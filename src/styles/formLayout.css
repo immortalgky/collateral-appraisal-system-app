@@ -1548,8 +1548,16 @@
   .cas-sidebar-main:has(.cas-sheet) {
   padding-top: 0;
 }
+/* Square corners with or without a tab bar — asked for; only the top rule depends on the bar. */
 [data-form-layout='grid'] .cas-form-grid :is(#land-section:has(.cas-sheet), .cas-sheet:not(#land-section .cas-sheet)) {
   border-radius: 0;
+}
+/* Same tab-bar condition as the padding above: without the bar, dropping the top rule left the
+   sheet open along its top edge (a building that is not under construction has one tab). */
+[data-form-layout='grid']
+  .cas-form-grid
+  #form-scroll-container:has(> .sticky)
+  :is(#land-section:has(.cas-sheet), .cas-sheet:not(#land-section .cas-sheet)) {
   border-top: 0;
 }
 /* Section headers without their icon: the grey band and the title are enough on the sheet.

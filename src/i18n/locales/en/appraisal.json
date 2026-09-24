@@ -1735,6 +1735,102 @@
       "buildingValue": "Building Value",
       "buildingValue100": "Building Value 100% Pre-inspection",
       "totalValue": "Total Value"
+    },
+    "method": {
+      "label": "Recording method",
+      "detail": "Itemize by work",
+      "summary": "Overall",
+      "locked": "Method locked",
+      "lockedHint": "Data was carried over or already recorded — switching method would discard it on save",
+      "switchTitle": "Switch recording method?",
+      "switchMessage": "Only one method is saved. Switching discards what is entered in the current one when you save."
+    },
+    "building": "Building",
+    "selectProperty": "Select property",
+    "buildingProperties": "Building properties",
+    "copyFrom": "Copy from",
+    "copyFromTitle": "Copy construction data from",
+    "copyConfirmTitle": "Replace the construction data?",
+    "copyConfirmMessage": "Copying replaces this property's work items, summary and remark with the other building's.",
+    "finishedAfterLeaving": "Finished after you left that property — nothing was applied; do it again there",
+    "copyNothing": "That building has no construction data to copy",
+    "copyFailed": "Could not copy the construction data — try again",
+    "kpi": {
+      "value100": "Value at 100%",
+      "progress": "Overall progress",
+      "currentValue": "Current value",
+      "appraisedValue": "Appraised value (whole appraisal)"
+    },
+    "tabs": {
+      "items": "Work items"
+    },
+    "remark": {
+      "label": "Remark",
+      "placeholder": "Enter remark or additional notes..."
+    },
+    "clearGuard": {
+      "title": "Delete construction data?",
+      "message": "This property has construction inspection data. If you save it as not under construction, all of it — work items, progress, summary and remark — will be deleted.",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "summaryForm": {
+      "detailPlaceholder": "Enter detail...",
+      "uploadTitle": "Upload construction detail",
+      "uploading": "Uploading...",
+      "uploadFailed": "Upload failed — try again",
+      "clickToUpload": "Click to upload",
+      "orDragDrop": "or drag and drop",
+      "document": "Document",
+      "removeDocument": "Remove document"
+    },
+    "showCalculated": "Show calculated columns",
+    "split": {
+      "ok": "Proportion 100% ✓",
+      "short": "Proportion {{pct}}% · {{diff}}% short",
+      "over": "Proportion {{pct}}% · {{diff}}% over"
+    },
+    "grid": {
+      "workItem": "Work item",
+      "proportion": "Proportion",
+      "constructionValue": "Work value",
+      "previousProgress": "Previous",
+      "currentProgress": "This round",
+      "change": "Change",
+      "currentShare": "Cumulative share",
+      "ofBuilding": "(% of building)",
+      "previousValue": "Previous value",
+      "currentValue": "Value this round",
+      "baht": "(Baht)",
+      "addItem": "+ Add item…",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items",
+      "groupTotal": "Total {{name}}",
+      "buildingTotal": "Building total",
+      "otherGroup": "Other",
+      "workGroupsFailed": "Could not load the list of work items — reload the page to add items",
+      "workGroupsLoading": "Loading the list of work items…",
+      "confirmDelete": "Delete?",
+      "remove": "Remove {{name}}",
+      "empty": "No work items yet — pick \"+ Add item…\" on a group, then split the proportions to 100%.",
+      "emptyReadOnly": "No work items recorded."
+    },
+    "status": {
+      "regressed_one": "{{count}} item below the previous round: {{names}} — if intended (e.g. rework), note why in Remark",
+      "regressed_other": "{{count}} items below the previous round: {{names}} — if intended (e.g. rework), note why in Remark",
+      "carriedOver": "Items and proportions carried over from the previous round · changing a proportion recalculates the previous value",
+      "carriedOverNoMoney": "Items and proportions carried over from the previous round",
+      "pending_one": "{{count}} item not entered this round: {{names}} — saved as is, it counts as 0%",
+      "pending_other": "{{count}} items not entered this round: {{names}} — saved as is, they count as 0%",
+      "summaryPending": "This round is not entered yet — saved as is, it counts as 0%",
+      "overBlocksSave": "Proportions add up to {{pct}}% — Save is blocked until they are 100% or less (Save draft still works)",
+      "keys": "↑ ↓ / Enter moves between rows",
+      "summaryRegressed": "Below the previous round — note why in Remark"
+    },
+    "valueHint": {
+      "condo": "A condo unit keeps the appraisal's full appraised value however far construction has progressed. The percentages record progress only; they do not change the price.",
+      "noValueBase": "No Building Cost Value yet, so the value by progress cannot be worked out.",
+      "noValueBaseEditable": "No Building Cost Value yet, so the value by progress cannot be worked out. Enter the Building Cost Value in the Building tab first."
     }
   },
   "forms": {

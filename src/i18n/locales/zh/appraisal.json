@@ -1738,6 +1738,102 @@
       "buildingValue": "建筑价值",
       "buildingValue100": "建筑价值 100%（检验前）",
       "totalValue": "总价值"
+    },
+    "method": {
+      "label": "记录方式",
+      "detail": "按工程项目",
+      "summary": "整体汇总",
+      "locked": "记录方式已锁定",
+      "lockedHint": "已有沿用或已保存的数据——切换记录方式会在保存时清除这些数据",
+      "switchTitle": "切换记录方式？",
+      "switchMessage": "每次只保存一种方式。切换后，当前方式中已填写的内容将在保存时被清除。"
+    },
+    "building": "建筑",
+    "selectProperty": "选择资产",
+    "buildingProperties": "建筑类资产",
+    "copyFrom": "复制自",
+    "copyFromTitle": "从以下资产复制施工数据",
+    "copyConfirmTitle": "替换施工数据？",
+    "copyConfirmMessage": "复制将用所选建筑的数据替换本资产的工程项目、汇总及备注。",
+    "finishedAfterLeaving": "在您离开该资产后才完成——未应用，请在该资产上重新操作",
+    "copyNothing": "该建筑没有可复制的施工数据",
+    "copyFailed": "复制施工数据失败——请重试",
+    "kpi": {
+      "value100": "完工 100% 价值",
+      "progress": "总体进度",
+      "currentValue": "当前价值",
+      "appraisedValue": "评估价值（整份评估）"
+    },
+    "tabs": {
+      "items": "工程项目"
+    },
+    "remark": {
+      "label": "备注",
+      "placeholder": "输入备注或补充说明..."
+    },
+    "clearGuard": {
+      "title": "删除施工数据？",
+      "message": "该资产已有施工检验数据。如以“非在建”保存，所有数据（工程项目、进度、汇总及备注）将被删除。",
+      "confirm": "确认",
+      "cancel": "取消"
+    },
+    "summaryForm": {
+      "detailPlaceholder": "输入详情...",
+      "uploadTitle": "上传施工明细",
+      "uploading": "正在上传...",
+      "uploadFailed": "上传失败——请重试",
+      "clickToUpload": "点击上传",
+      "orDragDrop": "或拖放文件",
+      "document": "文件",
+      "removeDocument": "删除文件"
+    },
+    "showCalculated": "显示计算列",
+    "split": {
+      "ok": "比例 100% ✓",
+      "short": "比例 {{pct}}% · 差 {{diff}}%",
+      "over": "比例 {{pct}}% · 超出 {{diff}}%"
+    },
+    "grid": {
+      "workItem": "工程项目",
+      "proportion": "比例",
+      "constructionValue": "工程价值",
+      "previousProgress": "上期",
+      "currentProgress": "本期",
+      "change": "变化",
+      "currentShare": "累计占比",
+      "ofBuilding": "（占整栋 %）",
+      "previousValue": "上期价值",
+      "currentValue": "本期价值",
+      "baht": "（泰铢）",
+      "addItem": "+ 添加项目…",
+      "itemCount_one": "{{count}} 项",
+      "itemCount_other": "{{count}} 项",
+      "groupTotal": "{{name}} 合计",
+      "buildingTotal": "整栋合计",
+      "otherGroup": "其他",
+      "workGroupsFailed": "无法加载工程项目列表——请刷新页面后再添加",
+      "workGroupsLoading": "正在加载工程项目列表…",
+      "confirmDelete": "删除？",
+      "remove": "删除 {{name}}",
+      "empty": "尚无工程项目——在分组上选择“+ 添加项目…”，再将比例分配至 100%。",
+      "emptyReadOnly": "没有工程项目。"
+    },
+    "status": {
+      "regressed_one": "{{count}} 项低于上一期：{{names}}——如属有意（如返工），请在备注中说明原因",
+      "regressed_other": "{{count}} 项低于上一期：{{names}}——如属有意（如返工），请在备注中说明原因",
+      "carriedOver": "项目与比例沿用上一期 · 修改比例会重新计算上期价值",
+      "carriedOverNoMoney": "项目与比例沿用上一期",
+      "pending_one": "{{count}} 项本期尚未填写：{{names}}——直接保存将按 0% 计",
+      "pending_other": "{{count}} 项本期尚未填写：{{names}}——直接保存将按 0% 计",
+      "summaryPending": "本期尚未填写——直接保存将按 0% 计",
+      "overBlocksSave": "比例合计 {{pct}}%——需不超过 100% 才能保存（仍可保存草稿）",
+      "keys": "↑ ↓ / Enter 切换行",
+      "summaryRegressed": "低于上一期——请在备注中说明原因"
+    },
+    "valueHint": {
+      "condo": "公寓单元无论施工进度如何，均按整份评估的全额评估价值计算。百分比仅用于记录进度，不影响价格。",
+      "noValueBase": "尚无建筑物价值，暂无法按进度计算价值。",
+      "noValueBaseEditable": "尚无建筑物价值，暂无法按进度计算价值。请先在“建筑”页填写建筑物价值。"
     }
   },
   "forms": {

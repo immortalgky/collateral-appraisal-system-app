@@ -1,4 +1,5 @@
 import { roundBaht } from './constructionMoney';
+import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
 import type {
   createCondoPMAFormType,
   createBuildingFormType,
@@ -22,6 +23,16 @@ import type {
 } from '@shared/schemas/v1';
 import type { CurrentAssignment } from '@features/appraisal/types/administration';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
+
+/**
+ * The Under Construction flag as the form should hold it. An empty flag with an inspection on record
+ * (older data) reads as Yes: the server keeps an inspection only while the flag is not No, and
+ * reading it as No would hide the tab and delete the inspection on the next save.
+ */
+function isUnderConstructionFromResponse(response: Record<string, unknown>): boolean {
+  const flag = response.isUnderConstruction as boolean | null | undefined;
+  return flag ?? !!response.constructionInspection;
+}
 
 export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyResponseType,
@@ -178,7 +189,7 @@ export const mapBuildingPropertyResponseToForm = (
     noHouseNumber: response.noHouseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
-    isUnderConstruction: response.isUnderConstruction ?? false,
+    isUnderConstruction: isUnderConstructionFromResponse(response),
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     hasObligation: response.hasObligation ?? '',
@@ -255,7 +266,7 @@ export const mapCondoPropertyResponseToForm = (
     roomNumber: response.roomNumber ?? '',
     floorNumber: response.floorNumber ?? 0,
     usableArea: response.usableArea ?? 0,
-    isUnderConstruction: response.isUnderConstruction ?? false,
+    isUnderConstruction: isUnderConstructionFromResponse(response),
 
     latitude: response.latitude ?? 0,
     longitude: response.longitude ?? 0,
@@ -470,7 +481,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     noHouseNumber: response.noHouseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
-    isUnderConstruction: response.isUnderConstruction ?? false,
+    isUnderConstruction: isUnderConstructionFromResponse(response),
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     buildingType: response.buildingType ?? '',
@@ -629,6 +640,7 @@ const mapConstructionInspectionFormToApi = (data: any) => {
     constructionEnterDetail,
     isUnderConstruction,
     depreciationDetails,
+    finalCostValueOverride,
   } = data;
 
   if (!isUnderConstruction) return null;
@@ -637,14 +649,21 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   // The server rounds this on save anyway, but it rounds decimals and the screen rounds doubles,
   // so sending the raw sum let the two land a baht apart at half-baht boundaries.
   //
-  // Only the depreciation rows, deliberately. A condo unit has no depreciation table, so this is 0
-  // and stays 0 — that zero is what tells the server the inspection has no value base of its own,
-  // and the screen substituting the appraised value for display must not leak into the payload.
+  // The building's Building Cost Value — the appraiser's keyed Final Cost Value when they entered
+  // one, otherwise the depreciated schedule rounded to the nearest thousand. The same figure
+  // ConstructionInspectionTab shows as TOTAL VALUE and the same helper the pricing screen uses, so
+  // what is saved is what was on screen. Summing the schedule here alone meant a building priced by
+  // hand was inspected against the table it overrode, and the override never reached the summary
+  // book, the Decision Summary card, the engagement's frozen value or the regulatory export.
+  //
+  // A condo unit has no depreciation table and no keyed figure, so this stays 0 — that zero is what
+  // tells the server the inspection has no value base of its own, and the screen substituting the
+  // appraised value for display must still not leak into the payload.
+  //
+  // Inspections saved before this rule keep their raw-sum base until they are next saved, and then
+  // move to it (at most 500 baht x progress). Decided 2026-09-24: no backfill.
   const totalValue = roundBaht(
-    (depreciationDetails ?? []).reduce(
-      (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
-      0,
-    ),
+    buildingFinalCostValue({ finalCostValueOverride, depreciationDetails }),
   );
 
   const isFullDetail = constructionEnterDetail ?? true;

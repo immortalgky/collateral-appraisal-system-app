@@ -1,5 +1,6 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
+import { proportionStatus } from '../utils/constructionMoney';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
@@ -215,12 +216,16 @@ export const createBuildingFormBase = z.object({
 });
 
 const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
-  if (data.constructionEnterDetail) {
+  // Not under construction: the rows are hidden and deleted on save, so they cannot block it.
+  // Null counts as itemized, as on screen (ConstructionInspectionTab: `?? true`).
+  if (data.constructionEnterDetail !== false && data.isUnderConstruction) {
     const total = (data.constructionSubItems ?? []).reduce(
       (sum: number, item: any) => sum + (Number(item.proportionPct) || 0),
       0,
     );
-    if (total > 100) {
+    // The screen's own rule: a 2-decimal split that reads 100% can add up to 100.00000000000001
+    // in floating point and would fail with nothing on screen to explain it.
+    if (proportionStatus(total) === 'over') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Total proportion is ${total.toFixed(2)}% — cannot exceed 100%`,

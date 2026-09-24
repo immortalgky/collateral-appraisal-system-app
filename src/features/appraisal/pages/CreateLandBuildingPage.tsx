@@ -42,7 +42,8 @@ import {
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
+import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
+import { useConstructionTab } from '../hooks/useConstructionTab';
 
 const CreateLandBuildingPage = () => {
   const { t } = useTranslation('appraisal');
@@ -221,11 +222,21 @@ const CreateLandBuildingPage = () => {
     'land' | 'building' | 'construction' | 'lease-agreement' | 'rental-info'
   >(initialTab);
 
+  const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
+    methods,
+    isUnderConstruction,
+    activeTab,
+    setActiveTab,
+    fallbackTab: 'land',
+    isCreateMode: !isEditMode,
+    isCiAppraisal,
+  });
+
   // The header's tabs; construction and lease/rental appear only when they apply.
   const editorTabs = [
     { id: 'land', label: t('createPage.navLand') },
     { id: 'building', label: t('createPage.navBuilding') },
-    ...(isUnderConstruction || isCiAppraisal
+    ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
       : []),
     ...(isRentedOut
@@ -235,13 +246,6 @@ const CreateLandBuildingPage = () => {
         ]
       : []),
   ];
-
-  // Reset to default tab if construction tab is active but property is not under construction
-  useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
-      setActiveTab('land');
-    }
-  }, [isUnderConstruction, activeTab, isCiAppraisal]);
 
   // Reset to land tab when isRentedOut is turned off and a rental tab is active
   useEffect(() => {
@@ -274,7 +278,7 @@ const CreateLandBuildingPage = () => {
                 typeCode="LB"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
-                activeTab={activeTab}
+                activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
               />
               <ResizableSidebar
@@ -288,7 +292,7 @@ const CreateLandBuildingPage = () => {
                     {/* Land Tab Content */}
                     <div
                       id="land-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'land' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'land' ? 'hidden' : ''}`}
                     >
                       <Section
                         id="land-title"
@@ -309,7 +313,7 @@ const CreateLandBuildingPage = () => {
                     {/* Building Tab Content */}
                     <div
                       id="building-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 ${shownTab !== 'building' ? 'hidden' : ''}`}
                     >
                       <Section id="building-info" anchor className="flex flex-col gap-6">
                         <BuildingDetailForm propertyType="LB" />
@@ -317,25 +321,20 @@ const CreateLandBuildingPage = () => {
                     </div>
 
                     {/* Construction Inspection Tab Content */}
-                    {(isUnderConstruction || isCiAppraisal) && (
-                      <div
-                        id="construction-section"
-                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
-                      >
-                        <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <ConstructionInspectionTab
-                            readOnly={isReadOnly}
-                            ciMode={isCiAppraisal}
-                          />
-                        </Section>
-                      </div>
-                    )}
+                    <ConstructionEditorSection
+                      key={propertyId}
+                      shownTab={shownTab}
+                      underConstruction={hasConstructionTab}
+                      readOnly={isReadOnly}
+                      ciMode={isCiAppraisal}
+                      condo={false}
+                    />
 
                     {/* Lease Agreement Tab Content */}
                     {isRentedOut && (
                       <div
                         id="lease-agreement-section"
-                        className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                        className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'lease-agreement' ? 'hidden' : ''}`}
                       >
                         <Section anchor className="min-w-0 overflow-hidden">
                           <LeaseAgreementForm namePrefix="leaseAgreement" />
@@ -347,7 +346,7 @@ const CreateLandBuildingPage = () => {
                     {isRentedOut && (
                       <div
                         id="rental-info-section"
-                        className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                        className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'rental-info' ? 'hidden' : ''}`}
                       >
                         <Section anchor className="min-w-0 overflow-hidden">
                           <RentalInfoForm namePrefix="rentalInfo" />

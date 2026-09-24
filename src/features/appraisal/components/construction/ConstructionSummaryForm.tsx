@@ -1,21 +1,34 @@
 import { useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 import NumberInput from '@shared/components/inputs/NumberInput';
+import TextInput from '@shared/components/inputs/TextInput';
+import { formatFileSize } from '@shared/utils/formatUtils';
 import Icon from '@shared/components/Icon';
-import { formatNumber } from '@shared/utils/formatUtils';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
+import { Change, HeaderCell } from './constructionGridCells';
+import { useConstructionScope } from './constructionScope';
+import {
+  baht,
+  INPUT_TD,
+  isPendingProgress,
+  isRegressedProgress,
+  pct,
+  REGRESSED,
+  RO,
+  TD,
+  TH,
+} from './constructionGrid';
 import {
   createUploadSession,
   useUploadDocument,
   useViewDocument,
 } from '@features/request/api/documents';
 
-function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return bytes + ' B';
-  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-  return (bytes / 1048576).toFixed(1) + ' MB';
-}
+/** ConstructionInspection.SummaryDetailMaxLength on the server; longer fails the whole save. */
+const SUMMARY_DETAIL_MAX = 1000;
 
 interface ConstructionSummaryFormProps {
-  totalValue: number;
   summary: {
     summaryDetail?: string | null;
     summaryPreviousProgressPct?: number | null;
@@ -33,6 +46,10 @@ interface ConstructionSummaryFormProps {
   /** Derived from the entered percentage — the persisted column holds 0. */
   summaryPreviousValue: number;
   onUpdateSummary: (field: string, value: string | number | null) => void;
+  /** Progressive round: the previous-round columns carry real history and are shown. */
+  showPrevious: boolean;
+  /** False without a value base of its own (a condo, or a house without its building cost). */
+  showMoney: boolean;
   readOnly?: boolean;
 }
 
@@ -41,11 +58,16 @@ export function ConstructionSummaryForm({
   summaryCurrentValue,
   summaryPreviousValue,
   onUpdateSummary,
+  showPrevious,
+  showMoney,
   readOnly,
 }: ConstructionSummaryFormProps) {
+  const { t } = useTranslation('appraisal');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
+  // In the property's scope, not here: switching method unmounts this form mid-upload, and a fresh
+  // one must still refuse a second upload.
+  const { isActive, uploading: isUploading, setUploading: setIsUploading } = useConstructionScope();
   const uploadDocument = useUploadDocument();
   const viewDocument = useViewDocument();
 
@@ -61,6 +83,8 @@ export function ConstructionSummaryForm({
   };
 
   const handleUpload = async (file: File) => {
+    // Attach only if this property is still on screen (see constructionScope); a method switch
+    // mid-upload stays in scope, so it still attaches.
     setIsUploading(true);
     try {
       const { sessionId } = await createUploadSession();
@@ -70,6 +94,10 @@ export function ConstructionSummaryForm({
         documentType: 'CONSTRUCT',
         documentCategory: 'support',
       });
+      if (!isActive()) {
+        toast(t('constructionInspection.finishedAfterLeaving'));
+        return;
+      }
       onUpdateSummary('documentId', result.documentId);
       onUpdateSummary('fileName', result.fileName);
       onUpdateSummary('filePath', result.storageUrl);
@@ -80,7 +108,7 @@ export function ConstructionSummaryForm({
       onUpdateSummary('fileExtension', ext);
       onUpdateSummary('mimeType', file.type || null);
     } catch {
-      // Upload failed — user can retry
+      if (isActive()) toast.error(t('constructionInspection.summaryForm.uploadFailed'));
     } finally {
       setIsUploading(false);
     }
@@ -96,6 +124,8 @@ export function ConstructionSummaryForm({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
+    // One upload at a time: a second would race the first for the attachment.
+    if (isUploading) return;
     const file = e.dataTransfer.files?.[0];
     if (file) handleUpload(file);
   };
@@ -109,85 +139,123 @@ export function ConstructionSummaryForm({
     onUpdateSummary('fileSizeBytes', null);
   };
 
+  const previousPct = summary?.summaryPreviousProgressPct ?? 0;
+  const currentPct = summary?.summaryCurrentProgressPct ?? 0;
+  // Read-only: no "not entered yet" prompt, the change printed as it stands (see constructionGrid).
+  const final = !!readOnly;
+  const isRegressed = isRegressedProgress(previousPct, currentPct, showPrevious);
+  const isPending = isPendingProgress(previousPct, currentPct, showPrevious, final);
+  // Enter in a field would submit the whole property form.
+  const blockEnter = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') e.preventDefault();
+  };
+  const head = (label: string, unit: string) => (
+    <HeaderCell label={label} unit={unit} className="w-[96px] min-w-[96px]" />
+  );
+
   return (
-    <div className="space-y-5">
-      {/* Summary Table */}
-      <div className="overflow-x-auto rounded-lg border border-gray-200 shadow-sm">
-        <table className="w-full text-xs">
+    <div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums text-[#1f2937]">
           <thead>
-            <tr className="bg-primary text-white">
-              <th className="text-left px-4 py-2.5 font-semibold min-w-[220px]" rowSpan={2}>
-                Detail
+            <tr>
+              <th className={clsx(TH, 'text-left min-w-[320px]')}>
+                {t('constructionInspection.columns.description')}
               </th>
-              <th
-                className="text-center px-3 py-1.5 font-semibold border-l border-white/20"
-                colSpan={2}
-              >
-                Previous Progress
-              </th>
-              <th
-                className="text-center px-3 py-1.5 font-semibold border-l border-white/20"
-                colSpan={2}
-              >
-                Current Progress
-              </th>
-            </tr>
-            <tr className="bg-primary text-white/90">
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[100px] border-l border-white/10">
-                (%)
-              </th>
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[130px]">
-                Value (Baht)
-              </th>
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[100px] border-l border-white/10">
-                (%)
-              </th>
-              <th className="text-center px-3 py-1.5 text-[10px] font-medium min-w-[130px]">
-                Value (Baht)
-              </th>
+              {showPrevious && head(t('constructionInspection.grid.previousProgress'), '(%)')}
+              {head(t('constructionInspection.grid.currentProgress'), '(%)')}
+              {showPrevious && head(t('constructionInspection.grid.change'), '(%)')}
+              {showPrevious &&
+                showMoney &&
+                head(
+                  t('constructionInspection.grid.previousValue'),
+                  t('constructionInspection.grid.baht'),
+                )}
+              {showMoney &&
+                head(
+                  t('constructionInspection.grid.currentValue'),
+                  t('constructionInspection.grid.baht'),
+                )}
             </tr>
           </thead>
           <tbody>
-            <tr className="bg-white hover:bg-gray-50/50 transition-colors">
-              <td className="px-3 py-2">
-                <input
-                  type="text"
-                  value={summary?.summaryDetail ?? ''}
-                  placeholder="Enter detail..."
-                  onChange={e => onUpdateSummary('summaryDetail', e.target.value)}
-                  disabled={readOnly}
-                  className="w-full px-2.5 py-1.5 border border-gray-200 rounded-md text-xs font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-500 transition-colors"
-                />
+            <tr>
+              <td className={INPUT_TD}>
+                {readOnly ? (
+                  // Wraps: a long detail would otherwise stretch the table and push the figures off-screen.
+                  <span className="block px-[5px] whitespace-normal break-words max-w-[520px]">
+                    {summary?.summaryDetail}
+                  </span>
+                ) : (
+                  <TextInput
+                    dense
+                    maxLength={SUMMARY_DETAIL_MAX}
+                    value={summary?.summaryDetail ?? ''}
+                    placeholder={t('constructionInspection.summaryForm.detailPlaceholder')}
+                    onChange={e => onUpdateSummary('summaryDetail', e.target.value)}
+                    onKeyDown={blockEnter}
+                    aria-label={t('constructionInspection.columns.description')}
+                    // Dense inputs are right-aligned for figures; this one is prose.
+                    className="text-left!"
+                  />
+                )}
               </td>
-              <td className="text-center px-3 py-2 text-gray-400 tabular-nums bg-gray-50/50">
-                {formatNumber(summary?.summaryPreviousProgressPct ?? 0, 2)}
-              </td>
-              <td className="text-right px-3 py-2 text-gray-400 tabular-nums bg-gray-50/50">
-                {formatNumber(summaryPreviousValue, 2)}
-              </td>
-              <td className="px-1.5 py-1">
-                <NumberInput
-                  value={summary?.summaryCurrentProgressPct ?? 0}
-                  onChange={e => onUpdateSummary('summaryCurrentProgressPct', e.target.value ?? 0)}
-                  decimalPlaces={2}
-                  max={100}
-                  disabled={readOnly}
-                  className="!py-1 !text-xs !rounded-md"
-                />
-              </td>
-              <td className="text-right px-3 py-2 font-bold text-gray-900 tabular-nums">
-                {formatNumber(summaryCurrentValue, 2)}
-              </td>
+              {showPrevious && <td className={clsx(TD, 'text-right', RO)}>{pct(previousPct)}</td>}
+              {readOnly ? (
+                <td className={clsx(TD, 'text-right', isRegressed && 'text-[#dc2626]')}>
+                  {pct(currentPct)}
+                </td>
+              ) : (
+                <td className={INPUT_TD}>
+                  <NumberInput
+                    dense
+                    value={currentPct}
+                    onChange={e =>
+                      onUpdateSummary('summaryCurrentProgressPct', e.target.value ?? 0)
+                    }
+                    decimalPlaces={2}
+                    max={100}
+                    onKeyDown={blockEnter}
+                    aria-label={t('constructionInspection.grid.currentProgress')}
+                    className={clsx(isRegressed && REGRESSED)}
+                  />
+                </td>
+              )}
+              {showPrevious && (
+                <td className={clsx(TD, 'text-right')}>
+                  <Change from={previousPct} to={currentPct} final={final} />
+                </td>
+              )}
+              {showPrevious && showMoney && (
+                <td className={clsx(TD, 'text-right', RO)}>{baht(summaryPreviousValue)}</td>
+              )}
+              {showMoney && (
+                <td className={clsx(TD, 'text-right font-semibold')}>
+                  {baht(summaryCurrentValue)}
+                </td>
+              )}
             </tr>
           </tbody>
         </table>
       </div>
+      {isPending && (
+        <div className="px-[12px] pt-[6px] text-[11.5px] text-[#b45309]">
+          {t('constructionInspection.status.summaryPending')}
+        </div>
+      )}
+      {isRegressed && (
+        <div className="px-[12px] pt-[6px] text-[11.5px] text-[#dc2626]">
+          ⚠ {t('constructionInspection.status.summaryRegressed')}
+        </div>
+      )}
 
       {/* Upload Construction Detail */}
-      <div className="space-y-3">
+      <div className="space-y-3 p-[12px]">
         <div className="flex items-center gap-2">
           <Icon name="paperclip" style="solid" className="size-3.5 text-gray-400" />
-          <span className="text-xs font-semibold text-gray-700">Upload Construction Detail</span>
+          <span className="text-xs font-semibold text-gray-700">
+            {t('constructionInspection.summaryForm.uploadTitle')}
+          </span>
         </div>
 
         {/* Upload area — show when no document attached and not read-only */}
@@ -233,11 +301,16 @@ export function ConstructionSummaryForm({
               </div>
               <div className="text-center">
                 {isUploading ? (
-                  <p className="text-xs font-medium text-primary">Uploading...</p>
+                  <p className="text-xs font-medium text-primary">
+                    {t('constructionInspection.summaryForm.uploading')}
+                  </p>
                 ) : (
                   <>
                     <p className="text-xs font-medium text-gray-600">
-                      <span className="text-primary">Click to upload</span> or drag and drop
+                      <span className="text-primary">
+                        {t('constructionInspection.summaryForm.clickToUpload')}
+                      </span>{' '}
+                      {t('constructionInspection.summaryForm.orDragDrop')}
                     </p>
                     <p className="text-[10px] text-gray-400 mt-0.5">PDF, DOC, XLS, JPG, PNG</p>
                   </>
@@ -260,7 +333,7 @@ export function ConstructionSummaryForm({
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-gray-700 truncate hover:text-primary transition-colors">
-                  {summary?.fileName ?? 'Document'}
+                  {summary?.fileName ?? t('constructionInspection.summaryForm.document')}
                 </p>
                 <p className="text-[10px] text-gray-400">
                   {[
@@ -276,7 +349,8 @@ export function ConstructionSummaryForm({
               <button
                 type="button"
                 onClick={handleRemoveDocument}
-                className="p-1.5 rounded-md text-gray-400 hover:text-danger hover:bg-danger/5 transition-all opacity-0 group-hover:opacity-100"
+                aria-label={t('constructionInspection.summaryForm.removeDocument')}
+                className="p-1.5 rounded-md text-gray-400 hover:text-danger hover:bg-danger/5 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <Icon name="trash-can" style="regular" className="size-3" />
               </button>

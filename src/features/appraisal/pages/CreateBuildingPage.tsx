@@ -41,7 +41,8 @@ import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
+import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
+import { useConstructionTab } from '../hooks/useConstructionTab';
 
 const CreateBuildingPage = () => {
   const { t } = useTranslation('appraisal');
@@ -257,12 +258,15 @@ const CreateBuildingPage = () => {
   const initialBuildingTab = tabParam === 'construction' ? 'construction' : 'building';
   const [activeTab, setActiveTab] = useState<'building' | 'construction'>(initialBuildingTab);
 
-  // Reset to default tab if construction tab is active but property is not under construction (CI appraisals always show it)
-  useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
-      setActiveTab('building');
-    }
-  }, [isUnderConstruction, activeTab, isCiAppraisal]);
+  const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
+    methods,
+    isUnderConstruction,
+    activeTab,
+    setActiveTab,
+    fallbackTab: 'building',
+    isCreateMode: !isEditMode,
+    isCiAppraisal,
+  });
 
   if (isLoading || (isEditMode && !propertyData)) {
     return (
@@ -275,7 +279,7 @@ const CreateBuildingPage = () => {
   // The header's tabs; construction appears only when it applies.
   const editorTabs = [
     { id: 'building', label: t('createPage.navBuilding') },
-    ...(isUnderConstruction || isCiAppraisal
+    ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
       : []),
   ];
@@ -296,7 +300,7 @@ const CreateBuildingPage = () => {
                 typeCode="B"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
-                activeTab={activeTab}
+                activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
               />
               <ResizableSidebar
@@ -310,7 +314,7 @@ const CreateBuildingPage = () => {
                     {/* Building Tab Content */}
                     <div
                       id="building-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 ${shownTab !== 'building' ? 'hidden' : ''}`}
                     >
                       <Section id="building-info" anchor className="flex flex-col gap-6">
                         <BuildingDetailForm />
@@ -318,19 +322,14 @@ const CreateBuildingPage = () => {
                     </div>
 
                     {/* Construction Inspection Tab Content */}
-                    {(isUnderConstruction || isCiAppraisal) && (
-                      <div
-                        id="construction-section"
-                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
-                      >
-                        <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <ConstructionInspectionTab
-                            readOnly={isReadOnly}
-                            ciMode={isCiAppraisal}
-                          />
-                        </Section>
-                      </div>
-                    )}
+                    <ConstructionEditorSection
+                      key={propertyId}
+                      shownTab={shownTab}
+                      underConstruction={hasConstructionTab}
+                      readOnly={isReadOnly}
+                      ciMode={isCiAppraisal}
+                      condo={false}
+                    />
                   </div>
                 </ResizableSidebar.Main>
               </ResizableSidebar>
