@@ -21,21 +21,21 @@ export function syncSaleAdjustmentGridFormSurveys({
 
   const prev = current.saleAdjustmentGridQualitatives ?? [];
 
-  // factorCode -> marketId -> qualitativeLevel
-  const prevMap = new Map<string, Map<string, string>>();
-  for (const row of prev) {
-    const inner = new Map<string, string>();
-    for (const cell of row.qualitatives ?? []) inner.set(cell.marketId, cell.qualitativeLevel);
-    prevMap.set(row.factorCode, inner);
-  }
+  // Each row keeps its own levels. This used to go through a factorCode -> marketId map built from
+  // this same array, which meant two rows with no factor picked yet shared the key null and read
+  // back each other's levels -- the same collision the adjustment rows below had.
+  const mergedQuals = prev.map(row => {
+    const prevLevels = new Map<string, string>();
+    for (const cell of row.qualitatives ?? []) prevLevels.set(cell.marketId, cell.qualitativeLevel);
 
-  const mergedQuals = prev.map(row => ({
-    ...row,
-    qualitatives: comparativeSurveys.map(s => ({
-      marketId: s.id,
-      qualitativeLevel: prevMap.get(row.factorCode)?.get(s.id) ?? 'E',
-    })),
-  }));
+    return {
+      ...row,
+      qualitatives: comparativeSurveys.map(s => ({
+        marketId: s.id,
+        qualitativeLevel: prevLevels.get(s.id) ?? 'E',
+      })),
+    };
+  });
 
   const next = {
     ...current,

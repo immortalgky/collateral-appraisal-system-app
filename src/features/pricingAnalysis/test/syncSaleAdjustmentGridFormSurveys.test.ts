@@ -39,18 +39,15 @@ function blankAdjustment(factorCode: string | null): Record<string, unknown> {
   };
 }
 
-function qualitative(factorCode: string | null): Record<string, unknown> {
+function qualitative(factorCode: string | null, level = 'E'): Record<string, unknown> {
   return {
     factorId: '',
     factorCode,
-    qualitatives: surveys.map(s => ({ marketId: s.id, qualitativeLevel: 'E' })),
+    qualitatives: surveys.map(s => ({ marketId: s.id, qualitativeLevel: level })),
   };
 }
 
-function sync(
-  qualitatives: Record<string, unknown>[],
-  adjustments: Record<string, unknown>[],
-): AdjustmentRow[] {
+function sync(qualitatives: Record<string, unknown>[], adjustments: Record<string, unknown>[]) {
   const reset = vi.fn();
   syncSaleAdjustmentGridFormSurveys({
     comparativeSurveys: surveys,
@@ -61,14 +58,23 @@ function sync(
       saleAdjustmentGridAdjustmentFactors: adjustments,
     })) as never,
   });
-  return (reset.mock.calls[0][0] as { saleAdjustmentGridAdjustmentFactors: AdjustmentRow[] })
-    .saleAdjustmentGridAdjustmentFactors;
+  return reset.mock.calls[0][0] as {
+    saleAdjustmentGridAdjustmentFactors: AdjustmentRow[];
+    saleAdjustmentGridQualitatives: { qualitatives: { qualitativeLevel: string }[] }[];
+  };
+}
+
+function adjustmentsOf(...args: Parameters<typeof sync>) {
+  return sync(...args).saleAdjustmentGridAdjustmentFactors;
 }
 
 describe('syncSaleAdjustmentGridFormSurveys', () => {
   it('keeps a row whose factor has not been picked yet', () => {
     // Straight out of handleAddRow: null on the qualitative side, '' on the adjustment side.
-    const [row] = sync([qualitative(null)], [filledAdjustment('', 'typed before picking')]);
+    const [row] = adjustmentsOf(
+      [qualitative(null)],
+      [filledAdjustment('', 'typed before picking')],
+    );
 
     expect(row.remark).toBe('typed before picking');
     expect(row.surveys[0]).toMatchObject({ adjustPercent: 7, adjustAmount: 70 });
@@ -77,7 +83,7 @@ describe('syncSaleAdjustmentGridFormSurveys', () => {
   it('keeps a row whose factor was picked after the last sync', () => {
     // Picking a factor writes saleAdjustmentGridQualitatives.N.factorCode and nothing on the
     // adjustment row, so the two disagree until the next rebuild.
-    const [row] = sync([qualitative('05')], [filledAdjustment('', 'typed after picking')]);
+    const [row] = adjustmentsOf([qualitative('05')], [filledAdjustment('', 'typed after picking')]);
 
     expect(row.remark).toBe('typed after picking');
     expect(row.surveys[0]).toMatchObject({ adjustPercent: 7, adjustAmount: 70 });
@@ -85,7 +91,7 @@ describe('syncSaleAdjustmentGridFormSurveys', () => {
 
   it('does not let one row inherit another row"s remark or percentages', () => {
     // Two rows that share a factorCode of '' — the shape any two freshly added rows have.
-    const [blank, filled] = sync(
+    const [blank, filled] = adjustmentsOf(
       [qualitative(null), qualitative('05')],
       [blankAdjustment(''), filledAdjustment('', 'belongs to row 1')],
     );
@@ -94,5 +100,15 @@ describe('syncSaleAdjustmentGridFormSurveys', () => {
     expect(blank.surveys[0]).toMatchObject({ adjustPercent: 0, adjustAmount: 0 });
     expect(filled.remark).toBe('belongs to row 1');
     expect(filled.surveys[0]).toMatchObject({ adjustPercent: 7, adjustAmount: 70 });
+  });
+
+  it('keeps each unpicked row"s own qualitative levels', () => {
+    const { saleAdjustmentGridQualitatives: rows } = sync(
+      [qualitative(null, 'A'), qualitative(null, 'D')],
+      [blankAdjustment(''), blankAdjustment('')],
+    );
+
+    expect(rows[0].qualitatives.map(q => q.qualitativeLevel)).toEqual(['A', 'A']);
+    expect(rows[1].qualitatives.map(q => q.qualitativeLevel)).toEqual(['D', 'D']);
   });
 });
