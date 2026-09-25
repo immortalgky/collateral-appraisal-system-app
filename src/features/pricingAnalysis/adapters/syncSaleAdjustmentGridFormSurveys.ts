@@ -95,8 +95,10 @@ export function syncSaleAdjustmentGridFormSurveys({
         const inner = new Map<string, { adjustPercent: number; adjustAmount: number }>();
         for (const s of af.surveys ?? [])
           inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
-        // '' for a row whose factor has not been picked yet: handleAddRow seeds it empty and
-        // the lookup below reads it back with the same fallback, so the pair still matches.
+        // handleAddRow seeds an unpicked row null, so both sides of this map fold null to '' —
+        // write here, read below. Two unpicked rows collide on that key and the last one wins,
+        // which is what main already did with null; the qualitative factorCode rule blocks the
+        // save while any row is unpicked, so nothing that reaches the payload can be lost.
         prevAdjMap.set(af.factorCode ?? '', inner);
       }
       // Build lookup for remarks
@@ -107,9 +109,9 @@ export function syncSaleAdjustmentGridFormSurveys({
       return (current.saleAdjustmentGridQualitatives ?? []).map(q => ({
         factorId: q.factorId,
         factorCode: q.factorCode,
-        remark: prevRemarkMap.get(q.factorCode) ?? null,
+        remark: prevRemarkMap.get(q.factorCode ?? '') ?? null,
         surveys: comparativeSurveys.map(survey => {
-          const prev = prevAdjMap.get(q.factorCode)?.get(survey.id);
+          const prev = prevAdjMap.get(q.factorCode ?? '')?.get(survey.id);
           return {
             marketId: survey.id,
             adjustPercent: prev?.adjustPercent ?? 0,
