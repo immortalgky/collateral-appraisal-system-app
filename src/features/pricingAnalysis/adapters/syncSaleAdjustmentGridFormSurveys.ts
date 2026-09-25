@@ -86,39 +86,37 @@ export function syncSaleAdjustmentGridFormSurveys({
       });
     })(),
     saleAdjustmentGridAdjustmentFactors: (() => {
-      // Build lookup: factorCode -> marketId -> existing adjustment data
-      const prevAdjMap = new Map<
-        string,
-        Map<string, { adjustPercent: number; adjustAmount: number }>
-      >();
-      for (const af of current.saleAdjustmentGridAdjustmentFactors ?? []) {
-        const inner = new Map<string, { adjustPercent: number; adjustAmount: number }>();
-        for (const s of af.surveys ?? [])
-          inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
-        // handleAddRow seeds an unpicked row null, so both sides of this map fold null to '' —
-        // write here, read below. Two unpicked rows collide on that key and the last one wins,
-        // which is what main already did with null; the qualitative factorCode rule blocks the
-        // save while any row is unpicked, so nothing that reaches the payload can be lost.
-        prevAdjMap.set(af.factorCode ?? '', inner);
-      }
-      // Build lookup for remarks
-      const prevRemarkMap = new Map<string, string | null | undefined>();
-      for (const af of current.saleAdjustmentGridAdjustmentFactors ?? []) {
-        prevRemarkMap.set(af.factorCode ?? '', af.remark);
-      }
-      return (current.saleAdjustmentGridQualitatives ?? []).map(q => ({
-        factorId: q.factorId,
-        factorCode: q.factorCode,
-        remark: prevRemarkMap.get(q.factorCode ?? '') ?? null,
-        surveys: comparativeSurveys.map(survey => {
-          const prev = prevAdjMap.get(q.factorCode ?? '')?.get(survey.id);
-          return {
-            marketId: survey.id,
-            adjustPercent: prev?.adjustPercent ?? 0,
-            adjustAmount: prev?.adjustAmount ?? 0,
-          };
-        }),
-      }));
+      // Matched by position, not by factorCode. The two arrays are built and mutated as a pair
+      // everywhere — initializeSaleAdjustmentGridForm and restoreSaleAdjustmentGridFromSavedData
+      // map both over the same factor list, handleAddRow appends to both, handleRemoveRow removes
+      // the same index from both, and this function rebuilds the adjustments by walking the
+      // qualitatives in order. factorCode is the wrong key: it is null or '' until the user picks
+      // a factor, so every unpicked row shares one key and they read back each other's remarks and
+      // percentages.
+      const prevAdjustments = current.saleAdjustmentGridAdjustmentFactors ?? [];
+      return (current.saleAdjustmentGridQualitatives ?? []).map((q, rowIndex) => {
+        const prevRow = prevAdjustments[rowIndex];
+        const prevBySurvey = new Map<string, { adjustPercent: number; adjustAmount: number }>();
+        for (const s of prevRow?.surveys ?? [])
+          prevBySurvey.set(s.marketId, {
+            adjustPercent: s.adjustPercent,
+            adjustAmount: s.adjustAmount,
+          });
+
+        return {
+          factorId: q.factorId,
+          factorCode: q.factorCode,
+          remark: prevRow?.remark ?? null,
+          surveys: comparativeSurveys.map(survey => {
+            const prev = prevBySurvey.get(survey.id);
+            return {
+              marketId: survey.id,
+              adjustPercent: prev?.adjustPercent ?? 0,
+              adjustAmount: prev?.adjustAmount ?? 0,
+            };
+          }),
+        };
+      });
     })(),
   };
   reset(next, { keepDirty: true, keepTouched: true });
