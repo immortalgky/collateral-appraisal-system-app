@@ -10,69 +10,87 @@ import { mapDirectComparisonFormToSubmitSchema } from '@/features/pricingAnalysi
  *
  * Unlike the factorCode collisions, zod cannot catch this one: factorCode is filled in and valid
  * while factorId is empty, so the payload goes to the API.
+ *
+ * Every cell gets a value no other cell has, and the whole payload is compared at once, so a
+ * mapper that pairs the wrong row, the wrong market, or drops a field fails here — including by
+ * emitting fewer entries, which a per-group `.every()` would have waved through.
  */
 
-const surveys = [{ marketId: 'm1' }, { marketId: 'm2' }];
+const markets = ['m1', 'm2'];
 
-function rows(prefix: 'saleAdjustmentGrid' | 'directComparison') {
+/** row -> market -> [qualitative level, adjust %]. Amounts are % × 10. */
+const cells: Record<number, Record<string, [string, number]>> = {
+  0: { m1: ['A', 1], m2: ['C', 3] },
+  1: { m1: ['B', 2], m2: ['D', 4] },
+};
+
+function form(prefix: 'saleAdjustmentGrid' | 'directComparison') {
   return {
-    [`${prefix}Qualitatives`]: [
-      {
-        factorId: '',
-        factorCode: '01',
-        qualitatives: surveys.map(s => ({ ...s, qualitativeLevel: 'A' })),
-      },
-      {
-        factorId: '',
-        factorCode: '02',
-        qualitatives: surveys.map(s => ({ ...s, qualitativeLevel: 'B' })),
-      },
-    ],
-    [`${prefix}AdjustmentFactors`]: [
-      {
-        factorId: '',
-        factorCode: '01',
-        remark: 'row 0',
-        surveys: surveys.map(s => ({ ...s, adjustPercent: 1, adjustAmount: 10 })),
-      },
-      {
-        factorId: '',
-        factorCode: '02',
-        remark: 'row 1',
-        surveys: surveys.map(s => ({ ...s, adjustPercent: 2, adjustAmount: 20 })),
-      },
-    ],
+    [`${prefix}Qualitatives`]: [0, 1].map(row => ({
+      factorId: '',
+      factorCode: `0${row + 1}`,
+      qualitatives: markets.map(m => ({ marketId: m, qualitativeLevel: cells[row][m][0] })),
+    })),
+    [`${prefix}AdjustmentFactors`]: [0, 1].map(row => ({
+      factorId: '',
+      factorCode: `0${row + 1}`,
+      remark: `row ${row}`,
+      surveys: markets.map(m => ({
+        marketId: m,
+        adjustPercent: cells[row][m][1],
+        adjustAmount: cells[row][m][1] * 10,
+      })),
+    })),
   };
 }
 
+const expected = [0, 1].flatMap(row =>
+  markets.map(m => ({
+    row,
+    market: m,
+    level: cells[row][m][0],
+    pct: cells[row][m][1],
+    amt: cells[row][m][1] * 10,
+    remark: `row ${row}`,
+  })),
+);
+
+type FactorScore = {
+  displaySequence: number;
+  marketComparableId: string | null;
+  comparisonResult: string | null;
+  adjustmentPct: number | null;
+  adjustmentAmt: number | null;
+  remarks: string | null;
+};
+
+function project(factorScores: FactorScore[]) {
+  return factorScores
+    .map(f => ({
+      row: f.displaySequence,
+      market: f.marketComparableId,
+      level: f.comparisonResult,
+      pct: f.adjustmentPct,
+      amt: f.adjustmentAmt,
+      remark: f.remarks,
+    }))
+    .sort((a, b) => a.row - b.row || String(a.market).localeCompare(String(b.market)));
+}
+
 describe('submit mappers pair factor rows by position', () => {
-  it('keeps each row"s adjustments when no factorId has resolved (sale adjustment grid)', () => {
+  it(`saves each row's own adjustments when no factorId has resolved (sale adjustment grid)`, () => {
     const { factorScores } = mapSaleAdjustmentGridFormToSubmitSchema({
-      SaleAdjustmentGridForm: rows('saleAdjustmentGrid') as never,
+      SaleAdjustmentGridForm: form('saleAdjustmentGrid') as never,
     });
 
-    const byRow = [0, 1].map(seq => factorScores.filter(f => f.displaySequence === seq));
-
-    // Assert the rows arrived before asserting anything about them: [].every() is true, so a
-    // change to how displaySequence is numbered would empty these groups and pass in silence.
-    expect(byRow[0]).toHaveLength(surveys.length);
-    expect(byRow[1]).toHaveLength(surveys.length);
-    expect(byRow[0].every(f => f.remarks === 'row 0' && f.adjustmentPct === 1)).toBe(true);
-    expect(byRow[1].every(f => f.remarks === 'row 1' && f.adjustmentPct === 2)).toBe(true);
+    expect(project(factorScores as FactorScore[])).toEqual(expected);
   });
 
-  it('keeps each row"s adjustments when no factorId has resolved (direct comparison)', () => {
+  it(`saves each row's own adjustments when no factorId has resolved (direct comparison)`, () => {
     const { factorScores } = mapDirectComparisonFormToSubmitSchema({
-      DirectComparisonForm: rows('directComparison') as never,
+      DirectComparisonForm: form('directComparison') as never,
     });
 
-    const byRow = [0, 1].map(seq => factorScores.filter(f => f.displaySequence === seq));
-
-    // Assert the rows arrived before asserting anything about them: [].every() is true, so a
-    // change to how displaySequence is numbered would empty these groups and pass in silence.
-    expect(byRow[0]).toHaveLength(surveys.length);
-    expect(byRow[1]).toHaveLength(surveys.length);
-    expect(byRow[0].every(f => f.remarks === 'row 0' && f.adjustmentPct === 1)).toBe(true);
-    expect(byRow[1].every(f => f.remarks === 'row 1' && f.adjustmentPct === 2)).toBe(true);
+    expect(project(factorScores as FactorScore[])).toEqual(expected);
   });
 });
