@@ -53,6 +53,10 @@ describe('submit mappers pair factor rows by position', () => {
 
     const byRow = [0, 1].map(seq => factorScores.filter(f => f.displaySequence === seq));
 
+    // Assert the rows arrived before asserting anything about them: [].every() is true, so a
+    // change to how displaySequence is numbered would empty these groups and pass in silence.
+    expect(byRow[0]).toHaveLength(surveys.length);
+    expect(byRow[1]).toHaveLength(surveys.length);
     expect(byRow[0].every(f => f.remarks === 'row 0' && f.adjustmentPct === 1)).toBe(true);
     expect(byRow[1].every(f => f.remarks === 'row 1' && f.adjustmentPct === 2)).toBe(true);
   });
@@ -64,6 +68,10 @@ describe('submit mappers pair factor rows by position', () => {
 
     const byRow = [0, 1].map(seq => factorScores.filter(f => f.displaySequence === seq));
 
+    // Assert the rows arrived before asserting anything about them: [].every() is true, so a
+    // change to how displaySequence is numbered would empty these groups and pass in silence.
+    expect(byRow[0]).toHaveLength(surveys.length);
+    expect(byRow[1]).toHaveLength(surveys.length);
     expect(byRow[0].every(f => f.remarks === 'row 0' && f.adjustmentPct === 1)).toBe(true);
     expect(byRow[1].every(f => f.remarks === 'row 1' && f.adjustmentPct === 2)).toBe(true);
   });
