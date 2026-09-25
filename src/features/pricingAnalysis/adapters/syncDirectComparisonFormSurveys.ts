@@ -13,7 +13,7 @@ interface SetDirectComparisonInitialValueOnSelectSurveyProps {
   getValues: UseFormGetValues<DirectComparisonType>;
 }
 export function syncDirectComparisonFormSurveys({
-  comparativeSurveys,
+  comparativeSurveys = [],
   reset,
   getValues,
 }: SetDirectComparisonInitialValueOnSelectSurveyProps) {

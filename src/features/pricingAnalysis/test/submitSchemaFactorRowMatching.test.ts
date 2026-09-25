@@ -35,7 +35,9 @@ function form(prefix: 'saleAdjustmentGrid' | 'directComparison') {
       factorId: '',
       factorCode: `0${row + 1}`,
       remark: `row ${row}`,
-      surveys: markets.map(m => ({
+      // Reverse order on purpose: the qualitatives list m1, m2 and the adjustments m2, m1, so a
+      // mapper that pairs cells by column index instead of marketId saves the wrong percentage.
+      surveys: [...markets].reverse().map(m => ({
         marketId: m,
         adjustPercent: cells[row][m][1],
         adjustAmount: cells[row][m][1] * 10,
@@ -48,6 +50,7 @@ const expected = [0, 1].flatMap(row =>
   markets.map(m => ({
     row,
     market: m,
+    factorId: '',
     level: cells[row][m][0],
     pct: cells[row][m][1],
     amt: cells[row][m][1] * 10,
@@ -56,6 +59,7 @@ const expected = [0, 1].flatMap(row =>
 );
 
 type FactorScore = {
+  factorId: string | null;
   displaySequence: number;
   marketComparableId: string | null;
   comparisonResult: string | null;
@@ -69,6 +73,7 @@ function project(factorScores: FactorScore[]) {
     .map(f => ({
       row: f.displaySequence,
       market: f.marketComparableId,
+      factorId: f.factorId,
       level: f.comparisonResult,
       pct: f.adjustmentPct,
       amt: f.adjustmentAmt,
