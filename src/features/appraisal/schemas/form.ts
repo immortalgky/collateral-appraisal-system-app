@@ -1012,7 +1012,7 @@ export const createCondoPMAFormDefault: createCondoPMAFormType = {
   buildingInsurancePrice: 0,
   sellingPrice: 0,
   forcedSalePrice: 0,
-  builtOnTitleNumber: '',
+  titleNumber: '',
   condoRegistrationNumber: '',
   roomNumber: '',
   floorNumber: '',

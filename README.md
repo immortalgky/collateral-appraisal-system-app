@@ -348,7 +348,7 @@ export const router = createBrowserRouter([
 
 #### How to make a form
 
-- Define schema (for Zod validation) in `shared/forms/v1.ts` (either write it yourself or generate it from OpenAPI)
+- Define schema (for Zod validation) in `shared/schemas/v1.ts` (generated) or a feature-local `schemas/` module (either write it yourself or generate it from OpenAPI)
 - Define default values (for React Hook Form) for each schema field in `shared/forms/defaults.ts`.
 - Then use them at your form...
 

@@ -779,7 +779,7 @@ export const LoanDetailDto = z.object({
 
 ### Complete Flow Example
 
-#### 1. Define Schema (src/shared/forms/v1.ts)
+#### 1. Define Schema (src/shared/schemas/v1.ts, or a feature-local schemas/ module)
 
 ```typescript
 export const RequestCustomerDto = z.object({

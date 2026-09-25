@@ -27,6 +27,10 @@ const SaleAdjustmentGridQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
 const SaleAdjustmentGridQualitative = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
+      // Declared rather than left to the catchall: mapSaleAdjustmentGridFormToSubmitSchema keys the
+      // save payload off factorId, and a catchall types it `unknown` at every read site. Optional
+      // because the restore path can hand one back undefined — requiring it would block the save.
+      factorId: z.string().optional(),
       factorCode: z.string({
         required_error: t('validation.factorCodeRequired'),
         invalid_type_error: t('validation.factorCodeRequired'),
@@ -70,6 +74,15 @@ const SaleAdjustmentGridAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
 const SaleAdjustmentGridAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
+      factorId: z.string().optional(),
+      // Both writers always set a string (initializeSaleAdjustmentGridForm and
+      // restoreSaleAdjustmentGridFromSavedData, each with a '' fallback), and the sync adapter
+      // uses it as a Map key, so it is required here exactly like on the qualitative row above.
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+      remark: z.string().nullable().optional(),
       surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
     })
     .passthrough();
