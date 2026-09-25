@@ -9,6 +9,7 @@ import { emailFormSchema, type EmailFormValues } from '@/shared/schemas/email';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MeetingDocumentsDialog from '@/features/meeting/components/MeetingDocumentsDialog';
 import type { PickedDocument } from '@/features/meeting/components/MeetingDocumentsDialog';
+import QuotationDocumentsDialog from '@/features/quotation/components/QuotationDocumentsDialog';
 import FileInput from '@/shared/components/inputs/FileInput';
 import { useViewDocument } from '@/features/request/api/documents';
 import { fileTypeIcon } from '@/shared/utils/fileTypeIcon';
@@ -16,13 +17,10 @@ import RichTextEditor from './RichTextEditor';
 
 /**
  * When provided, replaces the free-text attachment chip input with a document
- * picker sourced from the given meeting's document library. Quotation flows that
- * use `showAttachments={false}` are unaffected — this prop is only consulted
- * when `showAttachments` is also true.
+ * picker sourced from the given meeting's or quotation's document library.
+ * This prop is only consulted when `showAttachments` is also true.
  */
-interface AttachmentPickerConfig {
-  meetingId: string;
-}
+type AttachmentPickerConfig = { meetingId: string } | { quotationId: string };
 
 interface EmailCompositionModalProps {
   isOpen: boolean;
@@ -415,12 +413,22 @@ const EmailCompositionModal = ({
           </Button>
         </div>
       </form>
-      {/* Document picker (only in picker mode) — the meeting documents modal in select mode */}
-      {attachmentPicker && (
+      {/* Document picker (only in picker mode) — meeting or quotation documents modal in select mode */}
+      {attachmentPicker && 'meetingId' in attachmentPicker && (
         <MeetingDocumentsDialog
           isOpen={pickerDisclosure.isOpen}
           onClose={pickerDisclosure.onClose}
           meetingId={attachmentPicker.meetingId}
+          selectable
+          selectedIds={pickedDocs.map(d => d.id)}
+          onConfirm={handlePickerConfirm}
+        />
+      )}
+      {attachmentPicker && 'quotationId' in attachmentPicker && (
+        <QuotationDocumentsDialog
+          isOpen={pickerDisclosure.isOpen}
+          onClose={pickerDisclosure.onClose}
+          quotationId={attachmentPicker.quotationId}
           selectable
           selectedIds={pickedDocs.map(d => d.id)}
           onConfirm={handlePickerConfirm}
