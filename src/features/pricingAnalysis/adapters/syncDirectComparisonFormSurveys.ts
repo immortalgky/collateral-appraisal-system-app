@@ -21,21 +21,21 @@ export function syncDirectComparisonFormSurveys({
 
   const prev = current.directComparisonQualitatives ?? [];
 
-  // factorCode -> marketId -> qualitativeLevel
-  const prevMap = new Map<string, Map<string, string>>();
-  for (const row of prev) {
-    const inner = new Map<string, string>();
-    for (const cell of row.qualitatives ?? []) inner.set(cell.marketId, cell.qualitativeLevel);
-    prevMap.set(row.factorCode, inner);
-  }
+  // Each row keeps its own levels. This used to go through a factorCode -> marketId map built from
+  // this same array, which meant two rows with no factor picked yet shared one key and read back
+  // each other's levels -- handleAddRow leaves factorCode unset on both sides here.
+  const mergedQuals = prev.map(row => {
+    const prevLevels = new Map<string, string>();
+    for (const cell of row.qualitatives ?? []) prevLevels.set(cell.marketId, cell.qualitativeLevel);
 
-  const mergedQuals = prev.map(row => ({
-    ...row,
-    qualitatives: comparativeSurveys.map(s => ({
-      marketId: s.id,
-      qualitativeLevel: prevMap.get(row.factorCode)?.get(s.id) ?? 'E',
-    })),
-  }));
+    return {
+      ...row,
+      qualitatives: comparativeSurveys.map(s => ({
+        marketId: s.id,
+        qualitativeLevel: prevLevels.get(s.id) ?? 'E',
+      })),
+    };
+  });
 
   const next = {
     ...current,
@@ -82,33 +82,36 @@ export function syncDirectComparisonFormSurveys({
       });
     })(),
     directComparisonAdjustmentFactors: (() => {
-      const prevAdjMap = new Map<
-        string,
-        Map<string, { adjustPercent: number; adjustAmount: number }>
-      >();
-      for (const af of current.directComparisonAdjustmentFactors ?? []) {
-        const inner = new Map<string, { adjustPercent: number; adjustAmount: number }>();
-        for (const s of af.surveys ?? [])
-          inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
-        prevAdjMap.set(af.factorCode, inner);
-      }
-      const prevRemarkMap = new Map<string, string | null | undefined>();
-      for (const af of current.directComparisonAdjustmentFactors ?? []) {
-        prevRemarkMap.set(af.factorCode, af.remark);
-      }
-      return (current.directComparisonQualitatives ?? []).map(q => ({
-        factorId: q.factorId,
-        factorCode: q.factorCode,
-        remark: prevRemarkMap.get(q.factorCode) ?? null,
-        surveys: comparativeSurveys.map(survey => {
-          const prev = prevAdjMap.get(q.factorCode)?.get(survey.id);
-          return {
-            marketId: survey.id,
-            adjustPercent: prev?.adjustPercent ?? 0,
-            adjustAmount: prev?.adjustAmount ?? 0,
-          };
-        }),
-      }));
+      // Matched by position, not by factorCode. The two arrays are built and mutated as a pair
+      // everywhere -- initializeDirectComparisonForm and restoreDirectComparisonFromSavedData map
+      // both over the same factor list, handleAddRow appends to both, handleRemoveRow removes the
+      // same index from both -- and this function rebuilds the adjustments by walking the
+      // qualitatives in order. factorCode is unset until the user picks a factor, so keying on it
+      // made every such row share one key and inherit another row's remark and percentages.
+      const prevAdjustments = current.directComparisonAdjustmentFactors ?? [];
+      return (current.directComparisonQualitatives ?? []).map((q, rowIndex) => {
+        const prevRow = prevAdjustments[rowIndex];
+        const prevBySurvey = new Map<string, { adjustPercent: number; adjustAmount: number }>();
+        for (const s of prevRow?.surveys ?? [])
+          prevBySurvey.set(s.marketId, {
+            adjustPercent: s.adjustPercent,
+            adjustAmount: s.adjustAmount,
+          });
+
+        return {
+          factorId: q.factorId,
+          factorCode: q.factorCode,
+          remark: prevRow?.remark ?? null,
+          surveys: comparativeSurveys.map(survey => {
+            const prev = prevBySurvey.get(survey.id);
+            return {
+              marketId: survey.id,
+              adjustPercent: prev?.adjustPercent ?? 0,
+              adjustAmount: prev?.adjustAmount ?? 0,
+            };
+          }),
+        };
+      });
     })(),
   };
   reset(next, { keepDirty: true, keepTouched: true });

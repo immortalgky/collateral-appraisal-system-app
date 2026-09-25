@@ -27,6 +27,10 @@ const DirectComparisonQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
 const DirectComparisonQualitative = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
+      // Declared rather than left to the catchall, which types it `unknown` at every read site:
+      // mapDirectComparisonFormToSubmitSchema keys the save payload off factorId. Optional because
+      // handleAddRow leaves it unset and the restore path can hand one back undefined.
+      factorId: z.string().optional(),
       factorCode: z.string({
         required_error: t('validation.factorCodeRequired'),
         invalid_type_error: t('validation.factorCodeRequired'),
@@ -58,6 +62,13 @@ const DirectComparisonAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
 const DirectComparisonAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
+      factorId: z.string().optional(),
+      // Optional, unlike its twin on the qualitative row above. The qualitative row has a rendered
+      // dropdown, so a message there reaches the user; nothing renders an input at
+      // directComparisonAdjustmentFactors.N.factorCode, so a required rule here could only fail
+      // where no one can see it.
+      factorCode: z.string().optional(),
+      remark: z.string().nullable().optional(),
       surveys: z.array(DirectComparisonAdjustmentPct(t)),
     })
     .passthrough();
