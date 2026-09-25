@@ -601,7 +601,10 @@ export const mapCondoPMAPropertyResponseToForm = (
     titleNumber: response.titleNumber ?? '',
     condoRegistrationNumber: response.condoRegistrationNumber ?? '',
     roomNumber: response.roomNumber ?? '',
-    floorNumber: response.floorNumber ?? 0,
+    // A string, like every other text field here: the API binds FloorNumber as string?, and the
+    // draft posts getValues() without validation, so a 0 reached it as a JSON number and the
+    // whole draft was refused with a 400.
+    floorNumber: response.floorNumber ?? '',
     buildingNumber: response.buildingNumber ?? '',
     condoName: response.condoName ?? '',
     subDistrict: response.subDistrict ?? '',
