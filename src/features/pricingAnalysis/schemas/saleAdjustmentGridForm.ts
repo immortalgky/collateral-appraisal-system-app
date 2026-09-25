@@ -75,13 +75,13 @@ const SaleAdjustmentGridAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
       factorId: z.string().optional(),
-      // Both writers always set a string (initializeSaleAdjustmentGridForm and
-      // restoreSaleAdjustmentGridFromSavedData, each with a '' fallback), and the sync adapter
-      // uses it as a Map key, so it is required here exactly like on the qualitative row above.
-      factorCode: z.string({
-        required_error: t('validation.factorCodeRequired'),
-        invalid_type_error: t('validation.factorCodeRequired'),
-      }),
+      // Optional, unlike its twin on the qualitative row above. The qualitative row has a rendered
+      // dropdown, so a message there reaches the user; nothing renders an input at
+      // saleAdjustmentGridAdjustmentFactors.N.factorCode (the field-path helper for it has no
+      // callers), so a required rule here could only fail where no one can see it — handleSubmit
+      // would no-op in silence. It is not in the save payload either: the submit mapper keys the
+      // adjustment factors off factorId.
+      factorCode: z.string().optional(),
       remark: z.string().nullable().optional(),
       surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
     })

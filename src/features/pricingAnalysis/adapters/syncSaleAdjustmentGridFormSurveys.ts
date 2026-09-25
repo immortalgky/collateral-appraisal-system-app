@@ -95,12 +95,14 @@ export function syncSaleAdjustmentGridFormSurveys({
         const inner = new Map<string, { adjustPercent: number; adjustAmount: number }>();
         for (const s of af.surveys ?? [])
           inner.set(s.marketId, { adjustPercent: s.adjustPercent, adjustAmount: s.adjustAmount });
-        prevAdjMap.set(af.factorCode, inner);
+        // '' for a row whose factor has not been picked yet: handleAddRow seeds it empty and
+        // the lookup below reads it back with the same fallback, so the pair still matches.
+        prevAdjMap.set(af.factorCode ?? '', inner);
       }
       // Build lookup for remarks
       const prevRemarkMap = new Map<string, string | null | undefined>();
       for (const af of current.saleAdjustmentGridAdjustmentFactors ?? []) {
-        prevRemarkMap.set(af.factorCode, af.remark);
+        prevRemarkMap.set(af.factorCode ?? '', af.remark);
       }
       return (current.saleAdjustmentGridQualitatives ?? []).map(q => ({
         factorId: q.factorId,
