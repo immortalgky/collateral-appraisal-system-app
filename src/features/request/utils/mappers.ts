@@ -133,7 +133,7 @@ export const mapCopyTemplateToForm = (
       prevAppraisalId: template.prevAppraisal.appraisalId,
       prevAppraisalReportNo: template.prevAppraisal.appraisalNumber,
       prevAppraisalValue: template.prevAppraisal.appraisalValue ?? null,
-      prevAppraisalDate: template.prevAppraisal.appointmentDate ?? null,
+      prevAppraisalDate: template.prevAppraisal.appraisalDate ?? null,
       inspectionNumber: template.prevAppraisal.nextInspectionNumber ?? null,
       address: {
         houseNumber: template.detail.address?.houseNumber ?? '',

@@ -6,9 +6,12 @@ import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplat
 
 /**
  * Outside an AppraisalCopyProvider — which is how edit mode renders this control — the selector
- * stamps the metadata fields itself instead of delegating to RequestPage. The date it stamps has
- * to come from `appointmentDate`: the snapshot has never carried a `completedDate`, and reading
- * one wrote `undefined` into the form, leaving the date field blank while the other two filled in.
+ * stamps the metadata fields itself instead of delegating to RequestPage.
+ *
+ * The date has to be `appraisalDate`. It was `completedDate`, which the snapshot has never carried,
+ * so `setValue` got `undefined` and the field stayed blank. `appointmentDate` is not the answer
+ * either: the API persists `PrevAppraisalDate` from `appraisalDate`, and the two diverge — the
+ * fixture below is an off-system external engagement, which has no appointment at all.
  */
 
 const template = {
@@ -16,7 +19,8 @@ const template = {
     appraisalId: 'a-1',
     appraisalNumber: 'AP-0001',
     appraisalValue: 5_000_000,
-    appointmentDate: '2026-03-14',
+    appointmentDate: null,
+    appraisalDate: '2026-03-14',
   },
 } as AppraisalCopyTemplate;
 
@@ -61,7 +65,7 @@ function Harness() {
 }
 
 describe('AppraisalSelector outside an AppraisalCopyProvider', () => {
-  it('stamps the previous appraisal date from appointmentDate', async () => {
+  it('stamps the previous appraisal date from appraisalDate, not the appointment', async () => {
     const { user } = render(<Harness />);
 
     await user.click(screen.getByTitle('Search previous appraisal reports'));
