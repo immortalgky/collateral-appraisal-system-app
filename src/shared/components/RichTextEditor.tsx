@@ -144,7 +144,7 @@ const RichTextEditor = ({
       <EditorContent
         editor={editor}
         className={clsx(
-          'max-h-96 overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-gray-900 [&_.ProseMirror]:outline-none',
+          'flex max-h-96 flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-gray-900 [&_.ProseMirror]:flex-1 ProseMirror:focus-visible',
           '[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5',
           '[&_table]:my-2 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse',
           '[&_td]:border [&_td]:border-gray-300 [&_td]:p-1.5 [&_td]:break-words [&_th]:border [&_th]:border-gray-300 [&_th]:bg-gray-100 [&_th]:p-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:break-words',
