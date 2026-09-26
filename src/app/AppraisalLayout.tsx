@@ -80,7 +80,7 @@ function AppraisalLayout() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const location = useLocation();
   const navigate = useNavigate();
-  useSidebarCssVar();
+  useSidebarCssVar('appraisal');
 
   // /appraisals/:appraisalId/* is always read-only — editable work happens under /tasks/:taskId/*.
   // Persist returnPath in sessionStorage so internal sidebar navigation doesn't lose it.

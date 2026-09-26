@@ -110,7 +110,7 @@ function Layout() {
     defaultIsOpen: true,
   });
   const rightMenuPortalRef = useRef<HTMLDivElement>(null);
-  useSidebarCssVar();
+  useSidebarCssVar('main');
 
   // Get role-based navigation
   const navigation = useNavigation();

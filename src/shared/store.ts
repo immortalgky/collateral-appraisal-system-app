@@ -18,6 +18,7 @@ import type {
   LocaleStore,
   ParameterStore,
   StoredParameters,
+  SidebarScope,
   Theme,
   UIStore,
 } from './types';
@@ -57,8 +58,12 @@ export const useUIStore = create<UIStore>()(
     set => ({
       sidebarOpen: false,
       setSidebarOpen: (open: boolean) => set({ sidebarOpen: open }),
-      sidebarCollapsed: false,
-      toggleSidebar: () => set(state => ({ sidebarCollapsed: !state.sidebarCollapsed })),
+      // Unpinned (icon rail, hover to open) until the user pins it — per sidebar.
+      sidebarCollapsed: { main: true, appraisal: true },
+      toggleSidebar: (scope: SidebarScope) =>
+        set(state => ({
+          sidebarCollapsed: { ...state.sidebarCollapsed, [scope]: !state.sidebarCollapsed[scope] },
+        })),
       sidebarWidth: SIDEBAR_DEFAULT_WIDTH,
       setSidebarWidth: (width: number) =>
         set({ sidebarWidth: Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, width)) }),
@@ -89,7 +94,12 @@ export const useUIStore = create<UIStore>()(
     {
       name: 'cas-ui-store',
       partialize: state => ({
-        sidebarCollapsed: state.sidebarCollapsed,
+        // Stored as the user's pin choice under a new key: the old `sidebarCollapsed: false` was the
+        // former default for everyone, not a choice, so it must not keep them pinned.
+        sidebarPinned: {
+          main: !state.sidebarCollapsed.main,
+          appraisal: !state.sidebarCollapsed.appraisal,
+        },
         sidebarWidth: state.sidebarWidth,
         theme: state.theme,
         density: state.density,
@@ -103,7 +113,7 @@ export const useUIStore = create<UIStore>()(
       merge: (persisted, current) => {
         const p = (persisted ?? {}) as Partial<{
           sidebarWidth: unknown;
-          sidebarCollapsed: unknown;
+          sidebarPinned: unknown;
           theme: unknown;
           density: unknown;
           formLayout: unknown;
@@ -118,7 +128,8 @@ export const useUIStore = create<UIStore>()(
           typeof rawW === 'number' && Number.isFinite(rawW)
             ? Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, rawW))
             : SIDEBAR_DEFAULT_WIDTH;
-        const collapsed = typeof p.sidebarCollapsed === 'boolean' ? p.sidebarCollapsed : false;
+        const pinned = (p.sidebarPinned ?? {}) as Partial<Record<SidebarScope, unknown>>;
+        const collapsed = { main: pinned.main !== true, appraisal: pinned.appraisal !== true };
         const theme: Theme = p.theme === 'light' || p.theme === 'dark' ? p.theme : 'light';
         const density: Density = isDensity(p.density) ? p.density : DEFAULT_DENSITY;
         const formLayout: FormLayout = isFormLayout(p.formLayout)
