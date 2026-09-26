@@ -32,7 +32,10 @@ export function CreateSupportingDataPage() {
 
   const hasSupportingId = Boolean(id);
 
-  const { data: supportingData, isLoading } = useGetSupportingDataDetailById(supportingId, id);
+  const { data: supportingData, isLoading } = useGetSupportingDataDetailById(
+    supportingId ?? '',
+    id ?? '',
+  );
 
   const formDefaults = useMemo(() => {
     if (hasSupportingId && supportingData) {

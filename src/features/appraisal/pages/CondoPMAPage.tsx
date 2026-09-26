@@ -66,7 +66,10 @@ const CondoPMAPage = () => {
   const { mutate: createCondoPMAProperties, isPending: isUpdating } = useCreateCondoPMAProperty();
   const isPending = isCreating || isUpdating || isSavingDraft;
 
-  const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetCondoPMAPropertyById(
+    appraisalId ?? '',
+    propertyId,
+  );
 
   const onSubmit: SubmitHandler<createCondoPMAFormType> = data => {
     setSaveAction('submit');

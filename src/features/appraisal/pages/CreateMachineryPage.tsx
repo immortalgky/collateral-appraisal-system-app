@@ -45,7 +45,10 @@ const CreateMachineryPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
-  const { data: propertyData, isLoading } = useGetMachineryPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetMachineryPropertyById(
+    appraisalId ?? '',
+    propertyId,
+  );
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {

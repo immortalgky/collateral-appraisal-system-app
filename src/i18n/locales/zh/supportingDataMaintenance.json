@@ -69,7 +69,8 @@
       "Pending": "Pending",
       "Approved": "Approved",
       "Cancelled": "Cancelled",
-      "Reject": "Reject"
+      "Rejected": "Rejected",
+      "RoutedBack": "Routed Back"
     },
     "website": "Website",
     "websitePlaceholder": "Enter website",

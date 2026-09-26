@@ -3,6 +3,7 @@
  * Provides render function with all necessary providers
  */
 import type { ReactElement, ReactNode } from 'react';
+import { expect } from 'vitest';
 import {
   render,
   type RenderOptions,

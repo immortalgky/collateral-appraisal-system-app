@@ -113,7 +113,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   // ─── Building detail form ─────────────────────────────────────
   const { data: propertyData, isLoading } = useGetLeaseAgreementBuildingPropertyById(
-    appraisalId,
+    appraisalId ?? '',
     propertyId,
   );
 

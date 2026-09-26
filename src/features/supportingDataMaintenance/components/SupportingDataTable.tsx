@@ -1,7 +1,7 @@
 import { Icon } from '@/shared/components';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useGetSupportingDataDetailList } from '../api';
 import type { SupportingDataDetailItem } from '../api/types';
