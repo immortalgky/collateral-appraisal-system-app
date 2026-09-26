@@ -226,7 +226,7 @@ export function WQSPanel({
       reset,
     });
 
-    setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
+    setValue('generateAt', new Date().toISOString(), { shouldDirty: true });
     setIsGenerated(true);
   };
 

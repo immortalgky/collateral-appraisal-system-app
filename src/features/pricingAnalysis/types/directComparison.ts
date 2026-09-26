@@ -5,7 +5,7 @@ export interface ComparativeFactors {
 }
 
 export interface ComparativeSurveys {
-  linkId?: string;
+  linkId?: string | null;
   marketId: string;
   displaySeq: number;
 }
@@ -30,7 +30,7 @@ export interface DirectComparisonCalculation {
   sellingPriceMeasurementUnit?: string;
   // sellingDate: z.date(), TODO
   sellingPriceAdjustmentYear?: number;
-  numberOfYears?: number;
+  numberOfYears?: number | null;
   adjustedValue: number;
 
   // 2nd revision
@@ -67,7 +67,7 @@ export interface DirectComparisonAdjustmentFactor {
   factorId: string;
   factorCode: string;
   surveys: DirectComparisonAdjustmentPct[];
-  remark?: string;
+  remark?: string | null;
 }
 
 export interface DirectComparisonAppraisalPrice {
@@ -76,12 +76,20 @@ export interface DirectComparisonAppraisalPrice {
   usableArea?: number;
   appraisalPrice: number;
   appraisalPriceRounded: number;
+  priceDifferentiate?: number;
+  landValue?: number;
+  hasBuildingValue?: boolean;
+  totalBuildingCost?: number;
+  appraisalPriceIncludeBuildingCost?: number;
+  appraisalPriceIncludeBuildingCostRounded?: number;
+  priceIncludeBuildingCostDifferentiate?: number;
 }
 
 export interface DirectComparison {
   methodId: string;
   collateralType: string;
-  pricingTemplateCode: string;
+  // null after the collateral type changes, until a template is picked again.
+  pricingTemplateCode: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactors[];
   /** Qualitative section */
@@ -94,4 +102,6 @@ export interface DirectComparison {
   directComparisonFinalValue: DirectComparisonFinalValue;
   /** Apprisal price section */
   directComparisonAppraisalPrice: DirectComparisonAppraisalPrice;
+  /** Set when the analysis is generated, which marks the form as having unsaved changes. */
+  generateAt?: string;
 }

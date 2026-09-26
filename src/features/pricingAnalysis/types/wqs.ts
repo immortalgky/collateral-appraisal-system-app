@@ -1,5 +1,5 @@
 export interface WQSCalculation {
-  marketId?: string;
+  marketId: string;
   offeringPrice?: number;
   offeringPriceMeasurementUnit?: string;
   offeringPriceAdjustmentPct?: number;
@@ -9,7 +9,7 @@ export interface WQSCalculation {
   // sellingDate: Date;
   sellingPriceAdjustmentYear?: number;
   totalAdjustedSellingPrice?: number;
-  numberOfYears?: number;
+  numberOfYears?: number | null;
   adjustedValue?: number;
 }
 
@@ -21,7 +21,7 @@ export interface ComparativeFactor {
 }
 
 export interface ComparativeSurveys {
-  linkId?: string;
+  linkId?: string | null;
   marketId: string;
   displaySeq: number;
 }
@@ -29,7 +29,7 @@ export interface ComparativeSurveys {
 /** WQS scoring section */
 export interface WQSSurveyScore {
   id?: string;
-  marketId?: string;
+  marketId: string;
   surveyScore: number;
   weightedSurveyScore: number;
 }
@@ -43,7 +43,7 @@ export interface WQSScore {
   surveys: WQSSurveyScore[];
   collateral: number;
   collateralWeightedScore: number;
-  collateralScoreId?: string;
+  collateralScoreId?: string | null;
 }
 
 export interface TotalSurveyScore {
@@ -85,7 +85,8 @@ export interface WQSFinalValue {
 export interface WQS {
   methodId: string; // remove if select template is mandatory
   collateralType: string; // remove if select template is mandatory
-  pricingTemplateCode: string;
+  // null after the collateral type changes, until a template is picked again.
+  pricingTemplateCode: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactor[];
   WQSScores: WQSScore[];

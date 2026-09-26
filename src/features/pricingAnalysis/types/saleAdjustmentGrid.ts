@@ -5,7 +5,7 @@ export interface ComparativeFactors {
 }
 
 export interface ComparativeSurveys {
-  linkId?: string;
+  linkId?: string | null;
   marketId: string;
   displaySeq: number;
 }
@@ -30,7 +30,7 @@ export interface SaleAdjustmentGridCalculation {
   sellingPriceMeasurementUnit?: string;
   // sellingDate: z.date(), TODO
   sellingPriceAdjustmentYear?: number;
-  numberOfYears?: number;
+  numberOfYears?: number | null;
   adjustedValue: number;
 
   // 2nd revision
@@ -71,7 +71,7 @@ export interface SaleAdjustmentGridAdjustmentFactor {
   factorId: string;
   factorCode: string;
   surveys: SaleAdjustmentGridAdjustmentPct[];
-  remark?: string;
+  remark?: string | null;
 }
 
 export interface SaleAdjustmentGridAppraisalPrice {
@@ -80,12 +80,20 @@ export interface SaleAdjustmentGridAppraisalPrice {
   usableArea?: number;
   appraisalPrice: number;
   appraisalPriceRounded: number;
+  priceDifferentiate?: number;
+  landValue?: number;
+  hasBuildingValue?: boolean;
+  totalBuildingCost?: number;
+  appraisalPriceIncludeBuildingCost?: number;
+  appraisalPriceIncludeBuildingCostRounded?: number;
+  priceIncludeBuildingCostDifferentiate?: number;
 }
 
 export interface SaleAdjustmentGrid {
   methodId: string;
   collateralType: string;
-  pricingTemplateCode: string;
+  // null after the collateral type changes, until a template is picked again.
+  pricingTemplateCode: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactors[];
   /** Qualitative section */
@@ -98,4 +106,6 @@ export interface SaleAdjustmentGrid {
   saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue;
   /** Apprisal price section */
   saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice;
+  /** Set when the analysis is generated, which marks the form as having unsaved changes. */
+  generateAt?: string;
 }

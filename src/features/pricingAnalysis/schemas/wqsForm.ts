@@ -1,3 +1,5 @@
+import type { WQS } from '../types/wqs';
+import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
 
@@ -104,7 +106,7 @@ export const makeWQSDto = (t: TFunction<'pricingAnalysis'>) =>
 
       generateAt: z.string(),
     })
-    .passthrough();
+    .passthrough() as unknown as FormValidator<WQS>;
 
 // Static schema for type inference only — no runtime messages
 export const WQSDto = makeWQSDto(_t);
@@ -114,4 +116,4 @@ export type WQSScoreFormType = z.infer<ReturnType<typeof WQSScore>>;
 export type WQSFinalValueFormType = z.infer<ReturnType<typeof WQSFinalValue>>;
 
 export type ComparativeFactorFormType = z.infer<ReturnType<typeof ComparativeFactor>>;
-export type WQSFormType = z.infer<typeof WQSDto>;
+export type WQSFormType = WQS;
