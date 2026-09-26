@@ -9,11 +9,13 @@ import LandBuildingPMAPage from './LandBuildingPMAPage';
 /**
  * The PMA pages drive four things from one dirty signal: the leave guard, the "Unsaved changes"
  * badge, Save draft and Save. These render the real pages, so a page that goes back to reading
- * react-hook-form's whole-form isDirty — which a derived write can leave stale, and which the
- * address self-heal on load flips to true — fails here, as does a guard that is fed a constant.
+ * react-hook-form's whole-form isDirty — which a derived write can leave stale — fails here, as does
+ * a guard that is fed a constant.
  *
- * The record has a sub-district that is in the address store, so LocationSelector's on-load
- * self-heal (district, province, postcode and names, written without shouldDirty) actually runs.
+ * The record has a sub-district that is in the address store and no district, so LocationSelector's
+ * on-load self-heal writes the district code (and province, postcode) without shouldDirty. That
+ * leaves district differing from its reset default, which is what makes the put-back test fail for
+ * a page reading isDirty: after an edit is put back, isDirty still sees that difference.
  */
 
 const state = vi.hoisted(() => ({
@@ -137,10 +139,10 @@ beforeEach(() => {
 });
 
 describe.each(pages)('$name PMA page: one dirty signal', ({ Page, record, set }) => {
-  it('opens clean, even after the address self-heal', async () => {
+  it('opens clean', async () => {
     set(record);
     open(Page);
-    // The self-heal has run once the district has been filled in from the sub-district.
+    // Wait for the loaded record to be on screen (the mapper fills the district name at reset()).
     await waitFor(() =>
       expect(screen.getAllByDisplayValue(address.districtName).length).toBeGreaterThan(0),
     );
@@ -184,8 +186,8 @@ describe.each(pages)('$name PMA page: one dirty signal', ({ Page, record, set })
     await userEvent.setup().click(saveDraft());
 
     // The record came with no district; the mapper leaves it '' and only LocationSelector's on-load
-    // self-heal writes the code. So this is what shows the self-heal ran for this fixture — the
-    // write that turns whole-form isDirty true on open, which the "opens clean" test depends on.
+    // self-heal writes the code. So this shows the self-heal ran for this fixture — which the
+    // put-back test relies on to catch a page reading isDirty.
     await waitFor(() => expect(state.saved).toHaveLength(1));
     expect(state.saved[0].data.district).toBe(address.districtCode);
 
