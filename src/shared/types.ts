@@ -95,11 +95,15 @@ export type LoadingStore = {
 
 export type AtLeastOne<T> = { [K in keyof T]: Pick<T, K> }[keyof T] & Partial<T>;
 
+/** T's declared keys, without the `[k: string]` index signature that `.passthrough()` adds. */
+type DeclaredKeys<T> = keyof { [P in keyof T as string extends P ? never : P]: T[P] };
+
 /**
- * Marks fields K as always present. v1.ts generates every DTO field as optional, even the ones the
- * backend never omits; use this at the API hook to state what the endpoint really returns.
+ * Marks fields K as never omitted: removes `undefined`, keeps `null`. v1.ts generates every DTO field
+ * as optional, even the ones the backend always sends; use this at the API hook to state what the
+ * endpoint really returns. K must be a declared field, so a misspelt name fails to compile.
  */
-export type Sent<T, K extends keyof T> = T & { [P in K]-?: Exclude<T[P], undefined> };
+export type Sent<T, K extends DeclaredKeys<T>> = T & { [P in K]-?: Exclude<T[P], undefined> };
 
 export type BreadcrumbItem = {
   label: string;
