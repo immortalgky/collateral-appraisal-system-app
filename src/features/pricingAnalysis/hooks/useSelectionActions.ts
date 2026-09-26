@@ -650,7 +650,7 @@ export function useSelectionActions({
       setPendingDelete(null);
       closeDelete();
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? t('toasts.failedReset'));
+      toast.error(err?.apiError?.detail ?? t('toasts.deleteFailed'));
     }
   };
 
