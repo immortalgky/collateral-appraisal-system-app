@@ -1,7 +1,23 @@
-import type { DCFMethod } from '../../types/dcf';
+import type {
+  DCFMethod,
+  MethodParameterBasedOnTierOfPropertyValueWrapper,
+  MethodProportionOfTheNewReplacementCostWrapper,
+  MethodSpecifiedRentalIncomePerSquareMeterWrapper,
+  MethodSpecifiedValueWithGrowthWrapper,
+} from '../../types/dcf';
 import { getNewId } from '../getNewId';
 
 type MethodType = DCFMethod['methodType'];
+
+/**
+ * A new method holds only what its modal starts from; for some types that is less than the full
+ * detail, which the modal and the derived rules fill in. The detail keys are still checked.
+ */
+function draft<M extends DCFMethod>(
+  method: Omit<M, 'detail'> & { detail: Partial<NonNullable<M['detail']>> },
+): M {
+  return method as unknown as M;
+}
 
 export function createDefaultMethod(methodType: MethodType): DCFMethod {
   const id = getNewId();
@@ -118,7 +134,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         },
       };
     case '06':
-      return {
+      return draft<MethodSpecifiedRentalIncomePerSquareMeterWrapper>({
         id,
         methodType: '06',
         totalMethodValues: [],
@@ -143,7 +159,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           totalMethodValues: [],
           startIn: 1,
         },
-      };
+      });
     case '07':
       return {
         id,
@@ -195,12 +211,12 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         },
       };
     case '10':
-      return {
+      return draft<MethodParameterBasedOnTierOfPropertyValueWrapper>({
         id,
         methodType: '10',
         totalMethodValues: [],
         detail: { startIn: 1 },
-      };
+      });
     case '11':
       return {
         id,
@@ -217,7 +233,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         },
       };
     case '12':
-      return {
+      return draft<MethodProportionOfTheNewReplacementCostWrapper>({
         id,
         methodType: '12',
         totalMethodValues: [],
@@ -228,7 +244,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           totalMethodValues: [],
           startIn: 1,
         },
-      };
+      });
     case '13':
       return {
         id,
@@ -241,7 +257,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
         },
       };
     case '14':
-      return {
+      return draft<MethodSpecifiedValueWithGrowthWrapper>({
         id,
         methodType: '14',
         totalMethodValues: [],
@@ -251,7 +267,7 @@ export function createDefaultMethod(methodType: MethodType): DCFMethod {
           increaseRateYrs: 0,
           startIn: 1,
         },
-      };
+      });
     default: {
       const _exhaustive: never = methodType;
       return _exhaustive;

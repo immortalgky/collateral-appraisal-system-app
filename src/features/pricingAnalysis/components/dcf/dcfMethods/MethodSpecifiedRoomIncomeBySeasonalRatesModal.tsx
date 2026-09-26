@@ -187,7 +187,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
         deps: [`${name}.seasonDetails`],
         compute: ({ getValues }) => {
           const sumAvgTotalRoomIncomePerSeason = (getValues(`${name}.seasonDetails`) ?? []).reduce(
-            (acc, curr) => {
+            (acc: number, curr: { avgTotalRoomIncomePerSeason?: number }) => {
               return acc + toNumber(curr.avgTotalRoomIncomePerSeason ?? 0);
             },
             0,

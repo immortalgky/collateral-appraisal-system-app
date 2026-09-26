@@ -1016,7 +1016,7 @@ export function buildMethodProportionOfTheNewReplacementCostDerivedRules({
         return ctx.newReplacementCost ?? 0;
       },
     },
-    ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx) => {
+    ...Array.from({ length: totalNumberOfYears }).flatMap((_, idx): DerivedFieldRule[] => {
       return [
         {
           targetPath: `${name}.detail.increaseRates.${idx}`,

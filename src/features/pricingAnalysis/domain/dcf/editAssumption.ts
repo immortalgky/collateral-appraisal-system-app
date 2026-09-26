@@ -18,7 +18,8 @@ export function editAssumption(sections: DCFSection[], draft: AssumptionEditDraf
     if (sourceAssumption) break;
   }
 
-  if (!sourceAssumption || !draft.targetCategoryClientId) return sections;
+  // assumptionType is required by the modal's schema, so a submitted draft always has one.
+  if (!sourceAssumption || !draft.targetCategoryClientId || !draft.assumptionType) return sections;
 
   const updatedAssumption: DCFAssumption = {
     ...sourceAssumption,
