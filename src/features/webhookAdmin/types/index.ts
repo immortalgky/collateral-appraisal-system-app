@@ -39,13 +39,27 @@ export interface GetWebhookDeliveriesParams extends WebhookDeliveryFilters {
 
 // ─── Webhook Subscriptions ────────────────────────────────────────────────────
 
+export type WebhookAuthType = 'HMAC' | 'TokenBearer';
+export type WebhookHttpMethod = 'POST' | 'PUT';
+export type WebhookSecretField = 'SecretKey' | 'ClientSecret';
+
 export interface WebhookSubscription {
   id: string;
   systemCode: string;
+  /** Null = catch-all (every event for the system code). */
+  eventType: string | null;
   callbackUrl: string;
+  httpMethod: WebhookHttpMethod;
+  authType: WebhookAuthType;
+  tokenEndpoint: string | null;
+  clientId: string | null;
+  /** Secrets are stored encrypted and never returned — only whether one is set. */
+  hasSecretKey: boolean;
+  hasClientSecret: boolean;
+  /** False for a secret saved before encryption — re-enter it to encrypt. */
+  secretKeyEncrypted: boolean;
+  clientSecretEncrypted: boolean;
   isActive: boolean;
-  /** Last 4 chars of the shared HMAC secret — the full secret is never returned. */
-  secretLast4: string | null;
   lastDeliveryAt: string | null;
   createdAt: string | null;
 }
@@ -64,14 +78,23 @@ export interface GetWebhookSubscriptionsParams {
   isActive?: boolean;
 }
 
-export interface CreateWebhookSubscriptionRequest {
-  systemCode: string;
+interface WebhookConnectionFields {
   callbackUrl: string;
-  secretKey: string;
+  httpMethod: WebhookHttpMethod;
+  authType: WebhookAuthType;
+  tokenEndpoint?: string;
+  clientId?: string;
 }
 
-export interface UpdateWebhookSubscriptionRequest {
-  callbackUrl: string;
-  /** Only sent when replacing the shared secret; omitted leaves it unchanged. */
+export interface CreateWebhookSubscriptionRequest extends WebhookConnectionFields {
+  systemCode: string;
+  eventType?: string;
   secretKey?: string;
+  clientSecret?: string;
+}
+
+export interface UpdateWebhookSubscriptionRequest extends WebhookConnectionFields {
+  /** Only sent when setting/replacing a secret; omitted leaves the stored one unchanged. */
+  secretKey?: string;
+  clientSecret?: string;
 }

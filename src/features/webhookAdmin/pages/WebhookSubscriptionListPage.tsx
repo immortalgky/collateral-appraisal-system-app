@@ -19,7 +19,9 @@ const PAGE_SIZE = 20;
 
 const TABLE_SKELETON_COLUMNS = [
   { width: 'w-24' },
+  { width: 'w-32' },
   { width: 'w-64' },
+  { width: 'w-20' },
   { width: 'w-16' },
   { width: 'w-20' },
   { width: 'w-32' },
@@ -27,6 +29,19 @@ const TABLE_SKELETON_COLUMNS = [
 ];
 
 type ActiveFilter = '' | 'true' | 'false';
+
+/** Set + encrypted / set but still plaintext (saved before encryption) / not set. */
+const SecretStatus = ({ subscription: sub }: { subscription: WebhookSubscription }) => {
+  const { t } = useTranslation('webhookAdmin');
+  const bearer = sub.authType === 'TokenBearer';
+  if (!(bearer ? sub.hasClientSecret : sub.hasSecretKey))
+    return <span className="text-danger">{t('subscriptions.form.secretNotSet')}</span>;
+  return (bearer ? sub.clientSecretEncrypted : sub.secretKeyEncrypted) ? (
+    <span className="text-emerald-700">{t('subscriptions.form.secretSet')}</span>
+  ) : (
+    <span className="text-amber-700">{t('subscriptions.form.secretPlaintext')}</span>
+  );
+};
 
 const WebhookSubscriptionListPage = () => {
   const { t } = useTranslation('webhookAdmin');
@@ -149,7 +164,13 @@ const WebhookSubscriptionListPage = () => {
                   {t('subscriptions.columns.systemCode')}
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {t('subscriptions.columns.eventType')}
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   {t('subscriptions.columns.callbackUrl')}
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {t('subscriptions.columns.authType')}
                 </th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                   {t('subscriptions.columns.active')}
@@ -170,7 +191,7 @@ const WebhookSubscriptionListPage = () => {
                 <TableRowSkeleton columns={TABLE_SKELETON_COLUMNS} rows={5} />
               ) : isError ? (
                 <tr>
-                  <td colSpan={6} className="py-4">
+                  <td colSpan={8} className="py-4">
                     <DataErrorState
                       variant="inline"
                       title={t('subscriptions.loadFailed')}
@@ -180,7 +201,7 @@ const WebhookSubscriptionListPage = () => {
                 </tr>
               ) : subscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-400 text-sm">
+                  <td colSpan={8} className="text-center py-12 text-gray-400 text-sm">
                     <Icon name="plug" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
                     <p>{t('subscriptions.emptyState')}</p>
                   </td>
@@ -192,10 +213,23 @@ const WebhookSubscriptionListPage = () => {
                     className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
                   >
                     <td className="px-4 py-3 font-medium text-gray-900">{sub.systemCode}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                      {sub.eventType ?? (
+                        <span className="font-sans text-gray-400">
+                          {t('subscriptions.catchAll')}
+                        </span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-gray-600 max-w-xs">
                       <span className="block truncate" title={sub.callbackUrl}>
+                        <span className="font-mono text-xs text-gray-400 mr-1.5">
+                          {sub.httpMethod}
+                        </span>
                         {sub.callbackUrl}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                      {t(`subscriptions.authTypeShort.${sub.authType}`)}
                     </td>
                     <td className="px-4 py-3">
                       <span
@@ -208,8 +242,8 @@ const WebhookSubscriptionListPage = () => {
                         {sub.isActive ? t('subscriptions.active.yes') : t('subscriptions.active.no')}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 font-mono text-xs">
-                      ••••{sub.secretLast4 ?? '____'}
+                    <td className="px-4 py-3 text-xs whitespace-nowrap">
+                      <SecretStatus subscription={sub} />
                     </td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
                       {sub.lastDeliveryAt ? (

@@ -61,7 +61,7 @@
     "viewPermission": "สิทธิ์ดู",
     "viewPermissionPrefix": "คำนำหน้าสิทธิ์ดู",
     "viewPermissionPrefixPlaceholder": "เช่น MONITORING:",
-    "viewPermissionPrefixHint": "ให้สิทธิ์ดูแก่สิทธิ์ทั้งหมดที่ขึ้นต้นด้วยคำนำหน้านี้ จำเป็นหากไม่ได้ระบุสิทธิ์ดู",
+    "viewPermissionPrefixHint": "ให้สิทธิ์ดูแก่สิทธิ์ทั้งหมดที่ขึ้นต้นด้วยคำนำหน้านี้ เว้นว่างทั้งช่องนี้และสิทธิ์ดูได้เฉพาะเมนูกลุ่ม (ไม่มี path) แล้วเมนูจะแสดงเมื่อมีเมนูลูกที่มองเห็นได้",
     "editPermission": "สิทธิ์แก้ไข",
     "labels": "ป้ายกำกับ",
     "labelPlaceholderEn": "ป้ายกำกับภาษาอังกฤษ (จำเป็น)",
@@ -69,8 +69,8 @@
     "labelAriaInput": "ป้ายกำกับ {{lang}}",
     "submit": "บันทึก",
     "submitting": "กำลังบันทึก...",
-    "viewPermissionRequired": "โปรดระบุสิทธิ์ดูหรือคำนำหน้าสิทธิ์",
     "labelRequired": "จำเป็นต้องระบุชื่อภาษาอังกฤษ",
+    "viewPermissionRequired": "เมนูที่มี path ต้องระบุสิทธิ์ดูหรือคำนำหน้าสิทธิ์ เว้นว่างได้เฉพาะเมนูกลุ่ม (ไม่มี path)",
     "itemKeyRequired": "จำเป็นต้องระบุคีย์รายการ",
     "iconRequired": "จำเป็นต้องเลือกไอคอน"
   },

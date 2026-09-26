@@ -11,6 +11,7 @@ import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigationTypes';
+import { buildQualifiedHrefs, isDescendantActive, isHrefActive } from './sidebarActive';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
 import { DENSITY_SCALE } from './densityConstants';
 import { SidebarStarButton } from '@features/menuFavorites/components/SidebarStarButton';
@@ -27,71 +28,10 @@ function getTaskActivityId(href: string): string | null {
 }
 
 /**
- * Query strings declared by menu items, grouped by path:
- * `/tasks -> ['activityId=admin-finalize', 'activityId=int-pma-input', ...]`.
- *
- * Only items that declare params are collected — they are the ones that can out-rank a bare item
- * at the same path. Derived from the tree, never hard-coded: menu rows live in auth.MenuItems and
- * are editable in /admin/menus, so this has to hold for whatever an admin adds.
- */
-function buildQualifiedHrefs(
-  items: NavItem[],
-  map: Map<string, string[]> = new Map(),
-): Map<string, string[]> {
-  for (const item of items) {
-    const [path, search] = item.href.split('?');
-    if (search) map.set(path, [...(map.get(path) ?? []), search]);
-    if (item.children?.length) buildQualifiedHrefs(item.children, map);
-  }
-  return map;
-}
-
-/**
  * Shared so the recursive MenuItem can read it without every level passing it down. Defaults to
  * an empty map, which degrades to "compare paths only" rather than throwing.
  */
 const QualifiedHrefsContext = createContext<Map<string, string[]>>(new Map());
-
-/** Does the current URL carry every param of `search`, with the same values? */
-function paramsMatch(search: string, current: URLSearchParams): boolean {
-  for (const [key, value] of new URLSearchParams(search)) {
-    if (current.get(key) !== value) return false;
-  }
-  return true;
-}
-
-/**
- * Is `href` the menu entry for where the user currently is? Most specific wins.
- *
- * Every param the item declares must be present and equal; params it does NOT declare are ignored.
- * This used to compare the whole query string, so an item went dark the moment its own page put
- * anything in the URL — /appraisals/search unhighlighted itself as soon as the user typed a search
- * term or picked a filter, taking the parent group with it.
- *
- * A bare item (no params) then yields to any item at the same path whose params DO match. That is
- * what keeps "All tasks" (/tasks) dark on /tasks?activityId=X while the item owning that URL lights
- * up, without a notion of which keys are "identifying" — which would have been guesswork, since a
- * bare item would go dark for a key some unrelated sibling happened to declare.
- *
- * Falling back to the bare item rather than to nothing also matches the router: TaskPageDispatcher
- * (router.tsx:305) treats an empty activityId as falsy and renders All tasks, so /tasks?activityId=
- * now highlights All tasks instead of leaving the whole sidebar dark.
- *
- * A plain function, not a hook: isChildActive has to evaluate it inside .some().
- */
-function isHrefActive(
-  href: string,
-  pathname: string,
-  search: string,
-  qualified: Map<string, string[]>,
-): boolean {
-  const [path, hrefSearch = ''] = href.split('?');
-  if (pathname !== path) return false;
-
-  const current = new URLSearchParams(search);
-  if (hrefSearch) return paramsMatch(hrefSearch, current);
-  return !(qualified.get(path) ?? []).some(q => paramsMatch(q, current));
-}
 
 type SidebarProps = {
   navigation: NavItem[];
@@ -125,8 +65,11 @@ function MenuItem({
     | 'brands';
 
   if (hasChildren) {
-    const isChildActive = item.children?.some(child =>
-      isHrefActive(child.href, location.pathname, location.search, qualified),
+    const isChildActive = isDescendantActive(
+      item.children,
+      location.pathname,
+      location.search,
+      qualified,
     );
 
     return (
@@ -180,7 +123,7 @@ function MenuItem({
         >
           <ul className="overflow-hidden flex flex-col gap-1">
             {item.children?.map(child => (
-              <MenuItem key={child.href} item={child} isChild railed={railed} />
+              <MenuItem key={child.itemKey} item={child} isChild railed={railed} />
             ))}
           </ul>
         </div>
@@ -273,7 +216,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
               <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
                 <ul className="flex flex-col gap-1">
                   {navigation.map(item => (
-                    <MenuItem key={item.itemKey || item.href} item={item} />
+                    <MenuItem key={item.itemKey} item={item} />
                   ))}
                 </ul>
               </QualifiedHrefsContext.Provider>
@@ -389,7 +332,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
               <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
                 <ul className="flex flex-col gap-1">
                   {navigation.map(item => (
-                    <MenuItem key={item.itemKey || item.href} item={item} railed={!expanded} />
+                    <MenuItem key={item.itemKey} item={item} railed={!expanded} />
                   ))}
                 </ul>
               </QualifiedHrefsContext.Provider>
