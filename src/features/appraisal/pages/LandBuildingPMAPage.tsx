@@ -74,7 +74,7 @@ const LandBuildingPMAPage = () => {
   const isPending = isCreating || isUpdating || isSavingDraft;
 
   const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
-    appraisalId,
+    appraisalId ?? '',
     propertyId,
   );
 
