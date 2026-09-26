@@ -21,6 +21,8 @@ import {
 import { OverrideAccessSelect } from './OverrideAccessSelect';
 import { ActivityPreviewPane, type PreviewItem } from './ActivityPreviewPane';
 import { SortableTh } from './SortableTh';
+import { visibleMenuIds } from '../utils/menuVisibility';
+import type { MenuItemAdminDto } from '../types';
 import { nextSort, type SortDir } from '../tableSort';
 
 const EFFECTIVE_BADGE = {
@@ -73,24 +75,32 @@ export function ActivityOverridesPanel() {
     const map = new Map<
       string,
       {
-        viewCode: string;
         editCode: string | null;
         iconName: string;
         iconStyle: PreviewItem['iconStyle'];
         iconColor: string | null;
       }
     >();
-    menus?.forEach(m =>
-      map.set(m.id, {
-        viewCode: m.viewPermissionCode,
-        editCode: m.editPermissionCode,
-        iconName: m.iconName,
-        iconStyle: m.iconStyle,
-        iconColor: m.iconColor,
-      }),
-    );
+    // Recursive, like visibleMenuIds: a nested item must get its edit code and icon too.
+    const add = (items: MenuItemAdminDto[]) =>
+      items.forEach(m => {
+        map.set(m.id, {
+          editCode: m.editPermissionCode,
+          iconName: m.iconName,
+          iconStyle: m.iconStyle,
+          iconColor: m.iconColor,
+        });
+        add(m.children ?? []);
+      });
+    add(menus ?? []);
     return map;
   }, [menus]);
+
+  // What the previewed role actually sees — the same rule as the backend (utils/menuVisibility).
+  const roleVisibleIds = useMemo(
+    () => (roleCodes && menus ? visibleMenuIds(menus, roleCodes) : null),
+    [menus, roleCodes],
+  );
 
   // Draft holds only changed rows (menuItemId → access).
   const [draft, setDraft] = useState<Record<string, OverrideAccess>>({});
@@ -111,15 +121,15 @@ export function ActivityOverridesPanel() {
       const base = row.hasOverride ? accessFromRow(row) : 'inherit';
       const access = draft[row.menuItemId] ?? base;
       const meta = menuMeta.get(row.menuItemId);
-      const roleCanView = roleCodes && meta ? roleCodes.has(meta.viewCode) : false;
+      const roleCanView = roleVisibleIds ? roleVisibleIds.has(row.menuItemId) : false;
       const roleCanEdit = roleCodes && meta?.editCode ? roleCodes.has(meta.editCode) : false;
       const effective: EffectiveState | null = roleCodes
         ? effectiveWithRole(access, roleCanView, roleCanEdit)
         : null;
       const noEffect = roleCodes ? !roleCanView && access !== 'inherit' : false;
-      return { row, access, base, effective, noEffect, meta };
+      return { row, access, base, effective, noEffect, meta, roleCanView };
     });
-  }, [data, draft, menuMeta, roleCodes]);
+  }, [data, draft, menuMeta, roleCodes, roleVisibleIds]);
 
   const filteredRows = useMemo(() => {
     const q = filterText.trim().toLowerCase();
@@ -205,7 +215,7 @@ export function ActivityOverridesPanel() {
           iconStyle: r.meta!.iconStyle,
           iconColor: r.meta!.iconColor,
           access: r.access,
-          viewCode: r.meta!.viewCode,
+          roleCanView: r.roleCanView,
           editCode: r.meta!.editCode,
         })),
     [rows],

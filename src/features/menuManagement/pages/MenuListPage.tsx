@@ -6,6 +6,7 @@ import { useGetRoles, useGetRoleById } from '@/features/userManagement/api/roles
 import { useGetPermissions } from '@/features/userManagement/api/permissions';
 import { MenuTreeTable } from '../components/MenuTreeTable';
 import { MenuTreePreviewPane } from '../components/MenuTreePreviewPane';
+import { visibleMenuIds } from '../utils/menuVisibility';
 import { ActivityOverridesPanel } from '../components/ActivityOverridesPanel';
 import { useMenuList } from '../hooks/useMenuList';
 import type { MenuItemAdminDto, MenuScope } from '../types';
@@ -52,6 +53,12 @@ export default function MenuListPage() {
   const roleCodes = useMemo(
     () => (role ? new Set(role.permissions.map(p => p.permissionCode)) : null),
     [role],
+  );
+  // Computed once from the saved tree and shared by the table and the preview, so both always show
+  // the same (saved) visibility — the backend rule, see utils/menuVisibility.
+  const visibleIds = useMemo(
+    () => (roleCodes && items ? visibleMenuIds(items, roleCodes) : null),
+    [items, roleCodes],
   );
   const validCodes = useMemo(
     () => new Set((permsResult?.items ?? []).map(p => p.permissionCode)),
@@ -237,6 +244,7 @@ export default function MenuListPage() {
                     onReordered={() => refetch()}
                     validCodes={validCodes}
                     roleCodes={roleCodes}
+                    visibleIds={visibleIds}
                     searchText={searchText}
                     collapsedIds={collapsedIds}
                     onToggleCollapse={toggleCollapse}
@@ -247,6 +255,7 @@ export default function MenuListPage() {
                     <MenuTreePreviewPane
                       items={items}
                       roleCodes={roleCodes}
+                      visibleIds={visibleIds}
                       roleName={role?.name}
                     />
                   </div>

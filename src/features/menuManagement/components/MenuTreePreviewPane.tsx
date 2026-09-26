@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
@@ -7,6 +8,8 @@ interface MenuTreePreviewPaneProps {
   items: MenuItemAdminDto[];
   /** Permission codes held by the previewed role, or null when none is chosen. */
   roleCodes: Set<string> | null;
+  /** Ids the previewed role sees (utils/menuVisibility), computed once by the page. */
+  visibleIds: Set<string> | null;
   roleName?: string;
 }
 
@@ -17,28 +20,24 @@ interface PreviewNode {
 }
 
 /**
- * Flatten the menu tree to the rows a role actually sees: an item is shown only if
- * the role can view it (and its parent is shown); items the role can't edit get a
- * lock badge. With no role chosen, everything is shown (the full menu).
+ * Flatten the menu tree to the rows a role actually sees (see visibleMenuIds for the
+ * rule); items the role can't edit get a lock badge. With no role chosen, everything
+ * is shown (the full menu).
  */
 function buildVisible(
   nodes: MenuItemAdminDto[],
   roleCodes: Set<string> | null,
+  visibleIds: Set<string> | null,
   depth: number,
   out: PreviewNode[],
 ) {
   nodes.forEach(item => {
-    const canView = roleCodes
-      ? roleCodes.has(item.viewPermissionCode) ||
-        (!!item.viewPermissionPrefix &&
-          [...roleCodes].some(code => code.startsWith(item.viewPermissionPrefix!)))
-      : true;
-    if (!canView) return; // parent hidden → whole subtree unreachable
+    if (visibleIds && !visibleIds.has(item.id)) return;
     const canEdit = roleCodes
       ? !item.editPermissionCode || roleCodes.has(item.editPermissionCode)
       : true;
     out.push({ item, locked: !!roleCodes && !canEdit, depth });
-    if (item.children?.length) buildVisible(item.children, roleCodes, depth + 1, out);
+    if (item.children?.length) buildVisible(item.children, roleCodes, visibleIds, depth + 1, out);
   });
 }
 
@@ -47,10 +46,18 @@ function buildVisible(
  * ceiling). Mirrors the appraisal-sidebar lock-badge styling so all three menu
  * tabs share one preview language.
  */
-export function MenuTreePreviewPane({ items, roleCodes, roleName }: MenuTreePreviewPaneProps) {
+export function MenuTreePreviewPane({
+  items,
+  roleCodes,
+  visibleIds,
+  roleName,
+}: MenuTreePreviewPaneProps) {
   const { t } = useTranslation('menuManagement');
-  const visible: PreviewNode[] = [];
-  buildVisible(items, roleCodes, 0, visible);
+  const visible = useMemo(() => {
+    const out: PreviewNode[] = [];
+    buildVisible(items, roleCodes, visibleIds, 0, out);
+    return out;
+  }, [items, roleCodes, visibleIds]);
 
   return (
     <div className="rounded-xl border border-gray-200 bg-gray-50/60 overflow-hidden">

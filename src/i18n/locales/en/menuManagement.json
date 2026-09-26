@@ -61,7 +61,7 @@
     "viewPermission": "View Permission",
     "viewPermissionPrefix": "View Permission Prefix",
     "viewPermissionPrefixPlaceholder": "e.g. MONITORING:",
-    "viewPermissionPrefixHint": "Grants view access to every permission starting with this prefix. Required if View Permission is empty.",
+    "viewPermissionPrefixHint": "Grants view access to every permission starting with this prefix. Leave this and View Permission empty only on a group (no path): it then shows whenever any child is visible.",
     "editPermission": "Edit Permission",
     "labels": "Labels",
     "labelPlaceholderEn": "English label (required)",
@@ -69,8 +69,8 @@
     "labelAriaInput": "{{lang}} label",
     "submit": "Save",
     "submitting": "Saving...",
-    "viewPermissionRequired": "Provide a view permission or a permission prefix.",
     "labelRequired": "English label is required.",
+    "viewPermissionRequired": "A menu item with a path needs a view permission or prefix. Only a group (no path) may leave both empty.",
     "itemKeyRequired": "Item key is required.",
     "iconRequired": "Icon is required."
   },
