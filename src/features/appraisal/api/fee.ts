@@ -22,7 +22,7 @@ export type AppraisalFeePayment = Sent<
 // No Omit: the DTO has a passthrough index signature, which Omit would collapse the whole type into.
 export type AppraisalFee = Sent<
   AppraisalFeeDtoType,
-  'id' | 'customerPayableAmount' | 'totalPaidAmount'
+  'id' | 'customerPayableAmount' | 'totalPaidAmount' | 'items' | 'paymentHistory'
 > & { items: AppraisalFeeItem[]; paymentHistory: AppraisalFeePayment[] };
 
 /**

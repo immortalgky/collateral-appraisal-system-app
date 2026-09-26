@@ -103,8 +103,9 @@ type NonNullDeclaredKeys<T> = keyof {
 /**
  * Marks fields K as always present. v1.ts generates every DTO field as optional, even the ones the
  * backend always sends; use this at the API hook to state what the endpoint really returns.
- * K must be a declared, non-nullable field: a misspelt name fails to compile, and so does a
- * nullable one, because the API omits nulls (WhenWritingNull) instead of sending them.
+ * K must be declared and non-nullable in v1.ts, so a misspelt or nullable name fails to compile.
+ * That is only as good as v1.ts: a C# `string X = default!` generates as non-null yet can still be
+ * null, and the API omits nulls (WhenWritingNull). Check the backend actually fills each field.
  */
 export type Sent<T, K extends NonNullDeclaredKeys<T>> = T & {
   [P in K]-?: Exclude<T[P], undefined>;
