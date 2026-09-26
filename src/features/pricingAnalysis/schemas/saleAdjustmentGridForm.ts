@@ -1,3 +1,5 @@
+import type { SaleAdjustmentGrid } from '../types/saleAdjustmentGrid';
+import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
 
@@ -146,7 +148,7 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
       /** Apprisal price section */
       saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice(t),
     })
-    .passthrough();
+    .passthrough() as unknown as FormValidator<SaleAdjustmentGrid>;
 
 // Static schema for type inference only — no runtime messages
 export const SaleAdjustmentGridDto = makeSaleAdjustmentGridDto(_t);
@@ -161,4 +163,4 @@ export type ComparativeFactorsFormType = z.infer<ReturnType<typeof ComparativeFa
 export type SaleAdjustmentGridQualitativeFormType = z.infer<
   ReturnType<typeof SaleAdjustmentGridQualitative>
 >;
-export type SaleAdjustmentGridType = z.infer<typeof SaleAdjustmentGridDto>;
+export type SaleAdjustmentGridType = SaleAdjustmentGrid;

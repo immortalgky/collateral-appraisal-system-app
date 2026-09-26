@@ -1,5 +1,5 @@
 export interface WQSCalculation {
-  marketId?: string;
+  marketId: string;
   offeringPrice?: number;
   offeringPriceMeasurementUnit?: string;
   offeringPriceAdjustmentPct?: number;
@@ -9,19 +9,21 @@ export interface WQSCalculation {
   // sellingDate: Date;
   sellingPriceAdjustmentYear?: number;
   totalAdjustedSellingPrice?: number;
-  numberOfYears?: number;
+  numberOfYears?: number | null;
   adjustedValue?: number;
 }
 
 /** select surveys section */
 export interface ComparativeFactor {
   id?: string;
-  factorId?: string;
-  factorCode?: string;
+  // ComparativeFactorTable adds a row as { factorId: '', factorCode: null } until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
+  collateralValue?: string | number | null;
 }
 
 export interface ComparativeSurveys {
-  linkId?: string;
+  linkId?: string | null;
   marketId: string;
   displaySeq: number;
 }
@@ -29,21 +31,21 @@ export interface ComparativeSurveys {
 /** WQS scoring section */
 export interface WQSSurveyScore {
   id?: string;
-  marketId?: string;
-  surveyScore: number;
+  marketId: string;
+  surveyScore: number | null; // null when the user clears the cell
   weightedSurveyScore: number;
 }
 
 export interface WQSScore {
   factorId?: string;
-  factorCode?: string;
-  weight: number;
-  intensity: number;
+  factorCode?: string | null; // null on a row just added, until a factor is picked
+  weight?: number;
+  intensity?: number;
   weightedIntensity: number;
   surveys: WQSSurveyScore[];
   collateral: number;
   collateralWeightedScore: number;
-  collateralScoreId?: string;
+  collateralScoreId?: string | null;
 }
 
 export interface TotalSurveyScore {
@@ -72,8 +74,8 @@ export interface WQSFinalValue {
   slope: number;
   lowestEstimate: number;
   highestEstimate: number;
-  hasBuildingValue: boolean;
-  includeLandArea: boolean;
+  hasBuildingValue?: boolean;
+  includeLandArea?: boolean;
   landArea?: number;
   usableArea?: number;
   // stored fields (backend persists these)
@@ -84,8 +86,10 @@ export interface WQSFinalValue {
 
 export interface WQS {
   methodId: string; // remove if select template is mandatory
-  collateralType: string; // remove if select template is mandatory
-  pricingTemplateCode: string;
+  collateralType?: string; // remove if select template is mandatory
+  // undefined until initialize/restore finds the template, '' when generated without one, null after
+  // the collateral type changes.
+  pricingTemplateCode?: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactor[];
   WQSScores: WQSScore[];
@@ -94,4 +98,9 @@ export interface WQS {
   WQSFinalValue: WQSFinalValue;
 
   generateAt: string;
+  /**
+   * Written by the panel on Generate only to mark the form as having unsaved changes. Not generateAt:
+   * the initializer has just put that in the defaults, and the same millisecond would leave it clean.
+   */
+  generatedAt?: string;
 }

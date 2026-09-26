@@ -16,7 +16,10 @@ import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDer
 import { directComparisonPath } from '@features/pricingAnalysis/adapters/directComparisonFieldPath.ts';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue.ts';
 import { qualitativeDefaultPercent } from '@features/pricingAnalysis/domain/qualitativeDefault.ts';
-import type { DirectComparisonQualitative } from '../types/directComparison';
+import type {
+  DirectComparisonAdjustmentFactor,
+  DirectComparisonQualitative,
+} from '../types/directComparison';
 
 export function buildDirectComparisonCalculationDerivedRules(args: {
   surveys: MarketComparableDetailType[];
@@ -187,7 +190,8 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           compute: ({ getValues }) => {
             const saleAdjustmentGridAdjustmentFactors =
               getValues(adjustmentFactorsPath())?.map(
-                factor => factor.surveys?.[columnIndex]?.adjustPercent ?? 0,
+                (factor: DirectComparisonAdjustmentFactor) =>
+                  factor.surveys?.[columnIndex]?.adjustPercent ?? 0,
               ) ?? [];
             const totalDiffPct = calcSum(saleAdjustmentGridAdjustmentFactors);
 
@@ -200,7 +204,8 @@ export function buildDirectComparisonCalculationDerivedRules(args: {
           compute: ({ getValues }) => {
             const saleAdjustmentGridAdjustmentFactors =
               getValues(adjustmentFactorsPath())?.map(
-                factor => factor.surveys?.[columnIndex]?.adjustAmount ?? 0,
+                (factor: DirectComparisonAdjustmentFactor) =>
+                  factor.surveys?.[columnIndex]?.adjustAmount ?? 0,
               ) ?? [];
             const totalDiffAmt = calcSum(saleAdjustmentGridAdjustmentFactors);
             return totalDiffAmt;

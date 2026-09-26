@@ -18,6 +18,7 @@ import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDer
 import { saleGridFieldPath } from '@/features/pricingAnalysis/adapters/saleAdjustmentGridFieldPath';
 import type { FactorDataType, MarketComparableDetailType } from '@features/pricingAnalysis/schemas';
 import { readFactorValue } from '@features/pricingAnalysis/domain/readFactorValue';
+import type { SaleAdjustmentGridAdjustmentFactor } from '../types/saleAdjustmentGrid';
 import type { SaleAdjustmentGridQualitative } from '../types/saleAdjustmentGrid';
 
 export function buildSaleGridCalculationDerivedRules(args: {
@@ -191,7 +192,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
           compute: ({ getValues }) => {
             const saleAdjustmentGridAdjustmentFactors =
               getValues(adjustmentFactorsPath())?.map(
-                factor => factor.surveys?.[columnIndex]?.adjustPercent ?? 0,
+                (factor: SaleAdjustmentGridAdjustmentFactor) =>
+                  factor.surveys?.[columnIndex]?.adjustPercent ?? 0,
               ) ?? [];
             const totalDiffPct = calcSum(saleAdjustmentGridAdjustmentFactors);
 
@@ -204,7 +206,8 @@ export function buildSaleGridCalculationDerivedRules(args: {
           compute: ({ getValues }) => {
             const saleAdjustmentGridAdjustmentFactors =
               getValues(adjustmentFactorsPath())?.map(
-                factor => factor.surveys?.[columnIndex]?.adjustAmount ?? 0,
+                (factor: SaleAdjustmentGridAdjustmentFactor) =>
+                  factor.surveys?.[columnIndex]?.adjustAmount ?? 0,
               ) ?? [];
             const totalDiffAmt = calcSum(saleAdjustmentGridAdjustmentFactors);
             return totalDiffAmt;

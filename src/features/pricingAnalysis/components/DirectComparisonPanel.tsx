@@ -516,7 +516,7 @@ export function DirectComparisonPanel({
               marketSurveys={marketSurveys}
               comparativeMarketSurveys={comparativeSurveys}
               template={pricingTemplate}
-              allFactors={allFactors}
+              allFactors={allFactors ?? []}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
               manualSubject={manualSubject}
             />

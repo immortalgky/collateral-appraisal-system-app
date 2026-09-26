@@ -15,9 +15,10 @@ export type GetPricingAnalysisResponseType = z.infer<typeof schemas.GetPricingAn
 export type PricingAnalysisDocumentDtoType = z.infer<typeof schemas.PricingAnalysisDocumentDto>;
 
 // -- Approaches & Methods --
-export type AddPricingAnalysisApproachRequestType = z.infer<typeof schemas.AddApproachRequest>;
+// Request types use z.input: fields with a .default() may be left out of what we send.
+export type AddPricingAnalysisApproachRequestType = z.input<typeof schemas.AddApproachRequest>;
 export type AddPricingAnalysisApproachResponseType = z.infer<typeof schemas.AddApproachResponse>;
-export type AddPricingAnalysisMethodRequestType = z.infer<typeof schemas.AddMethodRequest>;
+export type AddPricingAnalysisMethodRequestType = z.input<typeof schemas.AddMethodRequest>;
 export type AddPricingAnalysisMethodResponseType = z.infer<typeof schemas.AddMethodResponse>;
 
 // -- Comparative Analysis --
@@ -42,7 +43,8 @@ export type GetComparativeFactorsResponseType = z.infer<
 
 // -- Link/Unlink Comparables --
 export type LinkedComparableType = z.infer<typeof schemas.LinkedComparableDto>;
-export type LinkComparableRequestType = z.infer<typeof schemas.LinkComparableRequest>;
+// z.input: weight has a .default() and may be left out.
+export type LinkComparableRequestType = z.input<typeof schemas.LinkComparableRequest>;
 export type LinkComparableResponseType = z.infer<typeof schemas.LinkComparableResponse>;
 
 // -- Market Comparable --

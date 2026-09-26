@@ -72,5 +72,5 @@ export const wqsFieldPath = {
   finalValueUsableArea: () => `WQSFinalValue.usableArea`,
   finalValueLandValue: () => `WQSFinalValue.landValue`,
   finalValueBuildingCost: () => `WQSFinalValue.buildingValue`,
-  finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice`,
+  finalValueAppraisalPrice: () => `WQSFinalValue.appraisalPrice` as const,
 };

@@ -104,9 +104,9 @@ export function useLinkedComparables({
       const selectedIds = new Set(selectedSurveys.map(s => s.id!));
 
       // Surveys to link (in selection but not currently linked)
-      const toLink = selectedSurveys.filter(s => !currentIds.has(s.id));
+      const toLink = selectedSurveys.filter(s => !currentIds.has(s.id!));
       // Surveys to unlink (currently linked but not in selection)
-      const toUnlink = comparativeSurveys.filter(s => !selectedIds.has(s.id));
+      const toUnlink = comparativeSurveys.filter(s => !selectedIds.has(s.id!));
 
       const newLinkMap = new Map(linkMap);
 

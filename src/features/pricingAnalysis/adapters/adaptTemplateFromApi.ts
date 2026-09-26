@@ -43,6 +43,9 @@ export function adaptTemplateFromApi(
     templateName: apiTemplate.templateName,
     collateralType: (apiTemplate as any).propertyType ?? '',
     comparativeFactors: apiTemplate.comparativeFactors.map(mapToComparative),
-    calculationFactors: apiTemplate.calculationFactors.map(mapToCalculation),
+    // Same TemplateFactorDto list as comparativeFactors on the backend; v1.ts generates it as unknown[].
+    calculationFactors: (apiTemplate.calculationFactors as TemplateFactorDto2Type[]).map(
+      mapToCalculation,
+    ),
   };
 }

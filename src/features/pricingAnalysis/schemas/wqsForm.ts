@@ -1,3 +1,5 @@
+import type { WQS } from '../types/wqs';
+import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
 
@@ -76,8 +78,8 @@ const WQSFinalValue = (t: TFunction<'pricingAnalysis'>) =>
 
 /**
  * Surveys chosen on the selection screen, written into the form by syncXxxFormSurveys. Kept loose
- * on purpose: `marketId` is copied from a `.partial()` API DTO and can arrive undefined, so making
- * it required here would block the save rather than describe the data.
+ * on purpose: `marketId` is copied from a `.partial()` API DTO, so its type allows undefined even
+ * though the backend always sends it; making it required here would only add a failure mode.
  */
 const ComparativeSurveys = z
   .object({
@@ -104,7 +106,7 @@ export const makeWQSDto = (t: TFunction<'pricingAnalysis'>) =>
 
       generateAt: z.string(),
     })
-    .passthrough();
+    .passthrough() as unknown as FormValidator<WQS>;
 
 // Static schema for type inference only — no runtime messages
 export const WQSDto = makeWQSDto(_t);
@@ -114,4 +116,4 @@ export type WQSScoreFormType = z.infer<ReturnType<typeof WQSScore>>;
 export type WQSFinalValueFormType = z.infer<ReturnType<typeof WQSFinalValue>>;
 
 export type ComparativeFactorFormType = z.infer<ReturnType<typeof ComparativeFactor>>;
-export type WQSFormType = z.infer<typeof WQSDto>;
+export type WQSFormType = WQS;

@@ -89,15 +89,15 @@ export const saleGridFieldPath = {
   landArea: () => 'saleAdjustmentGridAppraisalPrice.landArea',
   usableArea: () => 'saleAdjustmentGridAppraisalPrice.usableArea',
   appraisalPrice: () => 'saleAdjustmentGridAppraisalPrice.appraisalPrice',
-  appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded',
+  appraisalPriceRounded: () => 'saleAdjustmentGridAppraisalPrice.appraisalPriceRounded' as const,
   landValue: () => 'saleAdjustmentGridAppraisalPrice.landValue',
   priceDifferentiate: () => 'saleAdjustmentGridAppraisalPrice.priceDifferentiate',
-  finalValueHasBuildingCost: () => `saleAdjustmentGridAppraisalPrice.hasBuildingValue`,
+  finalValueHasBuildingCost: () => `saleAdjustmentGridAppraisalPrice.hasBuildingValue` as const,
   finalValueTotalBuildingCost: () => `saleAdjustmentGridAppraisalPrice.totalBuildingCost`,
   finalValueAppraisalPriceIncludeBuildingCost: () =>
     `saleAdjustmentGridAppraisalPrice.appraisalPriceIncludeBuildingCost`,
   finalValueAppraisalPriceIncludeBuildingCostRounded: () =>
-    `saleAdjustmentGridAppraisalPrice.appraisalPriceIncludeBuildingCostRounded`,
+    `saleAdjustmentGridAppraisalPrice.appraisalPriceIncludeBuildingCostRounded` as const,
   finalValuePriceIncludeBuildingCostDifferentiate: () =>
     `saleAdjustmentGridAppraisalPrice.priceIncludeBuildingCostDifferentiate`,
 };
