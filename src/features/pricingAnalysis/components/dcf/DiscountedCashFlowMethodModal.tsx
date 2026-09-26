@@ -6,7 +6,14 @@ import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '@features/pricingAnalysis/components/table/RHFInputCell.tsx';
 import { methodParams } from '../../data/dcfParameters';
 import { useGetPricingParameters } from '../../api';
-import { FormProvider, useForm, useWatch } from 'react-hook-form';
+import {
+  FormProvider,
+  useForm,
+  useWatch,
+  type FieldValues,
+  type Resolver,
+  type UseFormGetValues,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AssumptionEditDraftSchema } from '../../schemas/dcfMethodModalSchema';
 import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModalRenderer';
@@ -30,7 +37,7 @@ interface DiscountedCashFlowMethodModalProps {
   editing: string | null;
   initialData: AssumptionEditDraft;
   properties: Record<string, unknown>[];
-  getOuterFormValues: (name: string) => object[];
+  getOuterFormValues: UseFormGetValues<FieldValues>;
   onCancelEditMode: () => void;
   onSaveEditMode: (data: AssumptionEditDraft) => void;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
@@ -58,7 +65,8 @@ export function DiscountedCashFlowMethodModal({
   const { t } = useTranslation('pricingAnalysis');
   const methods = useForm<AssumptionEditDraft>({
     defaultValues: initialData,
-    resolver: zodResolver(AssumptionEditDraftSchema),
+    // The schema checks only the fields that carry a message and passes the rest through.
+    resolver: zodResolver(AssumptionEditDraftSchema) as unknown as Resolver<AssumptionEditDraft>,
   });
 
   const { handleSubmit, reset, getValues, control, register, setValue } = methods;
