@@ -47,12 +47,15 @@ const CondoPMAPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: { isDirty },
+    formState: { isDirty, dirtyFields },
   } = methods;
 
-  // isDirty is already the boolean the guard wants. This used to count the keys of that boolean,
-  // which is always zero, so leaving with unsaved edits never warned.
-  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
+  // Per-field, like the other property pages. This used to count the keys of isDirty — a boolean,
+  // so always zero — and the guard never fired. dirtyFields rather than isDirty because isDirty
+  // compares the whole form to its defaults, so a derived value the form writes after load
+  // (totalSquareWa) would mark it dirty with no field actually edited.
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
+  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 

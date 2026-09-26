@@ -3,8 +3,7 @@ import { FormFields } from '@/shared/components/form';
 import Icon from '@/shared/components/Icon';
 import { useRelativeTime } from '@/shared/hooks/useFormatters';
 import { pmaField, condoPmaDetailFields, condoPmaAddressFields } from '../configs/fields';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useForcedSalePriceDefault } from '../hooks/useForcedSalePriceDefault';
 import { FieldLabels } from '../components/FieldLabels';
 
 type CondoPMAFormProps = {
@@ -21,13 +20,7 @@ const CondoPMAForm = ({
   const relTime = useRelativeTime();
   const synced = externalSyncedAt ? relTime(externalSyncedAt) : null;
 
-  const { setValue } = useFormContext();
-  const sellingPrice = useWatch({ name: 'sellingPrice' });
-
-  useEffect(() => {
-    const forceSalePrice = (sellingPrice * 70) / 100;
-    setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
-  }, [sellingPrice, setValue]);
+  useForcedSalePriceDefault();
 
   return (
     <FieldLabels scope="condoPma">
