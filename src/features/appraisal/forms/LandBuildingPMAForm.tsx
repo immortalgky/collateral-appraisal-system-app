@@ -37,10 +37,7 @@ const LandBuildingPMAForm = ({
   });
   useEffect(() => {
     setValue('totalSquareWa', pmaTotalSquareWa(areaRai, areaNgan, areaSquareWa), {
-      // shouldDirty so react-hook-form's whole-form isDirty is recomputed after this write and stays
-      // honest when an area is put back. The page itself reads dirtyFields, which this does not
-      // affect. It marks nothing on load: the mapper seeds the same value, which equals the default.
-      shouldDirty: true,
+      shouldDirty: false,
       shouldValidate: false,
     });
   }, [areaRai, areaNgan, areaSquareWa, setValue]);

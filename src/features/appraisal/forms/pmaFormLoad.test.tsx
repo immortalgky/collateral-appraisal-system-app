@@ -172,6 +172,16 @@ describe('PMA forms', () => {
       await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(1_400_000));
     });
 
+    it('condo: rounds the proposal to 2 decimal places', async () => {
+      // 70% of 1,234,567.89 is 864,197.523; the price is stored to the satang.
+      const form = await openCondo();
+
+      await typeInto(/1,000,000/, '1234567.89');
+
+      await waitFor(() => expect(form.getValues('sellingPrice')).toBe(1_234_567.89));
+      await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(864_197.52));
+    });
+
     it('land+building: a typed edit elsewhere leaves a hand-set price alone; the selling price proposes 70% as an edit', async () => {
       // Only an edit to the selling price may propose 70%, and the proposal is itself a change to
       // save. Every value is unique so each input can be found by what it shows.
