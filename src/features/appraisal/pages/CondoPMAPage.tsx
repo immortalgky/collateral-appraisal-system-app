@@ -47,11 +47,14 @@ const CondoPMAPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: { isDirty, dirtyFields },
+    formState: { dirtyFields },
   } = methods;
 
-  // Per-field, like the other property pages. This used to count the keys of isDirty — a boolean,
-  // so always zero — and the guard never fired.
+  // The one dirty signal for this page — the leave guard, the unsaved badge and both Save buttons.
+  // Per-field, like the other property pages; this used to count the keys of isDirty, a boolean,
+  // so the guard never fired. Not isDirty for the badge either: react-hook-form can re-emit an
+  // isDirty computed before a derived write (the forced-sale proposal, Total Sq.Wa) and leave it
+  // stale, while dirtyFields is updated in place and always current.
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
@@ -198,7 +201,7 @@ const CondoPMAPage = () => {
                 {!isReadOnly && (
                   <>
                     <div className="h-6 w-px bg-gray-200" />
-                    {isDirty && (
+                    {hasDirtyFields && (
                       <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                         Unsaved changes
@@ -214,7 +217,7 @@ const CondoPMAPage = () => {
                     type="button"
                     onClick={handleSaveDraft}
                     isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending || !isDirty}
+                    disabled={isPending || !hasDirtyFields}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
@@ -222,7 +225,10 @@ const CondoPMAPage = () => {
                   <Button
                     type="submit"
                     isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending || (!isDirty && propertyData?.externalSyncStatus !== 'Failed')}
+                    disabled={
+                      isPending ||
+                      (!hasDirtyFields && propertyData?.externalSyncStatus !== 'Failed')
+                    }
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
                     Save

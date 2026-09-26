@@ -17,13 +17,10 @@ export function useForcedSalePriceDefault() {
     const subscription = watch((values, { name, type }) => {
       if (name !== 'sellingPrice' || type !== 'change') return;
       const forceSalePrice = (values.sellingPrice * 70) / 100;
-      // Deferred until the selling price's own change handler has finished. Written synchronously
-      // from inside this callback, the proposal was overtaken by that handler's isDirty, computed
-      // while forced-sale still held the previous proposal: type the selling price back to the
-      // saved value and the form stayed dirty with no field dirty — badge on, leave guard silent.
-      queueMicrotask(() =>
-        setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true }),
-      );
+      // shouldDirty: the proposal is a real change to forced-sale and has to be saved. Written from
+      // inside the selling price's own change handler, so react-hook-form may then re-emit an isDirty
+      // computed before this write; the PMA pages read dirtyFields, which this updates in place.
+      setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
     });
     return () => subscription.unsubscribe();
   }, [watch, setValue]);
