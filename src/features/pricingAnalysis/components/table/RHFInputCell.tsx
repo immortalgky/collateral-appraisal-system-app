@@ -192,7 +192,7 @@ export const RHFInputCell = ({
         }}
         label={dropdown?.label ?? ''}
         options={options}
-        queryParameters={dropdown?.group}
+        queryParameters={dropdown?.group ?? ''}
         showValue={dropdown?.showValue ?? true}
         error={error?.message}
         dense={dense}
