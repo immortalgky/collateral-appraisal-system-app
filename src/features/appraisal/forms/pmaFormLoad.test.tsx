@@ -220,6 +220,59 @@ describe('PMA forms on load', () => {
     await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(1_400_000));
   });
 
+  async function typeInto(displayed: RegExp, text: string) {
+    const { default: userEvent } = await import('@testing-library/user-event');
+    const user = userEvent.setup();
+    const input = screen.getByDisplayValue(displayed);
+    await user.clear(input);
+    await user.type(input, text);
+    await user.tab();
+  }
+
+  it('land+building: a typed edit elsewhere leaves a hand-set forced-sale price alone', async () => {
+    // Only an edit to the selling price may propose 70%. Every value is unique so each input can be
+    // found by what it shows.
+    const form = await openLoaded(
+      LandBuildingPMAForm,
+      createLandAndBuildingPMAFormDefault,
+      mapLandAndBuildingPMAPropertyResponseToForm({
+        ...landBuildingResponse,
+        buildingInsurancePrice: 123_456,
+      } as never) as never,
+      makeLandAndBuildingPMAForm(t) as never,
+    );
+
+    await typeInto(/123,456/, '200000');
+    await waitFor(() => expect(form.getValues('buildingInsurancePrice')).toBe(200_000));
+    expect(form.getValues('forcedSalePrice')).toBe(750_000);
+
+    await typeInto(/1,000,000/, '2000000');
+    await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(1_400_000));
+  });
+
+  it('condo: typing the selling price back leaves nothing to save', async () => {
+    // The proposal is itself an edit to forced-sale, so it must count as one: put the selling
+    // price back and the proposal goes back with it, and the form is clean again. Loaded at
+    // exactly 70% so that "back" is the saved state.
+    const form = await openLoaded(
+      CondoPMAForm,
+      createCondoPMAFormDefault,
+      mapCondoPMAPropertyResponseToForm({
+        ...condoResponse,
+        forcedSalePrice: 700_000,
+      } as never) as never,
+      makeCondoPMAForm(t) as never,
+    );
+
+    await typeInto(/1,000,000/, '2000000');
+    await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(1_400_000));
+    expect((await dirtyState(form)).isDirty).toBe(true);
+
+    await typeInto(/2,000,000/, '1000000');
+    await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(700_000));
+    expect(await dirtyState(form)).toEqual({ dirtyFields: {}, isDirty: false });
+  });
+
   describe('create mode (nothing loaded)', () => {
     async function openFresh(Form: React.ComponentType, defaults: object, schema: never) {
       const capture: Capture = { current: null };

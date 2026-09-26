@@ -17,7 +17,13 @@ export function useForcedSalePriceDefault() {
     const subscription = watch((values, { name, type }) => {
       if (name !== 'sellingPrice' || type !== 'change') return;
       const forceSalePrice = (values.sellingPrice * 70) / 100;
-      setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
+      // Deferred until the selling price's own change handler has finished. Written synchronously
+      // from inside this callback, the proposal was overtaken by that handler's isDirty, computed
+      // while forced-sale still held the previous proposal: type the selling price back to the
+      // saved value and the form stayed dirty with no field dirty — badge on, leave guard silent.
+      queueMicrotask(() =>
+        setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true }),
+      );
     });
     return () => subscription.unsubscribe();
   }, [watch, setValue]);
