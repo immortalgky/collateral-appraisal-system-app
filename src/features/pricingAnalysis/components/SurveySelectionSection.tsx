@@ -48,41 +48,35 @@ export function SurveySelectionSection({
   const closeMarketSelection = onCloseMarketSelection ?? (() => setLocalMarketSelectionOpen(false));
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-1 min-h-0 flex-col">
       {/* No section heading here — the "ข้อมูลเปรียบเทียบ" tab label above already is
           the heading (compact-layout redesign); a second one just wasted a row. */}
-      <div>
-        <div className="flex flex-col gap-2">
-          {/* "Add Comparative Data" used to be a standalone button above the table;
-              it's now the table's own "+" column header (compact-layout redesign) —
-              see ComparativeFactorTable's onAddComparative prop. The toolbar's
-              "+ เพิ่มตลาด" button (in the tab strip, owned by WQSForm) is a second entry
-              point to the same modal, matching the mock. */}
-          <ComparativeFactorTable
-            comparativeMarketSurveys={comparativeMarketSurveys}
-            property={property}
-            allFactors={allFactors}
-            template={template}
-            fieldPath={fieldPath}
-            manualSubject={manualSubject}
-            hideEmptyRows={hideEmptyRows}
-            onAddComparative={openMarketSelection}
-            onRemoveComparative={survey =>
-              onSelectComparativeMarketSurvey(
-                comparativeMarketSurveys.filter(s => s.id !== survey.id),
-              )
-            }
-          />
-        </div>
-        <MarketSurveySelectionModal
-          isOpen={isMarketSelectionOpen}
-          surveys={marketSurveys}
-          comparativeSurveys={comparativeMarketSurveys}
-          onSelect={onSelectComparativeMarketSurvey}
-          onCancel={closeMarketSelection}
-          readOnly={isReadOnly}
-        />
-      </div>
+      {/* "Add Comparative Data" used to be a standalone button above the table;
+          it's now the table's own "+" column header (compact-layout redesign) —
+          see ComparativeFactorTable's onAddComparative prop. The toolbar's
+          "+ เพิ่มตลาด" button (in the tab strip, owned by WQSForm) is a second entry
+          point to the same modal, matching the mock. */}
+      <ComparativeFactorTable
+        comparativeMarketSurveys={comparativeMarketSurveys}
+        property={property}
+        allFactors={allFactors}
+        template={template}
+        fieldPath={fieldPath}
+        manualSubject={manualSubject}
+        hideEmptyRows={hideEmptyRows}
+        onAddComparative={openMarketSelection}
+        onRemoveComparative={survey =>
+          onSelectComparativeMarketSurvey(comparativeMarketSurveys.filter(s => s.id !== survey.id))
+        }
+      />
+      <MarketSurveySelectionModal
+        isOpen={isMarketSelectionOpen}
+        surveys={marketSurveys}
+        comparativeSurveys={comparativeMarketSurveys}
+        onSelect={onSelectComparativeMarketSurvey}
+        onCancel={closeMarketSelection}
+        readOnly={isReadOnly}
+      />
     </div>
   );
 }
