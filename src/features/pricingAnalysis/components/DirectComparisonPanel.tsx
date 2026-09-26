@@ -243,7 +243,7 @@ export function DirectComparisonPanel({
       reset,
     });
 
-    setValue('generateAt', new Date().toISOString(), { shouldDirty: true });
+    setValue('generatedAt', new Date().toISOString(), { shouldDirty: true });
     setIsGenerated(true);
   };
 

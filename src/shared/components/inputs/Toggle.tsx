@@ -6,8 +6,7 @@ interface ToggleProps {
   label?: string;
   /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
   labelAddon?: ReactNode;
-  /** Two labels; empty renders no option buttons (a table cell whose config has none). */
-  options: [string, string] | [];
+  options: [string, string];
   error?: string;
   required?: boolean;
   /** Size variant */

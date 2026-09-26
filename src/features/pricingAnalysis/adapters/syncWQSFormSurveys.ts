@@ -46,7 +46,7 @@ export function syncWQSFormSurveys({
       WQSScores:
         getValues('WQSScores')?.map(score => {
           // Build lookup of existing survey scores by marketId
-          const prevScoreMap = new Map<string, number>();
+          const prevScoreMap = new Map<string, number | null>();
           for (const s of score.surveys ?? []) prevScoreMap.set(s.marketId, s.surveyScore);
           return {
             ...score,
@@ -95,9 +95,7 @@ export function syncWQSFormSurveys({
         }) as WQSCalculation[];
       })(),
     },
-    // Same as the SAG/DC sync. `{ isDirty: true }` is not a reset option, so this used to be a plain
-    // reset that cleared the dirty state: edits made before picking a comparable no longer warned
-    // on leave.
-    { keepDirty: true, keepTouched: true },
+    // A plain reset, as before: this passed { isDirty: true }, which reset() does not read.
+    {},
   );
 }

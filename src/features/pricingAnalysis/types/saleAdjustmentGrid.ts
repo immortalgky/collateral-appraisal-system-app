@@ -34,16 +34,16 @@ export interface SaleAdjustmentGridCalculation {
   adjustedValue: number;
 
   // 2nd revision
-  landAreaOfDeficient?: number;
+  landAreaOfDeficient?: number | null;
   landAreaOfDeficientMeasureUnit?: number;
-  landPrice?: number;
+  landPrice?: number | null;
   landPriceMeasureUnit?: number;
-  landValueIncreaseDecrease?: number;
-  usableAreaOfDeficient?: number;
+  landValueIncreaseDecrease?: number | null;
+  usableAreaOfDeficient?: number | null;
   usableAreaOfDeficientMeasureUnit?: number;
-  usableAreaPrice?: number;
+  usableAreaPrice?: number | null;
   usableAreaPriceMeasureUnit?: number;
-  buildingValueIncreaseDecrease?: number;
+  buildingValueIncreaseDecrease?: number | null;
   totalSecondRevision?: number;
 
   // adjusted value
@@ -91,9 +91,9 @@ export interface SaleAdjustmentGridAppraisalPrice {
 
 export interface SaleAdjustmentGrid {
   methodId: string;
-  collateralType: string;
-  // null after the collateral type changes, until a template is picked again.
-  pricingTemplateCode: string | null;
+  collateralType?: string;
+  // undefined until initialize/restore finds the template; null after the collateral type changes.
+  pricingTemplateCode?: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactors[];
   /** Qualitative section */
@@ -106,6 +106,9 @@ export interface SaleAdjustmentGrid {
   saleAdjustmentGridFinalValue: SaleAdjustmentGridFinalValue;
   /** Apprisal price section */
   saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice;
-  /** Set when the analysis is generated, which marks the form as having unsaved changes. */
-  generateAt?: string;
+  /**
+   * Written by the panel on Generate only to mark the form as having unsaved changes. A key the
+   * defaults never hold, so the write always differs from them.
+   */
+  generatedAt?: string;
 }

@@ -30,15 +30,15 @@ export interface ComparativeSurveys {
 export interface WQSSurveyScore {
   id?: string;
   marketId: string;
-  surveyScore: number;
+  surveyScore: number | null; // null when the user clears the cell
   weightedSurveyScore: number;
 }
 
 export interface WQSScore {
   factorId?: string;
   factorCode?: string;
-  weight: number;
-  intensity: number;
+  weight?: number;
+  intensity?: number;
   weightedIntensity: number;
   surveys: WQSSurveyScore[];
   collateral: number;
@@ -72,8 +72,8 @@ export interface WQSFinalValue {
   slope: number;
   lowestEstimate: number;
   highestEstimate: number;
-  hasBuildingValue: boolean;
-  includeLandArea: boolean;
+  hasBuildingValue?: boolean;
+  includeLandArea?: boolean;
   landArea?: number;
   usableArea?: number;
   // stored fields (backend persists these)
@@ -84,9 +84,9 @@ export interface WQSFinalValue {
 
 export interface WQS {
   methodId: string; // remove if select template is mandatory
-  collateralType: string; // remove if select template is mandatory
-  // null after the collateral type changes, until a template is picked again.
-  pricingTemplateCode: string | null;
+  collateralType?: string; // remove if select template is mandatory
+  // undefined until initialize/restore finds the template; null after the collateral type changes.
+  pricingTemplateCode?: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactor[];
   WQSScores: WQSScore[];
@@ -95,4 +95,9 @@ export interface WQS {
   WQSFinalValue: WQSFinalValue;
 
   generateAt: string;
+  /**
+   * Written by the panel on Generate only to mark the form as having unsaved changes. Not generateAt:
+   * the initializer sets that in the defaults, and the same millisecond would leave the form clean.
+   */
+  generatedAt?: string;
 }
