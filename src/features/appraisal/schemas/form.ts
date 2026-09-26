@@ -1112,7 +1112,8 @@ export const rentalInfoFormSchema = buildFormSchema(
   rentalScheduleField,
   rentalInfoBaseSchema,
 ).superRefine(rentalInfoRefinement);
-export type RentalInfoFormType = z.infer<typeof rentalInfoFormSchema>;
+// From the base schema: buildFormSchema returns ZodObject<any>, which would make this type any.
+export type RentalInfoFormType = z.infer<typeof rentalInfoBaseSchema>;
 
 // =============================================================================
 // Combined Lease Agreement Schemas (one form per page)
