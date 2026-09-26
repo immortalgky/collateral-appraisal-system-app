@@ -50,8 +50,9 @@ const CondoPMAPage = () => {
     formState: { isDirty },
   } = methods;
 
-  const hasDirtyFields = Object.keys(isDirty).length > 0;
-  const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
+  // isDirty is already the boolean the guard wants. This used to count the keys of that boolean,
+  // which is always zero, so leaving with unsaved edits never warned.
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
 

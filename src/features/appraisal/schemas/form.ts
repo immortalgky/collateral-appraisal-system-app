@@ -320,7 +320,10 @@ const makeCondoPMAFormBase = (t: TFunction<'appraisal'>) =>
     titleNumber: z.string().min(1, t('validation.titleNumberRequired')),
     condoRegistrationNumber: z.string().min(1, t('validation.condoRegistrationNumberRequired')),
     roomNumber: z.string().min(1, t('validation.roomNumberRequired')),
-    floorNumber: z.coerce.number(),
+    // A string, as it is everywhere else: the field is a text input and the API binds FloorNumber
+    // as string?. buildFormSchema's field rule wins over this one, so this was never what
+    // validated — but it disagreed with it, and a number here is the wrong shape to copy from.
+    floorNumber: z.string(),
     buildingNumber: z.string().min(1, t('validation.buildingNumberRequired')),
     condoName: z.string().min(1, t('validation.condoNameRequired')),
     subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
