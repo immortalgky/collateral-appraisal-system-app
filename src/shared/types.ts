@@ -95,6 +95,22 @@ export type LoadingStore = {
 
 export type AtLeastOne<T> = { [K in keyof T]: Pick<T, K> }[keyof T] & Partial<T>;
 
+/** T's declared, non-nullable keys (dropping the `[k: string]` index that `.passthrough()` adds). */
+type NonNullDeclaredKeys<T> = keyof {
+  [P in keyof T as string extends P ? never : null extends T[P] ? never : P]: 0;
+};
+
+/**
+ * Marks fields K as always present. v1.ts generates every DTO field as optional, even the ones the
+ * backend always sends; use this at the API hook to state what the endpoint really returns.
+ * K must be declared and non-nullable in v1.ts, so a misspelt or nullable name fails to compile.
+ * That is only as good as v1.ts: a C# `string X = default!` generates as non-null yet can still be
+ * null, and the API omits nulls (WhenWritingNull). Check the backend actually fills each field.
+ */
+export type Sent<T, K extends NonNullDeclaredKeys<T>> = T & {
+  [P in K]-?: Exclude<T[P], undefined>;
+};
+
 export type BreadcrumbItem = {
   label: string;
   href: string;

@@ -101,7 +101,7 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.priceVerification'),
         options: t('decisionSummary.fields.priceVerificationOptions', {
           returnObjects: true,
-        }) as string[],
+        }) as [string, string],
       },
     ],
     conditionFields: [
@@ -546,7 +546,7 @@ const DecisionSummaryPage = () => {
   const { data: assetSummaryData, isLoading: isLoadingAssetSummary } =
     useGetAssetSummary(appraisalId);
   const hasAssetSummary =
-    assetSummaryData?.groups?.length > 0 || assetSummaryData?.items?.length > 0;
+    (assetSummaryData?.groups?.length ?? 0) > 0 || (assetSummaryData?.items?.length ?? 0) > 0;
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
