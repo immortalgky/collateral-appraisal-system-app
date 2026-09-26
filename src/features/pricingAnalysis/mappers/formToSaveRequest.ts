@@ -108,7 +108,7 @@ function mapCategories(categories: RuntimeCategory[]): IncomeCategoryInput[] {
   );
 }
 
-// appraisalId and propertyId are added by useSaveIncomeAnalysis.
+// appraisalId and propertyId are added by the save and preview mutations.
 export function mapDCFFormToSaveRequest(
   form: DCFFormType,
 ): Omit<SaveIncomeAnalysisRequest, 'appraisalId' | 'propertyId'> {

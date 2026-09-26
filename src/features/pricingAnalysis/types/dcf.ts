@@ -391,7 +391,7 @@ export interface MethodSpecifiedValueWithGrowthWrapper {
   detail?: MethodSpecifiedValueWithGrowth;
 }
 
-// Every method also carries the form's client id, and a db id once saved (see Base).
+// Methods built from a template also carry a client id, and saved ones a db id (see Base).
 export type DCFMethod = { clientId?: string; dbId?: string | null } & (
   | MethodSpecifiedRoomIncomePerDayWrapper
   | MethodSpecifiedRoomIncomeBySeasonalRatesWrapper
@@ -417,7 +417,7 @@ interface Base {
 
 export interface DCFAssumption extends Base {
   assumptionType: string; // unique except miscellaneous
-  assumptionName: string | null; // the modal leaves it null unless the user names it
+  assumptionName?: string | null; // unset on a new row; the modal names it except for M99
   identifier: Identifier;
   displaySeq: number;
   totalAssumptionValues: number[];
