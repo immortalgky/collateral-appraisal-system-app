@@ -69,7 +69,8 @@
       "Pending": "รอดำเนินการ",
       "Approved": "อนุมัติแล้ว",
       "Cancelled": "ยกเลิกแล้ว",
-      "Reject": "ปฏิเสธ"
+      "Rejected": "ปฏิเสธแล้ว",
+      "RoutedBack": "ส่งกลับแก้ไข"
     },
     "website": "เว็บไซต์",
     "websitePlaceholder": "ระบุเว็บไซต์",

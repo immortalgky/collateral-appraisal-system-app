@@ -5,14 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import i18n from '@/i18n';
-
-const tp = (key: string, options?: Record<string, unknown>) =>
-  // i18next's overload resolution can't match a dynamic Record<string, unknown> against
-  // its TOptions union when the key is a template-literal string; narrow cast on just the
-  // options argument (not the return value) since no interpolation-safe overload exists.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  i18n.t(`pricingAnalysis:${key}`, options as any);
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
 import type { Approach, Method, MethodRole } from '../types/selection';
@@ -64,10 +56,6 @@ export function useSelectionActions({
   const navigate = useNavigate();
   const basePath = useBasePath();
   const qc = useQueryClient();
-  // Properly-typed alternative to the module-level tp() below, for the one call site (the
-  // role picker's success toast) that can't dodge tp()'s TS2345 the way the catch-block
-  // calls do — see selectMethodRole. Not used to replace tp() itself; every other call in
-  // this file stays as-is (pre-existing, out of scope here).
   const { t } = useTranslation('pricingAnalysis');
 
   // Deselect confirmation dialog
@@ -157,9 +145,9 @@ export function useSelectionActions({
         queryKey: pricingAnalysisKeys.detail(result.pricingAnalysisId ?? pricingAnalysisId),
       });
 
-      toast.success(tp('toasts.selectionSaved'));
+      toast.success(t('toasts.selectionSaved'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
     }
   };
 
@@ -194,11 +182,11 @@ export function useSelectionActions({
         pricingAnalysisId,
         documentEntryId: pendingRemoveDocument.documentEntryId,
       });
-      toast.success(tp('toasts.documentRemoved'));
+      toast.success(t('toasts.documentRemoved'));
       setPendingRemoveDocument(null);
       closeRemoveDocument();
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.documentRemoveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.documentRemoveFailed'));
     }
   };
 
@@ -213,7 +201,7 @@ export function useSelectionActions({
     const appraisalValue = method?.appraisalValue ?? 0;
 
     if (appraisalValue <= 0) {
-      toast.error(tp('toasts.calculateFirst'));
+      toast.error(t('toasts.calculateFirst'));
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_METHOD', payload: arg });
@@ -224,7 +212,7 @@ export function useSelectionActions({
     const method = appr?.methods.some((m: Method) => m.isSelected);
 
     if (!method) {
-      toast.error(tp('toasts.methodNotSelected'));
+      toast.error(t('toasts.methodNotSelected'));
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_APPROACH', payload: { approachType } });
@@ -247,15 +235,9 @@ export function useSelectionActions({
         request: { role: arg.role } as UpdateMethodRequestType,
       });
       await qc.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(pricingAnalysisId) });
-      // t(), not tp() — tp()'s untyped `key: string` param can't narrow to a literal, so
-      // i18next infers its return as the union of every value in the namespace (groups
-      // included), which is why every bare tp() call in this file already fails the same
-      // TS2345 (the catch-block calls dodge it by `??`-combining with `err: any`, which
-      // has no equivalent on this success path). useTranslation's t is generic over the
-      // literal key here, so it comes back typed as plain string — no cast needed.
       toast.success(t('toasts.changed'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
     }
   };
 
@@ -301,13 +283,13 @@ export function useSelectionActions({
     // Final approach must be selected
     const finalApproach = state.summarySelected.find((a: Approach) => a.isSelected);
     if (!finalApproach) {
-      toast.error(tp('toasts.approachNotSelected'));
+      toast.error(t('toasts.approachNotSelected'));
       return { success: false, failedFileNames: getFailedFileNames() };
     }
 
     const finalMethod = finalApproach.methods.find((m: Method) => m.isSelected);
     if (!finalMethod) {
-      toast.error(tp('toasts.methodNotSelected'));
+      toast.error(t('toasts.methodNotSelected'));
       return { success: false, failedFileNames: getFailedFileNames() };
     }
 
@@ -317,7 +299,7 @@ export function useSelectionActions({
     if (isManualMode) {
       const totalDocuments = (state.documents?.length ?? 0) + pdfFiles.length;
       if (totalDocuments === 0) {
-        toast.error(tp('toasts.documentRequired'));
+        toast.error(t('toasts.documentRequired'));
         return { success: false, failedFileNames: getFailedFileNames() };
       }
     }
@@ -362,7 +344,7 @@ export function useSelectionActions({
 
         if (unprocessedIndices.size > 0) {
           const failedFileNames = getFailedFileNames();
-          toast.error(tp('toasts.someFilesFailed', { files: failedFileNames.join(', ') }));
+          toast.error(t('toasts.someFilesFailed', { files: failedFileNames.join(', ') }));
           return { success: false, failedFileNames };
         }
       }
@@ -535,10 +517,10 @@ export function useSelectionActions({
         queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
       });
 
-      toast.success(tp('toasts.selectionSaved'));
+      toast.success(t('toasts.selectionSaved'));
       return { success: true, failedFileNames: [] };
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
       return { success: false, failedFileNames: getFailedFileNames() };
     } finally {
       setIsSaving(false);
@@ -580,9 +562,9 @@ export function useSelectionActions({
         request: { methodType: mapToServerMethodType(arg.methodType), status: null },
       });
 
-      toast.success(tp('toasts.methodAdded'));
+      toast.success(t('toasts.methodAdded'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
     }
   };
 
@@ -664,11 +646,11 @@ export function useSelectionActions({
         methodId: pendingDelete.methodId,
       });
 
-      toast.success(tp('toasts.methodDeleted'));
+      toast.success(t('toasts.methodDeleted'));
       setPendingDelete(null);
       closeDelete();
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.failedReset'));
+      toast.error(err?.apiError?.detail ?? t('toasts.failedReset'));
     }
   };
 
