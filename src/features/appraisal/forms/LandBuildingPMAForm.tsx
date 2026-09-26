@@ -37,7 +37,11 @@ const LandBuildingPMAForm = ({
   });
   useEffect(() => {
     setValue('totalSquareWa', pmaTotalSquareWa(areaRai, areaNgan, areaSquareWa), {
-      shouldDirty: false,
+      // shouldDirty so isDirty is recomputed after this write. Without it, putting an area back
+      // left isDirty true — compared while the total still held the edited value — with no field
+      // dirty, so the badge said unsaved while the leave guard stayed silent. It marks nothing
+      // on load: the mapper seeds the same value, so the write equals the default.
+      shouldDirty: true,
       shouldValidate: false,
     });
   }, [areaRai, areaNgan, areaSquareWa, setValue]);

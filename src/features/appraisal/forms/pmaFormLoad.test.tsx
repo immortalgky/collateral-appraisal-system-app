@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { describe, expect, it } from 'vitest';
 import { useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { render, screen, waitFor } from '@/test/test-utils';
+import { act, render, screen, waitFor } from '@/test/test-utils';
 import { FormProvider } from '@/shared/components/form';
 import CondoPMAForm from './CondoPMAForm';
 import LandBuildingPMAForm from './LandBuildingPMAForm';
@@ -39,7 +39,7 @@ function Harness({
 }: {
   Form: React.ComponentType;
   defaults: object;
-  loaded: Record<string, unknown>;
+  loaded?: Record<string, unknown>;
   schema: never;
   capture: Capture;
 }) {
@@ -55,8 +55,9 @@ function Harness({
   void methods.formState.dirtyFields;
   // Same order as CondoPMAPage / LandBuildingPMAPage: the form is on screen and the page's effect
   // resets it from the mapped response.
+  // Create mode has no record, so nothing resets the form.
   useEffect(() => {
-    methods.reset(loaded);
+    if (loaded) methods.reset(loaded);
   }, [methods, loaded]);
   return (
     <FormProvider methods={methods} schema={schema}>
@@ -79,6 +80,12 @@ async function openLoaded(
   // Let any effect that reacts to the reset settle.
   await new Promise(r => setTimeout(r, 0));
   return capture.current!;
+}
+
+/** Settle effects, then read the dirty state as the last render saw it. */
+async function dirtyState(form: UseFormReturn<Record<string, unknown>>) {
+  await new Promise(r => setTimeout(r, 0));
+  return { dirtyFields: form.formState.dirtyFields, isDirty: form.formState.isDirty };
 }
 
 const condoResponse = {
@@ -137,7 +144,9 @@ describe('PMA forms on load', () => {
       makeCondoPMAForm(t) as never,
     );
 
-    form.setValue('sellingPrice', 2_000_000);
+    await act(async () => {
+      form.setValue('sellingPrice', 2_000_000);
+    });
     await new Promise(r => setTimeout(r, 0));
 
     expect(form.getValues('forcedSalePrice')).toBe(750_000);
@@ -152,13 +161,44 @@ describe('PMA forms on load', () => {
     );
     expect(form.getValues('totalSquareWa')).toBe(603);
 
-    form.setValue('buildingInsurancePrice', 5, { shouldDirty: true });
-    form.setValue('buildingInsurancePrice', 0, { shouldDirty: true });
-    await new Promise(r => setTimeout(r, 0));
+    await act(async () => {
+      form.setValue('buildingInsurancePrice', 5, { shouldDirty: true });
+    });
+    // Proves a render ran in between; otherwise the final read could be the clean state from load.
+    expect(await dirtyState(form)).toEqual({
+      dirtyFields: { buildingInsurancePrice: true },
+      isDirty: true,
+    });
 
+    await act(async () => {
+      form.setValue('buildingInsurancePrice', 0, { shouldDirty: true });
+    });
     // The guard reads dirtyFields; the badge and Save buttons read isDirty. They must agree.
-    expect(form.formState.dirtyFields).toEqual({});
-    expect(form.formState.isDirty).toBe(false);
+    expect(await dirtyState(form)).toEqual({ dirtyFields: {}, isDirty: false });
+  });
+
+  it('land+building: an area edit put back leaves nothing to save either', async () => {
+    // The area drives the derived Total Sq.Wa, which the form writes in an effect after the edit.
+    const form = await openLoaded(
+      LandBuildingPMAForm,
+      createLandAndBuildingPMAFormDefault,
+      mapLandAndBuildingPMAPropertyResponseToForm(landBuildingResponse as never) as never,
+      makeLandAndBuildingPMAForm(t) as never,
+    );
+
+    await act(async () => {
+      form.setValue('areaRai', 2, { shouldDirty: true });
+    });
+    const edited = await dirtyState(form);
+    expect(edited.isDirty).toBe(true);
+    expect(edited.dirtyFields).toMatchObject({ areaRai: true });
+    expect(form.getValues('totalSquareWa')).toBe(1003);
+
+    await act(async () => {
+      form.setValue('areaRai', 1, { shouldDirty: true });
+    });
+    expect(await dirtyState(form)).toEqual({ dirtyFields: {}, isDirty: false });
+    expect(form.getValues('totalSquareWa')).toBe(603);
   });
 
   it('condo: still proposes 70% when the user changes the selling price', async () => {
@@ -178,5 +218,32 @@ describe('PMA forms on load', () => {
     await user.tab();
 
     await waitFor(() => expect(form.getValues('forcedSalePrice')).toBe(1_400_000));
+  });
+
+  describe('create mode (nothing loaded)', () => {
+    async function openFresh(Form: React.ComponentType, defaults: object, schema: never) {
+      const capture: Capture = { current: null };
+      render(<Harness Form={Form} defaults={defaults} schema={schema} capture={capture} />);
+      await waitFor(() => expect(capture.current).not.toBeNull());
+      return capture.current!;
+    }
+
+    it('condo: an untouched new form is clean', async () => {
+      const form = await openFresh(
+        CondoPMAForm,
+        createCondoPMAFormDefault,
+        makeCondoPMAForm(t) as never,
+      );
+      expect(await dirtyState(form)).toEqual({ dirtyFields: {}, isDirty: false });
+    });
+
+    it('land+building: an untouched new form is clean', async () => {
+      const form = await openFresh(
+        LandBuildingPMAForm,
+        createLandAndBuildingPMAFormDefault,
+        makeLandAndBuildingPMAForm(t) as never,
+      );
+      expect(await dirtyState(form)).toEqual({ dirtyFields: {}, isDirty: false });
+    });
   });
 });
