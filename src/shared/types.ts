@@ -106,7 +106,9 @@ type NonNullDeclaredKeys<T> = keyof {
  * K must be a declared, non-nullable field: a misspelt name fails to compile, and so does a
  * nullable one, because the API omits nulls (WhenWritingNull) instead of sending them.
  */
-export type Sent<T, K extends NonNullDeclaredKeys<T>> = T & { [P in K]-?: Exclude<T[P], undefined> };
+export type Sent<T, K extends NonNullDeclaredKeys<T>> = T & {
+  [P in K]-?: Exclude<T[P], undefined>;
+};
 
 export type BreadcrumbItem = {
   label: string;
