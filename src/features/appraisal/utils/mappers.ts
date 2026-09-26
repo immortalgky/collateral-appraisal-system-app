@@ -874,8 +874,9 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
  * Map the appraisal-level machinery summary response into form values.
  * A null response (nothing saved yet) yields empty defaults.
  */
+// Partial: Save draft also passes the form's own values through here to turn undefined into null.
 export const mapMachinerySummaryResponseToForm = (
-  response: MachinerySummaryResponse | null | undefined,
+  response: Partial<MachinerySummaryResponse> | null | undefined,
 ): machinerySummaryFormType => {
   return {
     // Section 3.1 — general

@@ -398,20 +398,24 @@ describe('useParameterStore', () => {
   it('should group parameters by group.country.language', () => {
     const params = [
       {
-        id: 1,
+        parId: 1,
         group: 'collateral',
         country: 'TH',
         language: 'en',
         code: '01',
         description: 'Land',
+        isActive: true,
+        seqNo: 1,
       },
       {
-        id: 2,
+        parId: 2,
         group: 'collateral',
         country: 'TH',
         language: 'en',
         code: '02',
         description: 'Building',
+        isActive: true,
+        seqNo: 2,
       },
     ];
 
@@ -431,28 +435,34 @@ describe('useParameterStore', () => {
   it('should handle multiple parameter groups', () => {
     const params = [
       {
-        id: 1,
+        parId: 1,
         group: 'collateral',
         country: 'TH',
         language: 'en',
         code: '01',
         description: 'Land',
+        isActive: true,
+        seqNo: 1,
       },
       {
-        id: 2,
+        parId: 2,
         group: 'status',
         country: 'TH',
         language: 'en',
         code: 'active',
         description: 'Active',
+        isActive: true,
+        seqNo: 2,
       },
       {
-        id: 3,
+        parId: 3,
         group: 'collateral',
         country: 'TH',
         language: 'th',
         code: '01',
         description: 'ที่ดิน',
+        isActive: true,
+        seqNo: 3,
       },
     ];
 
