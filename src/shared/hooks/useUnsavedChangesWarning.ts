@@ -14,10 +14,11 @@ export function useUnsavedChangesWarning(isDirty: boolean) {
     skipRef.current = true;
   }, []);
 
-  // skipWarning() covers the one navigation that follows it; every caller calls navigate() next.
-  // It has to lift when the form is next edited. After create → navigate(`…/${id}`) React keeps the
-  // same page mounted, so a flag that stayed set left the guard off for the rest of the visit and
-  // any later edit was lost without a prompt.
+  // skipWarning() is for the navigation that follows a save, and has to lift when the form is next
+  // edited. After create → navigate(`…/${id}`) React keeps the same page mounted, so a flag that
+  // stayed set left the guard off for the rest of the visit and any later edit was lost without a
+  // prompt. (A few callers skip after a save that does not navigate; for them this is what turns
+  // the guard back on.)
   useEffect(() => {
     if (isDirty) skipRef.current = false;
   }, [isDirty]);

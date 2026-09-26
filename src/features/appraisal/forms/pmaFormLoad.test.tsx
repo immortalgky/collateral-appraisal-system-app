@@ -48,6 +48,11 @@ function Harness({
     resolver: zodResolver(schema),
   });
   capture.current = methods;
+  // Read in render, as the pages do (badge, Save buttons, guard). react-hook-form only keeps
+  // formState fields a render has subscribed to; unread, isDirty and dirtyFields stay at their
+  // defaults and every assertion on them would pass whatever the form did.
+  void methods.formState.isDirty;
+  void methods.formState.dirtyFields;
   // Same order as CondoPMAPage / LandBuildingPMAPage: the form is on screen and the page's effect
   // resets it from the mapped response.
   useEffect(() => {
@@ -88,14 +93,13 @@ const condoResponse = {
   condoRegistrationNumber: 'R',
 };
 
+// The area sits on the first title, where the mapper reads it — non-zero, so the form's derived
+// Total Sq.Wa (1×400 + 2×100 + 3 = 603) is actually exercised.
 const landBuildingResponse = {
   sellingPrice: 1_000_000,
   forcedSalePrice: 750_000,
   buildingInsurancePrice: 0,
-  titles: [],
-  areaRai: 1,
-  areaNgan: 2,
-  areaSquareWa: 3,
+  titles: [{ titleNumber: 'T1', rai: 1, ngan: 2, squareWa: 3 }],
 };
 
 describe('PMA forms on load', () => {
@@ -109,6 +113,7 @@ describe('PMA forms on load', () => {
 
     expect(form.getValues('forcedSalePrice')).toBe(750_000);
     expect(form.formState.dirtyFields).toEqual({});
+    expect(form.formState.isDirty).toBe(false);
   });
 
   it('land+building: keeps a hand-set forced-sale price and has no dirty field', async () => {
@@ -121,6 +126,7 @@ describe('PMA forms on load', () => {
 
     expect(form.getValues('forcedSalePrice')).toBe(750_000);
     expect(form.formState.dirtyFields).toEqual({});
+    expect(form.formState.isDirty).toBe(false);
   });
 
   it('condo: leaves the forced-sale price alone when code, not the user, sets the selling price', async () => {
@@ -135,6 +141,24 @@ describe('PMA forms on load', () => {
     await new Promise(r => setTimeout(r, 0));
 
     expect(form.getValues('forcedSalePrice')).toBe(750_000);
+  });
+
+  it('land+building: an edit put back leaves nothing to save, for the guard and the badge alike', async () => {
+    const form = await openLoaded(
+      LandBuildingPMAForm,
+      createLandAndBuildingPMAFormDefault,
+      mapLandAndBuildingPMAPropertyResponseToForm(landBuildingResponse as never) as never,
+      makeLandAndBuildingPMAForm(t) as never,
+    );
+    expect(form.getValues('totalSquareWa')).toBe(603);
+
+    form.setValue('buildingInsurancePrice', 5, { shouldDirty: true });
+    form.setValue('buildingInsurancePrice', 0, { shouldDirty: true });
+    await new Promise(r => setTimeout(r, 0));
+
+    // The guard reads dirtyFields; the badge and Save buttons read isDirty. They must agree.
+    expect(form.formState.dirtyFields).toEqual({});
+    expect(form.formState.isDirty).toBe(false);
   });
 
   it('condo: still proposes 70% when the user changes the selling price', async () => {

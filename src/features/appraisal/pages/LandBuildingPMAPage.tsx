@@ -53,9 +53,7 @@ const LandBuildingPMAPage = () => {
   } = methods;
 
   // Per-field, like the other property pages. This used to count the keys of isDirty — a boolean,
-  // so always zero — and the guard never fired. dirtyFields rather than isDirty because isDirty
-  // compares the whole form to its defaults, so a derived value the form writes after load
-  // (totalSquareWa) would mark it dirty with no field actually edited.
+  // so always zero — and the guard never fired.
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
