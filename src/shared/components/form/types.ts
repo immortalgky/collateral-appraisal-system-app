@@ -281,6 +281,8 @@ interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';
   label: string;
   filterOptions?: OptionFilter | OptionFilter[];
+  /** Passed through to Dropdown; false hides the "code - " prefix on each option. */
+  showValuePrefix?: boolean;
 }
 
 // =============================================================================

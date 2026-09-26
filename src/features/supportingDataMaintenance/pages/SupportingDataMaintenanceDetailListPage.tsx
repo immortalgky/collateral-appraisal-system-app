@@ -33,6 +33,7 @@ import {
   useUpdateDraftSupportingData,
   useBulkUploadSupportingDetails,
 } from '../api';
+import type { CreateSupportingDataType } from '../api/types';
 import { BulkUploadDialog, type RowParseError } from '../components/BulkUploadDialog';
 import { mapSupportingDataResponseToForm } from '../utils/mapper';
 import { SUPPORTING_STATUS } from '../constants/parameters';
@@ -297,7 +298,7 @@ export function SupportingDataMaintenanceDetailListPage() {
         toast.success(`${result.insertedCount} row(s) imported successfully`);
         navigate(`/standalone/supporting-data-maintenance/${newSupportingId}`);
       } else {
-        const result = await bulkUpload({ supportingId, file });
+        const result = await bulkUpload({ supportingId: supportingId!, file });
         setParseErrors(null);
 
         toast.success(`${result.insertedCount} row(s) imported successfully`);
@@ -380,7 +381,7 @@ export function SupportingDataMaintenanceDetailListPage() {
     // If supporting data is unsaved when "Add Item" is clicked, create a draft first to get the supportingId, then route to /:supportingId/new
     if (!hasSupportingId) {
       const { supportingId: newSupportingId } = await createDraftSupportingData(
-        { data: values },
+        { data: values as CreateSupportingDataType },
         {
           onSuccess: () => {
             toast.success(t('toasts.propertyCreatedSuccess'));
@@ -625,7 +626,7 @@ export function SupportingDataMaintenanceDetailListPage() {
               )}
 
               <SupportingDataTable
-                supportingId={supportingId}
+                supportingId={supportingId ?? ''}
                 isReadOnly={!hasAuthorityToEdit}
                 hasAuthorityToDecision={hasAuthorityToDecision}
                 onSelectSupportingData={handleSelectSupportingData}
