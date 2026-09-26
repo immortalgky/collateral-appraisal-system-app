@@ -495,8 +495,11 @@ export const DirectComparisonScoringSection = ({
                     )
                     .map(cf => ({
                       label:
-                        getFactorDesciption(cf.factorCode, serverData.allFactors ?? [], language) ??
-                        '',
+                        getFactorDesciption(
+                          cf.factorCode ?? '',
+                          serverData.allFactors ?? [],
+                          language,
+                        ) ?? '',
                       value: cf.factorCode,
                     }));
                   const isTemplateFactor = (template?.calculationFactors ?? []).some(

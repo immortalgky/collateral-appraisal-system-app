@@ -16,8 +16,9 @@ export interface WQSCalculation {
 /** select surveys section */
 export interface ComparativeFactor {
   id?: string;
-  factorId?: string;
-  factorCode?: string;
+  // ComparativeFactorTable adds a row as { factorId: '', factorCode: null } until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   collateralValue?: string | number | null;
 }
 
