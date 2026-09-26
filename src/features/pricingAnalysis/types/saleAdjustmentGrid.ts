@@ -2,6 +2,7 @@ export interface ComparativeFactors {
   id?: string;
   factorId: string;
   factorCode: string;
+  collateralValue?: string | number | null;
 }
 
 export interface ComparativeSurveys {
@@ -15,8 +16,9 @@ export interface SaleAdjustmentGridQualitativeSurvey {
   qualitativeLevel: string;
 }
 export interface SaleAdjustmentGridQualitative {
-  factorId: string;
-  factorCode: string;
+  // Unset or empty on a row just added, until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   qualitatives: SaleAdjustmentGridQualitativeSurvey[];
 }
 
@@ -28,7 +30,7 @@ export interface SaleAdjustmentGridCalculation {
   offeringPriceAdjustmentAmt?: number;
   sellingPrice?: number;
   sellingPriceMeasurementUnit?: string;
-  // sellingDate: z.date(), TODO
+  sellingDate?: string;
   sellingPriceAdjustmentYear?: number;
   numberOfYears?: number | null;
   adjustedValue: number;
@@ -68,8 +70,9 @@ export interface SaleAdjustmentGridAdjustmentPct {
 }
 
 export interface SaleAdjustmentGridAdjustmentFactor {
-  factorId: string;
-  factorCode: string;
+  // Unset or empty on a row just added, until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   surveys: SaleAdjustmentGridAdjustmentPct[];
   remark?: string | null;
 }
@@ -107,8 +110,8 @@ export interface SaleAdjustmentGrid {
   /** Apprisal price section */
   saleAdjustmentGridAppraisalPrice: SaleAdjustmentGridAppraisalPrice;
   /**
-   * Written by the panel on Generate only to mark the form as having unsaved changes. A key the
-   * defaults never hold, so the write always differs from them.
+   * Written by the panel on Generate only to mark the form as having unsaved changes. Generate
+   * resets from the initializer first, which does not set it.
    */
   generatedAt?: string;
 }

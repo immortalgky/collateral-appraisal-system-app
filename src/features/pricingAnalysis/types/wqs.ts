@@ -18,6 +18,7 @@ export interface ComparativeFactor {
   id?: string;
   factorId?: string;
   factorCode?: string;
+  collateralValue?: string | number | null;
 }
 
 export interface ComparativeSurveys {
@@ -36,7 +37,7 @@ export interface WQSSurveyScore {
 
 export interface WQSScore {
   factorId?: string;
-  factorCode?: string;
+  factorCode?: string | null; // null on a row just added, until a factor is picked
   weight?: number;
   intensity?: number;
   weightedIntensity: number;
@@ -85,7 +86,8 @@ export interface WQSFinalValue {
 export interface WQS {
   methodId: string; // remove if select template is mandatory
   collateralType?: string; // remove if select template is mandatory
-  // undefined until initialize/restore finds the template; null after the collateral type changes.
+  // undefined until initialize/restore finds the template, '' when generated without one, null after
+  // the collateral type changes.
   pricingTemplateCode?: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactor[];
@@ -97,7 +99,7 @@ export interface WQS {
   generateAt: string;
   /**
    * Written by the panel on Generate only to mark the form as having unsaved changes. Not generateAt:
-   * the initializer sets that in the defaults, and the same millisecond would leave the form clean.
+   * the initializer has just put that in the defaults, and the same millisecond would leave it clean.
    */
   generatedAt?: string;
 }

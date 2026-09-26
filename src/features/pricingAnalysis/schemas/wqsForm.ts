@@ -78,8 +78,8 @@ const WQSFinalValue = (t: TFunction<'pricingAnalysis'>) =>
 
 /**
  * Surveys chosen on the selection screen, written into the form by syncXxxFormSurveys. Kept loose
- * on purpose: `marketId` is copied from a `.partial()` API DTO and can arrive undefined, so making
- * it required here would block the save rather than describe the data.
+ * on purpose: `marketId` is copied from a `.partial()` API DTO, so its type allows undefined even
+ * though the backend always sends it; making it required here would only add a failure mode.
  */
 const ComparativeSurveys = z
   .object({

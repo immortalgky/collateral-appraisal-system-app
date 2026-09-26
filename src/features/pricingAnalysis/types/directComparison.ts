@@ -2,6 +2,7 @@ export interface ComparativeFactors {
   id?: string;
   factorId: string;
   factorCode: string;
+  collateralValue?: string | number | null;
 }
 
 export interface ComparativeSurveys {
@@ -15,8 +16,9 @@ export interface DirectComparisonQualitativeSurvey {
   qualitativeLevel: string;
 }
 export interface DirectComparisonQualitative {
-  factorId: string;
-  factorCode: string;
+  // Unset or empty on a row just added, until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   qualitatives: DirectComparisonQualitativeSurvey[];
 }
 
@@ -28,7 +30,7 @@ export interface DirectComparisonCalculation {
   offeringPriceAdjustmentAmt?: number;
   sellingPrice?: number;
   sellingPriceMeasurementUnit?: string;
-  // sellingDate: z.date(), TODO
+  sellingDate?: string;
   sellingPriceAdjustmentYear?: number;
   numberOfYears?: number | null;
   adjustedValue: number;
@@ -64,8 +66,9 @@ export interface DirectComparisonAdjustmentPct {
 }
 
 export interface DirectComparisonAdjustmentFactor {
-  factorId: string;
-  factorCode: string;
+  // Unset or empty on a row just added, until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   surveys: DirectComparisonAdjustmentPct[];
   remark?: string | null;
 }
@@ -103,8 +106,8 @@ export interface DirectComparison {
   /** Apprisal price section */
   directComparisonAppraisalPrice: DirectComparisonAppraisalPrice;
   /**
-   * Written by the panel on Generate only to mark the form as having unsaved changes. A key the
-   * defaults never hold, so the write always differs from them.
+   * Written by the panel on Generate only to mark the form as having unsaved changes. Generate
+   * resets from the initializer first, which does not set it.
    */
   generatedAt?: string;
 }
