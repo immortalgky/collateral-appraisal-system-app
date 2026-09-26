@@ -7,7 +7,7 @@ import NumberInput from '@shared/components/inputs/NumberInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { FeeItem } from '../types/appointmentAndFee';
 import { FEE_ITEM_TYPE_OPTIONS, VAT_PERCENTAGE } from '../types/appointmentAndFee';
-import type { AppraisalFeeItemDtoType } from '@shared/schemas/v1';
+import type { AppraisalFeeItem } from '../api/fee';
 import AddFeeModal from './AddFeeModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
@@ -18,7 +18,7 @@ export const FULL_BANK_ABSORB_FEE_TYPES = ['05', '06', '07'];
 const BANK_ABSORB_SHOW_TYPES = ['04', '99'];
 
 interface FeeInformationSectionProps {
-  items: AppraisalFeeItemDtoType[];
+  items: AppraisalFeeItem[];
   vatRate?: number;
   feePaymentType?: string | null;
   onUpdateFeePaymentType?: (value: string) => void;
@@ -132,7 +132,7 @@ export default function FeeInformationSection({
 
   // A fee counts toward the billable total only if it doesn't need approval or has been approved.
   // Pending-approval and Rejected fees are excluded (mirrors the backend RecalculateFromItems).
-  const isBillable = (item: AppraisalFeeItemDtoType) =>
+  const isBillable = (item: AppraisalFeeItem) =>
     !item.requiresApproval || item.approvalStatus === 'Approved';
 
   // Calculate totals from billable API items only
@@ -201,7 +201,7 @@ export default function FeeInformationSection({
   const handleDeleteFee = async () => {
     if (deletingFeeIndex === null || !onRemoveFeeItem) return;
     const item = items[deletingFeeIndex];
-    const totalPaid = totalFeePaid;
+    const totalPaid = totalFeePaid ?? 0;
 
     if (totalPaid > 0) {
       // Billable total after removing this item (pending/rejected fees never count — mirrors the
@@ -257,21 +257,21 @@ export default function FeeInformationSection({
   // Check if an item is editable (only type 01 is locked)
   // Base appraisal fee ('01') is never editable; neither is a fee whose approval is finalised
   // (Approved/Rejected) — its amount is locked once the bank has decided.
-  const isEditable = (item: AppraisalFeeItemDtoType) =>
+  const isEditable = (item: AppraisalFeeItem) =>
     item.feeCode !== '01' &&
     item.approvalStatus !== 'Approved' &&
     item.approvalStatus !== 'Rejected';
 
   // Delete is allowed for any non-base fee — including approved/rejected ones (the amount is
   // locked from editing, but the line can still be removed).
-  const isDeletable = (item: AppraisalFeeItemDtoType) => item.feeCode !== '01';
+  const isDeletable = (item: AppraisalFeeItem) => item.feeCode !== '01';
 
   // Get approval info directly from API item
   // New backend fields (approvalSubmittedAt) arrive via .passthrough()
-  const getApprovalInfo = (item: AppraisalFeeItemDtoType) => {
+  const getApprovalInfo = (item: AppraisalFeeItem) => {
     if (!item.requiresApproval) return null;
     const status = item.approvalStatus?.toLowerCase();
-    const submittedAt = (item as AppraisalFeeItemDtoType & { approvalSubmittedAt?: string | null }).approvalSubmittedAt;
+    const submittedAt = (item as AppraisalFeeItem & { approvalSubmittedAt?: string | null }).approvalSubmittedAt;
 
     if (status === 'approved') {
       return { label: item.approvalStatus!, colorClass: 'bg-success/10 text-success' };

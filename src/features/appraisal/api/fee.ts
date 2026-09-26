@@ -7,6 +7,23 @@ import type {
   UpdateFeeItemRequestType,
   UpdatePaymentRequestType,
 } from '@shared/schemas/v1';
+import type { Sent } from '@/shared/types';
+
+// Fields GetAppraisalFeesResult always sends.
+
+export type AppraisalFeeItem = Sent<
+  NonNullable<AppraisalFeeDtoType['items']>[number],
+  'id' | 'appraisalFeeId' | 'feeCode' | 'feeDescription' | 'feeAmount'
+>;
+export type AppraisalFeePayment = Sent<
+  NonNullable<AppraisalFeeDtoType['paymentHistory']>[number],
+  'id' | 'paymentAmount' | 'paymentDate'
+>;
+// No Omit: the DTO has a passthrough index signature, which Omit would collapse the whole type into.
+export type AppraisalFee = Sent<
+  AppraisalFeeDtoType,
+  'id' | 'customerPayableAmount' | 'totalPaidAmount'
+> & { items: AppraisalFeeItem[]; paymentHistory: AppraisalFeePayment[] };
 
 /**
  * Get fees for an appraisal
@@ -15,7 +32,7 @@ import type {
 export const useGetAppraisalFees = (appraisalId: string) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'fees'],
-    queryFn: async (): Promise<AppraisalFeeDtoType[]> => {
+    queryFn: async (): Promise<AppraisalFee[]> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/fees`);
       return data.fees ?? [];
     },
@@ -180,8 +197,6 @@ export const useRecordPayment = () => {
     }: RecordPaymentRequestType & {
       appraisalId: string;
       feeId: string;
-      feePaymentType: string;
-      bankAbsorbAmount?: number;
     }): Promise<void> => {
       await axios.post(`/appraisals/${appraisalId}/fees/${feeId}/payments`, body);
     },

@@ -10,6 +10,10 @@ import type {
   CancelAppointmentRequestType,
   ApproveAppointmentRequestType,
 } from '@shared/schemas/v1';
+import type { Sent } from '@/shared/types';
+
+// GetAppointmentResult always sends the id.
+export type Appointment = Sent<AppointmentDto2Type, 'id'>;
 
 /**
  * Get the active appointment for an appraisal
@@ -18,7 +22,7 @@ import type {
 export const useGetAppointment = (appraisalId: string) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'appointments'],
-    queryFn: async (): Promise<AppointmentDto2Type | null> => {
+    queryFn: async (): Promise<Appointment | null> => {
       try {
         const { data } = await axios.get(`/appraisals/${appraisalId}/appointments`);
         return data.appointment ?? null;

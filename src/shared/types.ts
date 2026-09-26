@@ -95,6 +95,12 @@ export type LoadingStore = {
 
 export type AtLeastOne<T> = { [K in keyof T]: Pick<T, K> }[keyof T] & Partial<T>;
 
+/**
+ * Marks fields K as always present. v1.ts generates every DTO field as optional, even the ones the
+ * backend never omits; use this at the API hook to state what the endpoint really returns.
+ */
+export type Sent<T, K extends keyof T> = T & { [P in K]-?: Exclude<T[P], undefined> };
+
 export type BreadcrumbItem = {
   label: string;
   href: string;
