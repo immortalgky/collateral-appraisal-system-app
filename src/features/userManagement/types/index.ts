@@ -336,6 +336,8 @@ export interface AdminUpdateUserRequest {
   aoCode?: string | null;
   // Bank staff employee id; only sent for bank users (no companyId).
   employeeId?: string | null;
+  /** Convert the account to or from temporary-access. Omit to leave the flag alone. */
+  isTemporaryAccess?: boolean;
 }
 
 export interface UpdateUserRolesRequest {

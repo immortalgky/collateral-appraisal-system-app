@@ -177,7 +177,10 @@
     "ldapPassword": "Password is managed by Active Directory — the user signs in with their AD credentials.",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
     "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
-    "temporaryAccessCreate": "Starts closed — the account has no password until an admin opens an access window."
+    "temporaryAccessCreate": "Starts closed — the account has no password until an admin opens an access window.",
+    "temporaryAccessLocalOnly": "Only a local account can be temporary-access — opening a window issues a local password.",
+    "temporaryAccessTurningOn": "The account closes immediately and cannot sign in until you open an access window.",
+    "temporaryAccessTurningOff": "The account becomes ordinary with no expiry, and must set a new password at next sign-in."
   },
   "empty": {
     "noUsersFound": "No users found",

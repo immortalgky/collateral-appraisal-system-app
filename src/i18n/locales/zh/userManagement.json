@@ -175,7 +175,10 @@
     "ldapPassword": "密码由 Active Directory 管理 — 用户使用其 AD 凭据登录。",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
     "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
-    "temporaryAccessCreate": "账户创建后默认关闭——在管理员开启访问窗口之前没有密码。"
+    "temporaryAccessCreate": "账户创建后默认关闭——在管理员开启访问窗口之前没有密码。",
+    "temporaryAccessLocalOnly": "仅本地账号可设为临时访问账号，因为开启访问窗口会签发本地密码。",
+    "temporaryAccessTurningOn": "账号将立即关闭，在开启访问窗口前无法登录。",
+    "temporaryAccessTurningOff": "账号将恢复为普通账号且不再过期，下次登录时必须设置新密码。"
   },
   "empty": {
     "noUsersFound": "No users found",

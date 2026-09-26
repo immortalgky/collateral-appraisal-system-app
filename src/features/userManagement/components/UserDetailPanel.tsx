@@ -93,6 +93,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   });
   const [editScope, setEditScope] = useState<'Bank' | 'Company'>('Bank');
   const [editAuthSource, setEditAuthSource] = useState<'Local' | 'LDAP'>('Local');
+  const [editTemporaryAccess, setEditTemporaryAccess] = useState(false);
   const ldapLookup = useLdapLookup();
 
   const localizeCompanyName = useLocalizedCompanyName();
@@ -151,6 +152,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     });
     setEditScope(user.companyId ? 'Company' : 'Bank');
     setEditAuthSource(user.authSource === 'LDAP' ? 'LDAP' : 'Local');
+    setEditTemporaryAccess(user.isTemporaryAccess);
     setShowEditModal(true);
   };
 
@@ -184,6 +186,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         aoCode: isCompany ? null : editForm.aoCode || null,
         employeeId: isCompany ? null : editForm.employeeId || null,
         authSource: editAuthSource,
+        // Only sent when the admin actually moved it; the API leaves the flag alone when omitted.
+        isTemporaryAccess:
+          editTemporaryAccess === user?.isTemporaryAccess ? undefined : editTemporaryAccess,
       },
       {
         onSuccess: () => {
@@ -809,6 +814,31 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 )}
               </p>
             )}
+
+            {/* Converting an existing account in either direction. Lives here rather than in the
+                Temporary access card, which only renders for accounts that already carry the flag —
+                there would be nowhere to switch it on from. */}
+            <label className="mt-3 flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editTemporaryAccess}
+                disabled={editAuthSource === 'LDAP'}
+                onChange={e => setEditTemporaryAccess(e.target.checked)}
+                className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary/30 disabled:opacity-40"
+              />
+              <span>
+                {t('fields.isTemporaryAccess')}
+                <span className="block text-xs text-gray-500">
+                  {editAuthSource === 'LDAP'
+                    ? t('hints.temporaryAccessLocalOnly')
+                    : editTemporaryAccess && !user.isTemporaryAccess
+                      ? t('hints.temporaryAccessTurningOn')
+                      : !editTemporaryAccess && user.isTemporaryAccess
+                        ? t('hints.temporaryAccessTurningOff')
+                        : t('hints.temporaryAccessCreate')}
+                </span>
+              </span>
+            </label>
           </section>
 
           {/* Profile */}
