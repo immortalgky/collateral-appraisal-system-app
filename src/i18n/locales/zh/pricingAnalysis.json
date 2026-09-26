@@ -14,7 +14,11 @@
     }
   },
   "rail": {
-    "title": "Properties in group · {{count}}"
+    "title": "Properties in group · {{count}}",
+    "label": "Properties in group",
+    "pin": "Pin property panel",
+    "expand": "Expand property panel",
+    "openProperty": "Open property (new tab)"
   },
   "confirm": {
     "changeCalculationTitle": "Change Calculation Mode",
@@ -1303,8 +1307,8 @@
     "addMarket": "+ Add Market",
     "marketCountUnit": "Markets",
     "scrollHint": "Scroll wheel on the header = scroll left-right",
-    "infoDateFactor": "Date Obtained",
-    "offerSalePriceFactor": "Sale / Asking Price (THB)",
+    "infoDateFactor": "Information Date",
+    "offerSalePriceFactor": "Selling/Offering Price",
     "remarkFactor": "Remark",
     "mixedUnitWarning": "⚠ {{odd}} market entries use a different unit from the rest — the system used the most common unit ({{label}}). Check the market data before saving.",
     "roundingHint": "Rounded to the nearest thousand from {{value}}",

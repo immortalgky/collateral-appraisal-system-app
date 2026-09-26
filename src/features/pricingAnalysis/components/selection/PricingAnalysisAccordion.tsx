@@ -212,6 +212,8 @@ export const PricingAnalysisAccordion = ({
       >
         <div
           ref={detailInnerRef}
+          // Faded out, not unmounted — `inert` keeps Tab off controls nobody can see.
+          inert={!isPricingAnalysisAccordionOpen}
           className={clsx(
             'flex pb-4 text-gray-700 transition-opacity duration-200',
             // Fill the box rather than growing past it, so each column scrolls its own

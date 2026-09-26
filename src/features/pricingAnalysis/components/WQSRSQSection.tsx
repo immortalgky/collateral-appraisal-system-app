@@ -122,7 +122,7 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
         </button>
       </div>
 
-      <div className="px-3 py-3">
+      <div className="min-h-0 overflow-y-auto [scrollbar-gutter:stable] [scrollbar-width:thin] px-3 py-3">
         <div className="flex flex-col gap-4">
           {/* Stats table */}
           <table className="w-full text-[11.5px] tabular-nums table-fixed">
