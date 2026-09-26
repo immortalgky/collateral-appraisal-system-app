@@ -12,7 +12,6 @@ import {
 } from '../configs/fields';
 import { FieldLabels } from '../components/FieldLabels';
 import { useForcedSalePriceDefault } from '../hooks/useForcedSalePriceDefault';
-import { pmaTotalSquareWa } from '../utils/pmaTotalSquareWa';
 
 type LandBuildingPMAFormProps = {
   externalSyncStatus?: string | null;
@@ -36,7 +35,9 @@ const LandBuildingPMAForm = ({
     name: ['areaRai', 'areaNgan', 'areaSquareWa'],
   });
   useEffect(() => {
-    setValue('totalSquareWa', pmaTotalSquareWa(areaRai, areaNgan, areaSquareWa), {
+    const total =
+      (Number(areaRai) || 0) * 400 + (Number(areaNgan) || 0) * 100 + (Number(areaSquareWa) || 0);
+    setValue('totalSquareWa', Math.round(total * 100) / 100, {
       shouldDirty: false,
       shouldValidate: false,
     });

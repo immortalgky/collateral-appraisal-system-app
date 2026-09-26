@@ -1,5 +1,4 @@
 import { roundBaht } from './constructionMoney';
-import { pmaTotalSquareWa } from './pmaTotalSquareWa';
 import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
 import type {
   createCondoPMAFormType,
@@ -859,8 +858,6 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
     areaRai: title?.rai ?? 0,
     areaNgan: title?.ngan ?? 0,
     areaSquareWa: title?.squareWa ?? 0,
-    // Seeded here, not only by the form's effect, so reset() already holds it (see helper).
-    totalSquareWa: pmaTotalSquareWa(title?.rai, title?.ngan, title?.squareWa),
     subDistrict: response.subDistrict ?? '',
     subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',

@@ -20,6 +20,7 @@ const state = vi.hoisted(() => ({
   condo: null as unknown,
   landBuilding: null as unknown,
   guard: [] as boolean[],
+  saved: [] as { data: Record<string, unknown> }[],
 }));
 
 vi.mock('@/features/appraisal/context/AppraisalContext', () => ({
@@ -39,7 +40,17 @@ vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null
 vi.mock('@/shared/components/RightMenuPortal', () => ({ default: () => null }));
 
 vi.mock('../api', () => {
-  const mutation = () => ({ mutate: () => {}, isPending: false });
+  // Every save succeeds and is recorded, so the pages' onSuccess (which resets the form) runs.
+  const mutation = () => ({
+    mutate: (
+      vars: { data: Record<string, unknown> },
+      options?: { onSuccess?: (r?: unknown) => void },
+    ) => {
+      state.saved.push(vars);
+      options?.onSuccess?.({ propertyId: 'property-1' });
+    },
+    isPending: false,
+  });
   return {
     useGetCondoPMAPropertyById: () => ({ data: state.condo, isLoading: false }),
     useUpdateCondoPMAProperty: mutation,
@@ -67,7 +78,7 @@ const condoRecord = {
   subDistrict: address.subDistrictCode,
   district: null, // the self-heal fills these in on load
   province: null,
-  externalSyncStatus: 'Synced',
+  externalSyncStatus: 'Delivered', // a real value: NotSynced | Pending | Delivered | Failed
 };
 
 const landBuildingRecord = {
@@ -78,7 +89,7 @@ const landBuildingRecord = {
   subDistrict: address.subDistrictCode,
   district: null,
   province: null,
-  externalSyncStatus: 'Synced',
+  externalSyncStatus: 'Delivered', // a real value: NotSynced | Pending | Delivered | Failed
 };
 
 const pages = [
@@ -121,6 +132,7 @@ async function typeInto(displayed: RegExp, text: string) {
 
 beforeEach(() => {
   state.guard = [];
+  state.saved = [];
   useAddressStore.setState({ titleAddresses: [address], dopaAddresses: [address] });
 });
 
@@ -153,6 +165,31 @@ describe.each(pages)('$name PMA page: one dirty signal', ({ Page, record, set })
     expect(guard()).toBe(true);
 
     await typeInto(/200,000/, '123456');
+    await waitFor(() => expect(badge()).toBeNull());
+    expect(saveDraft()).toBeDisabled();
+    expect(save()).toBeDisabled();
+    expect(guard()).toBe(false);
+  });
+
+  it('Save draft sends the self-healed address, and a saved page is clean again', async () => {
+    set(record);
+    open(Page);
+    await waitFor(() =>
+      expect(screen.getAllByDisplayValue(address.districtName).length).toBeGreaterThan(0),
+    );
+
+    await typeInto(/123,456/, '200000');
+    await waitFor(() => expect(saveDraft()).toBeEnabled());
+    const { default: userEvent } = await import('@testing-library/user-event');
+    await userEvent.setup().click(saveDraft());
+
+    // The record came with no district; the mapper leaves it '' and only LocationSelector's on-load
+    // self-heal writes the code. So this is what shows the self-heal ran for this fixture — the
+    // write that turns whole-form isDirty true on open, which the "opens clean" test depends on.
+    await waitFor(() => expect(state.saved).toHaveLength(1));
+    expect(state.saved[0].data.district).toBe(address.districtCode);
+
+    // onSuccess resets the form to what was saved.
     await waitFor(() => expect(badge()).toBeNull());
     expect(saveDraft()).toBeDisabled();
     expect(save()).toBeDisabled();
