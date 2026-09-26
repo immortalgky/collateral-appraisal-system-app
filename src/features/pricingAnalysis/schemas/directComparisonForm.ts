@@ -25,13 +25,19 @@ const DirectComparisonQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
     .passthrough();
 
 const DirectComparisonQualitative = (t: TFunction<'pricingAnalysis'>) =>
-  z.object({
-    factorCode: z.string({
-      required_error: t('validation.factorCodeRequired'),
-      invalid_type_error: t('validation.factorCodeRequired'),
-    }),
-    qualitatives: z.array(DirectComparisonQualitativeSurvey(t)),
-  });
+  z
+    .object({
+      // Declared rather than left to the catchall, which types it `unknown` at every read site:
+      // mapDirectComparisonFormToSubmitSchema keys the save payload off factorId. Optional because
+      // handleAddRow leaves it unset and the restore path can hand one back undefined.
+      factorId: z.string().optional(),
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+      qualitatives: z.array(DirectComparisonQualitativeSurvey(t)),
+    })
+    .passthrough();
 
 const DirectComparisonFinalValue = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -56,6 +62,13 @@ const DirectComparisonAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
 const DirectComparisonAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
+      factorId: z.string().optional(),
+      // Optional, unlike its twin on the qualitative row above. The qualitative row has a rendered
+      // dropdown, so a message there reaches the user; nothing renders an input at
+      // directComparisonAdjustmentFactors.N.factorCode, so a required rule here could only fail
+      // where no one can see it.
+      factorCode: z.string().optional(),
+      remark: z.string().nullable().optional(),
       surveys: z.array(DirectComparisonAdjustmentPct(t)),
     })
     .passthrough();
@@ -70,6 +83,18 @@ const DirectComparisonAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
     })
     .passthrough();
 
+/**
+ * Surveys chosen on the selection screen, written into the form by syncXxxFormSurveys. Kept loose
+ * on purpose: `marketId` is copied from a `.partial()` API DTO and can arrive undefined, so making
+ * it required here would block the save rather than describe the data.
+ */
+const ComparativeSurveys = z
+  .object({
+    marketId: z.string().optional(),
+    displaySeq: z.number().optional(),
+  })
+  .passthrough();
+
 export const makeDirectComparisonDto = (t: TFunction<'pricingAnalysis'>) =>
   z
     .object({
@@ -81,6 +106,7 @@ export const makeDirectComparisonDto = (t: TFunction<'pricingAnalysis'>) =>
         required_error: t('validation.templateRequired'),
         invalid_type_error: t('validation.templateRequired'),
       }),
+      comparativeSurveys: z.array(ComparativeSurveys).optional(),
       comparativeFactors: z.array(ComparativeFactors(t)),
       /** Qualitative section */
       directComparisonQualitatives: z.array(DirectComparisonQualitative(t)),

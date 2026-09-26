@@ -25,13 +25,19 @@ const SaleAdjustmentGridQualitativeSurvey = (t: TFunction<'pricingAnalysis'>) =>
     .passthrough();
 
 const SaleAdjustmentGridQualitative = (t: TFunction<'pricingAnalysis'>) =>
-  z.object({
-    factorCode: z.string({
-      required_error: t('validation.factorCodeRequired'),
-      invalid_type_error: t('validation.factorCodeRequired'),
-    }),
-    qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey(t)),
-  });
+  z
+    .object({
+      // Declared rather than left to the catchall: mapSaleAdjustmentGridFormToSubmitSchema keys the
+      // save payload off factorId, and a catchall types it `unknown` at every read site. Optional
+      // because the restore path can hand one back undefined — requiring it would block the save.
+      factorId: z.string().optional(),
+      factorCode: z.string({
+        required_error: t('validation.factorCodeRequired'),
+        invalid_type_error: t('validation.factorCodeRequired'),
+      }),
+      qualitatives: z.array(SaleAdjustmentGridQualitativeSurvey(t)),
+    })
+    .passthrough();
 
 const SaleAdjustmentGridCalculation = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -66,9 +72,20 @@ const SaleAdjustmentGridAdjustmentPct = (t: TFunction<'pricingAnalysis'>) =>
     .passthrough();
 
 const SaleAdjustmentGridAdjustmentFactor = (t: TFunction<'pricingAnalysis'>) =>
-  z.object({
-    surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
-  });
+  z
+    .object({
+      factorId: z.string().optional(),
+      // Optional, unlike its twin on the qualitative row above. The qualitative row has a rendered
+      // dropdown, so a message there reaches the user; nothing renders an input at
+      // saleAdjustmentGridAdjustmentFactors.N.factorCode (the field-path helper for it has no
+      // callers), so a required rule here could only fail where no one can see it — handleSubmit
+      // would no-op in silence. It is not in the save payload either: the submit mapper keys the
+      // adjustment factors off factorId.
+      factorCode: z.string().optional(),
+      remark: z.string().nullable().optional(),
+      surveys: z.array(SaleAdjustmentGridAdjustmentPct(t)),
+    })
+    .passthrough();
 
 const SaleAdjustmentGridAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -79,6 +96,18 @@ const SaleAdjustmentGridAppraisalPrice = (t: TFunction<'pricingAnalysis'>) =>
       }),
     })
     .passthrough();
+
+/**
+ * Surveys chosen on the selection screen, written into the form by syncXxxFormSurveys. Kept loose
+ * on purpose: `marketId` is copied from a `.partial()` API DTO and can arrive undefined, so making
+ * it required here would block the save rather than describe the data.
+ */
+const ComparativeSurveys = z
+  .object({
+    marketId: z.string().optional(),
+    displaySeq: z.number().optional(),
+  })
+  .passthrough();
 
 export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -91,6 +120,7 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
         required_error: t('validation.templateRequired'),
         invalid_type_error: t('validation.templateRequired'),
       }),
+      comparativeSurveys: z.array(ComparativeSurveys).optional(),
       comparativeFactors: z.array(ComparativeFactors(t)),
       /** Qualitative section */
       saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative(t)),

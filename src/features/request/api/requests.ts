@@ -10,7 +10,8 @@ import type { z } from 'zod';
 
 // Extract schemas for convenience
 const {
-  GetRequestsResponse: GetRequestResult,
+  // The page itself, not the { result } envelope: useGetRequests unwraps before it returns.
+  PaginatedResultOfGetRequestListItem: GetRequestResult,
   GetRequestByIdResponse: GetRequestByIdResult,
   UpdateRequestRequest,
   UpdateRequestResponse,
@@ -40,7 +41,9 @@ export type UpdateDraftRequestResponseType = z.infer<typeof UpdateDraftRequestRe
  * so empty placeholders don't need to be persisted.
  */
 const stripEmptyDocuments = <T extends Record<string, any>>(request: T): T => {
-  const result = { ...request };
+  // Typed as a plain record rather than T: TypeScript rejects dotted access on a naked type
+  // parameter even when its constraint carries an index signature.
+  const result: Record<string, any> = { ...request };
 
   if (Array.isArray(result.documents)) {
     result.documents = result.documents.filter((doc: any) => doc.fileName || doc.documentId);
@@ -56,7 +59,7 @@ const stripEmptyDocuments = <T extends Record<string, any>>(request: T): T => {
     });
   }
 
-  return result;
+  return result as T;
 };
 
 // Query params for request listing
@@ -123,7 +126,11 @@ export const useGetRequests = (params: GetRequestsParams = {}) => {
           ...(params.sortDirection && { SortDirection: params.sortDirection }),
         },
       });
-      return data;
+      // Unwrap here rather than in the page, the way every other hook in the app does it: `data`
+      // is still `any` at this point, so the hedge for a response that arrives without the
+      // envelope costs the caller nothing. Done outside, it widens the type to a union whose
+      // other member has no `items`, and every read off it degrades to `unknown`.
+      return data?.result ?? data;
     },
     // Cache data for 30 seconds - switching sorts won't refetch if within this window
     staleTime: 30 * 1000,
