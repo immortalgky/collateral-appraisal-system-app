@@ -27,11 +27,17 @@ export interface GalleryPrefs {
   view: 'grid' | 'list';
 }
 
+/**
+ * Which desktop sidebar: the main app menu, or the appraisal/task menu. Each keeps its own pin, so
+ * a user can pin the main menu and still work inside tasks with the menu tucked away.
+ */
+export type SidebarScope = 'main' | 'appraisal';
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  sidebarCollapsed: boolean;
-  toggleSidebar: () => void;
+  sidebarCollapsed: Record<SidebarScope, boolean>;
+  toggleSidebar: (scope: SidebarScope) => void;
   sidebarWidth: number;
   setSidebarWidth: (width: number) => void;
   resetSidebarWidth: () => void;
