@@ -623,7 +623,17 @@
       "confirm": "提交",
       "cancel": "取消",
       "submitting": "提交中…",
-      "validationErrorsTitle": "请填写必填字段"
+      "validationErrorsTitle": "请填写必填字段",
+      "voteTitle": "确认投票",
+      "voteMessage": "投票提交后无法修改。",
+      "voteAck": "我确认对此评估投票“{{vote}}”",
+      "summary": {
+        "decision": "决定",
+        "destination": "下一步",
+        "assignee": "处理人",
+        "reason": "原因",
+        "comments": "备注"
+      }
     },
     "toasts": {
       "saved": "决策摘要保存成功",
@@ -632,7 +642,8 @@
       "submitFailed": "提交决策失败",
       "validationErrors": "发生验证错误",
       "forceSaleRateSaved": "强制出售价格比例已保存",
-      "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。"
+      "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。",
+      "voteNeedsComment": "提交前请填写备注并确认您的投票。"
     },
     "warnings": {
       "title": "继续前请复核",
@@ -646,7 +657,6 @@
     "commentsLabel": "意见",
     "noDecision": "尚未做出决策",
     "assignNextTo": "下一步分配给",
-    "decisionPlaceholder": "选择决策...",
     "assigneePlaceholder": "选择被分配人...",
     "requestDocuments": "请求补充文件",
     "loadingActivity": "加载活动中...",
@@ -661,7 +671,26 @@
       "hold": "为什么暂停？"
     },
     "reasonLabel": "原因",
-    "reasonPlaceholder": "请选择原因..."
+    "reasonPlaceholder": "请选择原因...",
+    "groups": {
+      "forward": "向前提交",
+      "back": "退回",
+      "cancel": "取消 / 拒绝"
+    },
+    "destination": {
+      "forward": "转至 {{name}}",
+      "back": "退回至 {{name}}",
+      "cancel": "结束流程"
+    },
+    "committeeVotes": "委员会投票",
+    "votesSummary": "已投票 {{received}}/{{total}}",
+    "stepsCount_one": "{{count}} 个步骤",
+    "stepsCount_other": "{{count}} 个步骤",
+    "yourVote": "您的投票",
+    "nextStep": "下一步",
+    "voteImpact": "{{from}} → {{to}} 票",
+    "votesLoadFailed": "无法加载委员会投票。",
+    "noActions": "此任务没有可用的决定选项。请刷新页面，如仍有问题请联系管理员。"
   },
   "propertyInfo": {
     "tabs": {
@@ -2122,9 +2151,6 @@
     "quotationStarted": "报价单已开始 — 已邀请相关公司",
     "quotationAddSelectDraft": "请选择要添加的草稿报价单",
     "quotationAddedToDraft": "估价已添加至 {{quotationNumber}}",
-    "voteSubmitFailed": "提交投票失败",
-    "committeeDecisionRecorded": "委员会决议已记录",
-    "voteRecorded": "投票已记录",
     "propertyCondoUpdated": "公寓房产更新成功",
     "propertyCondoCreated": "公寓房产创建成功",
     "propertyLandUpdated": "土地房产更新成功",
@@ -2496,8 +2522,6 @@
     "totalRow": "合计"
   },
   "approvalListSection": {
-    "title": "委员会审批",
-    "notActiveYet": "此评估的委员会审批尚未启动。",
     "returnedBanner": "此评估已被退回修改。",
     "conditionsTitle": "审批条件",
     "votesDisplay": "{{received}}/{{total}} 票",
@@ -2518,13 +2542,6 @@
     "conditionRoleRequiredDefault": "所需角色必须投票",
     "conditionMinVotes": "至少需要 {{n}} 票",
     "conditionMinVotesDefault": "需达到最低投票数",
-    "columns": {
-      "member": "成员",
-      "role": "角色",
-      "vote": "投票",
-      "date": "日期",
-      "comments": "评论"
-    },
     "stats": {
       "votesReceived": "已投票数",
       "approve": "批准",
