@@ -795,8 +795,9 @@ type LandPMATitle = NonNullable<GetLandPMAPropertyResponseType['titles']>[number
  * savedTitles are the titles as loaded. The form edits only the first, as flat fields. The backend
  * replaces the title list with what is sent (rows matched by id, unsent rows deleted) and updates a
  * matched row's fields but never its title number. So the loaded rows go back with all their
- * fields, the first with the form's edits on top: with its id while the title number is unchanged,
- * and as a new row when it changed, which is how the land page's title modal changes one. Built
+ * fields, the first with the form's edits on top: with its id while the title number is unchanged
+ * (ignoring padding), and as a new row when it changed, which is how the land page's title modal
+ * changes one (its schema drops the id). Built
  * from the form alone, each save recreated the title, dropped any other title and cleared the
  * fields this form does not show.
  */
@@ -824,17 +825,16 @@ export const mapLandAndBuildingPMAFormToPayload = (
   } = data;
 
   const [savedFirst, ...savedOthers] = savedTitles;
-  // Blank (a draft saved mid-edit) or only padded differently counts as unchanged: keep the row.
+  // Padding is not a change of title number.
   const editedNumber = (titleNumber ?? '').trim();
-  const keepFirstId =
-    !!savedFirst && (editedNumber === '' || editedNumber === savedFirst.titleNumber.trim());
+  const keepFirstId = !!savedFirst && editedNumber === savedFirst.titleNumber.trim();
   const first =
     titleNumber || rawang || landNumber || surveyNumber
       ? [
           {
             ...savedFirst,
             id: keepFirstId ? (savedFirst.id ?? null) : null,
-            titleNumber: titleNumber ?? '',
+            titleNumber: editedNumber,
             titleType: savedFirst?.titleType ?? 'DEED',
             rawang: rawang ?? null,
             landParcelNumber: landNumber ?? null,

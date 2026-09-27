@@ -67,10 +67,15 @@ describe('mapLandAndBuildingPMAFormToPayload', () => {
     });
   });
 
-  it('treats a blank or padded title number as unchanged', () => {
-    // A draft can be saved mid-edit with the number cleared; that must not recreate the row.
-    expect(map({ ...form, titleNumber: '' }, [firstTitle]).titles[0].id).toBe('title-1');
-    expect(map({ ...form, titleNumber: ' T1 ' }, [firstTitle]).titles[0].id).toBe('title-1');
+  it('ignores padding around the title number', () => {
+    expect(map({ ...form, titleNumber: ' T1 ' }, [firstTitle]).titles[0]).toMatchObject({
+      id: 'title-1',
+      titleNumber: 'T1',
+    });
+    expect(map({ ...form, titleNumber: ' T9 ' }, [firstTitle]).titles[0]).toMatchObject({
+      id: null,
+      titleNumber: 'T9',
+    });
   });
 
   it('keeps the other titles when the first one is renumbered', () => {
