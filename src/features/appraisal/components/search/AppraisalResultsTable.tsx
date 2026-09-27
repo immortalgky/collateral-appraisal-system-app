@@ -1,13 +1,19 @@
-import { useMemo, useRef, type ReactNode } from 'react';
+import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
+import Avatar from '@/shared/components/Avatar';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { formatDate } from '@/shared/utils/dateUtils';
+import { formatDate, isToday } from '@/shared/utils/dateUtils';
+import { hashString } from '@/shared/utils/stringUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
-import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
+import {
+  useAppraisalTypeLabel,
+  useProvinceName,
+  usePropertyTypeLabels,
+} from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { ColumnResizeHandle } from '@/shared/components/columnLayout';
 import type { ColumnTableLayout } from '@/shared/components/columnLayout';
@@ -17,6 +23,20 @@ import type { ColumnTableLayout } from '@/shared/components/columnLayout';
  * apart and leave the sticky offsets wrong.
  */
 const ROW_NUMBER_WIDTH = 48;
+
+/**
+ * A soft colour per banking segment, picked from the code so a segment keeps its colour across
+ * rows and visits. Whole class strings — Tailwind only ships classes it finds written out.
+ */
+const SEGMENT_TONES = [
+  'bg-sky-50 text-sky-700',
+  'bg-violet-50 text-violet-700',
+  'bg-amber-50 text-amber-700',
+  'bg-emerald-50 text-emerald-700',
+  'bg-indigo-50 text-indigo-700',
+  'bg-slate-100 text-slate-700',
+] as const;
+const segmentTone = (code: string) => SEGMENT_TONES[hashString(code) % SEGMENT_TONES.length];
 
 interface AppraisalResultsTableProps {
   columns: AppraisalColumnDef[];
@@ -52,6 +72,18 @@ interface AppraisalResultsTableProps {
    * fixed-height `overflow-hidden` frame that a taller empty state would spill out of.
    */
   emptyState?: ReactNode;
+  /** 'compact' trims row padding and drops each cell's second line. List page only. */
+  density?: 'comfortable' | 'compact';
+  /**
+   * Draws a header row wherever `labelOf` changes between consecutive rows. The caller sorts by the
+   * same field, so each group arrives contiguous — within a page, which is all the server pages by.
+   */
+  groupBy?: { labelOf: (item: AppraisalDto) => string };
+  /**
+   * Column held in place (with the row number before it) while the table scrolls sideways. The
+   * layout forces it to index 0, so it is always the first data column when shown.
+   */
+  pinnedColumn?: string;
 }
 
 function AppraisalResultsTable({
@@ -68,16 +100,41 @@ function AppraisalResultsTable({
   isStale = false,
   layout,
   emptyState,
+  density = 'comfortable',
+  groupBy,
+  pinnedColumn,
 }: AppraisalResultsTableProps) {
+  const compact = density === 'compact';
+  const cellPad = compact ? 'px-3 py-1.5' : 'px-3 py-2.5';
   const { t } = useTranslation('appraisal');
   const internalTableRef = useRef<HTMLTableElement>(null);
   const tableRef = layout?.tableRef ?? internalTableRef;
   // Row numbers stay on unless a layout explicitly turns them off, so the no-layout callers are
   // unchanged.
   const showRowNumber = layout?.showRowNumber ?? true;
+
+  // Sticky needs an opaque background of its own — the row's hover colour is repeated through
+  // `group-hover` so a pinned cell does not flash white under the pointer. The edge is a shadow,
+  // not a border: a border would stay behind with the table grid instead of travelling with it.
+  const pinned = Boolean(pinnedColumn && columns[0]?.key === pinnedColumn);
+  const pinnedLeft = showRowNumber ? ROW_NUMBER_WIDTH : 0;
+  // Per row: a pinned cell paints over the row's own background, so it repeats the loading
+  // highlight too, and stays put under the pointer while another row is loading (no row hover then).
+  const pinBody = (isLoadingRow: boolean, isAnyLoading: boolean) =>
+    `sticky z-10 ${
+      isLoadingRow ? 'bg-primary-50' : isAnyLoading ? 'bg-white' : 'bg-white group-hover:bg-gray-50'
+    }`;
+  const pinHead = 'sticky z-30 bg-gray-50';
+  // The hairline is always there; the drop shadow only once columns are actually sliding under the
+  // pinned ones — at rest nothing is underneath, and a shadow there would suggest otherwise.
+  const [scrolledX, setScrolledX] = useState(false);
+  const pinEdge = scrolledX
+    ? 'shadow-[inset_-1px_0_0_var(--color-gray-200),6px_0_8px_-4px_rgb(0_0_0/0.12)]'
+    : 'shadow-[inset_-1px_0_0_var(--color-gray-200)]';
   const localizeCompanyName = useLocalizedCompanyName();
   const provinceName = useProvinceName();
   const propertyTypeLabels = usePropertyTypeLabels();
+  const appraisalTypeLabel = useAppraisalTypeLabel();
 
   const totalWidth = useMemo(
     () =>
@@ -148,12 +205,109 @@ function AppraisalResultsTable({
       const totalHours = Math.floor(Math.abs(diffMs) / 3_600_000);
       const days = Math.floor(totalHours / 24);
       const hours = totalHours % 24;
-      const timeStr = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+      const timeStr =
+        days > 0
+          ? t('list.sla.durationDays', { days, hours })
+          : t('list.sla.durationHours', { hours });
       return diffMs < 0
         ? t('list.sla.overdue', { time: timeStr })
         : t('list.sla.left', { time: timeStr });
     }
     return item.slaStatus;
+  };
+
+  const subLine = (text: string | null | undefined) =>
+    !compact && text ? <div className="truncate text-xs text-gray-400 mt-0.5">{text}</div> : null;
+
+  const slaCell = (item: AppraisalDto) => {
+    const closed = isClosed(item);
+    // The text counts calendar time to slaDueDate, while slaStatus is the server's business-hours
+    // verdict — the two disagree on long-overdue work the server still calls OnTrack. The colour
+    // follows the text, so a row that SAYS "overdue" never shows green.
+    const overdue =
+      !closed &&
+      !!item.slaStatus &&
+      item.slaDueDate !== null &&
+      new Date(item.slaDueDate).getTime() < Date.now();
+    const level = overdue ? 'Breached' : item.slaStatus;
+    const tone = closed
+      ? 'text-gray-400'
+      : level === 'Breached'
+        ? 'text-red-600'
+        : level === 'AtRisk'
+          ? 'text-amber-600'
+          : level === 'OnTrack'
+            ? 'text-green-600'
+            : 'text-gray-400';
+    const icon = closed
+      ? item.status === 'Completed'
+        ? 'circle-check'
+        : 'ban'
+      : level === 'OnTrack'
+        ? 'clock'
+        : 'triangle-exclamation';
+    return (
+      <>
+        {/* Closed work is grey whatever the SLA said: red on a delivered job reads as "needs
+            attention" when there is nothing left to do. */}
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${tone}`}>
+          {item.slaStatus || closed ? (
+            <Icon style="solid" name={icon} className="size-3 shrink-0" />
+          ) : null}
+          {formatSlaStatus(item)}
+        </span>
+        {!closed &&
+          item.slaDueDate &&
+          subLine(
+            t('list.sla.dueOn', { date: formatDate(new Date(item.slaDueDate), 'dd/MM/yyyy') }),
+          )}
+      </>
+    );
+  };
+
+  /**
+   * External work names the company — the person there is never recorded (see
+   * APPRAISAL_DEFAULT_HIDDEN_COLUMNS). Internal work has only the user code.
+   */
+  const assigneeCell = (item: AppraisalDto) => {
+    const company = item.companyName
+      ? localizeCompanyName(item.companyName, item.companyNameLocal)
+      : null;
+    const who = company ?? item.assigneeUserId;
+    if (!who) {
+      return (
+        <span className="inline-flex items-center gap-1.5 text-gray-400">
+          <Icon style="regular" name="user" className="size-3 shrink-0" />
+          {t('list.unassigned')}
+        </span>
+      );
+    }
+    if (company) {
+      return (
+        <span className="inline-flex max-w-full items-center gap-1.5">
+          <Icon style="solid" name="building" className="size-3 shrink-0 text-indigo-400" />
+          <span className="truncate">{company}</span>
+        </span>
+      );
+    }
+    // Internal work names a person — initials (the DTO carries no photo), name, user code.
+    return personCell(item.assigneeName, who);
+  };
+
+  /** A person cell: initials, the name, and the user code under it — or the code alone. */
+  const personCell = (name: string | null | undefined, code: string | null | undefined) => {
+    const n = name?.trim() || null;
+    const shown = n ?? code;
+    if (!shown) return '—';
+    return (
+      <span className="flex max-w-full items-center gap-2">
+        <Avatar name={shown} size="xs" className="size-6!" />
+        <span className="min-w-0">
+          <span className="block truncate">{shown}</span>
+          {n && code && subLine(code)}
+        </span>
+      </span>
+    );
   };
 
   /**
@@ -178,7 +332,10 @@ function AppraisalResultsTable({
       <thead className="sticky top-0 z-20 bg-gray-50">
         <tr className="border-b border-gray-200">
           {showRowNumber && (
-            <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12">
+            <th
+              className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12 ${pinned ? pinHead : ''}`}
+              style={pinned ? { left: 0 } : undefined}
+            >
               #
             </th>
           )}
@@ -188,7 +345,10 @@ function AppraisalResultsTable({
               onClick={() => col.sortable && onSort(col.key)}
               className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap ${
                 layout ? 'relative overflow-hidden text-ellipsis' : ''
-              } ${col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''}`}
+              } ${col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''} ${
+                pinned && colIndex === 0 ? `${pinHead} ${pinEdge}` : ''
+              }`}
+              style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
             >
               <span className="inline-flex items-center gap-1">
                 {col.label}
@@ -226,6 +386,8 @@ function AppraisalResultsTable({
   // returned nothing, past a horizontal scrollbar for columns holding no data. Dropping the table
   // also drops the scrollbar, and the message lands in the middle of what is actually visible.
   if (!isLoading && items.length === 0) {
+    // The scroll container unmounts here and comes back at scrollLeft 0 — drop the shadow with it.
+    if (scrolledX) setScrolledX(false);
     return (
       <div className="flex flex-1 min-h-0 w-full flex-col">
         {/* Header only, at the widths the user set: squeezing the columns to fit turned every
@@ -259,6 +421,15 @@ function AppraisalResultsTable({
         isStale ? 'opacity-60 pointer-events-none' : ''
       }`}
       aria-busy={isStale}
+      onScroll={
+        pinned
+          ? e => {
+              const moved = e.currentTarget.scrollLeft > 0;
+              // Only on the change, so vertical scrolling does not re-render the table.
+              if (moved !== scrolledX) setScrolledX(moved);
+            }
+          : undefined
+      }
     >
       <table
         ref={tableRef}
@@ -284,36 +455,140 @@ function AppraisalResultsTable({
             items.map((item, index) => {
               const isLoadingRow = loadingRowId === item.id;
               const isAnyLoading = loadingRowId !== undefined;
-              return (
-                <tr
-                  key={item.id}
-                  onClick={() => !isAnyLoading && onRowClick(item)}
-                  onKeyDown={e => {
-                    if (!isAnyLoading && (e.key === 'Enter' || e.key === ' ')) onRowClick(item);
-                  }}
-                  tabIndex={0}
-                  className={`transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
-                    isLoadingRow
-                      ? 'bg-primary-50 cursor-wait'
-                      : isAnyLoading
-                        ? 'cursor-wait opacity-60'
-                        : 'hover:bg-gray-50 cursor-pointer'
-                  }`}
-                >
-                  {showRowNumber && (
-                    <td className="px-3 py-2.5 text-gray-400 text-sm">
-                      {pageNumber * pageSize + index + 1}
-                    </td>
-                  )}
-                  {columns.map(col => (
+              const group = groupBy?.labelOf(item);
+              const groupRow =
+                groupBy && (index === 0 || groupBy.labelOf(items[index - 1]) !== group) ? (
+                  <tr className="bg-gray-50">
                     <td
-                      key={col.key}
-                      className={`px-3 py-2.5 text-gray-600 text-sm ${
-                        layout ? 'overflow-hidden text-ellipsis whitespace-nowrap' : ''
-                      }`}
+                      colSpan={columns.length + (showRowNumber ? 1 : 0)}
+                      className="px-3 py-1.5 text-xs font-semibold text-gray-500"
                     >
-                      {col.render ? (
-                        col.key === 'appraisalNumber' ? (
+                      {/* Sticky so the label stays in view when the table is scrolled sideways. */}
+                      <span className="sticky left-3">{group}</span>
+                    </td>
+                  </tr>
+                ) : null;
+              return (
+                <Fragment key={item.id}>
+                  {groupRow}
+                  <tr
+                    onClick={() => !isAnyLoading && onRowClick(item)}
+                    onKeyDown={e => {
+                      if (!isAnyLoading && (e.key === 'Enter' || e.key === ' ')) onRowClick(item);
+                    }}
+                    tabIndex={0}
+                    className={`group transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+                      isLoadingRow
+                        ? 'bg-primary-50 cursor-wait'
+                        : isAnyLoading
+                          ? 'cursor-wait opacity-60'
+                          : 'hover:bg-gray-50 cursor-pointer'
+                    }`}
+                  >
+                    {showRowNumber && (
+                      <td
+                        className={`${cellPad} text-gray-400 text-sm ${pinned ? pinBody(isLoadingRow, isAnyLoading) : ''}`}
+                        style={pinned ? { left: 0 } : undefined}
+                      >
+                        {pageNumber * pageSize + index + 1}
+                      </td>
+                    )}
+                    {columns.map((col, colIndex) => (
+                      <td
+                        key={col.key}
+                        className={`${cellPad} text-gray-600 text-sm ${
+                          layout ? 'overflow-hidden text-ellipsis whitespace-nowrap' : ''
+                        } ${pinned && colIndex === 0 ? `${pinBody(isLoadingRow, isAnyLoading)} ${pinEdge}` : ''}`}
+                        style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
+                      >
+                        {col.render ? (
+                          col.key === 'appraisalNumber' ? (
+                            <span className="font-medium text-primary inline-flex items-center gap-1.5">
+                              {isLoadingRow && (
+                                <Icon
+                                  name="spinner"
+                                  style="solid"
+                                  className="size-3 animate-spin text-primary shrink-0"
+                                />
+                              )}
+                              {col.render(item)}
+                            </span>
+                          ) : (
+                            col.render(item)
+                          )
+                        ) : col.key === 'status' ? (
+                          // Badge keeps its own English statusLabelMap and does not go through i18n.
+                          // `children` wins over that map, so the translated text is passed in here
+                          // rather than by changing Badge — which 31 other files render.
+                          // The colour still keys off the raw `value`.
+                          <Badge type="status" value={item.status} size="sm">
+                            {t(`list.status.${item.status}`, { defaultValue: item.status })}
+                          </Badge>
+                        ) : col.key === 'priority' ? (
+                          // Only High is marked. Normal is most rows, and a badge on every one of them
+                          // hid the few that matter.
+                          item.priority === 'High' ? (
+                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                              <Icon style="solid" name="flag" className="size-3" />
+                              {t('list.priority.High')}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-gray-400">
+                              {t(`list.priority.${item.priority}`, { defaultValue: item.priority })}
+                            </span>
+                          )
+                        ) : col.key === 'slaStatus' ? (
+                          slaCell(item)
+                        ) : col.key === 'assignee' ? (
+                          assigneeCell(item)
+                        ) : col.key === 'requestor' ? (
+                          personCell(item.requestorName, item.requestorCode)
+                        ) : col.key === 'appointmentDateTime' &&
+                          item.appointmentDateTime &&
+                          isToday(new Date(item.appointmentDateTime)) ? (
+                          <span className="font-semibold text-primary">
+                            {t('list.today')}{' '}
+                            {formatDate(new Date(item.appointmentDateTime), 'HH:mm')}
+                          </span>
+                        ) : col.key === 'bankingSegment' && item.bankingSegment ? (
+                          <span
+                            className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${segmentTone(item.bankingSegment)}`}
+                          >
+                            <span className="truncate">{getCellValue(item, 'bankingSegment')}</span>
+                          </span>
+                        ) : col.key === 'customerName' ? (
+                          <>
+                            <span className="inline-flex max-w-full items-center gap-1.5">
+                              <span className="truncate font-medium text-gray-800">
+                                {item.customerName || '-'}
+                              </span>
+                              {item.customerCount > 1 && (
+                                <span
+                                  title={t('list.moreCustomers', { count: item.customerCount - 1 })}
+                                  className="shrink-0 rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-500"
+                                >
+                                  +{item.customerCount - 1}
+                                </span>
+                              )}
+                            </span>
+                            {/* What is being appraised, under whose name — the list page only: the
+                              copy-from modal frames this table at a fixed height. */}
+                            {layout &&
+                              subLine(
+                                [
+                                  item.propertyTypes
+                                    ? propertyTypeLabels(item.propertyTypes)
+                                    : null,
+                                  appraisalTypeLabel(item.appraisalType) ??
+                                    t(`list.appraisalType.${item.appraisalType}`, {
+                                      defaultValue: item.appraisalType,
+                                    }),
+                                ]
+                                  .filter(Boolean)
+                                  .join(' · '),
+                              )}
+                          </>
+                        ) : col.key === 'appraisalNumber' ? (
                           <span className="font-medium text-primary inline-flex items-center gap-1.5">
                             {isLoadingRow && (
                               <Icon
@@ -322,70 +597,15 @@ function AppraisalResultsTable({
                                 className="size-3 animate-spin text-primary shrink-0"
                               />
                             )}
-                            {col.render(item)}
+                            {item.appraisalNumber || '-'}
                           </span>
                         ) : (
-                          col.render(item)
-                        )
-                      ) : col.key === 'status' ? (
-                        // Badge keeps its own English statusLabelMap and does not go through i18n.
-                        // `children` wins over that map, so the translated text is passed in here
-                        // rather than by changing Badge — which 31 other files render.
-                        // The colour still keys off the raw `value`.
-                        <Badge type="status" value={item.status} size="sm">
-                          {t(`list.status.${item.status}`, { defaultValue: item.status })}
-                        </Badge>
-                      ) : col.key === 'priority' ? (
-                        <Badge type="priority" value={item.priority} size="sm">
-                          {t(`list.priority.${item.priority}`, { defaultValue: item.priority })}
-                        </Badge>
-                      ) : col.key === 'slaStatus' ? (
-                        <span
-                          className={`text-xs font-medium ${
-                            // Closed work is grey whatever the SLA said: red on a delivered job
-                            // reads as "needs attention" when there is nothing left to do.
-                            isClosed(item)
-                              ? 'text-gray-400'
-                              : item.slaStatus === 'Breached'
-                                ? 'text-red-600'
-                                : item.slaStatus === 'AtRisk'
-                                  ? 'text-amber-600'
-                                  : item.slaStatus === 'OnTrack'
-                                    ? 'text-green-600'
-                                    : 'text-gray-400'
-                          }`}
-                        >
-                          {formatSlaStatus(item)}
-                        </span>
-                      ) : col.key === 'customerName' ? (
-                        <span className="inline-flex items-center gap-1.5">
-                          <span className="truncate">{item.customerName || '-'}</span>
-                          {item.customerCount > 1 && (
-                            <span
-                              title={t('list.moreCustomers', { count: item.customerCount - 1 })}
-                              className="shrink-0 rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-500"
-                            >
-                              +{item.customerCount - 1}
-                            </span>
-                          )}
-                        </span>
-                      ) : col.key === 'appraisalNumber' ? (
-                        <span className="font-medium text-primary inline-flex items-center gap-1.5">
-                          {isLoadingRow && (
-                            <Icon
-                              name="spinner"
-                              style="solid"
-                              className="size-3 animate-spin text-primary shrink-0"
-                            />
-                          )}
-                          {item.appraisalNumber || '-'}
-                        </span>
-                      ) : (
-                        getCellValue(item, col.key)
-                      )}
-                    </td>
-                  ))}
-                </tr>
+                          getCellValue(item, col.key)
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                </Fragment>
               );
             })
           )}

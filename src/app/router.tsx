@@ -364,7 +364,7 @@ export const router = createBrowserRouter([
         path: 'profile',
         element: <MyProfilePage />,
       },
-      // Appraisal search — the filterable list (smart views, facets, export).
+      // Appraisal search — the filterable list (smart views, export).
       // Lives at /appraisals/search; /appraisals/list below is the legacy alias.
       {
         path: 'appraisals/search',

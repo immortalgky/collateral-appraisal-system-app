@@ -1,14 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useHasPermission } from '@/shared/hooks/useHasPermission';
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+} from '@headlessui/react';
 import { SearchByInput } from '@/shared/components/inputs';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import {
   useAppraisalSearch,
+  useAppraisalSearchCounts,
   useSmartViews,
   useSavedSearches,
   useCreateSavedSearch,
@@ -34,7 +44,7 @@ import {
 } from '@/shared/components/columnLayout';
 import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
 import FilterChipBar from '../components/search/FilterChipBar';
-import SearchTipsButton from '../components/search/SearchTipsButton';
+import SearchSuggest from '../components/search/SearchSuggest';
 import AppraisalEmptyState from '../components/search/AppraisalEmptyState';
 import SmartViewBar from '../components/search/SmartViewBar';
 import SavedSearchesDropdown from '../components/search/SavedSearchesDropdown';
@@ -42,7 +52,10 @@ import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
+import { useLocalStorage } from '@/shared/hooks/useLocalStorage';
+import { useAuthStore } from '@/features/auth/store';
 import { MIN_SEARCH_LENGTH } from '@shared/api/search';
+import { useAppraisalTypeLabel, useProvinceName } from '@/shared/hooks/useCodeLabels';
 
 // `q` is accepted as an inbound alias for `search` so a link built by the global search bar works
 // either way. It is normalised to `search` on mount and never written back, so the canonical URL
@@ -94,6 +107,39 @@ const SEARCH_FIELD_ICONS: Record<SearchField, string> = {
   requestNumber: 'file-lines',
 };
 
+/**
+ * Filters drawn as a button even when unset — the ones reached for on most visits. The company
+ * stands in for "assignee": it is the only assignee the list can offer as a choice (internal
+ * appraisers have a user code but no picker here).
+ */
+const PINNED_FILTERS = [
+  'status',
+  'priority',
+  'purpose',
+  'assigneeCompanyId',
+  'province',
+  'appointment',
+];
+
+/**
+ * Fields the table can group by. Each is also a server sort key, which is what makes grouping
+ * work at all: the page sorts by the field, so a group's rows arrive together.
+ */
+const GROUP_FIELDS = ['status', 'slaStatus', 'priority', 'province', 'assignmentType'] as const;
+type GroupField = (typeof GROUP_FIELDS)[number];
+
+const RECENT_KEY = 'appraisal-search-recent';
+/** A stored list, or [] when it is missing, blocked, corrupt or not a list of strings. */
+const readRecent = (key: string): string[] => {
+  try {
+    const v: unknown = JSON.parse(localStorage.getItem(key) ?? '[]');
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+  } catch {
+    return [];
+  }
+};
+const RECENT_MAX = 5;
+
 const isSearchField = (v: string | null): v is SearchField =>
   v !== null && (SEARCH_FIELDS as readonly string[]).includes(v);
 
@@ -126,7 +172,24 @@ function AppraisalListPage() {
   // Export below is the exception, and it is a real control rather than presentation.
   const canExport = useHasPermission('APPRAISAL_VIEW');
 
-  const appraisalFilters = useMemo(() => makeAppraisalFilters(t), [t]);
+  const appraisalTypeLabel = useAppraisalTypeLabel();
+  // The type filter reads its wording from the AppraisalType parameter too, so the chip and the
+  // row say the same thing. i18n stays as the fallback while the parameter store loads.
+  const appraisalFilters = useMemo(
+    () =>
+      makeAppraisalFilters(t).map(f =>
+        f.key === 'appraisalType'
+          ? {
+              ...f,
+              options: f.options?.map(o => ({
+                ...o,
+                label: appraisalTypeLabel(o.value) ?? o.label,
+              })),
+            }
+          : f,
+      ),
+    [t, appraisalTypeLabel],
+  );
   const appraisalColumns = useMemo(() => makeAppraisalColumns(t), [t]);
   /**
    * The keys the URL and the chips speak. Expanded from the filter list because a date-range
@@ -172,6 +235,26 @@ function AppraisalListPage() {
   const [filters, setFilters] = useState<Record<string, string>>(init.filters);
   const [activeViewKey, setActiveViewKey] = useState<string | null>(init.view);
   const [selectedAppraisalId, setSelectedAppraisalId] = useState<string | null>(null);
+  const [groupBy, setGroupBy] = useState<GroupField | null>(null);
+  const [density, setDensity] = useLocalStorage<'comfortable' | 'compact'>(
+    `${COLUMN_STORAGE_KEY}-density`,
+    'comfortable',
+  );
+  const [suggestOpen, setSuggestOpen] = useState(false);
+  const [suggestIndex, setSuggestIndex] = useState(-1);
+  // Per user: recent terms are often customer names, and a branch PC is shared between officers.
+  const currentUsername = useAuthStore(s => s.user?.username);
+  // Re-read whenever the key changes: useLocalStorage reads once at mount, so a username that
+  // resolved late would keep showing — and then saving over — another key's list.
+  const recentKey = currentUsername ? `${RECENT_KEY}:${currentUsername}` : null;
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  useEffect(() => {
+    setRecentSearches(recentKey ? readRecent(recentKey) : []);
+  }, [recentKey]);
+  const searchWrapRef = useRef<HTMLDivElement>(null);
+  /** Set when a suggestion opens the slide-over; swallows the focus it returns on close. */
+  const skipFocusOpen = useRef(false);
+  const provinceName = useProvinceName();
 
   /**
    * Open the activity panel for `?appraisal=`, then strip it from the URL.
@@ -281,15 +364,16 @@ function AppraisalListPage() {
     [filters],
   );
 
-  const { data, isLoading, isFetching, isError, error, refetch } = useAppraisalSearch({
-    ...searchParam,
-    pageNumber,
-    pageSize,
-    // Unsorted sends neither: the API orders by CreatedAt DESC when SortBy is missing.
-    sortBy: sortBy || undefined,
-    sortDir: sortBy ? sortDir : undefined,
-    ...activeFilters,
-  });
+  const { data, isLoading, isFetching, isPlaceholderData, isError, error, refetch } =
+    useAppraisalSearch({
+      ...searchParam,
+      pageNumber,
+      pageSize,
+      // Unsorted sends neither: the API orders by CreatedAt DESC when SortBy is missing.
+      sortBy: sortBy || undefined,
+      sortDir: sortBy ? sortDir : undefined,
+      ...activeFilters,
+    });
 
   // Loading feedback: true only while a request is in flight (not during typing/debounce)
   const isSearchPending = isFetching;
@@ -341,6 +425,13 @@ function AppraisalListPage() {
     setSortDir('desc');
   };
 
+  // Grouping IS a sort. Whatever moves the sort off the grouped field — a header click, sort
+  // switched off, a saved search — drops the grouping, or it would silently return the next time
+  // that column is sorted.
+  useEffect(() => {
+    if (groupBy && sortBy !== groupBy) setGroupBy(null);
+  }, [groupBy, sortBy]);
+
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
     setActiveViewKey(null);
@@ -358,6 +449,35 @@ function AppraisalListPage() {
   const handleClearFilters = () => {
     setFilters({});
     setActiveViewKey(null);
+  };
+
+  const handleSelectAll = () => {
+    handleClearFilters();
+    setSearchTerm('');
+    setDebouncedSearch('');
+  };
+
+  // Whether the grouped sort was imposed by grouping, or was already the user's own choice.
+  const groupOwnsSort = useRef(false);
+  const handleGroupBy = (field: GroupField | null) => {
+    // Turning grouping off also drops the sort it imposed — the user never chose that sort. A sort
+    // they picked themselves (on this column or another) is theirs and stays.
+    if (!field) {
+      if (groupBy && sortBy === groupBy && groupOwnsSort.current) {
+        setSortBy('');
+        setSortDir('desc');
+      }
+      setGroupBy(null);
+      return;
+    }
+    // Re-picking the current grouping must not hand its imposed sort over to the user.
+    if (field === groupBy && sortBy === field) return;
+    groupOwnsSort.current = sortBy !== field;
+    setGroupBy(field);
+    if (sortBy !== field) {
+      setSortBy(field);
+      setSortDir('asc');
+    }
   };
 
   const handleSmartView = (view: SmartViewDto) => {
@@ -414,9 +534,8 @@ function AppraisalListPage() {
     () => ({
       columns: appraisalColumns.map(c => c.key),
       // The appraisal number is the row's identity and its link target, so it is forced to
-      // index 0 and cannot be hidden. Note this is column ORDER only — nothing here renders
-      // `position: sticky`, so it does scroll away like any other column (LandTitleTable's
-      // `stickyColumns` prop is the unrelated thing that actually pins cells).
+      // index 0 and cannot be hidden — and AppraisalResultsTable holds it (with the row number)
+      // in place while the table scrolls sideways.
       pinnedColumn: 'appraisalNumber',
       defaultWidths: Object.fromEntries(
         appraisalColumns.filter(c => c.width).map(c => [c.key, c.width!]),
@@ -437,12 +556,45 @@ function AppraisalListPage() {
     reorderColumns,
     resetToDefault,
   } = useColumnVisibility(COLUMN_STORAGE_KEY, columnConfig);
-  const { widths, setWidth, resetWidths, hasCustomWidths } = useColumnWidths(
+  const { widths, setWidth, resetWidths, hasCustomWidths, isCustomWidth } = useColumnWidths(
     COLUMN_STORAGE_KEY,
     columnConfig,
   );
   const { showRowNumber, toggleRowNumber } = useRowNumberColumn(COLUMN_STORAGE_KEY);
   const getAutoFitWidth = useColumnAutoFit(tableRef, { leadingCells: showRowNumber ? 1 : 0 });
+
+  /**
+   * The pinned appraisal-number column sized to what it holds, unless the user dragged it.
+   *
+   * Measures the content element inside each cell, not the cell: a cell's scrollWidth never
+   * reports less than the cell's own width, so measuring the cell can grow a column but never
+   * shrink it. Group-header rows (one colSpan cell) are skipped — their label is not this column.
+   * Not persisted: it follows the rows on screen, and a stored width would count as a user choice.
+   */
+  const [pinnedFitWidth, setPinnedFitWidth] = useState<number | null>(null);
+  const pinnedIndex = visibleColumns.indexOf(columnConfig.pinnedColumn as string);
+  useLayoutEffect(() => {
+    const tbl = tableRef.current;
+    if (!tbl || showSkeleton || !data?.result.items.length || pinnedIndex < 0) return;
+    const at = pinnedIndex + (showRowNumber ? 1 : 0);
+    let max = 0;
+    tbl.querySelectorAll('tr').forEach(row => {
+      const cell = row.children[at] as HTMLTableCellElement | undefined;
+      const content =
+        cell && cell.colSpan === 1 ? (cell.firstElementChild as HTMLElement | null) : null;
+      if (content) max = Math.max(max, content.offsetWidth);
+    });
+    // + the cell's own horizontal padding (px-3 on each side).
+    if (max > 0) setPinnedFitWidth(max + 24);
+    // appraisalColumns: a language switch changes the header label's width without new data.
+  }, [data, showSkeleton, pinnedIndex, showRowNumber, appraisalColumns]);
+  const tableWidths = useMemo(
+    () =>
+      pinnedFitWidth && !isCustomWidth(columnConfig.pinnedColumn as string)
+        ? { ...widths, [columnConfig.pinnedColumn as string]: pinnedFitWidth }
+        : widths,
+    [pinnedFitWidth, isCustomWidth, widths, columnConfig.pinnedColumn],
+  );
 
   /**
    * Icons follow what the quotation listing already uses for the same concepts, so the two
@@ -457,6 +609,130 @@ function AppraisalListPage() {
       })),
     [t],
   );
+
+  // ── Search suggestions ──────────────────────────────────────────────────────
+  const addRecent = (term: string) => {
+    const v = term.trim();
+    if (v.length < MIN_SEARCH_LENGTH || !recentKey) return;
+    const next = [v, ...recentSearches.filter(r => r !== v)].slice(0, RECENT_MAX);
+    setRecentSearches(next);
+    try {
+      localStorage.setItem(recentKey, JSON.stringify(next));
+    } catch {
+      // Storage blocked or full: the list still works for this visit.
+    }
+  };
+
+  // The table's own result answers the box once it has caught up with what is typed. Until then
+  // (debounce, or keepPreviousData still showing the last term) the panel shows a spinner rather
+  // than rows that belong to a different search.
+  const isSuggestSettled =
+    Boolean(debouncedSearch) &&
+    debouncedSearch.trim() === searchTerm.trim() &&
+    !isPlaceholderData &&
+    !isFetching;
+
+  const otherFields = useMemo(() => SEARCH_FIELDS.filter(f => f !== searchField), [searchField]);
+  // Untrimmed, as searchParam sends it — otherwise a trailing space makes the count disagree with
+  // the table the user lands on after picking that field.
+  const otherCounts = useAppraisalSearchCounts(
+    debouncedSearch,
+    otherFields,
+    activeFilters,
+    suggestOpen && Boolean(debouncedSearch),
+  );
+  // Other fields' counts answer the debounced term; while the box is ahead of it they describe a
+  // different search, so they read as loading. (Not memoised: otherCounts is new every render.)
+  const fieldCounts = {
+    ...(debouncedSearch.trim() === searchTerm.trim() ? otherCounts : {}),
+    // null on error (renders "—"), not the 0 an errored query leaves in totalCount.
+    [searchField]: isError ? null : isSuggestSettled ? totalCount : undefined,
+  };
+
+  // Also on settling: the spinner row gives way to result rows, so an index would point elsewhere.
+  useEffect(() => setSuggestIndex(-1), [searchTerm, suggestOpen, isSuggestSettled]);
+
+  const closeSuggest = () => {
+    setSuggestOpen(false);
+    setSuggestIndex(-1);
+  };
+
+  const handleSearchKeyDown = (e: ReactKeyboardEvent) => {
+    // Only the text box drives the panel — the field picker's menu handles its own arrows.
+    if (!(e.target instanceof HTMLInputElement)) return;
+    // An IME (Chinese, Japanese…) uses Enter and the arrows to pick a candidate — not ours.
+    if (e.nativeEvent.isComposing) return;
+    const rows = Array.from(
+      searchWrapRef.current?.querySelectorAll<HTMLElement>('[data-suggest-item]') ?? [],
+    );
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSuggestOpen(true);
+      if (rows.length === 0) return;
+      const step = e.key === 'ArrowDown' ? 1 : -1;
+      // From no selection, Up goes to the last row, not the one before it.
+      setSuggestIndex(i =>
+        i < 0 ? (step > 0 ? 0 : rows.length - 1) : (i + step + rows.length) % rows.length,
+      );
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (suggestIndex >= 0 && rows[suggestIndex]) {
+        rows[suggestIndex].click();
+        return;
+      }
+      addRecent(searchTerm);
+      closeSuggest();
+    } else if (e.key === 'Escape') {
+      closeSuggest();
+      e.target.blur();
+    }
+  };
+
+  // ── Keyboard: "/" to search, j/k to walk the rows ──────────────────────────
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey || selectedAppraisalId) return;
+      // Only from the page itself or from inside the table. Anywhere else — a text box, an open
+      // filter panel or menu (portalled, so not under this page) — the keys belong to that control.
+      const el = e.target as HTMLElement | null;
+      const fromPage = !el || el === document.body || Boolean(tableRef.current?.contains(el));
+      if (!fromPage) return;
+      if (e.key === '/') {
+        e.preventDefault();
+        searchWrapRef.current?.querySelector('input')?.focus();
+      } else if (e.key === 'j' || e.key === 'k') {
+        const rows = Array.from(
+          tableRef.current?.querySelectorAll<HTMLElement>('tbody tr[tabindex]') ?? [],
+        );
+        if (rows.length === 0) return;
+        const at = rows.indexOf(document.activeElement as HTMLElement);
+        const next =
+          at < 0 ? 0 : Math.min(rows.length - 1, Math.max(0, at + (e.key === 'j' ? 1 : -1)));
+        rows[next].focus();
+        rows[next].scrollIntoView({ block: 'nearest' });
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [selectedAppraisalId]);
+
+  // ── Grouping ────────────────────────────────────────────────────────────────
+  const groupLabelOf = useMemo(() => {
+    if (!groupBy || sortBy !== groupBy) return undefined;
+    const empty = t('list.groupBy.empty');
+    const fns: Record<GroupField, (item: AppraisalDto) => string> = {
+      status: i => t(`list.status.${i.status}`, { defaultValue: i.status }),
+      slaStatus: i =>
+        i.slaStatus ? t(`list.sla.${i.slaStatus}`, { defaultValue: i.slaStatus }) : empty,
+      priority: i => t(`list.priority.${i.priority}`, { defaultValue: i.priority }),
+      province: i => (i.province ? provinceName(i.province) : empty),
+      assignmentType: i =>
+        i.assignmentType
+          ? t(`list.assignmentType.${i.assignmentType}`, { defaultValue: i.assignmentType })
+          : empty,
+    };
+    return { labelOf: fns[groupBy] };
+  }, [groupBy, sortBy, t, provinceName]);
 
   const columnLabels = useMemo(
     () => Object.fromEntries(appraisalColumns.map(c => [c.key, c.label])),
@@ -622,7 +898,15 @@ function AppraisalListPage() {
 
       {/* Smart Views */}
       <div className="shrink-0">
-        <SmartViewBar views={smartViews} activeViewKey={activeViewKey} onSelect={handleSmartView} />
+        <SmartViewBar
+          views={smartViews}
+          activeViewKey={activeViewKey}
+          onSelect={handleSmartView}
+          onSelectAll={handleSelectAll}
+          isAllActive={
+            !activeViewKey && !debouncedSearch && Object.keys(activeFilters).length === 0
+          }
+        />
       </div>
 
       {/* Search + Filters */}
@@ -636,48 +920,163 @@ function AppraisalListPage() {
             short of it; pr-1 keeps its count badge, which hangs outside the button, clear of the
             page's overflow-x-hidden edge. */}
         <div className="flex items-stretch gap-2 pr-1">
-          <SearchByInput
-            className="flex-1 min-w-0"
-            options={searchFieldOptions}
-            field={searchField}
-            onFieldChange={v => setSearchField(isSearchField(v) ? v : 'all')}
-            value={searchTerm}
-            onChange={setSearchTerm}
-            placeholder={t(`list.searchPlaceholderBy.${searchField}`)}
-            // Both: the static syntax sentence (sr-only, inside SearchTipsButton) and, when it is
-            // on screen, the reason nothing is happening. Without the second, a screen-reader user
-            // typing two characters is told the syntax and never told why the list did not move.
-            describedBy={
-              isSearchTooShort
-                ? 'appraisal-search-hint appraisal-search-too-short'
-                : 'appraisal-search-hint'
-            }
-            endAdornment={
-              isSearchPending ? (
-                <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
-              ) : (
-                searchTerm && (
-                  <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setDebouncedSearch('');
-                    }}
-                    aria-label={t('common:actions.clear')}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <Icon style="solid" name="xmark" className="size-4" />
-                  </button>
+          {/* The wrapper owns the suggestion panel: focus anywhere inside opens it, focus leaving
+              closes it, and the text box's keys drive it (see handleSearchKeyDown). The listeners
+              only catch events bubbling up from the input and the panel's buttons — the
+              landmark itself is never the target. */}
+          {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+          <div
+            ref={searchWrapRef}
+            role="search"
+            className="relative flex-1 min-w-0 flex"
+            // The text box only: the field picker's button (and its portalled menu, whose events
+            // bubble here through React) would otherwise open the panel under its own menu.
+            onFocus={e => {
+              if (!(e.target instanceof HTMLInputElement)) return;
+              if (skipFocusOpen.current) {
+                skipFocusOpen.current = false;
+                return;
+              }
+              setSuggestOpen(true);
+            }}
+            onBlur={e => {
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeSuggest();
+            }}
+            onKeyDown={handleSearchKeyDown}
+          >
+            <SearchByInput
+              className="flex-1 min-w-0"
+              options={searchFieldOptions}
+              field={searchField}
+              onFieldChange={v => setSearchField(isSearchField(v) ? v : 'all')}
+              value={searchTerm}
+              onChange={v => {
+                setSearchTerm(v);
+                // Enter closes the panel without moving focus, so onFocus would not reopen it.
+                setSuggestOpen(true);
+              }}
+              placeholder={t(`list.searchPlaceholderBy.${searchField}`)}
+              // Both: the static syntax sentence (sr-only, beside this box) and, when it is
+              // on screen, the reason nothing is happening. Without the second, a screen-reader user
+              // typing two characters is told the syntax and never told why the list did not move.
+              describedBy={
+                isSearchTooShort
+                  ? 'appraisal-search-hint appraisal-search-too-short'
+                  : 'appraisal-search-hint'
+              }
+              endAdornment={
+                isSearchPending ? (
+                  <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
+                ) : (
+                  searchTerm && (
+                    <button
+                      onClick={() => {
+                        setSearchTerm('');
+                        setDebouncedSearch('');
+                      }}
+                      aria-label={t('common:actions.clear')}
+                      className="text-gray-400 hover:text-gray-600"
+                    >
+                      <Icon style="solid" name="xmark" className="size-4" />
+                    </button>
+                  )
                 )
-              )
-            }
-          />
-          <SearchTipsButton
-            minLength={MIN_SEARCH_LENGTH}
-            hintId="appraisal-search-hint"
-            hint={
-              searchField === 'all' ? t('list.searchPrefixHint') : t('list.searchSubstringHint')
-            }
-          />
+              }
+            />
+            {suggestOpen && (
+              // mousedown is swallowed so a click on a row does not blur the input first — where a
+              // button takes no focus on click (Safari), that blur would close the panel before the
+              // click landed.
+              <div role="presentation" onMouseDown={e => e.preventDefault()}>
+                <SearchSuggest
+                  term={searchTerm}
+                  isSettled={isSuggestSettled}
+                  failed={isError}
+                  minLength={MIN_SEARCH_LENGTH}
+                  items={isSuggestSettled ? items.slice(0, 5) : []}
+                  fieldOptions={searchFieldOptions}
+                  counts={fieldCounts}
+                  recent={recentSearches}
+                  activeIndex={suggestIndex}
+                  onPickItem={item => {
+                    addRecent(searchTerm);
+                    closeSuggest();
+                    // The slide-over hands focus back to the input when it closes (Headless UI
+                    // restores from its own focus history, so blurring here does not prevent it).
+                    // That returning focus must not reopen the panel the user just used.
+                    skipFocusOpen.current = true;
+                    setSelectedAppraisalId(item.id);
+                  }}
+                  onPickField={field => {
+                    setSearchField(isSearchField(field) ? field : 'all');
+                    addRecent(searchTerm);
+                    closeSuggest();
+                  }}
+                  onPickRecent={term => setSearchTerm(term)}
+                />
+              </div>
+            )}
+          </div>
+          {/* The syntax sentence the input's aria-describedby points at. The tips themselves now
+              open with the box, in the panel above. */}
+          <span id="appraisal-search-hint" className="sr-only">
+            {searchField === 'all' ? t('list.searchPrefixHint') : t('list.searchSubstringHint')}
+          </span>
+          {/* Drawn like the column picker beside it — a square icon button, a count badge when it
+              is doing something, a titled panel — so the two table controls read as one pair. */}
+          <Menu as="div" className="relative h-full shrink-0">
+            <MenuButton
+              title={
+                groupLabelOf && groupBy
+                  ? t('list.groupBy.current', { label: columnLabels[groupBy] })
+                  : t('list.groupBy.label')
+              }
+              aria-label={t('list.groupBy.label')}
+              className={`relative flex h-full min-h-9 w-9 items-center justify-center rounded-lg border outline-none transition-all ${
+                groupLabelOf
+                  ? 'border-violet-300 bg-violet-50 hover:bg-violet-100'
+                  : 'border-violet-200 bg-violet-50/50 hover:border-violet-300 hover:bg-violet-50'
+              }`}
+            >
+              <Icon style="solid" name="layer-group" className="size-4 text-violet-500" />
+              {groupLabelOf && (
+                <span className="absolute -top-1.5 -right-1.5 inline-flex size-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold leading-none text-white">
+                  1
+                </span>
+              )}
+            </MenuButton>
+            <MenuItems
+              anchor="bottom end"
+              className="z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
+            >
+              <div className="border-b border-gray-100 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                {t('list.groupBy.label')}
+              </div>
+              <div className="py-1">
+                {[null, ...GROUP_FIELDS].map(field => {
+                  const on = (groupLabelOf ? groupBy : null) === field;
+                  return (
+                    <MenuItem key={field ?? 'none'}>
+                      <button
+                        type="button"
+                        onClick={() => handleGroupBy(field)}
+                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm data-focus:bg-gray-50 ${
+                          on ? 'font-medium text-gray-900' : 'text-gray-700'
+                        }`}
+                      >
+                        <span className="flex-1">
+                          {field ? columnLabels[field] : t('list.groupBy.none')}
+                        </span>
+                        {on && (
+                          <Icon style="solid" name="check" className="size-3.5 text-violet-500" />
+                        )}
+                      </button>
+                    </MenuItem>
+                  );
+                })}
+              </div>
+            </MenuItems>
+          </Menu>
           <ColumnVisibilityDropdown
             orderedColumns={orderedColumns}
             hidden={hidden}
@@ -688,14 +1087,40 @@ function AppraisalListPage() {
             onReorder={reorderColumns}
             // Reset touches visibility, order, widths and the row-number switch, so it stays live
             // whenever any of the four differs from the default — not just when a column is hidden.
-            canReset={isCustomized || hasCustomWidths || !showRowNumber}
+            canReset={isCustomized || hasCustomWidths || !showRowNumber || density === 'compact'}
             onReset={() => {
               // Everything the picker can change, or "Reset" is a button that visibly does
               // nothing when the only thing switched off is the row-number column.
               resetToDefault();
               resetWidths();
               if (!showRowNumber) toggleRowNumber();
+              setDensity('comfortable');
             }}
+            panelHeader={
+              <div className="border-b border-gray-100 px-3 py-2.5">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {t('list.density.title')}
+                </p>
+                <div role="radiogroup" className="flex rounded-lg bg-gray-100 p-0.5">
+                  {(['comfortable', 'compact'] as const).map(d => (
+                    <button
+                      key={d}
+                      type="button"
+                      role="radio"
+                      aria-checked={density === d}
+                      onClick={() => setDensity(d)}
+                      className={`flex-1 rounded-md py-1 text-sm transition-colors ${
+                        density === d
+                          ? 'bg-white font-medium text-gray-900 shadow-sm'
+                          : 'text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      {t(`list.density.${d}`)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            }
             extraToggles={[
               {
                 key: 'rowNumber',
@@ -706,8 +1131,14 @@ function AppraisalListPage() {
             ]}
           />
         </div>
+        {/* Kept mounted (sr-only) while the panel shows the same message, so aria-describedby
+            still resolves and the live region still announces. */}
         {isSearchTooShort && (
-          <p id="appraisal-search-too-short" aria-live="polite" className="text-xs text-amber-600">
+          <p
+            id="appraisal-search-too-short"
+            aria-live="polite"
+            className={suggestOpen ? 'sr-only' : 'text-xs text-amber-600'}
+          >
             {t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })}
           </p>
         )}
@@ -723,6 +1154,7 @@ function AppraisalListPage() {
           onChange={handleFilterChange}
           onRemove={handleRemoveFilter}
           onClear={handleClearFilters}
+          pinned={PINNED_FILTERS}
         />
       </div>
 
@@ -736,7 +1168,7 @@ function AppraisalListPage() {
           columns={orderedVisibleColumns}
           layout={{
             visibleColumns,
-            widths,
+            widths: tableWidths,
             setWidth,
             getAutoFitWidth,
             showRowNumber,
@@ -751,9 +1183,53 @@ function AppraisalListPage() {
           pageNumber={servedPageNumber}
           pageSize={servedPageSize}
           isStale={isFetching && !showSkeleton}
+          density={density}
+          groupBy={groupLabelOf}
+          pinnedColumn={columnConfig.pinnedColumn}
           emptyState={
             <AppraisalEmptyState
               isFiltered={Boolean(debouncedSearch) || Object.keys(activeFilters).length > 0}
+              actions={[
+                ...(debouncedSearch && searchField !== 'all'
+                  ? [
+                      {
+                        key: 'searchAll',
+                        label: t('list.emptyActions.searchAll'),
+                        onClick: () => setSearchField('all'),
+                      },
+                    ]
+                  : []),
+                ...(activeViewKey
+                  ? [
+                      {
+                        key: 'exitView',
+                        label: t('list.emptyActions.exitView'),
+                        onClick: handleClearFilters,
+                      },
+                    ]
+                  : Object.keys(activeFilters).length > 0
+                    ? [
+                        {
+                          key: 'clearFilters',
+                          label: t('list.emptyActions.clearFilters'),
+                          onClick: handleClearFilters,
+                        },
+                      ]
+                    : []),
+                ...(debouncedSearch &&
+                searchField === 'all' &&
+                !debouncedSearch.trim().startsWith('*')
+                  ? [
+                      {
+                        key: 'wildcard',
+                        label: t('list.emptyActions.tryWildcard', {
+                          term: `*${debouncedSearch.trim()}`,
+                        }),
+                        onClick: () => setSearchTerm(`*${debouncedSearch.trim()}`),
+                      },
+                    ]
+                  : []),
+              ]}
             />
           }
         />

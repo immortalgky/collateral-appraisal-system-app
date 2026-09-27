@@ -5,7 +5,13 @@ import Icon from '@/shared/components/Icon';
 import type { FilterField, FilterGroup } from './tabConfigs';
 import { FILTER_GROUPS } from './tabConfigs';
 import FilterValuePanel from './FilterValuePanel';
-import { isFieldActive, selectedValues, useFilterFieldOptions } from './filterOptions';
+import {
+  isFieldActive,
+  presetFor,
+  requestorLabel,
+  selectedValues,
+  useFilterFieldOptions,
+} from './filterOptions';
 
 interface FilterChipBarProps {
   filters: FilterField[];
@@ -14,6 +20,11 @@ interface FilterChipBarProps {
   /** Drops one key. Kept separate from onChange so a removed filter leaves no empty URL param. */
   onRemove: (key: string) => void;
   onClear: () => void;
+  /**
+   * Fields drawn as a button even when unset, in this order. The ones people reach for on most
+   * visits; everything else stays behind "Add filter".
+   */
+  pinned?: string[];
 }
 
 const PANEL_CLASS =
@@ -34,6 +45,11 @@ interface FilterChipProps {
   values: Record<string, string>;
   onChange: (key: string, value: string) => void;
   onRemove: (key: string) => void;
+  /**
+   * A pinned field with no value: drawn as a plain button. Same component (and same Popover) as the
+   * set chip, so ticking the first value does not remount it and close the panel under the cursor.
+   */
+  unset?: boolean;
 }
 
 /**
@@ -41,19 +57,28 @@ interface FilterChipProps {
  * bar shows the current filters and edits them in the same place instead of drawing them once in
  * a panel and again in a separate chip row.
  */
-function FilterChip({ field, values, onChange, onRemove }: FilterChipProps) {
+function FilterChip({ field, values, onChange, onRemove, unset = false }: FilterChipProps) {
   const { t } = useTranslation(['appraisal', 'common']);
-  const options = useFilterFieldOptions(field);
+  // A requestor chip has no local list to read its label from, so it looks its first value up.
+  const options = useFilterFieldOptions(
+    field,
+    field.type === 'requestor-autocomplete' ? (selectedValues(values, field.key)[0] ?? '') : '',
+  );
 
   const summary = () => {
     if (field.type === 'date-range') {
       const from = values[field.fromKey ?? ''];
       const to = values[field.toKey ?? ''];
+      const preset = from && to ? presetFor(from, to) : undefined;
+      if (preset) return t(`appraisal:list.filters.presets.${preset.key}`);
       return `${from || '…'} → ${to || '…'}`;
     }
     const selected = selectedValues(values, field.key);
     if (selected.length === 0) return t('appraisal:list.filters.anyValue');
-    const first = options.find(o => o.value === selected[0])?.label ?? selected[0];
+    const first =
+      options.find(o => o.value === selected[0])?.label ??
+      requestorLabel(selected[0]) ??
+      selected[0];
     // "+2" rather than the full list: a quick view can set four statuses at once, and spelling
     // them all out pushes every other chip off the row.
     return selected.length > 1 ? `${first} +${selected.length - 1}` : first;
@@ -79,7 +104,7 @@ function FilterChip({ field, values, onChange, onRemove }: FilterChipProps) {
     </button>
   );
 
-  if (field.hidden) {
+  if (field.hidden && !unset) {
     return (
       <span className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
         {chipBody}
@@ -90,12 +115,18 @@ function FilterChip({ field, values, onChange, onRemove }: FilterChipProps) {
 
   return (
     <Popover className="relative">
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-100 pl-2.5 pr-1 py-1 text-xs text-gray-700 transition-colors hover:border-gray-300">
+      <span
+        className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-200 py-1 text-xs transition-colors hover:border-gray-300 ${
+          unset
+            ? 'bg-white px-2.5 text-gray-600 hover:text-gray-800'
+            : 'bg-gray-100 pl-2.5 pr-1 text-gray-700'
+        }`}
+      >
         <PopoverButton className="inline-flex items-center gap-1.5 outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
-          {chipBody}
+          {unset ? field.label : chipBody}
           <Icon style="solid" name="chevron-down" className="size-2.5 opacity-60" />
         </PopoverButton>
-        {remove}
+        {!unset && remove}
       </span>
       <PopoverPanel anchor="bottom start" className={PANEL_CLASS}>
         <FilterValuePanel field={field} values={values} onChange={onChange} onRemove={onRemove} />
@@ -111,26 +142,50 @@ function FilterChip({ field, values, onChange, onRemove }: FilterChipProps) {
  * Nothing is rendered for a filter nobody is using, which is what the grid spent most of its
  * height on — the list page offers twelve and typical use is two or three.
  */
-function FilterChipBar({ filters, values, onChange, onRemove, onClear }: FilterChipBarProps) {
+function FilterChipBar({
+  filters,
+  values,
+  onChange,
+  onRemove,
+  onClear,
+  pinned = [],
+}: FilterChipBarProps) {
   const { t } = useTranslation(['appraisal', 'common']);
   // Which field the "add filter" menu drilled into. Reset every time the menu button is clicked,
   // so the menu always opens on the field list.
   const [pending, setPending] = useState<FilterField | null>(null);
 
+  const pinnedFields = pinned
+    .map(key => filters.find(f => f.key === key))
+    .filter((f): f is FilterField => f !== undefined);
+  const isPinned = (f: FilterField) => pinned.includes(f.key);
   const active = filters.filter(f => isFieldActive(values, f));
-  const available = filters.filter(f => !f.hidden && !isFieldActive(values, f));
+  const available = filters.filter(f => !f.hidden && !isPinned(f) && !isFieldActive(values, f));
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      {active.map(field => (
+      {pinnedFields.map(field => (
         <FilterChip
           key={field.key}
           field={field}
           values={values}
           onChange={onChange}
           onRemove={onRemove}
+          unset={!isFieldActive(values, field)}
         />
       ))}
+
+      {active
+        .filter(f => !isPinned(f))
+        .map(field => (
+          <FilterChip
+            key={field.key}
+            field={field}
+            values={values}
+            onChange={onChange}
+            onRemove={onRemove}
+          />
+        ))}
 
       {available.length > 0 && (
         <Popover className="relative">

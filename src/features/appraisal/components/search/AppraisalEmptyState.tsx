@@ -16,7 +16,13 @@ import SearchTips from './SearchTips';
  * "what can I search for", a question about the box rather than about this result set, and it
  * lives in the toolbar's "can't find it?" button.
  */
-function AppraisalEmptyState({ isFiltered }: { isFiltered: boolean }) {
+interface AppraisalEmptyStateProps {
+  isFiltered: boolean;
+  /** One-click ways out of this empty result, e.g. "Clear filters". Offered only when filtered. */
+  actions?: { key: string; label: string; onClick: () => void }[];
+}
+
+function AppraisalEmptyState({ isFiltered, actions = [] }: AppraisalEmptyStateProps) {
   const { t } = useTranslation('appraisal');
 
   return (
@@ -28,6 +34,20 @@ function AppraisalEmptyState({ isFiltered }: { isFiltered: boolean }) {
       <p className="text-xs text-gray-400">
         {isFiltered ? t('list.emptyHint') : t('list.emptyAllHint')}
       </p>
+      {isFiltered && actions.length > 0 && (
+        <div className="mt-3 flex flex-wrap justify-center gap-2">
+          {actions.map(a => (
+            <button
+              key={a.key}
+              type="button"
+              onClick={a.onClick}
+              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-primary hover:text-primary"
+            >
+              {a.label}
+            </button>
+          ))}
+        </div>
+      )}
       {isFiltered && (
         <div className="mt-4 w-full rounded-xl border border-gray-200 bg-gray-50 p-4">
           <p className="mb-2 text-left text-xs font-medium text-gray-700">
