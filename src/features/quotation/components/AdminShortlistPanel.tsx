@@ -229,7 +229,7 @@ const AdminShortlistPanel = ({
                   const maxEstimateManday = validEstimatedDays.length
                     ? Math.max(...validEstimatedDays)
                     : undefined;
-                  const isDeclined = cq.status === 'Declined';
+                  const isDeclined = cq.status === 'Declined' || cq.status === 'Expired';
                   return (
                     <tr
                       key={cq.id}

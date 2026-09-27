@@ -456,10 +456,7 @@ const QuotationSelectionPage = () => {
       />
 
       {/* ─── Section 1b: Invited Companies ───────────────────────────────────── */}
-      <InvitedCompaniesTable
-        companies={quotation.invitedCompanies ?? []}
-        companyQuotations={quotation.companyQuotations ?? []}
-      />
+      <InvitedCompaniesTable companies={quotation.invitedCompanies ?? []} />
 
       {/* Instructions (RM pick phase only) */}
       {isRmPickPhase && !isAlreadyPicked && (

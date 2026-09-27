@@ -1,16 +1,14 @@
 import { useTranslation } from 'react-i18next';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
 import Icon from '@/shared/components/Icon';
-import QuotationStatusBadge from './QuotationStatusBadge';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
-import type { CompanyQuotationDto, InvitedCompanyDto } from '../schemas/quotation';
+import type { InvitedCompanyDto } from '../schemas/quotation';
 
 interface InvitedCompaniesTableProps {
   companies: InvitedCompanyDto[];
-  companyQuotations: CompanyQuotationDto[];
 }
 
-const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompaniesTableProps) => {
+const InvitedCompaniesTable = ({ companies }: InvitedCompaniesTableProps) => {
   const { t } = useTranslation('quotation');
   const localizeCompanyName = useLocalizedCompanyName();
 
@@ -56,14 +54,10 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
                         <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           {t('columns.email')}
                         </th>
-                        <th className="px-4 py-2 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {t('columns.status')}
-                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
                       {companies.map((inv, idx) => {
-                        const cq = companyQuotations.find(q => q.companyId === inv.companyId);
                         return (
                           <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-2">
@@ -76,18 +70,6 @@ const InvitedCompaniesTable = ({ companies, companyQuotations }: InvitedCompanie
                             </td>
                             <td className="px-4 py-2">
                               <span className="text-sm text-gray-500">{inv.email ?? '—'}</span>
-                            </td>
-                            <td className="px-4 py-2 text-center">
-                              {cq ? (
-                                <QuotationStatusBadge
-                                  status={cq.status}
-                                  reason={cq.status === 'Declined' ? cq.declineReason : undefined}
-                                />
-                              ) : (
-                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                                  {t('invitedCompanies.pending')}
-                                </span>
-                              )}
                             </td>
                           </tr>
                         );

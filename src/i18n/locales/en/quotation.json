@@ -28,7 +28,8 @@
     "UnderReview": "Under Review",
     "Declined": "Declined",
     "PendingCheckerReview": "Pending Checker Review",
-    "Pending": "Pending Submission"
+    "Pending": "Pending Submission",
+    "Expired": "Expired"
   },
   "vendorStatus": {
     "Pending": "Pending Submission",
@@ -499,6 +500,8 @@
     "specialInstructions": "Special Instructions",
     "invitationDeclined": "Invitation Declined",
     "invitationDeclinedBody": "You have declined this invitation. The bank has been notified.",
+    "invitationExpired": "Response Window Closed",
+    "invitationExpiredBody": "The deadline for this quotation passed before a response was submitted. The bank has been notified.",
     "quotationSubmittedTitle": "Quotation Submitted",
     "totalQuotedPrice": "Total Quoted Price",
     "estimatedDays": "Estimated Days",

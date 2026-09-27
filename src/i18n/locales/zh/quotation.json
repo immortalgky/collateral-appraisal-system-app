@@ -28,7 +28,8 @@
     "UnderReview": "Under Review",
     "Declined": "Declined",
     "PendingCheckerReview": "Pending Checker Review",
-    "Pending": "Pending Submission"
+    "Pending": "Pending Submission",
+    "Expired": "已过期"
   },
   "vendorStatus": {
     "Pending": "Pending Submission",
@@ -498,6 +499,8 @@
     "specialInstructions": "Special Instructions",
     "invitationDeclined": "Invitation Declined",
     "invitationDeclinedBody": "You have declined this invitation. The bank has been notified.",
+    "invitationExpired": "响应时限已过",
+    "invitationExpiredBody": "在提交回复之前，此报价单的截止时间已过。银行已收到通知。",
     "quotationSubmittedTitle": "Quotation Submitted",
     "totalQuotedPrice": "Total Quoted Price",
     "estimatedDays": "Estimated Days",
