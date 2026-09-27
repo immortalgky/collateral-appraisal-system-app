@@ -824,15 +824,16 @@ export const mapLandAndBuildingPMAFormToPayload = (
   } = data;
 
   const [savedFirst, ...savedOthers] = savedTitles;
+  // Blank (a draft saved mid-edit) or only padded differently counts as unchanged: keep the row.
+  const editedNumber = (titleNumber ?? '').trim();
+  const keepFirstId =
+    !!savedFirst && (editedNumber === '' || editedNumber === savedFirst.titleNumber.trim());
   const first =
     titleNumber || rawang || landNumber || surveyNumber
       ? [
           {
             ...savedFirst,
-            id:
-              savedFirst && (savedFirst.titleNumber ?? '') === (titleNumber ?? '')
-                ? (savedFirst.id ?? null)
-                : null,
+            id: keepFirstId ? (savedFirst.id ?? null) : null,
             titleNumber: titleNumber ?? '',
             titleType: savedFirst?.titleType ?? 'DEED',
             rawang: rawang ?? null,

@@ -67,6 +67,19 @@ describe('mapLandAndBuildingPMAFormToPayload', () => {
     });
   });
 
+  it('treats a blank or padded title number as unchanged', () => {
+    // A draft can be saved mid-edit with the number cleared; that must not recreate the row.
+    expect(map({ ...form, titleNumber: '' }, [firstTitle]).titles[0].id).toBe('title-1');
+    expect(map({ ...form, titleNumber: ' T1 ' }, [firstTitle]).titles[0].id).toBe('title-1');
+  });
+
+  it('keeps the other titles when the first one is renumbered', () => {
+    const { titles } = map({ ...form, titleNumber: 'T1-new' }, [firstTitle, secondTitle]);
+
+    expect(titles.map(t => t.id)).toEqual([null, 'title-2']);
+    expect(titles[0]).toMatchObject({ titleNumber: 'T1-new', landParcelNumber: '12-edited' });
+  });
+
   it('keeps the titles the form does not show', () => {
     const { titles } = map(form, [firstTitle, secondTitle]);
 
