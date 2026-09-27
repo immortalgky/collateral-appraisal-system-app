@@ -89,8 +89,11 @@ export default function FeeInformationSection({
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
-  const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
+  // By id, not list position: the list can reorder or shrink between opening a dialog and
+  // confirming it (a refetch after the previous add/edit/delete lands late), and a position would
+  // then point at another item.
+  const [editingFee, setEditingFee] = useState<{ id: string; data: FeeItem } | null>(null);
+  const [deletingFeeId, setDeletingFeeId] = useState<string | null>(null);
 
   const [ciFeeDraft, setCiFeeDraft] = useState<number | null>(constructionInspectionFeeAmount);
   useEffect(() => {
@@ -184,7 +187,12 @@ export default function FeeInformationSection({
 
   const handleEditFee = async (data: Omit<FeeItem, 'id'>) => {
     if (!editingFee || !onUpdateFeeItem) return;
-    const apiItem = items[editingFee.index];
+    const apiItem = items.find(i => i.id === editingFee.id);
+    if (!apiItem) {
+      toast.error(t('fee.toasts.feeUpdateFailed'));
+      setEditingFee(null);
+      return;
+    }
     try {
       await onUpdateFeeItem(apiItem.appraisalFeeId, apiItem.id, {
         feeCode: data.type,
@@ -199,15 +207,20 @@ export default function FeeInformationSection({
   };
 
   const handleDeleteFee = async () => {
-    if (deletingFeeIndex === null || !onRemoveFeeItem) return;
-    const item = items[deletingFeeIndex];
+    if (deletingFeeId === null || !onRemoveFeeItem) return;
+    const item = items.find(i => i.id === deletingFeeId);
+    if (!item) {
+      toast.error(t('fee.toasts.feeDeleteFailed'));
+      setDeletingFeeId(null);
+      return;
+    }
     const totalPaid = totalFeePaid ?? 0;
 
     if (totalPaid > 0) {
       // Billable total after removing this item (pending/rejected fees never count — mirrors the
       // displayed subtotal and the backend RecalculateFromItems).
       const newSubtotal = items
-        .filter((i, idx) => idx !== deletingFeeIndex && isBillable(i))
+        .filter(i => i.id !== deletingFeeId && isBillable(i))
         .reduce((sum, i) => sum + (i.feeAmount || 0), 0);
       const newTotal = newSubtotal * (1 + vatRate / 100);
       if (totalPaid > newTotal) {
@@ -220,7 +233,7 @@ export default function FeeInformationSection({
             duration: 10000,
           },
         );
-        setDeletingFeeIndex(null);
+        setDeletingFeeId(null);
         return;
       }
     }
@@ -231,14 +244,13 @@ export default function FeeInformationSection({
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('fee.toasts.feeDeleteFailed'));
     } finally {
-      setDeletingFeeIndex(null);
+      setDeletingFeeId(null);
     }
   };
 
-  const openEditModal = (index: number) => {
-    const apiItem = items[index];
+  const openEditModal = (apiItem: AppraisalFeeItem) => {
     setEditingFee({
-      index,
+      id: apiItem.id,
       data: {
         id: apiItem.id,
         type: apiItem.feeCode as FeeItem['type'],
@@ -249,8 +261,8 @@ export default function FeeInformationSection({
   };
 
   const getDeletingFeeDescription = () => {
-    if (deletingFeeIndex === null) return '';
-    const item = items[deletingFeeIndex];
+    if (deletingFeeId === null) return '';
+    const item = items.find(i => i.id === deletingFeeId);
     return `${item?.feeDescription || 'this fee'} (${formatCurrency(item?.feeAmount || 0)})`;
   };
 
@@ -355,10 +367,8 @@ export default function FeeInformationSection({
         )}
 
         {/* Fee Rows */}
-        {items.map((item, index) => {
+        {items.map(item => {
           // Rejected fees are hidden from the list (a history screen will surface them later).
-          // Return null rather than filtering so `index` still maps to the original items array
-          // used by edit/delete handlers.
           if (item.approvalStatus === 'Rejected') return null;
 
           const editable = isEditable(item);
@@ -396,7 +406,7 @@ export default function FeeInformationSection({
                       {editable && (
                         <button
                           type="button"
-                          onClick={() => openEditModal(index)}
+                          onClick={() => openEditModal(item)}
                           className="text-gray-400 hover:text-secondary transition-colors p-1"
                           aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                           title={t('fee.aria.editFeeTitle')}
@@ -407,7 +417,7 @@ export default function FeeInformationSection({
                       {deletable && (
                         <button
                           type="button"
-                          onClick={() => setDeletingFeeIndex(index)}
+                          onClick={() => setDeletingFeeId(item.id)}
                           className="text-gray-400 hover:text-danger transition-colors p-1"
                           aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                           title={t('fee.aria.deleteFeeTitle')}
@@ -467,7 +477,7 @@ export default function FeeInformationSection({
                     {!readOnly && !editLocked && editable && (
                       <button
                         type="button"
-                        onClick={() => openEditModal(index)}
+                        onClick={() => openEditModal(item)}
                         className="text-gray-400 hover:text-secondary transition-colors p-1"
                         aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                       >
@@ -477,7 +487,7 @@ export default function FeeInformationSection({
                     {!readOnly && !editLocked && deletable && (
                       <button
                         type="button"
-                        onClick={() => setDeletingFeeIndex(index)}
+                        onClick={() => setDeletingFeeId(item.id)}
                         className="text-gray-400 hover:text-danger transition-colors p-1"
                         aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                       >
@@ -569,8 +579,8 @@ export default function FeeInformationSection({
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={deletingFeeIndex !== null}
-        onClose={() => setDeletingFeeIndex(null)}
+        isOpen={deletingFeeId !== null}
+        onClose={() => setDeletingFeeId(null)}
         onConfirm={handleDeleteFee}
         title={t('fee.deleteFeeDialog.title')}
         message={t('fee.deleteFeeDialog.message', { description: getDeletingFeeDescription() })}

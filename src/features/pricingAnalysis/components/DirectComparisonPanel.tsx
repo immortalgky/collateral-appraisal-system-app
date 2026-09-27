@@ -55,7 +55,6 @@ interface DirectComparisonPanelProps {
   savedComparativeAnalysisTemplateId?: string | null;
   savedFinalValueAdjusted?: number | null;
   savedLandValue?: number | null;
-  savedBuildingCost?: number | null;
   savedAppraisalPrice?: number | null;
   savedHasBuildingCost?: boolean | null;
   savedIncludeLandArea?: boolean | null;
@@ -82,7 +81,6 @@ export function DirectComparisonPanel({
   savedComparativeAnalysisTemplateId,
   savedFinalValueAdjusted,
   savedLandValue,
-  savedBuildingCost,
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
@@ -328,11 +326,6 @@ export function DirectComparisonPanel({
       // With building cost, also restore "Land Price (rounded)" which is bound to appraisalPriceRounded.
       if (hbc && savedLandValue != null && savedLandValue !== 0) {
         setValue('directComparisonAppraisalPrice.appraisalPriceRounded' as any, savedLandValue, {
-          shouldDirty: true,
-        });
-      }
-      if (savedBuildingCost != null && savedBuildingCost !== 0) {
-        setValue('directComparisonAppraisalPrice.buildingValue' as any, savedBuildingCost, {
           shouldDirty: true,
         });
       }
