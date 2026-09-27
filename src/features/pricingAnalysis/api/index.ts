@@ -1017,12 +1017,12 @@ export function useSaveIncomeAnalysis() {
       methodId: string;
       appraisalId: string;
       propertyId: string;
-      request: SaveIncomeAnalysisRequest;
+      request: Omit<SaveIncomeAnalysisRequest, 'appraisalId' | 'propertyId'>;
     }): Promise<IncomeAnalysisDto> => {
-      request = { ...request, appraisalId, propertyId };
+      const body: SaveIncomeAnalysisRequest = { ...request, appraisalId, propertyId };
       const { data: response } = await axios.put(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis`,
-        request,
+        body,
       );
       // SaveIncomeAnalysisResponse wraps the dto in { analysis }
       return (response.analysis ?? response) as IncomeAnalysisDto;
@@ -1058,12 +1058,12 @@ export function usePreviewIncomeAnalysis() {
       methodId: string;
       appraisalId: string;
       propertyId: string;
-      request: SaveIncomeAnalysisRequest;
+      request: Omit<SaveIncomeAnalysisRequest, 'appraisalId' | 'propertyId'>;
     }): Promise<IncomeAnalysisDto> => {
-      request = { ...request, appraisalId, propertyId };
+      const body: SaveIncomeAnalysisRequest = { ...request, appraisalId, propertyId };
       const { data } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis:preview`,
-        request,
+        body,
       );
       return (data.analysis ?? data) as IncomeAnalysisDto;
     },

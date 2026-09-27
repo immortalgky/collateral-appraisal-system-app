@@ -12,14 +12,13 @@ import { MethodSpecifyRoomIncomePerDayModal } from './dcfMethods/MethodSpecified
 import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateModal';
 import { MethodSpecifiedRoomIncomeWithGrowthModal } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthModal';
 import { MethodSpecifiedValueWithGrowthModal } from './dcfMethods/MethodSpecifiedValueWithGrowthModal';
-import type { UseFormGetValues } from 'react-hook-form';
-import type { FormValues } from '@features/appraisal/components/tables/bType.tsx';
+import type { FieldValues, UseFormGetValues } from 'react-hook-form';
 
 interface DiscountedCashFlowModalRendererProps {
   name: string;
   methodType: string;
   properties: Record<string, unknown>[];
-  getOuterFormValues: UseFormGetValues<FormValues>;
+  getOuterFormValues: UseFormGetValues<FieldValues>;
   isReadOnly?: boolean;
   incomeAnalysisId?: string;
   hostMethodId?: string;
