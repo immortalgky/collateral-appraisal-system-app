@@ -78,6 +78,16 @@ describe('mapLandAndBuildingPMAFormToPayload', () => {
     });
   });
 
+  it('treats a cleared title number as a change, as on main', () => {
+    expect(map({ ...form, titleNumber: '' }, [firstTitle]).titles[0]).toMatchObject({
+      id: null,
+      titleNumber: '',
+    });
+    // Only spaces is cleared too: with the other key fields empty the first title is dropped.
+    const blank = { ...form, titleNumber: '   ', rawang: '', landNumber: '', surveyNumber: '' };
+    expect(map(blank, [firstTitle, secondTitle]).titles).toEqual([secondTitle]);
+  });
+
   it('keeps the other titles when the first one is renumbered', () => {
     const { titles } = map({ ...form, titleNumber: 'T1-new' }, [firstTitle, secondTitle]);
 

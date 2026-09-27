@@ -829,7 +829,7 @@ export const mapLandAndBuildingPMAFormToPayload = (
   const editedNumber = (titleNumber ?? '').trim();
   const keepFirstId = !!savedFirst && editedNumber === savedFirst.titleNumber.trim();
   const first =
-    titleNumber || rawang || landNumber || surveyNumber
+    editedNumber || rawang || landNumber || surveyNumber
       ? [
           {
             ...savedFirst,
