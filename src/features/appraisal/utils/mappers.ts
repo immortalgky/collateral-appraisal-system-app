@@ -793,10 +793,12 @@ type LandPMATitle = NonNullable<GetLandPMAPropertyResponseType['titles']>[number
 
 /**
  * savedTitles are the titles as loaded. The form edits only the first, as flat fields. The backend
- * replaces the title list with what is sent, matching rows by id, and overwrites every field of a
- * matched row; so the loaded rows go back with their ids and all their fields, the first with the
- * form's edits on top. Built as a new row instead, each save deleted and recreated the title,
- * dropped any other title and cleared the fields this form does not show.
+ * replaces the title list with what is sent (rows matched by id, unsent rows deleted) and updates a
+ * matched row's fields but never its title number. So the loaded rows go back with all their
+ * fields, the first with the form's edits on top: with its id while the title number is unchanged,
+ * and as a new row when it changed, which is how the land page's title modal changes one. Built
+ * from the form alone, each save recreated the title, dropped any other title and cleared the
+ * fields this form does not show.
  */
 export const mapLandAndBuildingPMAFormToPayload = (
   data: createLandAndBuildingPMAFormType,
@@ -827,7 +829,10 @@ export const mapLandAndBuildingPMAFormToPayload = (
       ? [
           {
             ...savedFirst,
-            id: savedFirst?.id ?? null,
+            id:
+              savedFirst && (savedFirst.titleNumber ?? '') === (titleNumber ?? '')
+                ? (savedFirst.id ?? null)
+                : null,
             titleNumber: titleNumber ?? '',
             titleType: savedFirst?.titleType ?? 'DEED',
             rawang: rawang ?? null,

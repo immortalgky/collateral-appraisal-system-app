@@ -3,38 +3,43 @@ import { mapLandAndBuildingPMAFormToPayload } from './mappers';
 
 /**
  * The backend replaces the title list with what is sent: rows are matched by id, a row that is not
- * sent is deleted, and a matched row has every field overwritten. The PMA form edits only the first
- * title, so the loaded titles have to go back with their ids and all their fields.
+ * sent is deleted, and a matched row has every field overwritten except its title number, which it
+ * never changes. The PMA form edits only the first title, so the loaded titles go back with all
+ * their fields; the first keeps its id unless its title number changed, when it goes as a new row.
  */
 
 const form = {
   sellingPrice: 1_000_000,
   forcedSalePrice: 700_000,
   buildingInsurancePrice: 0,
-  titleNumber: 'T1-edited',
+  titleNumber: 'T1',
   rawang: 'R',
-  landNumber: '12',
+  landNumber: '12-edited',
   surveyNumber: '34',
   bookNumber: 'B',
   pageNumber: 'P',
   areaRai: 1,
   areaNgan: 2,
   areaSquareWa: 3,
-} as never;
+};
 
 const firstTitle = {
   id: 'title-1',
   titleNumber: 'T1',
   titleType: 'NS3K',
+  landParcelNumber: '12',
   mapSheetNumber: 'MS-9',
   governmentPrice: 250_000,
   remark: 'kept',
 };
 const secondTitle = { id: 'title-2', titleNumber: 'T2', titleType: 'DEED', remark: 'other' };
 
+const map = (values: object, saved?: object[]) =>
+  mapLandAndBuildingPMAFormToPayload(values as never, saved as never);
+
 describe('mapLandAndBuildingPMAFormToPayload', () => {
-  it('sends the loaded title back by id, with the fields the form does not show', () => {
-    const { titles } = mapLandAndBuildingPMAFormToPayload(form, [firstTitle] as never);
+  it('updates the loaded title in place, keeping the fields the form does not show', () => {
+    const { titles } = map(form, [firstTitle]);
 
     expect(titles).toHaveLength(1);
     expect(titles[0]).toMatchObject({
@@ -43,39 +48,43 @@ describe('mapLandAndBuildingPMAFormToPayload', () => {
       mapSheetNumber: 'MS-9',
       governmentPrice: 250_000,
       remark: 'kept',
-      // the form's edits win
-      titleNumber: 'T1-edited',
-      landParcelNumber: '12',
-      rai: 1,
+      landParcelNumber: '12-edited', // the form's edit wins
+    });
+  });
+
+  it('sends a changed title number as a new row, still with the other fields', () => {
+    // The backend never updates a title number in place, so an id here would drop the edit.
+    const { titles } = map({ ...form, titleNumber: 'T1-new' }, [firstTitle]);
+
+    expect(titles).toHaveLength(1);
+    expect(titles[0]).toMatchObject({
+      id: null,
+      titleNumber: 'T1-new',
+      titleType: 'NS3K',
+      mapSheetNumber: 'MS-9',
+      governmentPrice: 250_000,
+      remark: 'kept',
     });
   });
 
   it('keeps the titles the form does not show', () => {
-    const { titles } = mapLandAndBuildingPMAFormToPayload(form, [firstTitle, secondTitle] as never);
+    const { titles } = map(form, [firstTitle, secondTitle]);
 
     expect(titles.map(t => t.id)).toEqual(['title-1', 'title-2']);
     expect(titles[1]).toEqual(secondTitle);
   });
 
   it('adds a new title when none was loaded', () => {
-    const { titles } = mapLandAndBuildingPMAFormToPayload(form);
+    const { titles } = map(form);
 
     expect(titles).toHaveLength(1);
-    expect(titles[0]).toMatchObject({ id: null, titleType: 'DEED', titleNumber: 'T1-edited' });
+    expect(titles[0]).toMatchObject({ id: null, titleType: 'DEED', titleNumber: 'T1' });
   });
 
   it('drops only the first title when its key fields are cleared, as before', () => {
-    const cleared = {
-      ...(form as object),
-      titleNumber: '',
-      rawang: '',
-      landNumber: '',
-      surveyNumber: '',
-    } as never;
+    const cleared = { ...form, titleNumber: '', rawang: '', landNumber: '', surveyNumber: '' };
 
-    expect(mapLandAndBuildingPMAFormToPayload(cleared, [firstTitle] as never).titles).toEqual([]);
-    expect(
-      mapLandAndBuildingPMAFormToPayload(cleared, [firstTitle, secondTitle] as never).titles,
-    ).toEqual([secondTitle]);
+    expect(map(cleared, [firstTitle]).titles).toEqual([]);
+    expect(map(cleared, [firstTitle, secondTitle]).titles).toEqual([secondTitle]);
   });
 });
