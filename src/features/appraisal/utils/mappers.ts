@@ -789,7 +789,19 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
   };
 };
 
-export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPMAFormType) => {
+type LandPMATitle = NonNullable<GetLandPMAPropertyResponseType['titles']>[number];
+
+/**
+ * savedTitles are the titles as loaded. The form edits only the first, as flat fields. The backend
+ * replaces the title list with what is sent, matching rows by id, and overwrites every field of a
+ * matched row; so the loaded rows go back with their ids and all their fields, the first with the
+ * form's edits on top. Built as a new row instead, each save deleted and recreated the title,
+ * dropped any other title and cleared the fields this form does not show.
+ */
+export const mapLandAndBuildingPMAFormToPayload = (
+  data: createLandAndBuildingPMAFormType,
+  savedTitles: LandPMATitle[] = [],
+) => {
   const {
     sellingPrice,
     forcedSalePrice,
@@ -809,12 +821,15 @@ export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPM
     ...rest
   } = data;
 
-  const titles =
+  const [savedFirst, ...savedOthers] = savedTitles;
+  const first =
     titleNumber || rawang || landNumber || surveyNumber
       ? [
           {
+            ...savedFirst,
+            id: savedFirst?.id ?? null,
             titleNumber: titleNumber ?? '',
-            titleType: 'DEED',
+            titleType: savedFirst?.titleType ?? 'DEED',
             rawang: rawang ?? null,
             landParcelNumber: landNumber ?? null,
             surveyNumber: surveyNumber ?? null,
@@ -826,6 +841,7 @@ export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPM
           },
         ]
       : [];
+  const titles = [...first, ...savedOthers];
 
   return {
     ...rest,
