@@ -80,7 +80,7 @@ const LandBuildingPMAPage = () => {
 
   const onSubmit: SubmitHandler<createLandAndBuildingPMAFormType> = data => {
     setSaveAction('submit');
-    const payload = mapLandAndBuildingPMAFormToPayload(data);
+    const payload = mapLandAndBuildingPMAFormToPayload(data, propertyData?.titles ?? []);
     if (isEditMode && propertyId) {
       updateLandPMAProperties(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
@@ -118,7 +118,7 @@ const LandBuildingPMAPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    const payload = mapLandAndBuildingPMAFormToPayload(data);
+    const payload = mapLandAndBuildingPMAFormToPayload(data, propertyData?.titles ?? []);
     if (isEditMode && propertyId) {
       saveLandPMAPropertiesDraft(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },

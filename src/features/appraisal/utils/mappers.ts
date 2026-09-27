@@ -789,7 +789,22 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
   };
 };
 
-export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPMAFormType) => {
+type LandPMATitle = NonNullable<GetLandPMAPropertyResponseType['titles']>[number];
+
+/**
+ * savedTitles are the titles as loaded. The form edits only the first, as flat fields. The backend
+ * replaces the title list with what is sent (rows matched by id, unsent rows deleted) and updates a
+ * matched row's fields but never its title number. So the loaded rows go back with all their
+ * fields, the first with the form's edits on top: with its id while the title number is unchanged
+ * (ignoring padding), and as a new row when it changed, which is how the land page's title modal
+ * changes one (its schema drops the id). Built
+ * from the form alone, each save recreated the title, dropped any other title and cleared the
+ * fields this form does not show.
+ */
+export const mapLandAndBuildingPMAFormToPayload = (
+  data: createLandAndBuildingPMAFormType,
+  savedTitles: LandPMATitle[] = [],
+) => {
   const {
     sellingPrice,
     forcedSalePrice,
@@ -809,12 +824,18 @@ export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPM
     ...rest
   } = data;
 
-  const titles =
-    titleNumber || rawang || landNumber || surveyNumber
+  const [savedFirst, ...savedOthers] = savedTitles;
+  // Padding is not a change of title number.
+  const editedNumber = (titleNumber ?? '').trim();
+  const keepFirstId = !!savedFirst && editedNumber === savedFirst.titleNumber.trim();
+  const first =
+    editedNumber || rawang || landNumber || surveyNumber
       ? [
           {
-            titleNumber: titleNumber ?? '',
-            titleType: 'DEED',
+            ...savedFirst,
+            id: keepFirstId ? (savedFirst.id ?? null) : null,
+            titleNumber: editedNumber,
+            titleType: savedFirst?.titleType ?? 'DEED',
             rawang: rawang ?? null,
             landParcelNumber: landNumber ?? null,
             surveyNumber: surveyNumber ?? null,
@@ -826,6 +847,7 @@ export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPM
           },
         ]
       : [];
+  const titles = [...first, ...savedOthers];
 
   return {
     ...rest,
