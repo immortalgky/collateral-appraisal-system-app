@@ -124,7 +124,6 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   const { fields, append, replace } = useFieldArray({ control, name });
   const readOnly = useFormReadOnly();
   const rows: AreaRow[] = useWatch({ control, name }) ?? [];
-  const usableArea = useWatch({ control, name: USABLE_AREA });
 
   const focusIndex = useRef<number | null>(null);
 
@@ -179,9 +178,6 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   };
 
   const isEmpty = rows.length === 0;
-  const hasUsableArea = usableArea !== undefined && usableArea !== null && usableArea !== '';
-  const difference = total - toNum(usableArea);
-  const matches = Math.abs(difference) < 0.005;
 
   return (
     <div>
@@ -193,188 +189,200 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
             {isEmpty ? (
               t('forms.condo.areaDetailHint')
             ) : (
-              <>
-                <span className="tabular-nums">
-                  {t('forms.condo.areaItems', { count: rows.length, total: fmt(total) })}
-                </span>
-                {hasUsableArea &&
-                  (matches ? (
-                    <span className="rounded-full bg-primary-50 px-2 text-[0.75rem] font-semibold text-primary-700">
-                      {t('forms.condo.matchesUsable')}
-                    </span>
-                  ) : (
-                    <>
-                      <span className="rounded-full bg-amber-50 px-2 text-[0.75rem] font-semibold tabular-nums text-amber-700">
-                        {t('forms.condo.diffVsUsable', {
-                          diff: `${difference > 0 ? '+' : '−'}${fmt(Math.abs(difference))}`,
-                        })}
-                      </span>
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setValue(USABLE_AREA, Math.round(total * 100) / 100, {
-                              shouldDirty: true,
-                              shouldValidate: true,
-                            })
-                          }
-                          className="text-primary-600 underline underline-offset-2"
-                        >
-                          ใช้ยอดจากตาราง
-                        </button>
-                      )}
-                    </>
-                  ))}
-              </>
+              <span className="tabular-nums">
+                {t('forms.condo.areaItems', { count: rows.length, total: fmt(total) })}
+              </span>
             )}
           </span>
-          {!readOnly && (
+        </div>
+        {/* The table, then its add button under the total. */}
+        <div className="min-w-0 flex-1">
+          <div className="cas-table-card overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[480px] border-collapse text-[0.875rem] leading-tight tabular-nums">
+                <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
+                  <tr>
+                    <th className={clsx(TH, 'w-11 text-center')}>#</th>
+                    <th className={clsx(TH, 'text-left')}>
+                      {t('fieldLabels.condo.areaDescription')}
+                    </th>
+                    <th className={clsx(TH, 'w-40 text-right')}>
+                      {t('fieldLabels.condo.areaSize')}
+                    </th>
+                    {!readOnly && <th className={clsx(TH, 'w-24')} aria-hidden />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {isEmpty && (
+                    <tr>
+                      <td colSpan={readOnly ? 3 : 4} className="px-3 py-6 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          <Icon
+                            style="solid"
+                            name="ruler-combined"
+                            className="size-4 text-gray-300"
+                          />
+                          <p className="text-sm text-gray-500">
+                            {t('forms.condo.areaDetailEmpty')}
+                          </p>
+                          {!readOnly && (
+                            <button
+                              type="button"
+                              onClick={addRow}
+                              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                            >
+                              + {t('forms.condo.addArea')}
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+
+                  {order.map((index, position) => {
+                    const row = rows[index];
+                    return (
+                      <tr
+                        key={fields[index]?.id ?? index}
+                        className="group border-b border-gray-100 hover:bg-gray-50"
+                        onKeyDown={e => {
+                          if (readOnly || !e.altKey) return;
+                          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                            e.preventDefault();
+                            move(index, e.key === 'ArrowUp' ? -1 : 1);
+                          }
+                        }}
+                      >
+                        <td className={clsx(TD, 'text-center text-gray-400')}>{position + 1}</td>
+                        {readOnly ? (
+                          <>
+                            <td className={clsx(TD, 'truncate')}>{row?.areaDescription || '-'}</td>
+                            <td className={NUM}>
+                              {row?.areaSize === '' || row?.areaSize == null
+                                ? '-'
+                                : fmt(toNum(row.areaSize))}
+                            </td>
+                          </>
+                        ) : (
+                          <>
+                            <td className={clsx(TD, 'py-0.5')}>
+                              <DescriptionCell
+                                name={name}
+                                index={index}
+                                control={control}
+                                onEnter={() => nextFrom(index, 'areaDescription')}
+                              />
+                            </td>
+                            <td className={clsx(TD, 'py-0.5')}>
+                              <SizeCell
+                                name={name}
+                                index={index}
+                                control={control}
+                                onEnter={() => nextFrom(index, 'areaSize')}
+                              />
+                            </td>
+                            <td className={clsx(TD, 'py-0.5 pr-2')}>
+                              <div className="flex justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                                <RowButton
+                                  icon="arrow-up"
+                                  label={`Move row ${position + 1} up`}
+                                  disabled={position === 0}
+                                  onClick={() => move(index, -1)}
+                                />
+                                <RowButton
+                                  icon="arrow-down"
+                                  label={`Move row ${position + 1} down`}
+                                  disabled={position === order.length - 1}
+                                  onClick={() => move(index, 1)}
+                                />
+                                <RowButton
+                                  icon="trash"
+                                  label={`Remove row ${position + 1}`}
+                                  danger
+                                  onClick={() => removeRow(index)}
+                                />
+                              </div>
+                            </td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                {!isEmpty && (
+                  <tfoot>
+                    <tr className="bg-[#f8fafa] font-semibold text-[#1f2937]">
+                      <td className={TD} />
+                      <td className={TD}>{t('forms.condo.areaTotal')}</td>
+                      <td className={NUM}>{fmt(total)}</td>
+                      {!readOnly && <td />}
+                    </tr>
+                  </tfoot>
+                )}
+              </table>
+            </div>
+          </div>
+          {!isEmpty && !readOnly && (
             <button
               type="button"
               onClick={addRow}
-              className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[11px] font-normal text-gray-600 hover:border-primary-500 hover:text-primary-700"
+              className="mt-2 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 hover:border-primary-500 hover:text-primary-700"
             >
               + {t('forms.condo.addArea')}
             </button>
           )}
         </div>
-        <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[480px] border-collapse text-[0.875rem] leading-tight tabular-nums">
-              <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
-                <tr>
-                  <th className={clsx(TH, 'w-11 text-center')}>#</th>
-                  <th className={clsx(TH, 'text-left')}>
-                    {t('fieldLabels.condo.areaDescription')}
-                  </th>
-                  <th className={clsx(TH, 'w-40 text-right')}>{t('fieldLabels.condo.areaSize')}</th>
-                  {!readOnly && <th className={clsx(TH, 'w-24')} aria-hidden />}
-                </tr>
-              </thead>
-              <tbody>
-                {isEmpty && (
-                  <tr>
-                    <td colSpan={readOnly ? 3 : 4} className="px-3 py-6 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <Icon
-                          style="solid"
-                          name="ruler-combined"
-                          className="size-4 text-gray-300"
-                        />
-                        <p className="text-sm text-gray-500">{t('forms.condo.areaDetailEmpty')}</p>
-                        {!readOnly && (
-                          <button
-                            type="button"
-                            onClick={addRow}
-                            className="cas-hide-in-grid rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                          >
-                            + {t('forms.condo.addArea')}
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                )}
-
-                {order.map((index, position) => {
-                  const row = rows[index];
-                  return (
-                    <tr
-                      key={fields[index]?.id ?? index}
-                      className="group border-b border-gray-100 hover:bg-gray-50"
-                      onKeyDown={e => {
-                        if (readOnly || !e.altKey) return;
-                        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          move(index, e.key === 'ArrowUp' ? -1 : 1);
-                        }
-                      }}
-                    >
-                      <td className={clsx(TD, 'text-center text-gray-400')}>{position + 1}</td>
-                      {readOnly ? (
-                        <>
-                          <td className={clsx(TD, 'truncate')}>{row?.areaDescription || '-'}</td>
-                          <td className={NUM}>
-                            {row?.areaSize === '' || row?.areaSize == null
-                              ? '-'
-                              : fmt(toNum(row.areaSize))}
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className={clsx(TD, 'py-0.5')}>
-                            <DescriptionCell
-                              name={name}
-                              index={index}
-                              control={control}
-                              onEnter={() => nextFrom(index, 'areaDescription')}
-                            />
-                          </td>
-                          <td className={clsx(TD, 'py-0.5')}>
-                            <SizeCell
-                              name={name}
-                              index={index}
-                              control={control}
-                              onEnter={() => nextFrom(index, 'areaSize')}
-                            />
-                          </td>
-                          <td className={clsx(TD, 'py-0.5 pr-2')}>
-                            <div className="flex justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
-                              <RowButton
-                                icon="arrow-up"
-                                label={`Move row ${position + 1} up`}
-                                disabled={position === 0}
-                                onClick={() => move(index, -1)}
-                              />
-                              <RowButton
-                                icon="arrow-down"
-                                label={`Move row ${position + 1} down`}
-                                disabled={position === order.length - 1}
-                                onClick={() => move(index, 1)}
-                              />
-                              <RowButton
-                                icon="trash"
-                                label={`Remove row ${position + 1}`}
-                                danger
-                                onClick={() => removeRow(index)}
-                              />
-                            </div>
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  );
-                })}
-
-                {!isEmpty && !readOnly && (
-                  <tr className="cas-hide-in-grid">
-                    <td colSpan={4} className={clsx(TD, 'pl-12')}>
-                      <button
-                        type="button"
-                        onClick={addRow}
-                        className="rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 hover:border-primary-500 hover:text-primary-700"
-                      >
-                        + {t('forms.condo.addArea')}
-                      </button>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-              {!isEmpty && (
-                <tfoot>
-                  <tr className="bg-[#f8fafa] font-semibold text-[#1f2937]">
-                    <td className={TD} />
-                    <td className={TD}>{t('forms.condo.areaTotal')}</td>
-                    <td className={NUM}>{fmt(total)}</td>
-                    {!readOnly && <td />}
-                  </tr>
-                </tfoot>
-              )}
-            </table>
-          </div>
-        </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * The area table's total against the usable area, shown under the usable-area field: whether they
+ * match, and if not, a way to take the table's figure.
+ */
+export function UsableAreaCheck({ name }: { name: string }) {
+  const { t } = useTranslation('appraisal');
+  const { setValue } = useFormContext();
+  const readOnly = useFormReadOnly();
+  const rows: AreaRow[] = useWatch({ name }) ?? [];
+  const usableArea = useWatch({ name: USABLE_AREA });
+
+  const hasUsableArea = usableArea !== undefined && usableArea !== null && usableArea !== '';
+  if (rows.length === 0 || !hasUsableArea) return null;
+
+  const total = rows.reduce((sum, row) => sum + toNum(row?.areaSize), 0);
+  const difference = total - toNum(usableArea);
+  if (Math.abs(difference) < 0.005)
+    return (
+      <span className="whitespace-nowrap rounded-full bg-primary-50 px-2 text-[0.75rem] font-semibold text-primary-700">
+        {t('forms.condo.matchesUsable')}
+      </span>
+    );
+
+  return (
+    // One line, no flex-wrap: formLayout.css top-aligns any row that holds a .flex-wrap.
+    <span className="inline-flex items-center gap-x-1.5 whitespace-nowrap">
+      <span className="rounded-full bg-amber-50 px-2 text-[0.75rem] font-semibold tabular-nums text-amber-700">
+        {t('forms.condo.diffVsUsable', {
+          diff: `${difference > 0 ? '+' : '−'}${fmt(Math.abs(difference))}`,
+        })}
+      </span>
+      {!readOnly && (
+        <button
+          type="button"
+          onClick={() =>
+            setValue(USABLE_AREA, Math.round(total * 100) / 100, {
+              shouldDirty: true,
+              shouldValidate: true,
+            })
+          }
+          className="text-primary-600 underline underline-offset-2"
+        >
+          ใช้ยอดจากตาราง
+        </button>
+      )}
+    </span>
   );
 }
 

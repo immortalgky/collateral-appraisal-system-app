@@ -34,9 +34,10 @@ interface EditorIdentityCardProps {
 }
 
 /**
- * The card at the top of an editor, one short band: type, name and key facts on the left; a row of
- * photo thumbnails (and an optional aside) on the right, over the cover photo faded in behind it. Shared by the property and market comparable forms so the two read as one family.
- * Mock: docs/poc/identity-card-compact-mock.html (B).
+ * The card at the top of an editor, one short band: the cover photo as a framed tile on the left
+ * (an "add first photo" tile before there is one), then type, name and key facts on white, the other
+ * thumbnails and an optional aside on the right. The photo is an object, never a faded backdrop. Shared by the property and market comparable forms so the two read as one family.
+ * Mock: header-options.html (A).
  */
 export const EditorIdentityCard = ({
   view,
@@ -48,22 +49,94 @@ export const EditorIdentityCard = ({
 }: EditorIdentityCardProps) => {
   const { t } = useTranslation('appraisal');
   const photos = view?.photos ?? [];
-  const cover = photos[0];
   const canAdd = !!view && !view.readOnly;
-  const hidden = photos.length - MAX_THUMBS;
-  // The chosen cover gets a ring; without one set, the first photo is the cover.
-  const isCover = (id: string, index: number) =>
-    view?.thumbnailId ? id === view.thumbnailId : index === 0;
+  // The chosen cover, or the first photo when none is set, fills the tile; the rest line up on the right.
+  const cover = photos.find(p => p.id === view?.thumbnailId) ?? photos[0];
+  const rest = photos.filter(p => p !== cover);
+  const hidden = rest.length - (MAX_THUMBS - 1);
+  const showTile = !!view && (!!cover || canAdd);
+
+  const tile = showTile && (
+    <button
+      type="button"
+      onClick={cover ? () => view.onPreview(cover) : view.onAdd}
+      title={cover ? cover.fileName : undefined}
+      aria-label={cover ? cover.fileName : t('editorHeader.addFirstPhoto')}
+      className={clsx(
+        'relative flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg',
+        cover
+          ? 'bg-gray-100 ring-1 ring-gray-200'
+          : 'flex-col gap-1 border border-dashed border-gray-300 bg-gray-50 text-[0.6875rem] text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-700',
+      )}
+    >
+      {!cover ? (
+        <>
+          <Icon name="plus" style="solid" className="size-3" />
+          {t('editorHeader.addFirstPhoto')}
+        </>
+      ) : cover.isUploading ? (
+        <Icon name="spinner" style="solid" className="size-4 animate-spin text-gray-400" />
+      ) : (
+        <img src={cover.url} alt={cover.fileName} className="size-full object-cover" />
+      )}
+      {cover && photos.length > 1 && (
+        <span className="absolute bottom-1 right-1 rounded bg-black/60 px-1 text-[0.625rem] font-semibold leading-4 text-white tabular-nums">
+          {photos.length}
+        </span>
+      )}
+    </button>
+  );
+
+  // Only once there is a cover: before that the tile itself is the add button.
+  const thumbs = view && cover && (rest.length > 0 || canAdd) && (
+    <div className="flex shrink-0 items-center gap-1">
+      {rest.slice(0, MAX_THUMBS - 1).map((photo, i) => {
+        const folds = hidden > 0 && i === MAX_THUMBS - 2;
+        return (
+          <button
+            key={photo.id}
+            type="button"
+            onClick={() => view.onPreview(photo)}
+            title={photo.fileName}
+            className="relative flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 ring-1 ring-gray-200"
+          >
+            {photo.isUploading ? (
+              <Icon name="spinner" style="solid" className="size-3 animate-spin text-gray-400" />
+            ) : (
+              <img src={photo.url} alt={photo.fileName} className="size-full object-cover" />
+            )}
+            {folds && (
+              <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-semibold text-white">
+                +{hidden + 1}
+              </span>
+            )}
+          </button>
+        );
+      })}
+      {canAdd && (
+        <button
+          type="button"
+          onClick={view.onAdd}
+          title={t('editorHeader.addPhoto')}
+          aria-label={t('editorHeader.addPhoto')}
+          className="inline-flex size-8 items-center justify-center rounded-md border border-dashed border-gray-300 bg-white text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-700"
+        >
+          <Icon name="plus" style="solid" className="size-3" />
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div
       className={clsx(
-        // `isolate` keeps the backdrop's -z-10 inside the card. A soft shadow lifts it off the page
-        // in place of a border.
-        '@container relative isolate flex items-center gap-3 overflow-hidden rounded-xl bg-white px-3.5 py-2.5 shadow-[0_1px_2px_rgba(15,23,42,0.06),0_6px_20px_rgba(13,148,136,0.08)]',
+        // `isolate` keeps the skyline's -z-10 inside the card. A hairline border plus a firmer
+        // shadow: the shadow alone left the card's edge lost against the page.
+        '@container relative isolate flex items-center gap-3.5 overflow-hidden rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.08),0_8px_24px_rgba(15,23,42,0.10)]',
       )}
     >
-      {cover?.url && !cover.isUploading ? <CoverBackdrop url={cover.url} /> : <PixelSkyline />}
+      {!showTile && <PixelSkyline />}
+      {tile}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex flex-wrap items-center gap-2">{top}</div>
         <h2
@@ -76,55 +149,7 @@ export const EditorIdentityCard = ({
         </h2>
         {children}
       </div>
-      {view && (photos.length > 0 || canAdd) && (
-        <div className="flex shrink-0 items-center gap-1">
-          {photos.slice(0, MAX_THUMBS).map((photo, i) => {
-            const folds = hidden > 0 && i === MAX_THUMBS - 1;
-            return (
-              <button
-                key={photo.id}
-                type="button"
-                onClick={() => view.onPreview(photo)}
-                title={photo.fileName}
-                className={clsx(
-                  'relative flex h-[26px] w-[34px] shrink-0 items-center justify-center overflow-hidden rounded bg-gray-100 ring-1 ring-white',
-                  isCover(photo.id, i) && !folds && 'ring-2 ring-amber-400',
-                )}
-              >
-                {photo.isUploading ? (
-                  <Icon
-                    name="spinner"
-                    style="solid"
-                    className="size-3 animate-spin text-gray-400"
-                  />
-                ) : (
-                  <img src={photo.url} alt={photo.fileName} className="size-full object-cover" />
-                )}
-                {folds && (
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-semibold text-white">
-                    +{hidden + 1}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-          {canAdd && (
-            <button
-              type="button"
-              onClick={view.onAdd}
-              title={photos.length > 0 ? t('editorHeader.addPhoto') : undefined}
-              aria-label={t('editorHeader.addPhoto')}
-              className={clsx(
-                'inline-flex h-[26px] items-center justify-center gap-1.5 rounded border border-dashed border-gray-300 bg-white/90 text-xs text-gray-600 transition-colors hover:border-primary-400 hover:text-primary-700',
-                photos.length > 0 ? 'w-[34px]' : 'px-2.5',
-              )}
-            >
-              <Icon name="plus" style="solid" className="size-3" />
-              {photos.length === 0 && t('editorHeader.addFirstPhoto')}
-            </button>
-          )}
-        </div>
-      )}
+      {thumbs}
       {aside && (
         <div className="flex min-w-[8.5rem] flex-col items-end border-l border-gray-100 pl-4 text-right">
           {aside}
@@ -133,19 +158,6 @@ export const EditorIdentityCard = ({
     </div>
   );
 };
-
-/**
- * The cover photo on the card's right: clear enough to recognise the property, fading out only at
- * its left edge into the text. Decoration only — the photo itself opens from the buttons.
- */
-const CoverBackdrop = ({ url }: { url: string }) => (
-  <img
-    src={url}
-    alt=""
-    aria-hidden="true"
-    className="pointer-events-none absolute inset-y-0 right-0 -z-10 h-full w-[28%] max-w-[22rem] object-cover opacity-90 [mask-image:linear-gradient(to_left,#000_55%,transparent)]"
-  />
-);
 
 /** Buildings from the dino loader's Bangkok skyline, left to right, as they stand in the corner. */
 const SCENE: SkylineKind[] = [

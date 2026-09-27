@@ -25,7 +25,7 @@ import FormSwitch from '../inputs/FormSwitch';
 import AppraisalSelector from '../inputs/AppraisalSelector';
 import LocationSelector from '../inputs/LocationSelector';
 
-import { FieldLabelContext, useFormSchema } from './context';
+import { FieldLabelContext, useFormReadOnly, useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
 import FieldHelp from './FieldHelp';
@@ -271,6 +271,8 @@ function FieldRenderer({
     isRequired,
   } = useFieldState({ field, namePrefix, index });
   const isDisabled = fieldDisabled || (globalDisabled ?? false);
+  // A read-only page (the form context, not only `globalDisabled`) has nothing to fill in.
+  const formReadOnly = useFormReadOnly();
   const { setValue, getValues } = useFormContext();
 
   const filterWatchValues = useFilterWatchValues(
@@ -775,6 +777,16 @@ function FieldRenderer({
       // layout can show it as inactive. Deliberately not set for `globalDisabled`: a read-only page
       // disables every field, and tinting all of them would just look like a broken form.
       data-field-disabled={fieldDisabled || undefined}
+      // Required and still blank: the grid layout tints the row until a value lands. Not on a page
+      // nobody can edit, where the tint would read as errors that cannot be fixed.
+      data-field-required={(isRequired && !isDisabled && !formReadOnly) || undefined}
+      data-field-empty={
+        isBlank(watchedValue) ||
+        // The schema counts 0 as missing for a required number unless the field allows it, so the
+        // tint does too.
+        (passedField.type === 'number-input' && !passedField.allowZero && watchedValue === 0) ||
+        undefined
+      }
       data-row-lead={rowLead || undefined}
       className={clsx(field.wrapperClassName)}
       style={controlWidth ? ({ '--cas-ctrl-w': controlWidth } as CSSProperties) : undefined}
@@ -783,6 +795,9 @@ function FieldRenderer({
     </div>
   );
 }
+
+const isBlank = (v: unknown) =>
+  v == null || (typeof v === 'string' && !v.trim()) || (Array.isArray(v) && v.length === 0);
 
 /**
  * The cap for a field's control, in rem, or undefined to leave it filling its cell.
@@ -795,7 +810,8 @@ function FieldRenderer({
 function controlMaxWidth(field: FormField, schemaMaxLength?: number): string | undefined {
   switch (field.type) {
     case 'number-input': {
-      const digits = (field.maxIntegerDigits ?? 12) + (field.decimalPlaces ?? 0);
+      // Decimals default to NumberInput's own 2: a field that leaves them unset still shows "0.00".
+      const digits = (field.maxIntegerDigits ?? 12) + (field.decimalPlaces ?? 2);
       // ~0.6rem a digit at the form's size, plus room for separators and the unit icon.
       return `${Math.min(Math.max(digits * 0.6 + 2.5, 6), 16)}rem`;
     }

@@ -557,10 +557,7 @@
       "buildingInsuranceHint": "仅建筑物 — 不含土地",
       "decisionApproach": "决策方法",
       "priceVerification": "价格核实",
-      "priceVerificationOptions": [
-        "未核实",
-        "已核实"
-      ],
+      "priceVerificationOptions": ["未核实", "已核实"],
       "reviewPrices": "审查价格",
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",
@@ -929,6 +926,20 @@
       "reorderFailed": "重排房产失败"
     },
     "floorCount": "{{n}} 层",
+    "buildingAge": "房龄 {{n}} 年",
+    "underConstruction": "在建",
+    "underConstructionPct": "在建 {{pct}}%",
+    "facts": {
+      "deed": "地契 {{no}}",
+      "buildingArea": "建筑 {{n}} m²",
+      "floor": "{{n}} 层",
+      "room": "房号 {{n}}",
+      "madeIn": "{{n}} 年制造",
+      "machineAge": "机龄 {{n}} 年",
+      "leaseRemaining": "租期剩余 {{n}} 年",
+      "leaseEnded": "租约已到期",
+      "leaseRent": "租金 ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "机器汇总",
       "status": {
@@ -1905,9 +1916,31 @@
       "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
-      "sectionTitle": "建筑详情"
+      "sectionTitle": "建筑详情",
+      "groups": {
+        "identification": "基本信息",
+        "ownership": "权属与法律",
+        "typeUse": "类型与用途",
+        "condition": "状况与质量",
+        "structure": "结构",
+        "finishes": "装修与围护",
+        "floors": "楼层",
+        "areaCost": "面积与造价",
+        "limitations": "限制",
+        "remark": "备注"
+      }
     },
     "condo": {
+      "groups": {
+        "identification": "识别信息",
+        "ownership": "所有权与法律",
+        "location": "位置",
+        "surroundings": "周边环境",
+        "building": "建筑",
+        "unit": "单元",
+        "referencePrices": "参考价格",
+        "remark": "备注"
+      },
       "areaDetailHint": "单元各部分及其面积",
       "areaDetailEmpty": "暂无面积明细",
       "addArea": "添加面积",
@@ -1935,10 +1968,51 @@
       "sectionTitle": "地契"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "合同信息"
+      },
       "sectionTitle": "租赁协议"
     },
     "rentalInfo": {
-      "sectionTitle": "租赁信息"
+      "addPeriod": "添加期间",
+      "addUpFront": "添加预付款",
+      "groups": {
+        "schedule": "租期",
+        "growthRate": "租金增长率",
+        "upFront": "预付款",
+        "rentalSchedule": "租金计划表"
+      },
+      "sectionTitle": "租赁信息",
+      "growthFrequency": "按频率",
+      "growthPeriod": "按期间",
+      "edit": "编辑",
+      "editing": "编辑中",
+      "generate": "生成",
+      "generating": "生成中...",
+      "scheduleEmpty": "点击 生成 以计算租金计划表",
+      "upFrontMismatch": "预付款明细合计（{{entries}}）与预付款金额（{{total}}）不符",
+      "table": {
+        "atYear": "起始年",
+        "toYear": "截止年",
+        "growthRate": "增长率",
+        "growthAmount": "增长金额",
+        "totalAmount": "合计（泰铢）",
+        "atDate": "日期",
+        "upFrontAmount": "预付款金额",
+        "year": "年",
+        "contractStart": "合同开始",
+        "contractEnd": "合同结束",
+        "upFrontPerYear": "预付款（泰铢/年）",
+        "rentalFeePerYear": "合同租金（泰铢/年）",
+        "growthRatePct": "增长率 %",
+        "total": "合计"
+      },
+      "deleteRow": {
+        "title": "删除行",
+        "message": "确定要删除此行吗？此操作无法撤销。",
+        "confirm": "删除",
+        "cancel": "取消"
+      }
     },
     "marketComparable": {
       "sectionTitle": "市场可比案例",

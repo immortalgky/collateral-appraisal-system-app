@@ -9,6 +9,7 @@ import {
   leaseOtherField,
 } from '../configs/fields';
 import { FieldLabels } from '../components/FieldLabels';
+import { useTranslation } from 'react-i18next';
 
 interface SectionRowProps {
   title: string;
@@ -37,6 +38,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
 );
 
 const LeaseAgreementForm = ({ namePrefix }: { namePrefix?: string }) => {
+  const { t } = useTranslation('appraisal');
   return (
     <FieldLabels scope="lease">
       <div className="w-full max-w-full overflow-hidden">
@@ -48,7 +50,7 @@ const LeaseAgreementForm = ({ namePrefix }: { namePrefix?: string }) => {
             chrome than content, and the groups named steps of a lease rather than anything
             the reader has to tell apart. The fields inside still run in that order: parties,
             term, rent and costs, conditions, remark. */}
-          <SectionRow title="Contract Information" icon="file-contract" isLast>
+          <SectionRow title={t('forms.leaseAgreement.groups.contract')} icon="file-contract" isLast>
             <FormFields fields={leaseFields} namePrefix={namePrefix} />
           </SectionRow>
         </div>
@@ -85,17 +87,18 @@ const pick = (...entries: (string | [name: string, span: string])[]): FormField[
 
 const leaseFields = pick(
   ['contractNo', 'col-span-12'],
-  ['lessorName', 'col-span-6'],
-  ['lesseeName', 'col-span-6'],
-  ['leaseStartDate', 'col-span-3'],
-  ['leaseEndDate', 'col-span-3'],
-  ['leasePeriodAsContract', 'col-span-3'],
-  ['remainingLeaseAsAppraisalDate', 'col-span-3'],
+  ['lessorName', 'col-span-12'],
+  ['lesseeName', 'col-span-12'],
+  ['leaseStartDate', 'col-span-6'],
+  ['leaseEndDate', 'col-span-6'],
+  // The contract's term and what is left of it, together under the dates they span.
+  ['leasePeriodAsContract', 'col-span-6'],
+  ['remainingLeaseAsAppraisalDate', 'col-span-6'],
   ['contractRenewal', 'col-span-6'],
   ['leaseTerminate', 'col-span-6'],
-  ['leaseRentFee', 'col-span-4'],
-  ['rentAdjust', 'col-span-4'],
-  ['additionalExpenses', 'col-span-4'],
+  ['leaseRentFee', 'col-span-6'],
+  ['rentAdjust', 'col-span-3'],
+  ['additionalExpenses', 'col-span-3'],
   ['sublease', 'col-span-12'],
   'rentalTermsImpactingPropertyUse',
   'terminationOfLease',

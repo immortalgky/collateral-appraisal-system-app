@@ -3,7 +3,7 @@ import Icon from '@/shared/components/Icon';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import CondoAreaDetailForm from './CondoAreaDetailForm';
+import CondoAreaDetailForm, { UsableAreaCheck } from './CondoAreaDetailForm';
 import CondoInsuranceSummary from './CondoInsuranceSummary';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
@@ -72,8 +72,8 @@ function CondoDetailForm() {
   const lon = watch('longitude');
   const govPricePerSqm = watch('governmentPricePerSqm');
   const usableArea = watch('usableArea');
-  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
-  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const parsedLat = lat != null && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon != null && lon !== '' ? Number(lon) : null;
   const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
   const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
 
@@ -97,6 +97,9 @@ function CondoDetailForm() {
     () => (list: FormField[]) =>
       list.map(field => {
         if (field.name === 'propertyName' && fillIcon) return { ...field, rightIcon: fillIcon };
+        // The area table's total against this figure, with a way to take the table's.
+        if (field.name === 'usableArea' && field.type === 'number-input')
+          return { ...field, helperText: <UsableAreaCheck name="areaDetails" /> };
         if (
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
@@ -108,6 +111,7 @@ function CondoDetailForm() {
   );
   const identity = useMemo(() => withIcons(identityFields), [withIcons]);
   const coordinates = useMemo(() => withIcons(coordinateFields), [withIcons]);
+  const usableAreaFields = useMemo(() => withIcons(pick('usableArea')), [withIcons]);
 
   // Building Insurance: buildingInsurancePrice is SERVER-DERIVED (rate × usableArea) —
   // unlike Government Price above, there is no client-side computation here. The field
@@ -140,15 +144,15 @@ function CondoDetailForm() {
   return (
     <FieldLabels scope="condo">
       <div className="cas-condo-form cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <SectionRow title="Identification" icon="building">
+        <SectionRow title={t('forms.condo.groups.identification')} icon="building">
           <FormFields fields={identity} />
         </SectionRow>
 
-        <SectionRow title="Ownership & Legal" icon="scale-balanced">
+        <SectionRow title={t('forms.condo.groups.ownership')} icon="scale-balanced">
           <FormFields fields={legalFields} />
         </SectionRow>
 
-        <SectionRow title="Location" icon="map-location-dot">
+        <SectionRow title={t('forms.condo.groups.location')} icon="map-location-dot">
           <FieldGroupLabel label={t('fieldLabels.condo.titleAddressGroup')} />
           <FormFields fields={condoAddressFields} />
           <FieldGroupLabel label={t('fieldLabels.condo.dopaAddressGroup')} />
@@ -170,22 +174,24 @@ function CondoDetailForm() {
           initialLon={initialLon}
         />
 
-        <SectionRow title="Surroundings" icon="tree-city">
+        <SectionRow title={t('forms.condo.groups.surroundings')} icon="tree-city">
           <FormFields fields={surroundingFields} />
         </SectionRow>
 
-        <SectionRow title="Building" icon="building-columns">
+        <SectionRow title={t('forms.condo.groups.building')} icon="building-columns">
           <FormFields fields={buildingFields} />
         </SectionRow>
 
-        <SectionRow title="Unit" icon="door-open">
-          <FormFields fields={unitFields} />
+        <SectionRow title={t('forms.condo.groups.unit')} icon="door-open">
+          {/* The area table sits right under the usable area it is checked against. */}
+          <FormFields fields={usableAreaFields} />
           <div className="col-span-12">
             <CondoAreaDetailForm name={'areaDetails'} />
           </div>
+          <FormFields fields={unitFields} />
         </SectionRow>
 
-        <SectionRow title="Reference Prices" icon="money-bill">
+        <SectionRow title={t('forms.condo.groups.referencePrices')} icon="money-bill">
           <FormFields fields={condoGovernmentPriceFields} />
           <FormFields fields={buildingInsuranceFields} />
           <CondoInsuranceSummary />
@@ -199,7 +205,7 @@ function CondoDetailForm() {
           <FormFields fields={inForestBoundaryFormFields} />
         </SectionRow>
 
-        <SectionRow title="Remarks" icon="comment" isLast>
+        <SectionRow title={t('forms.condo.groups.remark')} icon="comment" isLast>
           <FormFields fields={remarkFormFields} />
         </SectionRow>
       </div>
@@ -247,17 +253,18 @@ const pick = (...entries: (string | [name: string, span: string])[]): FormField[
 const identityFields = pick(
   'propertyName',
   'condoName',
-  ['roomNumber', 'col-span-4'],
-  ['floorNumber', 'col-span-4'],
-  ['modelName', 'col-span-4'],
+  ['roomNumber', 'col-span-6'],
+  ['floorNumber', 'col-span-6'],
   ['buildingNumber', 'col-span-6'],
   ['condoRegistrationNumber', 'col-span-6'],
+  ['modelName', 'col-span-12'],
   'titleNumber',
 );
 
 const legalFields = pick(
-  ['isOwnerVerified', 'col-span-4'],
-  ['ownerName', 'col-span-8'],
+  // The owner's name sits on its own line under the check, as on the land form.
+  'isOwnerVerified',
+  'ownerName',
   'hasObligation',
   'obligationDetails',
   ['documentValidationResultType', 'col-span-12'],
@@ -271,9 +278,9 @@ const roadFields = pick(
   'locationType',
   'street',
   'soi',
-  'distanceFromMainRoad',
-  'accessRoadWidth',
-  'rightOfWay',
+  ['distanceFromMainRoad', 'col-span-6'],
+  ['accessRoadWidth', 'col-span-3'],
+  ['rightOfWay', 'col-span-3'],
   'roadSurfaceType',
   'roadSurfaceTypeOther',
 );
@@ -293,9 +300,10 @@ const surroundingFields = pick(
 );
 
 const buildingFields = pick(
-  ['buildingAge', 'col-span-3'],
-  ['numberOfFloors', 'col-span-3'],
-  ['isUnderConstruction', 'col-span-6'],
+  // One full row each.
+  ['buildingAge', 'col-span-12'],
+  ['numberOfFloors', 'col-span-12'],
+  ['isUnderConstruction', 'col-span-12'],
   'buildingConditionType',
   'buildingConditionTypeOther',
   'buildingFormType',
@@ -307,7 +315,6 @@ const buildingFields = pick(
 );
 
 const unitFields = pick(
-  ['usableArea', 'col-span-4'],
   'decorationType',
   'decorationTypeOther',
   'roomLayoutType',

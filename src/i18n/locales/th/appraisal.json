@@ -557,10 +557,7 @@
       "buildingInsuranceHint": "เฉพาะสิ่งปลูกสร้าง — ไม่รวมที่ดิน",
       "decisionApproach": "วิธีการตัดสินใจ",
       "priceVerification": "การตรวจสอบราคา",
-      "priceVerificationOptions": [
-        "ยังไม่ตรวจสอบ",
-        "ตรวจสอบแล้ว"
-      ],
+      "priceVerificationOptions": ["ยังไม่ตรวจสอบ", "ตรวจสอบแล้ว"],
       "reviewPrices": "ราคาทบทวน",
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
@@ -929,6 +926,20 @@
       "reorderFailed": "ไม่สามารถเรียงลำดับทรัพย์สินได้"
     },
     "floorCount": "{{n}} ชั้น",
+    "buildingAge": "อายุ {{n}} ปี",
+    "underConstruction": "กำลังก่อสร้าง",
+    "underConstructionPct": "กำลังก่อสร้าง {{pct}}%",
+    "facts": {
+      "deed": "โฉนด {{no}}",
+      "buildingArea": "อาคาร {{n}} ตร.ม.",
+      "floor": "ชั้น {{n}}",
+      "room": "ห้อง {{n}}",
+      "madeIn": "ผลิตปี {{n}}",
+      "machineAge": "อายุ {{n}} ปี",
+      "leaseRemaining": "เช่าเหลือ {{n}} ปี",
+      "leaseEnded": "สัญญาเช่าสิ้นสุดแล้ว",
+      "leaseRent": "ค่าเช่า ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "สรุปเครื่องจักร",
       "status": {
@@ -1905,9 +1916,31 @@
       "sectionTitleOtherInfo": "ข้อมูลอื่น ๆ"
     },
     "building": {
-      "sectionTitle": "รายละเอียดอาคาร"
+      "sectionTitle": "รายละเอียดอาคาร",
+      "groups": {
+        "identification": "ข้อมูลอาคาร",
+        "ownership": "กรรมสิทธิ์และข้อกฎหมาย",
+        "typeUse": "ประเภทและการใช้งาน",
+        "condition": "สภาพและคุณภาพ",
+        "structure": "โครงสร้าง",
+        "finishes": "งานตกแต่งและผนัง",
+        "floors": "ชั้นและพื้น",
+        "areaCost": "พื้นที่และราคาก่อสร้าง",
+        "limitations": "ข้อจำกัด",
+        "remark": "หมายเหตุ"
+      }
     },
     "condo": {
+      "groups": {
+        "identification": "ข้อมูลห้องชุด",
+        "ownership": "กรรมสิทธิ์และข้อกฎหมาย",
+        "location": "ที่ตั้ง",
+        "surroundings": "สภาพแวดล้อม",
+        "building": "อาคาร",
+        "unit": "ห้องชุด",
+        "referencePrices": "ราคาอ้างอิง",
+        "remark": "หมายเหตุ"
+      },
       "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
       "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
       "addArea": "เพิ่มพื้นที่",
@@ -1935,10 +1968,51 @@
       "sectionTitle": "โฉนดที่ดิน"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "ข้อมูลสัญญา"
+      },
       "sectionTitle": "สัญญาเช่า"
     },
     "rentalInfo": {
-      "sectionTitle": "ข้อมูลการเช่า"
+      "addPeriod": "เพิ่มช่วงเวลา",
+      "addUpFront": "เพิ่มค่าเช่าล่วงหน้า",
+      "groups": {
+        "schedule": "ระยะเวลาเช่า",
+        "growthRate": "อัตราการเพิ่มค่าเช่า",
+        "upFront": "ค่าเช่าล่วงหน้า",
+        "rentalSchedule": "ตารางค่าเช่า"
+      },
+      "sectionTitle": "ข้อมูลการเช่า",
+      "growthFrequency": "ตามความถี่",
+      "growthPeriod": "ตามช่วงเวลา",
+      "edit": "แก้ไข",
+      "editing": "กำลังแก้ไข",
+      "generate": "คำนวณ",
+      "generating": "กำลังคำนวณ...",
+      "scheduleEmpty": "กด คำนวณ เพื่อสร้างตารางค่าเช่า",
+      "upFrontMismatch": "ยอดรวมค่าเช่าล่วงหน้าในตาราง ({{entries}}) ไม่ตรงกับค่าเช่าจ่ายล่วงหน้า ({{total}})",
+      "table": {
+        "atYear": "ตั้งแต่ปีที่",
+        "toYear": "ถึงปีที่",
+        "growthRate": "อัตราการเพิ่ม",
+        "growthAmount": "จำนวนที่เพิ่ม",
+        "totalAmount": "รวม (บาท)",
+        "atDate": "ณ วันที่",
+        "upFrontAmount": "ค่าเช่าล่วงหน้า",
+        "year": "ปีที่",
+        "contractStart": "เริ่มสัญญา",
+        "contractEnd": "สิ้นสุดสัญญา",
+        "upFrontPerYear": "ค่าเช่าล่วงหน้า (บาท/ปี)",
+        "rentalFeePerYear": "ค่าเช่าตามสัญญา (บาท/ปี)",
+        "growthRatePct": "อัตราการเพิ่ม %",
+        "total": "รวม"
+      },
+      "deleteRow": {
+        "title": "ลบรายการ",
+        "message": "ต้องการลบรายการนี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้",
+        "confirm": "ลบ",
+        "cancel": "ยกเลิก"
+      }
     },
     "marketComparable": {
       "sectionTitle": "ข้อมูลตลาดเปรียบเทียบ",

@@ -117,19 +117,14 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
           the grid layout's teal repeater look, and this table wears the grey one. */}
         <div data-field={name} className="cas-repeater" />
         <div className="cas-labelled-table">
-          <div className="cas-table-label">
-            {t('titleEntry.sections.document.title')}
-            {addButton(
-              'inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[0.75rem] font-normal text-gray-600 hover:border-primary-500 hover:text-primary-700',
-            )}
-          </div>
+          <div className="cas-table-label">{t('titleEntry.sections.document.title')}</div>
           <div className="flex w-full min-w-0 flex-1 flex-col">
             {values.length === 0 ? (
               <div className="cas-table-card flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 py-10">
                 <Icon name="file-lines" style="regular" className="mb-2 text-3xl text-gray-300" />
                 <p className="text-sm font-medium text-gray-500">{t('titleEntry.list.empty')}</p>
                 {addButton(
-                  'cas-hide-in-grid mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-600',
+                  'mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-primary-600',
                 )}
               </div>
             ) : (
@@ -260,6 +255,12 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
                       })}
                     </tbody>
                   </table>
+                </div>
+                {/* Grid layout only: classic keeps its add button in the section header. */}
+                <div className="cas-show-in-grid pt-2">
+                  {addButton(
+                    'inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[0.75rem] font-normal text-gray-600 hover:border-primary-500 hover:text-primary-700',
+                  )}
                 </div>
               </>
             )}
