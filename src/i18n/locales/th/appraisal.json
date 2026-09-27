@@ -623,7 +623,17 @@
       "confirm": "ส่ง",
       "cancel": "ยกเลิก",
       "submitting": "กำลังส่ง…",
-      "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
+      "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน",
+      "voteTitle": "ยืนยันการลงคะแนน",
+      "voteMessage": "ส่งแล้วแก้ไขไม่ได้",
+      "voteAck": "ฉันต้องการลงคะแนน \"{{vote}}\" ต่อราคาประเมินนี้",
+      "summary": {
+        "decision": "การตัดสินใจ",
+        "destination": "ขั้นตอนถัดไป",
+        "assignee": "ผู้รับงาน",
+        "reason": "เหตุผล",
+        "comments": "ความคิดเห็น"
+      }
     },
     "warnings": {
       "title": "กรุณาตรวจสอบก่อนดำเนินการต่อ",
@@ -636,7 +646,8 @@
       "submitFailed": "ไม่สามารถส่งการตัดสินใจได้",
       "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ",
       "forceSaleRateSaved": "บันทึกอัตราราคาขายบังคับสำเร็จ",
-      "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่"
+      "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่",
+      "voteNeedsComment": "กรุณาระบุความคิดเห็นและยืนยันการลงคะแนนก่อนส่ง"
     }
   },
   "decision": {
@@ -646,7 +657,6 @@
     "commentsLabel": "ความคิดเห็น",
     "noDecision": "ยังไม่มีการตัดสินใจ",
     "assignNextTo": "มอบหมายถัดไปให้",
-    "decisionPlaceholder": "เลือกการตัดสินใจ...",
     "assigneePlaceholder": "เลือกผู้รับมอบหมาย...",
     "requestDocuments": "ขอเอกสารเพิ่มเติม",
     "loadingActivity": "กำลังโหลดกิจกรรม...",
@@ -661,7 +671,26 @@
       "routeBack": "ต้องการแก้ไขอะไร?",
       "proceed": "หมายเหตุสุดท้ายก่อนดำเนินการ?",
       "hold": "ทำไมถึงพักงานนี้ไว้?"
-    }
+    },
+    "groups": {
+      "forward": "ส่งต่อ",
+      "back": "ส่งกลับ",
+      "cancel": "ยกเลิก / ปฏิเสธ"
+    },
+    "destination": {
+      "forward": "ไปที่ {{name}}",
+      "back": "กลับไป {{name}}",
+      "cancel": "จบ workflow"
+    },
+    "committeeVotes": "ผลโหวต",
+    "votesSummary": "ลงคะแนนแล้ว {{received}}/{{total}}",
+    "stepsCount_one": "{{count}} ขั้นตอน",
+    "stepsCount_other": "{{count}} ขั้นตอน",
+    "yourVote": "คะแนนของคุณ",
+    "nextStep": "ขั้นตอนถัดไป",
+    "voteImpact": "{{from}} → {{to}} เสียง",
+    "votesLoadFailed": "โหลดผลโหวตของกรรมการไม่สำเร็จ",
+    "noActions": "ไม่มีตัวเลือกการตัดสินใจสำหรับงานนี้ กรุณารีเฟรชหน้า หรือติดต่อผู้ดูแลระบบหากยังพบปัญหา"
   },
   "propertyInfo": {
     "tabs": {
@@ -2122,9 +2151,6 @@
     "quotationStarted": "เริ่มต้นการประกวดราคาแล้ว — ได้รับเชิญบริษัทต่างๆ แล้ว",
     "quotationAddSelectDraft": "กรุณาเลือกใบเสนอราคาฉบับร่างที่ต้องการเพิ่ม",
     "quotationAddedToDraft": "เพิ่มงานประเมินใน {{quotationNumber}} แล้ว",
-    "voteSubmitFailed": "ส่งการโหวตล้มเหลว",
-    "committeeDecisionRecorded": "บันทึกการตัดสินใจของคณะกรรมการแล้ว",
-    "voteRecorded": "บันทึกการโหวตแล้ว",
     "propertyCondoUpdated": "อัปเดตทรัพย์สินคอนโดสำเร็จ",
     "propertyCondoCreated": "สร้างทรัพย์สินคอนโดสำเร็จ",
     "propertyLandUpdated": "อัปเดตทรัพย์สินที่ดินสำเร็จ",
@@ -2496,8 +2522,6 @@
     "totalRow": "รวม"
   },
   "approvalListSection": {
-    "title": "การอนุมัติของคณะกรรมการ",
-    "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",
     "returnedBanner": "การประเมินนี้ถูกส่งกลับเพื่อแก้ไข",
     "conditionsTitle": "เงื่อนไขการอนุมัติ",
     "votesDisplay": "{{received}}/{{total}} คะแนนเสียง",
@@ -2518,13 +2542,6 @@
     "conditionRoleRequiredDefault": "ต้องมีผู้มีสิทธิ์ลงคะแนน",
     "conditionMinVotes": "ต้องการอย่างน้อย {{n}} คะแนน",
     "conditionMinVotesDefault": "ต้องการจำนวนคะแนนขั้นต่ำ",
-    "columns": {
-      "member": "สมาชิก",
-      "role": "บทบาท",
-      "vote": "คะแนนเสียง",
-      "date": "วันที่",
-      "comments": "ความคิดเห็น"
-    },
     "stats": {
       "votesReceived": "จำนวนโหวต",
       "approve": "อนุมัติ",

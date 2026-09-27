@@ -9,7 +9,7 @@ interface MeetingChipProps {
 
 /**
  * Compact chip linking from an appraisal's approval section back to the
- * meeting that released it for voting. Used by `ApprovalListSection` for
+ * meeting that released it for voting. Used by `ApprovalListPanel` for
  * tier-3 (CommitteeWithMeeting) appraisals.
  */
 const MeetingChip = ({ meetingId, title, endedAt }: MeetingChipProps) => {

@@ -261,6 +261,16 @@ export const useUpdateForceSaleRate = () => {
 };
 
 /**
+ * A failure worth retrying: no HTTP response (network drop) or a 5xx. A 4xx — not a committee
+ * member, no round yet — is an answer, not an outage, and won't change by asking again.
+ */
+export const isTransientError = (error: unknown): boolean => {
+  if (error == null) return false;
+  const status = (error as { response?: { status?: number } }).response?.status;
+  return status == null || status >= 500;
+};
+
+/**
  * Get workflow-scoped approval list with polling.
  * GET /api/workflows/instances/{workflowInstanceId}/activities/{activityId}/approval-list
  *
@@ -282,7 +292,10 @@ export const useGetApprovalList = (
     enabled: !!workflowInstanceId && !!activityId,
     refetchInterval: query => {
       const data = query.state.data;
-      if (!data) return false;
+      if (!data) {
+        // Keep trying after a transient failed first load so the tally recovers without a reload.
+        return isTransientError(query.state.error) ? 10_000 : false;
+      }
       // Stop polling once the round has resolved (Approved or Returned); keep polling while Pending.
       return data.status !== 'Pending' ? false : 10_000;
     },
