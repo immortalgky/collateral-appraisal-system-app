@@ -40,26 +40,26 @@ export function syncWQSFormSurveys({
     {
       ...currentFormValue,
       comparativeSurveys: comparativeSurveys?.map((survey, index) => ({
-        marketId: survey.id,
+        marketId: survey.id!,
         displaySeq: index + 1,
       })),
       WQSScores:
         getValues('WQSScores')?.map(score => {
           // Build lookup of existing survey scores by marketId
-          const prevScoreMap = new Map<string, number>();
+          const prevScoreMap = new Map<string, number | null>();
           for (const s of score.surveys ?? []) prevScoreMap.set(s.marketId, s.surveyScore);
           return {
             ...score,
             surveys: comparativeSurveys.map(survey => ({
-              marketId: survey.id,
-              surveyScore: prevScoreMap.get(survey.id) ?? 0,
+              marketId: survey.id!,
+              surveyScore: prevScoreMap.get(survey.id!) ?? 0,
             })),
           };
         }) ?? [],
       WQSTotalScores: {
         ...currentFormValue.WQSTotalScores,
         surveys: comparativeSurveys.map(survey => ({
-          marketId: survey.id.toString(),
+          marketId: survey.id!.toString(),
         })),
       },
       WQSCalculations: (() => {
@@ -68,7 +68,7 @@ export function syncWQSFormSurveys({
           prevCalcMap.set(c.marketId, c);
         }
         return comparativeSurveys.map((survey: MarketComparableDetailType) => {
-          const existing = prevCalcMap.get(survey.id.toString());
+          const existing = prevCalcMap.get(survey.id!.toString());
           if (existing) return existing;
 
           const surveyMap = new Map(
@@ -82,7 +82,7 @@ export function syncWQSFormSurveys({
             ]),
           );
           return {
-            marketId: survey.id.toString(),
+            marketId: survey.id!.toString(),
             offeringPrice: survey.offerPrice ?? 0,
             offeringPriceMeasurementUnit: survey.offerPriceUnit ?? '',
             offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 5,
@@ -95,6 +95,7 @@ export function syncWQSFormSurveys({
         }) as WQSCalculation[];
       })(),
     },
-    { isDirty: true },
+    // A plain reset, as before: this passed { isDirty: true }, which reset() does not read.
+    {},
   );
 }

@@ -1,3 +1,5 @@
+import type { DirectComparison } from '../types/directComparison';
+import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
 
@@ -117,7 +119,7 @@ export const makeDirectComparisonDto = (t: TFunction<'pricingAnalysis'>) =>
       /** Apprisal price section */
       directComparisonAppraisalPrice: DirectComparisonAppraisalPrice(t),
     })
-    .passthrough();
+    .passthrough() as unknown as FormValidator<DirectComparison>;
 
 // Static schema for type inference only — no runtime messages
 export const DirectComparisonDto = makeDirectComparisonDto(_t);
@@ -129,4 +131,4 @@ export type ComparativeFactorsFormType = z.infer<ReturnType<typeof ComparativeFa
 export type DirectComparisonQualitativeFormType = z.infer<
   ReturnType<typeof DirectComparisonQualitative>
 >;
-export type DirectComparisonType = z.infer<typeof DirectComparisonDto>;
+export type DirectComparisonType = DirectComparison;

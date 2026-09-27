@@ -204,7 +204,7 @@ export const RHFInputCell = ({
     return (
       <Toggle
         {...field}
-        options={toggle?.options ?? []}
+        options={toggle?.options ?? ['No', 'Yes']}
         checked={field.value}
         size={dense ? 'sm' : 'md'}
         onChange={e => {

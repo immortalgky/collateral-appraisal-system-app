@@ -31,8 +31,8 @@ export function syncSaleAdjustmentGridFormSurveys({
     return {
       ...row,
       qualitatives: comparativeSurveys.map(s => ({
-        marketId: s.id,
-        qualitativeLevel: prevLevels.get(s.id) ?? 'E',
+        marketId: s.id!,
+        qualitativeLevel: prevLevels.get(s.id!) ?? 'E',
       })),
     };
   });
@@ -40,7 +40,7 @@ export function syncSaleAdjustmentGridFormSurveys({
   const next = {
     ...current,
     comparativeSurveys: comparativeSurveys.map((survey, columnIndex) => ({
-      marketId: survey.id,
+      marketId: survey.id!,
       displaySeq: columnIndex + 1,
     })),
 
@@ -56,7 +56,7 @@ export function syncSaleAdjustmentGridFormSurveys({
         prevCalcMap.set(c.marketId, c);
       }
       return comparativeSurveys.map((survey: MarketComparableDetailType) => {
-        const existing = prevCalcMap.get(survey.id);
+        const existing = prevCalcMap.get(survey.id!);
         if (existing) return existing;
 
         const surveyMap = new Map(
@@ -70,7 +70,7 @@ export function syncSaleAdjustmentGridFormSurveys({
           ]),
         );
         return {
-          marketId: survey.id,
+          marketId: survey.id!,
           offeringPrice: survey.offerPrice ?? 0,
           offeringPriceMeasurementUnit: (survey as any).offerPriceUnit ?? '',
           offeringPriceAdjustmentPct: survey.offerPriceAdjustmentPercent ?? 0,
@@ -108,9 +108,9 @@ export function syncSaleAdjustmentGridFormSurveys({
           factorCode: q.factorCode,
           remark: prevRow?.remark ?? null,
           surveys: comparativeSurveys.map(survey => {
-            const prev = prevBySurvey.get(survey.id);
+            const prev = prevBySurvey.get(survey.id!);
             return {
-              marketId: survey.id,
+              marketId: survey.id!,
               adjustPercent: prev?.adjustPercent ?? 0,
               adjustAmount: prev?.adjustAmount ?? 0,
             };
