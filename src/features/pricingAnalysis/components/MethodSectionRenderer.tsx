@@ -96,9 +96,6 @@ export function MethodSectionRenderer({
       return (
         <SaleAdjustmentGridPanel
           {...panelProps}
-          savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
-          }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
@@ -114,9 +111,6 @@ export function MethodSectionRenderer({
       return (
         <DirectComparisonPanel
           {...panelProps}
-          savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
-          }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
@@ -168,9 +162,6 @@ export function MethodSectionRenderer({
       return (
         <SaleAdjustmentGridPanel
           {...panelProps}
-          savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
-          }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
@@ -188,9 +179,6 @@ export function MethodSectionRenderer({
       return (
         <DirectComparisonPanel
           {...panelProps}
-          savedBuildingCost={
-            (calculationMethodData.comparativeFactors as any)?.finalValue?.buildingValue ?? null
-          }
           savedAppraisalPrice={
             (calculationMethodData.comparativeFactors as any)?.finalValue?.indicatedValue ?? null
           }
