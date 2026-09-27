@@ -584,7 +584,7 @@ export const useCreateQuotation = () => {
  */
 export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, enabled = true) => {
   return useQuery({
-    queryKey: ['eligible-companies', loanType],
+    queryKey: ['eligible-companies', 'raw', loanType],
     queryFn: async () => {
       const { data } = await axios.get('/companies/eligible', {
         params: loanType ? { loanType } : undefined,
@@ -597,6 +597,7 @@ export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, ena
         contactPerson?: string;
         phone?: string;
         email?: string;
+        loanTypes?: string[];
       }>;
     },
     enabled: enabled,

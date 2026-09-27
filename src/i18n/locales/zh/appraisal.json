@@ -427,6 +427,7 @@
     "cancelReasonOptional": "（可选）",
     "cancelReasonPlaceholder": "为什么要取消此报价单？",
     "draftHint": "此报价单仍为草稿。添加估价、邀请公司，然后点击发送报价单以开放投标。",
+    "existingDraftSegmentWarning": "此评估的业务板块（{{segment}}）尚未被此草稿覆盖。已邀请的公司可能无法评估该项目 — 发送前请检查公司的覆盖范围。",
     "notSet": "未设置",
     "maxAppraisalDuration": "最长评估期限（天）",
     "specialRequirements": "特殊要求",

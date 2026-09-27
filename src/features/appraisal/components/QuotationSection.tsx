@@ -32,6 +32,7 @@ import NegotiationModal from '@/features/quotation/components/NegotiationModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import AppraisalsPopover from '@/features/quotation/components/AppraisalsPopover';
 import InvitedCompaniesPopover from '@/features/quotation/components/InvitedCompaniesPopover';
+import { SegmentChips } from '@/features/quotation/components/SegmentBadges';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
@@ -307,6 +308,7 @@ const EditDraftForm = ({
         id: c.id,
         companyName: c.companyName,
         companyNameLocal: c.companyNameLocal,
+        loanTypes: c.loanTypes ?? [],
       })),
     [rawCompanies],
   );
@@ -464,6 +466,7 @@ const EditDraftForm = ({
                       <span className="flex-1 truncate text-gray-900">
                         {localizeCompanyName(company.companyName, company.companyNameLocal)}
                       </span>
+                      <SegmentChips segments={company.loanTypes} />
                     </button>
                   );
                 })}
@@ -538,6 +541,7 @@ type SendStep = 'confirm' | 'share-docs';
 const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
   const { t, i18n } = useTranslation('appraisal');
+  const { t: tq } = useTranslation('quotation');
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const canOpenQuotation = hasRoleOrPermission(currentUser, QUOTATION_SELECTION_ROLES);
@@ -651,9 +655,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
     ];
-    const appraisalNumbers = appraisals
-      .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean);
+    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean);
 
     const targetTime = cutOffTime
       ? cutOffTime.toLocaleTimeString('th-TH', {
@@ -1112,8 +1114,18 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const companyCount =
       draftDetail?.totalCompaniesInvited ?? activeQuotation.totalCompaniesInvited ?? 0;
     const hasDueDate = !!activeQuotation.cutOffTime;
-    const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
+    // Segment Coverage: every invited company must be able to appraise every banking segment in
+    const segmentGaps = (draftDetail?.invitedCompanies ?? []).filter(
+      c => (c.missingSegments?.length ?? 0) > 0,
+    );
+    const canSend =
+      appraisalCount >= 1 && companyCount >= 1 && hasDueDate && segmentGaps.length === 0;
     const draftAppraisals = draftDetail?.appraisals ?? [];
+
+    const viewedAppraisalSegment =
+      draftAppraisals.find(a => a.appraisalId === appraisalId)?.bankingSegment ??
+      draftDetail?.bankingSegment ??
+      undefined;
 
     /** Step 1 (share docs) → Step 2 (email). Requires full doc coverage. */
     const handleShareDocsNext = () => {
@@ -1307,9 +1319,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                     onClick={() => setSendStep('share-docs')}
                     disabled={!canSend || isBusy}
                     title={
-                      !canSend
-                        ? 'Add at least 1 appraisal, 1 company, and set a due date before sending'
-                        : undefined
+                      segmentGaps.length > 0
+                        ? tq('segment.sendBlockedTitle')
+                        : !canSend
+                          ? 'Add at least 1 appraisal, 1 company, and set a due date before sending'
+                          : undefined
                     }
                   >
                     <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
@@ -1329,10 +1343,38 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <p className="text-xs text-amber-700">{t('quotation.draftHint')}</p>
           </div>
 
+          {/* Segment Coverage warning */}
+          {segmentGaps.length > 0 && (
+            <div
+              role="alert"
+              className="flex items-start gap-2 px-4 py-3 bg-amber-50 border-b border-amber-100"
+            >
+              <Icon
+                name="triangle-exclamation"
+                style="solid"
+                className="size-4 text-amber-500 shrink-0 mt-0.5"
+              />
+              <div className="text-xs text-amber-700">
+                <p className="font-medium">{tq('segment.sendBlockedTitle')}</p>
+                <ul className="mt-1 list-disc pl-4">
+                  {segmentGaps.map(c => (
+                    <li key={c.companyId}>
+                      {tq('segment.sendBlockedItem', {
+                        company: localizeCompanyName(c.companyName, c.companyNameLocal),
+                        segments: c.missingSegments.join(', '),
+                      })}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1">{tq('segment.sendBlockedHint')}</p>
+              </div>
+            </div>
+          )}
+
           {/* Stats — read-only or edit form */}
           {isEditing ? (
             <EditDraftForm
-              bankingSegment={draftDetail?.bankingSegment || undefined}
+              bankingSegment={viewedAppraisalSegment}
               editDueDate={editDueDate}
               onDueDateChange={setEditDueDate}
               editCompanyIds={editCompanyIds}
@@ -1397,6 +1439,13 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   </div>
                 </div>
               </div>
+
+              {(draftDetail?.segmentSet?.length ?? 0) > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">{tq('segment.segmentSet')}</div>
+                  <SegmentChips segments={draftDetail?.segmentSet} />
+                </div>
+              )}
 
               {/* Request Details — Special Requirements (request-wide). Per-appraisal
                   Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}

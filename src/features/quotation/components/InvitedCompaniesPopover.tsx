@@ -15,11 +15,14 @@ import {
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { MissingSegmentsBadge } from './SegmentBadges';
 
 interface InvitedCompany {
   companyId: string;
   companyName: string;
   companyNameLocal?: string | null;
+  /** Segment Set entries the company cannot appraise; empty/absent = covers the quotation. */
+  missingSegments?: string[];
 }
 
 interface InvitedCompaniesPopoverProps {
@@ -92,6 +95,7 @@ const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPo
                       >
                         {localizeCompanyName(c.companyName, c.companyNameLocal)}
                       </span>
+                      <MissingSegmentsBadge missing={c.missingSegments ?? []} />
                     </li>
                   ))}
                 </ul>

@@ -20,6 +20,8 @@ import type {
 } from '../schemas/quotation';
 import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
 import type { SelectedAppraisal } from './AppraisalPicker';
+import { MissingSegmentsBadge, SegmentChips } from './SegmentBadges';
+import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface EditDraftQuotationModalProps {
@@ -32,6 +34,7 @@ interface SelectedCompany {
   id: string;
   companyName: string;
   companyNameLocal?: string | null;
+  loanTypes: string[];
 }
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
@@ -99,18 +102,36 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
   const allCompanies: SelectedCompany[] = useMemo(
     () =>
-      (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal })),
+      (rawCompanies ?? []).map(c => ({
+        id: c.id,
+        companyName: c.name,
+        companyNameLocal: c.nameLocal,
+        loanTypes: c.loanTypes ?? [],
+      })),
     [rawCompanies],
   );
 
+  // Segment Set of the appraisals currently in the draft (existing + added, minus marked-for-removal).
+  // Only companies that cover every segment in it are listed — the same rule NewQuotationPage's
+  // CompanyPicker applies, and the one the API's Send guard is authoritative on.
+  const segmentSet = useMemo(
+    () =>
+      buildSegmentSet(
+        appraisals.filter(a => !markedForRemovalIds.has(a.id)).map(a => a.bankingSegment),
+      ),
+    [appraisals, markedForRemovalIds],
+  );
+
   const filteredCompanies = useMemo(() => {
-    if (!searchQuery.trim()) return allCompanies;
-    const q = searchQuery.toLowerCase();
-    return allCompanies.filter(
-      c =>
-        c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
+    const covering = allCompanies.filter(
+      c => getMissingSegments(segmentSet, c.loanTypes).length === 0,
     );
-  }, [allCompanies, searchQuery]);
+    if (!searchQuery.trim()) return covering;
+    const q = searchQuery.toLowerCase();
+    return covering.filter(
+      c => c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
+    );
+  }, [allCompanies, searchQuery, segmentSet]);
 
   // Seed form once per open
 
@@ -122,6 +143,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         id: c.companyId,
         companyName: c.companyName,
         companyNameLocal: c.companyNameLocal,
+        loanTypes: c.loanTypes ?? [],
       })),
     );
     setAppraisals(
@@ -131,6 +153,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         appraisalNumber: a.appraisalNumber ?? a.appraisalId.slice(0, 8),
         customerName: a.customerName ?? null,
         maxAppraisalDays: a.maxAppraisalDays ?? null,
+        bankingSegment: a.bankingSegment ?? null,
       })),
     );
     const seededDocs: DocSelections = {};
@@ -386,6 +409,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                     <span className="font-medium">
                       {localizeCompanyName(c.companyName, c.companyNameLocal)}
                     </span>
+                    <MissingSegmentsBadge missing={getMissingSegments(segmentSet, c.loanTypes)} />
                     <button
                       type="button"
                       onClick={() => handleRemoveCompany(c.id)}
@@ -502,6 +526,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                           <span className="text-sm font-medium text-gray-900 truncate flex-1">
                             {localizeCompanyName(c.companyName, c.companyNameLocal)}
                           </span>
+                          <SegmentChips segments={c.loanTypes} />
                         </button>
                       );
                     })}
