@@ -21,6 +21,139 @@ export const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
  */
 export const BUILDING_TYPES = new Set(['B', 'LSB']);
 
+/** Amber chip for a building that is not finished yet, with its progress when an inspection exists. */
+const UnderConstructionChip = ({ property }: { property: PropertyItem }) => {
+  const { t } = useTranslation('appraisal');
+  if (!property.isUnderConstruction) return null;
+  const pct = property.constructionProgressPct;
+  return (
+    <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-50 px-1.5 text-[0.6875rem] font-semibold text-amber-700 ring-1 ring-amber-200 tabular-nums">
+      {pct != null
+        ? t('properties.underConstructionPct', { pct: Math.round(pct) })
+        : t('properties.underConstruction')}
+    </span>
+  );
+};
+
+/** Types whose record carries land titles. */
+const TITLED_TYPES = new Set(['L', 'LB', 'LSL', 'LS']);
+/** Land with a building on it: the land area sits in the area column, the building's goes here. */
+const LAND_BUILDING_TYPES = new Set(['LB', 'LS']);
+const CONDO_TYPES = new Set(['U', 'LSU']);
+const LEASE_TYPES = new Set(['LSL', 'LSB', 'LS', 'LSU']);
+
+/** Blank as the forms save it: nothing, or the "-" / "0" placeholders older records hold. */
+const filled = (v: string | number | null | undefined): v is string | number =>
+  v != null && !['', '-', '--', '0'].includes(String(v).trim());
+
+/**
+ * The second meta line of a row: the few facts that tell one property of a type from the next —
+ * a land's deed numbers, a condo's project, floor and room, a machine's year, a lease's remaining
+ * term and rent. Only what is filled in; an empty list renders nothing.
+ */
+function useTypeFacts(property: PropertyItem): ReactNode[] {
+  const { t } = useTranslation('appraisal');
+  const { type } = property;
+  const facts: ReactNode[] = [];
+
+  if (TITLED_TYPES.has(type)) {
+    const numbers = (property.titles ?? []).map(title => title.titleNumber).filter(filled);
+    if (numbers.length > 0)
+      facts.push(
+        <span key="deed" className="tabular-nums">
+          {t('properties.facts.deed', { no: numbers[0] })}
+          {numbers.length > 1 && ` +${numbers.length - 1}`}
+        </span>,
+      );
+  }
+
+  if (LAND_BUILDING_TYPES.has(type)) {
+    if (property.buildingArea)
+      facts.push(
+        <span key="barea" className="tabular-nums">
+          {t('properties.facts.buildingArea', { n: formatAreaNumber(property.buildingArea) })}
+        </span>,
+      );
+    if (property.buildingAge)
+      facts.push(
+        <span key="age" className="tabular-nums">
+          {t('properties.buildingAge', { n: property.buildingAge })}
+        </span>,
+      );
+  }
+
+  if (CONDO_TYPES.has(type)) {
+    if (filled(property.condoName)) facts.push(<span key="project">{property.condoName}</span>);
+    const floor = filled(property.floorNumber) ? property.floorNumber : null;
+    const room = filled(property.roomNumber) ? property.roomNumber : null;
+    if (floor || room)
+      facts.push(
+        <span key="unit" className="tabular-nums">
+          {[
+            floor && t('properties.facts.floor', { n: floor }),
+            room && t('properties.facts.room', { n: room }),
+          ]
+            .filter(Boolean)
+            .join(' · ')}
+        </span>,
+      );
+    if (property.roomLayoutType === OTHER_ROOM_LAYOUT && filled(property.roomLayoutTypeOther))
+      facts.push(<span key="layout">{property.roomLayoutTypeOther}</span>);
+    else if (filled(property.roomLayoutType))
+      facts.push(
+        <ParameterDisplay
+          key="layout"
+          group="RoomLayout"
+          code={property.roomLayoutType}
+          fallback={property.roomLayoutType}
+        />,
+      );
+  }
+
+  if (MACHINE_TYPES.has(type)) {
+    if (property.yearOfManufacture)
+      facts.push(
+        <span key="year" className="tabular-nums">
+          {t('properties.facts.madeIn', { n: property.yearOfManufacture })}
+        </span>,
+      );
+    if (property.machineAge)
+      facts.push(
+        <span key="mage" className="tabular-nums">
+          {t('properties.facts.machineAge', { n: formatAreaNumber(property.machineAge) })}
+        </span>,
+      );
+  }
+
+  if (LEASE_TYPES.has(type)) {
+    // As entered on the lease form; else counted from the contract's end date. A stored 0 is the
+    // old blank, not an expired lease, so it falls through to the date too.
+    const fromEnd = property.leaseEndDate
+      ? (new Date(property.leaseEndDate).getTime() - Date.now()) / (365.25 * 24 * 3600 * 1000)
+      : NaN;
+    const remaining = property.remainingLeaseYears || (Number.isFinite(fromEnd) ? fromEnd : null);
+    if (remaining != null)
+      facts.push(
+        <span key="remain" className="tabular-nums">
+          {remaining > 0
+            ? t('properties.facts.leaseRemaining', { n: formatAreaNumber(remaining) })
+            : t('properties.facts.leaseEnded')}
+        </span>,
+      );
+    if (property.leaseRentFee)
+      facts.push(
+        <span key="rent" className="tabular-nums">
+          {t('properties.facts.leaseRent', { n: formatAreaNumber(property.leaseRentFee) })}
+        </span>,
+      );
+  }
+
+  if (LAND_BUILDING_TYPES.has(type) && property.isUnderConstruction)
+    facts.push(<UnderConstructionChip key="uc" property={property} />);
+
+  return facts;
+}
+
 /**
  * The where-or-what value for a row: a building's type, everything else's location.
  *
@@ -40,7 +173,15 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
     const otherText =
       property.buildingType === OTHER_BUILDING_TYPE ? property.buildingTypeOther : undefined;
     const hasType = !!property.buildingType;
-    if (!hasType && floors == null) return <span className="text-gray-400">—</span>;
+    // Zero is what the form used to save for a blank age, so it reads as "not entered".
+    const age = property.buildingAge ? property.buildingAge : null;
+    const underConstruction = <UnderConstructionChip property={property} />;
+    if (!hasType && floors == null && age == null)
+      return property.isUnderConstruction ? (
+        underConstruction
+      ) : (
+        <span className="text-gray-400">—</span>
+      );
     return (
       <>
         {otherText ? (
@@ -58,6 +199,11 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
             {t('properties.floorCount', { n: formatAreaNumber(floors) })}
           </span>
         )}
+        {(hasType || floors != null) && age != null && ' · '}
+        {age != null && (
+          <span className="tabular-nums">{t('properties.buildingAge', { n: age })}</span>
+        )}
+        {underConstruction}
       </>
     );
   }
@@ -87,6 +233,8 @@ export const PropertyFlag = ({ icon, children }: { icon: string; children: React
 
 /** BuildingType parameter code for "other", whose meaning lives in `buildingTypeOther`. */
 const OTHER_BUILDING_TYPE = '99';
+/** RoomLayout's "other": the appraiser's own words replace it. */
+const OTHER_ROOM_LAYOUT = '99';
 
 /** ConditionUse codes: the everyday case, and the one that needs the loudest chip. */
 const IN_USE_CONDITION = '01';
@@ -332,6 +480,7 @@ export function PropertyCardContent({
   const { t } = useTranslation('appraisal');
   const isMachine = MACHINE_TYPES.has(property.type);
   const exceptions = useExceptionChips(property);
+  const typeFacts = useTypeFacts(property);
 
   // ── The Properties tab row ────────────────────────────────────────────────────────────────
   if (size === 'compact' || size === 'md') {
@@ -385,6 +534,7 @@ export function PropertyCardContent({
           </div>
 
           <MetaLine parts={metaParts} title={property.location} />
+          <MetaLine parts={typeFacts} />
 
           {exceptions.length > 0 && (
             <div className="flex items-center gap-1 flex-wrap mt-1">{exceptions}</div>

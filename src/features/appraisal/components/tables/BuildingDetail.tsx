@@ -142,16 +142,13 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
           anchor rather than the card: formLayout.css restyles any [data-field] that wraps a table. */}
       <div data-field={name} className="cas-repeater" />
       <div className="cas-labelled-table">
-        <div className="cas-table-label">
-          {t('costBuilding.table.sectionLabel')}
-          {addButtons}
-        </div>
+        <div className="cas-table-label">{t('costBuilding.table.sectionLabel')}</div>
         <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {isEmpty ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
               <Icon style="solid" name="building" className="size-5 text-gray-300" />
               <p className="text-sm text-gray-600">{t('costBuilding.table.noDepreciationData')}</p>
-              <div className="cas-hide-in-grid">{addButtons}</div>
+              {addButtons}
             </div>
           ) : (
             <>
@@ -372,7 +369,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                       );
                     })}
                     {addButtons && (
-                      <tr className="cas-hide-in-grid">
+                      <tr>
                         <td colSpan={columnCount} className={TD}>
                           {addButtons}
                         </td>

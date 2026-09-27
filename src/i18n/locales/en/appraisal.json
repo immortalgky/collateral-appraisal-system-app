@@ -929,6 +929,20 @@
       "reorderFailed": "Failed to reorder properties"
     },
     "floorCount": "{{n}} fl.",
+    "buildingAge": "{{n}} yr old",
+    "underConstruction": "Under construction",
+    "underConstructionPct": "Under construction {{pct}}%",
+    "facts": {
+      "deed": "Deed {{no}}",
+      "buildingArea": "Building {{n}} m²",
+      "floor": "Floor {{n}}",
+      "room": "Unit {{n}}",
+      "madeIn": "Made {{n}}",
+      "machineAge": "{{n}} yr old",
+      "leaseRemaining": "{{n}} yr lease left",
+      "leaseEnded": "Lease ended",
+      "leaseRent": "Rent ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "Machinery summary",
       "status": {
@@ -1911,9 +1925,31 @@
       "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
-      "sectionTitle": "Building Details"
+      "sectionTitle": "Building Details",
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Legal",
+        "typeUse": "Type & Use",
+        "condition": "Condition & Quality",
+        "structure": "Structure",
+        "finishes": "Finishes & Enclosure",
+        "floors": "Floors",
+        "areaCost": "Area & Cost",
+        "limitations": "Limitations",
+        "remark": "Remark"
+      }
     },
     "condo": {
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Legal",
+        "location": "Location",
+        "surroundings": "Surroundings",
+        "building": "Building",
+        "unit": "Unit",
+        "referencePrices": "Reference Prices",
+        "remark": "Remarks"
+      },
       "areaDetailHint": "Each part of the unit and its area",
       "areaDetailEmpty": "No area details yet",
       "addArea": "Add area",
@@ -1941,10 +1977,51 @@
       "sectionTitle": "Title Deed"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "Contract Information"
+      },
       "sectionTitle": "Lease Agreement"
     },
     "rentalInfo": {
-      "sectionTitle": "Rental Information"
+      "addPeriod": "Add period",
+      "addUpFront": "Add up-front payment",
+      "groups": {
+        "schedule": "Schedule",
+        "growthRate": "Growth Rate",
+        "upFront": "Up Front",
+        "rentalSchedule": "Rental Schedule"
+      },
+      "sectionTitle": "Rental Information",
+      "growthFrequency": "Frequency",
+      "growthPeriod": "Period",
+      "edit": "Edit",
+      "editing": "Editing",
+      "generate": "GENERATE",
+      "generating": "GENERATING...",
+      "scheduleEmpty": "Click GENERATE to compute the rental schedule",
+      "upFrontMismatch": "Total up front entries ({{entries}}) does not match the Up Front amount ({{total}})",
+      "table": {
+        "atYear": "At Year",
+        "toYear": "To Year",
+        "growthRate": "Growth Rate",
+        "growthAmount": "Growth Amount",
+        "totalAmount": "Total Amount (Baht)",
+        "atDate": "At Date",
+        "upFrontAmount": "Up Front Amount",
+        "year": "Year",
+        "contractStart": "Contract Start",
+        "contractEnd": "Contract End",
+        "upFrontPerYear": "Up Front (Baht/Year)",
+        "rentalFeePerYear": "Contract Rental Fee (Baht/Year)",
+        "growthRatePct": "Growth Rate %",
+        "total": "Total"
+      },
+      "deleteRow": {
+        "title": "Delete Row",
+        "message": "Are you sure you want to delete this row? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
     },
     "marketComparable": {
       "sectionTitle": "Market Comparable",

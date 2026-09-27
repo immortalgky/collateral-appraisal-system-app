@@ -67,8 +67,8 @@ const ProjectInfoForm = ({
   const [pickerOpen, setPickerOpen] = useState(false);
   const lat = watch('latitude');
   const lon = watch('longitude');
-  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
-  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const parsedLat = lat != null && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon != null && lon !== '' ? Number(lon) : null;
   const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
   const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
 

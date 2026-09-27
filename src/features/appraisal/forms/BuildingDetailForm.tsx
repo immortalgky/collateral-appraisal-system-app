@@ -101,6 +101,7 @@ const OwnerFromLandTriggerIcon = () => {
 };
 
 const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormProps) => {
+  const { t } = useTranslation('appraisal');
   const fillIcon = useMemo(() => <PropertyNameTriggerIcon propertyType={propertyType} />, []);
   const displayOwnerIcon = propertyType === 'LB' || propertyType === 'LS';
   const ownerIcon = useMemo(
@@ -123,36 +124,36 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
   return (
     <FieldLabels scope="building">
       <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <SectionRow title="Identification" icon="building">
+        <SectionRow title={t('forms.building.groups.identification')} icon="building">
           <FormFields fields={identity} />
         </SectionRow>
 
-        <SectionRow title="Ownership & Legal" icon="scale-balanced">
+        <SectionRow title={t('forms.building.groups.ownership')} icon="scale-balanced">
           <FormFields fields={legal} />
         </SectionRow>
 
-        <SectionRow title="Type & Use" icon="list">
+        <SectionRow title={t('forms.building.groups.typeUse')} icon="list">
           <FormFields fields={typeAndUseFields} />
         </SectionRow>
 
-        <SectionRow title="Condition & Quality" icon="gauge">
+        <SectionRow title={t('forms.building.groups.condition')} icon="gauge">
           <FormFields fields={conditionFields} />
         </SectionRow>
 
-        <SectionRow title="Structure" icon="warehouse">
+        <SectionRow title={t('forms.building.groups.structure')} icon="warehouse">
           <FormFields fields={structureFields} />
         </SectionRow>
 
-        <SectionRow title="Finishes & Enclosure" icon="paint-roller">
+        <SectionRow title={t('forms.building.groups.finishes')} icon="paint-roller">
           <FormFields fields={finishesFields} />
         </SectionRow>
 
-        <SectionRow title="Floors" icon="layer-group">
+        <SectionRow title={t('forms.building.groups.floors')} icon="layer-group">
           <FormFields fields={floorFields} />
           <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} />
         </SectionRow>
 
-        <SectionRow title="Area & Cost" icon="table">
+        <SectionRow title={t('forms.building.groups.areaCost')} icon="table">
           <FormFields fields={areaFields} />
           <div className="col-span-12">
             <BuildingDetail
@@ -162,11 +163,11 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
           </div>
         </SectionRow>
 
-        <SectionRow title="Limitations" icon="triangle-exclamation">
+        <SectionRow title={t('forms.building.groups.limitations')} icon="triangle-exclamation">
           <FormFields fields={encroachmentField} />
         </SectionRow>
 
-        <SectionRow title="Remark" icon="comment" isLast>
+        <SectionRow title={t('forms.building.groups.remark')} icon="comment" isLast>
           <FormFields fields={remarkBuildingField} />
         </SectionRow>
       </div>
@@ -213,17 +214,18 @@ const pick = (...entries: (string | [name: string, span: string])[]): FormField[
   });
 
 const identityFields = pick(
+  'propertyName',
   ['houseNumber', 'col-span-4'],
   ['noHouseNumber', 'col-span-8'],
-  'propertyName',
-  ['buildingNumber', 'col-span-3'],
-  ['modelName', 'col-span-3'],
-  ['builtOnTitleNumber', 'col-span-6'],
+  // One full row each, as on the land form.
+  ['buildingNumber', 'col-span-12'],
+  ['modelName', 'col-span-12'],
+  ['builtOnTitleNumber', 'col-span-12'],
 );
 
 const legalFields = pick(
-  ['isOwnerVerifiedBuilding', 'col-span-4'],
-  ['ownerNameBuilding', 'col-span-8'],
+  ['isOwnerVerifiedBuilding', 'col-span-12'],
+  ['ownerNameBuilding', 'col-span-12'],
   'hasObligation',
   'obligationDetails',
   'isAppraisable',
@@ -243,9 +245,9 @@ const typeAndUseFields = pick(
 const conditionFields = pick(
   'buildingConditionType',
   'buildingConditionTypeOther',
-  ['buildingAge', 'col-span-3'],
-  ['isUnderConstruction', 'col-span-3'],
-  ['constructionLicenseExpirationDate', 'col-span-6'],
+  ['buildingAge', 'col-span-12'],
+  ['isUnderConstruction', 'col-span-12'],
+  ['constructionLicenseExpirationDate', 'col-span-12'],
   'buildingMaterialType',
   'buildingStyleType',
   'buildingStyleTypeOther',
@@ -274,9 +276,9 @@ const finishesFields = pick(
   'fenceTypeOther',
 );
 
-const floorFields = pick(['numberOfFloors', 'col-span-3']);
+const floorFields = pick(['numberOfFloors', 'col-span-12']);
 
-const areaFields = pick(['totalBuildingArea', 'col-span-3']);
+const areaFields = pick(['totalBuildingArea', 'col-span-12']);
 
 const surfaceTableHeader = [
   {
