@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { useAddressStore, useCompanyStore } from '@/shared/store';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { useSearchRequestors } from '@/features/request/api/requestors';
+import { addDays, formatDate } from '@/shared/utils/dateUtils';
 import type { FilterField } from './tabConfigs';
 
 export interface FilterOption {
@@ -31,12 +33,16 @@ export const LIST_CAP = 12;
  * parameter groups, `ProvinceAutocomplete` for provinces, `CompanyAutocomplete` for companies,
  * so a chip and the old dropdown always agree on what a code is called.
  */
-export function useFilterFieldOptions(field: FilterField): FilterOption[] {
+export function useFilterFieldOptions(field: FilterField, search = ''): FilterOption[] {
   const parameterOptions = useParameterOptions(field.parameterGroup ?? '');
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
   const companies = useCompanyStore(s => s.companies);
   const localizeCompanyName = useLocalizedCompanyName();
+  // Only a requestor field searches; for every other field the query stays disabled (empty term).
+  const { data: requestors } = useSearchRequestors(
+    field.type === 'requestor-autocomplete' ? search : '',
+  );
 
   const provinceOptions = useMemo(() => {
     const seen = new Map<string, string>();
@@ -71,12 +77,50 @@ export function useFilterFieldOptions(field: FilterField): FilterOption[] {
         return provinceOptions;
       case 'company-autocomplete':
         return companyOptions;
+      case 'requestor-autocomplete':
+        // `employeeId` is the user's UserName — the value request.Requests.Requestor holds.
+        return (requestors ?? []).map(r => {
+          const label = r.name ? `${r.name} (${r.employeeId})` : r.employeeId;
+          requestorLabels.set(r.employeeId, label);
+          return { value: r.employeeId, label };
+        });
       default:
         // date, date-range and text carry no option list.
         return [];
     }
-  }, [field, parameterOptions, provinceOptions, companyOptions]);
+  }, [field, parameterOptions, provinceOptions, companyOptions, requestors]);
 }
+
+/** yyyy-MM-dd in local time, n days from today — the same shape DateRangeInput writes. */
+const dayOffset = (n: number) => formatDate(addDays(new Date(), n));
+
+/**
+ * One-click ranges, relative to the viewer's today and computed at click time. Both ends are
+ * inclusive, so "7 days" is today plus six — seven calendar days, as the label says.
+ */
+export const DATE_PRESETS = [
+  { key: 'today', range: () => [dayOffset(0), dayOffset(0)] },
+  { key: 'tomorrow', future: true, range: () => [dayOffset(1), dayOffset(1)] },
+  { key: 'next7', future: true, range: () => [dayOffset(0), dayOffset(6)] },
+  { key: 'past7', range: () => [dayOffset(-6), dayOffset(0)] },
+  { key: 'past30', range: () => [dayOffset(-29), dayOffset(0)] },
+] as const;
+
+/** The preset a stored range corresponds to, so a chip can say "Today" instead of two dates. */
+export const presetFor = (from: string, to: string) =>
+  DATE_PRESETS.find(p => {
+    const [f, t] = p.range();
+    return f === from && t === to;
+  });
+
+/**
+ * Names of requestors seen in any search this session, by user code. A remote field only knows
+ * the labels of its CURRENT results, so a value picked earlier would otherwise fall back to its
+ * bare code once the search box is cleared.
+ * ponytail: session-lifetime module cache, unbounded; fine for the few dozen names one user picks.
+ */
+const requestorLabels = new Map<string, string>();
+export const requestorLabel = (code: string) => requestorLabels.get(code);
 
 /** Values currently set on a field, as a list. Empty when the field is not filtered. */
 export const selectedValues = (values: Record<string, string>, key: string): string[] =>

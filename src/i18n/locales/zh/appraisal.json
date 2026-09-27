@@ -34,7 +34,9 @@
       "created": "创建时间",
       "slaBusinessDays": "SLA（天）",
       "submittedAt": "提交日期",
-      "groupTag": "分组"
+      "groupTag": "分组",
+      "assignee": "负责人",
+      "requestor": "申请人"
     },
     "filters": {
       "statusLabel": "状态",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "所有目的",
       "propertyTypeLabel": "抵押物类型",
       "propertyTypePlaceholder": "所有类型",
-      "appointmentDateFrom": "预约日期起",
-      "appointmentDateTo": "预约日期至",
       "assignedDateFrom": "分配日期起",
       "assignedDateTo": "分配日期至",
       "multiSelected": "{{label}}：已选 {{count}} 项",
@@ -83,7 +83,17 @@
         "time": "日期"
       },
       "anyValue": "全部",
-      "optionsUnavailable": "暂无可选项"
+      "optionsUnavailable": "暂无可选项",
+      "appointment": "预约日期",
+      "presets": {
+        "today": "今天",
+        "tomorrow": "明天",
+        "next7": "未来 7 天",
+        "past7": "过去 7 天",
+        "past30": "过去 30 天"
+      },
+      "requestorLabel": "申请人 (RM)",
+      "typeToSearch": "输入姓名或员工编号搜索"
     },
     "status": {
       "Pending": "待处理",
@@ -104,7 +114,10 @@
       "overdue": "超期 {{time}}",
       "left": "剩余 {{time}}",
       "closed": "已结案",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "durationDays": "{{days}}天 {{hours}}小时",
+      "durationHours": "{{hours}}小时",
+      "dueOn": "截止 {{date}}"
     },
     "assignmentType": {
       "Internal": "内部",
@@ -143,7 +156,9 @@
       "high-priority-active": "高优先级",
       "nearing-deadline": "临近截止",
       "external-assignments": "外部任务",
-      "my-company-queue": "我司队列"
+      "my-company-queue": "我司队列",
+      "all": "全部任务",
+      "my-requests": "我的申请"
     },
     "saved": "已保存",
     "saveCurrentSearch": "保存当前搜索",
@@ -154,7 +169,6 @@
     "removeFilter": "移除筛选",
     "activityTracking": "评估进度跟踪",
     "searchTips": {
-      "trigger": "找不到？",
       "title": "找不到？可以这样试试",
       "prefix": "默认从值的开头匹配 — 输入 691 可找到 69105467，输入 05467 则不行",
       "wildcard": "以 * 开头可匹配值中间的内容，例如 *john",
@@ -171,7 +185,39 @@
     "emptyAll": "暂无估价单",
     "emptyAllHint": "有新的估价单时会显示在这里",
     "moreCustomers_one": "该申请还有 {{count}} 位客户",
-    "moreCustomers_other": "该申请还有 {{count}} 位客户"
+    "moreCustomers_other": "该申请还有 {{count}} 位客户",
+    "unassigned": "未分配",
+    "today": "今天",
+    "internal": "内部",
+    "groupBy": {
+      "label": "分组",
+      "none": "不分组",
+      "current": "分组：{{label}}",
+      "empty": "未指定"
+    },
+    "suggest": {
+      "goTo": "前往评估",
+      "searchIn": "在以下字段搜索“{{term}}”",
+      "recent": "最近搜索",
+      "matches": "{{count}} 条",
+      "none": "无",
+      "noMatch": "没有匹配的评估",
+      "navigate": "选择",
+      "submit": "搜索",
+      "close": "关闭",
+      "shortcut": "按 / 搜索 · j / k 移动 · Enter 打开"
+    },
+    "emptyActions": {
+      "searchAll": "搜索全部字段",
+      "clearFilters": "清除筛选",
+      "exitView": "退出快速视图",
+      "tryWildcard": "试试 {{term}}"
+    },
+    "density": {
+      "title": "密度",
+      "comfortable": "宽松",
+      "compact": "紧凑"
+    }
   },
   "appointment": {
     "sectionTitle": "预约信息",

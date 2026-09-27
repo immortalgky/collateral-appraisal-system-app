@@ -57,3 +57,33 @@ export function usePropertyTypeLabels(): (codes: string | null | undefined) => s
     [codeToLabel],
   );
 }
+
+/**
+ * `Appraisals.AppraisalType` stores names ('New', 'ReAppraisal', …) while the AppraisalType
+ * parameter group — where the business keeps the wording — is keyed '01'…'04'. The pairing is the
+ * backend's own (GetAppraisalResultQueryHandler.MapAppraisalType); keep the two in step.
+ */
+const APPRAISAL_TYPE_PARAMETER_CODE: Record<string, string> = {
+  New: '01',
+  ReAppraisal: '02',
+  Progressive: '03',
+  PreAppraisal: '04',
+};
+
+/**
+ * Maps an appraisal's type to its AppraisalType parameter description in the current language.
+ * Returns undefined when the master has no row for it, so callers can fall back to their own text.
+ */
+export function useAppraisalTypeLabel(): (type: string | null | undefined) => string | undefined {
+  const types = useParametersByGroup('AppraisalType');
+  const codeToLabel = useMemo(
+    () => new Map(types.map(p => [p.code, p.description.trim()])),
+    [types],
+  );
+  return useCallback(
+    // `|| undefined`: a blank description must fall back too, not render as an empty label.
+    type =>
+      type ? codeToLabel.get(APPRAISAL_TYPE_PARAMETER_CODE[type] ?? '') || undefined : undefined,
+    [codeToLabel],
+  );
+}

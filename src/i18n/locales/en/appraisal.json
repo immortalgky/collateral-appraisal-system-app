@@ -34,7 +34,9 @@
       "created": "Created",
       "slaBusinessDays": "SLA (days)",
       "submittedAt": "Submitted",
-      "groupTag": "Group"
+      "groupTag": "Group",
+      "assignee": "Assignee",
+      "requestor": "Requestor"
     },
     "filters": {
       "statusLabel": "Status",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "All purposes",
       "propertyTypeLabel": "Property Type",
       "propertyTypePlaceholder": "All property types",
-      "appointmentDateFrom": "Appointment From",
-      "appointmentDateTo": "Appointment To",
       "assignedDateFrom": "Assigned From",
       "assignedDateTo": "Assigned To",
       "multiSelected": "{{label}}: {{count}} selected",
@@ -83,7 +83,17 @@
         "time": "Dates"
       },
       "anyValue": "Any",
-      "optionsUnavailable": "No options available yet"
+      "optionsUnavailable": "No options available yet",
+      "appointment": "Appointment date",
+      "presets": {
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "next7": "Next 7 days",
+        "past7": "Last 7 days",
+        "past30": "Last 30 days"
+      },
+      "requestorLabel": "Requestor (RM)",
+      "typeToSearch": "Type a name or employee ID to search"
     },
     "status": {
       "Pending": "Pending",
@@ -104,7 +114,10 @@
       "overdue": "Overdue {{time}}",
       "left": "{{time}} left",
       "closed": "Closed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "durationDays": "{{days}}d {{hours}}h",
+      "durationHours": "{{hours}}h",
+      "dueOn": "Due {{date}}"
     },
     "assignmentType": {
       "Internal": "Internal",
@@ -143,7 +156,9 @@
       "high-priority-active": "High priority",
       "nearing-deadline": "Nearing deadline",
       "external-assignments": "External assignments",
-      "my-company-queue": "My company queue"
+      "my-company-queue": "My company queue",
+      "all": "All jobs",
+      "my-requests": "My requests"
     },
     "saved": "Saved",
     "saveCurrentSearch": "Save current search",
@@ -154,7 +169,6 @@
     "removeFilter": "Remove filter",
     "activityTracking": "Appraisal Tracking",
     "searchTips": {
-      "trigger": "Can't find it?",
       "title": "Not finding it? Try this",
       "prefix": "Search matches from the start of a value — 691 finds 69105467, 05467 does not",
       "wildcard": "Prefix with * to match anywhere, e.g. *john",
@@ -171,7 +185,39 @@
     "emptyAll": "No appraisals yet",
     "emptyAllHint": "New appraisals will show up here",
     "moreCustomers_one": "{{count}} more customer on this request",
-    "moreCustomers_other": "{{count}} more customers on this request"
+    "moreCustomers_other": "{{count}} more customers on this request",
+    "unassigned": "Unassigned",
+    "today": "Today",
+    "internal": "Internal",
+    "groupBy": {
+      "label": "Group",
+      "none": "No grouping",
+      "current": "Group: {{label}}",
+      "empty": "Not set"
+    },
+    "suggest": {
+      "goTo": "Go to appraisal",
+      "searchIn": "Search “{{term}}” in",
+      "recent": "Recent searches",
+      "matches": "{{count}} found",
+      "none": "None",
+      "noMatch": "No matching appraisal",
+      "navigate": "select",
+      "submit": "search",
+      "close": "close",
+      "shortcut": "Press / to search · j / k to move · Enter to open"
+    },
+    "emptyActions": {
+      "searchAll": "Search all fields",
+      "clearFilters": "Clear filters",
+      "exitView": "Leave quick view",
+      "tryWildcard": "Try {{term}}"
+    },
+    "density": {
+      "title": "Density",
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    }
   },
   "appointment": {
     "sectionTitle": "Appointment Information",
@@ -511,7 +557,10 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": ["Not Verified", "Verified"],
+      "priceVerificationOptions": [
+        "Not Verified",
+        "Verified"
+      ],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
@@ -1865,13 +1914,13 @@
       "sectionTitle": "Building Details"
     },
     "condo": {
-        "areaDetailHint": "Each part of the unit and its area",
-        "areaDetailEmpty": "No area details yet",
-        "addArea": "Add area",
-        "areaItems": "{{count}} items · {{total}} m²",
-        "matchesUsable": "Matches usable area",
-        "diffVsUsable": "{{diff}} vs usable area",
-        "areaTotal": "Total",
+      "areaDetailHint": "Each part of the unit and its area",
+      "areaDetailEmpty": "No area details yet",
+      "addArea": "Add area",
+      "areaItems": "{{count}} items · {{total}} m²",
+      "matchesUsable": "Matches usable area",
+      "diffVsUsable": "{{diff}} vs usable area",
+      "areaTotal": "Total",
       "sectionTitle": "Condo Details",
       "areaDetail": "Area Detail",
       "pma": "PMA Information",

@@ -1,11 +1,15 @@
 import { useMemo, useState } from 'react';
+import { useIsFetching } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { Checkbox, DateRangeInput, TextInput } from '@/shared/components/inputs';
+import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { FilterField } from './tabConfigs';
 import {
   BIG_FROM,
+  DATE_PRESETS,
   LIST_CAP,
+  requestorLabel,
   SEARCHABLE_FROM,
   selectedValues,
   useFilterFieldOptions,
@@ -32,21 +36,31 @@ interface FilterValuePanelProps {
  */
 function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterValuePanelProps) {
   const { t } = useTranslation(['appraisal', 'common']);
-  const options = useFilterFieldOptions(field);
   const [query, setQuery] = useState('');
+  // A remote field asks the server for matches as the user types instead of filtering a list.
+  const isRemote = field.type === 'requestor-autocomplete';
+  // Debounced so typing a name is one request, not one per keystroke.
+  const remoteQuery = useDebounce(isRemote ? query.trim() : '', 300);
+  // Still waiting on the debounce or the server: say so, rather than showing the previous term's
+  // names under the new text, or "No match" for a search that has not answered yet.
+  const remoteFetching = useIsFetching({ queryKey: ['requestors', 'search', remoteQuery] }) > 0;
+  const remotePending =
+    isRemote && Boolean(query.trim()) && (query.trim() !== remoteQuery || remoteFetching);
+  const options = useFilterFieldOptions(field, remoteQuery);
 
   const selected = useMemo(() => selectedValues(values, field.key), [values, field.key]);
 
-  const searchable = options.length >= SEARCHABLE_FROM;
+  const searchable = isRemote || options.length >= SEARCHABLE_FROM;
   const isBig = options.length >= BIG_FROM;
 
   const { visible, pinned } = useMemo(() => {
     const q = query.trim().toLocaleLowerCase('th');
-    const matched = q
-      ? options.filter(o => o.label.toLocaleLowerCase('th').includes(q))
-      : // Selected first on a long list: the whole list cannot be on screen at once, and a value
-        // the user just ticked scrolling out of sight reads as "it did not register".
-        options;
+    const matched =
+      q && !isRemote
+        ? options.filter(o => o.label.toLocaleLowerCase('th').includes(q))
+        : // Selected first on a long list: the whole list cannot be on screen at once, and a value
+          // the user just ticked scrolling out of sight reads as "it did not register".
+          options;
     const ordered = isBig
       ? [...matched].sort(
           (a, b) => Number(selected.includes(b.value)) - Number(selected.includes(a.value)),
@@ -58,9 +72,10 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
       // A selected value filtered out by the search still has to be removable.
       pinned: selected.filter(v => !shown.some(o => o.value === v)),
     };
-  }, [options, query, isBig, selected]);
+  }, [options, query, isBig, selected, isRemote]);
 
-  const labelFor = (value: string) => options.find(o => o.value === value)?.label ?? value;
+  const labelFor = (value: string) =>
+    options.find(o => o.value === value)?.label ?? requestorLabel(value) ?? value;
 
   const toggle = (value: string) => {
     const next = selected.includes(value)
@@ -112,18 +127,40 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
   );
 
   if (field.type === 'date-range') {
+    const setRange = (from: string, to: string) => {
+      // Two sequential calls are safe: the page's setFilters uses a functional updater, so the
+      // second does not clobber the first.
+      if (field.fromKey) onChange(field.fromKey, from);
+      if (field.toKey) onChange(field.toKey, to);
+    };
+    const current = [values[field.fromKey ?? ''] || '', values[field.toKey ?? ''] || ''].join('|');
     return (
       <div className="w-64 flex flex-col gap-2">
         {header}
+        <div className="flex flex-wrap gap-1.5">
+          {DATE_PRESETS.filter(preset => field.futureDates || !('future' in preset)).map(preset => {
+            const [from, to] = preset.range();
+            const on = current === `${from}|${to}`;
+            return (
+              <button
+                key={preset.key}
+                type="button"
+                onClick={() => setRange(from, to)}
+                className={`rounded-md border px-2 py-0.5 text-xs transition-colors ${
+                  on
+                    ? 'border-primary bg-primary-50 text-primary'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {t(`appraisal:list.filters.presets.${preset.key}`)}
+              </button>
+            );
+          })}
+        </div>
         <DateRangeInput
           from={values[field.fromKey ?? ''] || ''}
           to={values[field.toKey ?? ''] || ''}
-          onChange={(from, to) => {
-            // Two sequential calls are safe: the page's setFilters uses a functional updater, so
-            // the second does not clobber the first.
-            if (field.fromKey) onChange(field.fromKey, from);
-            if (field.toKey) onChange(field.toKey, to);
-          }}
+          onChange={setRange}
           placeholder={field.label}
         />
       </div>
@@ -148,7 +185,7 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
     );
   }
 
-  if (options.length === 0) {
+  if (options.length === 0 && !isRemote) {
     return (
       <div className="w-64 flex flex-col gap-2">
         {header}
@@ -195,9 +232,15 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
       )}
 
       <div className="max-h-56 overflow-y-auto -mx-1">
-        {visible.length === 0 ? (
+        {remotePending ? (
           <p className="px-2 py-4 text-center text-xs text-gray-400">
-            {t('appraisal:list.filters.noMatch')}
+            {t('common:status.loading')}
+          </p>
+        ) : visible.length === 0 ? (
+          <p className="px-2 py-4 text-center text-xs text-gray-400">
+            {isRemote && !query.trim()
+              ? t('appraisal:list.filters.typeToSearch')
+              : t('appraisal:list.filters.noMatch')}
           </p>
         ) : (
           visible.map(option => (

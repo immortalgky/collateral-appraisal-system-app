@@ -34,7 +34,9 @@
       "created": "วันที่สร้าง",
       "slaBusinessDays": "SLA (วัน)",
       "submittedAt": "วันที่ส่งงาน",
-      "groupTag": "กลุ่ม"
+      "groupTag": "กลุ่ม",
+      "assignee": "ผู้รับผิดชอบ",
+      "requestor": "ผู้ขอ"
     },
     "filters": {
       "statusLabel": "สถานะ",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "ทุกวัตถุประสงค์",
       "propertyTypeLabel": "ประเภทหลักประกัน",
       "propertyTypePlaceholder": "ทุกประเภทหลักประกัน",
-      "appointmentDateFrom": "วันนัดตั้งแต่",
-      "appointmentDateTo": "วันนัดถึง",
       "assignedDateFrom": "วันมอบหมายตั้งแต่",
       "assignedDateTo": "วันมอบหมายถึง",
       "multiSelected": "{{label}}: เลือกไว้ {{count}} รายการ",
@@ -83,7 +83,17 @@
         "time": "ช่วงเวลา"
       },
       "anyValue": "ทั้งหมด",
-      "optionsUnavailable": "ยังไม่มีตัวเลือกให้เลือก"
+      "optionsUnavailable": "ยังไม่มีตัวเลือกให้เลือก",
+      "appointment": "วันนัดหมาย",
+      "presets": {
+        "today": "วันนี้",
+        "tomorrow": "พรุ่งนี้",
+        "next7": "7 วันข้างหน้า",
+        "past7": "7 วันที่ผ่านมา",
+        "past30": "30 วันที่ผ่านมา"
+      },
+      "requestorLabel": "ผู้ขอ (RM)",
+      "typeToSearch": "พิมพ์ชื่อหรือรหัสพนักงานเพื่อค้นหา"
     },
     "status": {
       "Pending": "รอดำเนินการ",
@@ -104,7 +114,10 @@
       "overdue": "เกินกำหนด {{time}}",
       "left": "เหลือ {{time}}",
       "closed": "ปิดงานแล้ว",
-      "cancelled": "ยกเลิกแล้ว"
+      "cancelled": "ยกเลิกแล้ว",
+      "durationDays": "{{days}} วัน {{hours}} ชม.",
+      "durationHours": "{{hours}} ชม.",
+      "dueOn": "ครบกำหนด {{date}}"
     },
     "assignmentType": {
       "Internal": "ภายใน",
@@ -143,7 +156,9 @@
       "high-priority-active": "ความสำคัญสูง",
       "nearing-deadline": "ใกล้ครบกำหนด",
       "external-assignments": "งานบริษัทภายนอก",
-      "my-company-queue": "คิวบริษัทของฉัน"
+      "my-company-queue": "คิวบริษัทของฉัน",
+      "all": "งานทั้งหมด",
+      "my-requests": "งานคำขอของฉัน"
     },
     "saved": "ที่บันทึกไว้",
     "saveCurrentSearch": "บันทึกการค้นหานี้",
@@ -154,7 +169,6 @@
     "removeFilter": "ลบตัวกรอง",
     "activityTracking": "ติดตามงานประเมิน",
     "searchTips": {
-      "trigger": "หาไม่เจอ?",
       "title": "ค้นหาไม่เจอ? ลองแบบนี้",
       "prefix": "ปกติค้นจากต้นค่า — พิมพ์ 691 เจอ 69105467 แต่พิมพ์ 05467 ไม่เจอ",
       "wildcard": "ใส่ * นำหน้าเพื่อค้นคำที่อยู่ตรงกลาง เช่น *john",
@@ -171,7 +185,39 @@
     "emptyAll": "ยังไม่มีรายการประเมิน",
     "emptyAllHint": "เมื่อมีงานเข้ามา รายการจะแสดงที่นี่",
     "moreCustomers_one": "มีลูกค้าในคำขอนี้อีก {{count}} คน",
-    "moreCustomers_other": "มีลูกค้าในคำขอนี้อีก {{count}} คน"
+    "moreCustomers_other": "มีลูกค้าในคำขอนี้อีก {{count}} คน",
+    "unassigned": "ยังไม่มอบหมาย",
+    "today": "วันนี้",
+    "internal": "ภายใน",
+    "groupBy": {
+      "label": "จัดกลุ่ม",
+      "none": "ไม่จัดกลุ่ม",
+      "current": "จัดกลุ่ม: {{label}}",
+      "empty": "ไม่ระบุ"
+    },
+    "suggest": {
+      "goTo": "ไปที่ใบประเมิน",
+      "searchIn": "ค้นหา “{{term}}” ใน",
+      "recent": "ค้นหาล่าสุด",
+      "matches": "{{count}} รายการ",
+      "none": "ไม่พบ",
+      "noMatch": "ไม่พบใบประเมินที่ตรงกัน",
+      "navigate": "เลือก",
+      "submit": "ค้นหา",
+      "close": "ปิด",
+      "shortcut": "กด / เพื่อไปที่ช่องค้นหา · j / k เลื่อนแถว · Enter เปิดรายละเอียด"
+    },
+    "emptyActions": {
+      "searchAll": "ค้นหาในทุกฟิลด์",
+      "clearFilters": "ล้างตัวกรอง",
+      "exitView": "ออกจากมุมมองด่วน",
+      "tryWildcard": "ลองค้นแบบ {{term}}"
+    },
+    "density": {
+      "title": "ความหนาแน่น",
+      "comfortable": "สบายตา",
+      "compact": "กระชับ"
+    }
   },
   "appointment": {
     "sectionTitle": "ข้อมูลการนัดหมาย",
