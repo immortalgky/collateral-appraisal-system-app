@@ -222,15 +222,10 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
               </QualifiedHrefsContext.Provider>
 
               <div className="mt-auto pt-4 border-t border-gray-100 dark:border-base-300">
-                <div className="px-3 mb-2">
-                  <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                    {t('sidebar.system')}
-                  </span>
-                </div>
                 <ul className="flex flex-col gap-1">
                   <li>
                     <Link
-                      to="/settings"
+                      to="/profile?tab=preferences"
                       className="group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-base-200"
                     >
                       <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
@@ -254,7 +249,9 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 export default function Sidebar({ navigation, logo }: SidebarProps): React.ReactNode {
   const { t } = useTranslation('nav');
   const location = useLocation();
-  const isSettingsActive = location.pathname === '/settings';
+  const isSettingsActive =
+    location.pathname === '/profile' &&
+    new URLSearchParams(location.search).get('tab') === 'preferences';
   const { expanded, overlay, width, contentStyle, hoverProps } = useSidebarHover('main');
   // The rail is the full menu clipped to the 4rem rail, so every item keeps its position when
   // hovering opens the menu and the cursor stays on what it was over.
@@ -339,16 +336,10 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
 
               {/* Bottom Section */}
               <div className="mt-auto pt-4 border-t border-gray-100 dark:border-base-300">
-                <SidebarSectionTitle
-                  icon="sliders"
-                  iconColor="text-violet-500"
-                  title={t('sidebar.system')}
-                  className="mb-2"
-                />
                 <ul className="flex flex-col gap-1">
                   <li>
                     <Link
-                      to="/settings"
+                      to="/profile?tab=preferences"
                       className={clsx(
                         'group flex items-center gap-2.5 py-2 px-2.5 rounded-xl transition-all duration-200',
                         isSettingsActive
