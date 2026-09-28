@@ -27,6 +27,16 @@ export async function redirectToLogin() {
   const redirectUri = `${baseAppUrl}/callback`;
   const authorizeUrl = `${baseApiUrl}/connect/authorize`;
 
+  // The PKCE state/verifier below live in this origin's sessionStorage, but the server always sends
+  // the user back to VITE_APP_URL. Opened under another host name (e.g. the bare machine name
+  // instead of the FQDN), /callback can't find them and the user has to sign in twice. Hop to the
+  // canonical origin first.
+  const appOrigin = new URL(baseAppUrl).origin;
+  if (window.location.origin !== appOrigin) {
+    window.location.replace(`${appOrigin}/login`);
+    return;
+  }
+
   const state = generateRandomString();
   const codeVerifier = generateRandomString();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
