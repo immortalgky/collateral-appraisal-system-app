@@ -1,10 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useWatch, type SubmitErrorHandler } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { makeWQSDto, WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
-import { flattenRHFErrors } from '../domain/flattenRHFErrors';
 import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
 import { fmt } from '../domain/formatters';
 import { useSaveComparativeAnalysis, useResetMethod } from '../api';
@@ -369,7 +368,7 @@ export function WQSPanel({
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
-      .map(s => s.marketId)
+      .map((s: { marketId?: string }) => s.marketId)
       .sort()
       .join(',');
     const currentSurveyIds = comparativeSurveys

@@ -146,18 +146,17 @@ describe('Modal', () => {
       const onClose = vi.fn();
       const { user } = render(<Modal {...defaultProps} onClose={onClose} />);
 
-      // Click on the backdrop (the fixed overlay area outside the panel)
-      const dialog = screen.getByRole('dialog');
-
-      // HeadlessUI Dialog calls onClose when clicking outside
-      // We simulate this by clicking the backdrop area
+      // HeadlessUI Dialog calls onClose when clicking outside.
+      // We simulate this by clicking the backdrop (the fixed overlay area outside the panel).
       const backdrop = document.querySelector('.fixed.inset-0.bg-black\\/30');
-      if (backdrop) {
-        await user.click(backdrop);
-        await waitFor(() => {
-          expect(onClose).toHaveBeenCalled();
-        });
-      }
+      // Fail loudly rather than skip: a silent `if (backdrop)` would report green the day the
+      // backdrop's classes change, while asserting nothing at all.
+      if (!backdrop) throw new Error('modal backdrop not found');
+
+      await user.click(backdrop);
+      await waitFor(() => {
+        expect(onClose).toHaveBeenCalled();
+      });
     });
   });
 

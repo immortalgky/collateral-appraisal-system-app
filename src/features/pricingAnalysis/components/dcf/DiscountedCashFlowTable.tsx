@@ -183,7 +183,7 @@ export function DiscountedCashFlowTable({
   );
 
   // Method 13 depends on referenced section/category/assumption totals, so use a stable snapshot
-  // of only the values that can affect resolveRefTarget-based calculations.
+  // of only the values that can affect its reference-based calculations.
   // Method 13 also got the issue if select section, category that its stay
   useDerivedFields({
     rules: methodCalculationRules,

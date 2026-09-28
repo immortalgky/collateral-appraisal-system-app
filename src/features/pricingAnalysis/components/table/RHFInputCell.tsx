@@ -192,7 +192,7 @@ export const RHFInputCell = ({
         }}
         label={dropdown?.label ?? ''}
         options={options}
-        queryParameters={dropdown?.group}
+        queryParameters={dropdown?.group ?? ''}
         showValue={dropdown?.showValue ?? true}
         error={error?.message}
         dense={dense}
@@ -204,7 +204,7 @@ export const RHFInputCell = ({
     return (
       <Toggle
         {...field}
-        options={toggle?.options ?? []}
+        options={toggle?.options ?? ['No', 'Yes']}
         checked={field.value}
         size={dense ? 'sm' : 'md'}
         onChange={e => {

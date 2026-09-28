@@ -34,7 +34,9 @@
       "created": "Created",
       "slaBusinessDays": "SLA (days)",
       "submittedAt": "Submitted",
-      "groupTag": "Group"
+      "groupTag": "Group",
+      "assignee": "Assignee",
+      "requestor": "Requestor"
     },
     "filters": {
       "statusLabel": "Status",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "All purposes",
       "propertyTypeLabel": "Property Type",
       "propertyTypePlaceholder": "All property types",
-      "appointmentDateFrom": "Appointment From",
-      "appointmentDateTo": "Appointment To",
       "assignedDateFrom": "Assigned From",
       "assignedDateTo": "Assigned To",
       "multiSelected": "{{label}}: {{count}} selected",
@@ -83,7 +83,17 @@
         "time": "Dates"
       },
       "anyValue": "Any",
-      "optionsUnavailable": "No options available yet"
+      "optionsUnavailable": "No options available yet",
+      "appointment": "Appointment date",
+      "presets": {
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "next7": "Next 7 days",
+        "past7": "Last 7 days",
+        "past30": "Last 30 days"
+      },
+      "requestorLabel": "Requestor (RM)",
+      "typeToSearch": "Type a name or employee ID to search"
     },
     "status": {
       "Pending": "Pending",
@@ -104,7 +114,10 @@
       "overdue": "Overdue {{time}}",
       "left": "{{time}} left",
       "closed": "Closed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "durationDays": "{{days}}d {{hours}}h",
+      "durationHours": "{{hours}}h",
+      "dueOn": "Due {{date}}"
     },
     "assignmentType": {
       "Internal": "Internal",
@@ -143,7 +156,9 @@
       "high-priority-active": "High priority",
       "nearing-deadline": "Nearing deadline",
       "external-assignments": "External assignments",
-      "my-company-queue": "My company queue"
+      "my-company-queue": "My company queue",
+      "all": "All jobs",
+      "my-requests": "My requests"
     },
     "saved": "Saved",
     "saveCurrentSearch": "Save current search",
@@ -154,7 +169,6 @@
     "removeFilter": "Remove filter",
     "activityTracking": "Appraisal Tracking",
     "searchTips": {
-      "trigger": "Can't find it?",
       "title": "Not finding it? Try this",
       "prefix": "Search matches from the start of a value — 691 finds 69105467, 05467 does not",
       "wildcard": "Prefix with * to match anywhere, e.g. *john",
@@ -171,7 +185,39 @@
     "emptyAll": "No appraisals yet",
     "emptyAllHint": "New appraisals will show up here",
     "moreCustomers_one": "{{count}} more customer on this request",
-    "moreCustomers_other": "{{count}} more customers on this request"
+    "moreCustomers_other": "{{count}} more customers on this request",
+    "unassigned": "Unassigned",
+    "today": "Today",
+    "internal": "Internal",
+    "groupBy": {
+      "label": "Group",
+      "none": "No grouping",
+      "current": "Group: {{label}}",
+      "empty": "Not set"
+    },
+    "suggest": {
+      "goTo": "Go to appraisal",
+      "searchIn": "Search “{{term}}” in",
+      "recent": "Recent searches",
+      "matches": "{{count}} found",
+      "none": "None",
+      "noMatch": "No matching appraisal",
+      "navigate": "select",
+      "submit": "search",
+      "close": "close",
+      "shortcut": "Press / to search · j / k to move · Enter to open"
+    },
+    "emptyActions": {
+      "searchAll": "Search all fields",
+      "clearFilters": "Clear filters",
+      "exitView": "Leave quick view",
+      "tryWildcard": "Try {{term}}"
+    },
+    "density": {
+      "title": "Density",
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    }
   },
   "appointment": {
     "sectionTitle": "Appointment Information",
@@ -511,7 +557,10 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": ["Not Verified", "Verified"],
+      "priceVerificationOptions": [
+        "Not Verified",
+        "Verified"
+      ],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
@@ -577,7 +626,17 @@
       "confirm": "Submit",
       "cancel": "Cancel",
       "submitting": "Submitting…",
-      "validationErrorsTitle": "Please complete the required fields"
+      "validationErrorsTitle": "Please complete the required fields",
+      "voteTitle": "Confirm your vote",
+      "voteMessage": "A vote cannot be changed after it is submitted.",
+      "voteAck": "I want to vote \"{{vote}}\" on this appraisal",
+      "summary": {
+        "decision": "Decision",
+        "destination": "Next step",
+        "assignee": "Assignee",
+        "reason": "Reason",
+        "comments": "Comments"
+      }
     },
     "warnings": {
       "title": "Review before continuing",
@@ -590,7 +649,8 @@
       "submitFailed": "Failed to submit decision",
       "validationErrors": "Validation errors occurred",
       "forceSaleRateSaved": "Force selling rate saved",
-      "forceSaleRateFailed": "Failed to save force selling rate. Please try again."
+      "forceSaleRateFailed": "Failed to save force selling rate. Please try again.",
+      "voteNeedsComment": "Add a comment and confirm your vote before submitting."
     }
   },
   "decision": {
@@ -600,7 +660,6 @@
     "commentsLabel": "Comments",
     "noDecision": "No decision made",
     "assignNextTo": "Assign Next To",
-    "decisionPlaceholder": "Select a decision...",
     "assigneePlaceholder": "Select an assignee...",
     "requestDocuments": "Request Additional Documents",
     "loadingActivity": "Loading activity...",
@@ -615,7 +674,26 @@
       "routeBack": "What needs to be revised?",
       "proceed": "Any final notes before proceeding?",
       "hold": "Why are you placing this on hold?"
-    }
+    },
+    "groups": {
+      "forward": "Send forward",
+      "back": "Send back",
+      "cancel": "Cancel / Reject"
+    },
+    "destination": {
+      "forward": "Goes to {{name}}",
+      "back": "Returns to {{name}}",
+      "cancel": "Ends the workflow"
+    },
+    "committeeVotes": "Committee votes",
+    "votesSummary": "{{received}}/{{total}} voted",
+    "stepsCount_one": "{{count}} step",
+    "stepsCount_other": "{{count}} steps",
+    "yourVote": "Your vote",
+    "nextStep": "Next step",
+    "voteImpact": "{{from}} → {{to}} votes",
+    "votesLoadFailed": "Could not load the committee votes.",
+    "noActions": "No decisions are available for this task. Refresh the page, or contact an administrator if this persists."
   },
   "propertyInfo": {
     "tabs": {
@@ -880,6 +958,20 @@
       "reorderFailed": "Failed to reorder properties"
     },
     "floorCount": "{{n}} fl.",
+    "buildingAge": "{{n}} yr old",
+    "underConstruction": "Under construction",
+    "underConstructionPct": "Under construction {{pct}}%",
+    "facts": {
+      "deed": "Deed {{no}}",
+      "buildingArea": "Building {{n}} m²",
+      "floor": "Floor {{n}}",
+      "room": "Unit {{n}}",
+      "madeIn": "Made {{n}}",
+      "machineAge": "{{n}} yr old",
+      "leaseRemaining": "{{n}} yr lease left",
+      "leaseEnded": "Lease ended",
+      "leaseRent": "Rent ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "Machinery summary",
       "status": {
@@ -1735,6 +1827,102 @@
       "buildingValue": "Building Value",
       "buildingValue100": "Building Value 100% Pre-inspection",
       "totalValue": "Total Value"
+    },
+    "method": {
+      "label": "Recording method",
+      "detail": "Itemize by work",
+      "summary": "Overall",
+      "locked": "Method locked",
+      "lockedHint": "Data was carried over or already recorded — switching method would discard it on save",
+      "switchTitle": "Switch recording method?",
+      "switchMessage": "Only one method is saved. Switching discards what is entered in the current one when you save."
+    },
+    "building": "Building",
+    "selectProperty": "Select property",
+    "buildingProperties": "Building properties",
+    "copyFrom": "Copy from",
+    "copyFromTitle": "Copy construction data from",
+    "copyConfirmTitle": "Replace the construction data?",
+    "copyConfirmMessage": "Copying replaces this property's work items, summary and remark with the other building's.",
+    "finishedAfterLeaving": "Finished after you left that property — nothing was applied; do it again there",
+    "copyNothing": "That building has no construction data to copy",
+    "copyFailed": "Could not copy the construction data — try again",
+    "kpi": {
+      "value100": "Value at 100%",
+      "progress": "Overall progress",
+      "currentValue": "Current value",
+      "appraisedValue": "Appraised value (whole appraisal)"
+    },
+    "tabs": {
+      "items": "Work items"
+    },
+    "remark": {
+      "label": "Remark",
+      "placeholder": "Enter remark or additional notes..."
+    },
+    "clearGuard": {
+      "title": "Delete construction data?",
+      "message": "This property has construction inspection data. If you save it as not under construction, all of it — work items, progress, summary and remark — will be deleted.",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "summaryForm": {
+      "detailPlaceholder": "Enter detail...",
+      "uploadTitle": "Upload construction detail",
+      "uploading": "Uploading...",
+      "uploadFailed": "Upload failed — try again",
+      "clickToUpload": "Click to upload",
+      "orDragDrop": "or drag and drop",
+      "document": "Document",
+      "removeDocument": "Remove document"
+    },
+    "showCalculated": "Show calculated columns",
+    "split": {
+      "ok": "Proportion 100% ✓",
+      "short": "Proportion {{pct}}% · {{diff}}% short",
+      "over": "Proportion {{pct}}% · {{diff}}% over"
+    },
+    "grid": {
+      "workItem": "Work item",
+      "proportion": "Proportion",
+      "constructionValue": "Work value",
+      "previousProgress": "Previous",
+      "currentProgress": "This round",
+      "change": "Change",
+      "currentShare": "Cumulative share",
+      "ofBuilding": "(% of building)",
+      "previousValue": "Previous value",
+      "currentValue": "Value this round",
+      "baht": "(Baht)",
+      "addItem": "+ Add item…",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items",
+      "groupTotal": "Total {{name}}",
+      "buildingTotal": "Building total",
+      "otherGroup": "Other",
+      "workGroupsFailed": "Could not load the list of work items — reload the page to add items",
+      "workGroupsLoading": "Loading the list of work items…",
+      "confirmDelete": "Delete?",
+      "remove": "Remove {{name}}",
+      "empty": "No work items yet — pick \"+ Add item…\" on a group, then split the proportions to 100%.",
+      "emptyReadOnly": "No work items recorded."
+    },
+    "status": {
+      "regressed_one": "{{count}} item below the previous round: {{names}} — if intended (e.g. rework), note why in Remark",
+      "regressed_other": "{{count}} items below the previous round: {{names}} — if intended (e.g. rework), note why in Remark",
+      "carriedOver": "Items and proportions carried over from the previous round · changing a proportion recalculates the previous value",
+      "carriedOverNoMoney": "Items and proportions carried over from the previous round",
+      "pending_one": "{{count}} item not entered this round: {{names}} — saved as is, it counts as 0%",
+      "pending_other": "{{count}} items not entered this round: {{names}} — saved as is, they count as 0%",
+      "summaryPending": "This round is not entered yet — saved as is, it counts as 0%",
+      "overBlocksSave": "Proportions add up to {{pct}}% — Save is blocked until they are 100% or less (Save draft still works)",
+      "keys": "↑ ↓ / Enter moves between rows",
+      "summaryRegressed": "Below the previous round — note why in Remark"
+    },
+    "valueHint": {
+      "condo": "A condo unit keeps the appraisal's full appraised value however far construction has progressed. The percentages record progress only; they do not change the price.",
+      "noValueBase": "No Building Cost Value yet, so the value by progress cannot be worked out.",
+      "noValueBaseEditable": "No Building Cost Value yet, so the value by progress cannot be worked out. Enter the Building Cost Value in the Building tab first."
     }
   },
   "forms": {
@@ -1766,16 +1954,38 @@
       "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
-      "sectionTitle": "Building Details"
+      "sectionTitle": "Building Details",
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Legal",
+        "typeUse": "Type & Use",
+        "condition": "Condition & Quality",
+        "structure": "Structure",
+        "finishes": "Finishes & Enclosure",
+        "floors": "Floors",
+        "areaCost": "Area & Cost",
+        "limitations": "Limitations",
+        "remark": "Remark"
+      }
     },
     "condo": {
-        "areaDetailHint": "Each part of the unit and its area",
-        "areaDetailEmpty": "No area details yet",
-        "addArea": "Add area",
-        "areaItems": "{{count}} items · {{total}} m²",
-        "matchesUsable": "Matches usable area",
-        "diffVsUsable": "{{diff}} vs usable area",
-        "areaTotal": "Total",
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Legal",
+        "location": "Location",
+        "surroundings": "Surroundings",
+        "building": "Building",
+        "unit": "Unit",
+        "referencePrices": "Reference Prices",
+        "remark": "Remarks"
+      },
+      "areaDetailHint": "Each part of the unit and its area",
+      "areaDetailEmpty": "No area details yet",
+      "addArea": "Add area",
+      "areaItems": "{{count}} items · {{total}} m²",
+      "matchesUsable": "Matches usable area",
+      "diffVsUsable": "{{diff}} vs usable area",
+      "areaTotal": "Total",
       "sectionTitle": "Condo Details",
       "areaDetail": "Area Detail",
       "pma": "PMA Information",
@@ -1796,10 +2006,51 @@
       "sectionTitle": "Title Deed"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "Contract Information"
+      },
       "sectionTitle": "Lease Agreement"
     },
     "rentalInfo": {
-      "sectionTitle": "Rental Information"
+      "addPeriod": "Add period",
+      "addUpFront": "Add up-front payment",
+      "groups": {
+        "schedule": "Schedule",
+        "growthRate": "Growth Rate",
+        "upFront": "Up Front",
+        "rentalSchedule": "Rental Schedule"
+      },
+      "sectionTitle": "Rental Information",
+      "growthFrequency": "Frequency",
+      "growthPeriod": "Period",
+      "edit": "Edit",
+      "editing": "Editing",
+      "generate": "GENERATE",
+      "generating": "GENERATING...",
+      "scheduleEmpty": "Click GENERATE to compute the rental schedule",
+      "upFrontMismatch": "Total up front entries ({{entries}}) does not match the Up Front amount ({{total}})",
+      "table": {
+        "atYear": "At Year",
+        "toYear": "To Year",
+        "growthRate": "Growth Rate",
+        "growthAmount": "Growth Amount",
+        "totalAmount": "Total Amount (Baht)",
+        "atDate": "At Date",
+        "upFrontAmount": "Up Front Amount",
+        "year": "Year",
+        "contractStart": "Contract Start",
+        "contractEnd": "Contract End",
+        "upFrontPerYear": "Up Front (Baht/Year)",
+        "rentalFeePerYear": "Contract Rental Fee (Baht/Year)",
+        "growthRatePct": "Growth Rate %",
+        "total": "Total"
+      },
+      "deleteRow": {
+        "title": "Delete Row",
+        "message": "Are you sure you want to delete this row? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
     },
     "marketComparable": {
       "sectionTitle": "Market Comparable",
@@ -1903,9 +2154,6 @@
     "quotationStarted": "Quotation started — companies have been invited",
     "quotationAddSelectDraft": "Please select a Draft quotation to add to",
     "quotationAddedToDraft": "Appraisal added to {{quotationNumber}}",
-    "voteSubmitFailed": "Failed to submit vote",
-    "committeeDecisionRecorded": "Committee decision recorded",
-    "voteRecorded": "Vote recorded",
     "propertyCondoUpdated": "Property condominium updated successfully",
     "propertyCondoCreated": "Property condominium created successfully",
     "propertyLandUpdated": "Property land updated successfully",
@@ -2277,8 +2525,6 @@
     "totalRow": "Total"
   },
   "approvalListSection": {
-    "title": "Committee Approval",
-    "notActiveYet": "Committee approval is not active for this appraisal yet.",
     "returnedBanner": "This appraisal has been returned for revision.",
     "conditionsTitle": "Approval Conditions",
     "votesDisplay": "{{received}}/{{total}} votes",
@@ -2299,13 +2545,6 @@
     "conditionRoleRequiredDefault": "Required role must vote",
     "conditionMinVotes": "At least {{n}} votes required",
     "conditionMinVotesDefault": "Minimum vote count required",
-    "columns": {
-      "member": "Member",
-      "role": "Role",
-      "vote": "Vote",
-      "date": "Date",
-      "comments": "Comments"
-    },
     "stats": {
       "votesReceived": "Votes received",
       "approve": "Approve",

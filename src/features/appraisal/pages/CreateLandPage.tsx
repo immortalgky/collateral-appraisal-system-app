@@ -45,7 +45,7 @@ const CreateLandPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
-  const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetLandPropertyById(appraisalId ?? '', propertyId);
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {

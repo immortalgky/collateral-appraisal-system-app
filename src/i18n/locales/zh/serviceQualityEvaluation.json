@@ -45,7 +45,8 @@
       "appraisalDepartment": "评估部门",
       "propertyType": "抵押物类型",
       "appraisalDate": "评估日期",
-      "reportReceivedDate": "报告接收日期"
+      "reportReceivedDate": "报告接收日期",
+      "internalAppraiser": "内部估价师"
     },
     "comments": {
       "additionalLabel": "评估员补充意见",

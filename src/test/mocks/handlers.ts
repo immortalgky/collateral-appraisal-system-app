@@ -131,7 +131,7 @@ export const handlers = [
     }
 
     return HttpResponse.json(
-      { id: Math.floor(Math.random() * 1000), ...body },
+      { id: Math.floor(Math.random() * 1000), ...(body as object) },
       { status: 201 }
     );
   }),

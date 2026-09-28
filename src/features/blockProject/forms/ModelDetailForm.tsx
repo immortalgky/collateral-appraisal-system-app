@@ -10,7 +10,6 @@ import SectionRow from '../components/SectionRow';
 import CondoAreaDetailForm from '@/features/appraisal/forms/CondoAreaDetailForm';
 import {
   condoModelInfoFields,
-  lbModelBuildingDetailFields,
   lbModelInfoFields,
 } from '../configs/fields';
 import {

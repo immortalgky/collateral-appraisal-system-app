@@ -158,7 +158,10 @@
     "invoiceNo": "发票编号",
     "noOfMachines": "机器数量",
     "houseNumber": "门牌号",
-    "villageBuildingNameFull": "村庄/楼栋名称"
+    "villageBuildingNameFull": "村庄/楼栋名称",
+    "builtOnTitleNumber": "产权编号",
+    "condoRegistrationNumber": "公寓登记编号",
+    "vehicleRegistrationNumber": "车辆登记编号"
   },
   "titleAddress": {
     "header": "产权文件地址",
@@ -174,7 +177,8 @@
     "duplicateMessage": "从第 {{n}} 项复制（{{type}}）",
     "duplicateCount": "复制份数",
     "duplicateHint": "单次最多 {{max}} 份，超过请使用批量导入。",
-    "duplicateConfirm_other": "复制 {{count}} 份"
+    "duplicateConfirm_other": "复制 {{count}} 份",
+    "duplicateConfirm_one": "复制 {{count}} 份"
   },
   "titleDetails": {
     "title": "产权",
@@ -295,7 +299,8 @@
     "columnAppraisalValue": "评估价值",
     "columnAppraisalDate": "评估日期",
     "dateFilterFrom": "评估日期从",
-    "dateFilterTo": "评估日期至"
+    "dateFilterTo": "评估日期至",
+    "columnInspectionNumber": "查勘编号"
   },
   "copyBanner": {
     "reappraisalOf": "重新评估",
@@ -409,7 +414,8 @@
     "customerNameRequired": "客户姓名为必填项。",
     "propertyTypeRequired": "房产类型为必填项。",
     "commentRequired": "评论为必填项",
-    "titleMinItems": "产权信息至少需要1项"
+    "titleMinItems": "产权信息至少需要1项",
+    "sellingPriceRequired": "售价必须大于 0。"
   },
   "titleImport": {
     "button": "批量导入",
@@ -461,6 +467,11 @@
     "rejectedOnAppend_other": "有 {{count}} 条被表单拒绝（{{rows}}），请联系系统管理员。",
     "tabValid_other": "将导入的记录（{{count}}）",
     "tabInvalid_other": "发现的问题（{{count}}）",
-    "missingColumns": "文件中缺少部分记录所需的列：{{columns}} — 请在标题行补上该列，或检查列名拼写。"
+    "missingColumns": "文件中缺少部分记录所需的列：{{columns}} — 请在标题行补上该列，或检查列名拼写。",
+    "confirm_one": "导入 {{count}} 条",
+    "imported_one": "已导入 {{count}} 条",
+    "rejectedOnAppend_one": "有 {{count}} 条被表单拒绝（{{rows}}），请联系系统管理员。",
+    "tabValid_one": "将导入的记录（{{count}}）",
+    "tabInvalid_one": "发现的问题（{{count}}）"
   }
 }

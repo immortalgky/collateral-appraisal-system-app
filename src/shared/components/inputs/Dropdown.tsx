@@ -69,7 +69,12 @@ function applyOptionFilters(
   });
 }
 
-interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
+// `value` is omitted from the DOM attributes and redeclared below: this control's value is the
+// option's key, and `null` is how every caller says "nothing selected" (ListBoxItem.value is
+// `string | null | undefined`). SelectHTMLAttributes types it as `string | number | readonly
+// string[]`, which rejects that null at every call site.
+interface DropdownBaseProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'value'> {
+  value?: string | null;
   label?: string;
   /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
   labelAddon?: ReactNode;

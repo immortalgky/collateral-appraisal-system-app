@@ -4,7 +4,10 @@
  */
 import { propertyTaxRanges } from '@features/pricingAnalysis/data/dcfParameters.ts';
 
-type Numberish = string | number | null | undefined;
+export type Numberish = string | number | null | undefined;
+
+/** A row read out of an untyped react-hook-form array, whose cells are all scalars. */
+export type NumberishRow = Record<string, Numberish>;
 
 /**
  * Safely converts any value to a finite number.
@@ -323,7 +326,7 @@ export function getPropertyTaxAmount(totalGovPrice: number): number {
   }, 0);
 }
 
-export function floorToThousands(num) {
+export function floorToThousands(num: number) {
   return Math.floor(num / 1000) * 1000;
 }
 

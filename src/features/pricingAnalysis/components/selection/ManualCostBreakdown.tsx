@@ -55,7 +55,12 @@ export const ManualCostBreakdown = ({
   // covering only Land, so the Cost approach added the building again through whichever method
   // actually covers it — the same double-count the board's formula row warns about, reached from
   // the other direction and with nothing on screen to show it had happened.
-  const landValue = (rateInput ?? 0) * landArea;
+  //
+  // Rounded to whole baht, the same way the backend rounds before storing it
+  // (PricingAnalysisMethod.ApplyLandAreaValue / SetManualCostBreakdownCommandHandler): the title
+  // area carries two decimals, so rate × area lands on satang nobody typed — and this figure is
+  // what gets saved, printed in the book and exported.
+  const landValue = Math.round((rateInput ?? 0) * landArea);
 
   const { onLandRateSync } = context;
   const methodType = method.methodType;
@@ -75,7 +80,12 @@ export const ManualCostBreakdown = ({
     // Re-derive the price the moment the rate moves. The appraiser can still overwrite it in the
     // price field afterwards — that rounded figure is this method's value, and rounding is
     // their call.
-    onTotalChange(roundToThousand((next ?? 0) * landArea));
+    //
+    // Rounded to whole baht first, exactly as the land figure above and as the backend stores it,
+    // and only then to the thousand: rounding the raw product in one step would round off a
+    // number that is never shown anywhere, and 55,925,499.63 lands a thousand below the
+    // 55,925,500 the card prints.
+    onTotalChange(roundToThousand(Math.round((next ?? 0) * landArea)));
   };
 
   const handleBlur = () => {

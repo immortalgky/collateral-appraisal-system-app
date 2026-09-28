@@ -34,7 +34,9 @@
       "created": "创建时间",
       "slaBusinessDays": "SLA（天）",
       "submittedAt": "提交日期",
-      "groupTag": "分组"
+      "groupTag": "分组",
+      "assignee": "负责人",
+      "requestor": "申请人"
     },
     "filters": {
       "statusLabel": "状态",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "所有目的",
       "propertyTypeLabel": "抵押物类型",
       "propertyTypePlaceholder": "所有类型",
-      "appointmentDateFrom": "预约日期起",
-      "appointmentDateTo": "预约日期至",
       "assignedDateFrom": "分配日期起",
       "assignedDateTo": "分配日期至",
       "multiSelected": "{{label}}：已选 {{count}} 项",
@@ -83,7 +83,17 @@
         "time": "日期"
       },
       "anyValue": "全部",
-      "optionsUnavailable": "暂无可选项"
+      "optionsUnavailable": "暂无可选项",
+      "appointment": "预约日期",
+      "presets": {
+        "today": "今天",
+        "tomorrow": "明天",
+        "next7": "未来 7 天",
+        "past7": "过去 7 天",
+        "past30": "过去 30 天"
+      },
+      "requestorLabel": "申请人 (RM)",
+      "typeToSearch": "输入姓名或员工编号搜索"
     },
     "status": {
       "Pending": "待处理",
@@ -104,7 +114,10 @@
       "overdue": "超期 {{time}}",
       "left": "剩余 {{time}}",
       "closed": "已结案",
-      "cancelled": "已取消"
+      "cancelled": "已取消",
+      "durationDays": "{{days}}天 {{hours}}小时",
+      "durationHours": "{{hours}}小时",
+      "dueOn": "截止 {{date}}"
     },
     "assignmentType": {
       "Internal": "内部",
@@ -143,7 +156,9 @@
       "high-priority-active": "高优先级",
       "nearing-deadline": "临近截止",
       "external-assignments": "外部任务",
-      "my-company-queue": "我司队列"
+      "my-company-queue": "我司队列",
+      "all": "全部任务",
+      "my-requests": "我的申请"
     },
     "saved": "已保存",
     "saveCurrentSearch": "保存当前搜索",
@@ -154,7 +169,6 @@
     "removeFilter": "移除筛选",
     "activityTracking": "评估进度跟踪",
     "searchTips": {
-      "trigger": "找不到？",
       "title": "找不到？可以这样试试",
       "prefix": "默认从值的开头匹配 — 输入 691 可找到 69105467，输入 05467 则不行",
       "wildcard": "以 * 开头可匹配值中间的内容，例如 *john",
@@ -171,7 +185,39 @@
     "emptyAll": "暂无估价单",
     "emptyAllHint": "有新的估价单时会显示在这里",
     "moreCustomers_one": "该申请还有 {{count}} 位客户",
-    "moreCustomers_other": "该申请还有 {{count}} 位客户"
+    "moreCustomers_other": "该申请还有 {{count}} 位客户",
+    "unassigned": "未分配",
+    "today": "今天",
+    "internal": "内部",
+    "groupBy": {
+      "label": "分组",
+      "none": "不分组",
+      "current": "分组：{{label}}",
+      "empty": "未指定"
+    },
+    "suggest": {
+      "goTo": "前往评估",
+      "searchIn": "在以下字段搜索“{{term}}”",
+      "recent": "最近搜索",
+      "matches": "{{count}} 条",
+      "none": "无",
+      "noMatch": "没有匹配的评估",
+      "navigate": "选择",
+      "submit": "搜索",
+      "close": "关闭",
+      "shortcut": "按 / 搜索 · j / k 移动 · Enter 打开"
+    },
+    "emptyActions": {
+      "searchAll": "搜索全部字段",
+      "clearFilters": "清除筛选",
+      "exitView": "退出快速视图",
+      "tryWildcard": "试试 {{term}}"
+    },
+    "density": {
+      "title": "密度",
+      "comfortable": "宽松",
+      "compact": "紧凑"
+    }
   },
   "appointment": {
     "sectionTitle": "预约信息",
@@ -192,7 +238,11 @@
       "locationLabel": "地点",
       "locationPlaceholder": "输入预约地点详情",
       "reasonLabel": "改期原因",
-      "reasonPlaceholder": "输入改期原因（可选）"
+      "reasonPlaceholder": "输入改期原因（可选）",
+      "contactPersonLabel": "联系人姓名",
+      "contactPersonPlaceholder": "请输入联系人姓名",
+      "contactPhoneLabel": "联系电话",
+      "contactPhonePlaceholder": "请输入联系电话"
     },
     "cancelDialog": {
       "title": "取消预约？",
@@ -573,7 +623,17 @@
       "confirm": "提交",
       "cancel": "取消",
       "submitting": "提交中…",
-      "validationErrorsTitle": "请填写必填字段"
+      "validationErrorsTitle": "请填写必填字段",
+      "voteTitle": "确认投票",
+      "voteMessage": "投票提交后无法修改。",
+      "voteAck": "我确认对此评估投票“{{vote}}”",
+      "summary": {
+        "decision": "决定",
+        "destination": "下一步",
+        "assignee": "处理人",
+        "reason": "原因",
+        "comments": "备注"
+      }
     },
     "toasts": {
       "saved": "决策摘要保存成功",
@@ -582,7 +642,12 @@
       "submitFailed": "提交决策失败",
       "validationErrors": "发生验证错误",
       "forceSaleRateSaved": "强制出售价格比例已保存",
-      "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。"
+      "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。",
+      "voteNeedsComment": "提交前请填写备注并确认您的投票。"
+    },
+    "warnings": {
+      "title": "继续前请复核",
+      "continueAnyway": "仍然继续"
     }
   },
   "decision": {
@@ -592,7 +657,6 @@
     "commentsLabel": "意见",
     "noDecision": "尚未做出决策",
     "assignNextTo": "下一步分配给",
-    "decisionPlaceholder": "选择决策...",
     "assigneePlaceholder": "选择被分配人...",
     "requestDocuments": "请求补充文件",
     "loadingActivity": "加载活动中...",
@@ -605,7 +669,28 @@
       "routeBack": "需要修改什么？",
       "proceed": "继续前的最终备注？",
       "hold": "为什么暂停？"
-    }
+    },
+    "reasonLabel": "原因",
+    "reasonPlaceholder": "请选择原因...",
+    "groups": {
+      "forward": "向前提交",
+      "back": "退回",
+      "cancel": "取消 / 拒绝"
+    },
+    "destination": {
+      "forward": "转至 {{name}}",
+      "back": "退回至 {{name}}",
+      "cancel": "结束流程"
+    },
+    "committeeVotes": "委员会投票",
+    "votesSummary": "已投票 {{received}}/{{total}}",
+    "stepsCount_one": "{{count}} 个步骤",
+    "stepsCount_other": "{{count}} 个步骤",
+    "yourVote": "您的投票",
+    "nextStep": "下一步",
+    "voteImpact": "{{from}} → {{to}} 票",
+    "votesLoadFailed": "无法加载委员会投票。",
+    "noActions": "此任务没有可用的决定选项。请刷新页面，如仍有问题请联系管理员。"
   },
   "propertyInfo": {
     "tabs": {
@@ -689,7 +774,8 @@
         "appraisedOverSurveyed": "评估 {{appraised}} 超过勘查 {{surveyed}}",
         "splitOverSurveyed": "已安装 + 未安装 = {{split}}，超过勘查的 {{surveyed}}",
         "note": "仅为提示，不影响保存。"
-      }
+      },
+      "saveDraft": "保存草稿"
     },
     "machineryInfo": {
       "groups": {
@@ -869,6 +955,20 @@
       "reorderFailed": "重排房产失败"
     },
     "floorCount": "{{n}} 层",
+    "buildingAge": "房龄 {{n}} 年",
+    "underConstruction": "在建",
+    "underConstructionPct": "在建 {{pct}}%",
+    "facts": {
+      "deed": "地契 {{no}}",
+      "buildingArea": "建筑 {{n}} m²",
+      "floor": "{{n}} 层",
+      "room": "房号 {{n}}",
+      "madeIn": "{{n}} 年制造",
+      "machineAge": "机龄 {{n}} 年",
+      "leaseRemaining": "租期剩余 {{n}} 年",
+      "leaseEnded": "租约已到期",
+      "leaseRent": "租金 ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "机器汇总",
       "status": {
@@ -1724,6 +1824,102 @@
       "buildingValue": "建筑价值",
       "buildingValue100": "建筑价值 100%（检验前）",
       "totalValue": "总价值"
+    },
+    "method": {
+      "label": "记录方式",
+      "detail": "按工程项目",
+      "summary": "整体汇总",
+      "locked": "记录方式已锁定",
+      "lockedHint": "已有沿用或已保存的数据——切换记录方式会在保存时清除这些数据",
+      "switchTitle": "切换记录方式？",
+      "switchMessage": "每次只保存一种方式。切换后，当前方式中已填写的内容将在保存时被清除。"
+    },
+    "building": "建筑",
+    "selectProperty": "选择资产",
+    "buildingProperties": "建筑类资产",
+    "copyFrom": "复制自",
+    "copyFromTitle": "从以下资产复制施工数据",
+    "copyConfirmTitle": "替换施工数据？",
+    "copyConfirmMessage": "复制将用所选建筑的数据替换本资产的工程项目、汇总及备注。",
+    "finishedAfterLeaving": "在您离开该资产后才完成——未应用，请在该资产上重新操作",
+    "copyNothing": "该建筑没有可复制的施工数据",
+    "copyFailed": "复制施工数据失败——请重试",
+    "kpi": {
+      "value100": "完工 100% 价值",
+      "progress": "总体进度",
+      "currentValue": "当前价值",
+      "appraisedValue": "评估价值（整份评估）"
+    },
+    "tabs": {
+      "items": "工程项目"
+    },
+    "remark": {
+      "label": "备注",
+      "placeholder": "输入备注或补充说明..."
+    },
+    "clearGuard": {
+      "title": "删除施工数据？",
+      "message": "该资产已有施工检验数据。如以“非在建”保存，所有数据（工程项目、进度、汇总及备注）将被删除。",
+      "confirm": "确认",
+      "cancel": "取消"
+    },
+    "summaryForm": {
+      "detailPlaceholder": "输入详情...",
+      "uploadTitle": "上传施工明细",
+      "uploading": "正在上传...",
+      "uploadFailed": "上传失败——请重试",
+      "clickToUpload": "点击上传",
+      "orDragDrop": "或拖放文件",
+      "document": "文件",
+      "removeDocument": "删除文件"
+    },
+    "showCalculated": "显示计算列",
+    "split": {
+      "ok": "比例 100% ✓",
+      "short": "比例 {{pct}}% · 差 {{diff}}%",
+      "over": "比例 {{pct}}% · 超出 {{diff}}%"
+    },
+    "grid": {
+      "workItem": "工程项目",
+      "proportion": "比例",
+      "constructionValue": "工程价值",
+      "previousProgress": "上期",
+      "currentProgress": "本期",
+      "change": "变化",
+      "currentShare": "累计占比",
+      "ofBuilding": "（占整栋 %）",
+      "previousValue": "上期价值",
+      "currentValue": "本期价值",
+      "baht": "（泰铢）",
+      "addItem": "+ 添加项目…",
+      "itemCount_one": "{{count}} 项",
+      "itemCount_other": "{{count}} 项",
+      "groupTotal": "{{name}} 合计",
+      "buildingTotal": "整栋合计",
+      "otherGroup": "其他",
+      "workGroupsFailed": "无法加载工程项目列表——请刷新页面后再添加",
+      "workGroupsLoading": "正在加载工程项目列表…",
+      "confirmDelete": "删除？",
+      "remove": "删除 {{name}}",
+      "empty": "尚无工程项目——在分组上选择“+ 添加项目…”，再将比例分配至 100%。",
+      "emptyReadOnly": "没有工程项目。"
+    },
+    "status": {
+      "regressed_one": "{{count}} 项低于上一期：{{names}}——如属有意（如返工），请在备注中说明原因",
+      "regressed_other": "{{count}} 项低于上一期：{{names}}——如属有意（如返工），请在备注中说明原因",
+      "carriedOver": "项目与比例沿用上一期 · 修改比例会重新计算上期价值",
+      "carriedOverNoMoney": "项目与比例沿用上一期",
+      "pending_one": "{{count}} 项本期尚未填写：{{names}}——直接保存将按 0% 计",
+      "pending_other": "{{count}} 项本期尚未填写：{{names}}——直接保存将按 0% 计",
+      "summaryPending": "本期尚未填写——直接保存将按 0% 计",
+      "overBlocksSave": "比例合计 {{pct}}%——需不超过 100% 才能保存（仍可保存草稿）",
+      "keys": "↑ ↓ / Enter 切换行",
+      "summaryRegressed": "低于上一期——请在备注中说明原因"
+    },
+    "valueHint": {
+      "condo": "公寓单元无论施工进度如何，均按整份评估的全额评估价值计算。百分比仅用于记录进度，不影响价格。",
+      "noValueBase": "尚无建筑物价值，暂无法按进度计算价值。",
+      "noValueBaseEditable": "尚无建筑物价值，暂无法按进度计算价值。请先在“建筑”页填写建筑物价值。"
     }
   },
   "forms": {
@@ -1749,16 +1945,38 @@
       "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
-      "sectionTitle": "建筑详情"
+      "sectionTitle": "建筑详情",
+      "groups": {
+        "identification": "基本信息",
+        "ownership": "权属与法律",
+        "typeUse": "类型与用途",
+        "condition": "状况与质量",
+        "structure": "结构",
+        "finishes": "装修与围护",
+        "floors": "楼层",
+        "areaCost": "面积与造价",
+        "limitations": "限制",
+        "remark": "备注"
+      }
     },
     "condo": {
-        "areaDetailHint": "单元各部分及其面积",
-        "areaDetailEmpty": "暂无面积明细",
-        "addArea": "添加面积",
-        "areaItems": "{{count}} 项 · {{total}} 平方米",
-        "matchesUsable": "与使用面积一致",
-        "diffVsUsable": "{{diff}} 与使用面积相差",
-        "areaTotal": "合计",
+      "groups": {
+        "identification": "识别信息",
+        "ownership": "所有权与法律",
+        "location": "位置",
+        "surroundings": "周边环境",
+        "building": "建筑",
+        "unit": "单元",
+        "referencePrices": "参考价格",
+        "remark": "备注"
+      },
+      "areaDetailHint": "单元各部分及其面积",
+      "areaDetailEmpty": "暂无面积明细",
+      "addArea": "添加面积",
+      "areaItems": "{{count}} 项 · {{total}} 平方米",
+      "matchesUsable": "与使用面积一致",
+      "diffVsUsable": "{{diff}} 与使用面积相差",
+      "areaTotal": "合计",
       "sectionTitle": "公寓详情",
       "areaDetail": "面积详情",
       "pma": "PMA 信息",
@@ -1779,13 +1997,65 @@
       "sectionTitle": "地契"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "合同信息"
+      },
       "sectionTitle": "租赁协议"
     },
     "rentalInfo": {
-      "sectionTitle": "租赁信息"
+      "addPeriod": "添加期间",
+      "addUpFront": "添加预付款",
+      "groups": {
+        "schedule": "租期",
+        "growthRate": "租金增长率",
+        "upFront": "预付款",
+        "rentalSchedule": "租金计划表"
+      },
+      "sectionTitle": "租赁信息",
+      "growthFrequency": "按频率",
+      "growthPeriod": "按期间",
+      "edit": "编辑",
+      "editing": "编辑中",
+      "generate": "生成",
+      "generating": "生成中...",
+      "scheduleEmpty": "点击 生成 以计算租金计划表",
+      "upFrontMismatch": "预付款明细合计（{{entries}}）与预付款金额（{{total}}）不符",
+      "table": {
+        "atYear": "起始年",
+        "toYear": "截止年",
+        "growthRate": "增长率",
+        "growthAmount": "增长金额",
+        "totalAmount": "合计（泰铢）",
+        "atDate": "日期",
+        "upFrontAmount": "预付款金额",
+        "year": "年",
+        "contractStart": "合同开始",
+        "contractEnd": "合同结束",
+        "upFrontPerYear": "预付款（泰铢/年）",
+        "rentalFeePerYear": "合同租金（泰铢/年）",
+        "growthRatePct": "增长率 %",
+        "total": "合计"
+      },
+      "deleteRow": {
+        "title": "删除行",
+        "message": "确定要删除此行吗？此操作无法撤销。",
+        "confirm": "删除",
+        "cancel": "取消"
+      }
     },
     "marketComparable": {
-      "sectionTitle": "市场可比案例"
+      "sectionTitle": "市场可比案例",
+      "duplicateDialog": {
+        "title": "复制市场比较资料",
+        "message": "确定要复制这条市场比较资料吗？系统将使用相同的数据创建一条新记录。",
+        "confirm": "复制"
+      }
+    },
+    "propertyName": {
+      "autoFillLabel": "自动填写资产名称"
+    },
+    "owner": {
+      "autoFillLabel": "从土地复制产权人"
     }
   },
   "validation": {
@@ -1811,7 +2081,10 @@
     "assignmentMethodRequired": "请选择分配方式",
     "remarksMaxLength": "备注不得超过 500 个字符",
     "selectAssignee": "请选择被分配人",
-    "selectFollowupStaff": "请选择内部跟进人员"
+    "selectFollowupStaff": "请选择内部跟进人员",
+    "contactPersonRequired": "请填写联系人姓名",
+    "contactPhoneRequired": "请填写联系电话",
+    "titleNumberRequired": "请填写产权编号。"
   },
   "toasts": {
     "photoUploaded": "照片上传成功",
@@ -1878,9 +2151,6 @@
     "quotationStarted": "报价单已开始 — 已邀请相关公司",
     "quotationAddSelectDraft": "请选择要添加的草稿报价单",
     "quotationAddedToDraft": "估价已添加至 {{quotationNumber}}",
-    "voteSubmitFailed": "提交投票失败",
-    "committeeDecisionRecorded": "委员会决议已记录",
-    "voteRecorded": "投票已记录",
     "propertyCondoUpdated": "公寓房产更新成功",
     "propertyCondoCreated": "公寓房产创建成功",
     "propertyLandUpdated": "土地房产更新成功",
@@ -1905,7 +2175,9 @@
     "appraisalReportNotAvailable": "此评估尚未附加完整评估报告。",
     "appraisalSummaryNotAvailable": "此评估尚未附加评估摘要报告。",
     "topicReorderFailed": "未能完整保存主题顺序，请再检查一遍。",
-    "topicUpdateFailed": "无法保存该主题，请再检查一遍。"
+    "topicUpdateFailed": "无法保存该主题，请再检查一遍。",
+    "marketComparableDeleted": "已删除市场比较资料",
+    "marketComparableDeleteFailed": "删除市场比较资料失败"
   },
   "common": {
     "unsavedChanges": "有未保存的更改",
@@ -2016,8 +2288,11 @@
     },
     "toasts": {
       "submitted": "已提交银行审批",
-      "submitFailed": "提交审批失败"
-    }
+      "submitFailed": "提交审批失败",
+      "rescheduleCancelled": "已取消改期",
+      "rescheduleCancelFailed": "取消改期失败"
+    },
+    "cancelRescheduleButton": "取消改期"
   },
   "createPage": {
     "photosSection": "照片",
@@ -2187,7 +2462,6 @@
       "landPrice": "土地价格"
     },
     "condoColumns": {
-      "titleDeedNo": "地契编号",
       "room": "房间号",
       "sqm": "平方米",
       "bahtPerSqm": "泰铢/平方米",
@@ -2195,7 +2469,8 @@
     },
     "footer": {
       "total": "合计",
-      "avg": "平均"
+      "avg": "平均",
+      "avgBasis": "基于已勘测的 {{area}} 平方哇"
     },
     "missingFromSurvey": "勘测中缺失",
     "showLess": "收起",
@@ -2247,8 +2522,6 @@
     "totalRow": "合计"
   },
   "approvalListSection": {
-    "title": "委员会审批",
-    "notActiveYet": "此评估的委员会审批尚未启动。",
     "returnedBanner": "此评估已被退回修改。",
     "conditionsTitle": "审批条件",
     "votesDisplay": "{{received}}/{{total}} 票",
@@ -2269,13 +2542,6 @@
     "conditionRoleRequiredDefault": "所需角色必须投票",
     "conditionMinVotes": "至少需要 {{n}} 票",
     "conditionMinVotesDefault": "需达到最低投票数",
-    "columns": {
-      "member": "成员",
-      "role": "角色",
-      "vote": "投票",
-      "date": "日期",
-      "comments": "评论"
-    },
     "stats": {
       "votesReceived": "已投票数",
       "approve": "批准",

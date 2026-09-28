@@ -78,8 +78,8 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
 
   const lat = watch('latitude');
   const lon = watch('longitude');
-  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
-  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const parsedLat = lat != null && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon != null && lon !== '' ? Number(lon) : null;
   const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
   const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
 
@@ -294,8 +294,9 @@ const identityFields = pick('propertyName', 'landDescription');
 const landOfficeFields = pick('landOffice');
 
 const ownershipFields = pick(
-  ['isOwnerVerifiedLand', 'col-span-4'],
-  ['ownerNameLand', 'col-span-8'],
+  // Full rows each, as configured: the owner's name sits on its own line under the check.
+  'isOwnerVerifiedLand',
+  'ownerNameLand',
   'hasObligation',
   'obligationDetails',
   'isRentedOut',

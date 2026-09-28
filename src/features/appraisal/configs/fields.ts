@@ -72,7 +72,7 @@ export const landAddressFields: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     addressSource: 'title',
-    wrapperClassName: 'col-span-5',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
   // Display fields (autopopulated by location-selector)
@@ -81,7 +81,7 @@ export const landAddressFields: FormField[] = [
     label: 'District',
     name: 'districtName',
     disabled: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 
   {
@@ -106,7 +106,7 @@ export const landDopaAddressFields: FormField[] = [
     postcodeField: 'dopaPostcode',
     subDistrictNameField: 'dopaSubDistrictName',
     addressSource: 'dopa',
-    wrapperClassName: 'col-span-5',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
   // Display fields (autopopulated by dopa location-selector)
@@ -115,7 +115,7 @@ export const landDopaAddressFields: FormField[] = [
     label: 'District',
     name: 'dopaDistrictName',
     disabled: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 
   {
@@ -1556,7 +1556,7 @@ export const condoAddressFields: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     addressSource: 'title',
-    wrapperClassName: 'col-span-5',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
   // Display fields (autopopulated by location-selector)
@@ -1565,7 +1565,7 @@ export const condoAddressFields: FormField[] = [
     label: 'District',
     name: 'districtName',
     disabled: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 
   {
@@ -1590,7 +1590,7 @@ export const condoDopaAddressFields: FormField[] = [
     postcodeField: 'dopaPostcode',
     subDistrictNameField: 'dopaSubDistrictName',
     addressSource: 'dopa',
-    wrapperClassName: 'col-span-5',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
   // Display fields (autopopulated by dopa location-selector)
@@ -1599,7 +1599,7 @@ export const condoDopaAddressFields: FormField[] = [
     label: 'District',
     name: 'dopaDistrictName',
     disabled: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 
   {
@@ -3246,7 +3246,7 @@ export const landPmaAddressFields: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     addressSource: 'title',
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
 
@@ -3256,7 +3256,7 @@ export const landPmaAddressFields: FormField[] = [
     name: 'districtName',
     disabled: true,
     required: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 
   {
@@ -3265,7 +3265,7 @@ export const landPmaAddressFields: FormField[] = [
     name: 'provinceName',
     disabled: true,
     required: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 ];
 
@@ -3347,7 +3347,7 @@ export const condoPmaAddressFields: FormField[] = [
     postcodeField: 'postcode',
     subDistrictNameField: 'subDistrictName',
     addressSource: 'title',
-    wrapperClassName: 'col-span-5',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
 
@@ -3357,7 +3357,7 @@ export const condoPmaAddressFields: FormField[] = [
     name: 'districtName',
     disabled: true,
     required: true,
-    wrapperClassName: 'col-span-4',
+    wrapperClassName: 'col-span-3',
   },
 
   {
@@ -3544,7 +3544,7 @@ export const rentalScheduleField: FormField[] = [
     type: 'number-input',
     label: 'Number of Year',
     name: 'numberOfYears',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-6',
     maxIntegerDigits: 3,
     required: true,
   },
@@ -3553,7 +3553,7 @@ export const rentalScheduleField: FormField[] = [
     type: 'date-input',
     label: 'First Year Start From',
     name: 'firstYearStartDate',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-6',
     required: true,
   },
 
@@ -3561,7 +3561,7 @@ export const rentalScheduleField: FormField[] = [
     type: 'number-input',
     label: 'Contract Rental Fee per Year',
     name: 'contractRentalFeePerYear',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-6',
     decimalPlaces: 2,
     maxIntegerDigits: 15,
     required: true,
@@ -3571,7 +3571,7 @@ export const rentalScheduleField: FormField[] = [
     type: 'number-input',
     label: 'Up Front',
     name: 'upFrontTotalAmount',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-6',
     decimalPlaces: 2,
     maxIntegerDigits: 15,
     required: true,

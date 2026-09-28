@@ -280,6 +280,22 @@ export function getRouteSegment(typeNameOrCode: string): string | undefined {
   return typeToRouteSegment[code];
 }
 
+/**
+ * Link to a property's page (router.tsx `property/<segment>/:propertyId`). Undefined when any part
+ * is missing — outside an appraisal, an unknown type, no id — so callers render plain text rather
+ * than a dead link.
+ */
+export function getPropertyHref(
+  basePath: string,
+  typeNameOrCode: string | null | undefined,
+  propertyId: string | null | undefined,
+): string | undefined {
+  const segment = typeNameOrCode ? getRouteSegment(typeNameOrCode) : undefined;
+  return basePath && segment && propertyId
+    ? `${basePath}/property/${segment}/${propertyId}`
+    : undefined;
+}
+
 /** Check if a property type has building details (accepts display name or code) */
 export function isBuildingType(typeNameOrCode: string): boolean {
   const code = displayNameToCode[typeNameOrCode] ?? typeNameOrCode;

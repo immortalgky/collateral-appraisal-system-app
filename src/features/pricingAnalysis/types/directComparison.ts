@@ -1,11 +1,13 @@
 export interface ComparativeFactors {
   id?: string;
-  factorId: string;
-  factorCode: string;
+  // ComparativeFactorTable adds a row as { factorId: '', factorCode: null } until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
+  collateralValue?: string | number | null;
 }
 
 export interface ComparativeSurveys {
-  linkId?: string;
+  linkId?: string | null;
   marketId: string;
   displaySeq: number;
 }
@@ -15,8 +17,9 @@ export interface DirectComparisonQualitativeSurvey {
   qualitativeLevel: string;
 }
 export interface DirectComparisonQualitative {
-  factorId: string;
-  factorCode: string;
+  // Unset or empty on a row just added, until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   qualitatives: DirectComparisonQualitativeSurvey[];
 }
 
@@ -28,22 +31,22 @@ export interface DirectComparisonCalculation {
   offeringPriceAdjustmentAmt?: number;
   sellingPrice?: number;
   sellingPriceMeasurementUnit?: string;
-  // sellingDate: z.date(), TODO
+  sellingDate?: string;
   sellingPriceAdjustmentYear?: number;
-  numberOfYears?: number;
+  numberOfYears?: number | null;
   adjustedValue: number;
 
   // 2nd revision
-  landAreaOfDeficient?: number;
+  landAreaOfDeficient?: number | null;
   landAreaOfDeficientMeasureUnit?: number;
-  landPrice?: number;
+  landPrice?: number | null;
   landPriceMeasureUnit?: number;
-  landValueIncreaseDecrease?: number;
-  usableAreaOfDeficient?: number;
+  landValueIncreaseDecrease?: number | null;
+  usableAreaOfDeficient?: number | null;
   usableAreaOfDeficientMeasureUnit?: number;
-  usableAreaPrice?: number;
+  usableAreaPrice?: number | null;
   usableAreaPriceMeasureUnit?: number;
-  buildingValueIncreaseDecrease?: number;
+  buildingValueIncreaseDecrease?: number | null;
   totalSecondRevision?: number;
 
   // adjusted value
@@ -64,10 +67,11 @@ export interface DirectComparisonAdjustmentPct {
 }
 
 export interface DirectComparisonAdjustmentFactor {
-  factorId: string;
-  factorCode: string;
+  // Unset or empty on a row just added, until a factor is picked.
+  factorId?: string | null;
+  factorCode?: string | null;
   surveys: DirectComparisonAdjustmentPct[];
-  remark?: string;
+  remark?: string | null;
 }
 
 export interface DirectComparisonAppraisalPrice {
@@ -76,12 +80,20 @@ export interface DirectComparisonAppraisalPrice {
   usableArea?: number;
   appraisalPrice: number;
   appraisalPriceRounded: number;
+  priceDifferentiate?: number;
+  landValue?: number;
+  hasBuildingValue?: boolean;
+  totalBuildingCost?: number;
+  appraisalPriceIncludeBuildingCost?: number;
+  appraisalPriceIncludeBuildingCostRounded?: number;
+  priceIncludeBuildingCostDifferentiate?: number;
 }
 
 export interface DirectComparison {
   methodId: string;
-  collateralType: string;
-  pricingTemplateCode: string;
+  collateralType?: string;
+  // undefined until initialize/restore finds the template; null after the collateral type changes.
+  pricingTemplateCode?: string | null;
   comparativeSurveys: ComparativeSurveys[];
   comparativeFactors: ComparativeFactors[];
   /** Qualitative section */
@@ -94,4 +106,9 @@ export interface DirectComparison {
   directComparisonFinalValue: DirectComparisonFinalValue;
   /** Apprisal price section */
   directComparisonAppraisalPrice: DirectComparisonAppraisalPrice;
+  /**
+   * Written by the panel on Generate only to mark the form as having unsaved changes. Generate
+   * resets from the initializer first, which does not set it.
+   */
+  generatedAt?: string;
 }

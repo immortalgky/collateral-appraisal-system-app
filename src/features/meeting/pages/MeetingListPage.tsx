@@ -459,8 +459,8 @@ const MeetingListPage = () => {
       {/* Tabs */}
       <div className="shrink-0 flex items-center gap-1 border-b border-gray-200">
         {[
-          { key: 'active' as const, labelKey: 'tabs.active' },
-          { key: 'history' as const, labelKey: 'tabs.history' },
+          { key: 'active' as const, labelKey: 'tabs.active' as const },
+          { key: 'history' as const, labelKey: 'tabs.history' as const },
         ].map(({ key, labelKey }) => {
           const isActive = tab === key;
           return (

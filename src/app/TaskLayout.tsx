@@ -96,7 +96,7 @@ function AddressLoader() {
 function TaskLayout() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
-  useSidebarCssVar();
+  useSidebarCssVar('appraisal');
 
   const currentUsername = useAuthStore(s => s.user?.username);
   const currentUser = useAuthStore(s => s.user);
@@ -198,7 +198,9 @@ function TaskLayout() {
         appraisal: {
           appraisalId: appraisalData.id ?? appraisalId ?? '',
           requestId: appraisalData.requestId ?? '',
-          requestedAt: appraisalData.requestedAt ?? undefined,
+          // Not in the generated schema — arrives via .passthrough() as unknown.
+          requestedAt:
+            typeof appraisalData.requestedAt === 'string' ? appraisalData.requestedAt : undefined,
           appraisalReportNo: appraisalData.appraisalNumber ?? undefined,
           status: appraisalData.status ?? undefined,
           appraisalType: appraisalData.appraisalType ?? undefined,
@@ -239,8 +241,8 @@ function TaskLayout() {
   if (isLoading) {
     body = (
       <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar logo={Logo} loading />
-        <AppraisalSidebar logo={Logo} loading />
+        <MobileAppraisalSidebar logo={Logo} loading hideGeneralNav />
+        <AppraisalSidebar logo={Logo} loading hideGeneralNav />
         <div
           className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}
         >
@@ -295,8 +297,8 @@ function TaskLayout() {
   } else {
     body = (
       <div className="h-screen flex flex-col">
-        <MobileAppraisalSidebar logo={Logo} />
-        <AppraisalSidebar logo={Logo} />
+        <MobileAppraisalSidebar logo={Logo} hideGeneralNav />
+        <AppraisalSidebar logo={Logo} hideGeneralNav />
 
         <div
           className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}

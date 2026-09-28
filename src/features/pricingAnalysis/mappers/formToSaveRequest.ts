@@ -108,7 +108,10 @@ function mapCategories(categories: RuntimeCategory[]): IncomeCategoryInput[] {
   );
 }
 
-export function mapDCFFormToSaveRequest(form: DCFFormType): SaveIncomeAnalysisRequest {
+// appraisalId and propertyId are added by the save and preview mutations.
+export function mapDCFFormToSaveRequest(
+  form: DCFFormType,
+): Omit<SaveIncomeAnalysisRequest, 'appraisalId' | 'propertyId'> {
   // Only send sections with categories (income/expense). Skip summaryDCF/summaryDirect —
   // those are server-computed and must not be in the request.
   const inputSections: IncomeSectionInput[] = (form.sections as unknown as RuntimeSection[])

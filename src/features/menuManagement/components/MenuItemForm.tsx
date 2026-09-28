@@ -139,8 +139,8 @@ export function MenuItemForm({
 
   const [itemKeyError, setItemKeyError] = useState(false);
   const [iconError, setIconError] = useState(false);
-  const [viewError, setViewError] = useState(false);
   const [labelError, setLabelError] = useState(false);
+  const [viewError, setViewError] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,20 +149,22 @@ export function MenuItemForm({
     // Validate every required field up front and surface all inline errors at once.
     const itemKeyMissing = values.itemKey.trim() === '';
     const iconMissing = values.iconName.trim() === '';
-    // At least one of viewPermissionCode / viewPermissionPrefix must be set (e.g. Monitoring
-    // uses only a prefix, with no discrete code).
-    const viewMissing =
-      values.viewPermissionCode.trim() === '' && (values.viewPermissionPrefix ?? '').trim() === '';
     // Empty translations get filtered out before POST, so a blank EN label would send an
     // empty list and trip the backend "at least one translation" validator.
     const labelMissing = getTranslation(values.translations, 'en').trim() === '';
+    // Mirrors the backend: a page (path set) needs a view permission or prefix, or nobody would
+    // ever see it. Only a group (no path) may leave both empty.
+    const viewMissing =
+      (values.path ?? '').trim() !== '' &&
+      values.viewPermissionCode.trim() === '' &&
+      (values.viewPermissionPrefix ?? '').trim() === '';
 
     setItemKeyError(itemKeyMissing);
     setIconError(iconMissing);
-    setViewError(viewMissing);
     setLabelError(labelMissing);
+    setViewError(viewMissing);
 
-    if (itemKeyMissing || iconMissing || viewMissing || labelMissing) {
+    if (itemKeyMissing || iconMissing || labelMissing || viewMissing) {
       if (labelMissing) setActiveTab('en');
       return;
     }
@@ -232,21 +234,25 @@ export function MenuItemForm({
             id={ids.path}
             label={t('form.path')}
             value={values.path ?? ''}
-            onChange={e => setValues(v => ({ ...v, path: e.target.value || null }))}
+            onChange={e => {
+              setValues(v => ({ ...v, path: e.target.value || null }));
+              // The gate is required only for a page; re-check on the next submit.
+              setViewError(false);
+            }}
             placeholder={t('form.pathPlaceholder')}
           />
           <p className="text-xs text-gray-400 mt-1">{t('form.pathHint')}</p>
         </div>
 
-        {/* View Permission — composite control. At least one of View Permission /
-            View Permission Prefix is required (see viewPermissionPrefix below). */}
+        {/* View Permission — composite control. Optional: leave it and the prefix empty on a
+            group, which then shows whenever any of its children is visible. */}
         <div role="group" aria-labelledby={`${fieldId}-view-perm-label`}>
           <span
             id={`${fieldId}-view-perm-label`}
             className="block text-sm font-medium text-gray-700 mb-1"
           >
             {t('form.viewPermission')}
-            <span className="text-red-500 ml-0.5">*</span>
+            {(values.path ?? '').trim() !== '' && <span className="text-red-500 ml-0.5">*</span>}
           </span>
           <PermissionSelect
             value={values.viewPermissionCode}

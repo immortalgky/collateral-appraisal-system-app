@@ -54,7 +54,7 @@ export const getDecisionFields = (t: T): FormField[] => [
     type: 'dropdown',
     label: t('fields.decision'),
     name: 'decision',
-    options: DECISION_PARAMS,
+    options: [...DECISION_PARAMS],
     wrapperClassName: 'col-span-2',
     required: true,
   },

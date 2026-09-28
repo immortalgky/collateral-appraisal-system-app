@@ -34,7 +34,9 @@
       "created": "วันที่สร้าง",
       "slaBusinessDays": "SLA (วัน)",
       "submittedAt": "วันที่ส่งงาน",
-      "groupTag": "กลุ่ม"
+      "groupTag": "กลุ่ม",
+      "assignee": "ผู้รับผิดชอบ",
+      "requestor": "ผู้ขอ"
     },
     "filters": {
       "statusLabel": "สถานะ",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "ทุกวัตถุประสงค์",
       "propertyTypeLabel": "ประเภทหลักประกัน",
       "propertyTypePlaceholder": "ทุกประเภทหลักประกัน",
-      "appointmentDateFrom": "วันนัดตั้งแต่",
-      "appointmentDateTo": "วันนัดถึง",
       "assignedDateFrom": "วันมอบหมายตั้งแต่",
       "assignedDateTo": "วันมอบหมายถึง",
       "multiSelected": "{{label}}: เลือกไว้ {{count}} รายการ",
@@ -83,7 +83,17 @@
         "time": "ช่วงเวลา"
       },
       "anyValue": "ทั้งหมด",
-      "optionsUnavailable": "ยังไม่มีตัวเลือกให้เลือก"
+      "optionsUnavailable": "ยังไม่มีตัวเลือกให้เลือก",
+      "appointment": "วันนัดหมาย",
+      "presets": {
+        "today": "วันนี้",
+        "tomorrow": "พรุ่งนี้",
+        "next7": "7 วันข้างหน้า",
+        "past7": "7 วันที่ผ่านมา",
+        "past30": "30 วันที่ผ่านมา"
+      },
+      "requestorLabel": "ผู้ขอ (RM)",
+      "typeToSearch": "พิมพ์ชื่อหรือรหัสพนักงานเพื่อค้นหา"
     },
     "status": {
       "Pending": "รอดำเนินการ",
@@ -104,7 +114,10 @@
       "overdue": "เกินกำหนด {{time}}",
       "left": "เหลือ {{time}}",
       "closed": "ปิดงานแล้ว",
-      "cancelled": "ยกเลิกแล้ว"
+      "cancelled": "ยกเลิกแล้ว",
+      "durationDays": "{{days}} วัน {{hours}} ชม.",
+      "durationHours": "{{hours}} ชม.",
+      "dueOn": "ครบกำหนด {{date}}"
     },
     "assignmentType": {
       "Internal": "ภายใน",
@@ -143,7 +156,9 @@
       "high-priority-active": "ความสำคัญสูง",
       "nearing-deadline": "ใกล้ครบกำหนด",
       "external-assignments": "งานบริษัทภายนอก",
-      "my-company-queue": "คิวบริษัทของฉัน"
+      "my-company-queue": "คิวบริษัทของฉัน",
+      "all": "งานทั้งหมด",
+      "my-requests": "งานคำขอของฉัน"
     },
     "saved": "ที่บันทึกไว้",
     "saveCurrentSearch": "บันทึกการค้นหานี้",
@@ -154,7 +169,6 @@
     "removeFilter": "ลบตัวกรอง",
     "activityTracking": "ติดตามงานประเมิน",
     "searchTips": {
-      "trigger": "หาไม่เจอ?",
       "title": "ค้นหาไม่เจอ? ลองแบบนี้",
       "prefix": "ปกติค้นจากต้นค่า — พิมพ์ 691 เจอ 69105467 แต่พิมพ์ 05467 ไม่เจอ",
       "wildcard": "ใส่ * นำหน้าเพื่อค้นคำที่อยู่ตรงกลาง เช่น *john",
@@ -171,7 +185,39 @@
     "emptyAll": "ยังไม่มีรายการประเมิน",
     "emptyAllHint": "เมื่อมีงานเข้ามา รายการจะแสดงที่นี่",
     "moreCustomers_one": "มีลูกค้าในคำขอนี้อีก {{count}} คน",
-    "moreCustomers_other": "มีลูกค้าในคำขอนี้อีก {{count}} คน"
+    "moreCustomers_other": "มีลูกค้าในคำขอนี้อีก {{count}} คน",
+    "unassigned": "ยังไม่มอบหมาย",
+    "today": "วันนี้",
+    "internal": "ภายใน",
+    "groupBy": {
+      "label": "จัดกลุ่ม",
+      "none": "ไม่จัดกลุ่ม",
+      "current": "จัดกลุ่ม: {{label}}",
+      "empty": "ไม่ระบุ"
+    },
+    "suggest": {
+      "goTo": "ไปที่ใบประเมิน",
+      "searchIn": "ค้นหา “{{term}}” ใน",
+      "recent": "ค้นหาล่าสุด",
+      "matches": "{{count}} รายการ",
+      "none": "ไม่พบ",
+      "noMatch": "ไม่พบใบประเมินที่ตรงกัน",
+      "navigate": "เลือก",
+      "submit": "ค้นหา",
+      "close": "ปิด",
+      "shortcut": "กด / เพื่อไปที่ช่องค้นหา · j / k เลื่อนแถว · Enter เปิดรายละเอียด"
+    },
+    "emptyActions": {
+      "searchAll": "ค้นหาในทุกฟิลด์",
+      "clearFilters": "ล้างตัวกรอง",
+      "exitView": "ออกจากมุมมองด่วน",
+      "tryWildcard": "ลองค้นแบบ {{term}}"
+    },
+    "density": {
+      "title": "ความหนาแน่น",
+      "comfortable": "สบายตา",
+      "compact": "กระชับ"
+    }
   },
   "appointment": {
     "sectionTitle": "ข้อมูลการนัดหมาย",
@@ -577,7 +623,17 @@
       "confirm": "ส่ง",
       "cancel": "ยกเลิก",
       "submitting": "กำลังส่ง…",
-      "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน"
+      "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน",
+      "voteTitle": "ยืนยันการลงคะแนน",
+      "voteMessage": "ส่งแล้วแก้ไขไม่ได้",
+      "voteAck": "ฉันต้องการลงคะแนน \"{{vote}}\" ต่อราคาประเมินนี้",
+      "summary": {
+        "decision": "การตัดสินใจ",
+        "destination": "ขั้นตอนถัดไป",
+        "assignee": "ผู้รับงาน",
+        "reason": "เหตุผล",
+        "comments": "ความคิดเห็น"
+      }
     },
     "warnings": {
       "title": "กรุณาตรวจสอบก่อนดำเนินการต่อ",
@@ -590,7 +646,8 @@
       "submitFailed": "ไม่สามารถส่งการตัดสินใจได้",
       "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ",
       "forceSaleRateSaved": "บันทึกอัตราราคาขายบังคับสำเร็จ",
-      "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่"
+      "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่",
+      "voteNeedsComment": "กรุณาระบุความคิดเห็นและยืนยันการลงคะแนนก่อนส่ง"
     }
   },
   "decision": {
@@ -600,7 +657,6 @@
     "commentsLabel": "ความคิดเห็น",
     "noDecision": "ยังไม่มีการตัดสินใจ",
     "assignNextTo": "มอบหมายถัดไปให้",
-    "decisionPlaceholder": "เลือกการตัดสินใจ...",
     "assigneePlaceholder": "เลือกผู้รับมอบหมาย...",
     "requestDocuments": "ขอเอกสารเพิ่มเติม",
     "loadingActivity": "กำลังโหลดกิจกรรม...",
@@ -615,7 +671,26 @@
       "routeBack": "ต้องการแก้ไขอะไร?",
       "proceed": "หมายเหตุสุดท้ายก่อนดำเนินการ?",
       "hold": "ทำไมถึงพักงานนี้ไว้?"
-    }
+    },
+    "groups": {
+      "forward": "ส่งต่อ",
+      "back": "ส่งกลับ",
+      "cancel": "ยกเลิก / ปฏิเสธ"
+    },
+    "destination": {
+      "forward": "ไปที่ {{name}}",
+      "back": "กลับไป {{name}}",
+      "cancel": "จบ workflow"
+    },
+    "committeeVotes": "ผลโหวต",
+    "votesSummary": "ลงคะแนนแล้ว {{received}}/{{total}}",
+    "stepsCount_one": "{{count}} ขั้นตอน",
+    "stepsCount_other": "{{count}} ขั้นตอน",
+    "yourVote": "คะแนนของคุณ",
+    "nextStep": "ขั้นตอนถัดไป",
+    "voteImpact": "{{from}} → {{to}} เสียง",
+    "votesLoadFailed": "โหลดผลโหวตของกรรมการไม่สำเร็จ",
+    "noActions": "ไม่มีตัวเลือกการตัดสินใจสำหรับงานนี้ กรุณารีเฟรชหน้า หรือติดต่อผู้ดูแลระบบหากยังพบปัญหา"
   },
   "propertyInfo": {
     "tabs": {
@@ -880,6 +955,20 @@
       "reorderFailed": "ไม่สามารถเรียงลำดับทรัพย์สินได้"
     },
     "floorCount": "{{n}} ชั้น",
+    "buildingAge": "อายุ {{n}} ปี",
+    "underConstruction": "กำลังก่อสร้าง",
+    "underConstructionPct": "กำลังก่อสร้าง {{pct}}%",
+    "facts": {
+      "deed": "โฉนด {{no}}",
+      "buildingArea": "อาคาร {{n}} ตร.ม.",
+      "floor": "ชั้น {{n}}",
+      "room": "ห้อง {{n}}",
+      "madeIn": "ผลิตปี {{n}}",
+      "machineAge": "อายุ {{n}} ปี",
+      "leaseRemaining": "เช่าเหลือ {{n}} ปี",
+      "leaseEnded": "สัญญาเช่าสิ้นสุดแล้ว",
+      "leaseRent": "ค่าเช่า ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "สรุปเครื่องจักร",
       "status": {
@@ -1735,6 +1824,102 @@
       "buildingValue": "มูลค่าอาคาร",
       "buildingValue100": "มูลค่าอาคาร 100% ก่อนตรวจสอบ",
       "totalValue": "มูลค่ารวม"
+    },
+    "method": {
+      "label": "วิธีบันทึก",
+      "detail": "แยกรายการงาน",
+      "summary": "สรุปรวม",
+      "locked": "ล็อกวิธีบันทึก",
+      "lockedHint": "มีข้อมูลที่ยกมาหรือบันทึกไว้แล้ว — เปลี่ยนวิธีบันทึกแล้วข้อมูลนั้นจะหายตอนบันทึก",
+      "switchTitle": "เปลี่ยนวิธีบันทึก?",
+      "switchMessage": "บันทึกได้ครั้งละวิธีเดียว เปลี่ยนแล้วข้อมูลที่กรอกในวิธีปัจจุบันจะหายเมื่อกดบันทึก"
+    },
+    "building": "อาคาร",
+    "selectProperty": "เลือกทรัพย์สิน",
+    "buildingProperties": "ทรัพย์สินประเภทอาคาร",
+    "copyFrom": "คัดลอกจาก",
+    "copyFromTitle": "คัดลอกข้อมูลการก่อสร้างจาก",
+    "copyConfirmTitle": "แทนที่ข้อมูลงานก่อสร้าง?",
+    "copyConfirmMessage": "การคัดลอกจะแทนที่รายการงาน สรุปรวม และหมายเหตุของทรัพย์สินนี้ ด้วยข้อมูลของอาคารที่เลือก",
+    "finishedAfterLeaving": "ทำเสร็จหลังจากออกจากทรัพย์สินนั้นแล้ว — ยังไม่ได้ใส่ให้ กรุณาทำใหม่ที่ทรัพย์สินนั้น",
+    "copyNothing": "อาคารนั้นไม่มีข้อมูลงานก่อสร้างให้คัดลอก",
+    "copyFailed": "คัดลอกข้อมูลงานก่อสร้างไม่สำเร็จ — ลองใหม่อีกครั้ง",
+    "kpi": {
+      "value100": "มูลค่าเมื่อเสร็จ 100%",
+      "progress": "ความคืบหน้ารวม",
+      "currentValue": "มูลค่าตามสภาพปัจจุบัน",
+      "appraisedValue": "ราคาประเมิน (ทั้งใบงาน)"
+    },
+    "tabs": {
+      "items": "รายการงาน"
+    },
+    "remark": {
+      "label": "หมายเหตุ",
+      "placeholder": "ระบุหมายเหตุหรือข้อมูลเพิ่มเติม..."
+    },
+    "clearGuard": {
+      "title": "ลบข้อมูลงานก่อสร้าง?",
+      "message": "ทรัพย์สินนี้มีข้อมูลงานก่อสร้างอยู่ ถ้าบันทึกเป็น \"ไม่อยู่ระหว่างก่อสร้าง\" ข้อมูลทั้งหมด ทั้งรายการงาน ความคืบหน้า สรุปรวม และหมายเหตุ จะถูกลบ",
+      "confirm": "ยืนยัน",
+      "cancel": "ยกเลิก"
+    },
+    "summaryForm": {
+      "detailPlaceholder": "ระบุรายละเอียด...",
+      "uploadTitle": "แนบเอกสารรายละเอียดงานก่อสร้าง",
+      "uploading": "กำลังอัปโหลด...",
+      "uploadFailed": "อัปโหลดไม่สำเร็จ — ลองใหม่อีกครั้ง",
+      "clickToUpload": "คลิกเพื่ออัปโหลด",
+      "orDragDrop": "หรือลากไฟล์มาวาง",
+      "document": "เอกสาร",
+      "removeDocument": "ลบเอกสาร"
+    },
+    "showCalculated": "แสดงคอลัมน์คำนวณ",
+    "split": {
+      "ok": "สัดส่วน 100% ✓",
+      "short": "สัดส่วน {{pct}}% · ขาด {{diff}}%",
+      "over": "สัดส่วน {{pct}}% · เกิน {{diff}}%"
+    },
+    "grid": {
+      "workItem": "รายการงาน",
+      "proportion": "สัดส่วน",
+      "constructionValue": "มูลค่างาน",
+      "previousProgress": "งวดก่อน",
+      "currentProgress": "งวดนี้",
+      "change": "เปลี่ยน",
+      "currentShare": "สัดส่วนสะสม",
+      "ofBuilding": "(% ของทั้งหลัง)",
+      "previousValue": "มูลค่างวดก่อน",
+      "currentValue": "มูลค่างวดนี้",
+      "baht": "(บาท)",
+      "addItem": "＋ เพิ่มรายการ…",
+      "itemCount_one": "{{count}} รายการ",
+      "itemCount_other": "{{count}} รายการ",
+      "groupTotal": "รวม {{name}}",
+      "buildingTotal": "รวมทั้งหลัง",
+      "otherGroup": "อื่น ๆ",
+      "workGroupsFailed": "โหลดรายการงานต้นแบบไม่สำเร็จ — โหลดหน้าใหม่เพื่อเพิ่มรายการ",
+      "workGroupsLoading": "กำลังโหลดรายการงาน…",
+      "confirmDelete": "ลบ?",
+      "remove": "ลบ {{name}}",
+      "empty": "ยังไม่มีรายการงาน — เลือก \"＋ เพิ่มรายการ…\" ที่หัวกลุ่ม แล้วใส่สัดส่วนให้รวมได้ 100%",
+      "emptyReadOnly": "ไม่มีรายการงาน"
+    },
+    "status": {
+      "regressed_one": "{{count}} รายการต่ำกว่างวดก่อน: {{names}} — ถ้าตั้งใจ (เช่น รื้อแก้งาน) ใส่เหตุผลในหมายเหตุ",
+      "regressed_other": "{{count}} รายการต่ำกว่างวดก่อน: {{names}} — ถ้าตั้งใจ (เช่น รื้อแก้งาน) ใส่เหตุผลในหมายเหตุ",
+      "carriedOver": "รายการและสัดส่วนยกมาจากงวดก่อน · แก้สัดส่วน = มูลค่างวดก่อนคำนวณใหม่ด้วย",
+      "carriedOverNoMoney": "รายการและสัดส่วนยกมาจากงวดก่อน",
+      "pending_one": "{{count}} รายการยังไม่ได้กรอกงวดนี้: {{names}} — ถ้าบันทึกเลยจะเป็น 0%",
+      "pending_other": "{{count}} รายการยังไม่ได้กรอกงวดนี้: {{names}} — ถ้าบันทึกเลยจะเป็น 0%",
+      "summaryPending": "ยังไม่ได้กรอกงวดนี้ — ถ้าบันทึกเลยจะเป็น 0%",
+      "overBlocksSave": "สัดส่วนรวม {{pct}}% — กดบันทึกไม่ได้จนกว่าจะไม่เกิน 100% (บันทึกร่างได้)",
+      "keys": "↑ ↓ / Enter เลื่อนแถว",
+      "summaryRegressed": "ต่ำกว่างวดก่อน — ใส่เหตุผลในหมายเหตุ"
+    },
+    "valueHint": {
+      "condo": "ห้องชุดใช้ราคาประเมินของทั้งใบงานเต็มจำนวน ไม่ว่าจะก่อสร้างไปกี่ % — ตัวเลข % ใช้บันทึกความคืบหน้าเท่านั้น ไม่ได้นำไปคูณราคา",
+      "noValueBase": "ยังไม่มีมูลค่าสิ่งปลูกสร้าง จึงยังคำนวณมูลค่าตามความคืบหน้าไม่ได้",
+      "noValueBaseEditable": "ยังไม่มีมูลค่าสิ่งปลูกสร้าง จึงยังคำนวณมูลค่าตามความคืบหน้าไม่ได้ — กรอกมูลค่าสิ่งปลูกสร้างในแท็บอาคารก่อน"
     }
   },
   "forms": {
@@ -1760,16 +1945,38 @@
       "sectionTitleOtherInfo": "ข้อมูลอื่น ๆ"
     },
     "building": {
-      "sectionTitle": "รายละเอียดอาคาร"
+      "sectionTitle": "รายละเอียดอาคาร",
+      "groups": {
+        "identification": "ข้อมูลอาคาร",
+        "ownership": "กรรมสิทธิ์และข้อกฎหมาย",
+        "typeUse": "ประเภทและการใช้งาน",
+        "condition": "สภาพและคุณภาพ",
+        "structure": "โครงสร้าง",
+        "finishes": "งานตกแต่งและผนัง",
+        "floors": "ชั้นและพื้น",
+        "areaCost": "พื้นที่และราคาก่อสร้าง",
+        "limitations": "ข้อจำกัด",
+        "remark": "หมายเหตุ"
+      }
     },
     "condo": {
-        "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
-        "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
-        "addArea": "เพิ่มพื้นที่",
-        "areaItems": "{{count}} รายการ · {{total}} ตร.ม.",
-        "matchesUsable": "ตรงกับพื้นที่ใช้สอย",
-        "diffVsUsable": "{{diff}} เทียบกับพื้นที่ใช้สอย",
-        "areaTotal": "รวม",
+      "groups": {
+        "identification": "ข้อมูลห้องชุด",
+        "ownership": "กรรมสิทธิ์และข้อกฎหมาย",
+        "location": "ที่ตั้ง",
+        "surroundings": "สภาพแวดล้อม",
+        "building": "อาคาร",
+        "unit": "ห้องชุด",
+        "referencePrices": "ราคาอ้างอิง",
+        "remark": "หมายเหตุ"
+      },
+      "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
+      "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
+      "addArea": "เพิ่มพื้นที่",
+      "areaItems": "{{count}} รายการ · {{total}} ตร.ม.",
+      "matchesUsable": "ตรงกับพื้นที่ใช้สอย",
+      "diffVsUsable": "{{diff}} เทียบกับพื้นที่ใช้สอย",
+      "areaTotal": "รวม",
       "sectionTitle": "รายละเอียดคอนโด",
       "areaDetail": "รายละเอียดพื้นที่",
       "pma": "ข้อมูล PMA",
@@ -1790,10 +1997,51 @@
       "sectionTitle": "โฉนดที่ดิน"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "ข้อมูลสัญญา"
+      },
       "sectionTitle": "สัญญาเช่า"
     },
     "rentalInfo": {
-      "sectionTitle": "ข้อมูลการเช่า"
+      "addPeriod": "เพิ่มช่วงเวลา",
+      "addUpFront": "เพิ่มค่าเช่าล่วงหน้า",
+      "groups": {
+        "schedule": "ระยะเวลาเช่า",
+        "growthRate": "อัตราการเพิ่มค่าเช่า",
+        "upFront": "ค่าเช่าล่วงหน้า",
+        "rentalSchedule": "ตารางค่าเช่า"
+      },
+      "sectionTitle": "ข้อมูลการเช่า",
+      "growthFrequency": "ตามความถี่",
+      "growthPeriod": "ตามช่วงเวลา",
+      "edit": "แก้ไข",
+      "editing": "กำลังแก้ไข",
+      "generate": "คำนวณ",
+      "generating": "กำลังคำนวณ...",
+      "scheduleEmpty": "กด คำนวณ เพื่อสร้างตารางค่าเช่า",
+      "upFrontMismatch": "ยอดรวมค่าเช่าล่วงหน้าในตาราง ({{entries}}) ไม่ตรงกับค่าเช่าจ่ายล่วงหน้า ({{total}})",
+      "table": {
+        "atYear": "ตั้งแต่ปีที่",
+        "toYear": "ถึงปีที่",
+        "growthRate": "อัตราการเพิ่ม",
+        "growthAmount": "จำนวนที่เพิ่ม",
+        "totalAmount": "รวม (บาท)",
+        "atDate": "ณ วันที่",
+        "upFrontAmount": "ค่าเช่าล่วงหน้า",
+        "year": "ปีที่",
+        "contractStart": "เริ่มสัญญา",
+        "contractEnd": "สิ้นสุดสัญญา",
+        "upFrontPerYear": "ค่าเช่าล่วงหน้า (บาท/ปี)",
+        "rentalFeePerYear": "ค่าเช่าตามสัญญา (บาท/ปี)",
+        "growthRatePct": "อัตราการเพิ่ม %",
+        "total": "รวม"
+      },
+      "deleteRow": {
+        "title": "ลบรายการ",
+        "message": "ต้องการลบรายการนี้ใช่หรือไม่? การลบไม่สามารถย้อนกลับได้",
+        "confirm": "ลบ",
+        "cancel": "ยกเลิก"
+      }
     },
     "marketComparable": {
       "sectionTitle": "ข้อมูลตลาดเปรียบเทียบ",
@@ -1802,6 +2050,12 @@
         "message": "คุณต้องการทำสำเนาข้อมูลตลาดเปรียบเทียบนี้หรือไม่? ระบบจะสร้างรายการใหม่โดยใช้ข้อมูลชุดเดียวกัน",
         "confirm": "ทำสำเนา"
       }
+    },
+    "propertyName": {
+      "autoFillLabel": "เติมชื่อทรัพย์สินอัตโนมัติ"
+    },
+    "owner": {
+      "autoFillLabel": "คัดลอกผู้ถือกรรมสิทธิ์จากที่ดิน"
     }
   },
   "validation": {
@@ -1828,7 +2082,9 @@
     "assignmentMethodRequired": "กรุณาเลือกวิธีการมอบหมาย",
     "remarksMaxLength": "หมายเหตุต้องไม่เกิน 500 ตัวอักษร",
     "selectAssignee": "กรุณาเลือกผู้รับมอบหมาย",
-    "selectFollowupStaff": "กรุณาเลือกเจ้าหน้าที่ติดตามภายใน"
+    "selectFollowupStaff": "กรุณาเลือกเจ้าหน้าที่ติดตามภายใน",
+    "contactPersonRequired": "กรุณาระบุชื่อผู้ติดต่อ",
+    "contactPhoneRequired": "กรุณาระบุเบอร์ติดต่อ"
   },
   "toasts": {
     "photoUploaded": "อัปโหลดรูปภาพสำเร็จ",
@@ -1895,9 +2151,6 @@
     "quotationStarted": "เริ่มต้นการประกวดราคาแล้ว — ได้รับเชิญบริษัทต่างๆ แล้ว",
     "quotationAddSelectDraft": "กรุณาเลือกใบเสนอราคาฉบับร่างที่ต้องการเพิ่ม",
     "quotationAddedToDraft": "เพิ่มงานประเมินใน {{quotationNumber}} แล้ว",
-    "voteSubmitFailed": "ส่งการโหวตล้มเหลว",
-    "committeeDecisionRecorded": "บันทึกการตัดสินใจของคณะกรรมการแล้ว",
-    "voteRecorded": "บันทึกการโหวตแล้ว",
     "propertyCondoUpdated": "อัปเดตทรัพย์สินคอนโดสำเร็จ",
     "propertyCondoCreated": "สร้างทรัพย์สินคอนโดสำเร็จ",
     "propertyLandUpdated": "อัปเดตทรัพย์สินที่ดินสำเร็จ",
@@ -2216,7 +2469,8 @@
     },
     "footer": {
       "total": "รวม",
-      "avg": "เฉลี่ย"
+      "avg": "เฉลี่ย",
+      "avgBasis": "จากพื้นที่ที่สำรวจ {{area}} ตร.ว."
     },
     "missingFromSurvey": "ไม่พบในรังวัด",
     "showLess": "แสดงน้อยลง",
@@ -2268,8 +2522,6 @@
     "totalRow": "รวม"
   },
   "approvalListSection": {
-    "title": "การอนุมัติของคณะกรรมการ",
-    "notActiveYet": "การอนุมัติของคณะกรรมการยังไม่เริ่มต้นสำหรับการประเมินนี้",
     "returnedBanner": "การประเมินนี้ถูกส่งกลับเพื่อแก้ไข",
     "conditionsTitle": "เงื่อนไขการอนุมัติ",
     "votesDisplay": "{{received}}/{{total}} คะแนนเสียง",
@@ -2290,13 +2542,6 @@
     "conditionRoleRequiredDefault": "ต้องมีผู้มีสิทธิ์ลงคะแนน",
     "conditionMinVotes": "ต้องการอย่างน้อย {{n}} คะแนน",
     "conditionMinVotesDefault": "ต้องการจำนวนคะแนนขั้นต่ำ",
-    "columns": {
-      "member": "สมาชิก",
-      "role": "บทบาท",
-      "vote": "คะแนนเสียง",
-      "date": "วันที่",
-      "comments": "ความคิดเห็น"
-    },
     "stats": {
       "votesReceived": "จำนวนโหวต",
       "approve": "อนุมัติ",

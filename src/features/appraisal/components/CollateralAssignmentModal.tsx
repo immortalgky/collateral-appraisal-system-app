@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';

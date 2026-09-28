@@ -12,7 +12,7 @@ import type { AtLeastOne } from '@/shared/types';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 
 type DropdownProps = DropdownBaseProps &
-  AtLeastOne<{ queryParameters: ParameterParams; options: ListBoxItem[] }>;
+  AtLeastOne<{ queryParameters: string; options: ListBoxItem[] }>;
 
 interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -48,7 +48,7 @@ interface ListBoxOptionProps {
 }
 
 export type ListBoxItem = {
-  value: string | undefined;
+  value: string | null | undefined;
   label: string;
   id?: string | number;
   colorClass?: string;
@@ -77,7 +77,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
 
-    const paramOptions = useParameterOptions(queryParameters);
+    const paramOptions = useParameterOptions(queryParameters ?? '');
     let dropdownOptions = useMemo<ListBoxItem[]>(() => {
       if (options !== undefined) return options;
       return paramOptions;

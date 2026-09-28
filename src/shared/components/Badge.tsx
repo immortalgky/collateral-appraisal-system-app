@@ -183,7 +183,7 @@ const typeColorMap: Record<BadgeType, Record<string, ColorKey>> = {
     disagree: 'red',
     'route back': 'purple',
     proceed: 'emerald',
-    // Actual committee vote values (VoteDialog VOTE_OPTIONS) — alias the semantic colors above.
+    // Actual committee vote values (approve / reject / route_back) — alias the semantic colors above.
     approve: 'emerald',
     reject: 'red',
     route_back: 'purple',

@@ -9,7 +9,7 @@ import { toNumber } from '../../appraisal/components/BuildingTable/BuildingDetai
 import type { FormTableHeader } from '../../appraisal/components/BuildingTable/BuildingDetailTable';
 import BuildingDetailPopUpModal from '../../appraisal/components/tables/BuildingDetailPopUpModal';
 import { useBasePath } from '../../appraisal/context/AppraisalContext';
-import { getRouteSegment, PROPERTY_TYPES } from '../../appraisal/utils/propertyTypeConfig';
+import { getPropertyHref, PROPERTY_TYPES } from '../../appraisal/utils/propertyTypeConfig';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import {
   buildingFinalCostValue,
@@ -624,15 +624,12 @@ function FinalCostRow({
         })
       : t('costBuilding.table.fromTableRounded');
 
-  // Real route (router.tsx `property/<segment>/:propertyId`), resolved through the same
-  // type→segment map the property pages use. Missing context degrades to plain text rather
-  // than a dead link — `useBasePath` returns '' outside an appraisal.
-  const segment = getRouteSegment((building.propertyType as string) ?? '');
-  const propertyId = building.propertyId as string | undefined;
-  const href =
-    basePath && segment && propertyId
-      ? `${basePath}/property/${segment}/${propertyId}`
-      : undefined;
+  // Undefined (plain text, not a dead link) when the route can't be built — see getPropertyHref.
+  const href = getPropertyHref(
+    basePath,
+    building.propertyType as string | undefined,
+    building.propertyId as string | undefined,
+  );
 
   const cellBase = clsx('px-[8px] py-0 h-[30px] border-b border-b-[#eef2f2]', FC_ROW_BG);
   // Label, the shortcut spanning the middle, provenance over the two columns before the

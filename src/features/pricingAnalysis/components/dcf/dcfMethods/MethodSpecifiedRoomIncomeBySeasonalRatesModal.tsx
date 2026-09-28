@@ -1,7 +1,5 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import {
-  useForm,
-  FormProvider,
   useFieldArray,
   useWatch,
   useFormContext,
@@ -128,7 +126,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
     formState: { errors },
   } = useFormContext();
 
-  const { fields, append, remove, replace } = useFieldArray({
+  const { fields, append, remove } = useFieldArray({
     control,
     name: `${name}.roomDetails`,
   });
@@ -140,7 +138,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
   const handleSeasonCountChange = (nextCount: number) => {
     setValue(`${name}.seasonCount`, nextCount);
 
-    const roomDetails = getValues(`${name}.roomDetails`);
+    const roomDetails: RoomIncomeRow[] = getValues(`${name}.roomDetails`) ?? [];
 
     roomDetails.forEach((row, rowIndex) => {
       setValue(
@@ -155,19 +153,19 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
   const rules: DerivedFieldRule<unknown>[] = useMemo(() => {
     return [
-      ...Array.from({ length: seasonCount }, (_, seasonIndex) => {
+      ...Array.from({ length: seasonCount }, (_, seasonIndex): DerivedFieldRule<unknown> => {
         return {
           targetPath: `${name}.seasonDetails.${seasonIndex}.avgTotalRoomIncomePerDay`,
           deps: [`${name}.roomDetails`],
           compute: ({ getValues }) => {
-            const roomDetails = getValues(`${name}.roomDetails`) ?? [];
+            const roomDetails: RoomIncomeRow[] = getValues(`${name}.roomDetails`) ?? [];
             const total = calculateSeasonTotals(roomDetails, seasonIndex);
             if (total.saleableArea === 0) return 0;
             return toNumber(total.totalRoomIncomePerDay / total.saleableArea);
           },
         };
       }),
-      ...Array.from({ length: seasonCount }, (_, seasonIndex) => {
+      ...Array.from({ length: seasonCount }, (_, seasonIndex): DerivedFieldRule<unknown> => {
         return {
           targetPath: `${name}.seasonDetails.${seasonIndex}.avgTotalRoomIncomePerSeason`,
           deps: [
@@ -189,7 +187,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
         deps: [`${name}.seasonDetails`],
         compute: ({ getValues }) => {
           const sumAvgTotalRoomIncomePerSeason = (getValues(`${name}.seasonDetails`) ?? []).reduce(
-            (acc, curr) => {
+            (acc: number, curr: { avgTotalRoomIncomePerSeason?: number }) => {
               return acc + toNumber(curr.avgTotalRoomIncomePerSeason ?? 0);
             },
             0,

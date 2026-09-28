@@ -22,7 +22,8 @@ export function editAssumption(sections: DCFSection[], draft: AssumptionEditDraf
 
   const updatedAssumption: DCFAssumption = {
     ...sourceAssumption,
-    assumptionType: draft.assumptionType,
+    // The modal's schema requires a type, so a submitted draft always has one.
+    assumptionType: draft.assumptionType ?? sourceAssumption.assumptionType,
     assumptionName: draft.assumptionName,
     method: draft.method,
   };

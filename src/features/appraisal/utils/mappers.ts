@@ -1,4 +1,5 @@
 import { roundBaht } from './constructionMoney';
+import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
 import type {
   createCondoPMAFormType,
   createBuildingFormType,
@@ -23,6 +24,16 @@ import type {
 import type { CurrentAssignment } from '@features/appraisal/types/administration';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 
+/**
+ * The Under Construction flag as the form should hold it. An empty flag with an inspection on record
+ * (older data) reads as Yes: the server keeps an inspection only while the flag is not No, and
+ * reading it as No would hide the tab and delete the inspection on the next save.
+ */
+function isUnderConstructionFromResponse(response: Record<string, unknown>): boolean {
+  const flag = response.isUnderConstruction as boolean | null | undefined;
+  return flag ?? !!response.constructionInspection;
+}
+
 export const mapLandPropertyResponseToForm = (
   response: GetLandPropertyResponseType,
 ): createLandFormType => {
@@ -36,8 +47,8 @@ export const mapLandPropertyResponseToForm = (
     titles: (response as any).titles ?? [],
     landAreaDeductions: (response as any).landAreaDeductions ?? [],
     propertyName: response.propertyName ?? '',
-    latitude: response.latitude ?? 0,
-    longitude: response.longitude ?? 0,
+    latitude: response.latitude ?? null,
+    longitude: response.longitude ?? null,
     subDistrict: response.subDistrict ?? '',
     subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
@@ -61,7 +72,7 @@ export const mapLandPropertyResponseToForm = (
     landCheckMethodTypeOther: response.landCheckMethodTypeOther ?? '',
     street: response.street ?? '',
     soi: response.soi ?? '',
-    distanceFromMainRoad: response.distanceFromMainRoad ?? 0,
+    distanceFromMainRoad: response.distanceFromMainRoad ?? null,
     village: response.village ?? '',
     addressLocation: response.addressLocation ?? '',
     landShapeType: response.landShapeType ?? '',
@@ -73,12 +84,12 @@ export const mapLandPropertyResponseToForm = (
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
     landFillTypeOther: response.landFillTypeOther ?? '',
-    landFillPercent: response.landFillPercent ?? 0,
-    soilLevel: response.soilLevel ?? 0,
-    accessRoadWidth: response.accessRoadWidth ?? 0,
-    rightOfWay: response.rightOfWay ?? 0,
-    roadFrontage: response.roadFrontage ?? 0,
-    numberOfSidesFacingRoad: response.numberOfSidesFacingRoad ?? 0,
+    landFillPercent: response.landFillPercent ?? null,
+    soilLevel: response.soilLevel ?? null,
+    accessRoadWidth: response.accessRoadWidth ?? null,
+    rightOfWay: response.rightOfWay ?? null,
+    roadFrontage: response.roadFrontage ?? null,
+    numberOfSidesFacingRoad: response.numberOfSidesFacingRoad ?? null,
     roadPassInFrontOfLand: response.roadPassInFrontOfLand ?? '',
     landAccessibilityType: response.landAccessibilityType ?? '',
     landAccessibilityRemark: response.landAccessibilityRemark ?? '',
@@ -101,9 +112,9 @@ export const mapLandPropertyResponseToForm = (
     royalDecree: response.royalDecree ?? '',
     isEncroached: response.isEncroached ?? false,
     encroachmentRemark: response.encroachmentRemark ?? '',
-    encroachmentArea: response.encroachmentArea ?? 0,
+    encroachmentArea: response.encroachmentArea ?? null,
     hasElectricity: response.hasElectricity ?? false,
-    electricityDistance: response.electricityDistance ?? 0,
+    electricityDistance: response.electricityDistance ?? null,
     isLandlocked: response.isLandlocked ?? false,
     landlockedRemark: response.landlockedRemark ?? '',
     isForestBoundary: response.isForestBoundary ?? false,
@@ -113,15 +124,15 @@ export const mapLandPropertyResponseToForm = (
     evictionTypeOther: response.evictionTypeOther ?? '',
     allocationType: response.allocationType ?? '',
     northAdjacentArea: response.northAdjacentArea ?? '',
-    northBoundaryLength: response.northBoundaryLength ?? 0,
+    northBoundaryLength: response.northBoundaryLength ?? null,
     southAdjacentArea: response.southAdjacentArea ?? '',
-    southBoundaryLength: response.southBoundaryLength ?? 0,
+    southBoundaryLength: response.southBoundaryLength ?? null,
     eastAdjacentArea: response.eastAdjacentArea ?? '',
-    eastBoundaryLength: response.eastBoundaryLength ?? 0,
+    eastBoundaryLength: response.eastBoundaryLength ?? null,
     westAdjacentArea: response.westAdjacentArea ?? '',
-    westBoundaryLength: response.westBoundaryLength ?? 0,
-    pondArea: response.pondArea ?? 0,
-    pondDepth: response.pondDepth ?? 0,
+    westBoundaryLength: response.westBoundaryLength ?? null,
+    pondArea: response.pondArea ?? null,
+    pondDepth: response.pondDepth ?? null,
     hasBuilding: response.hasBuilding ?? false,
     hasBuildingOther: response.hasBuildingOther ?? '',
     remark: response.remark ?? '',
@@ -178,24 +189,24 @@ export const mapBuildingPropertyResponseToForm = (
     noHouseNumber: response.noHouseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
-    isUnderConstruction: response.isUnderConstruction ?? false,
+    isUnderConstruction: isUnderConstructionFromResponse(response),
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     hasObligation: response.hasObligation ?? '',
     obligationDetails: response.obligationDetails ?? '',
     buildingType: response.buildingType ?? '',
     buildingTypeOther: response.buildingTypeOther ?? '',
-    numberOfFloors: response.numberOfFloors ?? 0,
+    numberOfFloors: response.numberOfFloors ?? null,
     decorationType: response.decorationType ?? '',
     decorationTypeOther: response.decorationTypeOther ?? '',
     isEncroachingOthers: response.isEncroachingOthers ?? false,
     encroachingOthersRemark: response.encroachingOthersRemark ?? '',
-    encroachingOthersArea: response.encroachingOthersArea ?? 0,
+    encroachingOthersArea: response.encroachingOthersArea ?? null,
     buildingMaterialType: response.buildingMaterialType ?? '',
     buildingStyleType: response.buildingStyleType ?? '',
     buildingStyleTypeOther: response.buildingStyleTypeOther ?? '',
     isResidential: response.isResidential ?? false,
-    buildingAge: response.buildingAge ?? 0,
+    buildingAge: response.buildingAge ?? null,
     residentialRemark: response.residentialRemark ?? '',
     constructionStyleRemark: response.constructionStyleRemark ?? '',
     constructionStyleType: response.constructionStyleType ?? '',
@@ -217,12 +228,12 @@ export const mapBuildingPropertyResponseToForm = (
     constructionTypeOther: response.constructionTypeOther ?? '',
     utilizationType: response.utilizationType ?? '',
     utilizationTypeOther: response.utilizationTypeOther ?? '',
-    totalBuildingArea: response.totalBuildingArea ?? 0,
-    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    totalBuildingArea: response.totalBuildingArea ?? null,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
     finalCostValueOverride: response.finalCostValueOverride ?? null,
     buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
-    sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forcedSalePrice ?? 0,
+    sellingPrice: response.sellingPrice ?? null,
+    forcedSalePrice: response.forcedSalePrice ?? null,
     remark: response.remark ?? '',
     surfaces: (response as any).surfaces ?? [],
     depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
@@ -253,12 +264,12 @@ export const mapCondoPropertyResponseToForm = (
     titleNumber: response.titleNumber ?? '',
     condoRegistrationNumber: response.condoRegistrationNumber ?? '',
     roomNumber: response.roomNumber ?? '',
-    floorNumber: response.floorNumber ?? 0,
-    usableArea: response.usableArea ?? 0,
-    isUnderConstruction: response.isUnderConstruction ?? false,
+    floorNumber: response.floorNumber ?? null,
+    usableArea: response.usableArea ?? null,
+    isUnderConstruction: isUnderConstructionFromResponse(response),
 
-    latitude: response.latitude ?? 0,
-    longitude: response.longitude ?? 0,
+    latitude: response.latitude ?? null,
+    longitude: response.longitude ?? null,
 
     subDistrict: response.subDistrict ?? '',
     subDistrictName: addressLookup?.subDistrictName ?? '',
@@ -284,9 +295,9 @@ export const mapCondoPropertyResponseToForm = (
     locationType: response.locationType ?? '',
     street: response.street ?? '',
     soi: response.soi ?? '',
-    distanceFromMainRoad: response.distanceFromMainRoad ?? 0,
-    accessRoadWidth: response.accessRoadWidth ?? 0,
-    rightOfWay: response.rightOfWay ?? 0,
+    distanceFromMainRoad: response.distanceFromMainRoad ?? null,
+    accessRoadWidth: response.accessRoadWidth ?? null,
+    rightOfWay: response.rightOfWay ?? null,
     roadSurfaceType: response.roadSurfaceType ?? '',
     roadSurfaceTypeOther: response.roadSurfaceTypeOther ?? '',
     publicUtilityType: response.publicUtilityType ?? [],
@@ -301,16 +312,16 @@ export const mapCondoPropertyResponseToForm = (
     landEntranceExitType: (response as any).landEntranceExitType ?? [],
     landEntranceExitTypeOther: (response as any).landEntranceExitTypeOther ?? '',
     isMissingFromSurvey: response.isMissingFromSurvey ?? false,
-    governmentPricePerSqm: (response as any).governmentPricePerSqm ?? 0,
-    governmentPrice: (response as any).governmentPrice ?? 0,
+    governmentPricePerSqm: (response as any).governmentPricePerSqm ?? null,
+    governmentPrice: (response as any).governmentPrice ?? null,
     // Not yet in the generated v1 response schema — cast until it's regenerated
     // (same pattern as the government-price fields above).
     fireInsuranceCode: (response as any).fireInsuranceCode ?? '',
 
     decorationType: response.decorationType ?? '',
     decorationTypeOther: response.decorationTypeOther ?? '',
-    buildingAge: response.buildingAge ?? 0,
-    numberOfFloors: response.numberOfFloors ?? 0,
+    buildingAge: response.buildingAge ?? null,
+    numberOfFloors: response.numberOfFloors ?? null,
     buildingFormType: response.buildingFormType ?? '',
     constructionMaterialType: response.constructionMaterialType ?? '',
 
@@ -334,7 +345,7 @@ export const mapCondoPropertyResponseToForm = (
       ...row,
       sequence: row.sequence ?? index + 1,
     })),
-    totalBuildingArea: response.totalBuildingArea ?? 0,
+    totalBuildingArea: response.totalBuildingArea ?? null,
 
     isExpropriated: response.isExpropriated ?? false,
     expropriationRemark: response.expropriationRemark ?? '',
@@ -349,10 +360,10 @@ export const mapCondoPropertyResponseToForm = (
     environmentType: response.environmentType ?? [],
     environmentTypeOther: response.environmentTypeOther ?? '',
 
-    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
     buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
-    sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forceSellingPrice ?? 0,
+    sellingPrice: response.sellingPrice ?? null,
+    forcedSalePrice: response.forceSellingPrice ?? null,
 
     remark: response.remark ?? '',
     ...mapConstructionInspectionResponseToForm((response as any).constructionInspection),
@@ -372,8 +383,8 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     titles: (response as any).titles ?? [],
     landAreaDeductions: (response as any).landAreaDeductions ?? [],
     propertyName: response.propertyName ?? '',
-    latitude: response.latitude ?? 0,
-    longitude: response.longitude ?? 0,
+    latitude: response.latitude ?? null,
+    longitude: response.longitude ?? null,
     subDistrict: response.subDistrict ?? '',
     subDistrictName: addressLookup?.subDistrictName ?? '',
     district: response.district ?? '',
@@ -397,7 +408,7 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     landCheckMethodTypeOther: response.landCheckMethodTypeOther ?? '',
     street: response.street ?? '',
     soi: response.soi ?? '',
-    distanceFromMainRoad: response.distanceFromMainRoad ?? 0,
+    distanceFromMainRoad: response.distanceFromMainRoad ?? null,
     village: response.village ?? '',
     addressLocation: response.addressLocation ?? '',
     landShapeType: response.landShapeType ?? '',
@@ -409,12 +420,12 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     plotLocationTypeOther: response.plotLocationTypeOther ?? '',
     landFillType: response.landFillType ?? '',
     landFillTypeOther: response.landFillTypeOther ?? '',
-    landFillPercent: response.landFillPercent ?? 0,
-    soilLevel: response.soilLevel ?? 0,
-    accessRoadWidth: response.accessRoadWidth ?? 0,
-    rightOfWay: response.rightOfWay ?? 0,
-    roadFrontage: response.roadFrontage ?? 0,
-    numberOfSidesFacingRoad: response.numberOfSidesFacingRoad ?? 0,
+    landFillPercent: response.landFillPercent ?? null,
+    soilLevel: response.soilLevel ?? null,
+    accessRoadWidth: response.accessRoadWidth ?? null,
+    rightOfWay: response.rightOfWay ?? null,
+    roadFrontage: response.roadFrontage ?? null,
+    numberOfSidesFacingRoad: response.numberOfSidesFacingRoad ?? null,
     roadPassInFrontOfLand: response.roadPassInFrontOfLand ?? '',
     landAccessibilityType: response.landAccessibilityType ?? '',
     landAccessibilityRemark: response.landAccessibilityRemark ?? '',
@@ -437,9 +448,9 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     royalDecree: response.royalDecree ?? '',
     isEncroached: response.isEncroached ?? false,
     encroachmentRemark: response.encroachmentRemark ?? '',
-    encroachmentArea: response.encroachmentArea ?? 0,
+    encroachmentArea: response.encroachmentArea ?? null,
     hasElectricity: response.hasElectricity ?? false,
-    electricityDistance: response.electricityDistance ?? 0,
+    electricityDistance: response.electricityDistance ?? null,
     isLandlocked: response.isLandlocked ?? false,
     landlockedRemark: response.landlockedRemark ?? '',
     isForestBoundary: response.isForestBoundary ?? false,
@@ -449,15 +460,15 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     evictionTypeOther: response.evictionTypeOther ?? '',
     allocationType: response.allocationType ?? '',
     northAdjacentArea: response.northAdjacentArea ?? '',
-    northBoundaryLength: response.northBoundaryLength ?? 0,
+    northBoundaryLength: response.northBoundaryLength ?? null,
     southAdjacentArea: response.southAdjacentArea ?? '',
-    southBoundaryLength: response.southBoundaryLength ?? 0,
+    southBoundaryLength: response.southBoundaryLength ?? null,
     eastAdjacentArea: response.eastAdjacentArea ?? '',
-    eastBoundaryLength: response.eastBoundaryLength ?? 0,
+    eastBoundaryLength: response.eastBoundaryLength ?? null,
     westAdjacentArea: response.westAdjacentArea ?? '',
-    westBoundaryLength: response.westBoundaryLength ?? 0,
-    pondArea: response.pondArea ?? 0,
-    pondDepth: response.pondDepth ?? 0,
+    westBoundaryLength: response.westBoundaryLength ?? null,
+    pondArea: response.pondArea ?? null,
+    pondDepth: response.pondDepth ?? null,
     hasBuilding: response.hasBuilding ?? false,
     hasBuildingOther: response.hasBuildingOther ?? '',
 
@@ -470,22 +481,22 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     noHouseNumber: response.noHouseNumber ?? '',
     buildingConditionType: response.buildingConditionType ?? '',
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
-    isUnderConstruction: response.isUnderConstruction ?? false,
+    isUnderConstruction: isUnderConstructionFromResponse(response),
     constructionLicenseExpirationDate: response.constructionLicenseExpirationDate ?? null,
     isAppraisable: response.isAppraisable ?? false,
     buildingType: response.buildingType ?? '',
     buildingTypeOther: response.buildingTypeOther ?? '',
-    numberOfFloors: response.numberOfFloors ?? 0,
+    numberOfFloors: response.numberOfFloors ?? null,
     decorationType: response.decorationType ?? '',
     decorationTypeOther: response.decorationTypeOther ?? '',
     isEncroachingOthers: response.isEncroachingOthers ?? false,
     encroachingOthersRemark: response.encroachingOthersRemark ?? '',
-    encroachingOthersArea: response.encroachingOthersArea ?? 0,
+    encroachingOthersArea: response.encroachingOthersArea ?? null,
     buildingMaterialType: response.buildingMaterialType ?? '',
     buildingStyleType: response.buildingStyleType ?? '',
     buildingStyleTypeOther: response.buildingStyleTypeOther ?? '',
     isResidential: response.isResidential ?? false,
-    buildingAge: response.buildingAge ?? 0,
+    buildingAge: response.buildingAge ?? null,
     residentialRemark: response.residentialRemark ?? '',
     constructionStyleRemark: response.constructionStyleRemark ?? '',
     constructionStyleType: response.constructionStyleType ?? '',
@@ -507,12 +518,12 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     constructionTypeOther: response.constructionTypeOther ?? '',
     utilizationType: response.utilizationType ?? '',
     utilizationTypeOther: response.utilizationTypeOther ?? '',
-    totalBuildingArea: response.totalBuildingArea ?? 0,
-    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
+    totalBuildingArea: response.totalBuildingArea ?? null,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
     finalCostValueOverride: response.finalCostValueOverride ?? null,
     buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
-    sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forcedSalePrice ?? 0,
+    sellingPrice: response.sellingPrice ?? null,
+    forcedSalePrice: response.forcedSalePrice ?? null,
     remark: response.remark ?? '',
     surfaces: (response as any).surfaces ?? [],
     depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
@@ -584,13 +595,16 @@ export const mapCondoPMAPropertyResponseToForm = (
     ? findAddressBySubDistrictCode(response.subDistrict)
     : undefined;
   return {
-    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
-    sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forcedSalePrice ?? 0,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
+    sellingPrice: response.sellingPrice ?? null,
+    forcedSalePrice: response.forcedSalePrice ?? null,
     titleNumber: response.titleNumber ?? '',
     condoRegistrationNumber: response.condoRegistrationNumber ?? '',
     roomNumber: response.roomNumber ?? '',
-    floorNumber: response.floorNumber ?? 0,
+    // A string, like every other text field here: the API binds FloorNumber as string?, and the
+    // draft posts getValues() without validation, so a 0 reached it as a JSON number and the
+    // whole draft was refused with a 400.
+    floorNumber: response.floorNumber ?? '',
     buildingNumber: response.buildingNumber ?? '',
     condoName: response.condoName ?? '',
     subDistrict: response.subDistrict ?? '',
@@ -614,11 +628,34 @@ const mapDepreciationDetailsToApi = (depreciationDetails: any[]) => {
   }));
 };
 
-const mapSurfacesToApi = (surfaces: any[]) => {
-  return surfaces.map(({ ...item }) => ({
-    ...item,
-    id: item.id ?? null,
-  }));
+export const mapSurfacesToApi = (surfaces: any[]) => {
+  let nextFloorNumber = surfaces.reduce(
+    (max, item) =>
+      Math.max(max, item.fromFloorNumber ?? -Infinity, item.toFloorNumber ?? -Infinity),
+    0,
+  );
+
+  return surfaces.map(({ ...item }) => {
+    let fromFloorNumber = item.fromFloorNumber;
+    let toFloorNumber = item.toFloorNumber;
+
+    if (fromFloorNumber == null && toFloorNumber == null) {
+      nextFloorNumber += 1;
+      fromFloorNumber = nextFloorNumber;
+      toFloorNumber = nextFloorNumber;
+    } else if (fromFloorNumber == null) {
+      fromFloorNumber = toFloorNumber;
+    } else if (toFloorNumber == null) {
+      toFloorNumber = fromFloorNumber;
+    }
+
+    return {
+      ...item,
+      id: item.id ?? null,
+      fromFloorNumber,
+      toFloorNumber,
+    };
+  });
 };
 
 const mapConstructionInspectionFormToApi = (data: any) => {
@@ -629,6 +666,7 @@ const mapConstructionInspectionFormToApi = (data: any) => {
     constructionEnterDetail,
     isUnderConstruction,
     depreciationDetails,
+    finalCostValueOverride,
   } = data;
 
   if (!isUnderConstruction) return null;
@@ -637,14 +675,21 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   // The server rounds this on save anyway, but it rounds decimals and the screen rounds doubles,
   // so sending the raw sum let the two land a baht apart at half-baht boundaries.
   //
-  // Only the depreciation rows, deliberately. A condo unit has no depreciation table, so this is 0
-  // and stays 0 — that zero is what tells the server the inspection has no value base of its own,
-  // and the screen substituting the appraised value for display must not leak into the payload.
+  // The building's Building Cost Value — the appraiser's keyed Final Cost Value when they entered
+  // one, otherwise the depreciated schedule rounded to the nearest thousand. The same figure
+  // ConstructionInspectionTab shows as TOTAL VALUE and the same helper the pricing screen uses, so
+  // what is saved is what was on screen. Summing the schedule here alone meant a building priced by
+  // hand was inspected against the table it overrode, and the override never reached the summary
+  // book, the Decision Summary card, the engagement's frozen value or the regulatory export.
+  //
+  // A condo unit has no depreciation table and no keyed figure, so this stays 0 — that zero is what
+  // tells the server the inspection has no value base of its own, and the screen substituting the
+  // appraised value for display must still not leak into the payload.
+  //
+  // Inspections saved before this rule keep their raw-sum base until they are next saved, and then
+  // move to it (at most 500 baht x progress). Decided 2026-09-24: no backfill.
   const totalValue = roundBaht(
-    (depreciationDetails ?? []).reduce(
-      (sum: number, item: any) => sum + (Number(item?.priceAfterDepreciation) || 0),
-      0,
-    ),
+    buildingFinalCostValue({ finalCostValueOverride, depreciationDetails }),
   );
 
   const isFullDetail = constructionEnterDetail ?? true;
@@ -767,7 +812,22 @@ export const mapAssignmentResponseToForm = (response: CurrentAssignment) => {
   };
 };
 
-export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPMAFormType) => {
+type LandPMATitle = NonNullable<GetLandPMAPropertyResponseType['titles']>[number];
+
+/**
+ * savedTitles are the titles as loaded. The form edits only the first, as flat fields. The backend
+ * replaces the title list with what is sent (rows matched by id, unsent rows deleted) and updates a
+ * matched row's fields but never its title number. So the loaded rows go back with all their
+ * fields, the first with the form's edits on top: with its id while the title number is unchanged
+ * (ignoring padding), and as a new row when it changed, which is how the land page's title modal
+ * changes one (its schema drops the id). Built
+ * from the form alone, each save recreated the title, dropped any other title and cleared the
+ * fields this form does not show.
+ */
+export const mapLandAndBuildingPMAFormToPayload = (
+  data: createLandAndBuildingPMAFormType,
+  savedTitles: LandPMATitle[] = [],
+) => {
   const {
     sellingPrice,
     forcedSalePrice,
@@ -787,12 +847,18 @@ export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPM
     ...rest
   } = data;
 
-  const titles =
-    titleNumber || rawang || landNumber || surveyNumber
+  const [savedFirst, ...savedOthers] = savedTitles;
+  // Padding is not a change of title number.
+  const editedNumber = (titleNumber ?? '').trim();
+  const keepFirstId = !!savedFirst && editedNumber === savedFirst.titleNumber.trim();
+  const first =
+    editedNumber || rawang || landNumber || surveyNumber
       ? [
           {
-            titleNumber: titleNumber ?? '',
-            titleType: 'DEED',
+            ...savedFirst,
+            id: keepFirstId ? (savedFirst.id ?? null) : null,
+            titleNumber: editedNumber,
+            titleType: savedFirst?.titleType ?? 'DEED',
             rawang: rawang ?? null,
             landParcelNumber: landNumber ?? null,
             surveyNumber: surveyNumber ?? null,
@@ -804,6 +870,7 @@ export const mapLandAndBuildingPMAFormToPayload = (data: createLandAndBuildingPM
           },
         ]
       : [];
+  const titles = [...first, ...savedOthers];
 
   return {
     ...rest,
@@ -827,9 +894,9 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
   const title = response.titles?.[0];
 
   return {
-    buildingInsurancePrice: response.buildingInsurancePrice ?? 0,
-    sellingPrice: response.sellingPrice ?? 0,
-    forcedSalePrice: response.forcedSalePrice ?? 0,
+    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
+    sellingPrice: response.sellingPrice ?? null,
+    forcedSalePrice: response.forcedSalePrice ?? null,
     titleNumber: title?.titleNumber ?? '',
     rawang: title?.rawang ?? '',
     landNumber: title?.landParcelNumber ?? '',
@@ -852,8 +919,9 @@ export const mapLandAndBuildingPMAPropertyResponseToForm = (
  * Map the appraisal-level machinery summary response into form values.
  * A null response (nothing saved yet) yields empty defaults.
  */
+// Partial: Save draft also passes the form's own values through here to turn undefined into null.
 export const mapMachinerySummaryResponseToForm = (
-  response: MachinerySummaryResponse | null | undefined,
+  response: Partial<MachinerySummaryResponse> | null | undefined,
 ): machinerySummaryFormType => {
   return {
     // Section 3.1 — general

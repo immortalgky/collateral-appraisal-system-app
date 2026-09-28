@@ -1,4 +1,4 @@
-import { type SubmitErrorHandler, useForm, useWatch } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -22,7 +22,6 @@ import type {
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
-import { flattenRHFErrors } from '@features/pricingAnalysis/domain/flattenRHFErrors.ts';
 import { mapSaleAdjustmentGridFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapSaleAdjustmentGridFormToSubmitSchema.ts';
 import { useSaveComparativeAnalysis, useResetMethod } from '@features/pricingAnalysis/api';
 import { initializeSaleAdjustmentGridForm } from '@features/pricingAnalysis/adapters/initializeSaleAdjustmentGridForm.ts';
@@ -56,7 +55,6 @@ interface SaleAdjustmentGridPanelProps {
   savedComparativeAnalysisTemplateId?: string | null;
   savedFinalValueAdjusted?: number | null;
   savedLandValue?: number | null;
-  savedBuildingCost?: number | null;
   savedAppraisalPrice?: number | null;
   savedHasBuildingCost?: boolean | null;
   savedIncludeLandArea?: boolean | null;
@@ -83,7 +81,6 @@ export function SaleAdjustmentGridPanel({
   savedComparativeAnalysisTemplateId,
   savedFinalValueAdjusted,
   savedLandValue,
-  savedBuildingCost,
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
@@ -335,11 +332,6 @@ export function SaleAdjustmentGridPanel({
           shouldDirty: true,
         });
       }
-      if (savedBuildingCost != null && savedBuildingCost !== 0) {
-        setValue('saleAdjustmentGridAppraisalPrice.buildingValue' as any, savedBuildingCost, {
-          shouldDirty: true,
-        });
-      }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
         const savedTemplate = (templateList ?? []).find(
@@ -397,7 +389,7 @@ export function SaleAdjustmentGridPanel({
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
-      .map(s => s.marketId)
+      .map((s: { marketId?: string }) => s.marketId)
       .sort()
       .join(',');
     const currentSurveyIds = comparativeSurveys
@@ -512,7 +504,7 @@ export function SaleAdjustmentGridPanel({
               marketSurveys={marketSurveys}
               comparativeMarketSurveys={comparativeSurveys}
               template={pricingTemplate}
-              allFactors={allFactors}
+              allFactors={allFactors ?? []}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
               manualSubject={manualSubject}
             />

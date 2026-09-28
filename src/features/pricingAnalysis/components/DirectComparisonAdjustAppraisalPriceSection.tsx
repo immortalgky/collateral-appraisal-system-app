@@ -162,7 +162,7 @@ export function DirectComparisonAdjustAppraisalPriceSection({
       compute: ({ getValues: gv }) => Number(gv(finalValueRoundedPath())) || 0,
     },
     {
-      // Unit-aware: 01/02 → finalValueAdjusted × area (raw, no rounding);
+      // Unit-aware: 01/02 → finalValueAdjusted × area, to whole baht;
       // other (e.g. unit 03) → finalValueRounded (already rounded by the grid).
       targetPath: appraisalPricePath(),
       deps: [finalValueAdjustedPath(), finalValueRoundedPath(), unitAreaPath],
@@ -170,7 +170,12 @@ export function DirectComparisonAdjustAppraisalPriceSection({
         const fvAdj = Number(gv(finalValueAdjustedPath())) || 0;
         const fvRounded = Number(gv(finalValueRoundedPath())) || 0;
         const area = Number(gv(unitAreaPath)) || 0;
-        return isUnitPrice && area ? fvAdj * area : fvRounded;
+        // Whole baht before anything downstream rounds to a thousand: the area carries two
+        // decimals, so rate × area lands on satang nobody typed, and the thousand step then
+        // rounds off a number that is shown nowhere (55,925,499.63 falls to 55,925,000 where
+        // 55,925,500 goes up). Matches the backend, which stores LandValue the same way.
+        // The non-rate branch is already a rounded figure from the grid — left alone.
+        return isUnitPrice && area ? Math.round(fvAdj * area) : fvRounded;
       },
     },
     {

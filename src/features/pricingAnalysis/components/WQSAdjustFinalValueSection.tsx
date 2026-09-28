@@ -180,7 +180,7 @@ export const AdjustFinalValueSection = ({
     },
     {
       // rawLandPrice: computed display value (not stored). Same logic for cost and market.
-      // unit 01/02 (per-unit price): finalValueAdjusted × matchingArea (raw, no rounding —
+      // unit 01/02 (per-unit price): finalValueAdjusted × matchingArea, to whole baht —
       //                              the user's rounded sibling field applies roundToThousand)
       // unit 03 (total price):       finalValueRounded (already rounded by the grid)
       targetPath: 'WQSFinalValue._rawLandPrice',
@@ -189,7 +189,12 @@ export const AdjustFinalValueSection = ({
         const fvAdj = Number(getValues(finalValueAdjustedPath())) || 0;
         const fvRounded = Number(getValues(finalValueFinalValueRoundedPath())) || 0;
         const area = Number(getValues(rawLandPriceAreaPath)) || 0;
-        return isUnitPrice && area ? fvAdj * area : fvRounded;
+        // Whole baht before anything downstream rounds to a thousand: the area carries two
+        // decimals, so rate × area lands on satang nobody typed, and the thousand step then
+        // rounds off a number that is shown nowhere (55,925,499.63 falls to 55,925,000 where
+        // 55,925,500 goes up). Matches the backend, which stores LandValue the same way.
+        // The non-rate branch is already a rounded figure from the grid — left alone.
+        return isUnitPrice && area ? Math.round(fvAdj * area) : fvRounded;
       },
     },
     {

@@ -1,7 +1,6 @@
 import type { DCFAssumption, DCFMethod } from '../../types/dcf';
 import { MethodProportion } from './dcfMethods/MethodProportion';
 import { MethodSpecifiedRoomIncomePerDay } from './dcfMethods/MethodSpecifiedRoomIncomePerDay';
-import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
 import { MethodSpecifiedValueWithGrowth } from './dcfMethods/MethodSpecifiedValueWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowth } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowth';
 import { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate } from './dcfMethods/MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate';
@@ -38,7 +37,6 @@ export function DiscountedCashFlowMethodRenderer({
     editing: editing,
     expanded: expanded,
     totalNumberOfYears: totalNumberOfYear,
-    method: method,
     assumptionId: assumption.clientId,
     assumptionName: assumption.assumptionName,
     assumptionType: assumption.assumptionType,
@@ -58,36 +56,38 @@ export function DiscountedCashFlowMethodRenderer({
     },
   };
 
-  const systemMethodType = mapDCFMethodCodeToSystemType(method.methodType);
-  switch (systemMethodType) {
-    case 'specifiedRoomIncomePerDay':
-      return <MethodSpecifiedRoomIncomePerDay {...props} />;
-    case 'specifiedRoomIncomeBySeasonalRates':
-      return <MethodSpecifiedRoomIncomeBySeasonalRates {...props} />;
-    case 'specifiedRoomIncomeWithGrowth':
-      return <MethodSpecifiedRoomIncomeWithGrowth {...props} />;
-    case 'specifiedRoomIncomeWithGrowthByOccupancyRate':
-      return <MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {...props} />;
-    case 'specifiedRentalIncomePerMonth':
-      return <MethodSpecifiedRentalIncomePerMonth {...props} />;
-    case 'specifiedRentalIncomePerSquareMeter':
-      return <MethodSpecifiedRentalIncomePerSquareMeter {...props} />;
-    case 'roomCostBasedOnExpensesPerRoomPerDay':
-      return <MethodRoomCostBasedOnExpensesPerRoomPerDay {...props} />;
-    case 'specifiedFoodAndBeverageExpensesPerRoomPerDay':
-      return <MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {...props} />;
-    case 'positionBasedSalaryCalculation':
-      return <MethodPositionBasedSalaryCalculation {...props} />;
-    case 'parameterBasedOnTierOfPropertyValue':
-      return <MethodParameterBasedOnTierOfPropertyValue {...props} />;
-    case 'specifiedEnergyCostIndex':
-      return <MethodSpecifiedEnergyCostIndex {...props} />;
-    case 'proportionOfTheNewReplacementCost':
-      return <MethodProportionOfTheNewReplacementCost {...props} />;
-    case 'proportion':
-      return <MethodProportion {...props} />;
-    case 'specifiedValueWithGrowth':
-      return <MethodSpecifiedValueWithGrowth {...props} />;
+  // Switched on the code rather than the mapped name so TypeScript narrows `method` to the one
+  // wrapper each component declares. Codes are mapDCFMethodCodeToSystemType's; '15'
+  // (grossOperatingProfit) has no editor and falls through to nothing.
+  switch (method.methodType) {
+    case '01':
+      return <MethodSpecifiedRoomIncomePerDay {...props} method={method} />;
+    case '02':
+      return <MethodSpecifiedRoomIncomeBySeasonalRates {...props} method={method} />;
+    case '03':
+      return <MethodSpecifiedRoomIncomeWithGrowth {...props} method={method} />;
+    case '04':
+      return <MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {...props} method={method} />;
+    case '05':
+      return <MethodSpecifiedRentalIncomePerMonth {...props} method={method} />;
+    case '06':
+      return <MethodSpecifiedRentalIncomePerSquareMeter {...props} method={method} />;
+    case '07':
+      return <MethodRoomCostBasedOnExpensesPerRoomPerDay {...props} method={method} />;
+    case '08':
+      return <MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {...props} method={method} />;
+    case '09':
+      return <MethodPositionBasedSalaryCalculation {...props} method={method} />;
+    case '10':
+      return <MethodParameterBasedOnTierOfPropertyValue {...props} method={method} />;
+    case '11':
+      return <MethodSpecifiedEnergyCostIndex {...props} method={method} />;
+    case '12':
+      return <MethodProportionOfTheNewReplacementCost {...props} method={method} />;
+    case '13':
+      return <MethodProportion {...props} method={method} />;
+    case '14':
+      return <MethodSpecifiedValueWithGrowth {...props} method={method} />;
     default:
       return <></>;
   }

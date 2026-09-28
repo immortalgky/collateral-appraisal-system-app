@@ -6,6 +6,7 @@ import type {
   CreateWebhookSubscriptionRequest,
   GetWebhookSubscriptionsParams,
   UpdateWebhookSubscriptionRequest,
+  WebhookSecretField,
   WebhookSubscriptionListResult,
 } from '../types';
 
@@ -36,6 +37,8 @@ export const useCreateWebhookSubscription = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation('webhookAdmin');
   return useMutation({
+    // The request/response carries a plaintext secret; drop it from the MutationCache at once.
+    gcTime: 0,
     mutationFn: async (request: CreateWebhookSubscriptionRequest) => {
       const { data } = await axios.post('/webhook-subscriptions', request);
       return data;
@@ -52,6 +55,8 @@ export const useUpdateWebhookSubscription = () => {
   const queryClient = useQueryClient();
   const { t } = useTranslation('webhookAdmin');
   return useMutation({
+    // The request/response carries a plaintext secret; drop it from the MutationCache at once.
+    gcTime: 0,
     mutationFn: async ({
       id,
       request,
@@ -98,5 +103,26 @@ export const useDeleteWebhookSubscription = () => {
       void queryClient.invalidateQueries({ queryKey: webhookSubscriptionKeys.all });
     },
     onError: (err: any) => toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.deleteFailed')),
+  });
+};
+
+/**
+ * Decrypts one stored secret. A POST mutation with gcTime 0, so the plaintext is not kept in the
+ * query or mutation cache; the server audits every call.
+ */
+export const useRevealWebhookSecret = () => {
+  const { t } = useTranslation('webhookAdmin');
+  return useMutation({
+    // The request/response carries a plaintext secret; drop it from the MutationCache at once.
+    gcTime: 0,
+    mutationFn: async ({ id, field }: { id: string; field: WebhookSecretField }) => {
+      const { data } = await axios.post<{ value: string }>(
+        `/webhook-subscriptions/${id}/secret/reveal`,
+        { field },
+      );
+      return data.value;
+    },
+    onError: (err: { apiError?: { detail?: string } }) =>
+      toast.error(err?.apiError?.detail ?? t('subscriptions.form.revealFailed')),
   });
 };

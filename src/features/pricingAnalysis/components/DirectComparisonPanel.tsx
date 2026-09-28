@@ -1,4 +1,4 @@
-import { useForm, useWatch, type SubmitErrorHandler } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
 import {
@@ -20,7 +20,6 @@ import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
 import toast from 'react-hot-toast';
-import { flattenRHFErrors } from '@features/pricingAnalysis/domain/flattenRHFErrors.ts';
 import { mapDirectComparisonFormToSubmitSchema } from '@features/pricingAnalysis/domain/mapDirectComparisonFormToSubmitSchema.ts';
 import { useSaveComparativeAnalysis, useResetMethod } from '@features/pricingAnalysis/api';
 import { initializeDirectComparisonForm } from '@features/pricingAnalysis/adapters/initializeDirectComparisonForm.ts';
@@ -56,7 +55,6 @@ interface DirectComparisonPanelProps {
   savedComparativeAnalysisTemplateId?: string | null;
   savedFinalValueAdjusted?: number | null;
   savedLandValue?: number | null;
-  savedBuildingCost?: number | null;
   savedAppraisalPrice?: number | null;
   savedHasBuildingCost?: boolean | null;
   savedIncludeLandArea?: boolean | null;
@@ -83,7 +81,6 @@ export function DirectComparisonPanel({
   savedComparativeAnalysisTemplateId,
   savedFinalValueAdjusted,
   savedLandValue,
-  savedBuildingCost,
   savedAppraisalPrice,
   savedHasBuildingCost,
   savedIncludeLandArea,
@@ -332,11 +329,6 @@ export function DirectComparisonPanel({
           shouldDirty: true,
         });
       }
-      if (savedBuildingCost != null && savedBuildingCost !== 0) {
-        setValue('directComparisonAppraisalPrice.buildingValue' as any, savedBuildingCost, {
-          shouldDirty: true,
-        });
-      }
       // Restore template selection from saved data
       if (savedComparativeAnalysisTemplateId) {
         const savedTemplate = (templateList ?? []).find(
@@ -394,7 +386,7 @@ export function DirectComparisonPanel({
 
     // Only re-init when the set of surveys actually changed
     const formSurveyIds = (getValues('comparativeSurveys') ?? [])
-      .map(s => s.marketId)
+      .map((s: { marketId?: string }) => s.marketId)
       .sort()
       .join(',');
     const currentSurveyIds = comparativeSurveys
@@ -517,7 +509,7 @@ export function DirectComparisonPanel({
               marketSurveys={marketSurveys}
               comparativeMarketSurveys={comparativeSurveys}
               template={pricingTemplate}
-              allFactors={allFactors}
+              allFactors={allFactors ?? []}
               onSelectComparativeMarketSurvey={handleOnSelectComparativeMarketSurvey}
               manualSubject={manualSubject}
             />

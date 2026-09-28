@@ -25,8 +25,9 @@ export function useColumnAutoFit(
         const rows = tbl.querySelectorAll('tr');
         let max = 0;
         rows.forEach(row => {
-          const cell = row.children[colIndex + leadingCells] as HTMLElement | undefined;
-          if (cell) max = Math.max(max, cell.scrollWidth);
+          const cell = row.children[colIndex + leadingCells] as HTMLTableCellElement | undefined;
+          // A spanning cell (e.g. a group-header row) is not this column's content.
+          if (cell && cell.colSpan === 1) max = Math.max(max, cell.scrollWidth);
         });
         // Nothing measurable (empty table, or the column is not rendered) — leave the width alone
         // rather than snapping it to the minimum.

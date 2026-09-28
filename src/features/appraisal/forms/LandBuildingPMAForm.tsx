@@ -11,6 +11,7 @@ import {
   pmaField,
 } from '../configs/fields';
 import { FieldLabels } from '../components/FieldLabels';
+import { useForcedSalePriceDefault } from '../hooks/useForcedSalePriceDefault';
 
 type LandBuildingPMAFormProps = {
   externalSyncStatus?: string | null;
@@ -42,12 +43,7 @@ const LandBuildingPMAForm = ({
     });
   }, [areaRai, areaNgan, areaSquareWa, setValue]);
 
-  const sellingPrice = useWatch({ name: 'sellingPrice' });
-
-  useEffect(() => {
-    const forceSalePrice = (sellingPrice * 70) / 100;
-    setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
-  }, [sellingPrice, setValue]);
+  useForcedSalePriceDefault();
 
   return (
     <FieldLabels scope="landBuildingPma">

@@ -2,7 +2,7 @@ type Identifier = 'positive' | 'negative' | 'empty';
 type CategoryType = 'income' | 'expenses' | 'gop' | 'fixedExps';
 type SectionType = 'income' | 'expenses' | 'summaryDCF' | 'summaryDirect';
 
-interface MethodSpecifiedRoomIncomePerDay {
+type MethodSpecifiedRoomIncomePerDay = {
   // modal
   roomDetails: {
     roomType?: string; // collect to db
@@ -33,7 +33,7 @@ interface MethodSpecifiedRoomIncomePerDay {
   roomIncome: number[];
 
   totalMethodValues: number[];
-}
+};
 
 type SeasonRateInput = {
   seasonId: string;
@@ -48,7 +48,7 @@ type RoomIncomeRow = {
   seasons: SeasonRateInput[];
 };
 
-interface MethodSpecifiedRoomIncomeBySeasonalRates {
+type MethodSpecifiedRoomIncomeBySeasonalRates = {
   // modal
   seasonCount: number; // collect to db
   seasonDetails: {
@@ -76,9 +76,9 @@ interface MethodSpecifiedRoomIncomeBySeasonalRates {
   roomRateIncrease: number[];
   avgDailyRate: number[];
   roomIncome: number[];
-}
+};
 
-interface MethodSpecifiedRoomIncomeWithGrowth {
+type MethodSpecifiedRoomIncomeWithGrowth = {
   // modal
   saleableArea: number; // collect to db
   totalNumberOfSaleableArea: number; // collect to db
@@ -92,9 +92,9 @@ interface MethodSpecifiedRoomIncomeWithGrowth {
   roomRateIncrease: number[];
   roomIncome: number[];
   totalMethodValues: number[];
-}
+};
 
-interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
+type MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate = {
   // modal
   saleableArea: number; // collect to db
   totalNumberOfSaleableArea: number; // collect to db
@@ -112,9 +112,9 @@ interface MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate {
   roomRateIncrease: number[];
   roomIncomeAdjustedValuedByGrowthRates: number[];
   roomIncome: number[];
-}
+};
 
-interface MethodSpecifiedRentalIncomePerMonth {
+type MethodSpecifiedRentalIncomePerMonth = {
   // modal
   roomDetails: {
     roomType: string; // collect to db
@@ -135,9 +135,9 @@ interface MethodSpecifiedRentalIncomePerMonth {
   // table
   roomRateIncrease: number[];
   roomIncome: number[];
-}
+};
 
-interface MethodSpecifiedRentalIncomePerSquareMeter {
+type MethodSpecifiedRentalIncomePerSquareMeter = {
   // modal
   areaDetail: {
     description: string; // collect to db
@@ -168,9 +168,9 @@ interface MethodSpecifiedRentalIncomePerSquareMeter {
   totalRentalIncome: number[];
 
   totalMethodValues: number[];
-}
+};
 
-interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
+type MethodRoomCostBasedOnExpensesPerRoomPerDay = {
   // modal
   roomDetails: {
     roomType?: string; // collect to db
@@ -191,9 +191,10 @@ interface MethodRoomCostBasedOnExpensesPerRoomPerDay {
   saleableArea: number[];
   roomRateIncrease: number[];
   roomExpense: number[];
-}
+  totalMethodValues?: number[];
+};
 
-interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
+type MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay = {
   // modal
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -204,9 +205,9 @@ interface MethodSpecifiedFoodAndBeverageExpensesPerRoomPerDay {
   increaseRate: number[];
   totalFoodAndBeveragePerRoomPerDay: number[];
   totalFoodAndBeveragePerRoomPerYear: number[];
-}
+};
 
-interface MethodPositionBasedSalaryCalculation {
+type MethodPositionBasedSalaryCalculation = {
   // modal
   jobPositionDetails: {
     jobPosition: string; // collect to db
@@ -224,9 +225,9 @@ interface MethodPositionBasedSalaryCalculation {
   // table
   increaseRate: number[];
   totalPositionBasedSalaryPerYear: number[];
-}
+};
 
-interface MethodParameterBasedOnTierOfPropertyValue {
+type MethodParameterBasedOnTierOfPropertyValue = {
   // modal
   propertyTax: {
     landPrices: number[];
@@ -240,9 +241,9 @@ interface MethodParameterBasedOnTierOfPropertyValue {
 
   // table
   totalMethodValues: number[];
-}
+};
 
-interface MethodSpecifiedEnergyCostIndex {
+type MethodSpecifiedEnergyCostIndex = {
   // modal
   energyCostIndex: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -253,9 +254,9 @@ interface MethodSpecifiedEnergyCostIndex {
   increaseRate: number[];
   energyCostIndexIncrease: number[];
   totalEnegyCost: number[];
-}
+};
 
-interface MethodProportionOfTheNewReplacementCost {
+type MethodProportionOfTheNewReplacementCost = {
   // modal
   proportionPct: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -266,7 +267,7 @@ interface MethodProportionOfTheNewReplacementCost {
   newReplacementCost: number;
   proportionOfNewReplacementCosts: number[];
   totalMethodValues: number[];
-}
+};
 
 type RefTarget = {
   kind: 'section' | 'category' | 'assumption';
@@ -275,14 +276,14 @@ type RefTarget = {
   dbId?: string | null;
 };
 
-interface MethodProportion {
+type MethodProportion = {
   // modal
   proportionPct: number; // collect to db
   refTarget: RefTarget; // collect to db
   startIn: number;
-}
+};
 
-interface MethodSpecifiedValueWithGrowth {
+type MethodSpecifiedValueWithGrowth = {
   // modal
   firstYearAmt: number; // collect to db
   increaseRatePct: number; // collect to db
@@ -291,7 +292,7 @@ interface MethodSpecifiedValueWithGrowth {
 
   // table
   increaseRates: number[];
-}
+};
 
 export interface MethodSpecifiedRoomIncomePerDayWrapper {
   id?: string;
@@ -390,7 +391,8 @@ export interface MethodSpecifiedValueWithGrowthWrapper {
   detail?: MethodSpecifiedValueWithGrowth;
 }
 
-export type DCFMethod =
+// Methods built from a template also carry a client id, and saved ones a db id (see Base).
+export type DCFMethod = { clientId?: string; dbId?: string | null } & (
   | MethodSpecifiedRoomIncomePerDayWrapper
   | MethodSpecifiedRoomIncomeBySeasonalRatesWrapper
   | MethodSpecifiedRoomIncomeWithGrowthWrapper
@@ -404,7 +406,8 @@ export type DCFMethod =
   | MethodSpecifiedEnergyCostIndexWrapper
   | MethodProportionOfTheNewReplacementCostWrapper
   | MethodProportionWrapper
-  | MethodSpecifiedValueWithGrowthWrapper;
+  | MethodSpecifiedValueWithGrowthWrapper
+);
 
 interface Base {
   templateId?: string | null;
@@ -414,7 +417,7 @@ interface Base {
 
 export interface DCFAssumption extends Base {
   assumptionType: string; // unique except miscellaneous
-  assumptionName: string;
+  assumptionName?: string | null; // unset on a new row; the modal names it except for M99
   identifier: Identifier;
   displaySeq: number;
   totalAssumptionValues: number[];
@@ -488,16 +491,20 @@ export interface DCFTemplateType {
   /** The appraiser's typed-over value only — null means "follow the computed value". */
   appraisalPriceRounded: number | null;
   sections: {
+    /** The template row's own id, which initializeDiscountedCashFlowForm maps to a clientId. */
+    templateId?: string | null;
     sectionType: SectionType; // render section e.g income, expenses
     sectionName: string;
     identifier: Identifier; // to identify total value of this section will be determined as positive or negative value
     displaySeq: number;
     categories?: {
+      templateId?: string | null;
       categoryType: CategoryType;
       categoryName: string;
       identifier: Identifier;
       displaySeq: number;
       assumptions: {
+        templateId?: string | null;
         assumptionType: string;
         assumptionName: string;
         identifier: Identifier;

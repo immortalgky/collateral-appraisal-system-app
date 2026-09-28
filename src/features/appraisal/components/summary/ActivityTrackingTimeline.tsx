@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
@@ -17,6 +18,8 @@ export interface ActivityStep {
   remark: string | null;
   /** Full timing breakdown for the hover tooltip. Absent on steps with no task row behind them. */
   timing?: HolderTiming;
+  /** Where the picked (not yet submitted) decision will send the work. */
+  preview?: boolean;
 }
 
 /** Return true if this step represents a backward movement (send-back / reject) */
@@ -104,6 +107,7 @@ const statusBadge: Record<ActivityStep['status'], { value: string; label: string
 };
 
 const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps) => {
+  const { t } = useTranslation('appraisal');
   const [expanded, setExpanded] = useState(false);
 
   const { visibleActivities, hiddenCount } = useMemo(() => {
@@ -169,7 +173,15 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
         } else {
           configKey = step.status;
         }
-        const config = statusConfig[configKey];
+        const config = step.preview
+          ? {
+              ...statusConfig.pending,
+              dotBg: clsx(
+                'border-2 border-dashed bg-white',
+                isBackward(step.movement) ? 'border-rose-400' : 'border-gray-400',
+              ),
+            }
+          : statusConfig[configKey];
 
         const isInstant =
           step.startedAt != null &&
@@ -227,7 +239,7 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
                   {step.taskDescription || step.stepName}
                 </span>
                 <Badge type="status" value={badge.value} size="xs" dot={false}>
-                  {badge.label}
+                  {step.preview ? t('decision.nextStep') : badge.label}
                 </Badge>
               </div>
 
@@ -241,7 +253,7 @@ const ActivityTrackingTimeline = ({ activities }: ActivityTrackingTimelineProps)
                   )}
                 </div>
               )}
-              {!step.assigneeName && step.status === 'pending' && (
+              {!step.assigneeName && step.status === 'pending' && !step.preview && (
                 <p className="text-xs text-gray-400 mt-1">Not assigned yet</p>
               )}
 

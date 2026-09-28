@@ -29,17 +29,19 @@ import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarnin
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { formatNumber } from '@/shared/utils/formatUtils';
-import { FormProvider, FormFields, type FormField } from '@/shared/components/form';
+import { FormProvider, FormFields } from '@/shared/components/form';
 import { FormReadOnlyContext } from '@/shared/components/form/context';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useConnectionStatus } from '@/features/notification/hooks/useConnectionStatus';
 import {
+  decisionSummaryKeys,
   useGetDecisionSummary,
   useSaveDecisionSummary,
   useUpdateForceSaleRate,
 } from '../api/decisionSummary';
+import { useQueryClient } from '@tanstack/react-query';
 import { useGetAssignment } from '../api/administration';
 import ValuationEngagementChips from '../components/ValuationEngagementChips';
 import { useAuthStore } from '@features/auth/store.ts';
@@ -62,11 +64,14 @@ import BlockApproachMatrixTable from '../components/summary/BlockApproachMatrixT
 import BlockPriceSummaryTable from '../components/summary/BlockPriceSummaryTable';
 import GovernmentPriceTable from '../components/summary/GovernmentPriceTable';
 import CondoGovernmentPriceTable from '../components/summary/CondoGovernmentPriceTable';
+import DecisionSection, { DecisionConfirmSummary } from '../components/summary/DecisionSection';
 import {
-  LiveApprovalListSection,
-  ApprovalHistorySection,
-} from '../components/summary/ApprovalListSection';
-import DecisionSection from '../components/summary/DecisionSection';
+  COMMITTEE_ACTIVITY_ID,
+  decisionDisplayLabel,
+  isDissentingVote,
+  isManualAssignmentAction,
+  reasonGroupOf,
+} from '../components/summary/decisionHelpers';
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
 import ConstructionBuildingDetailTable from '../components/summary/ConstructionBuildingDetailTable';
@@ -75,119 +80,6 @@ import { AssetSummaryDrawer } from '@/features/common/assetSummary/AssetSummaryD
 import { useGetAssetSummary } from '@/features/appraisal/api/assetSummary';
 
 // ==================== Field Definitions ====================
-
-// Static fallback options (English) — replaced at render time via makeDecisionFields()
-const CONDITION_TYPE_OPTIONS = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'special', label: 'Special' },
-  { value: 'other', label: 'Other' },
-];
-
-const REMARK_TYPE_OPTIONS = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'special', label: 'Special' },
-  { value: 'other', label: 'Other' },
-];
-
-const OPINION_TYPE_OPTIONS = [
-  { value: 'agree', label: 'Agree' },
-  { value: 'disagree', label: 'Disagree' },
-  { value: 'conditional', label: 'Conditional' },
-];
-
-const priceVerificationFields: FormField[] = [
-  {
-    type: 'boolean-toggle',
-    name: 'isPriceVerified',
-    label: 'Price Verification',
-    options: ['Not Verified', 'Verified'],
-  },
-];
-
-const conditionFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'conditionType',
-    label: 'Condition Type',
-    options: CONDITION_TYPE_OPTIONS,
-    placeholder: 'Select condition type...',
-  },
-  {
-    type: 'textarea',
-    name: 'condition',
-    label: 'Condition Details',
-    placeholder: 'Enter condition details...',
-  },
-];
-
-const remarkFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'remarkType',
-    label: 'Remark Type',
-    options: REMARK_TYPE_OPTIONS,
-    placeholder: 'Select remark type...',
-  },
-  {
-    type: 'textarea',
-    name: 'remark',
-    label: 'Remark Details',
-    placeholder: 'Enter remark...',
-  },
-];
-
-const appraiserOpinionFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'appraiserOpinionType',
-    label: 'Opinion Type',
-    options: OPINION_TYPE_OPTIONS,
-    placeholder: 'Select opinion type...',
-  },
-  {
-    type: 'textarea',
-    name: 'appraiserOpinion',
-    label: 'Appraiser Opinion',
-    placeholder: 'Enter appraiser opinion...',
-  },
-];
-
-const committeeOpinionFields: FormField[] = [
-  {
-    type: 'dropdown',
-    name: 'committeeOpinionType',
-    label: 'Opinion Type',
-    options: OPINION_TYPE_OPTIONS,
-    required: true,
-    placeholder: 'Select opinion type...',
-  },
-  {
-    type: 'textarea',
-    name: 'committeeOpinion',
-    label: 'Committee Opinion',
-    required: true,
-    placeholder: 'Enter committee opinion...',
-  },
-];
-
-const reviewPriceFields: FormField[] = [
-  {
-    type: 'number-input',
-    name: 'totalAppraisalPriceReview',
-    label: 'Total Appraisal Price (Review)',
-    decimalPlaces: 2,
-    wrapperClassName: 'col-span-1',
-  },
-];
-
-const additionalAssumptionsFields: FormField[] = [
-  {
-    type: 'textarea',
-    name: 'additionalAssumptions',
-    label: 'Details',
-    placeholder: 'Enter additional or special assumptions...',
-  },
-];
 
 /** Build translated field definitions for DecisionSummaryPage */
 const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
@@ -214,7 +106,7 @@ const makeDecisionFields = (t: import('i18next').TFunction<'appraisal'>) => {
         label: t('decisionSummary.fields.priceVerification'),
         options: t('decisionSummary.fields.priceVerificationOptions', {
           returnObjects: true,
-        }) as string[],
+        }) as [string, string],
       },
     ],
     conditionFields: [
@@ -572,6 +464,7 @@ const DecisionSummaryPage = () => {
   const { t } = useTranslation('appraisal');
   const fields = makeDecisionFields(t);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { taskId } = useParams<{ taskId: string }>();
   const appraisalId = useAppraisalId();
   const isReadOnly = usePageReadOnly();
@@ -642,6 +535,8 @@ const DecisionSummaryPage = () => {
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  // Disagree / Route Back votes must be ticked in the confirm dialog before they can be sent.
+  const [voteAcknowledged, setVoteAcknowledged] = useState(false);
   const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
   const [isAssetSummaryOpen, setIsAssetSummaryOpen] = useState(false);
   const [failures, setFailures] = useState<StructuredValidationError[]>([]);
@@ -659,7 +554,7 @@ const DecisionSummaryPage = () => {
   const { data: assetSummaryData, isLoading: isLoadingAssetSummary } =
     useGetAssetSummary(appraisalId);
   const hasAssetSummary =
-    assetSummaryData?.groups?.length > 0 || assetSummaryData?.items?.length > 0;
+    (assetSummaryData?.groups?.length ?? 0) > 0 || (assetSummaryData?.items?.length ?? 0) > 0;
 
   // API hooks
   const { data, isLoading } = useGetDecisionSummary(appraisalId);
@@ -701,10 +596,11 @@ const DecisionSummaryPage = () => {
     [actionsData, selectedDecision],
   );
 
-  const isManualAssignment =
-    selectedAction?.assignmentMode === 'user' && !!selectedAction.targetActivityId;
+  const isManualAssignment = isManualAssignmentAction(selectedAction);
 
-  const reasonRequired = selectedAction?.movement === 'C' || selectedAction?.movement === 'B';
+  const reasonRequired = reasonGroupOf(selectedAction) !== null;
+  // Only the task owner's Submit casts the vote; a non-owner's Submit just saves the summary.
+  const isDissent = isTaskOwner && isDissentingVote(activityId, selectedDecision);
 
   // Form setup
   const mapDataToForm = useMemo(() => {
@@ -942,6 +838,20 @@ const DecisionSummaryPage = () => {
             return;
           }
           // Success — close dialog and navigate away
+          if (activityId === COMMITTEE_ACTIVITY_ID) {
+            // A vote changes the round's tally (and may resolve it) — don't serve a stale one.
+            queryClient.invalidateQueries({
+              queryKey: decisionSummaryKeys.approvalList(
+                workflowInstanceId!,
+                COMMITTEE_ACTIVITY_ID,
+              ),
+            });
+            if (appraisalId) {
+              queryClient.invalidateQueries({
+                queryKey: decisionSummaryKeys.approvalHistory(appraisalId, COMMITTEE_ACTIVITY_ID),
+              });
+            }
+          }
           setWarnings([]);
           setIsConfirmOpen(false);
           toast.success(t('decisionSummary.toasts.submitted'));
@@ -986,6 +896,14 @@ const DecisionSummaryPage = () => {
     if (complete && isManualAssignment && !selectedAssigneeUserId) {
       setIsConfirmOpen(false);
       toast.error(t('administration.toasts.selectAssignee'));
+      return;
+    }
+
+    // A Disagree / Route Back vote needs a comment and the dialog tick. The buttons are disabled
+    // too, but re-check here so no path can send one without them.
+    if (complete && isDissent && (!comments.trim() || !voteAcknowledged)) {
+      setIsConfirmOpen(false);
+      toast.error(t('decisionSummary.toasts.voteNeedsComment'));
       return;
     }
 
@@ -1532,21 +1450,6 @@ const DecisionSummaryPage = () => {
                 </GroupCard>
               )}
 
-              {/* Committee Approval — standalone (active workflow). Hidden once the appraisal has
-                  reached a terminal status: completed/migrated appraisals show only the history
-                  section below (avoids the "not active yet" placeholder next to real history). */}
-              {showSection('committeeApproval') && !isTerminalStatus(appraisal?.status) && (
-                <LiveApprovalListSection
-                  workflowInstanceId={resolvedWorkflowInstanceId}
-                  activityId={resolvedActivityId}
-                />
-              )}
-
-              {/* Committee Approval History — shown when workflow has ended */}
-              {isTerminalStatus(appraisal?.status) && (
-                <ApprovalHistorySection appraisalId={appraisalId} activityId="pending-approval" />
-              )}
-
               {/* Decision — standalone */}
               <DecisionSection
                 selectedDecision={selectedDecision}
@@ -1562,6 +1465,12 @@ const DecisionSummaryPage = () => {
                 onReasonChange={setReasonCode}
                 workflowInstanceId={resolvedWorkflowInstanceId}
                 activityId={resolvedActivityId}
+                // Committee votes live in the Decision section's left column. Terminal appraisals
+                // always show their final-round history (hidden on 404); ongoing ones only while
+                // the section config allows it and the workflow is at the committee step.
+                showCommitteeVotes={showSection('committeeApproval')}
+                isAppraisalTerminal={isTerminalStatus(appraisal?.status)}
+                appraisalId={appraisalId}
               />
             </div>
           </div>
@@ -1616,12 +1525,22 @@ const DecisionSummaryPage = () => {
                       (isTaskOwner && !selectedDecision) ||
                       (isTaskOwner && !!selectedDecision && !selectedAction) ||
                       (isTaskOwner && isManualAssignment && !selectedAssigneeUserId) ||
-                      (isTaskOwner && reasonRequired && !reasonCode)
+                      (isTaskOwner && reasonRequired && !reasonCode) ||
+                      (isDissent && !comments.trim())
                     }
-                    onClick={() => setIsConfirmOpen(true)}
+                    onClick={() => {
+                      setVoteAcknowledged(false);
+                      setIsConfirmOpen(true);
+                    }}
                   >
                     <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
                     {t('decisionSummaryPageExtra.submitButton')}
+                    {/* Echo the pick on the button so the last click confirms what is sent */}
+                    {isTaskOwner && selectedAction && (
+                      <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-xs font-medium">
+                        {decisionDisplayLabel(t, activityId, selectedAction)}
+                      </span>
+                    )}
                   </Button>
                 </div>
               </div>
@@ -1653,12 +1572,17 @@ const DecisionSummaryPage = () => {
           resetProgressStore();
         }}
         onConfirm={() => handleSubmit(onSubmit)()}
-        title={t('decisionSummary.confirmDialog.title')}
+        title={
+          isTaskOwner && activityId === COMMITTEE_ACTIVITY_ID
+            ? t('decisionSummary.confirmDialog.voteTitle')
+            : t('decisionSummary.confirmDialog.title')
+        }
         message={t('decisionSummary.confirmDialog.message')}
         confirmText={t('decisionSummary.confirmDialog.confirm')}
         cancelText={t('decisionSummary.confirmDialog.cancel')}
         variant="primary"
         isLoading={isSaving || completeActivity.isPending}
+        confirmDisabled={isDissent && !voteAcknowledged}
         hasError={failures.length > 0}
         hasWarning={warnings.length > 0 && failures.length === 0}
         customFooter={
@@ -1722,6 +1646,17 @@ const DecisionSummaryPage = () => {
           </Alert>
         ) : isSaving || completeActivity.isPending ? (
           <ActivityCompletionChecklist pending liveUnavailable={hubStatus !== 'connected'} />
+        ) : isTaskOwner && selectedAction ? (
+          <DecisionConfirmSummary
+            action={selectedAction}
+            activityId={activityId}
+            workflowInstanceId={workflowInstanceId}
+            assigneeUserId={selectedAssigneeUserId}
+            reasonCode={reasonCode}
+            comments={comments}
+            acknowledged={voteAcknowledged}
+            onAcknowledgedChange={setVoteAcknowledged}
+          />
         ) : null}
       </ConfirmDialog>
     </div>

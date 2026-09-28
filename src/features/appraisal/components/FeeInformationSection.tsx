@@ -7,7 +7,7 @@ import NumberInput from '@shared/components/inputs/NumberInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { FeeItem } from '../types/appointmentAndFee';
 import { FEE_ITEM_TYPE_OPTIONS, VAT_PERCENTAGE } from '../types/appointmentAndFee';
-import type { AppraisalFeeItemDtoType } from '@shared/schemas/v1';
+import type { AppraisalFeeItem } from '../api/fee';
 import AddFeeModal from './AddFeeModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
@@ -18,7 +18,7 @@ export const FULL_BANK_ABSORB_FEE_TYPES = ['05', '06', '07'];
 const BANK_ABSORB_SHOW_TYPES = ['04', '99'];
 
 interface FeeInformationSectionProps {
-  items: AppraisalFeeItemDtoType[];
+  items: AppraisalFeeItem[];
   vatRate?: number;
   feePaymentType?: string | null;
   onUpdateFeePaymentType?: (value: string) => void;
@@ -89,8 +89,11 @@ export default function FeeInformationSection({
   const { t } = useTranslation('appraisal');
   const readOnly = usePageReadOnly();
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingFee, setEditingFee] = useState<{ index: number; data: FeeItem } | null>(null);
-  const [deletingFeeIndex, setDeletingFeeIndex] = useState<number | null>(null);
+  // By id, not list position: the list can reorder or shrink between opening a dialog and
+  // confirming it (a refetch after the previous add/edit/delete lands late), and a position would
+  // then point at another item.
+  const [editingFee, setEditingFee] = useState<{ id: string; data: FeeItem } | null>(null);
+  const [deletingFeeId, setDeletingFeeId] = useState<string | null>(null);
 
   const [ciFeeDraft, setCiFeeDraft] = useState<number | null>(constructionInspectionFeeAmount);
   useEffect(() => {
@@ -132,7 +135,7 @@ export default function FeeInformationSection({
 
   // A fee counts toward the billable total only if it doesn't need approval or has been approved.
   // Pending-approval and Rejected fees are excluded (mirrors the backend RecalculateFromItems).
-  const isBillable = (item: AppraisalFeeItemDtoType) =>
+  const isBillable = (item: AppraisalFeeItem) =>
     !item.requiresApproval || item.approvalStatus === 'Approved';
 
   // Calculate totals from billable API items only
@@ -184,7 +187,12 @@ export default function FeeInformationSection({
 
   const handleEditFee = async (data: Omit<FeeItem, 'id'>) => {
     if (!editingFee || !onUpdateFeeItem) return;
-    const apiItem = items[editingFee.index];
+    const apiItem = items.find(i => i.id === editingFee.id);
+    if (!apiItem) {
+      toast.error(t('fee.toasts.feeUpdateFailed'));
+      setEditingFee(null);
+      return;
+    }
     try {
       await onUpdateFeeItem(apiItem.appraisalFeeId, apiItem.id, {
         feeCode: data.type,
@@ -199,15 +207,20 @@ export default function FeeInformationSection({
   };
 
   const handleDeleteFee = async () => {
-    if (deletingFeeIndex === null || !onRemoveFeeItem) return;
-    const item = items[deletingFeeIndex];
-    const totalPaid = totalFeePaid;
+    if (deletingFeeId === null || !onRemoveFeeItem) return;
+    const item = items.find(i => i.id === deletingFeeId);
+    if (!item) {
+      toast.error(t('fee.toasts.feeDeleteFailed'));
+      setDeletingFeeId(null);
+      return;
+    }
+    const totalPaid = totalFeePaid ?? 0;
 
     if (totalPaid > 0) {
       // Billable total after removing this item (pending/rejected fees never count — mirrors the
       // displayed subtotal and the backend RecalculateFromItems).
       const newSubtotal = items
-        .filter((i, idx) => idx !== deletingFeeIndex && isBillable(i))
+        .filter(i => i.id !== deletingFeeId && isBillable(i))
         .reduce((sum, i) => sum + (i.feeAmount || 0), 0);
       const newTotal = newSubtotal * (1 + vatRate / 100);
       if (totalPaid > newTotal) {
@@ -220,7 +233,7 @@ export default function FeeInformationSection({
             duration: 10000,
           },
         );
-        setDeletingFeeIndex(null);
+        setDeletingFeeId(null);
         return;
       }
     }
@@ -231,14 +244,13 @@ export default function FeeInformationSection({
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('fee.toasts.feeDeleteFailed'));
     } finally {
-      setDeletingFeeIndex(null);
+      setDeletingFeeId(null);
     }
   };
 
-  const openEditModal = (index: number) => {
-    const apiItem = items[index];
+  const openEditModal = (apiItem: AppraisalFeeItem) => {
     setEditingFee({
-      index,
+      id: apiItem.id,
       data: {
         id: apiItem.id,
         type: apiItem.feeCode as FeeItem['type'],
@@ -249,29 +261,29 @@ export default function FeeInformationSection({
   };
 
   const getDeletingFeeDescription = () => {
-    if (deletingFeeIndex === null) return '';
-    const item = items[deletingFeeIndex];
+    if (deletingFeeId === null) return '';
+    const item = items.find(i => i.id === deletingFeeId);
     return `${item?.feeDescription || 'this fee'} (${formatCurrency(item?.feeAmount || 0)})`;
   };
 
   // Check if an item is editable (only type 01 is locked)
   // Base appraisal fee ('01') is never editable; neither is a fee whose approval is finalised
   // (Approved/Rejected) — its amount is locked once the bank has decided.
-  const isEditable = (item: AppraisalFeeItemDtoType) =>
+  const isEditable = (item: AppraisalFeeItem) =>
     item.feeCode !== '01' &&
     item.approvalStatus !== 'Approved' &&
     item.approvalStatus !== 'Rejected';
 
   // Delete is allowed for any non-base fee — including approved/rejected ones (the amount is
   // locked from editing, but the line can still be removed).
-  const isDeletable = (item: AppraisalFeeItemDtoType) => item.feeCode !== '01';
+  const isDeletable = (item: AppraisalFeeItem) => item.feeCode !== '01';
 
   // Get approval info directly from API item
   // New backend fields (approvalSubmittedAt) arrive via .passthrough()
-  const getApprovalInfo = (item: AppraisalFeeItemDtoType) => {
+  const getApprovalInfo = (item: AppraisalFeeItem) => {
     if (!item.requiresApproval) return null;
     const status = item.approvalStatus?.toLowerCase();
-    const submittedAt = (item as AppraisalFeeItemDtoType & { approvalSubmittedAt?: string | null }).approvalSubmittedAt;
+    const submittedAt = (item as AppraisalFeeItem & { approvalSubmittedAt?: string | null }).approvalSubmittedAt;
 
     if (status === 'approved') {
       return { label: item.approvalStatus!, colorClass: 'bg-success/10 text-success' };
@@ -355,10 +367,8 @@ export default function FeeInformationSection({
         )}
 
         {/* Fee Rows */}
-        {items.map((item, index) => {
+        {items.map(item => {
           // Rejected fees are hidden from the list (a history screen will surface them later).
-          // Return null rather than filtering so `index` still maps to the original items array
-          // used by edit/delete handlers.
           if (item.approvalStatus === 'Rejected') return null;
 
           const editable = isEditable(item);
@@ -396,7 +406,7 @@ export default function FeeInformationSection({
                       {editable && (
                         <button
                           type="button"
-                          onClick={() => openEditModal(index)}
+                          onClick={() => openEditModal(item)}
                           className="text-gray-400 hover:text-secondary transition-colors p-1"
                           aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                           title={t('fee.aria.editFeeTitle')}
@@ -407,7 +417,7 @@ export default function FeeInformationSection({
                       {deletable && (
                         <button
                           type="button"
-                          onClick={() => setDeletingFeeIndex(index)}
+                          onClick={() => setDeletingFeeId(item.id)}
                           className="text-gray-400 hover:text-danger transition-colors p-1"
                           aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                           title={t('fee.aria.deleteFeeTitle')}
@@ -467,7 +477,7 @@ export default function FeeInformationSection({
                     {!readOnly && !editLocked && editable && (
                       <button
                         type="button"
-                        onClick={() => openEditModal(index)}
+                        onClick={() => openEditModal(item)}
                         className="text-gray-400 hover:text-secondary transition-colors p-1"
                         aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                       >
@@ -477,7 +487,7 @@ export default function FeeInformationSection({
                     {!readOnly && !editLocked && deletable && (
                       <button
                         type="button"
-                        onClick={() => setDeletingFeeIndex(index)}
+                        onClick={() => setDeletingFeeId(item.id)}
                         className="text-gray-400 hover:text-danger transition-colors p-1"
                         aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                       >
@@ -569,8 +579,8 @@ export default function FeeInformationSection({
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        isOpen={deletingFeeIndex !== null}
-        onClose={() => setDeletingFeeIndex(null)}
+        isOpen={deletingFeeId !== null}
+        onClose={() => setDeletingFeeId(null)}
         onConfirm={handleDeleteFee}
         title={t('fee.deleteFeeDialog.title')}
         message={t('fee.deleteFeeDialog.message', { description: getDeletingFeeDescription() })}

@@ -143,120 +143,116 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
           anchor rather than the card: formLayout.css restyles any [data-field] that wraps a table. */}
       <div data-field={name} className="cas-repeater" />
       <div className="cas-labelled-table">
-        <div className="cas-table-label">
-          {t('surfaceTable.sectionLabel')}
-          {addButton}
-        </div>
-        <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="cas-table-label">{t('surfaceTable.sectionLabel')}</div>
+        <div className="cas-table-card cas-add-under min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {fields.length === 0 ? (
             <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
               <p className="text-sm text-gray-500">{t('surfaceTable.empty')}</p>
-              <div className="cas-hide-in-grid">{addButton}</div>
+              {addButton}
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-[0.875rem] leading-tight tabular-nums">
-                <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
-                  <tr>
-                    <th className={clsx(TH, 'w-[90px] text-right')}>
-                      {t('fieldLabels.building.fromFloorNumber')}
-                    </th>
-                    <th className={clsx(TH, 'w-[90px] text-right')}>
-                      {t('fieldLabels.building.toFloorNumber')}
-                    </th>
-                    <th className={clsx(TH, 'text-left')}>{t('fieldLabels.building.floorType')}</th>
-                    <th className={clsx(TH, 'text-left')}>
-                      {t('fieldLabels.building.floorStructureType')}
-                    </th>
-                    <th className={clsx(TH, 'text-left')}>
-                      {t('fieldLabels.building.floorSurfaceType')}
-                    </th>
-                    {!formReadOnly && <th className={clsx(TH, 'w-8')} />}
-                  </tr>
-                </thead>
-                <tbody className="text-[#1f2937]">
-                  {fields.map((field, index) => {
-                    const row = values[index] ?? ({} as SurfaceData);
-                    const p = `${name}.${index}`;
-                    const warning = warningFor(row, index);
-                    return (
-                      <Fragment key={field.id}>
-                        <tr>
-                          <td className={clsx(TD, 'text-right align-top')}>
-                            <NumCell
-                              name={`${p}.fromFloorNumber`}
-                              readOnly={formReadOnly}
-                              digits={0}
-                              maxInt={3}
-                              invalid={!!warning}
-                            />
-                          </td>
-                          <td className={clsx(TD, 'text-right align-top')}>
-                            <NumCell
-                              name={`${p}.toFloorNumber`}
-                              readOnly={formReadOnly}
-                              digits={0}
-                              maxInt={3}
-                              invalid={!!warning}
-                            />
-                          </td>
-                          <td className={clsx(TD, 'align-top')}>
-                            {paramCell(`${p}.floorType`, 'FloorType', row.floorType)}
-                          </td>
-                          <td className={clsx(TD, 'align-top')}>
-                            {paramCell(
-                              `${p}.floorStructureType`,
-                              'FloorStructure',
-                              row.floorStructureType,
-                              `${p}.floorStructureTypeOther`,
-                              row.floorStructureTypeOther,
-                            )}
-                          </td>
-                          <td className={clsx(TD, 'align-top')}>
-                            {paramCell(
-                              `${p}.floorSurfaceType`,
-                              'FloorSurface',
-                              row.floorSurfaceType,
-                              `${p}.floorSurfaceTypeOther`,
-                              row.floorSurfaceTypeOther,
-                            )}
-                          </td>
-                          {!formReadOnly && (
-                            <td className={clsx(TD, 'text-center align-top')}>
-                              <button
-                                type="button"
-                                onClick={() => remove(index)}
-                                aria-label={tc('actions.delete')}
-                                className="inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
-                              >
-                                <Icon style="solid" name="trash" className="size-3" />
-                              </button>
-                            </td>
-                          )}
-                        </tr>
-                        {warning && (
-                          <tr>
-                            <td
-                              colSpan={columnCount}
-                              className="px-2 pb-1 text-[0.75rem] text-amber-700"
-                            >
-                              {warning}
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                  {addButton && (
-                    <tr className="cas-hide-in-grid">
-                      <td colSpan={columnCount} className={TD}>
-                        {addButton}
-                      </td>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] border-collapse text-[0.875rem] leading-tight tabular-nums">
+                  <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
+                    <tr>
+                      <th className={clsx(TH, 'w-[90px] text-right')}>
+                        {t('fieldLabels.building.fromFloorNumber')}
+                      </th>
+                      <th className={clsx(TH, 'w-[90px] text-right')}>
+                        {t('fieldLabels.building.toFloorNumber')}
+                      </th>
+                      <th className={clsx(TH, 'text-left')}>
+                        {t('fieldLabels.building.floorType')}
+                      </th>
+                      <th className={clsx(TH, 'text-left')}>
+                        {t('fieldLabels.building.floorStructureType')}
+                      </th>
+                      <th className={clsx(TH, 'text-left')}>
+                        {t('fieldLabels.building.floorSurfaceType')}
+                      </th>
+                      {!formReadOnly && <th className={clsx(TH, 'w-8')} />}
                     </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="text-[#1f2937]">
+                    {fields.map((field, index) => {
+                      const row = values[index] ?? ({} as SurfaceData);
+                      const p = `${name}.${index}`;
+                      const warning = warningFor(row, index);
+                      return (
+                        <Fragment key={field.id}>
+                          <tr>
+                            <td className={clsx(TD, 'text-right align-top')}>
+                              <NumCell
+                                name={`${p}.fromFloorNumber`}
+                                readOnly={formReadOnly}
+                                digits={0}
+                                maxInt={3}
+                                invalid={!!warning}
+                              />
+                            </td>
+                            <td className={clsx(TD, 'text-right align-top')}>
+                              <NumCell
+                                name={`${p}.toFloorNumber`}
+                                readOnly={formReadOnly}
+                                digits={0}
+                                maxInt={3}
+                                invalid={!!warning}
+                              />
+                            </td>
+                            <td className={clsx(TD, 'align-top')}>
+                              {paramCell(`${p}.floorType`, 'FloorType', row.floorType)}
+                            </td>
+                            <td className={clsx(TD, 'align-top')}>
+                              {paramCell(
+                                `${p}.floorStructureType`,
+                                'FloorStructure',
+                                row.floorStructureType,
+                                `${p}.floorStructureTypeOther`,
+                                row.floorStructureTypeOther,
+                              )}
+                            </td>
+                            <td className={clsx(TD, 'align-top')}>
+                              {paramCell(
+                                `${p}.floorSurfaceType`,
+                                'FloorSurface',
+                                row.floorSurfaceType,
+                                `${p}.floorSurfaceTypeOther`,
+                                row.floorSurfaceTypeOther,
+                              )}
+                            </td>
+                            {!formReadOnly && (
+                              <td className={clsx(TD, 'text-center align-top')}>
+                                <button
+                                  type="button"
+                                  onClick={() => remove(index)}
+                                  aria-label={tc('actions.delete')}
+                                  className="inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                >
+                                  <Icon style="solid" name="trash" className="size-3" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                          {warning && (
+                            <tr>
+                              <td
+                                colSpan={columnCount}
+                                className="px-2 pb-1 text-[0.75rem] text-amber-700"
+                              >
+                                {warning}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {/* Under the table, not in a row of it: an action on the list, not one of its floors. */}
+              {addButton && <div className="pt-2">{addButton}</div>}
+            </>
           )}
         </div>
       </div>

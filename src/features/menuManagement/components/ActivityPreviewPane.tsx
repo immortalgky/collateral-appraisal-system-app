@@ -11,7 +11,8 @@ export interface PreviewItem {
   iconStyle: IconStyle;
   iconColor: string | null;
   access: OverrideAccess;
-  viewCode: string;
+  /** Whether the previewed role sees this item before overrides (see utils/menuVisibility). */
+  roleCanView: boolean;
   editCode: string | null;
 }
 
@@ -35,7 +36,7 @@ export function ActivityPreviewPane({ items, roleCodes, roleName }: ActivityPrev
       const eff = roleCodes
         ? effectiveWithRole(
             item.access,
-            roleCodes.has(item.viewCode),
+            item.roleCanView,
             !!item.editCode && roleCodes.has(item.editCode),
           )
         : effectiveIntent(item.access);

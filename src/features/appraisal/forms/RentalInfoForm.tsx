@@ -283,12 +283,12 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
           says "Rental Info". */}
         <div className="cas-section-grid cas-sheet grid grid-cols-5 gap-x-6 gap-y-4">
           {/* Schedule Header Fields */}
-          <SectionRow title="Schedule" icon="calendar-days">
+          <SectionRow title={t('forms.rentalInfo.groups.schedule')} icon="calendar-days">
             <FormFields fields={rentalScheduleField} namePrefix={namePrefix} />
           </SectionRow>
 
           {/* Growth Rate */}
-          <SectionRow title="Growth Rate" icon="chart-line">
+          <SectionRow title={t('forms.rentalInfo.groups.growthRate')} icon="chart-line">
             <div className="col-span-12 space-y-4">
               {/* The toggle and the fields it governs share one grid, so they read as consecutive
                 rows rather than two blocks with a gutter between them. data-field marks the
@@ -301,8 +301,8 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                     label={t('fieldLabels.rental.growthRateType')}
                     size="sm"
                     options={[
-                      { name: 'Period', label: 'Frequency' },
-                      { name: 'Property', label: 'Period' },
+                      { name: 'Period', label: t('forms.rentalInfo.growthFrequency') },
+                      { name: 'Property', label: t('forms.rentalInfo.growthPeriod') },
                     ]}
                   />
                 </div>
@@ -317,19 +317,19 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                       <thead>
                         <tr className="border-b border-gray-200 bg-gray-50">
                           <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                            At Year
+                            {t('forms.rentalInfo.table.atYear')}
                           </th>
                           <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                            To Year
+                            {t('forms.rentalInfo.table.toYear')}
                           </th>
                           <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                            Growth Rate
+                            {t('forms.rentalInfo.table.growthRate')}
                           </th>
                           <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                            Growth Amount
+                            {t('forms.rentalInfo.table.growthAmount')}
                           </th>
                           <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                            Total Amount (Baht)
+                            {t('forms.rentalInfo.table.totalAmount')}
                           </th>
                           <th className="px-3 py-2 w-10"></th>
                         </tr>
@@ -444,9 +444,10 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                           totalAmount: 0,
                         })
                       }
-                      className="mt-2 flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                      className="mt-2 mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
                     >
-                      <Icon style="solid" name="plus" className="size-3" /> Add Period
+                      <Icon style="solid" name="plus" className="size-3" />
+                      {t('forms.rentalInfo.addPeriod')}
                     </button>
                   </div>
                 )}
@@ -455,16 +456,16 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
           </SectionRow>
 
           {/* Up Front Entries */}
-          <SectionRow title="Up Front" icon="money-bill">
+          <SectionRow title={t('forms.rentalInfo.groups.upFront')} icon="money-bill">
             <div className="col-span-12">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-gray-200 bg-gray-50">
                     <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                      At Date
+                      {t('forms.rentalInfo.table.atDate')}
                     </th>
                     <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                      Up Front Amount
+                      {t('forms.rentalInfo.table.upFrontAmount')}
                     </th>
                     <th className="px-3 py-2 w-10"></th>
                   </tr>
@@ -515,7 +516,9 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                 {upFrontFields.length > 0 && (
                   <tfoot>
                     <tr className="border-t border-gray-200 bg-gray-50">
-                      <td className="px-3 py-2 text-sm font-semibold text-gray-700">Total</td>
+                      <td className="px-3 py-2 text-sm font-semibold text-gray-700">
+                        {t('forms.rentalInfo.table.total')}
+                      </td>
                       <td className="px-3 py-2 text-sm font-semibold text-right text-gray-700">
                         {fmtNumber(upFrontTotal)}
                       </td>
@@ -530,8 +533,10 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                   <div className="mt-2 flex items-center gap-2 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-700">
                     <Icon style="solid" name="triangle-exclamation" className="size-4 shrink-0" />
                     <span>
-                      Total up front entries ({fmtNumber(upFrontTotal)}) does not match the Up Front
-                      amount ({fmtNumber(upFrontTotalInput)})
+                      {t('forms.rentalInfo.upFrontMismatch', {
+                        entries: fmtNumber(upFrontTotal),
+                        total: fmtNumber(upFrontTotalInput),
+                      })}
                     </span>
                   </div>
                 )}
@@ -544,15 +549,16 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
               <button
                 type="button"
                 onClick={() => appendUpFront({ atYear: '', upFrontAmount: 0 })}
-                className="mt-2 flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                className="mt-2 mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
               >
-                <Icon style="solid" name="plus" className="size-3" /> Add
+                <Icon style="solid" name="plus" className="size-3" />
+                {t('forms.rentalInfo.addUpFront')}
               </button>
             </div>
           </SectionRow>
 
           {/* Rental Schedule */}
-          <SectionRow title="Rental Schedule" icon="table" isLast>
+          <SectionRow title={t('forms.rentalInfo.groups.rentalSchedule')} icon="table" isLast>
             <div className="col-span-12">
               <div className="flex justify-end gap-2 mb-3">
                 {scheduleFields.length > 0 && (
@@ -566,7 +572,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                       name={isScheduleEditing ? 'lock-open' : 'pen'}
                       className="size-3 mr-1.5 inline-block"
                     />
-                    {isScheduleEditing ? 'Editing' : 'Edit'}
+                    {isScheduleEditing ? t('forms.rentalInfo.editing') : t('forms.rentalInfo.edit')}
                   </button>
                 )}
                 <button
@@ -578,7 +584,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                   {isGenerating && (
                     <Icon style="solid" name="spinner" className="size-3.5 animate-spin" />
                   )}
-                  {isGenerating ? 'GENERATING...' : 'GENERATE'}
+                  {isGenerating ? t('forms.rentalInfo.generating') : t('forms.rentalInfo.generate')}
                 </button>
               </div>
               {isGenerating ? (
@@ -587,25 +593,25 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50">
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Year
+                          {t('forms.rentalInfo.table.year')}
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Contract Start
+                          {t('forms.rentalInfo.table.contractStart')}
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Contract End
+                          {t('forms.rentalInfo.table.contractEnd')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Up Front (Baht/Year)
+                          {t('forms.rentalInfo.table.upFrontPerYear')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Contract Rental Fee (Baht/Year)
+                          {t('forms.rentalInfo.table.rentalFeePerYear')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Total Amount (Baht)
+                          {t('forms.rentalInfo.table.totalAmount')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Growth Rate %
+                          {t('forms.rentalInfo.table.growthRatePct')}
                         </th>
                       </tr>
                     </thead>
@@ -628,25 +634,25 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50">
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Year
+                          {t('forms.rentalInfo.table.year')}
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Contract Start
+                          {t('forms.rentalInfo.table.contractStart')}
                         </th>
                         <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          Contract End
+                          {t('forms.rentalInfo.table.contractEnd')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Up Front (Baht/Year)
+                          {t('forms.rentalInfo.table.upFrontPerYear')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Contract Rental Fee (Baht/Year)
+                          {t('forms.rentalInfo.table.rentalFeePerYear')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Total Amount (Baht)
+                          {t('forms.rentalInfo.table.totalAmount')}
                         </th>
                         <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          Growth Rate %
+                          {t('forms.rentalInfo.table.growthRatePct')}
                         </th>
                       </tr>
                     </thead>
@@ -736,7 +742,7 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
               ) : (
                 <div className="text-center py-8 text-gray-400 text-sm">
                   <Icon style="solid" name="table" className="size-8 mx-auto mb-2 opacity-50" />
-                  <p>Click GENERATE to compute the rental schedule</p>
+                  <p>{t('forms.rentalInfo.scheduleEmpty')}</p>
                 </div>
               )}
             </div>
@@ -752,10 +758,10 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
               setDeleteGrowthConfirm({ isOpen: false, index: null });
             }
           }}
-          title="Delete Row"
-          message="Are you sure you want to delete this row? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
+          title={t('forms.rentalInfo.deleteRow.title')}
+          message={t('forms.rentalInfo.deleteRow.message')}
+          confirmText={t('forms.rentalInfo.deleteRow.confirm')}
+          cancelText={t('forms.rentalInfo.deleteRow.cancel')}
           variant="danger"
         />
 
@@ -768,10 +774,10 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
               setDeleteUpFrontConfirm({ isOpen: false, index: null });
             }
           }}
-          title="Delete Row"
-          message="Are you sure you want to delete this row? This action cannot be undone."
-          confirmText="Delete"
-          cancelText="Cancel"
+          title={t('forms.rentalInfo.deleteRow.title')}
+          message={t('forms.rentalInfo.deleteRow.message')}
+          confirmText={t('forms.rentalInfo.deleteRow.confirm')}
+          cancelText={t('forms.rentalInfo.deleteRow.cancel')}
           variant="danger"
         />
       </div>

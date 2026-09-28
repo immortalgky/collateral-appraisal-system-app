@@ -1,4 +1,4 @@
-import type { FieldErrors, SubmitErrorHandler } from 'react-hook-form';
+import type { FieldErrors } from 'react-hook-form';
 
 export function flattenRHFErrors(errs: FieldErrors, parent = ''): string[] {
   return Object.entries(errs).flatMap(([key, value]) => {

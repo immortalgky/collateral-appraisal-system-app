@@ -96,7 +96,8 @@
     "addressLine1": "ที่อยู่ บรรทัดที่ 1",
     "addressLine2": "ที่อยู่ บรรทัดที่ 2",
     "effectiveDate": "วันที่มีผล",
-    "expireDate": "วันที่หมดอายุ"
+    "expireDate": "วันที่หมดอายุ",
+    "hostCompanyCode": "รหัสบริษัทแม่ข่าย"
   },
   "placeholders": {
     "searchUsers": "ค้นหาผู้ใช้...",
@@ -139,7 +140,8 @@
     "enterCurrentPassword": "ป้อนรหัสผ่านปัจจุบัน",
     "companyNameLocal": "ชื่อบริษัทภาษาไทย",
     "addressLine1": "ที่อยู่ บรรทัดที่ 1",
-    "addressLine2": "ที่อยู่ บรรทัดที่ 2"
+    "addressLine2": "ที่อยู่ บรรทัดที่ 2",
+    "hostCompanyCode": "เช่น HC001"
   },
   "filters": {
     "all": "ทั้งหมด",

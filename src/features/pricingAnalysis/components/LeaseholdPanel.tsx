@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, useWatch, useController, useFieldArray } from 'react-hook-form';
+import { useForm, useWatch, useController, useFieldArray, type Resolver } from 'react-hook-form';
+import type { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
 import {
@@ -205,10 +206,12 @@ export function LeaseholdPanel({
     refetch: refetchLeaseAgreement,
   } = useGetLeaseAgreement(appraisalId ?? '', firstPropertyId);
 
+  // The schema's .default()s make its input type looser than its output. The form starts from
+  // leaseholdFormDefaults, so it always holds the output shape; type the resolver and schema that way.
   const leaseholdSchema = useLeaseholdFormSchema();
   const methods = useForm<LeaseholdFormType>({
     mode: 'onSubmit',
-    resolver: zodResolver(leaseholdSchema),
+    resolver: zodResolver(leaseholdSchema) as unknown as Resolver<LeaseholdFormType>,
     defaultValues: leaseholdFormDefaults,
   });
 
@@ -578,7 +581,10 @@ export function LeaseholdPanel({
   }
 
   return (
-    <FormProvider methods={methods} schema={leaseholdSchema}>
+    <FormProvider
+      methods={methods}
+      schema={leaseholdSchema as unknown as z.ZodType<LeaseholdFormType>}
+    >
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
           <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
