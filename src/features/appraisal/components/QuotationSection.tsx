@@ -48,7 +48,6 @@ import {
   formatQuotationSubjectAppraisalNumbersLabel,
   formatQuotationSubjectCustomerLabel,
 } from '@/features/quotation/utils/quotationEmailTemplate';
-import { useQuotationAttachmentUpload } from '@/features/quotation/hooks/useQuotationAttachmentUpload';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -612,7 +611,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
-  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
   const { mutate: setSharedDocuments, isPending: isSettingDocs } = useSetSharedDocuments(
     activeQuotation?.id ?? '',
   );
@@ -1450,7 +1448,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           showCc={true}
           showBcc={true}
           showAttachments={true}
-          onUploadAttachment={uploadQuotationAttachment}
+          attachmentPicker={{ quotationId: activeQuotation?.id ?? '' }}
           subjectLabel="Subject"
           isPending={isBusy}
           richTextContent

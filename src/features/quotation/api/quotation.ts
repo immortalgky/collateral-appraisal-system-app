@@ -15,8 +15,18 @@ import type {
   Quotation,
   StartQuotationFromTaskRequest,
 } from '@/features/appraisal/types/administration'; // ─── Query Key Factory ────────────────────────────────────────────────────────
+import type {
+  GenerateQuotationDocumentRequest,
+  LinkQuotationDocumentRequest,
+  QuotationDocumentDto,
+} from './types';
 
 // ─── Query Key Factory ────────────────────────────────────────────────────────
+
+export const quotationDocumentKeys = {
+  all: ['quotationDocuments'] as const,
+  byQuotation: (quotationId: string) => ['quotationDocuments', quotationId] as const,
+};
 
 export const quotationKeys = {
   all: ['quotations'] as const,
@@ -866,6 +876,88 @@ export const useSetSharedDocuments = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+    },
+  });
+};
+
+// ==================== Quotation Document Hooks ====================
+
+/** GET /quotations/{id}/documents */
+export const useGetQuotationDocuments = (quotationId: string | undefined) => {
+  return useQuery({
+    queryKey: quotationDocumentKeys.byQuotation(quotationId ?? ''),
+    queryFn: async (): Promise<QuotationDocumentDto[]> => {
+      const { data } = await axios.get(`/quotations/${quotationId}/documents`);
+      return data;
+    },
+    enabled: !!quotationId,
+  });
+};
+
+/** POST /quotations/{id}/documents/generate */
+export const useGenerateQuotationDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      quotationId,
+      body,
+    }: {
+      quotationId: string;
+      body: GenerateQuotationDocumentRequest;
+    }): Promise<QuotationDocumentDto> => {
+      const { data } = await axios.post(`/quotations/${quotationId}/documents/generate`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: quotationDocumentKeys.byQuotation(variables.quotationId),
+      });
+    },
+  });
+};
+
+/** POST /quotations/{id}/documents */
+export const useLinkQuotationDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      quotationId,
+      body,
+    }: {
+      quotationId: string;
+      body: LinkQuotationDocumentRequest;
+    }): Promise<QuotationDocumentDto> => {
+      const { data } = await axios.post(`/quotations/${quotationId}/documents`, body);
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: quotationDocumentKeys.byQuotation(variables.quotationId),
+      });
+    },
+  });
+};
+
+/** DELETE /quotations/{id}/documents/{documentId} */
+export const useRemoveQuotationDocument = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      quotationId,
+      documentId,
+    }: {
+      quotationId: string;
+      documentId: string;
+    }) => {
+      await axios.delete(`/quotations/${quotationId}/documents/${documentId}`);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: quotationDocumentKeys.byQuotation(variables.quotationId),
+      });
     },
   });
 };

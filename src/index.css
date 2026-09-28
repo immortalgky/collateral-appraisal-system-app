@@ -232,7 +232,8 @@ body {
    second, off-brand ring. Buttons, links, checkboxes and radios keep it: nothing else marks them. */
 input:not([type='checkbox']):not([type='radio']):not([type='range']):focus-visible,
 textarea:focus-visible,
-select:focus-visible {
+select:focus-visible,
+.ProseMirror:focus-visible {
   outline: none;
 }
 

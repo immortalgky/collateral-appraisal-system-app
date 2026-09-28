@@ -29,7 +29,6 @@ import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
-import { useQuotationAttachmentUpload } from '../hooks/useQuotationAttachmentUpload';
 import {
   buildQuotationEmailHtml,
   formatQuotationSubjectAppraisalNumbersLabel,
@@ -60,7 +59,6 @@ const QuotationSelectionPage = () => {
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
-  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
 
   // Breadcrumb: Home › Quotations › QTN-...
   useBreadcrumb(quotation?.quotationNumber, 'file-invoice-dollar');
@@ -1127,7 +1125,7 @@ const QuotationSelectionPage = () => {
         showCc={true}
         showBcc={true}
         showAttachments={true}
-        onUploadAttachment={uploadQuotationAttachment}
+        attachmentPicker={{ quotationId: id ?? '' }}
         subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
         richTextContent
