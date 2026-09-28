@@ -109,6 +109,8 @@ interface MenuTreeTableProps {
   validCodes?: Set<string>;
   /** When set, rows are evaluated against this role's permission codes (preview-as-role). */
   roleCodes?: Set<string> | null;
+  /** Ids the previewed role sees in the saved tree (utils/menuVisibility); null = no role chosen. */
+  visibleIds?: Set<string> | null;
   searchText?: string;
   collapsedIds: Set<string>;
   onToggleCollapse: (id: string) => void;
@@ -119,6 +121,8 @@ interface SortableRowProps {
   onDelete: (id: string, isSystem: boolean) => void;
   validCodes?: Set<string>;
   roleCodes?: Set<string> | null;
+  /** Ids the previewed role actually sees (null = no role chosen). */
+  visibleIds: Set<string> | null;
   hasChildren: boolean;
   isCollapsed: boolean;
   onToggleCollapse: (id: string) => void;
@@ -156,6 +160,7 @@ function SortableRow({
   onDelete,
   validCodes,
   roleCodes,
+  visibleIds,
   hasChildren,
   isCollapsed,
   onToggleCollapse,
@@ -183,7 +188,7 @@ function SortableRow({
   const missingLangs = REQUIRED_LANGS.filter(l => !item.labels?.[l]?.trim());
 
   // Preview-as-role: role permissions are the ceiling.
-  const roleCanView = roleCodes ? roleCodes.has(item.viewPermissionCode) : true;
+  const roleCanView = visibleIds ? visibleIds.has(item.id) : true;
   const roleCanEdit = roleCodes
     ? !!item.editPermissionCode && roleCodes.has(item.editPermissionCode)
     : true;
@@ -285,7 +290,12 @@ function SortableRow({
       </td>
       <td className="px-4 py-2">
         <PermChip
-          code={item.viewPermissionCode}
+          // A prefix gate shows as "PREFIX*" so a prefix-gated group (hides its subtree) is not
+          // mistaken for an ungated one ("—", shown whenever a child is).
+          code={
+            item.viewPermissionCode ??
+            (item.viewPermissionPrefix ? `${item.viewPermissionPrefix}*` : null)
+          }
           unknown={unknownView}
           label={t('tree.unknownPerm')}
         />
@@ -332,6 +342,7 @@ export function MenuTreeTable({
   onReordered,
   validCodes,
   roleCodes,
+  visibleIds = null,
   searchText = '',
   collapsedIds,
   onToggleCollapse,
@@ -551,6 +562,7 @@ export function MenuTreeTable({
                   onDelete={handleDelete}
                   validCodes={validCodes}
                   roleCodes={roleCodes}
+                  visibleIds={visibleIds}
                   hasChildren={parentIdsWithChildren.has(flatItem.id)}
                   isCollapsed={collapsedIds.has(flatItem.id)}
                   onToggleCollapse={onToggleCollapse}

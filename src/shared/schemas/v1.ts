@@ -1230,7 +1230,7 @@ const MethodDto = z
     landArea: z.number().nullish(),
     landValue: z.number().nullish(),
     buildingValue: z.number().nullish(),
-    appraisalPrice: z.number().nullish(),
+    indicatedValue: z.number().nullish(),
   })
   .passthrough();
 const ApproachDto = z
@@ -1272,7 +1272,7 @@ const GetPricingAnalysisResponse = z
 const SetManualCostBreakdownRequest = z
   .object({
     landRatePerSqWa: z.number().nullable().default(null),
-    appraisalPrice: z.number().nullable().default(null),
+    indicatedValue: z.number().nullable().default(null),
   })
   .partial()
   .passthrough();
@@ -1285,7 +1285,7 @@ const SetManualCostBreakdownResponse = z
     landValue: z.number().nullish(),
     buildingValue: z.number().nullish(),
     computedTotal: z.number(),
-    appraisalPrice: z.number().nullish(),
+    indicatedValue: z.number().nullish(),
     methodValue: z.number().nullish(),
     approachValue: z.number().nullish(),
     finalAppraisedValue: z.number().nullish(),
@@ -1314,10 +1314,9 @@ const UpdateMethodResponse = z
 const UpdateFinalValueRequest = z
   .object({
     finalValue: z.number(),
-    finalValueRounded: z.number(),
     includeLandArea: z.boolean().nullish().default(null),
     landArea: z.number().nullish().default(null),
-    appraisalPrice: z.number().nullish().default(null),
+    indicatedValue: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
     priceDifferentiate: z.number().nullish().default(null),
     hasBuildingValue: z.boolean().nullish().default(null),
@@ -1330,10 +1329,9 @@ const UpdateFinalValueResponse = z
   .object({
     finalValueId: z.string().uuid(),
     finalValue: z.number(),
-    finalValueRounded: z.number(),
     includeLandArea: z.boolean(),
     landArea: z.number().nullable(),
-    appraisalPrice: z.number().nullable(),
+    indicatedValue: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
     priceDifferentiate: z.number().nullable(),
     hasBuildingValue: z.boolean(),
@@ -1435,10 +1433,9 @@ const StartPricingAnalysisResponse = z
 const SetFinalValueRequest = z
   .object({
     finalValue: z.number(),
-    finalValueRounded: z.number(),
     includeLandArea: z.boolean().nullish().default(null),
     landArea: z.number().nullish().default(null),
-    appraisalPrice: z.number().nullish().default(null),
+    indicatedValue: z.number().nullish().default(null),
     appraisalPriceRounded: z.number().nullish().default(null),
     priceDifferentiate: z.number().nullish().default(null),
     hasBuildingValue: z.boolean().nullish().default(null),
@@ -1451,10 +1448,9 @@ const SetFinalValueResponse = z
   .object({
     finalValueId: z.string().uuid(),
     finalValue: z.number(),
-    finalValueRounded: z.number(),
     includeLandArea: z.boolean(),
     landArea: z.number().nullable(),
-    appraisalPrice: z.number().nullable(),
+    indicatedValue: z.number().nullable(),
     appraisalPriceRounded: z.number().nullable(),
     priceDifferentiate: z.number().nullable(),
     hasBuildingValue: z.boolean(),
@@ -1541,10 +1537,10 @@ const SaveComparativeAnalysisRequest = z
     calculations: z.array(CalculationInput),
     comparativeAnalysisTemplateId: z.string().uuid().nullish().default(null),
     appraisalValue: z.number().nullish().default(null),
-    finalValueAdjusted: z.number().nullish().default(null),
+    finalValueOverride: z.number().nullish().default(null),
     hasBuildingValue: z.boolean().nullish().default(null),
     buildingValue: z.number().nullish().default(null),
-    appraisalPrice: z.number().nullish().default(null),
+    indicatedValue: z.number().nullish().default(null),
     includeLandArea: z.boolean().nullish().default(null),
     landArea: z.number().nullish().default(null),
     landValue: z.number().nullish().default(null),
@@ -1690,7 +1686,7 @@ const GetComparativeFactorsResponse = z
     methodType: z.string(),
     comparativeAnalysisTemplateId: z.string().uuid().nullable(),
     methodValue: z.number().nullable(),
-    finalValueAdjusted: z.number().nullable().optional(),
+    finalValueOverride: z.number().nullable().optional(),
     linkedComparables: z.array(LinkedComparableDto),
     comparativeFactors: z.array(ComparativeFactorDto),
     factorScores: z.array(FactorScoreDto),
@@ -4813,7 +4809,7 @@ const GetCondoPMAPropertyResponse = z.object({
   externalSyncedAt: z.string().nullable(),
   condoName: z.string().nullable(),
   buildingNumber: z.string().nullable(),
-  builtOnTitleNumber: z.string().nullable(),
+  titleNumber: z.string().nullable(),
   condoRegistrationNumber: z.string().nullable(),
   roomNumber: z.string().nullable(),
   floorNumber: z.string().nullable(),
@@ -4842,7 +4838,7 @@ const CreateCondoPMAPropertyRequest = z.object({
   forcedSalePrice: z.number().nullable().optional(),
   buildingInsurancePrice: z.number().nullable().optional(),
   condoName: z.string().nullable().optional(),
-  builtOnTitleNumber: z.string().nullable().optional(),
+  titleNumber: z.string().nullable().optional(),
   condoRegistrationNumber: z.string().nullable().optional(),
   roomNumber: z.string().nullable().optional(),
   floorNumber: z.string().nullable().optional(),
@@ -4872,7 +4868,7 @@ const UpdateCondoPMAPropertyRequest = z.object({
   forcedSalePrice: z.number().nullable().optional(),
   buildingInsurancePrice: z.number().nullable().optional(),
   condoName: z.string().nullable().optional(),
-  builtOnTitleNumber: z.string().nullable().optional(),
+  titleNumber: z.string().nullable().optional(),
   condoRegistrationNumber: z.string().nullable().optional(),
   roomNumber: z.string().nullable().optional(),
   floorNumber: z.string().nullable().optional(),

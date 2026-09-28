@@ -43,6 +43,7 @@ import {
 } from '../schemas/form';
 import { isCondo } from '../types';
 import type { ProjectType } from '../types';
+import { mapSurfacesToApi } from '@/features/appraisal/utils/mappers';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -103,7 +104,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
           usableAreaMin: modelData.usableAreaMin ?? null,
           usableAreaMax: modelData.usableAreaMax ?? null,
           standardUsableArea: modelData.standardUsableArea ?? null,
-          fireInsuranceCondition: modelData.fireInsuranceCondition ?? null,
+          fireInsuranceCode: modelData.fireInsuranceCode ?? null,
           roomLayoutType: modelData.roomLayoutType ?? null,
           roomLayoutTypeOther: modelData.roomLayoutTypeOther ?? null,
           groundFloorMaterialType: modelData.groundFloorMaterialType ?? null,
@@ -129,7 +130,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         landAreaMin: modelData.landAreaMin ?? null,
         landAreaMax: modelData.landAreaMax ?? null,
         standardLandArea: modelData.standardLandArea ?? null,
-        fireInsuranceCondition: modelData.fireInsuranceCondition ?? null,
+        fireInsuranceCode: modelData.fireInsuranceCode ?? null,
         remark: modelData.remark ?? null,
         buildingType: modelData.buildingType ?? null,
         buildingTypeOther: modelData.buildingTypeOther ?? null,
@@ -165,7 +166,9 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
         exteriorWallTypeOther: modelData.exteriorWallTypeOther ?? null,
         fenceType: modelData.fenceType ?? [],
         fenceTypeOther: modelData.fenceTypeOther ?? null,
-        surfaces: modelData.surfaces ?? [],
+        surfaces: [...(modelData.surfaces ?? [])].sort(
+          (a, b) => (a.fromFloorNumber ?? 0) - (b.fromFloorNumber ?? 0),
+        ),
         depreciationDetails: modelData.depreciationDetails ?? [],
       } satisfies Partial<LbModelFormType>;
     }
@@ -220,9 +223,10 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const submitForm = (data: any, isDraft: boolean) => {
     if (!appraisalId) return;
+    const payload = data.surfaces ? { ...data, surfaces: mapSurfacesToApi(data.surfaces) } : data;
     if (isEditMode && modelId) {
       updateModel(
-        { appraisalId, modelId, data },
+        { appraisalId, modelId, data: payload },
         {
           onSuccess: () => {
             reset(getValues());
@@ -243,7 +247,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
       );
     } else {
       createModel(
-        { appraisalId, data },
+        { appraisalId, data: payload },
         {
           onSuccess: async response => {
             await photoSectionRef.current?.linkImagesToModel(response.id);

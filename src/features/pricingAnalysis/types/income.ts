@@ -125,7 +125,7 @@ export interface IncomeAnalysisDto {
   finalValueAdjust: number | null;
   isHighestBestUsed: boolean;
   highestBestUsed: HighestBestUsedDto;
-  appraisalPriceRounded: number | null;
+  indicatedValue: number | null;
   sections: IncomeSectionDto[];
   summary: IncomeSummaryDto;
 }
@@ -180,5 +180,5 @@ export interface SaveIncomeAnalysisRequest {
   finalValueAdjust?: number | null;
   isHighestBestUsed?: boolean;
   highestBestUsed?: HighestBestUsedInput | null;
-  appraisalPriceRounded?: number | null;
+  indicatedValue?: number | null;
 }

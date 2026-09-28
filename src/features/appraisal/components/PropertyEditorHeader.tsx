@@ -134,7 +134,7 @@ export const PropertyEditorHeader = ({
 
   return (
     <>
-      <div ref={cardRef} className="px-6">
+      <div ref={cardRef} className="px-3">
         {appraisalId ? (
           <PropertyPhotoSection
             ref={photoSectionRef}
@@ -199,7 +199,9 @@ const IdentityCard = ({ view, typeCode, item, groupName, isNew }: IdentityCardPr
         <>
           <PropertyTypeChip code={typeCode} />
           {groupName && item?.sequenceNumber != null && (
-            <span className="ml-auto text-xs text-gray-400">
+            // Beside the type chip, not pushed right: the right side now carries the cover photo
+            // and thumbnails, and the position drowned against them.
+            <span className="rounded-full border border-primary-200 bg-primary-50 px-2 text-[11px] font-semibold leading-4 text-primary-700">
               {t('editorHeader.position', { group: groupName, n: item.sequenceNumber })}
             </span>
           )}
@@ -228,7 +230,16 @@ const PropertyFacts = ({ item }: { item: PropertyItem }) => {
   } else {
     const titleCount = item.titles?.length ?? 0;
     if (titleCount > 1) facts.push(t('editorHeader.titleCount', { n: titleCount }));
-    else if (item.titleNo) facts.push(t('editorHeader.titleNo', { no: item.titleNo }));
+    else if (item.titleNo) {
+      // A condo's title number is free text and can be a long list; cut it to one short run and
+      // keep the whole of it in the tooltip.
+      const label = t('editorHeader.titleNo', { no: item.titleNo });
+      facts.push(
+        <span className="block max-w-[18rem] truncate" title={label}>
+          {label}
+        </span>,
+      );
+    }
     if (item.areaValue) {
       facts.push(
         <span className="tabular-nums">
@@ -250,7 +261,8 @@ const PropertyFacts = ({ item }: { item: PropertyItem }) => {
               ·
             </span>
           )}
-          {fact}
+          {/* min-w-0 + truncate: one over-long fact ellipsizes instead of pushing past the card. */}
+          <span className="min-w-0 max-w-full truncate">{fact}</span>
         </Fragment>
       ))}
     </>

@@ -116,6 +116,12 @@
 
     /* Animations */
     --animate-flash-highlight: flash-highlight 1.5s ease-out;
+    /* Pricing Analysis nav-chip "jump to column" flash — deliberately a separate token
+       from flash-highlight above, not a variant of it: flatter (background only, no
+       ring), stronger/darker colour, shorter (0.9s vs 1.5s). Matches the mock's own
+       `.flash`/`@keyframes flash` exactly rather than reusing flash-highlight's shape.
+       See ScrollableTableContainer.tsx's goToColumn. */
+    --animate-nav-flash: nav-flash 0.9s ease-out;
 }
 
 @keyframes flash-highlight {
@@ -127,6 +133,33 @@
         box-shadow: 0 0 0 0 transparent;
         background-color: transparent;
     }
+}
+
+/* No `to` keyframe on purpose — do not add one. With only a `from`, the implicit
+   to-keyframe interpolates back to the cell's *own* cascaded background (its
+   `bg-gray-50`/`bg-gray-100` class, per theme), so the flash fades opaque colour →
+   opaque colour and the cell is never even momentarily see-through. Every element
+   this lands on is a sticky <th> over a scrolling <tbody>: a `to { background-color:
+   transparent }` here animated the cell's own background away and let the body scroll
+   through it for 0.9s — the same bleed-through as `bg-gray-50/95` and `backdrop-blur`,
+   which were removed from these headers for exactly that reason. Spelling the end
+   colour out instead would hardcode one call site's background and break under
+   [data-theme=dark]; the implicit to-value reads whatever the class resolves to.
+   Requires the cell to carry an opaque background of its own — all four
+   `th[data-nav-col]` call sites do, and sticky headers here are required to. */
+@keyframes nav-flash {
+    from {
+        background-color: var(--nav-flash-color);
+    }
+}
+
+/* --color-primary-200 (#99F6E4) is the mock's --accent-line in light — same value, no
+   hex needed here. Kept as its own token (not a direct var(--color-primary-200) in the
+   keyframe above) purely so the dark override below can change just this flash's colour
+   without touching --color-primary-200 itself, which flash-highlight and other primary-
+   shade consumers still rely on staying put. */
+:root {
+    --nav-flash-color: var(--color-primary-200);
 }
 
 /* ========================================
@@ -144,4 +177,7 @@
 
     --color-secondary: #94a3b8;
     --color-secondary-content: #0f172a;
+
+    /* mock's --accent-line under dark (mock:50) */
+    --nav-flash-color: #17544e;
 }

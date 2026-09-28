@@ -8,6 +8,8 @@ interface InitializeCostMachineFormProps {
   machineryItems: MachineryItem[];
   savedItems?: MachineCostItemResponse[];
   remark?: string;
+  /** GetMachineCostItemsResponse.indicatedValue — the appraiser's saved FMV override. */
+  indicatedValue?: number | null;
   reset: UseFormReset<CostMachineFormType>;
 }
 
@@ -87,6 +89,7 @@ export function initializeCostMachineForm({
   machineryItems,
   savedItems,
   remark = '',
+  indicatedValue = null,
   reset,
 }: InitializeCostMachineFormProps): void {
   if (!reset) return;
@@ -94,5 +97,6 @@ export function initializeCostMachineForm({
   reset({
     remark,
     machineryCosts: buildMachineryFormDefaults(machineryItems, savedItems),
+    indicatedValue,
   });
 }

@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react';
 import type { ZodTypeAny } from 'zod';
+import type { FormField } from './types';
 
 /**
  * Context for providing Zod schema to form components.
@@ -40,3 +41,9 @@ export function useFormSchema<T extends ZodTypeAny = ZodTypeAny>(): T | null {
 export function useFormReadOnly(): boolean {
   return useContext(FormReadOnlyContext);
 }
+
+/**
+ * Relabels fields before FormFields renders them. A feature provides one to translate labels for a
+ * whole form at once (see the appraisal `FieldLabels`); without a provider the config labels show.
+ */
+export const FieldLabelContext = createContext<((field: FormField) => FormField) | null>(null);

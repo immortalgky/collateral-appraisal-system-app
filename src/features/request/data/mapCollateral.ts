@@ -2,12 +2,12 @@
 // Keys = PropertyType parameter codes (old letter codes, unchanged).
 // Values = CollateralType parameter codes (new 33-code numeric set).
 
-const LAND_CODES = ['01', '13', '14', '17', '19', '21', '26', '27'];
+export const LAND_CODES = ['01', '13', '14', '17', '19', '21', '26', '27'];
 const LB_CODES = ['02', '03', '04', '23', '24', '32'];
 const BUILDING_CODES = ['05', '06', '07', '15', '16', '18', '20', '22'];
 const CONDO_CODES = ['08', '33'];
 const LEASE_LS_CODES = ['09', '25', '30', '31'];
-const LEASE_LAND_CODE = ['29'];
+export const LEASE_LAND_CODE = ['29'];
 const LEASE_CONDO_CODE = ['28'];
 
 export const mapCollateral: Record<string, string[]> = {
@@ -31,4 +31,9 @@ export const mapCollateral: Record<string, string[]> = {
   VEH: ['10'],
   MAC: ['11'],
   VES: ['12'],
+};
+
+export const mapBuildingType: Record<string, string[]> = {
+  U: ['05', '06', '99'],
+  LSU: ['05', '06', '99'],
 };

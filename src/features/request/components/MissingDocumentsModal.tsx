@@ -4,12 +4,13 @@ import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import axios from '@shared/api/axiosInstance';
-import { useUploadDocument } from '../api/documents';
+import { useUploadDocument, MAX_UPLOAD_BYTES, sizeLabel } from '../api/documents';
 import { useGetDocumentChecklist } from '../api/requiredDocuments';
 import { getDocumentCategory } from '../types/document';
 import type { ApplicationDocumentChecklistItem } from '../types/document';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+// The system's ceiling — see CreateRequestFileInput. Large files go up in chunks.
+const MAX_FILE_SIZE = MAX_UPLOAD_BYTES;
 const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'];
 
 interface MissingDocumentsModalProps {
@@ -59,7 +60,9 @@ const MissingDocRow = ({
 
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
-      toast.error(t('toasts.missingDocSizeError', { name: file.name }));
+      toast.error(
+        t('toasts.missingDocSizeError', { name: file.name, limit: sizeLabel(MAX_FILE_SIZE) }),
+      );
       if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }

@@ -4,20 +4,9 @@ import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import clsx from 'clsx';
-import type { ParameterItem } from './ParameterGroupTable';
 import ParameterDetailModal from './ParameterDetailModal';
 import type { ParameterFormValues } from './ParameterDetailModal';
-
-interface ParameterPairRow {
-  code: string;
-  descriptionTh: string;
-  descriptionEn: string;
-  country: string;
-  seqNo: number;
-  isActive: boolean;
-  parIdTh: number;
-  parIdEn: number;
-}
+import { pairParameters, type ParameterItem, type ParameterPairRow } from '../utils/pairParameters';
 
 interface ParameterDetailTableProps {
   group: string;
@@ -34,38 +23,6 @@ interface ParameterDetailTableProps {
     isActive: boolean;
   }) => Promise<void>;
   onDelete?: (params: { parIdTh: number; parIdEn: number }) => Promise<void>;
-}
-
-function pairParameters(parameters: ParameterItem[]): ParameterPairRow[] {
-  const map = new Map<string, { th?: ParameterItem; en?: ParameterItem }>();
-
-  for (const p of parameters) {
-    const existing = map.get(p.code) ?? {};
-    if (p.language === 'TH') {
-      map.set(p.code, { ...existing, th: p });
-    } else if (p.language === 'EN') {
-      map.set(p.code, { ...existing, en: p });
-    } else {
-      if (!existing.th) map.set(p.code, { ...existing, th: p });
-    }
-  }
-
-  const rows: ParameterPairRow[] = [];
-  for (const [code, pair] of map.entries()) {
-    const base = pair.th ?? pair.en!;
-    rows.push({
-      code,
-      descriptionTh: pair.th?.description ?? '',
-      descriptionEn: pair.en?.description ?? '',
-      country: base.country,
-      seqNo: base.seqNo,
-      isActive: base.isActive,
-      parIdTh: pair.th?.parId ?? 0,
-      parIdEn: pair.en?.parId ?? 0,
-    });
-  }
-
-  return rows.sort((a, b) => a.seqNo - b.seqNo || a.code.localeCompare(b.code));
 }
 
 // =============================================================================

@@ -89,7 +89,7 @@ const GENERATED_FORM_SCHEMA = z.object({}).passthrough() as unknown as z.ZodType
 const block = (tone: SectionTone, titleKey: string, body: ReactNode) => (
   <div className="flex flex-col gap-6 min-w-0 max-w-full">
     <FormSectionHeader tone={tone} titleKey={titleKey} />
-    <Section className="flex flex-col gap-6 min-w-0 overflow-hidden">{body}</Section>
+    <Section className="cas-sheet flex flex-col gap-6 min-w-0 overflow-hidden">{body}</Section>
   </div>
 );
 

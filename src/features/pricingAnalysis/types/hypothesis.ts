@@ -559,8 +559,19 @@ export interface LandBuildingModelAggregate {
   totalBuildingAreaSqM: number;
   /** FSD field B10: Sum of price-before-depreciation across all rows (Baht). */
   totalPriceBeforeDepreciation: number;
-  /** FSD field B11: Sum of value-after-depreciation across all rows (Baht). */
+  /** Per-house construction cost: the mapped building's Final Cost Value (0 when none chosen). */
   totalBuildingValueAfterDepreciation: number;
+  /** The building property this model is mapped to. Null = none chosen. */
+  buildingPropertyId?: string | null;
+  /** The appraiser's typed-over model total (C21), echoed back. Null = computed. */
+  totalCost?: number | null;
+}
+
+/** L&B: house model → building property, plus an optional typed-over model total (C21). */
+export interface ModelBuildingMappingDto {
+  modelName: string;
+  appraisalPropertyId: string | null;
+  totalCost: number | null;
 }
 
 // ─── GET response ─────────────────────────────────────────────────────────────
@@ -580,6 +591,9 @@ export interface GetHypothesisAnalysisResult {
    * Null when the analysis is for a ProjectModel or the group has no titled land.
    */
   totalLandAreaFromTitles?: number | null;
+  /** Appraiser's typed-over figure for this method. Null = not overridden; the computed total applies. */
+  indicatedValue?: number | null;
+  modelBuildingMappings?: ModelBuildingMappingDto[] | null;
 }
 
 // ─── Save request / response ───────────────────────────────────────────────────
@@ -589,6 +603,10 @@ export interface SaveHypothesisAnalysisRequest {
   condominiumSummary?: CondominiumSummaryInput | null;
   costItems: HypothesisCostItemInput[];
   remark?: string | null;
+  /** Appraiser's typed-over figure. Null = not overridden; do not coerce to 0. */
+  indicatedValue?: number | null;
+  /** L&B only. Omit to leave the saved mappings untouched; [] clears them. */
+  modelBuildingMappings?: ModelBuildingMappingDto[] | null;
 }
 
 export interface SaveHypothesisAnalysisResult {
@@ -606,6 +624,10 @@ export interface PreviewHypothesisAnalysisRequest {
   landBuildingSummary?: LandBuildingSummaryInput | null;
   condominiumSummary?: CondominiumSummaryInput | null;
   costItems: HypothesisCostItemInput[];
+  /** L&B only. Omit to preview with the saved mappings. */
+  modelBuildingMappings?: ModelBuildingMappingDto[] | null;
+  /** Typed-over method value on screen — feeds the per-area figure only. */
+  indicatedValue?: number | null;
 }
 
 export interface PreviewHypothesisAnalysisResult {

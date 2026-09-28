@@ -49,10 +49,15 @@ const LandBuildingPMAPage = () => {
     handleSubmit,
     getValues,
     reset,
-    formState: { isDirty },
+    formState: { dirtyFields },
   } = methods;
 
-  const hasDirtyFields = Object.keys(isDirty).length > 0;
+  // The one dirty signal for this page — the leave guard, the unsaved badge and both Save buttons.
+  // Per-field, like the other property pages; this used to count the keys of isDirty, a boolean,
+  // so the guard never fired. Not isDirty for the badge either: react-hook-form can re-emit an
+  // isDirty computed before a derived write (the forced-sale proposal, Total Sq.Wa) and leave it
+  // stale, while dirtyFields is updated in place and always current.
+  const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
 
   const [saveAction, setSaveAction] = useState<'draft' | 'submit' | null>(null);
@@ -69,13 +74,13 @@ const LandBuildingPMAPage = () => {
   const isPending = isCreating || isUpdating || isSavingDraft;
 
   const { data: propertyData, isLoading } = useGetLandAndBuildingPMAPropertyById(
-    appraisalId,
+    appraisalId ?? '',
     propertyId,
   );
 
   const onSubmit: SubmitHandler<createLandAndBuildingPMAFormType> = data => {
     setSaveAction('submit');
-    const payload = mapLandAndBuildingPMAFormToPayload(data);
+    const payload = mapLandAndBuildingPMAFormToPayload(data, propertyData?.titles ?? []);
     if (isEditMode && propertyId) {
       updateLandPMAProperties(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
@@ -113,7 +118,7 @@ const LandBuildingPMAPage = () => {
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
-    const payload = mapLandAndBuildingPMAFormToPayload(data);
+    const payload = mapLandAndBuildingPMAFormToPayload(data, propertyData?.titles ?? []);
     if (isEditMode && propertyId) {
       saveLandPMAPropertiesDraft(
         { data: payload, appraisalId: appraisalId!, propertyId: propertyId },
@@ -208,7 +213,7 @@ const LandBuildingPMAPage = () => {
                 {!isReadOnly && (
                   <>
                     <div className="h-6 w-px bg-gray-200" />
-                    {isDirty && (
+                    {hasDirtyFields && (
                       <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
                         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                         Unsaved changes
@@ -224,7 +229,7 @@ const LandBuildingPMAPage = () => {
                     type="button"
                     onClick={handleSaveDraft}
                     isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending || !isDirty}
+                    disabled={isPending || !hasDirtyFields}
                   >
                     <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
@@ -232,7 +237,10 @@ const LandBuildingPMAPage = () => {
                   <Button
                     type="submit"
                     isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending || (!isDirty && propertyData?.externalSyncStatus !== 'Failed')}
+                    disabled={
+                      isPending ||
+                      (!hasDirtyFields && propertyData?.externalSyncStatus !== 'Failed')
+                    }
                   >
                     <Icon name="check" style="solid" className="size-4 mr-2" />
                     Save

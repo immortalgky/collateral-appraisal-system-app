@@ -1,11 +1,16 @@
-import type { Blocker } from 'react-router-dom';
+import { useBlocker } from 'react-router-dom';
 import ConfirmDialog from './ConfirmDialog';
+import type { UnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesWarning';
 
 interface UnsavedChangesDialogProps {
-  blocker: Blocker;
+  blocker: UnsavedChangesGuard;
 }
 
-const UnsavedChangesDialog = ({ blocker }: UnsavedChangesDialogProps) => {
+// The blocker lives in the same component as its dialog, so a blocked navigation always has a
+// visible prompt to resolve it.
+const Guard = ({ skipRef }: { skipRef: UnsavedChangesGuard['skipRef'] }) => {
+  const blocker = useBlocker(() => !skipRef.current);
+
   if (blocker.state !== 'blocked') return null;
 
   return (
@@ -21,5 +26,9 @@ const UnsavedChangesDialog = ({ blocker }: UnsavedChangesDialogProps) => {
     />
   );
 };
+
+// Mounted only while dirty: a clean form registers no router blocker at all.
+const UnsavedChangesDialog = ({ blocker }: UnsavedChangesDialogProps) =>
+  blocker.when ? <Guard skipRef={blocker.skipRef} /> : null;
 
 export default UnsavedChangesDialog;

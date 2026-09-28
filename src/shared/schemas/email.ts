@@ -34,7 +34,7 @@ export const emailFormSchema = z
       .refine(v => !v || validAddresses(v), { message: 'BCC must contain valid email address(es)' })
       .optional(),
     subject: z.string().min(1, 'Required').max(500),
-    content: z.string().max(4000).optional(),
+    content: z.string().max(8000).optional(),
     attachments: z.array(z.string().max(200)).max(10).optional(),
   })
   .refine(

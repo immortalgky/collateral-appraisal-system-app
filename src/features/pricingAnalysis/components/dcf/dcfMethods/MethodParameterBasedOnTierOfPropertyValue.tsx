@@ -1,5 +1,6 @@
 import type { MethodParameterBasedOnTierOfPropertyValueWrapper } from '@/features/pricingAnalysis/types/dcf';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 
 interface MethodParameterBasedOnTierOfPrpertyValueProps {
   name: string;
@@ -15,13 +16,14 @@ export function MethodParameterBasedOnTierOfPropertyValue({
   totalNumberOfYears,
   baseStyles,
 }: MethodParameterBasedOnTierOfPrpertyValueProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Total</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.common.total')}</span>
             </td>
             {Array.from({ length: totalNumberOfYears }, (_, idx) => {
               return (

@@ -172,7 +172,8 @@ export const ValuationDocumentChecklist = () => {
 
   const handleView = (file: AppraisalDocumentFile) => {
     if (!file.documentId) return;
-    viewDocument(file.documentId);
+    // The size decides whether this opens inline or downloads — see MAX_INLINE_VIEW_BYTES.
+    viewDocument(file.documentId, file.fileSizeBytes, file.fileName);
   };
 
   const handleRemoveClick = (file: AppraisalDocumentFile) => {

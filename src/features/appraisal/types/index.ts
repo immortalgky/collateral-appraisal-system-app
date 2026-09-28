@@ -84,6 +84,27 @@ export interface PropertyItem {
   buildingTypeOther?: string;
   /** Building only: storeys. Can be fractional — a mezzanine is recorded as half a floor. */
   numberOfFloors?: number;
+  /** Building only: age in years as entered. */
+  buildingAge?: number;
+  /** Building only: still under construction. */
+  isUnderConstruction?: boolean;
+  /** Building only, while under construction: overall progress 0-100, if an inspection exists. */
+  constructionProgressPct?: number;
+  /** Land with a building (LB / LS): the building's floor area, m². */
+  buildingArea?: number;
+  /** Condo only. */
+  condoName?: string;
+  floorNumber?: string;
+  roomNumber?: string;
+  roomLayoutType?: string;
+  roomLayoutTypeOther?: string;
+  /** Machinery only. */
+  yearOfManufacture?: number;
+  machineAge?: number;
+  /** Lease types only: remaining term in years as entered, the contract's end date, and its rent. */
+  remainingLeaseYears?: number;
+  leaseEndDate?: string;
+  leaseRentFee?: number;
 }
 
 export interface PropertyGroup {

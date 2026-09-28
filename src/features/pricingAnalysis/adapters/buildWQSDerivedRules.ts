@@ -11,7 +11,6 @@ import {
   toFiniteNumber,
   toNumberArray,
 } from '@features/pricingAnalysis/domain/calculateWQS';
-import { forecast } from '../domain/forecast';
 import { INTERCEPT, RSQ, SLOPE, STEYX } from '../domain/regression';
 import { wqsFieldPath } from './wqsFieldPath';
 import type { DerivedFieldRule } from '@features/pricingAnalysis/adapters/useDerivedFieldArray.tsx';
@@ -34,7 +33,7 @@ export function buildWQSScoringSurveyDerivedRules(args: {
   } = wqsFieldPath;
 
   const rules: DerivedFieldRule[] = scoringRows
-    .map((_, rowIndex) => {
+    .map((_, rowIndex): DerivedFieldRule[] => {
       return [
         {
           targetPath: scoringFactorWeightedIntensityPath({ row: rowIndex }),
@@ -48,7 +47,7 @@ export function buildWQSScoringSurveyDerivedRules(args: {
             return calcWeightedScore(weight, intensity);
           },
         },
-        ...surveys.map((_, columnIndex) => {
+        ...surveys.map((_, columnIndex): DerivedFieldRule => {
           return {
             targetPath: scoringFactorSurveyWeightedSurveyScorePath({
               row: rowIndex,
@@ -104,7 +103,7 @@ export function buildWQSCalculationDerivedRules(args: {
   } = wqsFieldPath;
 
   const rules: DerivedFieldRule[] = surveys
-    .map((survey: MarketComparableDetailType, columnIndex: number) => {
+    .map((survey: MarketComparableDetailType, columnIndex: number): DerivedFieldRule[] => {
       return [
         {
           targetPath: calculationAdjustedValuePath({ column: columnIndex }),
@@ -218,7 +217,7 @@ export function buildWQSTotalScoreRules(args: {
       },
     },
     ...surveys
-      .map((_, columnIndex: number) => {
+      .map((_, columnIndex: number): DerivedFieldRule[] => {
         return [
           {
             targetPath: totalSurveyScorePath({ column: columnIndex }),
@@ -332,13 +331,10 @@ export function buildWQSFinalValueDerivedRules(args: {
             return getValues(calculationAdjustedValuePath({ column: columnIndex })) ?? 0;
           }),
         );
-        const forecastResult =
-          forecast({
-            x: collateralScore,
-            known_ys: surveyCalculate,
-            known_xs: surveyScores,
-          }) ?? 0;
-        return round2(toFiniteNumber(forecastResult));
+        const slope = SLOPE(surveyCalculate, surveyScores) ?? 0;
+        const intercept = INTERCEPT(surveyCalculate, surveyScores) ?? 0;
+        const finalValue = intercept + slope * collateralScore;
+        return round2(toFiniteNumber(finalValue));
       },
     },
     {

@@ -73,7 +73,11 @@ const ParameterDisplay = ({
   if (!code) return <span className={className}>{fallback}</span>;
 
   if (codes) {
-    return <span className={className}>{multiLabel}</span>;
+    // `multiLabel` is empty whenever the codes array resolves to nothing — most often a
+    // stored empty JSON array ('[]'), which parses to [] and joins to ''. That is still
+    // "no value", so it gets `fallback` like a null code does; without this it rendered
+    // a silently blank cell next to genuinely-null cells showing the fallback.
+    return <span className={className}>{multiLabel || fallback}</span>;
   }
 
   const label = format === 'code-description' ? `${code} - ${singleDescription}` : singleDescription;

@@ -2,17 +2,7 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '@shared/components/Icon';
 import clsx from 'clsx';
-
-export interface ParameterItem {
-  parId: number;
-  group: string;
-  country: string;
-  language: string;
-  code: string;
-  description: string;
-  isActive: boolean;
-  seqNo: number;
-}
+import { pairParameters, type ParameterItem } from '../utils/pairParameters';
 
 interface ParameterGroupRow {
   group: string;
@@ -31,20 +21,25 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
   const [search, setSearch] = useState('');
 
   const groups = useMemo<ParameterGroupRow[]>(() => {
-    const map = new Map<string, { total: number; active: number }>();
+    const map = new Map<string, ParameterItem[]>();
     for (const p of parameters) {
-      const existing = map.get(p.group) ?? { total: 0, active: 0 };
-      map.set(p.group, {
-        total: existing.total + 1,
-        active: existing.active + (p.isActive ? 1 : 0),
-      });
+      if (!p.group) continue;
+      const existing = map.get(p.group);
+      if (existing) {
+        existing.push(p);
+      } else {
+        map.set(p.group, [p]);
+      }
     }
     return Array.from(map.entries())
-      .map(([group, counts]) => ({
-        group,
-        totalCount: counts.total,
-        activeCount: counts.active,
-      }))
+      .map(([group, groupParameters]) => {
+        const pairs = pairParameters(groupParameters);
+        return {
+          group,
+          totalCount: pairs.length,
+          activeCount: pairs.filter(p => p.isActive).length,
+        };
+      })
       .sort((a, b) => a.group.localeCompare(b.group));
   }, [parameters]);
 

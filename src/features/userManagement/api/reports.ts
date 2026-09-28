@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { downloadBlob } from '@shared/api/blobTransfer';
 import type { UserAccessMatrixResult, GetUserAccessMatrixParams } from '../types';
 
 const QUERY_KEY = 'userAccessMatrix';
@@ -31,7 +32,9 @@ export const useGetUserAccessMatrix = (params: GetUserAccessMatrixParams = {}) =
  * The backend streams the file; we receive it as a blob and trigger a browser download.
  */
 export const exportUserAccessReport = async (params: GetUserAccessMatrixParams = {}) => {
-  const response = await axios.get('/auth/reports/user-access/export', {
+  // The server builds the CSV before it sends anything, which the instance-wide 10s cap has no
+  // allowance for. See blobTransfer.
+  const response = await downloadBlob('/auth/reports/user-access/export', {
     params: {
       scope: params.scope || undefined,
       companyId: params.companyId || undefined,
@@ -41,7 +44,6 @@ export const exportUserAccessReport = async (params: GetUserAccessMatrixParams =
       isActive: params.isActive,
       search: params.search || undefined,
     },
-    responseType: 'blob',
   });
 
   const url = URL.createObjectURL(new Blob([response.data as BlobPart]));

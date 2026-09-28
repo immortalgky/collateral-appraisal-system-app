@@ -633,7 +633,7 @@ export const encroachedField: FormField[] = [
     label: 'Encroached Area (Sq.Wa)',
     name: 'encroachmentArea',
     wrapperClassName: 'col-span-9',
-    disableWhen: { field: 'isEncroached', is: false },
+    disabled: true,
     maxIntegerDigits: 8,
   },
 
@@ -643,7 +643,8 @@ export const encroachedField: FormField[] = [
     name: 'encroachmentRemark',
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'isEncroached', is: true },
-    requiredWhen: { field: 'isEncroached', is: true },
+    // Same reason as the appraisal form: the deduction rows carry the detail now, so requiring a
+    // remark here only ever produced an unsatisfiable error.
     maxLength: 4000,
     showCharCount: true,
   },
@@ -653,13 +654,15 @@ export const electricityField: FormField[] = [
   {
     type: 'checkbox',
     name: 'hasElectricity',
-    label: 'Has Electricity',
+    // Ticked = the plot lies far from the power line (the distance opens only then). The field name
+    // says "has"; the meaning, and so the label, is "far from".
+    label: 'Far from Electricity',
     wrapperClassName: 'col-span-3',
   },
 
   {
     type: 'number-input',
-    label: 'Distance',
+    label: 'Distance from Electricity (m)',
     name: 'electricityDistance',
     wrapperClassName: 'col-span-9',
     disableWhen: { field: 'hasElectricity', is: false },
@@ -720,7 +723,9 @@ export const LimitationOther: FormField[] = [...electricityField, ...landBoundar
 export const evictionField: FormField[] = [
   {
     type: 'checkbox-group',
-    label: 'Eviction',
+    // การรอนสิทธิ์: part of the plot is given over to a state utility (a high-voltage line, an
+    // underground railway). The field keeps its old name; "Eviction" was a mistranslation.
+    label: 'Right Restriction',
     name: 'evictionType',
     orientation: 'horizontal',
     group: 'Eviction',
@@ -2217,13 +2222,13 @@ export const condoGovernmentPriceFields: FormField[] = [
 
 // Condo building insurance — unlike Government Price, this is NOT computed client-side.
 // buildingInsurancePrice (rate × usableArea) is derived and locked server-side from the
-// selected fireInsuranceCondition; the client only posts fireInsuranceCondition and
+// selected fireInsuranceCode; the client only posts fireInsuranceCode and
 // displays whatever buildingInsurancePrice the GET response returns. See CondoDetailForm.
 export const condoBuildingInsuranceFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fire Insurance Condition',
-    name: 'fireInsuranceCondition',
+    name: 'fireInsuranceCode',
     // Populated at render time from useFireInsuranceOptions('Condo') — see CondoDetailForm.
     options: [],
     wrapperClassName: 'col-span-6',

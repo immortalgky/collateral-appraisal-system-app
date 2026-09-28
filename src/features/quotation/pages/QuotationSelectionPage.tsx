@@ -27,7 +27,14 @@ import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
+import { useQuotationAttachmentUpload } from '../hooks/useQuotationAttachmentUpload';
+import {
+  buildQuotationEmailHtml,
+  formatQuotationSubjectAppraisalNumbersLabel,
+  formatQuotationSubjectCustomerLabel,
+} from '../utils/quotationEmailTemplate';
 import { useAuthStore } from '@/features/auth/store';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetailPage';
@@ -53,6 +60,7 @@ const QuotationSelectionPage = () => {
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
+  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
 
   // Breadcrumb: Home › Quotations › QTN-...
   useBreadcrumb(quotation?.quotationNumber, 'file-invoice-dollar');
@@ -89,7 +97,14 @@ const QuotationSelectionPage = () => {
   const [isDraftCancelOpen, setIsDraftCancelOpen] = useState(false);
   const [viewingCqId, setViewingCqId] = useState<string | null>(null);
 
-  const shortlisted = (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted);
+  const shortlisted = sortCompanyResponses(
+    (quotation?.companyQuotations ?? []).filter(q => q.isShortlisted),
+    cq => ({
+      status: cq.status,
+      totalNetAmount: cq.totalQuotedPrice,
+      companyName: cq.companyName,
+    }),
+  );
   const tentativeWinner = quotation?.tentativeWinnerQuotationId
     ? shortlisted.find(q => q.id === quotation.tentativeWinnerQuotationId)
     : null;
@@ -162,6 +177,8 @@ const QuotationSelectionPage = () => {
 
   // PropertyType code → locale description (e.g. "LB" → "ที่ดินพร้อมสิ่งปลูกสร้าง").
   const propertyTypeParams = useParametersByGroup('PropertyType');
+  const buildingTypeParams = useParametersByGroup('BuildingType', 'th', 'th');
+  const machineStatusParams = useParametersByGroup('MachineStatus', 'th', 'th');
 
   const defaultEmailValues = useMemo(() => {
     const appraisals = quotation?.appraisals ?? [];
@@ -170,14 +187,20 @@ const QuotationSelectionPage = () => {
       if (!code) return '';
       return propertyTypeParams.find(p => p.code === code)?.description ?? code;
     };
+    const buildingTypeDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return buildingTypeParams.find(p => p.code === code)?.description ?? code;
+    };
+    const machineStatusDescription = (code: string | null | undefined) => {
+      if (!code) return '';
+      return machineStatusParams.find(p => p.code === code)?.description ?? code;
+    };
 
     const distinctCustomerNames = [
-      ...new Set(appraisals.map(a => a.customerName).filter(Boolean)),
-    ].join(', ');
-    const appraisalNumbers = appraisals
-      .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean)
-      .join(',');
+      ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
+    ];
+
+    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean);
 
     const targetTime = dueDate
       ? dueDate.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })
@@ -190,13 +213,6 @@ const QuotationSelectionPage = () => {
         })
       : '';
 
-    const appraisalList = appraisals
-      .map(
-        (a, i) =>
-          `    ${i + 1}.  ${a.appraisalNumber ?? ''}     ${a.customerName ?? ''}   ${propertyTypeDescription(a.propertyType)}`,
-      )
-      .join('\n');
-
     const adminFullName = `${currentUser?.firstName ?? ''} ${currentUser?.lastName ?? ''}`.trim();
 
     const bccEmails = (quotation?.invitedCompanies ?? [])
@@ -208,10 +224,18 @@ const QuotationSelectionPage = () => {
       from: currentUser?.email ?? '',
       cc: 'appraisal.team@lhbank.com',
       bcc: bccEmails,
-      subject: `Quotation ลูกค้าราย ${distinctCustomerNames} (${appraisalNumbers})`,
-      content: `เรียน เจ้าหน้าที่ที่เกี่ยวข้อง\n\n        รบกวนแจ้งกลับเสนอราคาก่อน ${targetTime} น. วันที่ ${targetDate}\nโดยมีรายการเล่มประเมินดังนี้\n\n        รหัสงาน(ธนาคาร)       ชื่อลูกค้า       ประเภทหลักประกัน\n${appraisalList}\n\nจึงเรียนมาเพื่อโปรดทราบ\n${adminFullName}`,
+      subject: `Quotation ${formatQuotationSubjectCustomerLabel(distinctCustomerNames)} (${formatQuotationSubjectAppraisalNumbersLabel(appraisalNumbers)})`,
+      content: buildQuotationEmailHtml({
+        appraisals,
+        targetTime,
+        targetDate,
+        adminFullName,
+        propertyTypeDescription,
+        buildingTypeDescription,
+        machineStatusDescription,
+      }),
     };
-  }, [quotation, currentUser, propertyTypeParams]);
+  }, [quotation, currentUser, propertyTypeParams, buildingTypeParams, machineStatusParams]);
 
   if (isLoading) {
     return (
@@ -292,6 +316,7 @@ const QuotationSelectionPage = () => {
     bcc?: string;
     subject: string;
     content?: string;
+    attachments?: string[];
   }) => {
     sendQuotation(emailData, {
       onSuccess: () => {
@@ -486,10 +511,19 @@ const QuotationSelectionPage = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {(quotation.invitedCompanies ?? []).map(inv => {
-                    const cq = (quotation.companyQuotations ?? []).find(
-                      q => q.companyId === inv.companyId,
-                    );
+                  {sortCompanyResponses(
+                    (quotation.invitedCompanies ?? []).map(inv => ({
+                      inv,
+                      cq: (quotation.companyQuotations ?? []).find(
+                        q => q.companyId === inv.companyId,
+                      ),
+                    })),
+                    ({ inv, cq }) => ({
+                      status: cq?.status ?? 'Pending',
+                      totalNetAmount: cq?.totalQuotedPrice,
+                      companyName: inv.companyName,
+                    }),
+                  ).map(({ inv, cq }) => {
                     const items = cq?.items ?? [];
                     const hasItems = items.length > 0;
                     const totalFeeAmount = items.reduce(
@@ -500,10 +534,15 @@ const QuotationSelectionPage = () => {
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     return (
                       <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
                         <td className="px-4 py-3">
@@ -528,7 +567,11 @@ const QuotationSelectionPage = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -587,7 +630,10 @@ const QuotationSelectionPage = () => {
                 __html: t('shared.quotationAwarded', {
                   company: `<strong class="text-gray-900">${
                     finalizedWinner
-                      ? localizeCompanyName(finalizedWinner.companyName, finalizedWinner.companyNameLocal)
+                      ? localizeCompanyName(
+                          finalizedWinner.companyName,
+                          finalizedWinner.companyNameLocal,
+                        )
                       : '—'
                   }</strong>`,
                 }),
@@ -686,11 +732,14 @@ const QuotationSelectionPage = () => {
                   {t('negotiation.rmRequestsNegotiation')}{' '}
                   <strong>
                     {tentativeWinner &&
-                      localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+                      localizeCompanyName(
+                        tentativeWinner.companyName,
+                        tentativeWinner.companyNameLocal,
+                      )}
                   </strong>
                 </p>
                 {quotation.rmNegotiationNote && (
-                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
+                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xl text-amber-800 italic">
                     {quotation.rmNegotiationNote}
                   </blockquote>
                 )}
@@ -751,10 +800,15 @@ const QuotationSelectionPage = () => {
                       (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                       0,
                     );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const validEstimatedDays = items
+                      .map(item => item.estimatedDays)
+                      .filter((d): d is number => typeof d === 'number' && d > 0);
+                    const minEstimateManday = validEstimatedDays.length
+                      ? Math.min(...validEstimatedDays)
+                      : undefined;
+                    const maxEstimateManday = validEstimatedDays.length
+                      ? Math.max(...validEstimatedDays)
+                      : undefined;
                     const submittedAt = (() => {
                       if (!cq.submittedAt) return '—';
                       const d = new Date(cq.submittedAt);
@@ -797,7 +851,11 @@ const QuotationSelectionPage = () => {
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className="text-sm text-gray-600">
-                            {hasItems ? totalEstimateManday : '—'}
+                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                              ? minEstimateManday === maxEstimateManday
+                                ? minEstimateManday
+                                : `${minEstimateManday} - ${maxEstimateManday}`
+                              : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
@@ -865,7 +923,10 @@ const QuotationSelectionPage = () => {
                 __html: t('selectWinner.body', {
                   company: `<strong>${
                     pickedCompany
-                      ? localizeCompanyName(pickedCompany.companyName, pickedCompany.companyNameLocal)
+                      ? localizeCompanyName(
+                          pickedCompany.companyName,
+                          pickedCompany.companyNameLocal,
+                        )
                       : ''
                   }</strong>`,
                 }),
@@ -1008,7 +1069,10 @@ const QuotationSelectionPage = () => {
           }}
           quotationId={quotation.id}
           companyQuotationId={finalizeTarget.id}
-          companyName={localizeCompanyName(finalizeTarget.companyName, finalizeTarget.companyNameLocal)}
+          companyName={localizeCompanyName(
+            finalizeTarget.companyName,
+            finalizeTarget.companyNameLocal,
+          )}
           winnerItems={finalizeTarget.items ?? []}
           appraisals={quotation.appraisals ?? []}
         />
@@ -1021,7 +1085,10 @@ const QuotationSelectionPage = () => {
           onClose={() => setIsNegotiationOpen(false)}
           quotationId={quotation.id}
           companyQuotationId={tentativeWinner.id}
-          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+          companyName={localizeCompanyName(
+            tentativeWinner.companyName,
+            tentativeWinner.companyNameLocal,
+          )}
           currentRounds={tentativeWinner.negotiationRounds ?? 0}
         />
       )}
@@ -1032,7 +1099,10 @@ const QuotationSelectionPage = () => {
           isOpen={isRejectOpen}
           onClose={() => setIsRejectOpen(false)}
           quotationId={quotation.id}
-          companyName={localizeCompanyName(tentativeWinner.companyName, tentativeWinner.companyNameLocal)}
+          companyName={localizeCompanyName(
+            tentativeWinner.companyName,
+            tentativeWinner.companyNameLocal,
+          )}
         />
       )}
 
@@ -1056,9 +1126,11 @@ const QuotationSelectionPage = () => {
         showFrom={false}
         showCc={true}
         showBcc={true}
-        showAttachments={false}
+        showAttachments={true}
+        onUploadAttachment={uploadQuotationAttachment}
         subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
+        richTextContent
         onSubmit={handleSendConfirm}
       />
 

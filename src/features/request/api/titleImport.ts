@@ -1,5 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { downloadBlob, uploadForm } from '@shared/api/blobTransfer';
 import type { RequestTitleDtoType } from '../schemas/form';
 
 /**
@@ -49,9 +50,12 @@ export interface TitleImportPreview {
 }
 
 /**
- * axiosInstance sets a global 10 s timeout, which suits ordinary JSON calls and not a 5 MB workbook
- * over a branch link. Without an override the upload aborts mid-flight and surfaces as a parse
- * failure, sending the user off to fix a file that was never read.
+ * axiosInstance sets a global 10 s timeout, which suits ordinary JSON calls and not a workbook
+ * being parsed server-side. Without an override the request aborts mid-flight and surfaces as a
+ * parse failure, sending the user off to fix a file that was never read.
+ *
+ * The calls that carry the file itself use blobTransfer instead, which watches for idle time
+ * rather than capping the total — a slow line and a dead one need telling apart.
  */
 const IMPORT_TIMEOUT_MS = 120_000;
 
@@ -64,10 +68,7 @@ const IMPORT_TIMEOUT_MS = 120_000;
 export const useDownloadTitleImportTemplate = () =>
   useMutation({
     mutationFn: async (): Promise<void> => {
-      const { data } = await axios.get<Blob>('/requests/titles/import-template', {
-        responseType: 'blob',
-        timeout: IMPORT_TIMEOUT_MS,
-      });
+      const { data } = await downloadBlob('/requests/titles/import-template');
 
       const url = URL.createObjectURL(data);
       const link = document.createElement('a');
@@ -94,13 +95,10 @@ export const useTitleImportFilePreview = () =>
       const formData = new FormData();
       formData.append('file', file);
 
-      const { data } = await axios.post<TitleImportPreview>(
+      const { data } = await uploadForm<TitleImportPreview>(
         '/requests/titles/import-preview',
         formData,
-        {
-          headers: { 'Content-Type': 'multipart/form-data' },
-          timeout: IMPORT_TIMEOUT_MS,
-        },
+        { label: file.name },
       );
       return data;
     },

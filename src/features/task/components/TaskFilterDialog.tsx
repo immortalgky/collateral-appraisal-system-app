@@ -7,6 +7,7 @@ import { TextInput, DateInput } from '@/shared/components/inputs';
 import type { TaskDateType, TaskFilterParams } from '../types';
 import { ACTIVITY_IDS, getActivityConfig } from '../config/activityConfig';
 import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
+import { useParameterOptions } from '@shared/utils/parameterUtils';
 
 const REQUEST_STATUS_OPTIONS = APPRAISAL_STATUS_FILTER_OPTIONS;
 
@@ -76,6 +77,16 @@ interface TaskFilterDialogProps {
 
 export function TaskFilterDialog({ open, initialValues, onApply, onClose }: TaskFilterDialogProps) {
   const [values, setValues] = useState<TaskFilterParams>(initialValues);
+  const PURPOSE_TYPE_OPTIONS = useParameterOptions('AppraisalPurpose')
+    .filter(o => !!o.isActive)
+    .map(o => ({
+      value: o.value ?? '',
+      label: o.label,
+    }));
+  const CHANNEL_OPTIONS = useParameterOptions('Channel').map(o => ({
+    value: o.value ?? '',
+    label: o.label,
+  }));
 
   useEffect(() => {
     if (open) setValues(initialValues);
@@ -118,6 +129,18 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
             options={TASK_TYPE_OPTIONS}
             value={values.activityId}
             onChange={activityId => setValues(v => ({ ...v, activityId }))}
+          />
+          <SelectField
+            label="Purpose"
+            options={PURPOSE_TYPE_OPTIONS}
+            value={values.purpose}
+            onChange={purpose => setValues(v => ({ ...v, purpose }))}
+          />
+          <SelectField
+            label="Channel"
+            options={CHANNEL_OPTIONS}
+            value={values.channel}
+            onChange={channel => setValues(v => ({ ...v, channel }))}
           />
         </section>
 

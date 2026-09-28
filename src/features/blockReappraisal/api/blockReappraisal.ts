@@ -13,8 +13,7 @@ import type {
 export const blockReappraisalKeys = {
   all: ['block-reappraisal'] as const,
   lists: () => [...blockReappraisalKeys.all, 'list'] as const,
-  list: (params: BlockReappraisalListParams) =>
-    [...blockReappraisalKeys.lists(), params] as const,
+  list: (params: BlockReappraisalListParams) => [...blockReappraisalKeys.lists(), params] as const,
   details: () => [...blockReappraisalKeys.all, 'detail'] as const,
   detail: (collateralMasterId: string) =>
     [...blockReappraisalKeys.details(), collateralMasterId] as const,
@@ -92,8 +91,14 @@ export function useCreateBlockReappraisal() {
 export function useMarkBlockReappraisalNotRequired() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (collateralMasterId: string): Promise<void> => {
-      await axios.post(`/block-reappraisal/${collateralMasterId}/opt-out`);
+    mutationFn: async ({
+      collateralMasterId,
+      remark,
+    }: {
+      collateralMasterId: string;
+      remark: string;
+    }): Promise<void> => {
+      await axios.post(`/block-reappraisal/${collateralMasterId}/opt-out`, { remark });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.lists() });

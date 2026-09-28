@@ -34,7 +34,8 @@ export interface MyMenuResponse {
 export interface MenuItemAdminDto extends Omit<MenuTreeNode, 'children'> {
   scope: MenuScope;
   parentId: string | null;
-  viewPermissionCode: string;
+  /** Null (with a null prefix) on a group: it shows whenever any child does. */
+  viewPermissionCode: string | null;
   viewPermissionPrefix: string | null;
   editPermissionCode: string | null;
   isSystem: boolean;

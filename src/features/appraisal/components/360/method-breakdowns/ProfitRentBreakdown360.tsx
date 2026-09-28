@@ -59,7 +59,7 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
         <DlRow label="Total Contract Rental Fee" value={a.totalContractRentalFee} />
         <DlRow label="Total Returns From Lease" value={a.totalReturnsFromLease} />
         <DlRow label="Total Present Value" value={a.totalPresentValue} />
-        <DlRow label="Final Value Rounded" value={a.finalValueRounded} highlight />
+        <DlRow label="Final Value" value={a.indicatedValue ?? a.finalValue} highlight />
       </div>
 
       {/* Calculation table */}
@@ -133,7 +133,7 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
           <DlRow label="Appraisal Price" value={a.appraisalPriceWithBuilding} />
           <DlRow
             label="Estimate Price Rounded"
-            value={a.appraisalPriceWithBuildingRounded}
+            value={a.indicatedValue ?? a.appraisalPriceWithBuildingRounded}
             highlight
           />
         </div>

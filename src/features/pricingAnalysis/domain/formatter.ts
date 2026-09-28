@@ -1,5 +1,3 @@
-const cache = new Map<string, Intl.NumberFormat>();
-
 interface FormatterConfig {
   style?: Intl.NumberFormatOptions['style'];
   minimumFractionDigits?: number;

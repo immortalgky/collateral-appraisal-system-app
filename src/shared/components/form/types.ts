@@ -224,6 +224,8 @@ export interface NumberInputField extends BaseFormField {
   leftIcon?: ReactNode;
   /** Icon rendered inside the input on the right (e.g. an action button) */
   rightIcon?: ReactNode;
+  /** Note shown under the input */
+  helperText?: ReactNode;
 }
 
 // =============================================================================
@@ -281,6 +283,8 @@ interface BaseDropdownField extends BaseFormField {
   type: 'dropdown';
   label: string;
   filterOptions?: OptionFilter | OptionFilter[];
+  /** Passed through to Dropdown; false hides the "code - " prefix on each option. */
+  showValuePrefix?: boolean;
 }
 
 // =============================================================================

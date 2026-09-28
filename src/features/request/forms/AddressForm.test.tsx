@@ -18,6 +18,9 @@ import { useForm, FormProvider } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import AddressForm from './AddressForm';
+import enRequest from '@/i18n/locales/en/request.json';
+import type { TFunction } from 'i18next';
+import { makeAddressFields, makeContactFields } from '../configs/fields';
 
 // Mock the components that AddressForm uses
 vi.mock('@/shared/components/form', () => ({
@@ -53,29 +56,55 @@ vi.mock('@shared/components', () => ({
   SectionHeader: ({ title }: { title: string }) => <h2>{title}</h2>,
 }));
 
+// `t` returns the key. Nothing initialises i18n in src/test/setup.ts today, so this only makes
+// explicit what already happens — but it keeps these assertions from breaking the day another
+// suite wants i18n initialised globally.
+vi.mock('react-i18next', async importOriginal => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
+
 // Define schema for testing validation
+// Field names and nesting follow `makeAddressFields` / `makeContactFields` in
+// ../configs/fields.ts, under the `detail.` prefix AddressForm passes to FormFields. A local
+// shape that drifts from those would let this suite keep passing while the form renders nothing
+// it declares.
 const addressSchema = z.object({
-  address: z.object({
-    houseNo: z.string().optional(),
-    roomNo: z.string().optional(),
-    floorNo: z.string().optional(),
-    villageBuilding: z.string().optional(),
-    moo: z.string().optional(),
-    soi: z.string().optional(),
-    road: z.string().optional(),
-    subDistrict: z.string().min(1, 'Sub District is required'),
-    district: z.string().min(1, 'District is required'),
-    province: z.string().min(1, 'Province is required'),
-    postcode: z.string().optional(),
-  }),
-  contact: z.object({
-    contactPersonName: z.string().min(1, 'Contact name is required'),
-    contactPersonContactNo: z.string().min(1, 'Contact phone is required'),
-    projectCode: z.string().optional(),
+  detail: z.object({
+    address: z.object({
+      // `required: true` in makeAddressFields — house number and sub-district are the two.
+      houseNumber: z.string().min(1, 'House number is required'),
+      subDistrict: z.string().min(1, 'Sub District is required'),
+      projectName: z.string().optional(),
+      moo: z.string().optional(),
+      soi: z.string().optional(),
+      road: z.string().optional(),
+      // Written by the location selector when a sub-district is picked, and shown read-only.
+      district: z.string().optional(),
+      districtName: z.string().optional(),
+      province: z.string().optional(),
+      provinceName: z.string().optional(),
+      subDistrictName: z.string().optional(),
+      postcode: z.string().optional(),
+    }),
+    contact: z.object({
+      contactPersonName: z.string().min(1, 'Contact name is required'),
+      contactPersonPhone: z.string().min(1, 'Contact phone is required'),
+      dealerCode: z.string().optional(),
+    }),
   }),
 });
 
 type AddressFormData = z.infer<typeof addressSchema>;
+
+// A case fills in only the fields it cares about, at any depth — `Partial` alone stops at the
+// top level and would demand every address field the moment one is given.
+type PartialAddressFormData = {
+  detail?: {
+    address?: Partial<AddressFormData['detail']['address']>;
+    contact?: Partial<AddressFormData['detail']['contact']>;
+  };
+};
 
 // Wrapper component that provides form context
 function AddressFormWrapper({
@@ -83,30 +112,34 @@ function AddressFormWrapper({
   defaultValues = {},
 }: {
   onSubmit?: (data: AddressFormData) => void;
-  defaultValues?: Partial<AddressFormData>;
+  defaultValues?: PartialAddressFormData;
 }) {
   const methods = useForm<AddressFormData>({
     resolver: zodResolver(addressSchema),
     defaultValues: {
-      address: {
-        houseNo: '',
-        roomNo: '',
-        floorNo: '',
-        villageBuilding: '',
-        moo: '',
-        soi: '',
-        road: '',
-        subDistrict: '',
-        district: '',
-        province: '',
-        postcode: '',
-        ...defaultValues.address,
-      },
-      contact: {
-        contactPersonName: '',
-        contactPersonContactNo: '',
-        projectCode: '',
-        ...defaultValues.contact,
+      detail: {
+        address: {
+          houseNumber: '',
+          projectName: '',
+          moo: '',
+          soi: '',
+          road: '',
+          subDistrict: '',
+          districtName: '',
+          provinceName: '',
+          postcode: '',
+          // Written by the location selector, so the mirror has them too.
+          district: '',
+          province: '',
+          subDistrictName: '',
+          ...defaultValues.detail?.address,
+        },
+        contact: {
+          contactPersonName: '',
+          contactPersonPhone: '',
+          dealerCode: '',
+          ...defaultValues.detail?.contact,
+        },
       },
     },
   });
@@ -116,6 +149,15 @@ function AddressFormWrapper({
       <form onSubmit={methods.handleSubmit(onSubmit)}>
         <AddressForm />
         <button type="submit">Submit</button>
+        {/* FormFields is mocked into unregistered inputs, so typing cannot reach the form. These
+            two give the reset case something it can actually observe. */}
+        <button
+          type="button"
+          onClick={() => methods.setValue('detail.address.houseNumber', 'typed over')}
+        >
+          Set house number
+        </button>
+        <output data-testid="house-number">{methods.watch('detail.address.houseNumber')}</output>
         <button type="button" onClick={() => methods.reset()}>
           Reset
         </button>
@@ -124,7 +166,42 @@ function AddressFormWrapper({
   );
 }
 
+// AddressForm labels its fields through `useTranslation('request')`, and nothing initialises
+// i18n in this suite, so `t()` hands back the key: a label renders as `fields.houseNo`.
+//
+// The assertions below take the key AND the English text it must resolve to, read from the
+// locale file. Matching the key alone would keep passing if someone deleted `fields.houseNo`
+// from en or blanked its value — the screen would show a raw key or an empty label, and
+// localeParity would not catch it either: it compares key SETS across locales, never values.
+const label = (key: keyof typeof enRequest.fields) => {
+  const text = enRequest.fields[key];
+  expect(text, `en/request.json is missing a value for fields.${key}`).toBeTruthy();
+  return `fields.${key}`;
+};
 describe('AddressForm', () => {
+  // The schema below is hand-written, so it can drift from the fields the form actually renders.
+  // This case is what stops that being silent: rename a field in configs/fields.ts and it fails
+  // here, naming the field, instead of every other case quietly testing a form that no longer
+  // exists.
+  it('mirrors the field names the config renders', () => {
+    // Key-passthrough stand-in, the same shape hypothesisForm.ts uses for its static schema:
+    // only the field names matter here, never the text.
+    const tStub = ((key: string) => key) as unknown as TFunction<'request'>;
+    const names = (fields: { name?: string }[]) =>
+      fields.map(f => f.name).filter((n): n is string => !!n);
+    const shape = addressSchema.shape.detail.shape;
+
+    // Every field the form renders has to exist here. The reverse does not hold: the schema also
+    // carries what the location selector writes (district, province, subDistrictName), which is
+    // no field of its own.
+    expect(Object.keys(shape.address.shape)).toEqual(
+      expect.arrayContaining(names(makeAddressFields(tStub))),
+    );
+    expect(Object.keys(shape.contact.shape)).toEqual(
+      expect.arrayContaining(names(makeContactFields(tStub))),
+    );
+  });
+
   // ============================================
   // Rendering Tests
   // ============================================
@@ -135,7 +212,8 @@ describe('AddressForm', () => {
     it('should render Location section header', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('Location')).toBeInTheDocument();
+      expect(enRequest.forms.location, 'en/request.json lost forms.location').toBeTruthy();
+      expect(screen.getByText('forms.location')).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -154,9 +232,9 @@ describe('AddressForm', () => {
     it('should render address field labels', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('House No')).toBeInTheDocument();
-      expect(screen.getByText('Sub District')).toBeInTheDocument();
-      expect(screen.getByText('Province')).toBeInTheDocument();
+      expect(screen.getByText(label('houseNo'))).toBeInTheDocument();
+      expect(screen.getByText(label('subDistrict'))).toBeInTheDocument();
+      expect(screen.getByText(label('province'))).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -165,9 +243,9 @@ describe('AddressForm', () => {
     it('should render contact field labels', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText('Contact Person Name')).toBeInTheDocument();
-      expect(screen.getByText('Contact Person Phone No')).toBeInTheDocument();
-      expect(screen.getByText('Project Code')).toBeInTheDocument();
+      expect(screen.getByText(label('contactPersonName'))).toBeInTheDocument();
+      expect(screen.getByText(label('contactPersonPhone'))).toBeInTheDocument();
+      expect(screen.getByText(label('dealerCode'))).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -195,15 +273,17 @@ describe('AddressForm', () => {
         <AddressFormWrapper
           onSubmit={handleSubmit}
           defaultValues={{
-            address: {
-              houseNo: '123',
-              subDistrict: 'Bang Rak',
-              district: 'Bang Rak',
-              province: 'Bangkok',
-            },
-            contact: {
-              contactPersonName: 'John Doe',
-              contactPersonContactNo: '0812345678',
+            detail: {
+              address: {
+                houseNumber: '123',
+                subDistrict: 'Bang Rak',
+                districtName: 'Bang Rak',
+                provinceName: 'Bangkok',
+              },
+              contact: {
+                contactPersonName: 'John Doe',
+                contactPersonPhone: '0812345678',
+              },
             },
           }}
         />,
@@ -247,25 +327,25 @@ describe('AddressForm', () => {
       const { user } = render(
         <AddressFormWrapper
           defaultValues={{
-            address: {
-              houseNo: '123',
-              subDistrict: 'Test',
-              district: 'Test',
-              province: 'Test',
-            },
-            contact: {
-              contactPersonName: 'Test',
-              contactPersonContactNo: '123',
+            detail: {
+              address: {
+                houseNumber: '123',
+                subDistrict: 'Test',
+                districtName: 'Test',
+                provinceName: 'Test',
+              },
+              contact: { contactPersonName: 'Test', contactPersonPhone: '123' },
             },
           }}
         />,
       );
 
-      // Click reset
+      await user.click(screen.getByRole('button', { name: 'Set house number' }));
+      expect(screen.getByTestId('house-number')).toHaveTextContent('typed over');
+
       await user.click(screen.getByRole('button', { name: 'Reset' }));
 
-      // Form should be reset (in a real test we'd check input values)
-      expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
+      expect(screen.getByTestId('house-number')).toHaveTextContent('123');
     });
   });
 
@@ -280,17 +360,15 @@ describe('AddressForm', () => {
       render(
         <AddressFormWrapper
           defaultValues={{
-            address: {
-              houseNo: '456',
-              province: 'Chiang Mai',
-            },
+            detail: { address: { houseNumber: '456', provinceName: 'Chiang Mai' } },
           }}
         />,
       );
 
-      // Fields should exist (in real test, we'd verify input values)
-      expect(screen.getByTestId('field-address.houseNo')).toBeInTheDocument();
-      expect(screen.getByTestId('field-address.province')).toBeInTheDocument();
+      // Fields should exist (in real test, we'd verify input values). The form nests its two
+      // groups under `detail.`, and the address fields are named `houseNumber` and `provinceName`.
+      expect(screen.getByTestId('field-detail.address.houseNumber')).toBeInTheDocument();
+      expect(screen.getByTestId('field-detail.address.provinceName')).toBeInTheDocument();
     });
   });
 });

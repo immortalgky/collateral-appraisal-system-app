@@ -1,5 +1,6 @@
 import type { GetPricingAnalysisResponseType, PricingAnalysisConfigType } from '../schemas';
 import type { Approach, Method } from '../types/selection';
+import { COST_APPROACH_TYPE } from '../types/selection';
 
 // Reverse mapping: server types → config types
 // (forward mapping lives in saveEditingSelection.ts)
@@ -88,18 +89,39 @@ export function createInitialState(
         landRatePerSqWa: isLandRateUnit(apiMethod?.unitType)
           ? (apiMethod?.valuePerUnit ?? null)
           : null,
+
+        // Not yet in the generated MethodDto schema (v1.ts) — same cast PricingAnalysisPage
+        // uses for the group-wide flag. `.passthrough()` lets the raw value survive the parse.
+        useSystemCalc: (apiMethod as any)?.useSystemCalc ?? true,
+        role: (apiMethod as any)?.role ?? null,
+        linkedMethodId: (apiMethod as any)?.linkedMethodId ?? null,
+        remark: (apiMethod as any)?.remark ?? null,
+        updatedAt: (apiMethod as any)?.updatedAt ?? null,
       };
     }) as Method[];
 
-    // Derive approach value from the candidated method (ApproachDto has no appraisalValue field)
-    const selectedMethod = methods.find(m => m.isSelected);
+    // ApproachDto carries no approach value, so it has to be re-derived here — and it must be
+    // derived the same way the server does it (PricingAnalysisApproach.ComputeSelectedValue):
+    // a Cost approach is the SUM of every selected method, one per role, because its value is
+    // assembled from components (land + building + machinery). Every other approach type has
+    // exactly one selected method, so the sum degenerates to that method's own value.
+    //
+    // Taking just `find(isSelected)` — the first selected method — is what made a Cost group
+    // open showing only its land figure while the formula row beside it showed land + building,
+    // and made the number change on its own as soon as any method was re-ticked (the reducer's
+    // SUMMARY_SELECT_METHOD already sums correctly; only this load path did not).
+    const selectedMethods = methods.filter(m => m.isSelected);
+    const derivedApproachValue =
+      confAppr.approachType === COST_APPROACH_TYPE
+        ? selectedMethods.reduce((sum, m) => sum + (m.appraisalValue ?? 0), 0)
+        : selectedMethods[0]?.appraisalValue;
 
     return {
       id: apiAppr?.id ?? confAppr.id, // safe fallback
       approachType: confAppr.approachType,
       label: confAppr.label ?? '',
       icon: confAppr.icon ?? 'image',
-      appraisalValue: selectedMethod?.appraisalValue ?? confAppr.appraisalValue ?? 0,
+      appraisalValue: derivedApproachValue ?? confAppr.appraisalValue ?? 0,
       isSelected: apiAppr?.isSelected ?? apiAppr?.isCandidated ?? false,
       methods,
     };

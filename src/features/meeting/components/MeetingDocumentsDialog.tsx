@@ -54,7 +54,9 @@ const MeetingDocumentsDialog = ({
   onConfirm,
 }: MeetingDocumentsDialogProps) => {
   const { t } = useTranslation('meeting');
-  const { data: documents = [], isLoading } = useGetMeetingDocuments(isOpen ? meetingId : undefined);
+  const { data: documents = [], isLoading } = useGetMeetingDocuments(
+    isOpen ? meetingId : undefined,
+  );
   const generate = useGenerateMeetingDocument();
   const removeDocument = useRemoveMeetingDocument();
   const download = useDownloadDocument();
@@ -182,7 +184,7 @@ const MeetingDocumentsDialog = ({
               disabled={isBusy}
               multiple={false}
             >
-              {(isDragging) => (
+              {isDragging => (
                 <span
                   className={clsx(
                     'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
@@ -297,7 +299,9 @@ const MeetingDocumentsDialog = ({
                         <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
-                            onClick={() => viewDocument(doc.documentId)}
+                            onClick={() =>
+                              viewDocument(doc.documentId, doc.fileSizeBytes, doc.fileName)
+                            }
                             className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-primary"
                             title={t('documents.view')}
                           >

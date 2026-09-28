@@ -34,7 +34,9 @@
       "created": "Created",
       "slaBusinessDays": "SLA (days)",
       "submittedAt": "Submitted",
-      "groupTag": "Group"
+      "groupTag": "Group",
+      "assignee": "Assignee",
+      "requestor": "Requestor"
     },
     "filters": {
       "statusLabel": "Status",
@@ -59,8 +61,6 @@
       "purposePlaceholder": "All purposes",
       "propertyTypeLabel": "Property Type",
       "propertyTypePlaceholder": "All property types",
-      "appointmentDateFrom": "Appointment From",
-      "appointmentDateTo": "Appointment To",
       "assignedDateFrom": "Assigned From",
       "assignedDateTo": "Assigned To",
       "multiSelected": "{{label}}: {{count}} selected",
@@ -83,7 +83,17 @@
         "time": "Dates"
       },
       "anyValue": "Any",
-      "optionsUnavailable": "No options available yet"
+      "optionsUnavailable": "No options available yet",
+      "appointment": "Appointment date",
+      "presets": {
+        "today": "Today",
+        "tomorrow": "Tomorrow",
+        "next7": "Next 7 days",
+        "past7": "Last 7 days",
+        "past30": "Last 30 days"
+      },
+      "requestorLabel": "Requestor (RM)",
+      "typeToSearch": "Type a name or employee ID to search"
     },
     "status": {
       "Pending": "Pending",
@@ -104,7 +114,10 @@
       "overdue": "Overdue {{time}}",
       "left": "{{time}} left",
       "closed": "Closed",
-      "cancelled": "Cancelled"
+      "cancelled": "Cancelled",
+      "durationDays": "{{days}}d {{hours}}h",
+      "durationHours": "{{hours}}h",
+      "dueOn": "Due {{date}}"
     },
     "assignmentType": {
       "Internal": "Internal",
@@ -143,7 +156,9 @@
       "high-priority-active": "High priority",
       "nearing-deadline": "Nearing deadline",
       "external-assignments": "External assignments",
-      "my-company-queue": "My company queue"
+      "my-company-queue": "My company queue",
+      "all": "All jobs",
+      "my-requests": "My requests"
     },
     "saved": "Saved",
     "saveCurrentSearch": "Save current search",
@@ -152,9 +167,8 @@
     "activeFilters": "Filters:",
     "clearAll": "Clear all",
     "removeFilter": "Remove filter",
-    "activityTracking": "Activity Tracking",
+    "activityTracking": "Appraisal Tracking",
     "searchTips": {
-      "trigger": "Can't find it?",
       "title": "Not finding it? Try this",
       "prefix": "Search matches from the start of a value — 691 finds 69105467, 05467 does not",
       "wildcard": "Prefix with * to match anywhere, e.g. *john",
@@ -171,7 +185,39 @@
     "emptyAll": "No appraisals yet",
     "emptyAllHint": "New appraisals will show up here",
     "moreCustomers_one": "{{count}} more customer on this request",
-    "moreCustomers_other": "{{count}} more customers on this request"
+    "moreCustomers_other": "{{count}} more customers on this request",
+    "unassigned": "Unassigned",
+    "today": "Today",
+    "internal": "Internal",
+    "groupBy": {
+      "label": "Group",
+      "none": "No grouping",
+      "current": "Group: {{label}}",
+      "empty": "Not set"
+    },
+    "suggest": {
+      "goTo": "Go to appraisal",
+      "searchIn": "Search “{{term}}” in",
+      "recent": "Recent searches",
+      "matches": "{{count}} found",
+      "none": "None",
+      "noMatch": "No matching appraisal",
+      "navigate": "select",
+      "submit": "search",
+      "close": "close",
+      "shortcut": "Press / to search · j / k to move · Enter to open"
+    },
+    "emptyActions": {
+      "searchAll": "Search all fields",
+      "clearFilters": "Clear filters",
+      "exitView": "Leave quick view",
+      "tryWildcard": "Try {{term}}"
+    },
+    "density": {
+      "title": "Density",
+      "comfortable": "Comfortable",
+      "compact": "Compact"
+    }
   },
   "appointment": {
     "sectionTitle": "Appointment Information",
@@ -432,6 +478,7 @@
     "specialRequirements": "Special Requirements",
     "closes": "Closes",
     "hoursRemaining": "{{n}}h remaining",
+    "viewQuotationHint": "Click to view quotation details",
     "stats": {
       "companiesInvited": "Invited Companies",
       "responses": "Responses",
@@ -510,11 +557,17 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": ["Not Verified", "Verified"],
+      "priceVerificationOptions": [
+        "Not Verified",
+        "Verified"
+      ],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
       "buildingInsuranceReview": "Building Insurance (Review)",
+      "verifiedStaleTitle": "Prices changed after verification",
+      "verifiedStaleHint": "The report and AS400 keep the verified figures until you verify again.",
+      "verifiedStaleAction": "Use current prices",
       "condition": "Condition",
       "conditionType": "Condition Type",
       "conditionTypePlaceholder": "Select condition type...",
@@ -573,7 +626,17 @@
       "confirm": "Submit",
       "cancel": "Cancel",
       "submitting": "Submitting…",
-      "validationErrorsTitle": "Please complete the required fields"
+      "validationErrorsTitle": "Please complete the required fields",
+      "voteTitle": "Confirm your vote",
+      "voteMessage": "A vote cannot be changed after it is submitted.",
+      "voteAck": "I want to vote \"{{vote}}\" on this appraisal",
+      "summary": {
+        "decision": "Decision",
+        "destination": "Next step",
+        "assignee": "Assignee",
+        "reason": "Reason",
+        "comments": "Comments"
+      }
     },
     "warnings": {
       "title": "Review before continuing",
@@ -586,7 +649,8 @@
       "submitFailed": "Failed to submit decision",
       "validationErrors": "Validation errors occurred",
       "forceSaleRateSaved": "Force selling rate saved",
-      "forceSaleRateFailed": "Failed to save force selling rate. Please try again."
+      "forceSaleRateFailed": "Failed to save force selling rate. Please try again.",
+      "voteNeedsComment": "Add a comment and confirm your vote before submitting."
     }
   },
   "decision": {
@@ -596,7 +660,6 @@
     "commentsLabel": "Comments",
     "noDecision": "No decision made",
     "assignNextTo": "Assign Next To",
-    "decisionPlaceholder": "Select a decision...",
     "assigneePlaceholder": "Select an assignee...",
     "requestDocuments": "Request Additional Documents",
     "loadingActivity": "Loading activity...",
@@ -611,7 +674,26 @@
       "routeBack": "What needs to be revised?",
       "proceed": "Any final notes before proceeding?",
       "hold": "Why are you placing this on hold?"
-    }
+    },
+    "groups": {
+      "forward": "Send forward",
+      "back": "Send back",
+      "cancel": "Cancel / Reject"
+    },
+    "destination": {
+      "forward": "Goes to {{name}}",
+      "back": "Returns to {{name}}",
+      "cancel": "Ends the workflow"
+    },
+    "committeeVotes": "Committee votes",
+    "votesSummary": "{{received}}/{{total}} voted",
+    "stepsCount_one": "{{count}} step",
+    "stepsCount_other": "{{count}} steps",
+    "yourVote": "Your vote",
+    "nextStep": "Next step",
+    "voteImpact": "{{from}} → {{to}} votes",
+    "votesLoadFailed": "Could not load the committee votes.",
+    "noActions": "No decisions are available for this task. Refresh the page, or contact an administrator if this persists."
   },
   "propertyInfo": {
     "tabs": {
@@ -630,6 +712,7 @@
       "legalSection": "Rights & Legal",
       "legalSubtitle": "Ownership, location and obligations",
       "save": "Save",
+      "saveDraft": "Save Draft",
       "saved": "Machinery summary saved",
       "saveFailed": "Failed to save machinery summary",
       "fields": {
@@ -698,6 +781,14 @@
       }
     },
     "machineryInfo": {
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Purchase",
+        "condition": "Condition & Performance",
+        "dimensions": "Dimensions",
+        "notes": "Parts & Notes",
+        "opinion": "Appraiser Opinion"
+      },
       "sectionTitle": "Machinery Information",
       "fields": {
         "propertyName": "Machinery Name",
@@ -867,6 +958,20 @@
       "reorderFailed": "Failed to reorder properties"
     },
     "floorCount": "{{n}} fl.",
+    "buildingAge": "{{n}} yr old",
+    "underConstruction": "Under construction",
+    "underConstructionPct": "Under construction {{pct}}%",
+    "facts": {
+      "deed": "Deed {{no}}",
+      "buildingArea": "Building {{n}} m²",
+      "floor": "Floor {{n}}",
+      "room": "Unit {{n}}",
+      "madeIn": "Made {{n}}",
+      "machineAge": "{{n}} yr old",
+      "leaseRemaining": "{{n}} yr lease left",
+      "leaseEnded": "Lease ended",
+      "leaseRent": "Rent ฿{{n}}"
+    },
     "machinerySummary": {
       "title": "Machinery summary",
       "status": {
@@ -1031,7 +1136,7 @@
       "eastAdjacent": "East Adjacent",
       "eastBoundaryLength": "East Boundary Length",
       "efficiency": "Efficiency",
-      "electricityDistance": "Electricity Distance",
+      "electricityDistance": "Distance from Electricity (m)",
       "encroached": "Encroached",
       "encroachingArea": "Encroaching Area",
       "encroachingOthers": "Encroaching Others",
@@ -1042,7 +1147,7 @@
       "engineNo": "Engine No.",
       "entrancePerExit": "Entrance/Exit",
       "environment": "Environment",
-      "eviction": "Eviction",
+      "eviction": "Right Restriction",
       "expropriated": "Expropriated",
       "expropriationRemark": "Expropriation Remark",
       "exteriorWall": "Exterior Wall",
@@ -1057,7 +1162,7 @@
       "governmentPricePerSqM": "Government Price per Sq.M",
       "groundFloorMaterial": "Ground Floor Material",
       "hasBuilding": "Has Building",
-      "hasElectricity": "Has Electricity",
+      "hasElectricity": "Far from Electricity",
       "hasObligation": "Has Obligation",
       "height": "Height",
       "houseNo": "House No.",
@@ -1198,7 +1303,7 @@
     }
   },
   "activityTracking": {
-    "pageTitle": "Activity Tracking",
+    "pageTitle": "Appraisal Tracking",
     "tabs": {
       "timeline": "Timeline",
       "log": "Log"
@@ -1223,6 +1328,136 @@
       "dueAt": "Due",
       "slaStatus": "SLA",
       "hoursShort": "{{hours}}h"
+    },
+    "sections": {
+      "progress": "Appraisal Progress",
+      "request": "Request Information",
+      "collateral": "Collateral in this Request",
+      "documents": "Appraisal Documents",
+      "log": "Activity Log",
+      "route": "Route",
+      "noCollateral": "No collateral items on this request",
+      "itemsCount": "{{count}} item(s)"
+    },
+    "brief": {
+      "customer": "Customer",
+      "coBorrowers": "and {{count}} co-borrower(s)",
+      "appraisedValue": "Appraised Value",
+      "forcedSaleValue": "Forced Sale Value",
+      "insuranceValue": "Insurance Value",
+      "baht": "THB",
+      "notReleased": "Not yet released",
+      "cancelledValue": "Request cancelled",
+      "dueDate": "Due",
+      "completedOn": "Completed",
+      "overdue": "(overdue)",
+      "dueDateHint": "The standard due date = date received + the standard turnaround for this type of work, counted in business hours only. It is a target fixed at intake and does not move with actual progress.",
+      "fields": {
+        "prevAppraisalNumber": "Previous Appraisal No.",
+        "appointment": "Appointment",
+        "appraiser": "Appraiser",
+        "propertyLocation": "Property Location",
+        "loanLimit": "Loan Limit"
+      },
+      "holder": {
+        "currentLabel": "Currently With",
+        "statusLabel": "Status",
+        "unassigned": "Not yet assigned",
+        "step": "Step",
+        "sinceToday": "Since today",
+        "heldFor": "Held for {{count}} day(s)",
+        "committeeReviewers": "Under joint review by {{count}} member(s)",
+        "teamsChat": "Chat on Teams",
+        "coordinator": "Coordinator: {{name}}",
+        "contactPerson": "Contact: {{name}}",
+        "externalFirm": "External valuation firm",
+        "closedCancelled": "Request has been cancelled",
+        "closedCompleted": "Appraisal has been completed",
+        "appraisalDesk": "Appraisal Department"
+      },
+      "phases": {
+        "Initiation": "Request Received",
+        "Assignment": "Assignment",
+        "Execution": "Inspection / Appraisal",
+        "Staff": "Report Acceptance",
+        "Checker": "Checking",
+        "Verification": "Verification",
+        "Approval": "Price Approval",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "inProgress": "In progress",
+        "notReached": "Not yet reached"
+      },
+      "committee": {
+        "sub": "Sub-Committee",
+        "subFull": "Collateral and Asset Valuation Sub-Committee",
+        "full": "Committee",
+        "fullFull": "Collateral and Asset Valuation Committee"
+      },
+      "collateral": {
+        "unspecifiedType": "Unspecified type",
+        "morePlaces": "and {{count}} more province(s)",
+        "floors": "{{count}} floor(s)",
+        "totalArea": "Total {{area}}",
+        "rai": "rai",
+        "ngan": "ngan",
+        "wa": "sq.wa",
+        "kinds": {
+          "land": "Land",
+          "building": "Building",
+          "condo": "Condominium",
+          "machine": "Machinery"
+        },
+        "condoFloors": "Floor {{floors}} of {{total}}",
+        "project": "Project",
+        "units": "{{count}} unit(s)",
+        "phases": "{{count}} phase(s)",
+        "developer": "Developer: {{name}}",
+        "towers": "{{count}} tower(s)",
+        "towerFloors": "{{towers}} tower(s) · {{floors}} storeys",
+        "houses": "{{count}} house(s)",
+        "houseStoreys": "{{count}} house(s) · {{floors}} storeys",
+        "condoUnit": "Unit {{room}}, floor {{floor}}",
+        "condoUnitNoRoom": "Floor {{floor}}",
+        "condoUnitNoFloor": "Unit {{room}}",
+        "unitsOrHouses_house": "{{count}} house(s)",
+        "unitsOrHouses_unit": "{{count}} unit(s)"
+      },
+      "documents": {
+        "lockedTitle": "Documents not yet available",
+        "lockedCancelled": "This request was cancelled before a price was issued, so there are no documents.",
+        "lockedPending": "All documents are released together once the appraisal team approves the price.",
+        "empty": "The price is approved, but no files are attached to this appraisal folder yet.",
+        "others": "Other documents in the folder",
+        "othersHint": "{{count}} file(s) · all viewable",
+        "view": "View",
+        "download": "Download",
+        "downloadFailed": "Could not download the document"
+      },
+      "lockedTitle": "Appraised value not yet released",
+      "lockedHint": "The appraised value, forced sale value, insurance value and documents are all released together once the committee approves the price.",
+      "cancelledTitle": "This request was cancelled",
+      "cancelledHint": "It was closed before a price was issued, so there is no appraised value or document to show.",
+      "log": {
+        "forwarded": "Forwarded",
+        "returned": "Returned for revision",
+        "assigned": "Assigned",
+        "reassigned": "Reassigned",
+        "cancelled": "Cancelled",
+        "empty": "No activity recorded yet",
+        "showAll": "Show all {{count}} entries",
+        "showLess": "Show less",
+        "steps": "{{count}} steps",
+        "externalLeg": "Work sent to the external firm",
+        "assignedInternal": "Assigned to the in-house team",
+        "assignedExternal": "Sent to an external firm"
+      },
+      "noAccessTitle": "You cannot view this appraisal",
+      "noAccessHint": "Your account does not have permission to open appraisal records.",
+      "notFoundTitle": "Appraisal not found",
+      "notFoundHint": "It may have been deleted, or the link points at an appraisal that no longer exists.",
+      "loadFailedTitle": "Could not load the details",
+      "loadFailedHint": "Try again. If it keeps failing, contact IT."
     }
   },
   "documentChecklist": {
@@ -1592,6 +1827,102 @@
       "buildingValue": "Building Value",
       "buildingValue100": "Building Value 100% Pre-inspection",
       "totalValue": "Total Value"
+    },
+    "method": {
+      "label": "Recording method",
+      "detail": "Itemize by work",
+      "summary": "Overall",
+      "locked": "Method locked",
+      "lockedHint": "Data was carried over or already recorded — switching method would discard it on save",
+      "switchTitle": "Switch recording method?",
+      "switchMessage": "Only one method is saved. Switching discards what is entered in the current one when you save."
+    },
+    "building": "Building",
+    "selectProperty": "Select property",
+    "buildingProperties": "Building properties",
+    "copyFrom": "Copy from",
+    "copyFromTitle": "Copy construction data from",
+    "copyConfirmTitle": "Replace the construction data?",
+    "copyConfirmMessage": "Copying replaces this property's work items, summary and remark with the other building's.",
+    "finishedAfterLeaving": "Finished after you left that property — nothing was applied; do it again there",
+    "copyNothing": "That building has no construction data to copy",
+    "copyFailed": "Could not copy the construction data — try again",
+    "kpi": {
+      "value100": "Value at 100%",
+      "progress": "Overall progress",
+      "currentValue": "Current value",
+      "appraisedValue": "Appraised value (whole appraisal)"
+    },
+    "tabs": {
+      "items": "Work items"
+    },
+    "remark": {
+      "label": "Remark",
+      "placeholder": "Enter remark or additional notes..."
+    },
+    "clearGuard": {
+      "title": "Delete construction data?",
+      "message": "This property has construction inspection data. If you save it as not under construction, all of it — work items, progress, summary and remark — will be deleted.",
+      "confirm": "Confirm",
+      "cancel": "Cancel"
+    },
+    "summaryForm": {
+      "detailPlaceholder": "Enter detail...",
+      "uploadTitle": "Upload construction detail",
+      "uploading": "Uploading...",
+      "uploadFailed": "Upload failed — try again",
+      "clickToUpload": "Click to upload",
+      "orDragDrop": "or drag and drop",
+      "document": "Document",
+      "removeDocument": "Remove document"
+    },
+    "showCalculated": "Show calculated columns",
+    "split": {
+      "ok": "Proportion 100% ✓",
+      "short": "Proportion {{pct}}% · {{diff}}% short",
+      "over": "Proportion {{pct}}% · {{diff}}% over"
+    },
+    "grid": {
+      "workItem": "Work item",
+      "proportion": "Proportion",
+      "constructionValue": "Work value",
+      "previousProgress": "Previous",
+      "currentProgress": "This round",
+      "change": "Change",
+      "currentShare": "Cumulative share",
+      "ofBuilding": "(% of building)",
+      "previousValue": "Previous value",
+      "currentValue": "Value this round",
+      "baht": "(Baht)",
+      "addItem": "+ Add item…",
+      "itemCount_one": "{{count}} item",
+      "itemCount_other": "{{count}} items",
+      "groupTotal": "Total {{name}}",
+      "buildingTotal": "Building total",
+      "otherGroup": "Other",
+      "workGroupsFailed": "Could not load the list of work items — reload the page to add items",
+      "workGroupsLoading": "Loading the list of work items…",
+      "confirmDelete": "Delete?",
+      "remove": "Remove {{name}}",
+      "empty": "No work items yet — pick \"+ Add item…\" on a group, then split the proportions to 100%.",
+      "emptyReadOnly": "No work items recorded."
+    },
+    "status": {
+      "regressed_one": "{{count}} item below the previous round: {{names}} — if intended (e.g. rework), note why in Remark",
+      "regressed_other": "{{count}} items below the previous round: {{names}} — if intended (e.g. rework), note why in Remark",
+      "carriedOver": "Items and proportions carried over from the previous round · changing a proportion recalculates the previous value",
+      "carriedOverNoMoney": "Items and proportions carried over from the previous round",
+      "pending_one": "{{count}} item not entered this round: {{names}} — saved as is, it counts as 0%",
+      "pending_other": "{{count}} items not entered this round: {{names}} — saved as is, they count as 0%",
+      "summaryPending": "This round is not entered yet — saved as is, it counts as 0%",
+      "overBlocksSave": "Proportions add up to {{pct}}% — Save is blocked until they are 100% or less (Save draft still works)",
+      "keys": "↑ ↓ / Enter moves between rows",
+      "summaryRegressed": "Below the previous round — note why in Remark"
+    },
+    "valueHint": {
+      "condo": "A condo unit keeps the appraisal's full appraised value however far construction has progressed. The percentages record progress only; they do not change the price.",
+      "noValueBase": "No Building Cost Value yet, so the value by progress cannot be worked out.",
+      "noValueBaseEditable": "No Building Cost Value yet, so the value by progress cannot be worked out. Enter the Building Cost Value in the Building tab first."
     }
   },
   "forms": {
@@ -1602,6 +1933,15 @@
       "autoFillLabel": "Copy owner from land"
     },
     "land": {
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Occupancy",
+        "location": "Location",
+        "areaZoning": "Area & Zoning",
+        "access": "Access & Road",
+        "utilities": "Utilities",
+        "physical": "Physical Characteristics"
+      },
       "pageTitle": "Land Detail",
       "sectionTitleInfo": "Land Information",
       "sectionTitleLocation": "Land Location",
@@ -1614,15 +1954,50 @@
       "sectionTitleOtherInfo": "Other Information"
     },
     "building": {
-      "sectionTitle": "Building Details"
+      "sectionTitle": "Building Details",
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Legal",
+        "typeUse": "Type & Use",
+        "condition": "Condition & Quality",
+        "structure": "Structure",
+        "finishes": "Finishes & Enclosure",
+        "floors": "Floors",
+        "areaCost": "Area & Cost",
+        "limitations": "Limitations",
+        "remark": "Remark"
+      }
     },
     "condo": {
+      "groups": {
+        "identification": "Identification",
+        "ownership": "Ownership & Legal",
+        "location": "Location",
+        "surroundings": "Surroundings",
+        "building": "Building",
+        "unit": "Unit",
+        "referencePrices": "Reference Prices",
+        "remark": "Remarks"
+      },
+      "areaDetailHint": "Each part of the unit and its area",
+      "areaDetailEmpty": "No area details yet",
+      "addArea": "Add area",
+      "areaItems": "{{count}} items · {{total}} m²",
+      "matchesUsable": "Matches usable area",
+      "diffVsUsable": "{{diff}} vs usable area",
+      "areaTotal": "Total",
       "sectionTitle": "Condo Details",
       "areaDetail": "Area Detail",
       "pma": "PMA Information",
       "buildingInsuranceSectionTitle": "Building Insurance",
-      "fireInsuranceCondition": "Fire Insurance Condition",
-      "buildingInsurancePrice": "Building Insurance Coverage"
+      "fireInsuranceCode": "Fire Insurance Condition",
+      "buildingInsurancePrice": "Calculated Value",
+      "buildingInsurancePriceOverride": "Building Insurance Coverage (Keyed)",
+      "buildingInsurance": "Building Insurance",
+      "buildingInsuranceCalculated": "Calculated from fire insurance condition",
+      "buildingInsuranceEdited": "Edited · calculated {{value}}",
+      "buildingInsuranceFormula": "{{rate}} × {{area}} m²",
+      "useCalculatedValue": "Use calculated value"
     },
     "machinery": {
       "sectionTitle": "Machinery Details"
@@ -1631,13 +2006,59 @@
       "sectionTitle": "Title Deed"
     },
     "leaseAgreement": {
+      "groups": {
+        "contract": "Contract Information"
+      },
       "sectionTitle": "Lease Agreement"
     },
     "rentalInfo": {
-      "sectionTitle": "Rental Information"
+      "addPeriod": "Add period",
+      "addUpFront": "Add up-front payment",
+      "groups": {
+        "schedule": "Schedule",
+        "growthRate": "Growth Rate",
+        "upFront": "Up Front",
+        "rentalSchedule": "Rental Schedule"
+      },
+      "sectionTitle": "Rental Information",
+      "growthFrequency": "Frequency",
+      "growthPeriod": "Period",
+      "edit": "Edit",
+      "editing": "Editing",
+      "generate": "GENERATE",
+      "generating": "GENERATING...",
+      "scheduleEmpty": "Click GENERATE to compute the rental schedule",
+      "upFrontMismatch": "Total up front entries ({{entries}}) does not match the Up Front amount ({{total}})",
+      "table": {
+        "atYear": "At Year",
+        "toYear": "To Year",
+        "growthRate": "Growth Rate",
+        "growthAmount": "Growth Amount",
+        "totalAmount": "Total Amount (Baht)",
+        "atDate": "At Date",
+        "upFrontAmount": "Up Front Amount",
+        "year": "Year",
+        "contractStart": "Contract Start",
+        "contractEnd": "Contract End",
+        "upFrontPerYear": "Up Front (Baht/Year)",
+        "rentalFeePerYear": "Contract Rental Fee (Baht/Year)",
+        "growthRatePct": "Growth Rate %",
+        "total": "Total"
+      },
+      "deleteRow": {
+        "title": "Delete Row",
+        "message": "Are you sure you want to delete this row? This action cannot be undone.",
+        "confirm": "Delete",
+        "cancel": "Cancel"
+      }
     },
     "marketComparable": {
-      "sectionTitle": "Market Comparable"
+      "sectionTitle": "Market Comparable",
+      "duplicateDialog": {
+        "title": "Duplicate Market Comparable",
+        "message": "Are you sure you want to duplicate this market comparable? A new comparable will be created with the same details.",
+        "confirm": "Duplicate"
+      }
     }
   },
   "validation": {
@@ -1733,9 +2154,6 @@
     "quotationStarted": "Quotation started — companies have been invited",
     "quotationAddSelectDraft": "Please select a Draft quotation to add to",
     "quotationAddedToDraft": "Appraisal added to {{quotationNumber}}",
-    "voteSubmitFailed": "Failed to submit vote",
-    "committeeDecisionRecorded": "Committee decision recorded",
-    "voteRecorded": "Vote recorded",
     "propertyCondoUpdated": "Property condominium updated successfully",
     "propertyCondoCreated": "Property condominium created successfully",
     "propertyLandUpdated": "Property land updated successfully",
@@ -1900,6 +2318,11 @@
     "save": "Save"
   },
   "landCharacteristicsForm": {
+    "deductionsLabel": "Reason",
+    "confirmClearDeductions": {
+      "title": "Turn off area deductions?",
+      "message": "Switching this off deletes the deduction rows you entered ({{count}}) and restores the appraised area to the registered title area."
+    },
     "sections": {
       "landfill": "Landfill",
       "road": "Road",
@@ -1911,7 +2334,7 @@
       "transportation": "Transportation",
       "anticipationOfProperty": "Anticipation of Property",
       "limitation": "Limitation",
-      "eviction": "Eviction",
+      "eviction": "Right Restriction",
       "allocation": "Allocation",
       "hasBuilding": "Has Building",
       "remark": "Remark"
@@ -1990,8 +2413,8 @@
       "littleChanceOfProsperity": "Little Chance of Prosperity"
     },
     "evictionOptions": {
-      "permanentElectricity": "Permanent Electricity",
-      "subwayLine": "Subway Line",
+      "permanentElectricity": "High-Voltage Power Line",
+      "subwayLine": "Underground Railway Line",
       "other": "Other"
     },
     "allocationOptions": {
@@ -2102,8 +2525,6 @@
     "totalRow": "Total"
   },
   "approvalListSection": {
-    "title": "Committee Approval",
-    "notActiveYet": "Committee approval is not active for this appraisal yet.",
     "returnedBanner": "This appraisal has been returned for revision.",
     "conditionsTitle": "Approval Conditions",
     "votesDisplay": "{{received}}/{{total}} votes",
@@ -2124,13 +2545,6 @@
     "conditionRoleRequiredDefault": "Required role must vote",
     "conditionMinVotes": "At least {{n}} votes required",
     "conditionMinVotesDefault": "Minimum vote count required",
-    "columns": {
-      "member": "Member",
-      "role": "Role",
-      "vote": "Vote",
-      "date": "Date",
-      "comments": "Comments"
-    },
     "stats": {
       "votesReceived": "Votes received",
       "approve": "Approve",
@@ -2302,15 +2716,15 @@
       "sourceInfo": "Source of information",
       "sourcePlaceholder": "e.g. sale sign, agent, website",
       "priceUnit": "Price unit",
-      "saleDate": "Sale date",
+      "saleDate": "Selling date",
       "latitude": "Latitude",
       "longitude": "Longitude",
       "other": "Other"
     },
     "price": {
       "label": "Price",
-      "sale": "Sale price",
-      "offer": "Offer price",
+      "sale": "Selling price",
+      "offer": "Offering price",
       "notSaved": "Not saved yet"
     },
     "location": {
@@ -2333,5 +2747,471 @@
       "createFailed": "Could not create the market comparable. Please try again.",
       "linkFailed": "The comparable was created but could not be linked to this appraisal."
     }
+  },
+  "titleEntry": {
+    "viewLabel": "View",
+    "viewDocument": "Document",
+    "viewForm": "Form",
+    "typeLabel": "Type",
+    "summary": "No. {{no}} · {{area}} rai",
+    "required": "Required",
+    "checks": {
+      "title": "On-site checks",
+      "hint": "Not printed on the title"
+    },
+    "price": {
+      "title": "Government appraisal",
+      "label": "Appraised price",
+      "formula": "{{wa}} sq.wa × {{rate}}"
+    },
+    "sections": {
+      "document": {
+        "title": "Title document"
+      },
+      "position": {
+        "title": "Land position"
+      },
+      "area": {
+        "title": "Area"
+      }
+    },
+    "area": {
+      "rai": "rai",
+      "ngan": "ngan",
+      "wa": "sq.wa",
+      "total": "Total {{wa}} sq.wa",
+      "asRai": "= {{rnw}} rai",
+      "required": "Enter the area in at least one box"
+    },
+    "fields": {
+      "titleNumber": "Title number",
+      "bookNumber": "Book",
+      "pageNumber": "Page",
+      "rawang": "Rawang",
+      "landParcelNumber": "Land number",
+      "surveyNumber": "Survey page",
+      "mapSheetNumber": "Sheet",
+      "aerialMapName": "Aerial photo map name",
+      "aerialMapNumber": "Aerial photo number",
+      "boundaryMarkerType": "Boundary marker",
+      "boundaryMarkerRemark": "Boundary marker remark",
+      "documentValidationResultType": "Document validation",
+      "isMissingFromSurvey": "Missed out on the survey",
+      "governmentPricePerSqWa": "Government price per sq.wa"
+    },
+    "deed": {
+      "registry": "Registration",
+      "ns3kAreaLead": "Area",
+      "ns3kMap": "Plot and adjoining boundaries",
+      "mapScaleAerial": "Aerial photo scale",
+      "ns3kIssuedFor": "This certificate of use is issued to show that",
+      "holderName": "Name",
+      "ns3kPossessed": "has occupied and used the plot described above",
+      "docSubtitle": "A document of title",
+      "issuedUnder": "Issued under the Land Code",
+      "subDistrict": "Sub-district",
+      "district": "District",
+      "province": "Province",
+      "issuedTo": "Issued to",
+      "nationality": "Nationality",
+      "houseNo": "House no.",
+      "moo": "Moo",
+      "road": "Road",
+      "soi": "Soi",
+      "mapScaleSheet": "Map sheet scale",
+      "mapScale": "Scale",
+      "issuedOn": "Issued on",
+      "month": "Month",
+      "year": "B.E.",
+      "watermark": "Replica for data entry",
+      "emblem": "Seal",
+      "positionBox": "Land position",
+      "areaLead": "This plot has an area of approx.",
+      "total": "Total",
+      "map": "Map",
+      "number": "No.",
+      "book": "Book",
+      "page": "Page",
+      "rawang": "Rawang",
+      "aerialMapName": "Aerial photo",
+      "aerialMapNumber": "No.",
+      "mapSheet": "Sheet",
+      "landParcel": "Land no.",
+      "survey": "Survey page",
+      "rai": "rai",
+      "ngan": "ngan",
+      "wa": "sq.wa",
+      "waShort": "sq.wa",
+      "headings": {
+        "DEED": {
+          "title": "Title Deed",
+          "noun": "Title deed"
+        },
+        "NS3K": {
+          "title": "Certificate of Use",
+          "sub": "(Nor Sor 3 Kor)",
+          "noun": "Nor Sor 3 Kor"
+        },
+        "NS3": {
+          "title": "Certificate of Use",
+          "sub": "(Nor Sor 3)",
+          "noun": "Nor Sor 3"
+        },
+        "NS3KO": {
+          "title": "Certificate of Use",
+          "sub": "(Nor Sor 3 Khor)",
+          "noun": "Nor Sor 3 Khor"
+        },
+        "POSR": {
+          "title": "Possessory Right",
+          "noun": "Possessory right"
+        },
+        "OTHER": {
+          "title": "Title Document",
+          "noun": "Title document"
+        }
+      },
+      "landLocated": "Land located at",
+      "ns3Possessed": "has possessed and used the land above, as evidenced below",
+      "ns3AreaLead": "Approximate area",
+      "ns3Map": "Approximate land plan",
+      "north": "North",
+      "south": "South",
+      "east": "East",
+      "west": "West"
+    },
+    "list": {
+      "type": "Type",
+      "document": "No. · Book · Page",
+      "position": "Land position",
+      "area": "Area",
+      "bookPage": "Book {{book}} · Page {{page}}",
+      "rai": "{{rnw}} rai",
+      "wa": "{{wa}} sq.wa",
+      "total_one": "Total {{count}} title",
+      "total_other": "Total {{count}} titles",
+      "incomplete": "Incomplete",
+      "empty": "No land titles yet",
+      "add": "Add title",
+      "edit": "Edit",
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete title",
+      "deleteMessage": "Delete this title? This cannot be undone."
+    }
+  },
+  "fieldLabels": {
+    "land": {
+      "propertyName": "Property Name",
+      "landDescription": "Land Description",
+      "isOwnerVerifiedLand": "Check Owner",
+      "ownerNameLand": "Owner",
+      "hasObligation": "Is Obligation",
+      "obligationDetails": "Obligation",
+      "isRentedOut": "Land is rented out to others",
+      "isLandLocationVerified": "Land Location Verified",
+      "landCheckMethodType": "Check By",
+      "landCheckMethodTypeOther": "Other",
+      "subDistrict": "Sub District",
+      "districtName": "District",
+      "provinceName": "Province",
+      "dopaSubDistrict": "Sub District",
+      "dopaDistrictName": "District",
+      "dopaProvinceName": "Province",
+      "landOffice": "Land Office",
+      "village": "Village",
+      "addressLocation": "Address / Location",
+      "street": "Street",
+      "soi": "Soi",
+      "distanceFromMainRoad": "Distance",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "landZoneType": "Location",
+      "landZoneTypeOther": "Other",
+      "urbanPlanningType": "Type of urban plan",
+      "landUseType": "Land Use",
+      "landUseTypeOther": "Other",
+      "allocationType": "Allocation",
+      "propertyAnticipationType": "Anticipation of Prosperity",
+      "propertyAnticipationTypeOther": "Other",
+      "plotLocationType": "Plot Location",
+      "plotLocationTypeOther": "Other",
+      "accessRoadWidth": "Road Width",
+      "rightOfWay": "Number of Lanes",
+      "roadFrontage": "Wide frontage of land adjacent to the road",
+      "numberOfSidesFacingRoad": "Number of sides facing the road",
+      "roadPassInFrontOfLand": "Road passing in front of the land",
+      "landAccessibilityType": "Land Accessibility",
+      "landAccessibilityRemark": "Land Accessibility Description",
+      "roadSurfaceType": "Road Surface",
+      "roadSurfaceTypeOther": "Other",
+      "landEntranceExitType": "Entrance-Exit",
+      "landEntranceExitTypeOther": "Other",
+      "transportationAccessType": "Transportation",
+      "transportationAccessTypeOther": "Other",
+      "publicUtilityType": "Public Utility",
+      "publicUtilityTypeOther": "Other",
+      "landShapeType": "Land Shape",
+      "landShapeTypeOther": "Other",
+      "landFillType": "Landfill",
+      "landFillTypeOther": "Other",
+      "landFillPercent": "Landfill ( % )",
+      "soilLevel": "Soil Level ( cm )",
+      "pondArea": "Pond Area",
+      "pondDepth": "Depth of Pit",
+      "hasBuilding": "Has Building",
+      "hasBuildingOther": "Other",
+      "northAdjacentArea": "North Consecutive Area",
+      "northBoundaryLength": "North Estimate Length",
+      "southAdjacentArea": "South Consecutive Area",
+      "southBoundaryLength": "South Estimate Length",
+      "eastAdjacentArea": "East Consecutive Area",
+      "eastBoundaryLength": "East Estimate Length",
+      "westAdjacentArea": "West Consecutive Area",
+      "westBoundaryLength": "West Estimate Length",
+      "isExpropriated": "Is Expropriate",
+      "expropriationRemark": "Is Expropriated",
+      "isInExpropriationLine": "In Line Expropriate",
+      "expropriationLineRemark": "Is In Line Expropriate",
+      "royalDecree": "Royal Decree",
+      "isEncroached": "Encroached / used by others / area cut for another reason",
+      "encroachmentRemark": "Is Encroached",
+      "isLandlocked": "Is Landlocked",
+      "landlockedRemark": "Is Landlocked Other",
+      "isForestBoundary": "Is Forest Boundary",
+      "forestBoundaryRemark": "Is Forest Boundary Other",
+      "hasElectricity": "Far from Electricity",
+      "electricityDistance": "Distance from Electricity (m)",
+      "evictionType": "Right Restriction",
+      "evictionTypeOther": "Other",
+      "otherLegalLimitations": "Other",
+      "remark": "Remark",
+      "titleAddressGroup": "Title Address",
+      "dopaAddressGroup": "Dopa Address"
+    },
+    "building": {
+      "houseNumber": "House No.",
+      "noHouseNumber": "No House Number",
+      "propertyName": "Property Name",
+      "buildingNumber": "Building No.",
+      "modelName": "Model Name",
+      "builtOnTitleNumber": "Construction on Title Deed No.",
+      "isOwnerVerifiedBuilding": "Check Owner",
+      "ownerNameBuilding": "Owner",
+      "hasObligation": "Is Obligation",
+      "obligationDetails": "Obligation",
+      "isAppraisable": "Appraisal",
+      "buildingType": "Building Type",
+      "buildingTypeOther": "Building Type Other",
+      "constructionType": "Construction Type",
+      "constructionTypeOther": "Other",
+      "utilizationType": "Utilization",
+      "utilizationTypeOther": "Other",
+      "isResidential": "Is Residential",
+      "residentialRemark": "Due To",
+      "buildingConditionType": "Building Condition",
+      "buildingConditionTypeOther": "Other",
+      "buildingAge": "Building Age",
+      "isUnderConstruction": "Under Construction",
+      "constructionLicenseExpirationDate": "License Expiration Date",
+      "buildingMaterialType": "Building Material",
+      "buildingStyleType": "Building Style",
+      "buildingStyleTypeOther": "Other",
+      "decorationType": "Decoration",
+      "decorationTypeOther": "Decoration Other",
+      "constructionStyleType": "Construction Style",
+      "structureType": "General Structure",
+      "structureTypeOther": "Other",
+      "roofFrameType": "Roof Frame",
+      "roofFrameTypeOther": "Other",
+      "roofType": "Roof",
+      "roofTypeOther": "Other",
+      "ceilingType": "Ceiling",
+      "ceilingTypeOther": "Other",
+      "interiorWallType": "Interior Wall",
+      "interiorWallTypeOther": "Other",
+      "exteriorWallType": "Exterior Wall",
+      "exteriorWallTypeOther": "Other",
+      "fenceType": "Fence",
+      "fenceTypeOther": "Other",
+      "numberOfFloors": "Total Floor",
+      "fromFloorNumber": "From Floor No.",
+      "toFloorNumber": "To Floor No.",
+      "floorType": "Floor Type",
+      "floorStructureType": "Floor Structure / Structure",
+      "floorSurfaceType": "Floor Surface / Surface",
+      "totalBuildingArea": "Total Building Area (sq.m.)",
+      "areaDescription": "Detail",
+      "area": "Area",
+      "pricePerSqMBeforeDepreciation": "Price per Sq.m",
+      "priceBeforeDepreciation": "RCN Before Depre.",
+      "depreciationYearPct": "Rate per year",
+      "totalDepreciationPct": "Depreciation",
+      "priceDepreciation": "Depre. Amount",
+      "priceAfterDepreciation": "RCN After Depre.",
+      "finalCostValue": "Building Cost Value",
+      "buildingInsurance": "Building Insurance",
+      "isEncroachingOthers": "Is Encroaching",
+      "encroachingOthersArea": "Encroaching Area",
+      "encroachingOthersRemark": "Encroachment Remark",
+      "remark": "Remark"
+    },
+    "condo": {
+      "propertyName": "Property Name",
+      "condoName": "Condominium Name",
+      "roomNumber": "Room No",
+      "floorNumber": "Floor No",
+      "modelName": "Model Name",
+      "buildingNumber": "Building No",
+      "condoRegistrationNumber": "Condominium Registration No",
+      "titleNumber": "Title Number",
+      "isOwnerVerified": "Check Owner",
+      "ownerName": "Owner",
+      "hasObligation": "Is Obligation",
+      "obligationDetails": "Obligation",
+      "documentValidationResultType": "Document Validation",
+      "titleAddressGroup": "Title Address",
+      "subDistrict": "Sub District",
+      "districtName": "District",
+      "provinceName": "Province",
+      "dopaAddressGroup": "Dopa Address",
+      "dopaSubDistrict": "Sub District",
+      "dopaDistrictName": "District",
+      "dopaProvinceName": "Province",
+      "landOffice": "Land Office",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "locationType": "Location",
+      "street": "Street",
+      "soi": "Soi",
+      "distanceFromMainRoad": "Distance",
+      "accessRoadWidth": "Road Width",
+      "rightOfWay": "Number of Lanes",
+      "roadSurfaceType": "Road Surface",
+      "roadSurfaceTypeOther": "Other",
+      "publicUtilityType": "Public Utility",
+      "publicUtilityTypeOther": "Other",
+      "landEntranceExitType": "Entrance-Exit",
+      "landEntranceExitTypeOther": "Other",
+      "urbanPlanningType": "Type of urban plan",
+      "landFillType": "Land Condition",
+      "landFillTypeOther": "Other",
+      "landUseType": "Land Use",
+      "landUseTypeOther": "Other",
+      "environmentType": "Environment",
+      "environmentTypeOther": "Other",
+      "buildingAge": "Building Age (Years)",
+      "numberOfFloors": "Total Number of Floors",
+      "isUnderConstruction": "Under Construction",
+      "buildingConditionType": "Condominium Condition",
+      "buildingConditionTypeOther": "Other",
+      "buildingFormType": "Building Form",
+      "constructionMaterialType": "Construction Materials",
+      "roofType": "Roof",
+      "roofTypeOther": "Other",
+      "facilityType": "Facility",
+      "facilityTypeOther": "Other",
+      "usableArea": "Usable Area (Sq.M)",
+      "decorationType": "Decoration",
+      "decorationTypeOther": "Other",
+      "roomLayoutType": "Room Layout",
+      "roomLayoutTypeOther": "Other",
+      "locationViewType": "Location View",
+      "locationViewTypeOther": "Other",
+      "groundFloorMaterialType": "Ground Flooring Materials",
+      "groundFloorMaterialTypeOther": "Other",
+      "upperFloorMaterialType": "Upper Flooring Materials",
+      "upperFloorMaterialTypeOther": "Other",
+      "bathroomFloorMaterialType": "Bathroom Flooring Materials",
+      "bathroomFloorMaterialTypeOther": "Other",
+      "areaDescription": "Area detail",
+      "areaSize": "Area (m²)",
+      "isMissingFromSurvey": "Missed out on the survey",
+      "governmentPricePerSqm": "Government Price per Sq.M",
+      "governmentPrice": "Government Price",
+      "fireInsuranceCode": "Fire Insurance Condition",
+      "buildingInsurancePrice": "(t) forms.condo.buildingInsurancePrice",
+      "buildingInsurancePriceOverride": "(t) forms.condo.buildingInsurance",
+      "isExpropriated": "Is Expropriated",
+      "expropriationRemark": "Is Expropriated",
+      "isInExpropriationLine": "In Line Expropriated",
+      "expropriationLineRemark": "Is In Line Expropriated",
+      "royalDecree": "Royal Decree",
+      "isForestBoundary": "Is In Forest Boundary",
+      "forestBoundaryRemark": "Is In Forest Boundary",
+      "remark": "Remark"
+    },
+    "lease": {
+      "lessorName": "Lessor Name",
+      "lesseeName": "Lessee Name",
+      "leasePeriodAsContract": "Lease Period as Contract",
+      "remainingLeaseAsAppraisalDate": "Remaining Lease as Appraisal Date",
+      "contractNo": "Contract No",
+      "leaseStartDate": "Lease Start Date",
+      "leaseEndDate": "Lease End Date",
+      "leaseRentFee": "Lease Rent Fee",
+      "rentAdjust": "Rent Adjust",
+      "sublease": "Sublease",
+      "additionalExpenses": "Additional Expenses",
+      "leaseTerminate": "Lease Terminate",
+      "contractRenewal": "Contract Renewal",
+      "rentalTermsImpactingPropertyUse": "Rental Terms Impacting Property Use",
+      "terminationOfLease": "Termination of Lease",
+      "remark": "Remark"
+    },
+    "rental": {
+      "numberOfYears": "Number of Year",
+      "firstYearStartDate": "First Year Start From",
+      "contractRentalFeePerYear": "Contract Rental Fee per Year",
+      "upFrontTotalAmount": "Up Front",
+      "growthRatePercent": "Growth Rate %",
+      "growthIntervalYears": "Every (Year)",
+      "growthRateType": "Contract Rental Fee Growth Rate"
+    },
+    "landBuildingPma": {
+      "titleNumber": "Title Number",
+      "bookNumber": "Book Number",
+      "pageNumber": "Page Number",
+      "rawang": "Rawang",
+      "landNumber": "Land Number",
+      "surveyNumber": "Survey Number",
+      "areaRai": "Rai",
+      "areaNgan": "Ngan",
+      "areaSquareWa": "Sq.Wa",
+      "totalSquareWa": "Total Sq.Wa",
+      "subDistrict": "Sub District",
+      "districtName": "District",
+      "provinceName": "Province",
+      "sellingPrice": "Selling Price",
+      "forcedSalePrice": "Force Selling Price",
+      "buildingInsurancePrice": "Building Insurance"
+    },
+    "condoPma": {
+      "condoName": "Condo Name",
+      "roomNumber": "Room Number",
+      "floorNumber": "Floor Number",
+      "buildingNumber": "Building Number",
+      "condoRegistrationNumber": "Condo Registration Number",
+      "titleNumber": "Title Number",
+      "subDistrict": "Sub District",
+      "districtName": "District",
+      "provinceName": "Province",
+      "sellingPrice": "Selling Price",
+      "forcedSalePrice": "Force Selling Price",
+      "buildingInsurancePrice": "Building Insurance"
+    }
+  },
+  "surfaceTable": {
+    "sectionLabel": "Floor surfaces",
+    "addFloor": "Add floor",
+    "empty": "No floor data yet",
+    "otherPlaceholder": "Specify",
+    "reversed": "To floor is lower than from floor",
+    "overlap": "Overlaps floors {{floors}}, already entered"
+  },
+  "boundaryTable": {
+    "direction": "Direction",
+    "adjacent": "Adjacent to",
+    "length": "Est. length (m)"
   }
 }

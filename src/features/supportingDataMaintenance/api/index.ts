@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { uploadForm } from '@shared/api/blobTransfer';
 import type {
   CreateDecisionDataType,
   CreateSupportingDataDetailRequest,
@@ -447,10 +448,10 @@ export const useBulkUploadSupportingDetails = () => {
       const formData = new FormData();
       formData.append('file', params.file);
 
-      const { data } = await axios.post<BulkUploadSupportingDetailsResponse>(
+      const { data } = await uploadForm<BulkUploadSupportingDetailsResponse>(
         `/supporting-data/${params.supportingId}/details/bulk-upload`,
         formData,
-        { headers: { 'Content-Type': 'multipart/form-data' } },
+        { label: params.file.name },
       );
       return data;
     },

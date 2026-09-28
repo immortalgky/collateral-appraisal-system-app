@@ -13,6 +13,7 @@ import { buildPinIcon } from '../icons';
 import Icon from '@shared/components/Icon';
 import { useGetDecisionSummary } from '@features/appraisal/api/decisionSummary';
 import { useEnrichedPropertyGroups } from '@features/appraisal/hooks/useEnrichedPropertyGroups';
+import { useCanOpenAppraisalWorkspace } from '@features/appraisal/hooks/useCanOpenAppraisalWorkspace';
 import type { PropertyItem, LandTitleInfo } from '@features/appraisal/types';
 
 interface PinDetailDrawerProps {
@@ -32,7 +33,9 @@ function Row({ label, value, mono }: { label: string; value: ReactNode; mono?: b
   return (
     <div className="flex justify-between items-start gap-3 text-sm">
       <span className="text-gray-500 shrink-0 text-xs">{label}</span>
-      <span className={['text-gray-800 text-right break-all', mono ? 'tabular-nums' : ''].join(' ')}>
+      <span
+        className={['text-gray-800 text-right break-all', mono ? 'tabular-nums' : ''].join(' ')}
+      >
         {value}
       </span>
     </div>
@@ -69,16 +72,24 @@ function LandTitleRows({ title }: { title: LandTitleInfo }) {
       {title.titleType && (
         <Row
           label={lt('titleType')}
-          value={<ParameterDisplay group="DeedType" code={title.titleType} fallback={title.titleType} />}
+          value={
+            <ParameterDisplay group="DeedType" code={title.titleType} fallback={title.titleType} />
+          }
         />
       )}
       {LAND_TITLE_FIELDS.map(f => {
         const v = title[f.key];
-        return v != null && v !== '' ? <Row key={f.key} label={lt(f.labelKey)} value={String(v)} /> : null;
+        return v != null && v !== '' ? (
+          <Row key={f.key} label={lt(f.labelKey)} value={String(v)} />
+        ) : null;
       })}
       {area && <Row label={lt('area')} value={area} mono />}
       {title.governmentPricePerSqWa != null && (
-        <Row label={lt('governmentPricePerSqWa')} value={formatNumber(title.governmentPricePerSqWa, 2)} mono />
+        <Row
+          label={lt('governmentPricePerSqWa')}
+          value={formatNumber(title.governmentPricePerSqWa, 2)}
+          mono
+        />
       )}
       {title.governmentPrice != null && (
         <Row label={lt('governmentPrice')} value={formatNumber(title.governmentPrice, 2)} mono />
@@ -101,7 +112,11 @@ function PropertyRow({ item, notSet }: { item: PropertyItem; notSet: string }) {
   return (
     <div className="flex gap-2 rounded-lg border border-gray-100 p-2">
       {item.image ? (
-        <img src={item.image} alt="" className="w-10 h-10 rounded object-cover bg-gray-100 shrink-0" />
+        <img
+          src={item.image}
+          alt=""
+          className="w-10 h-10 rounded object-cover bg-gray-100 shrink-0"
+        />
       ) : (
         <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center shrink-0">
           <Icon name="image" style="solid" className="w-3.5 h-3.5 text-gray-300" />
@@ -116,7 +131,9 @@ function PropertyRow({ item, notSet }: { item: PropertyItem; notSet: string }) {
           <span className="text-[11px] text-gray-500 tabular-nums">{item.area}</span>
         </div>
         <span className="text-xs text-gray-500 break-words">{location}</span>
-        <span className={`text-[11px] tabular-nums ${coords ? 'text-gray-500' : 'text-gray-400 italic'}`}>
+        <span
+          className={`text-[11px] tabular-nums ${coords ? 'text-gray-500' : 'text-gray-400 italic'}`}
+        >
           {coords ?? notSet}
         </span>
       </div>
@@ -153,23 +170,29 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
           <div className="flex flex-col gap-2">
             <Row
               label={t('pinDetail.appraisal.appraisalPrice')}
-              value={summaryData?.totalAppraisalPrice != null
-                ? formatNumber(summaryData.totalAppraisalPrice, 2)
-                : na}
+              value={
+                summaryData?.totalAppraisalPrice != null
+                  ? formatNumber(summaryData.totalAppraisalPrice, 2)
+                  : na
+              }
               mono
             />
             <Row
               label={t('pinDetail.appraisal.forceSellingPrice')}
-              value={summaryData?.forceSellingPrice != null
-                ? formatNumber(summaryData.forceSellingPrice, 2)
-                : na}
+              value={
+                summaryData?.forceSellingPrice != null
+                  ? formatNumber(summaryData.forceSellingPrice, 2)
+                  : na
+              }
               mono
             />
             <Row
               label={t('pinDetail.appraisal.buildingInsurance')}
-              value={summaryData?.buildingInsurance != null
-                ? formatNumber(summaryData.buildingInsurance, 2)
-                : na}
+              value={
+                summaryData?.buildingInsurance != null
+                  ? formatNumber(summaryData.buildingInsurance, 2)
+                  : na
+              }
               mono
             />
           </div>
@@ -177,22 +200,23 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
       </div>
 
       {/* ── Land Title Information (all titles across every property/group, flattened) ── */}
-      {!isLoadingGroups && (() => {
-        const allTitles = groups.flatMap(g => g.items).flatMap(it => it.titles ?? []);
-        if (allTitles.length === 0) return null;
-        return (
-          <div>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
-              {t('pinDetail.appraisal.landTitleInfo')}
-            </p>
-            <div className="flex flex-col gap-2">
-              {allTitles.map((tt, i) => (
-                <LandTitleRows key={tt.id ?? i} title={tt} />
-              ))}
+      {!isLoadingGroups &&
+        (() => {
+          const allTitles = groups.flatMap(g => g.items).flatMap(it => it.titles ?? []);
+          if (allTitles.length === 0) return null;
+          return (
+            <div>
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                {t('pinDetail.appraisal.landTitleInfo')}
+              </p>
+              <div className="flex flex-col gap-2">
+                {allTitles.map((tt, i) => (
+                  <LandTitleRows key={tt.id ?? i} title={tt} />
+                ))}
+              </div>
             </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* ── Property groups (per-property rows) ─────────────────────── */}
       <div>
@@ -236,6 +260,7 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
 
 function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
   const { t } = useTranslation('historySearch');
+  const canOpenWorkspace = useCanOpenAppraisalWorkspace();
   const locationParts = [pin.subDistrict, pin.district, pin.province].filter(Boolean);
   const location = locationParts.join(', ') || t('common.na');
 
@@ -247,19 +272,35 @@ function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Row label={t('pinDetail.appraisal.appraisalNumber')} value={pin.appraisalNumber ?? t('common.na')} />
-        <Row label={t('pinDetail.appraisal.customerName')} value={pin.customerName ?? t('common.na')} />
+        <Row
+          label={t('pinDetail.appraisal.appraisalNumber')}
+          value={pin.appraisalNumber ?? t('common.na')}
+        />
+        <Row
+          label={t('pinDetail.appraisal.customerName')}
+          value={pin.customerName ?? t('common.na')}
+        />
         <Row
           label={t('pinDetail.appraisal.propertyType')}
-          value={pin.propertyType
-            ? <ParameterDisplay group="PropertyType" code={pin.propertyType} fallback={pin.propertyType} />
-            : t('common.na')}
+          value={
+            pin.propertyType ? (
+              <ParameterDisplay
+                group="PropertyType"
+                code={pin.propertyType}
+                fallback={pin.propertyType}
+              />
+            ) : (
+              t('common.na')
+            )
+          }
         />
         <Row
           label={t('pinDetail.appraisal.appraisedDate')}
-          value={pin.appraisedDate
-            ? new Date(pin.appraisedDate).toLocaleDateString('en-GB')
-            : t('common.na')}
+          value={
+            pin.appraisedDate
+              ? new Date(pin.appraisedDate).toLocaleDateString('en-GB')
+              : t('common.na')
+          }
         />
         <Row label={t('pinDetail.appraisal.location')} value={location} />
       </div>
@@ -273,18 +314,28 @@ function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
             <AppraisalExtraSection appraisalId={pin.appraisalId} />
           </div>
 
-          <Link
-            to={`/appraisals/${pin.appraisalId}`}
-            className="mt-2 flex items-center justify-center gap-1.5 w-full bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-sm font-medium py-2 rounded-lg transition-colors"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-        </svg>
-            {t('pinDetail.appraisal.openReport')}
-          </Link>
+          {/* Hidden, not shown and then bounced: the workspace route denies the tracking-only
+              audience, and this link opens a NEW TAB — so a credit user got a fresh tab that
+              redirected to the dashboard with nothing said. History Search stays theirs
+              (HISTORY_SEARCH_VIEW is untouched by the revoke); only the way out is gone. */}
+          {canOpenWorkspace && (
+            <Link
+              to={`/appraisals/${pin.appraisalId}`}
+              className="mt-2 flex items-center justify-center gap-1.5 w-full bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-sm font-medium py-2 rounded-lg transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                />
+              </svg>
+              {t('pinDetail.appraisal.openReport')}
+            </Link>
+          )}
         </>
       ) : null}
     </div>
@@ -389,22 +440,34 @@ function MarketComparableDetail({ pin }: { pin: MarketComparablePinDto }) {
     <div className="p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2 mb-1">
         <img src={buildPinIcon('mcExisting')} alt="" className="w-4 h-5 shrink-0" />
-        <h4 className="text-sm font-semibold text-gray-800">{t('pinDetail.marketComparable.title')}</h4>
+        <h4 className="text-sm font-semibold text-gray-800">
+          {t('pinDetail.marketComparable.title')}
+        </h4>
       </div>
 
       <div className="flex flex-col gap-2">
         <Row label={t('pinDetail.marketComparable.surveyName')} value={pin.surveyName} />
         <Row
           label={t('pinDetail.marketComparable.propertyType')}
-          value={pin.propertyType
-            ? <ParameterDisplay group="PropertyType" code={pin.propertyType} fallback={pin.propertyType} />
-            : t('common.na')}
+          value={
+            pin.propertyType ? (
+              <ParameterDisplay
+                group="PropertyType"
+                code={pin.propertyType}
+                fallback={pin.propertyType}
+              />
+            ) : (
+              t('common.na')
+            )
+          }
         />
         <Row
           label={t('pinDetail.marketComparable.infoDateTime')}
-          value={pin.infoDateTime
-            ? new Date(pin.infoDateTime).toLocaleDateString('en-GB')
-            : t('common.na')}
+          value={
+            pin.infoDateTime
+              ? new Date(pin.infoDateTime).toLocaleDateString('en-GB')
+              : t('common.na')
+          }
         />
         <Row
           label={t('pinDetail.marketComparable.offerPrice')}
@@ -429,7 +492,13 @@ const FOCUSABLE_SELECTOR =
 
 // ─── Drawer shell ─────────────────────────────────────────────────────────────
 
-export function PinDetailDrawer({ pin, onClose, actionLabel, onAction, actionPending }: PinDetailDrawerProps) {
+export function PinDetailDrawer({
+  pin,
+  onClose,
+  actionLabel,
+  onAction,
+  actionPending,
+}: PinDetailDrawerProps) {
   const { t } = useTranslation('historySearch');
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -489,11 +558,7 @@ export function PinDetailDrawer({ pin, onClose, actionLabel, onAction, actionPen
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-30"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0 z-30" onClick={onClose} aria-hidden="true" />
 
       {/* Drawer */}
       <div
@@ -540,7 +605,14 @@ export function PinDetailDrawer({ pin, onClose, actionLabel, onAction, actionPen
             >
               {actionPending && (
                 <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
               )}

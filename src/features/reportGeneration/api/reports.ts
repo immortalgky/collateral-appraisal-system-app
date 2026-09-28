@@ -1,4 +1,14 @@
 import axios from '@shared/api/axiosInstance';
+import { SERVER_WORKING_TIMEOUT_MS, downloadBlob } from '@shared/api/blobTransfer';
+import type { TransferOptions } from '@shared/api/blobTransfer';
+
+/**
+ * Server-side render, no Puppeteer — quick, but not 10-seconds quick on a large book. The same
+ * budget blobTransfer gives a server that has not sent its first byte yet, because this renders
+ * the same report the PDF route does: a shorter one here would mean a book that opens as a PDF
+ * still failing in the preview tab, which is the thing this was raised to prevent.
+ */
+const REPORT_HTML_TIMEOUT_MS = SERVER_WORKING_TIMEOUT_MS;
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Types
@@ -65,27 +75,26 @@ export const reportKeys = {
 export const fetchReportPdf = async (
   reportTypeKey: string,
   entityId: string,
+  options: TransferOptions = {},
 ): Promise<Blob> => {
-  const response = await axios.get(`/reports/${reportTypeKey}/${entityId}`, {
-    params: { download: false },
-    responseType: 'blob',
+  // Generating the PDF happens before the first byte is sent, so this cannot live under the
+  // instance-wide 10s cap. See blobTransfer.
+  const response = await downloadBlob(`/reports/${reportTypeKey}/${entityId}`, {
+    ...options,
+    params: { ...options.params, download: false },
   });
-  return response.data as Blob;
+  return response.data;
 };
 
 /**
  * Fetches the PDF and triggers a browser download.
  * Mirrors exportUserAccessReport in userManagement/api/reports.ts.
  */
-export const downloadReportPdf = async (
-  reportTypeKey: string,
-  entityId: string,
-): Promise<void> => {
-  const response = await axios.get(`/reports/${reportTypeKey}/${entityId}`, {
+export const downloadReportPdf = async (reportTypeKey: string, entityId: string): Promise<void> => {
+  const response = await downloadBlob(`/reports/${reportTypeKey}/${entityId}`, {
     params: { download: true },
-    responseType: 'blob',
   });
-  const blob = response.data as Blob;
+  const blob = response.data;
   const url = URL.createObjectURL(new Blob([blob]));
   const link = document.createElement('a');
   link.href = url;
@@ -136,9 +145,7 @@ export const listReportJobs = async (): Promise<ReportJobSummary[]> => {
  * Returns 409 if not ready, 410 if artifact gone — callers should handle those.
  */
 export const downloadReportJobPdf = async (jobId: string): Promise<Blob> => {
-  const { data } = await axios.get<Blob>(`/reports/jobs/${jobId}/download`, {
-    responseType: 'blob',
-  });
+  const { data } = await downloadBlob(`/reports/jobs/${jobId}/download`);
   return data;
 };
 
@@ -154,12 +161,13 @@ export const downloadReportJobPdf = async (jobId: string): Promise<Blob> => {
  * appraisal-book), so raw interpolation is safe with no slash-encoding concern.
  * GET /reports/{reportTypeKey}/html/{entityId}
  */
-export const fetchReportHtml = async (
-  reportTypeKey: string,
-  entityId: string,
-): Promise<string> => {
+export const fetchReportHtml = async (reportTypeKey: string, entityId: string): Promise<string> => {
   const { data } = await axios.get<string>(`/reports/${reportTypeKey}/html/${entityId}`, {
     responseType: 'text',
+    // Not a blob, so it cannot use blobTransfer's watchdog — but it renders the same report the
+    // PDF route does, and leaving it on the instance-wide 10s cap would mean a book that now opens
+    // as a PDF still fails in the preview tab.
+    timeout: REPORT_HTML_TIMEOUT_MS,
   });
   return data;
 };

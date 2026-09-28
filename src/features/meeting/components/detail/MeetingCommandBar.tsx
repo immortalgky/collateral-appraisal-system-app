@@ -154,7 +154,7 @@ const MeetingCommandBar = ({
     <div className="sticky top-0 z-20 -mx-1 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-white/80 bg-white/95">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/meetings')} type="button">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)} type="button">
             <Icon name="arrow-left" style="solid" className="size-3.5 sm:mr-1.5" />
             <span className="hidden sm:inline">{t('buttons.back')}</span>
           </Button>

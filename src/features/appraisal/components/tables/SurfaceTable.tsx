@@ -1,234 +1,261 @@
+import { Fragment } from 'react';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
+import { useFieldArray, useFormContext, useWatch, Controller } from 'react-hook-form';
 import Icon from '@/shared/components/Icon';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
-import { useState, useCallback } from 'react';
-import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import SurfaceInputModal, { type SurfaceData } from './SurfaceInputModal';
+import { useFormReadOnly } from '@/shared/components/form/context';
+import { useParameterOptions } from '@/shared/utils/parameterUtils';
+import TDropdown from '@/features/pricingAnalysis/components/table/TDropdown';
+import { FIELD, NumCell, TD, TH } from './denseTable';
+
+export interface SurfaceData {
+  fromFloorNumber: number | null;
+  toFloorNumber: number | null;
+  floorType: string;
+  floorStructureType: string;
+  floorStructureTypeOther: string;
+  floorSurfaceType: string;
+  floorSurfaceTypeOther: string;
+}
 
 interface SurfaceTableProps {
   name: string;
-  headers?: SurfaceTableHeader[]; // Keep for backwards compatibility but not used in new design
+  headers?: unknown[]; // Kept for backwards compatibility, not used.
 }
 
-type SurfaceTableHeader = SurfaceTableRegularHeader | SurfaceTableRowNumberHeader;
+/** The parameter code every group uses for "Other — specify". */
+const OTHER = '99';
 
-interface SurfaceTableRegularHeader {
-  name: string;
-  label: string;
-  inputType?: 'text' | 'number' | 'dropdown';
-  options?: { label: string; value: string }[];
-}
-
-interface SurfaceTableRowNumberHeader {
-  rowNumberColumn: true;
-  label: string;
-}
+const floorText = (from: number | null, to: number | null) =>
+  from === to ? `${from}` : `${from}–${to}`;
 
 const SurfaceTable = ({ name }: SurfaceTableProps) => {
-  const { control } = useFormContext();
-  const { append, remove, update } = useFieldArray({
-    control,
-    name: name,
-  });
+  const { t } = useTranslation('appraisal');
+  const { t: tc } = useTranslation('common');
+  const { control, register } = useFormContext();
+  const { fields, append, remove } = useFieldArray({ control, name });
+  const formReadOnly = useFormReadOnly();
+  const values: SurfaceData[] = useWatch({ name, control }) || [];
 
-  const values = useWatch({ name, control }) || [];
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const optionsByGroup = {
+    FloorType: useParameterOptions('FloorType'),
+    FloorStructure: useParameterOptions('FloorStructure'),
+    FloorSurface: useParameterOptions('FloorSurface'),
+  };
+  // Inactive codes stay hidden unless the row already carries one, as the slide-over did.
+  const optionsFor = (group: keyof typeof optionsByGroup, current: string) =>
+    optionsByGroup[group]
+      .filter(o => o.isActive !== false || o.value === current)
+      .map(o => ({ value: o.value ?? undefined, label: o.label }));
 
-  const handleAddClick = useCallback(() => {
-    setEditIndex(null);
-    setModalMode('add');
-    setIsModalOpen(true);
-  }, []);
-
-  const handleEditClick = useCallback((index: number) => {
-    setEditIndex(index);
-    setModalMode('edit');
-    setIsModalOpen(true);
-  }, []);
-
-  const handleRowDoubleClick = useCallback(
-    (index: number) => {
-      handleEditClick(index);
-    },
-    [handleEditClick],
-  );
-
-  const handleDeleteClick = useCallback(
-    (index: number) => {
-      remove(index);
-    },
-    [remove],
-  );
-
-  const handleModalClose = useCallback(() => {
-    setIsModalOpen(false);
-    setEditIndex(null);
-  }, []);
-
-  const handleModalSave = useCallback(
-    (data: SurfaceData) => {
-      if (modalMode === 'add') {
-        append(data);
-      } else if (editIndex !== null) {
-        update(editIndex, data);
-      }
-    },
-    [modalMode, editIndex, append, update],
-  );
-
-  const getInitialData = (): SurfaceData | null => {
-    if (editIndex !== null && values[editIndex]) {
-      return values[editIndex];
-    }
-    return null;
+  const handleAdd = () => {
+    const last = values[values.length - 1];
+    const next = last?.toFloorNumber != null ? last.toFloorNumber + 1 : 1;
+    append({
+      fromFloorNumber: next,
+      toFloorNumber: next,
+      floorType: '',
+      floorStructureType: '',
+      floorStructureTypeOther: '',
+      floorSurfaceType: '',
+      floorSurfaceTypeOther: '',
+    });
   };
 
-  const isEmpty = values.length === 0;
-
-  const formatFloorRange = (from: number | null, to: number | null) => {
-    if (from === null && to === null) return '-';
-    if (from === to) return `Floor ${from}`;
-    if (from === null) return `Floor ${to}`;
-    if (to === null) return `Floor ${from}`;
-    return `Floor ${from} - ${to}`;
+  // Warnings, not errors: neither was ever enforced, and saved rows may already look like this.
+  const warningFor = (row: SurfaceData, index: number) => {
+    const from = row.fromFloorNumber;
+    const to = row.toFloorNumber;
+    if (from == null || to == null) return null;
+    if (to < from) return t('surfaceTable.reversed');
+    const overlaps = values.filter(
+      (other, i) =>
+        i !== index &&
+        other.fromFloorNumber != null &&
+        other.toFloorNumber != null &&
+        other.fromFloorNumber <= to &&
+        from <= other.toFloorNumber,
+    );
+    return overlaps.length
+      ? t('surfaceTable.overlap', {
+          floors: overlaps.map(o => floorText(o.fromFloorNumber, o.toFloorNumber)).join(', '),
+        })
+      : null;
   };
 
-  const formatFloorOther = (group: string, code: string | null, valueOther: string | null) => {
-    if (code === '99') return `${valueOther}`;
-    return <ParameterDisplay group={group} code={code} />;
-  };
+  const columnCount = formReadOnly ? 5 : 6;
+
+  const addButton = !formReadOnly && (
+    <button
+      type="button"
+      onClick={handleAdd}
+      className="inline-flex items-center rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
+    >
+      + {t('surfaceTable.addFloor')}
+    </button>
+  );
+
+  const paramCell = (
+    path: string,
+    group: keyof typeof optionsByGroup,
+    current: string,
+    otherField?: string,
+    otherValue?: string,
+  ) => (
+    <div className="flex flex-col gap-1">
+      {formReadOnly ? (
+        <ParameterDisplay group={group} code={current} />
+      ) : (
+        <Controller
+          name={path}
+          control={control}
+          render={({ field: f }) => (
+            <TDropdown
+              dense
+              showValue={false}
+              placeholder="-"
+              options={optionsFor(group, current)}
+              value={f.value || null}
+              onChange={v => f.onChange(v ?? '')}
+            />
+          )}
+        />
+      )}
+      {otherField &&
+        current === OTHER &&
+        (formReadOnly ? (
+          <span className="text-gray-500">{otherValue}</span>
+        ) : (
+          <input
+            {...register(otherField)}
+            maxLength={100}
+            placeholder={t('surfaceTable.otherPlaceholder')}
+            className={FIELD}
+          />
+        ))}
+    </div>
+  );
 
   return (
-    // data-field: scroll target for array-level errors on this table (see form/utils.ts).
-    <div data-field={name} className="col-span-12">
-      <div className="w-full overflow-x-auto rounded-lg border border-gray-200">
-        <table className="table w-full">
-          <thead>
-            <tr className="bg-primary-700">
-              <th className="text-white text-sm font-medium py-3 px-4 text-left rounded-tl-lg w-12">
-                #
-              </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Range</th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Type</th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">
-                Floor Structure
-              </th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-left">Floor Surface</th>
-              <th className="text-white text-sm font-medium py-3 px-4 text-right rounded-tr-lg w-24">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isEmpty ? (
-              <tr>
-                <td colSpan={6} className="py-8 text-center">
-                  <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                      <Icon style="regular" name="layer-group" className="size-6 text-gray-400" />
-                    </div>
-                    <p className="text-sm text-gray-500">No surface data yet</p>
-                    <button
-                      type="button"
-                      onClick={handleAddClick}
-                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-primary-600 bg-primary-50 rounded-lg hover:bg-primary-100 transition-colors"
-                    >
-                      <Icon style="solid" name="plus" className="size-3.5" />
-                      Add first surface
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ) : (
-              values.map((row: SurfaceData, index: number) => (
-                <tr
-                  key={index}
-                  className="hover:bg-gray-50 transition-colors cursor-pointer"
-                  onDoubleClick={() => handleRowDoubleClick(index)}
-                >
-                  <td className="py-3 px-4">
-                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-sm font-medium text-gray-600">
-                      {index + 1}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900">
-                    {formatFloorRange(row.fromFloorNumber, row.toFloorNumber)}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900">
-                    <ParameterDisplay group="FloorType" code={row.floorType} />
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900">
-                    {formatFloorOther(
-                      'floorStructure',
-                      row.floorStructureType,
-                      row.floorStructureTypeOther,
-                    )}
-                  </td>
-                  <td className="py-3 px-4 text-sm text-gray-900">
-                    {formatFloorOther(
-                      'floorSurface',
-                      row.floorSurfaceType,
-                      row.floorSurfaceTypeOther,
-                    )}
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex gap-1 justify-end">
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleEditClick(index);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
-                        title="Edit"
-                      >
-                        <Icon style="solid" name="pen" className="size-3.5" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={e => {
-                          e.stopPropagation();
-                          handleDeleteClick(index);
-                        }}
-                        className="w-8 h-8 flex items-center justify-center rounded-lg bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
-                        title="Delete"
-                      >
-                        <Icon style="solid" name="trash" className="size-3.5" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Add button */}
-      {!isEmpty && (
-        <div className="border-x border-b border-gray-200 rounded-b-lg">
-          <button
-            type="button"
-            onClick={handleAddClick}
-            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-medium text-primary-600 bg-gray-50 hover:bg-primary-50 transition-colors rounded-b-lg"
-          >
-            <div className="w-6 h-6 rounded-full bg-primary-500 flex items-center justify-center">
-              <Icon style="solid" name="plus" className="size-3 text-white" />
+    <div className="col-span-12">
+      {/* data-field: scroll target for array-level errors (see form/utils.ts). Kept on an empty
+          anchor rather than the card: formLayout.css restyles any [data-field] that wraps a table. */}
+      <div data-field={name} className="cas-repeater" />
+      <div className="cas-labelled-table">
+        <div className="cas-table-label">{t('surfaceTable.sectionLabel')}</div>
+        <div className="cas-table-card cas-add-under min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
+          {fields.length === 0 ? (
+            <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
+              <p className="text-sm text-gray-500">{t('surfaceTable.empty')}</p>
+              {addButton}
             </div>
-            Add surface
-          </button>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[720px] border-collapse text-[0.875rem] leading-tight tabular-nums">
+                  <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
+                    <tr>
+                      <th className={clsx(TH, 'w-[90px] text-right')}>
+                        {t('fieldLabels.building.fromFloorNumber')}
+                      </th>
+                      <th className={clsx(TH, 'w-[90px] text-right')}>
+                        {t('fieldLabels.building.toFloorNumber')}
+                      </th>
+                      <th className={clsx(TH, 'text-left')}>
+                        {t('fieldLabels.building.floorType')}
+                      </th>
+                      <th className={clsx(TH, 'text-left')}>
+                        {t('fieldLabels.building.floorStructureType')}
+                      </th>
+                      <th className={clsx(TH, 'text-left')}>
+                        {t('fieldLabels.building.floorSurfaceType')}
+                      </th>
+                      {!formReadOnly && <th className={clsx(TH, 'w-8')} />}
+                    </tr>
+                  </thead>
+                  <tbody className="text-[#1f2937]">
+                    {fields.map((field, index) => {
+                      const row = values[index] ?? ({} as SurfaceData);
+                      const p = `${name}.${index}`;
+                      const warning = warningFor(row, index);
+                      return (
+                        <Fragment key={field.id}>
+                          <tr>
+                            <td className={clsx(TD, 'text-right align-top')}>
+                              <NumCell
+                                name={`${p}.fromFloorNumber`}
+                                readOnly={formReadOnly}
+                                digits={0}
+                                maxInt={3}
+                                invalid={!!warning}
+                              />
+                            </td>
+                            <td className={clsx(TD, 'text-right align-top')}>
+                              <NumCell
+                                name={`${p}.toFloorNumber`}
+                                readOnly={formReadOnly}
+                                digits={0}
+                                maxInt={3}
+                                invalid={!!warning}
+                              />
+                            </td>
+                            <td className={clsx(TD, 'align-top')}>
+                              {paramCell(`${p}.floorType`, 'FloorType', row.floorType)}
+                            </td>
+                            <td className={clsx(TD, 'align-top')}>
+                              {paramCell(
+                                `${p}.floorStructureType`,
+                                'FloorStructure',
+                                row.floorStructureType,
+                                `${p}.floorStructureTypeOther`,
+                                row.floorStructureTypeOther,
+                              )}
+                            </td>
+                            <td className={clsx(TD, 'align-top')}>
+                              {paramCell(
+                                `${p}.floorSurfaceType`,
+                                'FloorSurface',
+                                row.floorSurfaceType,
+                                `${p}.floorSurfaceTypeOther`,
+                                row.floorSurfaceTypeOther,
+                              )}
+                            </td>
+                            {!formReadOnly && (
+                              <td className={clsx(TD, 'text-center align-top')}>
+                                <button
+                                  type="button"
+                                  onClick={() => remove(index)}
+                                  aria-label={tc('actions.delete')}
+                                  className="inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                >
+                                  <Icon style="solid" name="trash" className="size-3" />
+                                </button>
+                              </td>
+                            )}
+                          </tr>
+                          {warning && (
+                            <tr>
+                              <td
+                                colSpan={columnCount}
+                                className="px-2 pb-1 text-[0.75rem] text-amber-700"
+                              >
+                                {warning}
+                              </td>
+                            </tr>
+                          )}
+                        </Fragment>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+              {/* Under the table, not in a row of it: an action on the list, not one of its floors. */}
+              {addButton && <div className="pt-2">{addButton}</div>}
+            </>
+          )}
         </div>
-      )}
-
-      {/* Modal */}
-      <SurfaceInputModal
-        isOpen={isModalOpen}
-        onClose={handleModalClose}
-        onSave={handleModalSave}
-        initialData={getInitialData()}
-        mode={modalMode}
-      />
+      </div>
     </div>
   );
 };

@@ -57,7 +57,7 @@ const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) 
     <div className="col-span-full xl:col-span-4">
       <div className="grid grid-cols-12 gap-4">{children}</div>
     </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5" />}
+    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5" />}
   </>
 );
 
@@ -74,8 +74,8 @@ function CondoDetailForm() {
 
   const lat = watch('latitude');
   const lon = watch('longitude');
-  const parsedLat = lat !== undefined && lat !== '' ? Number(lat) : null;
-  const parsedLon = lon !== undefined && lon !== '' ? Number(lon) : null;
+  const parsedLat = lat != null && lat !== '' ? Number(lat) : null;
+  const parsedLon = lon != null && lon !== '' ? Number(lon) : null;
   const initialLat = parsedLat != null && !Number.isNaN(parsedLat) ? parsedLat : null;
   const initialLon = parsedLon != null && !Number.isNaN(parsedLon) ? parsedLon : null;
 
@@ -124,10 +124,10 @@ function CondoDetailForm() {
         // Narrow on `type` as well as `name`: spreading into a bare FormField union
         // widens `options` across every variant (boolean-toggle requires exactly
         // [string, string]), which breaks the discriminated union.
-        if (field.type === 'dropdown' && field.name === 'fireInsuranceCondition')
+        if (field.type === 'dropdown' && field.name === 'fireInsuranceCode')
           return {
             ...field,
-            label: t('forms.condo.fireInsuranceCondition'),
+            label: t('forms.condo.fireInsuranceCode'),
             options: fireInsuranceOptions,
           };
         if (field.name === 'buildingInsurancePrice')

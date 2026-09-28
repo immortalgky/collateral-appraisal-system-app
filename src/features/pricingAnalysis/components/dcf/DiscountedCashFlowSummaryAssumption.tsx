@@ -1,5 +1,6 @@
 import type { DCFAssumption, DCFCategory, DCFSection } from '../../types/dcf';
 import { useFormContext, type UseFormGetValues, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import { Icon } from '@shared/components';
@@ -7,6 +8,7 @@ import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModal
 import { MethodSpecifiedRoomIncomePerDaySummary } from './dcfMethods/MethodSpecifiedRoomIncomePerDaySummary';
 import { assumptionParams, methodParams } from '../../data/dcfParameters';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
+import { dcfAssumptionLabel, dcfCategoryLabel, dcfSectionLabel } from '../../domain/dcf/dcfNameLabel';
 import { DisplayOnlyProvider } from '../table/RHFInputCell';
 
 interface DiscountedCashFlowSummaryAssumptionProps {
@@ -21,6 +23,7 @@ interface ViewAssumptionSummaryButtonProps {
 }
 
 export function ViewAssumptionSummaryButton({ onClick }: ViewAssumptionSummaryButtonProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <button
       type="button"
@@ -34,7 +37,7 @@ export function ViewAssumptionSummaryButton({ onClick }: ViewAssumptionSummaryBu
       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-xs font-medium text-gray-700 transition-colors cursor-pointer shadow-sm"
     >
       <Icon name="list-check" style="regular" className="size-3" />
-      View Assumption Summary
+      {t('dcf.viewSummary')}
     </button>
   );
 }
@@ -76,6 +79,7 @@ export function DiscountedCashFlowSummaryAssumption({
   showAssumptionSummary,
   onShowAssumptionSummary,
 }: DiscountedCashFlowSummaryAssumptionProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { control } = useFormContext();
   const sections = (useWatch({ name: 'sections', control }) ?? []) as DCFSection[];
 
@@ -83,7 +87,7 @@ export function DiscountedCashFlowSummaryAssumption({
     <Modal
       isOpen={showAssumptionSummary}
       onClose={onShowAssumptionSummary}
-      title="Assumption Summary"
+      title={t('dcf.summaryModal.title')}
       size="3xl"
     >
       <DisplayOnlyProvider value={true}>
@@ -97,7 +101,7 @@ export function DiscountedCashFlowSummaryAssumption({
             // Force natural height for ScrollableTableContainer rows (designed for
             // flex-column parents with established height).
             '[&_.h-full]:h-auto',
-            "[&_[style*='max-height']]:!max-h-none",
+            "[&_[style*='max-height']]:max-h-none!",
           )}
         >
           {sections.map((section, sectionIdx) => {
@@ -147,10 +151,10 @@ export function DiscountedCashFlowSummaryAssumption({
                         theme.text,
                       )}
                     >
-                      Section
+                      {t('dcf.summaryModal.sectionLabel')}
                     </div>
                     <div className="text-base font-semibold text-gray-900 truncate">
-                      {section.sectionName}
+                      {dcfSectionLabel(t, section.sectionType, section.sectionName)}
                     </div>
                   </div>
                   <span
@@ -160,7 +164,10 @@ export function DiscountedCashFlowSummaryAssumption({
                       theme.text,
                     )}
                   >
-                    {assumptionCount} {assumptionCount === 1 ? 'assumption' : 'assumptions'}
+                    {assumptionCount}{' '}
+                    {assumptionCount === 1
+                      ? t('dcf.summaryModal.assumptionSingular')
+                      : t('dcf.summaryModal.assumptionPlural')}
                   </span>
                 </header>
 
@@ -175,7 +182,7 @@ export function DiscountedCashFlowSummaryAssumption({
                             aria-hidden
                           />
                           <span className="text-sm font-semibold text-gray-900">
-                            {category.categoryName}
+                            {dcfCategoryLabel(t, category.categoryName, category.categoryName)}
                           </span>
                           <span
                             className={clsx(
@@ -199,12 +206,17 @@ export function DiscountedCashFlowSummaryAssumption({
 
                               const methodLabel =
                                 methodParams.find(m => m.code === methodCode)?.description ?? '';
-                              const displayName =
+                              const rawDisplayName =
                                 assumption.assumptionName ||
                                 assumptionParams.find(p => p.code === assumption.assumptionType)
                                   ?.description ||
                                 assumption.assumptionType ||
-                                'Assumption';
+                                t('dcf.summaryModal.assumptionFallback');
+                              const displayName = dcfAssumptionLabel(
+                                t,
+                                assumption.assumptionType,
+                                rawDisplayName,
+                              );
 
                               const methodProps = {
                                 name: `sections.${sectionIdx}.categories.${categoryIdx}.assumptions.${assumptionIdx}.method.detail`,

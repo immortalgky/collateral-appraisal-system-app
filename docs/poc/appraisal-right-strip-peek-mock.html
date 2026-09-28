@@ -1,0 +1,257 @@
+<!doctype html>
+<meta charset="utf-8" />
+<title>Right Strip Peek</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* Single-theme on purpose: mirrors the app's light-only UI. */
+  :root {
+    color-scheme: light;
+    --font: 'Roboto', 'Sarabun', ui-sans-serif, system-ui, sans-serif;
+    --page: #f9fafb; --card: #fff; --ink: #111827; --ink-2: #374151; --muted: #6b7280; --muted-2: #9ca3af;
+    --line: #e5e7eb; --line-soft: #f3f4f6;
+    --primary: #0d9488; --primary-ink: #0f766e; --primary-bg: #f0fdfa;
+    --red: #dc2626; --amber: #d97706; --amber-bg: #fffbeb; --green: #059669; --green-bg: #ecfdf5;
+    --blue: #2563eb; --blue-bg: #eff6ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 13px/1.45 var(--font); color: var(--ink); background: var(--page); }
+  header.top { padding: 16px 24px 0; }
+  h1 { font-size: 18px; margin: 0 0 4px; }
+  .lead { color: var(--muted); margin: 0 0 12px; max-width: 900px; }
+  .tabs { display: flex; gap: 4px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 0; background: none; padding: 8px 14px; font: inherit; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; }
+  .tabs button.on { color: var(--primary-ink); border-bottom-color: var(--primary); font-weight: 600; }
+  .note { margin: 12px 24px; padding: 10px 14px; background: var(--card); border: 1px solid var(--line); border-radius: 8px; max-width: 980px; }
+  .note b { color: var(--primary-ink); }
+  .note ul { margin: 6px 0 0; padding-left: 18px; }
+
+  /* --- fake app frame --- */
+  .frame { margin: 0 24px 24px; height: 640px; display: flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--card); position: relative; }
+  .main { flex: 1; min-width: 0; padding: 20px; overflow: auto; background: var(--page); }
+  .fake-h { height: 14px; width: 220px; background: #d1d5db; border-radius: 4px; margin-bottom: 16px; }
+  .fake-card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 16px; margin-bottom: 12px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .fake-card i { display: block; height: 30px; background: var(--line-soft); border-radius: 6px; }
+
+  .strip { width: 40px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 12px; border-left: 1px solid var(--line-soft); background: var(--card); position: relative; }
+  .sbtn { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border: 0; background: none; border-radius: 8px; color: var(--muted-2); cursor: pointer; position: relative; }
+  .sbtn:hover, .sbtn.hot { color: var(--ink-2); background: #f9fafb; }
+  .sbtn.hot { color: var(--primary-ink); background: var(--primary-bg); }
+  .sbtn svg { width: 16px; height: 16px; }
+  .badge { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 99px; background: #ef4444; color: #fff; font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .sep { width: 20px; height: 1px; background: var(--line); margin: 2px 0; }
+
+  /* --- popover card (all variants) --- */
+  .pop { position: absolute; right: 44px; width: 288px; max-height: 560px; overflow-y: auto; overflow-x: hidden; background: var(--card); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 12px 32px -8px rgba(17,24,39,.22), 0 2px 6px rgba(17,24,39,.06); z-index: 20; opacity: 0; transform: translateX(6px); pointer-events: none; transition: opacity .12s, transform .12s; }
+  .pop.show { opacity: 1; transform: none; pointer-events: auto; }
+  .pop::before { content: ''; position: absolute; right: -8px; top: 0; bottom: 0; width: 8px; } /* hover bridge */
+  .pop-h { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line-soft); position: sticky; top: 0; background: var(--card); }
+  .pop-h b { font-size: 12px; }
+  .pop-b { padding: 12px 14px; display: flex; flex-direction: column; gap: 14px; }
+  .link { border: 0; background: none; color: var(--primary-ink); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; padding: 0; }
+  .link:hover { text-decoration: underline; }
+
+  .lbl { font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted-2); margin-bottom: 6px; }
+  .row { display: flex; align-items: flex-start; gap: 8px; padding: 3px 0; }
+  .row .ic { width: 14px; color: var(--muted-2); flex-shrink: 0; margin-top: 2px; }
+  .row .ic svg { width: 12px; height: 12px; }
+  .row .k { color: var(--muted); font-size: 11px; width: 92px; flex-shrink: 0; }
+  .row .v { font-size: 12px; font-weight: 500; color: var(--ink); min-width: 0; word-break: break-word; }
+  .row .v.m { color: var(--muted-2); font-weight: 400; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+  .pill.blue { background: var(--blue-bg); color: var(--blue); }
+  .pill.amber { background: var(--amber-bg); color: var(--amber); }
+  .pill.green { background: var(--green-bg); color: var(--green); }
+  .person { display: flex; gap: 8px; align-items: center; }
+  .av { width: 24px; height: 24px; border-radius: 99px; background: var(--primary-bg); color: var(--primary-ink); font-size: 10px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+  .map { height: 110px; border-radius: 8px; background: repeating-linear-gradient(45deg,#eef2f7 0 10px,#e5ebf2 10px 20px); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 11px; }
+
+  /* --- open panel (for click-to-open + variant E) --- */
+  .panel { width: 288px; flex-shrink: 0; border-left: 1px solid var(--line-soft); background: var(--card); display: flex; flex-direction: column; overflow: hidden; }
+  .panel .pop-b { overflow: auto; }
+  .ptabs { display: flex; gap: 4px; padding: 4px; margin: 12px 14px 0; background: var(--line-soft); border-radius: 8px; }
+  .ptabs span { flex: 1; text-align: center; padding: 5px; border-radius: 6px; font-size: 11px; color: var(--muted); }
+  .ptabs span.on { background: var(--card); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.06); font-weight: 500; }
+  .x { border: 0; background: none; color: var(--muted-2); cursor: pointer; font-size: 16px; line-height: 1; padding: 4px; border-radius: 6px; }
+  .x:hover { background: var(--line-soft); color: var(--ink-2); }
+
+  /* D: glance strip */
+  .vert { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 11px; font-weight: 600; color: var(--ink-2); letter-spacing: .02em; padding: 6px 0; white-space: nowrap; }
+  .vert.sub { font-weight: 400; color: var(--muted); }
+  .dot { width: 8px; height: 8px; border-radius: 99px; }
+  .glance { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0; border-radius: 8px; width: 32px; cursor: default; }
+  .glance:hover, .glance.hot { background: var(--primary-bg); }
+
+  /* E: overlay drawer */
+  .drawer { position: absolute; top: 0; bottom: 0; right: 40px; width: 288px; background: var(--card); border-left: 1px solid var(--line); box-shadow: -12px 0 32px -12px rgba(17,24,39,.25); z-index: 20; transform: translateX(12px); opacity: 0; pointer-events: none; transition: opacity .15s, transform .15s; display: flex; flex-direction: column; }
+  .drawer.show { transform: none; opacity: 1; pointer-events: auto; }
+  .drawer .pop-b { overflow: auto; }
+  .pin { border: 0; background: none; color: var(--muted-2); cursor: pointer; padding: 4px; border-radius: 6px; display: flex; }
+  .pin:hover { background: var(--line-soft); color: var(--primary-ink); }
+  .pin svg { width: 14px; height: 14px; }
+
+  .tip { position: absolute; right: 44px; background: #111827; color: #fff; font-size: 11px; padding: 4px 8px; border-radius: 6px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .1s; z-index: 30; }
+  .tip.show { opacity: 1; }
+</style>
+
+<header class="top">
+  <h1>แถบขวาตอนหุบ: ดูรายละเอียดใบงานโดยไม่ต้องเปิดแผง</h1>
+  <p class="lead">ทุกแบบใช้ข้อมูลชุดเดียวกับแท็บ Overview · ลอง hover ที่แถบขวาของกรอบ · คลิกไอคอน = เปิดแผงเต็มเหมือนปุ่ม ‹ เดิม</p>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+<div class="note" id="note"></div>
+<div class="frame" id="frame"></div>
+
+<script>
+const I = {
+  chev: '<path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
+  info: '<circle cx="8" cy="8" r="6.3" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M8 7.2v4M8 4.9v.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  cmt: '<path d="M2.5 4.5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H7l-3 2.5v-2.5a2 2 0 0 1-1.5-2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+  flow: '<circle cx="4" cy="4" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="12" cy="12" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M4 5.8V9a3 3 0 0 0 3 3h3.2" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+  cal: '<rect x="2.5" y="3.5" width="11" height="10" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M2.5 6.5h11M5.5 2v3M10.5 2v3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+  fee: '<rect x="1.5" y="4" width="13" height="8" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+  pin: '<path d="M8 14.5s4.5-4 4.5-7.5a4.5 4.5 0 0 0-9 0c0 3.5 4.5 7.5 4.5 7.5z" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="7" r="1.5" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+  user: '<circle cx="8" cy="5.5" r="2.5" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M3 14a5 5 0 0 1 10 0" fill="none" stroke="currentColor" stroke-width="1.3"/>',
+  hash: '<path d="M6 2 4.5 14M11.5 2 10 14M2.5 6h11M2 10h11" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>',
+  thumb: '<path d="M6 2.5h4l-.8 4 2.8 2H9L8 13.5 7 8.5H4l2.8-2z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>',
+  dot: '<circle cx="8" cy="8" r="2.5" fill="currentColor"/>',
+};
+const svg = (k, s = 16) => `<svg viewBox="0 0 16 16" width="${s}" height="${s}">${I[k]}</svg>`;
+
+// Same fields, same order as the Overview tab today.
+const D = {
+  info: [
+    ['hash', 'Appraisal No.', 'APR-2026-000123'],
+    ['user', 'Customer', 'นายสมชาย ใจดี'],
+    ['dot', 'Purpose', 'ขอสินเชื่อใหม่'],
+    ['dot', 'Status', '<span class="pill blue">In Progress</span>'],
+    ['fee', 'Facility Limit', '฿5,000,000'],
+    ['fee', 'Selling Price', '฿4,200,000'],
+    ['dot', "Customer's Own Book", 'No'],
+    ['pin', 'Province', 'กรุงเทพมหานคร'],
+    ['dot', 'Priority', '<span class="pill amber">High</span>'],
+  ],
+  flow: [['flow', 'Current Activity', 'Appraisal Staff Review']],
+  appt: [
+    ['cal', 'Date/Time', 'Sep 25, 2026, 10:00'],
+    ['pin', 'Location', '99/1 ซ.สุขุมวิท 50 แขวงพระโขนง'],
+    ['dot', 'Status', 'Confirmed'],
+    ['user', 'Contact', 'คุณวิภา 081-xxx-xxxx'],
+  ],
+  fee: [
+    ['dot', 'Payment Status', '<span class="pill green">Paid</span>'],
+    ['fee', 'Total Fee', '฿3,745'],
+    ['fee', 'Customer Payable', '฿3,745'],
+    ['fee', 'Outstanding', '<span class="v m">Not set</span>'],
+  ],
+};
+const rows = list => list.map(([ic, k, v]) => `<div class="row"><span class="ic">${svg(ic, 12)}</span><span class="k">${k}</span><span class="v">${v}</span></div>`).join('');
+const sec = (label, body) => `<div><div class="lbl">${label}</div>${body}</div>`;
+const requestor = sec('Requestor', `<div class="person"><span class="av">KS</span><div><div class="v" style="font-size:12px;font-weight:500">กิตติ ศรีสุข</div><div style="font-size:11px;color:var(--muted)">Requested · Sep 20, 2026, 14:12</div></div></div>`);
+const SECTIONS = {
+  info: sec('Appraisal Info', rows(D.info)),
+  flow: sec('Workflow Progress', rows(D.flow)),
+  req: requestor,
+  appt: sec('Appointment', rows(D.appt)),
+  fee: sec('Fee Information', rows(D.fee)),
+  map: sec('Property Location', '<div class="map">แผนที่ (Leaflet)</div>'),
+};
+const fullOverview = (withMap) => ['info', 'flow', 'req', 'appt', 'fee', ...(withMap ? ['map'] : [])].map(k => SECTIONS[k]).join('');
+// Header already carries No. + Status, so the body skips them.
+const compact = `<div>${rows([D.info[1], D.info[8], D.flow[0], D.appt[0], D.info[7]])}</div>`;
+
+const fakeMain = '<div class="main"><div class="fake-h"></div>' +
+  Array.from({ length: 5 }, () => '<div class="fake-card">' + '<i></i>'.repeat(6) + '</div>').join('') + '</div>';
+
+let panelOpen = false, pinned = false;
+
+// Hover open/close with a short grace period so the pointer can travel from icon into the card.
+function hoverPair(trigger, target, onShow) {
+  let t;
+  const show = () => { clearTimeout(t); onShow?.(); target.classList.add('show'); trigger.classList.add('hot'); };
+  const hide = () => { t = setTimeout(() => { if (pinned) return; target.classList.remove('show'); trigger.classList.remove('hot'); }, 150); };
+  [trigger, target].forEach(el => { el.addEventListener('mouseenter', show); el.addEventListener('mouseleave', hide); });
+  trigger.addEventListener('focus', show); trigger.addEventListener('blur', hide);
+}
+
+const commentBtn = `<button class="sbtn" title="Comments (3)">${svg('cmt')}<span class="badge">3</span></button>`;
+const openBtn = `<button class="sbtn" data-open title="Show application details">${svg('chev')}</button>`;
+
+const V = [
+  {
+    key: 'A', name: 'A · ไอคอน ⓘ + การ์ดเต็ม',
+    note: `<b>เพิ่มไอคอน ⓘ อีก 1 ตัว</b> hover แล้วการ์ดจะลอยออกมา มีข้อมูล Overview ครบทุกช่อง ยกเว้นแผนที่<ul><li>👍 ตรงกับที่ขอที่สุด ข้อมูลเหมือนตอนเปิดแผงทุกช่อง</li><li>👎 การ์ดยาว ต้อง scroll บนจอเตี้ย</li></ul>`,
+    strip: () => `${openBtn}<button class="sbtn" id="trg">${svg('info')}</button>${commentBtn}`,
+    pop: () => `<div class="pop" id="pop" style="top:52px"><div class="pop-h"><b>Application Details</b><button class="link" data-open>เปิดแผง →</button></div><div class="pop-b">${fullOverview(false)}</div></div>`,
+  },
+  {
+    key: 'B', name: 'B · ไอคอน ⓘ + การ์ดย่อ',
+    note: `<b>การ์ดย่อเฉพาะช่องที่ดูบ่อย</b> หัวการ์ดมีเลขที่กับสถานะ ข้างในมีลูกค้า Priority กิจกรรมปัจจุบัน วันนัด และจังหวัด ส่วนที่เหลือกด "ดูทั้งหมด"<ul><li>👍 อ่านจบในแวบเดียว ไม่ต้อง scroll</li><li>👎 ต้องเลือกว่าจะเก็บช่องไหน ตอนนี้ผมเลือกให้ ช่วยยืนยันด้วย</li></ul>`,
+    strip: () => `${openBtn}<button class="sbtn" id="trg">${svg('info')}</button>${commentBtn}`,
+    pop: () => `<div class="pop" id="pop" style="top:52px"><div class="pop-h"><b>APR-2026-000123</b><span class="pill blue">In Progress</span></div><div class="pop-b">${compact}</div><div style="padding:0 14px 12px;text-align:right"><button class="link" data-open>ดูทั้งหมด →</button></div></div>`,
+  },
+  {
+    key: 'C', name: 'C · ไอคอนรายหมวด',
+    note: `<b>ไอคอนหมวดละ 1 ตัว</b> ได้แก่ ข้อมูล ขั้นตอน นัดหมาย ค่าธรรมเนียม และแผนที่ hover ตัวไหนก็เห็นเฉพาะหมวดนั้น<ul><li>👍 การ์ดเล็ก ตรงจุด และแผนที่ใส่ได้เพราะโหลดเฉพาะตอน hover ไอคอนหมุด</li><li>👎 ไอคอนเยอะขึ้น 5 ตัว ผู้ใช้ต้องจำว่าไอคอนไหนคืออะไร</li></ul>`,
+    strip: () => `${openBtn}${commentBtn}<span class="sep"></span>` +
+      [['info', 'info'], ['flow', 'flow'], ['cal', 'appt'], ['fee', 'fee'], ['pin', 'map']].map(([ic, s]) => `<button class="sbtn" data-sec="${s}">${svg(ic)}</button>`).join(''),
+    pop: () => `<div class="pop" id="pop"><div class="pop-b" id="popb"></div></div>`,
+  },
+  {
+    key: 'D', name: 'D · แถบโชว์ข้อมูลตลอด',
+    note: `<b>แถบแสดงเลขที่ใบงานเป็นตัวหนังสือแนวตั้ง</b> พร้อมจุดสีบอกสถานะและ Priority เห็นได้โดยไม่ต้อง hover และเมื่อ hover จะเห็นการ์ดย่อ<ul><li>👍 รู้ว่าอยู่ใบงานไหนตลอดเวลาโดยไม่ต้องทำอะไร</li><li>👎 ตัวหนังสือแนวตั้งอ่านยาก และจุดสีต้องเรียนรู้ว่าหมายถึงอะไร</li></ul>`,
+    strip: () => `${openBtn}${commentBtn}<span class="sep"></span><div class="glance" id="trg" tabindex="0"><span class="dot" style="background:var(--blue)" title="In Progress"></span><span class="dot" style="background:var(--amber)" title="High"></span><span class="vert">APR-2026-000123</span><span class="vert sub">นายสมชาย ใจดี</span></div>`,
+    pop: () => `<div class="pop" id="pop" style="top:96px"><div class="pop-h"><b>APR-2026-000123</b><span class="pill blue">In Progress</span></div><div class="pop-b">${compact}</div><div style="padding:0 14px 12px;text-align:right"><button class="link" data-open>ดูทั้งหมด →</button></div></div>`,
+  },
+  {
+    key: 'E', name: 'E · hover ทั้งแถบ = แผงลอย',
+    note: `<b>hover ที่แถบตรงไหนก็ได้</b> แผงเต็มจะเลื่อนออกมาทับเนื้อหาชั่วคราว เนื้อหาไม่ถูกดันจนหน้ากระโดด เอาเมาส์ออกแล้วแผงหาย กด 📌 เพื่อปักไว้<ul><li>👍 ไม่ต้องเพิ่มไอคอน ได้ครบทั้ง Overview และ Comments</li><li>👎 ลากเมาส์ผ่านขอบจอเฉย ๆ ก็เด้งออกมาได้ จึงต้องหน่วงเวลาไว้ประมาณ 300ms</li></ul>`,
+    strip: () => `${openBtn}${commentBtn}`,
+    pop: () => `<div class="drawer" id="pop"><div class="pop-h"><b>Application Details</b><button class="link" data-open>ปักแผงไว้</button></div><div class="ptabs"><span class="on">Overview</span><span>Comments</span></div><div class="pop-b">${fullOverview(true)}</div></div>`,
+  },
+];
+
+let cur = 0;
+function render() {
+  const v = V[cur];
+  document.getElementById('tabs').innerHTML = V.map((x, i) => `<button class="${i === cur ? 'on' : ''}" data-i="${i}">${x.name}</button>`).join('');
+  document.getElementById('note').innerHTML = v.note;
+  const frame = document.getElementById('frame');
+  pinned = false;
+
+  if (panelOpen) {
+    frame.innerHTML = fakeMain + `<aside class="panel"><div class="pop-h" style="position:static"><b>Application Details</b><button class="x" id="close">×</button></div><div class="ptabs"><span class="on">Overview</span><span>Comments</span></div><div class="pop-b">${fullOverview(true)}</div></aside>`;
+    frame.querySelector('#close').onclick = () => { panelOpen = false; render(); };
+    return;
+  }
+  frame.innerHTML = fakeMain + `<div class="strip" id="strip">${v.strip()}</div>` + v.pop();
+  frame.querySelectorAll('[data-open]').forEach(b => b.onclick = () => { panelOpen = true; render(); });
+  const pop = frame.querySelector('#pop');
+
+  if (v.key === 'C') {
+    const popb = frame.querySelector('#popb');
+    frame.querySelectorAll('[data-sec]').forEach(b => {
+      b.onclick = () => { panelOpen = true; render(); };
+      hoverPair(b, pop, () => {
+        frame.querySelectorAll('[data-sec]').forEach(x => x.classList.remove('hot'));
+        popb.innerHTML = SECTIONS[b.dataset.sec];
+        pop.style.top = (b.offsetTop - 4) + 'px';
+      });
+    });
+  } else if (v.key === 'E') {
+    const strip = frame.querySelector('#strip');
+    let t, delay;
+    const show = () => { clearTimeout(t); delay = setTimeout(() => pop.classList.add('show'), 300); };
+    const hide = () => { clearTimeout(delay); t = setTimeout(() => pop.classList.remove('show'), 200); };
+    strip.addEventListener('mouseenter', show); strip.addEventListener('mouseleave', hide);
+    pop.addEventListener('mouseenter', () => clearTimeout(t)); pop.addEventListener('mouseleave', hide);
+  } else {
+    const trg = frame.querySelector('#trg');
+    trg.onclick = () => { panelOpen = true; render(); };
+    hoverPair(trg, pop);
+  }
+}
+document.getElementById('tabs').onclick = e => { const i = e.target.dataset.i; if (i != null) { cur = +i; panelOpen = false; render(); } };
+render();
+</script>

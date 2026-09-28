@@ -1,20 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useController, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { MethodFooterActions } from './MethodFooterActions';
 import {
   CostMachineFormSchema,
   isMachineRowLocked,
   type CostMachineFormType,
 } from '../schemas/costMachineForm';
-import { type MachineryItem } from './CostMachineSection';
+import { CostMachineSection, type MachineryItem, type MachineryRowFormValue } from './CostMachineSection';
+import { RemarkField } from './CostMachineForm';
+import { KvRow } from './KvRow';
 import toast from 'react-hot-toast';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Icon } from '@/shared/components';
+import { Button, Icon } from '@/shared/components';
+import { NumberInput } from '@/shared/components/inputs';
 import { initializeCostMachineForm } from '../adapters/initializeCostMachineForm';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import CostMachineForm from './CostMachineForm';
 import { useQueryClient } from '@tanstack/react-query';
 import { useGetMachineCostItems, useResetMethod, useSaveMachineCostItems } from '../api';
 import type { SaveMachineCostItemInput } from '../api';
@@ -22,6 +23,11 @@ import { pricingAnalysisKeys } from '../api/queryKeys';
 import DataErrorState from '@/shared/components/DataErrorState';
 import type { MarketComparableDetailType } from '../schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { MethodTopBarPortal } from './MethodTopBarPortal';
+import { MethodTabs } from './MethodTabs';
+import { DenseProvider } from './table/RHFInputCell';
+import { fmt } from '../domain/formatters';
 
 interface CostMachinePanelProps {
   activeMethod?: {
@@ -58,7 +64,6 @@ const firstNonBlank = (...values: unknown[]): string | null => {
 export function CostMachinePanel({
   activeMethod,
   propertiesMap,
-  savedMethodValue,
   marketSurveys,
   templateList,
   onCalculationSave,
@@ -116,11 +121,57 @@ export function CostMachinePanel({
   });
 
   const {
+    control,
     handleSubmit,
     formState: { isDirty },
     getValues,
     reset,
   } = methods;
+
+  const isReadOnly = usePageReadOnly();
+  // Stable id so the top-bar Save button (portaled outside this <form> via
+  // MethodTopBarPortal) still submits it natively — see WQSPanel.tsx for why.
+  const formId = 'mc-panel-form';
+
+  // Top-bar figure: sum of each row's already-computed FMV. This does NOT recompute the
+  // formula (RCN×P×F×E lives only in useRowComputedValues inside CostMachineSection) —
+  // it just totals the values that hook already put on each row, the same trivial
+  // reduce CostMachineSection itself does for its own footer total.
+  const machineryCosts = useWatch({ control, name: 'machineryCosts' }) as
+    | MachineryRowFormValue[]
+    | undefined;
+  const totalFmv = (machineryCosts ?? []).reduce((sum, row) => sum + (row?.fmv ?? 0), 0);
+  const totalQuantity = (machineryCosts ?? []).reduce(
+    (sum, row) => sum + (row?.machine?.quantity ?? 0),
+    0,
+  );
+  const totalRcn = (machineryCosts ?? []).reduce((sum, row) => sum + (row?.rcn ?? 0), 0);
+
+  // The appraiser's override of the table's FMV total (mock:2571's `mcTotOv`) — a real
+  // form field now, same as `indicatedValue` on leaseholdForm.ts/profitRentForm.ts/
+  // hypothesisForm.ts: `SaveMachineCostItemsRequest.cs` already accepts it
+  // (SetIndicatedValue/SyncMethodValueWithIndicatedValue), the FE just wasn't sending
+  // it. Being a real field also means `reset()` clears it and `isDirty` covers it for
+  // free — a bare `useState` gave neither. `field.value` stays `null` until the
+  // appraiser types something; NumberInput's own onChange already reports an emptied
+  // box as `null`, not `0` (see NumberInput.tsx's onChange type), so this never turns
+  // "cleared the box" into "saved a real zero".
+  const { field: indicatedValueField } = useController({ control, name: 'indicatedValue' });
+
+  // How far the appraiser's override sits from the table's own FMV total, which is what
+  // decides between the formula hint and the แก้เอง badge below. Null means "not
+  // overridden, use the computed total" (costMachineForm.ts:114), and mock:1636 keys its
+  // un-edited hint off exactly that null rather than off a comparison.
+  //
+  // The extra `!== totalFmv` test, which the mock doesn't have: an override that happens
+  // to equal the total is reported as NOT edited here. mock:1638 would render
+  // "ต่างจากที่คำนวณ" with an empty delta after it in that case (its `sign()` returns ''
+  // at 0), and there is nothing for the appraiser to act on — the number on screen is the
+  // computed one. This is also what the sibling summaries do; their `editedBadge`
+  // (WQSAdjustFinalValueSection.tsx:355) takes its un-edited branch on `delta === 0`, not
+  // on the field being unset, so machinery agrees with them on the degenerate case.
+  const overrideDelta =
+    indicatedValueField.value == null ? 0 : Number(indicatedValueField.value) - totalFmv;
 
   // Initialize form once when machine list and saved data are ready
   const isInitialized = useRef(false);
@@ -131,6 +182,7 @@ export function CostMachinePanel({
         machineryItems,
         savedItems: savedData?.items,
         remark: savedData?.remark ?? '',
+        indicatedValue: savedData?.indicatedValue ?? null,
         reset,
       });
     }
@@ -172,13 +224,14 @@ export function CostMachinePanel({
         methodId,
         items,
         remark: data.remark,
+        indicatedValue: data.indicatedValue,
       });
 
       if (activeMethod?.approachType && activeMethod?.methodType) {
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
-          appraisalValue: result.totalFmv,
+          appraisalValue: data.indicatedValue ?? result.totalFmv,
         });
       }
       toast.success(t('toasts.saved'));
@@ -211,74 +264,232 @@ export function CostMachinePanel({
 
   return (
     <FormProvider methods={methods} schema={CostMachineFormSchema}>
+      <MethodTopBarPortal>
+        <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
+          <span className="text-sm font-semibold text-primary tabular-nums">
+            {fmt(Number(indicatedValueField.value ?? totalFmv) || 0)}
+          </span>
+        </div>
+        {!isReadOnly && (
+          <>
+            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onCancelCalculationMethod}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {t('footer.cancel')}
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={handleOnReset}
+              disabled={saveMutation.isPending}
+              title={t('footer.reset')}
+              aria-label={t('footer.reset')}
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+            >
+              <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={saveMutation.isPending}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {!saveMutation.isPending && (
+                <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+              )}
+              {t('footer.save')}
+            </Button>
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
-        // grow/shrink with an auto basis and NO min-h-0, deliberately not `flex-1`.
-        // This form shares a flex column with the pricing accordion, which is a plain div with no
-        // shrink-0 and a body that expands to its content. Two things have to hold at once:
-        //   grow  — take the leftover space when there is any, which is what puts the ActionBar on
-        //           the bottom edge instead of trailing the last row of a short table;
-        //   no min-h-0 — the accordion keeps its automatic min-height, so once the column runs out
-        //           of room the accordion freezes at min-content and every remaining pixel of
-        //           shrink lands on this form. `min-h-0` here would let that take the form to ZERO.
-        // `basis-auto` alone does NOT protect against that — flex-basis is where shrinking starts,
-        // not a floor. Only a min-height is a floor, and dropping min-h-0 from the form is not
-        // enough on its own either: the form's min-content counts its children, and the scrolling
-        // content region below contributes 0 to it. That is why the real floor is the min-h on
-        // that region — see the comment there.
-        className="flex flex-col grow shrink basis-auto gap-4"
+        className="flex flex-col h-full min-h-0 gap-4"
       >
-        {/* Header */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
-            <Icon name="gear" className="size-4" />
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900">{t('costMachine.title')}</h2>
-        </div>
-
-        {/* Content — takes whatever height is left and scrolls inside itself, so the footer below
-            is always on the bottom edge instead of trailing the last row of a short table.
-            The min-height is what stops this from being squeezed to nothing. With `min-h-0` the
-            region contributes 0 to the form's own min-content, so the form floors at roughly the
-            header plus the Save bar and the table renders at 0px inside a scroll box that has no
-            track to scroll — reachable by expanding the pricing accordion on a short screen.
-            With a floor here the form can no longer fit, the column overflows, and the page
-            scroller on the tab content takes over: the table stays reachable.
-            240px is a floor, not a target — it is only reached when the column is shorter than
-            about 370px, which in practice means expanding the pricing accordion on a short
-            screen, and collapsing it again undoes it. In that state there are two scrollbars,
-            this one and the page's. That is the price of keeping the table inside its own box;
-            the alternative (no overflow here) lets a tall table run underneath the Save bar.
-            Save itself is reachable either way — ActionBar is `sticky bottom-0` and nothing
-            between here and the tab scroller clips it. Raise this one number if the squeezed
-            window turns out to be too small in practice. */}
-        <div className="flex-1 min-h-[240px] overflow-y-auto">
-          {isCostItemsError ? (
-            <DataErrorState
-              title={t('costMachine.loadFailed')}
-              onRetry={refetchCostItems}
-              variant="inline"
-            />
-          ) : (
-            <CostMachineForm
-              machineryItems={machineryItems}
-              isLoading={isLoadingCostItems}
-              methodId={methodId}
-              marketSurveys={marketSurveys}
-              templateList={templateList}
-            />
-          )}
-        </div>
-
-        {/* Footer save/cancel */}
-        <MethodFooterActions
-          showReset={true}
-          isSubmitting={saveMutation.isPending}
-          onReset={handleOnReset}
-          onCancel={onCancelCalculationMethod}
+        <MethodTabs
+          tabs={[
+            {
+              id: 'table',
+              label: t('costMachine.tabs.table'),
+              content: isCostItemsError ? (
+                <DataErrorState
+                  title={t('costMachine.loadFailed')}
+                  onRetry={refetchCostItems}
+                  variant="inline"
+                />
+              ) : (
+                <DenseProvider value={true}>
+                  <CostMachineSection
+                    machineryItems={machineryItems}
+                    isLoading={isLoadingCostItems}
+                    methodId={methodId}
+                    marketSurveys={marketSurveys}
+                    templateList={templateList}
+                  />
+                </DenseProvider>
+              ),
+            },
+            {
+              id: 'summary',
+              label: t('costMachine.tabs.summary'),
+              // mock:2569-2571 — four rows (Quantity, Total RCN, Total FMV, editable
+              // Indicated Value), same `.kv` card shape WQSAdjustFinalValueSection uses,
+              // beside its own Remark card rather than the Remark field standing alone.
+              // `py-[14px] px-[16px]` is the mock's own `.summary` rule (mock:585) — the
+              // inset WQS/SAG/DC already carry (WQSAdjustFinalValueSection.tsx:484,
+              // SaleAdjustmentGridForm.tsx:161, DirectComparisonForm.tsx:145). MethodTabs'
+              // shared tab body has no horizontal padding for any tab, so without this the
+              // cards sat flush against the top and left edges while every other method's
+              // floated (user: "เพิ่ม padding ให้การ์ดไม่ให้ติดซ้ายหรือบน แบบสรุปที่อื่นๆ").
+              // `grid-cols-2` stays: this tab has two cards, the summary and Remark, which
+              // is the same two-card shape the other three methods' summary tabs have.
+              content: (
+                <div className="grid grid-cols-2 items-start gap-[16px] py-[14px] px-[16px]">
+                  <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
+                    <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+                      {t('costMachine.summary.title')}
+                    </h4>
+                    {/* `KvRow` rather than the hand-rolled flex rows this replaced — the same
+                        shared row WQS/SAG/DC's summary cards use, so machinery's numbers and
+                        units land on the same x as theirs instead of wherever each row's own
+                        `w-40` happened to end (user: "ให้ข้อมูลในการ์ดตรงค่าต่างๆ ชิดขวาเหมือนที่อื่นๆ").
+                        No padding or gap on this container: every row brings its own per-cell
+                        `px-[12px]` and its own bottom border, so adding them here would double
+                        the indent and push the separators apart. */}
+                    <div className="flex flex-col text-[12.5px]">
+                      <KvRow
+                        label={t('costMachine.summary.quantity')}
+                        value={
+                          <span className="font-semibold text-gray-800">
+                            {totalQuantity.toLocaleString()}
+                          </span>
+                        }
+                        unit={t('costMachine.summary.quantityUnit')}
+                      />
+                      <KvRow
+                        label={t('costMachine.summary.totalRcn')}
+                        value={<span className="font-semibold text-gray-800">{fmt(totalRcn)}</span>}
+                        unit={t('costMachine.summary.baht')}
+                      />
+                      <KvRow
+                        label={t('costMachine.summary.totalFmvFromTable')}
+                        value={<span className="font-semibold text-gray-800">{fmt(totalFmv)}</span>}
+                        unit={t('costMachine.summary.baht')}
+                      />
+                      <KvRow
+                        label={
+                          <span className="flex flex-col">
+                            <span className="text-[14px] font-semibold text-[#0f766e]">
+                              <span className="mr-1 text-gray-400">=</span>
+                              {t('costMachine.summary.indicatedValueLabel')}
+                            </span>
+                            <span className="text-[10.5px] text-gray-400">
+                              {t('costMachine.summary.indicatedValueSubLabel')}
+                            </span>
+                          </span>
+                        }
+                        value={
+                          // No `w-[206px]` wrapper any more: the row's value column is 230px
+                          // wide and each cell carries `px-[12px]`, so its content box is that
+                          // same 206px, and NumberInput's own `fullWidth` (default true) already
+                          // puts `w-full` on both its wrapper and the input. The hard-coded width
+                          // would now be a second source of truth for the same number.
+                          <NumberInput
+                            name={indicatedValueField.name}
+                            ref={indicatedValueField.ref}
+                            value={indicatedValueField.value ?? totalFmv}
+                            onChange={e => indicatedValueField.onChange(e.target.value)}
+                            onBlur={indicatedValueField.onBlur}
+                            decimalPlaces={2}
+                            maxIntegerDigits={15}
+                            disabled={isReadOnly}
+                            // Green — same `.kv .final .in` palette as WQSAdjustFinalValueSection's
+                            // Indicated Value inputs (mock:587-589).
+                            className="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]!"
+                          />
+                        }
+                        hint={
+                          // mock:1636-1638's `.ovh` line for `mcTotOv`, the same two-branch
+                          // slot WQS/SAG/DC render through their own `editedBadge`: the
+                          // formula that produced the figure while it is still the computed
+                          // one, and once it has been typed over, the แก้เอง badge with the
+                          // signed delta plus a link back to the computed value. Without it
+                          // an override was invisible — the user's screenshot showed
+                          // 123,123,123,123,123.00 sitting where the table totals 4,750,000.00
+                          // with nothing on screen saying it had been changed.
+                          //
+                          // Built here rather than by calling the siblings' `editedBadge`:
+                          // that helper is an `RHFInputCell inputType="display"`, which
+                          // exists so those cards can read a field they don't otherwise
+                          // subscribe to and re-derive a SEEDED value through `roundToThousand`.
+                          // Neither applies here. Both operands are already live in this
+                          // render — `indicatedValueField.value` from useController and
+                          // `totalFmv` from useWatch — and machinery's computed value is a
+                          // plain sum with no rounding step, so the helper's un-edited branch
+                          // (always `comparativeAnalysis.roundingHint`, "ระบบปัดหลักพันจาก …")
+                          // would state a rounding that never happened. The three strings and
+                          // the markup are the shared ones; only the plumbing differs.
+                          overrideDelta !== 0 ? (
+                            <span className="text-[10.5px] text-gray-400 inline-flex items-center gap-1 flex-wrap justify-end">
+                              <span className="font-semibold text-[#b45309]">
+                                {t('comparativeAnalysis.editedLabel')}
+                              </span>
+                              {t('comparativeAnalysis.differsFromComputed', {
+                                value: `${overrideDelta > 0 ? '+' : '−'}${fmt(Math.abs(overrideDelta))}`,
+                              })}
+                              {!isReadOnly && (
+                                <>
+                                  <span>·</span>
+                                  {/* Writes null, not `totalFmv` — mock:4052 resets these
+                                      overrides with `state[k] = null` too. Null is the field's
+                                      own "not overridden" state, so the box goes back to
+                                      tracking the live table total (`value ?? totalFmv` above)
+                                      and a later edit to any machine row keeps flowing through.
+                                      Writing the number instead would freeze today's total in
+                                      as a permanent override that merely looks un-edited. */}
+                                  <button
+                                    type="button"
+                                    className="text-primary hover:underline"
+                                    onClick={() => indicatedValueField.onChange(null)}
+                                  >
+                                    {t('comparativeAnalysis.useComputedValue')}
+                                  </button>
+                                </>
+                              )}
+                            </span>
+                          ) : (
+                            <span className="text-[10.5px] text-gray-400">
+                              {t('costMachine.summary.computedHint')}
+                            </span>
+                          )
+                        }
+                        unit={t('costMachine.summary.baht')}
+                      />
+                    </div>
+                  </div>
+                  <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
+                    <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+                      {t('costMachine.summary.remarkTitle')}
+                    </h4>
+                    <div className="px-[12px] py-3">
+                      <RemarkField />
+                    </div>
+                  </div>
+                </div>
+              ),
+            },
+          ]}
         />
         <ConfirmDialog
           isOpen={isShowResetDialog}

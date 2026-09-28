@@ -412,7 +412,11 @@ export const useRespondNegotiation = (quotationId: string) => {
       verb: 'Accept' | 'Counter' | 'Reject';
       counterPrice?: number | null;
       message?: string | null;
-      items?: { appraisalId: string; negotiatedDiscount: number | null }[];
+      items?: {
+        appraisalId: string;
+        negotiatedDiscount: number | null;
+        itemNegotiationReason: string | null;
+      }[];
     }) => {
       const { negotiationId, ...body } = payload;
       const { data } = await axios.post(
@@ -706,6 +710,7 @@ export const useSendQuotation = (quotationId: string) => {
       bcc?: string;
       subject: string;
       content?: string;
+      attachments?: string[];
     }) => {
       const { data } = await axios.post(`/quotations/${quotationId}/send`, emailData);
       return data;

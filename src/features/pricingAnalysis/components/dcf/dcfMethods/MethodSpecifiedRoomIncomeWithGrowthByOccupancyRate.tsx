@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import type { MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateWrapper } from '../../../types/dcf';
 
@@ -18,12 +19,13 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
   baseStyles,
   isReadOnly,
 }: MethodSpecifiedRoomIncomeWithGrowthByOccupancyRateProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
             {(method.detail?.roomRateIncrease ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -33,7 +35,9 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Income Adjusted by Growth Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.methods.roomIncomeWithGrowthByOccupancyRate.incomeAdjustedByGrowthRate')}
+            </td>
             {(method.detail?.roomIncomeAdjustedValuedByGrowthRates ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -43,7 +47,7 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Occupancy Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.occupancyRate')}</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -68,9 +72,9 @@ export function MethodSpecifiedRoomIncomeWithGrowthByOccupancyRate({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Room Income</span>
-              <span>({method.detail?.saleableArea ?? 0} rooms)</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.common.roomIncome')}</span>
+              <span>{t('dcf.common.roomsCount', { count: method.detail?.saleableArea ?? 0 })}</span>
             </td>
             {(method.detail?.roomIncome ?? []).map((val, idx) => {
               return (

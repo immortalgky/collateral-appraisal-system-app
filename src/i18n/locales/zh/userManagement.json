@@ -96,7 +96,8 @@
     "addressLine1": "Address Line 1",
     "addressLine2": "Address Line 2",
     "effectiveDate": "Effective Date",
-    "expireDate": "Expire Date"
+    "expireDate": "Expire Date",
+    "hostCompanyCode": "Host Company Code"
   },
   "placeholders": {
     "searchUsers": "Search users...",
@@ -139,7 +140,8 @@
     "enterCurrentPassword": "Enter current password",
     "companyNameLocal": "Local company name",
     "addressLine1": "Address line 1",
-    "addressLine2": "Address line 2"
+    "addressLine2": "Address line 2",
+    "hostCompanyCode": "e.g. HC001"
   },
   "filters": {
     "all": "All",

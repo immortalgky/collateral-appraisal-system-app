@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import {
   DndContext,
@@ -41,6 +42,8 @@ interface ColumnVisibilityDropdownProps<K extends string> {
    * the row type nor a sort target and would otherwise squat on a key forever.
    */
   extraToggles?: { key: string; label: string; checked: boolean; onChange: () => void }[];
+  /** Rendered at the top of the panel, above the column list — e.g. a density switch. */
+  panelHeader?: ReactNode;
 }
 
 // Individual sortable row
@@ -142,6 +145,7 @@ export function ColumnVisibilityDropdown<K extends string>({
   onReset,
   canReset,
   extraToggles,
+  panelHeader,
 }: ColumnVisibilityDropdownProps<K>) {
   const { t } = useTranslation('common');
   // What the user would see as "off" relative to how the screen looks out of the box: columns they
@@ -207,6 +211,8 @@ export function ColumnVisibilityDropdown<K extends string>({
             {t('columns.reset')}
           </button>
         </div>
+
+        {panelHeader}
 
         {/* Sortable list */}
         <div className="overflow-y-auto max-h-80 p-1.5">

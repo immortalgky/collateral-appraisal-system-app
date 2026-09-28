@@ -5,6 +5,8 @@ export interface SegmentedOption<T extends string> {
   value: T;
   label: string;
   icon: string;
+  /** Shown but not choosable, e.g. a view the current data has nothing to show in. */
+  disabled?: boolean;
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -12,6 +14,8 @@ interface SegmentedControlProps<T extends string> {
   value: T;
   onChange: (value: T) => void;
   className?: string;
+  /** Names the group for screen readers. */
+  label?: string;
 }
 
 /**
@@ -27,10 +31,12 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   className,
+  label,
 }: SegmentedControlProps<T>) {
   return (
     <div
       role="group"
+      aria-label={label}
       className={clsx(
         'flex items-center gap-0.5 rounded-lg border border-gray-100 bg-gray-50/80 p-0.5',
         className,
@@ -43,9 +49,10 @@ export function SegmentedControl<T extends string>({
             key={option.value}
             type="button"
             aria-pressed={active}
+            disabled={option.disabled}
             onClick={() => onChange(option.value)}
             className={clsx(
-              'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all',
+              'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent',
               active
                 ? 'bg-white text-primary shadow-sm'
                 : 'text-gray-500 hover:bg-white/50 hover:text-gray-700',
@@ -54,7 +61,10 @@ export function SegmentedControl<T extends string>({
             <Icon
               name={option.icon}
               style="solid"
-              className={clsx('text-[11px]', active ? 'text-primary' : 'text-gray-400')}
+              className={clsx(
+                'text-[11px]',
+                active ? 'text-primary' : option.disabled ? 'text-gray-300' : 'text-gray-400',
+              )}
             />
             <span>{option.label}</span>
           </button>

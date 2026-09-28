@@ -10,7 +10,7 @@ import DocumentActionMenu from './DocumentActionMenu';
 import DocumentEditModal from './DocumentEditModal';
 import MoveDocumentModal, { type MoveTargetSection } from './MoveDocumentModal';
 import AppointmentLetterButton from './AppointmentLetterButton';
-import { useDownloadDocument, useUploadDocument } from '../api';
+import { useUploadDocument, useViewDocument } from '../api';
 import { getDocumentCategory, type UploadedDocument } from '../types/document';
 import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
 import clsx from 'clsx';
@@ -234,7 +234,9 @@ const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = (
                       </button>
                     )}
                   </div>
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">{noteText}</p>
+                  <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
+                    {noteText}
+                  </p>
                 </>
               )}
             </PopoverPanel>
@@ -321,7 +323,59 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
 
   const { mutate: uploadDocument } = useUploadDocument();
-  const { mutate: downloadDocument } = useDownloadDocument();
+  const viewDocument = useViewDocument();
+
+  // Object URLs handed to preview tabs for files that are not uploaded yet, kept so they can be
+  // released when the attachment goes. Not on a timer: that would break the preview tab's reload
+  // button, which is the same reason the server-side path waits for its tab to close.
+  const localPreviewUrls = useRef(new Map<File, { url: string; pinned?: boolean }>());
+
+  // Anything still held when the form goes: a preview URL outlives its File otherwise, and with it
+  // the whole file, for the rest of the session. This does revoke under a preview tab the user
+  // still has open — its reload button stops working — and unlike the server-side path there is no
+  // way to wait for that tab instead: `window.open(..., 'noopener')` hands back no handle to watch,
+  // and the noopener is not negotiable for a blob that is same-origin with the app. Bounded memory
+  // wins over a reload of a file that is already on screen.
+  useEffect(() => {
+    const urls = localPreviewUrls.current;
+    return () => {
+      urls.forEach(({ url }) => URL.revokeObjectURL(url));
+      urls.clear();
+    };
+  }, []);
+
+  // …and anything whose file has left the form while it stayed mounted — deleted, bulk-deleted,
+  // replaced, or dropped by a `reset()` (what happens after a save, when the rows come back as
+  // server DTOs with no `file`). Reconciling against what is actually attached covers all of them
+  // at once, rather than asking four call sites to remember.
+  const reconcilePreviews = () => {
+    if (localPreviewUrls.current.size === 0) return;
+
+    const attached = new Set<File>();
+    for (const doc of (watch('documents') as UploadedDocument[] | undefined) ?? []) {
+      if (doc.file) attached.add(doc.file);
+    }
+    for (const title of (watch('titles') as { documents?: UploadedDocument[] }[] | undefined) ??
+      []) {
+      for (const doc of title?.documents ?? []) {
+        if (doc.file) attached.add(doc.file);
+      }
+    }
+
+    localPreviewUrls.current.forEach((entry, file) => {
+      // Pinned means a replace is in flight and this file may be put back if the upload fails —
+      // see handleReplaceFileSelected. Everything else that is no longer attached is finished
+      // with, and a URL left registered keeps the whole File alive for the rest of the session.
+      if (entry.pinned || attached.has(file)) return;
+
+      URL.revokeObjectURL(entry.url);
+      localPreviewUrls.current.delete(file);
+    });
+  };
+
+  useEffect(() => {
+    reconcilePreviews();
+  });
 
   // Toggle section collapse state
   const toggleSection = (sectionKey: string) => {
@@ -565,9 +619,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       id: null,
       rowId: crypto.randomUUID(),
       titleId:
-        target.entityType === 'title'
-          ? (watch(`titles.${target.entityIndex}.id`) ?? null)
-          : null,
+        target.entityType === 'title' ? (watch(`titles.${target.entityIndex}.id`) ?? null) : null,
     };
 
     updateDocument(target.entityType, target.entityIndex, document.documentType || '', docs => {
@@ -617,6 +669,15 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       (entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex)).find(
         d => getDocKey(d) === docKey,
       ) || null;
+
+    // The outgoing file leaves the form now but comes back if the upload fails, so its preview URL
+    // is pinned until this settles — the reconcile would otherwise release it on the next render
+    // and the restored row would point at a dead URL.
+    const outgoing = currentDoc?.file ? localPreviewUrls.current.get(currentDoc.file) : undefined;
+    if (outgoing) outgoing.pinned = true;
+    const unpinOutgoing = () => {
+      if (outgoing) outgoing.pinned = false;
+    };
 
     // Create new document preserving metadata
     const tempDocument: UploadedDocument = {
@@ -673,6 +734,8 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               return [...docs];
             });
 
+            // The old file is gone for good now; let the reconcile have it.
+            unpinOutgoing();
             toast.success(t('toasts.documentReplaced'));
           },
           onError: (error: any) => {
@@ -683,6 +746,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
               );
             }
 
+            unpinOutgoing();
             toast.error(error.apiError?.detail || t('toasts.documentReplaceFailed'));
           },
         },
@@ -694,6 +758,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           docs.map(doc => (getDocKey(doc) === docKey ? currentDoc : doc)),
         );
       }
+      unpinOutgoing();
       toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
     }
   };
@@ -803,23 +868,33 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
   const handleView = (document: UploadedDocument) => {
     if (document.file) {
-      // View local file
-      const url = URL.createObjectURL(document.file);
-      window.open(url, '_blank');
+      // Not uploaded yet, so there is nothing to fetch and nothing to wait for: the bytes are
+      // already on this machine and the tab can be pointed straight at them. The URL is reused
+      // across previews of the same file and released by reconcilePreviews once the file leaves
+      // the form — one left registered keeps the whole File alive for the rest of the session.
+      const existing = localPreviewUrls.current.get(document.file);
+      const url = existing?.url ?? URL.createObjectURL(document.file);
+      localPreviewUrls.current.set(document.file, { url, pinned: existing?.pinned });
+
+      // Opened empty first, then pointed at the blob — the same two steps loadingTab uses, and for
+      // two reasons. `window.open(url, ..., 'noopener')` returns null by specification whether the
+      // tab opened or not, so a blocked pop-up cannot be told from a successful one; and the
+      // opener link still has to be severed, because a blob URL is same-origin with the app and an
+      // .html or .svg someone attaches would otherwise hold a live handle on this window.
+      const preview = window.open('', '_blank');
+      if (!preview) {
+        toast.error(t('common:documentViewer.popupBlocked'));
+        return;
+      }
+      preview.opener = null;
+      preview.location.href = url;
     } else if (document.documentId) {
-      // Download from server
-      downloadDocument(document.documentId, {
-        onSuccess: ({ blob }) => {
-          const url = URL.createObjectURL(blob);
-          window.open(url, '_blank');
-        },
-        onError: (error: any) => {
-          toast.error(error.apiError?.detail || t('toasts.documentDownloadFailed'));
-        },
-      });
+      // Stored on the server: the shared viewer opens the tab inside this click (Safari) and owns
+      // the loading page, the progress and the error from there.
+      viewDocument(document.documentId);
     } else if (document.filePath) {
       // Fallback to filePath
-      window.open(document.filePath, '_blank');
+      window.open(document.filePath, '_blank', 'noopener');
     }
   };
 
@@ -849,9 +924,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       sections.forEach(section => {
         section.documents.forEach(doc => {
           if (!doc.isUploading && doc.documentType && doc.fileName) {
-            allDocIds.add(
-              getDocumentId(section.entityType, section.entityIndex, getDocKey(doc)),
-            );
+            allDocIds.add(getDocumentId(section.entityType, section.entityIndex, getDocKey(doc)));
           }
         });
       });

@@ -1,5 +1,3 @@
-import type { CreateMarketSurveyRequestType } from './marketSurvey';
-
 export const requestTitleDtoDefaults = {
   // Discriminator field - now at top level
   collateralType: '' as string,

@@ -33,7 +33,7 @@ export const mapRequestResponseToForm = (
       loanDetail: {
         bankingSegment: response.detail?.loanDetail?.bankingSegment ?? '',
         loanApplicationNumber: response.detail?.loanDetail?.loanApplicationNumber ?? '',
-        facilityLimit: response.detail?.loanDetail?.facilityLimit ?? 0,
+        facilityLimit: response.detail?.loanDetail?.facilityLimit ?? null,
         additionalFacilityLimit: response.detail?.loanDetail?.additionalFacilityLimit ?? null,
         previousFacilityLimit: response.detail?.loanDetail?.previousFacilityLimit ?? null,
         totalSellingPrice: response.detail?.loanDetail?.totalSellingPrice ?? 0,
@@ -83,6 +83,7 @@ export const mapRequestResponseToForm = (
     properties: (response.properties ?? []).map(p => ({
       propertyType: p.propertyType ?? '',
       buildingType: p.buildingType ?? null,
+      buildingTypeOther: p.buildingTypeOther ?? null,
       sellingPrice: p.sellingPrice ?? null,
     })),
     // Type assertions needed due to complex Zod type inference differences
@@ -132,7 +133,7 @@ export const mapCopyTemplateToForm = (
       prevAppraisalId: template.prevAppraisal.appraisalId,
       prevAppraisalReportNo: template.prevAppraisal.appraisalNumber,
       prevAppraisalValue: template.prevAppraisal.appraisalValue ?? null,
-      prevAppraisalDate: template.prevAppraisal.appointmentDate ?? null,
+      prevAppraisalDate: template.prevAppraisal.appraisalDate ?? null,
       inspectionNumber: template.prevAppraisal.nextInspectionNumber ?? null,
       address: {
         houseNumber: template.detail.address?.houseNumber ?? '',
@@ -163,6 +164,7 @@ export const mapCopyTemplateToForm = (
     properties: (template.properties ?? []).map(p => ({
       propertyType: p.propertyType ?? '',
       buildingType: p.buildingType ?? null,
+      buildingTypeOther: p.buildingTypeOther ?? null,
       sellingPrice: p.sellingPrice ?? null,
     })),
     titles: (template.titles ?? []) as createRequestFormType['titles'],

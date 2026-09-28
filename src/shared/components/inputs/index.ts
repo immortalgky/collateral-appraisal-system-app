@@ -11,7 +11,7 @@ export type { HolidayInfo } from './dateConstraints';
 export { default as CalendarNavHeader } from './CalendarNavHeader';
 export { default as MonthYearPanel } from './MonthYearPanel';
 export { default as Dropdown } from './Dropdown';
-export type { ListBoxItem } from './Dropdown';
+export type { ListBoxItem, OptionFilter } from './Dropdown';
 export { default as MultiSelectDropdown } from './MultiSelectDropdown';
 export type { MultiSelectDropdownProps } from './MultiSelectDropdown';
 export { default as FileInput } from './FileInput';

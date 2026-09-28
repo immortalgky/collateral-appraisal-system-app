@@ -27,7 +27,8 @@
     },
     "filter": {
       "searchPlaceholder": "ค้นหาเลขที่ประเมิน ชื่อโครงการ…",
-      "developerPlaceholder": "กรองตามผู้พัฒนา"
+      "developerPlaceholder": "กรองตามผู้พัฒนา",
+      "developerLabel": "ผู้พัฒนาโครงการ"
     }
   },
   "detail": {
@@ -80,7 +81,12 @@
       "numFloors": "จำนวนชั้น",
       "landAreaSqWa": "เนื้อที่ดิน (ตร.วา)",
       "updatedAt": "อัปเดตล่าสุดเมื่อ",
-      "updatedBy": "อัปเดตล่าสุดโดย"
+      "updatedBy": "อัปเดตล่าสุดโดย",
+      "lastUpdated": "แก้ไขล่าสุด"
+    },
+    "kpi": {
+      "totalEstimate": "ราคาประเมินรวม (บาท)",
+      "avgEstimate": "ราคาประเมินเฉลี่ย (บาท)"
     }
   },
   "units": {
@@ -106,7 +112,8 @@
     },
     "selectAll": "เลือกทั้งหมด",
     "selectUnit": "เลือกยูนิต",
-    "bankNamePlaceholder": "ชื่อธนาคาร…"
+    "bankNamePlaceholder": "ชื่อธนาคาร…",
+    "updatedByLine": "โดย {{name}}"
   },
   "errors": {
     "loadFailed": "โหลดข้อมูลโครงการไม่สำเร็จ",

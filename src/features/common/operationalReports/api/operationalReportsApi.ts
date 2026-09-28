@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import i18n from '@/i18n';
 import axios from '@shared/api/axiosInstance';
+import { downloadBlob } from '@shared/api/blobTransfer';
 import { useCallback, useRef, useState } from 'react';
 import type { AnyReportRow, BaseReportFilter, PaginatedResult, SortDir } from './types';
 
@@ -83,7 +86,10 @@ interface UseReportExportReturn {
  * <a download> element. This is required because the endpoint is auth-gated and
  * cannot be opened via a plain window.open / href navigation.
  */
-export function useReportExport(slug: string, filter: BaseReportFilter = {}): UseReportExportReturn {
+export function useReportExport(
+  slug: string,
+  filter: BaseReportFilter = {},
+): UseReportExportReturn {
   // Ref guards against re-entrant calls; state drives the UI (disabled buttons + spinner).
   const isExportingRef = useRef(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -124,10 +130,9 @@ export function useReportExport(slug: string, filter: BaseReportFilter = {}): Us
         if (filter.feeType) exportParams.feeType = filter.feeType;
         const params = exportParams;
 
-        const response = await axios.get(`/reports/operational/${slug}/export`, {
-          params,
-          responseType: 'blob',
-        });
+        // The export is generated on demand — minutes of server work before the first byte on a
+        // wide date range — so it must not inherit the instance-wide 10s cap. See blobTransfer.
+        const response = await downloadBlob(`/reports/operational/${slug}/export`, { params });
 
         // Derive filename from Content-Disposition if present, else fall back
         const disposition = response.headers['content-disposition'] as string | undefined;
@@ -147,6 +152,13 @@ export function useReportExport(slug: string, filter: BaseReportFilter = {}): Us
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
+      } catch (error) {
+        // Without this the click simply does nothing: the spinner clears in the finally and the
+        // rejection goes unhandled. That was survivable while the request died at 10s; now that a
+        // heavy export may legitimately run for minutes, silence is indistinguishable from "still
+        // working" and the user will keep clicking.
+        const detail = (error as { apiError?: { detail?: string } })?.apiError?.detail;
+        toast.error(detail || i18n.t('common:transfer.exportFailed'));
       } finally {
         isExportingRef.current = false;
         setIsExporting(false);

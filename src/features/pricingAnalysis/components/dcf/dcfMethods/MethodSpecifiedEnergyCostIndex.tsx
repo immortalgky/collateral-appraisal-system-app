@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { MethodSpecifiedEnergyCostIndexWrapper } from '../../../types/dcf';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
@@ -16,14 +17,15 @@ export function MethodSpecifiedEnergyCostIndex({
   baseStyles,
   isReadOnly,
 }: MethodSpecifiedEnergyCostIndexProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row gap-1.5 items-center">
-                <span>Increase Rate - 1st year amt</span>
+                <span>{t('dcf.methods.energyCostIndex.increaseRateFirstYearAmt')}</span>
                 <div className="w-32">
                   <RHFInputCell
                     fieldName={`${name}.detail.energyCostIndex`}
@@ -36,7 +38,7 @@ export function MethodSpecifiedEnergyCostIndex({
                     }}
                   />
                 </div>
-                <span>growth</span>
+                <span>{t('dcf.common.growth')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.increaseRatePct`}
@@ -49,7 +51,7 @@ export function MethodSpecifiedEnergyCostIndex({
                     }}
                   />
                 </div>
-                <span>% every</span>
+                <span>{t('dcf.common.percentEvery')}</span>
                 <div className="w-20">
                   <RHFInputCell
                     fieldName={`${name}.detail.increaseRateYrs`}
@@ -63,7 +65,7 @@ export function MethodSpecifiedEnergyCostIndex({
                     }}
                   />
                 </div>
-                <span>year(s)</span>
+                <span>{t('dcf.common.year')}</span>
               </div>
             </td>
             {(method.detail?.increaseRate ?? []).map((val, idx) => {
@@ -75,8 +77,8 @@ export function MethodSpecifiedEnergyCostIndex({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Enegy Cost Index</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.methods.energyCostIndex.energyCostIndex')}</span>
             </td>
             {(method.detail?.energyCostIndexIncrease ?? []).map((val, idx) => {
               return (
@@ -87,8 +89,8 @@ export function MethodSpecifiedEnergyCostIndex({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
-              <span>Total Energy Cost</span>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              <span>{t('dcf.methods.energyCostIndex.totalEnergyCost')}</span>
             </td>
             {(method.detail?.totalEnegyCost ?? []).map((val, idx) => {
               return (

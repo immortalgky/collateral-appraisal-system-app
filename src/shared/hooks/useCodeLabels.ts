@@ -57,3 +57,22 @@ export function usePropertyTypeLabels(): (codes: string | null | undefined) => s
     [codeToLabel],
   );
 }
+
+/**
+ * Maps an appraisal's type (`New`, `ReAppraisal`, …) to its AppraisalType parameter description in
+ * the current language. The group is keyed on those same names (see the backend patch
+ * 20260927120000_PatchAppraisalTypeParameterCodes.sql), so no translation table is needed.
+ * Returns undefined when the master has no row for it, so callers can fall back to their own text.
+ */
+export function useAppraisalTypeLabel(): (type: string | null | undefined) => string | undefined {
+  const types = useParametersByGroup('AppraisalType');
+  const codeToLabel = useMemo(
+    () => new Map(types.map(p => [p.code, p.description.trim()])),
+    [types],
+  );
+  // `|| undefined`: a blank description must fall back too, not render as nothing.
+  return useCallback(
+    type => (type ? codeToLabel.get(type) || undefined : undefined),
+    [codeToLabel],
+  );
+}

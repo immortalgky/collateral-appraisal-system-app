@@ -95,7 +95,7 @@ const CreateLeaseAgreementLandPage = () => {
 
   // ─── Land detail form ─────────────────────────────────────────
   const { data: propertyData, isLoading } = useGetLeaseAgreementLandPropertyById(
-    appraisalId,
+    appraisalId ?? '',
     propertyId,
   );
 

@@ -18,6 +18,7 @@ interface AppraisalSelectorProps {
   /** Form path for appraisal date */
   dateField?: string;
   disabled?: boolean;
+  required?: boolean;
   error?: string;
   className?: string;
 }
@@ -30,6 +31,7 @@ const AppraisalSelector = ({
   valueField,
   dateField,
   disabled = false,
+  required = false,
   error,
   className,
 }: AppraisalSelectorProps) => {
@@ -65,7 +67,7 @@ const AppraisalSelector = ({
       setValue(name, prevAppraisal.appraisalNumber, { shouldDirty: true });
       setValue(idField, prevAppraisal.appraisalId, { shouldDirty: true });
       if (valueField) setValue(valueField, prevAppraisal.appraisalValue, { shouldDirty: true });
-      if (dateField) setValue(dateField, prevAppraisal.completedDate, { shouldDirty: true });
+      if (dateField) setValue(dateField, prevAppraisal.appraisalDate, { shouldDirty: true });
     }
   };
 
@@ -90,7 +92,10 @@ const AppraisalSelector = ({
   return (
     <div className={className}>
       {label && (
-        <label data-field-label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+        <label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+          {label}
+          {required && <span className="text-danger ml-0.5">*</span>}
+        </label>
       )}
       <div className="relative">
         <input

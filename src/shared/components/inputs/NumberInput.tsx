@@ -10,7 +10,8 @@ interface NumberInputProps extends Omit<
   label?: string;
   /** Node rendered next to the label, outside it (e.g. a FieldHelp "?" button) */
   labelAddon?: ReactNode;
-  helperText?: string;
+  /** Text under the control; a node when it needs a link (e.g. a reset back to a derived value). */
+  helperText?: ReactNode;
   error?: string;
   fullWidth?: boolean;
   leftIcon?: React.ReactNode;
@@ -27,6 +28,12 @@ interface NumberInputProps extends Omit<
   thousandSeparator?: boolean;
   /** Value from react-hook-form or controlled component */
   value?: number | string | null;
+  /**
+   * Opt-in compact sizing (smaller padding, `text-xs`) for dense table cells — e.g. the
+   * pricing-analysis scoring grids. Defaults to false so every existing caller renders
+   * byte-identically; only pass `dense` from a context that actually needs a short row.
+   */
+  dense?: boolean;
   /** onChange handler - receives number value */
   onChange?: (e: { target: { name?: string; value: number | null } }) => void;
   /** onBlur handler - compatible with react-hook-form */
@@ -61,6 +68,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       onKeyDown,
       placeholder,
       min,
+      dense = false,
       ...props
     },
     ref,
@@ -319,14 +327,23 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             type="text"
             inputMode="decimal"
             className={clsx(
-              'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
+              // Dense follows the mock's `.in` exactly (pricing-analysis-compact-mock.html:192-198):
+              // 21px tall, 4px radius, 12px text, quiet #f6f9f9 fill with a transparent border at
+              // rest — border only appears on hover/focus, no focus ring (mock: outline:none).
+              dense
+                ? 'block h-[21px] px-[5px] py-0 border rounded-[4px] text-[12px] tabular-nums transition-colors duration-200'
+                : 'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
               'placeholder:text-gray-400 text-right',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
+                : dense
+                  ? 'border-transparent focus:outline-none focus:border-[#0d9488]'
+                  : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
               isDisabled
                 ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : 'bg-white hover:border-gray-300',
+                : dense
+                  ? 'bg-[#f6f9f9] hover:border-[#cbd5d3] focus:bg-white'
+                  : 'bg-white hover:border-gray-300',
               leftIcon && 'pl-9',
               rightIcon && 'pr-12',
               suffix && !rightIcon && 'pr-10',

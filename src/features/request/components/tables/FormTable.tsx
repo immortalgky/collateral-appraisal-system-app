@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
-import { Dropdown, type ListBoxItem, NumberInput } from '@/shared/components/inputs';
+import {
+  Dropdown,
+  type ListBoxItem,
+  type OptionFilter,
+  NumberInput,
+} from '@/shared/components/inputs';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
   type Control,
@@ -10,6 +15,7 @@ import {
   useController,
   useFieldArray,
   useFormContext,
+  useWatch,
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
@@ -25,9 +31,9 @@ interface FormTableProps {
   sequenceField?: string;
 }
 
-type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
+export type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
 
-interface FormTableRegularColumn {
+export interface FormTableRegularColumn {
   name: string;
   label: string;
   inputType?: 'text' | 'number' | 'dropdown';
@@ -39,6 +45,10 @@ interface FormTableRegularColumn {
   maxLength?: number;
   options?: ListBoxItem[];
   group?: string;
+  otherField?: boolean;
+  otherFieldName?: string;
+  otherTriggerValue?: string;
+  filterOptions?: OptionFilter;
 }
 
 interface FormTableRowNumberColumn {
@@ -193,6 +203,49 @@ const SequenceCell = ({
   );
 };
 
+// --- DropdownOtherCell: dropdown + inline "Other" text field ---
+
+const DropdownOtherCell = ({
+  name,
+  index,
+  column,
+  control,
+  field,
+  filterWatchValues,
+}: {
+  name: string;
+  index: number;
+  column: FormTableRegularColumn;
+  control: Control<FieldValues, any, FieldValues>;
+  field: ReturnType<typeof useController>['field'];
+  filterWatchValues?: Record<string, unknown>;
+}) => {
+  const {
+    field: otherField,
+    fieldState: { error: otherError },
+  } = useController({
+    name: `${name}.${index}.${column.otherFieldName}`,
+    control,
+  });
+
+  if (!column.group) return null;
+
+  return (
+    <Dropdown
+      {...field}
+      group={column.group}
+      filterOptions={column.filterOptions}
+      filterWatchValues={filterWatchValues}
+      otherField
+      otherTriggerValue={column.otherTriggerValue}
+      otherText={otherField.value}
+      onOtherTextChange={otherField.onChange}
+      otherMaxLength={column.maxLength}
+      error={otherError?.message}
+    />
+  );
+};
+
 // --- TableCell ---
 
 const TableCell = ({
@@ -213,6 +266,13 @@ const TableCell = ({
   const isNum = column.inputType === 'number';
   const dp = column.decimalPlaces ?? 2;
 
+  const rowField = column.filterOptions?.type === 'dynamic' ? column.filterOptions.field : null;
+  const rowFieldValue = useWatch({
+    control,
+    name: `${name}.${index}.${rowField ?? column.name}`,
+  });
+  const filterWatchValues = rowField ? { [rowField]: rowFieldValue } : undefined;
+
   const input = () => {
     if (isNum)
       return (
@@ -228,7 +288,28 @@ const TableCell = ({
     // Split branches because Dropdown takes `group` or `options`, and the column type has both optional.
     if (column.inputType === 'dropdown') {
       if (column.options) return <Dropdown {...field} options={column.options} />;
-      if (column.group) return <Dropdown {...field} group={column.group} />;
+      if (column.group) {
+        if (column.otherField && column.otherFieldName) {
+          return (
+            <DropdownOtherCell
+              name={name}
+              index={index}
+              column={column}
+              control={control}
+              field={field}
+              filterWatchValues={filterWatchValues}
+            />
+          );
+        }
+        return (
+          <Dropdown
+            {...field}
+            group={column.group}
+            filterOptions={column.filterOptions}
+            filterWatchValues={filterWatchValues}
+          />
+        );
+      }
     }
     return <Input type={column.inputType} {...field} maxLength={column.maxLength} />;
   };
@@ -276,7 +357,11 @@ const FormTable = ({
 
   const handleAddRow = () => {
     const newRow: Record<string, any> = {};
-    for (const col of columns) if (isRegular(col)) newRow[col.name] = '';
+    for (const col of columns) {
+      if (!isRegular(col)) continue;
+      newRow[col.name] = '';
+      if (col.otherFieldName) newRow[col.otherFieldName] = '';
+    }
     if (sequenceField) {
       const maxSeq = rowList.reduce((m, r) => Math.max(m, Number(r?.[sequenceField]) || 0), 0);
       newRow[sequenceField] = maxSeq + 1;
@@ -388,7 +473,13 @@ const FormTable = ({
                             }
                           >
                             {col.inputType === 'dropdown' && col.group ? (
-                              <ParameterDisplay group={col.group} code={field[col.name]} />
+                              <>
+                                <ParameterDisplay group={col.group} code={field[col.name]} />
+                                {col.otherField &&
+                                  col.otherFieldName &&
+                                  field[col.name] === (col.otherTriggerValue ?? '99') &&
+                                  field[col.otherFieldName] && <> — {field[col.otherFieldName]}</>}
+                              </>
                             ) : col.inputType === 'number' ? (
                               (() => {
                                 const n = parseFloat(field[col.name]);

@@ -33,7 +33,7 @@ const ResizableSidebar = ({
 
 const Main = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="flex-1 min-w-0 p-6 overflow-y-auto overflow-x-hidden">
+    <div className="cas-sidebar-main flex-1 min-w-0 px-3 pt-3 pb-6 overflow-y-auto overflow-x-hidden">
       {children}
     </div>
   );

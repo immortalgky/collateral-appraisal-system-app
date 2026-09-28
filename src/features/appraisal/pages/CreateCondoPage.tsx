@@ -33,7 +33,8 @@ import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { PageReadOnlyContext, usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useProgressivePrefill } from '@/features/collateralMaster';
 import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
-import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
+import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
+import { useConstructionTab } from '../hooks/useConstructionTab';
 
 const CreateCondoPage = () => {
   const isReadOnly = usePageReadOnly();
@@ -249,12 +250,15 @@ const CreateCondoPage = () => {
   const initialCondoTab = tabParam === 'construction' ? 'construction' : 'condo';
   const [activeTab, setActiveTab] = useState<'condo' | 'construction'>(initialCondoTab);
 
-  // Reset to default tab if construction tab is active but property is not under construction (CI appraisals always show it)
-  useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
-      setActiveTab('condo');
-    }
-  }, [isUnderConstruction, activeTab, isCiAppraisal]);
+  const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
+    methods,
+    isUnderConstruction,
+    activeTab,
+    setActiveTab,
+    fallbackTab: 'condo',
+    isCreateMode: !isEditMode,
+    isCiAppraisal,
+  });
 
   if (isLoading || (isEditMode && !propertyData)) {
     return (
@@ -267,7 +271,7 @@ const CreateCondoPage = () => {
   // The header's tabs; construction appears only when it applies.
   const editorTabs = [
     { id: 'condo', label: t('createPage.navCondo') },
-    ...(isUnderConstruction || isCiAppraisal
+    ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
       : []),
   ];
@@ -288,7 +292,7 @@ const CreateCondoPage = () => {
                 typeCode="U"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
-                activeTab={activeTab}
+                activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
               />
               <ResizableSidebar
@@ -302,7 +306,7 @@ const CreateCondoPage = () => {
                     {/* Condo Tab Content */}
                     <div
                       id="condo-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'condo' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 ${shownTab !== 'condo' ? 'hidden' : ''}`}
                     >
                       {/* Condo Form */}
                       <Section
@@ -315,19 +319,14 @@ const CreateCondoPage = () => {
                     </div>
 
                     {/* Construction Inspection Tab Content */}
-                    {(isUnderConstruction || isCiAppraisal) && (
-                      <div
-                        id="construction-section"
-                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
-                      >
-                        <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <ConstructionInspectionTab
-                            readOnly={isReadOnly}
-                            ciMode={isCiAppraisal}
-                          />
-                        </Section>
-                      </div>
-                    )}
+                    <ConstructionEditorSection
+                      key={propertyId}
+                      shownTab={shownTab}
+                      underConstruction={hasConstructionTab}
+                      readOnly={isReadOnly}
+                      ciMode={isCiAppraisal}
+                      condo
+                    />
                   </div>
                 </ResizableSidebar.Main>
               </ResizableSidebar>

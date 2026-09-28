@@ -40,12 +40,13 @@ interface MarketReferenceListProps {
 
 // ── Helper ────────────────────────────────────────────────────────────────────
 
-function formatNumber(v: number | null | undefined): string {
+/** Exported so the bulk RCN dialog formats and labels its options identically to this list. */
+export function formatNumber(v: number | null | undefined): string {
   if (v == null) return '—';
   return v.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function methodTypeLabel(methodType: string): string {
+export function methodTypeLabel(methodType: string): string {
   switch (methodType) {
     case 'WQS_MARKET':
       return 'WQS';

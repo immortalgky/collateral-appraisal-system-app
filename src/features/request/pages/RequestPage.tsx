@@ -378,7 +378,8 @@ function RequestPage() {
     setIsDuplicateDialogOpen(true);
   };
 
-  const defaultProperties = (properties: createRequestFormType['properties']) =>
+  // createRequestFormType is any (buildFormSchema returns ZodObject<any>), so name the one field used here.
+  const defaultProperties = (properties: { sellingPrice?: number | string | null }[]) =>
     properties.map(p => ({
       ...p,
       sellingPrice: p.sellingPrice === '' || p.sellingPrice == null ? null : Number(p.sellingPrice),

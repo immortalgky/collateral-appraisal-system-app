@@ -103,6 +103,7 @@
     "searchPlaceholder": "Search by appraisal number...",
     "submittedFrom": "Submitted From",
     "submittedTo": "Submitted To",
+    "feePaymentMethod": "Fee Payment Method",
     "empty": "No eligible assignments found",
     "col": {
       "appraisalReportNo": "Appraisal Number",

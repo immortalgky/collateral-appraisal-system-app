@@ -47,6 +47,23 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     titles: (item.titles as PropertyItem['titles']) ?? undefined,
     sequenceNumber: item.sequenceInGroup ?? undefined,
     detailId: item.appraisalDetailId ?? undefined,
+    // Per-type facts for the list's second line, typed loosely (.passthrough()) until the schema
+    // is regenerated.
+    buildingAge: (item.buildingAge as number | null | undefined) ?? undefined,
+    isUnderConstruction: (item.isUnderConstruction as boolean | null | undefined) ?? undefined,
+    constructionProgressPct:
+      (item.constructionProgressPct as number | null | undefined) ?? undefined,
+    buildingArea: (item.buildingArea as number | null | undefined) ?? undefined,
+    condoName: (item.condoName as string | null | undefined) ?? undefined,
+    floorNumber: (item.floorNumber as string | null | undefined) ?? undefined,
+    roomNumber: (item.roomNumber as string | null | undefined) ?? undefined,
+    roomLayoutType: (item.roomLayoutType as string | null | undefined) ?? undefined,
+    roomLayoutTypeOther: (item.roomLayoutTypeOther as string | null | undefined) ?? undefined,
+    yearOfManufacture: (item.yearOfManufacture as number | null | undefined) ?? undefined,
+    machineAge: (item.machineAge as number | null | undefined) ?? undefined,
+    remainingLeaseYears: (item.remainingLeaseYears as number | null | undefined) ?? undefined,
+    leaseEndDate: (item.leaseEndDate as string | null | undefined) ?? undefined,
+    leaseRentFee: (item.leaseRentFee as number | null | undefined) ?? undefined,
     ...(isMachine
       ? {
           brand: item.brand ?? undefined,

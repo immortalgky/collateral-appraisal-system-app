@@ -3,10 +3,15 @@ import { Dialog, DialogBackdrop, DialogPanel, TransitionChild } from '@headlessu
 import { Link, useLocation } from 'react-router-dom';
 import { useUIStore } from '../store';
 import Icon from './Icon';
+import BrandLogo from './BrandLogo';
+import SidebarHeader from './SidebarHeader';
+import SidebarSectionTitle from './SidebarSectionTitle';
+import { useSidebarHover } from '@shared/hooks/useSidebarHover';
 import { getIconBgClass } from './icon-bg';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import type { NavItem } from '@shared/config/navigationTypes';
+import { buildQualifiedHrefs, isDescendantActive, isHrefActive } from './sidebarActive';
 import { TaskCountBadge } from '@features/task/components/TaskCountBadge';
 import { DENSITY_SCALE } from './densityConstants';
 import { SidebarStarButton } from '@features/menuFavorites/components/SidebarStarButton';
@@ -23,71 +28,10 @@ function getTaskActivityId(href: string): string | null {
 }
 
 /**
- * Query strings declared by menu items, grouped by path:
- * `/tasks -> ['activityId=admin-finalize', 'activityId=int-pma-input', ...]`.
- *
- * Only items that declare params are collected — they are the ones that can out-rank a bare item
- * at the same path. Derived from the tree, never hard-coded: menu rows live in auth.MenuItems and
- * are editable in /admin/menus, so this has to hold for whatever an admin adds.
- */
-function buildQualifiedHrefs(
-  items: NavItem[],
-  map: Map<string, string[]> = new Map(),
-): Map<string, string[]> {
-  for (const item of items) {
-    const [path, search] = item.href.split('?');
-    if (search) map.set(path, [...(map.get(path) ?? []), search]);
-    if (item.children?.length) buildQualifiedHrefs(item.children, map);
-  }
-  return map;
-}
-
-/**
  * Shared so the recursive MenuItem can read it without every level passing it down. Defaults to
  * an empty map, which degrades to "compare paths only" rather than throwing.
  */
 const QualifiedHrefsContext = createContext<Map<string, string[]>>(new Map());
-
-/** Does the current URL carry every param of `search`, with the same values? */
-function paramsMatch(search: string, current: URLSearchParams): boolean {
-  for (const [key, value] of new URLSearchParams(search)) {
-    if (current.get(key) !== value) return false;
-  }
-  return true;
-}
-
-/**
- * Is `href` the menu entry for where the user currently is? Most specific wins.
- *
- * Every param the item declares must be present and equal; params it does NOT declare are ignored.
- * This used to compare the whole query string, so an item went dark the moment its own page put
- * anything in the URL — /appraisals/search unhighlighted itself as soon as the user typed a search
- * term or picked a filter, taking the parent group with it.
- *
- * A bare item (no params) then yields to any item at the same path whose params DO match. That is
- * what keeps "All tasks" (/tasks) dark on /tasks?activityId=X while the item owning that URL lights
- * up, without a notion of which keys are "identifying" — which would have been guesswork, since a
- * bare item would go dark for a key some unrelated sibling happened to declare.
- *
- * Falling back to the bare item rather than to nothing also matches the router: TaskPageDispatcher
- * (router.tsx:305) treats an empty activityId as falsy and renders All tasks, so /tasks?activityId=
- * now highlights All tasks instead of leaving the whole sidebar dark.
- *
- * A plain function, not a hook: isChildActive has to evaluate it inside .some().
- */
-function isHrefActive(
-  href: string,
-  pathname: string,
-  search: string,
-  qualified: Map<string, string[]>,
-): boolean {
-  const [path, hrefSearch = ''] = href.split('?');
-  if (pathname !== path) return false;
-
-  const current = new URLSearchParams(search);
-  if (hrefSearch) return paramsMatch(hrefSearch, current);
-  return !(qualified.get(path) ?? []).some(q => paramsMatch(q, current));
-}
 
 type SidebarProps = {
   navigation: NavItem[];
@@ -97,14 +41,18 @@ type SidebarProps = {
 function MenuItem({
   item,
   isChild = false,
-  collapsed = false,
+  railed = false,
 }: {
   item: NavItem;
   isChild?: boolean;
-  collapsed?: boolean;
+  /** Sidebar is the clipped icon rail: an open group would only leave blank rows there. */
+  railed?: boolean;
 }) {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
+  useEffect(() => {
+    if (railed) setIsOpen(false);
+  }, [railed]);
   const qualified = useContext(QualifiedHrefsContext);
   const isActive = isHrefActive(item.href, location.pathname, location.search, qualified);
   const hasChildren = item.children && item.children.length > 0;
@@ -117,41 +65,19 @@ function MenuItem({
     | 'brands';
 
   if (hasChildren) {
-    if (collapsed) {
-      // When collapsed, show only the parent icon (no expandable children)
-      return (
-        <li>
-          <div
-            className="group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-base-200"
-            title={item.name}
-          >
-            <div
-              className={clsx(
-                'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
-                getIconBgClass(item.iconColor),
-                'group-hover:scale-105',
-              )}
-            >
-              <Icon
-                name={item.icon}
-                style={iconStyle}
-                className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
-              />
-            </div>
-          </div>
-        </li>
-      );
-    }
-
-    const isChildActive = item.children?.some(child =>
-      isHrefActive(child.href, location.pathname, location.search, qualified),
+    const isChildActive = isDescendantActive(
+      item.children,
+      location.pathname,
+      location.search,
+      qualified,
     );
 
     return (
       <li>
         <button
           type="button"
-          onClick={() => setIsOpen(!isOpen)}
+          // Not on the rail: a group opened there would only leave blank rows behind.
+          onClick={() => !railed && setIsOpen(!isOpen)}
           className={clsx(
             'group flex w-full items-center justify-between py-2 px-2.5 rounded-xl transition-all duration-200 text-left',
             isChildActive ? 'bg-primary/5' : 'hover:bg-gray-50 dark:hover:bg-base-200',
@@ -197,39 +123,10 @@ function MenuItem({
         >
           <ul className="overflow-hidden flex flex-col gap-1">
             {item.children?.map(child => (
-              <MenuItem key={child.href} item={child} isChild />
+              <MenuItem key={child.itemKey} item={child} isChild railed={railed} />
             ))}
           </ul>
         </div>
-      </li>
-    );
-  }
-
-  if (collapsed && !isChild) {
-    return (
-      <li>
-        <Link
-          to={item.href}
-          title={item.name}
-          className={clsx(
-            'group flex items-center justify-center py-2 px-2.5 rounded-xl transition-all duration-200',
-            isActive ? 'bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-base-200',
-          )}
-        >
-          <div
-            className={clsx(
-              'w-7 h-7 rounded-xl flex items-center justify-center transition-all duration-200 shadow-sm',
-              getIconBgClass(item.iconColor),
-              'group-hover:scale-105',
-            )}
-          >
-            <Icon
-              name={item.icon}
-              style={iconStyle}
-              className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
-            />
-          </div>
-        </Link>
       </li>
     );
   }
@@ -267,11 +164,9 @@ function MenuItem({
         )}
         <span className={clsx('flex-1 min-w-0 text-xs font-medium text-gray-700 dark:text-gray-200')}>{item.name}</span>
         {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
-        {!collapsed && (
-          <span className="flex-shrink-0">
-            <SidebarStarButton item={item} />
-          </span>
-        )}
+        <span className="flex-shrink-0">
+          <SidebarStarButton item={item} />
+        </span>
       </Link>
     </li>
   );
@@ -306,27 +201,8 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 
           <div className="flex grow flex-col overflow-y-auto bg-white dark:bg-base-100">
             {/* Logo Area */}
-            <div className="px-5 py-5">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-base-200 dark:to-base-100 border border-gray-100 dark:border-base-300 flex items-center justify-center shadow-sm">
-                  <img alt="LHBank" src={logo} className="h-7 w-auto" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
-                    CAS
-                  </span>
-                  <div
-                    className="w-12 h-1 rounded-full my-0.5"
-                    style={{
-                      background:
-                        'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
-                    }}
-                  />
-                  <span className="text-[10px] font-medium text-gray-400">
-                    Collateral Appraisal System
-                  </span>
-                </div>
-              </div>
+            <div className="px-3 py-4">
+              <BrandLogo logo={logo} onClick={() => setSidebarOpen(false)} />
             </div>
 
             {/* Navigation */}
@@ -340,21 +216,16 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
               <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
                 <ul className="flex flex-col gap-1">
                   {navigation.map(item => (
-                    <MenuItem key={item.itemKey || item.href} item={item} />
+                    <MenuItem key={item.itemKey} item={item} />
                   ))}
                 </ul>
               </QualifiedHrefsContext.Provider>
 
               <div className="mt-auto pt-4 border-t border-gray-100 dark:border-base-300">
-                <div className="px-3 mb-2">
-                  <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                    {t('sidebar.system')}
-                  </span>
-                </div>
                 <ul className="flex flex-col gap-1">
                   <li>
                     <Link
-                      to="/settings"
+                      to="/profile?tab=preferences"
                       className="group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-base-200"
                     >
                       <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
@@ -378,9 +249,12 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
 export default function Sidebar({ navigation, logo }: SidebarProps): React.ReactNode {
   const { t } = useTranslation('nav');
   const location = useLocation();
-  const isSettingsActive = location.pathname === '/settings';
-  const sidebarCollapsed = useUIStore(state => state.sidebarCollapsed);
-  const toggleSidebar = useUIStore(state => state.toggleSidebar);
+  const isSettingsActive =
+    location.pathname === '/profile' &&
+    new URLSearchParams(location.search).get('tab') === 'preferences';
+  const { expanded, overlay, width, contentStyle, hoverProps } = useSidebarHover('main');
+  // The rail is the full menu clipped to the 4rem rail, so every item keeps its position when
+  // hovering opens the menu and the cursor stays on what it was over.
   const qualifiedHrefs = useMemo(() => buildQualifiedHrefs(navigation), [navigation]);
   const resetSidebarWidth = useUIStore(state => state.resetSidebarWidth);
   const [isDragging, setIsDragging] = useState(false);
@@ -423,124 +297,77 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
 
   return (
     <aside
-      className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+      {...hoverProps}
+      className={clsx(
+        'hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col',
+        overlay && 'lg:shadow-xl',
+      )}
       style={{
-        width: 'var(--cas-sidebar-w)',
+        width,
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >
-      <div className="flex grow flex-col overflow-y-auto border-r border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 shadow-sm">
-        {/* Logo Area */}
-        <div
-          className={clsx(
-            'transition-all duration-300',
-            sidebarCollapsed ? 'py-4 px-2' : 'py-4 px-4',
-          )}
-        >
-          <div className={clsx('flex items-center', sidebarCollapsed ? 'justify-center' : 'gap-4')}>
-            <div className="w-9 h-9 rounded-2xl bg-gradient-to-br from-gray-50 to-white dark:from-base-200 dark:to-base-100 border border-gray-100 dark:border-base-300 flex items-center justify-center shadow-sm shrink-0">
-              <img alt="LHBank" src={logo} className="h-6 w-auto" />
-            </div>
-            {!sidebarCollapsed && (
-              <div className="flex flex-col">
-                <span className="text-lg font-black bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent tracking-tight">
-                  CAS
-                </span>
-                <div
-                  className="w-12 h-1 rounded-full my-0.5"
-                  style={{
-                    background:
-                      'linear-gradient(to right, #CED629, #47B9C0, #8B3F92, #ED8068, #0080BE, #F5BF0E, #F08D1D)',
-                  }}
-                />
-                <span className="text-[10px] font-medium text-gray-400">
-                  Collateral Appraisal System
-                </span>
+      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 shadow-sm">
+        <div className="flex grow flex-col min-h-0" style={contentStyle}>
+          <SidebarHeader logo={logo} expanded={expanded} scope="main" />
+
+          {/* Favorites stay pinned under the logo; capped so a long list can't crowd out the menu. */}
+          <div className="shrink-0 max-h-[40vh] overflow-y-auto overflow-x-hidden pt-3 px-2">
+            <SidebarFavoritesSection collapsed={!expanded} />
+          </div>
+
+          {/* Only the menu below scrolls */}
+          <div className="flex flex-1 min-h-0 flex-col overflow-y-auto overflow-x-hidden">
+            <nav className="flex flex-1 flex-col pb-3 px-2">
+              <SidebarSectionTitle
+                icon="grid-2"
+                iconColor="text-sky-500"
+                title={t('sidebar.general')}
+                className="mb-2"
+              />
+
+              <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
+                <ul className="flex flex-col gap-1">
+                  {navigation.map(item => (
+                    <MenuItem key={item.itemKey} item={item} railed={!expanded} />
+                  ))}
+                </ul>
+              </QualifiedHrefsContext.Provider>
+
+              {/* Bottom Section */}
+              <div className="mt-auto pt-4 border-t border-gray-100 dark:border-base-300">
+                <ul className="flex flex-col gap-1">
+                  <li>
+                    <Link
+                      to="/profile?tab=preferences"
+                      className={clsx(
+                        'group flex items-center gap-2.5 py-2 px-2.5 rounded-xl transition-all duration-200',
+                        isSettingsActive
+                          ? 'bg-primary/10'
+                          : 'hover:bg-gray-50 dark:hover:bg-base-200',
+                      )}
+                    >
+                      <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
+                        <Icon
+                          name="gear"
+                          style="solid"
+                          className="size-3.5 text-gray-500 dark:text-gray-300"
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
+                        {t('sidebar.settings')}
+                      </span>
+                    </Link>
+                  </li>
+                </ul>
               </div>
-            )}
+            </nav>
           </div>
         </div>
-
-        {/* Navigation */}
-        <nav
-          className={clsx(
-            'flex flex-1 flex-col py-3 transition-all duration-300',
-            sidebarCollapsed ? 'px-1' : 'px-3',
-          )}
-        >
-          <SidebarFavoritesSection collapsed={sidebarCollapsed} />
-
-          {!sidebarCollapsed && (
-            <div className="px-3 mb-2">
-              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                {t('sidebar.general')}
-              </span>
-            </div>
-          )}
-
-          <QualifiedHrefsContext.Provider value={qualifiedHrefs}>
-            <ul className="flex flex-col gap-1">
-              {navigation.map(item => (
-                <MenuItem
-                  key={item.itemKey || item.href}
-                  item={item}
-                  collapsed={sidebarCollapsed}
-                />
-              ))}
-            </ul>
-          </QualifiedHrefsContext.Provider>
-
-          {/* Bottom Section */}
-          <div className={clsx('mt-auto pt-4', !sidebarCollapsed && 'border-t border-gray-100 dark:border-base-300')}>
-            {!sidebarCollapsed && (
-              <div className="px-3 mb-2">
-                <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
-                  {t('sidebar.system')}
-                </span>
-              </div>
-            )}
-            <ul className="flex flex-col gap-1">
-              <li>
-                <Link
-                  to="/settings"
-                  title={sidebarCollapsed ? t('sidebar.settings') : undefined}
-                  className={clsx(
-                    'group flex items-center py-2 px-2.5 rounded-xl transition-all duration-200',
-                    isSettingsActive ? 'bg-primary/10' : 'hover:bg-gray-50 dark:hover:bg-base-200',
-                    sidebarCollapsed ? 'justify-center' : 'gap-2.5',
-                  )}
-                >
-                  <div className="w-7 h-7 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
-                    <Icon name="gear" style="solid" className="size-3.5 text-gray-500 dark:text-gray-300" />
-                  </div>
-                  {!sidebarCollapsed && (
-                    <span className="text-xs font-medium text-gray-700 dark:text-gray-200">
-                      {t('sidebar.settings')}
-                    </span>
-                  )}
-                </Link>
-              </li>
-            </ul>
-
-            {/* Toggle Button */}
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="mt-2 w-full flex items-center justify-center py-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors"
-              title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            >
-              <Icon
-                style="solid"
-                name={sidebarCollapsed ? 'chevron-right' : 'chevron-left'}
-                className="size-2.5"
-              />
-            </button>
-          </div>
-        </nav>
       </div>
 
       {/* Resize handle — only when expanded */}
-      {!sidebarCollapsed && (
+      {expanded && (
         <div
           className="absolute top-0 right-0 w-1 h-full cursor-col-resize hover:bg-primary/20 transition-colors"
           onPointerDown={handleResizePointerDown}

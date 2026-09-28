@@ -15,6 +15,8 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   leftIcon?: React.ReactNode;
   /** Icon node rendered inside the input on the right. Useful for click-to-open helpers. */
   rightIcon?: React.ReactNode;
+  /** Opt-in compact sizing — forwarded to the underlying Input. See Input.tsx. */
+  dense?: boolean;
 }
 
 /**

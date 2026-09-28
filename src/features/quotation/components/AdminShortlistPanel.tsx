@@ -14,6 +14,7 @@ import {
   useUnshortlistQuotation,
 } from '../api/quotation';
 import type { AppraisalSummaryDto, CompanyQuotationDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import SendToRmModal from './SendToRmModal';
 import { AdminCompanyQuotationDetailContent } from '../pages/AdminCompanyQuotationDetailPage';
@@ -56,6 +57,11 @@ const AdminShortlistPanel = ({
     ? companyQuotations.find(cq => cq.id === drawerCompanyQuotationId)
     : null;
 
+  const sortedCompanyQuotations = sortCompanyResponses(companyQuotations, cq => ({
+    status: cq.status,
+    totalNetAmount: cq.totalQuotedPrice,
+    companyName: cq.companyName,
+  }));
   const shortlistedQuotations = companyQuotations.filter(q => q.isShortlisted);
   const shortlistedCount = shortlistedQuotations.length;
   const isPending = isShortlisting || isUnshortlisting;
@@ -203,7 +209,7 @@ const AdminShortlistPanel = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {companyQuotations.map(cq => {
+                {sortedCompanyQuotations.map(cq => {
                   const items = cq.items ?? [];
                   const hasItems = items.length > 0;
                   const totalFeeAmount = items.reduce(
@@ -214,10 +220,15 @@ const AdminShortlistPanel = ({
                     (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                     0,
                   );
-                  const totalEstimateManday = items.reduce(
-                    (sum, item) => sum + (item.estimatedDays ?? 0),
-                    0,
-                  );
+                  const validEstimatedDays = items
+                    .map(item => item.estimatedDays)
+                    .filter((d): d is number => typeof d === 'number' && d > 0);
+                  const minEstimateManday = validEstimatedDays.length
+                    ? Math.min(...validEstimatedDays)
+                    : undefined;
+                  const maxEstimateManday = validEstimatedDays.length
+                    ? Math.max(...validEstimatedDays)
+                    : undefined;
                   const isDeclined = cq.status === 'Declined';
                   return (
                     <tr
@@ -274,7 +285,11 @@ const AdminShortlistPanel = ({
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="text-sm text-gray-600">
-                          {hasItems ? totalEstimateManday : '—'}
+                          {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                            ? minEstimateManday === maxEstimateManday
+                              ? minEstimateManday
+                              : `${minEstimateManday} - ${maxEstimateManday}`
+                            : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3">
