@@ -33,6 +33,7 @@ import {
   buildQuotationEmailHtml,
   formatQuotationSubjectAppraisalNumbersLabel,
   formatQuotationSubjectCustomerLabel,
+  TABLE_ROW_THRESHOLD,
 } from '../utils/quotationEmailTemplate';
 import { useAuthStore } from '@/features/auth/store';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
@@ -1126,6 +1127,7 @@ const QuotationSelectionPage = () => {
         showBcc={true}
         showAttachments={true}
         attachmentPicker={{ quotationId: id ?? '' }}
+        requireAttachment={(quotation?.appraisals?.length ?? 0) > TABLE_ROW_THRESHOLD}
         subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
         richTextContent
