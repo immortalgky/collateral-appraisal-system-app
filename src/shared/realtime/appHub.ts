@@ -10,7 +10,12 @@
  * - Pool task groups: client calls joinGroup('pool-'+g) / leaveGroup('pool-'+g).
  */
 
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr';
+import {
+  HttpTransportType,
+  HubConnectionBuilder,
+  HubConnectionState,
+  type HubConnection,
+} from '@microsoft/signalr';
 import { getFreshAccessToken, isSessionExpired } from '@shared/api/axiosInstance';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 
@@ -136,6 +141,15 @@ function buildConnection(): HubConnection {
         // next API call, which forces the logout/redirect.
         accessTokenFactory: async () => (await getFreshAccessToken()) ?? '',
         withCredentials: true,
+        // WebSockets only, no negotiate round trip. Deployed environments run two IIS nodes behind
+        // an F5 with sticky sessions off: a negotiated connection id lives in one node's memory, so
+        // the follow-up request (WS/SSE/long-poll) 404s whenever it lands on the other node. A
+        // single WebSocket is pinned to whichever node accepts it.
+        // The token rides in the query string here, and an encrypted access token is ~8 KB, so IIS
+        // must allow it: requestFiltering maxQueryString raised (UAT uses 16384) or the upgrade
+        // fails with 404.15.
+        skipNegotiation: true,
+        transport: HttpTransportType.WebSockets,
       })
       // Never give up: capped exponential backoff that always returns a delay
       // (the default policy stops after ~40s, killing real-time for the session).
