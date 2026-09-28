@@ -46,7 +46,7 @@ const LAND_BUILDING_LABELS: Record<string, string> = {
 };
 const LAND_ONLY_LABELS: Record<string, string> = {
   L: 'ที่ดินเปล่า',
-  LSL: 'สิทธการเช่าที่ดิน',
+  LSL: 'สิทธิการเช่าที่ดิน',
 };
 const CONDO_FAMILIES = new Set(['U', 'LSU']);
 const MACHINE_FAMILIES = new Set(['MAC']);
