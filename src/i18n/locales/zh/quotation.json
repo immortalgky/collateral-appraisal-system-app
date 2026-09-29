@@ -307,7 +307,7 @@
     "companyRequired": "At least one company must be invited",
     "appraisalRequired": "At least one appraisal is required",
     "discountExceedsFee": "Discount + Negotiated Discount exceeds Fee Amount on {{number}}",
-    "enterNegotiationReason": "Provide a reason for the $0 discount on: {{list}}",
+    "enterNegotiationReason": "Provide a reason for the 0 Baht discount on: {{list}}",
     "mandaysExceeded": "Estimated Mandays exceeds the maximum duration for: {{list}}",
     "fixErrors": "Please fix the highlighted errors before submitting",
     "noLongerCancellable": "Quotation is no longer cancellable (status: {{status}}).",
