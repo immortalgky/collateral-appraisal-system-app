@@ -31,7 +31,7 @@ const fmtDateTime = (iso: string | null | undefined): string => {
 interface AdminShortlistPanelProps {
   quotationId: string;
   companyQuotations: CompanyQuotationDto[];
-  /** Appraisals in this quotation — used to block Send-to-RM when any is a ReAppraisal. */
+  /** Appraisals in this quotation — used to block Send-to-RM when any is a ReAppraisal on the SIBS channel. */
   appraisals: AppraisalSummaryDto[];
 }
 
@@ -67,8 +67,10 @@ const AdminShortlistPanel = ({
   const isPending = isShortlisting || isUnshortlisting;
   /** Admin can pick winner directly only when exactly one company is shortlisted. */
   const canSelectAsWinner = shortlistedCount === 1 && !isPickingWinner;
-  /** Send-to-RM is blocked when any appraisal in the quotation is a ReAppraisal. */
-  const hasReAppraisal = appraisals.some(a => a.appraisalType === 'ReAppraisal');
+  /** Send-to-RM is blocked when any appraisal in the quotation is a ReAppraisal on the SIBS channel. */
+  const hasReAppraisalSibs = appraisals.some(
+    a => a.appraisalType === 'ReAppraisal' && a.channel === 'SIBS',
+  );
 
   const handleToggle = (cq: CompanyQuotationDto) => {
     if (isPending) return;
@@ -162,8 +164,8 @@ const AdminShortlistPanel = ({
             <Button
               size="sm"
               onClick={openSendToRm}
-              disabled={shortlistedCount === 0 || hasReAppraisal}
-              title={hasReAppraisal ? t('shortlist.sendToRmReAppraisalHint') : undefined}
+              disabled={shortlistedCount === 0 || hasReAppraisalSibs}
+              title={hasReAppraisalSibs ? t('shortlist.sendToRmReAppraisalHint') : undefined}
             >
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.sendToRm')}
