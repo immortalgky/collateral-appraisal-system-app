@@ -47,6 +47,7 @@ import {
   buildQuotationEmailHtml,
   formatQuotationSubjectAppraisalNumbersLabel,
   formatQuotationSubjectCustomerLabel,
+  TABLE_ROW_THRESHOLD,
 } from '@/features/quotation/utils/quotationEmailTemplate';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
@@ -1449,6 +1450,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           showBcc={true}
           showAttachments={true}
           attachmentPicker={{ quotationId: activeQuotation?.id ?? '' }}
+          requireAttachment={(quotationDetail?.appraisals?.length ?? 0) > TABLE_ROW_THRESHOLD}
           subjectLabel="Subject"
           isPending={isBusy}
           richTextContent
