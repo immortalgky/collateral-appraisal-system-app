@@ -22,8 +22,13 @@ import {
 import { useAsyncReportJob } from '@features/reportGeneration/hooks/useAsyncReportJob';
 import { useAuthStore } from '@features/auth/store';
 import type { AppraisalDocumentFile, AppraisalDocumentType } from '../../types/appraisalDocuments';
+import {
+  documentTypeName,
+  isAllowedValuationDocumentFile,
+  VAL_DOC_CATEGORY,
+  VALUATION_DOCUMENT_ACCEPT,
+} from '../../utils/valuationDocuments';
 
-const VAL_DOC_CATEGORY = 'VAL_DOC';
 const VAL_REPORT_CATEGORY = 'VAL_REPORT';
 
 // System-generated report types available from the checklist — code → report job key.
@@ -33,8 +38,6 @@ const REPORT_TYPE_BY_CODE: Record<string, string> = {
   D042: 'appraisal-summary',
   D043: 'appraisal-summary',
 };
-
-const isAllowedChecklistFile = (file: File) => /\.(jpe?g|png|pdf)$/i.test(file.name);
 
 // Type-count badge shown on each accordion row header — same green/amber palette as
 // StatusBadge (documentShared.tsx), so "has files"/"no files" reads consistently across
@@ -126,7 +129,7 @@ export const ValuationDocumentChecklist = () => {
       if (!code || !appraisalId) return;
 
       const files = Array.from(fileList);
-      const validFiles = files.filter(isAllowedChecklistFile);
+      const validFiles = files.filter(isAllowedValuationDocumentFile);
       const invalidCount = files.length - validFiles.length;
 
       if (invalidCount > 0) {
@@ -278,7 +281,7 @@ export const ValuationDocumentChecklist = () => {
         {types.map((type: AppraisalDocumentType) => {
           const isExpanded = expandedTypes.has(type.code);
           // Show one locale-appropriate name only — no code alongside it.
-          const displayName = i18n.language.startsWith('th') ? (type.nameTh ?? type.name) : type.name;
+          const displayName = documentTypeName(type, i18n.language);
           return (
             <div key={type.code}>
               <div
@@ -371,7 +374,7 @@ export const ValuationDocumentChecklist = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.pdf"
+        accept={VALUATION_DOCUMENT_ACCEPT}
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';

@@ -163,12 +163,12 @@ export const PropertyEditorHeader = ({
  * How many of the failed fields sit inside a tab's panel — the element with id `${tab.id}-section`
  * that every property page wraps each tab's content in. Array errors (`titles`) match their first cell.
  */
-function countFailedIn(panelId: string, failed: FlatFormError[]): number {
+export function countFailedIn(panelId: string, failed: FlatFormError[]): number {
   return failed.filter(({ path }) => panelHasField(panelId, path)).length;
 }
 
 /** Is the field at `path` inside the element with this id? Array errors match their first cell. */
-function panelHasField(panelId: string, path: string): boolean {
+export function panelHasField(panelId: string, path: string): boolean {
   const panel = document.getElementById(panelId);
   if (!panel) return false;
   const escaped = CSS.escape(path);

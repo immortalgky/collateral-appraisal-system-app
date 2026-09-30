@@ -24,7 +24,7 @@ import LandDetailForm from '../forms/LandDetailForm';
 import LeaseAgreementForm from '../forms/LeaseAgreementForm';
 import RentalInfoForm from '../forms/RentalInfoForm';
 import { createLandForm, createLandFormDefault, type createLandFormType } from '../schemas/form';
-import { mapLandPropertyResponseToForm } from '../utils/mappers';
+import { landToForm, landToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
@@ -49,12 +49,7 @@ const CreateLandPage = () => {
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
-      return {
-        ...mapLandPropertyResponseToForm(propertyData),
-        isRentedOut: (propertyData as any).isRentedOut ?? false,
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+      return landToForm(propertyData);
     }
     return createLandFormDefault;
   }, [isEditMode, propertyData]);
@@ -75,13 +70,7 @@ const CreateLandPage = () => {
 
   useEffect(() => {
     if (isEditMode && propertyData) {
-      reset({
-        ...createLandFormDefault,
-        ...mapLandPropertyResponseToForm(propertyData),
-        isRentedOut: (propertyData as any).isRentedOut ?? false,
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      } as any);
+      reset(landToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 
@@ -116,8 +105,7 @@ const CreateLandPage = () => {
 
   const onSubmit: SubmitHandler<createLandFormType> = data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo, ...rest } = data as any;
-    const payload = { ...rest, leaseAgreement, rentalInfo };
+    const payload = landToPayload(data);
 
     if (isEditMode && propertyId) {
       updateLandProperties(
@@ -166,8 +154,7 @@ const CreateLandPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const { leaseAgreement, rentalInfo, ...rest } = getValues() as any;
-    const payload = { ...rest, leaseAgreement, rentalInfo };
+    const payload = landToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateLandProperties(

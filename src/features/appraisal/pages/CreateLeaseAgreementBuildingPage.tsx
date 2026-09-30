@@ -27,10 +27,7 @@ import {
   createLeaseAgreementBuildingFormDefault,
   type createLeaseAgreementBuildingFormType,
 } from '../schemas/form';
-import {
-  mapBuildingPropertyResponseToForm,
-  mapBuildingFormDataToApiPayload,
-} from '../utils/mappers';
+import { leaseBuildingToForm, leaseBuildingToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
@@ -118,12 +115,7 @@ const CreateLeaseAgreementBuildingPage = () => {
   );
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData)
-      return {
-        ...mapBuildingPropertyResponseToForm(propertyData),
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+    if (isEditMode && propertyData) return leaseBuildingToForm(propertyData);
     return createLeaseAgreementBuildingFormDefault;
   }, [isEditMode, propertyData]);
 
@@ -135,13 +127,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   useEffect(() => {
     if (!isEditMode || !propertyData) return;
-    const base = mapBuildingPropertyResponseToForm(propertyData);
-    reset({
-      ...createLeaseAgreementBuildingFormDefault,
-      ...base,
-      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-      rentalInfo: (propertyData as any).rentalInfo ?? null,
-    } as any);
+    reset(leaseBuildingToForm(propertyData));
   }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } =
@@ -176,9 +162,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   const onSubmit: SubmitHandler<createLeaseAgreementBuildingFormType> = async data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapBuildingFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseBuildingToPayload(data);
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -218,10 +202,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapBuildingFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseBuildingToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateProperty(

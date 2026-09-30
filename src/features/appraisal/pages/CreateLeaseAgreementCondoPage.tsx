@@ -6,7 +6,7 @@ import { useAppraisalId, useBasePath, useIsCiAppraisal } from '../context/Apprai
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { mapCondoFormDataToApiPayload, mapCondoPropertyResponseToForm } from '../utils/mappers';
+import { leaseCondoToForm, leaseCondoToPayload } from '../utils/propertyFormRecipes';
 import {
   createLeaseAgreementCondoForm,
   createLeaseAgreementCondoFormDefault,
@@ -108,12 +108,7 @@ const CreateLeaseAgreementCondoPage = () => {
   );
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData)
-      return {
-        ...mapCondoPropertyResponseToForm(propertyData),
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+    if (isEditMode && propertyData) return leaseCondoToForm(propertyData);
     return createLeaseAgreementCondoFormDefault;
   }, [isEditMode, propertyData]);
 
@@ -125,13 +120,7 @@ const CreateLeaseAgreementCondoPage = () => {
 
   useEffect(() => {
     if (!isEditMode || !propertyData) return;
-    const base = mapCondoPropertyResponseToForm(propertyData);
-    reset({
-      ...createLeaseAgreementCondoFormDefault,
-      ...base,
-      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-      rentalInfo: (propertyData as any).rentalInfo ?? null,
-    } as any);
+    reset(leaseCondoToForm(propertyData));
   }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } = useCreateLeaseAgreementCondoProperty();
@@ -164,9 +153,7 @@ const CreateLeaseAgreementCondoPage = () => {
 
   const onSubmit: SubmitHandler<createLeaseAgreementCondoFormType> = async data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapCondoFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseCondoToPayload(data);
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -206,10 +193,7 @@ const CreateLeaseAgreementCondoPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapCondoFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseCondoToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateProperty(

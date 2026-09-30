@@ -274,7 +274,9 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
                   if (modalState.type === 'add') {
                     append(data);
                   } else {
-                    update(modalState.index, data);
+                    // The modal returns only its own schema's keys; merge over the stored row so
+                    // its id (update, not delete + re-create) and unedited members (remark) survive.
+                    update(modalState.index, { ...values[modalState.index], ...data });
                   }
                   setModalState(null);
                 }}

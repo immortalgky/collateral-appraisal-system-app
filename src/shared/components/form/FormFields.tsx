@@ -336,10 +336,10 @@ function FieldRenderer({
 
     preClampRef.current = current;
     // Dirty, unlike the blank-filling case above: the appraiser's own action changed a stored
-    // value, and the Data Correction form sends only the fields marked dirty
-    // (toCorrectionRequest walks dirtyFields). Clamping quietly there cleared the number on
-    // screen but left it in the database, so the report kept printing a registration number
-    // under the "ยังไม่ได้รับการจดทะเบียน" heading.
+    // value, and that change must show as an edit (unsaved-changes guard, the Data Correction
+    // confirm dialog). A quiet clamp once cleared the number on screen but left it in the
+    // database, so the report kept printing a registration number under the
+    // "ยังไม่ได้รับการจดทะเบียน" heading.
     setValue(name, field.disabledValue, {
       shouldDirty: true,
       shouldValidate: true,

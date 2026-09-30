@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -9,171 +9,330 @@ import Icon from '@/shared/components/Icon';
 import Section from '@/shared/components/sections/Section';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
-import Badge from '@/shared/components/Badge';
+import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { useGetPropertyDetail } from '@/features/appraisal/api/propertyGroup';
 import { useGetAppraisalById } from '@/features/appraisal/api/appraisal';
+import { useGetRequestById } from '@features/request/api/requests';
+import { useGetAppraisalDocuments } from '@/features/appraisal/api/appraisalDocuments';
 import { getPropertyIcon } from '@/features/appraisal/utils/propertyTypeConfig';
-import { useParametersByGroup } from '@/shared/utils/parameterUtils';
+import { EditorIdentityCard } from '@/features/appraisal/components/EditorIdentityCard';
+import { PropertyTypeChip } from '@/features/appraisal/components/PropertyTypeChip';
+import { usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
+import DataErrorState from '@/shared/components/DataErrorState';
 import { useBreadcrumbExtrasStore } from '@shared/store';
-import type { PropertyGroupItemDtoType } from '@shared/schemas/v1';
+import type {
+  GetPropertyGroupByIdResponseType,
+  PropertyCorrectionDtoType,
+  PropertyGroupItemDtoType,
+} from '@shared/schemas/v1';
 import {
   useGetAppraisalPropertiesWithType,
+  useGetCorrectionContext,
+  useGetPropertyCorrections,
   useCorrectPropertyData,
 } from '../api/appraisalDataCorrection';
 import { getPropertyTypeForm } from '../configs/propertyTypeForms';
-import {
-  buildCorrectionRequest,
-  hasRealChanges,
-  type CorrectionRequestBody,
-} from '../utils/toCorrectionRequest';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { buildDiffRows, type DiffRow } from '../utils/diffRows';
+import { diffFormValues, type DiffEntry } from '../utils/formDiff';
 import CorrectionConfirmDialog from '../components/CorrectionConfirmDialog';
-import CorrectionHistoryPanel from '../components/CorrectionHistoryPanel';
-
-/**
- * React Query types the mutation's error as `Error`; axios hangs the response body off it. The
- * only thing worth branching on is the backend's stable `errorCode` — the `detail` string is
- * written for logs, so it's a last resort rather than the message users normally see.
- */
-function readApiError(error: Error): { errorCode?: string; detail?: string } {
-  const e = error as Error & {
-    response?: { data?: { errorCode?: string } };
-    apiError?: { detail?: string };
-  };
-  return { errorCode: e.response?.data?.errorCode, detail: e.apiError?.detail };
-}
-
-const reasonField: FormField = {
-  type: 'textarea',
-  label: 'Reason for correction',
-  name: 'reason',
-  required: true,
-  maxLength: 4000,
-  showCharCount: true,
-  wrapperClassName: 'col-span-12',
-};
+import CorrectionHistoryPanel, { HistoryFilterChips } from '../components/CorrectionHistoryPanel';
+import CorrectionPageHeader from '../components/CorrectionPageHeader';
+import DocumentCorrectionPane from '../components/DocumentCorrectionPane';
+import LatestCorrectionCard from '../components/LatestCorrectionCard';
+import { useRegenerationPoll } from '../hooks/useRegenerationPoll';
+import { readApiError } from '../utils/readApiError';
+import {
+  countByTarget,
+  DOCUMENTS_PANE,
+  latestOf,
+  type HistoryFilter,
+} from '../utils/correctionHistory';
+import type { Regeneration } from '../utils/documentCorrection';
 
 // =============================================================================
 // Left rail — properties in this appraisal
 // =============================================================================
 
-function PropertyRail({
-  properties,
-  isLoading,
-  selectedPropertyId,
+/** One clickable rail row. Unsaved changes (a dot) win over the edit-count badge. */
+function RailItem({
+  icon,
+  label,
+  sublabel,
+  isSelected,
+  editCount = 0,
+  badgeClassName = 'bg-blue-50 text-blue-700',
+  isDirty = false,
   onSelect,
 }: {
-  properties: PropertyGroupItemDtoType[];
-  isLoading: boolean;
-  selectedPropertyId: string | null;
-  onSelect: (propertyId: string) => void;
+  icon: { style: string; name: string };
+  label: string;
+  sublabel?: string;
+  isSelected: boolean;
+  editCount?: number;
+  /** The edit-count badge's colours: the history drawer's palette (property blue, documents violet). */
+  badgeClassName?: string;
+  isDirty?: boolean;
+  onSelect: () => void;
 }) {
   const { t } = useTranslation('appraisalDataCorrection');
 
-  // Properties often have no name of their own; fall back to the type's description rather
-  // than its raw code ("LB"), which means nothing to the person reading the list.
-  const propertyTypeParams = useParametersByGroup('PropertyType');
-  const typeLabel = useMemo(
-    () => new Map(propertyTypeParams.map(p => [p.code, p.description])),
-    [propertyTypeParams],
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={clsx(
+        'relative w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+        isSelected
+          ? 'bg-primary/10 text-primary before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-primary'
+          : 'hover:bg-white text-gray-700',
+      )}
+    >
+      <span
+        className={clsx(
+          'flex size-6 shrink-0 items-center justify-center rounded-md',
+          isSelected ? 'bg-white' : 'bg-white ring-1 ring-slate-200',
+        )}
+      >
+        <Icon
+          style={icon.style}
+          name={icon.name}
+          className={clsx('size-3.5', isSelected ? 'text-primary' : 'text-gray-500')}
+        />
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-sm font-semibold truncate">{label}</div>
+        {sublabel && <div className="text-[11px] text-gray-400 truncate">{sublabel}</div>}
+      </div>
+      {isDirty ? (
+        <span
+          role="img"
+          aria-label={t('rail.unsaved')}
+          title={t('rail.unsaved')}
+          className="size-2 shrink-0 rounded-full bg-amber-500"
+        />
+      ) : (
+        editCount > 0 && (
+          <span
+            className={clsx(
+              'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+              badgeClassName,
+            )}
+          >
+            {t('rail.edits', { count: editCount })}
+          </span>
+        )
+      )}
+    </button>
+  );
+}
+
+function SectionLabel({ children, aside }: { children: string; aside?: string }) {
+  return (
+    <div className="flex items-baseline justify-between px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+      <span>{children}</span>
+      {aside && <span className="font-normal normal-case tracking-normal">{aside}</span>}
+    </div>
+  );
+}
+
+function PropertyRail({
+  propertyGroups,
+  isLoading,
+  isError,
+  onRetry,
+  selectedPropertyId,
+  editCounts,
+  dirtyPropertyId,
+  onSelect,
+}: {
+  propertyGroups: GetPropertyGroupByIdResponseType[];
+  isLoading: boolean;
+  isError: boolean;
+  onRetry: () => void;
+  selectedPropertyId: string | null;
+  editCounts: ReadonlyMap<string, number>;
+  /** The property whose form holds unsaved changes, if any. */
+  dirtyPropertyId: string | null;
+  onSelect: (propertyId: string) => void;
+}) {
+  const { t } = useTranslation('appraisalDataCorrection');
+  // Only rows with an id are rendered, so only those are counted.
+  const propertyCount = propertyGroups.reduce(
+    (sum, g) => sum + g.properties.filter(p => p.propertyId).length,
+    0,
   );
 
+  // Properties often have no name of their own; fall back to the type's description rather
+  // than its raw code ("LB"), which means nothing to the person reading the list.
+  const typeLabel = usePropertyTypeLabels();
+
+  let body: ReactNode;
   if (isLoading) {
-    return (
+    body = (
       <div className="flex items-center justify-center py-8">
         <Icon name="spinner" style="solid" className="size-5 text-primary animate-spin" />
       </div>
     );
-  }
-
-  if (properties.length === 0) {
-    return <p className="text-sm text-gray-500 px-2 py-4">{t('detail.noProperties')}</p>;
+  } else if (isError) {
+    body = (
+      <DataErrorState variant="inline" title={t('detail.propertiesLoadFailed')} onRetry={onRetry} />
+    );
+  } else if (propertyCount === 0) {
+    body = <p className="text-sm text-gray-500 px-2 py-2">{t('detail.noProperties')}</p>;
+  } else {
+    body = propertyGroups
+      .filter(g => g.properties.length > 0)
+      .map(g => (
+        <div key={g.id} className="space-y-1">
+          <div className="flex items-center gap-2 px-3 pt-1.5 text-[11.5px] text-gray-400 after:flex-1 after:border-t after:border-dashed after:border-gray-200">
+            <span className="truncate">
+              {[t('rail.group', { number: g.groupNumber }), g.groupName]
+                .filter(Boolean)
+                .join(' · ')}
+            </span>
+          </div>
+          {g.properties.map(p => {
+            const propertyId = p.propertyId;
+            if (!propertyId) return null;
+            return (
+              <RailItem
+                key={propertyId}
+                icon={getPropertyIcon(p.propertyType ?? '')}
+                label={p.propertyName || t('detail.unnamedProperty')}
+                sublabel={typeLabel(p.propertyType) || undefined}
+                isSelected={propertyId === selectedPropertyId}
+                editCount={editCounts.get(propertyId)}
+                isDirty={propertyId === dirtyPropertyId}
+                onSelect={() => onSelect(propertyId)}
+              />
+            );
+          })}
+        </div>
+      ));
   }
 
   return (
-    <div className="space-y-1">
-      {properties.map(p => {
-        const isSelected = p.propertyId === selectedPropertyId;
-        return (
-          <button
-            key={p.propertyId}
-            type="button"
-            onClick={() => p.propertyId && onSelect(p.propertyId)}
-            className={clsx(
-              'w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors',
-              isSelected ? 'bg-primary/10 text-primary' : 'hover:bg-gray-50 text-gray-700',
-            )}
-          >
-            <Icon
-              style={getPropertyIcon(p.propertyType ?? '').style}
-              name={getPropertyIcon(p.propertyType ?? '').name}
-              className={clsx('size-4 shrink-0', isSelected ? 'text-primary' : 'text-gray-400')}
-            />
-            <div className="min-w-0 flex-1">
-              <div className={clsx('text-sm truncate', isSelected && 'font-medium')}>
-                {p.propertyName || t('detail.unnamedProperty')}
-              </div>
-              <div className="text-[11px] text-gray-400 truncate">
-                {typeLabel.get(p.propertyType ?? '') || p.propertyType}
-              </div>
-            </div>
-          </button>
-        );
-      })}
+    <div>
+      {/* No count until loaded: "(0)" beside the spinner or the error would read as an empty
+          (or partial) appraisal. */}
+      <SectionLabel
+        aside={isLoading || isError ? undefined : t('rail.propertyCount', { count: propertyCount })}
+      >
+        {t('rail.properties')}
+      </SectionLabel>
+      {body}
+    </div>
+  );
+}
+
+/** The valuation-documents entry, set apart below the property list. */
+function DocumentsRailEntry({
+  appraisalId,
+  isSelected,
+  editCount,
+  onSelect,
+}: {
+  appraisalId: string | undefined;
+  isSelected: boolean;
+  editCount: number | undefined;
+  onSelect: () => void;
+}) {
+  const { t } = useTranslation('appraisalDataCorrection');
+  // Same query the documents pane reads, so this costs nothing extra once the pane is open.
+  const { data } = useGetAppraisalDocuments(appraisalId);
+  // Undefined until the list loads, so a pending or failed fetch does not read as "0 files".
+  const fileCount = data?.types.reduce((sum, ty) => sum + ty.totalFiles, 0);
+  const fileLabel =
+    fileCount === undefined ? undefined : t('documents.fileCount', { count: fileCount });
+
+  return (
+    <div>
+      <SectionLabel>{t('rail.documents')}</SectionLabel>
+      <RailItem
+        icon={{ style: 'solid', name: 'file-lines' }}
+        label={t('documents.title')}
+        sublabel={fileLabel}
+        isSelected={isSelected}
+        editCount={editCount}
+        badgeClassName="bg-violet-50 text-violet-700"
+        onSelect={onSelect}
+      />
     </div>
   );
 }
 
 // =============================================================================
-// Property correction editor — one mounted instance per (propertyId, typeCode)
+// Property correction editor — one mounted instance per property
 // =============================================================================
+
+/**
+ * Whether a dirtyFields node holds a real edit. After a field-array operation RHF leaves the
+ * array's entry behind as a tree of `false` leaves even when the rows equal the record, so a key
+ * being present is not enough.
+ */
+const hasEdit = (node: unknown): boolean =>
+  node === true || (typeof node === 'object' && node !== null && Object.values(node).some(hasEdit));
 
 function PropertyCorrectionEditor({
   appraisalId,
-  appraisalNumber,
-  appraisalStatus,
   property,
-  properties,
+  editCount,
+  latestEdit,
+  onOpenHistory,
+  onDirtyChange,
+  onSelectProperty,
 }: {
   appraisalId: string;
-  appraisalNumber?: string | null;
-  appraisalStatus?: string | null;
   property: PropertyGroupItemDtoType;
-  /** All properties on this appraisal — the history panel labels its entries with them. */
-  properties: PropertyGroupItemDtoType[];
+  /** Undefined until the history has loaded. */
+  editCount: number | undefined;
+  latestEdit: PropertyCorrectionDtoType | undefined;
+  onOpenHistory: () => void;
+  /** Reports whether the form holds unsaved changes, for the rail's marker. */
+  onDirtyChange: (isDirty: boolean) => void;
+  /** Another property was picked from inside the form (the construction tab's building list). */
+  onSelectProperty: (propertyId: string) => void;
 }) {
   const { t } = useTranslation('appraisalDataCorrection');
   const propertyId = property.propertyId!;
   const typeCode = property.propertyType ?? '';
-  const [showHistory, setShowHistory] = useState(false);
   const [pendingSubmit, setPendingSubmit] = useState<{
     reason: string;
-    body: CorrectionRequestBody;
-    diff: DiffRow[];
+    /** The body the property's real PUT takes, complete: the update overwrites the record. */
+    payload: unknown;
+    diff: DiffEntry[];
   } | null>(null);
 
-  const propertyTypeParams = useParametersByGroup('PropertyType');
-  const typeLabel = useMemo(
-    () => new Map(propertyTypeParams.map(p => [p.code, p.description])),
-    [propertyTypeParams],
-  );
-
   const config = getPropertyTypeForm(typeCode);
-  const { data: raw, isLoading } = useGetPropertyDetail(appraisalId, propertyId, typeCode);
+  // Always refetch on open: the save overwrites the whole record, so seeding it from a cached copy
+  // would silently revert anything another admin corrected in the meantime.
+  const {
+    data: raw,
+    isLoading,
+    isError,
+    dataUpdatedAt,
+    refetch,
+  } = useGetPropertyDetail(appraisalId, propertyId, typeCode, { refetchOnMount: 'always' });
+  // Not isFetchedAfterMount: a failed refetch sets that too, leaving `raw` the cached copy.
+  const [mountedAt] = useState(() => Date.now());
+  const isFresh = dataUpdatedAt >= mountedAt;
+  // The construction inspection locks its method switch on a progressive round.
+  const { data: appraisal } = useGetAppraisalById(appraisalId);
+  const ciMode = appraisal?.appraisalType === 'Progressive';
 
-  // Seed the create/edit screen's own form shape from the record, exactly as that screen
-  // does. `reason` rides along as an extra key so it participates in dirty tracking.
+  // Seed the property page's own form shape from the record, exactly as that page does.
+  // `reason` rides along as an extra key (excluded from the dirty check below).
   const defaults = useMemo(() => {
-    if (!config || !raw) return undefined;
-    return { ...config.defaults, ...config.toForm(raw), reason: '' } as Record<string, unknown>;
-  }, [config, raw]);
+    if (!config || !raw || !isFresh) return undefined;
+    return { ...config.toForm(raw), reason: '' };
+  }, [config, raw, isFresh]);
 
   const methods = useForm<Record<string, unknown>>({
     defaultValues: defaults ?? { reason: '' },
-    // The create screen's own schema, enforced in full: every field marked required has to hold
+    // The property page's own schema, enforced in full: every field marked required has to hold
     // a value before the correction saves, whether or not this admin was the one who emptied it.
     //
     // The cost is real and deliberate. A record completed before a field became mandatory will
@@ -181,10 +340,10 @@ function PropertyCorrectionEditor({
     // something unrelated first. Chosen anyway: the labels carry a red asterisk from this same
     // config, and a screen that shows the rule but does not apply it is the worse failure — it
     // lets a correction save a required field empty and calls that success.
-    // The registry stores schemas as `z.ZodType<Record<string, unknown>>`, which is wide enough
-    // to hold all eleven property types but drops the concrete `_def` zodResolver's overloads
-    // match on. The create screens pass their schema object directly and never hit this; here
-    // the cast is what lets one registry serve them all.
+    // The registry stores schemas as `z.ZodTypeAny`, wide enough to hold every property type but
+    // without the concrete `_def` zodResolver's overloads match on. The property pages pass their
+    // schema object directly and never hit this; here the cast is what lets one registry serve
+    // them all.
     resolver: config
       ? (zodResolver(config.schema as never) as Resolver<Record<string, unknown>>)
       : undefined,
@@ -196,12 +355,28 @@ function PropertyCorrectionEditor({
     formState: { dirtyFields },
   } = methods;
 
+  // What the form is compared against, for Discard and the confirm dialog: the record as loaded,
+  // or as just saved. Not `defaults` itself — after a save the form is reset to what was saved
+  // while `defaults` still holds the old record until the refetch lands.
+  const baseline = useRef<Record<string, unknown> | undefined>(defaults);
+  // dirtyFields, not isDirty: read during render, the proxy keeps it current. `reason` is not an edit.
+  const hasDirtyFields = Object.entries(dirtyFields).some(([k, v]) => k !== 'reason' && hasEdit(v));
   useEffect(() => {
-    if (defaults) reset(defaults);
+    if (!defaults) return;
+    // A refetch (e.g. the one a save triggers) must not throw away field edits typed since then.
+    // The first seed always applies. A reason typed meanwhile is carried over, not a reason to skip:
+    // skipping would keep the values as sent instead of what the server stored.
+    if (baseline.current && hasDirtyFields) return;
+    baseline.current = defaults;
+    reset({ ...defaults, reason: getValues('reason') ?? '' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [defaults]);
 
-  const hasDirtyFields = Object.keys(dirtyFields).some(k => k !== 'reason');
+  useEffect(() => {
+    onDirtyChange(hasDirtyFields);
+    // Unmounting (another entry selected, or the page left) clears the marker with it.
+    return () => onDirtyChange(false);
+  }, [hasDirtyFields, onDirtyChange]);
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
   const { mutate: correctProperty, isPending } = useCorrectPropertyData();
 
@@ -216,6 +391,9 @@ function PropertyCorrectionEditor({
     );
   }
 
+  // Only before the first seed: a later failed refetch keeps the form (and its unsaved edits).
+  if (isError && !defaults) return <DataErrorState onRetry={() => refetch()} />;
+
   if (isLoading || !defaults) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -224,43 +402,70 @@ function PropertyCorrectionEditor({
     );
   }
 
-  const onSubmit = (values: Record<string, unknown>) => {
-    // Read from the form, not from `values`. The resolver runs the property's own schema, which
-    // has no `reason` in it, and a zod object drops the keys it does not declare — so `values`
-    // arrives here without one however much was typed, and the check below failed every time
-    // with "A reason is required" sitting under a filled box. Same trap as the land title
-    // dialog, where zod stripped the row id and the correction saved as nothing.
+  // The resolver only gates the save; nothing reads its output. It runs the property's own
+  // schema, and a zod object drops every key it does not declare: `reason`, the row ids of titles,
+  // floors and depreciation, and fields such as encroachmentArea or sellingPrice. The update is a
+  // full overwrite, so a dropped key is wiped — a title sent without its id is deleted and
+  // re-created. Everything is therefore read from the form, as the property page's draft save does.
+  const onSubmit = () => {
     const reason = String(getValues('reason') ?? '').trim();
     if (!reason) {
       methods.setError('reason', { type: 'required', message: t('detail.reasonRequired') });
       return;
     }
 
-    const body = buildCorrectionRequest(typeCode, reason, dirtyFields, values, defaults);
-    if (!hasRealChanges(body)) {
+    // A payload with nothing different from the record is not worth a round trip — the server
+    // refuses it too (NO_CHANGES).
+    const formValues = getValues();
+    const diff = diffFormValues(baseline.current ?? defaults, formValues);
+    if (diff.length === 0) {
       toast.error(t('detail.noChanges'));
       return;
     }
 
-    setPendingSubmit({ reason, body, diff: buildDiffRows(body, defaults, values) });
+    const propertyValues = { ...formValues };
+    delete propertyValues.reason;
+    setPendingSubmit({ reason, payload: config.toPayload(propertyValues), diff });
+  };
+
+  const reasonField: FormField = {
+    type: 'textarea',
+    label: t('confirmDialog.reasonLabel'),
+    name: 'reason',
+    required: true,
+    maxLength: 4000,
+    showCharCount: true,
+    wrapperClassName: 'col-span-12',
   };
 
   const handleConfirm = () => {
     if (!pendingSubmit) return;
     correctProperty(
-      { appraisalId, propertyId, data: pendingSubmit.body },
+      {
+        appraisalId,
+        propertyId,
+        suffix: config.suffix,
+        reason: pendingSubmit.reason,
+        data: pendingSubmit.payload,
+      },
       {
         onSuccess: () => {
           toast.success(t('detail.saveSuccess'));
           setPendingSubmit(null);
           skipWarning();
-          reset(getValues());
+          // The reason belongs to the correction just saved, not to the next one.
+          const saved = { ...getValues(), reason: '' };
+          baseline.current = saved;
+          reset(saved);
         },
         onError: error => {
-          // 409 means the appraisal was reopened out from under the admin mid-edit.
+          // 409: the appraisal was reopened out from under the admin mid-edit. 400 NO_CHANGES:
+          // the record already holds these values (the preview compares the form, not the record).
           const { errorCode, detail } = readApiError(error);
           if (errorCode === 'APPRAISAL_NOT_COMPLETED') {
             toast.error(t('detail.appraisalNotCompleted'));
+          } else if (errorCode === 'NO_CHANGES') {
+            toast.error(t('detail.noChangesSaved'));
           } else {
             toast.error(detail || t('detail.saveFailed'));
           }
@@ -272,53 +477,47 @@ function PropertyCorrectionEditor({
 
   return (
     <FormProvider methods={methods} schema={config.schema}>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-        <div className="flex-1 min-h-0 overflow-y-auto px-1">
-          {/* Context header — what's being edited, and against which record */}
-          <div className="mb-5 flex items-start justify-between gap-3">
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="text-lg font-semibold text-gray-900 truncate">
-                  {property.propertyName || t('detail.unnamedProperty')}
-                </h2>
-                <span className="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">
-                  {typeLabel.get(typeCode) || typeCode}
-                </span>
-              </div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-gray-500">
-                {appraisalNumber && <span>{appraisalNumber}</span>}
-                {appraisalNumber && appraisalStatus && <span aria-hidden="true">·</span>}
-                {appraisalStatus && (
-                  <Badge type="status" value={appraisalStatus} size="xs">
-                    {appraisalStatus}
-                  </Badge>
-                )}
-              </div>
-            </div>
-            <Button type="button" variant="ghost" size="sm" onClick={() => setShowHistory(v => !v)}>
-              <Icon style="solid" name="clock-rotate-left" className="size-3.5 mr-1.5" />
-              {t('detail.historyToggle')}
-            </Button>
+      {/* `cas-form-grid` on the form and `form-scroll-container` on its scroller, exactly as the
+          property pages have them: the shared form styles (the sheet look, the pinned section
+          headers under the tab bar) are keyed on both. */}
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="cas-form-grid flex-1 min-h-0 flex flex-col"
+      >
+        <div
+          id="form-scroll-container"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth px-3"
+        >
+          {/* The property page's own identity card, so the pane opens the way that page does.
+              Top padding lives here and not on the scroller: the tab bar below is `sticky` and
+              has to reach the pane's top edge once this has scrolled away. */}
+          <div className="space-y-3 px-3 pt-4">
+            <EditorIdentityCard
+              top={<PropertyTypeChip code={typeCode} />}
+              title={property.propertyName || t('detail.unnamedProperty')}
+              titleMuted={!property.propertyName}
+            >
+              {editCount !== undefined && (
+                <p className="text-[13px] text-gray-600">
+                  {editCount > 0 ? t('edits.count', { count: editCount }) : t('edits.none')}
+                </p>
+              )}
+            </EditorIdentityCard>
+
+            {latestEdit && (
+              <LatestCorrectionCard correction={latestEdit} onViewAll={onOpenHistory} />
+            )}
           </div>
 
-          {showHistory && (
-            <Section className="mb-6 bg-white rounded-lg border border-gray-200 p-4">
-              <CorrectionHistoryPanel appraisalId={appraisalId} properties={properties} />
-            </Section>
-          )}
-
-          {/* The create/edit screen's own form body, reused verbatim — same layout, section
-              headings, labels, field order and dropdown sources the appraiser already knows.
-              A flex column, exactly as those screens wrap it: the forms build their own grid
-              inside, and an outer grid would fight the label rail they lay out against. */}
-          <div className="cas-form-grid flex flex-col gap-8 min-w-0 max-w-full">
-            {config.render()}
-          </div>
+          {/* The property page's own tab bar and panels. Its bar is a direct child of the scroll
+              container (it is `sticky`), so the body is rendered here and not inside a wrapper. */}
+          {config.render({ propertyId, ciMode, onSelectProperty })}
 
           {/* Dressed as one more section of the form rather than a card bolted underneath:
-              same `cas-form-grid` wrapper and `cas-section-head` band as every block above,
-              so the reason reads as the last thing you fill in, not a separate dialog. */}
-          <Section className="cas-form-grid mt-6 mb-6">
+              same `cas-section-head` band as every block above, so the reason reads as the last
+              thing you fill in, not a separate dialog. Below the panels, so it is there on
+              whichever tab is open. */}
+          <Section className="mb-6 px-3">
             <div className="cas-section-grid cas-sheet">
               <div className="cas-section-head mb-2 flex items-center gap-2">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-50">
@@ -336,21 +535,19 @@ function PropertyCorrectionEditor({
         </div>
 
         <ActionBar>
-          {/* ActionBar spreads its children apart, so both actions go in the right-hand group
-              to sit together. Discard is a ghost: it is the escape hatch, not a peer of Save,
-              and a filled button beside a filled button asks the reader which one is the point. */}
+          {/* Discard on the far left, Save on the far right, as the property pages have them:
+              Discard throws away every edit, so it does not sit beside the button it undoes. */}
           <ActionBar.Left>
-            <span />
-          </ActionBar.Left>
-          <ActionBar.Right>
             <Button
               type="button"
               variant="ghost"
-              onClick={() => reset(defaults)}
+              onClick={() => reset(baseline.current ?? defaults)}
               disabled={!hasDirtyFields || isPending}
             >
               {t('detail.discard')}
             </Button>
+          </ActionBar.Left>
+          <ActionBar.Right>
             <Button type="submit" disabled={!hasDirtyFields || isPending}>
               {t('detail.submit')}
             </Button>
@@ -362,7 +559,7 @@ function PropertyCorrectionEditor({
         isOpen={pendingSubmit !== null}
         onClose={() => setPendingSubmit(null)}
         onConfirm={handleConfirm}
-        diffRows={pendingSubmit?.diff ?? []}
+        diff={pendingSubmit?.diff ?? []}
         reason={pendingSubmit?.reason ?? ''}
         isLoading={isPending}
       />
@@ -375,9 +572,17 @@ function PropertyCorrectionEditor({
 const AppraisalDataCorrectionDetailPage = () => {
   const { t } = useTranslation('appraisalDataCorrection');
   const { appraisalId } = useParams<{ appraisalId: string }>();
-  const [searchParams] = useSearchParams();
-  const { properties, isLoading } = useGetAppraisalPropertiesWithType(appraisalId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const {
+    properties,
+    propertyGroups,
+    isLoading,
+    isError: propertiesFailed,
+    refetch: refetchProperties,
+  } = useGetAppraisalPropertiesWithType(appraisalId);
   const { data: appraisal } = useGetAppraisalById(appraisalId);
+  // Customer lives on the request, same source as the 360 page header.
+  const { data: request } = useGetRequestById(appraisal?.requestId);
 
   // Show which appraisal is open as a third crumb. Only once the number has actually
   // loaded — deliberately NOT falling back to appraisalId, which would flash the raw
@@ -392,39 +597,102 @@ const AppraisalDataCorrectionDetailPage = () => {
     return () => setBreadcrumbExtras([]);
   }, [appraisalNumber, appraisalId, setBreadcrumbExtras]);
 
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
-    searchParams.get('propertyId'),
-  );
+  // The selection lives in the URL so switching entries is a navigation: the editor's
+  // UnsavedChangesDialog then asks before a dirty form is thrown away, which local state could not.
+  // The fallback waits for every group: group details resolve in any order, so a partial list
+  // would open one property and then swap it for another's editor as the earlier group arrives.
+  const selectedPropertyId =
+    searchParams.get('propertyId') ??
+    (isLoading || propertiesFailed
+      ? null
+      : (properties.find(p => p.propertyId)?.propertyId ??
+        // A block appraisal has no properties at all; its documents are the only thing to correct.
+        DOCUMENTS_PANE));
+  // Re-selecting the open entry is not a navigation — it would raise the unsaved-changes prompt for nothing.
+  const setSelectedPropertyId = (id: string) => {
+    if (id !== selectedPropertyId) setSearchParams({ propertyId: id }, { replace: true });
+  };
 
-  useEffect(() => {
-    if (!selectedPropertyId && properties.length > 0 && properties[0].propertyId) {
-      setSelectedPropertyId(properties[0].propertyId);
-    }
-  }, [properties, selectedPropertyId]);
+  // Held here, not in the pane, so leaving the documents entry mid-regeneration does not re-enable
+  // the button — a second click would queue another job and notify the source system again.
+  const [regeneration, setRegeneration] = useState<Regeneration | null>(null);
+  // Tied to one appraisal: a route change to another must not inherit its disabled button or baseline.
+  useEffect(() => setRegeneration(null), [appraisalId]);
+  useRegenerationPoll(appraisalId, regeneration, setRegeneration);
 
   const selectedProperty = properties.find(p => p.propertyId === selectedPropertyId);
 
+  // One history query feeds the header, the rail badges, the property card and the drawer.
+  const { data: history } = useGetPropertyCorrections(appraisalId);
+  const corrections = history?.corrections;
+  const editCounts = useMemo(() => countByTarget(corrections ?? []), [corrections]);
+  const latestEdit = useMemo(() => latestOf(corrections ?? []), [corrections]);
+  const { data: source } = useGetCorrectionContext(appraisalId);
+
+  // Only the open editor is mounted, so at most one property can be dirty.
+  const [editorDirty, setEditorDirty] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyFilter, setHistoryFilter] = useState<HistoryFilter>('all');
+  const openHistory = () => setHistoryOpen(true);
+  // Close first: a dirty form makes the selection raise the unsaved-changes prompt, which the
+  // open drawer would otherwise sit behind.
+  const selectFromHistory = (id: string) => {
+    setHistoryOpen(false);
+    setSelectedPropertyId(id);
+  };
+
   return (
-    <div className="flex flex-col h-full min-h-0 gap-3">
-      <div className="flex-1 min-h-0 flex gap-4">
-        <div className="w-64 shrink-0 overflow-y-auto border-r border-gray-200 pr-3">
+    <div className="flex flex-col h-full min-h-0 overflow-hidden border border-gray-200 bg-white">
+      <CorrectionPageHeader
+        appraisalNumber={appraisal?.appraisalNumber}
+        customerName={request?.customers?.[0]?.name}
+        status={appraisal?.status}
+        approvedAt={source?.completedAt}
+        externalSystem={source?.externalSystem ?? null}
+        editCount={corrections?.length}
+        latestEditAt={latestEdit?.changedAt}
+        onOpenHistory={openHistory}
+      />
+
+      <div className="flex-1 min-h-0 flex">
+        <nav className="w-64 shrink-0 space-y-3 overflow-y-auto border-r border-slate-200 bg-slate-50 px-2.5 py-3.5">
           <PropertyRail
-            properties={properties}
+            propertyGroups={propertyGroups}
             isLoading={isLoading}
+            isError={propertiesFailed}
+            onRetry={refetchProperties}
             selectedPropertyId={selectedPropertyId}
+            editCounts={editCounts}
+            dirtyPropertyId={editorDirty ? selectedPropertyId : null}
             onSelect={setSelectedPropertyId}
           />
-        </div>
+          <DocumentsRailEntry
+            appraisalId={appraisalId}
+            isSelected={selectedPropertyId === DOCUMENTS_PANE}
+            editCount={editCounts.get(DOCUMENTS_PANE)}
+            onSelect={() => setSelectedPropertyId(DOCUMENTS_PANE)}
+          />
+        </nav>
 
-        <div className="flex-1 min-w-0 flex flex-col">
-          {selectedProperty ? (
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col bg-white">
+          {selectedPropertyId === DOCUMENTS_PANE ? (
+            <DocumentCorrectionPane
+              // Per appraisal, like the editor: open dialog / expanded rows must not carry to another one.
+              key={appraisalId}
+              appraisalId={appraisalId!}
+              regeneration={regeneration}
+              onRegenerationChange={setRegeneration}
+            />
+          ) : selectedProperty ? (
             <PropertyCorrectionEditor
               key={selectedProperty.propertyId}
               appraisalId={appraisalId!}
-              appraisalNumber={appraisal?.appraisalNumber}
-              appraisalStatus={appraisal?.status}
               property={selectedProperty}
-              properties={properties}
+              editCount={corrections && (editCounts.get(selectedProperty.propertyId!) ?? 0)}
+              latestEdit={latestOf(corrections ?? [], selectedProperty.propertyId!)}
+              onOpenHistory={openHistory}
+              onDirtyChange={setEditorDirty}
+              onSelectProperty={setSelectedPropertyId}
             />
           ) : (
             !isLoading && (
@@ -435,6 +703,21 @@ const AppraisalDataCorrectionDetailPage = () => {
           )}
         </div>
       </div>
+
+      <SlideOverPanel
+        isOpen={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        title={t('history.title')}
+        width="md"
+        headerActions={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
+      >
+        <CorrectionHistoryPanel
+          appraisalId={appraisalId!}
+          properties={properties}
+          onSelectTarget={selectFromHistory}
+          filter={historyFilter}
+        />
+      </SlideOverPanel>
     </div>
   );
 };
