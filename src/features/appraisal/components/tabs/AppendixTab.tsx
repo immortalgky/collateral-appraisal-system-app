@@ -37,14 +37,18 @@ import type { AppendixDocumentDto, AppraisalAppendixDto } from '../../types/docu
 import type { AnnotationResult } from '@shared/components/ImageAnnotationEditor';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import DataErrorState from '@/shared/components/DataErrorState';
+import {
+  isAllowedValuationDocumentFile,
+  VALUATION_DOCUMENT_ACCEPT,
+} from '../../utils/valuationDocuments';
 
 const ImageAnnotationEditor = lazyWithRetry(
   () => import('@shared/components/ImageAnnotationEditor/ImageAnnotationEditor'),
 );
 
 const isImageFile = (file: File) => /\.(jpg|jpeg|png)$/i.test(file.name);
-// Mirrors ValuationDocumentChecklist.tsx's isAllowedChecklistFile — same page, same accepted types.
-const isAcceptedAppendixFile = (file: File) => /\.(jpe?g|png|pdf)$/i.test(file.name);
+// Same page as the valuation document checklist, same accepted types.
+const isAcceptedAppendixFile = isAllowedValuationDocumentFile;
 
 // Mirrors the server cap (FileStorageConfiguration.MaxFileSizeBytes / appsettings 52428800).
 // The appendix path had no client-side size check at all — the server rejected oversize uploads
@@ -776,7 +780,7 @@ export const AppendixTab = () => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.pdf"
+        accept={VALUATION_DOCUMENT_ACCEPT}
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';
@@ -815,7 +819,7 @@ export const AppendixTab = () => {
         onUploadFromDevice={handleUploadFromDevice}
         onChooseFromGallery={handleChooseFromGallery}
         title={activeAppendix ? `Add ${activeAppendix.appendixTypeName}` : 'Add Files'}
-        accept=".jpg,.jpeg,.png,.pdf"
+        accept={VALUATION_DOCUMENT_ACCEPT}
       />
 
       {/* Gallery Selection Modal */}

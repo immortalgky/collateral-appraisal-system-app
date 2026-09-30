@@ -12,6 +12,8 @@ interface SlideOverPanelProps {
   children: ReactNode;
   /** Pinned under the scrolling content — for actions that must stay reachable on long forms. */
   footer?: ReactNode;
+  /** Controls shown on the title row, left of the close button (e.g. filter chips). */
+  headerActions?: ReactNode;
 }
 
 const widthClasses = {
@@ -31,6 +33,7 @@ const SlideOverPanel = ({
   width = 'lg' as const,
   children,
   footer,
+  headerActions,
 }: SlideOverPanelProps) => {
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -54,10 +57,13 @@ const SlideOverPanel = ({
               <div className="flex h-full flex-col bg-white shadow-xl">
                 {/* Header */}
                 <div className="flex items-start justify-between px-6 py-4 border-b border-gray-200">
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
                     {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
                   </div>
+                  {headerActions && (
+                    <div className="ml-auto flex shrink-0 items-center pl-3">{headerActions}</div>
+                  )}
                   <button
                     onClick={onClose}
                     className="ml-3 text-gray-400 hover:text-gray-600 transition-colors"

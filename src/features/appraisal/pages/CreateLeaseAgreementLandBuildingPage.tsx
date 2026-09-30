@@ -31,10 +31,7 @@ import {
 } from '../schemas/form';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import {
-  mapLandAndBuildingFormDataToApiPayload,
-  mapLandAndBuildingPropertyResponseToForm,
-} from '../utils/mappers';
+import { leaseLandBuildingToForm, leaseLandBuildingToPayload } from '../utils/propertyFormRecipes';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
@@ -120,12 +117,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
   );
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData)
-      return {
-        ...mapLandAndBuildingPropertyResponseToForm(propertyData),
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+    if (isEditMode && propertyData) return leaseLandBuildingToForm(propertyData);
     return createLeaseAgreementLandAndBuildingFormDefault;
   }, [isEditMode, propertyData]);
 
@@ -137,13 +129,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
 
   useEffect(() => {
     if (!isEditMode || !propertyData) return;
-    const base = mapLandAndBuildingPropertyResponseToForm(propertyData);
-    reset({
-      ...createLeaseAgreementLandAndBuildingFormDefault,
-      ...base,
-      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-      rentalInfo: (propertyData as any).rentalInfo ?? null,
-    } as any);
+    reset(leaseLandBuildingToForm(propertyData));
   }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } =
@@ -178,9 +164,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
 
   const onSubmit: SubmitHandler<createLeaseAgreementLandAndBuildingFormType> = async data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapLandAndBuildingFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseLandBuildingToPayload(data);
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -220,10 +204,7 @@ const CreateLeaseAgreementLandBuildingPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapLandAndBuildingFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseLandBuildingToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateProperty(

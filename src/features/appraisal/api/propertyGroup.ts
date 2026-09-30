@@ -287,6 +287,8 @@ export const useGetPropertyDetail = (
   appraisalId: string | undefined,
   propertyId: string | undefined,
   propertyType: PropertyType | string | undefined,
+  /** 'always' for editors that must not seed a full-overwrite save from a cached record. */
+  options?: { refetchOnMount?: boolean | 'always' },
 ) => {
   const endpoint = propertyType ? getDetailEndpoint(propertyType) : undefined;
 
@@ -299,5 +301,6 @@ export const useGetPropertyDetail = (
       return data as Record<string, unknown>;
     },
     enabled: !!appraisalId && !!propertyId && !!endpoint,
+    ...(options?.refetchOnMount !== undefined && { refetchOnMount: options.refetchOnMount }),
   });
 };

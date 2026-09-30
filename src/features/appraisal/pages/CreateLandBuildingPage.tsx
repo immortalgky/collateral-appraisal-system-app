@@ -35,10 +35,8 @@ import {
 } from '../schemas/form';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import {
-  mapLandAndBuildingFormDataToApiPayload,
-  mapLandAndBuildingPropertyResponseToForm,
-} from '../utils/mappers';
+import { mapLandAndBuildingFormDataToApiPayload } from '../utils/mappers';
+import { landBuildingToForm } from '../utils/propertyFormRecipes';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
@@ -67,12 +65,7 @@ const CreateLandBuildingPage = () => {
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
-      return {
-        ...mapLandAndBuildingPropertyResponseToForm(propertyData),
-        isRentedOut: (propertyData as any).isRentedOut ?? false,
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+      return landBuildingToForm(propertyData);
     }
     return createLandAndBuildingFormDefault;
   }, [isEditMode, propertyData]);
@@ -94,13 +87,7 @@ const CreateLandBuildingPage = () => {
   // Reset form when API data arrives or updates (edit mode only)
   useEffect(() => {
     if (isEditMode && propertyData) {
-      reset({
-        ...createLandAndBuildingFormDefault,
-        ...mapLandAndBuildingPropertyResponseToForm(propertyData),
-        isRentedOut: (propertyData as any).isRentedOut ?? false,
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      } as any);
+      reset(landBuildingToForm(propertyData));
     }
   }, [isEditMode, propertyData, reset]);
 

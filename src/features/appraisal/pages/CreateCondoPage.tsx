@@ -25,7 +25,8 @@ import {
   useUpdateCondoProperty,
 } from '../api/property';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
-import { mapCondoPropertyResponseToForm, mapCondoFormDataToApiPayload } from '../utils/mappers';
+import { mapCondoPropertyResponseToForm } from '../utils/mappers';
+import { condoToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
@@ -145,10 +146,8 @@ const CreateCondoPage = () => {
 
   const onSubmit: SubmitHandler<createCondoFormType> = data => {
     setSaveAction('submit');
-    // buildingInsurancePrice is server-derived (rate × usableArea) — display only,
-    // never sent back on create/update.
-    const { buildingInsurancePrice: _buildingInsurancePrice, ...rest } = data;
-    const payload = mapCondoFormDataToApiPayload(rest as createCondoFormType);
+    // buildingInsurancePrice is server-derived — condoToPayload never sends it back.
+    const payload = condoToPayload(data);
     if (isEditMode && propertyId) {
       updateCondoProperties(
         {
@@ -196,9 +195,7 @@ const CreateCondoPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    // buildingInsurancePrice is server-derived — never sent back on save.
-    const { buildingInsurancePrice: _buildingInsurancePrice, ...rest } = getValues();
-    const payload = mapCondoFormDataToApiPayload(rest as createCondoFormType);
+    const payload = condoToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateCondoProperties(

@@ -168,11 +168,14 @@ export const ActionDropdown = ({
   onEdit,
   onDelete,
   isEditable = false,
+  labels,
 }: {
   onView?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
   isEditable?: boolean;
+  /** Overrides the English defaults, for callers that are localized or name the edit action differently. */
+  labels?: { view?: string; edit?: string; delete?: string };
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -219,7 +222,7 @@ export const ActionDropdown = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <Icon name="eye" className="text-gray-400" />
-                  View
+                  {labels?.view ?? 'View'}
                 </button>
               )}
               {isEditable && onEdit && (
@@ -232,7 +235,7 @@ export const ActionDropdown = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
                 >
                   <Icon name="pen-to-square" className="text-gray-400" />
-                  Edit
+                  {labels?.edit ?? 'Edit'}
                 </button>
               )}
               {isEditable && onDelete && (
@@ -245,7 +248,7 @@ export const ActionDropdown = ({
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
                 >
                   <Icon name="trash" className="text-red-400" />
-                  Delete
+                  {labels?.delete ?? 'Delete'}
                 </button>
               )}
             </div>

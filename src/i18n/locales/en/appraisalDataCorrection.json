@@ -20,16 +20,38 @@
     "unsupportedType": "Correction is not supported for property type \"{{type}}\"",
     "saveSuccess": "Correction saved",
     "saveFailed": "Failed to save correction. Please try again.",
-    "historyToggle": "History",
-    "landTitlesSection": "Land Titles",
-    "titleRowLabel": "Title #{{number}}",
     "submit": "Save Correction",
     "selectProperty": "Select a property from the list",
     "appraisalNotCompleted": "This appraisal is no longer Completed — it may have been reopened or cancelled. Refresh and check its status before retrying.",
     "reasonTitle": "Reason for this correction",
     "reasonRequired": "A reason is required.",
     "noChanges": "Nothing has changed yet.",
-    "discard": "Cancel"
+    "noChangesSaved": "The saved record already holds these values. Nothing was changed.",
+    "discard": "Cancel",
+    "latestEdit": "Latest edit",
+    "viewAll": "View all →",
+    "moreChanges": "+{{count}} more",
+    "propertiesLoadFailed": "Failed to load the properties"
+  },
+  "header": {
+    "sourceSystem": "Source system",
+    "latest": "Latest {{at}}",
+    "approved": "Approved {{at}}"
+  },
+  "edits": {
+    "count_one": "Edited {{count}} time after closing",
+    "count_other": "Edited {{count}} times after closing",
+    "none": "Not edited since closing"
+  },
+  "rail": {
+    "properties": "Properties",
+    "documents": "Documents",
+    "group": "Group {{number}}",
+    "edits_one": "{{count}} edit",
+    "edits_other": "{{count}} edits",
+    "unsaved": "Unsaved changes",
+    "propertyCount_one": "{{count}} item",
+    "propertyCount_other": "{{count}} items"
   },
   "confirmDialog": {
     "title": "Confirm Data Correction",
@@ -37,9 +59,114 @@
     "cancel": "Cancel",
     "saving": "Saving...",
     "noChanges": "No fields were changed",
+    "fieldsHeading": "Fields",
+    "rowAdded": "Added",
+    "rowRemoved": "Removed",
     "reasonLabel": "Reason"
   },
+  "documents": {
+    "title": "Valuation documents",
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} files",
+    "noFile": "No file",
+    "generating": "Generating",
+    "loadFailed": "Failed to load documents",
+    "attach": "Attach document",
+    "attachFile": "Attach file",
+    "menu": {
+      "view": "View",
+      "replace": "Replace with new file",
+      "delete": "Delete"
+    },
+    "strip": {
+      "title": "Appraisal summary report",
+      "latest": "Latest {{at}}",
+      "none": "No file yet",
+      "busy": "Generating the report. The new file will appear in the list below",
+      "regenerate": "Regenerate summary",
+      "regenerating": "Generating…",
+      "notify": "Notify source system ({{system}})",
+      "timeout": "No new file found within 60 seconds. The job may still be running. Refresh this page later.",
+      "timeoutNotified": "No new file found within 60 seconds. The job may still be running. Refresh this page later. Do not click again — it notifies the source system again."
+    },
+    "dialog": {
+      "typeLabel": "Document type",
+      "fileLabel": "File",
+      "fileInvalid": "Please choose a file (JPG, PNG or PDF)",
+      "reasonLabel": "Reason",
+      "reasonPlaceholder": "e.g. The customer sent a corrected certificate after approval",
+      "reasonRequired": "Please enter a reason",
+      "cancel": "Cancel",
+      "attach": {
+        "title": "Attach document",
+        "submit": "Attach document"
+      },
+      "replace": {
+        "title": "Replace file",
+        "note": "The old file will be removed and its name kept in the history",
+        "submit": "Replace"
+      },
+      "delete": {
+        "title": "Delete document",
+        "warning": "The file will be removed from this appraisal and cannot be recovered. Only the file name and the reason are kept in the history.",
+        "submit": "Delete document"
+      },
+      "regenerate": {
+        "title": "Regenerate the appraisal summary report?",
+        "intro": "The system will build the summary from the current data and attach it as a new file. The old file is kept.",
+        "useWhen1": "Use it when the report generated at approval failed",
+        "useWhen2": "Or when data corrected after closing makes the existing report wrong",
+        "notifyLabel": "Notify the source system ({{system}}) to fetch the documents again",
+        "notifyHint": "Once the report is attached, the source system ({{system}}) fetches the current valuation book and summary report again. If you still need to attach or replace those files, do that first. Other document types are not sent.",
+        "noSource": "There is no source system to notify for this appraisal",
+        "submit": "Regenerate report"
+      },
+      "notify": {
+        "title": "Notify the source system ({{system}}) to fetch the documents again?",
+        "intro": "The source system ({{system}}) is told the appraisal result is ready and fetches the current valuation book and summary report. No new summary report is generated.",
+        "note": "Use it after attaching or replacing the valuation book / summary report yourself. Other document types are not sent.",
+        "submit": "Notify source system ({{system}})"
+      }
+    },
+    "toast": {
+      "attached": "Document attached",
+      "replaced": "File replaced",
+      "deleted": "Document deleted",
+      "uploadFailed": "Failed to upload the file. Please try again.",
+      "correctionFailed": "Failed to save the document change. Please try again.",
+      "regenerateQueued": "Request sent. The report is being generated",
+      "regenerateDone": "The new summary report was attached",
+      "regenerateDoneNotified": "The new summary report was attached and the source system ({{system}}) was notified",
+      "regenerateFailed": "Failed to send the request. Please try again.",
+      "notified": "Source system ({{system}}) notified",
+      "notifyFailed": "Failed to notify the source system. Please try again.",
+      "noExternalSource": "This appraisal has no source system to notify. Refresh this page and try again."
+    }
+  },
   "history": {
-    "empty": "No corrections have been made to this property yet"
+    "title": "Edit history",
+    "empty": "No corrections have been made to this appraisal yet",
+    "noneInFilter": "No entries match this filter",
+    "loadFailed": "Failed to load the edit history",
+    "filter": {
+      "all": "All",
+      "property": "Properties",
+      "documents": "Documents"
+    },
+    "documents": "Documents",
+    "appraisalSummary": "Appraisal summary report",
+    "regenerationRequested": "Regeneration requested",
+    "notifiedSourceSystem": "Notified source system",
+    "notNotifiedSourceSystem": "Did not notify source system",
+    "kind": {
+      "property": "Property data corrected",
+      "regenerate": "Summary regenerated",
+      "notify": "Source system notified",
+      "attach": "Document attached",
+      "replace": "Document replaced",
+      "delete": "Document deleted"
+    },
+    "reasonLabel": "Reason:",
+    "deleted": "deleted"
   }
 }
