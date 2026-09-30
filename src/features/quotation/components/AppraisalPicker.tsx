@@ -486,6 +486,10 @@ export function AppraisalPicker({
   const channelOptions = useParameterOptions('Channel');
   const bankingSegmentOptions = useParameterOptions('BankingSegment');
 
+  const purposeLabels = useMemo(
+    () => new Map(purposeOptions.map(o => [o.value ?? '', o.label])),
+    [purposeOptions],
+  );
   const channelLabels = useMemo(
     () => new Map(channelOptions.map(o => [o.value ?? '', o.label])),
     [channelOptions],
@@ -912,7 +916,7 @@ export function AppraisalPicker({
                         {r.customerName ?? '—'}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.purpose ?? '—'}
+                        {r.purpose ? (purposeLabels.get(r.purpose) ?? r.purpose) : '—'}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         {r.status ? (
