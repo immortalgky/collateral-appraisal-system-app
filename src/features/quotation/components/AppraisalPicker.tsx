@@ -59,38 +59,6 @@ const EMPTY_FILTERS: AppraisalFilters = {
   province: '',
 };
 
-const STORAGE_KEY = 'quotation-picker-filters-v1';
-
-interface StoredFilterState {
-  filters: Partial<AppraisalFilters>;
-  moreOpen: boolean;
-}
-
-function readStoredFilters(): StoredFilterState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as StoredFilterState;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredFilters(state: StoredFilterState): void {
-  try {
-    // Strip empty strings before persisting
-    const stripped = Object.fromEntries(
-      Object.entries(state.filters).filter(([, v]) => v !== ''),
-    ) as Partial<AppraisalFilters>;
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ filters: stripped, moreOpen: state.moreOpen }),
-    );
-  } catch {
-    // ignore — private mode / storage full
-  }
-}
-
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
@@ -472,25 +440,9 @@ export function AppraisalPicker({
     });
   };
 
-  // ── Filter state + localStorage hydration ──
-  const stored = useMemo(() => readStoredFilters(), []);
-  const [filters, setFilters] = useState<AppraisalFilters>({
-    ...EMPTY_FILTERS,
-    ...(stored?.filters ?? {}),
-  });
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState<boolean>(stored?.moreOpen ?? false);
-
-  // Debounced write-back on filter/toggle changes
-  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    writeTimerRef.current = setTimeout(() => {
-      writeStoredFilters({ filters, moreOpen: moreFiltersOpen });
-    }, 500);
-    return () => {
-      if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    };
-  }, [filters, moreFiltersOpen]);
+  // ── Filter state — always starts blank; not persisted across opens ──
+  const [filters, setFilters] = useState<AppraisalFilters>(EMPTY_FILTERS);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
 
   const [pageNumber, setPageNumber] = useState(0);
   const PAGE_SIZE = 10;
