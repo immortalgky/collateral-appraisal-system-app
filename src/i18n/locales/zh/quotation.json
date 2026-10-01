@@ -498,6 +498,7 @@
     "channelCol": "Channel",
     "properties": "Properties",
     "requestedAt": "Requested At",
+    "previouslyQuoted": "Previously Quoted",
     "selectAllHint": "Selected {{page}} on this page. {{total}} appraisals match your filters — refine filters or paginate to select more.",
     "maxDaysAll": "Set max days for all:",
     "maxDays": "Max days:",

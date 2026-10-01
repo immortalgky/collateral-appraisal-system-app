@@ -854,13 +854,16 @@ export function AppraisalPicker({
                 <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   {t('picker.requestedAt')}
                 </th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                  {t('picker.previouslyQuoted')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {/* Enhancement #6 — Select-all hint */}
               {allPageSelected && totalCount > PAGE_SIZE && (
                 <tr>
-                  <td colSpan={9} className="px-3 py-1.5 bg-gray-50">
+                  <td colSpan={10} className="px-3 py-1.5 bg-gray-50">
                     <p className="text-xs text-gray-500">
                       {t('picker.selectAllHint', { page: PAGE_SIZE, total: totalCount })}
                     </p>
@@ -869,7 +872,7 @@ export function AppraisalPicker({
               )}
               {isFetching && items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
+                  <td colSpan={10} className="px-3 py-8 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
                       <Icon name="spinner" style="solid" className="size-4 animate-spin" />
                       <span className="text-xs">{t('common:status.loading')}</span>
@@ -878,13 +881,13 @@ export function AppraisalPicker({
                 </tr>
               ) : appraisalsError ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <DataErrorState variant="inline" onRetry={() => refetchAppraisals()} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
+                  <td colSpan={10} className="px-3 py-8 text-center">
                     <p className="text-xs text-gray-400 italic">
                       {t('empty.noEligibleAppraisals')}
                     </p>
@@ -944,6 +947,9 @@ export function AppraisalPicker({
                               year: 'numeric',
                             })
                           : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                        {r.previouslyQuotedNumber ?? '—'}
                       </td>
                     </tr>
                   );
