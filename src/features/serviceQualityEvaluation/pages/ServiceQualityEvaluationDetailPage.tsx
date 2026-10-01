@@ -33,6 +33,7 @@ import type { EvaluationConfig } from '../api/types';
 import RatingGuidelinesTable from '../components/RatingGuidelinesTable';
 import EvaluationCriteriaRow from '../components/EvaluationCriteriaRow';
 import StarRating from '../components/StarRating';
+import { useHasPermission } from '@shared/hooks/useHasPermission';
 
 // ─── Info Grid ────────────────────────────────────────────────────────────────
 
@@ -115,6 +116,7 @@ function ServiceQualityEvaluationDetailPage() {
   const { appraisalId } = useParams<{ appraisalId: string }>();
   const { i18n, t } = useTranslation('serviceQualityEvaluation');
   const localizeCompanyName = useLocalizedCompanyName();
+  const isReadOnly = !useHasPermission('REPORT_EVALUATION_EDIT'); // TODO: Replace with outer stage in the future
 
   const { data: appraisal, isLoading: appraisalLoading, isError: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
   const { data: header, isLoading: headerLoading, isError: headerError, refetch: refetchHeader } = useGetEvaluationHeader(appraisalId ?? '');
@@ -400,7 +402,7 @@ function ServiceQualityEvaluationDetailPage() {
                       key={slot}
                       index={index}
                       criteriaLabel={getCriteriaLabel(slot)}
-                      disabled={isCompleted}
+                      disabled={isCompleted || isReadOnly}
                       forceDisabled={index === 1 ? (watchedValues.criteria2AutoLocked ?? false) : false}
                       deliveryAutoDetected={index === 1 ? (watchedValues.criteria2IsAutoDetected ?? false) : false}
                       deliveryDetectedDays={index === 1 ? (watchedValues.criteria2DetectedDays ?? null) : null}
@@ -426,7 +428,7 @@ function ServiceQualityEvaluationDetailPage() {
               rows={4}
               maxLength={4000}
               showCharCount
-              disabled={isCompleted}
+              disabled={isCompleted || isReadOnly}
               value={watchedValues.additionalComments ?? ''}
               {...register('additionalComments')}
             />
@@ -436,7 +438,7 @@ function ServiceQualityEvaluationDetailPage() {
               rows={4}
               maxLength={4000}
               showCharCount
-              disabled={isCompleted}
+              disabled={isCompleted || isReadOnly}
               value={watchedValues.note ?? ''}
               {...register('note')}
             />
@@ -449,7 +451,7 @@ function ServiceQualityEvaluationDetailPage() {
         <ActionBar.Left>
           <CancelButton fallbackPath="/standalone/service-quality-evaluation" />
         </ActionBar.Left>
-        {!isCompleted && (
+        {!isCompleted && !isReadOnly && (
           <ActionBar.Right>
             <Button
               variant="ghost"
