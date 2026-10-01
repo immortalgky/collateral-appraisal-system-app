@@ -1138,7 +1138,6 @@
       "encroachingArea": "侵占他人面积",
       "encroachingOthers": "侵占他人",
       "encroachingRemark": "侵占他人备注",
-      "encroachmentArea": "被侵占面积",
       "encroachmentRemark": "侵占备注",
       "energyUse": "能源消耗",
       "engineNo": "发动机号",
@@ -1152,7 +1151,6 @@
       "fence": "围墙",
       "floor": "楼层",
       "floors": "楼层数",
-      "forcedSalePrice": "强制出售价格",
       "forestBoundary": "林地边界",
       "forestBoundaryRemark": "林地边界备注",
       "governmentPrice": "政府评估价",
@@ -1218,7 +1216,6 @@
       "roomLayout": "户型布局",
       "roomNo": "房间号",
       "royalDecree": "皇家法令",
-      "sellingPrice": "销售价格",
       "series": "系列",
       "sidesFacingRoad": "临路面数",
       "soi": "巷",
@@ -2878,6 +2875,9 @@
       "west": "西"
     },
     "list": {
+      "moveUp": "上移",
+      "moveDown": "下移",
+      "sortByNumber": "按地契号排序",
       "type": "类型",
       "document": "编号 · 册 · 页",
       "position": "土地位置",

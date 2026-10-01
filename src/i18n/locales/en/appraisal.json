@@ -1141,7 +1141,6 @@
       "encroachingArea": "Encroaching Area",
       "encroachingOthers": "Encroaching Others",
       "encroachingRemark": "Encroaching Remark",
-      "encroachmentArea": "Encroachment Area",
       "encroachmentRemark": "Encroachment Remark",
       "energyUse": "Energy Use",
       "engineNo": "Engine No.",
@@ -1155,7 +1154,6 @@
       "fence": "Fence",
       "floor": "Floor",
       "floors": "Floors",
-      "forcedSalePrice": "Forced Sale Price",
       "forestBoundary": "Forest Boundary",
       "forestBoundaryRemark": "Forest Boundary Remark",
       "governmentPrice": "Government Price",
@@ -1221,7 +1219,6 @@
       "roomLayout": "Room Layout",
       "roomNo": "Room No.",
       "royalDecree": "Royal Decree",
-      "sellingPrice": "Selling Price",
       "series": "Series",
       "sidesFacingRoad": "Sides Facing Road",
       "soi": "Soi",
@@ -2881,6 +2878,9 @@
       "west": "West"
     },
     "list": {
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "sortByNumber": "Sort by title number",
       "type": "Type",
       "document": "No. · Book · Page",
       "position": "Land position",

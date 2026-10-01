@@ -138,11 +138,11 @@ export function ConstructionInspectionTab({
   // reports — that sums only the groups holding an inspection, so another group on the appraisal
   // (a machine, a plot) is in this figure and not in theirs.
   const appraisedValue = useAppraisalAppraisedValue();
-  // The appraiser's keyed Final Cost Value sits beside the depreciation table in this same form
-  // (see BuildingDetail.tsx, where it is edited).
-  // The building's Building Cost Value, not the raw schedule sum: `finalCostValueOverride ??
-  // roundToThousand(Σ priceAfterDepreciation)`. Reading the sum directly meant a building the
-  // appraiser had priced by hand still based its whole inspection on the table it overrode — the
+  // The Building Cost Value sits beside the depreciation table in this same form (BuildingDetail.tsx):
+  // the figure the appraiser typed, or null to follow the table.
+  // The building's Building Cost Value, not the raw schedule sum: `buildingCostValue ??` the schedule
+  // rounded to the nearest 1,000 by the server's rule (each row at 2 dp, ties away from zero). Reading the sum directly meant a building the
+  // appraiser had priced by hand still based its whole inspection on the table it replaced — the
   // 100% figure, every work row's Construction Value, Current Value, and from there the summary
   // book, the Decision Summary card, the engagement's frozen value and the regulatory export.
   //
@@ -155,7 +155,7 @@ export function ConstructionInspectionTab({
     control,
     compute: values =>
       buildingFinalCostValue({
-        finalCostValueOverride: values.finalCostValueOverride,
+        buildingCostValue: values.buildingCostValue,
         depreciationDetails: values.depreciationDetails ?? NO_ROWS,
       } as Record<string, unknown>),
   });

@@ -1,3 +1,4 @@
+import { enteredBuildingCostValue, enteredBuildingInsurance } from './buildingStoredValues';
 import { roundBaht } from './constructionMoney';
 import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
 import type {
@@ -112,7 +113,6 @@ export const mapLandPropertyResponseToForm = (
     royalDecree: response.royalDecree ?? '',
     isEncroached: response.isEncroached ?? false,
     encroachmentRemark: response.encroachmentRemark ?? '',
-    encroachmentArea: response.encroachmentArea ?? null,
     hasElectricity: response.hasElectricity ?? false,
     electricityDistance: response.electricityDistance ?? null,
     isLandlocked: response.isLandlocked ?? false,
@@ -145,6 +145,10 @@ export const mapProjectLandPropertyResponseToForm = (
   ...mapLandPropertyResponseToForm(response),
   ownerName: response.ownerName ?? '',
   isOwnerVerified: response.isOwnerVerified ?? true,
+  // A project land still stores these with no input for them, so they are carried back as loaded
+  // (appraisal lands no longer store encroachmentArea; null stays null rather than becoming '').
+  encroachmentArea: (response as { encroachmentArea?: number | null }).encroachmentArea ?? null,
+  landOffice: response.landOffice ?? null,
 });
 
 export const mapConstructionInspectionResponseToForm = (ci: any) => ({
@@ -229,11 +233,14 @@ export const mapBuildingPropertyResponseToForm = (
     utilizationType: response.utilizationType ?? '',
     utilizationTypeOther: response.utilizationTypeOther ?? '',
     totalBuildingArea: response.totalBuildingArea ?? null,
-    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
-    finalCostValueOverride: response.finalCostValueOverride ?? null,
-    buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
-    sellingPrice: response.sellingPrice ?? null,
-    forcedSalePrice: response.forcedSalePrice ?? null,
+    buildingInsurancePrice: enteredBuildingInsurance(
+      response.buildingInsurancePrice,
+      response.depreciationDetails,
+    ),
+    buildingCostValue: enteredBuildingCostValue(
+      response.buildingCostValue,
+      response.depreciationDetails as Record<string, unknown>[] | null | undefined,
+    ),
     remark: response.remark ?? '',
     surfaces: (response as any).surfaces ?? [],
     depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
@@ -362,8 +369,6 @@ export const mapCondoPropertyResponseToForm = (
 
     buildingInsurancePrice: response.buildingInsurancePrice ?? null,
     buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
-    sellingPrice: response.sellingPrice ?? null,
-    forcedSalePrice: response.forceSellingPrice ?? null,
 
     remark: response.remark ?? '',
     ...mapConstructionInspectionResponseToForm((response as any).constructionInspection),
@@ -448,7 +453,6 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     royalDecree: response.royalDecree ?? '',
     isEncroached: response.isEncroached ?? false,
     encroachmentRemark: response.encroachmentRemark ?? '',
-    encroachmentArea: response.encroachmentArea ?? null,
     hasElectricity: response.hasElectricity ?? false,
     electricityDistance: response.electricityDistance ?? null,
     isLandlocked: response.isLandlocked ?? false,
@@ -519,11 +523,14 @@ export const mapLandAndBuildingPropertyResponseToForm = (
     utilizationType: response.utilizationType ?? '',
     utilizationTypeOther: response.utilizationTypeOther ?? '',
     totalBuildingArea: response.totalBuildingArea ?? null,
-    buildingInsurancePrice: response.buildingInsurancePrice ?? null,
-    finalCostValueOverride: response.finalCostValueOverride ?? null,
-    buildingInsurancePriceOverride: response.buildingInsurancePriceOverride ?? null,
-    sellingPrice: response.sellingPrice ?? null,
-    forcedSalePrice: response.forcedSalePrice ?? null,
+    buildingInsurancePrice: enteredBuildingInsurance(
+      response.buildingInsurancePrice,
+      response.depreciationDetails,
+    ),
+    buildingCostValue: enteredBuildingCostValue(
+      response.buildingCostValue,
+      response.depreciationDetails as Record<string, unknown>[] | null | undefined,
+    ),
     remark: response.remark ?? '',
     surfaces: (response as any).surfaces ?? [],
     depreciationDetails: ((response as any).depreciationDetails ?? []).map((item: any) => ({
@@ -666,7 +673,7 @@ const mapConstructionInspectionFormToApi = (data: any) => {
     constructionEnterDetail,
     isUnderConstruction,
     depreciationDetails,
-    finalCostValueOverride,
+    buildingCostValue,
   } = data;
 
   if (!isUnderConstruction) return null;
@@ -675,11 +682,11 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   // The server rounds this on save anyway, but it rounds decimals and the screen rounds doubles,
   // so sending the raw sum let the two land a baht apart at half-baht boundaries.
   //
-  // The building's Building Cost Value — the appraiser's keyed Final Cost Value when they entered
+  // The building's Building Cost Value — the appraiser's typed figure when they entered
   // one, otherwise the depreciated schedule rounded to the nearest thousand. The same figure
   // ConstructionInspectionTab shows as TOTAL VALUE and the same helper the pricing screen uses, so
   // what is saved is what was on screen. Summing the schedule here alone meant a building priced by
-  // hand was inspected against the table it overrode, and the override never reached the summary
+  // hand was inspected against the table it replaced, and the typed figure never reached the summary
   // book, the Decision Summary card, the engagement's frozen value or the regulatory export.
   //
   // A condo unit has no depreciation table and no keyed figure, so this stays 0 — that zero is what
@@ -688,9 +695,7 @@ const mapConstructionInspectionFormToApi = (data: any) => {
   //
   // Inspections saved before this rule keep their raw-sum base until they are next saved, and then
   // move to it (at most 500 baht x progress). Decided 2026-09-24: no backfill.
-  const totalValue = roundBaht(
-    buildingFinalCostValue({ finalCostValueOverride, depreciationDetails }),
-  );
+  const totalValue = roundBaht(buildingFinalCostValue({ buildingCostValue, depreciationDetails }));
 
   const isFullDetail = constructionEnterDetail ?? true;
 

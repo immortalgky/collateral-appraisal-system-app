@@ -161,6 +161,68 @@ function pairRows(table: string, before: unknown[], after: unknown[]): RowPair[]
   return pairs;
 }
 
+/**
+ * Whether the rows kept from before are now in a different relative order, or a new row was put
+ * ahead of a kept one. Rows only added at the end or removed do not change the order.
+ */
+function orderChanged(before: unknown[], pairs: RowPair[]): boolean {
+  let previous = -1;
+  let sawNew = false;
+  for (const pair of pairs) {
+    if (pair.after === undefined) continue;
+    if (pair.before === undefined) {
+      sawNew = true;
+      continue;
+    }
+    const index = before.indexOf(pair.before);
+    if (sawNew || index < previous) return true;
+    previous = index;
+  }
+  return false;
+}
+
+/**
+ * Both sides of a title-order entry, by number. On the old side a number held by more than one
+ * title gets " (2)", " (3)"… on its later occurrences. On the new side a title whose number did not
+ * change keeps its old label, so swapping two titles that share a number still reads as a change; a
+ * renumbered or new title shows its new number, with the next suffix not already used on that side.
+ * The audit (SnapshotDiff.TitleOrder) labels the same way.
+ */
+function orderLabels(before: unknown[], pairs: RowPair[]): { from: string[]; to: string[] } {
+  const numberOf = (row: unknown) =>
+    isObject(row) && !isBlank(row.titleNumber) ? String(row.titleNumber) : '—';
+  const withSuffix = (no: string, n: number) => (n === 1 ? no : `${no} (${n})`);
+
+  const seen = new Map<string, number>();
+  const labelOf = new Map<unknown, string>();
+  const from = before.map(row => {
+    const no = numberOf(row);
+    const n = (seen.get(no) ?? 0) + 1;
+    seen.set(no, n);
+    const text = withSuffix(no, n);
+    labelOf.set(row, text);
+    return text;
+  });
+
+  const kept = pairs.filter(pair => pair.after !== undefined);
+  const carried = (pair: RowPair) =>
+    pair.before !== undefined && numberOf(pair.before) === numberOf(pair.after)
+      ? labelOf.get(pair.before)
+      : undefined;
+  const used = new Set(kept.map(carried).filter(Boolean));
+  const to = kept.map(pair => {
+    const label = carried(pair);
+    if (label !== undefined) return label;
+    const no = numberOf(pair.after);
+    let n = 1;
+    while (used.has(withSuffix(no, n))) n += 1;
+    const text = withSuffix(no, n);
+    used.add(text);
+    return text;
+  });
+  return { from, to };
+}
+
 /** "#1234" for a title (its number), "#3" for the third row of anything else. */
 function rowName(table: string, row: unknown, position: number): string {
   if (table === 'titles' && isObject(row) && !isBlank(row.titleNumber)) {
@@ -203,8 +265,24 @@ function diffArray(
   const table = labelForTable(key);
   const nested = ctx.group !== '';
   const group = nested ? ctx.group : table;
+  const pairs = pairRows(key, before, after);
 
-  for (const pair of pairRows(key, before, after)) {
+  // Title order is saved (the first title is what LOS and AS400 take), so a move is a change of
+  // its own: one entry for the whole list rather than every row reading as edited.
+  // Not when both sides read the same (a title replaced by a new one with the same number, in place):
+  // the added and removed rows already say what happened.
+  const order = key === 'titles' && orderChanged(before, pairs) ? orderLabels(before, pairs) : null;
+  if (order && order.from.join('\u0000') !== order.to.join('\u0000')) {
+    out.push({
+      key: `${join(ctx.path, key)}:order`,
+      group,
+      label: [...ctx.labels, labelOrHumanized('titleOrder')].join(' · '),
+      kind: 'changed',
+      ...order,
+    });
+  }
+
+  for (const pair of pairs) {
     const row = pair.before ?? pair.after;
     const name = rowName(key, row, pair.position);
     // Under a table title the row is just "#3"; inside another table's row it says which table.

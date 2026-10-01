@@ -101,6 +101,65 @@ describe('diffFormValues — tables', () => {
     ]);
   });
 
+  it('reports a move as one title-order entry and nothing per row', () => {
+    const before = { titles: [title('t1', '9876', 1), title('t2', '1234', 1)] };
+    const after = { titles: [title('t2', '1234', 1), title('t1', '9876', 1)] };
+    expect(diffFormValues(before, after)).toEqual([
+      expect.objectContaining({
+        group: 'Land titles',
+        kind: 'changed',
+        label: 'Title Order',
+        from: ['9876', '1234'],
+        to: ['1234', '9876'],
+      }),
+    ]);
+  });
+
+  it('a title added at the end is only an added row; one added on top also moves the order', () => {
+    const before = { titles: [title('t1', '9876', 1)] };
+    const atEnd = diffFormValues(before, {
+      titles: [title('t1', '9876', 1), title(undefined, '1', 1)],
+    });
+    expect(atEnd.map(e => e.kind)).toEqual(['added']);
+
+    const onTop = diffFormValues(before, {
+      titles: [title(undefined, '1', 1), title('t1', '9876', 1)],
+    });
+    expect(onTop.map(e => e.kind)).toEqual(['changed', 'added']);
+    expect(onTop[0]).toMatchObject({ label: 'Title Order', to: ['1', '9876'] });
+  });
+
+  it('tells apart titles that share a number when they swap', () => {
+    const before = { titles: [title('t1', '111', 1), title('t2', '111', 2)] };
+    const after = { titles: [title('t2', '111', 2), title('t1', '111', 1)] };
+    expect(diffFormValues(before, after)).toEqual([
+      expect.objectContaining({
+        label: 'Title Order',
+        from: ['111', '111 (2)'],
+        to: ['111 (2)', '111'],
+      }),
+    ]);
+  });
+
+  it('names a moved title by its new number; a number added back in place is no order change', () => {
+    const renumbered = diffFormValues(
+      { titles: [title('a', '111', 1), title('b', '222', 1)] },
+      { titles: [title('b', '222', 1), title('a', '999', 1)] },
+    );
+    expect(renumbered[0]).toMatchObject({
+      label: 'Title Order',
+      from: ['111', '222'],
+      to: ['222', '999'],
+    });
+
+    const replaced = diffFormValues(
+      { titles: [title('a', '111', 1), title('b', '222', 1)] },
+      { titles: [title(undefined, '111', 1), title('b', '222', 1)] },
+    );
+    const order = replaced.find(e => e.label === 'Title Order');
+    expect(order).toBeUndefined();
+  });
+
   it('reports a row that is gone as removed', () => {
     const before = { titles: [title('t1', '1234', 1), title('t2', '55', 1)] };
     const after = { titles: [title('t1', '1234', 1)] };
