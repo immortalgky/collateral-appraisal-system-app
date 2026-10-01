@@ -1,8 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { parseInitialRange } from './useLogFilterState';
 import { DEFAULT_RANGE_HOURS } from '../utils/range';
 
 describe('parseInitialRange', () => {
+  // validateRange rejects ranges older than the retention window, measured from "now" — pin the
+  // clock so the fixed dates below stay inside it whatever day the suite runs.
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-09-03T00:00:00'));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('accepts a valid custom from/to pair', () => {
     const params = new URLSearchParams({
       from: '2026-09-01T00:00:00',
