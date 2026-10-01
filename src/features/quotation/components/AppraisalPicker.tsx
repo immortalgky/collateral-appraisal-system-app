@@ -7,6 +7,7 @@ import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
+import { DateInput } from '@/shared/components';
 
 import {
   useEligibleAppraisalsForQuotation,
@@ -16,6 +17,13 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+
+/**
+ * DateInput emits a full ISO timestamp with a timezone offset (e.g.
+ * "2020-04-03T00:00:00+07:00"). Keep only the calendar date (yyyy-MM-dd) so the backend's
+ * date comparison can't shift by a day across timezones.
+ */
+const toDateOnly = (v: string | null): string => (v ? v.slice(0, 10) : '');
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -703,11 +711,9 @@ export function AppraisalPicker({
                 <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                   {t('picker.requestDate')}
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={filters.requestedAt}
-                  onChange={e => handleFilterChange('requestedAt', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  onChange={v => handleFilterChange('requestedAt', toDateOnly(v))}
                 />
               </div>
               <div className="flex flex-col gap-1">
