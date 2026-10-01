@@ -1293,7 +1293,8 @@
         "date": "日期",
         "value": "价值",
         "status": "状态"
-      }
+      },
+      "legacyBook": "AS400 旧册"
     }
   },
   "activityTracking": {

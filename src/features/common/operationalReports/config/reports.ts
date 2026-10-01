@@ -209,6 +209,12 @@ export const OPERATIONAL_REPORTS: ReportConfig[] = [
       { key: 'valuationDate', label: 'Valuation Date', field: 'valuationDate', type: 'date' },
       { key: 'nextValuationDate', label: 'Next Valuation', field: 'nextValuationDate', type: 'date' },
       { key: 'remainingDays', label: 'Remaining Days', field: 'remainingDays', type: 'int', className: 'text-right' },
+      // History: every book AS400 sent — reviewed ones with the reappraisal they produced.
+      { key: 'reviewStatus', label: 'Review Status', field: 'reviewStatus', type: 'text' },
+      { key: 'newAppraisalNumber', label: 'New Appraisal No.', field: 'newAppraisalNumber', type: 'text' },
+      { key: 'newAppraisalSubmittedAt', label: 'Submitted', field: 'newAppraisalSubmittedAt', type: 'date' },
+      { key: 'newAppraisalCompletedAt', label: 'Completed', field: 'newAppraisalCompletedAt', type: 'date' },
+      { key: 'newAppraisalStatus', label: 'New Appraisal Status', field: 'newAppraisalStatus', type: 'text' },
     ],
   },
 

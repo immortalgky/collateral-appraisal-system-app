@@ -1293,7 +1293,8 @@
         "date": "วันที่",
         "value": "มูลค่า",
         "status": "สถานะ"
-      }
+      },
+      "legacyBook": "หมายเลขประเมินจาก AS400"
     }
   },
   "activityTracking": {

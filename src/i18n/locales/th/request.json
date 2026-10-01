@@ -303,7 +303,7 @@
     "dateFilterTo": "วันที่ประเมินถึง"
   },
   "copyBanner": {
-    "reappraisalOf": "การประเมินซ้ำของ",
+    "reappraisalOf": "การทบทวนของ",
     "value": "(มูลค่า: {{n}})",
     "clearTitle": "ล้างการอ้างอิงการประเมินก่อนหน้า"
   },

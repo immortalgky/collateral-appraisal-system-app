@@ -15,33 +15,35 @@
   },
   "columns": {
     "oldAppraisalReportNumber": "原评估报告编号",
-    "cifNumber": "CIF 编号",
     "customerName": "客户姓名",
     "reviewType": "审查类型",
     "remainingDay": "剩余天数",
     "appraisalDate": "评估日期",
     "channel": "渠道",
     "status": "状态",
-    "distance": "距离 (km)"
+    "distance": "距离 (km)",
+    "bookAndCollateral": "评估编号 / 抵押物",
+    "customer": "客户",
+    "lastAppraisal": "最近评估",
+    "reviewDue": "复评到期",
+    "progress": "进度",
+    "queuedSince": "列入时间",
+    "lastFileUpdate": "最近文件更新",
+    "newAppraisal": "新评估",
+    "createdFrom": "创建来源",
+    "submittedAt": "提交日期",
+    "completedAt": "完成日期"
   },
   "filter": {
     "title": "筛选",
     "button": "筛选",
-    "reviewDateRange": "评估日期",
-    "remainingDays": "剩余天数",
-    "clearDates": "清除日期",
-    "clearRange": "清除范围",
+    "reviewDateRange": "AS400 复评日期",
     "fields": {
-      "customerName": "客户姓名",
-      "oldAppraisalReportNumber": "原评估报告编号",
-      "cifNumber": "CIF 编号",
       "collateralId": "抵押品编号",
-      "reviewType": "审查类型"
+      "reviewType": "审查类型",
+      "priorSource": "评估编号"
     },
     "placeholders": {
-      "customerName": "输入客户姓名",
-      "oldAppraisalReportNumber": "输入报告编号",
-      "cifNumber": "输入 CIF 编号",
       "collateralId": "输入抵押品编号",
       "remainingDayFrom": "0",
       "remainingDayTo": "例如 365"
@@ -55,26 +57,52 @@
       "reviewDateFrom": "起始日期",
       "reviewDateTo": "结束日期",
       "remainingDayFrom": "剩余起始",
-      "remainingDayTo": "剩余结束"
-    }
+      "remainingDayTo": "剩余结束",
+      "priorSource": "评估编号"
+    },
+    "priorSource": {
+      "CAS": "CAS 评估",
+      "AS400Legacy": "AS400 报告",
+      "Unknown": "未找到",
+      "NonCAS": "不在 CAS（两者）"
+    },
+    "clear": "清除",
+    "all": "全部",
+    "reviewDue": "复评到期",
+    "duePreset": {
+      "overdue": "已逾期",
+      "dueSoon": "90 天内",
+      "halfYear": "6 个月内",
+      "year": "1 年内",
+      "custom": "自定义"
+    },
+    "daysLeftFrom": "剩余天数从",
+    "daysLeftTo": "至（天）",
+    "reviewDueHint": "自最近评估日起 + 5 年 · 负数 = 已逾期",
+    "specific": "指定"
   },
   "badge": {
-    "used": "已使用",
+    "used": "已处理",
     "inProgress": "进行中",
-    "pending": "待处理"
+    "pending": "待处理",
+    "notReviewing": "本轮不复核",
+    "awaitingSubmit": "待提交"
   },
   "empty": {
     "noMatching": "无匹配的候选人",
     "noCandidates": "无候选人",
     "tryAdjusting": "请尝试调整筛选条件。",
     "noneAtThisTime": "目前没有重新评估候选人。",
-    "clearFilters": "清除筛选"
+    "clearFilters": "清除筛选",
+    "noSkipped": "没有标记为“本轮不复核”的项目",
+    "noSkippedHint": "标记为“本轮不复核”的项目会显示在这里，可随时恢复。",
+    "noProcessed": "尚无已处理项目",
+    "noProcessedHint": "已提交重新评估申请的评估编号将显示在此"
   },
   "error": {
     "loadFailed": "加载重新评估候选人失败"
   },
   "detail": {
-    "blockedTitle": "进行中",
     "backToList": "返回列表",
     "error": {
       "loadFailed": "加载候选人详情失败",
@@ -82,72 +110,221 @@
     },
     "banner": {
       "inProgressTitle": "此候选人正在处理中。",
-      "appraisalLabel": "评估",
       "groupLabel": "组",
-      "consumed": "此候选人已用于创建重新评估请求。"
+      "notReviewing": "此项已标记为“本轮不复核”——恢复后即可发起请求。",
+      "notReviewingTitle": "已标记为\"本轮不复评\"",
+      "awaitingSubmitTitle": "该报告有待提交的申请",
+      "inProgressBody": "评估 {{number}} · 组 {{group}} — 完成或取消前无法再次发起",
+      "awaitingSubmitBody": "申请 {{number}} 仍为草稿 — 请打开并提交",
+      "open": "打开 {{number}}",
+      "legacyTitle": "评估编号在 AS400，不在 CAS",
+      "unknownTitle": "在 CAS 和 AS400 中均未找到评估编号",
+      "noPriorRequest": "申请仅包含报告编号、原价值和日期 — 无地契或文件可复制，提交前需手动填写资产并附加文件",
+      "processedTitle": "已处理",
+      "processedAppraisal": "重新评估"
     },
     "fields": {
       "collateralId": "抵押品编号",
-      "collateralName": "抵押品名称",
-      "collateralDescription": "抵押品描述",
-      "collateralAddress": "抵押品地址",
       "carCode": "CAR 代码",
       "valuationDate": "估值日期",
-      "pastDueDate": "逾期天数",
       "externalName": "外部估价师",
       "internalName": "内部估价师",
-      "aoCode": "AO 代码",
-      "aoName": "AO 名称",
       "sllStatus": "SLL 状态",
-      "sllDescription": "SLL 描述"
+      "name": "名称",
+      "description": "描述",
+      "address": "地址",
+      "value": "价值",
+      "mortgageAmount": "抵押金额",
+      "facilityLimit": "授信额度",
+      "pastDue": "逾期",
+      "days": "{{days}} 天",
+      "group": "组",
+      "effectiveDate": "生效日期",
+      "onFile": "文件期间",
+      "yes": "是",
+      "no": "否"
     },
     "source": {
-      "inSystem": "系统内"
-    },
-    "duration": {
-      "year": "年",
-      "month": "个月",
-      "day": "天"
+      "inSystem": "系统内",
+      "due": "到期（AS400）",
+      "inSystemNotDue": "系统内 · 未到期"
     },
     "group": {
-      "title": "评估请求列表（组评估）",
-      "subtitle": "主候选人始终包含在内。选择附近的候选人进行分组。",
-      "nearbySelected": "已选择附近 {{count}} 项",
-      "main": "（主）",
+      "title": "将附近报告纳入同一轮评估",
+      "subtitle": "本报告始终包含。选择 1 公里内的报告一并评估 — 每份报告在同一组内各自生成申请",
       "empty": "半径范围内没有附近的候选人。",
-      "select": "选择",
-      "deselect": "取消选择",
-      "deleteCandidate": "删除候选人",
-      "cannotDelete": "无法删除系统内的评估",
-      "footer_one": "请求将包含 {{count}} 个候选人",
-      "footer_other": "请求将包含 {{count}} 个候选人",
+      "deleteCandidate": "本轮不复核",
       "columns": {
-        "oldAppraisalNumber": "原评估编号",
         "source": "来源",
-        "daysSince": "距上次评估天数"
-      }
+        "book": "报告"
+      },
+      "thisBook": "本报告",
+      "noCoordinates": "该报告无坐标，无法查找附近报告",
+      "selectBook": "选择 {{number}}",
+      "notInCas": "不在 CAS",
+      "km": "公里"
     },
     "deleteModal": {
-      "title": "删除候选人",
-      "body": "您确定要将此候选人从重新评估列表中移除吗？此操作无法撤销。"
+      "title": "本轮不复核",
+      "body": "将此项移至“本轮不复核”标签页。每月仍会接收 AS400 更新，可随时恢复。",
+      "confirm": "本轮不复评"
     },
     "initiateModal": {
-      "title": "发起重新评估请求",
-      "body_one": "为 {{count}} 个候选人（包括主候选人）发起重新评估请求？",
-      "body_other": "为 {{count}} 个候选人（包括主候选人）发起重新评估请求？"
+      "titleWithCount": "为 {{total}} 份报告发起重新评估",
+      "copiesPrior": "从原申请复制客户、地契和文件",
+      "startsEmpty": "CAS 中无原申请 — 需手动填写资产并附加文件",
+      "draftNotice": "申请将以草稿创建，尚未进入流程 — 请在申请列表中打开、填写预约并提交",
+      "confirm": "创建 {{total}} 个申请",
+      "fromUnit": "从 CAS 中的单元和项目填写 — 业主、契号和文件需手动填写"
     },
     "successModal": {
       "title": "重新评估请求已创建",
-      "heading": "请求已发起",
       "groupNumber": "组编号：",
-      "created_one": "成功创建 {{count}} 个请求。",
-      "created_other": "成功创建 {{count}} 个请求。",
-      "skipped": "已跳过（进行中）：{{count}}"
+      "notSubmitted": "请求尚未提交——请在请求列表中检查并提交。",
+      "goToRequests": "前往请求列表",
+      "noBookNumber": "无评估编号",
+      "alreadyInFlight": "进行中",
+      "alreadyReviewed": "已重新评估",
+      "notDue": "已不在最新文件中",
+      "createdDrafts": "已创建 {{total}} 个草稿申请",
+      "createdHeading": "已创建",
+      "skippedHeading": "跳过 {{total}} 份",
+      "reasonHint": {
+        "AlreadyInFlight": "该报告已有重新评估或未提交的申请",
+        "AlreadyReviewed": "该报告已完成重新评估 — 应复评新报告",
+        "NoBookNumber": "没有可追踪的报告编号",
+        "NotDue": "该报告已不在 AS400 最新文件中"
+      }
+    },
+    "stats": {
+      "reviewDue": "复评到期",
+      "reviewDueNote": "{{date}}（最近评估 + 5 年）",
+      "lastAppraisal": "最近评估",
+      "ago": "已过 {{period}}",
+      "effectiveDate": "AS400 生效日期",
+      "effectiveDateNote": "来自 COLLATREV 文件",
+      "priorValue": "原价值",
+      "baht": "泰铢"
+    },
+    "cards": {
+      "collateral": "抵押物",
+      "prior": "上次评估",
+      "loan": "贷款",
+      "thisRound": "本轮 AS400 数据"
+    },
+    "priorFrom": {
+      "CAS": "CAS 评估",
+      "AS400": "来自 AS400 文件"
+    },
+    "openPrior": "打开原评估",
+    "actionBar": {
+      "summary": "将创建 {{total}} 个草稿申请 · 本报告 + 附近 {{nearby}} 份",
+      "blocked": "该报告已有进行中的重新评估",
+      "restoreFirst": "请先恢复后再发起申请",
+      "processed": "该评估编号已处理"
     }
   },
   "actions": {
     "initiate": "发起重新评估请求",
     "viewOnMap": "在地图上查看",
-    "delete": "删除"
+    "delete": "删除",
+    "restore": "恢复"
+  },
+  "tabs": {
+    "Pending": "待处理",
+    "Deleted": "本轮不复核",
+    "Consumed": "已处理"
+  },
+  "priorSource": {
+    "CAS": "系统内评估",
+    "AS400Legacy": "AS400 旧册",
+    "Unknown": "未找到旧册"
+  },
+  "statusLabel": {
+    "Pending": "待处理",
+    "Consumed": "已处理",
+    "Deleted": "本轮不复核"
+  },
+  "search": {
+    "placeholder": "搜索报告编号、CIF 或客户名称"
+  },
+  "quick": {
+    "all": "全部",
+    "overdue": "已逾期",
+    "dueSoon": "90 天内到期",
+    "inProgress": "进行中",
+    "nonCas": "报告不在 CAS"
+  },
+  "due": {
+    "overdue": "已逾期 {{days}} 天",
+    "inDays": "还有 {{days}} 天",
+    "inPeriod": "还有 {{period}}",
+    "years": "{{n}} 年",
+    "months": "{{n}} 个月"
+  },
+  "progress": {
+    "appraising": "评估中",
+    "awaitingSubmit": "申请待提交",
+    "draft": "草稿",
+    "ready": "可开始"
+  },
+  "processedQuick": {
+    "all": "全部",
+    "Appraising": "评估中",
+    "Completed": "已批准",
+    "Cancelled": "已取消",
+    "NotFound": "未找到评估"
+  },
+  "processed": {
+    "createdByHand": "从申请页面创建",
+    "notFound": "未找到评估",
+    "notFoundHint": "未找到该评估编号的重新评估"
+  },
+  "unit": {
+    "tag": "项目单元",
+    "notFoundShort": "未找到单元 — 请手动填写房间/地块",
+    "room": "房间 {{value}}",
+    "floor": "楼层 {{value}}",
+    "tower": "楼栋 {{value}}",
+    "house": "门牌 {{value}}",
+    "plot": "地块 {{value}}",
+    "bannerTitle": "复评项目 {{number}} 的单元",
+    "matchedBy": {
+      "Ticket": "通过单元票据匹配",
+      "CollateralName": "通过抵押物名称中的房号匹配",
+      "CollateralAddress": "通过地址中的门牌/房号匹配"
+    },
+    "ownUnit": "仅复评此单元，项目其他单元分开处理",
+    "notFoundTitle": "未在项目中找到单元",
+    "notFoundBody": "抵押物名称或地址中的房号/门牌与项目单元均不匹配 — 申请仅包含项目信息，提交前需手动填写房间/地块",
+    "ambiguous": "匹配到 {{total}} 个单元，无法确定 — 申请仅包含项目信息，提交前需手动填写房间/地块",
+    "cardUnit": "项目单元",
+    "cardProject": "项目",
+    "fields": {
+      "tower": "楼栋",
+      "floor": "楼层",
+      "room": "房号",
+      "registration": "公寓登记号",
+      "usableArea": "使用面积",
+      "model": "户型",
+      "house": "门牌号",
+      "plot": "地块号",
+      "landArea": "土地面积",
+      "unit": "单元",
+      "unitPrice": "原单元评估价",
+      "projectName": "项目名称",
+      "projectType": "项目类型",
+      "projectAppraisal": "项目评估",
+      "projectValuationDate": "项目评估日期"
+    },
+    "sqm": "{{value}} 平方米",
+    "sqwa": "{{value}} 平方哇",
+    "projectType": {
+      "U": "公寓",
+      "LB": "土地及建筑",
+      "L": "土地"
+    },
+    "projectMissingTitle": "无法读取项目信息",
+    "projectMissingBody": "未在 CAS 中找到该评估编号的项目评估，因此无法匹配单元 — 发起申请前请检查项目评估"
   }
 }

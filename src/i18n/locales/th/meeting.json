@@ -113,7 +113,7 @@
   },
   "decisionGroups": {
     "New": "งานประเมินใหม่",
-    "ReAppraisal": "งานประเมินซ้ำ",
+    "ReAppraisal": "งานทบทวน",
     "Progressive": "งานประเมินตามความคืบหน้า",
     "PreAppraisal": "งานประเมินเบื้องต้น",
     "other": "อื่น ๆ"

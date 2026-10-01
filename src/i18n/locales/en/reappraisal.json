@@ -15,33 +15,35 @@
   },
   "columns": {
     "oldAppraisalReportNumber": "Old Appraisal Report Number",
-    "cifNumber": "CIF Number",
     "customerName": "Customer Name",
     "reviewType": "Review Type",
     "remainingDay": "Remaining Day",
     "appraisalDate": "Appraisal Date",
     "channel": "Channel",
     "status": "Status",
-    "distance": "Distance (km)"
+    "distance": "Distance (km)",
+    "bookAndCollateral": "Appraisal Number / Collateral",
+    "customer": "Customer",
+    "lastAppraisal": "Last Appraised",
+    "reviewDue": "Review Due",
+    "progress": "Progress",
+    "queuedSince": "Listed Since",
+    "lastFileUpdate": "Last File Update",
+    "newAppraisal": "New Appraisal",
+    "createdFrom": "Created From",
+    "submittedAt": "Submitted",
+    "completedAt": "Completed"
   },
   "filter": {
     "title": "Filter",
     "button": "Filters",
-    "reviewDateRange": "Appraisal Date",
-    "remainingDays": "Remaining Days",
-    "clearDates": "Clear dates",
-    "clearRange": "Clear range",
+    "reviewDateRange": "AS400 Review Date",
     "fields": {
-      "customerName": "Customer Name",
-      "oldAppraisalReportNumber": "Old Appraisal Report Number",
-      "cifNumber": "CIF Number",
       "collateralId": "Collateral ID",
-      "reviewType": "Review Type"
+      "reviewType": "Review Type",
+      "priorSource": "Appraisal Number"
     },
     "placeholders": {
-      "customerName": "Enter customer name",
-      "oldAppraisalReportNumber": "Enter report number",
-      "cifNumber": "Enter CIF number",
       "collateralId": "Enter collateral ID",
       "remainingDayFrom": "0",
       "remainingDayTo": "e.g. 365"
@@ -55,99 +57,274 @@
       "reviewDateFrom": "Date From",
       "reviewDateTo": "Date To",
       "remainingDayFrom": "Remaining From",
-      "remainingDayTo": "Remaining To"
-    }
+      "remainingDayTo": "Remaining To",
+      "priorSource": "Appraisal Number"
+    },
+    "priorSource": {
+      "CAS": "CAS Appraisal",
+      "AS400Legacy": "AS400 Legacy",
+      "Unknown": "Appraisal Number Not Found",
+      "NonCAS": "Not in CAS (Either)"
+    },
+    "clear": "Clear",
+    "all": "All",
+    "reviewDue": "Review Due",
+    "duePreset": {
+      "overdue": "Overdue",
+      "dueSoon": "Within 90 Days",
+      "halfYear": "Within 6 Months",
+      "year": "Within 1 Year",
+      "custom": "Custom"
+    },
+    "daysLeftFrom": "Days Left From",
+    "daysLeftTo": "Days Left To",
+    "reviewDueHint": "Counted from the last appraisal + 5 years · negative = overdue",
+    "specific": "Specific"
   },
   "badge": {
-    "used": "Used",
+    "used": "Processed",
     "inProgress": "In Progress",
-    "pending": "Pending"
+    "pending": "Pending",
+    "notReviewing": "Not Reviewing",
+    "awaitingSubmit": "Awaiting Submit"
   },
   "empty": {
     "noMatching": "No matching candidates",
     "noCandidates": "No candidates",
     "tryAdjusting": "Try adjusting your filters.",
     "noneAtThisTime": "There are no reappraisal candidates at this time.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear Filters",
+    "noSkipped": "Nothing marked \"Not Reviewing This Round\"",
+    "noSkippedHint": "Appraisals marked \"Not Reviewing This Round\" appear here and can be restored.",
+    "noProcessed": "Nothing processed yet",
+    "noProcessedHint": "Appraisal numbers whose reappraisal request was submitted appear here"
   },
   "error": {
     "loadFailed": "Failed to load reappraisal candidates"
   },
   "detail": {
-    "blockedTitle": "Already in progress",
-    "backToList": "Back to list",
+    "backToList": "Back to List",
     "error": {
       "loadFailed": "Failed to load candidate details",
       "notFound": "Candidate not found"
     },
     "banner": {
-      "inProgressTitle": "This candidate is already in progress.",
-      "appraisalLabel": "Appraisal",
+      "inProgressTitle": "This appraisal is already being reappraised",
       "groupLabel": "Group",
-      "consumed": "This candidate has been used to create a reappraisal request."
+      "notReviewing": "This appraisal is marked \"Not Reviewing This Round\" — restore it to initiate a request.",
+      "notReviewingTitle": "Marked \"Not Reviewing This Round\"",
+      "awaitingSubmitTitle": "A request for this appraisal is waiting to be sent",
+      "inProgressBody": "Appraisal {{number}} · group {{group}} — no new request until it completes or is cancelled",
+      "awaitingSubmitBody": "Request {{number}} is still a draft — open it and send it",
+      "open": "Open {{number}}",
+      "legacyTitle": "The appraisal number is in AS400, not in CAS",
+      "unknownTitle": "The appraisal number was not found in CAS or AS400",
+      "noPriorRequest": "The request will carry only the appraisal number, prior value and date — no title deeds or documents to copy. Enter the property and attach documents before sending",
+      "processedTitle": "Processed",
+      "processedAppraisal": "Reappraisal"
     },
     "fields": {
       "collateralId": "Collateral ID",
-      "collateralName": "Collateral Name",
-      "collateralDescription": "Collateral Description",
-      "collateralAddress": "Collateral Address",
       "carCode": "CAR Code",
       "valuationDate": "Valuation Date",
-      "pastDueDate": "Past Due Date",
       "externalName": "External Name",
       "internalName": "Internal Name",
-      "aoCode": "AO Code",
-      "aoName": "AO Name",
       "sllStatus": "SLL Status",
-      "sllDescription": "SLL Description"
+      "name": "Name",
+      "description": "Description",
+      "address": "Address",
+      "value": "Value",
+      "mortgageAmount": "Mortgage Amount",
+      "facilityLimit": "Facility Limit",
+      "pastDue": "Past Due",
+      "days": "{{days}} days",
+      "group": "Group",
+      "effectiveDate": "Effective Date",
+      "onFile": "On File",
+      "yes": "Yes",
+      "no": "No"
     },
     "source": {
-      "inSystem": "In-System"
-    },
-    "duration": {
-      "year": "year",
-      "month": "month",
-      "day": "day"
+      "inSystem": "In-System",
+      "due": "Due (AS400)",
+      "inSystemNotDue": "In CAS · Not Yet Due"
     },
     "group": {
-      "title": "Application Request List (Group Appraisal)",
-      "subtitle": "The main candidate is always included. Select nearby candidates to group.",
-      "nearbySelected": "{{count}} nearby selected",
-      "main": "(main)",
-      "empty": "No nearby candidates within radius.",
-      "select": "Select",
-      "deselect": "Deselect",
-      "deleteCandidate": "Delete candidate",
-      "cannotDelete": "Cannot delete in-system appraisal",
-      "footer_one": "{{count}} candidate will be included in the request",
-      "footer_other": "{{count}} candidates will be included in the request",
+      "title": "Appraise Nearby Appraisals in the Same Round",
+      "subtitle": "This appraisal is always included. Pick others within 1 km to appraise on the same visit — each gets its own request in one group",
+      "empty": "No nearby appraisals within the radius.",
+      "deleteCandidate": "Not Reviewing This Round",
       "columns": {
-        "oldAppraisalNumber": "Old Appraisal Number",
         "source": "Source",
-        "daysSince": "Days Since Last Appraisal"
-      }
+        "book": "Appraisal Number"
+      },
+      "thisBook": "This Appraisal",
+      "noCoordinates": "This appraisal has no coordinates, so nearby ones cannot be found",
+      "selectBook": "Select {{number}}",
+      "notInCas": "Not in CAS",
+      "km": "km"
     },
     "deleteModal": {
-      "title": "Delete Candidate",
-      "body": "Are you sure you want to remove this candidate from the reappraisal list? This action cannot be undone."
+      "title": "Not Reviewing This Round",
+      "body": "Move this appraisal to the \"Not Reviewing This Round\" tab. It keeps receiving AS400 updates every month and can be restored at any time.",
+      "confirm": "Skip This Round"
     },
     "initiateModal": {
-      "title": "Initiate Reappraisal Request",
-      "body_one": "Initiate reappraisal request for {{count}} candidate (including the main candidate)?",
-      "body_other": "Initiate reappraisal request for {{count}} candidates (including the main candidate)?"
+      "titleWithCount": "Initiate Reappraisal ({{total}})",
+      "copiesPrior": "Copies customers, title deeds and documents from the prior request",
+      "startsEmpty": "No prior request in CAS — enter the property and attach documents by hand",
+      "draftNotice": "Requests are created as drafts and not sent into the workflow — open each one, add the appointment and send it from the request list",
+      "confirm": "Create {{total}} Requests",
+      "fromUnit": "Filled from the unit and project in CAS — owner, deed number and documents by hand"
     },
     "successModal": {
       "title": "Reappraisal Request Created",
-      "heading": "Request Initiated",
       "groupNumber": "Group Number:",
-      "created_one": "{{count}} request created successfully.",
-      "created_other": "{{count}} requests created successfully.",
-      "skipped": "Skipped (already in progress): {{count}}"
+      "notSubmitted": "The requests are not submitted yet — review and submit them from the request list.",
+      "goToRequests": "Go to Request List",
+      "noBookNumber": "No Appraisal Number",
+      "alreadyInFlight": "Already in Progress",
+      "alreadyReviewed": "Already Reappraised",
+      "notDue": "Not on Latest File",
+      "createdDrafts": "Created {{total}} draft requests",
+      "createdHeading": "Created",
+      "skippedHeading": "Skipped ({{total}})",
+      "reasonHint": {
+        "AlreadyInFlight": "This appraisal already has a reappraisal or an unsent request",
+        "AlreadyReviewed": "This appraisal was already reappraised — review its successor instead",
+        "NoBookNumber": "No appraisal number to track it by",
+        "NotDue": "The appraisal is no longer on AS400's latest file"
+      }
+    },
+    "stats": {
+      "reviewDue": "Review Due",
+      "reviewDueNote": "{{date}} (last appraisal + 5 years)",
+      "lastAppraisal": "Last Appraised",
+      "ago": "{{period}} ago",
+      "effectiveDate": "AS400 Effective Date",
+      "effectiveDateNote": "From the COLLATREV file",
+      "priorValue": "Prior Value",
+      "baht": "THB"
+    },
+    "cards": {
+      "collateral": "Collateral",
+      "prior": "Prior Appraisal",
+      "loan": "Loan",
+      "thisRound": "This Round from AS400"
+    },
+    "priorFrom": {
+      "CAS": "CAS Appraisal",
+      "AS400": "From AS400 File"
+    },
+    "openPrior": "Open Prior Appraisal",
+    "actionBar": {
+      "summary": "Creates {{total}} draft requests · this appraisal + {{nearby}} nearby",
+      "blocked": "This appraisal already has a reappraisal under way",
+      "restoreFirst": "Restore the appraisal before starting a request",
+      "processed": "This appraisal number has been processed"
     }
   },
   "actions": {
-    "initiate": "Initiate reappraisal request",
+    "initiate": "Initiate Reappraisal Request",
     "viewOnMap": "View on Map",
-    "delete": "Delete"
+    "delete": "Delete",
+    "restore": "Restore"
+  },
+  "tabs": {
+    "Pending": "Pending",
+    "Deleted": "Not Reviewing This Round",
+    "Consumed": "Processed"
+  },
+  "priorSource": {
+    "CAS": "In-System Appraisal",
+    "AS400Legacy": "AS400 Legacy",
+    "Unknown": "Appraisal Number Not Found"
+  },
+  "statusLabel": {
+    "Pending": "Pending",
+    "Consumed": "Processed",
+    "Deleted": "Not Reviewing This Round"
+  },
+  "search": {
+    "placeholder": "Search appraisal number, CIF or customer"
+  },
+  "quick": {
+    "all": "All",
+    "overdue": "Overdue",
+    "dueSoon": "Due in 90 Days",
+    "inProgress": "In Progress",
+    "nonCas": "Not in CAS"
+  },
+  "due": {
+    "overdue": "Overdue by {{days}} days",
+    "inDays": "In {{days}} days",
+    "inPeriod": "In {{period}}",
+    "years": "{{n}} yr",
+    "months": "{{n}} mo"
+  },
+  "progress": {
+    "appraising": "Being Appraised",
+    "awaitingSubmit": "Request Not Sent",
+    "draft": "Draft",
+    "ready": "Ready"
+  },
+  "processedQuick": {
+    "all": "All",
+    "Appraising": "Being Appraised",
+    "Completed": "Approved",
+    "Cancelled": "Cancelled",
+    "NotFound": "No Appraisal Found"
+  },
+  "processed": {
+    "createdByHand": "Raised from the request page",
+    "notFound": "No appraisal found",
+    "notFoundHint": "No reappraisal was found for this appraisal number"
+  },
+  "unit": {
+    "tag": "Project Unit",
+    "notFoundShort": "Unit not found — enter room/plot by hand",
+    "room": "Room {{value}}",
+    "floor": "Floor {{value}}",
+    "tower": "Tower {{value}}",
+    "house": "House {{value}}",
+    "plot": "Plot {{value}}",
+    "bannerTitle": "Reviewing a unit of project {{number}}",
+    "matchedBy": {
+      "Ticket": "Unit matched by its ticket",
+      "CollateralName": "Unit matched by the room number in the collateral name",
+      "CollateralAddress": "Unit matched by the house/room number in the address"
+    },
+    "ownUnit": "Only this unit is reviewed; other units of the project are separate",
+    "notFoundTitle": "Unit not found in the project",
+    "notFoundBody": "No room or house number in the collateral name or address matches a unit of the project — the request will carry only the project; enter the room/plot before sending",
+    "ambiguous": "Matches {{total}} units, so none was picked — the request will carry only the project; enter the room/plot before sending",
+    "cardUnit": "Project Unit",
+    "cardProject": "Project",
+    "fields": {
+      "tower": "Tower",
+      "floor": "Floor",
+      "room": "Room Number",
+      "registration": "Condo Registration Number",
+      "usableArea": "Usable Area",
+      "model": "Model",
+      "house": "House Number",
+      "plot": "Plot Number",
+      "landArea": "Land Area",
+      "unit": "Unit",
+      "unitPrice": "Prior Unit Value",
+      "projectName": "Project Name",
+      "projectType": "Project Type",
+      "projectAppraisal": "Project Appraisal",
+      "projectValuationDate": "Project Valuation Date"
+    },
+    "sqm": "{{value}} sq.m.",
+    "sqwa": "{{value}} sq.wa",
+    "projectType": {
+      "U": "Condominium",
+      "LB": "Land and Building",
+      "L": "Land"
+    },
+    "projectMissingTitle": "Project could not be loaded",
+    "projectMissingBody": "The project appraisal for this appraisal number was not found in CAS, so no unit could be matched — check the project appraisal before starting a request"
   }
 }

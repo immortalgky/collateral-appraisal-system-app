@@ -1,84 +1,36 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Modal from '@/shared/components/Modal';
+import GoogleMapPinIcon from '@/shared/components/GoogleMapPinIcon';
 import { HistorySearchMapDrawer } from '@/features/common/historySearch/HistorySearchMapDrawer';
 import type { AppraisalPinDto } from '@/features/common/historySearch/types';
-import { formatLocaleDate } from '@/shared/utils/dateUtils';
 import {
   useReappraisalCandidateDetail,
   useInitiateReappraisal,
   useDeleteReappraisalCandidate,
+  useRestoreReappraisalCandidate,
 } from '../api/reappraisal';
-import type { NearbyReappraisalCandidate, SkippedReappraisalItem } from '../types';
+import { PriorSourceBadge, ReappraisalStatusBadge } from '../components/ReappraisalBadges';
+import { DueCell, NewAppraisalStatusChip, ReviewTypeChip } from '../components/ReappraisalCells';
+import { URGENCY_TEXT, useRemainingText } from '../utils/dueText';
+import { diffYMD, dueOf, formatDay, parseDay, startOfToday, urgencyOf } from '../utils/due';
+import type {
+  InitiateReappraisalResult,
+  BlockUnitInfo,
+  NearbyReappraisalCandidate,
+  SkippedReappraisalItem,
+} from '../types';
 import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Calendar-accurate diff between two dates as { years, months, days, sign }.
- *  Uses real month lengths (borrows from the previous month when day-of-month underflows),
- *  so e.g. 2020-01-31 → 2020-03-01 = 1 month 0 day (not "29 days" / "30 days"). */
-function diffYMD(from: Date, to: Date): { y: number; m: number; d: number; sign: 1 | -1 } {
-  const sign: 1 | -1 = from <= to ? 1 : -1;
-  const a = sign === 1 ? from : to;
-  const b = sign === 1 ? to : from;
-  let y = b.getFullYear() - a.getFullYear();
-  let m = b.getMonth() - a.getMonth();
-  let d = b.getDate() - a.getDate();
-  if (d < 0) {
-    m--;
-    // last day of the previous month of `b`
-    d += new Date(b.getFullYear(), b.getMonth(), 0).getDate();
-  }
-  if (m < 0) {
-    y--;
-    m += 12;
-  }
-  return { y, m, d, sign };
-}
-
-interface DurationLabels {
-  year: string;
-  month: string;
-  day: string;
-}
-
-/** Format a duration between two ISO dates as "X year Y month Z day" (labels localized).
- *  Negative directions get a leading "-". Returns "-" when either input is missing/invalid. */
-function formatDateDiff(
-  fromIso: string | null | undefined,
-  toIso: string | null | undefined,
-  labels: DurationLabels,
-): string {
-  if (!fromIso || !toIso) return '-';
-  const a = new Date(fromIso);
-  const b = new Date(toIso);
-  if (isNaN(a.getTime()) || isNaN(b.getTime())) return '-';
-  const { y, m, d, sign } = diffYMD(a, b);
-  const parts: string[] = [];
-  if (y > 0) parts.push(`${y} ${labels.year}`);
-  if (m > 0) parts.push(`${m} ${labels.month}`);
-  if (d > 0 || parts.length === 0) parts.push(`${d} ${labels.day}`);
-  return (sign < 0 ? '-' : '') + parts.join(' ');
-}
-
-/** ISO yyyy-MM-dd for "appraisalDate + N years" — used to derive the review/next-due date. */
-function addYearsISO(iso?: string | null, years = 5): string | null {
-  if (!iso) return null;
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return null;
-  d.setFullYear(d.getFullYear() + years);
-  return d.toISOString();
-}
-
-const TODAY_ISO = new Date().toISOString();
-
 function formatNumber(n?: number): string {
-  if (n == null) return '-';
-  return n.toLocaleString();
+  return n == null ? '—' : n.toLocaleString();
 }
 
 /** Stable identity token for a nearby row — matches Initiate partitioning logic. */
@@ -86,217 +38,430 @@ function rowToken(c: NearbyReappraisalCandidate): string {
   return (c.appraisalId ?? c.candidateId) as string;
 }
 
-// ─── Source badge ─────────────────────────────────────────────────────────────
+const TAG =
+  'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border whitespace-nowrap';
 
-function SourceBadge({ source }: { source: NearbyReappraisalCandidate['source'] }) {
+/** Why a book is in the group table: AS400 lists it as due, or it is a CAS appraisal brought forward. */
+function SourceTag({ row }: { row: NearbyReappraisalCandidate }) {
   const { t } = useTranslation('reappraisal');
-  if (source === 'InSystem') {
+  if (row.isInProgress)
     return (
-      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700">
-        {t('detail.source.inSystem')}
+      <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200 opacity-70')}>
+        {t('badge.inProgress')}
       </span>
     );
-  }
+  if (row.source === 'Candidate')
+    return (
+      <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
+        {t('detail.source.due')}
+      </span>
+    );
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700">
-      SIBS
+    <span className={clsx(TAG, 'bg-sky-50 text-sky-700 border-sky-200')}>
+      {t('detail.source.inSystemNotDue')}
     </span>
   );
 }
 
-// ─── Status badge ─────────────────────────────────────────────────────────────
+// ─── Label / value list ───────────────────────────────────────────────────────
 
-function StatusBadge({
-  status,
-  hasOpenAppraisal,
-  openAppraisalNumber,
-  openAppraisalGroupTag,
-  openAppraisalId,
+function FactCard({
+  title,
+  aside,
+  children,
 }: {
-  status: string;
-  hasOpenAppraisal: boolean;
-  openAppraisalNumber?: string;
-  openAppraisalGroupTag?: string;
-  openAppraisalId?: string;
+  title: string;
+  aside?: ReactNode;
+  children: ReactNode;
 }) {
-  const { t } = useTranslation('reappraisal');
-  let badge: ReactNode;
-
-  if (status === 'Consumed') {
-    badge = (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500 border border-gray-200">
-        {t('badge.used')}
-      </span>
-    );
-  } else if (status === 'Pending' && hasOpenAppraisal) {
-    badge = (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700 border border-amber-200">
-        {t('badge.inProgress')}
-      </span>
-    );
-  } else {
-    badge = (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-green-50 text-green-700 border border-green-200">
-        {t('badge.pending')}
-      </span>
-    );
-  }
-
-  const hasLink = openAppraisalNumber != null;
-
   return (
-    <div className="flex items-center gap-2">
-      {badge}
-      {hasLink && (
-        <span
-          className="text-[10px] text-gray-400"
-          data-appraisal-id={openAppraisalId}
-          title={openAppraisalGroupTag != null ? `Group ${openAppraisalGroupTag}` : undefined}
-        >
-          → {openAppraisalNumber}
-          {openAppraisalGroupTag != null && (
-            <span className="ml-1 text-gray-300">· {openAppraisalGroupTag}</span>
-          )}
-        </span>
+    <section className="bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-3 min-w-0">
+      <h3 className="flex items-baseline justify-between gap-2 mb-2 text-xs font-semibold text-gray-800">
+        {title}
+        {aside && <span className="text-[11px] font-normal text-gray-400">{aside}</span>}
+      </h3>
+      <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-xs">
+        {children}
+      </dl>
+    </section>
+  );
+}
+
+function Fact({ label, children, long }: { label: string; children?: ReactNode; long?: boolean }) {
+  return (
+    <>
+      <dt className="text-gray-500 whitespace-nowrap">{label}</dt>
+      <dd className={clsx('text-gray-900 break-words', long ? 'leading-relaxed' : 'font-medium')}>
+        {children == null || children === false || children === '' ? '—' : children}
+      </dd>
+    </>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  note,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  note?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className="px-4 py-3 border-gray-100 [&:not(:first-child)]:border-l">
+      <div className="text-[11px] text-gray-500">{label}</div>
+      <div
+        className={clsx(
+          'mt-0.5 text-[15px] font-semibold tabular-nums whitespace-nowrap',
+          className ?? 'text-gray-900',
+        )}
+      >
+        {value}
+      </div>
+      {note && <div className="mt-px text-[11px] text-gray-400 tabular-nums">{note}</div>}
+    </div>
+  );
+}
+
+function Banner({
+  tone,
+  title,
+  children,
+  action,
+}: {
+  tone: 'amber' | 'violet' | 'rose' | 'gray';
+  title: string;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
+  const style = {
+    amber: 'bg-amber-50 border-amber-200 text-amber-900',
+    violet: 'bg-violet-50 border-violet-200 text-violet-900',
+    rose: 'bg-rose-50 border-rose-200 text-rose-900',
+    gray: 'bg-gray-50 border-gray-200 text-gray-700',
+  }[tone];
+  return (
+    <div
+      className={clsx(
+        'shrink-0 rounded-lg border px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2',
+        style,
       )}
+    >
+      <div className="flex-1 min-w-0 text-xs leading-relaxed">
+        <p className="font-semibold">{title}</p>
+        {children && <p>{children}</p>}
+      </div>
+      {action}
     </div>
   );
 }
 
-// ─── Label / value display pair ───────────────────────────────────────────────
+// ─── Block-project unit ───────────────────────────────────────────────────────
 
-function Field({ label, value }: { label: string; value?: string | number | null }) {
+/** The project and the unit this row reviews — the request is filled from these (CAS only). */
+function BlockUnitSection({ unit }: { unit?: BlockUnitInfo }) {
+  const { t } = useTranslation('reappraisal');
+  const found = unit?.matchedUnits === 1;
+  const isCondo = unit?.projectType === 'U';
   return (
-    <div>
-      <dt className="text-xs text-gray-400">{label}</dt>
-      <dd className="text-xs font-medium text-gray-800 mt-0.5">{value ?? '-'}</dd>
+    <>
+      {found ? (
+        <Banner tone="gray" title={t('unit.bannerTitle', { number: unit?.projectAppraisalNumber })}>
+          {t(`unit.matchedBy.${unit?.matchedBy ?? 'CollateralName'}`)} · {t('unit.ownUnit')}
+        </Banner>
+      ) : !unit ? (
+        // The project itself could not be read (e.g. its appraisal was removed): no matching ran.
+        <Banner tone="amber" title={t('unit.projectMissingTitle')}>
+          {t('unit.projectMissingBody')}
+        </Banner>
+      ) : (
+        <Banner tone="amber" title={t('unit.notFoundTitle')}>
+          {unit.matchedUnits > 1
+            ? t('unit.ambiguous', { total: unit.matchedUnits })
+            : t('unit.notFoundBody')}
+        </Banner>
+      )}
+      <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 gap-3">
+        <FactCard title={t('unit.cardUnit')}>
+          {found ? (
+            isCondo ? (
+              <>
+                <Fact label={t('unit.fields.tower')}>{unit?.towerName}</Fact>
+                <Fact label={t('unit.fields.floor')}>{unit?.floor}</Fact>
+                <Fact label={t('unit.fields.room')}>{unit?.roomNumber}</Fact>
+                <Fact label={t('unit.fields.registration')}>{unit?.condoRegistrationNumber}</Fact>
+                <Fact label={t('unit.fields.usableArea')}>
+                  {unit?.usableArea != null &&
+                    t('unit.sqm', { value: formatNumber(unit.usableArea) })}
+                </Fact>
+                <Fact label={t('unit.fields.model')}>{unit?.modelType}</Fact>
+              </>
+            ) : (
+              <>
+                <Fact label={t('unit.fields.house')}>{unit?.houseNumber}</Fact>
+                <Fact label={t('unit.fields.plot')}>{unit?.plotNumber}</Fact>
+                <Fact label={t('unit.fields.landArea')}>
+                  {unit?.landArea != null && t('unit.sqwa', { value: formatNumber(unit.landArea) })}
+                </Fact>
+                <Fact label={t('unit.fields.usableArea')}>
+                  {unit?.usableArea != null &&
+                    t('unit.sqm', { value: formatNumber(unit.usableArea) })}
+                </Fact>
+                <Fact label={t('unit.fields.model')}>{unit?.modelType}</Fact>
+              </>
+            )
+          ) : (
+            <Fact label={t('unit.fields.unit')}>{undefined}</Fact>
+          )}
+          <Fact label={t('unit.fields.unitPrice')}>
+            {unit?.unitPrice != null && `${formatNumber(unit.unitPrice)} ${t('detail.stats.baht')}`}
+          </Fact>
+        </FactCard>
+        <FactCard title={t('unit.cardProject')}>
+          <Fact label={t('unit.fields.projectName')}>{unit?.projectName}</Fact>
+          <Fact label={t('unit.fields.projectType')}>
+            {unit?.projectType &&
+              t(`unit.projectType.${unit.projectType}`, { defaultValue: unit.projectType })}
+          </Fact>
+          <Fact label={t('unit.fields.projectAppraisal')}>
+            {unit && (
+              <Link
+                to={`/appraisals/${unit.projectAppraisalId}/360`}
+                className="text-primary hover:underline tabular-nums"
+              >
+                {unit.projectAppraisalNumber}
+              </Link>
+            )}
+          </Fact>
+          <Fact label={t('unit.fields.projectValuationDate')}>
+            {unit?.projectValuationDate && formatDay(unit.projectValuationDate)}
+          </Fact>
+        </FactCard>
+      </div>
+    </>
+  );
+}
+
+// ─── Modals ───────────────────────────────────────────────────────────────────
+
+function ConfirmFooter({
+  onClose,
+  onConfirm,
+  isPending,
+  confirmLabel,
+}: {
+  onClose: () => void;
+  onConfirm: () => void;
+  isPending: boolean;
+  confirmLabel: string;
+}) {
+  const { t } = useTranslation('common');
+  return (
+    <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+      <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
+        {t('actions.cancel')}
+      </Button>
+      <Button variant="primary" size="sm" onClick={onConfirm} isLoading={isPending}>
+        {confirmLabel}
+      </Button>
     </div>
   );
 }
 
-// ─── Delete confirmation modal ────────────────────────────────────────────────
-
-interface DeleteConfirmModalProps {
+function SkipConfirmModal({
+  open,
+  isPending,
+  onConfirm,
+  onClose,
+}: {
   open: boolean;
   isPending: boolean;
   onConfirm: () => void;
   onClose: () => void;
-}
-
-function DeleteConfirmModal({ open, isPending, onConfirm, onClose }: DeleteConfirmModalProps) {
-  const { t } = useTranslation(['reappraisal', 'common']);
+}) {
+  const { t } = useTranslation('reappraisal');
   return (
     <Modal isOpen={open} onClose={onClose} title={t('detail.deleteModal.title')} size="sm">
       <div className="space-y-4">
-        <p className="text-sm text-gray-700">{t('detail.deleteModal.body')}</p>
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
-            {t('common:actions.cancel')}
-          </Button>
-          <Button variant="danger" size="sm" onClick={onConfirm} isLoading={isPending}>
-            {t('common:actions.delete')}
-          </Button>
-        </div>
+        <p className="text-sm text-gray-700 leading-relaxed">{t('detail.deleteModal.body')}</p>
+        <ConfirmFooter
+          onClose={onClose}
+          onConfirm={onConfirm}
+          isPending={isPending}
+          confirmLabel={t('detail.deleteModal.confirm')}
+        />
       </div>
     </Modal>
   );
 }
 
-// ─── Initiate confirmation modal ──────────────────────────────────────────────
-
-interface InitiateConfirmModalProps {
-  open: boolean;
-  isPending: boolean;
-  selectedCount: number;
-  onConfirm: () => void;
-  onClose: () => void;
+/** One line per book: what its request will start with. */
+function BookList({
+  books,
+}: {
+  books: { bookNumber: string; hasPrior: boolean; tag?: ReactNode; note?: string }[];
+}) {
+  const { t } = useTranslation('reappraisal');
+  return (
+    <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+      {books.map(b => (
+        <li key={b.bookNumber} className="px-3 py-2">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-xs font-medium text-primary tabular-nums">{b.bookNumber}</span>
+            {b.tag}
+          </div>
+          <p className="mt-0.5 text-[11px] text-gray-500">
+            {b.note ??
+              (b.hasPrior
+                ? t('detail.initiateModal.copiesPrior')
+                : t('detail.initiateModal.startsEmpty'))}
+          </p>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 function InitiateConfirmModal({
   open,
   isPending,
-  selectedCount,
+  books,
   onConfirm,
   onClose,
-}: InitiateConfirmModalProps) {
-  const { t } = useTranslation(['reappraisal', 'common']);
+}: {
+  open: boolean;
+  isPending: boolean;
+  books: { bookNumber: string; hasPrior: boolean; note?: string }[];
+  onConfirm: () => void;
+  onClose: () => void;
+}) {
+  const { t } = useTranslation('reappraisal');
   return (
-    <Modal isOpen={open} onClose={onClose} title={t('detail.initiateModal.title')} size="sm">
+    <Modal
+      isOpen={open}
+      onClose={onClose}
+      title={t('detail.initiateModal.titleWithCount', { total: books.length })}
+      size="md"
+    >
       <div className="space-y-4">
-        <p className="text-sm text-gray-700">
-          {t('detail.initiateModal.body', { count: selectedCount })}
+        <BookList books={books} />
+        <p className="rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 text-xs text-gray-700 leading-relaxed">
+          {t('detail.initiateModal.draftNotice')}
         </p>
-        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-          <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
-            {t('common:actions.cancel')}
-          </Button>
-          <Button variant="primary" size="sm" onClick={onConfirm} isLoading={isPending}>
-            {t('common:actions.confirm')}
-          </Button>
-        </div>
+        <ConfirmFooter
+          onClose={onClose}
+          onConfirm={onConfirm}
+          isPending={isPending}
+          confirmLabel={t('detail.initiateModal.confirm', { total: books.length })}
+        />
       </div>
     </Modal>
   );
 }
 
-// ─── Success modal ────────────────────────────────────────────────────────────
+const SKIP_REASON_KEY: Record<SkippedReappraisalItem['reason'], string> = {
+  AlreadyInFlight: 'detail.successModal.alreadyInFlight',
+  AlreadyReviewed: 'detail.successModal.alreadyReviewed',
+  NoBookNumber: 'detail.successModal.noBookNumber',
+  NotDue: 'detail.successModal.notDue',
+};
 
-interface InitiateSuccessModalProps {
-  open: boolean;
-  groupNumber: string;
-  createdCount: number;
-  skipped: SkippedReappraisalItem[];
-  onClose: () => void;
-}
-
-function InitiateSuccessModal({
-  open,
-  groupNumber,
-  createdCount,
-  skipped,
+function InitiateResultModal({
+  result,
   onClose,
-}: InitiateSuccessModalProps) {
+}: {
+  result: InitiateReappraisalResult | null;
+  onClose: () => void;
+}) {
   const { t } = useTranslation(['reappraisal', 'common']);
+  const navigate = useNavigate();
+  if (!result) return null;
+  const accepted = result.accepted ?? [];
+  const createdCount = result.acceptedCount ?? accepted.length;
+  const skipped = result.skipped ?? [];
   return (
-    <Modal isOpen={open} onClose={onClose} title={t('detail.successModal.title')} size="sm">
+    <Modal isOpen onClose={onClose} title={t('detail.successModal.title')} size="md">
       <div className="space-y-4">
-        <div className="flex flex-col items-center gap-3 py-2">
-          <div className="size-12 rounded-full bg-green-50 flex items-center justify-center">
-            <Icon style="solid" name="check" className="size-5 text-green-600" />
+        <div className="flex items-center gap-3">
+          <div
+            className={clsx(
+              'size-9 shrink-0 rounded-full flex items-center justify-center',
+              createdCount > 0 ? 'bg-primary/10' : 'bg-amber-50',
+            )}
+          >
+            <Icon
+              style="solid"
+              name={createdCount > 0 ? 'check' : 'ban'}
+              className={clsx('size-4', createdCount > 0 ? 'text-primary' : 'text-amber-600')}
+            />
           </div>
-          <div className="text-center">
-            <p className="text-sm font-semibold text-gray-800">
-              {t('detail.successModal.heading')}
+          <div className="text-xs">
+            <p className="text-sm font-semibold text-gray-900">
+              {t('detail.successModal.createdDrafts', { total: createdCount })}
+              {createdCount > 0 && (
+                <span className="font-normal text-gray-500">
+                  {' · '}
+                  {t('detail.successModal.groupNumber')}{' '}
+                  <span className="tabular-nums">{result.groupNumber}</span>
+                </span>
+              )}
             </p>
-            <p className="text-xs text-gray-500 mt-1">
-              {t('detail.successModal.groupNumber')}{' '}
-              <strong className="text-gray-800">{groupNumber}</strong>
-            </p>
-            <p className="text-xs text-gray-500">
-              {t('detail.successModal.created', { count: createdCount })}
-            </p>
+            {createdCount > 0 && (
+              <p className="text-gray-500 mt-0.5">{t('detail.successModal.notSubmitted')}</p>
+            )}
           </div>
         </div>
 
-        {skipped.length > 0 && (
-          <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2.5">
-            <p className="text-xs font-medium text-amber-800 mb-1.5">
-              {t('detail.successModal.skipped', { count: skipped.length })}
+        {accepted.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold text-gray-600">
+              {t('detail.successModal.createdHeading')}
             </p>
-            <ul className="space-y-0.5">
-              {skipped.map(s => (
-                <li key={s.appraisalId} className="text-xs text-amber-700">
-                  {s.oldAppraisalReportNumber}
-                </li>
-              ))}
-            </ul>
+            <BookList
+              books={accepted.map(a => ({
+                bookNumber: a.bookNumber,
+                hasPrior: a.prevAppraisalId != null,
+                tag: (
+                  <span className={clsx(TAG, 'bg-primary/5 text-primary border-primary/20')}>
+                    {t('progress.draft')}
+                  </span>
+                ),
+              }))}
+            />
           </div>
         )}
 
-        <div className="flex justify-end pt-2 border-t border-gray-100">
-          <Button variant="primary" size="sm" onClick={onClose}>
-            {t('common:actions.close')}
+        {skipped.length > 0 && (
+          <div className="space-y-1.5">
+            <p className="text-[11px] font-semibold text-gray-600">
+              {t('detail.successModal.skippedHeading', { total: skipped.length })}
+            </p>
+            <BookList
+              books={skipped.map((s, i) => ({
+                bookNumber: s.oldAppraisalReportNumber ?? `—${i}`,
+                hasPrior: false,
+                tag: (
+                  <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
+                    {t(SKIP_REASON_KEY[s.reason] as 'detail.successModal.notDue')}
+                  </span>
+                ),
+                note: t(`detail.successModal.reasonHint.${s.reason}`),
+              }))}
+            />
+          </div>
+        )}
+
+        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+          <Button variant="outline" size="sm" onClick={onClose}>
+            {t('detail.backToList')}
           </Button>
+          {createdCount > 0 && (
+            <Button variant="primary" size="sm" onClick={() => navigate('/requests')}>
+              {t('detail.successModal.goToRequests')}
+            </Button>
+          )}
         </div>
       </div>
     </Modal>
@@ -310,174 +475,92 @@ function ReappraisalDetailPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(['reappraisal', 'common']);
   const user = useAuthStore(s => s.user);
+  const remaining = useRemainingText();
 
   const { data: detail, isLoading, isError, error } = useReappraisalCandidateDetail(id ?? '');
   const initiateMutation = useInitiateReappraisal();
   const deleteMutation = useDeleteReappraisalCandidate();
+  const restoreMutation = useRestoreReappraisalCandidate();
 
   // Breadcrumb: Home › Reappraisal (AS400) › <appraisal number>
   useBreadcrumb(detail?.oldAppraisalReportNumber, 'folder-open');
 
   // Selected nearby rows — keyed by (appraisalId ?? candidateId)
   const [selectedNearbyTokens, setSelectedNearbyTokens] = useState<Set<string>>(new Set());
-
-  // Modal states
   const [initiateConfirmOpen, setInitiateConfirmOpen] = useState(false);
-  const [successModalOpen, setSuccessModalOpen] = useState(false);
-  const [successResult, setSuccessResult] = useState<{
-    groupNumber: string;
-    createdCount: number;
-    skipped: SkippedReappraisalItem[];
-  } | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
+  const [result, setResult] = useState<InitiateReappraisalResult | null>(null);
+  // The candidate to skip, and the selection token of its row (a nearby row's token is its appraisal
+  // id when it has one, so the candidate id alone would leave the row ticked).
+  const [skipTarget, setSkipTarget] = useState<{ candidateId: string; token?: string } | null>(
+    null,
+  );
   const [mapOpen, setMapOpen] = useState(false);
 
-  // Overlay pins for the map drawer: the main appraisal + every nearby group
-  // candidate that has coordinates, rendered as always-visible "appraising" markers
-  // over the surrounding history-search backdrop. SIBS rows not yet geo-enriched
-  // (null lat/lon) are simply absent from the map.
+  // Overlay pins for the map drawer: the main appraisal + every nearby group candidate that has
+  // coordinates. SIBS rows not yet geo-enriched (null lat/lon) are simply absent from the map.
   const groupPins = useMemo<AppraisalPinDto[]>(() => {
     if (!detail || detail.latitude == null || detail.longitude == null) return [];
-    const pins: AppraisalPinDto[] = [
-      {
-        // Real in-system appraisal id (empty when AS400-only) — NOT the candidate id.
-        // The pin detail drawer fetches appraisal data with this; an empty value
-        // keeps it from querying a non-existent appraisal.
-        appraisalId: detail.appraisalId ?? '',
-        appraisalNumber: detail.oldAppraisalReportNumber,
-        lat: detail.latitude,
-        lon: detail.longitude,
-        propertyType: null,
-        buildingType: null,
-        appraisedValue: null,
-        appraisedDate: detail.appraisalDate ?? null,
-        distanceKm: 0,
-        province: null,
-        district: null,
-        subDistrict: null,
-        customerName: detail.customerName ?? null,
-      },
+    const pin = (
+      appraisalId: string | undefined,
+      appraisalNumber: string,
+      lat: number,
+      lon: number,
+      appraisedDate: string | undefined,
+      distanceKm: number | null,
+      customerName: string | undefined,
+    ): AppraisalPinDto => ({
+      // Real in-system appraisal id only (empty when AS400-only) — never the candidate id: the pin
+      // drawer fetches appraisal data with it.
+      appraisalId: appraisalId ?? '',
+      appraisalNumber,
+      lat,
+      lon,
+      propertyType: null,
+      buildingType: null,
+      appraisedValue: null,
+      appraisedDate: appraisedDate ?? null,
+      distanceKm,
+      province: null,
+      district: null,
+      subDistrict: null,
+      customerName: customerName ?? null,
+    });
+    const pins = [
+      pin(
+        detail.appraisalId,
+        detail.oldAppraisalReportNumber,
+        detail.latitude,
+        detail.longitude,
+        detail.appraisalDate,
+        0,
+        detail.customerName,
+      ),
     ];
     for (const c of detail.nearbyGroupCandidates) {
       if (c.latitude == null || c.longitude == null) continue;
-      pins.push({
-        // Real in-system appraisal id only; candidateId is NOT an appraisal id.
-        // Empty for SIBS-pending rows with no in-system match.
-        appraisalId: c.appraisalId ?? '',
-        appraisalNumber: c.oldAppraisalReportNumber,
-        lat: c.latitude,
-        lon: c.longitude,
-        propertyType: null,
-        buildingType: null,
-        appraisedValue: null,
-        appraisedDate: c.appraisalDate ?? null,
-        distanceKm: c.distanceKm ?? null,
-        province: null,
-        district: null,
-        subDistrict: null,
-        customerName: c.customerName ?? null,
-      });
+      pins.push(
+        pin(
+          c.appraisalId,
+          c.oldAppraisalReportNumber,
+          c.latitude,
+          c.longitude,
+          c.appraisalDate,
+          c.distanceKm ?? null,
+          c.customerName,
+        ),
+      );
     }
     return pins;
   }, [detail]);
-
-  const durationLabels: DurationLabels = {
-    year: t('detail.duration.year'),
-    month: t('detail.duration.month'),
-    day: t('detail.duration.day'),
-  };
-
-  const toggleNearby = (token: string) => {
-    setSelectedNearbyTokens(prev => {
-      const next = new Set(prev);
-      if (next.has(token)) {
-        next.delete(token);
-      } else {
-        next.add(token);
-      }
-      return next;
-    });
-  };
-
-  // The main candidate is always included; nearby selections are additive
-  const totalSelected = 1 + selectedNearbyTokens.size;
-
-  const handleInitiateConfirm = () => {
-    if (!detail || !user) return;
-
-    // Partition selected nearby tokens back into their respective ID arrays.
-    // We need the original row objects to know which id field to use.
-    const selectedRows = detail.nearbyGroupCandidates.filter(c =>
-      selectedNearbyTokens.has(rowToken(c)),
-    );
-
-    const candidateIds: string[] = [detail.id];
-    const nearbyAppraisalIds: string[] = [];
-
-    for (const row of selectedRows) {
-      if (row.candidateId) {
-        // Has a Pending candidate row — goes into candidateIds
-        candidateIds.push(row.candidateId);
-      } else if (row.appraisalId) {
-        // InSystem-only (no candidate row) — goes into nearbyAppraisalIds
-        nearbyAppraisalIds.push(row.appraisalId);
-      }
-    }
-
-    // Project convention: Request.Requestor/Creator store the bank user CODE (e.g. "P5229"),
-    // which is held in `user.username` on the FE auth model — NOT the Guid `user.id`.
-    // `username` field on the wire DTO carries the display name (`user.name`).
-    const userInfo = { userId: user.username, username: user.name };
-
-    initiateMutation.mutate(
-      { candidateIds, nearbyAppraisalIds, requestor: userInfo, creator: userInfo },
-      {
-        onSuccess: result => {
-          setInitiateConfirmOpen(false);
-          setSuccessResult({
-            groupNumber: result.groupNumber,
-            createdCount: result.createdRequestIds.length,
-            skipped: result.skipped ?? [],
-          });
-          setSuccessModalOpen(true);
-        },
-      },
-    );
-  };
-
-  const handleDeleteConfirm = () => {
-    if (!deleteTarget) return;
-    deleteMutation.mutate(deleteTarget, {
-      onSuccess: () => {
-        setDeleteTarget(null);
-        // If deleting the main candidate, go back to list
-        if (deleteTarget === detail?.id) {
-          navigate('/reappraisal');
-        } else {
-          // Remove from selection if it was selected (candidateId was used as token)
-          setSelectedNearbyTokens(prev => {
-            const next = new Set(prev);
-            next.delete(deleteTarget);
-            return next;
-          });
-        }
-      },
-    });
-  };
-
-  const handleViewOnMap = () => {
-    // Null-check (not truthy) so valid 0 coords still open the map.
-    if (detail?.latitude == null || detail?.longitude == null) return;
-    setMapOpen(true);
-  };
 
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-4">
         <div className="h-6 w-48 bg-gray-100 rounded animate-pulse" />
-        <div className="grid grid-cols-4 gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
-            <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+        <div className="h-16 bg-gray-100 rounded animate-pulse" />
+        <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-32 bg-gray-100 rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -503,330 +586,500 @@ function ReappraisalDetailPage() {
     );
   }
 
-  // Determine whether the Initiate button should be disabled and the banner shown.
   const isBlocked = detail.status !== 'Pending' || detail.hasOpenAppraisal === true;
+  const hasCoords = detail.latitude != null && detail.longitude != null;
+  const due = dueOf(detail.appraisalDate);
+  const age = due ? diffYMD(due.appraised, startOfToday()) : undefined;
+  const fd = formatDay;
+  const monthYear = (iso?: string) => {
+    const d = parseDay(iso);
+    return d
+      ? d.toLocaleDateString(i18n.language?.startsWith('th') ? 'th-TH' : 'en-GB', {
+          month: 'short',
+          year: '2-digit',
+        })
+      : '—';
+  };
+
+  const nearby = detail.nearbyGroupCandidates;
+  const selectedRows = nearby.filter(c => !c.isInProgress && selectedNearbyTokens.has(rowToken(c)));
+  const totalSelected = 1 + selectedRows.length;
+
+  const toggleNearby = (token: string) =>
+    setSelectedNearbyTokens(prev => {
+      const next = new Set(prev);
+      if (next.has(token)) next.delete(token);
+      else next.add(token);
+      return next;
+    });
+
+  const handleInitiateConfirm = () => {
+    if (!user) return;
+    const candidateIds: string[] = [detail.id];
+    const nearbyAppraisalIds: string[] = [];
+    for (const row of selectedRows) {
+      // A row with a Pending candidate goes by candidate; an in-system-only row by appraisal.
+      if (row.candidateId) candidateIds.push(row.candidateId);
+      else if (row.appraisalId) nearbyAppraisalIds.push(row.appraisalId);
+    }
+    // Project convention: Request.Requestor/Creator store the bank user CODE (e.g. "P5229"),
+    // which is held in `user.username` on the FE auth model — NOT the Guid `user.id`.
+    // `username` field on the wire DTO carries the display name (`user.name`).
+    const userInfo = { userId: user.username, username: user.name };
+    initiateMutation.mutate(
+      { candidateIds, nearbyAppraisalIds, requestor: userInfo, creator: userInfo },
+      {
+        onSuccess: res => {
+          setInitiateConfirmOpen(false);
+          setResult(res);
+        },
+      },
+    );
+  };
+
+  const handleSkipConfirm = () => {
+    if (!skipTarget) return;
+    const { candidateId, token } = skipTarget;
+    deleteMutation.mutate(candidateId, {
+      onSuccess: () => {
+        setSkipTarget(null);
+        if (candidateId === detail.id) {
+          navigate('/reappraisal');
+        } else if (token) {
+          setSelectedNearbyTokens(prev => {
+            const next = new Set(prev);
+            next.delete(token);
+            return next;
+          });
+        }
+      },
+    });
+  };
+
+  const openWork = detail.openAppraisalId
+    ? { to: `/appraisals/${detail.openAppraisalId}`, label: detail.openAppraisalNumber }
+    : detail.openRequestId
+      ? { to: `/requests/${detail.openRequestId}`, label: detail.openRequestNumber }
+      : undefined;
+
+  const priorFromCas = detail.priorAppraisalSource === 'CAS';
+  const yesNo = (v?: string) =>
+    v == null || v.trim() === ''
+      ? undefined
+      : v.trim().toUpperCase() === 'Y'
+        ? t('detail.fields.yes')
+        : t('detail.fields.no');
 
   return (
-    <div className="flex flex-col min-h-full min-w-0 gap-4">
+    <div className="flex flex-col min-h-full min-w-0 gap-3">
       {/* ── Page header ── */}
-      <div className="shrink-0 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="shrink-0 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3 min-w-0">
           <button
             onClick={() => navigate('/reappraisal')}
-            className="flex items-center justify-center size-7 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            aria-label={t('detail.backToList')}
+            className="flex items-center justify-center size-7 shrink-0 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
           >
             <Icon style="solid" name="arrow-left" className="size-3.5" />
           </button>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="text-sm font-semibold text-gray-900">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-semibold text-gray-900 tabular-nums">
                 {detail.oldAppraisalReportNumber}
               </h2>
-              <StatusBadge
+              <ReappraisalStatusBadge
                 status={detail.status}
                 hasOpenAppraisal={detail.hasOpenAppraisal}
-                openAppraisalNumber={detail.openAppraisalNumber}
-                openAppraisalGroupTag={detail.openAppraisalGroupTag}
-                openAppraisalId={detail.openAppraisalId}
               />
+              <PriorSourceBadge source={detail.priorAppraisalSource} />
+              {detail.isBlockUnit && (
+                <span className={clsx(TAG, 'bg-teal-50 text-teal-700 border-teal-200')}>
+                  {t('unit.tag')}
+                </span>
+              )}
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              {detail.customerName ?? detail.cifNumber} &middot;{' '}
+              {detail.customerName ?? '—'} · CIF {detail.cifNumber} ·{' '}
               {t(`reviewType.${detail.reviewType}`, { defaultValue: detail.reviewType })}
             </p>
           </div>
         </div>
-
-        {/* Action buttons */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* Null-check (not truthy) — valid lat/lon may be 0, and `0 && X` renders the literal 0 in JSX. */}
-          {detail.latitude != null && detail.longitude != null && (
+          {/* Null-check (not truthy) — valid lat/lon may be 0. */}
+          {hasCoords && (
             <Button
               variant="outline"
               size="sm"
-              onClick={handleViewOnMap}
-              leftIcon={<Icon style="solid" name="map-location-dot" className="size-3.5" />}
+              onClick={() => setMapOpen(true)}
+              leftIcon={<GoogleMapPinIcon />}
             >
               {t('actions.viewOnMap')}
             </Button>
           )}
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={isBlocked ? undefined : () => setInitiateConfirmOpen(true)}
-            disabled={isBlocked}
-            title={isBlocked ? t('detail.blockedTitle') : undefined}
-            leftIcon={<Icon style="solid" name="play" className="size-3" />}
-          >
-            {t('actions.initiate')}
-          </Button>
+          {!isBlocked && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setSkipTarget({ candidateId: detail.id })}
+            >
+              {t('detail.group.deleteCandidate')}
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* ── In-progress / consumed banner ── */}
-      {isBlocked && (
-        <div className="shrink-0 rounded-md bg-amber-50 border border-amber-200 px-4 py-3 flex items-start gap-3">
-          <Icon
-            style="solid"
-            name="triangle-exclamation"
-            className="size-4 text-amber-500 mt-0.5 shrink-0"
-          />
-          <div className="text-xs text-amber-800 space-y-0.5">
-            {detail.hasOpenAppraisal ? (
-              <>
-                <p className="font-medium">{t('detail.banner.inProgressTitle')}</p>
-                {detail.openAppraisalNumber != null && (
-                  <p>
-                    {t('detail.banner.appraisalLabel')} <strong>{detail.openAppraisalNumber}</strong>
-                    {detail.openAppraisalGroupTag != null && (
-                      <>
-                        {' '}
-                        &middot; {t('detail.banner.groupLabel')}{' '}
-                        <strong>{detail.openAppraisalGroupTag}</strong>
-                      </>
-                    )}
-                  </p>
-                )}
-              </>
-            ) : (
-              <p>{t('detail.banner.consumed')}</p>
-            )}
-          </div>
-        </div>
-      )}
+      {/* ── Banners ── */}
+      {detail.status === 'Deleted' ? (
+        <Banner
+          tone="rose"
+          title={t('detail.banner.notReviewingTitle')}
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => restoreMutation.mutate(detail.id)}
+              isLoading={restoreMutation.isPending}
+            >
+              {t('actions.restore')}
+            </Button>
+          }
+        >
+          {t('detail.banner.notReviewing')}
+        </Banner>
+      ) : detail.status === 'Consumed' ? (
+        <Banner
+          tone="gray"
+          title={t('detail.banner.processedTitle')}
+          action={
+            detail.newAppraisalId && (
+              <Link
+                to={`/appraisals/${detail.newAppraisalId}`}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 bg-white rounded-lg text-gray-800 hover:bg-gray-100"
+              >
+                {t('detail.banner.open', { number: detail.newAppraisalNumber })}
+                <Icon style="solid" name="arrow-up-right-from-square" className="size-2.5" />
+              </Link>
+            )
+          }
+        >
+          {detail.newAppraisalId ? (
+            <span className="inline-flex flex-wrap items-center gap-x-1.5 gap-y-1">
+              {t('detail.banner.processedAppraisal')}{' '}
+              <b className="tabular-nums">{detail.newAppraisalNumber}</b>
+              <NewAppraisalStatusChip status={detail.newAppraisalStatus} />
+              <span>
+                ·{' '}
+                {detail.newAppraisalGroupTag
+                  ? `${t('detail.banner.groupLabel')} ${detail.newAppraisalGroupTag}`
+                  : t('processed.createdByHand')}
+              </span>
+              <span className="tabular-nums">
+                · {t('columns.submittedAt')} {fd(detail.newAppraisalSubmittedAt)}
+              </span>
+              {detail.newAppraisalStatus === 'Completed' && (
+                <span className="tabular-nums">
+                  · {t('columns.completedAt')} {fd(detail.newAppraisalCompletedAt)}
+                </span>
+              )}
+            </span>
+          ) : (
+            t('processed.notFoundHint')
+          )}
+        </Banner>
+      ) : detail.hasOpenAppraisal ? (
+        <Banner
+          tone="amber"
+          title={
+            detail.openAppraisalNumber != null
+              ? t('detail.banner.inProgressTitle')
+              : t('detail.banner.awaitingSubmitTitle')
+          }
+          action={
+            openWork && (
+              <Link
+                to={openWork.to}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-amber-300 bg-white rounded-lg text-amber-800 hover:bg-amber-100"
+              >
+                {t('detail.banner.open', { number: openWork.label })}
+                <Icon style="solid" name="arrow-up-right-from-square" className="size-2.5" />
+              </Link>
+            )
+          }
+        >
+          {detail.openAppraisalNumber != null
+            ? t('detail.banner.inProgressBody', {
+                number: detail.openAppraisalNumber,
+                group: detail.openAppraisalGroupTag ?? '—',
+              })
+            : t('detail.banner.awaitingSubmitBody', { number: detail.openRequestNumber ?? '—' })}
+        </Banner>
+      ) : !priorFromCas ? (
+        <Banner
+          tone="violet"
+          title={
+            detail.priorAppraisalSource === 'AS400Legacy'
+              ? t('detail.banner.legacyTitle')
+              : t('detail.banner.unknownTitle')
+          }
+        >
+          {t('detail.banner.noPriorRequest')}
+        </Banner>
+      ) : null}
 
-      {/* ── Previous Application Report Details ── (header merged into the page header above) */}
-      <section className="shrink-0 bg-white rounded-lg border border-gray-200 p-4">
-        <dl className="grid grid-cols-3 gap-x-6 gap-y-4">
-          {/* Row 1 */}
-          <Field
-            label={t('columns.oldAppraisalReportNumber')}
-            value={detail.oldAppraisalReportNumber}
-          />
-          <Field
-            label={t('columns.reviewType')}
-            value={t(`reviewType.${detail.reviewType}`, { defaultValue: detail.reviewType })}
-          />
-          <Field label={t('columns.status')} value={detail.status} />
+      {/* ── Block-project unit ── */}
+      {detail.isBlockUnit && <BlockUnitSection unit={detail.unit} />}
 
-          {/* Row 2 */}
-          <Field label={t('columns.cifNumber')} value={detail.cifNumber} />
-          <Field label={t('detail.fields.collateralId')} value={detail.collateralId} />
-          <Field label={t('detail.fields.collateralName')} value={detail.collateralName} />
-
-          {/* Row 3 — Collateral Description (full width) */}
-          <div className="col-span-3">
-            <dt className="text-xs text-gray-400">{t('detail.fields.collateralDescription')}</dt>
-            <dd className="text-xs font-medium text-gray-800 mt-0.5">
-              {detail.collateralDescription ?? '-'}
-            </dd>
-          </div>
-
-          {/* Row 4 — Collateral Address (full width) */}
-          <div className="col-span-3">
-            <dt className="text-xs text-gray-400">{t('detail.fields.collateralAddress')}</dt>
-            <dd className="text-xs font-medium text-gray-800 mt-0.5">
-              {detail.collateralAddress ?? '-'}
-            </dd>
-          </div>
-
-          {/* Row 5 */}
-          <Field label={t('detail.fields.carCode')} value={detail.carCode} />
-          <Field
-            label={t('detail.fields.valuationDate')}
-            value={formatLocaleDate(detail.valuationDate, i18n.language)}
-          />
-          <Field label={t('detail.fields.pastDueDate')} value={formatNumber(detail.pastDueDay)} />
-
-          {/* Row 6 — External Name (full width) */}
-          <div className="col-span-3">
-            <dt className="text-xs text-gray-400">{t('detail.fields.externalName')}</dt>
-            <dd className="text-xs font-medium text-gray-800 mt-0.5">
-              {detail.externalValuerName ?? '-'}
-            </dd>
-          </div>
-
-          {/* Row 7 — Internal Name (full width) */}
-          <div className="col-span-3">
-            <dt className="text-xs text-gray-400">{t('detail.fields.internalName')}</dt>
-            <dd className="text-xs font-medium text-gray-800 mt-0.5">
-              {detail.internalValuerName ?? '-'}
-            </dd>
-          </div>
-
-          {/* Row 8 — AO Code | AO Name (third col empty) */}
-          <Field label={t('detail.fields.aoCode')} value={detail.aoCode} />
-          <Field label={t('detail.fields.aoName')} value={detail.aoName} />
-          <span />
-
-          {/* Row 9 — SLL Status | SLL Description (third col empty) */}
-          <Field
-            label={t('detail.fields.sllStatus')}
-            value={
-              detail.sllOver100M === true ? 'Y' : detail.sllOver100M === false ? 'N' : undefined
-            }
-          />
-          <Field label={t('detail.fields.sllDescription')} value={detail.sllDescription} />
-          <span />
-        </dl>
+      {/* ── Due summary ── */}
+      <section className="shrink-0 bg-white rounded-lg border border-gray-200 shadow-sm grid grid-cols-2 lg:grid-cols-4">
+        <Stat
+          label={t('detail.stats.reviewDue')}
+          value={due ? remaining(due.due, due.daysLeft) : '—'}
+          className={due ? URGENCY_TEXT[urgencyOf(due.daysLeft)] : undefined}
+          note={due && t('detail.stats.reviewDueNote', { date: fd(due.due) })}
+        />
+        <Stat
+          label={t('detail.stats.lastAppraisal')}
+          value={fd(detail.appraisalDate)}
+          note={
+            age &&
+            t('detail.stats.ago', {
+              period: [age.y > 0 ? t('due.years', { n: age.y }) : '', t('due.months', { n: age.m })]
+                .filter(Boolean)
+                .join(' '),
+            })
+          }
+        />
+        <Stat
+          label={t('detail.stats.effectiveDate')}
+          value={fd(detail.effectiveDateAppraisal)}
+          note={t('detail.stats.effectiveDateNote')}
+        />
+        <Stat
+          label={t('detail.stats.priorValue')}
+          value={formatNumber(detail.currentValue)}
+          note={t('detail.stats.baht')}
+        />
       </section>
 
-      {/* ── Application Request List (Group Appraisal) ── */}
-      <section className="flex-1 min-h-[24rem] bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
-        <div className="shrink-0 px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <div>
-            <h3 className="text-xs font-semibold text-gray-700">{t('detail.group.title')}</h3>
-            <p className="text-[10px] text-gray-400 mt-0.5">{t('detail.group.subtitle')}</p>
-          </div>
-          {selectedNearbyTokens.size > 0 && (
-            <span className="text-xs text-primary font-medium">
-              {t('detail.group.nearbySelected', { count: selectedNearbyTokens.size })}
+      {/* ── Facts ── */}
+      <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
+        <FactCard
+          title={t('detail.cards.collateral')}
+          aside={`${t('detail.fields.collateralId')} ${detail.collateralId}`}
+        >
+          <Fact label={t('detail.fields.name')}>{detail.collateralName}</Fact>
+          <Fact label={t('detail.fields.description')} long>
+            {detail.collateralDescription}
+          </Fact>
+          <Fact label={t('detail.fields.address')} long>
+            {detail.collateralAddress}
+          </Fact>
+          <Fact label={t('detail.fields.carCode')}>{detail.carCode}</Fact>
+        </FactCard>
+        <FactCard
+          title={t('detail.cards.prior')}
+          aside={t(`detail.priorFrom.${priorFromCas ? 'CAS' : 'AS400'}`)}
+        >
+          <Fact label={t('columns.oldAppraisalReportNumber')}>
+            <span className="tabular-nums">{detail.oldAppraisalReportNumber}</span>
+            {detail.appraisalId && (
+              <Link
+                to={`/appraisals/${detail.appraisalId}/360`}
+                className="ml-2 font-normal text-primary hover:underline"
+              >
+                {t('detail.openPrior')}
+              </Link>
+            )}
+          </Fact>
+          <Fact label={t('detail.fields.valuationDate')}>
+            {detail.valuationDate && fd(detail.valuationDate)}
+          </Fact>
+          <Fact label={t('detail.fields.value')}>
+            {detail.currentValue != null &&
+              `${formatNumber(detail.currentValue)} ${t('detail.stats.baht')}`}
+          </Fact>
+          <Fact label={t('detail.fields.externalName')}>{detail.externalValuerName}</Fact>
+          <Fact label={t('detail.fields.internalName')}>{detail.internalValuerName}</Fact>
+        </FactCard>
+        <FactCard title={t('detail.cards.loan')}>
+          <Fact label={t('detail.fields.mortgageAmount')}>
+            {detail.mortgageAmount != null && formatNumber(detail.mortgageAmount)}
+          </Fact>
+          <Fact label={t('detail.fields.facilityLimit')}>
+            {detail.facilityLimit != null && formatNumber(detail.facilityLimit)}
+          </Fact>
+          <Fact label={t('detail.fields.pastDue')}>
+            {detail.pastDueDay != null &&
+              t('detail.fields.days', { days: formatNumber(detail.pastDueDay) })}
+          </Fact>
+          <Fact label="AO">
+            {[detail.aoCode, detail.aoName].filter(Boolean).join(' · ') || undefined}
+          </Fact>
+          <Fact label={t('detail.fields.sllStatus')}>
+            {[yesNo(detail.sllOver100M), detail.sllDescription].filter(Boolean).join(' · ') ||
+              undefined}
+          </Fact>
+        </FactCard>
+        <FactCard title={t('detail.cards.thisRound')}>
+          <Fact label={t('columns.reviewType')}>
+            <ReviewTypeChip code={detail.reviewType} />
+          </Fact>
+          <Fact label="Stage">{detail.stage}</Fact>
+          <Fact label={t('detail.fields.group')}>
+            {[detail.group, detail.ibgRetail].filter(Boolean).join(' · ') || undefined}
+          </Fact>
+          <Fact label={t('detail.fields.effectiveDate')}>
+            {detail.effectiveDateAppraisal && fd(detail.effectiveDateAppraisal)}
+          </Fact>
+          <Fact label={t('detail.fields.onFile')}>
+            <span className="tabular-nums">
+              {monthYear(detail.firstSeenFileDate)} – {monthYear(detail.lastSeenFileDate)}
             </span>
-          )}
+          </Fact>
+        </FactCard>
+      </div>
+
+      {/* ── Group selection ── */}
+      <section className="flex-1 min-h-[20rem] bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
+        <div className="shrink-0 px-4 py-3 border-b border-gray-100">
+          <h3 className="text-xs font-semibold text-gray-800">{t('detail.group.title')}</h3>
+          <p className="text-[11px] text-gray-500 mt-0.5">{t('detail.group.subtitle')}</p>
         </div>
 
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full min-w-max text-sm">
+          <table className="w-full min-w-max text-xs">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
                 <th className="px-4 py-2.5 w-8" />
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('detail.group.columns.oldAppraisalNumber')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('detail.group.columns.source')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.customerName')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.appraisalDate')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.distance')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('detail.group.columns.daysSince')}
-                </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap">
-                  {t('columns.remainingDay')}
-                </th>
-                <th className="px-4 py-2.5 w-8" />
+                {[
+                  t('detail.group.columns.book'),
+                  t('detail.group.columns.source'),
+                  t('columns.customerName'),
+                  t('columns.distance'),
+                  t('columns.lastAppraisal'),
+                  t('columns.reviewDue'),
+                ].map(label => (
+                  <th key={label} className="px-3 py-2.5 text-left font-medium whitespace-nowrap">
+                    {label}
+                  </th>
+                ))}
+                <th className="px-3 py-2.5" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {/* Main candidate row — always included, non-interactive checkbox */}
-              <tr className="bg-primary/3">
-                <td className="px-4 py-2.5">
-                  <div className="size-4 rounded border-2 border-primary bg-primary flex items-center justify-center">
+              {/* Main book — always included */}
+              <tr className="bg-primary/[0.03]">
+                <td className="px-4 py-2">
+                  <span
+                    className="size-4 rounded border-2 border-primary bg-primary flex items-center justify-center"
+                    aria-hidden
+                  >
                     <Icon style="solid" name="check" className="size-2.5 text-white" />
-                  </div>
+                  </span>
                 </td>
-                <td className="px-3 py-2 text-xs font-medium text-gray-900 whitespace-nowrap">
-                  {detail.oldAppraisalReportNumber}
-                  <span className="ml-1.5 text-[10px] text-primary font-medium">
-                    {t('detail.group.main')}
+                <td className="px-3 py-2 whitespace-nowrap">
+                  <span className="font-medium text-primary tabular-nums">
+                    {detail.oldAppraisalReportNumber}
+                  </span>
+                  <span className={clsx(TAG, 'ml-1.5 bg-primary/5 text-primary border-primary/20')}>
+                    {t('detail.group.thisBook')}
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-50 text-amber-700">
-                    SIBS
+                  <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
+                    {t('detail.source.due')}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-xs text-gray-600">{detail.customerName ?? '-'}</td>
-                <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                  {formatLocaleDate(detail.appraisalDate, i18n.language)}
+                <td className="px-3 py-2 text-gray-700">{detail.customerName ?? '—'}</td>
+                <td className="px-3 py-2 text-gray-300">—</td>
+                <td className="px-3 py-2 text-gray-700 whitespace-nowrap tabular-nums">
+                  {fd(detail.appraisalDate)}
                 </td>
-                <td className="px-3 py-2 text-xs text-gray-400 whitespace-nowrap">—</td>
-                <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                  {formatDateDiff(detail.appraisalDate, TODAY_ISO, durationLabels)}
+                <td className="px-3 py-2">
+                  <DueCell appraisalDate={detail.appraisalDate} />
                 </td>
-                <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                  {/* Main row only: countdown to the AS400-supplied EffectiveDateAppraisal. */}
-                  {formatDateDiff(TODAY_ISO, detail.effectiveDateAppraisal, durationLabels)}
-                </td>
-                <td className="px-3 py-2 w-8">
-                  <button
-                    onClick={() => setDeleteTarget(detail.id)}
-                    className="invisible group-hover:visible flex items-center justify-center size-6 rounded hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors"
-                    title={t('detail.group.deleteCandidate')}
-                  >
-                    <Icon style="solid" name="trash" className="size-3" />
-                  </button>
-                </td>
+                <td className="px-3 py-2" />
               </tr>
 
-              {/* Nearby candidates */}
-              {detail.nearbyGroupCandidates.length === 0 ? (
+              {nearby.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-8 text-center">
-                    <p className="text-xs text-gray-400">{t('detail.group.empty')}</p>
+                  <td colSpan={8} className="py-8 text-center text-xs text-gray-400">
+                    {hasCoords ? t('detail.group.empty') : t('detail.group.noCoordinates')}
                   </td>
                 </tr>
               ) : (
-                detail.nearbyGroupCandidates.map((c: NearbyReappraisalCandidate) => {
+                nearby.map(c => {
                   const token = rowToken(c);
-                  const checked = selectedNearbyTokens.has(token);
-                  // Delete is only possible when a candidateId exists (InSystem-only rows can't be soft-deleted)
-                  const canDelete = c.candidateId != null;
+                  const disabled = isBlocked || !!c.isInProgress;
+                  const checked = !disabled && selectedNearbyTokens.has(token);
                   return (
                     <tr
                       key={token}
-                      className={`group transition-colors ${checked ? 'bg-primary/3' : 'hover:bg-gray-50'}`}
+                      className={clsx(
+                        c.isInProgress
+                          ? 'text-gray-400'
+                          : checked
+                            ? 'bg-primary/[0.03]'
+                            : 'hover:bg-gray-50',
+                      )}
                     >
-                      <td className="px-4 py-2.5">
-                        <button
-                          onClick={() => toggleNearby(token)}
-                          className={`size-4 rounded border-2 flex items-center justify-center transition-colors ${
-                            checked
-                              ? 'border-primary bg-primary'
-                              : 'border-gray-300 bg-white hover:border-primary/60'
-                          }`}
-                          aria-label={
-                            checked ? t('detail.group.deselect') : t('detail.group.select')
-                          }
-                        >
-                          {checked && (
-                            <Icon style="solid" name="check" className="size-2.5 text-white" />
-                          )}
-                        </button>
+                      <td className="px-4 py-2">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={() => toggleNearby(token)}
+                          aria-label={t('detail.group.selectBook', {
+                            number: c.oldAppraisalReportNumber,
+                          })}
+                          className="size-4 rounded border-gray-300 accent-[var(--color-primary-600)] disabled:opacity-40"
+                        />
                       </td>
-                      <td className="px-3 py-2 text-xs font-medium text-gray-900 whitespace-nowrap">
-                        {c.oldAppraisalReportNumber}
+                      <td className="px-3 py-2 whitespace-nowrap">
+                        <span
+                          className={clsx(
+                            'font-medium tabular-nums',
+                            c.isInProgress ? 'text-gray-400' : 'text-primary',
+                          )}
+                        >
+                          {c.oldAppraisalReportNumber}
+                        </span>
+                        {c.source === 'Candidate' && !c.appraisalId && (
+                          <span
+                            className={clsx(
+                              TAG,
+                              'ml-1.5 bg-violet-50 text-violet-700 border-violet-200',
+                            )}
+                          >
+                            {t('detail.group.notInCas')}
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2">
-                        <SourceBadge source={c.source} />
+                        <SourceTag row={c} />
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-600">{c.customerName ?? '-'}</td>
-                      <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                        {formatLocaleDate(c.appraisalDate, i18n.language)}
+                      <td className="px-3 py-2">{c.customerName ?? '—'}</td>
+                      <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                        {c.distanceKm != null
+                          ? `${c.distanceKm.toFixed(2)} ${t('detail.group.km')}`
+                          : '—'}
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-600 tabular-nums whitespace-nowrap">
-                        {c.distanceKm != null ? c.distanceKm.toFixed(2) : '-'}
+                      <td className="px-3 py-2 whitespace-nowrap tabular-nums">
+                        {fd(c.appraisalDate)}
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                        {formatDateDiff(c.appraisalDate, TODAY_ISO, durationLabels)}
+                      <td className="px-3 py-2">
+                        {c.isInProgress ? '—' : <DueCell appraisalDate={c.appraisalDate} />}
                       </td>
-                      <td className="px-3 py-2 text-xs text-gray-600 whitespace-nowrap">
-                        {formatDateDiff(TODAY_ISO, addYearsISO(c.appraisalDate, 5), durationLabels)}
-                      </td>
-                      <td className="px-3 py-2 w-8">
-                        {canDelete ? (
+                      <td className="px-3 py-2 text-right">
+                        {c.candidateId && !c.isInProgress && (
                           <button
-                            onClick={() => setDeleteTarget(c.candidateId!)}
-                            className="opacity-0 group-hover:opacity-100 flex items-center justify-center size-6 rounded hover:bg-red-50 text-gray-300 hover:text-red-500 transition-colors"
-                            title={t('detail.group.deleteCandidate')}
+                            type="button"
+                            onClick={() =>
+                              setSkipTarget({ candidateId: c.candidateId!, token: rowToken(c) })
+                            }
+                            className="px-2 py-1 text-[11px] text-gray-500 rounded-md border border-transparent hover:border-red-200 hover:bg-red-50 hover:text-red-700 whitespace-nowrap"
                           >
-                            <Icon style="solid" name="trash" className="size-3" />
-                          </button>
-                        ) : (
-                          // InSystem rows cannot be deleted — render a disabled placeholder
-                          <button
-                            disabled
-                            className="opacity-0 flex items-center justify-center size-6 rounded text-gray-200 cursor-not-allowed"
-                            title={t('detail.group.cannotDelete')}
-                          >
-                            <Icon style="solid" name="trash" className="size-3" />
+                            {t('detail.group.deleteCandidate')}
                           </button>
                         )}
                       </td>
@@ -838,11 +1091,30 @@ function ReappraisalDetailPage() {
           </table>
         </div>
 
-        {/* Footer: initiate button info */}
-        <div className="shrink-0 px-4 py-2.5 border-t border-gray-100 bg-gray-50 flex items-center justify-between">
-          <span className="text-xs text-gray-500">
-            {t('detail.group.footer', { count: totalSelected })}
+        {/* Action bar — the selection and the action that uses it, together */}
+        <div className="sticky bottom-0 shrink-0 px-4 py-2.5 border-t border-gray-200 bg-gray-50/90 backdrop-blur rounded-b-lg flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-gray-600">
+            {isBlocked
+              ? detail.status === 'Deleted'
+                ? t('detail.actionBar.restoreFirst')
+                : detail.status === 'Consumed'
+                  ? t('detail.actionBar.processed')
+                  : t('detail.actionBar.blocked')
+              : t('detail.actionBar.summary', { total: totalSelected, nearby: totalSelected - 1 })}
           </span>
+          <Button
+            variant="primary"
+            size="sm"
+            disabled={isBlocked}
+            onClick={isBlocked ? undefined : () => setInitiateConfirmOpen(true)}
+          >
+            {t('actions.initiate')}
+            {!isBlocked && (
+              <span className="ml-1.5 rounded-full bg-white/25 px-1.5 text-[10px] tabular-nums">
+                {totalSelected}
+              </span>
+            )}
+          </Button>
         </div>
       </section>
 
@@ -850,37 +1122,41 @@ function ReappraisalDetailPage() {
       <InitiateConfirmModal
         open={initiateConfirmOpen}
         isPending={initiateMutation.isPending}
-        selectedCount={totalSelected}
+        books={[
+          {
+            bookNumber: detail.oldAppraisalReportNumber,
+            hasPrior: detail.appraisalId != null,
+            note: detail.isBlockUnit ? t('detail.initiateModal.fromUnit') : undefined,
+          },
+          ...selectedRows.map(r => ({
+            bookNumber: r.oldAppraisalReportNumber,
+            hasPrior: r.appraisalId != null,
+          })),
+        ]}
         onConfirm={handleInitiateConfirm}
         onClose={() => setInitiateConfirmOpen(false)}
       />
 
-      {successResult && (
-        <InitiateSuccessModal
-          open={successModalOpen}
-          groupNumber={successResult.groupNumber}
-          createdCount={successResult.createdCount}
-          skipped={successResult.skipped}
-          onClose={() => {
-            setSuccessModalOpen(false);
-            navigate('/reappraisal');
-          }}
-        />
-      )}
-
-      <DeleteConfirmModal
-        open={!!deleteTarget}
-        isPending={deleteMutation.isPending}
-        onConfirm={handleDeleteConfirm}
-        onClose={() => setDeleteTarget(null)}
+      <InitiateResultModal
+        result={result}
+        onClose={() => {
+          setResult(null);
+          navigate('/reappraisal');
+        }}
       />
 
-      {/* ── Map drawer: pins the main appraisal + nearby group candidates ── */}
-      {detail.latitude != null && detail.longitude != null && (
+      <SkipConfirmModal
+        open={!!skipTarget}
+        isPending={deleteMutation.isPending}
+        onConfirm={handleSkipConfirm}
+        onClose={() => setSkipTarget(null)}
+      />
+
+      {hasCoords && (
         <HistorySearchMapDrawer
           isOpen={mapOpen}
           onClose={() => setMapOpen(false)}
-          initialCenter={{ lat: detail.latitude, lon: detail.longitude }}
+          initialCenter={{ lat: detail.latitude!, lon: detail.longitude! }}
           initialRadiusKm={1}
           appraisingCollateralPins={groupPins}
           primaryAppraisalNumber={detail.oldAppraisalReportNumber}

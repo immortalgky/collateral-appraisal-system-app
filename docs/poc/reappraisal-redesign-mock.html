@@ -1,0 +1,724 @@
+<meta charset="utf-8" />
+<title>Reappraisal Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* POC ONLY — standalone mock with sample data. No app code is touched.
+     Layout: the app's own shell (SectionHeader row, one white table card), denser columns,
+     due-date first; detail = due strip, grouped facts, group table with an action bar.
+     Single light theme on purpose: the app has no dark mode. */
+  :root {
+    --bg: #f3f6f6;
+    --surface: #ffffff;
+    --ink: #1f2937;
+    --ink-2: #6b7280;
+    --ink-3: #9ca3af;
+    --line: #e5e7eb;
+    --line-soft: #f1f3f3;
+    --head: #f9fafb;
+    --primary: #0d9488;
+    --primary-700: #0f766e;
+    --primary-50: #f0fdfa;
+    --primary-100: #ccfbf1;
+    --crit: #b91c1c;   --crit-bg: #fef2f2;  --crit-line: #fecaca;
+    --warn: #b45309;   --warn-bg: #fffbeb;  --warn-line: #fde68a;
+    --note: #0369a1;   --note-bg: #f0f9ff;  --note-line: #bae6fd;
+    --legacy: #6d28d9; --legacy-bg: #f5f3ff; --legacy-line: #ddd6fe;
+    --mock: #334155;   --mock-bg: #e2e8f0;
+    --be: #9a3412;     --be-bg: #ffedd5;
+    --font: 'Roboto', 'Sarabun', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 12px; }
+  button { font: inherit; color: inherit; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  /* ── Mock chrome (not part of the design) ── */
+  .mockbar { background: var(--mock-bg); color: var(--mock); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; border-bottom: 1px solid #cbd5e1; }
+  .mockbar b { font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
+  .mockbar .grp { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+  .mockbar .grp span { font-size: 11px; color: #64748b; margin-right: 2px; }
+  .mockbar button { border: 1px solid #cbd5e1; background: #fff; border-radius: 999px; padding: 4px 11px; font-size: 11.5px; cursor: pointer; }
+  .mockbar button[aria-pressed='true'] { background: var(--mock); color: #fff; border-color: var(--mock); }
+  .shell { padding: 16px; max-width: 1440px; margin: 0 auto; display: grid; gap: 14px; }
+
+  /* ── Change notes (not part of the design) ── */
+  .notes { background: #fff; border: 1px dashed #94a3b8; border-radius: 8px; padding: 12px 14px; }
+  .notes h4 { margin: 0 0 6px; font-size: 12px; color: var(--mock); }
+  .notes ol { margin: 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.55; color: #334155; }
+  .be { display: inline-block; font-size: 10px; font-weight: 600; padding: 0 6px; border-radius: 4px; background: var(--be-bg); color: var(--be); margin-left: 4px; vertical-align: 1px; }
+  .q { display: inline-block; font-size: 10px; font-weight: 600; padding: 0 6px; border-radius: 4px; background: var(--note-bg); color: var(--note); margin-left: 4px; vertical-align: 1px; }
+
+  /* ── Page header (= SectionHeader + right-side controls) ── */
+  .phead { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 16px; }
+  .phead h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .phead p { margin: 2px 0 0; font-size: 12px; color: var(--ink-2); }
+  .ctrls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .seg { display: inline-flex; border: 1px solid var(--line); background: var(--head); border-radius: 8px; padding: 2px; }
+  .seg button { border: 0; background: none; padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 500; color: var(--ink-2); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+  .seg button[aria-pressed='true'] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(15,23,42,.08); }
+  .seg .cnt { font-size: 10.5px; color: var(--ink-3); }
+  .seg button[aria-pressed='true'] .cnt { color: var(--primary-700); }
+  .search { position: relative; }
+  .search input { width: 260px; max-width: 70vw; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 10px 7px 28px; font: inherit; font-size: 12px; }
+  .search input:focus, .field input:focus, .field select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,148,136,.15); }
+  .search svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; color: var(--ink-3); }
+  .btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--ink); white-space: nowrap; }
+  .btn:hover { border-color: #d1d5db; background: #fafafa; }
+  .btn:focus-visible, .seg button:focus-visible, .chip-btn:focus-visible, .ck:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+  .btn.primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+  .btn.primary:hover { background: var(--primary-700); }
+  .btn.primary[disabled] { background: #99d5cf; border-color: #99d5cf; cursor: not-allowed; }
+  .btn.danger { background: #dc2626; border-color: #dc2626; color: #fff; }
+  .btn.danger:hover { background: #b91c1c; }
+  .gpin { width: 13px; height: 13px; flex-shrink: 0; }
+  .btn .badge { background: var(--primary); color: #fff; border-radius: 999px; font-size: 10px; min-width: 16px; height: 16px; display: inline-grid; place-items: center; padding: 0 4px; }
+  .btn.primary .badge { background: rgba(255,255,255,.25); }
+
+  /* ── Quick filters ── */
+  .quick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .chip-btn { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 10px; font-size: 11.5px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; color: var(--ink-2); }
+  .chip-btn b { font-weight: 600; color: var(--ink); }
+  .chip-btn[aria-pressed='true'] { border-color: var(--primary); background: var(--primary-50); color: var(--primary-700); }
+  .chip-btn[aria-pressed='true'] b { color: var(--primary-700); }
+  .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+
+  /* ── Table card ── */
+  .card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 1px 2px rgba(15,23,42,.04); min-width: 0; }
+  .tscroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--head); border-bottom: 1px solid var(--line); text-align: left; font-weight: 500; font-size: 11.5px; color: var(--ink-2); padding: 9px 12px; white-space: nowrap; position: sticky; top: 0; }
+  thead th.sorted { background: var(--primary-50); }
+  thead th .arr { color: var(--primary); }
+  thead th .arr { font-size: 9px; margin-left: 3px; }
+  tbody td { padding: 8px 12px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr.click { cursor: pointer; }
+  tbody tr.click:hover { background: #f9fbfb; }
+  tbody tr.busy td { background: #fcfcfb; }
+  .two { display: grid; gap: 1px; min-width: 0; }
+  .two .a { font-weight: 500; color: var(--ink); white-space: nowrap; }
+  .book, .two .a.book { color: var(--primary); }
+  .two .b { font-size: 11px; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
+  .book { display: inline-flex; gap: 6px; align-items: center; }
+  .tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
+  .tag.legacy { color: var(--legacy); background: var(--legacy-bg); border-color: var(--legacy-line); }
+  .tag.unknown { color: var(--crit); background: var(--crit-bg); border-color: var(--crit-line); }
+  .tag.main { color: var(--primary-700); background: var(--primary-50); border-color: var(--primary-100); }
+  .tag.as400 { color: var(--warn); background: var(--warn-bg); border-color: var(--warn-line); }
+  .tag.cas { color: var(--note); background: var(--note-bg); border-color: var(--note-line); }
+  .tag.unit { color: #0f766e; background: #f0fdfa; border-color: #99f6e4; }
+  .b.miss { color: var(--warn); }
+  .fill { display: grid; grid-template-columns: max-content minmax(0,1fr) max-content; gap: 6px 14px; margin: 0; }
+  .fill dt { color: var(--ink-2); white-space: nowrap; }
+  .fill dd { margin: 0; font-weight: 500; }
+  .src { font-size: 10px; color: var(--ink-3); white-space: nowrap; text-align: right; }
+  .manual { color: var(--warn); font-weight: 400; }
+  .rt { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+  .rt.s3 { background: var(--crit-bg); color: var(--crit); }
+  .rt.s2 { background: var(--warn-bg); color: var(--warn); }
+  .rt.s1 { background: #f3f4f6; color: #4b5563; }
+  .due { display: grid; gap: 1px; white-space: nowrap; }
+  .due .when { font-weight: 500; }
+  .due .left { font-size: 11px; display: inline-flex; align-items: center; gap: 5px; }
+  .u-crit { color: var(--crit); } .u-crit-bg { background: var(--crit); }
+  .u-warn { color: var(--warn); } .u-warn-bg { background: #f59e0b; }
+  .u-note { color: var(--note); } .u-note-bg { background: #38bdf8; }
+  .u-ok { color: var(--ink-2); } .u-ok-bg { background: #cbd5e1; }
+  .prog { display: grid; gap: 1px; }
+  .prog .s { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; white-space: nowrap; }
+  .prog .l { font-size: 11px; color: var(--ink-2); white-space: nowrap; }
+  .prog a { color: var(--primary-700); text-decoration: none; }
+  .prog a:hover { text-decoration: underline; }
+  .muted { color: var(--ink-3); }
+  .chev { color: #d1d5db; }
+  tr.click:hover .chev { color: var(--primary); }
+  .pager { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 11.5px; flex-wrap: wrap; gap: 8px; }
+
+  /* ── Detail ── */
+  .back { width: 28px; height: 28px; border: 1px solid var(--line); border-radius: 6px; display: grid; place-items: center; background: var(--surface); cursor: pointer; flex-shrink: 0; }
+  .titlewrap { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+  .titleline { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .banner { border-radius: 8px; padding: 10px 14px; display: flex; gap: 10px; align-items: flex-start; border: 1px solid; }
+  .banner.warn { background: var(--warn-bg); border-color: var(--warn-line); color: #78350f; }
+  .banner.legacy { background: var(--legacy-bg); border-color: var(--legacy-line); color: #4c1d95; }
+  .banner.skip { background: var(--crit-bg); border-color: var(--crit-line); color: #7f1d1d; }
+  .banner .t { font-weight: 600; margin-bottom: 2px; }
+  .banner .body { flex: 1; min-width: 0; line-height: 1.55; }
+
+  .duestrip { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+  .stat { padding: 12px 16px; border-left: 1px solid var(--line-soft); }
+  .stat:first-child { border-left: 0; }
+  .stat .k { font-size: 11px; color: var(--ink-2); }
+  .stat .v { font-size: 15px; font-weight: 600; margin-top: 3px; white-space: nowrap; }
+  .stat .s { font-size: 11px; color: var(--ink-3); margin-top: 1px; }
+
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 12px; }
+  .facts .card { padding: 12px 14px; }
+  .facts h3 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: var(--ink); display: flex; justify-content: space-between; gap: 8px; }
+  .facts h3 small { font-weight: 400; color: var(--ink-3); font-size: 11px; }
+  dl.kv { margin: 0; display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 14px; }
+  dl.kv dt { color: var(--ink-2); white-space: nowrap; }
+  dl.kv dd { margin: 0; font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+  dl.kv dd.long { font-weight: 400; line-height: 1.5; }
+
+  .grouphead { padding: 12px 14px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; border-bottom: 1px solid var(--line); }
+  .grouphead h3 { margin: 0; font-size: 12px; font-weight: 600; }
+  .grouphead p { margin: 2px 0 0; font-size: 11px; color: var(--ink-2); }
+  .ck { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #cbd5e1; background: #fff; display: grid; place-items: center; cursor: pointer; padding: 0; }
+  .ck[aria-checked='true'] { background: var(--primary); border-color: var(--primary); }
+  .ck[aria-checked='true']::after { content: ''; width: 8px; height: 4px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); }
+  .ck[disabled] { opacity: .45; cursor: default; }
+  tr.sel td { background: #f6fcfb; }
+  tr.blocked td { color: var(--ink-3); }
+  .rowact { border: 1px solid transparent; background: none; color: var(--ink-2); font-size: 11px; padding: 3px 8px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+  .rowact:hover { border-color: var(--crit-line); color: var(--crit); background: var(--crit-bg); }
+  .actionbar { position: sticky; bottom: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 10px 14px; border-top: 1px solid var(--line); background: #fbfdfd; border-radius: 0 0 8px 8px; }
+  .actionbar .sum { color: var(--ink-2); }
+  .actionbar .sum b { color: var(--ink); }
+
+  /* ── Modal ── */
+  .scrim { position: fixed; inset: 0; background: rgba(15,23,42,.35); display: grid; place-items: center; padding: 16px; z-index: 50; }
+  .modal { background: var(--surface); border-radius: 10px; width: min(560px, 100%); max-height: calc(100% - 32px); overflow: auto; box-shadow: 0 20px 50px rgba(15,23,42,.25); }
+  .modal.wide { width: min(640px, 100%); }
+  .modal header { padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .modal header h3 { margin: 0; font-size: 13px; font-weight: 600; }
+  .modal .x { border: 0; background: none; cursor: pointer; color: var(--ink-3); font-size: 16px; }
+  .modal .mb { padding: 14px 16px; display: grid; gap: 14px; }
+  .modal footer { padding: 12px 16px; border-top: 1px solid var(--line); display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap; }
+  .lst { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+  .lst .it { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 8px 12px; border-bottom: 1px solid var(--line-soft); align-items: center; }
+  .lst .it:last-child { border-bottom: 0; }
+  .lst .it .n { font-weight: 500; }
+  .lst .it .d { grid-column: 1 / -1; font-size: 11px; color: var(--ink-2); }
+  .callout { background: var(--primary-50); border: 1px solid var(--primary-100); color: #134e4a; border-radius: 8px; padding: 9px 12px; line-height: 1.55; }
+  .ok { display: flex; gap: 12px; align-items: center; }
+  .ok .ic { width: 36px; height: 36px; border-radius: 50%; background: var(--primary-50); color: var(--primary); display: grid; place-items: center; font-weight: 700; flex-shrink: 0; }
+  .ok .h { font-weight: 600; font-size: 13px; }
+  .ok .s { color: var(--ink-2); margin-top: 2px; }
+  .sec { display: grid; gap: 6px; }
+  .sec .lab { font-size: 11px; font-weight: 600; color: var(--ink-2); display: flex; justify-content: space-between; }
+  .sec .lab button { border: 0; background: none; color: var(--ink-3); font-size: 11px; cursor: pointer; }
+  .opts { display: flex; flex-wrap: wrap; gap: 6px; }
+  .row2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
+  .field { display: grid; gap: 4px; }
+  .field label { font-size: 11px; color: #374151; font-weight: 500; }
+  .field input, .field select { border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 7px 10px; font: inherit; font-size: 12px; width: 100%; }
+  .hint { font-size: 11px; color: var(--ink-3); }
+
+  @media (max-width: 720px) {
+    .duestrip { grid-template-columns: 1fr; }
+    .search input { width: 100%; }
+    .search { flex: 1 1 100%; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="mockbar" role="toolbar" aria-label="mock controls">
+  <b>Mock</b>
+  <div class="grp"><span>รายการ:</span>
+    <button id="v-list" data-view="list" aria-pressed="true">รอดำเนินการ</button>
+    <button id="v-skipped" data-view="skipped" aria-pressed="false">ไม่ทบทวนรอบนี้</button>
+    <button id="v-reviewed" data-view="reviewed" aria-pressed="false">ดำเนินการแล้ว (ใหม่)</button>
+    <button id="v-filter" data-view="filter" aria-pressed="false">ตัวกรอง</button>
+  </div>
+  <div class="grp"><span>รายละเอียด:</span>
+    <button id="v-d-normal" data-view="d-normal" aria-pressed="false">ปกติ</button>
+    <button id="v-d-busy" data-view="d-busy" aria-pressed="false">กำลังดำเนินการ</button>
+    <button id="v-d-legacy" data-view="d-legacy" aria-pressed="false">เล่ม AS400 (99A)</button>
+    <button id="v-d-skip" data-view="d-skip" aria-pressed="false">ไม่ทบทวนรอบนี้</button>
+    <button id="v-d-reviewed" data-view="d-reviewed" aria-pressed="false">ดำเนินการแล้ว</button>
+  </div>
+  <div class="grp"><span>ยูนิตโครงการ (ใหม่):</span>
+    <button id="v-d-unit" data-view="d-unit" aria-pressed="false">จับคู่จากชื่อ</button>
+    <button id="v-d-unit-ticket" data-view="d-unit-ticket" aria-pressed="false">เลขตั๋ว</button>
+    <button id="v-d-unit-miss" data-view="d-unit-miss" aria-pressed="false">หายูนิตไม่เจอ</button>
+  </div>
+  <div class="grp"><span>หลังกดเริ่ม:</span>
+    <button id="v-result" data-view="result" aria-pressed="false">ผลลัพธ์</button>
+  </div>
+</div>
+
+<div class="shell" id="app"></div>
+<div id="modal-root"></div>
+
+<script>
+(() => {
+  // ── Sample data (examples only; not real customers) ────────────────────────
+  const TODAY = new Date(2026, 9, 1); // 1 ต.ค. 2569
+  const D = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  const addYears = (d, n) => new Date(d.getFullYear() + n, d.getMonth(), d.getDate());
+  const fmt = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { day: 'numeric', month: 'short', year: 'numeric' });
+  const fmtMonth = new Intl.DateTimeFormat('th-TH-u-ca-buddhist', { month: 'short', year: '2-digit' });
+  const pad = n => String(n).padStart(2, '0');
+  const fd = d => d ? `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()}` : '—'; // dd/MM/yyyy like the app
+  const money = n => n == null ? '—' : n.toLocaleString('th-TH');
+  const days = (a, b) => Math.round((b - a) / 86400000);
+
+  function ymd(from, to) {
+    let y = to.getFullYear() - from.getFullYear(), m = to.getMonth() - from.getMonth(), d = to.getDate() - from.getDate();
+    if (d < 0) { m--; d += new Date(to.getFullYear(), to.getMonth(), 0).getDate(); }
+    if (m < 0) { y--; m += 12; }
+    return { y, m, d };
+  }
+  function remainText(due) {
+    const n = days(TODAY, due);
+    if (n < 0) return `เกินกำหนด ${-n} วัน`;
+    if (n <= 90) return `อีก ${n} วัน`;
+    const { y, m } = ymd(TODAY, due);
+    return 'อีก ' + [y ? `${y} ปี` : '', m ? `${m} เดือน` : ''].filter(Boolean).join(' ');
+  }
+  function urgency(due) {
+    const n = days(TODAY, due);
+    return n < 0 ? 'crit' : n <= 90 ? 'warn' : n <= 365 ? 'note' : 'ok';
+  }
+  const RT = { '1': ['ทบทวนปกติ', 's1'], '2': ['ก่อน Stage 3', 's2'], '3': ['Stage 3', 's3'] };
+
+  const rows = [
+    { id: 'c1', book: '64A01235', coll: 'ที่ดินพร้อมบ้านเดี่ยว 2 ชั้น · ต.บางพูด', cif: '69000021', cust: 'นางสาวพิมพ์ชนก ศรีวงศ์', rt: '2', appr: '2021-08-15', src: 'CAS', first: '2026-03-09' },
+    { id: 'c2', book: '99A00418', coll: 'อาคารพาณิชย์ 4 ชั้น 2 คูหา', cif: '69000019', cust: 'บริษัท ศรีสยามค้าวัสดุ จำกัด', rt: '1', appr: '2021-11-20', src: 'AS400Legacy', first: '2026-06-09' },
+    { id: 'c3', book: 'B62A00645', coll: 'ห้องชุด โครงการ เดอะ ริเวอร์ไซด์', cif: '69000020', cust: 'นายธนากร มั่นคง', rt: '3', appr: '2022-03-10', src: 'Unknown', first: '2026-06-09' },
+    { id: 'c4', book: '69000085', coll: 'ทาวน์เฮาส์ 3 ชั้น · ม.พฤกษา 12', cif: '69000008', cust: 'นายสมชาย ใจดี', rt: '3', appr: '2026-04-23', src: 'CAS', first: '2026-06-09', busy: { kind: 'appraisal', no: '69003749', group: '69G000012' } },
+    { id: 'c5', book: '69000098', coll: 'โรงงานพร้อมที่ดิน · นิคมบางปู', cif: '69000004', cust: 'บริษัท ไทยพลาสติกแพ็ค จำกัด', rt: '2', appr: '2026-04-02', src: 'CAS', first: '2026-06-09', busy: { kind: 'request', no: 'R69000211' } },
+    { id: 'c6', book: '69000072', coll: 'ที่ดินพร้อมบ้านเดี่ยว 2 ชั้น · ต.คลองหนึ่ง', cif: '69000014', cust: 'นางวิไลวรรณ ทองดี', rt: '3', appr: '2026-04-02', src: 'CAS', first: '2026-06-09' },
+    { id: 'c7', book: '69000097', coll: 'ที่ดินเปล่า 1-2-40 ไร่', cif: '69000005', cust: 'นายปกรณ์ เกษมสุข', rt: '3', appr: '2026-04-02', src: 'CAS', first: '2026-06-09' },
+    { id: 'c8', book: '69000068', coll: 'บ้านแฝด 2 ชั้น · ม.ชัยพฤกษ์', cif: '69000011', cust: 'นายอนุชา แสงทอง', rt: '3', appr: '2026-04-22', src: 'CAS', first: '2026-06-09' },
+    { id: 'c9', book: '69000063', coll: 'อาคารสำนักงาน 5 ชั้น', cif: '69000016', cust: 'บริษัท เอ็นพีเอ็ม โลจิสติกส์ จำกัด', rt: '2', appr: '2026-04-02', src: 'CAS', first: '2026-06-09' },
+    { id: 'c10', book: '69000066', coll: 'ห้องชุด โครงการ ไลฟ์ สาทร', cif: '69000015', cust: 'นางสาวกมลชนก วัฒนา', rt: '1', appr: '2026-04-02', src: 'CAS', first: '2026-06-09' },
+    { id: 'c11', book: '69000110', coll: 'ทาวน์เฮาส์ 2 ชั้น · ม.บ้านฟ้า', cif: '69000002', cust: 'นายวีระพงษ์ สุขใจ', rt: '3', appr: '2026-05-06', src: 'CAS', first: '2026-06-09' },
+    { id: 'c12', book: '69000139', coll: 'โกดังสินค้าพร้อมที่ดิน', cif: '69000001', cust: 'บริษัท ปทุมคลังสินค้า จำกัด', rt: '2', appr: '2026-06-04', src: 'CAS', first: '2026-06-09', busy: { kind: 'appraisal', no: '69003747', group: '69G000009' } },
+    { id: 'u1', book: 'B69105468', coll: 'CONDO.129/318 ห้องชุดเลขที่ 129/318', cif: '69000041', cust: 'นางสาวสุนิสา แก้วใส', rt: '1', appr: '2026-09-16', src: 'CAS', first: '2026-09-08', unit: { how: 'name', label: 'ห้อง 129/318 · ชั้น 7 · อาคาร B' }, go: 'd-unit' },
+    { id: 'u2', book: '69U00004', coll: 'ฉ.26892 ร.5036', cif: '69000042', cust: 'นายกิตติ ศรีสุข', rt: '1', appr: '2026-05-20', src: 'CAS', first: '2026-09-08', unit: { how: 'ticket', label: 'บ้านเลขที่ 102 · แปลง P-002' }, go: 'd-unit-ticket' },
+    { id: 'u3', book: '69105469', coll: 'ห้องชุด โครงการ ไลฟ์ อโศก', cif: '69000043', cust: 'นายภูมิ พงษ์ไทย', rt: '2', appr: '2026-09-12', src: 'CAS', first: '2026-09-08', unit: { how: 'miss' }, go: 'd-unit-miss' },
+  ].map(r => ({ ...r, apprD: D(r.appr), due: addYears(D(r.appr), 5), firstD: D(r.first) }));
+
+  const skipped = [
+    { id: 's1', book: '69000103', coll: 'บ้านเดี่ยว 1 ชั้น · ต.ลาดสวาย', cif: '69000003', cust: 'นายประเสริฐ บุญมา', rt: '1', appr: '2026-04-02', src: 'CAS', last: '2026-09-08' },
+    { id: 's2', book: '99A00377', coll: 'ที่ดินเปล่า 3-0-12 ไร่', cif: '69000031', cust: 'นายเกรียงไกร ศักดิ์ดี', rt: '1', appr: '2022-01-18', src: 'AS400Legacy', last: '2026-09-08' },
+    { id: 's3', book: '69000096', coll: 'ห้องชุด โครงการ ศุภาลัย ปาร์ค', cif: '69000006', cust: 'นางสาวอรอุมา ใจเย็น', rt: '1', appr: '2026-05-05', src: 'CAS', last: '2026-09-08' },
+  ].map(r => ({ ...r, apprD: D(r.appr), due: addYears(D(r.appr), 5), lastD: D(r.last) }));
+
+  // ── Shared bits ────────────────────────────────────────────────────────────
+  const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const srcTag = s => s === 'AS400Legacy' ? '<span class="tag legacy">เล่ม AS400</span>'
+    : s === 'Unknown' ? '<span class="tag unknown">ไม่พบเล่มเดิม</span>' : '';
+  const rtChip = c => `<span class="rt ${RT[c][1]}">${RT[c][0]}</span>`;
+  const searchIcon = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7" cy="7" r="5"/><path d="M11 11l3.5 3.5"/></svg>';
+  function dueCell(r) {
+    const u = urgency(r.due);
+    return `<div class="due"><span class="when num">${fd(r.due)}</span>
+      <span class="left u-${u} num">${u === 'ok' ? '' : `<span class="dot u-${u}-bg"></span>`}${remainText(r.due)}</span></div>`;
+  }
+  function progCell(r) {
+    if (!r.busy) return '<span class="muted">พร้อมเริ่ม</span>';
+    if (r.busy.kind === 'appraisal')
+      return `<div class="prog"><span class="s u-warn"><span class="dot u-warn-bg"></span>กำลังประเมิน</span>
+        <span class="l">→ <a href="#">${r.busy.no}</a> · กลุ่ม ${r.busy.group}</span></div>`;
+    return `<div class="prog"><span class="s u-note"><span class="dot u-note-bg"></span>รอกดส่งคำขอ</span>
+      <span class="l">→ <a href="#">${r.busy.no}</a> · ฉบับร่าง</span></div>`;
+  }
+  const notes = (title, items) => `<div class="notes"><h4>${title}</h4><ol>${items.map(i => `<li>${i}</li>`).join('')}</ol></div>`;
+  const BE = '<span class="be">ต้องเพิ่มที่ API</span>';
+  const Q = '<span class="q">รอตัดสิน</span>';
+
+  function header(tab, filterCount = 0) {
+    return `<div class="phead">
+      <div><h2>การทบทวนตามรอบ (AS400)</h2><p>ตรวจสอบและเริ่มคำขอทบทวนสำหรับหลักประกันที่คัดเลือก</p></div>
+      <div class="ctrls">
+        <div class="seg" role="group" aria-label="สถานะ">
+          <button data-go="list" aria-pressed="${tab === 'Pending'}">รอดำเนินการ <span class="cnt num">${rows.length}</span></button>
+          <button data-go="skipped" aria-pressed="${tab === 'Deleted'}">ไม่ทบทวนรอบนี้ <span class="cnt num">${skipped.length}</span></button>
+          <button data-go="reviewed" aria-pressed="${tab === 'Consumed'}">ดำเนินการแล้ว <span class="cnt num">${reviewed.length}</span></button>
+        </div>
+        <label class="search">${searchIcon}<input id="q" placeholder="ค้นหมายเลขประเมิน, CIF หรือชื่อลูกค้า" aria-label="ค้นหา" /></label>
+        <button class="btn" data-go="filter">ตัวกรอง${filterCount ? ` <span class="badge num">${filterCount}</span>` : ''}</button>
+      </div></div>`;
+  }
+
+  // ── Views ──────────────────────────────────────────────────────────────────
+  let quick = 'all';
+  function listView(opts = {}) {
+    const counts = {
+      all: rows.length,
+      overdue: rows.filter(r => days(TODAY, r.due) < 0).length,
+      soon: rows.filter(r => { const n = days(TODAY, r.due); return n >= 0 && n <= 90; }).length,
+      busy: rows.filter(r => r.busy).length,
+      nobook: rows.filter(r => r.src !== 'CAS').length,
+    };
+    const shown = rows.filter(r => quick === 'all' ? true
+      : quick === 'overdue' ? days(TODAY, r.due) < 0
+      : quick === 'soon' ? (n => n >= 0 && n <= 90)(days(TODAY, r.due))
+      : quick === 'busy' ? !!r.busy : r.src !== 'CAS').sort((a, b) => a.due - b.due);
+    const qb = (k, label, dot) => `<button class="chip-btn" data-quick="${k}" aria-pressed="${quick === k}">${dot ? `<span class="dot ${dot}"></span>` : ''}${label} <b class="num">${counts[k]}</b></button>`;
+    return header('Pending', opts.filterCount) + `
+      <div class="quick">
+        ${qb('all', 'ทั้งหมด')}${qb('overdue', 'เกินกำหนด', 'u-crit-bg')}${qb('soon', 'ครบใน 90 วัน', 'u-warn-bg')}${qb('busy', 'กำลังดำเนินการ', 'u-note-bg')}${qb('nobook', 'เล่มไม่อยู่ใน CAS', '')}
+      </div>
+      <div class="card"><div class="tscroll"><table>
+        <thead><tr>
+          <th>หมายเลขประเมิน / หลักประกัน</th><th>ลูกค้า</th><th>ประเภท</th><th>ประเมินล่าสุด</th>
+          <th class="sorted">ครบกำหนดทบทวน <span class="arr">▲</span></th><th>ความคืบหน้า</th><th>เข้าคิวตั้งแต่</th><th></th>
+        </tr></thead>
+        <tbody>${shown.map(r => `
+          <tr class="click ${r.busy ? 'busy' : ''}" data-go="${r.go ?? (r.busy ? 'd-busy' : r.src === 'AS400Legacy' ? 'd-legacy' : 'd-normal')}">
+            <td><div class="two"><span class="a book num">${r.book} ${srcTag(r.src)}${r.unit ? ' <span class="tag unit">ยูนิตโครงการ</span>' : ''}</span>${r.unit
+              ? (r.unit.label ? `<span class="b">${r.unit.label}</span>` : '<span class="b miss">หายูนิตไม่เจอ — กรอกห้อง/แปลงเอง</span>')
+              : `<span class="b">${esc(r.coll)}</span>`}</div></td>
+            <td><div class="two"><span class="a">${esc(r.cust)}</span><span class="b num">CIF ${r.cif}</span></div></td>
+            <td>${rtChip(r.rt)}</td>
+            <td class="num">${fd(r.apprD)}</td>
+            <td>${dueCell(r)}</td>
+            <td>${progCell(r)}</td>
+            <td class="num muted">${fmtMonth.format(r.firstD)}</td>
+            <td class="chev">›</td>
+          </tr>`).join('') || `<tr><td colspan="8" style="padding:40px;text-align:center" class="muted">ไม่มีรายการในกลุ่มนี้</td></tr>`}
+        </tbody></table></div>
+        <div class="pager"><span class="num">1–${shown.length} จาก ${shown.length}</span><span>‹ 1 ›</span></div>
+      </div>` + notes('เปลี่ยนอะไรจากหน้าเดิม', [
+        'ตัดคอลัมน์ที่ค่าเหมือนกันทุกแถว: <b>ช่องทาง</b> (SIBS เสมอ) และ <b>เล่มเดิม</b> (ส่วนใหญ่เป็น "ใบประเมินในระบบ") — แสดงป้ายเฉพาะเล่มที่ <i>ไม่</i> อยู่ใน CAS ข้างเลขเล่ม',
+        'รวมคอลัมน์เป็นสองบรรทัด: เลขเล่ม + ชื่อหลักประกัน, ชื่อลูกค้า + CIF → 11 คอลัมน์เหลือ 8 และหาแถวจากทรัพย์ได้',
+        '<b>วันที่เหลือ 1,644</b> → <b>วันครบกำหนด + "อีก 4 ปี 6 เดือน"</b> ตัวหนังสือมีสีและจุดตามความเร่ง (เกินกำหนด/≤90 วัน/≤1 ปี) ไม่มีแถบ เรียงใกล้ครบขึ้นก่อนเป็นค่าเริ่มต้น',
+        '<b>สถานะ</b> ในแท็บ "รอดำเนินการ" เป็น "รอดำเนินการ" ทุกแถวอยู่แล้ว → เปลี่ยนเป็น <b>ความคืบหน้า</b>: แสดงเฉพาะที่กำลังประเมิน (ลิงก์เลขใบ) หรือคำขอที่ยังไม่กดส่ง',
+        'แท็บย้ายไปขวาบนแถวเดียวกับหัวหน้า (ยังเป็น SectionHeader เหมือนหน้าอื่น) และมีจำนวนต่อแท็บ' + BE,
+        'ช่องค้นหาเดียวสำหรับเลขเล่ม/CIF/ชื่อ ไม่ต้องเปิดหน้าต่างตัวกรอง' + BE + ' (ตอนนี้ API แยก 3 พารามิเตอร์)',
+        'ปุ่มกรองด่วน (เกินกำหนด / ครบใน 90 วัน / กำลังดำเนินการ / เล่มไม่อยู่ใน CAS) พร้อมจำนวน — สองอันแรกใช้พารามิเตอร์ remainingDay ที่มีอยู่ได้ สองอันหลังและจำนวน' + BE,
+        '"เข้าคิวตั้งแต่" ย่อเป็นเดือน/ปี (มิ.ย. 69) — บอกว่าเล่มค้างอยู่ในไฟล์ AS400 มานานแค่ไหน',
+      ]);
+  }
+
+  function skippedView() {
+    return header('Deleted') + `
+      <div class="card"><div class="tscroll"><table>
+        <thead><tr><th>หมายเลขประเมิน / หลักประกัน</th><th>ลูกค้า</th><th>ประเภท</th><th>ครบกำหนดทบทวน</th><th>ข้อมูลล่าสุดจากไฟล์</th><th></th></tr></thead>
+        <tbody>${skipped.map(r => `
+          <tr class="click" data-go="d-skip">
+            <td><div class="two"><span class="a book num">${r.book} ${srcTag(r.src)}</span><span class="b">${esc(r.coll)}</span></div></td>
+            <td><div class="two"><span class="a">${esc(r.cust)}</span><span class="b num">CIF ${r.cif}</span></div></td>
+            <td>${rtChip(r.rt)}</td>
+            <td>${dueCell(r)}</td>
+            <td class="num muted">${fd(r.lastD)}</td>
+            <td><button class="btn" data-stop>นำกลับ</button></td>
+          </tr>`).join('')}
+        </tbody></table></div>
+        <div class="pager"><span class="num">1–${skipped.length} จาก ${skipped.length}</span><span>‹ 1 ›</span></div>
+      </div>` + notes('แท็บ "ไม่ทบทวนรอบนี้"', [
+        'ปุ่ม <b>นำกลับ</b> เห็นตลอด (เดิมเป็นลิงก์เล็กท้ายแถว) ',
+        'ไม่มีคอลัมน์ความคืบหน้า (เล่มในแท็บนี้ไม่มีงานค้าง) แต่มี <b>ข้อมูลล่าสุดจากไฟล์</b> — ย้ำว่าข้อมูลยังอัปเดตทุกเดือน',
+      ]);
+  }
+
+  // Reviewed (Consumed) books — the whole history, on the latest file or not.
+  const reviewed = [
+    { book: '69000085', coll: 'ทาวน์เฮาส์ 3 ชั้น · ม.พฤกษา 12', cif: '69000008', cust: 'นายสมชาย ใจดี', rt: '3', na: { no: '69003749', st: 'busy' }, by: { group: '69G000012' }, sub: '2026-09-21' },
+    { book: '69000139', coll: 'โกดังสินค้าพร้อมที่ดิน', cif: '69000001', cust: 'บริษัท ปทุมคลังสินค้า จำกัด', rt: '2', na: { no: '69003747', st: 'busy' }, by: { manual: true }, sub: '2026-09-18' },
+    { book: '68001877', coll: 'ห้องชุด โครงการ ไอดีโอ โมบิ', cif: '68004410', cust: 'นางสาวณัฐริกา ศรีทอง', rt: '1', na: { no: '69002210', st: 'done' }, by: { group: '69G000004' }, sub: '2026-07-02', done: '2026-08-14' },
+    { book: '99A00291', coll: 'ที่ดินเปล่า 2-1-30 ไร่', cif: '67001102', cust: 'นายวิชัย พึ่งบุญ', rt: '1', legacy: true, na: { no: '69001984', st: 'done' }, by: { group: '69G000003' }, sub: '2026-06-24', done: '2026-07-30' },
+    { book: '68000412', coll: 'อาคารพาณิชย์ 3 ชั้น', cif: '68002201', cust: 'บริษัท รุ่งเรืองค้าส่ง จำกัด', rt: '3', na: { no: '69001520', st: 'cancel' }, by: { group: '69G000002' }, sub: '2026-06-10' },
+    { book: '67003308', coll: 'บ้านเดี่ยว 2 ชั้น · ม.ลัดดารมย์', cif: '67000873', cust: 'นายธีรวัฒน์ แก้วมณี', rt: '2', na: null, sub: null },
+  ].map(r => ({ ...r, subD: r.sub ? D(r.sub) : null, doneD: r.done ? D(r.done) : null }));
+  let rquick = 'all';
+  const NA_CHIP = {
+    busy: '<span class="tag as400">กำลังประเมิน</span>',
+    done: '<span class="tag main">อนุมัติแล้ว</span>',
+    cancel: '<span class="tag unknown">ยกเลิก</span>',
+  };
+  function reviewedView() {
+    const cnt = k => k === 'all' ? reviewed.length : reviewed.filter(r => (r.na?.st ?? 'none') === k).length;
+    const shown = reviewed.filter(r => rquick === 'all' || (r.na?.st ?? 'none') === rquick);
+    const qb = (k, label, dot) => `<button class="chip-btn" data-rquick="${k}" aria-pressed="${rquick === k}">${dot ? `<span class="dot ${dot}"></span>` : ''}${label} <b class="num">${cnt(k)}</b></button>`;
+    return header('Consumed') + `
+      <div class="quick">${qb('all', 'ทั้งหมด')}${qb('busy', 'กำลังประเมิน', 'u-warn-bg')}${qb('done', 'อนุมัติแล้ว', 'u-ok-bg')}${qb('cancel', 'ยกเลิก', 'u-crit-bg')}</div>
+      <div class="card"><div class="tscroll"><table>
+        <thead><tr><th>หมายเลขประเมิน / หลักประกัน</th><th>ลูกค้า</th><th>ประเภท</th><th>ใบทบทวนใหม่</th><th>สร้างจาก</th>
+          <th class="sorted">วันส่งคำขอ <span class="arr">▼</span></th><th>วันอนุมัติเสร็จ</th><th></th></tr></thead>
+        <tbody>${shown.map(r => `
+          <tr class="click" data-go="d-reviewed">
+            <td><div class="two"><span class="a book num">${r.book} ${r.legacy ? srcTag('AS400Legacy') : ''}</span><span class="b">${esc(r.coll)}</span></div></td>
+            <td><div class="two"><span class="a">${esc(r.cust)}</span><span class="b num">CIF ${r.cif}</span></div></td>
+            <td>${rtChip(r.rt)}</td>
+            <td>${r.na ? `<div class="two"><span class="a num"><a href="#" style="color:var(--primary-700)">${r.na.no}</a></span><span>${NA_CHIP[r.na.st]}</span></div>` : '<span class="muted">ไม่พบใบทบทวน</span>'}</td>
+            <td class="muted">${r.by ? (r.by.manual ? 'สร้างเองจากหน้าคำขอ' : `กลุ่ม <span class="num">${r.by.group}</span>`) : '—'}</td>
+            <td class="num">${fd(r.subD)}</td>
+            <td class="num">${r.na?.st === 'cancel' ? '<span class="muted">—</span>' : fd(r.doneD)}</td>
+            <td class="chev">›</td>
+          </tr>`).join('')}
+        </tbody></table></div>
+        <div class="pager"><span class="num">1–${shown.length} จาก ${shown.length}</span><span>‹ 1 ›</span></div>
+      </div>` + notes('แท็บใหม่ "ดำเนินการแล้ว" — ประวัติเล่มที่ส่งคำขอทบทวนไปแล้ว', [
+        'แสดง<b>ทุกเล่มที่เคยทบทวน</b> ไม่ว่าจะยังอยู่ในไฟล์ AS400 ล่าสุดหรือไม่ (อีกสองแท็บแสดงเฉพาะที่อยู่ในไฟล์ล่าสุด)',
+        '<b>ใบทบทวนใหม่</b> = เลขใบ + สถานะ ใช้กติกาเดียวกับรายงาน RCAS002 (ใบทบทวนที่อ้างเล่มนี้ ล่าสุดก่อน) · คลิกเลขเปิดใบนั้น · คลิกแถวเปิดหน้ารายละเอียดของเล่ม',
+        '<b>สร้างจาก</b>: เลขกลุ่มเมื่อเริ่มจากหน้านี้ หรือ "สร้างเองจากหน้าคำขอ"',
+        'เรียงวันส่งคำขอล่าสุดก่อน · ปุ่มกรองด่วนตามสถานะใบใหม่ · ตัวกรองเพิ่มช่วงวันส่งคำขอ',
+        '<b>ยกเลิก</b>: เล่มยังอยู่แท็บนี้จนไฟล์ AS400 เดือนถัดไปมา แล้วจะกลับไป "รอดำเนินการ" เอง' + Q,
+        '<b>ไม่พบใบทบทวน</b>: เล่มที่ถูกปิดไปโดยไม่มีใบใหม่ (เช่น สำเนาเก่าจากก่อนรวมเล่มซ้ำ) — แสดงไว้ให้ครบประวัติ' + Q,
+        'ต่างจากรายงาน RCAS002: หน้านี้ไว้ค้นดูบนจอ รายงานไว้ส่งออก Excel/PDF',
+        'ฝั่ง API: รายการ status=Consumed ไม่กรองไฟล์ล่าสุด + คอลัมน์ใบใหม่/วันส่ง/วันเสร็จ/สร้างจาก + จำนวนในแท็บ' + BE,
+      ]);
+  }
+
+  // Detail sample: one main book + nearby.
+  const nearby = [
+    { tok: 'n1', book: '69000068', src: 'Candidate', cust: 'นายอนุชา แสงทอง', km: 0.18, appr: '2026-04-22' },
+    { tok: 'n2', book: '68004417', src: 'InSystem', cust: 'บริษัท เอ็นพีเอ็ม โลจิสติกส์ จำกัด', km: 0.42, appr: '2025-02-14' },
+    { tok: 'n3', book: '99A00418', src: 'Candidate', legacy: true, cust: 'บริษัท ศรีสยามค้าวัสดุ จำกัด', km: 0.77, appr: '2021-11-20' },
+    { tok: 'n4', book: '69000110', src: 'Candidate', cust: 'นายวีระพงษ์ สุขใจ', km: 0.94, appr: '2026-05-06', busy: true },
+  ].map(n => ({ ...n, apprD: D(n.appr), due: addYears(D(n.appr), 5) }));
+  let picked = new Set(['n1']);
+
+  function detailView(kind) {
+    const legacy = kind === 'd-legacy';
+    const busy = kind === 'd-busy';
+    const skip = kind === 'd-skip';
+    const done = kind === 'd-reviewed';
+    const m = legacy
+      ? { book: '99A00418', coll: 'อาคารพาณิชย์ 4 ชั้น 2 คูหา', cust: 'บริษัท ศรีสยามค้าวัสดุ จำกัด', cif: '69000019', rt: '1', appr: '2021-11-20', eff: '2026-11-20', value: 6850000, src: 'AS400Legacy' }
+      : { book: busy ? '69000085' : skip ? '69000103' : done ? '68001877' : '69000072', coll: 'ที่ดินพร้อมบ้านเดี่ยว 2 ชั้น · ต.คลองหนึ่ง', cust: 'นางวิไลวรรณ ทองดี', cif: '69000014', rt: '3', appr: '2026-04-02', eff: '2031-04-02', value: 4670000, src: 'CAS' };
+    const apprD = D(m.appr), due = addYears(apprD, 5), effD = D(m.eff);
+    const u = urgency(due);
+    const age = ymd(apprD, TODAY);
+    const blocked = busy || skip || done;
+    const statusTag = done ? '<span class="tag cas">ดำเนินการแล้ว</span>' : busy ? '<span class="tag as400">กำลังดำเนินการ</span>' : skip ? '<span class="tag unknown">ไม่ทบทวนรอบนี้</span>' : '<span class="tag main">รอดำเนินการ</span>';
+
+    const banner = done ? `<div class="banner" style="background:#f9fafb;border-color:var(--line);color:var(--ink)"><div class="body"><div class="t">ดำเนินการแล้ว</div>
+        ใบทบทวน <b class="num">69002210</b> · กลุ่ม <b class="num">69G000004</b> · ส่งคำขอ <span class="num">02/07/2026</span> · อนุมัติเสร็จ <span class="num">14/08/2026</span></div><button class="btn">เปิดใบ 69002210</button></div>`
+      : busy ? `<div class="banner warn"><div class="body"><div class="t">เล่มนี้กำลังทบทวนอยู่</div>
+        การประเมิน <b>69003749</b> · กลุ่ม <b>69G000012</b> — เริ่มคำขอซ้ำไม่ได้จนกว่างานนี้จะจบหรือถูกยกเลิก</div><button class="btn">เปิดงาน 69003749</button></div>`
+      : skip ? `<div class="banner skip"><div class="body"><div class="t">ตั้งเป็น "ไม่ทบทวนรอบนี้"</div>
+        ข้อมูลจาก AS400 ยังอัปเดตทุกเดือน กดนำกลับเพื่อย้ายไปแท็บรอดำเนินการ</div><button class="btn">นำกลับ</button></div>`
+      : legacy ? `<div class="banner legacy"><div class="body"><div class="t">เล่มเดิมอยู่ใน AS400 ไม่มีใน CAS</div>
+        คำขอที่สร้างจะมีแค่เลขเล่ม มูลค่าและวันที่ประเมินเดิม — ไม่มีโฉนดหรือเอกสารเดิมให้ดึงมา เจ้าหน้าที่ต้องกรอกทรัพย์และแนบเอกสารเองก่อนกดส่ง</div></div>` : '';
+
+    const nb = nearby.filter(n => !(legacy && n.legacy));
+    const selCount = 1 + [...picked].filter(t => nb.some(n => n.tok === t)).length;
+
+    return `<div class="phead">
+        <div class="titlewrap"><button class="back" data-go="list" aria-label="กลับไปยังรายการ">‹</button>
+          <div><div class="titleline"><h2 class="num">${m.book}</h2>${statusTag}${srcTag(m.src)}</div>
+          <p>${esc(m.cust)} · CIF ${m.cif} · ${RT[m.rt][0]}</p></div></div>
+        <div class="ctrls">
+          ${legacy ? '' : '<button class="btn"><svg class="gpin" viewBox="0 0 24 24" aria-hidden="true"><defs><clipPath id="gp"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/></clipPath></defs><g clip-path="url(#gp)"><rect width="12" height="9" fill="#4285F4"/><rect x="12" width="12" height="9" fill="#EA4335"/><rect y="9" width="12" height="15" fill="#FBBC04"/><rect x="12" y="9" width="12" height="15" fill="#34A853"/></g><circle cx="12" cy="9" r="2.6" fill="#fff"/></svg>ดูบนแผนที่</button>'}
+          ${!blocked ? '<button class="btn danger" data-modal="skip">ไม่ทบทวนรอบนี้</button>' : ''}
+        </div>
+      </div>
+      ${banner}
+      <div class="card duestrip">
+        <div class="stat"><div class="k">ครบกำหนดทบทวน</div><div class="v u-${u} num">${remainText(due)}</div><div class="s num">${fd(due)} (ประเมินล่าสุด + 5 ปี)</div></div>
+        <div class="stat"><div class="k">ประเมินล่าสุด</div><div class="v num">${fd(apprD)}</div><div class="s num">ผ่านมา ${age.y ? age.y + ' ปี ' : ''}${age.m} เดือน</div></div>
+        <div class="stat"><div class="k">วันที่มีผลจาก AS400</div><div class="v num">${fd(effD)}</div><div class="s">ตามไฟล์ COLLATREV</div></div>
+        <div class="stat"><div class="k">มูลค่าเดิม</div><div class="v num">${money(m.value)}</div><div class="s">บาท</div></div>
+      </div>
+      <div class="facts">
+        <div class="card"><h3>หลักประกัน <small class="num">รหัส 2004871</small></h3><dl class="kv">
+          <dt>ชื่อ</dt><dd>${esc(m.coll)}</dd>
+          <dt>รายละเอียด</dt><dd class="long">โฉนดเลขที่ 48211 เนื้อที่ 0-1-52 ไร่ พร้อมสิ่งปลูกสร้าง</dd>
+          <dt>ที่อยู่</dt><dd class="long">88/14 ม.5 ต.คลองหนึ่ง อ.คลองหลวง จ.ปทุมธานี 12120</dd>
+          <dt>รหัส CAR</dt><dd class="num">CR-3</dd></dl></div>
+        <div class="card"><h3>การประเมินครั้งก่อน <small>${m.src === 'CAS' ? 'ใบในระบบ CAS' : 'จากไฟล์ AS400'}</small></h3><dl class="kv">
+          <dt>เลขที่รายงาน</dt><dd class="num">${m.book}${m.src === 'CAS' ? ' <a href="#" style="color:var(--primary-700);font-weight:400">เปิดใบเดิม</a>' : ''}</dd>
+          <dt>วันที่ประเมินราคา</dt><dd class="num">${fd(apprD)}</dd>
+          <dt>มูลค่า</dt><dd class="num">${money(m.value)} บาท</dd>
+          <dt>ผู้ประเมินภายนอก</dt><dd>บริษัท ไทยประเมินทรัพย์ จำกัด</dd>
+          <dt>ผู้ประเมินภายใน</dt><dd>นายภาณุ รัตนกุล</dd></dl></div>
+        <div class="card"><h3>สินเชื่อ</h3><dl class="kv">
+          <dt>ยอดจำนอง</dt><dd class="num">3,500,000</dd>
+          <dt>วงเงิน</dt><dd class="num">3,200,000</dd>
+          <dt>ค้างชำระ</dt><dd class="num">0 วัน</dd>
+          <dt>AO</dt><dd>A1042 · นางสาวรัชนี พรหมมา</dd>
+          <dt>SLL &gt; 100 ล้าน</dt><dd>ไม่ใช่</dd></dl></div>
+        <div class="card"><h3>ข้อมูลรอบนี้จาก AS400</h3><dl class="kv">
+          <dt>ประเภทการทบทวน</dt><dd>${rtChip(m.rt)}</dd>
+          <dt>Stage · กลุ่ม</dt><dd>3 · IBG</dd>
+          <dt>วันที่มีผล</dt><dd class="num">${fd(effD)}</dd>
+          <dt>อยู่ในไฟล์</dt><dd class="num">มิ.ย. 69 – ก.ย. 69</dd></dl></div>
+      </div>
+      <div class="card">
+        <div class="grouphead"><div><h3>รวมเล่มใกล้เคียงไว้ในการประเมินรอบเดียวกัน</h3>
+          <p>เล่มนี้รวมเสมอ เลือกเล่มในรัศมี 1 กม. เพื่อออกไปประเมินพร้อมกัน — แต่ละเล่มได้คำขอแยกกันในกลุ่มเดียวกัน</p></div></div>
+        <div class="tscroll"><table>
+          <thead><tr><th style="width:36px"></th><th>เล่ม</th><th>ที่มา</th><th>ลูกค้า</th><th>ระยะทาง</th><th>ประเมินล่าสุด</th><th>ครบกำหนดทบทวน</th><th></th></tr></thead>
+          <tbody>
+            <tr class="sel"><td><button class="ck" role="checkbox" aria-checked="true" disabled aria-label="เล่มหลัก"></button></td>
+              <td><span class="book num"><b>${m.book}</b> <span class="tag main">เล่มนี้</span></span></td>
+              <td><span class="tag as400">ถึงรอบ (AS400)</span></td><td>${esc(m.cust)}</td><td class="muted">—</td>
+              <td class="num">${fd(apprD)}</td><td>${dueCell({ apprD, due })}</td><td></td></tr>
+            ${nb.map(n => {
+              const on = picked.has(n.tok);
+              return `<tr class="${n.busy ? 'blocked' : on ? 'sel' : ''}">
+                <td><button class="ck" role="checkbox" aria-checked="${on && !n.busy}" ${n.busy || blocked ? 'disabled' : ''} data-pick="${n.tok}" aria-label="เลือก ${n.book}"></button></td>
+                <td><span class="book num">${n.book} ${n.legacy ? srcTag('AS400Legacy') : ''}</span></td>
+                <td>${n.busy ? '<span class="tag as400" style="opacity:.6">กำลังดำเนินการ</span>' : n.src === 'Candidate' ? '<span class="tag as400">ถึงรอบ (AS400)</span>' : '<span class="tag cas">ในระบบ · ยังไม่ถึงรอบ</span>'}</td>
+                <td>${esc(n.cust)}</td>
+                <td class="num">${n.km.toFixed(2)} กม.</td>
+                <td class="num">${fd(n.apprD)}</td><td>${dueCell(n)}</td>
+                <td>${n.src === 'Candidate' && !n.busy ? '<button class="rowact" data-modal="skip">ไม่ทบทวนรอบนี้</button>' : ''}</td></tr>`;
+            }).join('')}
+          </tbody></table></div>
+        <div class="actionbar">
+          ${blocked
+            ? `<span class="sum">${done ? 'เล่มนี้ดำเนินการแล้ว' : busy ? 'เล่มนี้มีงานทบทวนค้างอยู่' : 'นำกลับก่อนจึงจะเริ่มคำขอได้'}</span><button class="btn primary" disabled>เริ่มคำขอทบทวน</button>`
+            : `<span class="sum">จะสร้าง <b class="num">${selCount}</b> คำขอ (ฉบับร่าง) · เล่มนี้ + ใกล้เคียง <b class="num">${selCount - 1}</b></span>
+               <button class="btn primary" data-modal="confirm">เริ่มคำขอทบทวน <span class="badge num">${selCount}</span></button>`}
+        </div>
+      </div>` + notes('เปลี่ยนอะไรจากหน้าเดิม', [
+        'แถวตัวเลขสรุปด้านบน: ครบกำหนดทบทวน / ประเมินล่าสุด / วันที่มีผลจาก AS400 / มูลค่าเดิม (เดิมไม่แสดงมูลค่าเลยทั้งที่ API ส่งมา)',
+        'ฟิลด์ 20 ตัวจัดเป็น 4 กลุ่ม: หลักประกัน / การประเมินครั้งก่อน / สินเชื่อ / ข้อมูลรอบนี้จาก AS400 — เดิมเป็นตาราง 3 คอลัมน์ที่มีช่องว่างและแถวเต็มความกว้าง; ยอดจำนองและวงเงินที่ API มีอยู่แล้วก็ได้แสดง',
+        'ปุ่ม <b>เริ่มคำขอทบทวน</b> ย้ายมาอยู่ท้ายตารางเลือกเล่ม พร้อมจำนวนคำขอที่จะสร้าง — เดิมอยู่หัวหน้า ห่างจากที่เลือก',
+        '<b>ไม่ทบทวนรอบนี้</b> เป็นปุ่มที่เห็นได้ (หัวหน้า และต่อแถว) แทนไอคอนถังขยะที่โผล่ตอน hover',
+        'ป้าย "ที่มา" เดิม "SIBS / ในระบบ" → <b>"ถึงรอบ (AS400)"</b> กับ <b>"ในระบบ · ยังไม่ถึงรอบ"</b> บอกว่าทำไมเล่มนั้นมาอยู่ในรายการ' + Q,
+        'เล่มใกล้เคียงที่มีงานค้างแสดงเป็นแถวจาง เลือกไม่ได้ (ตอนนี้ API ซ่อนแถวพวกนี้ไปเลย จะคงไว้แบบเดิมก็ได้)' + Q,
+        'ข้อสังเกต: หน้าเดิมคำนวณ "วันที่เหลือ" ของเล่มหลักจาก <b>วันที่มีผลของ AS400</b> แต่หน้ารายการและเล่มใกล้เคียงใช้ <b>วันประเมิน + 5 ปี</b> — ใน mock ใช้ +5 ปีทั้งหมด และแสดงวันที่มีผลแยกเป็นอีกช่อง' + Q,
+      ]);
+  }
+
+  function resultModal() {
+    return `<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="rt"><header><h3 id="rt">สร้างคำขอดำเนินการแล้ว</h3><button class="x" data-go="list" aria-label="ปิด">✕</button></header>
+      <div class="mb">
+        <div class="ok"><div class="ic">✓</div><div><div class="h">สร้างฉบับร่าง 2 คำขอ · กลุ่ม <span class="num">69G000014</span></div>
+          <div class="s">ยังไม่ส่งเข้าสายงาน — ตรวจ กรอกนัดหมาย แล้วกดส่งที่หน้ารายการคำขอ</div></div></div>
+        <div class="sec"><div class="lab">สร้างแล้ว</div><div class="lst">
+          <div class="it"><span class="n num">69000072</span><span class="tag main">ฉบับร่าง</span><span class="d">ดึงโฉนด 1 แปลงและเอกสาร 6 ไฟล์จากคำขอเดิม</span></div>
+          <div class="it"><span class="n num">69000068</span><span class="tag main">ฉบับร่าง</span><span class="d">ดึงโฉนด 2 แปลงและเอกสาร 4 ไฟล์จากคำขอเดิม</span></div>
+        </div></div>
+        <div class="sec"><div class="lab">ข้าม 1 เล่ม</div><div class="lst">
+          <div class="it"><span class="n num">69000110</span><span class="tag as400">กำลังดำเนินการอยู่</span><span class="d">มีคำขอ R69000211 รอกดส่งอยู่แล้ว</span></div>
+        </div></div>
+      </div>
+      <footer><button class="btn" data-go="list">กลับไปหน้ารายการ</button><button class="btn primary">ไปที่รายการคำขอ</button></footer></div></div>`;
+  }
+
+  function confirmModal() {
+    const sel = nearby.filter(n => picked.has(n.tok));
+    const item = (book, legacy) => `<div class="it"><span class="n num">${book} ${legacy ? srcTag('AS400Legacy') : ''}</span><span></span>
+      <span class="d">${legacy ? 'ไม่มีคำขอเดิมใน CAS — ต้องกรอกทรัพย์และแนบเอกสารเอง' : 'ดึงลูกค้า โฉนด และเอกสารจากคำขอของใบเดิม'}</span></div>`;
+    return `<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="ct"><header><h3 id="ct">เริ่มคำขอทบทวน ${1 + sel.length} เล่ม</h3><button class="x" data-close aria-label="ปิด">✕</button></header>
+      <div class="mb"><div class="lst">${item('69000072', false)}${sel.map(n => item(n.book, n.legacy)).join('')}</div>
+        <div class="callout">คำขอจะถูกสร้างเป็น<b>ฉบับร่าง</b> ยังไม่ส่งเข้าสายงาน — เจ้าหน้าที่ต้องเปิดตรวจ กรอกนัดหมาย แล้วกดส่งเองที่หน้ารายการคำขอ</div></div>
+      <footer><button class="btn" data-close>ยกเลิก</button><button class="btn primary" data-go="result">สร้าง ${1 + sel.length} คำขอ</button></footer></div></div>`;
+  }
+
+  function skipModal() {
+    return `<div class="scrim"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="st"><header><h3 id="st">ไม่ทบทวนรอบนี้</h3><button class="x" data-close aria-label="ปิด">✕</button></header>
+      <div class="mb"><p style="margin:0;line-height:1.6">ย้ายเล่มนี้ไปแท็บ "ไม่ทบทวนรอบนี้" ข้อมูลจาก AS400 ยังอัปเดตทุกเดือน และกดนำกลับได้ตลอด</p></div>
+      <footer><button class="btn" data-close>ยกเลิก</button><button class="btn primary" data-close>ย้ายไปไม่ทบทวนรอบนี้</button></footer></div></div>`;
+  }
+
+  function filterModal() {
+    const opt = (label, on) => `<button class="chip-btn" aria-pressed="${on}" data-toggle>${label}</button>`;
+    return `<div class="scrim"><div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="ft"><header><h3 id="ft">ตัวกรอง</h3><button class="x" data-go="list" aria-label="ปิด">✕</button></header>
+      <div class="mb">
+        <div class="sec"><div class="lab">ประเภทการทบทวน</div><div class="opts">${opt('ทั้งหมด', false)}${opt('Stage 3', true)}${opt('ก่อน Stage 3', false)}${opt('ทบทวนปกติ', false)}</div></div>
+        <div class="sec"><div class="lab">ครบกำหนดทบทวน <button>ล้าง</button></div>
+          <div class="opts">${opt('เกินกำหนดแล้ว', false)}${opt('ภายใน 90 วัน', true)}${opt('ภายใน 6 เดือน', false)}${opt('ภายใน 1 ปี', false)}${opt('กำหนดเอง', false)}</div>
+          <div class="hint">เลือกแบบสำเร็จรูป หรือ "กำหนดเอง" เพื่อใส่จำนวนวันเหลือ จาก–ถึง</div></div>
+        <div class="sec"><div class="lab">วันที่ประเมินล่าสุด <button>ล้าง</button></div><div class="row2">
+          <div class="field"><label for="f-from">ตั้งแต่</label><input id="f-from" placeholder="วว/ดด/ปปปป" /></div>
+          <div class="field"><label for="f-to">ถึง</label><input id="f-to" placeholder="วว/ดด/ปปปป" /></div></div></div>
+        <div class="sec"><div class="lab">ระบุเจาะจง</div><div class="row2">
+          <div class="field"><label for="f-coll">รหัสหลักประกัน</label><input id="f-coll" placeholder="กรอกรหัสหลักประกัน" /></div>
+          <div class="field"><label for="f-src">เล่มเดิม</label><select id="f-src"><option>ทั้งหมด</option><option>ใบในระบบ CAS</option><option>เล่ม AS400</option><option>ไม่พบเล่มเดิม</option></select></div></div></div>
+      </div>
+      <footer><button class="btn" style="margin-right:auto">ล้างทั้งหมด</button><button class="btn" data-go="list">ยกเลิก</button><button class="btn primary" data-go="list-f">แสดง 2 รายการ</button></footer></div></div>`
+      + `<div class="shell" style="position:relative;z-index:60;padding-top:0">${notes('เปลี่ยนอะไรในตัวกรอง', [
+        'ชื่อลูกค้า / เลขเล่ม / CIF ย้ายไปช่องค้นหาบนหัวหน้า — หน้าต่างนี้เหลือแต่ตัวกรองที่เป็นช่วงและตัวเลือก',
+        'ประเภทการทบทวน: dropdown → ปุ่มเลือก เห็นตัวเลือกครบทันที',
+        'วันที่เหลือ: กรอกตัวเลขจาก–ถึง → ปุ่มสำเร็จรูป (เกินกำหนด / 90 วัน / 6 เดือน / 1 ปี) + กำหนดเอง ใช้พารามิเตอร์ remainingDay เดิมได้ (เกินกำหนด = เหลือ &lt; 0' + Q + ')',
+        'เพิ่มตัวกรอง "เล่มเดิม" (CAS / AS400 / ไม่พบ)' + BE,
+        'ปุ่มยืนยันบอกจำนวนผลลัพธ์ก่อนกด ("แสดง 2 รายการ")' + BE + ' — ถ้าไม่ทำ ใช้คำว่า "ใช้ตัวกรอง" แบบเดิม',
+        'ช่องกรอกยังเป็นกล่องขาวมีเส้นขอบตามแบบของแอป',
+      ])}</div>`;
+  }
+
+  // ── Block-project unit (new) ──────────────────────────────────────────────
+  function unitView(kind) {
+    const ticket = kind === 'd-unit-ticket', miss = kind === 'd-unit-miss';
+    const u = ticket
+      ? { book: '69U00004', project: 'หมู่บ้านริเวียร่า บางนา', projNo: '69000076', type: 'LB', cust: 'นายกิตติ ศรีสุข', cif: '69000042',
+          how: 'เลขตั๋ว 69U00004 (ตั๋วที่ CAS ออกให้)', fields: [['บ้านเลขที่', '102'], ['เลขแปลง', 'P-002'], ['เนื้อที่ดิน', '62 ตร.ว.'], ['พื้นที่ใช้สอย', '180 ตร.ม.'], ['แบบบ้าน', 'Riviera · 2 ชั้น']], price: 4850000, date: '2026-05-20' }
+      : { book: miss ? '69105469' : 'B69105468', project: miss ? 'โครงการ ไลฟ์ อโศก' : 'โครงการ block 16/09/2026', projNo: miss ? '69105469' : '69105468', type: 'U', cust: miss ? 'นายภูมิ พงษ์ไทย' : 'นางสาวสุนิสา แก้วใส', cif: miss ? '69000043' : '69000041',
+          how: miss ? null : 'เลขห้อง 129/318 ในชื่อหลักประกัน "CONDO.129/318 …"', fields: [['อาคาร', 'B'], ['ชั้น', '7'], ['เลขห้อง', '007B11'], ['ทะเบียนห้องชุด', '129/318'], ['พื้นที่ใช้สอย', '28.69 ตร.ม.'], ['แบบห้อง', '1 BEDROOM (2)']], price: 2697000, date: '2026-09-16' };
+    const typeLabel = u.type === 'U' ? '08 ห้องชุด' : '02 ที่ดินพร้อมสิ่งปลูกสร้าง';
+    const row = (label, value, src) => `<dt>${label}</dt><dd>${value}</dd><span class="src">${src}</span>`;
+    const banner = miss
+      ? `<div class="banner warn"><div class="body"><div class="t">หายูนิตในโครงการไม่เจอ</div>
+          ไม่พบเลขห้อง/บ้านเลขที่ในชื่อหรือที่อยู่หลักประกันที่ตรงกับยูนิตเดียวในโครงการ ${u.projNo} — คำขอจะมีแค่ข้อมูลโครงการ เจ้าหน้าที่ต้องกรอกห้อง/แปลงเองก่อนกดส่ง</div></div>`
+      : `<div class="banner" style="background:var(--primary-50);border-color:var(--primary-100);color:#134e4a"><div class="body"><div class="t">ทบทวนยูนิตในโครงการ ${u.projNo}</div>
+          จับคู่ยูนิตได้จาก${u.how} · ทบทวนเฉพาะยูนิตนี้ ยูนิตอื่นในโครงการแยกกัน</div></div>`;
+    return `<div class="phead">
+        <div class="titlewrap"><button class="back" data-go="list" aria-label="กลับไปยังรายการ">‹</button>
+          <div><div class="titleline"><h2 class="num book">${u.book}</h2><span class="tag main">รอดำเนินการ</span><span class="tag unit">ยูนิตโครงการ</span></div>
+          <p>${u.cust} · CIF ${u.cif} · ${u.project}</p></div></div>
+        <div class="ctrls"><button class="btn danger" data-modal="skip">ไม่ทบทวนรอบนี้</button></div>
+      </div>
+      ${banner}
+      <div class="facts">
+        <div class="card"><h3>ยูนิตในโครงการ <small>${miss ? 'ยังไม่รู้ว่ายูนิตไหน' : 'จาก CAS'}</small></h3>
+          ${miss ? '<p class="muted" style="margin:0">—</p>' : `<dl class="kv">${u.fields.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}
+          <dt>ราคาประเมินรายยูนิตเดิม</dt><dd class="num">${money(u.price)} บาท</dd></dl>`}</div>
+        <div class="card"><h3>โครงการ <small class="num">ใบ ${u.projNo}</small></h3><dl class="kv">
+          <dt>ชื่อโครงการ</dt><dd>${u.project}</dd><dt>ประเภท</dt><dd>${u.type === 'U' ? 'คอนโด' : 'ที่ดิน+อาคาร'}</dd>
+          <dt>ที่อยู่</dt><dd class="long">ถ.สุขุมวิท แขวงพระโขนงเหนือ เขตวัฒนา กรุงเทพมหานคร 10110</dd>
+          <dt>ประเมินโครงการเมื่อ</dt><dd class="num">${fd(D(u.date))}</dd></dl></div>
+        <div class="card" style="grid-column: span 2"><h3>คำขอที่จะสร้าง <small>ช่องที่ระบบเติมให้ · ที่มา</small></h3>
+          <dl class="fill">
+            ${row('ประเภทหลักประกัน', typeLabel, 'โครงการ')}
+            ${row('ชื่อโครงการ', u.project, 'โครงการ')}
+            ${row('ที่อยู่', 'ตามที่อยู่โครงการ', 'โครงการ')}
+            ${miss ? row('ห้อง / แปลง', '<span class="manual">กรอกเอง</span>', '—')
+                   : u.fields.map(([k, v]) => row(k, v, 'ยูนิต')).join('')}
+            ${row('ใบประเมินเดิม', `<span class="num">${u.projNo}</span> (ใบโครงการ)`, 'โครงการ')}
+            ${row('ราคา / วันที่ประเมินเดิม', miss ? '<span class="manual">ไม่มี (ยังไม่รู้ยูนิต)</span>' : `<span class="num">${money(u.price)} บาท · ${fd(D(u.date))}</span><span class="q">รอตัดสิน</span>`, miss ? '—' : 'ยูนิต')}
+            ${row('ลูกค้า', '<span class="manual">กรอกเอง</span><span class="q">รอตัดสิน</span>', '—')}
+            ${row('เลขโฉนด / หนังสือกรรมสิทธิ์', '<span class="manual">กรอกเอง</span>', '—')}
+            ${row('เอกสาร', '<span class="manual">แนบเอง (ไม่ copy เอกสารโครงการ)</span>', '—')}
+          </dl></div>
+      </div>
+      <div class="card"><div class="actionbar" style="position:static">
+        <span class="sum">จะสร้าง <b>1</b> คำขอ (ฉบับร่าง) สำหรับยูนิตนี้</span>
+        <button class="btn primary">เริ่มคำขอทบทวน <span class="badge num">1</span></button></div></div>
+    ` + notes('ยูนิตในโครงการจัดสรร — เลขที่ชี้ไปใบโครงการ (มี B / ไม่มี B / เลขตั๋ว)', [
+        '<b>ทบทวนรายยูนิต</b>: หน่วย = หมายเลขประเมิน + รหัสหลักประกัน — ยูนิตอื่นในโครงการเดียวกันไม่ถูกบล็อก ไม่ถูกตั้ง "ดำเนินการแล้ว" ไปด้วย',
+        '<b>หายูนิต</b>: เลขตั๋ว → ยูนิตที่ตั๋วครอบ (แน่นอน) · มี B / ไม่มี B → อ่านเลขห้องจาก "CONDO.xxx" ในชื่อหลักประกัน หรือคำแรกของที่อยู่ (บ้านเลขที่) แล้วเทียบเลขทะเบียน → เลขห้อง → บ้านเลขที่ — กติกาเดียวกับ regulatory',
+        '<b>ข้อมูลในคำขอมาจาก CAS เท่านั้น</b> (ยูนิต + โครงการ) — ไม่ copy คำขอทั้งโครงการ (โฉนดทุกแปลง/เอกสารโครงการ) แบบที่ระบบทำอยู่ตอนนี้ และไม่เอาค่าจากไฟล์ AS400',
+        '<b>หายูนิตไม่เจอ หรือเจอหลายยูนิต</b>: ยังกดเริ่มได้ คำขอมีแค่ข้อมูลโครงการ + แบนเนอร์เตือน' + Q,
+        '<b>ราคา/วันที่ประเมินเดิมในคำขอ</b> = ราคาประเมินรายยูนิตจากใบโครงการ + วันประเมินโครงการ (ไม่ใช่ราคาทั้งโครงการ)' + Q,
+        '<b>ลูกค้า</b>: เว้นให้กรอกเอง หรือใช้ชื่อผู้ซื้อของยูนิตใน CAS (ProjectUnits.PurchaseBy — ใน dev ว่างแทบทั้งหมด)' + Q,
+        '<b>คำขอทบทวนยูนิตที่สร้างเองจากหน้าคำขอ</b> (อ้างใบโครงการ) บอกไม่ได้ว่ายูนิตไหน → ไม่ตั้งยูนิตใดเป็นดำเนินการแล้ว เจ้าหน้าที่จัดการในหน้านี้เอง' + Q,
+        'เล่มใกล้เคียง: ยูนิตโครงการไม่แสดงตาราง "รวมเล่มใกล้เคียง" ในรอบแรก (กดเริ่มทีละยูนิต)' + Q,
+      ]);
+  }
+
+  // ── Router ─────────────────────────────────────────────────────────────────
+  const app = document.getElementById('app');
+  const modalRoot = document.getElementById('modal-root');
+  let view = 'list';
+  let modal = null;
+  function render() {
+    document.querySelectorAll('.mockbar button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === view || (view === 'list-f' && b.dataset.view === 'list'))));
+    app.innerHTML = view === 'skipped' ? skippedView()
+      : view === 'reviewed' ? reviewedView()
+      : view.startsWith('d-unit') ? unitView(view)
+      : view.startsWith('d-') ? detailView(view)
+      : listView({ filterCount: view === 'list-f' ? 2 : 0 });
+    modalRoot.innerHTML = view === 'filter' ? filterModal() : view === 'result' ? resultModal()
+      : modal === 'confirm' ? confirmModal() : modal === 'skip' ? skipModal() : '';
+  }
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-view],[data-go],[data-quick],[data-rquick],[data-pick],[data-modal],[data-close],[data-toggle],[data-stop]');
+    if (!t) return;
+    if (t.dataset.stop !== undefined) { e.stopPropagation(); return; }
+    if (t.dataset.toggle !== undefined) { const on = t.getAttribute('aria-pressed') === 'true'; t.parentElement.querySelectorAll('[data-toggle]').forEach(b => b.setAttribute('aria-pressed', 'false')); t.setAttribute('aria-pressed', String(!on)); return; }
+    if (t.dataset.view) { view = t.dataset.view; modal = null; }
+    else if (t.dataset.go) { view = t.dataset.go; modal = null; if (view === 'list') quick = quick; }
+    else if (t.dataset.quick) { quick = t.dataset.quick; }
+    else if (t.dataset.rquick) { rquick = t.dataset.rquick; }
+    else if (t.dataset.pick) { picked.has(t.dataset.pick) ? picked.delete(t.dataset.pick) : picked.add(t.dataset.pick); }
+    else if (t.dataset.modal) { modal = t.dataset.modal; }
+    else if (t.dataset.close !== undefined) { modal = null; }
+    render();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && (modal || view === 'filter' || view === 'result')) { modal = null; if (view === 'filter' || view === 'result') view = 'list'; render(); } });
+  render();
+})();
+</script>

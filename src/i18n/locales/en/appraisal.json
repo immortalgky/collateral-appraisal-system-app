@@ -1296,7 +1296,8 @@
         "date": "Date",
         "value": "Value",
         "status": "Status"
-      }
+      },
+      "legacyBook": "AS400 Legacy Book"
     }
   },
   "activityTracking": {
