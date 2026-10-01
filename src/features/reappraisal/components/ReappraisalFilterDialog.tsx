@@ -1,49 +1,70 @@
-import { useEffect, useState, type SelectHTMLAttributes } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import Icon from '@/shared/components/Icon';
 import { TextInput, DateInput } from '@/shared/components/inputs';
-import type { ReappraisalFilterValues, ReviewTypeCode } from '../types';
+import { DUE_SOON_DAYS } from '../utils/due';
+import type { PriorSourceFilter, ReappraisalFilterValues, ReviewTypeCode } from '../types';
 
-// ─── Local select field (same pattern as TaskFilterDialog) ────────────────────
+// Due-date presets map onto the remaining-day range the API already filters on.
+type DuePreset = 'overdue' | 'dueSoon' | 'halfYear' | 'year' | 'custom';
 
-interface SelectFieldProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>, 'onChange'> {
-  label: string;
-  options: { value: string; label: string }[];
-  placeholder: string;
-  onChange: (value: string | undefined) => void;
-  value: string | undefined;
+const DUE_PRESETS: Record<Exclude<DuePreset, 'custom'>, { from?: number; to: number }> = {
+  overdue: { to: -1 },
+  dueSoon: { from: 0, to: DUE_SOON_DAYS },
+  halfYear: { from: 0, to: 182 },
+  year: { from: 0, to: 365 },
+};
+
+function presetOf(v: ReappraisalFilterValues): DuePreset | undefined {
+  if (v.remainingDayFrom == null && v.remainingDayTo == null) return undefined;
+  const hit = (Object.keys(DUE_PRESETS) as (keyof typeof DUE_PRESETS)[]).find(
+    k => DUE_PRESETS[k].from === v.remainingDayFrom && DUE_PRESETS[k].to === v.remainingDayTo,
+  );
+  return hit ?? 'custom';
 }
 
-function SelectField({ label, options, placeholder, value, onChange, ...rest }: SelectFieldProps) {
+function Chip({
+  on,
+  onClick,
+  children,
+}: {
+  on: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <div className="w-full">
-      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <select
-          {...rest}
-          value={value ?? ''}
-          onChange={e => onChange(e.target.value || undefined)}
-          className={clsx(
-            'block w-full appearance-none px-3 py-2 pr-9 border rounded-lg text-sm transition-colors duration-200',
-            'border-gray-200 bg-white hover:border-gray-300',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-            !value && 'text-gray-400',
-          )}
+    <button
+      type="button"
+      aria-pressed={on}
+      onClick={onClick}
+      className={clsx(
+        'px-3 py-1 text-xs rounded-full border transition-colors',
+        on
+          ? 'border-primary bg-primary/5 text-primary font-medium'
+          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SectionLabel({ label, onClear }: { label: string; onClear?: () => void }) {
+  const { t } = useTranslation('reappraisal');
+  return (
+    <div className="flex items-center justify-between">
+      <h3 className="text-xs font-semibold text-gray-600">{label}</h3>
+      {onClear && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="text-xs text-gray-400 hover:text-gray-600"
         >
-          <option value="">{placeholder}</option>
-          {options.map(o => (
-            <option key={o.value} value={o.value} className="text-gray-900">
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-          <Icon style="regular" name="chevron-down" className="size-3.5" />
-        </div>
-      </div>
+          {t('filter.clear')}
+        </button>
+      )}
     </div>
   );
 }
@@ -53,6 +74,8 @@ function SelectField({ label, options, placeholder, value, onChange, ...rest }: 
 interface ReappraisalFilterDialogProps {
   open: boolean;
   initialValues: ReappraisalFilterValues;
+  /** The due-date section; off on the processed tab, which has no due date. */
+  showDue?: boolean;
   onApply: (values: ReappraisalFilterValues) => void;
   onClose: () => void;
 }
@@ -60,101 +83,130 @@ interface ReappraisalFilterDialogProps {
 export function ReappraisalFilterDialog({
   open,
   initialValues,
+  showDue = true,
   onApply,
   onClose,
 }: ReappraisalFilterDialogProps) {
   const { t } = useTranslation(['reappraisal', 'common']);
   const [values, setValues] = useState<ReappraisalFilterValues>(initialValues);
-
-  const reviewTypeOptions = (['1', '2', '3'] as ReviewTypeCode[]).map(value => ({
-    value,
-    label: t(`reviewType.${value}`),
-  }));
+  const [customDue, setCustomDue] = useState(false);
 
   useEffect(() => {
-    if (open) setValues(initialValues);
+    if (open) {
+      setValues(initialValues);
+      setCustomDue(presetOf(initialValues) === 'custom');
+    }
   }, [open, initialValues]);
 
-  const handleClear = () => setValues({});
+  const set = (patch: Partial<ReappraisalFilterValues>) => setValues(v => ({ ...v, ...patch }));
+  const preset = customDue ? 'custom' : presetOf(values);
+
+  const pickPreset = (p: DuePreset) => {
+    if (p === 'custom') {
+      setCustomDue(true);
+      return;
+    }
+    setCustomDue(false);
+    if (preset === p) {
+      set({ remainingDayFrom: undefined, remainingDayTo: undefined });
+    } else {
+      set({ remainingDayFrom: DUE_PRESETS[p].from, remainingDayTo: DUE_PRESETS[p].to });
+    }
+  };
 
   const handleApply = () => {
     onApply(values);
     onClose();
   };
 
-  const hasDateRange = !!values.reviewDateFrom || !!values.reviewDateTo;
-  const hasRemainingRange = values.remainingDayFrom != null || values.remainingDayTo != null;
+  const numberInput = (key: 'remainingDayFrom' | 'remainingDayTo', placeholder: string) => (
+    <input
+      id={`reappraisal-filter-${key}`}
+      type="number"
+      placeholder={placeholder}
+      value={values[key] ?? ''}
+      onChange={e => set({ [key]: e.target.value !== '' ? Number(e.target.value) : undefined })}
+      className="block w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+    />
+  );
 
   return (
     <Modal isOpen={open} onClose={onClose} title={t('filter.title')} size="lg">
       <div className="space-y-5">
-        {/* ── Text fields ── */}
-        <section className="grid grid-cols-2 gap-x-4 gap-y-4">
-          <TextInput
-            label={t('filter.fields.customerName')}
-            placeholder={t('filter.placeholders.customerName')}
-            value={values.customerName ?? ''}
-            onChange={e => setValues(v => ({ ...v, customerName: e.target.value || undefined }))}
-          />
-          <TextInput
-            label={t('filter.fields.oldAppraisalReportNumber')}
-            placeholder={t('filter.placeholders.oldAppraisalReportNumber')}
-            value={values.oldAppraisalReportNumber ?? ''}
-            onChange={e =>
-              setValues(v => ({
-                ...v,
-                oldAppraisalReportNumber: e.target.value || undefined,
-              }))
-            }
-          />
-          <TextInput
-            label={t('filter.fields.cifNumber')}
-            placeholder={t('filter.placeholders.cifNumber')}
-            value={values.cifNumber ?? ''}
-            onChange={e => setValues(v => ({ ...v, cifNumber: e.target.value || undefined }))}
-          />
-          <TextInput
-            label={t('filter.fields.collateralId')}
-            placeholder={t('filter.placeholders.collateralId')}
-            value={values.collateralId ?? ''}
-            onChange={e => setValues(v => ({ ...v, collateralId: e.target.value || undefined }))}
-          />
-          <SelectField
-            label={t('filter.fields.reviewType')}
-            placeholder={t('common:select.placeholder')}
-            options={reviewTypeOptions}
-            value={values.reviewType}
-            onChange={reviewType =>
-              setValues(v => ({ ...v, reviewType: reviewType as ReviewTypeCode | undefined }))
-            }
-          />
+        {/* ── Review type ── */}
+        <section className="space-y-2">
+          <SectionLabel label={t('filter.fields.reviewType')} />
+          <div className="flex flex-wrap gap-1.5">
+            <Chip on={!values.reviewType} onClick={() => set({ reviewType: undefined })}>
+              {t('filter.all')}
+            </Chip>
+            {(['3', '2', '1'] as ReviewTypeCode[]).map(code => (
+              <Chip
+                key={code}
+                on={values.reviewType === code}
+                onClick={() => set({ reviewType: values.reviewType === code ? undefined : code })}
+              >
+                {t(`reviewType.${code}`)}
+              </Chip>
+            ))}
+          </div>
         </section>
 
-        <div className="border-t border-gray-100" />
-
-        {/* ── Appraisal Date range ── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              {t('filter.reviewDateRange')}
-            </h3>
-            {hasDateRange && (
-              <button
-                type="button"
-                onClick={() =>
-                  setValues(v => ({
-                    ...v,
-                    reviewDateFrom: undefined,
-                    reviewDateTo: undefined,
-                  }))
-                }
-                className="text-xs text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
-              >
-                <Icon style="regular" name="xmark" className="size-3" />
-                {t('filter.clearDates')}
-              </button>
-            )}
+        {/* ── Review due ── */}
+        <section className={clsx('space-y-2', !showDue && 'hidden')}>
+          <SectionLabel
+            label={t('filter.reviewDue')}
+            onClear={
+              preset
+                ? () => {
+                    setCustomDue(false);
+                    set({ remainingDayFrom: undefined, remainingDayTo: undefined });
+                  }
+                : undefined
+            }
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {(['overdue', 'dueSoon', 'halfYear', 'year', 'custom'] as const).map(p => (
+              <Chip key={p} on={preset === p} onClick={() => pickPreset(p)}>
+                {t(`filter.duePreset.${p}`)}
+              </Chip>
+            ))}
           </div>
+          {preset === 'custom' && (
+            <div className="grid grid-cols-2 gap-x-4">
+              <div>
+                <label
+                  htmlFor="reappraisal-filter-remainingDayFrom"
+                  className="block text-xs font-medium text-gray-700 mb-1"
+                >
+                  {t('filter.daysLeftFrom')}
+                </label>
+                {numberInput('remainingDayFrom', t('filter.placeholders.remainingDayFrom'))}
+              </div>
+              <div>
+                <label
+                  htmlFor="reappraisal-filter-remainingDayTo"
+                  className="block text-xs font-medium text-gray-700 mb-1"
+                >
+                  {t('filter.daysLeftTo')}
+                </label>
+                {numberInput('remainingDayTo', t('filter.placeholders.remainingDayTo'))}
+              </div>
+            </div>
+          )}
+          <p className="text-[11px] text-gray-400">{t('filter.reviewDueHint')}</p>
+        </section>
+
+        {/* ── Review date range ── */}
+        <section className="space-y-2">
+          <SectionLabel
+            label={t('filter.reviewDateRange')}
+            onClear={
+              values.reviewDateFrom || values.reviewDateTo
+                ? () => set({ reviewDateFrom: undefined, reviewDateTo: undefined })
+                : undefined
+            }
+          />
           <div className="grid grid-cols-2 gap-x-4">
             <div>
               <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -162,7 +214,7 @@ export function ReappraisalFilterDialog({
               </label>
               <DateInput
                 value={values.reviewDateFrom ?? null}
-                onChange={val => setValues(v => ({ ...v, reviewDateFrom: val ?? undefined }))}
+                onChange={val => set({ reviewDateFrom: val ?? undefined })}
               />
             </div>
             <div>
@@ -171,84 +223,65 @@ export function ReappraisalFilterDialog({
               </label>
               <DateInput
                 value={values.reviewDateTo ?? null}
-                onChange={val => setValues(v => ({ ...v, reviewDateTo: val ?? undefined }))}
+                onChange={val => set({ reviewDateTo: val ?? undefined })}
               />
             </div>
           </div>
         </section>
 
-        <div className="border-t border-gray-100" />
-
-        {/* ── Remaining Days range ── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
-              {t('filter.remainingDays')}
-            </h3>
-            {hasRemainingRange && (
-              <button
-                type="button"
-                onClick={() =>
-                  setValues(v => ({
-                    ...v,
-                    remainingDayFrom: undefined,
-                    remainingDayTo: undefined,
-                  }))
-                }
-                className="text-xs text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
+        {/* ── Specific ── */}
+        <section className="space-y-2">
+          <SectionLabel label={t('filter.specific')} />
+          <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+            <TextInput
+              label={t('filter.fields.collateralId')}
+              placeholder={t('filter.placeholders.collateralId')}
+              value={values.collateralId ?? ''}
+              onChange={e => set({ collateralId: e.target.value || undefined })}
+            />
+            <div>
+              <label
+                htmlFor="reappraisal-filter-prior"
+                className="block text-xs font-medium text-gray-700 mb-1"
               >
-                <Icon style="regular" name="xmark" className="size-3" />
-                {t('filter.clearRange')}
-              </button>
-            )}
-          </div>
-          <div className="grid grid-cols-2 gap-x-4">
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t('common:range.from')}
+                {t('filter.fields.priorSource')}
               </label>
-              <input
-                type="number"
-                min={0}
-                placeholder={t('filter.placeholders.remainingDayFrom')}
-                value={values.remainingDayFrom ?? ''}
+              <select
+                id="reappraisal-filter-prior"
+                value={values.priorSource ?? ''}
                 onChange={e =>
-                  setValues(v => ({
-                    ...v,
-                    remainingDayFrom: e.target.value !== '' ? Number(e.target.value) : undefined,
-                  }))
+                  set({
+                    priorSource: (e.target.value || undefined) as PriorSourceFilter | undefined,
+                  })
                 }
-                className="block w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                {t('common:range.to')}
-              </label>
-              <input
-                type="number"
-                min={0}
-                placeholder={t('filter.placeholders.remainingDayTo')}
-                value={values.remainingDayTo ?? ''}
-                onChange={e =>
-                  setValues(v => ({
-                    ...v,
-                    remainingDayTo: e.target.value !== '' ? Number(e.target.value) : undefined,
-                  }))
-                }
-                className="block w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
+                className="block w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              >
+                <option value="">{t('filter.all')}</option>
+                {(['CAS', 'AS400Legacy', 'Unknown', 'NonCAS'] as const).map(s => (
+                  <option key={s} value={s}>
+                    {t(`filter.priorSource.${s}`)}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </section>
 
         {/* ── Footer ── */}
-        <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+        <div className="flex flex-wrap items-center gap-2 pt-4 border-t border-gray-100">
+          <Button
+            variant="outline"
+            size="sm"
+            className="mr-auto"
+            onClick={() => {
+              setCustomDue(false);
+              setValues({});
+            }}
+          >
+            {t('common:actions.clearAll')}
+          </Button>
           <Button variant="outline" size="sm" onClick={onClose}>
             {t('common:actions.cancel')}
-          </Button>
-          <Button variant="outline" size="sm" onClick={handleClear}>
-            {t('common:actions.clear')}
           </Button>
           <Button variant="primary" size="sm" onClick={handleApply}>
             {t('common:actions.apply')}

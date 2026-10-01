@@ -86,6 +86,11 @@ export interface Rcas002Row {
   valuationDate?: string | null;
   nextValuationDate?: string | null;
   remainingDays?: number | null;
+  reviewStatus?: string | null;
+  newAppraisalNumber?: string | null;
+  newAppraisalSubmittedAt?: string | null;
+  newAppraisalCompletedAt?: string | null;
+  newAppraisalStatus?: string | null;
 }
 
 export interface Rcas003Row {

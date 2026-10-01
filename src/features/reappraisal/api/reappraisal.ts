@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import axios from '@shared/api/axiosInstance';
+import { getErrorMessage, isAxiosError } from '@shared/utils/errorUtils';
 import type {
   InitiateReappraisalRequest,
   InitiateReappraisalResult,
@@ -23,8 +25,12 @@ export const reappraisalKeys = {
 
 // ─── List hook ────────────────────────────────────────────────────────────────
 
-export function useReappraisalCandidates(params: ReappraisalCandidateListParams = {}) {
+export function useReappraisalCandidates(
+  params: ReappraisalCandidateListParams = {},
+  enabled = true,
+) {
   return useQuery({
+    enabled,
     queryKey: reappraisalKeys.list(params),
     queryFn: async (): Promise<PaginatedResult<ReappraisalCandidateListItem>> => {
       const {
@@ -41,6 +47,11 @@ export function useReappraisalCandidates(params: ReappraisalCandidateListParams 
         remainingDayTo,
         sortBy,
         sortDir,
+        status,
+        search,
+        priorSource,
+        inProgress,
+        newAppraisalState,
       } = params;
 
       const { data } = await axios.get('/reappraisal/candidates', {
@@ -57,6 +68,11 @@ export function useReappraisalCandidates(params: ReappraisalCandidateListParams 
           ...(remainingDayFrom != null && { remainingDayFrom }),
           ...(remainingDayTo != null && { remainingDayTo }),
           ...(sortBy && { sortBy, sortDir }),
+          ...(status && { status }),
+          ...(search && { search }),
+          ...(priorSource && { priorSource }),
+          ...(inProgress != null && { inProgress }),
+          ...(newAppraisalState && { newAppraisalState }),
         },
       });
 
@@ -94,7 +110,10 @@ export function useInitiateReappraisal() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: reappraisalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reappraisalKeys.details() });
     },
+    onError: (e: unknown) =>
+      toast.error(isAxiosError(e) ? getErrorMessage(e) : 'Failed to start reappraisal'),
   });
 }
 
@@ -125,7 +144,7 @@ export function useGenerateReappraisalTestFile() {
   });
 }
 
-// ─── Delete mutation ──────────────────────────────────────────────────────────
+// ─── Delete ("not reviewing this round") / restore mutations ─────────────────
 
 export function useDeleteReappraisalCandidate() {
   const queryClient = useQueryClient();
@@ -135,5 +154,20 @@ export function useDeleteReappraisalCandidate() {
       queryClient.invalidateQueries({ queryKey: reappraisalKeys.lists() });
       queryClient.invalidateQueries({ queryKey: reappraisalKeys.details() });
     },
+    onError: (e: unknown) =>
+      toast.error(isAxiosError(e) ? getErrorMessage(e) : 'Failed to skip candidate'),
+  });
+}
+
+export function useRestoreReappraisalCandidate() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => axios.post(`/reappraisal/candidates/${id}/restore`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: reappraisalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: reappraisalKeys.details() });
+    },
+    onError: (e: unknown) =>
+      toast.error(isAxiosError(e) ? getErrorMessage(e) : 'Failed to restore candidate'),
   });
 }
