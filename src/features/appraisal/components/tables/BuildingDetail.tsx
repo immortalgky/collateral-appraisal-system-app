@@ -9,6 +9,11 @@ import { toNumber } from '../BuildingTable/BuildingDetailTable';
 import { type DerivedRule, useDerivedFieldArray } from '../BuildingTable/useDerivedFieldArray';
 import { Controller, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { FIELD, NUM, NumCell, TD, TH, money2, toNum } from './denseTable';
+import { buildingInsuranceFigures } from '../../utils/buildingStoredValues';
+import {
+  roundSumToThousand,
+  scheduleCostFigures,
+} from '@/features/pricingAnalysis/domain/calculation';
 
 interface BuildingDetailProps {
   name: string;
@@ -20,8 +25,6 @@ interface BuildingDetailProps {
 }
 
 const ARRAY_FIELD = 'depreciationDetails';
-
-const roundToThousand = (v: number) => Math.round(v / 1000) * 1000;
 
 const sum = (rows: any[], key: string) => rows.reduce((acc, row) => acc + toNumber(row?.[key]), 0);
 
@@ -58,23 +61,19 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
 
   // The overrides sit next to the table in the same form; `name` may be prefixed on nested forms.
   const base = name.endsWith(ARRAY_FIELD) ? name.slice(0, -ARRAY_FIELD.length) : '';
-  const finalCostField = `${base}finalCostValueOverride`;
-  const insuranceField = `${base}buildingInsurancePriceOverride`;
+  const finalCostField = `${base}buildingCostValue`;
+  const insuranceField = `${base}buildingInsurancePrice`;
   const finalCostOverride = useWatch({ name: finalCostField });
-  const insuranceOverride = useWatch({ name: insuranceField });
+  const typedInsurance = useWatch({ name: insuranceField });
 
-  const { after, building } = (values as any[]).reduce(
-    (acc, row) => {
-      const value = toNum(row?.priceAfterDepreciation);
-      acc.after += value;
-      if (row?.isBuilding) acc.building += value;
-      return acc;
-    },
-    { after: 0, building: 0 },
-  );
-  const computedFinalCost = roundToThousand(after);
-  // Rounded per property, like Final Cost Value — the appraisal total rounds again on top.
-  const computedInsurance = roundToThousand(building);
+  // Both figures follow the server's rule (each row at 2 dp, then rounded to the thousand) — the one
+  // ConstructionInspection and pricing use too (buildingFinalCostValue) — and so do the subtotals
+  // shown beside them, so nothing on screen contradicts what is stored. Rounded per property; the
+  // appraisal total rounds again on top.
+  const { total: after, derived: derivedCost } = scheduleCostFigures(values);
+  const computedFinalCost = derivedCost ?? 0;
+  const { subtotal: building, insurance: derivedInsurance } = buildingInsuranceFigures(values);
+  const computedInsurance = derivedInsurance ?? 0;
 
   const handleRequestAdd = (isBuilding: boolean) =>
     append({ ...defaultDepreciationDetail, isBuilding });
@@ -82,9 +81,15 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
   const isEmpty = values.length === 0;
   const totals = {
     area: sum(values, 'area'),
-    before: sum(values, 'priceBeforeDepreciation'),
-    depreciation: sum(values, 'priceDepreciation'),
-    after: sum(values, 'priceAfterDepreciation'),
+    // Each at 2 dp per row like `after`, so before − depreciation = after on screen.
+    before: roundSumToThousand(
+      values.map((row: { [key: string]: unknown }) => row?.priceBeforeDepreciation as number),
+    ).sum,
+    depreciation: roundSumToThousand(
+      values.map((row: { [key: string]: unknown }) => row?.priceDepreciation as number),
+    ).sum,
+    // The same total the Building Cost Value line rounds, so the two "Table total" figures agree.
+    after,
   };
   const columnCount = formReadOnly ? 12 : 13;
   const typeOptions = [
@@ -129,7 +134,8 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
     {
       label: ta('fieldLabels.building.buildingInsurance'),
       field: insuranceField,
-      override: insuranceOverride,
+      // Null = not typed: the loaded figure equal to the derived one is mapped to null (see mappers).
+      override: typedInsurance,
       computed: computedInsurance,
       source: t('costBuilding.table.buildingSubtotal'),
       sourceValue: building,

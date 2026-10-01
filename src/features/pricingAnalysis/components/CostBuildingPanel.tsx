@@ -112,10 +112,9 @@ export function CostBuildingPanel({
       );
     }, [buildingProperties]);
 
-  // The group's Building Cost Value: per building, the appraiser's keyed override (the
-  // `finalCostValueOverride` column keeps its name — the label over it on the property form
-  // is Building Cost Value), else that building's schedule total rounded to the nearest
-  // 1,000. One shared implementation, now also called by WQS/SAG/DC's summary cards,
+  // The group's Building Cost Value: per building, the stored `buildingCostValue` (the figure the
+  // property form showed — typed, or its schedule rounded to the nearest 1,000), else that
+  // building's schedule rounded the same way. One shared implementation, now also called by WQS/SAG/DC's summary cards,
   // mirroring the backend's PricingPropertyDataService.BuildingCostSql.
   //
   // This is the figure that gets SAVED as the method value and that pricing reads back, so

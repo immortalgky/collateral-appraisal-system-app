@@ -8,8 +8,8 @@ import {
 const row = (area: number, priceAfterDepreciation: number) => ({ area, priceAfterDepreciation });
 
 /** A building carrying one schedule row with a stored after-depreciation figure. */
-const building = (priceAfterDepreciation: number, finalCostValueOverride?: number | null) => ({
-  ...(finalCostValueOverride === undefined ? {} : { finalCostValueOverride }),
+const building = (priceAfterDepreciation: number, buildingCostValue?: number | null) => ({
+  ...(buildingCostValue === undefined ? {} : { buildingCostValue }),
   depreciationDetails: [{ priceAfterDepreciation }],
 });
 
@@ -66,8 +66,8 @@ describe('sumBuildingFinalCostValue', () => {
     // schedule rows and printed 15,840,000 while the KPI card above it printed this figure under
     // the same label.
     const group = [
-      { finalCostValueOverride: 8_000_000, depreciationDetails: [row(80, 7_920_000)] },
-      { finalCostValueOverride: 6_000_000, depreciationDetails: [row(80, 7_920_000)] },
+      { buildingCostValue: 8_000_000, depreciationDetails: [row(80, 7_920_000)] },
+      { buildingCostValue: 6_000_000, depreciationDetails: [row(80, 7_920_000)] },
     ];
     expect(sumBuildingFinalCostValue(group)).toBe(14_000_000);
 

@@ -8,7 +8,7 @@
  * ── Which number the row shows ────────────────────────────────────────────────
  * The Building Cost method has two totals, and they are not the same thing:
  *
- *   per-building roll-up = Σ (FinalCostValueOverride ?? roundToThousand(afterDepreciation))
+ *   per-building roll-up = Σ buildingFinalCostValue (stored buildingCostValue, else the schedule rounded to 1,000)
  *   method value         = what the appraiser keyed into "มูลค่าตามวิธี" on the BC screen
  *                          and saved (PricingAnalysisMethod.MethodValue)
  *

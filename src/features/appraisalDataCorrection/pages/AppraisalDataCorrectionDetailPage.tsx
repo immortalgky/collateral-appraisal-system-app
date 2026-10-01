@@ -36,6 +36,7 @@ import {
 import { getPropertyTypeForm } from '../configs/propertyTypeForms';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { diffFormValues, type DiffEntry } from '../utils/formDiff';
+import { withStoredBuildingValues } from '@/features/appraisal/utils/buildingStoredValues';
 import CorrectionConfirmDialog from '../components/CorrectionConfirmDialog';
 import CorrectionHistoryPanel, { HistoryFilterChips } from '../components/CorrectionHistoryPanel';
 import CorrectionPageHeader from '../components/CorrectionPageHeader';
@@ -403,10 +404,9 @@ function PropertyCorrectionEditor({
   }
 
   // The resolver only gates the save; nothing reads its output. It runs the property's own
-  // schema, and a zod object drops every key it does not declare: `reason`, the row ids of titles,
-  // floors and depreciation, and fields such as encroachmentArea or sellingPrice. The update is a
-  // full overwrite, so a dropped key is wiped — a title sent without its id is deleted and
-  // re-created. Everything is therefore read from the form, as the property page's draft save does.
+  // schema, and a zod object drops every key it does not declare (`reason` among them). The update
+  // is a full overwrite, so a dropped key is wiped. Everything is therefore read from the form, as
+  // the property page's draft save does.
   const onSubmit = () => {
     const reason = String(getValues('reason') ?? '').trim();
     if (!reason) {
@@ -417,7 +417,12 @@ function PropertyCorrectionEditor({
     // A payload with nothing different from the record is not worth a round trip — the server
     // refuses it too (NO_CHANGES).
     const formValues = getValues();
-    const diff = diffFormValues(baseline.current ?? defaults, formValues);
+    // Compared as the server will store them: a Building Cost Value or insurance left to the table is
+    // saved as the figure the table gives, not as blank, so the confirm dialog and the audit show it.
+    const diff = diffFormValues(
+      withStoredBuildingValues(baseline.current ?? defaults),
+      withStoredBuildingValues(formValues),
+    );
     if (diff.length === 0) {
       toast.error(t('detail.noChanges'));
       return;

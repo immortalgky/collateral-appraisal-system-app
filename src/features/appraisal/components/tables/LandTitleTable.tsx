@@ -4,7 +4,7 @@ import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { type FormField } from '@/shared/components/form';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import clsx from 'clsx';
-import { useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { get, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useFormReadOnly } from '@/shared/components/form/context';
@@ -15,7 +15,11 @@ import { TD, TH } from './denseTable';
 interface LandTitleTableProps {
   name: string;
   fields: FormField[];
+  /** Order controls: off where the order is not saved (a block project's land). */
+  orderable?: boolean;
 }
+
+const byTitleNumber = new Intl.Collator('th', { numeric: true }).compare;
 
 type TitleRow = Record<string, unknown>;
 
@@ -49,11 +53,12 @@ const hasValue = (value: unknown) => value != null && String(value).trim() !== '
 const totalWaOf = (row: TitleRow) =>
   (Number(row.rai) || 0) * 400 + (Number(row.ngan) || 0) * 100 + (Number(row.squareWa) || 0);
 
-const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
+const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps) => {
   const { t } = useTranslation('appraisal');
   const readOnly = useFormReadOnly();
-  const { control, formState } = useFormContext();
-  const { append, remove, update } = useFieldArray({ control, name });
+  const { control, formState, trigger } = useFormContext();
+  const { append, remove, update, move, replace } = useFieldArray({ control, name });
+  const tableRef = useRef<HTMLTableElement>(null);
   const values = (useWatch({ control, name }) as TitleRow[] | undefined) ?? [];
 
   const [modalState, setModalState] = useState<
@@ -79,6 +84,57 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
       {t('titleEntry.list.wa', { wa: formatNumber(grandTotalWa, 2) })})
     </>
   );
+  // The order is the order saved (LandTitles.SequenceNumber), and the first title is the one LOS,
+  // AS400 and the collateral master take. Moving keeps each row's id: a move, not delete + re-add.
+  const canOrder = orderable && !readOnly && values.length > 1;
+  // Titles without a number go last: whatever is first is the title the other systems take.
+  const byNumber = useMemo(
+    () =>
+      canOrder
+        ? [...values].sort((a, b) => {
+            const [x, y] = [a.titleNumber, b.titleNumber].map(n =>
+              hasValue(n) ? String(n) : null,
+            );
+            if (x === null || y === null) return x === y ? 0 : x === null ? 1 : -1;
+            return byTitleNumber(x, y);
+          })
+        : values,
+    [canOrder, values],
+  );
+  const isSortedByNumber = byNumber.every((row, i) => row === values[i]);
+  const sortByNumber = () => {
+    replace(byNumber);
+    // replace() leaves validation errors at the old positions; re-check so they follow the rows. A
+    // submitted form re-checks the array by itself.
+    if (get(formState.errors, name) && !formState.isSubmitted) void trigger(name);
+    // The button turns itself off once the list is sorted; keep keyboard focus in the table.
+    requestAnimationFrame(() => tableRef.current?.querySelector<HTMLElement>('tbody tr')?.focus());
+  };
+  // Rows are keyed by position (an edit must not remount its row), so after a move the focus is put
+  // back on the moved title's arrow — or the other one when it reached an end and that one is off.
+  const moveRow = (index: number, step: -1 | 1) => {
+    const target = index + step;
+    move(index, target);
+    requestAnimationFrame(() => {
+      const arrow = (dir: string) =>
+        tableRef.current?.querySelector<HTMLButtonElement>(`[data-move="${target}:${dir}"]`);
+      const same = arrow(step < 0 ? 'up' : 'down');
+      (same && !same.disabled ? same : arrow(step < 0 ? 'down' : 'up'))?.focus();
+    });
+  };
+  const sortButton = (className: string) =>
+    canOrder && (
+      <button
+        type="button"
+        disabled={isSortedByNumber}
+        onClick={sortByNumber}
+        className={className}
+      >
+        <Icon style="solid" name="arrow-down-1-9" className="size-2.5" />
+        {t('titleEntry.list.sortByNumber')}
+      </button>
+    );
+
   const addButton = (className: string) =>
     !readOnly && (
       <button type="button" onClick={() => setModalState({ type: 'add' })} className={className}>
@@ -104,9 +160,15 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
         {summary && (
           <div className="min-w-0 truncate text-xs tabular-nums text-gray-500">{summary}</div>
         )}
+        {sortButton(
+          'cas-hide-in-grid ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-600 transition-colors hover:border-primary-500 hover:text-primary-700 disabled:cursor-default disabled:opacity-40',
+        )}
         {values.length > 0 &&
           addButton(
-            'cas-hide-in-grid ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+            clsx(
+              'cas-hide-in-grid inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-primary px-3 py-1 text-xs font-medium text-white shadow-sm transition-colors hover:bg-primary/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+              !canOrder && 'ml-auto',
+            ),
           )}
       </div>
       {/* One box for everything under the header, so the grid layout can treat it as the
@@ -136,7 +198,10 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
               grid layout treats any `.flex-wrap` in a field as a chip group, which shrank this box. */}
                 {/* border-separate: with collapsed borders a sticky header cell leaves its line behind. */}
                 <div className="cas-table-card max-h-[28rem] min-w-0 self-stretch overflow-auto rounded-lg border border-gray-200 bg-white">
-                  <table className="w-full min-w-[720px] border-separate border-spacing-0 text-[0.875rem] leading-tight tabular-nums">
+                  <table
+                    ref={tableRef}
+                    className="w-full min-w-[720px] border-separate border-spacing-0 text-[0.875rem] leading-tight tabular-nums"
+                  >
                     <thead className="text-left text-[0.8125rem] font-medium text-[#55636f]">
                       <tr>
                         <th className={clsx(TH, STICKY, 'w-10')}>#</th>
@@ -146,7 +211,9 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
                         <th className={clsx(TH, STICKY, 'text-right')}>
                           {t('titleEntry.list.area')}
                         </th>
-                        {!readOnly && <th className={clsx(TH, STICKY, 'w-20')} />}
+                        {!readOnly && (
+                          <th className={clsx(TH, STICKY, canOrder ? 'w-32' : 'w-20')} />
+                        )}
                       </tr>
                     </thead>
                     <tbody>
@@ -223,6 +290,38 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
                             {!readOnly && (
                               <td className={clsx(TD, 'py-0.5')}>
                                 <div className="flex justify-end gap-1">
+                                  {canOrder &&
+                                    (
+                                      [
+                                        ['up', -1, index === 0, 'titleEntry.list.moveUp'],
+                                        [
+                                          'down',
+                                          1,
+                                          index === values.length - 1,
+                                          'titleEntry.list.moveDown',
+                                        ],
+                                      ] as const
+                                    ).map(([dir, step, atEdge, label]) => (
+                                      <button
+                                        key={dir}
+                                        type="button"
+                                        data-move={`${index}:${dir}`}
+                                        disabled={atEdge}
+                                        onClick={event => {
+                                          event.stopPropagation();
+                                          moveRow(index, step);
+                                        }}
+                                        className="flex size-6 items-center justify-center rounded text-gray-400 transition-colors hover:bg-primary-50 hover:text-primary-600 disabled:cursor-default disabled:opacity-30"
+                                        aria-label={t(label)}
+                                        title={t(label)}
+                                      >
+                                        <Icon
+                                          style="solid"
+                                          name={`arrow-${dir}`}
+                                          className="size-3"
+                                        />
+                                      </button>
+                                    ))}
                                   <button
                                     type="button"
                                     onClick={event => {
@@ -258,9 +357,15 @@ const LandTitleTable = ({ name, fields }: LandTitleTableProps) => {
                 </div>
                 {/* Grid layout only: classic keeps its add button in the section header. */}
                 <div className="cas-show-in-grid pt-2">
-                  {addButton(
-                    'inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[0.75rem] font-normal text-gray-600 hover:border-primary-500 hover:text-primary-700',
-                  )}
+                  {/* The inner flex: the grid layout pins `.cas-show-in-grid` to display: block. */}
+                  <div className="flex gap-2">
+                    {addButton(
+                      'inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[0.75rem] font-normal text-gray-600 hover:border-primary-500 hover:text-primary-700',
+                    )}
+                    {sortButton(
+                      'inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 bg-white px-2 py-0.5 text-[0.75rem] font-normal text-gray-600 hover:border-primary-500 hover:text-primary-700 disabled:cursor-default disabled:opacity-40',
+                    )}
+                  </div>
                 </div>
               </>
             )}

@@ -168,7 +168,8 @@ export default function ProjectLandForm() {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <TitleDeedForm />
+                    {/* A project land does not store title order, so no order controls. */}
+                    <TitleDeedForm orderable={false} />
                   </Section>
 
                   {/* Land Detail */}

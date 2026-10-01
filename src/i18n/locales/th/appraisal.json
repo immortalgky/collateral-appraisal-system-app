@@ -1138,7 +1138,6 @@
       "encroachingArea": "พื้นที่ที่รุกล้ำผู้อื่น",
       "encroachingOthers": "รุกล้ำที่ผู้อื่น",
       "encroachingRemark": "หมายเหตุการรุกล้ำผู้อื่น",
-      "encroachmentArea": "พื้นที่ถูกรุกล้ำ",
       "encroachmentRemark": "หมายเหตุการรุกล้ำ",
       "energyUse": "การใช้พลังงาน",
       "engineNo": "เลขเครื่องยนต์",
@@ -1152,7 +1151,6 @@
       "fence": "รั้ว",
       "floor": "ชั้นที่",
       "floors": "จำนวนชั้น",
-      "forcedSalePrice": "ราคาบังคับขาย",
       "forestBoundary": "แนวเขตป่า",
       "forestBoundaryRemark": "หมายเหตุแนวเขตป่า",
       "governmentPrice": "ราคาประเมินราชการ",
@@ -1218,7 +1216,6 @@
       "roomLayout": "ผังห้อง",
       "roomNo": "เลขที่ห้อง",
       "royalDecree": "พระราชกฤษฎีกา",
-      "sellingPrice": "ราคาขาย",
       "series": "ซีรีส์",
       "sidesFacingRoad": "จำนวนด้านที่ติดถนน",
       "soi": "ซอย",
@@ -2878,6 +2875,9 @@
       "west": "ทิศตะวันตก"
     },
     "list": {
+      "moveUp": "ย้ายขึ้น",
+      "moveDown": "ย้ายลง",
+      "sortByNumber": "เรียงตามเลขโฉนด",
       "type": "ประเภท",
       "document": "เลขที่ · เล่ม · หน้า",
       "position": "ตำแหน่งที่ดิน",

@@ -451,7 +451,7 @@ export function ProfitRentPanel({
   // The group's building value — the rule BuildingCostLink documents for WQS/SAG/DC and
   // the mock's `o.bld = bcTotOv ?? Σ per-building`: the Building Cost method's SAVED value
   // wins (the appraiser may have keyed it, e.g. 23,000,000 over a 22,785,000 roll-up), else
-  // the per-building roll-up Σ(FinalCostValueOverride ?? roundToThousand(after)). This used to
+  // the per-building roll-up Σ(buildingFinalCostValue) — the stored buildingCostValue, else the schedule rounded to 1,000. This used to
   // be the raw after-depreciation sum, which matched neither. SaveProfitRentAnalysis applies
   // the same rule, so screen and stored value agree.
   const { methodValue: bcMethodValue } = useGroupBuildingCostMethod();
