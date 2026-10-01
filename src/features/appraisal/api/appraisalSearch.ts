@@ -62,6 +62,7 @@ export interface AppraisalDto {
   priority: string;
   isPma: boolean;
   purpose: string | null;
+  previouslyQuotedNumber?: string | null;
   channel: string | null;
   bankingSegment: string | null;
   facilityLimit: number | null;
