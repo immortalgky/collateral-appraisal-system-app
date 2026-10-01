@@ -28,6 +28,7 @@ type VendorStatusCode =
   | 'Tentative'
   | 'Negotiating'
   | 'Declined'
+  | 'Expired'
   | 'Cancelled';
 
 const STATUS_FILTER_GROUPS: { key: string; codes: VendorStatusCode[] }[] = [
@@ -38,6 +39,7 @@ const STATUS_FILTER_GROUPS: { key: string; codes: VendorStatusCode[] }[] = [
   { key: 'Tentative', codes: ['Tentative'] },
   { key: 'Negotiating', codes: ['Negotiating'] },
   { key: 'Declined', codes: ['Declined'] },
+  { key: 'Expired', codes: ['Expired'] },
   { key: 'Cancelled', codes: ['Cancelled'] },
 ];
 
