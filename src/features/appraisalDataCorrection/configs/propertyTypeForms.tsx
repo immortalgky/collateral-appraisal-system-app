@@ -1,195 +1,132 @@
 import type { ReactNode } from 'react';
 import { z } from 'zod';
-import LandDetailForm from '../forms/LandDetailForm';
-import BuildingDetailForm from '../forms/BuildingDetailForm';
-import CondoDetailForm from '../forms/CondoDetailForm';
-import MachineryDetailForm from '../forms/MachineryDetailForm';
-import LeaseAgreementForm from '../forms/LeaseAgreementForm';
-import {
-  createLandForm,
-  createLandFormDefault,
-  createBuildingForm,
-  createBuildingFormDefault,
-  createCondoForm,
-  createCondoFormDefault,
-  createLandAndBuildingForm,
-  createLandAndBuildingFormDefault,
-  createMachineryForm,
-  createMachineryFormDefault,
-} from '@/features/appraisal/schemas/form';
-import {
-  mapLandPropertyResponseToForm,
-  mapBuildingPropertyResponseToForm,
-  mapCondoPropertyResponseToForm,
-  mapLandAndBuildingPropertyResponseToForm,
-  mapMachineryPropertyResponseToForm,
-} from '@/features/appraisal/utils/mappers';
+import { PROPERTY_FORM_RECIPES } from '@/features/appraisal/utils/propertyFormRecipes';
+import { getDetailEndpoint } from '@/features/appraisal/utils/propertyTypeConfig';
 import Section from '@/shared/components/sections/Section';
+import type { FormField } from '@/shared/components/form';
 import { vehicleCorrectionFields, vesselCorrectionFields } from './generatedFields';
 import GeneratedDetailForm from '../components/GeneratedDetailForm';
-import FormSectionHeader, { type SectionTone } from '../components/FormSectionHeader';
-import TitleDeedForm from '../forms/TitleDeedForm';
+import FormSectionHeader from '../components/FormSectionHeader';
+import {
+  PropertyBodyFrame,
+  PropertyTabs,
+  type EditorContext,
+  type TabLayout,
+} from '../components/PropertyTabs';
 
 /**
- * The correction screen owns its forms outright — `../forms/*` and `../configs/fields.ts` are
- * this feature's copies, not the appraisal feature's.
+ * The correction screen edits a property with the property page's own form bodies, tabs, schema,
+ * record-to-form mapper and payload mapper (`appraisal/utils/propertyFormRecipes`), so a change
+ * to a property form is made once. What this file owns is which tabs each type has — the order and
+ * conditions of its `Create*Page`.
  *
- * This was not the first approach: an earlier version pulled the field *configs* out of
- * `appraisal/configs/fields.ts` and reassembled them here, which meant re-deriving layout,
- * section headings, labels, field order and dropdown parameter groups by hand — all of which
- * already exist, correct, in the form components. Anything rebuilt here drifts from the screen
- * the appraiser actually knows.
- *
- * The detail form components turned out to be reusable as-is: they take no props beyond an
- * optional prefix/propertyType, read everything through `useFormContext`, and make no API or
- * route calls. `usePageReadOnly()` returns its `false` default outside the appraisal route
- * tree, so they render editable here.
+ * Nothing the page's own payload carries is left out. Construction inspection and the
+ * lease/rental blocks each have their tab, so they are editable rather than merely passed
+ * through; the update they are sent to is a full overwrite.
  *
  * Vehicle and vessel are the one exception — no create/edit screen has ever existed for them,
  * so their fields are generated from the backend DTO. See `GeneratedDetailForm`.
  */
+
+export type { EditorContext };
+
 /**
  * What `useGetPropertyDetail` hands back: the detail endpoint's JSON, untyped, because one hook
- * serves eleven different response shapes. Each mapper below is cast to accept it — they read
- * only the members their own property type has, and a missing one falls back to its default.
+ * serves eleven different response shapes.
  */
 export type PropertyDetailPayload = Record<string, unknown>;
 
 export interface PropertyTypeForm {
-  /** Zod schema the create/edit screen validates with — absent for the generated forms. */
-  schema: z.ZodType<Record<string, unknown>>;
-  /** Blank form values, used as the base before seeding the record. */
-  defaults: Record<string, unknown>;
-  /**
-   * Turns the property-detail API response into form values — the screen's own mapper.
-   *
-   * Typed against the untyped payload `useGetPropertyDetail` returns rather than each mapper's
-   * specific response type, since one registry entry has to hold all of them.
-   */
+  /** Zod schema the create/edit screen validates with. */
+  schema: z.ZodTypeAny;
+  /** Turns the property-detail API response into form values — the screen's own mapper. */
   toForm: (raw: PropertyDetailPayload) => Record<string, unknown>;
-  /** The create/edit screen's own form body, section headers included. */
-  render: () => ReactNode;
+  /** The body the screen's own PUT sends, from the validated form values. */
+  toPayload: (values: Record<string, unknown>) => unknown;
+  /** Route suffix of the detail endpoint: `PUT …/data-correction/{suffix}` takes the same body. */
+  suffix: string;
+  /**
+   * The tab bar and panels. Rendered straight into the editor's scroll container: the bar is
+   * `sticky`, and a sticky element only sticks inside its parent.
+   */
+  render: (context: EditorContext) => ReactNode;
 }
+
+/** Tabs per type, as the pages order them (see each `Create*Page`'s `editorTabs`). */
+const LAYOUTS: Record<string, TabLayout> = {
+  L: { panels: ['land', 'lease-agreement', 'rental-info'], rentedOutOnly: true },
+  B: { panels: ['building', 'construction'] },
+  LB: {
+    panels: ['land', 'building', 'construction', 'lease-agreement', 'rental-info'],
+    landType: 'LB',
+    buildingType: 'LB',
+    rentedOutOnly: true,
+  },
+  U: { panels: ['condo', 'construction'], condo: true },
+  MAC: { panels: ['machinery'] },
+  LSL: { panels: ['land', 'lease-agreement', 'rental-info'] },
+  LSB: { panels: ['building', 'construction', 'lease-agreement', 'rental-info'] },
+  LS: {
+    panels: ['land', 'building', 'construction', 'lease-agreement', 'rental-info'],
+    landType: 'LS',
+    buildingType: 'LS',
+  },
+  LSU: { panels: ['condo', 'construction', 'lease-agreement', 'rental-info'], condo: true },
+};
 
 /**
  * Vehicle and vessel have no create screen and therefore no schema. `FormFields` only reads a
  * schema to pull constraints such as maxLength off it, so an empty object schema is a truthful
  * "no constraints declared" rather than a placeholder.
  */
-const GENERATED_FORM_SCHEMA = z.object({}).passthrough() as unknown as z.ZodType<
-  Record<string, unknown>
->;
+const GENERATED_FORM_SCHEMA = z.object({}).passthrough();
 
 /**
- * The create screens wrap every detail form in exactly this — a flex column that lets the form
- * lay out its own internal grid. An earlier version wrapped them in `grid grid-cols-12`, which
- * fought the `xl:col-span-1 / xl:col-span-4` split the forms use for their label rail and
- * squeezed every field into one narrow column.
+ * Vehicle and vessel take a flat detail: the generated fields, nothing else. The GET names the
+ * ownership flag `verifiableOwner` where the PUT calls it `isOwnerVerified`, and carries ids and
+ * the property envelope the PUT has no use for — the form holds only what the PUT accepts.
  */
-const block = (tone: SectionTone, titleKey: string, body: ReactNode) => (
-  <div className="flex flex-col gap-6 min-w-0 max-w-full">
-    <FormSectionHeader tone={tone} titleKey={titleKey} />
-    <Section className="cas-sheet flex flex-col gap-6 min-w-0 overflow-hidden">{body}</Section>
-  </div>
-);
-
-/** Land titles come before the land detail on the create screens; keep that order. */
-const landBlock = (propertyType: 'L' | 'LB') =>
-  block(
-    'land',
-    'createPage.landSection',
-    <>
-      <TitleDeedForm />
-      <LandDetailForm propertyType={propertyType} />
-    </>,
-  );
-
-export const PROPERTY_TYPE_FORMS: Record<string, PropertyTypeForm> = {
-  L: {
-    schema: createLandForm,
-    defaults: createLandFormDefault as Record<string, unknown>,
-    toForm: mapLandPropertyResponseToForm as PropertyTypeForm['toForm'],
-    render: () => landBlock('L'),
-  },
-  B: {
-    schema: createBuildingForm,
-    defaults: createBuildingFormDefault as Record<string, unknown>,
-    toForm: mapBuildingPropertyResponseToForm as PropertyTypeForm['toForm'],
-    render: () =>
-      block('building', 'createPage.buildingSection', <BuildingDetailForm propertyType="B" />),
-  },
-  LB: {
-    schema: createLandAndBuildingForm,
-    defaults: createLandAndBuildingFormDefault as Record<string, unknown>,
-    toForm: mapLandAndBuildingPropertyResponseToForm as PropertyTypeForm['toForm'],
+const generatedForm = (title: string, fields: FormField[], suffix: string): PropertyTypeForm => {
+  const names = fields.map(f => f.name);
+  return {
+    schema: GENERATED_FORM_SCHEMA,
+    suffix,
+    toForm: raw => ({
+      ...Object.fromEntries(names.map(name => [name, raw[name] ?? null])),
+      isOwnerVerified: raw.verifiableOwner ?? false,
+    }),
+    toPayload: values => Object.fromEntries(names.map(name => [name, values[name] ?? null])),
     render: () => (
-      <>
-        {landBlock('LB')}
-        {block('building', 'createPage.buildingSection', <BuildingDetailForm propertyType="LB" />)}
-      </>
+      <PropertyBodyFrame>
+        <div className="flex flex-col gap-6 min-w-0 max-w-full">
+          <FormSectionHeader tone="generated" titleKey={title} />
+          <Section className="flex flex-col gap-6 min-w-0 overflow-hidden">
+            <GeneratedDetailForm fields={fields} />
+          </Section>
+        </div>
+      </PropertyBodyFrame>
     ),
-  },
-  U: {
-    schema: createCondoForm,
-    defaults: createCondoFormDefault as Record<string, unknown>,
-    toForm: mapCondoPropertyResponseToForm as PropertyTypeForm['toForm'],
-    render: () => block('condo', 'createPage.condoSection', <CondoDetailForm />),
-  },
-  MAC: {
-    schema: createMachineryForm,
-    defaults: createMachineryFormDefault as Record<string, unknown>,
-    toForm: mapMachineryPropertyResponseToForm as PropertyTypeForm['toForm'],
-    render: () => block('machinery', 'createPage.machinerySection', <MachineryDetailForm />),
-  },
-  VEH: {
-    schema: GENERATED_FORM_SCHEMA,
-    defaults: {},
-    toForm: raw => ({ ...raw }),
-    render: () =>
-      block(
-        'generated',
-        'Vehicle Information',
-        <GeneratedDetailForm fields={vehicleCorrectionFields} />,
-      ),
-  },
-  VES: {
-    schema: GENERATED_FORM_SCHEMA,
-    defaults: {},
-    toForm: raw => ({ ...raw }),
-    render: () =>
-      block(
-        'generated',
-        'Vessel Information',
-        <GeneratedDetailForm fields={vesselCorrectionFields} />,
-      ),
-  },
+  };
 };
 
 /**
- * Lease-agreement property types (LSL/LSB/LS/LSU) are the underlying property plus a lease
- * block, matching how the create screens compose them.
+ * Built once, so a property type resolves to the same object on every render: the editor keys its
+ * form defaults on it, and a fresh object each call would reset the form endlessly.
  */
-const LEASE_BASE: Record<string, string> = { LSL: 'L', LSB: 'B', LS: 'LB', LSU: 'U' };
+const PROPERTY_TYPE_FORMS: Record<string, PropertyTypeForm> = {
+  ...Object.fromEntries(
+    Object.entries(LAYOUTS).map(([code, layout]) => [
+      code,
+      {
+        ...PROPERTY_FORM_RECIPES[code],
+        suffix: getDetailEndpoint(code)!,
+        render: (context: EditorContext) => <PropertyTabs layout={layout} context={context} />,
+      },
+    ]),
+  ),
+  VEH: generatedForm('Vehicle Information', vehicleCorrectionFields, 'vehicle-detail'),
+  VES: generatedForm('Vessel Information', vesselCorrectionFields, 'vessel-detail'),
+};
 
-export function getPropertyTypeForm(typeCode: string): PropertyTypeForm | undefined {
-  const direct = PROPERTY_TYPE_FORMS[typeCode];
-  if (direct) return direct;
-
-  const base = PROPERTY_TYPE_FORMS[LEASE_BASE[typeCode]];
-  if (!base) return undefined;
-
-  return {
-    ...base,
-    toForm: raw => ({ ...base.toForm(raw), leaseAgreement: raw?.leaseAgreement ?? {} }),
-    render: () => (
-      <>
-        {base.render()}
-        {block(
-          'lease',
-          'createPage.leaseAgreementSection',
-          <LeaseAgreementForm namePrefix="leaseAgreement" />,
-        )}
-      </>
-    ),
-  };
-}
+export const getPropertyTypeForm = (typeCode: string): PropertyTypeForm | undefined =>
+  PROPERTY_TYPE_FORMS[typeCode];

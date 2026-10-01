@@ -1,0 +1,215 @@
+import { describe, expect, it } from 'vitest';
+import { diffFormValues, formatDiffValue, groupDiff } from './formDiff';
+
+const change = (label: string, from: unknown, to: unknown) =>
+  expect.objectContaining({ kind: 'changed', label, from, to });
+
+describe('diffFormValues — plain fields', () => {
+  it('reports a changed field from → to under the form label', () => {
+    const diff = diffFormValues({ landOffice: 'A' }, { landOffice: 'B' });
+    expect(diff).toEqual([change('Land Office', 'A', 'B')]);
+  });
+
+  it('treats null, undefined and "" as the same empty', () => {
+    const diff = diffFormValues({ a: null, b: undefined, c: '' }, { a: '', b: null, c: undefined });
+    expect(diff).toEqual([]);
+  });
+
+  it('reads a switch never answered as No, but not Yes as No', () => {
+    expect(diffFormValues({ customFlag: null }, { customFlag: false })).toEqual([]);
+    expect(diffFormValues({ customFlag: true }, { customFlag: false })).toEqual([
+      change('Custom Flag', true, false),
+    ]);
+  });
+
+  it('reports a field filled in from empty', () => {
+    const diff = diffFormValues({ customNote: null }, { customNote: 'x' });
+    expect(diff).toEqual([change('Custom Note', null, 'x')]);
+  });
+
+  it('treats a number and its numeric string as the same, but not two different strings', () => {
+    expect(diffFormValues({ n: 5 }, { n: '5' })).toEqual([]);
+    expect(diffFormValues({ n: 5 }, { n: '5.5' })).toHaveLength(1);
+    expect(diffFormValues({ titleNumber: '007' }, { titleNumber: '7' })).toHaveLength(1);
+  });
+
+  it('never lists the reason or ids', () => {
+    expect(diffFormValues({ reason: '', id: 'a' }, { reason: 'why', id: 'b' })).toEqual([]);
+  });
+
+  it('shows the name beside a geocode instead of the code, and hides the name field', () => {
+    const diff = diffFormValues(
+      { subDistrict: '100101', subDistrictName: 'Phra Nakhon' },
+      { subDistrict: '100201', subDistrictName: 'Dusit' },
+    );
+    expect(diff).toEqual([change('Sub District', 'Phra Nakhon', 'Dusit')]);
+  });
+
+  it('compares a list of plain values as a whole', () => {
+    expect(diffFormValues({ roads: ['a', 'b'] }, { roads: ['a', 'b'] })).toEqual([]);
+    expect(diffFormValues({ roads: ['a'] }, { roads: ['a', 'b'] })).toHaveLength(1);
+  });
+
+  it('prefixes a field inside a nested block with the block', () => {
+    const diff = diffFormValues(
+      { leaseAgreement: { customNote: 'a' } },
+      { leaseAgreement: { customNote: 'b' } },
+    );
+    expect(diff).toEqual([change('Lease Agreement · Custom Note', 'a', 'b')]);
+  });
+
+  it('reads a block that was null as empty', () => {
+    const diff = diffFormValues({ leaseAgreement: null }, { leaseAgreement: { customNote: 'b' } });
+    expect(diff).toEqual([change('Lease Agreement · Custom Note', null, 'b')]);
+  });
+});
+
+describe('diffFormValues — tables', () => {
+  const title = (id: string | undefined, titleNumber: string, rai: number) => ({
+    ...(id ? { id } : {}),
+    titleNumber,
+    titleType: 'DEED',
+    rai,
+  });
+
+  it('reports a changed cell under the table, on the row named by its title number', () => {
+    const diff = diffFormValues(
+      { titles: [title('t1', '1234', 1)] },
+      { titles: [title('t1', '1234', 2)] },
+    );
+    expect(diff).toEqual([
+      expect.objectContaining({
+        group: 'Land titles',
+        kind: 'changed',
+        label: '#1234 · Rai',
+        from: 1,
+        to: 2,
+      }),
+    ]);
+  });
+
+  it('reports a row with no id as added, summarised in a line', () => {
+    const before = { titles: [title('t1', '1234', 1)] };
+    const after = { titles: [title('t1', '1234', 1), title(undefined, '99', 3)] };
+    expect(diffFormValues(before, after)).toEqual([
+      expect.objectContaining({
+        group: 'Land titles',
+        kind: 'added',
+        label: '#99',
+        to: expect.stringContaining('Title Number 99'),
+      }),
+    ]);
+  });
+
+  it('reports a row that is gone as removed', () => {
+    const before = { titles: [title('t1', '1234', 1), title('t2', '55', 1)] };
+    const after = { titles: [title('t1', '1234', 1)] };
+    expect(diffFormValues(before, after)).toEqual([
+      expect.objectContaining({
+        group: 'Land titles',
+        kind: 'removed',
+        label: '#55',
+        from: expect.stringContaining('Title Number 55'),
+      }),
+    ]);
+  });
+
+  it('matches a title that lost its id in the edit dialog by its number', () => {
+    const diff = diffFormValues(
+      { titles: [title('t1', '1', 1), title('t2', '2', 1)] },
+      { titles: [title(undefined, '2', 9)] },
+    );
+    expect(diff.map(d => [d.kind, d.label])).toEqual([
+      ['changed', '#2 · Rai'],
+      ['removed', '#1'],
+    ]);
+  });
+
+  it('numbers the rows of a table without titles from 1', () => {
+    const diff = diffFormValues(
+      {
+        landAreaDeductions: [
+          { id: 'd1', areaInSqWa: 10 },
+          { id: 'd2', areaInSqWa: 20 },
+        ],
+      },
+      {
+        landAreaDeductions: [
+          { id: 'd1', areaInSqWa: 10 },
+          { id: 'd2', areaInSqWa: 25 },
+        ],
+      },
+    );
+    expect(diff).toEqual([
+      expect.objectContaining({
+        group: 'Land area deductions',
+        label: '#2 · Area In Sq Wa',
+        from: 20,
+        to: 25,
+      }),
+    ]);
+  });
+
+  it('pairs rows that never had ids by position', () => {
+    const diff = diffFormValues(
+      { upFrontEntries: [{ atYear: 1, upFrontAmount: 100 }] },
+      {
+        upFrontEntries: [
+          { atYear: 1, upFrontAmount: 150 },
+          { atYear: 2, upFrontAmount: 50 },
+        ],
+      },
+    );
+    expect(diff.map(d => [d.kind, d.label])).toEqual([
+      ['changed', '#1 · Up Front Amount'],
+      ['added', '#2'],
+    ]);
+  });
+
+  it('names a nested table inside its parent row', () => {
+    const diff = diffFormValues(
+      { depreciationDetails: [{ id: 'p1', depreciationPeriods: [{ depreciationPerYear: 2 }] }] },
+      { depreciationDetails: [{ id: 'p1', depreciationPeriods: [{ depreciationPerYear: 3 }] }] },
+    );
+    expect(diff).toEqual([
+      expect.objectContaining({
+        group: 'Depreciation',
+        label: '#1 · Periods #1 · Depreciation Per Year',
+        from: 2,
+        to: 3,
+      }),
+    ]);
+  });
+
+  it('says nothing about an unchanged table', () => {
+    const rows = [title('t1', '1', 1)];
+    expect(diffFormValues({ titles: rows }, { titles: [...rows] })).toEqual([]);
+  });
+});
+
+describe('groupDiff', () => {
+  it('puts plain fields first, then each table in the order it first changed', () => {
+    const groups = groupDiff(
+      diffFormValues(
+        { a: 1, titles: [{ id: 't', rai: 1 }], landAreaDeductions: [] },
+        { a: 2, titles: [{ id: 't', rai: 2 }], landAreaDeductions: [{ areaInSqWa: 1 }] },
+      ),
+    );
+    expect(groups.map(g => g.group)).toEqual(['', 'Land titles', 'Land area deductions']);
+  });
+
+  it('is empty for no differences', () => {
+    expect(groupDiff([])).toEqual([]);
+  });
+});
+
+describe('formatDiffValue', () => {
+  it('reads empty as a dash and booleans as Yes / No', () => {
+    expect(formatDiffValue(null)).toBe('—');
+    expect(formatDiffValue('')).toBe('—');
+    expect(formatDiffValue(true)).toBe('Yes');
+    expect(formatDiffValue(false)).toBe('No');
+    expect(formatDiffValue(0)).toBe('0');
+    expect(formatDiffValue(['a', 'b'])).toBe('a, b');
+  });
+});

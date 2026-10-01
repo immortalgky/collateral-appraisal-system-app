@@ -5079,7 +5079,8 @@ const PropertyCorrectionChangeDto = z
 const PropertyCorrectionDto = z
   .object({
     id: z.string().uuid(),
-    appraisalPropertyId: z.string().uuid(),
+    // null = a document / summary-regeneration entry rather than a property correction
+    appraisalPropertyId: z.string().uuid().nullable(),
     propertyType: z.string(),
     reason: z.string(),
     changedBy: z.string(),

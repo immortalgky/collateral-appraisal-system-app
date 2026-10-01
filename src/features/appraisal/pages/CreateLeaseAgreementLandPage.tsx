@@ -24,7 +24,7 @@ import {
   createLeaseAgreementLandFormDefault,
   type createLeaseAgreementLandFormType,
 } from '../schemas/form';
-import { mapLandPropertyResponseToForm } from '../utils/mappers';
+import { leaseLandToForm, leaseLandToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
@@ -100,12 +100,7 @@ const CreateLeaseAgreementLandPage = () => {
   );
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData)
-      return {
-        ...mapLandPropertyResponseToForm(propertyData),
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+    if (isEditMode && propertyData) return leaseLandToForm(propertyData);
     return createLeaseAgreementLandFormDefault;
   }, [isEditMode, propertyData]);
 
@@ -117,13 +112,7 @@ const CreateLeaseAgreementLandPage = () => {
 
   useEffect(() => {
     if (!isEditMode || !propertyData) return;
-    const base = mapLandPropertyResponseToForm(propertyData);
-    reset({
-      ...createLeaseAgreementLandFormDefault,
-      ...base,
-      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-      rentalInfo: (propertyData as any).rentalInfo ?? null,
-    } as any);
+    reset(leaseLandToForm(propertyData));
   }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } = useCreateLeaseAgreementLandProperty();
@@ -138,8 +127,7 @@ const CreateLeaseAgreementLandPage = () => {
 
   const onSubmit: SubmitHandler<createLeaseAgreementLandFormType> = async data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const payload = { ...rest, leaseAgreement, rentalInfo };
+    const payload = leaseLandToPayload(data);
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -179,8 +167,7 @@ const CreateLeaseAgreementLandPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const { leaseAgreement, rentalInfo, ...rest } = getValues();
-    const payload = { ...rest, leaseAgreement, rentalInfo };
+    const payload = leaseLandToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateProperty(

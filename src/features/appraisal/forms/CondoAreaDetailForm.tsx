@@ -180,7 +180,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
   const isEmpty = rows.length === 0;
 
   return (
-    <div>
+    <div className="col-span-12">
       <span data-field={name} className="cas-repeater" />
       <div className="cas-labelled-table">
         <div className="cas-table-label">

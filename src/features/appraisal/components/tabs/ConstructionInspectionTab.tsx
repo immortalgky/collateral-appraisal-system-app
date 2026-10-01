@@ -53,19 +53,32 @@ interface ConstructionInspectionTabProps {
    * a house gets none) and the hint's wording (a condo has no Building tab to fill).
    */
   condo: boolean;
+  /**
+   * For a host that is not the property route (the data-correction screen), where the URL carries
+   * no `:propertyId`: the property on screen. Absent on the property pages, which read the route.
+   */
+  propertyId?: string;
+  /**
+   * Replaces the building switcher's navigation to another property's page. Given, the switcher
+   * hands the picked property's id to the host instead.
+   */
+  onSelectProperty?: (propertyId: string) => void;
 }
 
 export function ConstructionInspectionTab({
   readOnly,
   ciMode,
   condo,
+  propertyId: propertyIdProp,
+  onSelectProperty,
 }: ConstructionInspectionTabProps) {
   const { t } = useTranslation('appraisal');
   const navigate = useNavigate();
   const basePath = useBasePath();
   const appraisalId = useAppraisalId();
   const inspectionNumber = useAppraisalInspectionNumber();
-  const { propertyId } = useParams<{ propertyId: string }>();
+  const routeParams = useParams<{ propertyId: string }>();
+  const propertyId = propertyIdProp ?? routeParams.propertyId;
   const [searchParams] = useSearchParams();
   const groupId = searchParams.get('groupId');
   const propertyBasePath = usePropertyBasePath();
@@ -94,6 +107,10 @@ export function ConstructionInspectionTab({
 
   const handlePropertySelect = (property: PropertyItem) => {
     if (property.id === propertyId) {
+      return;
+    }
+    if (onSelectProperty) {
+      onSelectProperty(property.id);
       return;
     }
     const segment = getRouteSegment(property.type);

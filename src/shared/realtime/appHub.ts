@@ -10,7 +10,12 @@
  * - Pool task groups: client calls joinGroup('pool-'+g) / leaveGroup('pool-'+g).
  */
 
-import { HubConnectionBuilder, HubConnectionState, type HubConnection } from '@microsoft/signalr';
+import {
+  HttpTransportType,
+  HubConnectionBuilder,
+  HubConnectionState,
+  type HubConnection,
+} from '@microsoft/signalr';
 import { getFreshAccessToken, isSessionExpired } from '@shared/api/axiosInstance';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 
@@ -123,7 +128,18 @@ function setStatus(status: AppHubStatus): void {
 // Internal helpers
 // ──────────────────────────────────────────────────────────────────────────────
 
-function buildConnection(): HubConnection {
+/**
+ * `wsOnly` connects with a single WebSocket request and no negotiate round trip. Deployed
+ * environments run two IIS nodes behind an F5 with sticky sessions off: a negotiated connection id
+ * lives in one node's memory, so the follow-up request (WS/SSE/long-poll) 404s whenever it lands on
+ * the other node, while a lone WebSocket stays pinned to whichever node accepted it. The token
+ * rides in the query string (~8 KB when encrypted), so IIS must raise requestFiltering
+ * maxQueryString (UAT uses 16384) or the upgrade fails with 404.15.
+ *
+ * Without `wsOnly` the client negotiates and may fall back to SSE / long polling — for hosts that
+ * can't do WebSockets. See connectWithFallback().
+ */
+function buildConnection(wsOnly: boolean): HubConnection {
   return (
     new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
@@ -136,6 +152,7 @@ function buildConnection(): HubConnection {
         // next API call, which forces the logout/redirect.
         accessTokenFactory: async () => (await getFreshAccessToken()) ?? '',
         withCredentials: true,
+        ...(wsOnly && { skipNegotiation: true, transport: HttpTransportType.WebSockets }),
       })
       // Never give up: capped exponential backoff that always returns a delay
       // (the default policy stops after ~40s, killing real-time for the session).
@@ -233,6 +250,26 @@ const RESTART_DELAY_MS = 5000;
 /** Cadence once /auth/refresh has answered 401 — see the reasoning in scheduleRestart(). */
 const EXPIRED_RETRY_DELAY_MS = 5 * 60 * 1000;
 
+/**
+ * Connect WebSocket-only first, and only if that fails retry with negotiation so SSE / long polling
+ * can take over. Decided per start() rather than remembered, so a transient WebSocket failure does
+ * not leave the tab on the negotiated path (flaky across load-balanced nodes) for good.
+ */
+async function connectWithFallback(): Promise<void> {
+  _connection = buildConnection(true);
+  attachConnectionHandlers(_connection);
+  try {
+    await _connection.start();
+    return;
+  } catch (err) {
+    if (_intentionalStop) throw err;
+    console.warn('[AppHub] WebSocket-only connect failed, retrying with negotiation:', err);
+  }
+  _connection = buildConnection(false);
+  attachConnectionHandlers(_connection);
+  await _connection.start();
+}
+
 /** Schedule a reconnect attempt after an unexpected close. */
 function scheduleRestart(): void {
   if (_restartTimer || _intentionalStop || !_lastUsername) return;
@@ -299,11 +336,7 @@ export async function start(_username: string): Promise<void> {
     return;
   }
 
-  _connection = buildConnection();
-  attachConnectionHandlers(_connection);
-
-  const promise = _connection
-    .start()
+  const promise = connectWithFallback()
     .then(() => {
       console.log('[AppHub] Connected');
       setStatus('connected');
