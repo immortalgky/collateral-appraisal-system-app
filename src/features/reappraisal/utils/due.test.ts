@@ -7,6 +7,7 @@ describe('due', () => {
     expect([d.getFullYear(), d.getMonth(), d.getDate(), d.getHours()]).toEqual([2026, 3, 2, 0]);
     expect(parseDay(undefined)).toBeUndefined();
     expect(parseDay('not a date')).toBeUndefined();
+    expect(parseDay('2026-02-31')).toBeUndefined();
     expect(formatDay('2026-04-02')).toBe('02/04/2026');
     expect(formatDay(undefined)).toBe('—');
   });

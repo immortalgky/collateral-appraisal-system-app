@@ -32,7 +32,9 @@ type QuickFilter = 'all' | 'overdue' | 'dueSoon' | 'inProgress' | 'nonCas';
 
 const QUICK_PARAMS: Record<QuickFilter, Partial<ReappraisalCandidateListParams>> = {
   all: {},
-  overdue: { remainingDayTo: -1 },
+  // Names the lower bound too, so a dialog lower bound is cleared rather than combined into an
+  // impossible range.
+  overdue: { remainingDayFrom: undefined, remainingDayTo: -1 },
   dueSoon: { remainingDayFrom: 0, remainingDayTo: DUE_SOON_DAYS },
   inProgress: { inProgress: true },
   nonCas: { priorSource: 'NonCAS' },

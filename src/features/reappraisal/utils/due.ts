@@ -10,8 +10,10 @@ export const DUE_SOON_DAYS = 90;
 export function parseDay(iso?: string | null): Date | undefined {
   const m = iso ? /^(\d{4})-(\d{2})-(\d{2})/.exec(iso) : null;
   if (!m) return undefined;
-  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
-  return isNaN(d.getTime()) ? undefined : d;
+  const [y, mo, day] = [Number(m[1]), Number(m[2]) - 1, Number(m[3])];
+  const d = new Date(y, mo, day);
+  // Date rolls an impossible day over (31 Feb → 3 Mar); reject it instead.
+  return d.getFullYear() === y && d.getMonth() === mo && d.getDate() === day ? d : undefined;
 }
 
 /** dd/MM/yyyy (the system's date format); '—' when missing. */
