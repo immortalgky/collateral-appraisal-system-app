@@ -423,9 +423,9 @@ function RequestListingPage() {
                         {request.requestNumber || '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5 max-w-[180px]">
                       <div className="flex flex-col">
-                        <span className="text-gray-600">
+                        <span className="text-gray-600 truncate">
                           {request.customerName || (
                             <span className="text-gray-300 italic text-xs">-</span>
                           )}
