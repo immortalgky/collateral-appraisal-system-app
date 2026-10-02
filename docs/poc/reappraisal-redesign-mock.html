@@ -504,7 +504,7 @@
       </div>
       ${banner}
       <div class="card duestrip">
-        <div class="stat"><div class="k">ครบกำหนดทบทวน</div><div class="v u-${u} num">${remainText(due)}</div><div class="s num">${fd(due)} (ประเมินล่าสุด + 5 ปี)</div></div>
+        <div class="stat"><div class="k">ครบกำหนดทบทวน</div><div class="v u-${u} num">${remainText(due)}</div><div class="s num">${fd(due)} (วันครบกำหนดจาก AS400)</div></div>
         <div class="stat"><div class="k">ประเมินล่าสุด</div><div class="v num">${fd(apprD)}</div><div class="s num">ผ่านมา ${age.y ? age.y + ' ปี ' : ''}${age.m} เดือน</div></div>
         <div class="stat"><div class="k">วันที่มีผลจาก AS400</div><div class="v num">${fd(effD)}</div><div class="s">ตามไฟล์ COLLATREV</div></div>
         <div class="stat"><div class="k">มูลค่าเดิม</div><div class="v num">${money(m.value)}</div><div class="s">บาท</div></div>
@@ -568,7 +568,7 @@
         '<b>ไม่ทบทวนรอบนี้</b> เป็นปุ่มที่เห็นได้ (หัวหน้า และต่อแถว) แทนไอคอนถังขยะที่โผล่ตอน hover',
         'ป้าย "ที่มา" เดิม "SIBS / ในระบบ" → <b>"ถึงรอบ (AS400)"</b> กับ <b>"ในระบบ · ยังไม่ถึงรอบ"</b> บอกว่าทำไมเล่มนั้นมาอยู่ในรายการ' + Q,
         'เล่มใกล้เคียงที่มีงานค้างแสดงเป็นแถวจาง เลือกไม่ได้ (ตอนนี้ API ซ่อนแถวพวกนี้ไปเลย จะคงไว้แบบเดิมก็ได้)' + Q,
-        'ข้อสังเกต: หน้าเดิมคำนวณ "วันที่เหลือ" ของเล่มหลักจาก <b>วันที่มีผลของ AS400</b> แต่หน้ารายการและเล่มใกล้เคียงใช้ <b>วันประเมิน + 5 ปี</b> — ใน mock ใช้ +5 ปีทั้งหมด และแสดงวันที่มีผลแยกเป็นอีกช่อง' + Q,
+        'วันครบกำหนดทบทวนใช้ <b>ReviewDate ที่ AS400 ส่งมา</b> ทุกหน้า (ไม่คำนวณ +5 ปีเอง — AS400 คิดรอบตามประเภท Stage 3 ครบเร็วกว่า) และแสดงวันที่มีผลแยกเป็นอีกช่อง',
       ]);
   }
 

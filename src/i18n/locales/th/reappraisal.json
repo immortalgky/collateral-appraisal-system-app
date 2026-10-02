@@ -78,7 +78,7 @@
     },
     "daysLeftFrom": "เหลือตั้งแต่ (วัน)",
     "daysLeftTo": "ถึง (วัน)",
-    "reviewDueHint": "นับจากวันประเมินล่าสุด + 5 ปี · ค่าติดลบ = เกินกำหนด",
+    "reviewDueHint": "นับถึงวันครบกำหนดทบทวนที่ AS400 ส่งมา · ค่าติดลบ = เกินกำหนด",
     "specific": "ระบุเจาะจง"
   },
   "badge": {
@@ -198,7 +198,7 @@
     },
     "stats": {
       "reviewDue": "ครบกำหนดทบทวน",
-      "reviewDueNote": "{{date}} (ประเมินล่าสุด + 5 ปี)",
+      "reviewDueNote": "{{date}} (วันครบกำหนดจาก AS400)",
       "lastAppraisal": "ประเมินล่าสุด",
       "ago": "ผ่านมา {{period}}",
       "effectiveDate": "วันที่มีผลจาก AS400",

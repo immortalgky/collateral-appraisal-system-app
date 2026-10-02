@@ -25,6 +25,7 @@ export interface ReappraisalCandidateListItem {
   status: string;
   reviewType: ReviewTypeCode;
   appraisalDate?: string; // ISO date yyyy-MM-dd — absent when the prior book cannot be traced
+  reviewDate?: string; // ISO date — the review due date AS400 sent
   remainingDay?: number;
   oldAppraisalReportNumber: string;
   cifNumber: string;
@@ -79,9 +80,10 @@ export interface NearbyReappraisalCandidate {
   collateralName?: string;
   currentValue?: number;
   appraisalDate?: string; // ISO date — absent when the prior book cannot be traced
+  reviewDate?: string; // ISO date — AS400's review due date; absent for an in-system appraisal
   remainingDay?: number;
   reviewType?: string; // only meaningful for "Candidate" rows
-  daysSinceLastAppraisal?: number; // today − (candidate ValuationDate or in-system AppointmentDateTime)
+  daysSinceLastAppraisal?: number; // today − appraisalDate
   distanceKm?: number;
   latitude?: number;
   longitude?: number;

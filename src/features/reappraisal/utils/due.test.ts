@@ -12,13 +12,12 @@ describe('due', () => {
     expect(formatDay(undefined)).toBe('—');
   });
 
-  it('dates the review five years on and counts the days left', () => {
-    const r = dueOf('2021-11-20', new Date(2026, 9, 1))!;
+  it('takes the review date as the due date and counts the days left', () => {
+    const r = dueOf('2026-11-20', new Date(2026, 9, 1))!;
     expect(r.due).toEqual(new Date(2026, 10, 20));
     expect(r.daysLeft).toBe(50);
-    expect(dueOf('2021-08-15', new Date(2026, 9, 1))!.daysLeft).toBe(-47);
-    // Same as DATEADD(YEAR, 5, '2020-02-29') in the view: 28 Feb, not 1 Mar.
-    expect(dueOf('2020-02-29', new Date(2025, 1, 28))!.due).toEqual(new Date(2025, 1, 28));
+    expect(dueOf('2026-08-15', new Date(2026, 9, 1))!.daysLeft).toBe(-47);
+    expect(dueOf(undefined)).toBeUndefined();
   });
 
   it('grades urgency at overdue / 90 days / one year', () => {
