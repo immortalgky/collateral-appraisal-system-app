@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
@@ -69,11 +69,16 @@ const PROCESSED_DOT: Partial<Record<ProcessedQuick, string>> = {
 
 // Each tab opens on its natural order: due date (closest first) for the to-do tabs, the latest
 // submission for the processed history.
+const TABS: readonly ReappraisalListStatus[] = ['Pending', 'Deleted', 'Consumed'];
+
 const DEFAULT_SORT: Record<ReappraisalListStatus, { field: string; dir: 'asc' | 'desc' }> = {
   Pending: { field: 'RemainingDay', dir: 'asc' },
   Deleted: { field: 'RemainingDay', dir: 'asc' },
   Consumed: { field: 'NewAppraisalSubmittedAt', dir: 'desc' },
 };
+
+// "CIF" / "COL" tag in front of an id.
+const ID_TAG = 'px-1 rounded bg-gray-100 text-[9px] font-bold text-gray-700';
 
 const TH = 'px-3 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap';
 // Columns shrink to their content; only the customer column grows into the free width.
@@ -95,13 +100,40 @@ function ReappraisalListPage() {
   const [processedQuick, setProcessedQuick] = useState<ProcessedQuick>('all');
   // Tabs: the to-do list and books marked "not reviewing this round" (both only books on AS400's
   // latest file), and processed books — the whole history.
-  const [status, setStatus] = useState<ReappraisalListStatus>('Pending');
+  // The tab lives in the URL (?tab=deleted) so coming back from a detail page reopens it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab')?.toLowerCase();
+  const status = TABS.find(s => s.toLowerCase() === tabParam) ?? 'Pending';
   const restoreMutation = useRestoreReappraisalCandidate();
 
   // Sort — sortField carries the whitelisted PascalCase view column name. Opens on the due date
   // (closest first) so the column shows it; cleared, the API falls back to the same order.
-  const [sortField, setSortField] = useState<string | null>('RemainingDay');
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [sortField, setSortField] = useState<string | null>(DEFAULT_SORT[status].field);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(DEFAULT_SORT[status].dir);
+  // Each tab opens on its own order, page 1 — whatever changed the tab (a click, the menu link to
+  // /reappraisal while on another tab).
+  const [sortedFor, setSortedFor] = useState(status);
+  const resetFor = (tab: ReappraisalListStatus) => {
+    setSortedFor(tab);
+    setSortField(DEFAULT_SORT[tab].field);
+    setSortDirection(DEFAULT_SORT[tab].dir);
+    setPageNumber(0);
+  };
+  if (sortedFor !== status) resetFor(status);
+  // Tab switches replace the history entry: browser Back leaves the list rather than walking tabs.
+  const setStatus = (tab: ReappraisalListStatus) => {
+    // Clicking the active tab may change no URL, so reset here.
+    if (tab === status) resetFor(tab);
+    setSearchParams(
+      prev => {
+        const next = new URLSearchParams(prev);
+        if (tab === 'Pending') next.delete('tab');
+        else next.set('tab', tab.toLowerCase());
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   const isPending = status === 'Pending';
   const isProcessed = status === 'Consumed';
@@ -253,22 +285,17 @@ function ReappraisalListPage() {
             className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5"
             role="group"
           >
-            {(['Pending', 'Deleted', 'Consumed'] as const).map(tab => {
+            {TABS.map(tab => {
               return (
                 <button
                   key={tab}
                   type="button"
                   aria-pressed={status === tab}
-                  onClick={() => {
-                    setStatus(tab);
-                    setSortField(DEFAULT_SORT[tab].field);
-                    setSortDirection(DEFAULT_SORT[tab].dir);
-                    setPageNumber(0);
-                  }}
+                  onClick={() => setStatus(tab)}
                   className={clsx(
-                    'inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors',
+                    'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
                     status === tab
-                      ? 'bg-white text-gray-900 shadow-sm'
+                      ? 'bg-white text-primary shadow-sm'
                       : 'text-gray-500 hover:text-gray-700',
                   )}
                 >
@@ -511,7 +538,11 @@ function ReappraisalListPage() {
                 items.map(item => (
                   <tr
                     key={item.id}
-                    onClick={() => navigate(`/reappraisal/${item.id}`)}
+                    onClick={() =>
+                      navigate(`/reappraisal/${item.id}`, {
+                        state: { fromList: true },
+                      })
+                    }
                     className={clsx(
                       'group cursor-pointer transition-colors hover:bg-gray-50',
                       item.hasOpenAppraisal && 'bg-gray-50/40',
@@ -528,30 +559,36 @@ function ReappraisalListPage() {
                             </span>
                           )}
                         </span>
-                        {item.isBlockUnit ? (
-                          item.unitMatchedUnits === 1 ? (
-                            <span className="text-[11px] text-gray-500 truncate max-w-64">
-                              {unitLabel(
-                                {
-                                  roomNumber: item.unitRoomNumber,
-                                  floor: item.unitFloor,
-                                  towerName: item.unitTowerName,
-                                  houseNumber: item.unitHouseNumber,
-                                  plotNumber: item.unitPlotNumber,
-                                },
-                                t,
-                              )}
-                            </span>
-                          ) : (
-                            <span className="text-[11px] text-amber-700 truncate max-w-64">
-                              {t('unit.notFoundShort')}
-                            </span>
-                          )
-                        ) : (
-                          <span className="text-[11px] text-gray-500 truncate max-w-64">
-                            {item.collateralName ?? '—'}
+                        <span className="flex items-baseline gap-1 min-w-0">
+                          <span className="shrink-0 flex items-center gap-1 text-[11px] text-gray-500 tabular-nums">
+                            <span className={ID_TAG}>COL</span>
+                            {item.collateralId} ·
                           </span>
-                        )}
+                          {item.isBlockUnit ? (
+                            item.unitMatchedUnits === 1 ? (
+                              <span className="text-[11px] text-gray-500 truncate max-w-64">
+                                {unitLabel(
+                                  {
+                                    roomNumber: item.unitRoomNumber,
+                                    floor: item.unitFloor,
+                                    towerName: item.unitTowerName,
+                                    houseNumber: item.unitHouseNumber,
+                                    plotNumber: item.unitPlotNumber,
+                                  },
+                                  t,
+                                )}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] text-amber-700 truncate max-w-64">
+                                {t('unit.notFoundShort')}
+                              </span>
+                            )
+                          ) : (
+                            <span className="text-[11px] text-gray-500 truncate max-w-64">
+                              {item.collateralName ?? '—'}
+                            </span>
+                          )}
+                        </span>
                       </div>
                     </td>
                     <td className="px-3 py-2 w-full max-w-0 min-w-40">
@@ -562,8 +599,9 @@ function ReappraisalListPage() {
                         >
                           {item.customerName ?? '—'}
                         </span>
-                        <span className="text-[11px] text-gray-500 tabular-nums">
-                          CIF {item.cifNumber}
+                        <span className="flex items-center gap-1 text-[11px] text-gray-500 tabular-nums">
+                          <span className={ID_TAG}>CIF</span>
+                          {item.cifNumber}
                         </span>
                       </div>
                     </td>

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
-import { TextInput, DateInput } from '@/shared/components/inputs';
+import { TextInput, DateInput, Dropdown } from '@/shared/components/inputs';
 import { DUE_SOON_DAYS } from '../utils/due';
 import type { PriorSourceFilter, ReappraisalFilterValues, ReviewTypeCode } from '../types';
 
@@ -239,31 +239,20 @@ export function ReappraisalFilterDialog({
               value={values.collateralId ?? ''}
               onChange={e => set({ collateralId: e.target.value || undefined })}
             />
-            <div>
-              <label
-                htmlFor="reappraisal-filter-prior"
-                className="block text-xs font-medium text-gray-700 mb-1"
-              >
-                {t('filter.fields.priorSource')}
-              </label>
-              <select
-                id="reappraisal-filter-prior"
-                value={values.priorSource ?? ''}
-                onChange={e =>
-                  set({
-                    priorSource: (e.target.value || undefined) as PriorSourceFilter | undefined,
-                  })
-                }
-                className="block w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white hover:border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              >
-                <option value="">{t('filter.all')}</option>
-                {(['CAS', 'AS400Legacy', 'Unknown', 'NonCAS'] as const).map(s => (
-                  <option key={s} value={s}>
-                    {t(`filter.priorSource.${s}`)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Dropdown
+              label={t('filter.fields.priorSource')}
+              aria-label={t('filter.fields.priorSource')}
+              showValuePrefix={false}
+              value={values.priorSource ?? ''}
+              onChange={(val: string) =>
+                set({ priorSource: (val || undefined) as PriorSourceFilter | undefined })
+              }
+              placeholder={t('filter.all')}
+              options={(['CAS', 'AS400Legacy', 'Unknown', 'NonCAS'] as const).map(s => ({
+                value: s,
+                label: t(`filter.priorSource.${s}`),
+              }))}
+            />
           </div>
         </section>
 
