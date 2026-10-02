@@ -36,7 +36,7 @@ export function DueCell({ reviewDate }: { reviewDate?: string }) {
 }
 
 const REVIEW_TYPE_STYLE: Record<ReviewTypeCode, string> = {
-  '1': 'bg-gray-100 text-gray-600',
+  '1': 'bg-emerald-50 text-emerald-700',
   '2': 'bg-amber-50 text-amber-700',
   '3': 'bg-red-50 text-red-700',
 };
@@ -44,7 +44,7 @@ const REVIEW_TYPE_STYLE: Record<ReviewTypeCode, string> = {
 export function ReviewTypeChip({ code }: { code?: string }) {
   const { t } = useTranslation('reappraisal');
   if (!code) return <span className="text-gray-300">—</span>;
-  const style = REVIEW_TYPE_STYLE[code as ReviewTypeCode] ?? REVIEW_TYPE_STYLE['1'];
+  const style = REVIEW_TYPE_STYLE[code as ReviewTypeCode] ?? 'bg-gray-100 text-gray-600';
   return (
     <span
       className={clsx(

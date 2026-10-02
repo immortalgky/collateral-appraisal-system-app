@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
@@ -473,6 +473,10 @@ function InitiateResultModal({
 function ReappraisalDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  // Opened from the list: step back to its history entry, which still carries the ?tab=. Opened
+  // directly (a link, a bookmark): replace this entry with the list's default tab.
+  const fromList = (useLocation().state as { fromList?: boolean } | null)?.fromList;
+  const backToList = () => (fromList ? navigate(-1) : navigate('/reappraisal', { replace: true }));
   const { t, i18n } = useTranslation(['reappraisal', 'common']);
   const user = useAuthStore(s => s.user);
   const remaining = useRemainingText();
@@ -579,7 +583,7 @@ function ReappraisalDetailPage() {
           </p>
           <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/reappraisal')}>
+        <Button variant="outline" size="sm" onClick={backToList}>
           {t('detail.backToList')}
         </Button>
       </div>
@@ -601,6 +605,8 @@ function ReappraisalDetailPage() {
         })
       : '—';
   };
+  const firstOnFile = monthYear(detail.firstSeenFileDate);
+  const lastOnFile = monthYear(detail.lastSeenFileDate);
 
   const nearby = detail.nearbyGroupCandidates;
   const selectedRows = nearby.filter(c => !c.isInProgress && selectedNearbyTokens.has(rowToken(c)));
@@ -645,7 +651,7 @@ function ReappraisalDetailPage() {
       onSuccess: () => {
         setSkipTarget(null);
         if (candidateId === detail.id) {
-          navigate('/reappraisal');
+          backToList();
         } else if (token) {
           setSelectedNearbyTokens(prev => {
             const next = new Set(prev);
@@ -677,7 +683,7 @@ function ReappraisalDetailPage() {
       <div className="shrink-0 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0">
           <button
-            onClick={() => navigate('/reappraisal')}
+            onClick={backToList}
             aria-label={t('detail.backToList')}
             className="flex items-center justify-center size-7 shrink-0 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
           >
@@ -863,7 +869,7 @@ function ReappraisalDetailPage() {
       </section>
 
       {/* ── Facts ── */}
-      <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-3">
+      <div className="shrink-0 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         <FactCard
           title={t('detail.cards.collateral')}
           aside={`${t('detail.fields.collateralId')} ${detail.collateralId}`}
@@ -934,7 +940,7 @@ function ReappraisalDetailPage() {
           </Fact>
           <Fact label={t('detail.fields.onFile')}>
             <span className="tabular-nums">
-              {monthYear(detail.firstSeenFileDate)} – {monthYear(detail.lastSeenFileDate)}
+              {firstOnFile === lastOnFile ? firstOnFile : `${firstOnFile} – ${lastOnFile}`}
             </span>
           </Fact>
         </FactCard>
@@ -1142,7 +1148,7 @@ function ReappraisalDetailPage() {
         result={result}
         onClose={() => {
           setResult(null);
-          navigate('/reappraisal');
+          backToList();
         }}
       />
 
