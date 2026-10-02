@@ -73,12 +73,37 @@ function roundHalfAway(value: number): number {
 }
 
 /**
+ * `value` as a decimal column with `places` stores it, in units of its last place (satang for money).
+ * Rounds the decimal text the payload carries — `String(n)` is what JSON.stringify posts and what the
+ * API parses exactly — half away from zero, like SQL Server and MidpointRounding.AwayFromZero. Not the
+ * float: 205277.62499999997 is posted as such and stored .62, where rounding the float gives .63.
+ */
+// ponytail: a JS number, exact up to 2^53 units (~90 trillion baht at 2 places); BigInt if a figure ever
+// gets near that.
+export function toStoredUnits(value: Numberish, places: number): number {
+  const n = toNumber(value);
+  const text = String(Math.abs(n));
+  let units: number;
+  if (text.includes('e')) {
+    // Exponent notation: float noise around zero (a fully depreciated row lands on -1.45e-10) or a
+    // magnitude no figure reaches. Splitting that text on '.' would read the exponent as digits.
+    units = Math.round(Math.abs(n) * 10 ** places);
+  } else {
+    const [whole, fraction = ''] = text.split('.');
+    units = Number(whole + fraction.slice(0, places).padEnd(places, '0'));
+    if (fraction.charAt(places) >= '5') units += 1;
+  }
+  return n < 0 && units !== 0 ? -units : units;
+}
+
+/**
  * Amounts rounded to the nearest 1,000 the way the server does it for a decimal(18,2) column: each
- * at 2 dp, summed exactly (in satang — float addition can land a hair under a half-thousand the
- * server's decimal sum hits exactly), then midpoint away from zero. Also returns that exact sum.
+ * at the 2 dp it is stored at, summed exactly (in satang — float addition can land a hair under a
+ * half-thousand the server's decimal sum hits exactly), then midpoint away from zero. Also returns
+ * that exact sum.
  */
 export function roundSumToThousand(values: Numberish[]): { sum: number; rounded: number } {
-  const satang = values.reduce<number>((acc, v) => acc + roundHalfAway(toNumber(v) * 100), 0);
+  const satang = values.reduce<number>((acc, v) => acc + toStoredUnits(v, 2), 0);
   return { sum: satang / 100, rounded: roundHalfAway(satang / 100_000) * 1000 };
 }
 
