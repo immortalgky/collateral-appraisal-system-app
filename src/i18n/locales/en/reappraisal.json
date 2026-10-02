@@ -78,7 +78,7 @@
     },
     "daysLeftFrom": "Days Left From",
     "daysLeftTo": "Days Left To",
-    "reviewDueHint": "Counted from the last appraisal + 5 years · negative = overdue",
+    "reviewDueHint": "Counted to the review due date AS400 sends · negative = overdue",
     "specific": "Specific"
   },
   "badge": {
@@ -198,7 +198,7 @@
     },
     "stats": {
       "reviewDue": "Review Due",
-      "reviewDueNote": "{{date}} (last appraisal + 5 years)",
+      "reviewDueNote": "{{date}} (due date from AS400)",
       "lastAppraisal": "Last Appraised",
       "ago": "{{period}} ago",
       "effectiveDate": "AS400 Effective Date",

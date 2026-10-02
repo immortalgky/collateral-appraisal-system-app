@@ -577,7 +577,7 @@ function ReappraisalListPage() {
                     )}
                     {!isProcessed && (
                       <td className="px-3 py-2">
-                        <DueCell appraisalDate={item.appraisalDate} />
+                        <DueCell reviewDate={item.reviewDate} />
                       </td>
                     )}
                     {isProcessed ? (

@@ -588,8 +588,9 @@ function ReappraisalDetailPage() {
 
   const isBlocked = detail.status !== 'Pending' || detail.hasOpenAppraisal === true;
   const hasCoords = detail.latitude != null && detail.longitude != null;
-  const due = dueOf(detail.appraisalDate);
-  const age = due ? diffYMD(due.appraised, startOfToday()) : undefined;
+  const due = dueOf(detail.reviewDate);
+  const lastAppraised = parseDay(detail.appraisalDate);
+  const age = lastAppraised ? diffYMD(lastAppraised, startOfToday()) : undefined;
   const fd = formatDay;
   const monthYear = (iso?: string) => {
     const d = parseDay(iso);
@@ -996,7 +997,7 @@ function ReappraisalDetailPage() {
                   {fd(detail.appraisalDate)}
                 </td>
                 <td className="px-3 py-2">
-                  <DueCell appraisalDate={detail.appraisalDate} />
+                  <DueCell reviewDate={detail.reviewDate} />
                 </td>
                 <td className="px-3 py-2" />
               </tr>
@@ -1068,7 +1069,7 @@ function ReappraisalDetailPage() {
                         {fd(c.appraisalDate)}
                       </td>
                       <td className="px-3 py-2">
-                        {c.isInProgress ? '—' : <DueCell appraisalDate={c.appraisalDate} />}
+                        {c.isInProgress ? '—' : <DueCell reviewDate={c.reviewDate} />}
                       </td>
                       <td className="px-3 py-2 text-right">
                         {c.candidateId && !c.isInProgress && (

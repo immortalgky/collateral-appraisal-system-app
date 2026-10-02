@@ -13,10 +13,10 @@ const URGENCY_DOT: Record<Urgency, string> = {
   later: '',
 };
 
-/** Review due date (last appraisal + 5 years) over the time left, coloured by urgency. */
-export function DueCell({ appraisalDate }: { appraisalDate?: string }) {
+/** Review due date (AS400's ReviewDate) over the time left, coloured by urgency. */
+export function DueCell({ reviewDate }: { reviewDate?: string }) {
   const remaining = useRemainingText();
-  const due = dueOf(appraisalDate);
+  const due = dueOf(reviewDate);
   if (!due) return <span className="text-gray-300">—</span>;
   const u = urgencyOf(due.daysLeft);
   return (

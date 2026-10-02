@@ -1,8 +1,5 @@
 import { formatDate } from '@/shared/utils/dateUtils';
 
-/** Reappraisal is due five years after the last appraisal. */
-export const REVIEW_CYCLE_YEARS = 5;
-
 /** "Due soon" — the same 90-day line as the list's quick filter. */
 export const DUE_SOON_DAYS = 90;
 
@@ -20,11 +17,6 @@ export function parseDay(iso?: string | null): Date | undefined {
 export function formatDay(value?: Date | string | null): string {
   const d = value instanceof Date ? value : parseDay(value);
   return d ? formatDate(d, 'dd/MM/yyyy') : '—';
-}
-
-/** 29 Feb plus a year lands on 28 Feb, as SQL Server's DATEADD(YEAR, …) does. */
-export function addYears(d: Date, years: number): Date {
-  return addMonthsClamped(d, years * 12);
 }
 
 export function startOfToday(): Date {
@@ -60,10 +52,10 @@ export function urgencyOf(daysLeft: number): Urgency {
   return 'later';
 }
 
-/** Due date and days left for a book last appraised on `appraisalDate`. */
-export function dueOf(appraisalDate?: string | null, today = startOfToday()) {
-  const appraised = parseDay(appraisalDate);
-  if (!appraised) return undefined;
-  const due = addYears(appraised, REVIEW_CYCLE_YEARS);
-  return { appraised, due, daysLeft: daysBetween(today, due) };
+/** Due date and days left for a book AS400 lists as due on `reviewDate` (it already follows the
+ *  review type's cycle — CAS does not recompute it). */
+export function dueOf(reviewDate?: string | null, today = startOfToday()) {
+  const due = parseDay(reviewDate);
+  if (!due) return undefined;
+  return { due, daysLeft: daysBetween(today, due) };
 }

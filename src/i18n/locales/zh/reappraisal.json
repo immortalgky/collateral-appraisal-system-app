@@ -78,7 +78,7 @@
     },
     "daysLeftFrom": "剩余天数从",
     "daysLeftTo": "至（天）",
-    "reviewDueHint": "自最近评估日起 + 5 年 · 负数 = 已逾期",
+    "reviewDueHint": "计至 AS400 提供的复评到期日 · 负数 = 已逾期",
     "specific": "指定"
   },
   "badge": {
@@ -198,7 +198,7 @@
     },
     "stats": {
       "reviewDue": "复评到期",
-      "reviewDueNote": "{{date}}（最近评估 + 5 年）",
+      "reviewDueNote": "{{date}}（AS400 到期日）",
       "lastAppraisal": "最近评估",
       "ago": "已过 {{period}}",
       "effectiveDate": "AS400 生效日期",
