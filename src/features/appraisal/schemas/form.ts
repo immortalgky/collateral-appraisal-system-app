@@ -124,6 +124,8 @@ export const createProjectLandForm = buildFormSchema(
           'ownerNameLand',
           'isOwnerVerifiedLand',
           'landOffice',
+          'latitude',
+          'longitude',
         ].includes(field.name),
     ),
     {
