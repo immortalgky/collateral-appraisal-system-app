@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import { formatISO } from 'date-fns';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import SectionHeader from '@shared/components/sections/SectionHeader';
@@ -91,9 +92,14 @@ function readView(sp: URLSearchParams) {
     const check = Object.prototype.hasOwnProperty.call(FILTER_CHECKS, k)
       ? FILTER_CHECKS[k as keyof ReappraisalFilterValues]
       : undefined;
-    if (check?.(v))
-      filters[k] =
-        check === isDayCount ? Math.max(-MAX_DAYS, Math.min(MAX_DAYS, Math.trunc(Number(v)))) : v;
+    if (!check?.(v)) return;
+    if (check === isDayCount)
+      filters[k] = Math.max(-MAX_DAYS, Math.min(MAX_DAYS, Math.trunc(Number(v))));
+    // The day as written, at local midnight in DateInput's own form: a shared link from another
+    // timezone (or a bare yyyy-MM-dd) would otherwise show the dialog a different day than the chip
+    // and the API use.
+    else if (check === isDay) filters[k] = formatISO(parseDay(v)!);
+    else filters[k] = v;
   });
   const quick = sp.get('quick');
   const pq = sp.get('pq') as ProcessedQuick | null;
@@ -216,11 +222,13 @@ function ReappraisalListPage() {
   const setView = (patch: Partial<ListView>) => {
     const next = { ...(pending.current ?? view), ...patch };
     const url = writeView(next);
-    // No change from what the URL is (or is about to be): skip, so `pending` is never left set by a
-    // navigation that will not commit. Reverting a pending write still navigates.
-    const target = pending.current ? writeView(pending.current) : searchParams;
-    if (url.toString() === target.toString()) return;
-    pending.current = next;
+    // No change from what the URL is about to be: skip. Back to the committed URL while a write is
+    // pending: still navigate (to cancel that write), but nothing changes on commit to clear `pending`,
+    // so clear it here.
+    const committed = searchParams.toString();
+    const target = pending.current ? writeView(pending.current).toString() : committed;
+    if (url.toString() === target) return;
+    pending.current = url.toString() === committed ? null : next;
     setSearchParams(url, { replace: true });
   };
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
