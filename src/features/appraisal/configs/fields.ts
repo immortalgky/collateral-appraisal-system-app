@@ -668,8 +668,8 @@ export const electricityField: FormField[] = [
     name: 'electricityDistance',
     wrapperClassName: 'col-span-6',
     disableWhen: { field: 'hasElectricity', is: false },
-    // Switching back to No clears the distance rather than leaving a stale figure behind.
-    disabledValue: 0,
+    // Disabled means blank, not 0: switching back to No clears the distance to null.
+    disabledValue: null,
     maxIntegerDigits: 3,
   },
 ];
@@ -1111,8 +1111,8 @@ export const encroachmentField: FormField[] = [
     name: 'encroachingOthersArea',
     wrapperClassName: 'col-span-6',
     disableWhen: { field: 'isEncroachingOthers', is: false },
-    // Switching back to No clears the area rather than leaving a stale figure behind.
-    disabledValue: 0,
+    // Disabled means blank, not 0: switching back to No clears the area to null.
+    disabledValue: null,
     maxIntegerDigits: 8,
   },
 

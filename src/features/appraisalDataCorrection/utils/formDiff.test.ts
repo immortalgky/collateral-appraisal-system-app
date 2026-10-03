@@ -45,6 +45,88 @@ describe('diffFormValues — plain fields', () => {
     expect(diff).toEqual([change('Sub District', 'Phra Nakhon', 'Dusit')]);
   });
 
+  it('never lists what the page fills in for itself as it opens', () => {
+    // Absent from the record, present on screen: the table's average %/year and the postcodes the
+    // location pickers look up from the sub-district.
+    const before = {
+      subDistrict: '100101',
+      dopaSubDistrict: '100101',
+      postcode: null,
+      dopaPostcode: null,
+      depreciationDetails: [{ id: 'd1' }],
+    };
+    const after = {
+      ...before,
+      postcode: '-',
+      dopaPostcode: '10200',
+      depreciationDetails: [{ id: 'd1', totalDepreciationPercentPerYear: 3 }],
+    };
+    expect(diffFormValues(before, after)).toEqual([]);
+    // A postcode with no picker beside it is a stored field like any other.
+    expect(diffFormValues({ postcode: '10200' }, { postcode: '10300' })).toHaveLength(1);
+  });
+
+  it('compares the depreciation figures at the places the record stores them', () => {
+    const row = (v: Record<string, unknown>) => ({ depreciationDetails: [{ id: 'd1', ...v }] });
+
+    // Recomputed on screen to more places, stored the same as before.
+    expect(
+      diffFormValues(
+        row({ pricePerSqMAfterDepreciation: 7754.93, priceDepreciation: 205277.63 }),
+        row({ pricePerSqMAfterDepreciation: 7754.9325, priceDepreciation: 205277.625 }),
+      ),
+    ).toEqual([]);
+    // Percentages at four places: 3 × 1.1 is 3.3000000000000003 in floating point.
+    expect(
+      diffFormValues(
+        row({ totalDepreciationPct: 3.3, depreciationPeriods: [{ totalDepreciationPct: 3.3 }] }),
+        row({
+          totalDepreciationPct: 3 * 1.1,
+          depreciationPeriods: [{ totalDepreciationPct: 3 * 1.1 }],
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('rounds the decimal the payload carries, as the server does, not the float', () => {
+    const row = (v: number) => ({ depreciationDetails: [{ id: 'd1', priceDepreciation: v }] });
+    // 1.005 posts as "1.005" and is stored 1.01; 205277.62499999997 posts as such and is stored .62.
+    expect(diffFormValues(row(1.01), row(1.005))).toEqual([]);
+    expect(diffFormValues(row(205277.62), row(205277.62499999997))).toEqual([]);
+    // A fully depreciated row lands on float noise below zero; it is stored as 0.00, not -0.00.
+    expect(diffFormValues(row(0), row(-1.4551915228366852e-10))).toEqual([]);
+  });
+
+  it('shows a real change as it will be stored', () => {
+    const row = (v: unknown) => ({
+      depreciationDetails: [{ id: 'd1', pricePerSqMAfterDepreciation: v }],
+    });
+    expect(diffFormValues(row(1163239.8), row(1163239.9525))).toEqual([
+      expect.objectContaining({ from: '1163239.80', to: '1163239.95' }),
+    ]);
+    // A blank stays blank, not 0.
+    expect(diffFormValues(row(null), row(5000))).toEqual([
+      expect.objectContaining({ from: null, to: '5000.00' }),
+    ]);
+  });
+
+  it('summarises an added depreciation row with its stored figures', () => {
+    const diff = diffFormValues(
+      { depreciationDetails: [] },
+      { depreciationDetails: [{ areaDescription: 'Main', priceBeforeDepreciation: 1368517.505 }] },
+    );
+    expect(diff).toEqual([
+      expect.objectContaining({ kind: 'added', to: expect.stringContaining('1368517.51') }),
+    ]);
+  });
+
+  it('keeps comparing every other number exactly, and the same names outside the depreciation table', () => {
+    expect(diffFormValues({ latitude: 13.75 }, { latitude: 13.751 })).toHaveLength(1);
+    expect(diffFormValues({ priceDepreciation: 1.23 }, { priceDepreciation: 1.234 })).toHaveLength(
+      1,
+    );
+  });
+
   it('compares a list of plain values as a whole', () => {
     expect(diffFormValues({ roads: ['a', 'b'] }, { roads: ['a', 'b'] })).toEqual([]);
     expect(diffFormValues({ roads: ['a'] }, { roads: ['a', 'b'] })).toHaveLength(1);
@@ -234,8 +316,8 @@ describe('diffFormValues — tables', () => {
       expect.objectContaining({
         group: 'Depreciation',
         label: '#1 · Periods #1 · Depreciation Per Year',
-        from: 2,
-        to: 3,
+        from: '2.0000',
+        to: '3.0000',
       }),
     ]);
   });
