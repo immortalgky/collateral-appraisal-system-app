@@ -37,7 +37,7 @@
   "filter": {
     "title": "筛选",
     "button": "筛选",
-    "reviewDateRange": "AS400 复评日期",
+    "reviewDateRange": "复评到期日",
     "fields": {
       "collateralId": "抵押品编号",
       "reviewType": "审查类型",
@@ -139,7 +139,6 @@
       "pastDue": "逾期",
       "days": "{{days}} 天",
       "group": "组",
-      "effectiveDate": "生效日期",
       "onFile": "文件期间",
       "yes": "是",
       "no": "否"
@@ -201,8 +200,8 @@
       "reviewDueNote": "{{date}}（AS400 到期日）",
       "lastAppraisal": "最近评估",
       "ago": "已过 {{period}}",
-      "effectiveDate": "AS400 生效日期",
-      "effectiveDateNote": "来自 COLLATREV 文件",
+      "reviewDate": "常规复评日期 (AS400)",
+      "reviewDateNote": "5 年周期 ReviewDate · 进入 Stage 可能提前到期",
       "priorValue": "原价值",
       "baht": "泰铢"
     },

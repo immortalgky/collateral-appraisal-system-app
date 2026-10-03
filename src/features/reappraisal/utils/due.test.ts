@@ -12,7 +12,7 @@ describe('due', () => {
     expect(formatDay(undefined)).toBe('—');
   });
 
-  it('takes the review date as the due date and counts the days left', () => {
+  it('takes the due date and counts the days left', () => {
     const r = dueOf('2026-11-20', new Date(2026, 9, 1))!;
     expect(r.due).toEqual(new Date(2026, 10, 20));
     expect(r.daysLeft).toBe(50);

@@ -592,7 +592,7 @@ function ReappraisalDetailPage() {
 
   const isBlocked = detail.status !== 'Pending' || detail.hasOpenAppraisal === true;
   const hasCoords = detail.latitude != null && detail.longitude != null;
-  const due = dueOf(detail.reviewDate);
+  const due = dueOf(detail.dueDate);
   const lastAppraised = parseDay(detail.appraisalDate);
   const age = lastAppraised ? diffYMD(lastAppraised, startOfToday()) : undefined;
   const fd = formatDay;
@@ -857,9 +857,9 @@ function ReappraisalDetailPage() {
           }
         />
         <Stat
-          label={t('detail.stats.effectiveDate')}
-          value={fd(detail.effectiveDateAppraisal)}
-          note={t('detail.stats.effectiveDateNote')}
+          label={t('detail.stats.reviewDate')}
+          value={fd(detail.reviewDate)}
+          note={detail.reviewDate && t('detail.stats.reviewDateNote')}
         />
         <Stat
           label={t('detail.stats.priorValue')}
@@ -935,9 +935,6 @@ function ReappraisalDetailPage() {
           <Fact label={t('detail.fields.group')}>
             {[detail.group, detail.ibgRetail].filter(Boolean).join(' · ') || undefined}
           </Fact>
-          <Fact label={t('detail.fields.effectiveDate')}>
-            {detail.effectiveDateAppraisal && fd(detail.effectiveDateAppraisal)}
-          </Fact>
           <Fact label={t('detail.fields.onFile')}>
             <span className="tabular-nums">
               {firstOnFile === lastOnFile ? firstOnFile : `${firstOnFile} – ${lastOnFile}`}
@@ -1003,7 +1000,7 @@ function ReappraisalDetailPage() {
                   {fd(detail.appraisalDate)}
                 </td>
                 <td className="px-3 py-2">
-                  <DueCell reviewDate={detail.reviewDate} />
+                  <DueCell dueDate={detail.dueDate} />
                 </td>
                 <td className="px-3 py-2" />
               </tr>
@@ -1075,7 +1072,7 @@ function ReappraisalDetailPage() {
                         {fd(c.appraisalDate)}
                       </td>
                       <td className="px-3 py-2">
-                        {c.isInProgress ? '—' : <DueCell reviewDate={c.reviewDate} />}
+                        {c.isInProgress ? '—' : <DueCell dueDate={c.dueDate} />}
                       </td>
                       <td className="px-3 py-2 text-right">
                         {c.candidateId && !c.isInProgress && (
