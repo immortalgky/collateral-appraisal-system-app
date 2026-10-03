@@ -37,7 +37,7 @@
   "filter": {
     "title": "Filter",
     "button": "Filters",
-    "reviewDateRange": "AS400 Review Date",
+    "reviewDateRange": "Review Due Date",
     "fields": {
       "collateralId": "Collateral ID",
       "reviewType": "Review Type",
@@ -139,7 +139,6 @@
       "pastDue": "Past Due",
       "days": "{{days}} days",
       "group": "Group",
-      "effectiveDate": "Effective Date",
       "onFile": "On File",
       "yes": "Yes",
       "no": "No"
@@ -201,8 +200,8 @@
       "reviewDueNote": "{{date}} (due date from AS400)",
       "lastAppraisal": "Last Appraised",
       "ago": "{{period}} ago",
-      "effectiveDate": "AS400 Effective Date",
-      "effectiveDateNote": "From the COLLATREV file",
+      "reviewDate": "Normal Review Date (AS400)",
+      "reviewDateNote": "5-year ReviewDate · a stage can bring the due date forward",
       "priorValue": "Prior Value",
       "baht": "THB"
     },

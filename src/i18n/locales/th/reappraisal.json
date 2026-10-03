@@ -37,7 +37,7 @@
   "filter": {
     "title": "กรอง",
     "button": "ตัวกรอง",
-    "reviewDateRange": "วันที่ทบทวนตาม AS400",
+    "reviewDateRange": "วันครบกำหนดทบทวน",
     "fields": {
       "collateralId": "รหัสหลักประกัน",
       "reviewType": "ประเภทการทบทวน",
@@ -139,7 +139,6 @@
       "pastDue": "ค้างชำระ",
       "days": "{{days}} วัน",
       "group": "กลุ่ม",
-      "effectiveDate": "วันที่มีผล",
       "onFile": "อยู่ในไฟล์",
       "yes": "ใช่",
       "no": "ไม่ใช่"
@@ -201,8 +200,8 @@
       "reviewDueNote": "{{date}} (วันครบกำหนดจาก AS400)",
       "lastAppraisal": "ประเมินล่าสุด",
       "ago": "ผ่านมา {{period}}",
-      "effectiveDate": "วันที่มีผลจาก AS400",
-      "effectiveDateNote": "ตามไฟล์ COLLATREV",
+      "reviewDate": "รอบทบทวนปกติ (AS400)",
+      "reviewDateNote": "ReviewDate รอบ 5 ปี · ติด Stage อาจครบกำหนดก่อน",
       "priorValue": "มูลค่าเดิม",
       "baht": "บาท"
     },

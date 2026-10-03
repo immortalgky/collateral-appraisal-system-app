@@ -91,12 +91,15 @@ export function ReappraisalFilterDialog({
   const [values, setValues] = useState<ReappraisalFilterValues>(initialValues);
   const [customDue, setCustomDue] = useState(false);
 
+  // The draft starts from the applied filters each time the dialog opens — not on every new
+  // initialValues object while it is open, which would wipe the user's edits.
   useEffect(() => {
     if (open) {
       setValues(initialValues);
       setCustomDue(presetOf(initialValues) === 'custom');
     }
-  }, [open, initialValues]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const set = (patch: Partial<ReappraisalFilterValues>) => setValues(v => ({ ...v, ...patch }));
   const preset = customDue ? 'custom' : presetOf(values);
@@ -197,8 +200,8 @@ export function ReappraisalFilterDialog({
           <p className="text-[11px] text-gray-400">{t('filter.reviewDueHint')}</p>
         </section>
 
-        {/* ── Review date range ── */}
-        <section className="space-y-2">
+        {/* ── Review date range (a due date too: hidden with it) ── */}
+        <section className={clsx('space-y-2', !showDue && 'hidden')}>
           <SectionLabel
             label={t('filter.reviewDateRange')}
             onClear={

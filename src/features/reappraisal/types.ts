@@ -25,7 +25,7 @@ export interface ReappraisalCandidateListItem {
   status: string;
   reviewType: ReviewTypeCode;
   appraisalDate?: string; // ISO date yyyy-MM-dd — absent when the prior book cannot be traced
-  reviewDate?: string; // ISO date — the review due date AS400 sent
+  dueDate?: string; // ISO date — review due date: AS400's EffectiveDateAppraisal
   remainingDay?: number;
   oldAppraisalReportNumber: string;
   cifNumber: string;
@@ -80,7 +80,7 @@ export interface NearbyReappraisalCandidate {
   collateralName?: string;
   currentValue?: number;
   appraisalDate?: string; // ISO date — absent when the prior book cannot be traced
-  reviewDate?: string; // ISO date — AS400's review due date; absent for an in-system appraisal
+  dueDate?: string; // ISO date — review due date; absent for an in-system appraisal
   remainingDay?: number;
   reviewType?: string; // only meaningful for "Candidate" rows
   daysSinceLastAppraisal?: number; // today − appraisalDate
@@ -142,7 +142,7 @@ export interface ReappraisalCandidateDetail extends ReappraisalCandidateListItem
   stage?: string;
   ibgRetail?: string;
   group?: string;
-  effectiveDateAppraisal?: string;
+  reviewDate?: string; // AS400's normal-cycle review date (the due date unless a stage brings it forward)
   nearbyGroupCandidates: NearbyReappraisalCandidate[];
 }
 

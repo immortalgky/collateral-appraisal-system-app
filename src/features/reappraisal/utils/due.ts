@@ -52,10 +52,10 @@ export function urgencyOf(daysLeft: number): Urgency {
   return 'later';
 }
 
-/** Due date and days left for a book AS400 lists as due on `reviewDate` (it already follows the
- *  review type's cycle — CAS does not recompute it). */
-export function dueOf(reviewDate?: string | null, today = startOfToday()) {
-  const due = parseDay(reviewDate);
+/** Due date and days left for a book due on `dueDate` (the API's DueDate: AS400's
+ *  EffectiveDateAppraisal — CAS does not recompute it). */
+export function dueOf(dueDate?: string | null, today = startOfToday()) {
+  const due = parseDay(dueDate);
   if (!due) return undefined;
   return { due, daysLeft: daysBetween(today, due) };
 }

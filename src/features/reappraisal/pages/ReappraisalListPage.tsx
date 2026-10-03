@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import { formatISO } from 'date-fns';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import SectionHeader from '@shared/components/sections/SectionHeader';
@@ -16,7 +17,7 @@ import {
   ReviewTypeChip,
 } from '../components/ReappraisalCells';
 import { ReappraisalFilterDialog } from '../components/ReappraisalFilterDialog';
-import { DUE_SOON_DAYS, formatDay } from '../utils/due';
+import { DUE_SOON_DAYS, formatDay, parseDay } from '../utils/due';
 import { unitLabel } from '../utils/unitLabel';
 import type {
   ReappraisalCandidateListItem,
@@ -40,8 +41,125 @@ const QUICK_PARAMS: Record<QuickFilter, Partial<ReappraisalCandidateListParams>>
   nonCas: { priorSource: 'NonCAS' },
 };
 
+// The list's view lives in the URL, so coming back from a detail page (or a reload) restores it:
+// ?tab= &q= &quick= &pq= &page= (1-based) &size= &sort= &dir=, and each dialog filter under its own name.
+// Every value is checked: a bad one is dropped rather than sent to the API.
+// A real calendar day (the dialog's DateInput sends ISO with a time; 2026-02-31 is not a day), and a
+// day count the API's int takes (the dialog's number box allows decimals: they are truncated).
+const isDay = (v: string) =>
+  /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,7})?)?(Z|[+-]\d{2}:\d{2})?)?$/.test(v) &&
+  !!parseDay(v);
+const isDayCount = (v: string) => v.trim() !== '' && Number.isFinite(Number(v));
+// The API's int range; the dialog's number box takes any size.
+const MAX_DAYS = 999_999_999;
+const FILTER_CHECKS: Record<keyof ReappraisalFilterValues, (v: string) => boolean> = {
+  customerName: () => true,
+  oldAppraisalReportNumber: () => true,
+  cifNumber: () => true,
+  collateralId: () => true,
+  reviewType: v => ['1', '2', '3'].includes(v),
+  reviewDateFrom: isDay,
+  reviewDateTo: isDay,
+  remainingDayFrom: isDayCount,
+  remainingDayTo: isDayCount,
+  priorSource: v => ['CAS', 'AS400Legacy', 'Unknown', 'NonCAS'].includes(v),
+};
+const SORT_FIELDS = new Set([
+  'OldAppraisalReportNumber',
+  'CustomerName',
+  'ReviewType',
+  'AppraisalDate',
+  'RemainingDay',
+  'NewAppraisalSubmittedAt',
+  'NewAppraisalCompletedAt',
+]);
+// Pagination's own size choices: anything else shows an empty size box.
+const PAGE_SIZES = [10, 25, 50, 100];
+const DEFAULT_PAGE_SIZE = 25;
+const MAX_PAGE = 100_000;
+
+function positiveInt(v: string | null, fallback: number, max = Infinity): number {
+  const n = Number(v);
+  return Number.isInteger(n) && n > 0 && n <= max ? n : fallback;
+}
+
+function readView(sp: URLSearchParams) {
+  const tab = sp.get('tab')?.toLowerCase();
+  const status = TABS.find(s => s.toLowerCase() === tab) ?? 'Pending';
+  const filters: Record<string, string | number> = {};
+  sp.forEach((v, k) => {
+    // Own keys only: ?valueOf= or ?__proto__= must not reach Object.prototype.
+    const check = Object.prototype.hasOwnProperty.call(FILTER_CHECKS, k)
+      ? FILTER_CHECKS[k as keyof ReappraisalFilterValues]
+      : undefined;
+    if (!check?.(v)) return;
+    if (check === isDayCount)
+      filters[k] = Math.max(-MAX_DAYS, Math.min(MAX_DAYS, Math.trunc(Number(v))));
+    // The day as written, at local midnight in DateInput's own form: a shared link from another
+    // timezone (or a bare yyyy-MM-dd) would otherwise show the dialog a different day than the chip
+    // and the API use.
+    else if (check === isDay) filters[k] = formatISO(parseDay(v)!);
+    else filters[k] = v;
+  });
+  const quick = sp.get('quick');
+  const pq = sp.get('pq') as ProcessedQuick | null;
+  const sort = sp.get('sort');
+  const dir = sp.get('dir');
+  // Only a column the tab shows: the processed tab has no due date, the to-do tabs no new appraisal.
+  const shown =
+    sort != null &&
+    SORT_FIELDS.has(sort) &&
+    (status === 'Consumed'
+      ? sort !== 'RemainingDay' && sort !== 'AppraisalDate'
+      : !sort.startsWith('NewAppraisal') && (status === 'Pending' || sort !== 'AppraisalDate'));
+  const sorted = sort === 'none' || shown;
+  return {
+    status,
+    pageNumber: positiveInt(sp.get('page'), 1, MAX_PAGE) - 1,
+    pageSize: PAGE_SIZES.includes(Number(sp.get('size')))
+      ? Number(sp.get('size'))
+      : DEFAULT_PAGE_SIZE,
+    filters: filters as ReappraisalFilterValues,
+    search: (sp.get('q') ?? '').trim(),
+    // A chip and a dialog filter on the same parameter: the filter wins, as when set in the page.
+    quick:
+      quick &&
+      Object.prototype.hasOwnProperty.call(QUICK_PARAMS, quick) &&
+      !conflicts(quick as QuickFilter, filters as ReappraisalFilterValues)
+        ? (quick as QuickFilter)
+        : 'all',
+    processedQuick: pq && PROCESSED_QUICK.includes(pq) ? pq : 'all',
+    sortField: sorted ? (sort === 'none' ? null : sort) : DEFAULT_SORT[status].field,
+    sortDirection: (sorted && (dir === 'asc' || dir === 'desc')
+      ? dir
+      : DEFAULT_SORT[status].dir) as 'asc' | 'desc',
+  };
+}
+
+type ListView = ReturnType<typeof readView>;
+
+/** The URL for a view: only what differs from the defaults. */
+function writeView(v: ListView): URLSearchParams {
+  const next = new URLSearchParams();
+  if (v.status !== 'Pending') next.set('tab', v.status.toLowerCase());
+  Object.entries(v.filters).forEach(([k, val]) => {
+    if (val != null && val !== '') next.set(k, String(val));
+  });
+  if (v.search) next.set('q', v.search);
+  if (v.quick !== 'all') next.set('quick', v.quick);
+  if (v.processedQuick !== 'all') next.set('pq', v.processedQuick);
+  if (v.pageNumber > 0) next.set('page', String(v.pageNumber + 1));
+  if (v.pageSize !== DEFAULT_PAGE_SIZE) next.set('size', String(v.pageSize));
+  const d = DEFAULT_SORT[v.status];
+  if (v.sortField !== d.field || v.sortDirection !== d.dir) {
+    next.set('sort', v.sortField ?? 'none');
+    next.set('dir', v.sortDirection);
+  }
+  return next;
+}
+
 /** A quick filter and the dialog can set the same parameter (due range, prior source). The one set
- *  last wins and the other is cleared, so the chips, the dialog's result count and the list agree. */
+ *  last wins and the other is cleared, so the chips and the list agree. */
 function conflicts(q: QuickFilter, v: ReappraisalFilterValues): boolean {
   return Object.keys(QUICK_PARAMS[q]).some(k => v[k as keyof ReappraisalFilterValues] != null);
 }
@@ -90,59 +208,72 @@ function ReappraisalListPage() {
   const navigate = useNavigate();
   const { t, i18n } = useTranslation(['reappraisal', 'common']);
 
-  const [pageNumber, setPageNumber] = useState(0);
-  const [pageSize, setPageSize] = useState(20);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<ReappraisalFilterValues>({});
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search.trim(), 350);
-  const [quick, setQuick] = useState<QuickFilter>('all');
-  const [processedQuick, setProcessedQuick] = useState<ProcessedQuick>('all');
   // Tabs: the to-do list and books marked "not reviewing this round" (both only books on AS400's
   // latest file), and processed books — the whole history.
-  // The tab lives in the URL (?tab=deleted) so coming back from a detail page reopens it.
+  // The view lives only in the URL (see readView): coming back from a detail page, Back/Forward and
+  // the menu link all just show what their URL says. Every change replaces the entry in one write.
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabParam = searchParams.get('tab')?.toLowerCase();
-  const status = TABS.find(s => s.toLowerCase() === tabParam) ?? 'Pending';
+  const view = useMemo(() => readView(searchParams), [searchParams]);
+  const { status, pageNumber, pageSize, quick, processedQuick, sortField, sortDirection } = view;
+  const filters = view.filters;
+  // Writes build on the last one not yet in the URL (navigation commits later), so two quick writes —
+  // the search debounce and a chip click — both land.
+  const pending = useRef<ListView | null>(null);
+  const setView = (patch: Partial<ListView>) => {
+    const next = { ...(pending.current ?? view), ...patch };
+    const url = writeView(next);
+    // No change from what the URL is about to be: skip. Back to the committed URL while a write is
+    // pending: still navigate (to cancel that write), but nothing changes on commit to clear `pending`,
+    // so clear it here.
+    const committed = searchParams.toString();
+    const target = pending.current ? writeView(pending.current).toString() : committed;
+    if (url.toString() === target) return;
+    pending.current = url.toString() === committed ? null : next;
+    setSearchParams(url, { replace: true });
+  };
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const restoreMutation = useRestoreReappraisalCandidate();
 
-  // Sort — sortField carries the whitelisted PascalCase view column name. Opens on the due date
-  // (closest first) so the column shows it; cleared, the API falls back to the same order.
-  const [sortField, setSortField] = useState<string | null>(DEFAULT_SORT[status].field);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(DEFAULT_SORT[status].dir);
-  // Each tab opens on its own order, page 1 — whatever changed the tab (a click, the menu link to
-  // /reappraisal while on another tab).
-  const [sortedFor, setSortedFor] = useState(status);
-  const resetFor = (tab: ReappraisalListStatus) => {
-    setSortedFor(tab);
-    setSortField(DEFAULT_SORT[tab].field);
-    setSortDirection(DEFAULT_SORT[tab].dir);
-    setPageNumber(0);
-  };
-  if (sortedFor !== status) resetFor(status);
-  // Tab switches replace the history entry: browser Back leaves the list rather than walking tabs.
-  const setStatus = (tab: ReappraisalListStatus) => {
-    // Clicking the active tab may change no URL, so reset here.
-    if (tab === status) resetFor(tab);
-    setSearchParams(
-      prev => {
-        const next = new URLSearchParams(prev);
-        if (tab === 'Pending') next.delete('tab');
-        else next.set('tab', tab.toLowerCase());
-        return next;
-      },
-      { replace: true },
-    );
-  };
+  // The search box types locally and reaches the URL (and the API) once typing pauses.
+  const [search, setSearch] = useState(view.search);
+  const debouncedSearch = useDebounce(search.trim(), 350);
+  useEffect(() => {
+    if (debouncedSearch !== view.search) setView({ search: debouncedSearch, pageNumber: 0 });
+    // Only a settled search writes; the URL's own changes are picked up below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearch]);
+  // A URL this page did not write (the menu link, Back/Forward) wins over the box, unsettled typing
+  // included. The page's own write only clears `pending`, so typing that went on meanwhile stays.
+  useEffect(() => {
+    if (!pending.current) setSearch(view.search);
+    pending.current = null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Each tab opens on its own order, page 1 — clicking the active tab resets it too.
+  const setStatus = (tab: ReappraisalListStatus) =>
+    setView({
+      status: tab,
+      sortField: DEFAULT_SORT[tab].field,
+      sortDirection: DEFAULT_SORT[tab].dir,
+      pageNumber: 0,
+    });
 
   const isPending = status === 'Pending';
   const isProcessed = status === 'Consumed';
-  // One builder for the list and the filter dialog's result count.
+  // The processed tab has no due date: its due and date ranges stay in the URL for the to-do tabs
+  // but are not sent.
   const paramsFor = (v: ReappraisalFilterValues): ReappraisalCandidateListParams => ({
     ...v,
+    ...(isProcessed && {
+      remainingDayFrom: undefined,
+      remainingDayTo: undefined,
+      reviewDateFrom: undefined,
+      reviewDateTo: undefined,
+    }),
     ...(isPending && !conflicts(quick, v) ? QUICK_PARAMS[quick] : {}),
     ...(isProcessed && processedQuick !== 'all' ? { newAppraisalState: processedQuick } : {}),
-    search: debouncedSearch || undefined,
+    search: view.search || undefined,
     status,
   });
   const queryParams: ReappraisalCandidateListParams = {
@@ -156,18 +287,13 @@ function ReappraisalListPage() {
 
   // Three-state cycle: unsorted -> asc -> desc -> unsorted
   const handleSort = (field: string) => {
-    if (sortField === field) {
-      if (sortDirection === 'asc') {
-        setSortDirection('desc');
-      } else {
-        setSortField(null);
-        setSortDirection('asc');
-      }
+    if (sortField === field && sortDirection === 'asc') {
+      setView({ sortDirection: 'desc', pageNumber: 0 });
+    } else if (sortField === field) {
+      setView({ sortField: null, sortDirection: 'asc', pageNumber: 0 });
     } else {
-      setSortField(field);
-      setSortDirection('asc');
+      setView({ sortField: field, sortDirection: 'asc', pageNumber: 0 });
     }
-    setPageNumber(0);
   };
 
   const { data, isLoading, isPlaceholderData, isError, error } =
@@ -176,36 +302,45 @@ function ReappraisalListPage() {
   const items = data?.items ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+  // A page from the URL can be past the end (a row was initiated or skipped meanwhile). Only on this
+  // view's own data — placeholder rows belong to the previous query.
+  useEffect(() => {
+    if (data && !isPlaceholderData && pageNumber > 0 && pageNumber >= Math.max(totalPages, 1)) {
+      setView({ pageNumber: Math.max(totalPages - 1, 0) });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, isPlaceholderData, totalPages, pageNumber]);
 
   // Skeleton on the first load and whenever the tab, filters, search, sort or page change (the old
   // rows are only a placeholder then). A background refresh of the same view keeps the rows.
   const showSkeleton = isLoading || isPlaceholderData;
 
-  // The processed tab has no due date: the API ignores the due range there, so it is not shown as active.
+  // The processed tab has no due date: the API ignores the due and date ranges there, so they are not
+  // shown as active.
   const activeFilterChips = Object.entries(filters).filter(
-    ([k, v]) => v != null && v !== '' && !(isProcessed && k.startsWith('remainingDay')),
+    ([k, v]) =>
+      v != null &&
+      v !== '' &&
+      !(isProcessed && (k.startsWith('remainingDay') || k.startsWith('reviewDate'))),
   ) as [keyof ReappraisalFilterValues, string | number][];
   const isFiltered =
     activeFilterChips.length > 0 ||
-    !!debouncedSearch ||
+    !!view.search ||
     (isPending && quick !== 'all') ||
     (isProcessed && processedQuick !== 'all');
 
+  // Filter edits start from the latest write, which may not be in the URL yet.
+  const currentFilters = () => (pending.current ?? view).filters;
+
   const removeFilter = (key: keyof ReappraisalFilterValues) => {
-    setFilters(prev => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-    setPageNumber(0);
+    const next = { ...currentFilters() };
+    delete next[key];
+    setView({ filters: next, pageNumber: 0 });
   };
 
   const clearAll = () => {
-    setFilters({});
     setSearch('');
-    setQuick('all');
-    setProcessedQuick('all');
-    setPageNumber(0);
+    setView({ filters: {}, search: '', quick: 'all', processedQuick: 'all', pageNumber: 0 });
   };
 
   const getChipLabel = (key: keyof ReappraisalFilterValues, value: string | number): string => {
@@ -214,16 +349,13 @@ function ReappraisalListPage() {
     }
     if (key === 'priorSource')
       return t(`filter.priorSource.${value}`, { defaultValue: String(value) });
+    if (key === 'reviewDateFrom' || key === 'reviewDateTo') return formatDay(String(value));
     return String(value);
   };
 
   const restore = (item: ReappraisalCandidateListItem) =>
-    restoreMutation.mutate(item.id, {
-      // Restoring the last row of a later page would leave an empty page.
-      onSuccess: () => {
-        if (items.length === 1 && pageNumber > 0) setPageNumber(pageNumber - 1);
-      },
-    });
+    // Restoring the last row of a later page leaves it empty: the past-the-end effect steps back.
+    restoreMutation.mutate(item.id);
 
   if (isError) {
     return (
@@ -272,7 +404,7 @@ function ReappraisalListPage() {
 
   return (
     <div className="flex flex-col h-full min-h-0 min-w-0">
-      {/* ── Page header: title left; tabs, search and filter right ── */}
+      {/* ── Page header: title left; search and filter (they apply to every tab) right ── */}
       <div className="shrink-0 mb-3 flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
         <SectionHeader
           title={t('page.list.title')}
@@ -281,30 +413,6 @@ function ReappraisalListPage() {
           className="mb-0"
         />
         <div className="flex flex-wrap items-center gap-2">
-          <div
-            className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5"
-            role="group"
-          >
-            {TABS.map(tab => {
-              return (
-                <button
-                  key={tab}
-                  type="button"
-                  aria-pressed={status === tab}
-                  onClick={() => setStatus(tab)}
-                  className={clsx(
-                    'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
-                    status === tab
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700',
-                  )}
-                >
-                  {t(`tabs.${tab}`)}
-                </button>
-              );
-            })}
-          </div>
-
           <label className="relative">
             <Icon
               style="regular"
@@ -315,16 +423,12 @@ function ReappraisalListPage() {
               id="reappraisal-search"
               type="search"
               value={search}
-              onChange={e => {
-                setSearch(e.target.value);
-                setPageNumber(0);
-              }}
+              onChange={e => setSearch(e.target.value)}
               placeholder={t('search.placeholder')}
               aria-label={t('search.placeholder')}
               className="w-64 max-w-full pl-7 pr-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </label>
-
           <button
             type="button"
             onClick={() => setFilterDialogOpen(true)}
@@ -346,71 +450,87 @@ function ReappraisalListPage() {
         </div>
       </div>
 
-      {/* ── Quick filters (Pending tab) ── */}
-      {isPending && (
-        <div className="shrink-0 mb-3 flex flex-wrap items-center gap-1.5">
-          {(['all', 'overdue', 'dueSoon', 'inProgress', 'nonCas'] as const).map(q => {
+      {/* ── Tabs, then that tab's quick filters; the quick filters wrap on a narrow screen ── */}
+      <div className="shrink-0 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <div
+          className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5"
+          role="group"
+        >
+          {TABS.map(tab => {
             return (
               <button
-                key={q}
+                key={tab}
                 type="button"
-                aria-pressed={quick === q}
-                onClick={() => {
-                  setQuick(q);
-                  if (conflicts(q, filters)) {
-                    setFilters(prev => {
-                      const next = { ...prev };
-                      for (const k of Object.keys(QUICK_PARAMS[q]))
-                        delete next[k as keyof ReappraisalFilterValues];
-                      return next;
-                    });
-                  }
-                  setPageNumber(0);
-                }}
+                aria-pressed={status === tab}
+                onClick={() => setStatus(tab)}
                 className={clsx(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] rounded-full border transition-colors',
-                  quick === q
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
+                  'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
+                  status === tab
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700',
                 )}
               >
-                {QUICK_DOT[q] && <span className={clsx('size-1.5 rounded-full', QUICK_DOT[q])} />}
-                {t(`quick.${q}`)}
+                {t(`tabs.${tab}`)}
               </button>
             );
           })}
         </div>
-      )}
-
-      {/* ── Quick filters (processed tab) ── */}
-      {isProcessed && (
-        <div className="shrink-0 mb-3 flex flex-wrap items-center gap-1.5">
-          {PROCESSED_QUICK.map(q => {
-            return (
-              <button
-                key={q}
-                type="button"
-                aria-pressed={processedQuick === q}
-                onClick={() => {
-                  setProcessedQuick(q);
-                  setPageNumber(0);
-                }}
-                className={clsx(
-                  'inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] rounded-full border transition-colors',
-                  processedQuick === q
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
-                )}
-              >
-                {PROCESSED_DOT[q] && (
-                  <span className={clsx('size-1.5 rounded-full', PROCESSED_DOT[q])} />
-                )}
-                {t(`processedQuick.${q}`)}
-              </button>
-            );
-          })}
-        </div>
-      )}
+        {(isPending || isProcessed) && (
+          <>
+            <span className="h-5 w-px bg-gray-200" aria-hidden />
+            <div className="flex flex-wrap items-center gap-1.5">
+              {isPending
+                ? (['all', 'overdue', 'dueSoon', 'inProgress', 'nonCas'] as const).map(q => {
+                    return (
+                      <button
+                        key={q}
+                        type="button"
+                        aria-pressed={quick === q}
+                        onClick={() => {
+                          const next = { ...currentFilters() };
+                          for (const k of Object.keys(QUICK_PARAMS[q]))
+                            delete next[k as keyof ReappraisalFilterValues];
+                          setView({ quick: q, filters: next, pageNumber: 0 });
+                        }}
+                        className={clsx(
+                          'inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] rounded-full border transition-colors',
+                          quick === q
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
+                        )}
+                      >
+                        {QUICK_DOT[q] && (
+                          <span className={clsx('size-1.5 rounded-full', QUICK_DOT[q])} />
+                        )}
+                        {t(`quick.${q}`)}
+                      </button>
+                    );
+                  })
+                : PROCESSED_QUICK.map(q => {
+                    return (
+                      <button
+                        key={q}
+                        type="button"
+                        aria-pressed={processedQuick === q}
+                        onClick={() => setView({ processedQuick: q, pageNumber: 0 })}
+                        className={clsx(
+                          'inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] rounded-full border transition-colors',
+                          processedQuick === q
+                            ? 'border-primary bg-primary/5 text-primary'
+                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
+                        )}
+                      >
+                        {PROCESSED_DOT[q] && (
+                          <span className={clsx('size-1.5 rounded-full', PROCESSED_DOT[q])} />
+                        )}
+                        {t(`processedQuick.${q}`)}
+                      </button>
+                    );
+                  })}
+            </div>
+          </>
+        )}
+      </div>
 
       {/* ── Active filter chips ── */}
       {activeFilterChips.length > 0 && (
@@ -432,10 +552,7 @@ function ReappraisalListPage() {
             </span>
           ))}
           <button
-            onClick={() => {
-              setFilters({});
-              setPageNumber(0);
-            }}
+            onClick={() => setView({ filters: {}, pageNumber: 0 })}
             className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
           >
             {t('common:actions.clearAll')}
@@ -447,11 +564,9 @@ function ReappraisalListPage() {
         open={filterDialogOpen}
         initialValues={filters}
         showDue={!isProcessed}
-        onApply={v => {
-          setFilters(v);
-          if (conflicts(quick, v)) setQuick('all');
-          setPageNumber(0);
-        }}
+        onApply={v =>
+          setView({ filters: v, quick: conflicts(quick, v) ? 'all' : quick, pageNumber: 0 })
+        }
         onClose={() => setFilterDialogOpen(false)}
       />
 
@@ -615,7 +730,7 @@ function ReappraisalListPage() {
                     )}
                     {!isProcessed && (
                       <td className="px-3 py-2">
-                        <DueCell reviewDate={item.reviewDate} />
+                        <DueCell dueDate={item.dueDate} />
                       </td>
                     )}
                     {isProcessed ? (
@@ -695,17 +810,13 @@ function ReappraisalListPage() {
         </div>
 
         <Pagination
+          pageSizeOptions={PAGE_SIZES}
           currentPage={pageNumber}
           totalPages={totalPages}
           totalCount={totalCount}
           pageSize={pageSize}
-          onPageChange={p => {
-            setPageNumber(p);
-          }}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPageNumber(0);
-          }}
+          onPageChange={p => setView({ pageNumber: p })}
+          onPageSizeChange={size => setView({ pageSize: size, pageNumber: 0 })}
         />
       </div>
     </div>

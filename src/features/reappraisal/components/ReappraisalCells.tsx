@@ -13,10 +13,10 @@ const URGENCY_DOT: Record<Urgency, string> = {
   later: '',
 };
 
-/** Review due date (AS400's ReviewDate) over the time left, coloured by urgency. */
-export function DueCell({ reviewDate }: { reviewDate?: string }) {
+/** Review due date (AS400's EffectiveDateAppraisal) over the time left, coloured by urgency. */
+export function DueCell({ dueDate }: { dueDate?: string }) {
   const remaining = useRemainingText();
-  const due = dueOf(reviewDate);
+  const due = dueOf(dueDate);
   if (!due) return <span className="text-gray-300">—</span>;
   const u = urgencyOf(due.daysLeft);
   return (

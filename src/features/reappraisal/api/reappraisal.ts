@@ -35,7 +35,7 @@ export function useReappraisalCandidates(
     queryFn: async (): Promise<PaginatedResult<ReappraisalCandidateListItem>> => {
       const {
         pageNumber = 0,
-        pageSize = 20,
+        pageSize = 25,
         customerName,
         oldAppraisalReportNumber,
         cifNumber,
@@ -63,8 +63,9 @@ export function useReappraisalCandidates(
           ...(cifNumber && { cifNumber }),
           ...(collateralId && { collateralId }),
           ...(reviewType && { reviewType }),
-          ...(reviewDateFrom && { reviewDateFrom }),
-          ...(reviewDateTo && { reviewDateTo }),
+          // The API binds DateOnly: the dialog's DateInput sends ISO with a time, so keep the day only.
+          ...(reviewDateFrom && { reviewDateFrom: reviewDateFrom.slice(0, 10) }),
+          ...(reviewDateTo && { reviewDateTo: reviewDateTo.slice(0, 10) }),
           ...(remainingDayFrom != null && { remainingDayFrom }),
           ...(remainingDayTo != null && { remainingDayTo }),
           ...(sortBy && { sortBy, sortDir }),
