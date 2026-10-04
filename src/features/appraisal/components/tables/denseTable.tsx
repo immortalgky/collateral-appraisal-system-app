@@ -30,6 +30,20 @@ export const NUM = `${TD} text-right`;
 export const FIELD =
   'block h-[1.625rem] w-full rounded-[4px] border border-transparent bg-[#f6f9f9] px-[5px] py-0 text-[0.875rem] hover:border-[#cbd5d3] focus:border-[#0d9488] focus:bg-white focus:outline-none';
 
+/**
+ * The size of a field control (formLayoutSkin.css "field controls"): the dense input is 21px tall with
+ * 12px text and a 4px corner; in a form's skin a table's input is the same box as a field's. `!`
+ * because the dense input's own utilities live in the same layer.
+ */
+export const INPUT_SIZE =
+  'h-[var(--cas-input-h,2.3077rem)]! px-[var(--cas-ctl-px,0.75rem)]! py-0! text-[length:var(--cas-ctl-font,1rem)]! rounded-[var(--cas-ctl-radius,0.4615rem)]!';
+/**
+ * An editable cell or row as the skins draw an input: a white box with its edge drawn, not the dense look's
+ * grey fill with no border. The tokens come from the form skin (white / #e0e7e9 / #b7c4c9 in light,
+ * their dark mixes in dark), with the light values as the fallback. Focus is a field's: the primary
+ * edge and a 2px 25% ring on the theme's own fill. Not for a regressed cell, which has REGRESSED instead.
+ */
+export const INPUT_BOX = `${INPUT_SIZE} enabled:bg-[color:var(--cas-input,#fff)]! border-[color:var(--cas-input-edge,#e0e7e9)]! enabled:hover:border-[color:var(--cas-input-edge-hover,#b7c4c9)]! focus:border-[color:var(--color-primary-500)]! focus:bg-[color:var(--color-base-100)]! focus:shadow-[0_0_0_2px_color-mix(in_srgb,var(--color-primary-500)_25%,transparent)]`;
 /** A number cell: plain text when read-only, otherwise the dense input the pricing tables use. */
 export function NumCell({
   name,

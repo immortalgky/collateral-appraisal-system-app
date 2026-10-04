@@ -17,6 +17,7 @@ export default function ThemeProvider(): null {
   }, [theme]);
 
   useEffect(() => {
+    // The skin sheets key on this attribute alone (formLayoutCompact.css, formLayoutStandard.css).
     document.documentElement.setAttribute('data-form-layout', formLayout);
   }, [formLayout]);
 

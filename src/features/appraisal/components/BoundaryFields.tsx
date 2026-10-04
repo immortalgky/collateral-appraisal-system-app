@@ -41,13 +41,13 @@ const BoundaryFields = ({ readOnly: readOnlyProp }: BoundaryFieldsProps) => {
                 <th className={clsx(TH, 'w-[170px] text-right')}>{t('boundaryTable.length')}</th>
               </tr>
             </thead>
-            <tbody className="text-[#1f2937]">
+            <tbody className="text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
               {BOUNDARY_ROWS.map((row, i) => {
                 const areaError = get(formState.errors, row.area)?.message as string | undefined;
                 const lengthError = !!get(formState.errors, row.length);
                 return (
                   <tr key={row.key}>
-                    <td className={clsx(TD, 'font-medium')}>{t(`titleEntry.deed.${row.key}`)}</td>
+                    <td className={TD}>{t(`titleEntry.deed.${row.key}`)}</td>
                     <td className={TD}>
                       {readOnly ? (
                         areas[i]

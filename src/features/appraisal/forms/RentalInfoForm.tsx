@@ -8,35 +8,12 @@ import { rentalScheduleField, rentalGrowthPeriodField } from '../configs/fields'
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import DatePickerInput from '@/shared/components/inputs/DatePickerInput';
 import FormStringToggle from '@/shared/components/inputs/FormStringToggle';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
+import { useFormReadOnly } from '@/shared/components/form/context';
 import { FieldLabels } from '../components/FieldLabels';
+import SectionRow from '../components/SectionRow';
+import { sumColumn } from '@features/request/components/tables/formTableUtils';
 import { useTranslation } from 'react-i18next';
-
-interface SectionRowProps {
-  title: string;
-  icon?: string;
-  children: React.ReactNode;
-  isLast?: boolean;
-}
-
-const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
-  <>
-    <div className="cas-section-head col-span-1 pt-1">
-      <div className="flex items-center gap-2">
-        {icon && (
-          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-          </div>
-        )}
-        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
-      </div>
-    </div>
-    <div className="col-span-4">
-      <div className="grid grid-cols-12 gap-4">{children}</div>
-    </div>
-    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-5 my-2" />}
-  </>
-);
 
 interface ScheduleRow {
   year: number;
@@ -190,22 +167,12 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
     setValue(p(`growthPeriodEntries.${idx}.totalAmount`), total, { shouldDirty: true });
   };
 
-  const upFrontTotal = (watchedUpFrontEntries ?? []).reduce(
-    (sum: number, e: any) => sum + (e?.upFrontAmount ?? 0),
-    0,
-  );
+  const upFrontTotal = sumColumn(watchedUpFrontEntries, 'upFrontAmount');
   const [computedRows, setComputedRows] = useState<ScheduleRow[]>([]);
+  // Every add / edit / generate link and row delete below is an edit: a viewer gets none of them.
+  const readOnly = useFormReadOnly();
   const [isScheduleEditing, setIsScheduleEditing] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [deleteGrowthConfirm, setDeleteGrowthConfirm] = useState<{
-    isOpen: boolean;
-    index: number | null;
-  }>({ isOpen: false, index: null });
-  const [deleteUpFrontConfirm, setDeleteUpFrontConfirm] = useState<{
-    isOpen: boolean;
-    index: number | null;
-  }>({ isOpen: false, index: null });
-
   const {
     fields: upFrontFields,
     append: appendUpFront,
@@ -217,6 +184,8 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
     append: appendGrowth,
     remove: removeGrowth,
   } = useFieldArray({ control, name: p('growthPeriodEntries') });
+  const addGrowthPeriod = () =>
+    appendGrowth({ fromYear: 0, toYear: 0, growthRate: 0, growthAmount: 0, totalAmount: 0 });
 
   const { fields: scheduleFields, replace: replaceScheduleEntries } = useFieldArray({
     control,
@@ -283,12 +252,22 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
           says "Rental Info". */}
         <div className="cas-section-grid cas-sheet grid grid-cols-5 gap-x-6 gap-y-4">
           {/* Schedule Header Fields */}
-          <SectionRow title={t('forms.rentalInfo.groups.schedule')} icon="calendar-days">
+          <SectionRow
+            fixedColumns
+            spacedRule
+            title={t('forms.rentalInfo.groups.schedule')}
+            icon="calendar-days"
+          >
             <FormFields fields={rentalScheduleField} namePrefix={namePrefix} />
           </SectionRow>
 
           {/* Growth Rate */}
-          <SectionRow title={t('forms.rentalInfo.groups.growthRate')} icon="chart-line">
+          <SectionRow
+            fixedColumns
+            spacedRule
+            title={t('forms.rentalInfo.groups.growthRate')}
+            icon="chart-line"
+          >
             <div className="col-span-12 space-y-4">
               {/* The toggle and the fields it governs share one grid, so they read as consecutive
                 rows rather than two blocks with a gutter between them. data-field marks the
@@ -313,142 +292,157 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
 
                 {growthRateType === 'Property' && (
                   <div className="col-span-12">
-                    <table className="w-full text-sm border-collapse">
-                      <thead>
-                        <tr className="border-b border-gray-200 bg-gray-50">
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                            {t('forms.rentalInfo.table.atYear')}
-                          </th>
-                          <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                            {t('forms.rentalInfo.table.toYear')}
-                          </th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                            {t('forms.rentalInfo.table.growthRate')}
-                          </th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                            {t('forms.rentalInfo.table.growthAmount')}
-                          </th>
-                          <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                            {t('forms.rentalInfo.table.totalAmount')}
-                          </th>
-                          <th className="px-3 py-2 w-10"></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {growthFields.map((field, idx) => (
-                          <tr key={field.id} className="border-b border-gray-100">
-                            <td className="px-3 py-1.5">
-                              <Controller
-                                control={control}
-                                name={p(`growthPeriodEntries.${idx}.fromYear`)}
-                                render={({ field: f, fieldState: { error } }) => (
-                                  <NumberInput
-                                    {...f}
-                                    decimalPlaces={0}
-                                    maxIntegerDigits={3}
-                                    thousandSeparator={false}
-                                    error={error?.message}
-                                    className="!py-1.5"
+                    {/* The band holds the title, the count and the add link (hidden outside
+                        `.cas-form-grid`, where the dashed button under the table, its twin, shows). */}
+                    <div className="cas-labelled-table">
+                      <div className="cas-table-label">
+                        {t('forms.rentalInfo.groups.growthRate')}
+                        <span className="cas-label-meta">
+                          {t('forms.rentalInfo.growthPeriodCount', { count: growthFields.length })}
+                        </span>
+                        {!readOnly && (
+                          <button type="button" onClick={addGrowthPeriod} className="cas-label-add">
+                            + {t('forms.rentalInfo.addPeriod')}
+                          </button>
+                        )}
+                      </div>
+                      <div className="cas-table-card min-w-0 flex-1">
+                        <table className="cas-form-table w-full text-sm border-collapse">
+                          <thead>
+                            <tr className="border-b border-gray-200 bg-gray-50">
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                                {t('forms.rentalInfo.table.atYear')}
+                              </th>
+                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                                {t('forms.rentalInfo.table.toYear')}
+                              </th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                                {t('forms.rentalInfo.table.growthRate')}
+                              </th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                                {t('forms.rentalInfo.table.growthAmount')}
+                              </th>
+                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                                {t('forms.rentalInfo.table.totalAmount')}
+                              </th>
+                              <th className="px-3 py-2 w-10"></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {growthFields.map((field, idx) => (
+                              <tr key={field.id} className="border-b border-gray-100">
+                                <td className="px-3 py-1.5">
+                                  <Controller
+                                    control={control}
+                                    name={p(`growthPeriodEntries.${idx}.fromYear`)}
+                                    render={({ field: f, fieldState: { error } }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={0}
+                                        maxIntegerDigits={3}
+                                        thousandSeparator={false}
+                                        error={error?.message}
+                                        className="!py-1.5"
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <Controller
-                                control={control}
-                                name={p(`growthPeriodEntries.${idx}.toYear`)}
-                                render={({ field: f }) => (
-                                  <NumberInput
-                                    {...f}
-                                    decimalPlaces={0}
-                                    maxIntegerDigits={3}
-                                    thousandSeparator={false}
-                                    disabled
-                                    className="!py-1.5"
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <Controller
+                                    control={control}
+                                    name={p(`growthPeriodEntries.${idx}.toYear`)}
+                                    render={({ field: f }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={0}
+                                        maxIntegerDigits={3}
+                                        thousandSeparator={false}
+                                        disabled
+                                        className="!py-1.5"
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <Controller
-                                control={control}
-                                name={p(`growthPeriodEntries.${idx}.growthRate`)}
-                                render={({ field: f }) => (
-                                  <NumberInput
-                                    {...f}
-                                    decimalPlaces={2}
-                                    maxIntegerDigits={3}
-                                    rightIcon={<span className="text-xs">%</span>}
-                                    className="!py-1.5"
-                                    onChange={e => {
-                                      f.onChange(e);
-                                      handleGrowthRateChange(idx, e.target.value ?? 0);
-                                    }}
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <Controller
+                                    control={control}
+                                    name={p(`growthPeriodEntries.${idx}.growthRate`)}
+                                    render={({ field: f }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={2}
+                                        maxIntegerDigits={3}
+                                        rightIcon={<span className="text-xs">%</span>}
+                                        className="!py-1.5"
+                                        onChange={e => {
+                                          f.onChange(e);
+                                          handleGrowthRateChange(idx, e.target.value ?? 0);
+                                        }}
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <Controller
-                                control={control}
-                                name={p(`growthPeriodEntries.${idx}.growthAmount`)}
-                                render={({ field: f }) => (
-                                  <NumberInput
-                                    {...f}
-                                    decimalPlaces={2}
-                                    maxIntegerDigits={15}
-                                    className="!py-1.5"
-                                    onChange={e => {
-                                      f.onChange(e);
-                                      handleGrowthAmountChange(idx, e.target.value ?? 0);
-                                    }}
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <Controller
+                                    control={control}
+                                    name={p(`growthPeriodEntries.${idx}.growthAmount`)}
+                                    render={({ field: f }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={2}
+                                        maxIntegerDigits={15}
+                                        className="!py-1.5"
+                                        onChange={e => {
+                                          f.onChange(e);
+                                          handleGrowthAmountChange(idx, e.target.value ?? 0);
+                                        }}
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <Controller
-                                control={control}
-                                name={p(`growthPeriodEntries.${idx}.totalAmount`)}
-                                render={({ field: f }) => (
-                                  <NumberInput
-                                    {...f}
-                                    decimalPlaces={2}
-                                    disabled
-                                    className="!py-1.5"
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <Controller
+                                    control={control}
+                                    name={p(`growthPeriodEntries.${idx}.totalAmount`)}
+                                    render={({ field: f }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={2}
+                                        disabled
+                                        className="!py-1.5"
+                                      />
+                                    )}
                                   />
-                                )}
-                              />
-                            </td>
-                            <td className="px-3 py-1.5">
-                              <button
-                                type="button"
-                                onClick={() => setDeleteGrowthConfirm({ isOpen: true, index: idx })}
-                                className="text-red-500 hover:text-red-700"
-                              >
-                                <Icon style="solid" name="xmark" className="size-4" />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        appendGrowth({
-                          fromYear: 0,
-                          toYear: 0,
-                          growthRate: 0,
-                          growthAmount: 0,
-                          totalAmount: 0,
-                        })
-                      }
-                      className="mt-2 mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
-                    >
-                      <Icon style="solid" name="plus" className="size-3" />
-                      {t('forms.rentalInfo.addPeriod')}
-                    </button>
+                                </td>
+                                <td className="px-3 py-1.5">
+                                  <ConfirmDeleteButton
+                                    onConfirm={() => removeGrowth(idx)}
+                                    rowNumber={idx + 1}
+                                    readOnly={readOnly}
+                                    className="cas-row-btn text-red-500 hover:text-red-700"
+                                  >
+                                    <Icon style="solid" name="xmark" className="size-4" />
+                                  </ConfirmDeleteButton>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                    {/* Twin of the band's add link, for outside `.cas-form-grid`. */}
+                    {!readOnly && (
+                      <div className="cas-outside-form-only">
+                        <button
+                          type="button"
+                          onClick={addGrowthPeriod}
+                          className="mt-2 mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
+                        >
+                          <Icon style="solid" name="plus" className="size-3" />
+                          {t('forms.rentalInfo.addPeriod')}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -456,77 +450,104 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
           </SectionRow>
 
           {/* Up Front Entries */}
-          <SectionRow title={t('forms.rentalInfo.groups.upFront')} icon="money-bill">
+          <SectionRow
+            fixedColumns
+            spacedRule
+            title={t('forms.rentalInfo.groups.upFront')}
+            icon="money-bill"
+          >
             <div className="col-span-12">
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-gray-200 bg-gray-50">
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                      {t('forms.rentalInfo.table.atDate')}
-                    </th>
-                    <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                      {t('forms.rentalInfo.table.upFrontAmount')}
-                    </th>
-                    <th className="px-3 py-2 w-10"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {upFrontFields.map((field, idx) => (
-                    <tr key={field.id} className="border-b border-gray-100">
-                      <td className="px-3 py-1.5">
-                        <Controller
-                          control={control}
-                          name={p(`upFrontEntries.${idx}.atYear`)}
-                          render={({ field: f }) => (
-                            <DatePickerInput
-                              value={typeof f.value === 'string' ? f.value : null}
-                              onChange={val => f.onChange(val ?? '')}
-                              onBlur={f.onBlur}
-                              name={f.name}
+              {/* The band holds the title, the count and the add link (hidden outside
+                  `.cas-form-grid`, where the dashed button under the table, its twin, shows). */}
+              <div className="cas-labelled-table">
+                <div className="cas-table-label">
+                  {t('forms.rentalInfo.groups.upFront')}
+                  <span className="cas-label-meta">
+                    {t('forms.rentalInfo.upFrontCount', { count: upFrontFields.length })}
+                  </span>
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={() => appendUpFront({ atYear: '', upFrontAmount: 0 })}
+                      className="cas-label-add"
+                    >
+                      + {t('forms.rentalInfo.addUpFront')}
+                    </button>
+                  )}
+                </div>
+                <div className="cas-table-card min-w-0 flex-1">
+                  <table className="cas-form-table w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.atDate')}
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.upFrontAmount')}
+                        </th>
+                        <th className="px-3 py-2 w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {upFrontFields.map((field, idx) => (
+                        <tr key={field.id} className="border-b border-gray-100">
+                          <td className="px-3 py-1.5">
+                            <Controller
+                              control={control}
+                              name={p(`upFrontEntries.${idx}.atYear`)}
+                              render={({ field: f }) => (
+                                <DatePickerInput
+                                  value={typeof f.value === 'string' ? f.value : null}
+                                  onChange={val => f.onChange(val ?? '')}
+                                  onBlur={f.onBlur}
+                                  name={f.name}
+                                />
+                              )}
                             />
-                          )}
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <Controller
-                          control={control}
-                          name={p(`upFrontEntries.${idx}.upFrontAmount`)}
-                          render={({ field: f }) => (
-                            <NumberInput
-                              {...f}
-                              decimalPlaces={2}
-                              maxIntegerDigits={15}
-                              className="!py-1.5"
+                          </td>
+                          <td className="px-3 py-1.5">
+                            <Controller
+                              control={control}
+                              name={p(`upFrontEntries.${idx}.upFrontAmount`)}
+                              render={({ field: f }) => (
+                                <NumberInput
+                                  {...f}
+                                  decimalPlaces={2}
+                                  maxIntegerDigits={15}
+                                  className="!py-1.5"
+                                />
+                              )}
                             />
-                          )}
-                        />
-                      </td>
-                      <td className="px-3 py-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setDeleteUpFrontConfirm({ isOpen: true, index: idx })}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Icon style="solid" name="xmark" className="size-4" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-                {upFrontFields.length > 0 && (
-                  <tfoot>
-                    <tr className="border-t border-gray-200 bg-gray-50">
-                      <td className="px-3 py-2 text-sm font-semibold text-gray-700">
-                        {t('forms.rentalInfo.table.total')}
-                      </td>
-                      <td className="px-3 py-2 text-sm font-semibold text-right text-gray-700">
-                        {fmtNumber(upFrontTotal)}
-                      </td>
-                      <td className="px-3 py-2 w-10"></td>
-                    </tr>
-                  </tfoot>
-                )}
-              </table>
+                          </td>
+                          <td className="px-3 py-1.5">
+                            <ConfirmDeleteButton
+                              onConfirm={() => removeUpFront(idx)}
+                              rowNumber={idx + 1}
+                              readOnly={readOnly}
+                              className="cas-row-btn text-red-500 hover:text-red-700"
+                            >
+                              <Icon style="solid" name="xmark" className="size-4" />
+                            </ConfirmDeleteButton>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    {upFrontFields.length > 0 && (
+                      <tfoot>
+                        <tr className="border-t border-gray-200 bg-gray-50">
+                          <td className="px-3 py-2 text-sm font-semibold">
+                            {t('forms.rentalInfo.table.total')}
+                          </td>
+                          <td className="px-3 py-2 text-sm font-semibold text-right">
+                            {fmtNumber(upFrontTotal)}
+                          </td>
+                          <td className="px-3 py-2 w-10"></td>
+                        </tr>
+                      </tfoot>
+                    )}
+                  </table>
+                </div>
+              </div>
               {upFrontFields.length > 0 &&
                 upFrontTotalInput > 0 &&
                 Math.abs(upFrontTotal - upFrontTotalInput) > 0.01 && (
@@ -546,240 +567,244 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                   <span>{rentalErrors.upFrontEntries.message}</span>
                 </div>
               )}
-              <button
-                type="button"
-                onClick={() => appendUpFront({ atYear: '', upFrontAmount: 0 })}
-                className="mt-2 mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
-              >
-                <Icon style="solid" name="plus" className="size-3" />
-                {t('forms.rentalInfo.addUpFront')}
-              </button>
+              {/* Twin of the band's add link, for outside `.cas-form-grid`. */}
+              {!readOnly && (
+                <div className="cas-outside-form-only">
+                  <button
+                    type="button"
+                    onClick={() => appendUpFront({ atYear: '', upFrontAmount: 0 })}
+                    className="mt-2 mb-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-300 py-2 text-sm font-medium text-gray-500 transition-colors hover:border-primary-400 hover:bg-primary-50 hover:text-primary-700"
+                  >
+                    <Icon style="solid" name="plus" className="size-3" />
+                    {t('forms.rentalInfo.addUpFront')}
+                  </button>
+                </div>
+              )}
             </div>
           </SectionRow>
 
           {/* Rental Schedule */}
-          <SectionRow title={t('forms.rentalInfo.groups.rentalSchedule')} icon="table" isLast>
+          <SectionRow
+            fixedColumns
+            spacedRule
+            title={t('forms.rentalInfo.groups.rentalSchedule')}
+            icon="table"
+            isLast
+          >
             <div className="col-span-12">
-              <div className="flex justify-end gap-2 mb-3">
-                {scheduleFields.length > 0 && (
+              {/* The band holds the title, the year count and the actions (hidden outside
+                  `.cas-form-grid`, where the solid button below, its twin, shows). The header row is
+                  always there; an empty schedule is one muted row. */}
+              <div className="cas-labelled-table">
+                <div className="cas-table-label">
+                  {t('forms.rentalInfo.groups.rentalSchedule')}
+                  <span className="cas-label-meta">
+                    {t('forms.rentalInfo.scheduleYears', { count: scheduleFields.length })}
+                  </span>
+                  {!readOnly && scheduleFields.length > 0 && (
+                    // Pressed = editing: amber, like the Data Correction rail's amber badges. `!` because
+                    // the skin's own `.cas-label-add` colour is unlayered and would beat a plain utility.
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleEditing(!isScheduleEditing)}
+                      aria-pressed={isScheduleEditing}
+                      className="cas-label-add aria-pressed:!text-[color:var(--dc-warn)]"
+                    >
+                      {isScheduleEditing ? (
+                        <>
+                          <span aria-hidden="true">✓ </span>
+                          {t('forms.rentalInfo.editing')}
+                        </>
+                      ) : (
+                        t('forms.rentalInfo.edit')
+                      )}
+                    </button>
+                  )}
+                  {!readOnly && (
+                    <button
+                      type="button"
+                      onClick={handleGenerate}
+                      disabled={isGenerating}
+                      className="cas-label-add disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isGenerating
+                        ? t('forms.rentalInfo.generating')
+                        : t('forms.rentalInfo.generate')}
+                    </button>
+                  )}
+                </div>
+                <div className="cas-table-card min-w-0 flex-1 overflow-x-auto">
+                  <table className="cas-form-table w-full text-sm border-collapse">
+                    <thead>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.year')}
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.contractStart')}
+                        </th>
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.contractEnd')}
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.upFrontPerYear')}
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.rentalFeePerYear')}
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.totalAmount')}
+                        </th>
+                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                          {t('forms.rentalInfo.table.growthRatePct')}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isGenerating ? (
+                        Array.from({ length: 5 }).map((_, idx) => (
+                          <tr key={idx} className="border-b border-gray-100">
+                            {Array.from({ length: 7 }).map((_, col) => (
+                              <td key={col} className="px-3 py-2.5">
+                                <div className="h-4 bg-gray-200 rounded animate-pulse" />
+                              </td>
+                            ))}
+                          </tr>
+                        ))
+                      ) : scheduleFields.length > 0 ? (
+                        scheduleFields.map((field, idx) => {
+                          const entry = watchedScheduleEntries?.[idx];
+                          const upFrontVal = entry?.upFront ?? 0;
+                          const feeVal = entry?.contractRentalFee ?? 0;
+                          const totalVal = upFrontVal + feeVal;
+                          return (
+                            <tr
+                              key={field.id}
+                              className="border-b border-gray-100 hover:bg-gray-50"
+                            >
+                              <td className="px-3 py-1.5 text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                {entry?.year}
+                              </td>
+                              <td className="px-3 py-1.5 text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                {entry?.contractStart
+                                  ? format(new Date(entry.contractStart), 'dd/MM/yyyy')
+                                  : ''}
+                              </td>
+                              <td className="px-3 py-1.5 text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                {entry?.contractEnd
+                                  ? format(new Date(entry.contractEnd), 'dd/MM/yyyy')
+                                  : ''}
+                              </td>
+                              <td className="px-3 py-1.5">
+                                {isScheduleEditing ? (
+                                  <Controller
+                                    control={control}
+                                    name={p(`scheduleEntries.${idx}.upFront`)}
+                                    render={({ field: f }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={2}
+                                        maxIntegerDigits={15}
+                                        className="!py-1.5"
+                                        onChange={e => {
+                                          f.onChange(e);
+                                          handleCellChange(idx, 'upFront', e.target.value ?? 0);
+                                        }}
+                                      />
+                                    )}
+                                  />
+                                ) : (
+                                  <span className="block text-right text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                    {fmtNumber(upFrontVal)}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-1.5">
+                                {isScheduleEditing ? (
+                                  <Controller
+                                    control={control}
+                                    name={p(`scheduleEntries.${idx}.contractRentalFee`)}
+                                    render={({ field: f }) => (
+                                      <NumberInput
+                                        {...f}
+                                        decimalPlaces={2}
+                                        maxIntegerDigits={15}
+                                        className="!py-1.5"
+                                        onChange={e => {
+                                          f.onChange(e);
+                                          handleCellChange(
+                                            idx,
+                                            'contractRentalFee',
+                                            e.target.value ?? 0,
+                                          );
+                                        }}
+                                      />
+                                    )}
+                                  />
+                                ) : (
+                                  <span className="block text-right text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                    {fmtNumber(feeVal)}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-3 py-1.5 text-right font-medium text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                {fmtNumber(totalVal)}
+                              </td>
+                              <td className="px-3 py-1.5 text-right text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
+                                {(entry?.contractRentalFeeGrowthRatePercent ?? 0).toFixed(2)}
+                              </td>
+                            </tr>
+                          );
+                        })
+                      ) : (
+                        <tr>
+                          <td colSpan={7} className="px-3 py-2 text-center text-xs text-gray-400">
+                            {t('forms.rentalInfo.scheduleEmpty')}
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {/* Twin of the band's calculate action, for outside `.cas-form-grid`. */}
+              {!readOnly && (
+                <div className="cas-outside-form-only mt-3 flex justify-end gap-2">
+                  {scheduleFields.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsScheduleEditing(!isScheduleEditing)}
+                      aria-pressed={isScheduleEditing}
+                      className="rounded-md border border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 aria-pressed:border-amber-300 aria-pressed:bg-amber-50 aria-pressed:text-amber-700"
+                    >
+                      {isScheduleEditing ? (
+                        <>
+                          <span aria-hidden="true">✓ </span>
+                          {t('forms.rentalInfo.editing')}
+                        </>
+                      ) : (
+                        t('forms.rentalInfo.edit')
+                      )}
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setIsScheduleEditing(!isScheduleEditing)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md border ${isScheduleEditing ? 'bg-amber-50 border-amber-300 text-amber-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                    className="flex items-center gap-1.5 rounded-md bg-primary-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-70"
                   >
-                    <Icon
-                      style="solid"
-                      name={isScheduleEditing ? 'lock-open' : 'pen'}
-                      className="size-3 mr-1.5 inline-block"
-                    />
-                    {isScheduleEditing ? t('forms.rentalInfo.editing') : t('forms.rentalInfo.edit')}
+                    {isGenerating && (
+                      <Icon style="solid" name="spinner" className="size-3.5 animate-spin" />
+                    )}
+                    {isGenerating
+                      ? t('forms.rentalInfo.generating')
+                      : t('forms.rentalInfo.generate')}
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleGenerate}
-                  disabled={isGenerating}
-                  className="px-4 py-1.5 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-1.5"
-                >
-                  {isGenerating && (
-                    <Icon style="solid" name="spinner" className="size-3.5 animate-spin" />
-                  )}
-                  {isGenerating ? t('forms.rentalInfo.generating') : t('forms.rentalInfo.generate')}
-                </button>
-              </div>
-              {isGenerating ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.year')}
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.contractStart')}
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.contractEnd')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.upFrontPerYear')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.rentalFeePerYear')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.totalAmount')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.growthRatePct')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {Array.from({ length: 5 }).map((_, idx) => (
-                        <tr key={idx} className="border-b border-gray-100">
-                          {Array.from({ length: 7 }).map((_, col) => (
-                            <td key={col} className="px-3 py-2.5">
-                              <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                            </td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : scheduleFields.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.year')}
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.contractStart')}
-                        </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.contractEnd')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.upFrontPerYear')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.rentalFeePerYear')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.totalAmount')}
-                        </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
-                          {t('forms.rentalInfo.table.growthRatePct')}
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {scheduleFields.map((field, idx) => {
-                        const entry = watchedScheduleEntries?.[idx];
-                        const upFrontVal = entry?.upFront ?? 0;
-                        const feeVal = entry?.contractRentalFee ?? 0;
-                        const totalVal = upFrontVal + feeVal;
-                        return (
-                          <tr key={field.id} className="border-b border-gray-100 hover:bg-gray-50">
-                            <td className="px-3 py-1.5 text-gray-700">{entry?.year}</td>
-                            <td className="px-3 py-1.5 text-gray-700">
-                              {entry?.contractStart
-                                ? format(new Date(entry.contractStart), 'dd/MM/yyyy')
-                                : ''}
-                            </td>
-                            <td className="px-3 py-1.5 text-gray-700">
-                              {entry?.contractEnd
-                                ? format(new Date(entry.contractEnd), 'dd/MM/yyyy')
-                                : ''}
-                            </td>
-                            <td className="px-3 py-1.5">
-                              {isScheduleEditing ? (
-                                <Controller
-                                  control={control}
-                                  name={p(`scheduleEntries.${idx}.upFront`)}
-                                  render={({ field: f }) => (
-                                    <NumberInput
-                                      {...f}
-                                      decimalPlaces={2}
-                                      maxIntegerDigits={15}
-                                      className="!py-1.5"
-                                      onChange={e => {
-                                        f.onChange(e);
-                                        handleCellChange(idx, 'upFront', e.target.value ?? 0);
-                                      }}
-                                    />
-                                  )}
-                                />
-                              ) : (
-                                <span className="block text-right text-gray-700">
-                                  {fmtNumber(upFrontVal)}
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-3 py-1.5">
-                              {isScheduleEditing ? (
-                                <Controller
-                                  control={control}
-                                  name={p(`scheduleEntries.${idx}.contractRentalFee`)}
-                                  render={({ field: f }) => (
-                                    <NumberInput
-                                      {...f}
-                                      decimalPlaces={2}
-                                      maxIntegerDigits={15}
-                                      className="!py-1.5"
-                                      onChange={e => {
-                                        f.onChange(e);
-                                        handleCellChange(
-                                          idx,
-                                          'contractRentalFee',
-                                          e.target.value ?? 0,
-                                        );
-                                      }}
-                                    />
-                                  )}
-                                />
-                              ) : (
-                                <span className="block text-right text-gray-700">
-                                  {fmtNumber(feeVal)}
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-3 py-1.5 text-right font-medium text-gray-700">
-                              {fmtNumber(totalVal)}
-                            </td>
-                            <td className="px-3 py-1.5 text-right text-gray-700">
-                              {(entry?.contractRentalFeeGrowthRatePercent ?? 0).toFixed(2)}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-8 text-gray-400 text-sm">
-                  <Icon style="solid" name="table" className="size-8 mx-auto mb-2 opacity-50" />
-                  <p>{t('forms.rentalInfo.scheduleEmpty')}</p>
                 </div>
               )}
             </div>
           </SectionRow>
         </div>
-
-        <ConfirmDialog
-          isOpen={deleteGrowthConfirm.isOpen}
-          onClose={() => setDeleteGrowthConfirm({ isOpen: false, index: null })}
-          onConfirm={() => {
-            if (deleteGrowthConfirm.index !== null) {
-              removeGrowth(deleteGrowthConfirm.index);
-              setDeleteGrowthConfirm({ isOpen: false, index: null });
-            }
-          }}
-          title={t('forms.rentalInfo.deleteRow.title')}
-          message={t('forms.rentalInfo.deleteRow.message')}
-          confirmText={t('forms.rentalInfo.deleteRow.confirm')}
-          cancelText={t('forms.rentalInfo.deleteRow.cancel')}
-          variant="danger"
-        />
-
-        <ConfirmDialog
-          isOpen={deleteUpFrontConfirm.isOpen}
-          onClose={() => setDeleteUpFrontConfirm({ isOpen: false, index: null })}
-          onConfirm={() => {
-            if (deleteUpFrontConfirm.index !== null) {
-              removeUpFront(deleteUpFrontConfirm.index);
-              setDeleteUpFrontConfirm({ isOpen: false, index: null });
-            }
-          }}
-          title={t('forms.rentalInfo.deleteRow.title')}
-          message={t('forms.rentalInfo.deleteRow.message')}
-          confirmText={t('forms.rentalInfo.deleteRow.confirm')}
-          cancelText={t('forms.rentalInfo.deleteRow.cancel')}
-          variant="danger"
-        />
       </div>
     </FieldLabels>
   );

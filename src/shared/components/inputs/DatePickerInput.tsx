@@ -25,6 +25,7 @@ import { CalendarNavHeader } from './CalendarNavHeader';
 import { MonthYearPanel } from './MonthYearPanel';
 import { createHolidayDayButton } from './HolidayDayButton';
 import { useDateSegmentInput } from './useDateSegmentInput';
+import { usePortalPopoverPosition } from '@/shared/hooks/usePortalPopoverPosition';
 
 const MONTH_LABELS_SHORT = [
   'Jan',
@@ -168,10 +169,6 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
     const [showMonths, setShowMonths] = useState(false);
-    const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
-    const [align, setAlign] = useState<'left' | 'right'>('left');
-    // Viewport coordinates of the input, for the portalled calendar to anchor itself to.
-    const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null);
     /**
      * Range mode: the range being edited in the open calendar, published only when the user
      * confirms. Held locally so picking the start does not immediately apply a one-day filter and
@@ -301,61 +298,15 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       if (date) setMonth(date);
     }, [value, isRange, rangeValue?.from, rangeValue?.to]);
 
-    // Helper bound
-    function getScrollParent(node: HTMLElement | null): HTMLElement | null {
-      let el = node?.parentElement ?? null;
-      while (el) {
-        const { overflowX, overflowY } = getComputedStyle(el);
-        if (/(auto|scroll|hidden)/.test(overflowX + overflowY)) return el;
-        el = el.parentElement;
-      }
-      return null;
-    }
-
-    // Calculate position when opening (flip to top if not enough space below)
-    const updatePlacement = useCallback(() => {
-      if (!inputRef.current) return;
-      const rect = inputRef.current.getBoundingClientRect();
-      setAnchorRect(rect);
-
-      const scrollParent = getScrollParent(inputRef.current);
-      const bounds = scrollParent
-        ? scrollParent.getBoundingClientRect()
-        : { top: 0, bottom: window.innerHeight, left: 0, right: window.innerWidth };
-
-      const spaceBelow = bounds.bottom - rect.bottom;
-      const calendarHeight = 320; // approximate height of calendar
-      if (spaceBelow < calendarHeight && rect.top - bounds.top > calendarHeight) {
-        setPosition('top');
-      } else {
-        setPosition('bottom');
-      }
-
-      // Hang the calendar off the input's RIGHT edge, under the icon that opened it: on a wide
-      // field a left-aligned popover appears a long way from where the user just clicked. Flip to
-      // the left edge only when there is no room to expand leftwards but there is to the right —
-      // a narrow field hard against the left of a scrollable panel.
-      const calendarWidth = 460; // calendar + month/year panel when expanded
-      const spaceLeft = rect.right - bounds.left;
-      if (spaceLeft < calendarWidth && bounds.right - rect.left > calendarWidth) {
-        setAlign('left');
-      } else {
-        setAlign('right');
-      }
-    }, []);
-
-    // The calendar is portalled to <body> and positioned in viewport coordinates, so it has to
-    // follow the input when anything moves it — a page scroll, a scrollable panel, a resize.
-    useEffect(() => {
-      if (!isOpen) return;
-      updatePlacement();
-      window.addEventListener('resize', updatePlacement);
-      window.addEventListener('scroll', updatePlacement, true);
-      return () => {
-        window.removeEventListener('resize', updatePlacement);
-        window.removeEventListener('scroll', updatePlacement, true);
-      };
-    }, [isOpen, updatePlacement]);
+    // The calendar is portalled to <body> and positioned in viewport coordinates from the input's
+    // rect; the hook flips and follows it (a page scroll, a scrollable panel, a resize).
+    const { style: popoverStyle } = usePortalPopoverPosition({
+      isOpen,
+      anchorRef: inputRef,
+      popoverHeight: 320, // approximate height of the calendar
+      popoverWidth: 460, // calendar + month/year panel when expanded
+      clipToScrollParent: true,
+    });
 
     // Handle click outside to close
     useEffect(() => {
@@ -591,16 +542,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             createPortal(
               <div
                 ref={popoverRef}
-                style={{
-                  position: 'fixed',
-                  ...(position === 'bottom'
-                    ? { top: (anchorRect?.bottom ?? 0) + 4 }
-                    : { bottom: window.innerHeight - (anchorRect?.top ?? 0) + 4 }),
-                  ...(align === 'left'
-                    ? { left: anchorRect?.left ?? 0 }
-                    : { right: window.innerWidth - (anchorRect?.right ?? 0) }),
-                  visibility: anchorRect ? 'visible' : 'hidden',
-                }}
+                style={popoverStyle}
                 className="z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200"
               >
                 <div className="flex">

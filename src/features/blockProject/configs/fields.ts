@@ -706,7 +706,6 @@ export const condoTowerStructureFields: FormField[] = [
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
   {
     type: 'number-input',
@@ -753,7 +752,6 @@ export const condoTowerRoofFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1100,7 +1098,6 @@ export const lbModelBuildingDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'constructionType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
   {
     type: 'radio-group',
@@ -1119,7 +1116,6 @@ export const lbModelBuildingDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'utilizationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 

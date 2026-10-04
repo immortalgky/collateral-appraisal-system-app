@@ -519,6 +519,8 @@
       "sectionLabel": "建筑成本",
       "addBuilding": "添加建筑",
       "addNonBuilding": "添加非建筑",
+      "itemCount_one": "· {{count}} 项",
+      "itemCount_other": "· {{count}} 项",
       "fromYearHeader": "起始年",
       "toYearHeader": "结束年",
       "addPeriod": "添加期间",

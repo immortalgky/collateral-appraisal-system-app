@@ -381,8 +381,6 @@
     "addFirstItem": "เพิ่มรายการแรก",
     "addRow": "เพิ่มแถว",
     "deleteRow": "ลบ",
-    "deleteRowTitle": "ลบแถว",
-    "deleteRowMessage": "คุณแน่ใจหรือไม่ว่าต้องการลบแถวนี้? การกระทำนี้ไม่สามารถย้อนกลับได้",
     "total": "รวม",
     "override": "แก้ไข",
     "resetToCalculated": "รีเซ็ตเป็นผลรวมที่คำนวณ",

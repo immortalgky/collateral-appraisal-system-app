@@ -1,4 +1,5 @@
 import Button from '@/shared/components/Button';
+import Icon from '@/shared/components/Icon';
 import { SegmentedControl } from '@/shared/components/SegmentedControl';
 import { buildFormSchema, type FormField, FormFields } from '@/shared/components/form';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -35,9 +36,19 @@ interface LandTitleModalProps {
   onCancel: () => void;
   onSave: (data: Record<string, any>) => void;
   readOnly?: boolean;
+  /**
+   * Previous / next title, for a title that is being edited (not a new one). Moving applies the
+   * dialog's edits first, as Save does but without closing, so nothing typed is dropped.
+   */
+  nav?: { index: number; count: number; onNavigate: (to: number) => void };
+  /** Applies the dialog's values to the title being edited, leaving the dialog open (for `nav`). */
+  onApply?: (data: Record<string, any>) => void;
 }
 
 const createLandTitleForm = buildFormSchema(landtitlesFields);
+
+const NAV_BTN =
+  'flex size-7 items-center justify-center rounded-md border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40';
 
 const LandTitleModal = ({
   fields,
@@ -45,6 +56,8 @@ const LandTitleModal = ({
   onCancel,
   onSave,
   readOnly = false,
+  nav,
+  onApply,
 }: LandTitleModalProps) => {
   // Escape closes, the way every other dialog in the app does. Bound on the document rather
   // than the panel so it works before anything inside has been focused.
@@ -162,14 +175,28 @@ const LandTitleModal = ({
   const money = (n: number, digits = 2) =>
     n.toLocaleString('en-US', { minimumFractionDigits: digits, maximumFractionDigits: digits });
 
-  const handleSave = form.handleSubmit(data =>
-    onSave({
-      ...data,
-      rai: data.rai ?? 0,
-      ngan: data.ngan ?? 0,
-      squareWa: data.squareWa ?? 0,
-    }),
-  );
+  const payload = (data: Record<string, any>) => ({
+    ...data,
+    rai: data.rai ?? 0,
+    ngan: data.ngan ?? 0,
+    squareWa: data.squareWa ?? 0,
+  });
+  const handleSave = form.handleSubmit(data => onSave(payload(data)));
+  // Read in render so the form keeps `isDirty` up to date for `goTo`.
+  const isDirty = form.formState.isDirty;
+  // A clean dialog just moves. A dirty one is validated and applied first, like Save; if it does not
+  // validate, it stays and shows its errors rather than dropping what was typed.
+  const goTo = (to: number) => {
+    if (!nav) return;
+    if (readOnly || !isDirty || !onApply) {
+      nav.onNavigate(to);
+      return;
+    }
+    void form.handleSubmit(data => {
+      onApply(payload(data));
+      nav.onNavigate(to);
+    })();
+  };
 
   // Rendered into <body>. `position: fixed` is only viewport-relative while no ancestor
   // establishes a containing block, and this dialog sits deep inside the form — under an
@@ -197,7 +224,40 @@ const LandTitleModal = ({
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* The title number can run to 200 characters: the summary truncates, full text on hover. */}
               <div className="min-w-0 flex-1">
-                <h2 className="text-lg font-semibold">Title Detail</h2>
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold">Title Detail</h2>
+                  {nav && (
+                    <div
+                      role="group"
+                      aria-label={t('titleEntry.nav.group')}
+                      className="flex items-center gap-1"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => goTo(nav.index - 1)}
+                        disabled={nav.index <= 0}
+                        aria-label={t('titleEntry.nav.prev')}
+                        title={t('titleEntry.nav.prev')}
+                        className={NAV_BTN}
+                      >
+                        <Icon style="solid" name="chevron-left" className="size-3" />
+                      </button>
+                      <span className="min-w-[3.5rem] text-center text-sm tabular-nums text-gray-600">
+                        {t('titleEntry.nav.position', { current: nav.index + 1, total: nav.count })}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => goTo(nav.index + 1)}
+                        disabled={nav.index >= nav.count - 1}
+                        aria-label={t('titleEntry.nav.next')}
+                        title={t('titleEntry.nav.next')}
+                        className={NAV_BTN}
+                      >
+                        <Icon style="solid" name="chevron-right" className="size-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <p className="truncate text-xs text-gray-500" title={titleNumber || undefined}>
                   {t('titleEntry.summary', { no: titleNumber || '—', area: toRaiNganWa(totalWa) })}
                 </p>
@@ -269,7 +329,7 @@ const LandTitleModal = ({
                 <div className="flex items-baseline justify-between rounded-lg bg-gray-50 px-3 py-2.5">
                   <span className="text-xs text-gray-500">{t('titleEntry.price.label')}</span>
                   <div className="text-right tabular-nums">
-                    <div className="text-lg font-semibold text-gray-900">
+                    <div className="text-lg font-semibold text-teal-700">
                       {money(governmentPrice)}
                     </div>
                     <div className="text-[11.5px] text-gray-400">

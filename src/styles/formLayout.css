@@ -10,7 +10,8 @@
    risk to the create/edit screens appraisers use daily. Widening it later means
    adding the class to those pages; the rules stay put.
 
-   The `classic` layout has no rules at all — it IS the components' own styling.
+   Nothing here applies to the `classic` layout: its look is formLayoutStandard.css (on top of the
+   components' own styling), and what it shares with the `grid` layout's skin is formLayoutSkin.css.
 
    Hooks, all present in the markup:
      [data-field]        per-field wrapper           FormFields.tsx:587
@@ -107,26 +108,6 @@
 }
 [data-form-layout='grid'] .cas-form-grid [data-field]:has([data-field-label]):not(:has(table)) > * {
   display: contents;
-}
-/* …except when the root is itself a positioning context. ParameterSearchInput
-   hangs its results panel off `.relative` on its root and positions it with
-   `absolute left-0 right-0 top-full`. `display: contents` generates no box, so
-   that `position: relative` stopped applying and the panel anchored to the row
-   instead — which is why the dropdown appeared to open into nothing. Such a root
-   becomes the flex row itself, which keeps the box and still splits label from
-   control. */
-[data-form-layout='grid']
-  .cas-form-grid
-  [data-field]:has([data-field-label]):not(:has(table))
-  > .relative {
-  display: flex;
-  align-items: center;
-  /* `flex: 1 1 0`, not `width: 100%`. Once the row wraps — which it must, so a
-     validation message can take its own line — a 100%-wide item no longer shares
-     the line with the label, it is pushed below it. A zero-basis item that grows
-     fills exactly the same space and still fits beside the label. */
-  flex: 1 1 0;
-  min-width: 0;
 }
 /* Some components bury the label a level deeper — the chip group wraps it in a
    header row, the toggle in a fieldset with a legend. Flatten whatever holds it
@@ -872,11 +853,7 @@
    `flex justify-between` row. */
 [data-form-layout='grid']
   .cas-form-grid
-  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater),
-[data-form-layout='grid']
-  .cas-form-grid
-  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater)
-  > .relative {
+  [data-field]:has([data-field-label]):not(:has(table)):not(.cas-repeater) {
   flex-wrap: wrap;
 }
 [data-form-layout='grid'] .cas-form-grid [data-field] :is(p, div).text-danger,
@@ -901,8 +878,8 @@
 /* ── section stack: bands butt up against each other ────────────────────────
    The PMA forms space their blocks with `gap-6`, which reads right when each
    block is a card. In this layout the band *is* the divider, so that 24px is an
-   empty strip between two bars. Classic keeps its gutter — only the class is
-   read here, never removed from the markup. */
+   empty strip between two bars. Only the class is read here, never removed from the markup; the
+   classic layout's skin zeroes the gap of every `.cas-sheet` (PMA ones included) the same way. */
 [data-form-layout='grid'] .cas-form-grid .cas-section-stack {
   gap: 0;
 }
@@ -1094,8 +1071,8 @@
 
 /* ── Surface and Depreciation cards sit flush in the grid layout ────────────
    Both cards draw their own frame (and keep their [data-field] on an empty anchor, so the
-   repeater rules above never reach them). Square corners here match the grid's ruled rows;
-   the classic layout keeps the rounded card. */
+   repeater rules above never reach them). Square corners here match the grid's ruled rows; the
+   classic layout's own skin squares them too (formLayoutStandard.css). */
 [data-form-layout='grid'] .cas-form-grid .cas-table-card {
   border-radius: 0;
 }
@@ -1142,7 +1119,6 @@
    table highlight in a paler colour than its neighbours. */
 
 /* ── land form: one continuous sheet, section headers pinned while scrolling ──
-   Mock: docs/poc/property-form-layout-mock.html ("ต่อกัน + หัวค้าง", "เทากลาง").
    Opted in with `.cas-sheet`, which each property form (and the PMA and correction
    screens) sets on its own section container; a form without it keeps the gapped
    sections.
@@ -1276,8 +1252,11 @@
   --cas-pin-top: 0px;
   --cas-head-h: 2.5rem;
 }
-/* Headers pin under the editor's tab bar when there is one — it is the scroller's
-   own sticky child: pt-3 plus a py-2 text-xs tab and its 1px rule. */
+/* These offsets date from when section headers pinned under the editor's tab bar (the scroller's own
+   sticky child). They no longer pin ("Section headers do not pin while scrolling" below) and the
+   strip has since lost its `pt-3`, so nothing reads the pin offset for real any more: the head's
+   `top` is moot while it is `position: static`, and the title table's header row is reset to
+   `top: 0`. The skins do not use them; they stay only because the rules above still read them. */
 [data-form-layout='grid'] #form-scroll-container:has(> .sticky) {
   --cas-pin-top: calc(2.75rem + 1px);
 }
@@ -1350,8 +1329,9 @@
 
 /* ── a whole table under one label (BuildingDetail) ───────────────────────────
    The table is not a [data-field] row, so the rules above never give it a label
-   column. It carries its own, which only the grid layout shows — classic keeps
-   the section rail as its only heading. Same look as a field's label cell. */
+   column. It carries its own, which the skins (grid and classic) show as a band above the table
+   and which stays hidden outside `.cas-form-grid`, where the section rail is the only heading.
+   Same look as a field's label cell. */
 .cas-table-label {
   display: none;
 }
@@ -1378,20 +1358,6 @@
 [data-form-layout='grid'] .cas-form-grid .cas-labelled-table .cas-table-card {
   border: 0;
 }
-/* What the label above carries in the grid layout — add buttons, a summary — the table also shows
-   in its own place for the classic layout and for pages outside .cas-form-grid, which have no
-   label column. This hides that second copy once the label is there to hold it. */
-[data-form-layout='grid'] .cas-form-grid .cas-hide-in-grid {
-  display: none !important;
-}
-/* …and the reverse: a copy only the grid layout shows (the title table's add button under the table,
-   which classic keeps in the section header). */
-.cas-show-in-grid {
-  display: none;
-}
-[data-form-layout='grid'] .cas-form-grid .cas-show-in-grid {
-  display: block;
-}
 
 /* ── one sheet, grey / black / teal ─────────────────────────────────────────
    Sections stay butted together as one sheet (the rules above). On top of it:
@@ -1399,15 +1365,15 @@
      darkened below for the rules, and the old header read that variable too.
    - Label column: no fill, told apart by its divider and a slightly quieter black.
    - Teal is kept for one thing, the chosen value.
-   A card-per-section layout was tried here and dropped (mock: form-hierarchy-color-mock.html).
-   Colours are property-form-redesign-mock.html's: head #f8fafa, secondary ink #55636f, rule
+   A card-per-section layout was tried here and dropped.
+   Colours: head #f8fafa, secondary ink #55636f, rule
    #eef2f2 (its line-soft). The dark theme gets the same roles mixed from its own tokens. */
 [data-form-layout='grid'] .cas-form-grid {
-  --cas-sheet-head: #f8fafa;
+  --cas-sheet-head: var(--palette-surface-2);
   /* Table column heads keep this grey when the section head takes a colour of its own. */
-  --cas-table-head: #f8fafa;
-  --cas-ink-2: #55636f;
-  --cas-line: #eef2f2;
+  --cas-table-head: var(--palette-surface-2);
+  --cas-ink-2: var(--palette-ink-2);
+  --cas-line: var(--palette-line-soft);
 }
 [data-theme='dark'][data-form-layout='grid'] .cas-form-grid,
 [data-theme='dark'] [data-form-layout='grid'] .cas-form-grid {
@@ -1548,8 +1514,9 @@
 /* The sheet hangs straight off the editor's tab bar: square corners, no gap above it, and no top
    rule of its own — the tab bar's baseline is that edge. `.cas-sidebar-main` is ResizableSidebar's
    content box; keyed on holding a sheet so the Block pages that share it keep their padding. */
-/* …only when there is a tab bar to hang off (it is the scroller's sticky child, rendered for two
-   tabs or more). Without one the sheet would butt straight against the identity card. */
+/* …only when there is a tab bar to hang off (the scroller's sticky child; property editors with tabs
+   render one, a single-tab form included; the vehicle and vessel editors of Data Correction render
+   none). Without one the sheet would butt straight against the identity card. */
 [data-form-layout='grid']
   #form-scroll-container:has(> .sticky)
   .cas-form-grid
@@ -1564,8 +1531,9 @@
 [data-form-layout='grid'] .cas-form-grid :is(#land-section:has(.cas-sheet), .cas-sheet:not(#land-section .cas-sheet)) {
   border-radius: 0;
 }
-/* Same tab-bar condition as the padding above: without the bar, dropping the top rule left the
-   sheet open along its top edge (a building that is not under construction has one tab). */
+/* Same tab-bar condition as the padding above: without the bar (a page that renders none), dropping
+   the top rule would leave the sheet open along its top edge. It applies to every sheet in the
+   scroller; formLayoutCompact.css gives the top edge back to any that is not the one under the bar. */
 [data-form-layout='grid']
   .cas-form-grid
   #form-scroll-container:has(> .sticky)
@@ -1611,7 +1579,7 @@
    not merge into a band. Only what can be typed into — disabled and read-only controls stay bare —
    and only while not focused, so the existing white-with-teal-ring focus state still takes over. */
 [data-form-layout='grid'] .cas-form-grid {
-  /* The mock's input fill. A darker step was tried to tell it from the #f8fafa head bands and
+  /* The input fill. A darker step was tried to tell it from the #f8fafa head bands and
      dropped — see the head colours above if the two ever read as one grey again. */
   --cas-input: #f6f9f9;
 }
@@ -1660,7 +1628,7 @@
 /* Hover shows the box's edge, the same #cbd5d3 the dense table inputs use. Drawn as a second inset
    shadow just inside the white ring, so the line hugs the grey box instead of the row. */
 [data-form-layout='grid'] .cas-form-grid {
-  --cas-input-edge: #cbd5d3;
+  --cas-input-edge: var(--palette-line-strong);
 }
 [data-theme='dark'][data-form-layout='grid'] .cas-form-grid,
 [data-theme='dark'] [data-form-layout='grid'] .cas-form-grid {
@@ -1727,39 +1695,6 @@
   background-color: var(--cas-input) !important;
   outline-color: var(--cas-input-edge);
 }
-/* Its "add row" is the small dashed button the other tables on this sheet use, not a full-width
-   grey bar with a teal disc. The bar is the div after the table; the disc is the icon's wrapper. */
-[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells [data-field] table ~ div:has(> button) {
-  border-top: 0;
-  /* Space above only, the title table's own 0.5rem gap before its add button. */
-  padding: 0.5rem 0 0;
-}
-[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells [data-field] table ~ div > button {
-  width: auto;
-  justify-content: flex-start;
-  gap: 0.25rem;
-  padding: 0.125rem 0.5rem;
-  border: 1px dashed var(--color-base-300);
-  border-radius: 0.375rem;
-  background: transparent;
-  color: var(--cas-ink-2);
-  font-size: 0.75rem;
-  font-weight: 400;
-}
-[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells [data-field] table ~ div > button:hover {
-  border-color: var(--color-primary-500);
-  color: var(--color-primary-700);
-  background: transparent;
-}
-[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells [data-field] table ~ div > button > div {
-  width: auto;
-  height: auto;
-  background: transparent;
-  border-radius: 0;
-}
-[data-form-layout='grid'] .cas-form-grid .cas-deduction-cells [data-field] table ~ div > button svg {
-  color: currentColor;
-}
 /* Compact rows, to the building table's measurements: 0.5rem/0.375rem cells and a 1.625rem input
    box, instead of the roomier padding the repeater rules give a FormTable. */
 [data-form-layout='grid'] .cas-form-grid .cas-deduction-cells [data-field] thead th,
@@ -1818,7 +1753,7 @@
 
 /* ── colour roles: section head, label column, editable box, required-but-empty ──────────────
    Four roles that used to share one near-white grey, so nothing said which boxes take input
-   (mock: land-form-redesign.html, Version 3).
+   (the land form redesign, version 3).
    - Section head: a teal band with a stripe on its left edge. The rest of the sheet stays neutral, so the band stands out.
    - Label column: its own light fill again, so it reads as a column of names, not values.
    - Editable box: white with its edge always drawn. Disabled / read-only controls stay bare, so
@@ -1830,11 +1765,11 @@
   --cas-head-ink: #115e59;
   --cas-label-bg: #f6f8f9;
   --cas-input: var(--color-base-100);
-  --cas-input-edge: #e0e7e9;
-  --cas-input-edge-hover: #b7c4c9;
-  --cas-req-bg: #fff5f4;
-  --cas-req-edge: #f3b1aa;
-  --cas-req-ink: #b91c1c;
+  --cas-input-edge: var(--palette-input-edge);
+  --cas-input-edge-hover: var(--palette-input-edge-hover);
+  --cas-req-bg: var(--palette-req-wash);
+  --cas-req-edge: var(--palette-req-line);
+  --cas-req-ink: var(--palette-req);
 }
 [data-theme='dark'][data-form-layout='grid'] .cas-form-grid,
 [data-theme='dark'] [data-form-layout='grid'] .cas-form-grid {

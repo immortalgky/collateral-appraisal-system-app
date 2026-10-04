@@ -377,7 +377,6 @@ const CreateLeaseAgreementLandBuildingPage = () => {
                     isLoading={isPending && saveAction === 'draft'}
                     disabled={isPending}
                   >
-                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
                   </Button>
                   <Button

@@ -160,6 +160,58 @@
    shade consumers still rely on staying put. */
 :root {
     --nav-flash-color: var(--color-primary-200);
+
+    /* The grey / teal palette of the appraisal form skins (formLayoutCompact / Standard / Skin.css)
+       and of the Appraisal Data Correction screen: defined once here, read by `--cas-*` and
+       `--dc-*` below. Global on purpose — the correction screen's components sit outside
+       `.cas-form-grid`. Every token has a dark value in the `[data-theme=dark]` block further down;
+       the skins restate their own dark values per role (derived from the base tokens). */
+    --palette-surface: #ffffff;
+    --palette-surface-2: #f8fafa;
+    --palette-surface-3: #edf1f1;
+    --palette-line: #e3e9e8;
+    --palette-line-soft: #eef2f2;
+    --palette-line-strong: #cbd5d3;
+    --palette-ink: #1f2937;
+    /* Strongest text of the correction screen: `text-gray-900`'s own colour, so moving that screen
+       onto `--dc-ink` changes nothing in light. (`--palette-ink` is the skins' #1f2937, one step
+       lighter.) */
+    --palette-ink-strong: var(--color-gray-900);
+    --palette-ink-2: #55636f;
+    --palette-ink-3: #8a96a0;
+    --palette-input-edge: #e0e7e9;
+    --palette-input-edge-hover: #b7c4c9;
+    --palette-accent: #0d9488;
+    --palette-accent-ink: #0f766e;
+    --palette-accent-wash: #f0fdfa;
+    --palette-accent-line: #99f6e4;
+    --palette-warn: #b45309;
+    --palette-warn-wash: #fffbeb;
+    --palette-danger: #dc2626;
+    --palette-req: #b91c1c;
+    --palette-req-wash: #fff5f4;
+    --palette-req-line: #f3b1aa;
+
+    /* The lift of the Data Correction editor's outer frame (the property editor's frame has no shadow). */
+    --palette-shadow-lift: 0 1px 2px rgba(16, 24, 32, 0.06), 0 4px 12px rgba(16, 24, 32, 0.08);
+
+    /* Appraisal Data Correction screen (DocumentCorrectionPane, CorrectionPageHeader, the rail in
+       AppraisalDataCorrectionDetailPage). */
+    --dc-ink: var(--palette-ink-strong);
+    --dc-surface: var(--palette-surface);
+    --dc-surface-2: var(--palette-surface-2);
+    --dc-surface-3: var(--palette-surface-3);
+    --dc-line: var(--palette-line);
+    --dc-line-soft: var(--palette-line-soft);
+    --dc-ink-2: var(--palette-ink-2);
+    --dc-ink-3: var(--palette-ink-3);
+    --dc-accent: var(--palette-accent);
+    --dc-accent-ink: var(--palette-accent-ink);
+    --dc-accent-wash: var(--palette-accent-wash);
+    --dc-accent-line: var(--palette-accent-line);
+    --dc-warn: var(--palette-warn);
+    --dc-warn-wash: var(--palette-warn-wash);
+    --dc-danger: var(--palette-danger);
 }
 
 /* ========================================
@@ -180,4 +232,39 @@
 
     /* mock's --accent-line under dark (mock:50) */
     --nav-flash-color: #17544e;
+
+    /* Dark palette: every `--palette-*` has a dark value, so any screen reading them directly is
+       right in dark mode. Surfaces, lines and ink are mixes of `--color-base-100` and
+       `--color-base-content` at the percentages the skins' dark blocks use for the same roles
+       (surface-2 = table head 6%, surface-3 = section head 8%, line 20%, line-soft 15%, ink-2 72%,
+       ink-3 50%), so the correction screen and the form sheet it hosts share one dark ground. The
+       accent, warn and danger values are fixed hex. The skins still restate their own dark values
+       per role, so nothing they render moves. */
+    --palette-ink-strong: #e5e7eb;
+    --palette-shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --palette-ink: var(--color-base-content);
+    --palette-line-strong: color-mix(in srgb, var(--color-base-content) 30%, var(--color-base-100));
+    --palette-input-edge: color-mix(in srgb, var(--color-base-content) 15%, var(--color-base-100));
+    --palette-input-edge-hover: color-mix(
+        in srgb,
+        var(--color-base-content) 30%,
+        var(--color-base-100)
+    );
+    --palette-req: #f87171;
+    --palette-req-wash: color-mix(in srgb, #ef4444 12%, var(--color-base-100));
+    --palette-req-line: color-mix(in srgb, #ef4444 45%, var(--color-base-100));
+    --palette-surface: var(--color-base-100);
+    --palette-surface-2: color-mix(in srgb, var(--color-base-content) 6%, var(--color-base-100));
+    --palette-surface-3: color-mix(in srgb, var(--color-base-content) 8%, var(--color-base-100));
+    --palette-line: color-mix(in srgb, var(--color-base-content) 20%, var(--color-base-100));
+    --palette-line-soft: color-mix(in srgb, var(--color-base-content) 15%, var(--color-base-100));
+    --palette-ink-2: color-mix(in srgb, var(--color-base-content) 72%, transparent);
+    --palette-ink-3: color-mix(in srgb, var(--color-base-content) 50%, var(--color-base-100));
+    --palette-accent: #2dd4bf;
+    --palette-accent-ink: #5eead4;
+    --palette-accent-wash: #10322f;
+    --palette-accent-line: #17544e;
+    --palette-warn: #fcd34d;
+    --palette-warn-wash: #33280d;
+    --palette-danger: #fca5a5;
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
@@ -8,7 +8,7 @@ import {
   type OptionFilter,
   NumberInput,
 } from '@/shared/components/inputs';
-import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
 import {
   type Control,
   type FieldValues,
@@ -19,6 +19,7 @@ import {
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
+import { emptyRowFor, isRegular, sumColumn } from './formTableUtils';
 
 // --- Types ---
 
@@ -29,6 +30,10 @@ interface FormTableProps {
   totalFieldName?: string;
   allowOverride?: boolean;
   sequenceField?: string;
+  /** Leave out the add-row bar under the table — for a parent that puts its own add link elsewhere. */
+  hideAddButton?: boolean;
+  /** Exposes this table's add-row action to a parent (`ref.current?.()`) while it is mounted. */
+  addRowRef?: React.Ref<() => void>;
 }
 
 export type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
@@ -58,7 +63,6 @@ interface FormTableRowNumberColumn {
 
 // --- Helpers ---
 
-const isRegular = (col: FormTableColumn): col is FormTableRegularColumn => 'name' in col;
 const isRowNum = (col: FormTableColumn): col is FormTableRowNumberColumn =>
   'rowNumberColumn' in col;
 const fmtNum = (n: number, dp = 2) =>
@@ -83,6 +87,7 @@ const IconBtn = ({
     type="button"
     onClick={onClick}
     title={title}
+    aria-label={title}
     className={`${size === 7 ? 'shrink-0 w-6 h-6' : 'w-7 h-7'} flex items-center justify-center rounded-md transition-colors ${className}`}
   >
     <Icon style="solid" name={icon} className={iconSize} />
@@ -116,7 +121,7 @@ const TotalCell = ({
 
   if (isReadOnly || !totalFieldName) {
     return (
-      <span className="text-sm font-semibold text-gray-900 text-right block">
+      <span className="text-sm font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)] text-right block">
         {fmtNum(totalFieldName ? value : calculatedTotal)}
       </span>
     );
@@ -148,7 +153,7 @@ const TotalCell = ({
   }
   return (
     <div className="flex items-center gap-2">
-      <span className="flex-1 text-sm font-semibold text-gray-900 text-right block px-3">
+      <span className="flex-1 text-sm font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)] text-right block px-3">
         {fmtNum(value)}
       </span>
       {allowOverride && (
@@ -331,6 +336,8 @@ const FormTable = ({
   totalFieldName,
   allowOverride = false,
   sequenceField,
+  hideAddButton = false,
+  addRowRef,
 }: FormTableProps) => {
   const { t } = useTranslation(['request', 'common']);
   const { getValues, setValue, control, watch } = useFormContext();
@@ -338,11 +345,23 @@ const FormTable = ({
   const { fields, append, remove } = useFieldArray({ control, name });
   const values = getValues(name);
   const watchedValues = watch(name);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; index: number | null }>({
-    isOpen: false,
-    index: null,
-  });
   const [isOverridden, setIsOverridden] = useState(false);
+
+  const deleteRow = (index: number) => {
+    remove(index);
+    if (!sequenceField) return;
+    const remaining = (getValues(name) as Record<string, unknown>[] | undefined) ?? [];
+    remaining
+      .map((_, i) => i)
+      .sort(
+        (a, b) =>
+          (Number(remaining[a]?.[sequenceField]) || 0) -
+          (Number(remaining[b]?.[sequenceField]) || 0),
+      )
+      .forEach((origIdx, pos) => {
+        setValue(`${name}.${origIdx}.${sequenceField}`, pos + 1, { shouldDirty: true });
+      });
+  };
 
   // Display order from the current sequence values
   const rowList = (values as Record<string, unknown>[] | undefined) ?? [];
@@ -355,19 +374,17 @@ const FormTable = ({
         )
     : rowList.map((_, i) => i);
 
-  const handleAddRow = () => {
-    const newRow: Record<string, any> = {};
-    for (const col of columns) {
-      if (!isRegular(col)) continue;
-      newRow[col.name] = '';
-      if (col.otherFieldName) newRow[col.otherFieldName] = '';
-    }
+  // Reads the rows when it runs, not from this render, so the copy a parent holds never goes stale.
+  const handleAddRow = React.useCallback(() => {
+    const newRow = emptyRowFor(columns);
     if (sequenceField) {
-      const maxSeq = rowList.reduce((m, r) => Math.max(m, Number(r?.[sequenceField]) || 0), 0);
+      const current = (getValues(name) as Record<string, unknown>[] | undefined) ?? [];
+      const maxSeq = current.reduce((m, r) => Math.max(m, Number(r?.[sequenceField]) || 0), 0);
       newRow[sequenceField] = maxSeq + 1;
     }
     append(newRow);
-  };
+  }, [columns, sequenceField, getValues, name, append]);
+  useImperativeHandle(addRowRef, () => handleAddRow, [handleAddRow]);
 
   const handleSequenceCommit = (originalIndex: number, rawTarget: number) => {
     if (!sequenceField) return;
@@ -385,11 +402,7 @@ const FormTable = ({
     });
   };
 
-  const calcSum = (col: string): number =>
-    (watchedValues || values || []).reduce(
-      (s: number, r: Record<string, any>) => s + (parseFloat(r?.[col]) || 0),
-      0,
-    );
+  const calcSum = (col: string): number => sumColumn(watchedValues || values, col);
   const calculatedTotal = sumColumns.length > 0 ? calcSum(sumColumns[0]) : 0;
 
   React.useEffect(() => {
@@ -520,12 +533,13 @@ const FormTable = ({
                   {!isReadOnly && (
                     <td className="py-1.5 px-3">
                       <div className="flex gap-1 justify-end">
-                        <IconBtn
-                          onClick={() => setDeleteConfirm({ isOpen: true, index: originalIndex })}
-                          icon="trash"
-                          className="bg-danger-50 text-danger-600 hover:bg-danger-100"
-                          title={t('table.deleteRow')}
-                        />
+                        <ConfirmDeleteButton
+                          onConfirm={() => deleteRow(originalIndex)}
+                          rowNumber={displayPos + 1}
+                          className="cas-row-btn flex h-7 w-7 items-center justify-center rounded-md bg-danger-50 text-danger-600 transition-colors hover:bg-danger-100"
+                        >
+                          <Icon style="solid" name="trash" className="size-3.5" />
+                        </ConfirmDeleteButton>
                       </div>
                     </td>
                   )}
@@ -567,7 +581,10 @@ const FormTable = ({
                   if (!labelRendered) {
                     labelRendered = true;
                     return (
-                      <td key={i} className="py-3 px-4 text-sm font-semibold text-gray-600">
+                      <td
+                        key={i}
+                        className="py-3 px-4 text-sm font-semibold text-gray-600 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-2)]"
+                      >
                         <div className="flex items-center gap-2">
                           {t('table.total')}
                           {isOverridden && (
@@ -587,7 +604,7 @@ const FormTable = ({
           </tfoot>
         )}
       </table>
-      {!isEmpty && !isReadOnly && (
+      {!isEmpty && !isReadOnly && !hideAddButton && (
         <div className="border-t border-gray-100">
           <button
             type="button"
@@ -601,34 +618,6 @@ const FormTable = ({
           </button>
         </div>
       )}
-      <ConfirmDialog
-        isOpen={deleteConfirm.isOpen}
-        onClose={() => setDeleteConfirm({ isOpen: false, index: null })}
-        onConfirm={() => {
-          if (deleteConfirm.index !== null) {
-            remove(deleteConfirm.index);
-            if (sequenceField) {
-              const remaining = (getValues(name) as Record<string, unknown>[] | undefined) ?? [];
-              remaining
-                .map((_, i) => i)
-                .sort(
-                  (a, b) =>
-                    (Number(remaining[a]?.[sequenceField]) || 0) -
-                    (Number(remaining[b]?.[sequenceField]) || 0),
-                )
-                .forEach((origIdx, pos) => {
-                  setValue(`${name}.${origIdx}.${sequenceField}`, pos + 1, { shouldDirty: true });
-                });
-            }
-            setDeleteConfirm({ isOpen: false, index: null });
-          }
-        }}
-        title={t('table.deleteRowTitle')}
-        message={t('table.deleteRowMessage')}
-        confirmText={t('common:actions.delete')}
-        cancelText={t('common:actions.cancel')}
-        variant="danger"
-      />
     </div>
   );
 };

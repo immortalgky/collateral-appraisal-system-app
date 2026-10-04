@@ -1,8 +1,11 @@
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import Icon from '@/shared/components/Icon';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import FormTable from '@features/request/components/tables/FormTable';
+import { emptyRowFor, sumColumn } from '@features/request/components/tables/formTableUtils';
+import { formatNumber } from '@/shared/utils/formatUtils';
 
 interface LandAreaDeductionTableProps {
   /** Field-array name. Defaults to the land form's own field. */
@@ -24,11 +27,17 @@ export default function LandAreaDeductionTable({
   // The wording is FormTable's own, which lives in the request namespace.
   const { t: tRequest } = useTranslation('request');
   const { control } = useFormContext();
-  // FormTable owns the same array; appending here lands in its rows.
+  // FormTable owns the rows while it is mounted; this instance only serves the empty state, where
+  // FormTable is not rendered, and registers the name for the error scroll target below.
   const { append } = useFieldArray({ control, name });
+  // The band's add link triggers FormTable's own add action, so a new row is built and keyed in
+  // one place (the `fields` of a second `useFieldArray` on this name would go stale).
+  const addRowRef = useRef<(() => void) | null>(null);
   // Counted from the form value, not this hook's `fields`: FormTable removes rows through its own
   // useFieldArray, and two instances on one name do not share their `fields`.
-  const isEmpty = ((useWatch({ control, name }) as unknown[] | null) ?? []).length === 0;
+  const rows = (useWatch({ control, name }) as { areaInSqWa?: unknown }[] | null) ?? [];
+  const isEmpty = rows.length === 0;
+  const totalWa = sumColumn(rows, 'areaInSqWa');
   const readOnly = useFormReadOnly();
 
   return (
@@ -36,7 +45,31 @@ export default function LandAreaDeductionTable({
       {/* Empty, FormTable is not rendered, so the array's error scroll target lives here. */}
       {isEmpty && <div data-field={name} className="cas-repeater" />}
       <div className="cas-labelled-table">
-        <div className="cas-table-label">{t('landCharacteristicsForm.deductionsLabel')}</div>
+        {/* The band: title, a muted summary and the add link. FormTable's own add bar is not
+            rendered (`hideAddButton`). Shown where `.cas-table-label` is (inside `.cas-form-grid`);
+            the button under the table, `cas-outside-form-only`, is its twin for where it is not. */}
+        <div className="cas-table-label">
+          {t('landCharacteristicsForm.deductionsTitle')}
+          {!isEmpty && (
+            <>
+              <span className="cas-label-meta">
+                {t('landCharacteristicsForm.deductionsSummary', {
+                  count: rows.length,
+                  area: formatNumber(totalWa, 2),
+                })}
+              </span>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() => addRowRef.current?.()}
+                  className="cas-label-add"
+                >
+                  + {t('landCharacteristicsForm.addDeduction')}
+                </button>
+              )}
+            </>
+          )}
+        </div>
         <div className="cas-deduction-cells cas-table-card min-w-0 flex-1 rounded border border-gray-200">
           {isEmpty ? (
             // The same empty state as the other tables on the sheet: no column heads, just the prompt.
@@ -46,7 +79,7 @@ export default function LandAreaDeductionTable({
               {!readOnly && (
                 <button
                   type="button"
-                  onClick={() => append({ reasonCode: '', areaInSqWa: '', remark: '' })}
+                  onClick={() => append(emptyRowFor(deductionColumns))}
                   className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
                 >
                   <Icon style="solid" name="plus" className="size-2.5" />
@@ -55,7 +88,30 @@ export default function LandAreaDeductionTable({
               )}
             </div>
           ) : (
-            <FormTable columns={deductionColumns} name={name} sumColumns={['areaInSqWa']} />
+            <>
+              <FormTable
+                columns={deductionColumns}
+                name={name}
+                sumColumns={['areaInSqWa']}
+                hideAddButton
+                addRowRef={addRowRef}
+              />
+              {/* Twin of the band's add link above, for outside `.cas-form-grid`, where
+                  `.cas-table-label` is hidden. `.cas-outside-form-only` (formLayoutSkin.css) hides
+                  this copy inside it, so there is exactly one add control in every context. */}
+              {!readOnly && (
+                <div className="cas-outside-form-only border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => addRowRef.current?.()}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-b-lg bg-gray-50 py-2 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+                  >
+                    <Icon style="solid" name="plus" className="size-2.5" />
+                    {tRequest('table.addRow')}
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

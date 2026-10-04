@@ -11,6 +11,7 @@ import {
 import { Icon, NumberInput } from '@/shared/components';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import { useTranslation } from 'react-i18next';
+import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
 import { FIELD, NUM, TD, TH } from '../components/tables/denseTable';
 
 interface CondoAreaDetailFormProps {
@@ -185,7 +186,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
       <div className="cas-labelled-table">
         <div className="cas-table-label">
           {t('forms.condo.areaDetail')}
-          <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.75rem] font-normal text-gray-500">
+          <span className="cas-label-meta flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.75rem] font-normal text-gray-500">
             {isEmpty ? (
               t('forms.condo.areaDetailHint')
             ) : (
@@ -194,8 +195,14 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
               </span>
             )}
           </span>
+          {!isEmpty && !readOnly && (
+            <button type="button" onClick={addRow} className="cas-label-add">
+              + {t('forms.condo.addArea')}
+            </button>
+          )}
         </div>
-        {/* The table, then its add button under the total. */}
+        {/* The table; the add link is in the band above, and its twin under the total shows only
+            outside `.cas-form-grid` (`.cas-outside-form-only`). */}
         <div className="min-w-0 flex-1">
           <div className="cas-table-card overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="overflow-x-auto">
@@ -282,7 +289,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
                               />
                             </td>
                             <td className={clsx(TD, 'py-0.5 pr-2')}>
-                              <div className="flex justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100">
+                              <div className="flex justify-end gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 has-[[data-armed=true]]:opacity-100">
                                 <RowButton
                                   icon="arrow-up"
                                   label={`Move row ${position + 1} up`}
@@ -311,7 +318,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
                 </tbody>
                 {!isEmpty && (
                   <tfoot>
-                    <tr className="bg-[#f8fafa] font-semibold text-[#1f2937]">
+                    <tr className="bg-[#f8fafa] font-semibold text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
                       <td className={TD} />
                       <td className={TD}>{t('forms.condo.areaTotal')}</td>
                       <td className={NUM}>{fmt(total)}</td>
@@ -326,7 +333,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
             <button
               type="button"
               onClick={addRow}
-              className="mt-2 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 hover:border-primary-500 hover:text-primary-700"
+              className="cas-outside-form-only mt-2 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 hover:border-primary-500 hover:text-primary-700"
             >
               + {t('forms.condo.addArea')}
             </button>
@@ -399,6 +406,20 @@ function RowButton({
   disabled?: boolean;
   danger?: boolean;
 }) {
+  const look =
+    'cas-row-btn flex size-6 items-center justify-center rounded-md text-gray-400 disabled:opacity-30';
+  // A delete takes two clicks (the first arms it); the move arrows act at once.
+  if (danger)
+    return (
+      <ConfirmDeleteButton
+        onConfirm={onClick}
+        label={label}
+        disabled={disabled}
+        className={`${look} enabled:hover:bg-red-50 enabled:hover:text-red-600`}
+      >
+        <Icon style="solid" name={icon} className="size-3" />
+      </ConfirmDeleteButton>
+    );
   return (
     <button
       type="button"
@@ -406,12 +427,7 @@ function RowButton({
       disabled={disabled}
       aria-label={label}
       title={label}
-      className={clsx(
-        'flex size-6 items-center justify-center rounded-md text-gray-400 disabled:opacity-30',
-        danger
-          ? 'enabled:hover:bg-red-50 enabled:hover:text-red-600'
-          : 'enabled:hover:bg-gray-200 enabled:hover:text-gray-700',
-      )}
+      className={clsx(look, 'enabled:hover:bg-gray-200 enabled:hover:text-gray-700')}
     >
       <Icon style="solid" name={icon} className="size-3" />
     </button>

@@ -213,7 +213,6 @@ export default function ProjectInfoTab({
                   isLoading={isPending}
                   disabled={isPending}
                 >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                   Save Draft
                 </Button>
                 <Button type="submit" isLoading={isPending} disabled={isPending}>

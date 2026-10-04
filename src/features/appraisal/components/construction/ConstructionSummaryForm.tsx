@@ -14,6 +14,7 @@ import {
   isPendingProgress,
   isRegressedProgress,
   pct,
+  INPUT_BOX,
   REGRESSED,
   RO,
   TD,
@@ -156,7 +157,7 @@ export function ConstructionSummaryForm({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums text-[#1f2937]">
+        <table className="w-full min-w-max border-separate border-spacing-0 text-[0.875rem] leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
           <thead>
             <tr>
               <th className={clsx(TH, 'text-left min-w-[320px]')}>
@@ -196,7 +197,7 @@ export function ConstructionSummaryForm({
                     onKeyDown={blockEnter}
                     aria-label={t('constructionInspection.columns.description')}
                     // Dense inputs are right-aligned for figures; this one is prose.
-                    className="text-left!"
+                    className={clsx('text-left!', INPUT_BOX)}
                   />
                 )}
               </td>
@@ -217,7 +218,7 @@ export function ConstructionSummaryForm({
                     max={100}
                     onKeyDown={blockEnter}
                     aria-label={t('constructionInspection.grid.currentProgress')}
-                    className={clsx(isRegressed && REGRESSED)}
+                    className={isRegressed ? REGRESSED : INPUT_BOX}
                   />
                 </td>
               )}
@@ -239,12 +240,12 @@ export function ConstructionSummaryForm({
         </table>
       </div>
       {isPending && (
-        <div className="px-[12px] pt-[6px] text-[11.5px] text-[#b45309]">
+        <div className="px-[12px] pt-[6px] text-[0.75rem] text-[color:var(--palette-warn)]">
           {t('constructionInspection.status.summaryPending')}
         </div>
       )}
       {isRegressed && (
-        <div className="px-[12px] pt-[6px] text-[11.5px] text-[#dc2626]">
+        <div className="px-[12px] pt-[6px] text-[0.75rem] text-[#dc2626]">
           ⚠ {t('constructionInspection.status.summaryRegressed')}
         </div>
       )}
@@ -253,7 +254,7 @@ export function ConstructionSummaryForm({
       <div className="space-y-3 p-[12px]">
         <div className="flex items-center gap-2">
           <Icon name="paperclip" style="solid" className="size-3.5 text-gray-400" />
-          <span className="text-xs font-semibold text-gray-700">
+          <span className="text-xs font-semibold text-gray-700 dark:text-[color:var(--palette-ink)]">
             {t('constructionInspection.summaryForm.uploadTitle')}
           </span>
         </div>
@@ -281,7 +282,7 @@ export function ConstructionSummaryForm({
                   ? 'border-primary/30 bg-primary/5 cursor-wait'
                   : isDragOver
                     ? 'border-primary bg-primary/5 cursor-pointer'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50/50 cursor-pointer'
+                    : 'border-gray-200 dark:border-[color:var(--palette-line)] hover:border-gray-300 hover:bg-gray-50/50 cursor-pointer'
               }`}
             >
               <div
@@ -306,13 +307,15 @@ export function ConstructionSummaryForm({
                   </p>
                 ) : (
                   <>
-                    <p className="text-xs font-medium text-gray-600">
+                    <p className="text-xs font-medium text-gray-600 dark:text-[color:var(--palette-ink-2)]">
                       <span className="text-primary">
                         {t('constructionInspection.summaryForm.clickToUpload')}
                       </span>{' '}
                       {t('constructionInspection.summaryForm.orDragDrop')}
                     </p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">PDF, DOC, XLS, JPG, PNG</p>
+                    <p className="text-[0.75rem] text-gray-400 dark:text-[color:var(--palette-ink-3)] mt-0.5">
+                      PDF, DOC, XLS, JPG, PNG
+                    </p>
                   </>
                 )}
               </div>
@@ -322,7 +325,7 @@ export function ConstructionSummaryForm({
 
         {/* Uploaded document */}
         {hasDocument && (
-          <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 rounded-lg border border-gray-100 group hover:border-gray-200 transition-colors">
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-[color:var(--palette-surface-2)] rounded-lg border border-gray-100 dark:border-[color:var(--palette-line)] group hover:border-gray-200 transition-colors">
             <button
               type="button"
               onClick={handleViewDocument}
@@ -332,10 +335,10 @@ export function ConstructionSummaryForm({
                 <Icon name="file-lines" style="regular" className="size-3.5 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-700 truncate hover:text-primary transition-colors">
+                <p className="text-xs font-medium text-gray-700 dark:text-[color:var(--palette-ink)] truncate hover:text-primary transition-colors">
                   {summary?.fileName ?? t('constructionInspection.summaryForm.document')}
                 </p>
-                <p className="text-[10px] text-gray-400">
+                <p className="text-[0.75rem] text-gray-400 dark:text-[color:var(--palette-ink-3)]">
                   {[
                     summary?.fileExtension?.toUpperCase(),
                     summary?.fileSizeBytes != null ? formatFileSize(summary.fileSizeBytes) : null,

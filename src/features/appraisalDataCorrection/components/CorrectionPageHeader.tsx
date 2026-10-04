@@ -1,5 +1,4 @@
 import { useTranslation } from 'react-i18next';
-import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Badge from '@/shared/components/Badge';
 import SectionHeader from '@/shared/components/sections/SectionHeader';
@@ -43,46 +42,49 @@ const CorrectionPageHeader = ({
   // House style: the shared SectionHeader for the title, context and actions on its right
   // (same pattern as OAuthClientListPage) — never a custom, bigger title.
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-primary/20 bg-gradient-to-r from-primary/15 to-primary/5 px-5 py-3.5">
+    <div className="shrink-0 flex min-h-[3.6923rem] flex-wrap items-center gap-x-[1.0769rem] gap-y-[0.4615rem] border-b border-[color:var(--dc-line)] bg-[color:var(--dc-surface)] px-[0.9231rem] py-[0.4615rem]">
       <SectionHeader
-        className="!mb-0"
+        className="!mb-0 shrink-0"
         title={appraisalNumber ?? ''}
         subtitle={customerName ?? undefined}
         icon="pen-to-square"
         iconColor="teal"
       />
-      <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-2">
+      <div className="flex flex-1 flex-wrap items-center gap-x-[1.0769rem] gap-y-[0.4615rem]">
         {status && (
           <Badge type="status" value={status} size="xs">
             {status}
           </Badge>
         )}
         {approvedAt && (
-          <span className="text-xs text-gray-500">
+          <span className="text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-2)]">
             {t('header.approved', { at: formatLocaleDate(approvedAt, i18n.language) })}
           </span>
         )}
         {externalSystem && (
-          <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+          <span className="inline-flex items-center gap-1.5 text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-2)]">
             {t('header.sourceSystem')}
-            <span className="rounded-full bg-sky-50 px-2 py-0.5 font-medium text-sky-700">
+            <span className="rounded bg-[color:var(--dc-surface-3)] px-[0.3846rem] text-[0.7692rem] font-semibold leading-[1.2308rem] text-[color:var(--dc-ink-2)]">
               {externalSystem}
             </span>
           </span>
         )}
-        {editCount !== undefined && <span className="text-xs text-gray-500">{editSummary}</span>}
+        {editCount !== undefined && (
+          <span className="text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-2)]">
+            {editSummary}
+          </span>
+        )}
       </div>
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="ml-auto bg-white shadow-sm"
+        className="ml-auto dark:text-[color:var(--dc-ink)]"
         onClick={onOpenHistory}
       >
-        <Icon style="regular" name="clock" className="size-3.5 mr-1.5" />
         {t('history.title')}
         {!!editCount && (
-          <span className="ml-2 min-w-5 rounded-full bg-primary px-1.5 text-center text-[11px] font-bold leading-5 text-white">
+          <span className="ml-[0.4615rem] rounded-full bg-[color:var(--dc-accent-wash)] px-[0.4615rem] text-center text-[0.8077rem] font-semibold leading-[1.2308rem] text-[color:var(--dc-accent-ink)]">
             {editCount}
           </span>
         )}

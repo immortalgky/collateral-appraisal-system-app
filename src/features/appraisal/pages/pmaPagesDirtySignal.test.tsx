@@ -41,6 +41,12 @@ vi.mock('@/shared/hooks/useUnsavedChangesWarning', () => ({
 vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null }));
 vi.mock('@/shared/components/RightMenuPortal', () => ({ default: () => null }));
 
+// The editor header looks the property up in the saved list; there is no server here, and the
+// header's own request would fail noisily without changing what these tests assert.
+vi.mock('../hooks/useEnrichedPropertyGroups', () => ({
+  useEnrichedPropertyGroups: () => ({ groups: [] }),
+}));
+
 vi.mock('../api', () => {
   // Every save succeeds and is recorded, so the pages' onSuccess (which resets the form) runs.
   const mutation = () => ({

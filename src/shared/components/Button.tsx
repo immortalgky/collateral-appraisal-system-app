@@ -1,5 +1,6 @@
-import type { ButtonHTMLAttributes } from 'react';
+import { Children, isValidElement, type ButtonHTMLAttributes } from 'react';
 import clsx from 'clsx';
+import Icon from './Icon';
 
 type ButtonVariant =
   | 'primary'
@@ -55,9 +56,9 @@ const Button = ({
   };
 
   // Loading spinner component
-  const LoadingSpinner = () => (
+  const LoadingSpinner = ({ beforeLabel }: { beforeLabel: boolean }) => (
     <svg
-      className="animate-spin -ml-1 mr-2 h-4 w-4"
+      className={clsx('animate-spin h-4 w-4', beforeLabel && 'mr-2')}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -78,6 +79,15 @@ const Button = ({
     </svg>
   );
 
+  // While loading the spinner stands in for the leading icon, wherever the caller put it
+  // (`leftIcon`, or an <Icon> written as the first child): dropping it keeps the button's width
+  // steady. A trailing <Icon> ("Next ›") stays, and an icon-only button gets a bare, centred
+  // spinner: the margin is only for a label that follows it. A `rightIcon` stays for the same
+  // reason: the button keeps its width.
+  const kids = Children.toArray(children);
+  const leadingIconChild = isLoading && isValidElement(kids[0]) && kids[0].type === Icon;
+  const content = leadingIconChild ? kids.slice(1) : kids;
+
   return (
     <button
       // Default to "button" so a Button rendered inside a <form> doesn't implicitly
@@ -96,10 +106,10 @@ const Button = ({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <LoadingSpinner beforeLabel={content.length > 0} />}
       {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
-      {children}
-      {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+      {isLoading ? content : children}
+      {rightIcon && <span className="ml-2">{rightIcon}</span>}
     </button>
   );
 };

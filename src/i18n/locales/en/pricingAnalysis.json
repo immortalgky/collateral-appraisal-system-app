@@ -519,6 +519,8 @@
       "sectionLabel": "Building Cost",
       "addBuilding": "Add Building",
       "addNonBuilding": "Add Non-Building",
+      "itemCount_one": "· {{count}} item",
+      "itemCount_other": "· {{count}} items",
       "fromYearHeader": "From yr",
       "toYearHeader": "To yr",
       "addPeriod": "Add period",
