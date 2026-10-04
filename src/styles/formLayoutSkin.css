@@ -259,7 +259,7 @@
   background-color: var(--cas-label-bg);
   color: var(--cas-ink-2);
   font-size: 0.8077rem;
-  line-height: 1.25;
+  line-height: var(--cas-leading);
 }
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -759,7 +759,7 @@
   > td[colspan]:has(> div > table) {
   height: auto;
   padding: 0.3077rem 0.6154rem 0.4615rem 1.8462rem;
-  line-height: 1.4;
+  line-height: var(--cas-leading);
 }
 [data-form-layout='grid'][data-form-layout='grid']
   .cas-form-grid
@@ -790,7 +790,7 @@
   .cas-pos {
   gap: 0;
   font-size: 0.875rem;
-  line-height: 1.4;
+  line-height: var(--cas-leading);
   color: var(--cas-ink-3);
 }
 [data-form-layout='grid'][data-form-layout='grid']

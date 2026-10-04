@@ -164,7 +164,7 @@
   span {
   font-size: 0.875rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: var(--cas-leading);
   color: var(--cas-head-ink);
 }
 /* The icon chip: the box holding an svg directly (SectionRow nests it inside the title row, the
@@ -742,7 +742,7 @@
   color: var(--cas-ink-2);
   font-size: 0.8462rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: var(--cas-leading);
 }
 /* ── open popovers ──────────────────────────────────────────────────────────
    ParameterSearchInput and AddressAutocomplete hang their result panel off a `relative` box inside

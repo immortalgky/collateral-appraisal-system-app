@@ -1351,7 +1351,7 @@
   background: var(--color-base-200);
   font-size: 0.75rem;
   font-weight: 500;
-  line-height: 1.2;
+  line-height: var(--cas-leading);
 }
 /* The label's right edge and the row's bottom edge already frame the card; its own border on
    top of them drew those lines twice as thick. */
