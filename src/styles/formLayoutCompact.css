@@ -829,7 +829,7 @@
   color: var(--cas-ink-2);
   font-size: 0.8462rem;
   font-weight: 600;
-  line-height: 1.3;
+  line-height: var(--cas-leading);
 }
 [data-form-layout='grid'][data-form-layout='grid']
   .cas-form-grid

@@ -268,3 +268,20 @@
     --palette-warn-wash: #33280d;
     --palette-danger: #fca5a5;
 }
+
+/* ========================================
+   Line height
+   Thai glyphs fall back to Sarabun, but a fixed line-height sizes the line box
+   from Roboto's metrics (ascent ~0.93em). Stacked Thai marks (ที่ ต้) reach
+   ~1.25em, so Tailwind's default 1.33-1.43 leading lets them poke out the top
+   and anything `truncate`/`overflow-hidden` shaves them off.
+   One knob: --cas-leading in src/index.css.
+   ======================================== */
+@theme inline {
+    --text-xs--line-height: var(--cas-leading);
+    --text-sm--line-height: var(--cas-leading);
+    --text-base--line-height: var(--cas-leading);
+    --text-lg--line-height: var(--cas-leading);
+    --text-xl--line-height: var(--cas-leading);
+    --text-2xl--line-height: var(--cas-leading);
+}

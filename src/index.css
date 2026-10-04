@@ -199,6 +199,8 @@
 :root {
   --cas-root-step: 13px;
   --cas-density: 1;
+  /* Leading for text-xs..text-2xl and body; see theme.css. ~1.8 fully clears stacked Thai marks. */
+  --cas-leading: 1.6;
 }
 
 @media (min-width: 1600px) {
@@ -216,6 +218,7 @@
 html {
   scroll-behavior: smooth;
   font-size: calc(var(--cas-root-step) * var(--cas-density));
+  line-height: var(--cas-leading);
 }
 
 body {
@@ -235,15 +238,6 @@ textarea:focus-visible,
 select:focus-visible,
 .ProseMirror:focus-visible {
   outline: none;
-}
-
-a:hover {
-  color: #535bf2;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
 }
 
 /*
