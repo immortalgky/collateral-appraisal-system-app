@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 
 interface MonthYearPanelProps {
@@ -48,6 +48,20 @@ export function MonthYearPanel({
 }: MonthYearPanelProps) {
   const [yearGridOpen, setYearGridOpen] = useState(false);
   const [yearBase, setYearBase] = useState(year - 6);
+  const monthGridRef = useRef<HTMLDivElement>(null);
+  // Picking a year unmounts the year button that held focus. The panel shows the month grid again,
+  // so focus goes there (the shown month, else the first enabled one) instead of falling to <body>,
+  // which would break a modal calendar's Tab trap and send Tab back to the top of the page.
+  const focusMonthGrid = useRef(false);
+  useEffect(() => {
+    if (yearGridOpen || !focusMonthGrid.current) return;
+    focusMonthGrid.current = false;
+    const grid = monthGridRef.current;
+    (
+      grid?.querySelector<HTMLElement>('button[data-selected="true"]:not([disabled])') ??
+      grid?.querySelector<HTMLElement>('button:not([disabled])')
+    )?.focus();
+  }, [yearGridOpen]);
 
   const toggleYearGrid = () => {
     setYearBase(year - 6);
@@ -57,6 +71,7 @@ export function MonthYearPanel({
   const selectYear = (y: number) => {
     if (onSelectYear) onSelectYear(y);
     else onStepYear(y - year);
+    focusMonthGrid.current = true;
     setYearGridOpen(false);
   };
 
@@ -127,7 +142,7 @@ export function MonthYearPanel({
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-4 gap-1 flex-1 content-center">
+        <div ref={monthGridRef} className="grid grid-cols-4 gap-1 flex-1 content-center">
           {monthLabels.map((label, i) => {
             const isSelected = selectedMonth === i;
             const disabled = isMonthDisabled?.(i) ?? false;
@@ -136,6 +151,7 @@ export function MonthYearPanel({
                 key={i}
                 type="button"
                 disabled={disabled}
+                data-selected={isSelected ? 'true' : undefined}
                 onClick={() => onSelectMonth(i)}
                 className={clsx(
                   'py-1.5 rounded text-xs font-medium transition-colors',

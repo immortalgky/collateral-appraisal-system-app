@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
+import { FloatingFocusManager, FloatingPortal, useMergeRefs } from '@floating-ui/react';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { format, formatISO, isSameDay, isValid } from 'date-fns';
 import clsx from 'clsx';
@@ -25,7 +25,7 @@ import { CalendarNavHeader } from './CalendarNavHeader';
 import { MonthYearPanel } from './MonthYearPanel';
 import { createHolidayDayButton } from './HolidayDayButton';
 import { useDateSegmentInput } from './useDateSegmentInput';
-import { usePortalPopoverPosition } from '@/shared/hooks/usePortalPopoverPosition';
+import { useCalendarFloating } from './useCalendarFloating';
 
 const MONTH_LABELS_SHORT = [
   'Jan',
@@ -159,13 +159,20 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
     const inputId = uuid;
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
-    const popoverRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    // The toggle button is neither the input nor the popover, so the outside-click handler has to
-    // know about it — otherwise mousedown closes the calendar and the click reopens it, and the
-    // icon can never shut what it opened.
+    // The calendar button: where focus returns when the calendar closes. A press on it is on the
+    // field (it is inside the reference), so it toggles rather than dismisses.
     const calendarButtonRef = useRef<HTMLButtonElement>(null);
     const [isOpen, setIsOpen] = useState(false);
+    // `clipToScrollParent`: a field near the bottom of a scrolling modal or panel flips by that
+    // panel's edge, since the portalled calendar would otherwise only see the viewport.
+    const calendar = useCalendarFloating({
+      open: isOpen,
+      onOpenChange: setIsOpen,
+      clipToScrollParent: true,
+    });
+    const popoverRef = calendar.floating;
+    const setRefs = useMergeRefs([ref, inputRef]);
     const [inputValue, setInputValue] = useState('');
     const [month, setMonth] = useState(new Date());
     const [showMonths, setShowMonths] = useState(false);
@@ -208,16 +215,6 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       () => (date: Date) => holidayMap.has(toDateKey(date)),
       [holidayMap],
     );
-
-    // Combine refs
-    const setRefs = (element: HTMLInputElement | null) => {
-      inputRef.current = element;
-      if (typeof ref === 'function') {
-        ref(element);
-      } else if (ref) {
-        ref.current = element;
-      }
-    };
 
     // Parse value to Date
     const parseValue = (val: string | Date | null | undefined): Date | undefined => {
@@ -298,45 +295,6 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       if (date) setMonth(date);
     }, [value, isRange, rangeValue?.from, rangeValue?.to]);
 
-    // The calendar is portalled to <body> and positioned in viewport coordinates from the input's
-    // rect; the hook flips and follows it (a page scroll, a scrollable panel, a resize).
-    const { style: popoverStyle } = usePortalPopoverPosition({
-      isOpen,
-      anchorRef: inputRef,
-      popoverHeight: 320, // approximate height of the calendar
-      popoverWidth: 460, // calendar + month/year panel when expanded
-      clipToScrollParent: true,
-    });
-
-    // Handle click outside to close
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          popoverRef.current &&
-          !popoverRef.current.contains(event.target as Node) &&
-          inputRef.current &&
-          !inputRef.current.contains(event.target as Node) &&
-          !calendarButtonRef.current?.contains(event.target as Node)
-        ) {
-          setIsOpen(false);
-        }
-      };
-
-      const handleEscape = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') setIsOpen(false);
-      };
-
-      if (isOpen) {
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-      }
-
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscape);
-      };
-    }, [isOpen]);
-
     /**
      * Single-date typing. The field is edited one segment at a time — click or arrow onto the
      * month, type over it, step it with the arrow keys — instead of retyping the whole value,
@@ -389,19 +347,50 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
       else openCalendar();
     };
 
-    const handleInputBlur = () => {
-      // Small delay to allow calendar click to register
-      setTimeout(() => {
-        if (!popoverRef.current?.contains(document.activeElement)) {
-          onBlur?.();
-        }
-      }, 100);
+    // `onBlur` means the WHOLE widget lost focus: the input, the calendar button and the calendar
+    // are one field. Moving between them is not a blur; leaving all three is, whether by Tab, by a
+    // press elsewhere, or by the calendar closing while focus is already outside (nothing fires a
+    // blur when the focused element is removed).
+    const blurReported = useRef(false);
+    const inWidget = (node: Node | null) => {
+      if (!node) return false;
+      // The focus manager's guards (and the portal root they sit in) are part of the calendar.
+      const portalRoot = popoverRef.current?.closest('[data-floating-ui-portal]');
+      return (
+        !!calendar.reference.current?.contains(node) ||
+        !!portalRoot?.contains(node) ||
+        !!(node as Element).closest?.('[data-floating-ui-focus-guard]')
+      );
     };
+    const handleWidgetFocus = (event: React.FocusEvent) => {
+      // The focus manager's guards take focus in passing while Tab carries it out: not a return.
+      if ((event.target as Element).closest('[data-floating-ui-focus-guard]')) return;
+      blurReported.current = false;
+    };
+    const handleWidgetBlur = (event: React.FocusEvent) => {
+      if (inWidget(event.relatedTarget as Node | null)) return;
+      blurReported.current = true;
+      onBlur?.();
+    };
+    const wasOpen = useRef(false);
+    useEffect(() => {
+      const closed = wasOpen.current && !isOpen;
+      wasOpen.current = isOpen;
+      if (!closed) return;
+      // After the focus manager has handed focus back (Escape: to the calendar button, which is
+      // still in the widget).
+      const id = setTimeout(() => {
+        if (blurReported.current || inWidget(document.activeElement)) return;
+        blurReported.current = true;
+        onBlur?.();
+      }, 0);
+      return () => clearTimeout(id);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen]);
 
     // Single mode also rolls a half-typed value back to whatever the form holds.
     const handleSingleBlur = () => {
       segmentInput.inputProps.onBlur();
-      handleInputBlur();
     };
 
     /** The typed-value message, e.g. "Cannot select a future date". */
@@ -439,7 +428,13 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
           )
         )}
 
-        <div className={clsx('relative', fullWidth && 'w-full')}>
+        <div
+          ref={calendar.setReference}
+          {...calendar.referenceProps}
+          onFocus={handleWidgetFocus}
+          onBlur={handleWidgetBlur}
+          className={clsx('relative', fullWidth && 'w-full')}
+        >
           <input
             ref={setRefs}
             id={inputId}
@@ -486,7 +481,6 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
                   readOnly: true as const,
                   // The range field is read-only, so a click on it has nothing else to mean.
                   onClick: openCalendar,
-                  onBlur: handleInputBlur,
                 }
               : { ...segmentInput.inputProps, onBlur: handleSingleBlur })}
             // While the calendar is open the field mirrors the DRAFT, so the first click shows
@@ -506,7 +500,7 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             ref={calendarButtonRef}
             type="button"
             aria-label="Open calendar"
-            aria-expanded={isOpen}
+            {...calendar.triggerProps}
             disabled={isDisabled}
             onClick={toggleCalendar}
             className={clsx(
@@ -536,123 +530,138 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
               own layout. An in-place calendar therefore put a table inside the field the moment it
               opened, switched the whole two-column row off, and dropped the input onto its own
               full-width line until the calendar closed again. Out of the field, the guard never
-              sees it. Positioned in viewport coordinates from the input's rect, so it also stops
-              being clipped by scrollable ancestors. */}
-          {isOpen &&
-            createPortal(
-              <div
-                ref={popoverRef}
-                style={popoverStyle}
-                className="z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200"
+              sees it. Positioned `fixed` from the field's wrapper (input + calendar button), so it also
+              stops being clipped by scrollable ancestors. */}
+          {isOpen && (
+            <FloatingPortal>
+              {/* Not modal: the page stays reachable. Focus lands on the selected day and returns
+                  to the calendar button when it closes. Tabbing out of it, or opening another
+                  picker, closes it. */}
+              <FloatingFocusManager
+                context={calendar.context}
+                modal={false}
+                initialFocus={calendar.initialFocusRef}
+                returnFocus={calendarButtonRef}
               >
-                <div className="flex">
-                  <div className="p-2">
-                    <CalendarNavHeader
-                      label={format(month, 'MMMM yyyy')}
-                      onPrev={() =>
-                        setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))
-                      }
-                      onNext={() =>
-                        setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))
-                      }
-                      onToggle={() => setShowMonths(s => !s)}
-                      expanded={showMonths}
-                      className="mb-1 px-1"
-                    />
-                    {/* Two literal blocks rather than a `mode={mode}` variable: react-day-picker's
+                <div
+                  ref={calendar.setFloating}
+                  {...calendar.floatingProps}
+                  className="z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200"
+                >
+                  <div className="flex">
+                    <div className="p-2">
+                      <CalendarNavHeader
+                        label={format(month, 'MMMM yyyy')}
+                        onPrev={() =>
+                          setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))
+                        }
+                        onNext={() =>
+                          setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))
+                        }
+                        onToggle={() => setShowMonths(s => !s)}
+                        expanded={showMonths}
+                        className="mb-1 px-1"
+                      />
+                      {/* Two literal blocks rather than a `mode={mode}` variable: react-day-picker's
                       props are a discriminated union on `mode`, so `selected`/`onSelect` only
                       typecheck against a literal. */}
-                    {isRange ? (
-                      <DayPicker
-                        className="react-day-picker text-xs"
-                        style={CALENDAR_RDP_STYLE}
-                        weekStartsOn={1}
-                        formatters={{ formatWeekdayName: formatNarrowWeekday }}
-                        mode="range"
-                        hideNavigation
-                        selected={draftRange}
-                        onSelect={range => setDraftRange(normalizeRange(range))}
-                        month={month}
-                        onMonthChange={setMonth}
-                        showOutsideDays
-                        disabled={disabledMatcher}
-                        modifiers={{ holiday: holidayMatcher }}
-                        components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
-                      />
-                    ) : (
-                      <DayPicker
-                        className="react-day-picker text-xs"
-                        style={CALENDAR_RDP_STYLE}
-                        weekStartsOn={1}
-                        formatters={{ formatWeekdayName: formatNarrowWeekday }}
-                        mode="single"
-                        hideNavigation
-                        selected={selectedDate}
-                        onSelect={handleDaySelect}
-                        month={month}
-                        onMonthChange={setMonth}
-                        showOutsideDays
-                        disabled={disabledMatcher}
-                        modifiers={{ holiday: holidayMatcher }}
-                        components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
-                      />
+                      {isRange ? (
+                        <DayPicker
+                          className="react-day-picker text-xs"
+                          style={CALENDAR_RDP_STYLE}
+                          weekStartsOn={1}
+                          formatters={{ formatWeekdayName: formatNarrowWeekday }}
+                          mode="range"
+                          hideNavigation
+                          selected={draftRange}
+                          onSelect={range => setDraftRange(normalizeRange(range))}
+                          month={month}
+                          onMonthChange={setMonth}
+                          showOutsideDays
+                          disabled={disabledMatcher}
+                          modifiers={{ holiday: holidayMatcher }}
+                          components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
+                        />
+                      ) : (
+                        <DayPicker
+                          className="react-day-picker text-xs"
+                          style={CALENDAR_RDP_STYLE}
+                          weekStartsOn={1}
+                          formatters={{ formatWeekdayName: formatNarrowWeekday }}
+                          mode="single"
+                          hideNavigation
+                          selected={selectedDate}
+                          onSelect={handleDaySelect}
+                          month={month}
+                          onMonthChange={setMonth}
+                          showOutsideDays
+                          disabled={disabledMatcher}
+                          modifiers={{ holiday: holidayMatcher }}
+                          components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
+                        />
+                      )}
+                    </div>
+                    {showMonths && (
+                      <div className="w-44 p-2 pl-3 border-l border-gray-200">
+                        <MonthYearPanel
+                          year={month.getFullYear()}
+                          selectedMonth={month.getMonth()}
+                          monthLabels={MONTH_LABELS_SHORT}
+                          onSelectMonth={m => {
+                            setMonth(new Date(month.getFullYear(), m, 1));
+                            setShowMonths(false);
+                            calendar.focusDays();
+                          }}
+                          onStepYear={delta =>
+                            setMonth(new Date(month.getFullYear() + delta, month.getMonth(), 1))
+                          }
+                          onSelectYear={y => setMonth(new Date(y, month.getMonth(), 1))}
+                        />
+                      </div>
                     )}
                   </div>
-                  {showMonths && (
-                    <div className="w-44 p-2 pl-3 border-l border-gray-200">
-                      <MonthYearPanel
-                        year={month.getFullYear()}
-                        selectedMonth={month.getMonth()}
-                        monthLabels={MONTH_LABELS_SHORT}
-                        onSelectMonth={m => {
-                          setMonth(new Date(month.getFullYear(), m, 1));
-                          setShowMonths(false);
-                        }}
-                        onStepYear={delta =>
-                          setMonth(new Date(month.getFullYear() + delta, month.getMonth(), 1))
-                        }
-                        onSelectYear={y => setMonth(new Date(y, month.getMonth(), 1))}
-                      />
-                    </div>
-                  )}
-                </div>
-                {/* Today sits on the first screen. It only navigates — jumping the calendar to
+                  {/* Today sits on the first screen. It only navigates — jumping the calendar to
                     this month without picking a date, so a field that forbids today (or is simply
                     being browsed) behaves the same as any other month change. */}
-                <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-2 py-1.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMonth(new Date());
-                      setShowMonths(false);
-                    }}
-                    className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
-                  >
-                    {todayLabel}
-                  </button>
-                  {isRange && (
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setDraftRange(undefined)}
-                        className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
-                        disabled={!draftRange?.from}
-                      >
-                        {rangeLabels.clear}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={applyRange}
-                        className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90"
-                      >
-                        {rangeLabels.apply}
-                      </button>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between gap-2 border-t border-gray-200 px-2 py-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMonth(new Date());
+                        setShowMonths(false);
+                      }}
+                      className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                    >
+                      {todayLabel}
+                    </button>
+                    {isRange && (
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDraftRange(undefined);
+                            // Clear disables itself: do not leave focus on a dead button.
+                            calendar.focusDays();
+                          }}
+                          className="text-xs text-gray-500 hover:text-gray-700 disabled:opacity-40"
+                          disabled={!draftRange?.from}
+                        >
+                          {rangeLabels.clear}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={applyRange}
+                          className="rounded-md bg-primary px-3 py-1 text-xs font-medium text-white hover:bg-primary/90"
+                        >
+                          {rangeLabels.apply}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>,
-              document.body,
-            )}
+              </FloatingFocusManager>
+            </FloatingPortal>
+          )}
         </div>
 
         {(helperText || error || constraintError) && (
