@@ -195,6 +195,7 @@ const WebhookDeliveryListPage = lazy(
 const WebhookSubscriptionListPage = lazy(
   () => import('@features/webhookAdmin/pages/WebhookSubscriptionListPage'),
 );
+const FailedMessagesPage = lazy(() => import('@features/failedMessages/pages/FailedMessagesPage'));
 const OAuthClientListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthClientListPage'));
 const OAuthScopeListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthScopeListPage'));
 const OAuthTokenListPage = lazy(() => import('@features/oauthAdmin/pages/OAuthTokenListPage'));
@@ -570,6 +571,13 @@ export const router = createBrowserRouter([
               />
             ),
             children: [{ index: true, element: <WebhookSubscriptionListPage /> }],
+          },
+          {
+            path: 'failed-messages',
+            element: (
+              <RoleProtectedRoute allowedRoles={[]} requiredPermission="FAILED_MESSAGE_VIEW" />
+            ),
+            children: [{ index: true, element: <FailedMessagesPage /> }],
           },
           {
             path: 'oauth-clients',
