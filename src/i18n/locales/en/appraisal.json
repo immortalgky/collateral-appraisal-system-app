@@ -557,10 +557,7 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": [
-        "Not Verified",
-        "Verified"
-      ],
+      "priceVerificationOptions": ["Not Verified", "Verified"],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
@@ -734,7 +731,7 @@
         "latitude": "Latitude",
         "longitude": "Longitude",
         "obligation": "Obligation",
-        "other": "Other"
+        "other": "Remarks"
       },
       "suggested": {
         "applyEmpty": "Fill blanks",
@@ -756,7 +753,7 @@
         "condition": "CONDITION AND MARKET",
         "ownership": "OWNERSHIP",
         "location": "LOCATION",
-        "obligation": "OBLIGATIONS AND NOTES"
+        "remarks": "REMARKS"
       },
       "table": {
         "item": "Item",
@@ -764,6 +761,7 @@
         "derived": "Derived",
         "source": "Source",
         "use": "use",
+        "useDisabled": "Already equals the calculated value",
         "ungrouped": "Ungrouped",
         "sourceSentence": "{{list}}",
         "sourcePart_one": "{{count}} machine from {{group}}",
@@ -1500,6 +1498,7 @@
     "uploadedBy": "Uploaded by {{name}}",
     "empty": "No files attached",
     "noTypes": "No document types found",
+    "untitledFile": "Untitled document",
     "loadFailed": "Failed to load document checklist",
     "deleteDialog": {
       "title": "Remove Document",
@@ -1900,7 +1899,6 @@
       "otherGroup": "Other",
       "workGroupsFailed": "Could not load the list of work items — reload the page to add items",
       "workGroupsLoading": "Loading the list of work items…",
-      "confirmDelete": "Delete?",
       "remove": "Remove {{name}}",
       "empty": "No work items yet — pick \"+ Add item…\" on a group, then split the proportions to 100%.",
       "emptyReadOnly": "No work items recorded."
@@ -2000,6 +1998,14 @@
     "machinery": {
       "sectionTitle": "Machinery Details"
     },
+    "pma": {
+      "groups": {
+        "titleInfo": "Title information",
+        "condoInfo": "Condo information",
+        "titleAddress": "Title address",
+        "value": "Value information"
+      }
+    },
     "titleDeed": {
       "sectionTitle": "Title Deed"
     },
@@ -2026,6 +2032,12 @@
       "generate": "GENERATE",
       "generating": "GENERATING...",
       "scheduleEmpty": "Click GENERATE to compute the rental schedule",
+      "upFrontCount_one": "· {{count}} item",
+      "upFrontCount_other": "· {{count}} items",
+      "scheduleYears_one": "· {{count}} year",
+      "scheduleYears_other": "· {{count}} years",
+      "growthPeriodCount_one": "· {{count}} period",
+      "growthPeriodCount_other": "· {{count}} periods",
       "upFrontMismatch": "Total up front entries ({{entries}}) does not match the Up Front amount ({{total}})",
       "table": {
         "atYear": "At Year",
@@ -2312,11 +2324,15 @@
     "navBuilding": "Building",
     "navConstructionInspection": "Construction Detail",
     "navMachinery": "Machinery",
+    "navPma": "PMA Information",
     "saveDraft": "Save draft",
     "save": "Save"
   },
   "landCharacteristicsForm": {
-    "deductionsLabel": "Reason",
+    "deductionsTitle": "Area deductions",
+    "deductionsSummary_one": "· {{count}} item · deducting {{area}} sq.wa",
+    "deductionsSummary_other": "· {{count}} items · deducting {{area}} sq.wa",
+    "addDeduction": "Add item",
     "confirmClearDeductions": {
       "title": "Turn off area deductions?",
       "message": "Switching this off deletes the deduction rows you entered ({{count}}) and restores the appraised area to the registered title area."
@@ -2655,6 +2671,14 @@
     "untitled": "No name yet",
     "newHint": "Key details show here once saved",
     "position": "{{group}} · item {{n}}",
+    "pmaSuffix": "PMA",
+    "pmaTitle": "Updating PMA property",
+    "pmaSync": {
+      "synced": "Synced",
+      "pending": "Pending sync",
+      "failed": "Sync failed",
+      "retryHint": "· Save to retry"
+    },
     "titleCount": "{{n}} title documents",
     "titleNo": "Title {{no}}"
   },
@@ -2750,6 +2774,12 @@
     "viewLabel": "View",
     "viewDocument": "Document",
     "viewForm": "Form",
+    "nav": {
+      "group": "Title navigation",
+      "prev": "Previous title",
+      "next": "Next title",
+      "position": "{{current}} / {{total}}"
+    },
     "typeLabel": "Type",
     "summary": "No. {{no}} · {{area}} rai",
     "required": "Required",
@@ -2879,9 +2909,15 @@
       "west": "West"
     },
     "list": {
-      "moveUp": "Move up",
-      "moveDown": "Move down",
       "sortByNumber": "Sort by title number",
+      "dnd": {
+        "handle": "Drag to reorder",
+        "instructions": "Press space to pick up a title, the arrow keys to move it, and space again to drop it. Escape cancels.",
+        "pickedUp": "Picked up title {{pos}}.",
+        "movedTo": "Title {{pos}} is over position {{to}}.",
+        "dropped": "Title {{pos}} moved to position {{to}}.",
+        "cancelled": "Move cancelled. Title {{pos}} stays where it was."
+      },
       "type": "Type",
       "document": "No. · Book · Page",
       "position": "Land position",
@@ -3205,6 +3241,8 @@
   "surfaceTable": {
     "sectionLabel": "Floor surfaces",
     "addFloor": "Add floor",
+    "itemCount_one": "· {{count}} item",
+    "itemCount_other": "· {{count}} items",
     "empty": "No floor data yet",
     "otherPlaceholder": "Specify",
     "reversed": "To floor is lower than from floor",

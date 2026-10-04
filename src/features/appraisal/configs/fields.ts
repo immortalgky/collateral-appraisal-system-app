@@ -214,7 +214,6 @@ export const landLocationField: FormField[] = [
     showWhen: { field: 'landCheckMethodType', is: '99' },
     requiredWhen: { field: 'landCheckMethodType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -276,7 +275,6 @@ export const landLocationField: FormField[] = [
     showWhen: { field: 'landShapeType', is: '99' },
     requiredWhen: { field: 'landShapeType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -304,7 +302,6 @@ export const landLocationField: FormField[] = [
     showWhen: { field: 'landZoneType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'landZoneType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -327,7 +324,6 @@ export const plotLocationField: FormField[] = [
     showWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'plotLocationType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -351,7 +347,6 @@ export const landFillField: FormField[] = [
     showWhen: { field: 'landFillType', is: '99' },
     requiredWhen: { field: 'landFillType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -458,7 +453,6 @@ export const roadSurfaceField: FormField[] = [
     showWhen: { field: 'roadSurfaceType', is: '99' },
     requiredWhen: { field: 'roadSurfaceType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -481,7 +475,6 @@ export const publicUtilityField: FormField[] = [
     showWhen: { field: 'publicUtilityType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -504,7 +497,6 @@ export const landUseField: FormField[] = [
     showWhen: { field: 'landUseType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'landUseType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -527,7 +519,6 @@ export const landEntranceField: FormField[] = [
     showWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -549,7 +540,6 @@ export const transpotationField: FormField[] = [
     showWhen: { field: 'transportationAccessType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'transportationAccessType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -572,7 +562,6 @@ export const anticipationProsperityField: FormField[] = [
     showWhen: { field: 'propertyAnticipationType', is: '99' },
     requiredWhen: { field: 'propertyAnticipationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -719,7 +708,6 @@ export const landBoundaryField: FormField[] = [
     name: 'otherLegalLimitations',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -746,7 +734,6 @@ export const evictionField: FormField[] = [
     showWhen: { field: 'evictionType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'evictionType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -865,7 +852,6 @@ export const otherInformationField: FormField[] = [
     showWhen: { field: 'hasBuilding', is: true },
     requiredWhen: { field: 'hasBuilding', is: true },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -988,7 +974,6 @@ export const buildingInfoField: FormField[] = [
     showWhen: { field: 'buildingConditionType', is: '99' },
     requiredWhen: { field: 'buildingConditionType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1000,7 +985,7 @@ export const buildingInfoField: FormField[] = [
   },
 
   {
-    type: 'datetime-input',
+    type: 'date-input',
     label: 'License Expiration Date',
     name: 'constructionLicenseExpirationDate',
     wrapperClassName: 'col-span-6',
@@ -1057,7 +1042,6 @@ export const buildingTypeField: FormField[] = [
     showWhen: { field: 'buildingType', is: '99' },
     requiredWhen: { field: 'buildingType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1092,7 +1076,6 @@ export const decorationField: FormField[] = [
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1159,7 +1142,6 @@ export const buildingStyleField: FormField[] = [
     showWhen: { field: 'buildingStyleType', is: '99' },
     requiredWhen: { field: 'buildingStyleType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1190,7 +1172,6 @@ export const isResidentialField: FormField[] = [
     showWhen: { field: 'isResidential', is: false },
     requiredWhen: { field: 'isResidential', is: false },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1236,7 +1217,6 @@ export const generalStructureField: FormField[] = [
     showWhen: { field: 'structureType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'structureType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1259,7 +1239,6 @@ export const roofFrameField: FormField[] = [
     showWhen: { field: 'roofFrameType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'roofFrameType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1282,7 +1261,6 @@ export const roofField: FormField[] = [
     showWhen: { field: 'roofType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'roofType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1305,7 +1283,6 @@ export const ceilingField: FormField[] = [
     showWhen: { field: 'ceilingType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'ceilingType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1328,7 +1305,6 @@ export const wallField: FormField[] = [
     showWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1349,7 +1325,6 @@ export const wallField: FormField[] = [
     showWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1372,7 +1347,6 @@ export const fenceField: FormField[] = [
     showWhen: { field: 'fenceType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'fenceType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1395,7 +1369,6 @@ export const constTypeFeild: FormField[] = [
     showWhen: { field: 'constructionType', is: '99' },
     requiredWhen: { field: 'constructionType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1430,7 +1403,6 @@ export const utilizationFeild: FormField[] = [
     showWhen: { field: 'utilizationType', is: '99' },
     requiredWhen: { field: 'utilizationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1687,7 +1659,6 @@ export const condoFieldsTail: FormField[] = [
     showWhen: { field: 'buildingConditionType', is: '99' },
     requiredWhen: { field: 'buildingConditionType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1793,7 +1764,6 @@ export const condoLocationFields: FormField[] = [
     showWhen: { field: 'roadSurfaceType', is: '99' },
     requiredWhen: { field: 'roadSurfaceType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1813,7 +1783,6 @@ export const condoLocationFields: FormField[] = [
     showWhen: { field: 'publicUtilityType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'publicUtilityType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1838,7 +1807,6 @@ export const condoDecorationFields: FormField[] = [
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1906,7 +1874,6 @@ export const condoRoomLayoutFormFields: FormField[] = [
     showWhen: { field: 'roomLayoutType', is: '99' },
     requiredWhen: { field: 'roomLayoutType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1928,7 +1895,6 @@ export const locationViewFormFields: FormField[] = [
     showWhen: { field: 'locationViewType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'locationViewType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1951,7 +1917,6 @@ export const floorFormFields: FormField[] = [
     showWhen: { field: 'groundFloorMaterialType', is: '99' },
     requiredWhen: { field: 'groundFloorMaterialType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1972,7 +1937,6 @@ export const floorFormFields: FormField[] = [
     showWhen: { field: 'upperFloorMaterialType', is: '99' },
     requiredWhen: { field: 'upperFloorMaterialType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -1993,7 +1957,6 @@ export const floorFormFields: FormField[] = [
     showWhen: { field: 'bathroomFloorMaterialType', is: '99' },
     requiredWhen: { field: 'bathroomFloorMaterialType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2015,7 +1978,6 @@ export const roofFormFields: FormField[] = [
     showWhen: { field: 'roofType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'roofType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2085,7 +2047,6 @@ export const condoFacilityFields: FormField[] = [
     showWhen: { field: 'facilityType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'facilityType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2107,7 +2068,6 @@ export const environmentFields: FormField[] = [
     showWhen: { field: 'environmentType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'environmentType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2176,7 +2136,6 @@ export const condoLandCharacteristicsFields: FormField[] = [
     showWhen: { field: 'landFillType', is: '99' },
     requiredWhen: { field: 'landFillType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -2196,7 +2155,6 @@ export const condoLandCharacteristicsFields: FormField[] = [
     showWhen: { field: 'landUseType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'landUseType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -2216,7 +2174,6 @@ export const condoLandCharacteristicsFields: FormField[] = [
     showWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'landEntranceExitType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2331,7 +2288,6 @@ export const interiorWallFields: FormField[] = [
     showWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'interiorWallType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2353,7 +2309,6 @@ export const exteriorWallFields: FormField[] = [
     showWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
     requiredWhen: { field: 'exteriorWallType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2394,7 +2349,6 @@ export const groundFloorFields: FormField[] = [
     showWhen: { field: 'groundFloorMaterialType', is: '99' },
     requiredWhen: { field: 'groundFloorMaterialType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2417,7 +2371,6 @@ export const upperFloorFields: FormField[] = [
     showWhen: { field: 'upperFloorMaterialType', is: '99' },
     requiredWhen: { field: 'upperFloorMaterialType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2440,7 +2393,6 @@ export const bathroomFloorFields: FormField[] = [
     showWhen: { field: 'bathroomFloorMaterialType', is: '99' },
     requiredWhen: { field: 'bathroomFloorMaterialType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -2757,7 +2709,6 @@ export const machineInfoFields: FormField[] = [
     name: 'other',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -3097,12 +3048,13 @@ export const landtitlesFields: FormField[] = [
 // =============================================================================
 // PMA fields
 // =============================================================================
+// 12-col grid on both PMA forms: the three prices are col-span-4 so they share one row.
 export const pmaField: FormField[] = [
   {
     type: 'number-input',
     label: 'Selling Price',
     name: 'sellingPrice',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxIntegerDigits: 15,
     leftIcon: bahtPrefix,
@@ -3112,7 +3064,7 @@ export const pmaField: FormField[] = [
     type: 'number-input',
     label: 'Force Selling Price',
     name: 'forcedSalePrice',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxIntegerDigits: 15,
     leftIcon: bahtPrefix,
@@ -3122,7 +3074,7 @@ export const pmaField: FormField[] = [
     type: 'number-input',
     label: 'Building Insurance',
     name: 'buildingInsurancePrice',
-    wrapperClassName: 'col-span-3',
+    wrapperClassName: 'col-span-4',
     required: true,
     maxIntegerDigits: 15,
     leftIcon: bahtPrefix,
@@ -3283,7 +3235,7 @@ export const condoPmaDetailFields: FormField[] = [
     type: 'text-input',
     label: 'Condo Name',
     name: 'condoName',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     required: true,
     maxLength: 100,
   },
@@ -3292,7 +3244,7 @@ export const condoPmaDetailFields: FormField[] = [
     type: 'text-input',
     label: 'Room Number',
     name: 'roomNumber',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     required: true,
     maxLength: 10,
   },
@@ -3301,7 +3253,7 @@ export const condoPmaDetailFields: FormField[] = [
     type: 'text-input',
     label: 'Floor Number',
     name: 'floorNumber',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     required: true,
     maxLength: 10,
   },
@@ -3310,7 +3262,7 @@ export const condoPmaDetailFields: FormField[] = [
     type: 'text-input',
     label: 'Building Number',
     name: 'buildingNumber',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     required: true,
     maxLength: 30,
   },
@@ -3319,7 +3271,7 @@ export const condoPmaDetailFields: FormField[] = [
     type: 'text-input',
     label: 'Condo Registration Number',
     name: 'condoRegistrationNumber',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-6',
     required: true,
     maxLength: 10,
   },
@@ -3328,7 +3280,7 @@ export const condoPmaDetailFields: FormField[] = [
     type: 'textarea',
     label: 'Title Number',
     name: 'titleNumber',
-    wrapperClassName: 'col-span-9',
+    wrapperClassName: 'col-span-12',
     required: true,
     maxLength: 500,
     showCharCount: true,
@@ -3502,7 +3454,6 @@ export const leaseRentalTermsField: FormField[] = [
     name: 'rentalTermsImpactingPropertyUse',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
   },
 
   {
@@ -3511,7 +3462,6 @@ export const leaseRentalTermsField: FormField[] = [
     name: 'terminationOfLease',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -3612,6 +3562,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'inIndustrial',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
+    showCharCount: false,
   },
 
   {
@@ -3674,7 +3625,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'maintenance',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
+    showCharCount: false,
   },
 
   {
@@ -3683,7 +3634,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'exterior',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
+    showCharCount: false,
   },
 
   {
@@ -3692,7 +3643,7 @@ export const machinerySummaryGeneralFields: FormField[] = [
     name: 'performance',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
+    showCharCount: false,
   },
 
   {
@@ -3728,6 +3679,7 @@ export const machinerySummaryLegalFields: FormField[] = [
     name: 'proprietor',
     wrapperClassName: 'col-span-6',
     maxLength: 100,
+    showCharCount: false,
   },
 
   {
@@ -3736,6 +3688,7 @@ export const machinerySummaryLegalFields: FormField[] = [
     name: 'owner',
     wrapperClassName: 'col-span-6',
     maxLength: 100,
+    showCharCount: false,
   },
 
   {
@@ -3786,15 +3739,15 @@ export const machinerySummaryLegalFields: FormField[] = [
     name: 'obligation',
     wrapperClassName: 'col-span-12',
     maxLength: 100,
-    showCharCount: true,
+    showCharCount: false,
   },
 
   {
-    type: 'text-input',
+    type: 'textarea',
     label: 'Other',
     name: 'other',
     wrapperClassName: 'col-span-12',
-    maxLength: 100,
+    maxLength: 4000,
     showCharCount: true,
   },
 ];

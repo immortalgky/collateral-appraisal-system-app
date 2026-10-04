@@ -970,7 +970,6 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
                 isLoading={saveIntent === 'draft' && isBusy}
                 disabled={isBusy}
               >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                 Save Draft
               </Button>
               <Button type="submit" isLoading={saveIntent === 'full' && isBusy} disabled={isBusy}>

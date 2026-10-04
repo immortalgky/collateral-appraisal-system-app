@@ -1,4 +1,6 @@
 import { toNumber, toStoredUnits } from '@/features/pricingAnalysis/domain/calculation';
+import * as fieldConfigs from '@/features/appraisal/configs/fields';
+import * as generatedFields from '../configs/generatedFields';
 import { humanize, labelForTable, labelOrHumanized } from '../configs/fieldLabels';
 
 /**
@@ -122,6 +124,97 @@ const sameScalar = (a: unknown, b: unknown): boolean => {
 const isValueList = (list: unknown[]) => list.every(v => !isObject(v) && !Array.isArray(v));
 
 const asList = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+
+/** The names of the `type: 'date-input'` fields declared in a config module's field arrays. */
+const dateInputNames = (configs: object): string[] =>
+  Object.values(configs)
+    .filter(Array.isArray)
+    .flat()
+    .filter((f: { type?: string }) => f?.type === 'date-input')
+    .map((f: { name: string }) => f.name.toLowerCase());
+
+/**
+ * The names of the fields the forms edit as a date with no time, read off the field configs (the
+ * `type: 'date-input'` ones, in the property forms and in the generated vehicle / vessel forms) so a
+ * new date field needs no entry here. A value stored with a time part (older rows kept the date-time
+ * picker's) reads as the date only wherever a correction lists it.
+ */
+const DATE_ONLY_FIELDS = new Set([
+  ...dateInputNames(fieldConfigs),
+  ...dateInputNames(generatedFields),
+  // Date fields RentalInfoForm draws by hand (a DatePickerInput, or a formatted cell), which no
+  // config declares. Add a field here when a property form renders a date outside configs/fields.ts.
+  'atyear', // upFrontEntries[].atYear — the date an advance rent falls due
+  'contractstart', // scheduleEntries[].contractStart
+  'contractend', // scheduleEntries[].contractEnd
+]);
+
+/**
+ * Collections with a date-only column. The audit logs an added or removed row of one as a single
+ * string of its cells ("2026-04-01T00:00:00, 300000") under the row's path, so the date has to be
+ * found inside the string. Add a collection here when its rows carry a date-only field.
+ */
+const DATE_ONLY_ROW_COLLECTIONS = new Set(['upfrontentries']);
+
+/**
+ * `v` as dd/MM/yyyy when `field` is a date-only field and `v` is an ISO date or date-time; otherwise `v`. The
+ * audit names the field with its table and in PascalCase ("Building.ConstructionLicenseExpirationDate"),
+ * the form diff by its path in camelCase ("rentalInfo.firstYearStartDate"), so the match takes the
+ * last segment, whole and ignoring case: a name that merely ends the same way is left alone.
+ */
+export function dateOnlyValue<T>(field: string, v: T): T | string {
+  if (typeof v !== 'string') return v;
+  // A whole row's summary: every ISO date-time in it, as written. A truncated one ("…T00:00:0") counts.
+  if (isDateOnlyRow(field))
+    return v.replace(
+      /(\d{4})-(\d{2})-(\d{2})T[\d:.]*(?:Z|[+-]\d{2}:?\d{2})?/g,
+      (_, y, m, d) => `${d}/${m}/${y}`,
+    );
+  if (!isDateOnlyField(field)) return v;
+  // The date as written, not converted to the browser's zone: the audit and the form both write the
+  // local date with its offset, and a conversion could move it a day.
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(v);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : v;
+}
+
+/** Is `field` the path of a row of a collection with a date-only column ("RentalInfo.UpFrontEntries[2]")? */
+function isDateOnlyRow(field: string): boolean {
+  const segment = field.split('.').pop()!;
+  return (
+    /\[\d+\]/.test(segment) &&
+    DATE_ONLY_ROW_COLLECTIONS.has(segment.replace(/[[:].*$/, '').toLowerCase())
+  );
+}
+
+/**
+ * A change of a date-only field whose two sides read as the same day: the audit logs a time-only
+ * change of what the form shows as a date, and a list of changes has no use for "01/01/2025 → 01/01/2025".
+ */
+export function isSameDayChange(field: string, from: unknown, to: unknown): boolean {
+  if (typeof from !== 'string' || typeof to !== 'string' || from === '' || to === '') return false;
+  return isDateOnlyField(field) && dateOnlyValue(field, from) === dateOnlyValue(field, to);
+}
+
+/** Is `field` (a bare name, a form path or an audit "Table.Name") one of the date-only fields? */
+function isDateOnlyField(field: string): boolean {
+  const name = field
+    .split('.')
+    .pop()!
+    .replace(/[[:].*$/, '')
+    .toLowerCase();
+  return DATE_ONLY_FIELDS.has(name);
+}
+
+/**
+ * What a value is compared as. A date-only field is its date, as written, so the same day re-picked
+ * with another time or offset ("…T09:30:00+07:00" against "…T00:00:00+07:00") is not a change the
+ * correction lists; anything else compares as it stands.
+ */
+function comparable(field: string, v: unknown): unknown {
+  if (typeof v !== 'string' || !isDateOnlyField(field)) return v;
+  const m = /^(\d{4}-\d{2}-\d{2})(?:T|$)/.exec(v);
+  return m ? m[1] : v;
+}
 
 /** How a value reads in the dialog; the one place it is decided. */
 export function formatDiffValue(v: unknown): string {
@@ -289,7 +382,10 @@ function summarize(row: unknown, path: string): string {
   const cells = Object.entries(row)
     .filter(([k, v]) => !SKIPPED_KEYS.has(k) && !isObject(v) && !Array.isArray(v) && !isBlank(v))
     .slice(0, 4)
-    .map(([k, v]) => `${labelOrHumanized(k)} ${asStored(k, path, v) ?? formatDiffValue(v)}`);
+    .map(
+      ([k, v]) =>
+        `${labelOrHumanized(k)} ${asStored(k, path, v) ?? formatDiffValue(dateOnlyValue(k, v))}`,
+    );
   return cells.length > 0 ? cells.join(' · ') : '—';
 }
 
@@ -378,7 +474,7 @@ function diffObject(before: Obj, after: Obj, ctx: Context, out: DiffEntry[]) {
         { ...ctx, labels: [...ctx.labels, humanize(key)], path: join(ctx.path, key) },
         out,
       );
-    } else if (!sameScalar(a, b)) {
+    } else if (!sameScalar(comparable(key, a), comparable(key, b))) {
       const nameKey = NAME_OF[key];
       const showName = nameKey !== undefined && (nameKey in before || nameKey in after);
       out.push({

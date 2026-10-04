@@ -86,12 +86,35 @@ export const getFileTypeLabel = (
   mimeType: string | null | undefined,
   fileExtension: string | null | undefined,
 ): string => {
-  const ext = (fileExtension ?? fileName?.split('.').pop() ?? '').replace(/^\./, '');
+  // The name's suffix only when the name has a dot: a bare "memo" is not an extension.
+  const nameExt = fileName?.includes('.') ? fileName.split('.').pop() : '';
+  const ext = (fileExtension || nameExt || '').replace(/^\./, '');
   if (ext && ext.length <= 5) return ext.toUpperCase();
   if (mimeType === 'application/pdf') return 'PDF';
   if (mimeType?.startsWith('image/')) return mimeType.split('/')[1]?.toUpperCase() ?? 'IMAGE';
   return '';
 };
+
+/** What a document file row shows about a file, with its fallbacks in one place. */
+export const getFileMeta = (
+  file: {
+    fileName?: string | null;
+    mimeType?: string | null;
+    fileExtension?: string | null;
+    fileSizeBytes?: number | null;
+    uploadedAt?: string | null;
+    uploadedByName?: string | null;
+    uploadedBy?: string | null;
+  },
+  untitledLabel: string,
+) => ({
+  name: file.fileName || untitledLabel,
+  typeLabel: getFileTypeLabel(file.fileName, file.mimeType, file.fileExtension),
+  size: formatFileSize(file.fileSizeBytes),
+  uploadedAt: formatUploadDateTime(file.uploadedAt),
+  // `||`: an empty name must not block the code.
+  uploadedBy: file.uploadedByName || file.uploadedBy || '',
+});
 
 export const getCollateralTypeIcon = (code: string | null | undefined): string => {
   switch (code) {
@@ -342,12 +365,15 @@ export const DocumentFileRow = ({
       ? `${API_BASE_URL}/documents/${documentId}/download?download=false&size=large`
       : null;
 
-  const uploadedByLabel = uploadedByName ?? uploadedBy;
+  const meta = getFileMeta(
+    { fileName, mimeType, fileExtension, fileSizeBytes, uploadedAt, uploadedByName, uploadedBy },
+    t('valuationDocuments.untitledFile'),
+  );
   const metaParts = [
-    getFileTypeLabel(fileName, mimeType, fileExtension),
-    formatFileSize(fileSizeBytes),
-    formatUploadDateTime(uploadedAt),
-    uploadedByLabel ? t('valuationDocuments.uploadedBy', { name: uploadedByLabel }) : null,
+    meta.typeLabel,
+    meta.size,
+    meta.uploadedAt,
+    meta.uploadedBy ? t('valuationDocuments.uploadedBy', { name: meta.uploadedBy }) : null,
   ].filter((v): v is string => !!v);
 
   return (
@@ -380,12 +406,12 @@ export const DocumentFileRow = ({
             type="button"
             onClick={onView}
             className="text-sm text-primary hover:text-primary-700 hover:underline truncate block max-w-full text-left"
-            title={fileName || 'Untitled document'}
+            title={meta.name}
           >
-            {fileName || 'Untitled document'}
+            {meta.name}
           </button>
         ) : (
-          <p className="text-sm font-medium text-gray-900 truncate">{fileName || 'Untitled document'}</p>
+          <p className="text-sm font-medium text-gray-900 truncate">{meta.name}</p>
         )}
         {metaParts.length > 0 && (
           <p className="text-xs text-gray-500 truncate">{metaParts.join(' · ')}</p>

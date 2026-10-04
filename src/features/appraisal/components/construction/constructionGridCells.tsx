@@ -21,12 +21,16 @@ export function Change({
 }) {
   const d = Math.round((to - from) * 100) / 100;
   const unknown = (to === 0 && from > 0) || incomplete;
-  if (unknown && !final) return <span className="text-[#8a96a0]">—</span>;
+  if (unknown && !final) return <span className="text-[color:var(--palette-ink-3)]">—</span>;
   return (
     <span
       className={clsx(
         'font-medium',
-        unknown || d === 0 ? 'text-[#8a96a0]' : d > 0 ? 'text-[#15803d]' : 'text-[#dc2626]',
+        unknown || d === 0
+          ? 'text-[color:var(--palette-ink-3)]'
+          : d > 0
+            ? 'text-[#15803d]'
+            : 'text-[#dc2626]',
       )}
     >
       {d > 0 ? '+' : d < 0 ? '−' : ''}
@@ -48,7 +52,9 @@ export function HeaderCell({
   return (
     <th className={clsx(TH, 'text-right', className)}>
       {label}
-      <span className="block text-[10px] text-[#8a96a0] font-normal leading-[12px]">{unit}</span>
+      <span className="block text-[0.75rem] text-[color:var(--palette-ink-3)] font-normal leading-[0.9231rem]">
+        {unit}
+      </span>
     </th>
   );
 }

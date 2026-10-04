@@ -8,7 +8,8 @@ import TDropdown from '@/features/pricingAnalysis/components/table/TDropdown';
 import { toNumber } from '../BuildingTable/BuildingDetailTable';
 import { type DerivedRule, useDerivedFieldArray } from '../BuildingTable/useDerivedFieldArray';
 import { Controller, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { FIELD, NUM, NumCell, TD, TH, money2, toNum } from './denseTable';
+import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
+import { FIELD, INPUT_BOX, NUM, NumCell, TD, TH, money2, toNum } from './denseTable';
 import { buildingInsuranceFigures } from '../../utils/buildingStoredValues';
 import {
   roundSumToThousand,
@@ -93,32 +94,41 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
   };
   const columnCount = formReadOnly ? 12 : 13;
   const typeOptions = [
-    { value: 'true', label: t('costBuilding.table.building'), colorClass: 'text-[#15803d]' },
-    { value: 'false', label: t('costBuilding.table.nonBuilding'), colorClass: 'text-[#c2410c]' },
+    {
+      value: 'true',
+      label: t('costBuilding.table.building'),
+      colorClass: 'text-[#15803d] dark:in-[.cas-form-grid]:text-[#4ade80]',
+    },
+    {
+      value: 'false',
+      label: t('costBuilding.table.nonBuilding'),
+      colorClass: 'text-[#c2410c] dark:in-[.cas-form-grid]:text-[#fb923c]',
+    },
   ];
   const methodOptions = [
     { value: 'Gross', label: t('costBuilding.table.methodGross') },
     { value: 'Period', label: t('costBuilding.table.methodPeriod') },
   ];
 
+  // One handler set for both copies of the add buttons: the band's links and the dashed buttons
+  // under the rows.
+  const addActions = [
+    { isBuilding: true, label: t('costBuilding.table.addBuilding'), dot: 'bg-primary-500' },
+    { isBuilding: false, label: t('costBuilding.table.addNonBuilding'), dot: 'bg-amber-500' },
+  ];
   const addButtons = !formReadOnly && (
     <div className="flex flex-wrap gap-1.5">
-      <button
-        type="button"
-        onClick={() => handleRequestAdd(true)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
-      >
-        <span className="size-2 rounded-sm bg-primary-500" />
-        {t('costBuilding.table.addBuilding')}
-      </button>
-      <button
-        type="button"
-        onClick={() => handleRequestAdd(false)}
-        className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
-      >
-        <span className="size-2 rounded-sm bg-amber-500" />
-        {t('costBuilding.table.addNonBuilding')}
-      </button>
+      {addActions.map(({ isBuilding, label, dot }) => (
+        <button
+          key={String(isBuilding)}
+          type="button"
+          onClick={() => handleRequestAdd(isBuilding)}
+          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
+        >
+          <span className={`size-2 rounded-sm ${dot}`} />
+          {label}
+        </button>
+      ))}
     </div>
   );
 
@@ -148,12 +158,38 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
           anchor rather than the card: formLayout.css restyles any [data-field] that wraps a table. */}
       <div data-field={name} className="cas-repeater" />
       <div className="cas-labelled-table">
-        <div className="cas-table-label">{t('costBuilding.table.sectionLabel')}</div>
+        {/* The band copy of the add buttons, shown wherever the layout shows `.cas-table-label`
+            (inside `.cas-form-grid`). Its twin under the rows, `cas-outside-form-only`, is for where
+            it is hidden — the block model form renders this table outside `.cas-form-grid` — and
+            `.cas-outside-form-only` (formLayoutSkin.css) hides that copy inside it. */}
+        <div className="cas-table-label">
+          {t('costBuilding.table.sectionLabel')}
+          {!isEmpty && (
+            <>
+              <span className="cas-label-meta">
+                {t('costBuilding.table.itemCount', { count: values.length })}
+              </span>
+              {!formReadOnly &&
+                addActions.map(({ isBuilding, label }) => (
+                  <button
+                    key={String(isBuilding)}
+                    type="button"
+                    onClick={() => handleRequestAdd(isBuilding)}
+                    className="cas-label-add"
+                  >
+                    + {label}
+                  </button>
+                ))}
+            </>
+          )}
+        </div>
         <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
           {isEmpty ? (
             <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
               <Icon style="solid" name="building" className="size-5 text-gray-300" />
-              <p className="text-sm text-gray-600">{t('costBuilding.table.noDepreciationData')}</p>
+              <p className="text-sm text-gray-600 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-2)]">
+                {t('costBuilding.table.noDepreciationData')}
+              </p>
               {addButtons}
             </div>
           ) : (
@@ -162,7 +198,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                 <RowSync key={field.id} base={`${name}.${i}`} readOnly={formReadOnly} />
               ))}
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] border-collapse text-[0.875rem] leading-tight tabular-nums">
+                <table className="cas-dep-table w-full min-w-[980px] border-collapse text-[0.875rem] leading-tight tabular-nums">
                   <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
                     <tr>
                       <th rowSpan={2} className={clsx(TH, 'text-left')}>
@@ -215,7 +251,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="text-[#1f2937]">
+                  <tbody className="text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
                     {fields.map((field, rowIndex) => {
                       const row = values[rowIndex] ?? {};
                       const p = `${name}.${rowIndex}`;
@@ -349,14 +385,13 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                             <td className={NUM}>{money2(row.priceAfterDepreciation)}</td>
                             {!formReadOnly && (
                               <td className={clsx(TD, 'text-center')}>
-                                <button
-                                  type="button"
-                                  onClick={() => remove(rowIndex)}
-                                  aria-label={t('costBuilding.table.deleteAction')}
-                                  className="inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                <ConfirmDeleteButton
+                                  onConfirm={() => remove(rowIndex)}
+                                  rowNumber={rowIndex + 1}
+                                  className="cas-row-btn inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
                                 >
                                   <Icon style="solid" name="trash" className="size-3" />
-                                </button>
+                                </ConfirmDeleteButton>
                               </td>
                             )}
                           </tr>
@@ -374,8 +409,9 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                         </Fragment>
                       );
                     })}
+                    {/* Twin of the band's add buttons (see the band above). */}
                     {addButtons && (
-                      <tr>
+                      <tr className="cas-outside-form-only">
                         <td colSpan={columnCount} className={TD}>
                           {addButtons}
                         </td>
@@ -383,7 +419,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                     )}
                   </tbody>
                   <tfoot>
-                    <tr className="bg-[#f8fafa] font-semibold text-[#1f2937]">
+                    <tr className="bg-[#f8fafa] font-semibold text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
                       <td className={TD}>{t('costBuilding.table.tableTotal')}</td>
                       <td className={TD} />
                       <td className={NUM}>{money2(totals.area)}</td>
@@ -401,15 +437,19 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
 
               {/* These are the figures the rest of the appraisal reads off this table. */}
               {showCostSummary && (
-                <div className="divide-y divide-gray-200 border-t border-gray-200">
+                <div className="cas-cost-summary divide-y divide-gray-200 border-t border-gray-200">
                   {costSummary.map(item => (
                     <div
                       key={item.field}
-                      className="grid grid-cols-1 items-center gap-2 px-4 py-3 sm:grid-cols-[1fr_minmax(0,300px)] sm:gap-6"
+                      className="cas-cost-row grid grid-cols-1 items-center gap-2 px-4 py-3 sm:grid-cols-[1fr_minmax(0,300px)] sm:gap-6"
                     >
-                      <div className="flex flex-col gap-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-800">{item.label}</span>
+                      {/* `display: contents` in the grid layout: the name, the source text and the
+                          input become one row of flex items there. */}
+                      <div className="cas-cost-lead flex flex-col gap-1">
+                        <div className="cas-cost-name flex items-center gap-2">
+                          <span className="text-sm font-semibold text-gray-800 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)]">
+                            {item.label}
+                          </span>
                           <span
                             className={clsx(
                               'rounded-full px-2 py-0.5 text-[0.75rem] font-semibold',
@@ -423,7 +463,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                               : t('methodStatus.calculated')}
                           </span>
                         </div>
-                        <div className="flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
+                        <div className="cas-cost-src flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
                           <span>
                             {item.source}{' '}
                             <b className="font-medium text-gray-600 tabular-nums">
@@ -451,7 +491,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                         maxIntegerDigits={15}
                         decimalPlaces={2}
                         dense
-                        className="font-semibold"
+                        className={clsx('font-semibold', INPUT_BOX)}
                       />
                     </div>
                   ))}
@@ -583,14 +623,13 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
                   <td className="px-1 py-0.5 text-right">{money2(row.priceDepreciation)}</td>
                   {!readOnly && (
                     <td className="px-1 py-0.5 text-center">
-                      <button
-                        type="button"
-                        onClick={() => remove(i)}
-                        aria-label={t('costBuilding.table.deleteAction')}
-                        className="inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
+                      <ConfirmDeleteButton
+                        onConfirm={() => remove(i)}
+                        rowNumber={i + 1}
+                        className="cas-row-btn inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
                       >
                         <Icon style="solid" name="trash" className="size-3" />
-                      </button>
+                      </ConfirmDeleteButton>
                     </td>
                   )}
                 </tr>

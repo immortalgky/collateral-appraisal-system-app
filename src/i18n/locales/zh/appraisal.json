@@ -730,7 +730,7 @@
         "latitude": "纬度",
         "longitude": "经度",
         "obligation": "义务负担",
-        "other": "其他"
+        "other": "备注"
       },
       "suggested": {
         "applyEmpty": "填入空白栏",
@@ -752,7 +752,7 @@
         "condition": "整体状况与市场",
         "ownership": "产权",
         "location": "位置",
-        "obligation": "义务与备注"
+        "remarks": "备注"
       },
       "table": {
         "item": "项目",
@@ -760,6 +760,7 @@
         "derived": "计算值",
         "source": "来源",
         "use": "使用",
+        "useDisabled": "已与计算值一致",
         "ungrouped": "未分组",
         "sourceSentence": "来自 {{list}}",
         "sourcePart_other": "{{group}} {{count}} 台",
@@ -1497,6 +1498,7 @@
     "uploadedBy": "上传者 {{name}}",
     "empty": "尚未附加文件",
     "noTypes": "未找到文件类型",
+    "untitledFile": "未命名文档",
     "loadFailed": "加载文件清单失败",
     "deleteDialog": {
       "title": "移除文件",
@@ -1897,7 +1899,6 @@
       "otherGroup": "其他",
       "workGroupsFailed": "无法加载工程项目列表——请刷新页面后再添加",
       "workGroupsLoading": "正在加载工程项目列表…",
-      "confirmDelete": "删除？",
       "remove": "删除 {{name}}",
       "empty": "尚无工程项目——在分组上选择“+ 添加项目…”，再将比例分配至 100%。",
       "emptyReadOnly": "没有工程项目。"
@@ -1991,6 +1992,14 @@
     "machinery": {
       "sectionTitle": "机械详情"
     },
+    "pma": {
+      "groups": {
+        "titleInfo": "产权文件信息",
+        "condoInfo": "公寓信息",
+        "titleAddress": "产权文件地址",
+        "value": "价格信息"
+      }
+    },
     "titleDeed": {
       "sectionTitle": "地契"
     },
@@ -2017,6 +2026,12 @@
       "generate": "生成",
       "generating": "生成中...",
       "scheduleEmpty": "点击 生成 以计算租金计划表",
+      "upFrontCount_one": "· {{count}} 项",
+      "upFrontCount_other": "· {{count}} 项",
+      "scheduleYears_one": "· {{count}} 年",
+      "scheduleYears_other": "· {{count}} 年",
+      "growthPeriodCount_one": "· {{count}} 个期间",
+      "growthPeriodCount_other": "· {{count}} 个期间",
       "upFrontMismatch": "预付款明细合计（{{entries}}）与预付款金额（{{total}}）不符",
       "table": {
         "atYear": "起始年",
@@ -2309,11 +2324,15 @@
     "navBuilding": "建筑",
     "navConstructionInspection": "施工明细",
     "navMachinery": "机械",
+    "navPma": "PMA 信息",
     "saveDraft": "保存草稿",
     "save": "保存"
   },
   "landCharacteristicsForm": {
-    "deductionsLabel": "原因",
+    "deductionsTitle": "面积扣减",
+    "deductionsSummary_one": "· {{count}} 项 · 扣减 {{area}} 平方瓦",
+    "deductionsSummary_other": "· {{count}} 项 · 扣减 {{area}} 平方瓦",
+    "addDeduction": "添加",
     "confirmClearDeductions": {
       "title": "确认关闭面积扣减？",
       "message": "关闭后将删除已录入的面积扣减明细（{{count}} 条），并将评估面积恢复为权证登记面积。"
@@ -2652,6 +2671,14 @@
     "untitled": "尚未命名",
     "newHint": "保存后将在此显示主要信息",
     "position": "{{group}} · 第 {{n}} 项",
+    "pmaSuffix": "PMA",
+    "pmaTitle": "更新 PMA 资产",
+    "pmaSync": {
+      "synced": "已同步",
+      "pending": "等待同步",
+      "failed": "同步失败",
+      "retryHint": "· 保存以重试"
+    },
     "titleCount": "{{n}} 份产权文件",
     "titleNo": "产权文件 {{no}}"
   },
@@ -2747,6 +2774,12 @@
     "viewLabel": "视图",
     "viewDocument": "文件",
     "viewForm": "表单",
+    "nav": {
+      "group": "证书导航",
+      "prev": "上一个证书",
+      "next": "下一个证书",
+      "position": "{{current}} / {{total}}"
+    },
     "typeLabel": "类型",
     "summary": "编号 {{no}} · {{area}} 莱",
     "required": "必填",
@@ -2876,9 +2909,15 @@
       "west": "西"
     },
     "list": {
-      "moveUp": "上移",
-      "moveDown": "下移",
       "sortByNumber": "按地契号排序",
+      "dnd": {
+        "handle": "拖动以排序",
+        "instructions": "按空格键拿起证书，用方向键移动，再按空格键放下。按 Esc 取消。",
+        "pickedUp": "已拿起第 {{pos}} 个证书",
+        "movedTo": "第 {{pos}} 个证书位于第 {{to}} 位上方",
+        "dropped": "第 {{pos}} 个证书已移至第 {{to}} 位",
+        "cancelled": "已取消移动，第 {{pos}} 个证书保持原位"
+      },
       "type": "类型",
       "document": "编号 · 册 · 页",
       "position": "土地位置",
@@ -3202,6 +3241,8 @@
   "surfaceTable": {
     "sectionLabel": "各层地面",
     "addFloor": "添加楼层",
+    "itemCount_one": "· {{count}} 项",
+    "itemCount_other": "· {{count}} 项",
     "empty": "暂无楼层数据",
     "otherPlaceholder": "请注明",
     "reversed": "结束楼层低于起始楼层",

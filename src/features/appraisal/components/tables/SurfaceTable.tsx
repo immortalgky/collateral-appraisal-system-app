@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { useFieldArray, useFormContext, useWatch, Controller } from 'react-hook-form';
 import Icon from '@/shared/components/Icon';
+import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
@@ -32,7 +33,6 @@ const floorText = (from: number | null, to: number | null) =>
 
 const SurfaceTable = ({ name }: SurfaceTableProps) => {
   const { t } = useTranslation('appraisal');
-  const { t: tc } = useTranslation('common');
   const { control, register } = useFormContext();
   const { fields, append, remove } = useFieldArray({ control, name });
   const formReadOnly = useFormReadOnly();
@@ -85,6 +85,8 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
   };
 
   const columnCount = formReadOnly ? 5 : 6;
+
+  const isEmpty = fields.length === 0;
 
   const addButton = !formReadOnly && (
     <button
@@ -143,9 +145,25 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
           anchor rather than the card: formLayout.css restyles any [data-field] that wraps a table. */}
       <div data-field={name} className="cas-repeater" />
       <div className="cas-labelled-table">
-        <div className="cas-table-label">{t('surfaceTable.sectionLabel')}</div>
-        <div className="cas-table-card cas-add-under min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          {fields.length === 0 ? (
+        {/* The band: title, a muted count and the add link (hidden outside `.cas-form-grid`, where the
+            button under the table, its twin, shows). */}
+        <div className="cas-table-label">
+          {t('surfaceTable.sectionLabel')}
+          {!isEmpty && (
+            <>
+              <span className="cas-label-meta">
+                {t('surfaceTable.itemCount', { count: fields.length })}
+              </span>
+              {!formReadOnly && (
+                <button type="button" onClick={handleAdd} className="cas-label-add">
+                  + {t('surfaceTable.addFloor')}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+        <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
+          {isEmpty ? (
             <div className="flex flex-col items-center gap-2 px-4 py-6 text-center">
               <p className="text-sm text-gray-500">{t('surfaceTable.empty')}</p>
               {addButton}
@@ -174,7 +192,7 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                       {!formReadOnly && <th className={clsx(TH, 'w-8')} />}
                     </tr>
                   </thead>
-                  <tbody className="text-[#1f2937]">
+                  <tbody className="text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
                     {fields.map((field, index) => {
                       const row = values[index] ?? ({} as SurfaceData);
                       const p = `${name}.${index}`;
@@ -223,14 +241,13 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                             </td>
                             {!formReadOnly && (
                               <td className={clsx(TD, 'text-center align-top')}>
-                                <button
-                                  type="button"
-                                  onClick={() => remove(index)}
-                                  aria-label={tc('actions.delete')}
-                                  className="inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
+                                <ConfirmDeleteButton
+                                  onConfirm={() => remove(index)}
+                                  rowNumber={index + 1}
+                                  className="cas-row-btn inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
                                 >
                                   <Icon style="solid" name="trash" className="size-3" />
-                                </button>
+                                </ConfirmDeleteButton>
                               </td>
                             )}
                           </tr>
@@ -250,8 +267,9 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                   </tbody>
                 </table>
               </div>
-              {/* Under the table, not in a row of it: an action on the list, not one of its floors. */}
-              {addButton && <div className="pt-2">{addButton}</div>}
+              {/* Twin of the band's add link, for outside `.cas-form-grid` (`.cas-outside-form-only` is
+                  hidden inside it). Under the table, not in a row of it: an action on the list. */}
+              {addButton && <div className="cas-outside-form-only pt-2">{addButton}</div>}
             </>
           )}
         </div>

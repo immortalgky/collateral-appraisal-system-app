@@ -381,8 +381,6 @@
     "addFirstItem": "Add First Item",
     "addRow": "Add row",
     "deleteRow": "Delete",
-    "deleteRowTitle": "Delete Row",
-    "deleteRowMessage": "Are you sure you want to delete this row? This action cannot be undone.",
     "total": "Total",
     "override": "Override",
     "resetToCalculated": "Reset to calculated sum",

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { z } from 'zod';
 import NumberInput from '@shared/components/inputs/NumberInput';
+import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
 import Icon from '@shared/components/Icon';
 import { schemas } from '@shared/schemas/v1';
 import {
@@ -15,6 +16,7 @@ import {
   isRegressedProgress,
   NAME,
   pct,
+  INPUT_BOX,
   REGRESSED,
   RO,
   sumWork,
@@ -81,20 +83,20 @@ function AddItemMenu({
 }) {
   return (
     <Menu>
-      <MenuButton className="inline-flex items-center gap-[4px] h-[21px] px-[7px] rounded-[4px] border border-dashed border-[#99f6e4] bg-white text-[12px] font-medium text-[#0f766e] hover:border-[#0d9488] focus:outline-none focus:border-[#0d9488]">
+      <MenuButton className="inline-flex items-center gap-[4px] h-[21px] px-[7px] rounded-[4px] border border-dashed border-[color:var(--palette-accent-line)] bg-[color:var(--palette-surface)] text-[0.875rem] font-medium text-[color:var(--palette-accent-ink)] hover:border-[#0d9488] focus:outline-none focus:border-[#0d9488]">
         {label}
         <Icon name="chevron-down" style="solid" className="size-[8px]" />
       </MenuButton>
       <MenuItems
         anchor={{ to: 'bottom start', gap: 4, padding: 8 }}
-        className="z-50 max-h-[240px] min-w-[190px] overflow-y-auto rounded-[8px] border border-[#e3e9e8] bg-white py-[4px] shadow-xl focus:outline-none"
+        className="z-50 max-h-[240px] min-w-[190px] overflow-y-auto rounded-[8px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] py-[4px] shadow-xl focus:outline-none"
       >
         {items.map(item => (
           <MenuItem key={item.id}>
             <button
               type="button"
               onClick={() => onPick(item)}
-              className="block w-full px-[10px] py-[3px] text-left text-[12px] leading-[20px] text-[#1f2937] data-[focus]:bg-[#f0fdfa]"
+              className="block w-full px-[10px] py-[3px] text-left text-[0.875rem] leading-[1.5385rem] text-[color:var(--palette-ink)] data-[focus]:bg-[color:var(--palette-accent-wash)]"
             >
               {itemLabel(item)}
             </button>
@@ -122,7 +124,6 @@ export function ConstructionDetailTable({
 }: ConstructionDetailTableProps) {
   const { t, i18n } = useTranslation('appraisal');
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
-  const [armedDelete, setArmedDelete] = useState<string | null>(null);
   const [focusRow, setFocusRow] = useState<number | null>(null);
 
   // A freshly added item puts the cursor in its proportion cell, the one thing it still needs.
@@ -141,23 +142,6 @@ export function ConstructionDetailTable({
     input.focus();
     setFocusRow(null);
   }, [focusRow, computedSubItems.length]);
-
-  // A click anywhere else disarms. Not onBlur: Safari and Firefox on macOS do not focus a clicked
-  // button, so it never blurs and the row would stay one click from deletion.
-  useEffect(() => {
-    if (armedDelete == null) return;
-    const disarm = (e: Event) => {
-      if (!(e.target as Element | null)?.closest?.(`[data-ci-armed="${armedDelete}"]`))
-        setArmedDelete(null);
-    };
-    // Keyboard users move on by focus, not by pointer.
-    document.addEventListener('pointerdown', disarm);
-    document.addEventListener('focusin', disarm);
-    return () => {
-      document.removeEventListener('pointerdown', disarm);
-      document.removeEventListener('focusin', disarm);
-    };
-  }, [armedDelete]);
 
   const isThai = i18n.language?.startsWith('th');
   const masterItems = useMemo(
@@ -243,7 +227,7 @@ export function ConstructionDetailTable({
       header(t('constructionInspection.grid.previousValue'), t('constructionInspection.grid.baht')),
     showMoney &&
       header(t('constructionInspection.grid.currentValue'), t('constructionInspection.grid.baht')),
-    !readOnly && <th key="actions" className={clsx(TH, 'w-[30px]')} />,
+    !readOnly && <th key="actions" className={clsx(TH, 'w-[3.75rem] min-w-[3.75rem]')} />,
   ].filter(Boolean);
   const fullSpan = headerCells.length;
 
@@ -266,7 +250,7 @@ export function ConstructionDetailTable({
           data-ci-row={item._index}
           onKeyDown={handleKeyDown}
           aria-label={`${itemName(item)} ${field === 'proportionPct' ? t('constructionInspection.grid.proportion') : t('constructionInspection.grid.currentProgress')}`}
-          className={clsx(regressedCell && REGRESSED)}
+          className={regressedCell ? REGRESSED : INPUT_BOX}
         />
       </td>
     );
@@ -335,7 +319,7 @@ export function ConstructionDetailTable({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums text-[#1f2937]">
+        <table className="w-full min-w-max border-separate border-spacing-0 text-[0.875rem] leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
           <thead>
             <tr>{headerCells}</tr>
           </thead>
@@ -354,14 +338,11 @@ export function ConstructionDetailTable({
 
               return (
                 <Fragment key={group.id}>
-                  <tr className="bg-[#edf1f1] text-[11px] font-semibold text-[#55636f] leading-[23px]">
-                    <td className={clsx(CELL, NAME, 'bg-[#edf1f1] p-0')}>
+                  <tr className="bg-[color:var(--palette-surface-3)] text-[0.8462rem] font-semibold text-[color:var(--palette-ink-2)] leading-[1.7692rem]">
+                    <td className={clsx(CELL, NAME, 'bg-[color:var(--palette-surface-3)] p-0')}>
                       <button
                         type="button"
-                        onClick={() => {
-                          setArmedDelete(null);
-                          setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }));
-                        }}
+                        onClick={() => setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }))}
                         aria-expanded={!isCollapsed}
                         className="flex items-center gap-[6px] w-full h-full px-[8px] text-left"
                       >
@@ -376,7 +357,7 @@ export function ConstructionDetailTable({
                         <Icon
                           name={CATEGORY_ICONS[group.code] || 'folder'}
                           style="solid"
-                          className="size-[11px] text-[#8a96a0]"
+                          className="size-[11px] text-[color:var(--palette-ink-3)]"
                         />
                         <span className="truncate">{groupName}</span>
                       </button>
@@ -395,7 +376,7 @@ export function ConstructionDetailTable({
                             }}
                           />
                         )}
-                        <span className="ml-auto font-normal text-[#8a96a0]">
+                        <span className="ml-auto font-normal text-[color:var(--palette-ink-3)]">
                           {t('constructionInspection.grid.itemCount', { count: items.length })}
                           {isCollapsed &&
                             ` · ${pct(groupTotals.currentProgress)}%` +
@@ -408,10 +389,9 @@ export function ConstructionDetailTable({
                   {!isCollapsed &&
                     items.map(item => {
                       const name = itemName(item);
-                      const isArmed = armedDelete === item._key;
                       return (
-                        <tr key={item._key} className="bg-white">
-                          <td className={clsx(TD, NAME, 'bg-white')}>
+                        <tr key={item._key} className="bg-[color:var(--palette-surface)]">
+                          <td className={clsx(TD, NAME, 'bg-[color:var(--palette-surface)]')}>
                             <span className="block truncate">{name}</span>
                           </td>
                           {figures(
@@ -429,33 +409,20 @@ export function ConstructionDetailTable({
                             },
                           )}
                           {!readOnly && (
-                            <td className={clsx(CELL, 'w-[30px] p-0 text-center')}>
+                            <td
+                              className={clsx(
+                                CELL,
+                                'w-[3.75rem] min-w-[3.75rem] p-0 text-center align-middle leading-[0]',
+                              )}
+                            >
                               {/* Two clicks instead of a modal: the first arms the button. */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (isArmed) {
-                                    setArmedDelete(null);
-                                    onDeleteSubItem(item._index);
-                                  } else setArmedDelete(item._key);
-                                }}
-                                data-ci-armed={isArmed ? item._key : undefined}
-                                aria-label={t('constructionInspection.grid.remove', {
-                                  name: name,
-                                })}
-                                className={clsx(
-                                  'inline-grid place-items-center h-[20px] rounded-[4px] leading-none',
-                                  isArmed
-                                    ? 'px-[6px] bg-[#dc2626] text-white text-[11px]'
-                                    : 'w-[20px] text-[#8a96a0] hover:bg-[#fef2f2] hover:text-[#dc2626]',
-                                )}
+                              <ConfirmDeleteButton
+                                onConfirm={() => onDeleteSubItem(item._index)}
+                                label={t('constructionInspection.grid.remove', { name })}
+                                className="inline-grid h-[20px] w-[20px] place-items-center rounded-[4px] leading-none text-[color:var(--palette-ink-3)] hover:bg-[#fef2f2] hover:text-[#dc2626]"
                               >
-                                {isArmed ? (
-                                  t('constructionInspection.grid.confirmDelete')
-                                ) : (
-                                  <Icon name="xmark" style="solid" className="size-[11px]" />
-                                )}
-                              </button>
+                                <Icon name="xmark" style="solid" className="size-[11px]" />
+                              </ConfirmDeleteButton>
                             </td>
                           )}
                         </tr>
@@ -467,7 +434,7 @@ export function ConstructionDetailTable({
                     totalRow(
                       t('constructionInspection.grid.groupTotal', { name: groupName }),
                       groupTotals,
-                      'bg-[#f8fafa] font-semibold',
+                      'bg-[color:var(--palette-surface-2)] font-semibold',
                       { incomplete: items.some(isPending) },
                     )}
                 </Fragment>
@@ -485,26 +452,30 @@ export function ConstructionDetailTable({
                   previousProgress: total.previousShare,
                   currentProgress: total.currentShare,
                 },
-                'bg-[#f0fdfa] font-bold text-[#0f766e] [&>td]:border-t [&>td]:border-t-[#cbd5d3]',
+                'bg-[color:var(--palette-accent-wash)] font-bold text-[color:var(--palette-accent-ink)] [&>td]:border-t [&>td]:border-t-[color:var(--palette-line-strong)]',
                 { incomplete: pending.length > 0, shareIsProgress: true },
-                split === 'over' ? 'text-[#dc2626]' : split === 'short' ? 'text-[#b45309]' : '',
+                split === 'over'
+                  ? 'text-[#dc2626]'
+                  : split === 'short'
+                    ? 'text-[color:var(--palette-warn)]'
+                    : '',
               )}
           </tbody>
         </table>
       </div>
 
       {workGroupsLoading && computedSubItems.length > 0 && (
-        <div className="px-[12px] py-[6px] text-[11.5px] text-[#8a96a0] border-t border-t-[#e3e9e8]">
+        <div className="px-[12px] py-[6px] text-[0.75rem] text-[color:var(--palette-ink-3)] border-t border-t-[color:var(--palette-line)]">
           {t('constructionInspection.grid.workGroupsLoading')}
         </div>
       )}
       {workGroupsFailed && (
-        <div className="px-[12px] py-[6px] text-[11.5px] text-[#dc2626] border-t border-t-[#e3e9e8]">
+        <div className="px-[12px] py-[6px] text-[0.75rem] text-[#dc2626] border-t border-t-[color:var(--palette-line)]">
           {t('constructionInspection.grid.workGroupsFailed')}
         </div>
       )}
       {computedSubItems.length === 0 && (
-        <div className="px-[16px] py-[32px] text-center text-[12.5px] text-[#8a96a0]">
+        <div className="px-[16px] py-[32px] text-center text-[0.875rem] text-[color:var(--palette-ink-3)]">
           {readOnly
             ? t('constructionInspection.grid.emptyReadOnly')
             : t('constructionInspection.grid.empty')}
@@ -512,14 +483,14 @@ export function ConstructionDetailTable({
       )}
 
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-x-[14px] gap-y-[2px] min-h-[28px] px-[12px] py-[4px] border-t border-t-[#e3e9e8] bg-[#f8fafa] text-[11.5px] text-[#8a96a0]">
+        <div className="flex flex-wrap items-center gap-x-[14px] gap-y-[2px] min-h-[28px] px-[12px] py-[4px] border-t border-t-[color:var(--palette-line)] bg-[color:var(--palette-surface-2)] text-[0.75rem] text-[color:var(--palette-ink-3)]">
           {split === 'over' && (
             <span className="font-medium text-[#dc2626]">
               {t('constructionInspection.status.overBlocksSave', { pct: pct(total.proportion) })}
             </span>
           )}
           {pending.length > 0 && (
-            <span className="text-[#b45309]">
+            <span className="text-[color:var(--palette-warn)]">
               {t('constructionInspection.status.pending', {
                 count: pending.length,
                 // A new round starts with every row pending: name a few, count the rest.

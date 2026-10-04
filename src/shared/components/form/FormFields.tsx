@@ -812,8 +812,12 @@ function controlMaxWidth(field: FormField, schemaMaxLength?: number): string | u
     case 'number-input': {
       // Decimals default to NumberInput's own 2: a field that leaves them unset still shows "0.00".
       const digits = (field.maxIntegerDigits ?? 12) + (field.decimalPlaces ?? 2);
-      // ~0.6rem a digit at the form's size, plus room for separators and the unit icon.
-      return `${Math.min(Math.max(digits * 0.6 + 2.5, 6), 16)}rem`;
+      // ~0.6rem a digit at the form's size, plus room for separators. An icon or unit inside the box
+      // takes its own room off the right (`NumberInput` reserves 3rem for an icon, 2.5rem for a
+      // suffix, 2.25rem on the left), so it is added: the map pin of Latitude / Longitude cut
+      // "-100.501765" short in a 7.9rem box.
+      const room = (field.rightIcon ? 3 : field.suffix ? 2.5 : 0) + (field.leftIcon ? 2.25 : 0);
+      return `${Math.min(Math.max(digits * 0.6 + 2.5 + room, 6), 16)}rem`;
     }
     case 'date-input':
     case 'datetime-input':
@@ -821,7 +825,8 @@ function controlMaxWidth(field: FormField, schemaMaxLength?: number): string | u
     case 'text-input': {
       const max = field.maxLength ?? schemaMaxLength;
       if (max == null || max > 60) return undefined;
-      return `${Math.min(Math.max(max * 0.55 + 2, 7), 26)}rem`;
+      const room = (field.rightIcon ? 2.5 : 0) + (field.leftIcon ? 2.25 : 0);
+      return `${Math.min(Math.max(max * 0.55 + 2 + room, 7), 26)}rem`;
     }
     default:
       return undefined;

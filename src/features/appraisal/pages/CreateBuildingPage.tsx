@@ -355,7 +355,6 @@ const CreateBuildingPage = () => {
                     isLoading={isPending && saveAction === 'draft'}
                     disabled={isPending}
                   >
-                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     {t('createPage.saveDraft')}
                   </Button>
                   <Button

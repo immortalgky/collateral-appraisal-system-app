@@ -6,6 +6,10 @@ import './index.css'; // Import global CSS which includes Tailwind
 // Imported here rather than @import-ed from index.css: Tailwind v4's Vite plugin does
 // not reliably watch partials pulled into the CSS entry, so edits were served stale.
 import './styles/formLayout.css';
+import './styles/formLayoutCompact.css';
+import './styles/formLayoutStandard.css';
+// After both skins: the rules they share (formLayoutSkin.css explains why the order matters).
+import './styles/formLayoutSkin.css';
 import './styles/collateralScene.css';
 import App from '@app/App';
 import { queryClient } from '@app/queryClient';

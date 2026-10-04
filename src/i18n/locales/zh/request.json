@@ -381,8 +381,6 @@
     "addFirstItem": "添加第一项",
     "addRow": "添加行",
     "deleteRow": "删除",
-    "deleteRowTitle": "删除行",
-    "deleteRowMessage": "确定要删除此行吗？此操作无法撤销。",
     "total": "合计",
     "override": "覆盖",
     "resetToCalculated": "重置为计算值",

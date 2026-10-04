@@ -63,7 +63,6 @@ function RailItem({
   sublabel,
   isSelected,
   editCount = 0,
-  badgeClassName = 'bg-blue-50 text-blue-700',
   isDirty = false,
   onSelect,
 }: {
@@ -72,8 +71,6 @@ function RailItem({
   sublabel?: string;
   isSelected: boolean;
   editCount?: number;
-  /** The edit-count badge's colours: the history drawer's palette (property blue, documents violet). */
-  badgeClassName?: string;
   isDirty?: boolean;
   onSelect: () => void;
 }) {
@@ -84,28 +81,30 @@ function RailItem({
       type="button"
       onClick={onSelect}
       className={clsx(
-        'relative w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left transition-colors',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+        'grid w-full grid-cols-[2.1538rem_minmax(0,1fr)_auto] items-center gap-[0.6154rem] px-[0.9231rem] py-[0.4615rem] text-left transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40',
         isSelected
-          ? 'bg-primary/10 text-primary before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-full before:bg-primary'
-          : 'hover:bg-white text-gray-700',
+          ? 'bg-[color:var(--dc-accent-wash)] shadow-[inset_3px_0_0_var(--dc-accent)]'
+          : 'hover:bg-[color:var(--dc-surface-2)]',
       )}
     >
       <span
         className={clsx(
-          'flex size-6 shrink-0 items-center justify-center rounded-md',
-          isSelected ? 'bg-white' : 'bg-white ring-1 ring-slate-200',
+          'flex size-[2.1538rem] shrink-0 items-center justify-center rounded-[0.4615rem]',
+          isSelected
+            ? 'bg-[color:var(--dc-surface)] text-[color:var(--dc-accent-ink)]'
+            : 'bg-[color:var(--dc-surface-3)] text-[color:var(--dc-ink-2)]',
         )}
       >
-        <Icon
-          style={icon.style}
-          name={icon.name}
-          className={clsx('size-3.5', isSelected ? 'text-primary' : 'text-gray-500')}
-        />
+        <Icon style={icon.style} name={icon.name} className="size-[0.9231rem]" />
       </span>
-      <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold truncate">{label}</div>
-        {sublabel && <div className="text-[11px] text-gray-400 truncate">{sublabel}</div>}
+      <div className="min-w-0">
+        <div className="truncate text-[0.9231rem] font-medium text-[color:var(--dc-ink)]">
+          {label}
+        </div>
+        {sublabel && (
+          <div className="truncate text-[0.8077rem] text-[color:var(--dc-ink-3)]">{sublabel}</div>
+        )}
       </div>
       {isDirty ? (
         <span
@@ -114,17 +113,12 @@ function RailItem({
           title={t('rail.unsaved')}
           className="size-2 shrink-0 rounded-full bg-amber-500"
         />
+      ) : editCount > 0 ? (
+        <span className="shrink-0 rounded-full bg-[color:var(--dc-warn-wash)] px-[0.6154rem] py-[0.0769rem] text-[0.8462rem] font-medium text-[color:var(--dc-warn)]">
+          {t('rail.edits', { count: editCount })}
+        </span>
       ) : (
-        editCount > 0 && (
-          <span
-            className={clsx(
-              'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
-              badgeClassName,
-            )}
-          >
-            {t('rail.edits', { count: editCount })}
-          </span>
-        )
+        <span />
       )}
     </button>
   );
@@ -132,7 +126,7 @@ function RailItem({
 
 function SectionLabel({ children, aside }: { children: string; aside?: string }) {
   return (
-    <div className="flex items-baseline justify-between px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+    <div className="flex items-baseline justify-between px-[0.9231rem] pb-[0.2308rem] pt-[0.6154rem] text-[0.8077rem] font-semibold tracking-[0.04em] text-[color:var(--dc-ink-3)]">
       <span>{children}</span>
       {aside && <span className="font-normal normal-case tracking-normal">{aside}</span>}
     </div>
@@ -187,8 +181,8 @@ function PropertyRail({
     body = propertyGroups
       .filter(g => g.properties.length > 0)
       .map(g => (
-        <div key={g.id} className="space-y-1">
-          <div className="flex items-center gap-2 px-3 pt-1.5 text-[11.5px] text-gray-400 after:flex-1 after:border-t after:border-dashed after:border-gray-200">
+        <div key={g.id} className="space-y-px">
+          <div className="flex items-center gap-2 px-[0.9231rem] pb-[0.1538rem] pt-[0.3077rem] text-[0.8462rem] text-[color:var(--dc-ink-3)] after:flex-1 after:border-t after:border-[color:var(--dc-line-soft)]">
             <span className="truncate">
               {[t('rail.group', { number: g.groupNumber }), g.groupName]
                 .filter(Boolean)
@@ -258,7 +252,6 @@ function DocumentsRailEntry({
         sublabel={fileLabel}
         isSelected={isSelected}
         editCount={editCount}
-        badgeClassName="bg-violet-50 text-violet-700"
         onSelect={onSelect}
       />
     </div>
@@ -298,6 +291,8 @@ function PropertyCorrectionEditor({
   onSelectProperty: (propertyId: string) => void;
 }) {
   const { t } = useTranslation('appraisalDataCorrection');
+  // The identity block above the tab bar: what picking a tab scrolls back up to.
+  const headRef = useRef<HTMLDivElement>(null);
   const propertyId = property.propertyId!;
   const typeCode = property.propertyType ?? '';
   const [pendingSubmit, setPendingSubmit] = useState<{
@@ -487,23 +482,24 @@ function PropertyCorrectionEditor({
           headers under the tab bar) are keyed on both. */}
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="cas-form-grid flex-1 min-h-0 flex flex-col"
+        className="cas-form-grid cas-dc-editor flex-1 min-h-0 flex flex-col"
       >
         <div
           id="form-scroll-container"
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth px-3"
+          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
         >
-          {/* The property page's own identity card, so the pane opens the way that page does.
-              Top padding lives here and not on the scroller: the tab bar below is `sticky` and
-              has to reach the pane's top edge once this has scrolled away. */}
-          <div className="space-y-3 px-3 pt-4">
+          {/* The property page's own identity card, so the pane opens the way that page does. It
+              sits flush with the pane's top and sides (`.cas-dc-editor` in formLayoutSkin.css): no
+              gutter on the scroller, so the sticky tab bar below reaches the pane's top edge once
+              this has scrolled away. */}
+          <div ref={headRef} className="cas-dc-head">
             <EditorIdentityCard
-              top={<PropertyTypeChip code={typeCode} />}
+              top={<PropertyTypeChip code={typeCode} className="cas-id-badge" />}
               title={property.propertyName || t('detail.unnamedProperty')}
               titleMuted={!property.propertyName}
             >
               {editCount !== undefined && (
-                <p className="text-[13px] text-gray-600">
+                <p className="cas-id-facts text-[13px] text-gray-600">
                   {editCount > 0 ? t('edits.count', { count: editCount }) : t('edits.none')}
                 </p>
               )}
@@ -516,13 +512,13 @@ function PropertyCorrectionEditor({
 
           {/* The property page's own tab bar and panels. Its bar is a direct child of the scroll
               container (it is `sticky`), so the body is rendered here and not inside a wrapper. */}
-          {config.render({ propertyId, ciMode, onSelectProperty })}
+          {config.render({ propertyId, ciMode, onSelectProperty, scrollAnchorRef: headRef })}
 
           {/* Dressed as one more section of the form rather than a card bolted underneath:
               same `cas-section-head` band as every block above, so the reason reads as the last
               thing you fill in, not a separate dialog. Below the panels, so it is there on
               whichever tab is open. */}
-          <Section className="mb-6 px-3">
+          <Section>
             <div className="cas-section-grid cas-sheet">
               <div className="cas-section-head mb-2 flex items-center gap-2">
                 <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-50">
@@ -647,82 +643,87 @@ const AppraisalDataCorrectionDetailPage = () => {
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 overflow-hidden border border-gray-200 bg-white">
-      <CorrectionPageHeader
-        appraisalNumber={appraisal?.appraisalNumber}
-        customerName={request?.customers?.[0]?.name}
-        status={appraisal?.status}
-        approvedAt={source?.completedAt}
-        externalSystem={source?.externalSystem ?? null}
-        editCount={corrections?.length}
-        latestEditAt={latestEdit?.changedAt}
-        onOpenHistory={openHistory}
-      />
-
-      <div className="flex-1 min-h-0 flex">
-        <nav className="w-64 shrink-0 space-y-3 overflow-y-auto border-r border-slate-200 bg-slate-50 px-2.5 py-3.5">
-          <PropertyRail
-            propertyGroups={propertyGroups}
-            isLoading={isLoading}
-            isError={propertiesFailed}
-            onRetry={refetchProperties}
-            selectedPropertyId={selectedPropertyId}
-            editCounts={editCounts}
-            dirtyPropertyId={editorDirty ? selectedPropertyId : null}
-            onSelect={setSelectedPropertyId}
-          />
-          <DocumentsRailEntry
-            appraisalId={appraisalId}
-            isSelected={selectedPropertyId === DOCUMENTS_PANE}
-            editCount={editCounts.get(DOCUMENTS_PANE)}
-            onSelect={() => setSelectedPropertyId(DOCUMENTS_PANE)}
-          />
-        </nav>
-
-        <div className="flex-1 min-w-0 min-h-0 flex flex-col bg-white">
-          {selectedPropertyId === DOCUMENTS_PANE ? (
-            <DocumentCorrectionPane
-              // Per appraisal, like the editor: open dialog / expanded rows must not carry to another one.
-              key={appraisalId}
-              appraisalId={appraisalId!}
-              regeneration={regeneration}
-              onRegenerationChange={setRegeneration}
-            />
-          ) : selectedProperty ? (
-            <PropertyCorrectionEditor
-              key={selectedProperty.propertyId}
-              appraisalId={appraisalId!}
-              property={selectedProperty}
-              editCount={corrections && (editCounts.get(selectedProperty.propertyId!) ?? 0)}
-              latestEdit={latestOf(corrections ?? [], selectedProperty.propertyId!)}
-              onOpenHistory={openHistory}
-              onDirtyChange={setEditorDirty}
-              onSelectProperty={setSelectedPropertyId}
-            />
-          ) : (
-            !isLoading && (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                {t('detail.selectProperty')}
-              </div>
-            )
-          )}
-        </div>
-      </div>
-
-      <SlideOverPanel
-        isOpen={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        title={t('history.title')}
-        width="md"
-        headerActions={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
-      >
-        <CorrectionHistoryPanel
-          appraisalId={appraisalId!}
-          properties={properties}
-          onSelectTarget={selectFromHistory}
-          filter={historyFilter}
+    // The gutter is what lets the frame's shadow show: the app layout's content scroller clips at its
+    // own edge, and the property pages have the same 0.75rem gutter around their frame.
+    <div className="h-full min-h-0 px-3 pt-3 pb-6">
+      <div className="flex flex-col h-full min-h-0 overflow-hidden rounded-[0.7692rem] border border-[color:var(--palette-line-strong)] bg-[color:var(--dc-surface)] [box-shadow:var(--palette-shadow-lift)]">
+        <CorrectionPageHeader
+          appraisalNumber={appraisal?.appraisalNumber}
+          customerName={request?.customers?.[0]?.name}
+          status={appraisal?.status}
+          approvedAt={source?.completedAt}
+          externalSystem={source?.externalSystem ?? null}
+          editCount={corrections?.length}
+          latestEditAt={latestEdit?.changedAt}
+          onOpenHistory={openHistory}
         />
-      </SlideOverPanel>
+
+        <div className="flex-1 min-h-0 flex">
+          <nav className="grid w-[17.8462rem] shrink-0 content-start gap-px overflow-y-auto border-r border-[color:var(--dc-line)] bg-[color:var(--dc-surface)] pb-[1.2308rem] pt-[0.3077rem]">
+            <PropertyRail
+              propertyGroups={propertyGroups}
+              isLoading={isLoading}
+              isError={propertiesFailed}
+              onRetry={refetchProperties}
+              selectedPropertyId={selectedPropertyId}
+              editCounts={editCounts}
+              dirtyPropertyId={editorDirty ? selectedPropertyId : null}
+              onSelect={setSelectedPropertyId}
+            />
+            <DocumentsRailEntry
+              appraisalId={appraisalId}
+              isSelected={selectedPropertyId === DOCUMENTS_PANE}
+              editCount={editCounts.get(DOCUMENTS_PANE)}
+              onSelect={() => setSelectedPropertyId(DOCUMENTS_PANE)}
+            />
+          </nav>
+
+          <div className="flex-1 min-w-0 min-h-0 flex flex-col bg-[color:var(--dc-surface)]">
+            {selectedPropertyId === DOCUMENTS_PANE ? (
+              <DocumentCorrectionPane
+                // Per appraisal, like the editor: an open dialog (it holds a document type and file of the
+                // appraisal it was opened on) must not carry over to another appraisal.
+                key={appraisalId}
+                appraisalId={appraisalId!}
+                regeneration={regeneration}
+                onRegenerationChange={setRegeneration}
+              />
+            ) : selectedProperty ? (
+              <PropertyCorrectionEditor
+                key={selectedProperty.propertyId}
+                appraisalId={appraisalId!}
+                property={selectedProperty}
+                editCount={corrections && (editCounts.get(selectedProperty.propertyId!) ?? 0)}
+                latestEdit={latestOf(corrections ?? [], selectedProperty.propertyId!)}
+                onOpenHistory={openHistory}
+                onDirtyChange={setEditorDirty}
+                onSelectProperty={setSelectedPropertyId}
+              />
+            ) : (
+              !isLoading && (
+                <div className="flex items-center justify-center h-64 text-gray-500">
+                  {t('detail.selectProperty')}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+
+        <SlideOverPanel
+          isOpen={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          title={t('history.title')}
+          width="md"
+          headerActions={<HistoryFilterChips value={historyFilter} onChange={setHistoryFilter} />}
+        >
+          <CorrectionHistoryPanel
+            appraisalId={appraisalId!}
+            properties={properties}
+            onSelectTarget={selectFromHistory}
+            filter={historyFilter}
+          />
+        </SlideOverPanel>
+      </div>
     </div>
   );
 };

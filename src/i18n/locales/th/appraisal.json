@@ -731,7 +731,7 @@
         "latitude": "ละติจูด",
         "longitude": "ลองจิจูด",
         "obligation": "ภาระผูกพัน",
-        "other": "อื่นๆ"
+        "other": "หมายเหตุ"
       },
       "suggested": {
         "applyEmpty": "เติมช่องที่ว่าง",
@@ -753,7 +753,7 @@
         "condition": "สภาพโดยรวมและตลาด",
         "ownership": "กรรมสิทธิ์",
         "location": "ที่ตั้ง",
-        "obligation": "ภาระผูกพันและหมายเหตุ"
+        "remarks": "หมายเหตุ"
       },
       "table": {
         "item": "รายการ",
@@ -761,6 +761,7 @@
         "derived": "คำนวณได้",
         "source": "ที่มา",
         "use": "ใช้",
+        "useDisabled": "ตรงกับค่าที่คำนวณได้แล้ว",
         "ungrouped": "ยังไม่จัดกลุ่ม",
         "sourceSentence": "มาจาก {{list}}",
         "sourcePart_other": "{{group}} {{count}} เครื่อง",
@@ -1497,6 +1498,7 @@
     "uploadedBy": "อัปโหลดโดย {{name}}",
     "empty": "ยังไม่มีไฟล์แนบ",
     "noTypes": "ไม่พบประเภทเอกสาร",
+    "untitledFile": "ไม่มีชื่อไฟล์",
     "loadFailed": "ไม่สามารถโหลดรายการตรวจเอกสารได้",
     "deleteDialog": {
       "title": "ลบเอกสาร",
@@ -1897,7 +1899,6 @@
       "otherGroup": "อื่น ๆ",
       "workGroupsFailed": "โหลดรายการงานต้นแบบไม่สำเร็จ — โหลดหน้าใหม่เพื่อเพิ่มรายการ",
       "workGroupsLoading": "กำลังโหลดรายการงาน…",
-      "confirmDelete": "ลบ?",
       "remove": "ลบ {{name}}",
       "empty": "ยังไม่มีรายการงาน — เลือก \"＋ เพิ่มรายการ…\" ที่หัวกลุ่ม แล้วใส่สัดส่วนให้รวมได้ 100%",
       "emptyReadOnly": "ไม่มีรายการงาน"
@@ -1991,6 +1992,14 @@
     "machinery": {
       "sectionTitle": "รายละเอียดเครื่องจักร"
     },
+    "pma": {
+      "groups": {
+        "titleInfo": "ข้อมูลเอกสารสิทธิ์",
+        "condoInfo": "ข้อมูลห้องชุด",
+        "titleAddress": "ที่อยู่ตามเอกสารสิทธิ์",
+        "value": "ข้อมูลราคา"
+      }
+    },
     "titleDeed": {
       "sectionTitle": "โฉนดที่ดิน"
     },
@@ -2017,6 +2026,12 @@
       "generate": "คำนวณ",
       "generating": "กำลังคำนวณ...",
       "scheduleEmpty": "กด คำนวณ เพื่อสร้างตารางค่าเช่า",
+      "upFrontCount_one": "· {{count}} รายการ",
+      "upFrontCount_other": "· {{count}} รายการ",
+      "scheduleYears_one": "· {{count}} ปี",
+      "scheduleYears_other": "· {{count}} ปี",
+      "growthPeriodCount_one": "· {{count}} ช่วง",
+      "growthPeriodCount_other": "· {{count}} ช่วง",
       "upFrontMismatch": "ยอดรวมค่าเช่าล่วงหน้าในตาราง ({{entries}}) ไม่ตรงกับค่าเช่าจ่ายล่วงหน้า ({{total}})",
       "table": {
         "atYear": "ตั้งแต่ปีที่",
@@ -2309,11 +2324,15 @@
     "navBuilding": "อาคาร",
     "navConstructionInspection": "รายละเอียดงานก่อสร้าง",
     "navMachinery": "เครื่องจักร",
+    "navPma": "ข้อมูล PMA",
     "saveDraft": "บันทึกร่าง",
     "save": "บันทึก"
   },
   "landCharacteristicsForm": {
-    "deductionsLabel": "สาเหตุ",
+    "deductionsTitle": "รายการหักเนื้อที่",
+    "deductionsSummary_one": "· {{count}} รายการ · หัก {{area}} ตร.ว.",
+    "deductionsSummary_other": "· {{count}} รายการ · หัก {{area}} ตร.ว.",
+    "addDeduction": "เพิ่มรายการ",
     "confirmClearDeductions": {
       "title": "ยืนยันการปิดการหักเนื้อที่",
       "message": "ระบบจะลบรายการหักเนื้อที่ที่คีย์ไว้ ({{count}} รายการ) และคืนเนื้อที่ประเมินเป็นเนื้อที่ตามโฉนด"
@@ -2652,6 +2671,14 @@
     "untitled": "ยังไม่ตั้งชื่อ",
     "newHint": "บันทึกแล้วข้อมูลหลักจะแสดงที่นี่",
     "position": "{{group}} · ชิ้นที่ {{n}}",
+    "pmaSuffix": "PMA",
+    "pmaTitle": "อัปเดตทรัพย์สิน PMA",
+    "pmaSync": {
+      "synced": "ซิงก์แล้ว",
+      "pending": "รอซิงก์",
+      "failed": "ซิงก์ไม่สำเร็จ",
+      "retryHint": "· กดบันทึกเพื่อลองใหม่"
+    },
     "titleCount": "เอกสารสิทธิ์ {{n}} ฉบับ",
     "titleNo": "เอกสารสิทธิ์ {{no}}"
   },
@@ -2747,6 +2774,12 @@
     "viewLabel": "มุมมอง",
     "viewDocument": "หน้าเอกสาร",
     "viewForm": "ฟอร์ม",
+    "nav": {
+      "group": "เลื่อนดูโฉนด",
+      "prev": "โฉนดก่อนหน้า",
+      "next": "โฉนดถัดไป",
+      "position": "{{current}} / {{total}}"
+    },
     "typeLabel": "ประเภท",
     "summary": "เลขที่ {{no}} · {{area}} ไร่",
     "required": "จำเป็นต้องกรอก",
@@ -2876,9 +2909,15 @@
       "west": "ทิศตะวันตก"
     },
     "list": {
-      "moveUp": "ย้ายขึ้น",
-      "moveDown": "ย้ายลง",
       "sortByNumber": "เรียงตามเลขโฉนด",
+      "dnd": {
+        "handle": "ลากเพื่อจัดลำดับ",
+        "instructions": "กด Space เพื่อยกโฉนด ใช้ปุ่มลูกศรเพื่อเลื่อน และกด Space อีกครั้งเพื่อวาง กด Esc เพื่อยกเลิก",
+        "pickedUp": "ยกโฉนดลำดับที่ {{pos}}",
+        "movedTo": "โฉนดลำดับที่ {{pos}} อยู่เหนือลำดับที่ {{to}}",
+        "dropped": "ย้ายโฉนดลำดับที่ {{pos}} ไปลำดับที่ {{to}} แล้ว",
+        "cancelled": "ยกเลิกการย้าย โฉนดลำดับที่ {{pos}} อยู่ที่เดิม"
+      },
       "type": "ประเภท",
       "document": "เลขที่ · เล่ม · หน้า",
       "position": "ตำแหน่งที่ดิน",
@@ -3202,6 +3241,8 @@
   "surfaceTable": {
     "sectionLabel": "พื้นแต่ละชั้น",
     "addFloor": "เพิ่มชั้น",
+    "itemCount_one": "· {{count}} รายการ",
+    "itemCount_other": "· {{count}} รายการ",
     "empty": "ยังไม่มีข้อมูลพื้น",
     "otherPlaceholder": "ระบุ",
     "reversed": "ถึงชั้นที่น้อยกว่าจากชั้นที่",
