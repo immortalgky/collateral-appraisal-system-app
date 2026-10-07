@@ -41,6 +41,35 @@ const STATUS_FILTER_GROUPS: { key: string; codes: VendorStatusCode[] }[] = [
   { key: 'Cancelled', codes: ['Cancelled'] },
 ];
 
+const statusStorageKey = (userId: string) => `quotation.extInvitations.statusGroups.${userId}`;
+
+/** Read the remembered status filter. Returns null when nothing valid is stored (so the role default applies);
+    an empty array is a valid, deliberate "all statuses" choice. */
+const loadStatusGroups = (userId: string | undefined): string[] | null => {
+  if (!userId) return null;
+  try {
+    const raw = localStorage.getItem(statusStorageKey(userId));
+    if (raw == null) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const known = new Set(STATUS_FILTER_GROUPS.map(g => g.key));
+    const valid = parsed.filter((k): k is string => typeof k === 'string' && known.has(k));
+    // Everything stored was stale/unknown -> fall back to the default rather than show "all".
+    return valid.length === 0 && parsed.length > 0 ? null : valid;
+  } catch {
+    return null;
+  }
+};
+
+const saveStatusGroups = (userId: string | undefined, groups: string[]) => {
+  if (!userId) return;
+  try {
+    localStorage.setItem(statusStorageKey(userId), JSON.stringify(groups));
+  } catch {
+    // Storage unavailable (private mode / quota) — the filter simply isn't remembered.
+  }
+};
+
 // Single search box + a "search by" selector: only the chosen field is sent to the backend.
 type SearchField = 'quotationNo' | 'appraisalNo' | 'customerName';
 
@@ -77,7 +106,13 @@ const ExtCompanyInvitationListPage = () => {
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
   const [searchField, setSearchField] = useState<SearchField>('quotationNo');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusGroups, setStatusGroups] = useState<string[]>(() => defaultStatusGroups);
+  const [statusGroups, setStatusGroups] = useState<string[]>(
+    () => loadStatusGroups(currentUser?.id) ?? defaultStatusGroups,
+  );
+  const handleStatusGroupsChange = (groups: string[]) => {
+    setStatusGroups(groups);
+    saveStatusGroups(currentUser?.id, groups);
+  };
   const statuses = useMemo(
     () => statusGroups.flatMap(key => STATUS_FILTER_GROUPS.find(g => g.key === key)?.codes ?? []),
     [statusGroups],
@@ -142,7 +177,7 @@ const ExtCompanyInvitationListPage = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusGroups([]);
+    handleStatusGroupsChange([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
   };
@@ -194,7 +229,7 @@ const ExtCompanyInvitationListPage = () => {
           <MultiSelectDropdown
             options={statusOptions}
             value={statusGroups}
-            onChange={setStatusGroups}
+            onChange={handleStatusGroupsChange}
             placeholder={t('filters.allStatuses')}
             showValuePrefix={false}
             className="min-w-40"
