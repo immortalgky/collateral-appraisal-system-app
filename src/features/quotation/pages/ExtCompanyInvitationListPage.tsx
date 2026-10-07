@@ -68,10 +68,10 @@ const ExtCompanyInvitationListPage = () => {
   const currentUser = useAuthStore(state => state.user);
   const isChecker = currentUser?.roles.includes('ExtAppraisalChecker') ?? false;
   const isAdmin = currentUser?.roles.includes('ExtAdmin') ?? false;
-  const defaultStatusGroups = isChecker
-    ? ['PendingCheckerReview']
-    : isAdmin
-      ? ['PendingSubmission']
+  const defaultStatusGroups = isAdmin
+    ? ['PendingSubmission', 'Negotiating']
+    : isChecker
+      ? ['PendingCheckerReview']
       : [];
 
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
