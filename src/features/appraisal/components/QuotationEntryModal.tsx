@@ -14,6 +14,7 @@ import {
 } from '@/features/quotation/api/quotation';
 import type { QuotationDraftSummaryDto } from '@/features/quotation/schemas/quotation';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
 
 type Tab = 'new' | 'existing';
 
@@ -53,13 +54,22 @@ const QuotationEntryModal = ({
   const [selectedDraft, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
   const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
 
-  // Fetch existing drafts for the "Add to Existing" tab
+  // Every Draft owned by this admin, regardless of banking segment — any appraisal can join any
+  // Draft. bankingSegment (the prop) is used below only so the picker can warn when the appraisal
+  // being added introduces a segment the draft doesn't already have; the API doesn't filter on it.
   const { data: drafts = [], isLoading: isDraftsLoading } = useGetMyDraftsForAssembly(
-    bankingSegment,
     isOpen && activeTab === 'existing',
   );
 
   const { mutate: startFromTask, isPending: isAdding } = useStartQuotationFromTask();
+  const segmentLabel = useSegmentLabel();
+
+  const introducesNewSegment =
+    !!bankingSegment &&
+    !!selectedDraft &&
+    !(selectedDraft.bankingSegment ?? []).some(
+      s => s.toLowerCase() === bankingSegment.toLowerCase(),
+    );
 
   const handleClose = () => {
     setActiveTab('new');
@@ -81,7 +91,6 @@ const QuotationEntryModal = ({
         workflowInstanceId,
         taskExecutionId: null,
         cutOffTime: selectedDraft.cutOffTime ?? new Date(Date.now() + 86400000 * 7).toISOString(),
-        bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: [],
         existingQuotationRequestId: selectedDraft.id,
         maxAppraisalDays: maxAppraisalDays ?? null,
@@ -162,6 +171,24 @@ const QuotationEntryModal = ({
                   Appraisal will be added to <strong>{selectedDraft.quotationNumber}</strong> (
                   {selectedDraft.totalAppraisals} existing appraisal
                   {selectedDraft.totalAppraisals !== 1 ? 's' : ''})
+                </p>
+              </div>
+            )}
+
+            {/* Segment Coverage is warn-only here: adding is never blocked, but a company already
+                invited to this draft may not cover a segment the new appraisal introduces — Send
+                would then block until the admin invites a covering company or removes an appraisal. */}
+            {introducesNewSegment && (
+              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
+                <Icon
+                  name="triangle-exclamation"
+                  style="solid"
+                  className="size-4 text-amber-500 shrink-0 mt-0.5"
+                />
+                <p className="text-sm text-amber-700">
+                  {t('quotation.existingDraftSegmentWarning', {
+                    segment: segmentLabel(bankingSegment!),
+                  })}
                 </p>
               </div>
             )}

@@ -25,6 +25,8 @@ import {
   SetMaxDaysBar,
 } from '../components/AppraisalPicker';
 import type { SelectedAppraisal, DocSelections } from '../components/AppraisalPicker';
+import { MissingSegmentsBadge, SegmentChips } from '../components/SegmentBadges';
+import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -42,18 +44,26 @@ interface SelectedCompany {
   id: string;
   companyName: string;
   companyNameLocal?: string | null;
+  loanTypes: string[];
 }
 
 // ─── CompanyPicker ────────────────────────────────────────────────────────────
 
 interface CompanyPickerProps {
   selected: SelectedCompany[];
+  selectedAppraisals: SelectedAppraisal[];
   onToggle: (c: SelectedCompany) => void;
   onSetAllVisible: (companies: SelectedCompany[], selectAll: boolean) => void;
   error?: string;
 }
 
-function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPickerProps) {
+function CompanyPicker({
+  selected,
+  selectedAppraisals,
+  onToggle,
+  onSetAllVisible,
+  error,
+}: CompanyPickerProps) {
   const { t } = useTranslation('quotation');
   const localizeCompanyName = useLocalizedCompanyName();
   const [query, setQuery] = useState('');
@@ -69,12 +79,25 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
     refetch,
   } = useGetLoanTypeMatchedCompanies(undefined, true);
 
+  // Segment Set of the appraisals picked so far. Only companies that cover every segment in it are
+  // listed (empty set = no appraisal picked yet = everyone). The API's Send guard is authoritative.
+  const segmentSet = useMemo(
+    () => buildSegmentSet(selectedAppraisals.map(a => a.bankingSegment)),
+    [selectedAppraisals],
+  );
+
   const companies: SelectedCompany[] = useMemo(
     () =>
       (rawCompanies ?? [])
         .filter(c => c.id !== excludedCompanyId)
-        .map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal })),
-    [rawCompanies, excludedCompanyId],
+        .map(c => ({
+          id: c.id,
+          companyName: c.name,
+          companyNameLocal: c.nameLocal,
+          loanTypes: c.loanTypes ?? [],
+        }))
+        .filter(c => getMissingSegments(segmentSet, c.loanTypes).length === 0),
+    [rawCompanies, excludedCompanyId, segmentSet],
   );
 
   const filtered = useMemo(() => {
@@ -103,6 +126,11 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
         </div>
       )}
 
+      {/* Every company shows until an appraisal is picked — explain why, rather than looking unfiltered. */}
+      {segmentSet.length === 0 && (
+        <p className="text-xs text-gray-400 italic">{t('segment.noneSelectedHint')}</p>
+      )}
+
       {/* Selected chips */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -113,6 +141,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
             >
               <Icon name="building" style="solid" className="size-3" />
               <span>{localizeCompanyName(c.companyName, c.companyNameLocal)}</span>
+              <MissingSegmentsBadge missing={getMissingSegments(segmentSet, c.loanTypes)} />
               <button
                 type="button"
                 onClick={() => onToggle(c)}
@@ -210,6 +239,9 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
                     </div>
                     <span className="text-sm text-gray-900 flex-1 truncate">
                       {localizeCompanyName(c.companyName, c.companyNameLocal)}
+                    </span>
+                    <span className="flex min-w-0">
+                      <SegmentChips segments={c.loanTypes} />
                     </span>
                   </button>
                 );
@@ -448,6 +480,7 @@ function NewQuotationPage() {
           </div>
           <CompanyPicker
             selected={selectedCompanies}
+            selectedAppraisals={selectedAppraisals}
             onToggle={handleToggleCompany}
             onSetAllVisible={handleSetAllVisibleCompanies}
             error={errors.invitedCompanyIds?.message}

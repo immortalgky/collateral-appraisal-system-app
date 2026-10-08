@@ -473,6 +473,7 @@
     "cancelReasonOptional": "(optional)",
     "cancelReasonPlaceholder": "Why is this quotation being cancelled?",
     "draftHint": "This quotation is still a draft. Add appraisals, invite companies, then click Send Quotation to open bidding.",
+    "existingDraftSegmentWarning": "The banking segment of this appraisal ({{segment}}) is not yet covered by this draft. Companies already invited may not be able to appraise it — check company coverage before sending.",
     "notSet": "Not set",
     "maxAppraisalDuration": "Max Appraisal Duration (Days)",
     "specialRequirements": "Special Requirements",

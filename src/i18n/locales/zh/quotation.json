@@ -543,6 +543,16 @@
     "notParticipatingNoReason": "未提供原因。",
     "feeAfterDiscountZero": "Fee after discount cannot be 0"
   },
+  "segment": {
+    "companyName": "公司名称",
+    "bankingSegment": "业务板块",
+    "missing": "缺少 {{segments}}",
+    "segmentSet": "业务板块",
+    "sendBlockedTitle": "无法发送：部分受邀公司未覆盖此报价中的所有业务板块",
+    "sendBlockedItem": "{{company}} - 缺少 {{segments}}",
+    "sendBlockedHint": "请移除这些公司，或移除超出其业务板块的评估。",
+    "noneSelectedHint": "选择评估以查看哪些公司覆盖其业务板块。"
+  },
   "role": {
     "Maker": "Maker",
     "Checker": "Checker"
