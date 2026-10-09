@@ -237,21 +237,14 @@ export const ComparableEditorHeader = ({
   );
 
   const renderCard = (view?: PhotoSectionView) => (
-    <EditorIdentityCard
-      view={view}
-      firstIsCover
-      top={top}
-      title={title}
-      titleMuted={!name}
-      aside={aside}
-    >
+    <EditorIdentityCard view={view} top={top} title={title} titleMuted={!name} aside={aside}>
       {facts}
     </EditorIdentityCard>
   );
 
   return (
     <>
-      <div className="px-6">
+      <div className="px-3">
         {appraisalId ? (
           <MarketComparablePhotoSection
             ref={photoSectionRef}

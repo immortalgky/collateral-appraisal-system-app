@@ -212,8 +212,10 @@ describe('useDownloadDocument', () => {
         { timeout: MOCK_TIMEOUT },
       );
 
-      // Should return a Blob
-      expect(result.current.data).toBeInstanceOf(Blob);
+      // The hook resolves to { blob, fileName } — fileName is parsed from Content-Disposition,
+      // which the handler sends as `attachment; filename="document.pdf"`.
+      expect(result.current.data?.blob).toBeInstanceOf(Blob);
+      expect(result.current.data?.fileName).toBe('document.pdf');
     });
 
     // ------------------------------------------

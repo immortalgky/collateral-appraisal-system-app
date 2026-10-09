@@ -8,7 +8,8 @@
 import { useFormContext, Controller, useFieldArray, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import NumberInput from '@/shared/components/inputs/NumberInput';
-import { fmt } from '../../../domain/formatters';
+import Badge from '@/shared/components/Badge';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import type { LandBuildingFormValues } from '../../../schemas/hypothesisForm';
 import type {
   LandBuildingSummaryDto,
@@ -16,23 +17,22 @@ import type {
   CostItemDto,
 } from '../../../types/hypothesis';
 import {
-  COL,
-  SectionPrimary,
-  SubSectionLabel,
-  FieldRow,
-  DerivedValue,
-  PercentExpression,
-  PdcDerivedRow,
-  PdcTotalRow,
-  AddRowButton,
-  UserAddedRow,
-  FvDerivedRow,
-  FvInputRow,
-  InlineNumberInput,
   IsCalculatingProvider,
+  LedgerTable,
+  LedgerBand,
+  LedgerRow,
+  LedgerRemarkRow,
+  LedgerAddRow,
+  LedgerUserRow,
+  LedgerIndicatedValueRow,
+  LedgerWithChart,
+  RateInput,
+  RateValue,
+  Qty,
+  Num,
+  pct,
 } from '../_shared/summaryAtoms';
 import { HypothesisResidualWaterfall } from '../../viz/HypothesisResidualWaterfall';
-import { HypothesisCostDonut } from '../../viz/HypothesisCostDonut';
 import { getLbTooltips } from '../_shared/hypothesisTooltips';
 
 interface LandBuildingSummaryTabProps {
@@ -43,6 +43,65 @@ interface LandBuildingSummaryTabProps {
   /** Server snapshot of cost items — used to read computed categoryRatio for user-added rows. */
   costItems?: CostItemDto[] | null;
   isCalculating?: boolean;
+  /** Charts aside on/off — the toggle lives in the tab toolbar (LandBuildingTabs). */
+  showChart?: boolean;
+}
+
+/** Section ids + labels, shared with the tab toolbar's jump bar. */
+export function useLbSections() {
+  const { t } = useTranslation('pricingAnalysis');
+  return [
+    {
+      id: 'land',
+      title: t('hypothesis.ledger.lb.sec.land'),
+      short: t('hypothesis.ledger.lb.short.land'),
+    },
+    {
+      id: 'rev',
+      title: t('hypothesis.ledger.lb.sec.rev'),
+      short: t('hypothesis.ledger.lb.short.rev'),
+    },
+    {
+      id: 'sales',
+      title: t('hypothesis.ledger.lb.sec.sales'),
+      short: t('hypothesis.ledger.lb.short.sales'),
+    },
+    {
+      id: 'pdc',
+      title: t('hypothesis.ledger.lb.sec.pdc'),
+      short: t('hypothesis.ledger.lb.short.pdc'),
+    },
+    {
+      id: 'cons',
+      title: t('hypothesis.ledger.lb.sec.cons'),
+      short: t('hypothesis.ledger.lb.short.cons'),
+    },
+    {
+      id: 'pc',
+      title: t('hypothesis.ledger.lb.sec.pc'),
+      short: t('hypothesis.ledger.lb.short.pc'),
+    },
+    {
+      id: 'gov',
+      title: t('hypothesis.ledger.lb.sec.gov'),
+      short: t('hypothesis.ledger.lb.short.gov'),
+    },
+    {
+      id: 'risk',
+      title: t('hypothesis.ledger.lb.sec.risk'),
+      short: t('hypothesis.ledger.lb.short.risk'),
+    },
+    {
+      id: 'tdc',
+      title: t('hypothesis.ledger.lb.sec.tdc'),
+      short: t('hypothesis.ledger.lb.short.tdc'),
+    },
+    {
+      id: 'fv',
+      title: t('hypothesis.ledger.lb.sec.fv'),
+      short: t('hypothesis.ledger.lb.short.fv'),
+    },
+  ];
 }
 
 export function LandBuildingSummaryTab({
@@ -51,8 +110,25 @@ export function LandBuildingSummaryTab({
   totalLandAreaFromTitles,
   costItems,
   isCalculating,
+  showChart,
 }: LandBuildingSummaryTabProps) {
   const { t } = useTranslation('pricingAnalysis');
+  const readOnly = usePageReadOnly();
+  const sec = Object.fromEntries(useLbSections().map(x => [x.id, x.title]));
+  const u = (
+    k:
+      | 'sqWa'
+      | 'baht'
+      | 'unit'
+      | 'month'
+      | 'houseMonth'
+      | 'bahtSqWa'
+      | 'bahtUnit'
+      | 'bahtPlot'
+      | 'bahtMonth'
+      | 'monthConstruction'
+      | 'monthSales',
+  ) => t(`hypothesis.ledger.u.${k}`);
   const LB_TIPS = getLbTooltips(t);
   const { control } = useFormContext<LandBuildingFormValues>();
   const modelList = models ? Object.values(models) : [];
@@ -121,413 +197,471 @@ export function LandBuildingSummaryTab({
   // C01 — prefer the system-derived title sum; fall back to persisted summary value.
   const totalArea = totalLandAreaFromTitles ?? s?.totalArea ?? null;
 
+  const L = (k: string) => t(`hypothesis.ledger.lb.${k}` as never) as string;
+  const yrs =
+    s?.estimatedDurationMonths != null ? (s.estimatedDurationMonths / 12).toFixed(2) : '-';
+
   return (
     <IsCalculatingProvider value={isCalculating ?? false}>
-      <div className="space-y-5">
-        {/* ── Visual residual story + cost composition ────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-7">
-            <HypothesisResidualWaterfall variant="LandBuilding" summary={s} />
-          </div>
-          <div className="lg:col-span-5">
-            <HypothesisCostDonut variant="LandBuilding" summary={s} />
-          </div>
-        </div>
-
-        {/* ── Details of the Assessed Land Area ───────────────────────────── */}
-        <SectionPrimary title="Details of the Assessed Land Area">
-          <FieldRow label="Total Area" tooltip={LB_TIPS.totalArea}>
-            <DerivedValue value={totalArea} unit="Sq.Wa" />
-          </FieldRow>
-
-          <FieldRow label="Selling Area" tooltip={LB_TIPS.sellingArea}>
-            <PercentExpression
-              percent={s?.sellingAreaPercent}
-              ofLabel="Of the Total Area"
-              highlightPercent={isSellingAreaOutOfBand(s?.sellingAreaPercent)}
+      <LedgerWithChart
+        chart={
+          showChart ? <HypothesisResidualWaterfall variant="LandBuilding" summary={s} /> : undefined
+        }
+      >
+        <LedgerTable ratio>
+          {/* ── Land (C01–C10A) ── */}
+          <LedgerBand id="land" title={sec.land}>
+            <LedgerRow
+              label={L('totalArea')}
+              tip={LB_TIPS.totalArea}
+              qty={<Qty value={totalArea} unit={u('sqWa')} />}
             />
-            <DerivedValue value={s?.sellingArea} unit="Sq.Wa" />
-          </FieldRow>
-
-          {modelList.map(m => (
-            <ModelDetailRow
-              key={m.modelName}
-              modelName={m.modelName}
-              unit={m.unitCount}
-              avgArea={m.avgLandAreaSqWa}
-              totalArea={m.totalLandAreaSqWa}
-            />
-          ))}
-
-          <FieldRow label="Public Utility Area" tooltip={LB_TIPS.publicUtilityArea}>
-            <PercentExpression percent={s?.publicUtilityAreaPercent} ofLabel="Of the Total Area" />
-            <DerivedValue value={s?.publicUtilityArea} unit="Sq.Wa" />
-          </FieldRow>
-
-          <FieldRow label="Remark" alignTop>
-            <Controller
-              control={control}
-              name="summary.remark"
-              render={({ field }) => (
-                <textarea
-                  {...field}
-                  value={field.value ?? ''}
-                  rows={4}
-                  className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400"
-                  placeholder="Notes or assumptions about the assessed land area…"
+            <LedgerRow
+              label={L('sellingArea')}
+              tip={LB_TIPS.sellingArea}
+              rate={
+                <RateValue
+                  value={pct(s?.sellingAreaPercent)}
+                  danger={isSellingAreaOutOfBand(s?.sellingAreaPercent)}
+                  note={t('hypothesis.ledger.n.ofTotalArea')}
                 />
-              )}
+              }
+              qty={<Qty value={s?.sellingArea} unit={u('sqWa')} />}
             />
-          </FieldRow>
-        </SectionPrimary>
-
-        {/* ── Project Revenue Estimates ───────────────────────────────────── */}
-        <SectionPrimary id="hyp-section-revenue" title="Project Revenue Estimates">
-          <FieldRow label="House Model">
-            <span className="text-xs text-gray-400 italic">Per house model from upload</span>
-          </FieldRow>
-
-          {modelList.map(m => (
-            <ModelRevenueRow
-              key={m.modelName}
-              modelName={m.modelName}
-              unit={m.unitCount}
-              sellingPrice={m.totalSellingPrice}
+            {modelList.map(m => (
+              <LedgerRow
+                key={m.modelName}
+                sub
+                label={`- ${m.modelName}`}
+                rate={
+                  <RateValue
+                    value={<Num value={m.unitCount} int />}
+                    unit={u('unit')}
+                    note={t('hypothesis.ledger.n.avgSqWa', {
+                      value: (m.avgLandAreaSqWa ?? 0).toFixed(2),
+                    })}
+                  />
+                }
+                qty={<Qty value={m.totalLandAreaSqWa} unit={u('sqWa')} />}
+              />
+            ))}
+            <LedgerRow
+              label={L('publicUtilityArea')}
+              tip={LB_TIPS.publicUtilityArea}
+              rate={
+                <RateValue
+                  value={pct(s?.publicUtilityAreaPercent)}
+                  note={t('hypothesis.ledger.n.ofTotalArea')}
+                />
+              }
+              qty={<Qty value={s?.publicUtilityArea} unit={u('sqWa')} />}
             />
-          ))}
+            <LedgerRemarkRow control={control} name="summary.remark" />
+          </LedgerBand>
 
-          <TotalRow label="Total project revenue estimates" value={s?.totalRevenue} unit="Baht" />
-        </SectionPrimary>
-
-        {/* ── Estimate Sales Period ───────────────────────────────────────── */}
-        <SectionPrimary title="Estimate Sales Period">
-          <FieldRow label="Estimate Sales Period" tooltip={LB_TIPS.estSalesPeriod}>
-            <div className="flex items-center gap-2 ml-auto flex-wrap">
-              <InlineNumberInput
-                control={control}
-                name="summary.estSalesPeriod"
-                decimalPlaces={0}
-              />
-              <span className="text-[11px] text-gray-500 w-[80px]">House/Month</span>
-              <span className="min-w-[80px] text-right tabular-nums text-xs font-medium text-gray-800">
-                {fmt(s?.totalUnits)}
-              </span>
-              <span className="text-[11px] text-gray-500 w-[40px]">Unit</span>
-              <span className="min-w-[80px] text-right tabular-nums text-xs font-medium text-gray-800">
-                {fmt(s?.estimatedDurationMonths)}
-              </span>
-              <span className="text-[11px] text-gray-500 w-[50px]">Month</span>
-            </div>
-          </FieldRow>
-        </SectionPrimary>
-
-        {/* ── Project Development Cost Estimates (FSD Figure 57) ──────────── */}
-        <SectionPrimary id="hyp-section-dev" title="Project Development Cost Estimates">
-          <SubSectionLabel label="Construction Cost Per Unit of Building / House" />
-
-          {modelList.map(m => (
-            <ConstructionCostRow
-              key={m.modelName}
-              modelName={m.modelName}
-              costPerUnit={m.totalBuildingValueAfterDepreciation}
-              unitCount={m.unitCount}
-              total={m.totalValueAfterDepreciationAllUnits}
-              ratioPercent={m.devCostRatioPercent}
+          {/* ── Revenue (C11–C15) ── */}
+          <LedgerBand id="rev" title={sec.rev}>
+            <LedgerRow
+              label={L('houseModel')}
+              rate={
+                <span className="text-[10.5px] text-gray-400">
+                  {t('hypothesis.ledger.n.perModelUpload')}
+                </span>
+              }
             />
-          ))}
-
-          <PdcDerivedRow
-            label="Public Utility Construction Costs"
-            tooltip={LB_TIPS.publicUtilityConstruction}
-            rateInput={
-              <InlineNumberInput
-                control={control}
-                name="summary.publicUtilityRatePerSqWa"
-                fillSlot
+            {modelList.map(m => (
+              <LedgerRow
+                key={m.modelName}
+                sub
+                label={`- ${m.modelName}`}
+                rate={<RateValue value={<Num value={m.unitCount} int />} unit={u('unit')} />}
+                total={<Num value={m.totalSellingPrice} />}
               />
-            }
-            rateUnit="Baht/Sq.Wa"
-            qtyValue={s?.publicUtilityAreaForCost}
-            qtyUnit="Sq.Wa"
-            total={s?.publicUtilityCost}
-            ratioPercent={s?.publicUtilityCostRatio}
-          />
-
-          <PdcDerivedRow
-            label="Land Filling Cost (Remaining Amount)"
-            tooltip={LB_TIPS.landFilling}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.landFillingRatePerSqWa" fillSlot />
-            }
-            rateUnit="Baht/Sq.Wa"
-            qtyValue={s?.landFillingArea}
-            qtyUnit="Sq.Wa"
-            total={s?.landFillingCost}
-            ratioPercent={s?.landFillingCostRatio}
-          />
-
-          {projectDevCostRows.map(({ rhfKey, idx, field }) => (
-            <UserAddedPdcRow
-              key={rhfKey}
-              index={idx}
-              serverItemId={field.id ?? null}
-              categoryRatioById={categoryRatioById}
-              totalProjectDevCost={s?.totalProjectDevCost ?? null}
-              onRemove={() => removeOther(idx)}
+            ))}
+            <LedgerRow
+              tone="tot"
+              label={L('totalRevenue')}
+              tip={LB_TIPS.totalRevenue}
+              total={<Num value={s?.totalRevenue} />}
             />
-          ))}
+          </LedgerBand>
 
-          <AddRowButton
-            label="Add Project Development Cost Estimates"
-            onClick={handleAddProjectDevCost}
-          />
-
-          <PdcDerivedRow
-            label="Contingency Allowance"
-            tooltip={LB_TIPS.contingencyDev}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.contingencyPercent" fillSlot />
-            }
-            rateUnit="%"
-            rateSuffix="Of Project Development Costs"
-            total={s?.contingencyAmount}
-            ratioPercent={s?.contingencyRatio}
-          />
-
-          <PdcTotalRow
-            label="Total Project Development Cost Estimates"
-            total={s?.totalProjectDevCost}
-            ratioPercent={s?.totalDevCostRatio}
-          />
-        </SectionPrimary>
-
-        {/* ── Estimate Construction Period (FSD Figure 58) ────────────────── */}
-        <SectionPrimary title="Estimate Construction Period">
-          <FieldRow label="Estimate Construction Period" tooltip={LB_TIPS.estConstructionPeriod}>
-            <div className="flex items-center gap-2 ml-auto flex-wrap">
-              <InlineNumberInput
-                control={control}
-                name="summary.estConstructionPeriod"
-                decimalPlaces={0}
-              />
-              <span className="text-[11px] text-gray-500 w-[80px]">House/Month</span>
-              <span className="min-w-[80px] text-right tabular-nums text-xs font-medium text-gray-800">
-                {fmt(s?.totalUnitsForConstruction)}
-              </span>
-              <span className="text-[11px] text-gray-500 w-[40px]">Unit</span>
-              <span className="min-w-[80px] text-right tabular-nums text-xs font-medium text-gray-800">
-                {fmt(s?.estimatedConstructionDurationMonths)}
-              </span>
-              <span className="text-[11px] text-gray-500 w-[50px]">Month</span>
-            </div>
-          </FieldRow>
-        </SectionPrimary>
-
-        {/* ── Project Cost Estimates (FSD Figure 59) ──────────────────────── */}
-        <SectionPrimary id="hyp-section-project" title="Project Cost Estimates">
-          <PdcDerivedRow
-            label="Allocation Permit Fee"
-            tooltip={LB_TIPS.allocationPermitFee}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.allocationPermitFee" fillSlot />
-            }
-            rateUnit="Baht"
-            total={s?.allocationPermitFee}
-            ratioPercent={s?.allocationPermitFeeRatio}
-          />
-
-          <PdcDerivedRow
-            label="Land Title Deed Division Fee"
-            tooltip={LB_TIPS.landTitleFee}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.landTitleFeePerPlot" fillSlot />
-            }
-            rateUnit="Baht/Plot"
-            qtyValue={s?.totalPlots}
-            qtyUnit="Unit"
-            total={s?.landTitleFeeTotal}
-            ratioPercent={s?.landTitleFeeRatio}
-          />
-
-          <PdcDerivedRow
-            label="Professional Service Fees and Construction Supervision"
-            tooltip={LB_TIPS.professionalFee}
-            rateInput={
-              <InlineNumberInput
-                control={control}
-                name="summary.professionalFeePerMonth"
-                fillSlot
-              />
-            }
-            rateUnit="Baht/Month"
-            qtyValue={s?.professionalFeeMonths}
-            qtyUnit="Month"
-            total={s?.professionalFeeTotal}
-            ratioPercent={s?.professionalFeeRatio}
-          />
-
-          <PdcDerivedRow
-            label="Project Administration and Management Costs"
-            tooltip={LB_TIPS.adminCost}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.adminCostPerMonth" fillSlot />
-            }
-            rateUnit="Baht/Month"
-            qtyValue={s?.adminCostMonths}
-            qtyUnit="Month"
-            total={s?.adminCostTotal}
-            ratioPercent={s?.adminCostRatio}
-          />
-
-          <PdcDerivedRow
-            label="Selling and Advertising Expenses"
-            tooltip={LB_TIPS.sellingAdv}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.sellingAdvPercent" fillSlot />
-            }
-            rateUnit="%"
-            rateSuffix="Of Total Revenue"
-            total={s?.sellingAdvTotal}
-            ratioPercent={s?.sellingAdvRatio}
-          />
-
-          {projectCostRows.map(({ rhfKey, idx, field }) => (
-            <UserAddedPdcRow
-              key={rhfKey}
-              index={idx}
-              serverItemId={field.id ?? null}
-              categoryRatioById={categoryRatioById}
-              totalProjectDevCost={s?.totalProjectCost ?? null}
-              onRemove={() => removeOther(idx)}
+          {/* ── Sales period (C16–C18) ── */}
+          <LedgerBand id="sales" title={sec.sales}>
+            <LedgerRow
+              label={L('estSalesPeriod')}
+              tip={LB_TIPS.estSalesPeriod}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.estSalesPeriod"
+                  decimals={0}
+                  unit={u('houseMonth')}
+                />
+              }
+              qty={<Qty value={s?.totalUnits} unit={u('unit')} int />}
+              total={<Num value={s?.estimatedDurationMonths} int />}
+              totalUnit={u('month')}
             />
-          ))}
+          </LedgerBand>
 
-          <AddRowButton label="Add Project Cost Estimates" onClick={handleAddProjectCost} />
-
-          <PdcDerivedRow
-            label="Contingency Allowance"
-            tooltip={LB_TIPS.contingencyProject}
-            rateInput={
-              <InlineNumberInput
-                control={control}
-                name="summary.projectContingencyPercent"
-                fillSlot
+          {/* ── Project development cost (C19–C39) ── */}
+          <LedgerBand id="pdc" title={sec.pdc}>
+            <LedgerRow
+              label={L('constructionCost')}
+              rate={
+                <span className="text-[10.5px] text-gray-400">
+                  {t('hypothesis.ledger.n.fromBuilding')}
+                </span>
+              }
+            />
+            {modelList.map(m => {
+              const warning =
+                m.totalCost != null
+                  ? t('hypothesis.costTab.pillTotalEdited')
+                  : !m.buildingPropertyId
+                    ? t('hypothesis.costTab.pillNoBuilding')
+                    : undefined;
+              return (
+                <LedgerRow
+                  key={m.modelName}
+                  sub
+                  label={
+                    <>
+                      - {m.modelName}
+                      {warning && (
+                        <span className="ml-[6px]">
+                          <Badge tone="yellow" size="sm" dot={false}>
+                            {warning}
+                          </Badge>
+                        </span>
+                      )}
+                    </>
+                  }
+                  rate={
+                    <RateValue
+                      value={<Num value={m.totalBuildingValueAfterDepreciation} />}
+                      unit={u('bahtUnit')}
+                    />
+                  }
+                  qty={<Qty value={m.unitCount} unit={u('unit')} int />}
+                  total={<Num value={m.totalValueAfterDepreciationAllUnits} />}
+                  ratio={pct(m.devCostRatioPercent)}
+                />
+              );
+            })}
+            <LedgerRow
+              label={L('publicUtilityConstruction')}
+              tip={LB_TIPS.publicUtilityConstruction}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.publicUtilityRatePerSqWa"
+                  unit={u('bahtSqWa')}
+                />
+              }
+              qty={<Qty value={s?.publicUtilityAreaForCost} unit={u('sqWa')} />}
+              total={<Num value={s?.publicUtilityCost} />}
+              ratio={pct(s?.publicUtilityCostRatio)}
+            />
+            <LedgerRow
+              label={L('landFilling')}
+              tip={LB_TIPS.landFilling}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.landFillingRatePerSqWa"
+                  unit={u('bahtSqWa')}
+                />
+              }
+              qty={<Qty value={s?.landFillingArea} unit={u('sqWa')} />}
+              total={<Num value={s?.landFillingCost} />}
+              ratio={pct(s?.landFillingCostRatio)}
+            />
+            {projectDevCostRows.map(({ rhfKey, idx, field }) => (
+              <UserAddedPdcRow
+                key={rhfKey}
+                index={idx}
+                serverItemId={field.id ?? null}
+                categoryRatioById={categoryRatioById}
+                totalProjectDevCost={s?.totalProjectDevCost ?? null}
+                onRemove={() => removeOther(idx)}
               />
-            }
-            rateUnit="%"
-            rateSuffix="Of the Project Cost Expenses"
-            total={s?.projectContingencyAmount}
-            ratioPercent={s?.projectContingencyRatio}
-          />
+            ))}
+            {!readOnly && (
+              <LedgerAddRow
+                label={t('hypothesis.ledger.addPdc')}
+                onClick={handleAddProjectDevCost}
+              />
+            )}
+            <LedgerRow
+              label={L('contingency')}
+              tip={LB_TIPS.contingencyDev}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.contingencyPercent"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.ofPdc')}
+                />
+              }
+              total={<Num value={s?.contingencyAmount} />}
+              ratio={pct(s?.contingencyRatio)}
+            />
+            <LedgerRow
+              tone="tot"
+              label={L('totalPdc')}
+              total={<Num value={s?.totalProjectDevCost} />}
+              ratio={pct(s?.totalDevCostRatio)}
+            />
+          </LedgerBand>
 
-          <PdcTotalRow
-            label="Total Project Cost Estimates"
-            total={s?.totalProjectCost}
-            ratioPercent={s?.totalProjectCostRatio}
-          />
-        </SectionPrimary>
+          {/* ── Construction period (C40–C42) ── */}
+          <LedgerBand id="cons" title={sec.cons}>
+            <LedgerRow
+              label={L('estConstructionPeriod')}
+              tip={LB_TIPS.estConstructionPeriod}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.estConstructionPeriod"
+                  decimals={0}
+                  unit={u('houseMonth')}
+                />
+              }
+              qty={<Qty value={s?.totalUnitsForConstruction} unit={u('unit')} int />}
+              total={<Num value={s?.estimatedConstructionDurationMonths} int />}
+              totalUnit={u('month')}
+            />
+          </LedgerBand>
 
-        {/* ── Government Taxes and Fees (FSD Figure 60) ───────────────────── */}
-        <SectionPrimary id="hyp-section-tax" title="Government Taxes and Fees">
-          <PdcDerivedRow
-            label="Transfer Fee"
-            tooltip={LB_TIPS.transferFee}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.transferFeePercent" fillSlot />
-            }
-            rateUnit="%"
-            rateSuffix="Of Total Revenue"
-            total={s?.transferFeeAmount}
-            ratioPercent={s?.transferFeeRatio}
-          />
+          {/* ── Project cost (C43–C65) ── */}
+          <LedgerBand id="pc" title={sec.pc}>
+            <LedgerRow
+              label={L('allocationPermitFee')}
+              tip={LB_TIPS.allocationPermitFee}
+              rate={
+                <RateInput control={control} name="summary.allocationPermitFee" unit={u('baht')} />
+              }
+              total={<Num value={s?.allocationPermitFee} />}
+              ratio={pct(s?.allocationPermitFeeRatio)}
+            />
+            <LedgerRow
+              label={L('landTitleFee')}
+              tip={LB_TIPS.landTitleFee}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.landTitleFeePerPlot"
+                  unit={u('bahtPlot')}
+                />
+              }
+              qty={<Qty value={s?.totalPlots} unit={u('unit')} int />}
+              total={<Num value={s?.landTitleFeeTotal} />}
+              ratio={pct(s?.landTitleFeeRatio)}
+            />
+            <LedgerRow
+              label={L('professionalFee')}
+              tip={LB_TIPS.professionalFee}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.professionalFeePerMonth"
+                  unit={u('bahtMonth')}
+                />
+              }
+              qty={<Qty value={s?.professionalFeeMonths} unit={u('monthConstruction')} int />}
+              total={<Num value={s?.professionalFeeTotal} />}
+              ratio={pct(s?.professionalFeeRatio)}
+            />
+            <LedgerRow
+              label={L('adminCost')}
+              tip={LB_TIPS.adminCost}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.adminCostPerMonth"
+                  unit={u('bahtMonth')}
+                />
+              }
+              qty={<Qty value={s?.adminCostMonths} unit={u('monthSales')} int />}
+              total={<Num value={s?.adminCostTotal} />}
+              ratio={pct(s?.adminCostRatio)}
+            />
+            <LedgerRow
+              label={L('sellingAdv')}
+              tip={LB_TIPS.sellingAdv}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.sellingAdvPercent"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.ofRevenue')}
+                />
+              }
+              total={<Num value={s?.sellingAdvTotal} />}
+              ratio={pct(s?.sellingAdvRatio)}
+            />
+            {projectCostRows.map(({ rhfKey, idx, field }) => (
+              <UserAddedPdcRow
+                key={rhfKey}
+                index={idx}
+                serverItemId={field.id ?? null}
+                categoryRatioById={categoryRatioById}
+                totalProjectDevCost={s?.totalProjectCost ?? null}
+                onRemove={() => removeOther(idx)}
+              />
+            ))}
+            {!readOnly && (
+              <LedgerAddRow label={t('hypothesis.ledger.addPc')} onClick={handleAddProjectCost} />
+            )}
+            <LedgerRow
+              label={L('contingency')}
+              tip={LB_TIPS.contingencyProject}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.projectContingencyPercent"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.ofPc')}
+                />
+              }
+              total={<Num value={s?.projectContingencyAmount} />}
+              ratio={pct(s?.projectContingencyRatio)}
+            />
+            <LedgerRow
+              tone="tot"
+              label={L('totalPc')}
+              total={<Num value={s?.totalProjectCost} />}
+              ratio={pct(s?.totalProjectCostRatio)}
+            />
+          </LedgerBand>
 
-          <PdcDerivedRow
-            label="Specific Business Tax"
-            tooltip={LB_TIPS.specificBizTax}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.specificBizTaxPercent" fillSlot />
-            }
-            rateUnit="%"
-            rateSuffix="Of Total Revenue"
-            total={s?.specificBizTaxAmount}
-            ratioPercent={s?.specificBizTaxRatio}
-          />
+          {/* ── Government taxes (C66–C73) ── */}
+          <LedgerBand id="gov" title={sec.gov}>
+            <LedgerRow
+              label={L('transferFee')}
+              tip={LB_TIPS.transferFee}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.transferFeePercent"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.ofRevenue')}
+                />
+              }
+              total={<Num value={s?.transferFeeAmount} />}
+              ratio={pct(s?.transferFeeRatio)}
+            />
+            <LedgerRow
+              label={L('specificBizTax')}
+              tip={LB_TIPS.specificBizTax}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.specificBizTaxPercent"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.ofRevenue')}
+                />
+              }
+              total={<Num value={s?.specificBizTaxAmount} />}
+              ratio={pct(s?.specificBizTaxRatio)}
+            />
+            <LedgerRow
+              tone="tot"
+              label={L('totalGov')}
+              total={<Num value={s?.totalGovTax} />}
+              ratio={pct(s?.totalGovTaxRatio)}
+            />
+          </LedgerBand>
 
-          <PdcTotalRow
-            label="Total Government Taxes and Fees"
-            total={s?.totalGovTax}
-            ratioPercent={s?.totalGovTaxRatio}
-          />
-        </SectionPrimary>
+          {/* ── Risk (C74–C75) ── */}
+          <LedgerBand id="risk" title={sec.risk}>
+            <LedgerRow
+              label={L('riskPremium')}
+              tip={LB_TIPS.riskPremium}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.riskPremiumPercent"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.ofRevenue')}
+                />
+              }
+              total={<Num value={s?.riskPremiumAmount} />}
+            />
+          </LedgerBand>
 
-        {/* ── Risk Premium (FSD Figure 61) ────────────────────────────────── */}
-        <SectionPrimary id="hyp-section-risk" title="Risk Premium">
-          <PdcDerivedRow
-            label="Risk Premium"
-            tooltip={LB_TIPS.riskPremium}
-            rateInput={
-              <InlineNumberInput control={control} name="summary.riskPremiumPercent" fillSlot />
-            }
-            rateUnit="%"
-            rateSuffix="Of Total Revenue"
-            total={s?.riskPremiumAmount}
-            ratioPercent={null}
-          />
-        </SectionPrimary>
+          {/* ── Total cost (C76) ── */}
+          <LedgerBand id="tdc" title={sec.tdc}>
+            <LedgerRow
+              tone="tot"
+              label={L('totalDev')}
+              total={<Num value={s?.totalDevCostsAndExpenses} />}
+            />
+          </LedgerBand>
 
-        {/* ── Total Development Costs and Expenses (FSD Figure 62) ────────── */}
-        <SectionPrimary title="Total Development Costs and Expenses">
-          <PdcTotalRow
-            label="Total Development Costs and Expenses"
-            total={s?.totalDevCostsAndExpenses}
-            ratioPercent={null}
-          />
-        </SectionPrimary>
-
-        {/* ── Final Property Value (FSD Figure 63) ────────────────────────── */}
-        <SectionPrimary id="hyp-section-final" title="Final Property Value">
-          <FvDerivedRow
-            label="Current Property Value"
-            tooltip={LB_TIPS.currentPropertyValue}
-            value={s?.currentPropertyValue}
-            unit="Baht"
-          />
-
-          <FvInputRow
-            label="Discount Rate"
-            tooltip={LB_TIPS.discountRate}
-            rateInput={<InlineNumberInput control={control} name="summary.discountRate" fillSlot />}
-            rateUnit="%"
-            rateSuffix="0 = no discounting"
-          />
-
-          <FvDerivedRow
-            label="Discount Rate Factor"
-            tooltip={LB_TIPS.discountRateFactor}
-            value={s?.discountRateFactor}
-          />
-          <FvDerivedRow
-            label="Final Property Value"
-            tooltip={LB_TIPS.finalPropertyValue}
-            value={s?.finalPropertyValue}
-            unit="Baht"
-          />
-          <FvDerivedRow
-            label="Total Asset Value (Rounded ±10,000)"
-            tooltip={LB_TIPS.totalAssetValueRounded}
-            value={s?.totalAssetValueRounded}
-            unit="Baht"
-            emphasize
-          />
-          <FvDerivedRow
-            label="Value Per Sq.Wa (Rounded ±100)"
-            tooltip={LB_TIPS.totalAssetValuePerSqWa}
-            value={s?.totalAssetValuePerSqWa}
-            unit="Baht/Sq.Wa"
-            emphasize
-          />
-        </SectionPrimary>
-      </div>
+          {/* ── Final value (C77–C82) ── */}
+          <LedgerBand id="fv" title={sec.fv}>
+            <LedgerRow
+              label={L('currentValue')}
+              tip={LB_TIPS.currentPropertyValue}
+              rate={
+                <span className="text-[10.5px] text-gray-400">
+                  {t('hypothesis.ledger.n.revenueMinusCost')}
+                </span>
+              }
+              total={<Num value={s?.currentPropertyValue} />}
+            />
+            <LedgerRow
+              label={L('discountRate')}
+              tip={LB_TIPS.discountRate}
+              rate={
+                <RateInput
+                  control={control}
+                  name="summary.discountRate"
+                  unit="%"
+                  note={t('hypothesis.ledger.n.noDiscount')}
+                />
+              }
+            />
+            <LedgerRow
+              label={L('discountFactor')}
+              tip={LB_TIPS.discountRateFactor}
+              rate={
+                <RateValue
+                  value={
+                    s?.discountRateFactor != null ? Number(s.discountRateFactor).toFixed(4) : ''
+                  }
+                  note={t('hypothesis.ledger.n.salesPeriod', {
+                    years: yrs,
+                    months: s?.estimatedDurationMonths ?? '-',
+                  })}
+                />
+              }
+            />
+            <LedgerRow
+              tone="tot"
+              label={L('finalValue')}
+              tip={LB_TIPS.finalPropertyValue}
+              total={<Num value={s?.finalPropertyValue} />}
+            />
+            <LedgerIndicatedValueRow
+              control={control}
+              computed={s?.totalAssetValueRounded}
+              tip={LB_TIPS.totalAssetValueRounded}
+              disabled={readOnly}
+            />
+            <LedgerRow
+              tone="tot"
+              label={L('perSqWa')}
+              tip={LB_TIPS.totalAssetValuePerSqWa}
+              total={<Num value={s?.totalAssetValuePerSqWa} />}
+              totalUnit={u('bahtSqWa')}
+            />
+          </LedgerBand>
+        </LedgerTable>
+      </LedgerWithChart>
     </IsCalculatingProvider>
   );
 }
@@ -536,131 +670,6 @@ export function LandBuildingSummaryTab({
 function isSellingAreaOutOfBand(percent?: number | null): boolean {
   if (percent === null || percent === undefined) return false;
   return percent < 50 || percent > 70;
-}
-
-function ModelRevenueRow({
-  modelName,
-  unit,
-  sellingPrice,
-}: {
-  modelName: string;
-  unit?: number | null;
-  sellingPrice?: number | null;
-}) {
-  return (
-    <div className="grid grid-cols-12 gap-3 px-5 py-2.5 bg-gray-50/60 items-center">
-      <div className="col-span-2" />
-      <div className="col-span-10 flex items-center gap-3 flex-wrap">
-        <span className="text-xs font-medium text-gray-700 min-w-[220px]">- {modelName}</span>
-        <div className="flex items-center gap-2 ml-auto">
-          <span className="min-w-[60px] text-right tabular-nums text-xs font-medium text-gray-800">
-            {fmt(unit)}
-          </span>
-          <span className="text-[11px] text-gray-500 w-[40px]">Unit</span>
-          <span className="min-w-[120px] text-right tabular-nums text-xs font-medium text-gray-800">
-            {fmt(sellingPrice)}
-          </span>
-          <span className="text-[11px] text-gray-500 w-[68px]">Baht</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function TotalRow({ label, value, unit }: { label: string; value?: number | null; unit?: string }) {
-  return (
-    <div className="grid grid-cols-12 gap-3 px-5 py-3 bg-gray-100/80 border-t border-gray-200 items-center">
-      <div className="col-span-6 text-xs font-semibold text-gray-800">{label}</div>
-      <div className="col-span-6 flex items-center gap-2 justify-end">
-        <span className="min-w-[140px] text-right tabular-nums text-sm font-bold text-gray-900">
-          {fmt(value)}
-        </span>
-        {unit && <span className="text-[11px] text-gray-500 w-[68px]">{unit}</span>}
-      </div>
-    </div>
-  );
-}
-
-function ModelDetailRow({
-  modelName,
-  unit,
-  avgArea,
-  totalArea,
-}: {
-  modelName: string;
-  unit?: number | null;
-  avgArea?: number | null;
-  totalArea?: number | null;
-}) {
-  return (
-    <div className="grid grid-cols-12 gap-3 px-5 py-2.5 bg-gray-50/60 items-center">
-      <div className="col-span-2" />
-      <div className="col-span-10 flex items-center gap-3 flex-wrap">
-        <span className="text-xs font-medium text-gray-700 min-w-[220px]">- {modelName}</span>
-        <div className="flex items-center gap-2 ml-auto">
-          <span className="min-w-[60px] text-right tabular-nums text-xs font-medium text-gray-800">
-            {fmt(unit)}
-          </span>
-          <span className="text-[11px] text-gray-500 w-[40px]">Unit</span>
-          <span className="min-w-[80px] text-right tabular-nums text-xs font-medium text-gray-800">
-            {fmt(avgArea)}
-          </span>
-          <span className="text-[11px] text-gray-500 w-[68px]">Avg Sq.Wa</span>
-          <span className="min-w-[100px] text-right tabular-nums text-xs font-semibold text-gray-800">
-            {fmt(totalArea)}
-          </span>
-          <span className="text-[11px] text-gray-500 w-[68px]">Sq.Wa</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ConstructionCostRow({
-  modelName,
-  costPerUnit,
-  unitCount,
-  total,
-  ratioPercent,
-}: {
-  modelName: string;
-  costPerUnit?: number | null;
-  unitCount?: number | null;
-  total?: number | null;
-  ratioPercent?: number | null;
-}) {
-  return (
-    <div className="flex items-center px-5 py-2.5 bg-gray-50/60 gap-2">
-      <div className="flex-1 text-xs font-medium text-gray-700 pl-4 min-w-0">- {modelName}</div>
-      <span
-        className={`${COL.rate} text-right tabular-nums text-xs font-medium text-primary shrink-0`}
-      >
-        {fmt(costPerUnit)}
-      </span>
-      <span className={`${COL.rateUnit} text-[11px] text-gray-500 shrink-0`}>Baht/Unit</span>
-      <span className={`${COL.suffix} shrink-0`} />
-      <div className={`${COL.mid} flex items-center justify-end gap-2 shrink-0`}>
-        <span className="text-right tabular-nums text-xs font-medium text-gray-800">
-          {fmt(unitCount)}
-        </span>
-        <span className="text-[11px] text-gray-500 w-[44px]">Unit</span>
-      </div>
-      <span
-        className={`${COL.total} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
-      >
-        {fmt(total)}
-      </span>
-      <span className={`${COL.totalUnit} text-[11px] text-gray-500 shrink-0`}>Baht</span>
-      <span
-        className={`${COL.ratio} text-right tabular-nums text-xs font-medium text-gray-800 shrink-0`}
-      >
-        {ratioPercent !== null && ratioPercent !== undefined
-          ? `${Number(ratioPercent).toFixed(2)} %`
-          : '-'}
-      </span>
-      <span className={`${COL.remove} shrink-0`} />
-    </div>
-  );
 }
 
 function UserAddedPdcRow({
@@ -676,6 +685,7 @@ function UserAddedPdcRow({
   totalProjectDevCost: number | null;
   onRemove: () => void;
 }) {
+  const { t } = useTranslation('pricingAnalysis');
   const { control } = useFormContext<LandBuildingFormValues>();
   const amount = useWatch({ control, name: `otherCostItems.${index}.amount` as const });
   // Prefer server-computed ratio for saved rows; derive client-side for unsaved rows.
@@ -687,8 +697,7 @@ function UserAddedPdcRow({
       : null;
   const ratio = serverRatio ?? derivedRatio;
   return (
-    <UserAddedRow
-      amountValue={amt}
+    <LedgerUserRow
       ratio={ratio}
       onRemove={onRemove}
       descriptionInput={
@@ -699,8 +708,8 @@ function UserAddedPdcRow({
             <input
               {...field}
               value={field.value ?? ''}
-              placeholder="Item description…"
-              className="w-full text-xs border border-gray-200 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400"
+              placeholder={t('hypothesis.ledger.itemPlaceholder')}
+              className="w-full h-[21px] text-[12px] border border-gray-200 rounded px-[6px] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400"
             />
           )}
         />
@@ -716,7 +725,7 @@ function UserAddedPdcRow({
               onBlur={field.onBlur}
               decimalPlaces={2}
               fullWidth
-              className="!text-xs"
+              dense
             />
           )}
         />

@@ -397,14 +397,22 @@ export function useApplyPricingSelection() {
       pricingAnalysisId,
       selections,
       finalApproachId,
+      fullyDescribedApproachIds,
     }: {
       pricingAnalysisId: string;
       selections: { approachId: string; methodId: string }[];
       finalApproachId: string;
+      /**
+       * Approaches whose selection `selections` states in full. The server clears these before
+       * applying, so a method left out becomes deselected — without it an untick never persists,
+       * because SelectMethod is additive within a Cost approach. Approaches not named here are
+       * untouched; omitting the field entirely keeps the old additive behaviour.
+       */
+      fullyDescribedApproachIds?: string[];
     }): Promise<ApplySelectionResponseType> => {
       const { data: response } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/selection`,
-        { selections, finalApproachId },
+        { selections, finalApproachId, fullyDescribedApproachIds },
       );
       return response;
     },
@@ -684,6 +692,9 @@ export interface GetMachineCostItemsResponse {
   items: MachineCostItemResponse[];
   totalFmv: number;
   remark: string | null;
+  // GetMachineCostItemsResult.IndicatedValue — the appraiser's saved override of the
+  // table's FMV total, null when nobody has overridden it yet.
+  indicatedValue: number | null;
 }
 
 export interface SaveMachineCostItemInput {
@@ -743,15 +754,20 @@ export function useSaveMachineCostItems() {
       methodId,
       items,
       remark,
+      indicatedValue,
     }: {
       pricingAnalysisId: string;
       methodId: string;
       items: SaveMachineCostItemInput[];
       remark?: string | null;
+      // SaveMachineCostItemsRequest.cs already has this field (SetIndicatedValue /
+      // SyncMethodValueWithIndicatedValue) — the FE just never sent it. Optional so
+      // every existing caller keeps compiling without passing it.
+      indicatedValue?: number | null;
     }): Promise<SaveMachineCostItemsResponse> => {
       const { data: response } = await axios.put(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/machine-cost-items`,
-        { items, remark },
+        { items, remark, indicatedValue },
       );
       return response;
     },
@@ -1001,12 +1017,12 @@ export function useSaveIncomeAnalysis() {
       methodId: string;
       appraisalId: string;
       propertyId: string;
-      request: SaveIncomeAnalysisRequest;
+      request: Omit<SaveIncomeAnalysisRequest, 'appraisalId' | 'propertyId'>;
     }): Promise<IncomeAnalysisDto> => {
-      request = { ...request, appraisalId, propertyId };
+      const body: SaveIncomeAnalysisRequest = { ...request, appraisalId, propertyId };
       const { data: response } = await axios.put(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis`,
-        request,
+        body,
       );
       // SaveIncomeAnalysisResponse wraps the dto in { analysis }
       return (response.analysis ?? response) as IncomeAnalysisDto;
@@ -1042,12 +1058,12 @@ export function usePreviewIncomeAnalysis() {
       methodId: string;
       appraisalId: string;
       propertyId: string;
-      request: SaveIncomeAnalysisRequest;
+      request: Omit<SaveIncomeAnalysisRequest, 'appraisalId' | 'propertyId'>;
     }): Promise<IncomeAnalysisDto> => {
-      request = { ...request, appraisalId, propertyId };
+      const body: SaveIncomeAnalysisRequest = { ...request, appraisalId, propertyId };
       const { data } = await axios.post(
         `/pricing-analysis/${pricingAnalysisId}/methods/${methodId}/income-analysis:preview`,
-        request,
+        body,
       );
       return (data.analysis ?? data) as IncomeAnalysisDto;
     },

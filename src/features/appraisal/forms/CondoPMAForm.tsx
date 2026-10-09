@@ -1,106 +1,32 @@
-import { Badge } from '@/shared/components';
+import { useTranslation } from 'react-i18next';
 import { FormFields } from '@/shared/components/form';
-import Icon from '@/shared/components/Icon';
-import { useRelativeTime } from '@/shared/hooks/useFormatters';
 import { pmaField, condoPmaDetailFields, condoPmaAddressFields } from '../configs/fields';
-import { useFormContext, useWatch } from 'react-hook-form';
-import { useEffect } from 'react';
+import { FieldLabels } from '../components/FieldLabels';
+import { useForcedSalePriceDefault } from '../hooks/useForcedSalePriceDefault';
+import FieldGroupLabel from './FieldGroupLabel';
+import SectionRow from '../components/SectionRow';
 
-type CondoPMAFormProps = {
-  externalSyncStatus?: string | null;
-  externalSyncError?: string | null;
-  externalSyncedAt?: string | null;
-};
+const CondoPMAForm = () => {
+  const { t } = useTranslation('appraisal');
 
-const CondoPMAForm = ({
-  externalSyncStatus,
-  externalSyncError,
-  externalSyncedAt,
-}: CondoPMAFormProps) => {
-  const relTime = useRelativeTime();
-  const synced = externalSyncedAt ? relTime(externalSyncedAt) : null;
-
-  const { setValue } = useFormContext();
-  const sellingPrice = useWatch({ name: 'sellingPrice' });
-
-  useEffect(() => {
-    const forceSalePrice = (sellingPrice * 70) / 100;
-    setValue('forcedSalePrice', Math.round(forceSalePrice * 100) / 100, { shouldDirty: true });
-  }, [sellingPrice, setValue]);
+  useForcedSalePriceDefault();
 
   return (
-    <div className="cas-section-stack flex flex-col gap-6">
-      {/* Property Section — sync status badge sits on this header line */}
-      <div id="property-section">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center">
-              <Icon name="city" style="solid" className="w-5 h-5 text-blue-600" />
-            </div>
-            <h2 className="text-lg font-semibold text-gray-900">Updating PMA Property</h2>
-          </div>
-          {externalSyncStatus && externalSyncStatus !== 'NotSynced' && (
-            <div
-              className="flex items-center gap-2 shrink-0"
-              title={externalSyncStatus === 'Failed' ? (externalSyncError ?? undefined) : undefined}
-            >
-              {externalSyncStatus === 'Delivered' && (
-                <>
-                  <Badge type="externalSyncStatus" value="Delivered" size="sm">
-                    Synced
-                  </Badge>
-                  {synced && (
-                    <span className="text-xs text-gray-400" title={synced.absolute}>
-                      · {synced.relative}
-                    </span>
-                  )}
-                </>
-              )}
-              {externalSyncStatus === 'Pending' && (
-                <Badge type="externalSyncStatus" value="Pending" size="sm">
-                  Pending sync
-                </Badge>
-              )}
-              {externalSyncStatus === 'Failed' && (
-                <>
-                  <Badge type="externalSyncStatus" value="Failed" size="sm">
-                    Sync failed
-                  </Badge>
-                  <span className="text-xs text-gray-400">· Save to retry</span>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-        <div className="h-px bg-gray-200 mb-4" />
-        <div className="cas-section-head text-xs font-medium text-primary mb-2">
-          <span>Title Information</span>
-        </div>
-        <div className="grid grid-cols-9 gap-4">
-          <FormFields fields={condoPmaDetailFields} />
-        </div>
-
-        {/* Address sub-group */}
-        <div>
-          <div className="cas-section-head text-xs font-medium text-primary mb-2">
-          <span>Title Address</span>
-        </div>
-          <div className="grid grid-cols-12 gap-4">
+    <FieldLabels scope="condoPma">
+      <div className="w-full max-w-full overflow-hidden">
+        <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
+          <SectionRow spacedRule title={t('forms.pma.groups.condoInfo')} icon="building">
+            <FormFields fields={condoPmaDetailFields} />
+            <FieldGroupLabel label={t('forms.pma.groups.titleAddress')} />
             <FormFields fields={condoPmaAddressFields} />
-          </div>
-        </div>
-      </div>
+          </SectionRow>
 
-      {/* Value Section (prices) */}
-      <div id="value-section">
-        <div className="cas-section-head text-xs font-medium text-primary mb-2">
-          <span>Value Information</span>
-        </div>
-        <div className="grid grid-cols-9 gap-4">
-          <FormFields fields={pmaField} />
+          <SectionRow spacedRule title={t('forms.pma.groups.value')} icon="money-bill" isLast>
+            <FormFields fields={pmaField} />
+          </SectionRow>
         </div>
       </div>
-    </div>
+    </FieldLabels>
   );
 };
 

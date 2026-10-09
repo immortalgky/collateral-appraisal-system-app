@@ -315,7 +315,6 @@ describe('NumberInput', () => {
     // Scenario 21: K key multiplies by 1000
     // ------------------------------------------
     it('should multiply by 1000 when K key is pressed', async () => {
-      const handleChange = vi.fn();
       const { user } = render(
         <ControlledNumberInput label="Amount" initialValue={5} />
       );

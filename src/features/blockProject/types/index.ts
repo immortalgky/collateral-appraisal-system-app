@@ -183,7 +183,7 @@ export interface ProjectModel {
   usableAreaMin?: number;
   usableAreaMax?: number;
   standardUsableArea?: number;
-  fireInsuranceCondition?: string;
+  fireInsuranceCode?: string;
   groundFloorMaterialType?: string;
   groundFloorMaterialTypeOther?: string;
   upperFloorMaterialType?: string;
@@ -312,6 +312,7 @@ export interface ProjectUnitPrice {
   projectUnitId: string;
   sequenceNumber: number;
   // Common unit fields (denormalized)
+  projectModelId?: string;
   modelType?: string;
   usableArea?: number;
   sellingPrice?: number;
@@ -377,7 +378,9 @@ export interface ProjectModelAssumption {
   /** LandAndBuilding-only */
   standardLandPrice?: number;
   coverageAmount?: number;
-  fireInsuranceCondition?: string;
+  fireInsuranceCode?: string;
+  /** Condo-only */
+  towerName?: string;
 }
 
 /**

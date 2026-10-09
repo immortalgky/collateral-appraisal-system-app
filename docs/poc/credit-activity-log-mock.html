@@ -1,0 +1,263 @@
+<title>Activity Log Redesign</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  /* ------------------------------------------------------------------
+     POC ONLY — standalone mock, no build step, no app code touched.
+     Three treatments for "ประวัติการดำเนินงาน" on the credit tracking
+     panel, from the same sample data, so they can be compared directly.
+     ------------------------------------------------------------------ */
+  :root {
+    --primary: #0d9488;
+    --primary-700: #0f766e;
+    --accent: #d97706;
+    --ink: #1f2937;
+    --ink-soft: #6b7280;
+    --line: #e5e7eb;
+    --base-200: #f6f8f8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 26px 20px 70px;
+    font-family: Sarabun, system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--ink); background: #f1f5f5; font-size: 14px;
+  }
+  .wrap { max-width: 1060px; margin: 0 auto; }
+  h1 { font-size: 17px; margin: 0 0 4px; }
+  .lede { font-size: 13px; color: var(--ink-soft); margin: 0 0 16px; line-height: 1.65; }
+
+  .tabs { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 16px; }
+  .tabs button {
+    font: inherit; font-size: 12.5px; font-weight: 600; padding: 6px 13px;
+    border-radius: 999px; cursor: pointer; border: 1px solid var(--line);
+    background: #fff; color: var(--ink-soft);
+  }
+  .tabs button[aria-pressed='true'] { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+  .panel { background: #fff; border-radius: 14px; padding: 18px 20px 22px; box-shadow: 0 1px 2px rgba(15,23,42,.06); }
+  .sec-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 8px; }
+  .sec-h h2 {
+    margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: #475569; display: flex; align-items: center; gap: 8px;
+  }
+  .sec-h h2::before { content: ''; width: 4px; height: 14px; border-radius: 999px; background: linear-gradient(to bottom, #cbd5e1, #64748b); }
+  .sec-h .n { font-size: 12px; color: var(--ink-soft); }
+  .rule { height: 1px; background: linear-gradient(to right, rgba(148,163,184,.7), transparent); margin-bottom: 4px; }
+
+  .note { margin-top: 14px; font-size: 12px; color: var(--ink-soft); line-height: 1.75;
+    background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--primary);
+    border-radius: 8px; padding: 12px 14px; }
+  .note b { color: var(--ink); }
+
+  /* ---------- shared bits ---------- */
+  .who { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+  .av {
+    width: 24px; height: 24px; border-radius: 999px; flex: none;
+    display: grid; place-items: center; font-size: 9px; font-weight: 700;
+    background: #ecfdf5; color: var(--primary-700);
+  }
+  .av.ext { background: #eff6ff; color: #1d4ed8; }
+  .dur { font-size: 11px; color: var(--ink-soft); background: var(--base-200); border-radius: 999px; padding: 1px 8px; white-space: nowrap; }
+  .dur.long { background: #fff7ed; color: #b45309; }
+  .rmk { margin-top: 5px; font-size: 12px; color: #475569; background: #f8fafc;
+    border-left: 2px solid #cbd5e1; border-radius: 0 6px 6px 0; padding: 5px 9px; }
+
+  /* ---------- A. timeline ---------- */
+  .tl { position: relative; padding-left: 128px; }
+  .tl .row { position: relative; padding: 11px 0 13px; border-top: 1px solid #f1f5f9; }
+  .tl .row:first-child { border-top: 0; }
+  .tl .when {
+    position: absolute; left: -128px; top: 12px; width: 108px; text-align: right;
+    font-size: 11.5px; color: var(--ink-soft); line-height: 1.45;
+  }
+  .tl .when b { display: block; font-size: 12px; font-weight: 600; color: #334155; }
+  .tl .dot {
+    position: absolute; left: -14px; top: 16px; width: 9px; height: 9px; border-radius: 999px;
+    background: #fff; border: 2px solid var(--primary);
+  }
+  .tl .dot.idle { border-color: #cbd5e1; }
+  .tl::before { content: ''; position: absolute; left: -10px; top: 8px; bottom: 8px; width: 1px; background: #e2e8f0; }
+  .tl .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .tl .act { font-size: 13.5px; font-weight: 600; }
+  .tl .meta { display: flex; align-items: center; gap: 10px; margin-top: 4px; font-size: 12px; color: var(--ink-soft); }
+
+  /* ---------- B. grouped by phase ---------- */
+  .ph { border: 1px solid var(--line); border-radius: 11px; overflow: hidden; margin-bottom: 9px; }
+  .ph-h { display: flex; align-items: center; gap: 10px; padding: 10px 13px; background: #fbfdfd; }
+  .ph-h .ic { width: 22px; height: 22px; border-radius: 999px; display: grid; place-items: center;
+    background: var(--primary); color: #fff; font-size: 11px; flex: none; }
+  .ph-h b { font-size: 13.5px; }
+  .ph-h .sub { font-size: 11.5px; color: var(--ink-soft); }
+  .ph-h .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .ph-b { border-top: 1px solid var(--line); }
+  .hand { display: flex; align-items: center; gap: 9px; padding: 8px 13px 8px 45px; font-size: 12.5px; border-top: 1px solid #f1f5f9; }
+  .hand:first-child { border-top: 0; }
+  .hand .t { margin-left: auto; font-size: 11.5px; color: var(--ink-soft); white-space: nowrap; }
+  .chip { font-size: 10.5px; font-weight: 600; border-radius: 999px; padding: 1px 7px; }
+  .chip.re { background: #fef3c7; color: #92400e; }
+  .chip.ok { background: #ecfdf5; color: #047857; }
+
+  /* ---------- C. compact table ---------- */
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; font-size: 10.5px; font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: #94a3b8; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 13px; vertical-align: top; }
+  td.num { color: #94a3b8; font-size: 11.5px; width: 26px; }
+  tbody tr:hover { background: #fafcfc; }
+</style>
+
+<div class="wrap">
+  <h1>ประวัติการดำเนินงาน — 3 แบบให้เลือก</h1>
+  <p class="lede">
+    ข้อมูลชุดเดียวกันทั้ง 3 แบบ ตัดคอลัมน์ที่เป็นเรื่องภายในออกแล้ว (ACTION <code>P</code>/<code>R</code>/<code>INT</code>,
+    TIME TAKEN ที่ถูก mask อยู่แล้วสำหรับสินเชื่อ, STATUS ที่เป็น <code>completed</code> ทุกแถว)
+    และแปลชื่อขั้นตอนเป็นภาษาที่คนนอกฝ่ายประเมินอ่านออก
+  </p>
+
+  <div class="tabs" id="tabs"></div>
+  <div class="panel">
+    <div class="sec-h"><h2>ประวัติการดำเนินงาน</h2><span class="n" id="count"></span></div>
+    <div class="rule"></div>
+    <div id="view"></div>
+  </div>
+  <div class="note" id="note"></div>
+</div>
+
+<script>
+  /**
+   * Sample taken from the real screen. `act` is the workflow activity name, `group`
+   * the phase it rolls up to, `movement` P = forward, R = returned, Reassigned =
+   * handed to someone else in the same step.
+   */
+  const LOG = [
+    { no: 1, group: 'Assignment', act: 'Appraisal Assignment', who: 'IntAdmin', code: 'IntAdmin', ext: false, start: '05/06/2026 21:16', end: '16/06/2026 23:34', took: '266h 17m', mv: 'INT', rmk: null },
+    { no: 2, group: 'Execution', act: 'Internal Appraisal Execution', who: 'Anuwat Srisawat', code: 'int.staff1', ext: false, start: '16/06/2026 23:34', end: '24/08/2026 00:06', took: '1632h 32m', mv: 'Reassigned', rmk: null },
+    { no: 3, group: 'Execution', act: 'Internal Appraisal Execution', who: 'Boonchu Chankaew', code: 'int.staff2', ext: false, start: '24/08/2026 00:06', end: '24/08/2026 00:07', took: '0h 0m', mv: 'P', rmk: null },
+    { no: 4, group: 'Checker', act: 'Internal Appraisal Check', who: 'Damrong Ekachai', code: 'int.chk1', ext: false, start: '24/08/2026 00:07', end: '24/08/2026 00:08', took: '0h 0m', mv: 'R', rmk: 'ขอให้แก้ไขรูปถ่ายด้านหน้าอาคาร' },
+    { no: 5, group: 'Execution', act: 'Internal Appraisal Execution', who: 'Anuwat Srisawat', code: 'int.staff1', ext: false, start: '24/08/2026 00:08', end: '24/08/2026 00:13', took: '0h 4m', mv: 'Reassigned', rmk: null },
+    { no: 6, group: 'Execution', act: 'Internal Appraisal Execution', who: 'Boonchu Chankaew', code: 'int.staff2', ext: false, start: '24/08/2026 00:13', end: '24/08/2026 00:14', took: '0h 0m', mv: 'P', rmk: null },
+    { no: 7, group: 'Checker', act: 'Internal Appraisal Check', who: 'Damrong Ekachai', code: 'int.chk1', ext: false, start: '24/08/2026 00:14', end: '24/08/2026 00:14', took: '0h 0m', mv: 'R', rmk: 'ราคาประเมินสูงกว่าราคาตลาดในพื้นที่' },
+    { no: 8, group: 'Execution', act: 'Internal Appraisal Execution', who: 'Boonchu Chankaew', code: 'int.staff2', ext: false, start: '24/08/2026 00:14', end: '24/08/2026 00:14', took: '0h 0m', mv: 'Reassigned', rmk: null },
+    { no: 9, group: 'Execution', act: 'Internal Appraisal Execution', who: 'Chaiyaporn Duangsri', code: 'int.staff3', ext: false, start: '24/08/2026 00:14', end: '24/08/2026 00:15', took: '0h 1m', mv: 'P', rmk: null },
+    { no: 10, group: 'Checker', act: 'Internal Appraisal Check', who: 'Damrong Ekachai', code: 'int.chk1', ext: false, start: '24/08/2026 00:15', end: '24/08/2026 00:15', took: '0h 0m', mv: 'P', rmk: null },
+    { no: 11, group: 'Verification', act: 'Internal Appraisal Verification', who: 'Gritsada Homsuwan', code: 'int.vrf1', ext: false, start: '24/08/2026 00:15', end: '26/08/2026 09:40', took: '57h 25m', mv: 'P', rmk: null },
+    { no: 12, group: 'Approval', act: 'Pending Meeting', who: 'คณะกรรมการ', code: null, ext: false, start: '26/08/2026 09:40', end: '02/09/2026 14:05', took: '172h 25m', mv: 'P', rmk: 'อนุมัติตามราคาที่เสนอ' },
+  ];
+
+  // Phase names a reader outside the appraisal department recognises. The raw
+  // activity names ("Internal Appraisal Execution") are the workflow's own labels.
+  const PHASE = {
+    Assignment: 'มอบหมายงาน', Execution: 'ออกตรวจ/ประเมิน', Staff: 'ตรวจรับเล่มรายงาน',
+    Checker: 'ตรวจสอบ', Verification: 'สอบทาน', Approval: 'อนุมัติราคา',
+  };
+  const MOVE = { P: 'ส่งต่อ', R: 'ตีกลับแก้ไข', INT: 'มอบหมายภายใน', Reassigned: 'เปลี่ยนผู้รับผิดชอบ' };
+
+  const initials = n => n.replace(/^(นาย|นาง|นางสาว|คณะ)\s*/, '').trim().split(/\s+/).slice(0, 2).map(p => p[0]).join('');
+  const isLong = t => { const h = parseInt(t, 10); return h >= 48; };
+  const day = s => s.slice(0, 10);
+  const time = s => s.slice(11);
+  const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+
+  const avatar = r =>
+    r.code
+      ? `<i class="av${r.ext ? ' ext' : ''}">${esc(initials(r.who))}</i>`
+      : `<i class="av" style="background:#fef3c7;color:#92400e">⚖</i>`;
+
+  /** A. One entry per step, dates in their own gutter. */
+  function timeline() {
+    return `<div class="tl">${LOG.map((r, i) => {
+      const sameDay = i > 0 && day(LOG[i - 1].start) === day(r.start);
+      return `<div class="row">
+        <div class="when">${sameDay ? '' : `<b>${day(r.start)}</b>`}${time(r.start)}</div>
+        <span class="dot${r.mv === 'R' ? ' idle' : ''}"></span>
+        <div class="head">
+          <span class="act">${PHASE[r.group] || r.group}</span>
+          <span class="dur${isLong(r.took) ? ' long' : ''}">${r.took}</span>
+        </div>
+        <div class="meta">
+          <span class="who">${avatar(r)}${esc(r.who)}</span>
+          <span class="chip ${r.mv === 'R' ? 're' : 'ok'}">${MOVE[r.mv] || r.mv}</span>
+        </div>
+        ${r.rmk ? `<div class="rmk">${esc(r.rmk)}</div>` : ''}
+      </div>`;
+    }).join('')}</div>`;
+  }
+
+  /** B. Collapse the churn: one block per phase, handovers listed inside it. */
+  function grouped() {
+    const blocks = [];
+    LOG.forEach(r => {
+      const last = blocks[blocks.length - 1];
+      if (last && last.group === r.group) last.rows.push(r);
+      else blocks.push({ group: r.group, rows: [r] });
+    });
+    return blocks.map(b => {
+      const first = b.rows[0], last = b.rows[b.rows.length - 1];
+      const hours = b.rows.reduce((s, r) => s + parseInt(r.took, 10), 0);
+      const returns = b.rows.filter(r => r.mv === 'R').length;
+      return `<div class="ph">
+        <div class="ph-h">
+          <span class="ic">✓</span>
+          <span><b>${PHASE[b.group] || b.group}</b>
+            <span class="sub">${day(first.start)} ${time(first.start)} → ${day(last.end)} ${time(last.end)}</span></span>
+          <span class="right">
+            ${returns ? `<span class="chip re">ตีกลับ ${returns} ครั้ง</span>` : ''}
+            <span class="dur${hours >= 48 ? ' long' : ''}">${hours}h</span>
+          </span>
+        </div>
+        <div class="ph-b">${b.rows.map(r => `<div class="hand">
+            <span class="who">${avatar(r)}${esc(r.who)}</span>
+            <span class="chip ${r.mv === 'R' ? 're' : 'ok'}">${MOVE[r.mv] || r.mv}</span>
+            ${r.rmk ? `<span style="color:#475569">${esc(r.rmk)}</span>` : ''}
+            <span class="t">${time(r.start)} · ${r.took}</span>
+          </div>`).join('')}</div>
+      </div>`;
+    }).join('');
+  }
+
+  /** C. Still a table, but only the four columns credit reads. */
+  function table() {
+    return `<table>
+      <thead><tr><th></th><th>ขั้นตอน</th><th>ผู้รับผิดชอบ</th><th>ช่วงเวลา</th><th>ผลลัพธ์</th></tr></thead>
+      <tbody>${LOG.map(r => `<tr>
+        <td class="num">${r.no}</td>
+        <td><b style="font-weight:600">${PHASE[r.group] || r.group}</b>
+          ${r.rmk ? `<div class="rmk">${esc(r.rmk)}</div>` : ''}</td>
+        <td><span class="who">${avatar(r)}${esc(r.who)}</span></td>
+        <td style="color:#64748b;font-size:12.5px">${day(r.start)} ${time(r.start)}<br>
+          <span class="dur${isLong(r.took) ? ' long' : ''}">${r.took}</span></td>
+        <td><span class="chip ${r.mv === 'R' ? 're' : 'ok'}">${MOVE[r.mv] || r.mv}</span></td>
+      </tr>`).join('')}</tbody></table>`;
+  }
+
+  const VIEWS = {
+    'A · ไทม์ไลน์': {
+      render: timeline,
+      note: '<b>ไทม์ไลน์</b> — วันที่อยู่รางซ้าย ไม่ซ้ำเมื่อเป็นวันเดิม จึงเห็นได้ทันทีว่างานกองอยู่ช่วงไหน หนึ่งบรรทัดต่อหนึ่งการเคลื่อนไหว เหมาะถ้าอยากเห็นลำดับเวลาจริง ๆ ข้อเสียคือรายการยาวเท่าเดิม',
+    },
+    'B · จัดกลุ่มตามขั้นตอน': {
+      render: grouped,
+      note: '<b>จัดกลุ่มตามขั้นตอน</b> — ยุบการวนไป-กลับให้เหลือบล็อกเดียวต่อขั้นตอน พร้อมป้าย “ตีกลับ N ครั้ง” และเวลารวม จาก 12 แถวเหลือ 6 บล็อก อ่านจบเร็วที่สุดและตอบคำถาม “ทำไมงานช้า” ได้ตรงที่สุด',
+    },
+    'C · ตารางแบบย่อ': {
+      render: table,
+      note: '<b>ตารางแบบย่อ</b> — โครงเดิมแต่เหลือ 4 คอลัมน์ที่สินเชื่ออ่านจริง คุ้นมือที่สุดสำหรับคนที่เคยใช้ของเดิม แต่ยังยาวและยังต้องกวาดตาซ้าย-ขวา',
+    },
+  };
+
+  function select(name) {
+    document.getElementById('view').innerHTML = VIEWS[name].render();
+    document.getElementById('note').innerHTML = VIEWS[name].note;
+    document.getElementById('count').textContent = LOG.length + ' รายการ';
+    document.querySelectorAll('#tabs button').forEach(b => b.setAttribute('aria-pressed', String(b.textContent === name)));
+  }
+  const tabs = document.getElementById('tabs');
+  Object.keys(VIEWS).forEach(n => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = n;
+    b.addEventListener('click', () => select(n));
+    tabs.appendChild(b);
+  });
+  select('B · จัดกลุ่มตามขั้นตอน');
+</script>

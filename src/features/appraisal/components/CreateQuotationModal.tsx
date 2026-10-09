@@ -1,5 +1,6 @@
 import { type ReactNode, useMemo, useState } from 'react';
 import clsx from 'clsx';
+import { addHours, formatISO } from 'date-fns';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -49,7 +50,9 @@ const CreateQuotationModal = ({
   const localizeCompanyName = useLocalizedCompanyName();
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(null);
+  const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(() =>
+    formatISO(addHours(new Date(), 1)),
+  );
   const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
   const [remarks, setRemarks] = useState('');
 
@@ -145,6 +148,17 @@ const CreateQuotationModal = ({
   };
 
   const isCompanySelected = (companyId: string) => selectedCompanies.some(c => c.id === companyId);
+  const isAllCompanySelected =
+    companyList.length > 0 && companyList.every(c => isCompanySelected(c.id));
+
+  const handleToggleAllCompany = () => {
+    setSelectedCompanies(prev => {
+      if (isAllCompanySelected) {
+        return prev.filter(c => !companyList.some(vc => vc.id === c.id));
+      }
+      return [...prev, ...companyList.filter(c => !isCompanySelected(c.id))];
+    });
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Request Quotation" size="lg">
@@ -192,8 +206,29 @@ const CreateQuotationModal = ({
           )}
 
           <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="p-2 border-b border-gray-100">
-              <div className="relative">
+            <div className="flex p-2 border-b border-gray-100">
+              <button
+                type="button"
+                onClick={() => handleToggleAllCompany()}
+                className={clsx(
+                  'flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
+                  isAllCompanySelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                )}
+              >
+                <div
+                  className={clsx(
+                    'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
+                    isAllCompanySelected
+                      ? 'bg-purple-500 border-purple-500'
+                      : 'border-gray-300 bg-white',
+                  )}
+                >
+                  {isAllCompanySelected && (
+                    <Icon name="check" style="solid" className="size-3 text-white" />
+                  )}
+                </div>
+              </button>
+              <div className="relative w-full">
                 <Icon
                   name="magnifying-glass"
                   style="regular"

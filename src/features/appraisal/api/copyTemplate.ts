@@ -9,7 +9,14 @@ export interface PrevAppraisalSnapshot {
   appraisalId: string;
   appraisalNumber: string | null;
   appraisalValue: number | null;
+  /** The raw inspection slot. Null for an off-system external engagement, which has no appointment. */
   appointmentDate: string | null;
+  /**
+   * The appraisal (valuation) date — what "วันที่ประเมินครั้งก่อน" means, and what the API persists
+   * into `PrevAppraisalDate` regardless of what we send. `COALESCE(ValuationDate,
+   * AppointmentDateTime, CompletedAt)` in `vw_AppraisalCopyTemplate`. Stamp this, not the one above.
+   */
+  appraisalDate: string | null;
   /** Round number the NEW request would be (current appraisal's round + 1) */
   nextInspectionNumber?: number;
 }
@@ -56,6 +63,7 @@ export interface CopyTemplateCustomer {
 export interface CopyTemplateProperty {
   propertyType: string | null;
   buildingType: string | null;
+  buildingTypeOther: string | null;
   sellingPrice: number | null;
 }
 

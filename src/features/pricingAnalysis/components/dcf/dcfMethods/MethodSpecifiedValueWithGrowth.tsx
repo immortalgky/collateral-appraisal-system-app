@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { MethodSpecifiedValueWithGrowthWrapper } from '../../../types/dcf';
 import { RHFInputCell } from '../../table/RHFInputCell';
 
@@ -16,16 +17,17 @@ export function MethodSpecifiedValueWithGrowth({
   baseStyles,
   isReadOnly,
 }: MethodSpecifiedValueWithGrowthProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
               <div className="flex flex-row justify-between items-center gap-3">
-                <span>Increase Rate</span>
+                <span>{t('dcf.common.increaseRate')}</span>
                 <div className="flex flex-row gap-1.5 items-center">
-                  <span>1st year amt</span>
+                  <span>{t('dcf.common.firstYearAmt')}</span>
                   <div className="w-32">
                     <RHFInputCell
                       fieldName={`${name}.detail.firstYearAmt`}
@@ -38,7 +40,7 @@ export function MethodSpecifiedValueWithGrowth({
                       }}
                     />
                   </div>
-                  <span>growth</span>
+                  <span>{t('dcf.common.growth')}</span>
                   <div className="w-20">
                     <RHFInputCell
                       fieldName={`${name}.detail.increaseRatePct`}
@@ -51,7 +53,7 @@ export function MethodSpecifiedValueWithGrowth({
                       }}
                     />
                   </div>
-                  <span>% every</span>
+                  <span>{t('dcf.common.percentEvery')}</span>
                   <div className="w-20">
                     <RHFInputCell
                       fieldName={`${name}.detail.increaseRateYrs`}
@@ -65,7 +67,7 @@ export function MethodSpecifiedValueWithGrowth({
                       }}
                     />
                   </div>
-                  <span>year(s)</span>
+                  <span>{t('dcf.common.year')}</span>
                 </div>
               </div>
             </td>
@@ -78,7 +80,7 @@ export function MethodSpecifiedValueWithGrowth({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Total</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.total')}</td>
             {(method.totalMethodValues ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>

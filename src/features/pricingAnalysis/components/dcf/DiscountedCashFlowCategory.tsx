@@ -1,5 +1,4 @@
 import { Fragment, useState } from 'react';
-import { Icon } from '@/shared/components';
 import clsx from 'clsx';
 import { DiscountedCashFlowAssumption } from './DiscountedCashFlowAssumption';
 import type { SectionColor } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
@@ -8,6 +7,10 @@ import { type DCFAssumption, type DCFCategory, type DCFSection } from '../../typ
 import { DiscountedCashFlowMethodModal } from './DiscountedCashFlowMethodModal';
 import { useAssumptionManagement } from '../../domain/dcf/useAssumptionManagement';
 import { useAssumptionEditor } from '../../domain/dcf/useAssumptionEditor';
+import { useTranslation } from 'react-i18next';
+import { dcfCategoryLabel } from '../../domain/dcf/dcfNameLabel';
+import { STKW_CLASS, STK_CLASS_FLEX, STK2_CLASS, YEAR_CELL_CLASS } from './dcfTableCellStyles';
+import { DenseProvider } from '../table/RHFInputCell';
 
 interface DiscountedCashFlowCategoryProps {
   name: string;
@@ -16,7 +19,6 @@ interface DiscountedCashFlowCategoryProps {
   category: DCFCategory;
   totalNumberOfYears: number;
   color: SectionColor;
-  baseStyles: { rowHeader: string; rowBody: string };
   isReadOnly?: boolean;
   onStructuralChange?: () => void;
   incomeAnalysisId?: string;
@@ -31,8 +33,6 @@ export function DiscountedCashFlowCategory({
   section,
   category,
   totalNumberOfYears,
-  color,
-  baseStyles,
   isReadOnly,
   onStructuralChange,
   incomeAnalysisId,
@@ -40,6 +40,7 @@ export function DiscountedCashFlowCategory({
   marketSurveys,
   ensureIncomeAnalysisId,
 }: DiscountedCashFlowCategoryProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const { getValues, setValue, control } = useFormContext();
 
   const {
@@ -65,35 +66,39 @@ export function DiscountedCashFlowCategory({
 
   return (
     <>
+      {/* Category row — mock's catrow: two sticky cells (item with chevron/name/count,
+          then an empty stk2 — categories have no "assumption" of their own), rather than
+          a colspan'd wide cell. */}
       <tr
         onClick={() => setExpanded(!isExpanded)}
         data-category={{ category: category }}
         className="cursor-pointer hover:bg-gray-50/60"
       >
-        <td className={clsx(baseStyles.rowHeader)}>
+        <td className={clsx(STK_CLASS_FLEX, 'font-semibold')}>
           <div className="flex flex-row items-center gap-1.5">
-            <Icon
-              name="chevron-down"
-              style="solid"
-              className={clsx(
-                'size-2 transition-transform duration-300 ease-in-out shrink-0',
-                isExpanded ? 'rotate-180' : '',
-              )}
-            />
-            {category?.categoryName ?? ''}
+            {/* mock `.g.dcf .chev2` — a ▾/▸ glyph, 10px wide, ink-3. */}
+            <span className="inline-block w-[10px] shrink-0 text-[#8a96a0]" aria-hidden>
+              {isExpanded ? '▾' : '▸'}
+            </span>
+            <span
+              className="truncate"
+              title={dcfCategoryLabel(t, category.categoryName, category?.categoryName ?? '')}
+            >
+              {dcfCategoryLabel(t, category.categoryName, category?.categoryName ?? '')}
+            </span>
             <span
               className={clsx(
-                'inline-flex items-center justify-center min-w-5 h-4 px-1 rounded text-[10px] font-semibold',
-                color.textAccent,
-                color.bg,
+                // mock `.g.dcf .cnt` — neutral chip, not the section colour.
+                'inline-flex items-center justify-center min-w-4 h-[15px] px-[5px] rounded-lg text-[10.5px] font-medium shrink-0 bg-[#edf1f1] text-[#55636f]',
               )}
             >
               {fields.length}
             </span>
           </div>
         </td>
+        <td className={STK2_CLASS} />
         {Array.from({ length: totalNumberOfYears }, (_, index) => (
-          <td key={index} className={clsx(baseStyles.rowBody)}>
+          <td key={index} className={YEAR_CELL_CLASS}>
             <span>
               {category.totalCategoryValues?.[index]
                 ? category.totalCategoryValues?.[index].toLocaleString()
@@ -126,39 +131,47 @@ export function DiscountedCashFlowCategory({
           })}
 
           {editing && modalInitialData && (
-            <DiscountedCashFlowMethodModal
-              initialData={modalInitialData}
-              properties={properties}
-              getOuterFormValues={getValues}
-              editing={editing}
-              onCancelEditMode={handleOnCancelEditMode}
-              onSaveEditMode={handleOnSaveEditMode}
-              size="2xl"
-              isReadOnly={isReadOnly}
-              incomeAnalysisId={incomeAnalysisId}
-              hostMethodId={hostMethodId}
-              marketSurveys={marketSurveys}
-              ensureIncomeAnalysisId={ensureIncomeAnalysisId}
-            />
+            // Reset to non-dense: this is a spacious edit modal, not a table row — without
+            // this it would inherit `dense` from DiscountedCashFlowTable's DenseProvider
+            // (a React context value, unaffected by the modal's own DOM/portal placement).
+            <DenseProvider value={false}>
+              <DiscountedCashFlowMethodModal
+                initialData={modalInitialData}
+                properties={properties}
+                getOuterFormValues={getValues}
+                editing={editing}
+                onCancelEditMode={handleOnCancelEditMode}
+                onSaveEditMode={handleOnSaveEditMode}
+                size="2xl"
+                isReadOnly={isReadOnly}
+                incomeAnalysisId={incomeAnalysisId}
+                hostMethodId={hostMethodId}
+                marketSurveys={marketSurveys}
+                ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+              />
+            </DenseProvider>
           )}
 
           {!isReadOnly && (
             <tr>
-              <td className="border-b border-gray-200 bg-white">
-                <div className="flex flex-row items-center pl-10 px-1 py-0.5">
+              {/* mock:2123 — `<td class="stkw" colspan="2">…</td><td colspan="${n}">`:
+                  one wide sticky cell for the button, one plain cell spanning every year
+                  column instead of N empty cells. */}
+              <td colSpan={2} className={clsx(STKW_CLASS, 'bg-white')}>
+                <div className="flex flex-row items-center h-[26px]">
                   <button
                     type="button"
                     onClick={handleOnAddAssumption}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] text-primary rounded-md border border-dashed border-primary/40 hover:bg-primary/10 cursor-pointer"
+                    // mock `.addrow` (mock:350): 11px, line-height 18px, padding 1px 8px →
+                    // 22px tall, so it sits inside the 26px row. Without its own leading it
+                    // inherited the cell's 25px and overflowed, clipping the dashed border.
+                    className="inline-flex items-center px-[8px] py-[1px] text-[11px] leading-[18px] text-primary rounded-[6px] border border-dashed border-primary hover:bg-primary/10 cursor-pointer"
                   >
-                    <Icon name="plus" style="solid" className="size-2.5" />
-                    Add assumption
+                    + {t('dcf.assumption.addAssumption')}
                   </button>
                 </div>
               </td>
-              {Array.from({ length: totalNumberOfYears }, (_, index) => (
-                <td key={index} className="border-b border-gray-200 bg-white" />
-              ))}
+              <td colSpan={totalNumberOfYears} className="border-b border-gray-300 bg-white" />
             </tr>
           )}
         </>

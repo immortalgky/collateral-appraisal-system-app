@@ -66,7 +66,7 @@ function SearchByInput({
           className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-gray-700 whitespace-nowrap hover:bg-gray-50"
         >
           {selected?.icon && (
-            <Icon style="solid" name={selected.icon} className="size-3.5 text-primary" />
+            <Icon style="solid" name={selected.icon} className="size-3.5 text-gray-500" />
           )}
           {selected?.label ?? ''}
           <Icon style="regular" name="chevron-down" className="size-3 text-gray-400" />
@@ -88,7 +88,7 @@ function SearchByInput({
                     <Icon
                       style="solid"
                       name={o.icon}
-                      className={clsx('size-3.5', isSelected ? 'text-primary' : 'text-gray-400')}
+                      className={clsx('size-3.5', isSelected ? 'text-gray-700' : 'text-gray-400')}
                     />
                   )}
                   <span

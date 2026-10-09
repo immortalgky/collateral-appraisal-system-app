@@ -2,7 +2,6 @@
   "sidebar": {
     "menu": "เมนู",
     "general": "ทั่วไป",
-    "system": "ระบบ",
     "dashboard": "แดชบอร์ด",
     "requests": "คำขอ",
     "appraisals": "การประเมิน",
@@ -61,7 +60,7 @@
       "landParcelNumber": "เลขที่ดิน",
       "roomNumber": "เลขห้องชุด",
       "licensePlateNumber": "ทะเบียนรถ",
-      "ownerName": "เจ้าของทรัพย์",
+      "ownerName": "ผู้ถือกรรมสิทธิ์",
       "projectName": "ชื่อโครงการ",
       "condoName": "ชื่อคอนโด"
     }
@@ -83,7 +82,7 @@
   },
   "formLayout": {
     "label": "เลย์เอาต์ฟอร์มประเมิน",
-    "grid": "ตาราง",
+    "grid": "กระชับ",
     "classic": "มาตรฐาน"
   }
 }

@@ -175,7 +175,7 @@ export const projectLocationFields: FormField[] = [
   // this field. Title also leaves postcode NULL on those rows, and the form saves postcode.
   {
     type: 'location-selector',
-    label: 'Sub District',
+    label: 'DOPA Sub District',
     name: 'subDistrict',
     districtField: 'district',
     provinceField: 'province',
@@ -192,14 +192,14 @@ export const projectLocationFields: FormField[] = [
   },
   {
     type: 'text-input',
-    label: 'District',
+    label: 'DOPA District',
     name: 'districtName',
     disabled: true,
     wrapperClassName: 'col-span-4',
   },
   {
     type: 'text-input',
-    label: 'Province',
+    label: 'DOPA Province',
     name: 'provinceName',
     disabled: true,
     wrapperClassName: 'col-span-4',
@@ -524,7 +524,7 @@ export const condoModelInfoFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fire Insurance Condition',
-    name: 'fireInsuranceCondition',
+    name: 'fireInsuranceCode',
     // Populated at render time from useFireInsuranceOptions('Condo') — see ModelDetailForm.
     options: [],
     wrapperClassName: 'col-span-12',
@@ -706,7 +706,6 @@ export const condoTowerStructureFields: FormField[] = [
     showWhen: { field: 'decorationType', is: '99' },
     requiredWhen: { field: 'decorationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
   {
     type: 'number-input',
@@ -753,7 +752,6 @@ export const condoTowerRoofFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'roofType', is: '99', operator: 'contains' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -978,7 +976,7 @@ export const lbModelInfoFields: FormField[] = [
   {
     type: 'dropdown',
     label: 'Fire Insurance Condition',
-    name: 'fireInsuranceCondition',
+    name: 'fireInsuranceCode',
     // Populated at render time from useFireInsuranceOptions('LandAndBuilding') — see ModelDetailForm.
     options: [],
     wrapperClassName: 'col-span-6',
@@ -1100,7 +1098,6 @@ export const lbModelBuildingDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'constructionType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
   {
     type: 'radio-group',
@@ -1119,7 +1116,6 @@ export const lbModelBuildingDetailFields: FormField[] = [
     wrapperClassName: 'col-span-12',
     showWhen: { field: 'utilizationType', is: '99' },
     maxLength: 100,
-    showCharCount: true,
   },
 ];
 
@@ -1290,7 +1286,7 @@ export const projectLandInfoFields: FormField[] = [
     name: 'landDescription',
     wrapperClassName: 'col-span-12',
     required: true,
-    maxLength: 100,
+    maxLength: 4000,
     showCharCount: true,
   },
   {

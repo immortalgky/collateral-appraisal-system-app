@@ -18,6 +18,11 @@ export const ProfitRentFormSchema = z.object({
   includeBuildingCost: z.boolean().default(false),
   growthPeriods: z.array(GrowthPeriodSchema).default([]),
   estimatePriceRounded: z.number().nullable().default(null),
+  // No `.default()` here — it diverges the schema's input/output types (see the
+  // `kind` field note in hypothesisForm.ts) and broke the zodResolver/useForm
+  // alignment. `.optional()` alone keeps input and output both `number | null | undefined`;
+  // profitRentFormDefaults supplies the actual default of `null`.
+  indicatedValue: z.number().nullable().optional(),
   totalBuildingCost: z.number().nullable().default(null),
   appraisalPriceWithBuilding: z.number().nullable().default(null),
   appraisalPriceWithBuildingRounded: z.number().nullable().default(null),
@@ -36,6 +41,7 @@ export const profitRentFormDefaults: ProfitRentFormType = {
   includeBuildingCost: false,
   growthPeriods: [],
   estimatePriceRounded: null,
+  indicatedValue: null,
   totalBuildingCost: null,
   appraisalPriceWithBuilding: null,
   appraisalPriceWithBuildingRounded: null,

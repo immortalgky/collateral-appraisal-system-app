@@ -1,4 +1,5 @@
 import { useFormContext, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { roomTypeParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 
 interface RoomDetail {
@@ -24,6 +25,7 @@ interface MethodDetail {
 
 export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string }) {
   const { control } = useFormContext();
+  const { t } = useTranslation('pricingAnalysis');
   const detail = (useWatch({ control, name }) ?? {}) as MethodDetail;
 
   const rooms = detail.roomDetails ?? [];
@@ -35,16 +37,16 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
           <thead>
             <tr className="bg-gray-50 text-gray-600">
               <th className="text-left font-medium px-3 py-2 border-b border-gray-200">
-                Room Type
+                {t('dcf.common.roomType')}
               </th>
               <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
-                Room Income
+                {t('dcf.common.roomIncome')}
               </th>
               <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
-                Saleable Area
+                {t('dcf.common.saleableArea')}
               </th>
               <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
-                Total Room Income
+                {t('dcf.common.totalRoomIncome')}
               </th>
             </tr>
           </thead>
@@ -55,7 +57,7 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
                   colSpan={4}
                   className="px-3 py-4 text-center text-gray-400 border-b border-gray-100"
                 >
-                  No rooms configured
+                  {t('dcf.common.noRoomsConfigured')}
                 </td>
               </tr>
             )}
@@ -89,7 +91,7 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
           {rooms.length > 0 && (
             <tfoot>
               <tr className="bg-gray-50 font-semibold text-gray-800">
-                <td className="px-3 py-2 border-t border-gray-200">Total</td>
+                <td className="px-3 py-2 border-t border-gray-200">{t('dcf.common.total')}</td>
                 <td className="px-3 py-2 border-t border-gray-200 text-right tabular-nums">
                   {formatNumber(detail.sumRoomIncome, 2)}
                 </td>
@@ -106,24 +108,25 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
       </div>
 
       <dl className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
-        <Stat label="Average Room Rate" value={formatNumber(detail.avgRoomRate, 2)} />
-        <Stat label="Total Saleable Area" value={formatNumber(detail.sumSaleableArea, 0)} />
+        <Stat label={t('dcf.common.averageRoomRate')} value={formatNumber(detail.avgRoomRate, 2)} />
         <Stat
-          label="Increase Rate"
-          value={`${formatNumber(detail.increaseRatePct, 0)}% every ${formatNumber(
-            detail.increaseRateYrs,
-            0,
-          )} year(s)`}
+          label={t('dcf.methods.rentalIncomePerSquareMeter.totalSaleableArea')}
+          value={formatNumber(detail.sumSaleableArea, 0)}
         />
         <Stat
-          label="Occupancy Rate"
-          value={`First year ${formatNumber(
-            detail.occupancyRateFirstYearPct,
-            2,
-          )}%, grows ${formatNumber(detail.occupancyRatePct, 2)}% every ${formatNumber(
-            detail.occupancyRateYrs,
-            0,
-          )} year(s)`}
+          label={t('dcf.common.increaseRate')}
+          value={t('dcf.common.increaseRateSummary', {
+            pct: formatNumber(detail.increaseRatePct, 0),
+            years: formatNumber(detail.increaseRateYrs, 0),
+          })}
+        />
+        <Stat
+          label={t('dcf.common.occupancyRate')}
+          value={t('dcf.common.occupancyRateSummary', {
+            firstYear: formatNumber(detail.occupancyRateFirstYearPct, 2),
+            growth: formatNumber(detail.occupancyRatePct, 2),
+            years: formatNumber(detail.occupancyRateYrs, 0),
+          })}
         />
       </dl>
     </div>

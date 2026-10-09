@@ -3,6 +3,10 @@
     "save": "保存",
     "cancel": "取消",
     "delete": "删除",
+    "confirmDelete": "删除？",
+    "confirmDeleteLabel": "确认删除",
+    "confirmDeletePrompt": "再按一次以确认删除",
+    "deleteRowN": "删除第 {{n}} 行",
     "edit": "编辑",
     "create": "创建",
     "confirm": "确认",
@@ -31,7 +35,12 @@
   "select": {
     "placeholder": "请选择",
     "searchPlaceholder": "搜索...",
-    "typeToSearch": "输入以搜索..."
+    "typeToSearch": "输入以搜索...",
+    "noResults": "未找到结果",
+    "clearSelection": "清除选择",
+    "other": "其他",
+    "otherPlaceholder": "请注明",
+    "clearOther": "清除并重新选择"
   },
   "range": {
     "from": "从",
@@ -94,6 +103,13 @@
     "deleteMessage": "您确定要删除此项吗？此操作无法撤销。",
     "unsavedChanges": "您有未保存的更改。确定要离开吗？"
   },
+  "unsaved": {
+    "badge": "有未保存的更改",
+    "title": "未保存的更改",
+    "message": "您有未保存的更改。确定要离开此页面吗？您的更改将会丢失。",
+    "stay": "留下",
+    "leave": "离开"
+  },
   "validation": {
     "required": "此字段为必填项",
     "invalidEmail": "邮箱地址无效",
@@ -101,6 +117,9 @@
   },
   "hint": {
     "scrollWithArrowKeys": "使用方向键滚动表格"
+  },
+  "nav": {
+    "visibleRange": "显示 {{from}}–{{to}}，共 {{total}}"
   },
   "language": {
     "en": "EN",

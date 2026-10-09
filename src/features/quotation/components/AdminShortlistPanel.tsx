@@ -14,6 +14,7 @@ import {
   useUnshortlistQuotation,
 } from '../api/quotation';
 import type { AppraisalSummaryDto, CompanyQuotationDto } from '../schemas/quotation';
+import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import SendToRmModal from './SendToRmModal';
 import { AdminCompanyQuotationDetailContent } from '../pages/AdminCompanyQuotationDetailPage';
@@ -30,7 +31,7 @@ const fmtDateTime = (iso: string | null | undefined): string => {
 interface AdminShortlistPanelProps {
   quotationId: string;
   companyQuotations: CompanyQuotationDto[];
-  /** Appraisals in this quotation — used to block Send-to-RM when any is a ReAppraisal. */
+  /** Appraisals in this quotation — used to block Send-to-RM when any is a ReAppraisal on the SIBS channel. */
   appraisals: AppraisalSummaryDto[];
 }
 
@@ -56,13 +57,20 @@ const AdminShortlistPanel = ({
     ? companyQuotations.find(cq => cq.id === drawerCompanyQuotationId)
     : null;
 
+  const sortedCompanyQuotations = sortCompanyResponses(companyQuotations, cq => ({
+    status: cq.status,
+    totalNetAmount: cq.totalQuotedPrice,
+    companyName: cq.companyName,
+  }));
   const shortlistedQuotations = companyQuotations.filter(q => q.isShortlisted);
   const shortlistedCount = shortlistedQuotations.length;
   const isPending = isShortlisting || isUnshortlisting;
   /** Admin can pick winner directly only when exactly one company is shortlisted. */
   const canSelectAsWinner = shortlistedCount === 1 && !isPickingWinner;
-  /** Send-to-RM is blocked when any appraisal in the quotation is a ReAppraisal. */
-  const hasReAppraisal = appraisals.some(a => a.appraisalType === 'ReAppraisal');
+  /** Send-to-RM is blocked when any appraisal in the quotation is a ReAppraisal on the SIBS channel. */
+  const hasReAppraisalSibs = appraisals.some(
+    a => a.appraisalType === 'ReAppraisal' && a.channel === 'SIBS',
+  );
 
   const handleToggle = (cq: CompanyQuotationDto) => {
     if (isPending) return;
@@ -156,8 +164,8 @@ const AdminShortlistPanel = ({
             <Button
               size="sm"
               onClick={openSendToRm}
-              disabled={shortlistedCount === 0 || hasReAppraisal}
-              title={hasReAppraisal ? t('shortlist.sendToRmReAppraisalHint') : undefined}
+              disabled={shortlistedCount === 0 || hasReAppraisalSibs}
+              title={hasReAppraisalSibs ? t('shortlist.sendToRmReAppraisalHint') : undefined}
             >
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.sendToRm')}
@@ -203,7 +211,7 @@ const AdminShortlistPanel = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {companyQuotations.map(cq => {
+                {sortedCompanyQuotations.map(cq => {
                   const items = cq.items ?? [];
                   const hasItems = items.length > 0;
                   const totalFeeAmount = items.reduce(
@@ -214,10 +222,15 @@ const AdminShortlistPanel = ({
                     (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
                     0,
                   );
-                  const totalEstimateManday = items.reduce(
-                    (sum, item) => sum + (item.estimatedDays ?? 0),
-                    0,
-                  );
+                  const validEstimatedDays = items
+                    .map(item => item.estimatedDays)
+                    .filter((d): d is number => typeof d === 'number' && d > 0);
+                  const minEstimateManday = validEstimatedDays.length
+                    ? Math.min(...validEstimatedDays)
+                    : undefined;
+                  const maxEstimateManday = validEstimatedDays.length
+                    ? Math.max(...validEstimatedDays)
+                    : undefined;
                   const isDeclined = cq.status === 'Declined';
                   return (
                     <tr
@@ -274,7 +287,11 @@ const AdminShortlistPanel = ({
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className="text-sm text-gray-600">
-                          {hasItems ? totalEstimateManday : '—'}
+                          {minEstimateManday !== undefined && maxEstimateManday !== undefined
+                            ? minEstimateManday === maxEstimateManday
+                              ? minEstimateManday
+                              : `${minEstimateManday} - ${maxEstimateManday}`
+                            : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3">

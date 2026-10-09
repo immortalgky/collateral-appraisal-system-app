@@ -85,10 +85,9 @@ function RequestListingPage() {
     error,
   } = useGetRequests(requestParams);
 
-  // Extract paginated result
-  const paginatedResult = data?.result ?? data;
-  const requests = paginatedResult?.items ?? [];
-  const totalCount = paginatedResult?.count ?? 0;
+  // useGetRequests already unwrapped the { result } envelope
+  const requests = data?.items ?? [];
+  const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // First load vs refetch
@@ -424,9 +423,9 @@ function RequestListingPage() {
                         {request.requestNumber || '-'}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5">
+                    <td className="px-4 py-2.5 max-w-[180px]">
                       <div className="flex flex-col">
-                        <span className="text-gray-600">
+                        <span className="text-gray-600 truncate">
                           {request.customerName || (
                             <span className="text-gray-300 italic text-xs">-</span>
                           )}

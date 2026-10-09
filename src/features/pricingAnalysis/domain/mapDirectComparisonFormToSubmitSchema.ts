@@ -29,10 +29,11 @@ export function mapDirectComparisonFormToSubmitSchema({
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
     appraisalValue: userAppraisalPrice,
-    finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
+    // Wire key renamed; the right-hand side still reads the form model, which keeps its own name.
+    finalValueOverride: (fv?.finalValueAdjusted as number | undefined) ?? null,
     hasBuildingValue: ap?.hasBuildingValue ?? null,
     buildingValue: ap?.totalBuildingCost ?? null,
-    appraisalPrice: userAppraisalPrice,
+    indicatedValue: userAppraisalPrice,
     includeLandArea: ap?.includeLandArea ?? null,
     landArea: ap?.landArea ?? null,
     landValue: landValueToSend,
@@ -88,17 +89,17 @@ function buildFactorScores(
   const qualitatives = form.directComparisonQualitatives ?? [];
   const adjustmentFactors = form.directComparisonAdjustmentFactors ?? [];
 
-  // Build a lookup: factorId → adjustment factor data
-  const adjMap = new Map<string, (typeof adjustmentFactors)[number]>();
-  for (const af of adjustmentFactors) {
-    adjMap.set(af.factorId, af);
-  }
+  // The adjustment row for a qualitative row is the one at the same index, not the one with a
+  // matching factorId: factorId is '' until a factor resolves (handleAddRow leaves it unset, and
+  // initialize falls back to '' when factorIdMap misses), so keying on it made every such row
+  // share one entry and save one row's percentages and remark against another's. The two arrays
+  // are built and mutated as a pair -- see syncXxxFormSurveys for the same reasoning.
 
   const entries: SaveComparativeAnalysisRequestType['factorScores'] = [];
 
   for (let rowIdx = 0; rowIdx < qualitatives.length; rowIdx++) {
     const qual = qualitatives[rowIdx];
-    const adj = adjMap.get(qual.factorId);
+    const adj = adjustmentFactors[rowIdx];
     const fid = qual.factorId || '';
 
     for (const q of qual.qualitatives ?? []) {

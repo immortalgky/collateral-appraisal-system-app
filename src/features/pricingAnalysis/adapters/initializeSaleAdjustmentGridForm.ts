@@ -102,7 +102,15 @@ export function initializeSaleAdjustmentGridForm({
         },
         saleAdjustmentGridAppraisalPrice: {
           includeLandArea: false,
-          landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+          // Net area — title area less the deductions the appraiser listed. Same shape as
+          // initializeWQSForm.ts: `!= null` so a fully deducted plot stays a real 0, and a
+          // property with no deductions recorded falls back to the title area unchanged.
+          landArea:
+            property?.netLandAreaInSqWa != null
+              ? Number(property.netLandAreaInSqWa)
+              : property?.totalLandAreaInSqWa
+                ? Number(property.totalLandAreaInSqWa)
+                : undefined,
           usableArea: property?.totalBuildingArea
             ? Number(property.totalBuildingArea)
             : property?.usableArea
@@ -201,7 +209,15 @@ export function initializeSaleAdjustmentGridForm({
       },
       saleAdjustmentGridAppraisalPrice: {
         includeLandArea: false,
-        landArea: property?.totalLandAreaInSqWa ? Number(property.totalLandAreaInSqWa) : undefined,
+        // Net area — title area less the deductions the appraiser listed. Same shape as
+        // initializeWQSForm.ts: `!= null` so a fully deducted plot stays a real 0, and a
+        // property with no deductions recorded falls back to the title area unchanged.
+        landArea:
+          property?.netLandAreaInSqWa != null
+            ? Number(property.netLandAreaInSqWa)
+            : property?.totalLandAreaInSqWa
+              ? Number(property.totalLandAreaInSqWa)
+              : undefined,
         usableArea: property?.totalBuildingArea
           ? Number(property.totalBuildingArea)
           : property?.usableArea

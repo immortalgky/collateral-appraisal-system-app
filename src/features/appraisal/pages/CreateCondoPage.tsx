@@ -25,7 +25,8 @@ import {
   useUpdateCondoProperty,
 } from '../api/property';
 import { createCondoForm, createCondoFormDefault, type createCondoFormType } from '../schemas/form';
-import { mapCondoPropertyResponseToForm, mapCondoFormDataToApiPayload } from '../utils/mappers';
+import { mapCondoPropertyResponseToForm } from '../utils/mappers';
+import { condoToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
@@ -33,7 +34,8 @@ import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { PageReadOnlyContext, usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useProgressivePrefill } from '@/features/collateralMaster';
 import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
-import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
+import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
+import { useConstructionTab } from '../hooks/useConstructionTab';
 
 const CreateCondoPage = () => {
   const isReadOnly = usePageReadOnly();
@@ -144,10 +146,8 @@ const CreateCondoPage = () => {
 
   const onSubmit: SubmitHandler<createCondoFormType> = data => {
     setSaveAction('submit');
-    // buildingInsurancePrice is server-derived (rate × usableArea) — display only,
-    // never sent back on create/update.
-    const { buildingInsurancePrice: _buildingInsurancePrice, ...rest } = data;
-    const payload = mapCondoFormDataToApiPayload(rest as createCondoFormType);
+    // buildingInsurancePrice is server-derived — condoToPayload never sends it back.
+    const payload = condoToPayload(data);
     if (isEditMode && propertyId) {
       updateCondoProperties(
         {
@@ -195,9 +195,7 @@ const CreateCondoPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    // buildingInsurancePrice is server-derived — never sent back on save.
-    const { buildingInsurancePrice: _buildingInsurancePrice, ...rest } = getValues();
-    const payload = mapCondoFormDataToApiPayload(rest as createCondoFormType);
+    const payload = condoToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateCondoProperties(
@@ -249,12 +247,15 @@ const CreateCondoPage = () => {
   const initialCondoTab = tabParam === 'construction' ? 'construction' : 'condo';
   const [activeTab, setActiveTab] = useState<'condo' | 'construction'>(initialCondoTab);
 
-  // Reset to default tab if construction tab is active but property is not under construction (CI appraisals always show it)
-  useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
-      setActiveTab('condo');
-    }
-  }, [isUnderConstruction, activeTab, isCiAppraisal]);
+  const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
+    methods,
+    isUnderConstruction,
+    activeTab,
+    setActiveTab,
+    fallbackTab: 'condo',
+    isCreateMode: !isEditMode,
+    isCiAppraisal,
+  });
 
   if (isLoading || (isEditMode && !propertyData)) {
     return (
@@ -267,7 +268,7 @@ const CreateCondoPage = () => {
   // The header's tabs; construction appears only when it applies.
   const editorTabs = [
     { id: 'condo', label: t('createPage.navCondo') },
-    ...(isUnderConstruction || isCiAppraisal
+    ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
       : []),
   ];
@@ -288,7 +289,7 @@ const CreateCondoPage = () => {
                 typeCode="U"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
-                activeTab={activeTab}
+                activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
               />
               <ResizableSidebar
@@ -302,7 +303,7 @@ const CreateCondoPage = () => {
                     {/* Condo Tab Content */}
                     <div
                       id="condo-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'condo' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 ${shownTab !== 'condo' ? 'hidden' : ''}`}
                     >
                       {/* Condo Form */}
                       <Section
@@ -315,19 +316,14 @@ const CreateCondoPage = () => {
                     </div>
 
                     {/* Construction Inspection Tab Content */}
-                    {(isUnderConstruction || isCiAppraisal) && (
-                      <div
-                        id="construction-section"
-                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
-                      >
-                        <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <ConstructionInspectionTab
-                            readOnly={isReadOnly}
-                            ciMode={isCiAppraisal}
-                          />
-                        </Section>
-                      </div>
-                    )}
+                    <ConstructionEditorSection
+                      key={propertyId}
+                      shownTab={shownTab}
+                      underConstruction={hasConstructionTab}
+                      readOnly={isReadOnly}
+                      ciMode={isCiAppraisal}
+                      condo
+                    />
                   </div>
                 </ResizableSidebar.Main>
               </ResizableSidebar>
@@ -353,7 +349,6 @@ const CreateCondoPage = () => {
                     isLoading={isPending && saveAction === 'draft'}
                     disabled={isPending}
                   >
-                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     {t('createPage.saveDraft')}
                   </Button>
                   <Button

@@ -1,69 +1,55 @@
 import type { SectionColor } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
-import { type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import clsx from 'clsx';
-import { Icon } from '@shared/components';
+import { useTranslation } from 'react-i18next';
 import type { DCFSection } from '../../../types/dcf';
+import { dcfSectionLabel } from '../../../domain/dcf/dcfNameLabel';
+import { STK_CLASS, STK2_CLASS, YEAR_CELL_CLASS } from '../dcfTableCellStyles';
 
 interface SectionHeaderProps {
   title: string;
-  color: SectionColor;
-  icon: string;
   totalNumberOfYears: number;
+  open: boolean;
+  onToggle: () => void;
 }
-function SectionHeader({ title, color, icon, totalNumberOfYears }: SectionHeaderProps) {
+/** mock `band()` (mock:1412, CSS mock:172) — the grey collapsible band, not a coloured one. */
+export function SectionHeader({ title, totalNumberOfYears, open, onToggle }: SectionHeaderProps) {
   return (
-    <tr className={color.bg}>
-      <td className={clsx('border-b border-gray-200', color.bg)}>
-        <div className={clsx('flex items-center gap-2 px-1 py-0.5')}>
-          <div
-            className={clsx('flex items-center justify-center w-5 h-5 rounded-md', color.bgAccent)}
-          >
-            <Icon name={icon} style="solid" className={clsx('size-3 shrink-0', color.textLight)} />
-          </div>
-          <span className={clsx('text-xs font-bold tracking-wide uppercase', color.textAccent)}>
-            {title}
-          </span>
-        </div>
+    <tr onClick={onToggle} className="cursor-pointer select-none">
+      <td
+        colSpan={2}
+        className="border-b border-gray-300 px-[8px] py-0 h-[22px] leading-[21px] truncate bg-[#edf1f1] text-[11px] font-semibold tracking-[0.02em] text-[#55636f]"
+      >
+        <span
+          className={clsx('inline-block w-[10px] transition-transform', !open && '-rotate-90')}
+          aria-hidden
+        >
+          ▾
+        </span>{' '}
+        {title}
       </td>
-      {Array.from({ length: totalNumberOfYears }, (_, index) => (
-        <td key={index} className={clsx('border-b border-gray-200', color.bg)} />
-      ))}
+      <td colSpan={totalNumberOfYears} className="border-b border-gray-300 h-[22px] bg-[#edf1f1]" />
     </tr>
   );
 }
 
 interface SectionTotalRowProps {
-  name: string;
   totalSectionValues: number[];
   label: string;
-  color: SectionColor;
-  variant?: 'section' | 'final';
 }
-function SectionTotalRow({ totalSectionValues, label, color }: SectionTotalRowProps) {
+/** mock `tr.tot` — font-weight 600 on surface-2, stays visible while the band is shut. */
+function SectionTotalRow({ totalSectionValues, label }: SectionTotalRowProps) {
   return (
-    <tr className={color.bg}>
-      <td className={clsx('border-b border-gray-200', color.bg)}>
-        <div className={clsx('flex items-center gap-2 px-1 py-0.5')}>
-          <div className={clsx('w-0.5 h-3 rounded', color.bgAccent)}></div>
-          <span className={clsx('text-[11px] font-bold tracking-wide uppercase', color.textAccent)}>
-            {label}
-          </span>
-        </div>
+    <tr>
+      <td className={clsx(STK_CLASS, 'bg-[#f8fafa] font-semibold')} title={label}>
+        {label}
       </td>
-      {(totalSectionValues ?? []).map((val, index) => {
-        return (
-          <td
-            key={index}
-            className={clsx(
-              'border-b border-gray-200 font-medium text-right text-xs px-1 py-0.5',
-              color.bg,
-              color.textAccent,
-            )}
-          >
-            <span>{val.toLocaleString() ?? 0}</span>
-          </td>
-        );
-      })}
+      <td className={clsx(STK2_CLASS, 'bg-[#f8fafa]')} />
+      {(totalSectionValues ?? []).map((val, index) => (
+        <td key={index} className={clsx(YEAR_CELL_CLASS, 'bg-[#f8fafa] font-semibold')}>
+          {(val ?? 0).toLocaleString()}
+        </td>
+      ))}
     </tr>
   );
 }
@@ -77,30 +63,25 @@ interface DynamicSectionProps {
   children: ReactNode;
   totalSectionValues?: number[];
 }
-export function DynamicSection({
-  name,
-  section,
-  totalNumberOfYears,
-  icon,
-  color,
-  children,
-}: DynamicSectionProps) {
+export function DynamicSection({ section, totalNumberOfYears, children }: DynamicSectionProps) {
+  const { t } = useTranslation('pricingAnalysis');
+  const [open, setOpen] = useState(true);
+  const totalLabel =
+    section.sectionType === 'income'
+      ? t('methodTabs.dcf.sectionTotal.income')
+      : section.sectionType === 'expenses'
+        ? t('methodTabs.dcf.sectionTotal.expenses')
+        : t('dcf.common.total');
   return (
     <>
       <SectionHeader
-        title={section.sectionName}
-        color={color}
-        icon={icon}
+        title={dcfSectionLabel(t, section.sectionType, section.sectionName)}
         totalNumberOfYears={totalNumberOfYears}
+        open={open}
+        onToggle={() => setOpen(o => !o)}
       />
-      {children}
-      <SectionTotalRow
-        name={name}
-        totalSectionValues={section.totalSectionValues}
-        label={'Total'}
-        color={color}
-        variant={'section'}
-      />
+      {open && children}
+      <SectionTotalRow totalSectionValues={section.totalSectionValues} label={totalLabel} />
     </>
   );
 }

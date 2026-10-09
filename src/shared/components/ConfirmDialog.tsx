@@ -45,6 +45,8 @@ interface ConfirmDialogProps {
   customFooter?: ReactNode;
   /** Text shown on the confirm button while loading (defaults to "Processing..."). */
   loadingText?: string;
+  /** Keeps the confirm button disabled, e.g. until an acknowledgement box is ticked. */
+  confirmDisabled?: boolean;
 }
 
 const ConfirmDialog = ({
@@ -63,6 +65,7 @@ const ConfirmDialog = ({
   hasWarning = false,
   customFooter,
   loadingText,
+  confirmDisabled = false,
 }: ConfirmDialogProps) => {
   const progressMessage = useLoadingStore(s => s.message);
 
@@ -168,7 +171,7 @@ const ConfirmDialog = ({
               <button
                 type="button"
                 onClick={handleConfirm}
-                disabled={isLoading}
+                disabled={isLoading || confirmDisabled}
                 className={`flex-1 px-4 py-2.5 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${styles.confirmBtn}`}
               >
                 {isLoading ? (

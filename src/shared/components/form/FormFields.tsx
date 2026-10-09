@@ -5,7 +5,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useMemo, useRef, type CSSProperties } from 'react';
 import clsx from 'clsx';
 import type { z } from 'zod';
 
@@ -25,7 +25,7 @@ import FormSwitch from '../inputs/FormSwitch';
 import AppraisalSelector from '../inputs/AppraisalSelector';
 import LocationSelector from '../inputs/LocationSelector';
 
-import { useFormSchema } from './context';
+import { FieldLabelContext, useFormReadOnly, useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
 import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
 import FieldHelp from './FieldHelp';
@@ -154,6 +154,45 @@ interface FieldRendererProps {
   schema?: z.ZodObject<any>;
   globalShowCharCount?: boolean;
   globalDisabled?: boolean;
+  /** First field of a row it shares with others, and wide enough to carry a full-row label. */
+  rowLead?: boolean;
+}
+
+/**
+ * Which fields open a row they share with other fields and are wide enough to carry a full-row
+ * label, walking the 12-column spans in order. The grid layout gives those fields the same label
+ * column as a full-row field, so the left edge lines up down the form (formLayout.css,
+ * `data-row-lead`).
+ *
+ * Wide enough means half the row or more, or a third of it when it has the row to share with just
+ * one other field (Check Owner | Owner at 4 + 8). A 4/4/4 or 3/3/6 row is left alone: a 16rem label
+ * out of a third of a three-field row leaves almost nothing for the control.
+ *
+ * Worked out from the configured spans, not from what is currently shown: a field hidden by its
+ * condition still counts. In practice the conditional fields are full-row remarks, which start and
+ * end on a row boundary either way. A field with no col-span resets the count.
+ */
+function findRowLeads(fields: FormField[]): Set<FormField> {
+  const spanOf = (field: FormField | undefined) => {
+    const match = /(?:^|\s)col-span-(\d+)(?=\s|$)/.exec(field?.wrapperClassName ?? '');
+    return match ? Number(match[1]) : null;
+  };
+  const leads = new Set<FormField>();
+  let used = 0;
+  fields.forEach((field, i) => {
+    const span = spanOf(field);
+    if (span === null) {
+      used = 0;
+      return;
+    }
+    if (used + span > 12) used = 0;
+    if (used === 0 && span < 12) {
+      const pairedWithOne = span + (spanOf(fields[i + 1]) ?? 0) === 12;
+      if (span >= 6 || (pairedWithOne && span >= 4)) leads.add(field);
+    }
+    used = (used + span) % 12;
+  });
+  return leads;
 }
 
 /**
@@ -188,23 +227,26 @@ export function FormFields({
   // Use schema from props, or fall back to context from FormProvider
   const contextSchema = useFormSchema();
   const schema = schemaProp ?? contextSchema;
+  const relabel = useContext(FieldLabelContext);
+  const visible = fields.filter(f => !f.hide);
+  const shown = relabel ? visible.map(relabel) : visible;
+  const rowLeads = findRowLeads(shown);
 
   return (
     <>
-      {fields
-        .filter(f => !f.hide)
-        .map(field => (
-          <FieldRenderer
-            key={field.key ?? field.name}
-            control={control}
-            field={field}
-            namePrefix={namePrefix}
-            index={index}
-            schema={schema as z.ZodObject<any> | undefined}
-            globalShowCharCount={showCharCount}
-            globalDisabled={disabled}
-          />
-        ))}
+      {shown.map(field => (
+        <FieldRenderer
+          key={field.key ?? field.name}
+          control={control}
+          field={field}
+          namePrefix={namePrefix}
+          index={index}
+          schema={schema as z.ZodObject<any> | undefined}
+          globalShowCharCount={showCharCount}
+          globalDisabled={disabled}
+          rowLead={rowLeads.has(field)}
+        />
+      ))}
     </>
   );
 }
@@ -220,6 +262,7 @@ function FieldRenderer({
   schema,
   globalShowCharCount,
   globalDisabled,
+  rowLead,
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
   const {
@@ -228,6 +271,8 @@ function FieldRenderer({
     isRequired,
   } = useFieldState({ field, namePrefix, index });
   const isDisabled = fieldDisabled || (globalDisabled ?? false);
+  // A read-only page (the form context, not only `globalDisabled`) has nothing to fill in.
+  const formReadOnly = useFormReadOnly();
   const { setValue, getValues } = useFormContext();
 
   const filterWatchValues = useFilterWatchValues(
@@ -291,10 +336,10 @@ function FieldRenderer({
 
     preClampRef.current = current;
     // Dirty, unlike the blank-filling case above: the appraiser's own action changed a stored
-    // value, and the Data Correction form sends only the fields marked dirty
-    // (toCorrectionRequest walks dirtyFields). Clamping quietly there cleared the number on
-    // screen but left it in the database, so the report kept printing a registration number
-    // under the "ยังไม่ได้รับการจดทะเบียน" heading.
+    // value, and that change must show as an edit (unsaved-changes guard, the Data Correction
+    // confirm dialog). A quiet clamp once cleared the number on screen but left it in the
+    // database, so the report kept printing a registration number under the
+    // "ยังไม่ได้รับการจดทะเบียน" heading.
     setValue(name, field.disabledValue, {
       shouldDirty: true,
       shouldValidate: true,
@@ -651,6 +696,7 @@ function FieldRenderer({
             valueField={passedField.valueField}
             dateField={passedField.dateField}
             disabled={isDisabled}
+            required={isRequired}
             error={error?.message}
             className={passedField.className}
           />
@@ -716,6 +762,11 @@ function FieldRenderer({
     }
   };
 
+  // How wide the control may grow, from what the field already declares: a house number capped to
+  // its own few characters instead of a grey bar half the page wide. Published as a custom property
+  // and applied by the grid layout only (formLayout.css); every other layout ignores it.
+  const controlWidth = controlMaxWidth(passedField, schemaProps.maxLength);
+
   // Wrap the field component with the wrapper div.
   // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
   // because Dropdown never forwards `name` to the DOM.
@@ -726,11 +777,60 @@ function FieldRenderer({
       // layout can show it as inactive. Deliberately not set for `globalDisabled`: a read-only page
       // disables every field, and tinting all of them would just look like a broken form.
       data-field-disabled={fieldDisabled || undefined}
+      // Required and still blank: the grid layout tints the row until a value lands. Not on a page
+      // nobody can edit, where the tint would read as errors that cannot be fixed.
+      data-field-required={(isRequired && !isDisabled && !formReadOnly) || undefined}
+      data-field-empty={
+        isBlank(watchedValue) ||
+        // The schema counts 0 as missing for a required number unless the field allows it, so the
+        // tint does too.
+        (passedField.type === 'number-input' && !passedField.allowZero && watchedValue === 0) ||
+        undefined
+      }
+      data-row-lead={rowLead || undefined}
       className={clsx(field.wrapperClassName)}
+      style={controlWidth ? ({ '--cas-ctrl-w': controlWidth } as CSSProperties) : undefined}
     >
       {renderFieldComponent()}
     </div>
   );
+}
+
+const isBlank = (v: unknown) =>
+  v == null || (typeof v === 'string' && !v.trim()) || (Array.isArray(v) && v.length === 0);
+
+/**
+ * The cap for a field's control, in rem, or undefined to leave it filling its cell.
+ *
+ * Read off what the field already declares — a text field's `maxLength` (its own or the schema's),
+ * a number's digits — so a new field gets a sensible width without anyone setting one. Long text,
+ * textareas, dropdowns, choice controls and anything with its own search/pick UI keep the full
+ * cell: they hold sentences, or a control whose width is its own business.
+ */
+function controlMaxWidth(field: FormField, schemaMaxLength?: number): string | undefined {
+  switch (field.type) {
+    case 'number-input': {
+      // Decimals default to NumberInput's own 2: a field that leaves them unset still shows "0.00".
+      const digits = (field.maxIntegerDigits ?? 12) + (field.decimalPlaces ?? 2);
+      // ~0.6rem a digit at the form's size, plus room for separators. An icon or unit inside the box
+      // takes its own room off the right (`NumberInput` reserves 3rem for an icon, 2.5rem for a
+      // suffix, 2.25rem on the left), so it is added: the map pin of Latitude / Longitude cut
+      // "-100.501765" short in a 7.9rem box.
+      const room = (field.rightIcon ? 3 : field.suffix ? 2.5 : 0) + (field.leftIcon ? 2.25 : 0);
+      return `${Math.min(Math.max(digits * 0.6 + 2.5 + room, 6), 16)}rem`;
+    }
+    case 'date-input':
+    case 'datetime-input':
+      return '13rem';
+    case 'text-input': {
+      const max = field.maxLength ?? schemaMaxLength;
+      if (max == null || max > 60) return undefined;
+      const room = (field.rightIcon ? 2.5 : 0) + (field.leftIcon ? 2.25 : 0);
+      return `${Math.min(Math.max(max * 0.55 + 2 + room, 7), 26)}rem`;
+    }
+    default:
+      return undefined;
+  }
 }
 
 // Re-export types for convenience

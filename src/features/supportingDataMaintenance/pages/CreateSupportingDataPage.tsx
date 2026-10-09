@@ -9,7 +9,6 @@ import { FormProvider } from '@shared/components/form';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
-import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -33,7 +32,10 @@ export function CreateSupportingDataPage() {
 
   const hasSupportingId = Boolean(id);
 
-  const { data: supportingData, isLoading } = useGetSupportingDataDetailById(supportingId, id);
+  const { data: supportingData, isLoading } = useGetSupportingDataDetailById(
+    supportingId ?? '',
+    id ?? '',
+  );
 
   const formDefaults = useMemo(() => {
     if (hasSupportingId && supportingData) {

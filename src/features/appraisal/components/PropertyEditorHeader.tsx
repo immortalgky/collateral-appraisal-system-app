@@ -5,8 +5,9 @@ import { useLocation } from 'react-router-dom';
 import { type FlatFormError, flattenFormErrors, scrollToField } from '@/shared/components/form';
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
-import type { PropertyItem } from '../types';
+import type { PropertyGroup, PropertyItem } from '../types';
 import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
+import { resolveTypeCode } from '../utils/propertyTypeConfig';
 import PropertyPhotoSection, {
   type PhotoSectionView,
   type PropertyPhotoSectionRef,
@@ -21,8 +22,17 @@ interface PropertyEditorHeaderProps {
   propertyId?: string;
   /** The form's property type code, e.g. 'L' or 'LB' — a new property has no saved row yet. */
   typeCode: string;
-  photoSectionRef: Ref<PropertyPhotoSectionRef>;
-  /** Leave out for a form with a single section — one tab is no choice at all. */
+  /** Absent on the PMA editors, which carry no photos: the card then has no cover tile. */
+  photoSectionRef?: Ref<PropertyPhotoSectionRef>;
+  /** A PMA property: the type chip reads "… (PMA)" and an unnamed one is titled for what it is. */
+  pma?: boolean;
+  /** Beside the type chip and position, e.g. the PMA sync status. */
+  meta?: ReactNode;
+  /**
+   * One entry per section of the form. A single section still gets a one-tab strip (not a tab
+   * list): it is the row that joins the header to the sheet below it. Editors rendered without this
+   * header or PropertyTabs have no strip — the Data Correction screen's generated VEH/VES forms.
+   */
   tabs?: EditorTab[];
   activeTab?: string;
   onTabChange?: (id: string) => void;
@@ -45,23 +55,17 @@ export const PropertyEditorHeader = ({
   propertyId,
   typeCode,
   photoSectionRef,
+  pma = false,
+  meta,
   tabs = [],
   activeTab,
   onTabChange,
 }: PropertyEditorHeaderProps) => {
   const { t } = useTranslation('appraisal');
   const cardRef = useRef<HTMLDivElement>(null);
-  const tabsRef = useRef<HTMLDivElement>(null);
   const { groups } = useEnrichedPropertyGroups(propertyId ? appraisalId : undefined);
 
-  const found = useMemo(() => {
-    if (!propertyId) return null;
-    for (const group of groups) {
-      const item = group.items.find(i => i.id === propertyId);
-      if (item) return { group, item };
-    }
-    return null;
-  }, [groups, propertyId]);
+  const found = useMemo(() => findProperty(groups, propertyId), [groups, propertyId]);
 
   // The breadcrumb's last crumb: this property's name instead of the layout's generic type label.
   const { pathname } = useLocation();
@@ -114,14 +118,6 @@ export const PropertyEditorHeader = ({
     return () => cancelAnimationFrame(frame);
   }, [activeTab]);
 
-  const selectTab = (id: string) => {
-    onTabChange?.(id);
-    // Deep in a long tab, the next one should open at its top rather than wherever this one was.
-    const scroller = tabsRef.current?.parentElement;
-    const cardHeight = cardRef.current?.offsetHeight ?? 0;
-    if (scroller && scroller.scrollTop > cardHeight) scroller.scrollTo({ top: cardHeight });
-  };
-
   const renderCard = (view?: PhotoSectionView) => (
     <IdentityCard
       view={view}
@@ -129,13 +125,15 @@ export const PropertyEditorHeader = ({
       item={found?.item}
       groupName={found?.group.name}
       isNew={!propertyId}
+      pma={pma}
+      meta={meta}
     />
   );
 
   return (
     <>
-      <div ref={cardRef} className="px-6">
-        {appraisalId ? (
+      <div ref={cardRef} className="px-3">
+        {appraisalId && photoSectionRef ? (
           <PropertyPhotoSection
             ref={photoSectionRef}
             appraisalId={appraisalId}
@@ -146,13 +144,13 @@ export const PropertyEditorHeader = ({
           renderCard()
         )}
       </div>
-      {tabs.length > 1 && (
+      {tabs.length > 0 && (
         <EditorTabBar
-          barRef={tabsRef}
+          scrollAnchorRef={cardRef}
           tabs={tabsWithErrors}
           activeId={activeTab}
           label={t('editorHeader.tabsLabel')}
-          onSelect={selectTab}
+          onSelect={id => onTabChange?.(id)}
         />
       )}
     </>
@@ -160,15 +158,29 @@ export const PropertyEditorHeader = ({
 };
 
 /**
+ * The group and item for a property id. Case-insensitive: the list holds the API's lowercase
+ * GUIDs, while a URL can carry them in capitals (hand-written links, SQL Server's own output).
+ */
+export function findProperty(groups: PropertyGroup[], propertyId?: string) {
+  if (!propertyId) return null;
+  const wanted = propertyId.toLowerCase();
+  for (const group of groups) {
+    const item = group.items.find(i => i.id.toLowerCase() === wanted);
+    if (item) return { group, item };
+  }
+  return null;
+}
+
+/**
  * How many of the failed fields sit inside a tab's panel — the element with id `${tab.id}-section`
  * that every property page wraps each tab's content in. Array errors (`titles`) match their first cell.
  */
-function countFailedIn(panelId: string, failed: FlatFormError[]): number {
+export function countFailedIn(panelId: string, failed: FlatFormError[]): number {
   return failed.filter(({ path }) => panelHasField(panelId, path)).length;
 }
 
 /** Is the field at `path` inside the element with this id? Array errors match their first cell. */
-function panelHasField(panelId: string, path: string): boolean {
+export function panelHasField(panelId: string, path: string): boolean {
   const panel = document.getElementById(panelId);
   if (!panel) return false;
   const escaped = CSS.escape(path);
@@ -181,10 +193,12 @@ interface IdentityCardProps {
   item?: PropertyItem;
   groupName?: string;
   isNew: boolean;
+  pma: boolean;
+  meta?: ReactNode;
 }
 
 /** The shared editor card, filled with a property's type, name and facts. */
-const IdentityCard = ({ view, typeCode, item, groupName, isNew }: IdentityCardProps) => {
+const IdentityCard = ({ view, typeCode, item, groupName, isNew, pma, meta }: IdentityCardProps) => {
   const { t } = useTranslation('appraisal');
   const name = item && item.address !== '-' ? item.address : null;
 
@@ -197,21 +211,39 @@ const IdentityCard = ({ view, typeCode, item, groupName, isNew }: IdentityCardPr
       view={view}
       top={
         <>
-          <PropertyTypeChip code={typeCode} />
+          <PropertyTypeChip
+            code={typeCode}
+            suffix={pma ? `(${t('editorHeader.pmaSuffix')})` : undefined}
+            className="cas-id-badge"
+          />
           {groupName && item?.sequenceNumber != null && (
-            <span className="ml-auto text-xs text-gray-400">
+            // Beside the type chip, not pushed right: the right side now carries the cover photo
+            // and thumbnails, and the position drowned against them.
+            <span className="cas-id-pos rounded-full border border-primary-200 bg-primary-50 px-2 text-[11px] font-semibold leading-4 text-primary-700">
               {t('editorHeader.position', { group: groupName, n: item.sequenceNumber })}
             </span>
           )}
+          {meta}
         </>
       }
-      title={name ?? (isNew ? t('editorHeader.newProperty') : t('editorHeader.untitled'))}
-      titleMuted={!name}
+      title={
+        name ??
+        (pma
+          ? t('editorHeader.pmaTitle')
+          : isNew
+            ? t('editorHeader.newProperty')
+            : t('editorHeader.untitled'))
+      }
+      titleMuted={!name && !pma}
     >
-      <div className="flex flex-wrap items-center text-[13px] text-gray-600">{factsLine}</div>
+      <div className="cas-id-facts flex flex-wrap items-center text-[13px] text-gray-600">
+        {factsLine}
+      </div>
     </EditorIdentityCard>
   );
 };
+
+const CONDO_CODES = new Set<string>(['U', 'LSU']);
 
 /**
  * The line under the name. Machines are told apart by brand and registration; everything else
@@ -225,10 +257,35 @@ const PropertyFacts = ({ item }: { item: PropertyItem }) => {
     const identity = brandModel(item);
     if (identity) facts.push(identity);
     if (item.registrationNumber) facts.push(item.registrationNumber);
+  } else if (CONDO_CODES.has(resolveTypeCode(item.type) ?? '')) {
+    // A unit is told apart by its project, floor and room, as in the property cards; the deed
+    // number of a condo is free text and no help here.
+    if (item.condoName) facts.push(item.condoName);
+    const unit = [
+      item.floorNumber && t('properties.facts.floor', { n: item.floorNumber }),
+      item.roomNumber && t('properties.facts.room', { n: item.roomNumber }),
+    ].filter(Boolean);
+    if (unit.length) facts.push(<span className="tabular-nums">{unit.join(' · ')}</span>);
+    if (item.areaValue)
+      facts.push(
+        <span className="tabular-nums">
+          {formatAreaNumber(item.areaValue)} {t('properties.units.sqm')}
+        </span>,
+      );
+    facts.push(<PlaceValue property={item} />);
   } else {
     const titleCount = item.titles?.length ?? 0;
     if (titleCount > 1) facts.push(t('editorHeader.titleCount', { n: titleCount }));
-    else if (item.titleNo) facts.push(t('editorHeader.titleNo', { no: item.titleNo }));
+    else if (item.titleNo) {
+      // A condo's title number is free text and can be a long list; cut it to one short run and
+      // keep the whole of it in the tooltip.
+      const label = t('editorHeader.titleNo', { no: item.titleNo });
+      facts.push(
+        <span className="block max-w-[18rem] truncate" title={label}>
+          {label}
+        </span>,
+      );
+    }
     if (item.areaValue) {
       facts.push(
         <span className="tabular-nums">
@@ -250,7 +307,8 @@ const PropertyFacts = ({ item }: { item: PropertyItem }) => {
               ·
             </span>
           )}
-          {fact}
+          {/* min-w-0 + truncate: one over-long fact ellipsizes instead of pushing past the card. */}
+          <span className="min-w-0 max-w-full truncate">{fact}</span>
         </Fragment>
       ))}
     </>

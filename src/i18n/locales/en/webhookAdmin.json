@@ -57,7 +57,9 @@
     },
     "columns": {
       "systemCode": "System Code",
+      "eventType": "Event Type",
       "callbackUrl": "Callback URL",
+      "authType": "Auth",
       "active": "Active",
       "secret": "Secret",
       "lastDelivery": "Last Delivery",
@@ -86,15 +88,42 @@
       "editTitle": "Edit Webhook Subscription",
       "systemCode": "System Code",
       "systemCodePlaceholder": "e.g. LOS, CLS",
-      "systemCodeLocked": "System code cannot be changed after creation.",
+      "systemCodeLocked": "System code and event type cannot be changed after creation.",
       "callbackUrl": "Callback URL",
       "secretKey": "Signing Secret",
       "secretKeyPlaceholder": "Shared HMAC secret from the receiving system",
       "secretKeyHint": "Shared HMAC-SHA256 secret used to sign outbound payloads. Coordinated with the receiving system.",
       "replaceSecret": "Replace secret",
+      "keepSecret": "Keep the current secret",
       "cancel": "Cancel",
       "create": "Create",
-      "save": "Save"
+      "save": "Save",
+      "eventType": "Event Type",
+      "eventTypePlaceholder": "e.g. APPRAISAL_PMA_UPDATED",
+      "eventTypeHint": "Leave empty to receive every event for this system (catch-all). Cannot be changed after creation.",
+      "httpMethod": "HTTP Method",
+      "authType": "Authentication",
+      "authTypes": {
+        "HMAC": "HMAC signature",
+        "TokenBearer": "Bearer token (token endpoint)"
+      },
+      "tokenEndpoint": "Token Endpoint",
+      "clientId": "Client ID",
+      "clientSecret": "Client Secret",
+      "clientSecretPlaceholder": "Client secret issued by the receiving system",
+      "clientSecretHint": "Sent with the Client ID to the token endpoint to obtain a bearer token.",
+      "secretSet": "Set (stored encrypted)",
+      "secretNotSet": "Not set",
+      "secretPlaintext": "Set, NOT encrypted — re-enter it",
+      "clientSecretReenter": "The callback URL, token endpoint or client ID changed — re-enter the client secret.",
+      "secretKeyReenter": "The callback URL changed — re-enter the signing secret.",
+      "reveal": "Reveal",
+      "hide": "Hide",
+      "copy": "Copy",
+      "copied": "Copied to clipboard",
+      "copyFailed": "Could not copy — select the value and copy it manually.",
+      "revealAudited": "Every reveal is recorded (who, when, from which IP).",
+      "revealFailed": "Failed to reveal the secret"
     },
     "delete": {
       "confirmTitle": "Delete Subscription",
@@ -114,6 +143,11 @@
       "deleteFailed": "Failed to delete subscription"
     },
     "emptyState": "No webhook subscriptions configured",
-    "loadFailed": "Failed to load webhook subscriptions"
+    "loadFailed": "Failed to load webhook subscriptions",
+    "catchAll": "All events",
+    "authTypeShort": {
+      "HMAC": "HMAC",
+      "TokenBearer": "Bearer token"
+    }
   }
 }

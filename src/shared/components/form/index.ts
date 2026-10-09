@@ -29,7 +29,13 @@ export { FormFields } from './FormFields';
 export { FormErrorAlert } from './FormErrorAlert';
 
 // Context & Hooks
-export { FormSchemaContext, useFormSchema, FormReadOnlyContext, useFormReadOnly } from './context';
+export {
+  FormSchemaContext,
+  useFormSchema,
+  FormReadOnlyContext,
+  useFormReadOnly,
+  FieldLabelContext,
+} from './context';
 
 // Types
 export type {
@@ -76,11 +82,7 @@ export {
 } from './utils';
 
 // Schema Builder
-export {
-  mergeSchemas,
-  buildFormSchema,
-  type MergeSchemaOptions,
-} from './schemaBuilder';
+export { mergeSchemas, buildFormSchema, type MergeSchemaOptions } from './schemaBuilder';
 
 // Condition Evaluation (shared between UI and schema builder)
 export { evaluateCondition, evaluateConditions } from './conditions';

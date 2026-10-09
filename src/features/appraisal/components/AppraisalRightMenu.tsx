@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import clsx from 'clsx';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
@@ -10,13 +10,14 @@ import { useAppraisalContext } from '../context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MapPreview } from './MapPreview';
 import { useAuthStore } from '@/features/auth/store';
-import { useAddressStore } from '@/shared/store';
+import { useAddressStore, useUIStore } from '@/shared/store';
 import {
   useAddComment,
   useUpdateComment,
   useDeleteComment,
   useGetComments,
   useGetRequestById,
+  type GetRequestCommentsByRequestIdResponseType,
 } from '@/features/request/api';
 import { useGetAppointment } from '../api/appointment';
 import { useGetAppraisalFees } from '../api/fee';
@@ -28,10 +29,13 @@ import { getFeePaymentStatusDisplay } from '../utils/feePaymentStatus';
 
 interface AppraisalRightMenuProps {
   onClose?: () => void;
+  initialTab?: RightMenuTab;
 }
 
-const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
-  const [activeTab, setActiveTab] = useState<'overview' | 'comments'>('overview');
+type RightMenuTab = 'overview' | 'comments';
+
+const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRightMenuProps) => {
+  const [activeTab, setActiveTab] = useState<RightMenuTab>(initialTab);
   const [newComment, setNewComment] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
@@ -40,38 +44,8 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
   const queryClient = useQueryClient();
   const { appraisal, isLoading } = useAppraisalContext();
   const commentsReadOnly = usePageReadOnly();
-  const appraisalId = appraisal?.appraisalId;
   const requestId = appraisal?.requestId;
   const currentUser = useAuthStore(state => state.user);
-
-  // Fetch related data
-  const { data: requestData } = useGetRequestById(requestId);
-  const { data: appointment = null } = useGetAppointment(appraisalId ?? '');
-  const { data: fees = [] } = useGetAppraisalFees(appraisalId ?? '');
-  const { data: workflowProgress } = useGetWorkflowProgress(appraisalId);
-
-  // Current activity = the pending entry in the activity log (fallback: last entry)
-  const currentActivityName = useMemo(() => {
-    const log = workflowProgress?.activityLog;
-    if (!log || log.length === 0) return null;
-    const pending = log.find(a => a.status === 'Pending');
-    return (pending ?? log[log.length - 1]).activityName;
-  }, [workflowProgress]);
-
-  // Derive fee summary (first fee record)
-  const feeSummary = useMemo(() => {
-    if (fees.length === 0) return null;
-    return fees[0];
-  }, [fees]);
-
-  // Resolve province code to name via address store
-  const titleAddresses = useAddressStore(state => state.titleAddresses);
-  const provinceName = useMemo(() => {
-    const code = (requestData as any)?.detail?.address?.province;
-    if (!code) return null;
-    const match = titleAddresses.find(a => a.provinceCode === code);
-    return match?.provinceName ?? null;
-  }, [requestData, titleAddresses]);
 
   // API queries and mutations for comments
   const { data: commentsData, isLoading: isCommentsLoading } = useGetComments(requestId);
@@ -165,34 +139,6 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
     }
   };
 
-  // Format currency
-  const formatCurrency = (amount: number | null | undefined): string => {
-    if (amount === null || amount === undefined) return 'Not set';
-    return new Intl.NumberFormat('th-TH', {
-      style: 'currency',
-      currency: 'THB',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  // Format date/time
-  const formatDateTime = (dateTime: string | null | undefined): string => {
-    if (!dateTime) return 'Not set';
-    try {
-      const date = new Date(dateTime);
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
-    } catch {
-      return dateTime;
-    }
-  };
-
   if (isLoading || !appraisal) {
     return (
       <div className="flex flex-col h-full p-4">
@@ -255,7 +201,7 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
           >
             Comments
             {comments.length > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-primary text-white rounded-full">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-500 text-white rounded-full">
                 {comments.length}
               </span>
             )}
@@ -271,217 +217,7 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
         )}
       >
         {activeTab === 'overview' ? (
-          <div className="flex flex-col gap-5">
-            {/* Appraisal Info */}
-            <div>
-              <SidebarLabel>Appraisal Info</SidebarLabel>
-              <div className="mt-2 space-y-2">
-                <InfoRow
-                  icon="hashtag"
-                  label="Appraisal No."
-                  value={appraisal.appraisalReportNo || 'Not set'}
-                  muted={!appraisal.appraisalReportNo}
-                />
-                <InfoRow
-                  icon="user"
-                  label="Customer"
-                  value={(requestData as any)?.customers?.[0]?.name || 'Not set'}
-                  muted={!(requestData as any)?.customers?.[0]?.name}
-                />
-                <InfoRow
-                  icon="bullseye"
-                  label="Purpose"
-                  value={
-                    requestData?.purpose ? (
-                      <ParameterDisplay group="AppraisalPurpose" code={requestData?.purpose} />
-                    ) : (
-                      'Not set'
-                    )
-                  }
-                  muted={!requestData?.purpose}
-                />
-                <InfoRow
-                  icon="circle-check"
-                  label="Status"
-                  value={
-                    <Badge
-                      type="status"
-                      value={appraisal.appraisalReportNo ? appraisal.status : requestData?.status}
-                    />
-                  }
-                />
-                <InfoRow
-                  icon="money-bill-wave"
-                  label="Facility Limit"
-                  value={formatCurrency(appraisal.facilityLimit)}
-                  muted={appraisal.facilityLimit == null}
-                />
-                <InfoRow
-                  icon="baht-sign"
-                  label="Selling Price"
-                  value={formatCurrency(
-                    (requestData as any)?.detail?.loanDetail?.totalSellingPrice,
-                  )}
-                  muted={(requestData as any)?.detail?.loanDetail?.totalSellingPrice == null}
-                />
-                <InfoRow
-                  icon="book"
-                  label="Customer's Own Book"
-                  value={
-                    (requestData as any)?.detail?.hasAppraisalBook != null
-                      ? (requestData as any)?.detail?.hasAppraisalBook
-                        ? 'Yes'
-                        : 'No'
-                      : 'Not set'
-                  }
-                  muted={(requestData as any)?.detail?.hasAppraisalBook == null}
-                />
-                <InfoRow
-                  icon="location-dot"
-                  label="Province"
-                  value={provinceName || 'Not set'}
-                  muted={!provinceName}
-                />
-                <InfoRow
-                  icon="flag"
-                  label="Priority"
-                  value={
-                    <Badge
-                      type="priority"
-                      value={appraisal.priority || requestData?.priority || 'normal'}
-                    />
-                  }
-                />
-              </div>
-            </div>
-
-            {/* Workflow Progress */}
-            <div>
-              <SidebarLabel>Workflow Progress</SidebarLabel>
-              <div className="mt-2">
-                <InfoRow
-                  icon="diagram-project"
-                  label="Current Activity"
-                  value={currentActivityName || 'Not set'}
-                  muted={!currentActivityName}
-                />
-              </div>
-            </div>
-
-            {/* Requestor (from request) */}
-            <div>
-              <SidebarLabel>Requestor</SidebarLabel>
-              <div className="mt-2">
-                <PersonRow
-                  label={
-                    requestData?.requestedAt
-                      ? `Requested · ${formatDateTime(requestData.requestedAt)}`
-                      : 'Requested'
-                  }
-                  name={
-                    requestData?.requestor?.name || requestData?.requestor?.employeeId || 'Not set'
-                  }
-                  avatar={null}
-                  isMe={requestData?.requestor?.employeeId === currentUser?.username}
-                />
-              </div>
-            </div>
-
-            {/* Appointment (from appointments API) */}
-            <div>
-              <SidebarLabel>Appointment</SidebarLabel>
-              <div className="mt-2 space-y-2">
-                <InfoRow
-                  icon="calendar"
-                  label="Date/Time"
-                  value={formatDateTime(appointment?.appointmentDateTime)}
-                  muted={!appointment?.appointmentDateTime}
-                />
-                <InfoRow
-                  icon="location-dot"
-                  label="Location"
-                  value={appointment?.locationDetail || 'Not set'}
-                  muted={!appointment?.locationDetail}
-                />
-                <InfoRow
-                  icon="circle-check"
-                  label="Status"
-                  value={appointment?.status || 'Not set'}
-                  muted={!appointment?.status}
-                />
-                <InfoRow
-                  icon="user"
-                  label="Contact"
-                  value={appointment?.contactPerson || 'Not set'}
-                  muted={!appointment?.contactPerson}
-                />
-              </div>
-            </div>
-
-            {/* Fee Information (from fees API) */}
-            <div>
-              <SidebarLabel>Fee Information</SidebarLabel>
-              <div className="mt-2 space-y-2">
-                <InfoRow
-                  icon="circle-check"
-                  label="Payment Status"
-                  value={
-                    feeSummary?.paymentStatus
-                      ? (() => {
-                          const { label, color } = getFeePaymentStatusDisplay(
-                            feeSummary.paymentStatus,
-                          );
-                          const colorClass =
-                            color === 'success'
-                              ? 'text-success'
-                              : color === 'warning'
-                                ? 'text-warning'
-                                : color === 'danger'
-                                  ? 'text-danger'
-                                  : color === 'info'
-                                    ? 'text-blue-700'
-                                    : 'text-gray-500';
-                          return (
-                            <span className={`text-sm font-medium ${colorClass}`}>{label}</span>
-                          );
-                        })()
-                      : 'Not set'
-                  }
-                  muted={!feeSummary?.paymentStatus}
-                />
-                <InfoRow
-                  icon="baht-sign"
-                  label="Total Fee"
-                  value={formatCurrency(feeSummary?.totalFeeAfterVAT)}
-                  muted={feeSummary?.totalFeeAfterVAT == null}
-                />
-                <InfoRow
-                  icon="baht-sign"
-                  label="Customer Payable"
-                  value={formatCurrency(feeSummary?.customerPayableAmount)}
-                  muted={feeSummary?.customerPayableAmount == null}
-                />
-                <InfoRow
-                  icon="baht-sign"
-                  label="Outstanding"
-                  value={formatCurrency(feeSummary?.outstandingAmount)}
-                  muted={feeSummary?.outstandingAmount == null}
-                />
-              </div>
-            </div>
-
-            {/* Property Location Map (from latest appointment coordinates) */}
-            <div>
-              <SidebarLabel>Property Location</SidebarLabel>
-              <div className="mt-2">
-                <MapPreview
-                  latitude={appointment?.latitude ?? null}
-                  longitude={appointment?.longitude ?? null}
-                  address={appointment?.locationDetail ?? null}
-                />
-              </div>
-            </div>
-          </div>
+          <AppraisalOverview />
         ) : (
           <>
             {/* Comments list - scrollable */}
@@ -675,6 +411,472 @@ const AppraisalRightMenu = ({ onClose }: AppraisalRightMenuProps) => {
         cancelText="Cancel"
         variant="danger"
       />
+    </div>
+  );
+};
+
+/**
+ * The Overview tab's content. Also shown in the collapsed strip's hover card, where the
+ * map is left out so the card stays short and Leaflet is not remounted on every hover.
+ */
+const AppraisalOverview = ({ showMap = true }: { showMap?: boolean }) => {
+  const { appraisal } = useAppraisalContext();
+  const appraisalId = appraisal?.appraisalId;
+  const requestId = appraisal?.requestId;
+  const currentUser = useAuthStore(state => state.user);
+
+  // Fetch related data
+  const { data: requestData } = useGetRequestById(requestId);
+  const { data: appointment = null } = useGetAppointment(appraisalId ?? '');
+  const { data: fees = [] } = useGetAppraisalFees(appraisalId ?? '');
+  const { data: workflowProgress } = useGetWorkflowProgress(appraisalId);
+
+  // Current activity = the pending entry in the activity log (fallback: last entry)
+  const currentActivityName = useMemo(() => {
+    const log = workflowProgress?.activityLog;
+    if (!log || log.length === 0) return null;
+    const pending = log.find(a => a.status === 'Pending');
+    return (pending ?? log[log.length - 1]).activityName;
+  }, [workflowProgress]);
+
+  // Derive fee summary (first fee record)
+  const feeSummary = useMemo(() => {
+    if (fees.length === 0) return null;
+    return fees[0];
+  }, [fees]);
+
+  // Resolve province code to name via address store
+  const titleAddresses = useAddressStore(state => state.titleAddresses);
+  const provinceName = useMemo(() => {
+    const code = (requestData as any)?.detail?.address?.province;
+    if (!code) return null;
+    const match = titleAddresses.find(a => a.provinceCode === code);
+    return match?.provinceName ?? null;
+  }, [requestData, titleAddresses]);
+
+  // Format currency
+  const formatCurrency = (amount: number | null | undefined): string => {
+    if (amount === null || amount === undefined) return 'Not set';
+    return new Intl.NumberFormat('th-TH', {
+      style: 'currency',
+      currency: 'THB',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  // Format date/time
+  const formatDateTime = (dateTime: string | null | undefined): string => {
+    if (!dateTime) return 'Not set';
+    try {
+      const date = new Date(dateTime);
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+    } catch {
+      return dateTime;
+    }
+  };
+
+  if (!appraisal) return null;
+
+  return (
+    <div className="flex flex-col gap-5">
+      {/* Appraisal Info */}
+      <div>
+        <SidebarLabel>Appraisal Info</SidebarLabel>
+        <div className="mt-2 space-y-2">
+          <InfoRow
+            icon="hashtag"
+            label="Appraisal No."
+            value={appraisal.appraisalReportNo || 'Not set'}
+            muted={!appraisal.appraisalReportNo}
+          />
+          <InfoRow
+            icon="user"
+            label="Customer"
+            value={(requestData as any)?.customers?.[0]?.name || 'Not set'}
+            muted={!(requestData as any)?.customers?.[0]?.name}
+          />
+          <InfoRow
+            icon="bullseye"
+            label="Purpose"
+            value={
+              requestData?.purpose ? (
+                <ParameterDisplay group="AppraisalPurpose" code={requestData?.purpose} />
+              ) : (
+                'Not set'
+              )
+            }
+            muted={!requestData?.purpose}
+          />
+          <InfoRow
+            icon="circle-check"
+            label="Status"
+            value={
+              <Badge
+                type="status"
+                value={appraisal.appraisalReportNo ? appraisal.status : requestData?.status}
+              />
+            }
+          />
+          <InfoRow
+            icon="money-bill-wave"
+            label="Facility Limit"
+            value={formatCurrency(appraisal.facilityLimit)}
+            muted={appraisal.facilityLimit == null}
+          />
+          <InfoRow
+            icon="baht-sign"
+            label="Selling Price"
+            value={formatCurrency((requestData as any)?.detail?.loanDetail?.totalSellingPrice)}
+            muted={(requestData as any)?.detail?.loanDetail?.totalSellingPrice == null}
+          />
+          <InfoRow
+            icon="book"
+            label="Customer's Own Book"
+            value={
+              (requestData as any)?.detail?.hasAppraisalBook != null
+                ? (requestData as any)?.detail?.hasAppraisalBook
+                  ? 'Yes'
+                  : 'No'
+                : 'Not set'
+            }
+            muted={(requestData as any)?.detail?.hasAppraisalBook == null}
+          />
+          <InfoRow
+            icon="location-dot"
+            label="Province"
+            value={provinceName || 'Not set'}
+            muted={!provinceName}
+          />
+          <InfoRow
+            icon="flag"
+            label="Priority"
+            value={
+              <Badge
+                type="priority"
+                value={appraisal.priority || requestData?.priority || 'normal'}
+              />
+            }
+          />
+        </div>
+      </div>
+
+      {/* Workflow Progress */}
+      <div>
+        <SidebarLabel>Workflow Progress</SidebarLabel>
+        <div className="mt-2">
+          <InfoRow
+            icon="diagram-project"
+            label="Current Activity"
+            value={currentActivityName || 'Not set'}
+            muted={!currentActivityName}
+          />
+        </div>
+      </div>
+
+      {/* Requestor (from request) */}
+      <div>
+        <SidebarLabel>Requestor</SidebarLabel>
+        <div className="mt-2">
+          <PersonRow
+            label={
+              requestData?.requestedAt
+                ? `Requested · ${formatDateTime(requestData.requestedAt)}`
+                : 'Requested'
+            }
+            name={requestData?.requestor?.name || requestData?.requestor?.employeeId || 'Not set'}
+            avatar={null}
+            isMe={requestData?.requestor?.employeeId === currentUser?.username}
+          />
+        </div>
+      </div>
+
+      {/* Appointment (from appointments API) */}
+      <div>
+        <SidebarLabel>Appointment</SidebarLabel>
+        <div className="mt-2 space-y-2">
+          <InfoRow
+            icon="calendar"
+            label="Date/Time"
+            value={formatDateTime(appointment?.appointmentDateTime)}
+            muted={!appointment?.appointmentDateTime}
+          />
+          <InfoRow
+            icon="location-dot"
+            label="Location"
+            value={appointment?.locationDetail || 'Not set'}
+            muted={!appointment?.locationDetail}
+          />
+          <InfoRow
+            icon="circle-check"
+            label="Status"
+            value={appointment?.status || 'Not set'}
+            muted={!appointment?.status}
+          />
+          <InfoRow
+            icon="user"
+            label="Contact"
+            value={appointment?.contactPerson || 'Not set'}
+            muted={!appointment?.contactPerson}
+          />
+        </div>
+      </div>
+
+      {/* Fee Information (from fees API) */}
+      <div>
+        <SidebarLabel>Fee Information</SidebarLabel>
+        <div className="mt-2 space-y-2">
+          <InfoRow
+            icon="circle-check"
+            label="Payment Status"
+            value={
+              feeSummary?.paymentStatus
+                ? (() => {
+                    const { label, color } = getFeePaymentStatusDisplay(feeSummary.paymentStatus);
+                    const colorClass =
+                      color === 'success'
+                        ? 'text-success'
+                        : color === 'warning'
+                          ? 'text-warning'
+                          : color === 'danger'
+                            ? 'text-danger'
+                            : color === 'info'
+                              ? 'text-blue-700'
+                              : 'text-gray-500';
+                    return <span className={`text-sm font-medium ${colorClass}`}>{label}</span>;
+                  })()
+                : 'Not set'
+            }
+            muted={!feeSummary?.paymentStatus}
+          />
+          <InfoRow
+            icon="baht-sign"
+            label="Total Fee"
+            value={formatCurrency(feeSummary?.totalFeeAfterVAT)}
+            muted={feeSummary?.totalFeeAfterVAT == null}
+          />
+          <InfoRow
+            icon="baht-sign"
+            label="Customer Payable"
+            value={formatCurrency(feeSummary?.customerPayableAmount)}
+            muted={feeSummary?.customerPayableAmount == null}
+          />
+          <InfoRow
+            icon="baht-sign"
+            label="Outstanding"
+            value={formatCurrency(feeSummary?.outstandingAmount)}
+            muted={feeSummary?.outstandingAmount == null}
+          />
+        </div>
+      </div>
+
+      {/* Property Location Map (from latest appointment coordinates) */}
+      {showMap && (
+        <div>
+          <SidebarLabel>Property Location</SidebarLabel>
+          <div className="mt-2">
+            <MapPreview
+              latitude={appointment?.latitude ?? null}
+              longitude={appointment?.longitude ?? null}
+              address={appointment?.locationDetail ?? null}
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const stripButton =
+  'w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors';
+
+interface StripPeekProps {
+  label: string;
+  title: string;
+  onOpen: () => void;
+  icon: React.ReactNode;
+  /** Chat-style body: starts scrolled to the bottom so the newest message is in view. */
+  chat?: boolean;
+  children: React.ReactNode;
+}
+
+/**
+ * A collapsed-strip button that shows a card on hover/focus and opens the panel on click.
+ * The card mounts only while shown, so its queries don't run until someone hovers.
+ */
+const StripPeek = ({ label, title, onOpen, icon, chat, children }: StripPeekProps) => {
+  const [show, setShow] = useState(false);
+  // A short grace period lets the pointer cross from the icon into the card.
+  const timer = useRef<number | undefined>(undefined);
+  const showCard = () => {
+    window.clearTimeout(timer.current);
+    setShow(true);
+  };
+  const hideCard = () => {
+    timer.current = window.setTimeout(() => setShow(false), 150);
+  };
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  return (
+    <div className="relative" onMouseEnter={showCard} onMouseLeave={hideCard}>
+      <button
+        type="button"
+        onClick={onOpen}
+        onFocus={showCard}
+        onBlur={hideCard}
+        className={clsx(
+          stripButton,
+          'relative',
+          show && 'text-gray-600 bg-gray-50 dark:bg-base-200',
+        )}
+        aria-label={label}
+        aria-expanded={show}
+      >
+        {icon}
+      </button>
+      {show && (
+        <div className="absolute right-full top-0 mr-1 z-40 w-72 max-h-[calc(100vh-12rem)] flex flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-base-300 bg-white dark:bg-base-100 shadow-xl">
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-base-300">
+            <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+            <button
+              type="button"
+              onClick={onOpen}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Open panel
+            </button>
+          </div>
+          {/* column-reverse anchors the scroll at the bottom without measuring anything */}
+          <div
+            className={clsx('flex-1 min-h-0 overflow-y-auto p-4', chat && 'flex flex-col-reverse')}
+          >
+            {children}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+/** Read-only comment thread for the strip's hover card, laid out like the panel's chat. */
+const CommentsPeek = ({
+  comments,
+}: {
+  comments: GetRequestCommentsByRequestIdResponseType['comments'];
+}) => {
+  const currentUser = useAuthStore(state => state.user);
+
+  if (comments.length === 0) {
+    return <p className="text-xs text-gray-400 text-center py-4">No comments yet</p>;
+  }
+  return (
+    <div className="space-y-3">
+      {comments.map(c => {
+        const timeDisplay = getRelativeTimeString(c.commentedAt);
+        return c.commentedBy === currentUser?.username ? (
+          <div key={c.id} className="flex justify-end">
+            <div className="max-w-[80%]">
+              <div className="bg-primary text-white rounded-2xl rounded-tr-sm px-3 py-2 min-w-0 overflow-hidden">
+                <p className="text-xs break-words break-all">{c.comment}</p>
+                {c.lastModifiedAt && (
+                  <span className="text-[10px] text-white/70 italic">(edited)</span>
+                )}
+              </div>
+              <p className="text-[10px] text-gray-400 mt-0.5 text-right">{timeDisplay}</p>
+            </div>
+          </div>
+        ) : (
+          <div key={c.id} className="flex items-start gap-2 max-w-[80%]">
+            <div className="mt-4">
+              <Avatar name={c.commentedByName} size="xs" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-xs font-medium text-gray-900">{c.commentedByName}</span>
+                <span className="text-[10px] text-gray-400">{timeDisplay}</span>
+              </div>
+              <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
+                <p className="text-xs break-words break-all">{c.comment}</p>
+                {c.lastModifiedAt && (
+                  <span className="text-[10px] text-gray-400 italic">(edited)</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+/**
+ * The right-hand panel as the layouts place it: open, or a narrow strip whose icons show
+ * the details and comments on hover. Open/closed is remembered per browser.
+ */
+export const AppraisalRightPanel = () => {
+  const isOpen = useUIStore(s => s.appraisalDetailsOpen);
+  const setOpen = useUIStore(s => s.setAppraisalDetailsOpen);
+  const [initialTab, setInitialTab] = useState<RightMenuTab>('overview');
+  const { appraisal } = useAppraisalContext();
+  const { data: commentsData } = useGetComments(appraisal?.requestId);
+  const comments = commentsData?.comments ?? [];
+  const commentCount = comments.length;
+
+  const open = (tab: RightMenuTab) => {
+    setInitialTab(tab);
+    setOpen(true);
+  };
+
+  if (isOpen) {
+    return (
+      <aside className="hidden lg:flex w-72 h-full shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden">
+        <AppraisalRightMenu initialTab={initialTab} onClose={() => setOpen(false)} />
+      </aside>
+    );
+  }
+
+  return (
+    <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-3 pt-3 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
+      <button
+        type="button"
+        onClick={() => open('overview')}
+        className={stripButton}
+        title="Show application details"
+      >
+        <Icon style="solid" name="chevron-left" className="size-4" />
+      </button>
+      <StripPeek
+        label="Application details"
+        title="Application Details"
+        onOpen={() => open('overview')}
+        icon={<Icon style="regular" name="circle-info" className="size-4" />}
+      >
+        <AppraisalOverview showMap={false} />
+      </StripPeek>
+      <StripPeek
+        label={commentCount > 0 ? `Comments, ${commentCount}` : 'Comments'}
+        title={commentCount > 0 ? `Comments (${commentCount})` : 'Comments'}
+        onOpen={() => open('comments')}
+        chat
+        icon={
+          <>
+            <Icon style="regular" name="comment" className="size-4" />
+            {commentCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-500 text-white rounded-full">
+                {commentCount > 99 ? '99+' : commentCount}
+              </span>
+            )}
+          </>
+        }
+      >
+        <CommentsPeek comments={comments} />
+      </StripPeek>
     </div>
   );
 };

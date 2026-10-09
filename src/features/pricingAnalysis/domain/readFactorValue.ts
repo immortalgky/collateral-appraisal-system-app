@@ -1,5 +1,6 @@
 export function readFactorValue(s: {
-  dataType: string;
+  // A string at runtime (the backend's FactorDataType enum name); v1.ts generates it as unknown.
+  dataType: unknown;
   fieldDecimal?: number | undefined | null;
   value?: string | undefined | null;
 }) {

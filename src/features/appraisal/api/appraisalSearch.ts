@@ -1,4 +1,10 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import {
+  useQueries,
+  useQuery,
+  useMutation,
+  useQueryClient,
+  keepPreviousData,
+} from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { downloadBlob } from '@shared/api/blobTransfer';
 import { saveBlob } from '@/shared/utils/saveBlob';
@@ -22,6 +28,8 @@ export interface AppraisalSearchParams {
   assignmentType?: string;
   assigneeUserId?: string;
   assigneeCompanyId?: string;
+  /** Request requestor (RM) user code(s), comma-joined. */
+  requestor?: string;
   channel?: string;
   bankingSegment?: string;
   purpose?: string;
@@ -68,6 +76,14 @@ export interface AppraisalDto {
   createdAt: string | null;
   appraisalValue: number | null;
   assigneeUserId: string | null; // username like "P5229", not GUID
+  /**
+   * Display name for `assigneeUserId`, resolved by the API. Optional: absent until the backend
+   * sends it, in which case the list shows the user code alone.
+   */
+  assigneeName?: string | null;
+  /** The request's requestor (RM): user code and the name the request recorded. */
+  requestorCode?: string | null;
+  requestorName?: string | null;
   assigneeCompanyId: string | null;
   assignmentType: string | null;
   assignmentStatus: string | null;
@@ -86,6 +102,7 @@ export interface AppraisalDto {
   district: string | null;
   subDistrict: string | null;
   appointmentDateTime: string | null;
+  inspectionNumber: number | null;
   /** Groups appraisals raised together; null for a standalone one. */
   groupTag: string | null;
   /** SLA hours expressed in 8-hour working days, computed by the view. */
@@ -106,19 +123,6 @@ export interface AppraisalDto {
   remainingHours: number | null;
 }
 
-export interface FacetItem {
-  value: string;
-  count: number;
-}
-
-export interface AppraisalFacets {
-  status: FacetItem[];
-  slaStatus: FacetItem[];
-  priority: FacetItem[];
-  appraisalType: FacetItem[];
-  assignmentType: FacetItem[];
-}
-
 export interface AppraisalSearchResponse {
   result: {
     items: AppraisalDto[];
@@ -126,7 +130,6 @@ export interface AppraisalSearchResponse {
     pageNumber: number;
     pageSize: number;
   };
-  facets: AppraisalFacets | null;
 }
 
 export interface SmartViewDto {
@@ -179,6 +182,48 @@ export function useAppraisalSearch(params: AppraisalSearchParams, options?: { en
     staleTime: 30_000,
     enabled: options?.enabled,
   });
+}
+
+/**
+ * How many rows the term would return in each of `fields`, for the search box's "search in" rows.
+ *
+ * One request per field, each asking for a single row and reading `count` off the envelope. The
+ * term goes in as that field's own parameter — 'all' as `search` — exactly as the page sends it,
+ * so a count here is the total the table would show after picking that field. Filters ride along
+ * for the same reason.
+ */
+export function useAppraisalSearchCounts(
+  term: string,
+  fields: readonly string[],
+  filters: Record<string, string>,
+  enabled: boolean,
+) {
+  const results = useQueries({
+    queries: fields.map(field => {
+      const params: AppraisalSearchParams = {
+        ...(field === 'all' ? { search: term } : { [field]: term }),
+        ...filters,
+        pageNumber: 0,
+        pageSize: 1,
+      };
+      return {
+        queryKey: [...appraisalSearchKeys.all, 'count', params] as const,
+        queryFn: async ({ signal }: { signal: AbortSignal }) => {
+          const { data } = await axios.get<AppraisalSearchResponse>('/appraisals', {
+            params,
+            signal,
+          });
+          return data.result.count;
+        },
+        enabled: enabled && term.length > 0,
+        staleTime: 30_000,
+      };
+    }),
+  });
+  // null on error, so a failed count stops spinning instead of reading as "still loading".
+  return Object.fromEntries(
+    fields.map((f, i) => [f, results[i].isError ? null : results[i].data]),
+  ) as Record<string, number | null | undefined>;
 }
 
 export function useSmartViews() {

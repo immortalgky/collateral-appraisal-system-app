@@ -102,6 +102,7 @@ export interface Task {
   activityId: string;
   appraisalNumber: string | null;
   requestNumber: string | null;
+  channel: string | null;
   customerName: string | null;
   taskType: string | null;
   taskDescription: string | null;
@@ -159,6 +160,8 @@ export interface GetPoolTasksParams {
   appraisalNumber?: string;
   customerName?: string;
   status?: string;
+  purpose?: string;
+  channel?: string;
   dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
@@ -194,6 +197,8 @@ export interface GetTasksParams {
   pendingTaskStatus?: string;
   slaStatus?: string;
   assigneeUserId?: string;
+  purpose?: string;
+  channel?: string;
   dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;
@@ -209,6 +214,8 @@ export interface TaskFilterParams {
   slaStatus?: string;
   assigneeUserId?: string;
   activityId?: string;
+  purpose?: string;
+  channel?: string;
   dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;

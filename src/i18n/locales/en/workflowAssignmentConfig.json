@@ -49,6 +49,12 @@
     "excludeAssigneesFromInherit": "Inheriting from workflow definition — click to override",
     "excludeAssigneesFromReset": "Reset to workflow definition",
     "excludeAssigneesFromNoActivities": "Activity list unavailable.",
+    "sameAssigneeAsActivity": "Same assignee as activity",
+    "sameAssigneeAsActivityHint": "(for the same_assignee_as_activity strategy)",
+    "sameAssigneeInherit": "Inherit ({{value}})",
+    "sameAssigneeFreePlaceholder": "e.g. ext-appraisal-assignment",
+    "followupSelectionHint": "This step automatically picks the internal follow-up staff. Choose the activity below: whoever completed it becomes the follow-up staff.",
+    "activitiesLoading": "Loading activities…",
     "isActive": "Active",
     "isActiveHint": "(uncheck to disable without deleting)"
   },
@@ -63,7 +69,10 @@
     "primary": "Primary (initial) Strategies",
     "routeBack": "Route-back Strategies",
     "baseline": "Baseline: {{list}}",
-    "baselineNone": "none"
+    "baselineNone": "none",
+    "orderHint": "Order matters: the first strategy that finds an assignee wins.",
+    "moveUp": "Move {{strategy}} up",
+    "moveDown": "Move {{strategy}} down"
   },
   "actions": {
     "addOverride": "Add override",

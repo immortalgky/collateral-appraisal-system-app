@@ -1,5 +1,6 @@
 import { RHFInputCell } from '../../table/RHFInputCell';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { MethodProportionOfTheNewReplacementCostWrapper } from '../../../types/dcf';
 interface MethodProportionOfTheNewReplacementCostProps {
   name: string;
@@ -16,12 +17,15 @@ export function MethodProportionOfTheNewReplacementCost({
   method,
   baseStyles,
 }: MethodProportionOfTheNewReplacementCostProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     <>
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>New Replacement Cost</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.methods.proportionOfNewReplacementCost.newReplacementCost')}
+            </td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -37,7 +41,7 @@ export function MethodProportionOfTheNewReplacementCost({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -53,11 +57,11 @@ export function MethodProportionOfTheNewReplacementCost({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td className={clsx(baseStyles.rowHeader)}>Total</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.total')}</td>
             {(
               method.detail?.proportionOfNewReplacementCosts ??
               new Array<number>(totalNumberOfYears).fill(0)
-            ).map((val, idx) => {
+            ).map((_val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
                   <RHFInputCell

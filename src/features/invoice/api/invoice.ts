@@ -57,6 +57,7 @@ export interface GetEligibleAssignmentsParams {
   submittedDateFrom?: string;
   submittedDateTo?: string;
   currentInvoiceId?: string;
+  costCenter?: string;
 }
 
 // ─── GET /invoices ────────────────────────────────────────────────────────────
@@ -129,6 +130,7 @@ export const useGetEligibleAssignments = (params: GetEligibleAssignmentsParams =
           ...(params.submittedDateFrom && { submittedDateFrom: params.submittedDateFrom }),
           ...(params.submittedDateTo && { submittedDateTo: params.submittedDateTo }),
           ...(params.currentInvoiceId && { currentInvoiceId: params.currentInvoiceId }),
+          ...(params.costCenter && { costCenter: params.costCenter }),
         },
       });
       return data.assignments ?? data ?? [];

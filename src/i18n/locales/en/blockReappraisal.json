@@ -114,6 +114,8 @@
     "optOutModal": {
       "title": "Reappraisal Not Required",
       "body": "Mark this project as not requiring reappraisal? It will be removed from the due list.",
+      "remarkLabel": "Remark",
+      "remarkPlaceholder": "Why doesn't this project require reappraisal?",
       "confirm": "Confirm"
     }
   },

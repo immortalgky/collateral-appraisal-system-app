@@ -27,11 +27,17 @@ export interface GalleryPrefs {
   view: 'grid' | 'list';
 }
 
+/**
+ * Which desktop sidebar: the main app menu, or the appraisal/task menu. Each keeps its own pin, so
+ * a user can pin the main menu and still work inside tasks with the menu tucked away.
+ */
+export type SidebarScope = 'main' | 'appraisal';
+
 export type UIStore = {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  sidebarCollapsed: boolean;
-  toggleSidebar: () => void;
+  sidebarCollapsed: Record<SidebarScope, boolean>;
+  toggleSidebar: (scope: SidebarScope) => void;
   sidebarWidth: number;
   setSidebarWidth: (width: number) => void;
   resetSidebarWidth: () => void;
@@ -53,6 +59,9 @@ export type UIStore = {
   setGalleryPrefs: (patch: Partial<GalleryPrefs>) => void;
   photoTopicsPreviewOpen: boolean;
   setPhotoTopicsPreviewOpen: (open: boolean) => void;
+  /** Application Details panel on the right of appraisal/task pages. */
+  appraisalDetailsOpen: boolean;
+  setAppraisalDetailsOpen: (open: boolean) => void;
 };
 
 export type ParameterStore = {
@@ -72,6 +81,12 @@ export type DealerStore = {
 export type LoadingStore = {
   isLoading: boolean;
   message?: string;
+  /**
+   * How many callers currently want the overlay up. In the state rather than in a module
+   * variable, so `showLoading` can restart it from 1 whenever the overlay is down — see the
+   * note on the store for what that covers and what it does not.
+   */
+  pending: number;
   showLoading: (message?: string) => void;
   hideLoading: () => void;
   /** Update the message text without toggling visibility. No-op when not loading. */
@@ -79,6 +94,22 @@ export type LoadingStore = {
 };
 
 export type AtLeastOne<T> = { [K in keyof T]: Pick<T, K> }[keyof T] & Partial<T>;
+
+/** T's declared, non-nullable keys (dropping the `[k: string]` index that `.passthrough()` adds). */
+type NonNullDeclaredKeys<T> = keyof {
+  [P in keyof T as string extends P ? never : null extends T[P] ? never : P]: 0;
+};
+
+/**
+ * Marks fields K as always present. v1.ts generates every DTO field as optional, even the ones the
+ * backend always sends; use this at the API hook to state what the endpoint really returns.
+ * K must be declared and non-nullable in v1.ts, so a misspelt or nullable name fails to compile.
+ * That is only as good as v1.ts: a C# `string X = default!` generates as non-null yet can still be
+ * null, and the API omits nulls (WhenWritingNull). Check the backend actually fills each field.
+ */
+export type Sent<T, K extends NonNullDeclaredKeys<T>> = T & {
+  [P in K]-?: Exclude<T[P], undefined>;
+};
 
 export type BreadcrumbItem = {
   label: string;

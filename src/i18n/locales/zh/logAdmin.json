@@ -1,48 +1,225 @@
 {
   "page": {
-    "title": "Log Viewer",
-    "subtitle": "Search and inspect structured application logs by level, message, or business ID"
+    "title": "应用程序日志",
+    "subtitle": "按消息、级别或业务编号搜索并查看应用程序日志",
+    "backToLogs": "返回日志"
+  },
+  "metrics": {
+    "stripTitle": "同一时间段的机器指标",
+    "legendRestart": "重启（应用程序池回收）",
+    "restartTitle": "{{machine}} 于 {{times}} 重启",
+    "legendThreshold": "异常阈值",
+    "viewHealth": "机器状态",
+    "cpuLabel": "应用 CPU",
+    "memoryLabel": "机器已用内存",
+    "queueLabel": "线程池排队任务",
+    "p95Label": "p95 响应时间",
+    "rpmLabel": "每分钟请求数",
+    "http5xxLabel": "每分钟 HTTP 5xx 数"
+  },
+  "health": {
+    "title": "机器健康状况",
+    "subtitle": "应用每分钟自动采样一次 · 点击图表可查看该时段的日志",
+    "noMachines": "过去 10 分钟内没有机器上报数据",
+    "status": {
+      "ok": "正常",
+      "warn": "需留意",
+      "bad": "异常"
+    },
+    "startedAt": "最近一次启动 {{time}}",
+    "uptimeDays": "已运行 {{days}} 天 {{hours}} 小时",
+    "uptimeHours": "已运行 {{hours}} 小时 {{minutes}} 分钟",
+    "staleWarning": "自 {{time}} 起没有新数据 — 此机器可能已停止上报",
+    "extra": {
+      "workingSet": "工作集",
+      "gcHeap": "GC 堆",
+      "gen2": "Gen2 GC 次数 / 小时",
+      "threads": "线程数",
+      "requestsPerMin": "请求数 / 分钟",
+      "exceptionsPerMin": "异常数 / 分钟"
+    },
+    "historyTitle": "历史记录",
+    "eventsTitle": "此时间段内的事件",
+    "eventsSubtitle": "根据阈值自动检测，并链接到对应的日志时间段",
+    "eventsEmpty": "此时间段内没有事件",
+    "eventRestart": "应用程序池已重启",
+    "eventBreach": "{{metric}} 达到 {{value}}",
+    "viewLogs": "查看此时段的日志",
+    "notesTitle": "采集方式与未涵盖的内容",
+    "notes": [
+      "全部使用 .NET 9 自带的能力（Process、GC.GetGCMemoryInfo、ThreadPool、MeterListener），无需额外的 agent 或安装包",
+      "排队任务多但 CPU 低，说明线程被 I/O（通常是数据库）阻塞——这是\"系统卡住但机器看起来很空闲\"的典型原因",
+      "内存数据来自 GC；CPU 仅为本进程占用，不包含整台机器（含其他程序），如需整机数据需使用服务器自身的监控工具",
+      "尚未包含数据库连接池以及 SQL Server 端的数据（CPU、等待、阻塞等）"
+    ]
   },
   "columns": {
-    "timeStamp": "Timestamp",
-    "level": "Level",
-    "message": "Message",
-    "exception": "Exception",
-    "correlationId": "Correlation ID",
-    "appraisalId": "Appraisal ID",
-    "requestId": "Request ID",
-    "entityId": "Entity ID",
-    "workflowInstanceId": "Workflow Instance ID",
-    "collateralId": "Collateral ID",
-    "documentId": "Document ID",
-    "machineName": "Machine"
+    "timeStamp": "时间",
+    "level": "级别",
+    "message": "消息",
+    "source": "来源",
+    "correlationId": "关联 ID",
+    "appraisalId": "评估单",
+    "requestId": "申请单 ID",
+    "entityId": "实体 ID",
+    "workflowInstanceId": "工作流",
+    "collateralId": "抵押品",
+    "documentId": "文件",
+    "userName": "用户",
+    "requestPath": "请求路径",
+    "sourceContext": "来源"
   },
   "levels": {
-    "Verbose": "Verbose",
-    "Debug": "Debug",
-    "Information": "Information",
-    "Warning": "Warning",
-    "Error": "Error",
-    "Fatal": "Fatal"
+    "Information": "信息",
+    "Warning": "警告",
+    "Error": "错误",
+    "Fatal": "严重错误"
+  },
+  "search": {
+    "placeholder": "搜索消息 / 异常，或直接粘贴 GUID，例如 timeout  path:/api/v1  user:los",
+    "button": "搜索",
+    "live": "实时",
+    "zoomOut": "缩小",
+    "liveTitle": "每 5 秒刷新一次",
+    "dirtyHint": "尚未搜索 — 按 Enter 或点击“搜索”",
+    "hint": "按 Enter 搜索 · 输入的词会同时匹配 Message 和 Exception · \"精确短语\" · -词 表示排除 · appraisal:（GUID 或评估单编号）request: corr: user: path: source: · 直接粘贴 GUID 可同时搜索所有 ID 栏位",
+    "guideLink": "查看完整指南和示例",
+    "wideRangeWarning": "时间范围超过 7 天且带有文字搜索，可能会比较慢"
+  },
+  "range": {
+    "15m": "15 分钟",
+    "1h": "1 小时",
+    "24h": "24 小时",
+    "7d": "7 天",
+    "30d": "30 天",
+    "custom": "自定义…",
+    "customModeRange": "时间范围",
+    "customModeAround": "事件发生时间",
+    "from": "开始",
+    "to": "结束",
+    "incidentTime": "对方系统报告的时间",
+    "plusMinus": "前后",
+    "plusMinusOption": "± {{minutes}} 分钟",
+    "cancel": "取消",
+    "apply": "应用此范围"
+  },
+  "errors": {
+    "invalidRange": "请完整填写日期和时间",
+    "fromAfterTo": "开始时间必须早于结束时间",
+    "futureNotAllowed": "结束时间不能是未来时间",
+    "beyondRetention": "日志只保留 30 天，此范围内的数据已被删除",
+    "spanTooWide": "时间范围不能超过 31 天"
   },
   "filters": {
-    "searchPlaceholder": "Search message...",
-    "levelLabel": "Level",
-    "correlationIdPlaceholder": "Correlation ID",
-    "appraisalIdPlaceholder": "Appraisal ID",
-    "requestIdPlaceholder": "Request ID",
-    "entityIdPlaceholder": "Entity ID",
-    "from": "From",
-    "to": "To",
-    "clear": "Clear filters"
+    "removeRange": "移除时间范围",
+    "removeFilter": "移除筛选条件"
+  },
+  "histogram": {
+    "errorFatalLabel": "Error/Fatal",
+    "clickHint": "点击柱状图可放大该时间段"
+  },
+  "table": {
+    "httpTag": "外部 API 请求",
+    "filterAppraisal": "按此评估单筛选",
+    "filterTrace": "查看此请求的所有日志",
+    "showingMore": "已显示 {{count}} 条，还有更多",
+    "showingAll": "共显示 {{count}} 条",
+    "copyLink": "复制搜索链接",
+    "copyLinkToast": "链接已复制，分享给团队可看到相同结果",
+    "copyLinkFailed": "复制失败 — 此处无法使用剪贴板",
+    "loadMore": "加载更多",
+    "loadingMore": "加载中…"
+  },
+  "sidebar": {
+    "topProblemsTitle": "常见问题",
+    "topProblemsSubtitle": "按消息模板对所选时间段内的 Error + Warning 分组",
+    "topProblemsEmpty": "此时间段内没有 Error/Warning",
+    "topProblemsLastSeen": "最近一次 {{time}}",
+    "savedSearchesTitle": "已保存的搜索",
+    "savedSearchesSubtitle": "仅保存在此浏览器中",
+    "savedSearchesNoQuery": "（无搜索词）",
+    "savedSearchesDelete": "删除已保存的搜索",
+    "savedSearchesSavePlaceholder": "为此搜索命名…",
+    "savedSearchesSave": "保存",
+    "savedSearchesCustomRangeHint": "自定义时间范围无法保存 — 请先选择预设范围（1小时/24小时/7天/30天）"
   },
   "drawer": {
-    "title": "Log Entry Details",
-    "copy": "Copy",
-    "copied": "Copied!"
+    "title": "日志详情",
+    "tabDetail": "详情",
+    "tabTrace": "请求跟踪（{{count}}）",
+    "tabTracePlain": "请求跟踪",
+    "traceHasMoreText": "超过 200 条记录",
+    "traceHasMoreLink": "查看全部",
+    "tabProperties": "Properties JSON",
+    "request": "请求",
+    "response": "响应",
+    "requestBody": "请求内容 · 外部系统发送的内容",
+    "responseBody": "响应内容 · 我们返回的内容",
+    "noBody": "无内容（GET）",
+    "httpHint": "每侧最多保留 32KB · 不记录请求头（Authorization 不会写入日志）· 文件上传和 multipart 请求不会被记录",
+    "exceptionHint": "异常堆栈 · 绿色 = 我们的代码，暗淡 = 框架代码",
+    "copy": "复制",
+    "copied": "已复制！",
+    "copyFailed": "复制失败 — 此处无法使用剪贴板",
+    "copyStack": "复制堆栈",
+    "copyAll": "复制全部",
+    "aroundThisLog": "此日志前后 ± 2 分钟（所有级别）",
+    "traceHint": "所有具有相同 CorrelationId 的日志，按时间排序 — 这条 HTTP 请求从开始到结束的完整路径",
+    "noTrace": "此日志不属于某个 HTTP 请求（例如后台任务），因此没有跟踪记录",
+    "loading": "加载中…",
+    "filterLink": "筛选"
+  },
+  "guide": {
+    "title": "搜索指南",
+    "subtitle": "点击高亮示例即可立即搜索 · 可在同一个搜索框中组合多种语法",
+    "columnPattern": "语法",
+    "columnSearchesIn": "搜索范围",
+    "columnSpeed": "速度",
+    "columnOldRows": "适用于部署前的旧日志",
+    "columnUsage": "用法 / 示例",
+    "speedFast": "非常快",
+    "speedScan": "按时间范围扫描",
+    "oldRowsYes": "✓ 可以",
+    "oldRowsNo": "✕ 仅限新日志",
+    "recipesTitle": "常用搜索组合",
+    "tipsTitle": "使用须知",
+    "tips": [
+      "按 Enter 或点击“搜索” — 系统不会在输入过程中自动搜索",
+      "标记为“按时间范围扫描”的语法需要读取所选范围内的每一行 — 24 小时比 30 天快约 30 倍",
+      "标记为“非常快”的语法使用了索引，即使查 30 天也很快",
+      "大小写不影响搜索结果",
+      "查询（读取）类日志不会被记录，除非执行失败或耗时超过 3 秒"
+    ],
+    "sections": {
+      "text": { "title": "文本" },
+      "ids": { "title": "业务编号（已建索引，非常快）" },
+      "who": { "title": "谁 / 来自哪里" }
+    },
+    "rows": {
+      "word": "输入一个或多个词，多个词时必须全部匹配",
+      "phrase": "必须完全匹配整个短语 — 当词语中含有空格或符号时使用",
+      "negate": "排除包含此词的记录 — 用于剔除已知无关的结果",
+      "guid": "无需知道是哪种 ID — 会同时搜索 Correlation、Appraisal、Request、Workflow、Collateral 和 Document 等 ID 栏位",
+      "appraisal": "可填写 GUID 或评估单编号",
+      "request": "此更新之前写入的旧日志无法使用此语法搜索，因为旧栏位存的值本身有误",
+      "corr": "同一个 HTTP 请求从开始到结束的所有日志 — 此值也会通过 X-Correlation-Id 请求头返回给外部系统",
+      "user": "用户名，或外部系统的 client id，例如 los",
+      "path": "被调用的 URL — 匹配路径中包含此内容的记录",
+      "source": "可填写类名的一部分",
+      "level": "Information、Warning、Error、Fatal（也可以直接点击上方的级别标签）"
+    },
+    "recipes": {
+      "losFailed": "外部系统调用失败",
+      "http400": "返回 400 的外部 API 请求（数据不完整）",
+      "commandFailed": "执行失败的命令，附带发送的数据",
+      "slowRequests": "耗时超过 3 秒的请求",
+      "dbTimeout": "数据库超时",
+      "losDeliveryFailed": "发送给 LOS 的事件投递失败",
+      "wholeAppraisal": "某一份评估单的全部日志"
+    }
   },
   "error": {
-    "failedToLoad": "Failed to load logs"
+    "failedToLoad": "加载日志失败"
   },
-  "emptyState": "No log entries found"
+  "emptyState": "此时间段内没有日志记录，请尝试扩大时间范围或清除筛选条件"
 }

@@ -129,7 +129,7 @@
       "usableAreaMin": "Usable Area Min (sq.m.)",
       "usableAreaMax": "Usable Area Max (sq.m.)",
       "standardUsableArea": "Standard Usable Area (sq.m.)",
-      "fireInsuranceCondition": "Fire Insurance Condition",
+      "fireInsuranceCode": "Fire Insurance Condition",
       "roomLayout": "Room Layout",
       "otherRoomLayout": "Other Room Layout",
       "numberOfHouses": "Number of Houses",
@@ -260,7 +260,8 @@
       "all": "全部",
       "available": "可售",
       "sold": "已售",
-      "allModels": "全部户型"
+      "allModels": "全部户型",
+      "allTowers": "全部楼栋"
     },
     "outcome": {
       "imported": "导入 {{count}} 套",
@@ -404,7 +405,7 @@
       "standardLandSqWa": "Standard Land (Sq.Wa)",
       "standardPriceBahtSqm": "Standard Price (Baht/sq.m)",
       "coverageAmountBahtSqm": "Coverage Amount (Baht/Sq.m)",
-      "fireInsuranceCondition": "Fire Insurance Condition",
+      "fireInsuranceCode": "Fire Insurance Condition",
       "description": "Description"
     }
   },
@@ -569,7 +570,7 @@
       "usableAreaMin": "Usable Area Min (sq.m.)",
       "usableAreaMax": "Usable Area Max (sq.m.)",
       "standardUsableArea": "Standard Usable Area (sq.m.)",
-      "fireInsuranceCondition": "Fire Insurance Condition",
+      "fireInsuranceCode": "Fire Insurance Condition",
       "roomLayout": "Room Layout",
       "otherRoomLayout": "Other Room Layout",
       "remark": "Remark",

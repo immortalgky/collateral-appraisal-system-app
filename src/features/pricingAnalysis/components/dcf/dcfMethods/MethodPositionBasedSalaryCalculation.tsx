@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import type { MethodPositionBasedSalaryCalculationWrapper } from '../../../types/dcf';
 
 interface MethodPositionBasedSalaryCalculationProps {
@@ -12,11 +13,12 @@ export function MethodPositionBasedSalaryCalculation({
   method,
   baseStyles,
 }: MethodPositionBasedSalaryCalculationProps) {
+  const { t } = useTranslation('pricingAnalysis');
   return (
     expanded && (
       <>
         <tr className="group transition-colors">
-          <td className={clsx(baseStyles.rowHeader)}>Increase Rate</td>
+          <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
           {(method.detail?.increaseRate ?? []).map((val, idx) => {
             return (
               <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -26,8 +28,8 @@ export function MethodPositionBasedSalaryCalculation({
           })}
         </tr>
         <tr className="group transition-colors">
-          <td className={clsx(baseStyles.rowHeader)}>
-            <span>Total</span>
+          <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+            <span>{t('dcf.common.total')}</span>
           </td>
           {(method.detail?.totalPositionBasedSalaryPerYear ?? []).map((val, idx) => {
             return (

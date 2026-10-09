@@ -23,7 +23,6 @@ export interface LeaseholdAnalysis {
   totalIncomeOverLeaseTerm: number;
   valueAtLeaseExpiry: number;
   finalValue: number;
-  finalValueRounded: number;
   isPartialUsage: boolean;
   partialRai: number | null;
   partialNgan: number | null;
@@ -33,6 +32,8 @@ export interface LeaseholdAnalysis {
   partialLandPrice: number | null;
   estimateNetPrice: number | null;
   estimatePriceRounded: number | null;
+  /** Appraiser's typed-over figure for this method. Null = not overridden; the computed value applies. */
+  indicatedValue: number | null;
   landGrowthPeriods: LandGrowthPeriod[];
   calculationDetails: LeaseholdCalculationDetail[];
 }
@@ -74,6 +75,8 @@ export interface SaveLeaseholdAnalysisRequest {
   partialWa: number | null;
   pricePerSqWa: number | null;
   estimatePriceRounded?: number | null;
+  /** Appraiser's typed-over figure. Null = not overridden; do not coerce to 0. */
+  indicatedValue?: number | null;
   remark?: string | null;
 }
 

@@ -78,8 +78,8 @@ const IncomeBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Props) 
         {data.finalValueAdjust != null && (
           <SummaryRow label="Adjusted" value={data.finalValueAdjust} highlight />
         )}
-        {data.appraisalPriceRounded != null && (
-          <SummaryRow label="Appraisal Price Rounded" value={data.appraisalPriceRounded} />
+        {data.indicatedValue != null && (
+          <SummaryRow label="Appraisal Price Rounded" value={data.indicatedValue} />
         )}
       </div>
     </div>

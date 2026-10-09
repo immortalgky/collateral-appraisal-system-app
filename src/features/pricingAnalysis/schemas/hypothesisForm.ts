@@ -162,16 +162,33 @@ export type LandBuildingSummaryFormValues = z.infer<typeof LandBuildingSummaryFo
 
 export const LandBuildingFormSchema = z.object({
   summary: LandBuildingSummaryFormSchema,
-  /** Cost items for CostOfBuilding category (per model) */
-  costOfBuildingItems: z.array(HypothesisCostItemSchema),
+  /**
+   * House model → building property (Cost of Building tab). The per-house cost is read live
+   * from the building; `totalCost` is the appraiser's typed-over model total, null = computed.
+   */
+  modelBuildingMappings: z.array(
+    z.object({
+      modelName: z.string(),
+      appraisalPropertyId: z.string().nullable(),
+      totalCost: z.number().min(0).nullable(),
+    }),
+  ),
   /** Other cost items: ProjectDevCost, ProjectCost, GovernmentTax */
   otherCostItems: z.array(HypothesisCostItemSchema),
   remark: z.string().optional().nullable(),
+  /**
+   * Appraiser's typed-over figure overriding totalAssetValueRounded. Null = not overridden.
+   * No `.default()` — it would diverge the schema's input/output types (see the `kind`
+   * field note above) and break zodResolver/useForm alignment; the defaults object
+   * supplies the actual default of `null`.
+   */
+  indicatedValue: z.number().nullable().optional(),
 });
 
 export type LandBuildingFormValues = z.infer<typeof LandBuildingFormSchema>;
 
 export const landBuildingFormDefaults: LandBuildingFormValues = {
+  indicatedValue: null,
   summary: {
     totalArea: null,
     sellingAreaPercent: null,
@@ -194,7 +211,7 @@ export const landBuildingFormDefaults: LandBuildingFormValues = {
     discountRate: null,
     remark: null,
   },
-  costOfBuildingItems: [],
+  modelBuildingMappings: [],
   otherCostItems: [],
   remark: null,
 };
@@ -254,11 +271,19 @@ export type CondominiumSummaryFormValues = z.infer<typeof CondominiumSummaryForm
 export const CondominiumFormSchema = z.object({
   summary: CondominiumSummaryFormSchema,
   remark: z.string().optional().nullable(),
+  /**
+   * Appraiser's typed-over figure overriding totalAssetValueRounded. Null = not overridden.
+   * No `.default()` — it would diverge the schema's input/output types (see the `kind`
+   * field note above) and break zodResolver/useForm alignment; the defaults object
+   * supplies the actual default of `null`.
+   */
+  indicatedValue: z.number().nullable().optional(),
 });
 
 export type CondominiumFormValues = z.infer<typeof CondominiumFormSchema>;
 
 export const condominiumFormDefaults: CondominiumFormValues = {
+  indicatedValue: null,
   summary: {
     areaTitleDeed: null,
     far: null,

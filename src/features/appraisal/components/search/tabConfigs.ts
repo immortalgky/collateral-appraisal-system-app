@@ -21,6 +21,7 @@ export interface FilterField {
     | 'date-range'
     | 'province-autocomplete'
     | 'company-autocomplete'
+    | 'requestor-autocomplete'
     | 'parameter-select';
   options?: { value: string; label: string }[];
   /** Parameter group for type: 'parameter-select' (e.g. 'BankingSegment'). Options come from GET /parameters. */
@@ -41,6 +42,9 @@ export interface FilterField {
    */
   fromKey?: string;
   toKey?: string;
+  /** type 'date-range' only: offer forward-looking presets (Tomorrow, Next 7 days). Off for dates
+   *  that can only be in the past, like Created, where they would always return nothing. */
+  futureDates?: boolean;
 }
 
 // ── Enhanced Appraisal Search Config (for AppraisalListPage) ──
@@ -159,6 +163,14 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
     type: 'company-autocomplete',
     placeholder: t('list.filters.companyPlaceholder'),
   },
+  // Who raised the request — how a credit officer finds their own customers' work. Options are
+  // searched on the server (/auth/requestors), not listed: there are over a thousand users.
+  {
+    key: 'requestor',
+    group: 'owner',
+    label: t('list.filters.requestorLabel'),
+    type: 'requestor-autocomplete',
+  },
   {
     key: 'created',
     group: 'time',
@@ -167,6 +179,17 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
     fromKey: 'createdFrom',
     toKey: 'createdTo',
   },
+  // Was two hidden keys that only "Today's appointments" could set. A range control writes the same
+  // two keys, so that quick view still lights this chip — and now anyone can pick "next 7 days".
+  {
+    key: 'appointment',
+    group: 'time',
+    label: t('list.filters.appointment'),
+    type: 'date-range',
+    fromKey: 'appointmentDateFrom',
+    toKey: 'appointmentDateTo',
+    futureDates: true,
+  },
   {
     key: 'slaDueDate',
     group: 'time',
@@ -174,6 +197,7 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
     type: 'date-range',
     fromKey: 'slaDueDateFrom',
     toKey: 'slaDueDateTo',
+    futureDates: true,
   },
 
   // Quick views ("Today's appointments", "Assigned this week") set these, and the page rebuilds
@@ -191,18 +215,6 @@ export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] =
     key: 'assigneeUserId',
     label: t('list.filters.assigneeUserId'),
     type: 'text',
-    hidden: true,
-  },
-  {
-    key: 'appointmentDateFrom',
-    label: t('list.filters.appointmentDateFrom'),
-    type: 'date',
-    hidden: true,
-  },
-  {
-    key: 'appointmentDateTo',
-    label: t('list.filters.appointmentDateTo'),
-    type: 'date',
     hidden: true,
   },
   {
@@ -240,11 +252,15 @@ export const expandFilterKeys = (
   );
 
 export const makeAppraisalColumns = (t: TFunction<'appraisal'>): AppraisalColumnDef[] => [
-  { key: 'appraisalNumber', label: t('list.columns.appraisalNumber'), sortable: true, width: 130 },
-  { key: 'customerName', label: t('list.columns.customer'), sortable: true, width: 180 },
+  { key: 'appraisalNumber', label: t('list.columns.appraisalNumber'), sortable: true, width: 110 },
+  { key: 'customerName', label: t('list.columns.customer'), sortable: true, width: 230 },
   { key: 'status', label: t('list.columns.status'), sortable: true, width: 110 },
   { key: 'priority', label: t('list.columns.priority'), sortable: true, width: 90 },
-  { key: 'slaStatus', label: t('list.columns.sla'), sortable: true, width: 110 },
+  { key: 'slaStatus', label: t('list.columns.sla'), sortable: true, width: 170 },
+  // Who has the job, in one cell: the company for External work (the person there is not recorded —
+  // see the note on APPRAISAL_DEFAULT_HIDDEN_COLUMNS), the user code for Internal.
+  { key: 'assignee', label: t('list.columns.assignee'), sortable: false, width: 190 },
+  { key: 'requestor', label: t('list.columns.requestor'), sortable: false, width: 190 },
   { key: 'province', label: t('list.columns.province'), sortable: true, width: 130 },
   { key: 'assignmentType', label: t('list.columns.assignment'), sortable: true, width: 110 },
   { key: 'bankingSegment', label: t('list.columns.bankingSegment'), sortable: true, width: 150 },
@@ -274,6 +290,9 @@ export const makeAppraisalColumns = (t: TFunction<'appraisal'>): AppraisalColumn
  * 153 External assignments), so a column for either could only ever be empty.
  */
 export const APPRAISAL_DEFAULT_HIDDEN_COLUMNS = [
+  // Both are folded into `assignee`; still offered in the picker for anyone who wants them apart.
+  'assignmentType',
+  'companyName',
   'slaBusinessDays',
   'submittedAt',
   'groupTag',

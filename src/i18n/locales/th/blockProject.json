@@ -129,7 +129,7 @@
       "usableAreaMin": "พื้นที่ใช้สอยต่ำสุด (ตร.ม.)",
       "usableAreaMax": "พื้นที่ใช้สอยสูงสุด (ตร.ม.)",
       "standardUsableArea": "พื้นที่ใช้สอยมาตรฐาน (ตร.ม.)",
-      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "fireInsuranceCode": "เงื่อนไขการประกันอัคคีภัย",
       "roomLayout": "รูปแบบห้อง",
       "otherRoomLayout": "รูปแบบห้องอื่น ๆ",
       "numberOfHouses": "จำนวนหลัง",
@@ -260,7 +260,8 @@
       "all": "ทั้งหมด",
       "available": "ยังไม่ขาย",
       "sold": "ขายแล้ว",
-      "allModels": "ทุกแบบ"
+      "allModels": "ทุกแบบ",
+      "allTowers": "ทุกอาคาร"
     },
     "outcome": {
       "imported": "นำเข้า {{count}} ยูนิต",
@@ -404,7 +405,7 @@
       "standardLandSqWa": "ที่ดินมาตรฐาน (ตร.วา)",
       "standardPriceBahtSqm": "ราคามาตรฐาน (บาท/ตร.ม.)",
       "coverageAmountBahtSqm": "จำนวนเงินคุ้มครอง (บาท/ตร.ม.)",
-      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "fireInsuranceCode": "เงื่อนไขการประกันอัคคีภัย",
       "description": "คำอธิบาย"
     }
   },
@@ -569,7 +570,7 @@
       "usableAreaMin": "พื้นที่ใช้สอยต่ำสุด (ตร.ม.)",
       "usableAreaMax": "พื้นที่ใช้สอยสูงสุด (ตร.ม.)",
       "standardUsableArea": "พื้นที่ใช้สอยมาตรฐาน (ตร.ม.)",
-      "fireInsuranceCondition": "เงื่อนไขการประกันอัคคีภัย",
+      "fireInsuranceCode": "เงื่อนไขการประกันอัคคีภัย",
       "roomLayout": "รูปแบบห้อง",
       "otherRoomLayout": "รูปแบบห้องอื่น ๆ",
       "remark": "หมายเหตุ",

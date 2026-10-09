@@ -6,6 +6,10 @@ interface SmartViewBarProps {
   views: SmartViewDto[];
   activeViewKey: string | null;
   onSelect: (view: SmartViewDto) => void;
+  /** "All jobs": leaves every quick view and drops the filters it set. */
+  onSelectAll: () => void;
+  /** Lit when nothing narrows the list — no view, no filter, no search. */
+  isAllActive: boolean;
 }
 
 /**
@@ -35,6 +39,12 @@ const viewStyles: Record<string, ViewStyle> = {
     color: 'text-primary',
     active: 'bg-primary border-primary text-white',
     hover: 'hover:border-primary',
+  },
+  'my-requests': {
+    icon: 'file-signature',
+    color: 'text-cyan-600',
+    active: 'bg-cyan-600 border-cyan-600 text-white',
+    hover: 'hover:border-cyan-500',
   },
   'sla-at-risk': {
     icon: 'triangle-exclamation',
@@ -87,13 +97,41 @@ const DEFAULT_VIEW_STYLE: ViewStyle = {
   hover: 'hover:border-primary',
 };
 
-function SmartViewBar({ views, activeViewKey, onSelect }: SmartViewBarProps) {
+const chipClass =
+  'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors whitespace-nowrap';
+
+function SmartViewBar({
+  views,
+  activeViewKey,
+  onSelect,
+  onSelectAll,
+  isAllActive,
+}: SmartViewBarProps) {
   const { t } = useTranslation('appraisal');
-  if (!views.length) return null;
+  // No early return on an empty `views`: "All jobs" is client-side and is the one-click way back
+  // to the whole list, so it stays even when the views endpoint returns nothing or fails.
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto pb-1">
       <span className="text-xs text-gray-500 shrink-0">{t('list.quickViews')}</span>
+      {/* Client-side, not a server view: it is the absence of one, so the backend has nothing to
+          describe. Without it the only way back to the whole list was clearing chips one by one. */}
+      <button
+        onClick={onSelectAll}
+        aria-pressed={isAllActive}
+        className={`${chipClass} ${
+          isAllActive
+            ? 'bg-[#1877F2] border-[#1877F2] text-white'
+            : 'bg-white text-gray-600 border-gray-200 hover:border-[#1877F2]'
+        }`}
+      >
+        <Icon
+          style="solid"
+          name="layer-group"
+          className={`size-3 ${isAllActive ? '' : 'text-[#1877F2]'}`}
+        />
+        {t('list.smartViews.all')}
+      </button>
       {views.map(view => {
         const style = viewStyles[view.key] ?? DEFAULT_VIEW_STYLE;
         const isActive = activeViewKey === view.key;
@@ -102,7 +140,8 @@ function SmartViewBar({ views, activeViewKey, onSelect }: SmartViewBarProps) {
             key={view.key}
             onClick={() => onSelect(view)}
             title={view.description}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-full border transition-colors whitespace-nowrap ${
+            aria-pressed={isActive}
+            className={`${chipClass} ${
               isActive ? style.active : `bg-white text-gray-600 border-gray-200 ${style.hover}`
             }`}
           >

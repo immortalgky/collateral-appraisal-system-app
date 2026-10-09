@@ -27,16 +27,14 @@ import {
   createLeaseAgreementBuildingFormDefault,
   type createLeaseAgreementBuildingFormType,
 } from '../schemas/form';
-import {
-  mapBuildingPropertyResponseToForm,
-  mapBuildingFormDataToApiPayload,
-} from '../utils/mappers';
+import { leaseBuildingToForm, leaseBuildingToPayload } from '../utils/propertyFormRecipes';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
 import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
-import { ConstructionInspectionTab } from '../components/tabs/ConstructionInspectionTab';
+import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
+import { useConstructionTab } from '../hooks/useConstructionTab';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { propertyGroupKeys } from '../api/propertyGroup';
@@ -80,6 +78,15 @@ const useUpdateLeaseAgreementBuildingProperty = () => {
       queryClient.invalidateQueries({
         queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
       });
+      // The page's own query, so the form is reset from what the server saved (as lease-condo does).
+      queryClient.invalidateQueries({
+        queryKey: [
+          'appraisals',
+          variables.appraisalId,
+          'lease-agreement-building-properties',
+          variables.propertyId,
+        ],
+      });
     },
   });
 };
@@ -103,17 +110,12 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   // ─── Building detail form ─────────────────────────────────────
   const { data: propertyData, isLoading } = useGetLeaseAgreementBuildingPropertyById(
-    appraisalId,
+    appraisalId ?? '',
     propertyId,
   );
 
   const formDefaults = useMemo(() => {
-    if (isEditMode && propertyData)
-      return {
-        ...mapBuildingPropertyResponseToForm(propertyData),
-        leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-        rentalInfo: (propertyData as any).rentalInfo ?? null,
-      };
+    if (isEditMode && propertyData) return leaseBuildingToForm(propertyData);
     return createLeaseAgreementBuildingFormDefault;
   }, [isEditMode, propertyData]);
 
@@ -125,13 +127,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   useEffect(() => {
     if (!isEditMode || !propertyData) return;
-    const base = mapBuildingPropertyResponseToForm(propertyData);
-    reset({
-      ...createLeaseAgreementBuildingFormDefault,
-      ...base,
-      leaseAgreement: (propertyData as any).leaseAgreement ?? null,
-      rentalInfo: (propertyData as any).rentalInfo ?? null,
-    } as any);
+    reset(leaseBuildingToForm(propertyData));
   }, [isEditMode, propertyData]);
 
   const { mutate: createProperty, isPending: isCreating } =
@@ -149,11 +145,15 @@ const CreateLeaseAgreementBuildingPage = () => {
     'building' | 'construction' | 'lease-agreement' | 'rental-info'
   >(initialBuildingTab);
 
-  useEffect(() => {
-    if (activeTab === 'construction' && !isUnderConstruction && !isCiAppraisal) {
-      setActiveTab('building');
-    }
-  }, [isUnderConstruction, activeTab, isCiAppraisal]);
+  const { shownTab, hasTab: hasConstructionTab } = useConstructionTab({
+    methods,
+    isUnderConstruction,
+    activeTab,
+    setActiveTab,
+    fallbackTab: 'building',
+    isCreateMode: !isEditMode,
+    isCiAppraisal,
+  });
 
   const hasDirtyFields = methods.formState.isDirty;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -162,9 +162,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   const onSubmit: SubmitHandler<createLeaseAgreementBuildingFormType> = async data => {
     setSaveAction('submit');
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapBuildingFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseBuildingToPayload(data);
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -204,10 +202,7 @@ const CreateLeaseAgreementBuildingPage = () => {
 
   const handleSaveDraft = () => {
     setSaveAction('draft');
-    const data = getValues();
-    const { leaseAgreement, rentalInfo, ...rest } = data;
-    const basePayload = mapBuildingFormDataToApiPayload(rest as any);
-    const payload = { ...basePayload, leaseAgreement, rentalInfo };
+    const payload = leaseBuildingToPayload(getValues());
 
     if (isEditMode && propertyId) {
       updateProperty(
@@ -260,7 +255,7 @@ const CreateLeaseAgreementBuildingPage = () => {
   // The header's tabs; construction appears only when it applies.
   const editorTabs = [
     { id: 'building', label: t('createPage.navBuilding') },
-    ...(isUnderConstruction || isCiAppraisal
+    ...(hasConstructionTab
       ? [{ id: 'construction', label: t('createPage.navConstructionInspection') }]
       : []),
     { id: 'lease-agreement', label: t('createPage.navLeaseAgreement') },
@@ -283,7 +278,7 @@ const CreateLeaseAgreementBuildingPage = () => {
                 typeCode="LSB"
                 photoSectionRef={photoSectionRef}
                 tabs={editorTabs}
-                activeTab={activeTab}
+                activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
               />
               <ResizableSidebar
@@ -297,7 +292,7 @@ const CreateLeaseAgreementBuildingPage = () => {
                     {/* Building Tab Content */}
                     <div
                       id="building-section"
-                      className={`flex flex-col gap-6 ${activeTab !== 'building' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 ${shownTab !== 'building' ? 'hidden' : ''}`}
                     >
                       <Section id="building-info" anchor className="flex flex-col gap-6">
                         <BuildingDetailForm />
@@ -305,24 +300,19 @@ const CreateLeaseAgreementBuildingPage = () => {
                     </div>
 
                     {/* Construction Inspection Tab Content */}
-                    {(isUnderConstruction || isCiAppraisal) && (
-                      <div
-                        id="construction-section"
-                        className={`flex flex-col gap-6 ${activeTab !== 'construction' ? 'hidden' : ''}`}
-                      >
-                        <Section id="construction-info" anchor className="flex flex-col gap-6">
-                          <ConstructionInspectionTab
-                            readOnly={isReadOnly}
-                            ciMode={isCiAppraisal}
-                          />
-                        </Section>
-                      </div>
-                    )}
+                    <ConstructionEditorSection
+                      key={propertyId}
+                      shownTab={shownTab}
+                      underConstruction={hasConstructionTab}
+                      readOnly={isReadOnly}
+                      ciMode={isCiAppraisal}
+                      condo={false}
+                    />
 
                     {/* Lease Agreement Tab Content */}
                     <div
                       id="lease-agreement-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'lease-agreement' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
                         <LeaseAgreementForm namePrefix="leaseAgreement" />
@@ -332,7 +322,7 @@ const CreateLeaseAgreementBuildingPage = () => {
                     {/* Rental Info Tab Content */}
                     <div
                       id="rental-info-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${activeTab !== 'rental-info' ? 'hidden' : ''}`}
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'rental-info' ? 'hidden' : ''}`}
                     >
                       <Section anchor className="min-w-0 overflow-hidden">
                         <RentalInfoForm namePrefix="rentalInfo" />
@@ -363,7 +353,6 @@ const CreateLeaseAgreementBuildingPage = () => {
                     isLoading={isPending && saveAction === 'draft'}
                     disabled={isPending}
                   >
-                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                     Save draft
                   </Button>
                   <Button

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +10,10 @@ import { useAuthStore } from '@/features/auth/store';
 import AppointmentInfoCard from '../components/AppointmentInfoCard';
 import AppointmentHistoryDrawer from '../components/AppointmentHistoryDrawer';
 import RescheduleModal from '../components/RescheduleModal';
-import FeeInformationSection, { BANK_ABSORB_FEE_TYPES } from '../components/FeeInformationSection';
+import FeeInformationSection, {
+  BANK_ABSORB_FEE_TYPES,
+  FULL_BANK_ABSORB_FEE_TYPES,
+} from '../components/FeeInformationSection';
 import PaymentInformationSection from '../components/PaymentInformationSection';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import {
@@ -190,19 +193,40 @@ export default function AppointmentAndFeePage() {
   const handleUpdateFeePaymentType = async (value: string) => {
     if (!currentFee) return;
     try {
+      const wasFullAbsorb = FULL_BANK_ABSORB_FEE_TYPES.includes(currentFee.feePaymentType ?? '');
+      const bankAbsorbAmount = FULL_BANK_ABSORB_FEE_TYPES.includes(value)
+        ? (currentFee.totalFeeAfterVAT ?? 0)
+        : BANK_ABSORB_FEE_TYPES.includes(value)
+          ? wasFullAbsorb
+            ? 0
+            : (currentFee.bankAbsorbAmount ?? 0)
+          : 0;
       await updateAppraisalFee.mutateAsync({
         appraisalId,
         feeId: currentFee.id ?? '',
         feePaymentType: value,
-        bankAbsorbAmount: BANK_ABSORB_FEE_TYPES.includes(value)
-          ? (currentFee.bankAbsorbAmount ?? 0)
-          : 0,
+        bankAbsorbAmount,
       });
       toast.success(t('fee.toasts.feeTypeUpdated'));
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('fee.toasts.feeTypeUpdateFailed'));
     }
   };
+
+  useEffect(() => {
+    if (!currentFee) return;
+    const feePaymentType = currentFee.feePaymentType ?? '';
+    if (!FULL_BANK_ABSORB_FEE_TYPES.includes(feePaymentType)) return;
+    if (updateAppraisalFee.isPending) return;
+    const total = currentFee.totalFeeAfterVAT ?? 0;
+    if ((currentFee.bankAbsorbAmount ?? 0) === total) return;
+    updateAppraisalFee.mutate({
+      appraisalId,
+      feeId: currentFee.id ?? '',
+      feePaymentType,
+      bankAbsorbAmount: total,
+    });
+  }, [currentFee?.id, currentFee?.feePaymentType, currentFee?.totalFeeAfterVAT]);
 
   const handleUpdateBankAbsorbAmount = async (amount: number) => {
     if (!currentFee) return;
@@ -326,7 +350,11 @@ export default function AppointmentAndFeePage() {
           {/* Global approval banner */}
           {hasDraft && (
             <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-300 text-amber-800">
-              <Icon name="triangle-exclamation" style="solid" className="size-4 mt-0.5 shrink-0 text-amber-600" />
+              <Icon
+                name="triangle-exclamation"
+                style="solid"
+                className="size-4 mt-0.5 shrink-0 text-amber-600"
+              />
               <span className="text-sm">{t('approval.banner.needsApproval')}</span>
             </div>
           )}

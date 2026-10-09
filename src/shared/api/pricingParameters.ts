@@ -26,7 +26,7 @@ export interface PricingAssumptionMethodMatrix {
 
 /**
  * Fire-insurance coverage rate for one building condition. `condition` is the value already
- * persisted on Project/ProjectModel.FireInsuranceCondition and is what forms post back;
+ * persisted on Project/ProjectModel.FireInsuranceCode and is what forms post back;
  * `code` reconciles the row with the 'FireInsuranceCondition' parameter group (used to resolve
  * a display label — see useFireInsuranceOptions).
  */
@@ -41,13 +41,11 @@ export interface FireInsuranceRate {
 export interface PricingParametersResponse {
   assumptionTypes: PricingAssumptionType[];
   assumptionMethodMatrix: PricingAssumptionMethodMatrix[];
-  fireInsuranceRates: FireInsuranceRate[];
 }
 
 interface PricingParametersRaw {
   assumptionTypes: { code: string; name: string; category: string; displaySeq: number }[];
   assumptionMethodMatrix: { assumptionType: string; allowedMethodCodes: string[] }[];
-  fireInsuranceRates: FireInsuranceRate[];
 }
 
 export function useGetPricingParameters() {
@@ -65,8 +63,27 @@ export function useGetPricingParameters() {
           displaySeq: a.displaySeq,
         })),
         assumptionMethodMatrix: data.assumptionMethodMatrix ?? [],
-        fireInsuranceRates: data.fireInsuranceRates ?? [],
       };
+    },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+  });
+}
+
+export const FIRE_INSURANCE_RATES_QUERY_KEY = ['fire-insurance-rates'] as const;
+
+/**
+ * Fire-insurance coverage rates. Owned by the Appraisal module — every consumer of these rates
+ * (condo property detail, block project models, unit-price calculation) is appraisal work, so they
+ * are no longer bundled into the generic /pricing-parameters payload.
+ */
+export function useGetFireInsuranceRates() {
+  return useQuery({
+    queryKey: FIRE_INSURANCE_RATES_QUERY_KEY,
+    queryFn: async (): Promise<FireInsuranceRate[]> => {
+      const { data } = await axios.get<{ rates: FireInsuranceRate[] }>('/fire-insurance-rates');
+      return data.rates ?? [];
     },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -76,23 +93,23 @@ export function useGetPricingParameters() {
 
 /**
  * Fire-insurance condition dropdown options for a property kind, ordered by displaySeq.
- * `value` is the `condition` key (posted/persisted); `label` is resolved from the
+ * `value` is the rate `code` (posted/persisted); `label` is resolved from the
  * 'FireInsuranceCondition' parameter group by matching `code`, so it follows the same
  * locale-driven description lookup every other parameter-group dropdown uses.
  */
 export function useFireInsuranceOptions(propertyKind: 'Condo' | 'LandAndBuilding'): ListBoxItem[] {
-  const { data } = useGetPricingParameters();
+  const { data } = useGetFireInsuranceRates();
   const conditionParams = useParametersByGroup('FireInsuranceCondition');
 
   return useMemo(() => {
     const labelByCode = new Map(conditionParams.map(p => [p.code, p.description]));
-    return (data?.fireInsuranceRates ?? [])
+    return (data ?? [])
       .filter(r => r.propertyKind === propertyKind)
       .sort((a, b) => a.displaySeq - b.displaySeq)
       .map(r => ({
-        value: r.condition,
+        value: r.code,
         label: labelByCode.get(r.code) ?? r.condition,
-        id: r.condition,
+        id: r.code,
       }));
   }, [data, conditionParams, propertyKind]);
 }

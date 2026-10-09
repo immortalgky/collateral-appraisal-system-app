@@ -106,6 +106,12 @@ export const CostMachineFormSchema = z.object({
   // DOM attribute is the only thing standing between a long remark and a SQL truncation error.
   remark: z.string().max(4000, 'Remark must be at most 4000 characters').nullable(),
   machineryCosts: z.array(MachineryRowSchema),
+  // The appraiser's override of the table's FMV total (mock:2571's `mcTotOv`). No
+  // `.default()` — same reasoning as leaseholdForm.ts's own indicatedValue: it would
+  // diverge the schema's input/output types and break zodResolver/useForm alignment.
+  // Null means "not overridden, use the computed total", not zero — an emptied box
+  // must never silently save an appraisal value of 0.
+  indicatedValue: z.number().nullable().optional(),
 });
 
 export type CostMachineFormType = z.infer<typeof CostMachineFormSchema>;

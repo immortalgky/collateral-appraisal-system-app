@@ -45,7 +45,10 @@ const CreateMachineryPage = () => {
 
   const isEditMode = Boolean(propertyId);
 
-  const { data: propertyData, isLoading } = useGetMachineryPropertyById(appraisalId, propertyId);
+  const { data: propertyData, isLoading } = useGetMachineryPropertyById(
+    appraisalId ?? '',
+    propertyId,
+  );
 
   const formDefaults = useMemo(() => {
     if (isEditMode && propertyData) {
@@ -200,6 +203,8 @@ const CreateMachineryPage = () => {
               propertyId={propertyId}
               typeCode="MAC"
               photoSectionRef={photoSectionRef}
+              tabs={[{ id: 'machinery', label: t('createPage.navMachinery') }]}
+              activeTab="machinery"
             />
             <ResizableSidebar
               isOpen={isOpen}
@@ -211,7 +216,7 @@ const CreateMachineryPage = () => {
                 <div className="flex-auto flex flex-col gap-6 min-w-0">
                   {/* Machinery Forms */}
                   <Section
-                    id="machinery"
+                    id="machinery-section"
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
@@ -242,7 +247,6 @@ const CreateMachineryPage = () => {
                   isLoading={isPending && saveAction === 'draft'}
                   disabled={isPending}
                 >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                   {t('createPage.saveDraft')}
                 </Button>
                 <Button

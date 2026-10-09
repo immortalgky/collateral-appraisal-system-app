@@ -62,6 +62,7 @@ export const CompanyQuotationItemDtoSchema = z.object({
   estimatedDays: z.number().int(),
   proposedCompletionDate: z.string().nullable().optional(),
   itemNotes: z.string().nullable().optional(),
+  itemNegotiationReason: z.string().nullable().optional(),
 });
 
 export type CompanyQuotationItemDto = z.infer<typeof CompanyQuotationItemDtoSchema>;
@@ -100,6 +101,24 @@ export const CompanyQuotationSchema = z.object({
 export type CompanyQuotationDto = z.infer<typeof CompanyQuotationSchema>;
 
 // ─── Appraisal Summary (per appraisal inside a quotation) ───────────────────
+export const QuotationTitleDetailSchema = z.object({
+  titleFamily: z.string(),
+  titleNumber: z.string().nullable().optional(),
+  buildingType: z.string().nullable().optional(),
+  areaRai: z.number().nullable().optional(),
+  areaNgan: z.number().nullable().optional(),
+  areaSquareWa: z.number().nullable().optional(),
+  condoName: z.string().nullable().optional(),
+  roomNumber: z.string().nullable().optional(),
+  usableArea: z.number().nullable().optional(),
+  installationStatus: z.string().nullable().optional(),
+  numberOfMachine: z.number().int().nullable().optional(),
+  dopaSubDistrictName: z.string().nullable().optional(),
+  dopaDistrictName: z.string().nullable().optional(),
+  dopaProvinceName: z.string().nullable().optional(),
+});
+
+export type QuotationTitleDetailDto = z.infer<typeof QuotationTitleDetailSchema>;
 
 export const AppraisalSummarySchema = z.object({
   /** The appraisal's primary ID — field name matches backend QuotationAppraisalResult. */
@@ -108,6 +127,7 @@ export const AppraisalSummarySchema = z.object({
   propertyType: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   loanType: z.string().nullable().optional(),
+  channel: z.string().nullable().optional(),
   addedAt: z.string().datetime({ offset: true }).optional(),
   addedBy: z.string().nullable().optional(),
   /** v7: requestId from which documents are fetched for the share-docs picker. */
@@ -118,6 +138,7 @@ export const AppraisalSummarySchema = z.object({
   maxAppraisalDays: z.number().int().nullable().optional(),
   /** Appraisal type: New | ReAppraisal | Progressive | PreAppraisal. Gates the Send-to-RM action. */
   appraisalType: z.string().nullable().optional(),
+  titles: z.array(QuotationTitleDetailSchema).optional().default([]),
 });
 
 export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;
@@ -334,6 +355,8 @@ export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
       negotiatedDiscount: z.number().nonnegative().nullable().optional(),
       vatPercent: z.number().nonnegative().nullable().optional(),
       itemNotes: z.string().nullable().optional(),
+      /** Required when negotiatedDiscount resolves to 0/null on a Counter response. */
+      itemNegotiationReason: z.string().max(500, t('validation.reasonMax')).nullable().optional(),
     })
     .superRefine((item, ctx) => {
       if (item.feeAmount === undefined) return;
@@ -372,6 +395,12 @@ export const submitQuotationItemSchema = z
     vatPercent: z.number().nonnegative().nullable().optional(),
     /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
     itemNotes: z.string().nullable().optional(),
+    /** Required when negotiatedDiscount resolves to 0/null on a Counter response. */
+    itemNegotiationReason: z
+      .string()
+      .max(500, 'Must be 500 characters or fewer')
+      .nullable()
+      .optional(),
   })
   .superRefine((item, ctx) => {
     if (item.feeAmount === undefined) return;

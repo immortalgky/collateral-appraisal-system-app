@@ -102,6 +102,7 @@
     "appraisalInformation": "Appraisal Information",
     "attachDocument": "Attach Document",
     "quotationInformationFee": "Quotation Information — Appraisal Fee",
+    "itemNegotiationReason": "Reason for No Discount",
     "duration": "Duration",
     "appraisalRemark": "Remark for this Appraisal",
     "requestDocuments": "Request Documents",
@@ -122,6 +123,7 @@
     "notes": "Notes",
     "notesOptional": "(optional)",
     "messageToCompany": "Message to Company",
+    "itemNegotiationReason": "Reason for No Discount",
     "noteToAdmin": "Note to admin",
     "appraisalsToInclude": "Appraisals to include",
     "appraisalsToIncludeHint": "Search and add one or more appraisals to this RFQ",
@@ -134,6 +136,7 @@
     "cancelReason": "Why is this quotation being cancelled?",
     "notes": "Any additional notes...",
     "negotiationMessage": "Explain what you'd like the company to revise (e.g., target a 10% discount on items 1 and 3)",
+    "itemNegotiationReason": "Explain why no additional discount is offered for this appraisal",
     "remarkHint": "Add overall remarks or conditions...",
     "appraisalRemark": "Add any notes specific to this appraisal (conditions, assumptions, scope caveats)...",
     "declineReason": "Please explain why you are declining this invitation...",
@@ -168,7 +171,35 @@
     "saveChanges": "Save Changes",
     "backToTasks": "Back to Tasks",
     "backToInvitations": "Back to Invitations",
-    "back": "Back"
+    "back": "Back",
+    "cancel": "Cancel"
+  },
+  "documents": {
+    "title": "Quotation Documents",
+    "generate": "Generate",
+    "summary": "Quotation Summary",
+    "uploadNew": "Upload",
+    "loading": "Loading documents...",
+    "empty": "No documents yet",
+    "colFileName": "File Name",
+    "colType": "Type",
+    "colSource": "Source",
+    "colCreated": "Created At",
+    "colActions": "Actions",
+    "view": "View",
+    "download": "Download",
+    "remove": "Remove",
+    "generated": "Document generated",
+    "generateFailed": "Failed to generate document",
+    "uploaded": "File uploaded and linked",
+    "uploadFailed": "Failed to upload file",
+    "downloadFailed": "Failed to download file",
+    "removed": "Document removed",
+    "removeFailed": "Failed to remove document",
+    "pickerTitle": "Select Attachments",
+    "pickerHint": "Select documents to attach to the email",
+    "pickerSelected": "{{count}} selected",
+    "pickerConfirm": "Confirm"
   },
   "aria": {
     "rowActions": "Row actions",
@@ -276,10 +307,11 @@
     "companyRequired": "At least one company must be invited",
     "appraisalRequired": "At least one appraisal is required",
     "discountExceedsFee": "Discount + Negotiated Discount exceeds Fee Amount on {{number}}",
-    "enterNegotiatedDiscount": "Enter a Negotiated Discount on at least one appraisal before submitting",
+    "enterNegotiationReason": "Provide a reason for the 0 Baht discount on: {{list}}",
     "mandaysExceeded": "Estimated Mandays exceeds the maximum duration for: {{list}}",
     "fixErrors": "Please fix the highlighted errors before submitting",
-    "noLongerCancellable": "Quotation is no longer cancellable (status: {{status}})."
+    "noLongerCancellable": "Quotation is no longer cancellable (status: {{status}}).",
+    "feeAfterDiscountZero": "Fee after discount cannot be 0 for: {{list}}"
   },
   "validation": {
     "cutOffRequired": "Cut off time is required",
@@ -296,6 +328,7 @@
     "feeRequired": "Fee amount is required",
     "mustBeWhole": "Must be a whole number",
     "discountExceedsFee": "Discount + Negotiated Discount cannot exceed Fee Amount",
+    "reasonMax": "Must be 500 characters or fewer",
     "invalidEmail": "Invalid email"
   },
   "negotiation": {
@@ -333,7 +366,7 @@
     "hintMultiple": "\"Select as Winner\" is disabled with multiple shortlisted — use \"Send to RM\" instead.",
     "selectWinnerHint0": "Shortlist exactly one company to enable",
     "selectWinnerHintMulti": "Disabled when more than one company is shortlisted — use Send to RM instead",
-    "sendToRmReAppraisalHint": "Can't send to RM — this quotation contains a Re-Appraisal appraisal.",
+    "sendToRmReAppraisalHint": "Can't send to RM — this quotation contains a Re-Appraisal appraisal with SIBS channel.",
     "sendToRmTitle": "Send Shortlist to RM",
     "sendToRmConfirm": "Confirm shortlist submission",
     "sendToRmBody": "You are sending {{count}} shortlisted company bid(s) to the RM for final selection. The RM will pick a tentative winner from these submissions.",
@@ -407,7 +440,8 @@
   },
   "appraisalReport": {
     "title": "Appraisal Report Listing",
-    "noAppraisals": "No appraisals linked to this RFQ."
+    "noAppraisals": "No appraisals linked to this RFQ.",
+    "viewAppraisalHint": "Click to view appraisal details"
   },
   "trackingLog": {
     "title": "Quotation Tracking Log",
@@ -454,6 +488,8 @@
     "clearFilters": "Clear all filters",
     "clear": "Clear",
     "selectAll": "Select all",
+    "selectAllDocuments": "Select all documents",
+    "selectedCount": "{{selected}}/{{total}} selected",
     "clearAll": "Clear all",
     "matchingCount": "({{count}} matching)",
     "appraisalNo": "Appraisal No.",
@@ -478,6 +514,8 @@
     "closes": "Closes",
     "loadingDocument": "Loading document...",
     "discountsExceedFee": "Discounts exceed fee",
+    "reasonRequiredHint": "Required — no discount offered",
+    "reasonNotNeededHint": "Not needed — a discount is offered",
     "companyResponses": "Company Responses",
     "cancelQuotation": "Cancel Quotation",
     "quotationAwarded": "Quotation awarded to {{company}}.",
@@ -502,7 +540,8 @@
     "priorCompanyExcluded": "1 prior company excluded (appeal flow — most recent appraiser of this collateral).",
     "searchCompanyName": "Search company name...",
     "notParticipatingTitle": "不参与",
-    "notParticipatingNoReason": "未提供原因。"
+    "notParticipatingNoReason": "未提供原因。",
+    "feeAfterDiscountZero": "Fee after discount cannot be 0"
   },
   "role": {
     "Maker": "Maker",

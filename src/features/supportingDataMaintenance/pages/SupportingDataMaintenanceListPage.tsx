@@ -17,6 +17,7 @@ import { SupportingDataFilterDialog } from '../components/SupportingDataFilterDi
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { getImportChannelLabel, getSourceOfDataLabel, getStatusLabel } from '../utils/getLabel';
 import { ARCHIVED_STATUSES, REMOVABLE_STATUSES } from '../constants/parameters';
+import type { SupportingStatus } from '../constants/enums';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -25,7 +26,7 @@ interface ContextMenuState {
   x: number;
   y: number;
   supportingId: string | null;
-  status: string | null;
+  status: SupportingStatus | null;
 }
 
 type ActiveTab = 'importing' | 'archived';
@@ -222,7 +223,7 @@ export function SupportingDataMaintenanceListPage() {
   });
 
   const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
-    keyof SupportingDataParams,
+    keyof SupportingDataParams & keyof GetSupportingDataMaintenanceListParams,
     string,
   ][];
   const hasFilters = !!searchTerm || activeFilterChips.length > 0;
@@ -277,6 +278,8 @@ export function SupportingDataMaintenanceListPage() {
 
   const hasAuthorityToEdit = listData?.hasAuthorityToEdit ?? false;
   const hasAuthorityToRemove = listData?.hasAuthorityToRemove ?? false;
+  const canRemoveContextItem =
+    hasAuthorityToRemove && !!contextMenu.status && REMOVABLE_STATUSES.has(contextMenu.status);
 
   const isLoading = isListLoading || isDeleting;
 
@@ -664,7 +667,7 @@ export function SupportingDataMaintenanceListPage() {
               />
               {t('actions.open')}
             </button>
-            {hasAuthorityToRemove && REMOVABLE_STATUSES.has(contextMenu.status ?? '') && (
+            {canRemoveContextItem && (
               <button
                 onClick={() => {
                   const item = allItems.find(t => t.id === contextMenu.supportingId);

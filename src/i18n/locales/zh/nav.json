@@ -2,7 +2,6 @@
   "sidebar": {
     "menu": "菜单",
     "general": "一般的",
-    "system": "系统",
     "dashboard": "仪表盘",
     "requests": "请求",
     "appraisals": "评估",
@@ -83,7 +82,7 @@
   },
   "formLayout": {
     "label": "估价表单布局",
-    "grid": "表格",
+    "grid": "紧凑",
     "classic": "标准"
   }
 }

@@ -1,0 +1,1033 @@
+/* ============================================================================
+   Appraisal form skin — `compact`
+   ============================================================================
+   The look of the `grid` layout, always on for it. ThemeProvider writes only
+   data-form-layout="grid", so every rule in formLayout.css keeps applying; this file is gated on
+   that same attribute written twice, `[data-form-layout='grid'][data-form-layout='grid']`, which
+   makes each rule one attribute more specific than the formLayout.css rule it overrides (a repeated
+   attribute selector counts each time). It only changes the look — colour, size, radius, font,
+   padding and margin. Nothing here touches overflow, position, z-index, isolation,
+   display: contents or the flex/grid structure of a field row; those took six review rounds in
+   formLayout.css and stay exactly as they are. The one structural change is `.cas-labelled-table`
+   stacking its label above its table.
+
+   The `classic` layout has its own skin, formLayoutStandard.css. The rules whose bodies are the
+   same in both skins are in formLayoutSkin.css (loaded after both); what is left here is what only
+   compact needs.
+
+   Design intent: a dense, flat, spreadsheet-like sheet — label column beside the value, one 32px row
+   per field, teal only for the chosen value.
+
+   Sizes are rem calibrated to the 13px root the app runs at (12px = 0.9231rem, 12.5px =
+   0.9615rem, 11px = 0.8462rem, 30px = 2.3077rem, 24px = 1.8462rem), so the density setting keeps
+   working. Borders stay px.
+
+   HOW THE RULES WIN. Each override copies the selector of the rule it beats and swaps its leading
+   `[data-form-layout='grid']` for `[data-form-layout='grid'][data-form-layout='grid']`: always
+   one attribute more specific, and this file loads after formLayout.css. Where the original
+   carries `!important`, so does the override. Dark values are restated at four attributes
+   because the dark token blocks in formLayout.css are `[data-theme='dark'][data-form-layout=…]`
+   (three counting the class) and a three-attribute compact block would tie with them and win by order.
+   ============================================================================ */
+
+/* ── tokens ─────────────────────────────────────────────────────────────────
+   formLayout.css already paints the section head, label column and inputs from these; re-pointing
+   them is the whole change for those. `--cas-input` (white), `--cas-input-edge` (#e0e7e9) and
+   `--cas-input-edge-hover` (#b7c4c9) are already the values this skin wants, so they are not repeated.
+
+   New here: `--cas-line-2` (one step darker than the row rules), `--cas-ink-3` (muted text, for
+   secondary figures and the quiet row buttons), `line-3` (the strongest line, for dashed edges), `frame` (the outline around header, tab strip and sheet), `sel` (fill, text and hover of the selected option:
+   radio pill, chip, toggle thumb), `pick-fg` (teal text, for links), `off` (the `false` side of a
+   yes/no toggle, solid grey like `sel`) and `neutral` (a quiet grey chip or hover).
+
+   The greys, lines and ink read the global palette (theme.css), which has a dark value for each, so
+   the dark block below restates only what differs in dark: the label column (4%, where the palette's
+   surface-2 is 6%), the neutral chip (10%, palette surface-3 is 8%), and the selection / link colours
+   (primary shades in dark rather than the palette's teal). */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid {
+  --cas-sheet-head: var(--palette-surface-3);
+  --cas-head-ink: var(--palette-ink);
+  --cas-ink: var(--palette-ink);
+  --cas-label-bg: var(--palette-surface-2);
+  --cas-line-2: var(--palette-line);
+  --cas-ink-3: var(--palette-ink-3);
+  --cas-sel-bg: var(--palette-accent);
+  --cas-sel-fg: #fff;
+  --cas-sel-hover: var(--palette-accent-ink);
+  --cas-pick-fg: var(--palette-accent-ink);
+  --cas-off-bg: var(--palette-ink-2);
+  --cas-off-fg: #fff;
+  --cas-neutral-bg: var(--palette-surface-3);
+  --cas-neutral-fg: var(--palette-ink);
+  --cas-line-3: var(--palette-line-strong);
+  --cas-frame: var(--palette-line);
+}
+[data-theme='dark'][data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid,
+[data-theme='dark'] [data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid {
+  --cas-label-bg: color-mix(in srgb, var(--color-base-content) 4%, var(--color-base-100));
+  --cas-sel-bg: var(--color-primary-700);
+  --cas-sel-hover: var(--color-primary-600);
+  --cas-pick-fg: var(--color-primary-300);
+  --cas-off-bg: #64748b;
+  --cas-neutral-bg: color-mix(in srgb, var(--color-base-content) 10%, var(--color-base-100));
+}
+
+/* ── 1. section head: neutral band (`--cas-sheet-head` / `--cas-head-ink`), no teal stripe ──────────────────────────
+   Overrides formLayout.css's inset stripe (the "colour roles" block), the head's 2.5rem height (the
+   "section headers pinned" block) and, for the title, its size and the weight 700 that wins there
+   (the "one sheet, grey / black / teal" and "colour roles" blocks). Fill and title colour come from
+   the tokens above. The title-table's summary is a div, not a span, and keeps its own muted grey. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head) {
+  box-shadow: none;
+  height: 2.3077rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head)
+  span {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* ── 2. label column and row height ─────────────────────────────────────────
+   Fill and rule colours are tokens. Size: overrides the "type scale" block's 0.8125rem. Row height:
+   overrides the "field: label cell, then control" row and the "standalone checkboxes" row (2.25rem,
+   29.25px at 13px). The label-less arm is limited to rows that hold a checkbox: the standalone
+   checkbox rule also matches bare `[data-field]` anchors such as the construction-inspection tab's
+   split badge, which is not part of this work. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid [data-field] [data-field-label] {
+  font-size: 0.875rem;
+  font-weight: 400;
+  /* One model for every label cell: equal padding above and below, the text centred in the row.
+     formLayout.css padded the cell 0.675rem / 0.25rem (tuned for 12px text in a 29px row), which sat the
+     text high. A one-line row centres the label by `align-items` with no padding at all (so a
+     two-line label still fits the row); beside a tall control (next rule) the label sits in the row's top
+     slot, padded the same above and below. The line is `text-sm`'s own 1.25rem (16.25px for 11.4px text):
+     Thai stacks tone marks and vowels above and below the letters, and a tighter line let the second line's
+     marks touch the first line's lower vowels in a two-line label. Half-leading is symmetric, so the
+     line height does not move the ink: the text stays centred whatever the line is. */
+  line-height: 1.25rem;
+  align-items: center;
+  padding-block: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)) {
+  min-height: var(--cas-row-h);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has(input[type='checkbox']):not(:has([data-field-label])):not(:has(table)):not(
+    .cas-repeater
+  ) {
+  min-height: var(--cas-row-h);
+  font-size: 0.875rem;
+}
+
+/* formLayout.css's "standalone checkboxes" rule (`[data-field]` with no label of its own: flex, 2.25rem tall,
+   padded) also catches a bare anchor that holds no control at all, such as the construction tab's split
+   status chip (`span.rounded-full[data-field]`), which it inflated from 20px to 29px. A label-less field
+   that holds no input, select, button, choice or table is not a row: it gets its component's own box back
+   (`revert-layer` is the utilities' value; the chip's own `px-[8px]` and line-height). Checkbox rows,
+   choice groups and a table cell's control wrapper all hold a control and keep the rule. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:not(
+    :has(
+      [data-field-label],
+      table,
+      input,
+      select,
+      textarea,
+      button,
+      fieldset,
+      [role='radio'],
+      [role='radiogroup'],
+      [role='switch']
+    )
+  ):not(.cas-repeater) {
+  display: revert-layer;
+  align-items: revert-layer;
+  min-height: revert-layer;
+  padding: revert-layer;
+  background: revert-layer;
+  border-bottom: revert-layer;
+}
+
+/* ── 2b. label width never shrinks; a row without room breaks into rows ──────────────────────────
+   formLayout.css gave the first field of a shared row (`data-row-lead`) the full 16rem label only once
+   its section's grid was 48rem (half a row) or 72rem (a third) wide, and the narrow 9.5rem below that,
+   so the first label of a shared row shrank next to the single-field rows' 16rem. Now the lead's label is
+   always 16rem, and a row that has no room for it puts its fields on rows of their own, each a normal
+   full-width row with the full label. The room is measured on the grid itself (`container-type` is set on
+   `.grid:has(> [data-field])` above), not the viewport, so the sheet, the Data Correction editor (a rail
+   on its left) and the right-hand panel opening or closing all decide for themselves.
+
+   The minimum is a label plus 7.5rem for the value (a short number, a date, two chips): the lead needs
+   16 + 7.5 = 23.5rem, a field holding a quarter of the row needs its 9.5rem label + 7.5rem = 17rem. Three
+   kinds of shared row:
+   - two halves (6 + 6) and the 6 + 3 + 3 row's lead: 23.5rem is half a row, so below 47rem every shared
+     row breaks;
+   - rows whose members are a quarter wide (the `col-span-3` pairs, e.g. District | Province): 17rem is a
+     quarter, so below 68rem those and their lead break;
+   - rows led by a third (4 + 8, House No. + No House Number): 23.5rem is a third, so below 70.5rem they
+     break. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid [data-field][data-row-lead] {
+  --cas-label-w: 16rem;
+}
+@container (max-width: 46.99rem) {
+  [data-form-layout='grid'][data-form-layout='grid']
+    .cas-form-grid
+    [data-field][class*='col-span-']:not(.col-span-12, .col-span-9, .col-span-full) {
+    grid-column: 1 / -1;
+    --cas-label-w: 16rem;
+  }
+}
+@container (max-width: 67.99rem) {
+  [data-form-layout='grid'][data-form-layout='grid']
+    .cas-form-grid
+    [data-field]:is(.col-span-3, :has(+ .col-span-3)) {
+    grid-column: 1 / -1;
+    --cas-label-w: 16rem;
+  }
+}
+@container (max-width: 70.49rem) {
+  [data-form-layout='grid'][data-form-layout='grid']
+    .cas-form-grid
+    [data-field]:is(.col-span-4, .col-span-5, :is(.col-span-4, .col-span-5) + [data-field]) {
+    grid-column: 1 / -1;
+    --cas-label-w: 16rem;
+  }
+}
+
+/* The land form's "encroached / used by others" toggle takes the whole row and the wide label column,
+   like a col-span-12 field (the same two lines formLayout.css's "condo: Usable Area takes the full row"
+   rule gives the condo's usable area); in the classic layout it keeps sharing its row. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid [data-field='isEncroached'] {
+  grid-column: 1 / -1;
+  --cas-label-w: 16rem;
+}
+
+/* ── 3. values: the standard skin's box ──────────────────────────────────────────────────
+   A field control is the same box here as in the standard skin: `--cas-input-h` tall, `--cas-ctl-*`
+   text, corner and padding (formLayoutSkin.css "field controls"), a real 1px edge that goes from
+   `--cas-input-edge` to `--cas-input-edge-hover` on hover and to the teal edge and soft teal ring on
+   focus. formLayout.css built the box another way (a 2px transparent border with a 1px inset
+   outline, so the visible box was two pixels smaller than the border box); these rules put it back
+   to one border, so the sizes and the edge colours can be compared one to one.
+
+   Size is set on every control of a labelled row — read-only and disabled ones too, so a row does
+   not change height with its state. Scoped to labelled rows: the same `[data-field] input` selector
+   also reaches the cells of a table, which size themselves. Excluded: checkbox / radio / hidden /
+   file, the "other" input inside a Dropdown's own frame (`.h-full`), and a combobox's chevron (a
+   listbox-popup button that sits over the input). `min-height: 0` clears the 2.1875rem of the
+   "compact rows" deduction rule in formLayout.css, which only reaches table cells but is cheap
+   insurance against a future rule.
+
+   `padding-block: 0` — the input centres its own text; the old 0.3125rem padding ("Controls drop
+   their frame" in formLayout.css) was what set the height before. Dropdown is a button, so its text
+   div takes the line-height instead: content height = box height − 2 × 1px border. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], .h-full),
+    textarea,
+    select,
+    button[aria-haspopup='listbox']
+  ) {
+  font-size: var(--cas-ctl-font);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], .h-full),
+    select,
+    button[aria-haspopup='listbox']:not([role='combobox'] ~ *)
+  ) {
+  height: var(--cas-input-h);
+  min-height: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], .h-full),
+    select
+  ) {
+  padding-block: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  button[aria-haspopup='listbox']:not([role='combobox'] ~ *)
+  > div.truncate {
+  padding-block: 0;
+  padding-inline: var(--cas-ctl-px);
+  line-height: calc(var(--cas-input-h) - 2px);
+}
+/* The box of an editable control: the same list as the standard skin's, so the two draw the same
+   things. A box in error keeps the component's own red (`aria-invalid`, `.border-danger`; the rule
+   after the focus one). The inline padding is the standard skin's `px-3`: formLayout.css put 0.5rem
+   on every control, a right side reserved by the component (`pr-9`, `pr-10`, `pr-12`) excepted. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly],
+      [aria-invalid='true']
+    ),
+    input[role='combobox'][readonly]:not([disabled], [aria-invalid='true']),
+    textarea:not([disabled], [readonly], [aria-invalid='true']),
+    select:not([disabled]),
+    button[aria-haspopup='listbox']:not([disabled], .border-danger, [role='combobox'] ~ *)
+  ) {
+  background-clip: border-box;
+  border: 1px solid var(--cas-input-edge);
+  border-radius: var(--cas-ctl-radius);
+  outline: 0 none;
+  outline-offset: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly]:not([role='combobox'])
+    ),
+    textarea:not([disabled], [readonly]),
+    select:not([disabled])
+  ) {
+  padding-left: var(--cas-ctl-px);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly]:not([role='combobox']),
+      [class*='pr-']
+    ),
+    textarea:not([disabled], [readonly]),
+    select:not([disabled])
+  ) {
+  padding-right: var(--cas-ctl-px);
+}
+/* …and a right side the component reserved for its icons (`pr-9`, `pr-16` on a combobox with a chevron
+   and a clear button) is the component's again: formLayout.css's 0.5rem put values under the icons. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(input, textarea)[class*='pr-']:not([disabled], [readonly]:not([role='combobox'])) {
+  padding-right: revert-layer;
+}
+/* A text area keeps its height; its padding is the standard skin's `py-2`. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  textarea {
+  padding-block: 0.5rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly],
+      [aria-invalid='true']
+    ),
+    input[role='combobox'][readonly]:not([disabled], [aria-invalid='true']),
+    textarea:not([disabled], [readonly], [aria-invalid='true']),
+    select:not([disabled]),
+    button[aria-haspopup='listbox']:not([disabled], .border-danger, [role='combobox'] ~ *)
+  ):not(:focus) {
+  background-color: var(--cas-input);
+  border-color: var(--cas-input-edge);
+  box-shadow: none;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly],
+      [aria-invalid='true']
+    ),
+    input[role='combobox'][readonly]:not([disabled], [aria-invalid='true']),
+    textarea:not([disabled], [readonly], [aria-invalid='true']),
+    select:not([disabled]),
+    button[aria-haspopup='listbox']:not([disabled], .border-danger, [role='combobox'] ~ *)
+  ):not(:focus):hover {
+  border-color: var(--cas-input-edge-hover);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly]:not([role='combobox']),
+      [aria-invalid='true']
+    ),
+    textarea:not([readonly], [aria-invalid='true']),
+    select,
+    button[aria-haspopup='listbox']:not(.border-danger, [role='combobox'] ~ *)
+  ):focus {
+  background-color: var(--color-base-100);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 25%, transparent);
+  outline: 0 none;
+}
+/* In error: the component's own red edge. formLayout.css's transparent border hid it. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(
+    input[aria-invalid='true'],
+    textarea[aria-invalid='true'],
+    button[aria-haspopup='listbox'].border-danger
+  ):not([disabled], [role='combobox'] ~ *) {
+  background-clip: border-box;
+  background-color: var(--cas-input);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--cas-ctl-radius);
+  box-shadow: none;
+  outline: 0 none;
+  outline-offset: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(input[aria-invalid='true'], textarea[aria-invalid='true']):not([disabled]) {
+  padding-left: var(--cas-ctl-px);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table)):not([data-field-disabled])
+  :is(input[aria-invalid='true'], textarea[aria-invalid='true']):not([disabled], [class*='pr-']) {
+  padding-right: var(--cas-ctl-px);
+}
+/* Required and still empty: a red tint on the box. FormFields sets data-field-required and
+   data-field-empty, so it clears the moment a value lands. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field][data-field-required][data-field-empty]:has([data-field-label]):not(:has(table)):not(
+    [data-field-disabled]
+  )
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [disabled],
+      [readonly],
+      [aria-invalid='true']
+    ),
+    input[role='combobox'][readonly]:not([disabled], [aria-invalid='true']),
+    textarea:not([disabled], [readonly], [aria-invalid='true']),
+    select:not([disabled]),
+    button[aria-haspopup='listbox']:not([disabled], .border-danger, [role='combobox'] ~ *)
+  ):not(:focus) {
+  background-color: var(--cas-req-bg);
+  border-color: var(--cas-req-edge);
+}
+/* The wrapper's vertical margin (formLayout.css "Text boxes stand off the label column", 0.1875rem) shrinks so box + margins
+   land on the 32px row: 28px control + 2 × 2px. Same two selectors as the original. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  > *
+  > :not([data-field-label], .text-danger, fieldset, [role='radiogroup'], .flex-wrap):not(
+    :has(> p.text-danger, fieldset, [role='radiogroup'], .flex-wrap)
+  ),
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:has([data-field-label]):not(:has(table))
+  :has(> [data-field-label]):not([data-field-label])
+  > div:not([data-field-label], .text-danger, fieldset, [role='radiogroup'], .flex-wrap):not(
+    :has(> p.text-danger, fieldset, [role='radiogroup'], .flex-wrap)
+  ) {
+  margin-block: var(--cas-wrap-m, calc((var(--cas-row-h) - var(--cas-input-h)) / 2));
+}
+/* A text area is not a single-line control: it keeps its 2px stand-off, so its row is the height it was. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid [data-field] textarea {
+  --cas-wrap-m: 0.1538rem;
+}
+
+/* ── 4. radio pills and checkbox chips ──────────────────────────────────────
+   Unselected: white, 1px #e3e9e8 hairline, 28px (the control's 30px less 2px, the standard skin's pill), 6px corner, 12px #55636f. Selected: solid primary
+   (`--cas-sel-*`) with white text, weight 500.
+
+   A radio pill is Headless UI v2's `Radio`, which renders a **span** with role="radio" (not the
+   div that formLayout.css's `div[role='radio']` rules match, so none of those apply). It is matched
+   as `[role='radio']:not(button)` — the toggle's options are `button[role='radio']`. What is beaten
+   here is the component's own utilities (`bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full
+   h-8 px-4 bg-primary text-white shadow-sm`) and the size rule of formLayout.css's "compact variant
+   for choice controls" block, which does match. */
+
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  :is([role='radio']:not(button), button[aria-pressed]) {
+  height: calc(var(--cas-input-h) - 2px);
+  min-height: calc(var(--cas-input-h) - 2px);
+  padding: 0 0.6923rem;
+  font-size: var(--cas-ctl-font);
+  font-weight: 400;
+  border-radius: 0.4615rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:is(:has(textarea), :has(.flex-wrap), :has([role='radiogroup']):not(:has(fieldset)))
+  [data-field-label] {
+  align-items: flex-start;
+  padding-block: calc((var(--cas-row-h) - 1.25rem) / 2);
+}
+/* formLayout.css's `[role='radiogroup'] > span { inset-block: 0.125rem }` is the toggle thumb's rule, but a
+   radio pill is a `relative` span in a radiogroup too, so it was pushed 2px down (top wins over bottom):
+   4.6px above and 1.4px below in a 34px row. A pill sits where the group's padding puts it. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  [role='radiogroup']
+  > [role='radio']:not(button) {
+  inset-block: auto;
+}
+/* The group's vertical padding (formLayout.css "compact variant for choice controls", 0.25rem): 26px
+   pill + 2 × 3px = 32px row. Not a toggle's track (a radiogroup directly under a fieldset):
+   formLayout.css gives that its own 0.0625rem padding and it must keep it, error state included. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  :is([role='radiogroup']:not(fieldset > *), .flex-wrap) {
+  padding-block: calc((var(--cas-row-h) - var(--cas-input-h) + 2px) / 2);
+}
+
+/* Checkbox chips. The base overrides formLayout.css's "checkbox chips: same language as the radio
+   pills" base rule (unselected: white, not transparent, so a row's hover tint does not show
+   through; that block's hover rules and the sheet's option hover stay stronger). Selected is in
+   formLayoutSkin.css, including the :hover rule that ties with the base selector. The tick icon and
+   the empty placeholder box ("chips: reserve the tick's space") are untouched. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  button[aria-pressed] {
+  background-color: var(--color-base-100);
+  color: var(--cas-ink-2);
+  box-shadow: inset 0 0 0 1px var(--cas-line-2);
+}
+
+/* ── 5. toggle ──────────────────────────────────────────────────────────────
+   The component's own round shape is kept: the track keeps `bg-gray-100/80 rounded-full`, the thumb
+   `rounded-full` with its drop shadow, and only the thumb's colour changes — solid primary by
+   default. A yes/no toggle (marker class from FormBooleanToggle) turns the thumb grey while its
+   first option — false — is active; a string toggle stays primary either way. The error state
+   (`border-danger` on the track, `bg-danger` on the thumb) is excluded by the :not() and keeps
+   its own look.
+
+   Sizes: buttons 24px, track padding stays formLayout.css's 0.0625rem (the `fieldset >
+   div[role='radiogroup']` rule), so ≈26px in all. The thumb's `inset-block` (set in the same
+   block) drops to match. The thumb's width and slide distance are the component's own and are not
+   touched. Track margin-block centres it in a 32px row (the row is top-aligned, see "Tall rows" in
+   formLayout.css). */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  fieldset
+  > div[role='radiogroup']:not(.border-danger) {
+  margin-block: calc((var(--cas-row-h) - var(--cas-input-h) + 2px) / 2);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]
+  fieldset
+  > div[role='radiogroup']:not(.border-danger)
+  > button[role='radio'] {
+  height: calc(var(--cas-input-h) - 4px);
+  min-height: calc(var(--cas-input-h) - 4px);
+  padding: 0 0.6923rem;
+  font-size: var(--cas-ctl-font);
+  border-radius: 9999px;
+}
+
+/* ── 7. tables ───────────────────────────────────────────────────────────────
+   Heads grey #f8fafa / #55636f / 500 / 12px, everywhere. The tables built for the sheet
+   (title deeds, boundary, surface, building, condo area) are already grey and only change size;
+   the repeater tables (FormTable, the correction screen's title table) and the cost table carry a
+   teal head from formLayout.css that is replaced here. Sizes go on th/td because `table-xs` and
+   per-cell `text-xs` beat a size set on the table. */
+
+/* Repeater head: overrides the teal head of formLayout.css's "every repeater table reads like the
+   title-deed one" and the pinned cell's `!important` teal ("sticky cells need a ground of their own"). */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
+  thead
+  tr {
+  background: var(--cas-table-head);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
+  thead
+  th {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--cas-ink-2);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
+  thead
+  th.sticky {
+  background-color: var(--cas-table-head) !important;
+}
+/* Body and totals text: overrides the 0.75rem / 0.875rem / 0.8125rem sizes that formLayout.css sets on
+   repeater cells, totals, the cost table's totals and the deduction table. Row rules are
+   already --cas-line (#eef2f2) through the sheet's `--color-base-300` remap. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
+  tbody
+  td,
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
+  tfoot
+  :is(td, th) {
+  font-size: 0.875rem;
+}
+
+/* Cost table head: overrides the teal head of formLayout.css's "the building cost table keeps its own
+   treatment", all three `!important` (the pinned cell, the row, the cell). Both are unlayered `!important` against unlayered `!important`, so specificity decides. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field].cas-cost-table
+  thead
+  th.sticky,
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field].cas-cost-table
+  thead
+  tr,
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  [data-field].cas-cost-table
+  thead
+  th {
+  background-color: var(--cas-table-head) !important;
+  color: var(--cas-ink-2) !important;
+}
+
+/* The tables built for the sheet: sizes on th / td. Their heads are already #f8fafa / #55636f
+   (the `thead` classes and the sticky `bg-[#f8fafa]`), 0.8125rem on the thead, 0.875rem on the
+   table. Also reaches the land-deduction table, where it agrees with the rule above. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid .cas-labelled-table thead th {
+  font-size: 0.875rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table
+  :is(tbody td, tfoot td) {
+  font-size: 0.875rem;
+}
+
+/* Editable cells (and the two cost-summary override inputs under the building table, which sit in
+   a div, not a td): the same white box with a 1px #e0e7e9 edge. `denseTable.tsx`'s FIELD, NumCell
+   (the dense NumberInput) and the dense dropdown draw a borderless #f6f9f9 fill with a
+   transparent border, `hover:` / `focus:` utilities on top; those constants are not touched.
+   Only the resting and hover state are set, so the utilities' teal focus border stays.
+   `.border-danger` keeps a dropdown's error edge; the inputs' `border-red-400!` is `!important`
+   already. The land-deduction table is excluded: it draws its box with formLayout.css's "Editable inputs read as fillable" block
+   (a 2px transparent border plus an outline), and a real border colour here would thicken it. It
+   follows the tokens instead.
+   Cell text sizes that need `!important` are at the end of the file, in a layer. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [disabled], [readonly]),
+    textarea:not([disabled], [readonly]),
+    button[aria-haspopup='listbox']:not([disabled])
+  ):not(:focus, .border-danger, .cas-deduction-cells *) {
+  background-color: var(--cas-input);
+  border-color: var(--cas-input-edge);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [disabled], [readonly]),
+    textarea:not([disabled], [readonly]),
+    button[aria-haspopup='listbox']:not([disabled])
+  ):not(:focus, .border-danger, .cas-deduction-cells *):hover {
+  border-color: var(--cas-input-edge-hover);
+}
+/* The deduction table's boxes are the field box too (formLayoutSkin.css "controls inside a table"). formLayout.css
+   draws them with a 2px transparent border, a 1px outline and `!important`; these put back a real 1px
+   edge with the field's colours in every state, `!important` against its `!important`, and close the
+   cell around the box (2px above and below). */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-deduction-cells.cas-deduction-cells
+  tbody
+  td:has(input, textarea, button[aria-haspopup='listbox']) {
+  padding-block: calc((var(--cas-row-h) - var(--cas-input-h)) / 2);
+  padding-inline: 0.375rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-deduction-cells.cas-deduction-cells
+  tbody
+  td
+  :is(
+    input:not([disabled], [readonly]),
+    textarea:not([disabled], [readonly]),
+    button[aria-haspopup='listbox']:not([disabled], .border-danger)
+  ):not(:focus, [aria-invalid='true']) {
+  background-clip: border-box;
+  background-color: var(--cas-input) !important;
+  border: 1px solid var(--cas-input-edge) !important;
+  border-radius: var(--cas-ctl-radius) !important;
+  outline: 0 none;
+  outline-offset: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-deduction-cells.cas-deduction-cells
+  tbody
+  td
+  :is(
+    input:not([disabled], [readonly]),
+    textarea:not([disabled], [readonly]),
+    button[aria-haspopup='listbox']:not([disabled], .border-danger)
+  ):not(:focus, [aria-invalid='true']):hover {
+  border-color: var(--cas-input-edge-hover) !important;
+  outline: 0 none;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-deduction-cells.cas-deduction-cells
+  tbody
+  td
+  :is(
+    input:not([disabled], [readonly]),
+    textarea:not([disabled], [readonly]),
+    button[aria-haspopup='listbox']:not([disabled])
+  ):focus {
+  background-color: var(--color-base-100) !important;
+  border: 1px solid var(--color-primary-500) !important;
+  border-radius: var(--cas-ctl-radius) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 25%, transparent);
+  outline: 0 none;
+}
+
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-deduction-cells.cas-deduction-cells
+  tbody
+  td
+  :is(input[aria-invalid='true'], button[aria-haspopup='listbox'].border-danger):not([disabled]) {
+  background-color: var(--cas-input) !important;
+  border: 1px solid var(--color-danger) !important;
+  border-radius: var(--cas-ctl-radius) !important;
+  outline: 0 none;
+}
+/* The other tables' cells keep the components' own focus utilities (a teal-600 edge, no ring); the field
+   box's focus is the teal-500 edge and the soft ring, so the cells say the same. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table:not(.cas-deduction-cells)
+  td
+  :is(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='hidden'],
+      [type='file'],
+      .h-full,
+      [readonly]:not([role='combobox']),
+      [aria-invalid='true']
+    ),
+    textarea:not([readonly], [aria-invalid='true']),
+    select,
+    button[aria-haspopup='listbox']:not(.border-danger, [role='combobox'] ~ *)
+  ):focus {
+  background-color: var(--color-base-100);
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary-500) 25%, transparent);
+  outline: 0 none;
+}
+
+/* A table under its label. The table runs the full width of the sheet under a slim sub-band, so the
+   label cell becomes a band across the top and the table takes the whole width below it with no
+   inset frame. Overrides, in formLayout.css's "a whole table under one label" block, the flex row
+   and the 16rem label column with its fill and right rule; the label fill of the "one sheet, grey /
+   black / teal" and "colour roles" blocks (at id specificity through `#land-title` — hence the
+   second selector); the label size; and the inset and the frame of the "A table in a label's value
+   cell" rules.
+   `flex: 0 0 auto` matters: the column's `flex: 0 0 16rem` would become a 16rem *height*. Whatever
+   else the label carries (the condo table's item count) is pushed to the right. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid .cas-labelled-table {
+  flex-direction: column;
+}
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid .cas-table-label,
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(.cas-sheet, #land-title)
+  .cas-table-label {
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3846rem 0.7692rem;
+  border-right: 0;
+  border-bottom: 1px solid var(--cas-line);
+  background: transparent;
+  color: var(--cas-ink-2);
+  font-size: 0.8462rem;
+  font-weight: 600;
+  line-height: var(--cas-leading);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table
+  > .cas-table-label
+  + .cas-table-card {
+  margin: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table
+  > .cas-table-label
+  + :not(.cas-table-card) {
+  padding: 0;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table
+  .cas-table-card,
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  #land-section:has(.cas-sheet)
+  #land-title
+  .cas-labelled-table
+  div:has(> table) {
+  border: 0;
+}
+
+/* ── 8. header frame: the sheet's edge ──────────────────────────────────────────
+   The identity band, the tab strip and the skyline / cover / badge rules are in formLayoutSkin.css
+   (the standard skin draws the same frame). What is compact's own is the sheet: it has formLayout.css's
+   frame (border, square corners, no top rule under a strip); formLayoutSkin.css opens its sides and
+   its bottom, so the only rule left is the strip's baseline at its top (see "The sheet hangs straight
+   off the editor's tab bar" in formLayout.css). */
+/* formLayout.css drops the top rule of every sheet in a scroller that has a tab strip (keyed on the
+   strip's `sticky` class, which now matches on every page). Only the sheet that hangs off the strip
+   — inside the element right after it, the editor body — should lose it: any other sheet in the
+   scroller (the Data Correction reason block, below the panels) gets its top edge back. Overridden
+   here rather than in formLayout.css so that rule, and whatever else reads it, stays as it is. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  #form-scroll-container:has(> .cas-tabbar)
+  :is(#land-section:has(.cas-sheet), .cas-sheet:not(#land-section .cas-sheet)):not(
+    .cas-tabbar + * *
+  ) {
+  border-top: 1px solid var(--cas-frame);
+}
+/* The sheet's last field row ends it. The frame has no bottom rule, so the row's own hairline would be
+   the only line left under the last section: it goes (the sheet simply stops). On the Data Correction
+   editor, whose sheet keeps its bottom rule, it also stops the two from doubling. The row (a field, or the
+   block holding a table) is the last child of the last grid in the sheet's last block. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-sheet
+  > :last-child
+  > :last-child
+  > :last-child {
+  border-bottom-width: 0;
+}
+/* A table that ends the sheet (the rental schedule) closes on its last row's own rule; the labelled
+   table's bottom border beside it made that a double line. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-sheet
+  > :last-child
+  > :last-child
+  > :last-child
+  > .cas-labelled-table {
+  border-bottom-width: 0;
+}
+/* ── 9. one table language ──────────────────────────
+   Every table in a labelled table gets the same cells — the shared rules (heads, last-column rules,
+   row buttons, bands) are in formLayoutSkin.css; these are compact's own: body cells, the control
+   cells of the deduction table, totals.
+
+   Why the tripled `.cas-labelled-table` and `:not(td table)`: the cells are set by a dozen earlier
+   rules (the repeater block, the deduction block, `TH` / `TD` utilities), the deepest at five
+   classes and a `:has()`. Three copies of one class put this block at six, so it wins on
+   specificity, not on order. `:not(td table)` and the child combinators keep it off the building
+   table's nested age-band table. Cells that carry `!important` fills are beaten with the same. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > :is(tbody, tfoot)
+  > tr
+  > td {
+  height: 2.3846rem;
+  padding: 0 0.6154rem;
+  line-height: 2.3077rem;
+  border-bottom: 1px solid var(--cas-line);
+  border-right: 1px solid var(--cas-line);
+}
+/* A cell holding a control: the field-height box, 2px above and below. The line-height goes back to normal, or
+   the 30px line would put the box in a 38px cell. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > :is(tbody, tfoot)
+  > tr
+  > td:has(input, select, textarea, button[aria-haspopup='listbox']) {
+  padding-block: calc((var(--cas-row-h) - var(--cas-input-h)) / 2);
+  line-height: normal;
+}
+/* A row-action cell (formLayoutSkin.css "row-action cell"): the cell rule above sets a 30px line, which the
+   shared rule cannot beat, so the cell is named the same way plus what it holds. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > :is(tbody, tfoot)
+  > tr
+  > td:has(.cas-row-btn, .cas-row-del, .cas-row-del-armed) {
+  line-height: 0;
+  vertical-align: middle;
+}
+/* Totals. `!important` because everything under a FormTable's [data-field] is cleared with one. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > tfoot
+  > tr
+  > td,
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > tbody
+  > tr.cas-total-row
+  > td {
+  background-color: var(--cas-table-head) !important;
+  font-weight: 600;
+  border-bottom: 0;
+}
+/* Control cells of the deduction table: the wrapper FormTable puts around each control is a
+   label-less field (formLayout.css "standalone checkboxes": 2.25rem tall, padded, filled), which is what made these
+   rows 34px. The cell owns the spacing here. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-deduction-cells
+  tbody
+  td
+  > [data-field] {
+  min-height: 0;
+  padding: 0;
+  background-color: transparent;
+}
+/* Its `#` column is 36px wide and its delete column 3.75rem (room for the armed "Delete?" pill, see
+   formLayoutSkin.css "row-action cell"); FormTable sets 60px inline on their heads (the delete head is the
+   empty one, and absent when read-only). The `#` in a row is text, not a badge. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-deduction-cells
+  thead
+  th:first-child {
+  width: 2.7692rem !important;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-deduction-cells
+  thead
+  th:last-child:empty {
+  width: 3.75rem !important;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > tbody
+  > tr
+  > td:first-child
+  > span.rounded-full {
+  color: var(--cas-ink-3);
+}
+/* Band: title, then a muted summary, then the add links at the right end. Only the
+   tables that carry these in the band render them; every other band is untouched. */
+[data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid .cas-table-label {
+  flex-wrap: wrap;
+  row-gap: 0.1538rem;
+}
+/* ── cell text that a utility marks `!important` ────────────────────────────
+   NumCell passes `text-[0.875rem]!` to every number cell, and BuildingDetailTable puts
+   `[&_tbody_td]:!text-[13px]` on the cost table. Tailwind utilities live in `@layer utilities`, and
+   for `!important` declarations the layer order is reversed: an *unlayered* `!important` (which is
+   all of formLayout.css) loses to a layered one whatever its specificity. Declaring these in
+   `@layer components` — earlier than `utilities`, so first for important — is what beats them.
+   Only these rules (two here, one in formLayoutSkin.css) need it; everything else is plain cascade. */
+@layer components {
+  [data-form-layout='grid'][data-form-layout='grid']
+    .cas-form-grid
+    [data-field].cas-cost-table
+    tbody
+    td {
+    font-size: 0.875rem !important;
+  }
+}

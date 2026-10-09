@@ -30,7 +30,9 @@
     "importChannel": "Import Channel",
     "dateType": "Date Type",
     "dateFrom": "Date From",
-    "dateTo": "Date To"
+    "dateTo": "Date To",
+    "website": "Website",
+    "phoneNo": "Phone No."
   },
   "actions": {
     "create": "Create",
@@ -67,8 +69,13 @@
       "Pending": "Pending",
       "Approved": "Approved",
       "Cancelled": "Cancelled",
-      "Reject": "Reject"
-    }
+      "Rejected": "Rejected",
+      "RoutedBack": "Routed Back"
+    },
+    "website": "Website",
+    "websitePlaceholder": "Enter website",
+    "phoneNo": "Phone No.",
+    "phoneNoPlaceholder": "Enter phone no."
   },
   "formSections": {
     "supportingDataTitle": "Supporting Data Maintenance",

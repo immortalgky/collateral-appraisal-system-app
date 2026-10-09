@@ -36,6 +36,7 @@ export function initializeLeaseholdForm(
       partialWa: analysis.partialWa,
       pricePerSqWa: analysis.pricePerSqWa,
       estimatePriceRounded: analysis.estimatePriceRounded,
+      indicatedValue: analysis.indicatedValue,
       remark: remark ?? null,
     },
     { keepDirty: false, keepDirtyValues: false, keepTouched: false },

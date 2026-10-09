@@ -3,15 +3,15 @@ import { format, parseISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
-import type { AppraisalFeeDtoType, AppraisalFeeItemDtoType } from '@shared/schemas/v1';
+import type { AppraisalFee, AppraisalFeeItem, AppraisalFeePayment } from '../api/fee';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import AddPaymentModal from './AddPaymentModal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { getFeePaymentStatusDisplay } from '../utils/feePaymentStatus';
 
 interface PaymentInformationSectionProps {
-  items: AppraisalFeeItemDtoType[];
-  fee?: AppraisalFeeDtoType | null;
+  items: AppraisalFeeItem[];
+  fee?: AppraisalFee | null;
   onRecordPayment?: (data: {
     paymentAmount: number;
     paymentDate: string;
@@ -47,7 +47,7 @@ export default function PaymentInformationSection({
   const [editingPaymentId, setEditingPaymentId] = useState<string | null>(null);
   const [deletingPaymentId, setDeletingPaymentId] = useState<string | null>(null);
   const bankAbsorbAmount = fee?.bankAbsorbAmount ?? 0;
-  const payments = fee?.paymentHistory ?? [];
+  const payments: AppraisalFeePayment[] = fee?.paymentHistory ?? [];
 
   // Calculate totals from billable items only — pending-approval and rejected fees are excluded
   // (mirrors the backend RecalculateFromItems and the Fee Information section).
@@ -62,6 +62,7 @@ export default function PaymentInformationSection({
 
   const effectiveBankAbsorbAmount = bankAbsorbAmount;
   const effectiveRemaining = remaining;
+  const isFullyBankAbsorbed = totalFee > 0 && bankAbsorbAmount >= totalFee;
   const paymentPercentage = totalFee > 0 ? Math.min((totalPaid / totalFee) * 100, 100) : 0;
 
   // Determine payment status from the backend value.
@@ -334,7 +335,7 @@ export default function PaymentInformationSection({
               )}
 
               {/* Add Payment Button */}
-              {!readOnly && (
+              {!readOnly && !isFullyBankAbsorbed && (
                 <button
                   type="button"
                   onClick={() => setIsAddPaymentModalOpen(true)}

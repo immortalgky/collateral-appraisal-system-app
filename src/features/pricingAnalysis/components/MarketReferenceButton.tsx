@@ -99,12 +99,17 @@ export function MarketReferenceButton({
           setIsOpen(true);
         }}
         className={clsx(
-          'relative inline-flex items-center text-primary border border-primary/20 rounded-lg',
-          'hover:bg-primary/5 hover:border-primary/40 transition-colors',
+          'relative inline-flex items-center transition-colors',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+          // compact = the mock's `.refico` (mock:354-358) — a small icon-only affordance
+          // marking "this field can come from a reference", not the primary-coloured
+          // button the full mode uses. 17x17, no border/fill at rest; accent colours
+          // (--accent-wash/--accent-ink) only appear on hover. Decided 20/09/2569 after
+          // two earlier passes kept the "WQS" text pill and widened the field instead —
+          // the icon is the affordance now, the tooltip carries the meaning.
           compact
-            ? 'gap-0 px-1.5 py-0.5 text-[10px] font-semibold'
-            : 'gap-1 px-2 py-1 text-xs font-medium',
+            ? 'size-[17px] justify-center rounded-[4px] text-[#94a3b8] hover:bg-[#f0fdfa] hover:text-[#0f766e]'
+            : 'gap-1 rounded-lg border border-primary/20 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5 hover:border-primary/40',
           isPending && 'opacity-60 cursor-wait',
           className,
         )}
@@ -117,7 +122,7 @@ export function MarketReferenceButton({
             {!compact && <span>{buttonLabel}</span>}
           </span>
         ) : compact ? (
-          <span>{buttonLabel}</span>
+          <Icon name="link" style="solid" className="size-[12px]" />
         ) : (
           <>
             <Icon name="chart-bar" className="size-3" />

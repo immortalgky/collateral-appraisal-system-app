@@ -15,7 +15,7 @@ export function mapWQSFormToSubmitSchema({
 
   const fv = WQSForm.WQSFinalValue;
 
-  // The Adjust Final Value UI now binds the user-rounded total to `appraisalPrice`
+  // The Adjust Final Value UI now binds the user-rounded total to `indicatedValue`
   // in all cases (unit 01/02, unit 03 machinery, with/without building cost).
   // `landValue` is only meaningful when hasBuildingValue = true (separate Land Price input).
   const hasBuildingCost = !!fv?.hasBuildingValue;
@@ -25,10 +25,11 @@ export function mapWQSFormToSubmitSchema({
   return {
     comparativeAnalysisTemplateId: comparativeAnalysisTemplateId ?? null,
     appraisalValue: userRoundedAppraisalPrice,
-    finalValueAdjusted: (fv?.finalValueAdjusted as number | undefined) ?? null,
+    // Wire key renamed; the right-hand side still reads the form model, which keeps its own name.
+    finalValueOverride: (fv?.finalValueAdjusted as number | undefined) ?? null,
     hasBuildingValue: fv?.hasBuildingValue ?? null,
     buildingValue: fv?.buildingValue ?? null,
-    appraisalPrice: userRoundedAppraisalPrice,
+    indicatedValue: userRoundedAppraisalPrice,
     includeLandArea: fv?.includeLandArea ?? null,
     landArea: fv?.landArea ?? null,
     landValue: landValueToSend,
@@ -91,7 +92,13 @@ export function mapWQSFormToSubmitSchema({
         adjustOfferPricePct: hasOfferingPrice ? (calc.offeringPriceAdjustmentPct ?? null) : null,
         adjustOfferPriceAmt: hasOfferingPrice ? (calc.offeringPriceAdjustmentAmt ?? null) : null,
         sellingPrice: hasOfferingPrice ? null : (calc.sellingPrice ?? null),
-        sellingPriceUnit: null,
+        // Was hardcoded null while SAG and DC both pass this through, so a WQS priced off SALE
+        // comparables reached the server with no unit at all: DetectPriceUnit found nothing, the
+        // method defaulted to the PerUnit lumpsum, ValuePerUnit was never stored, the value got
+        // rounded to the nearest thousand as if it were a total, and ApplyLandAreaValue skipped the
+        // row. Offer-priced comparables (line above) were unaffected, which is why it survived —
+        // the failure depended on which of the two prices the surveyor happened to fill in.
+        sellingPriceUnit: calc.sellingPriceMeasurementUnit ?? null,
         buySellYear:
           !hasOfferingPrice && calc.numberOfYears != null ? Math.trunc(calc.numberOfYears) : null,
         buySellMonth: null,

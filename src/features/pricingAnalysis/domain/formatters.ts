@@ -20,6 +20,20 @@ export function formatDateOnly(dateStr: string): string {
   return `${day}/${month}/${year}`;
 }
 
+/**
+ * Format an audit timestamp as DD/MM/YYYY HH:mm, in the viewer's own timezone.
+ *
+ * Deliberately separate from formatDateOnly rather than an option on it: every other caller of
+ * that helper formats a *calendar* date — appraisal date, lease start/end, contract start/end —
+ * where a clock time is meaningless and would render as a misleading 00:00. This one is for
+ * fields that genuinely carry a time (the server sends `DateTime? UpdatedAt`).
+ */
+export function formatDateTime(dateStr: string): string {
+  const d = new Date(dateStr);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 /** Safe number conversion — returns 0 for non-finite values */
 export const toNum = (v: unknown): number => {
   const n = Number(v);

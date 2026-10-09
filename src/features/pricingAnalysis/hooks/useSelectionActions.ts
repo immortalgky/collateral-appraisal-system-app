@@ -4,17 +4,10 @@ import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useNavigate } from 'react-router-dom';
 import { useBasePath } from '@/features/appraisal/context/AppraisalContext';
 import toast from 'react-hot-toast';
-import i18n from '@/i18n';
-
-const tp = (key: string, options?: Record<string, unknown>) =>
-  // i18next's overload resolution can't match a dynamic Record<string, unknown> against
-  // its TOptions union when the key is a template-literal string; narrow cast on just the
-  // options argument (not the return value) since no interpolation-safe overload exists.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  i18n.t(`pricingAnalysis:${key}`, options as any);
+import { useTranslation } from 'react-i18next';
 
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
-import type { Approach, Method } from '../types/selection';
+import type { Approach, Method, MethodRole } from '../types/selection';
 import { useSaveEditingSelection } from '../store/saveEditingSelection';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 import {
@@ -42,7 +35,7 @@ import {
   mapToServerMethodType,
 } from '../store/saveEditingSelection';
 
-type MethodKey = { approachType: string; methodType: string };
+export type MethodKey = { approachType: string; methodType: string };
 
 export function useSelectionActions({
   state,
@@ -63,6 +56,7 @@ export function useSelectionActions({
   const navigate = useNavigate();
   const basePath = useBasePath();
   const qc = useQueryClient();
+  const { t } = useTranslation('pricingAnalysis');
 
   // Deselect confirmation dialog
   const { isOpen: isConfirmOpen, onOpen: openConfirm, onClose: closeConfirm } = useDisclosure();
@@ -151,9 +145,9 @@ export function useSelectionActions({
         queryKey: pricingAnalysisKeys.detail(result.pricingAnalysisId ?? pricingAnalysisId),
       });
 
-      toast.success(tp('toasts.selectionSaved'));
+      toast.success(t('toasts.selectionSaved'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
     }
   };
 
@@ -188,11 +182,11 @@ export function useSelectionActions({
         pricingAnalysisId,
         documentEntryId: pendingRemoveDocument.documentEntryId,
       });
-      toast.success(tp('toasts.documentRemoved'));
+      toast.success(t('toasts.documentRemoved'));
       setPendingRemoveDocument(null);
       closeRemoveDocument();
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.documentRemoveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.documentRemoveFailed'));
     }
   };
 
@@ -207,7 +201,7 @@ export function useSelectionActions({
     const appraisalValue = method?.appraisalValue ?? 0;
 
     if (appraisalValue <= 0) {
-      toast.error(tp('toasts.calculateFirst'));
+      toast.error(t('toasts.calculateFirst'));
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_METHOD', payload: arg });
@@ -218,10 +212,33 @@ export function useSelectionActions({
     const method = appr?.methods.some((m: Method) => m.isSelected);
 
     if (!method) {
-      toast.error(tp('toasts.methodNotSelected'));
+      toast.error(t('toasts.methodNotSelected'));
       return;
     }
     dispatch({ type: 'SUMMARY_SELECT_APPROACH', payload: { approachType } });
+  };
+
+  // Cost approach's role picker (Land/Building/LandAndBuilding/Machinery) — a discrete
+  // choice, written immediately (unlike the debounced value/remark below) because multi-select
+  // and the Cost formula row both key off Role server-side, same "reflect the real state right
+  // away" reasoning as the calc-mode toggle in PricingAnalysisMethodBoardRow. No local dispatch:
+  // the invalidate below re-INITs from the server, the same round trip that toggle already uses.
+  const selectMethodRole = async (arg: MethodKey & { role: MethodRole }) => {
+    const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
+    const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
+    if (!method?.id || !isServerId(method.id) || !pricingAnalysisId) return;
+
+    try {
+      await updateMethodMutation.mutateAsync({
+        id: pricingAnalysisId,
+        methodId: method.id,
+        request: { role: arg.role } as UpdateMethodRequestType,
+      });
+      await qc.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(pricingAnalysisId) });
+      toast.success(t('toasts.changed'));
+    } catch (err: any) {
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
+    }
   };
 
   const [isSaving, setIsSaving] = useState(false);
@@ -258,26 +275,21 @@ export function useSelectionActions({
     const unprocessedIndices = new Set<number>(pdfFiles.map((_, i) => i));
     const getFailedFileNames = () =>
       pdfFiles.filter((_, i) => unprocessedIndices.has(i)).map(f => f.name);
-    const isEveryMethodSelected = state.summarySelected.every((a: Approach) =>
-      a.methods.some((m: Method) => m.isSelected),
-    );
-
-    // validate every method under approach must be selected
-    if (!isEveryMethodSelected) {
-      toast.error(tp('toasts.methodNotSelected'));
-      return { success: false, failedFileNames: getFailedFileNames() };
-    }
+    // No "every approach must have a selected method" rule here: only the approach chosen as
+    // the group's value has to be complete, which the two checks below enforce — and which is
+    // exactly what the domain requires (PricingAnalysis.SelectApproach). Demanding it of every
+    // added approach blocked saving whenever any other approach was still being worked on.
 
     // Final approach must be selected
     const finalApproach = state.summarySelected.find((a: Approach) => a.isSelected);
     if (!finalApproach) {
-      toast.error(tp('toasts.approachNotSelected'));
+      toast.error(t('toasts.approachNotSelected'));
       return { success: false, failedFileNames: getFailedFileNames() };
     }
 
     const finalMethod = finalApproach.methods.find((m: Method) => m.isSelected);
     if (!finalMethod) {
-      toast.error(tp('toasts.methodNotSelected'));
+      toast.error(t('toasts.methodNotSelected'));
       return { success: false, failedFileNames: getFailedFileNames() };
     }
 
@@ -287,7 +299,7 @@ export function useSelectionActions({
     if (isManualMode) {
       const totalDocuments = (state.documents?.length ?? 0) + pdfFiles.length;
       if (totalDocuments === 0) {
-        toast.error(tp('toasts.documentRequired'));
+        toast.error(t('toasts.documentRequired'));
         return { success: false, failedFileNames: getFailedFileNames() };
       }
     }
@@ -332,7 +344,7 @@ export function useSelectionActions({
 
         if (unprocessedIndices.size > 0) {
           const failedFileNames = getFailedFileNames();
-          toast.error(tp('toasts.someFilesFailed', { files: failedFileNames.join(', ') }));
+          toast.error(t('toasts.someFilesFailed', { files: failedFileNames.join(', ') }));
           return { success: false, failedFileNames };
         }
       }
@@ -345,12 +357,21 @@ export function useSelectionActions({
       // must block the rest of the save.
       const dirtyValueKeys = state.dirtyManualValueKeys;
       const dirtyBreakdownKeys = state.dirtyCostBreakdownKeys;
+      const dirtyRemarkKeys = state.dirtyMethodRemarkKeys;
 
-      if (dirtyValueKeys.length > 0 || dirtyBreakdownKeys.length > 0) {
+      if (
+        dirtyValueKeys.length > 0 ||
+        dirtyBreakdownKeys.length > 0 ||
+        dirtyRemarkKeys.length > 0
+      ) {
         const dirtyMethods = state.summarySelected
           .flatMap(appr => appr.methods)
           .filter(
-            m => m.id && (dirtyValueKeys.includes(m.id) || dirtyBreakdownKeys.includes(m.id)),
+            m =>
+              m.id &&
+              (dirtyValueKeys.includes(m.id) ||
+                dirtyBreakdownKeys.includes(m.id) ||
+                dirtyRemarkKeys.includes(m.id)),
           );
 
         for (const method of dirtyMethods) {
@@ -365,24 +386,41 @@ export function useSelectionActions({
           // dirty: a Cost method whose price alone changed would otherwise be sent rate null
           // and lose a breakdown it never had — a MachineryCost method's FMV row, say.
           //
-          // Exactly one endpoint per method. Both write the method value, so falling through
-          // to updateMethod afterwards would race the two writes.
+          // Exactly one endpoint writes the *value* per method — the breakdown endpoint and
+          // updateMethod below never both fire for the same method, so the value is never
+          // raced. Remark is a separate field on a separate write: when both the rate and the
+          // remark are dirty on the same method, the breakdown call above lands first, then a
+          // second call here sends remark alone (no methodValue — already written above) so
+          // typing a note while adjusting a land rate isn't silently lost.
           if (dirtyBreakdownKeys.includes(method.id)) {
             await manualCostBreakdownMutation.mutateAsync({
               id: pricingAnalysisId,
               methodId: method.id,
               request: {
                 landRatePerSqWa: method.landRatePerSqWa ?? null,
-                appraisalPrice: method.appraisalValue,
+                indicatedValue: method.appraisalValue,
               } as SetManualCostBreakdownRequestType,
             });
+
+            if (dirtyRemarkKeys.includes(method.id)) {
+              await updateMethodMutation.mutateAsync({
+                id: pricingAnalysisId,
+                methodId: method.id,
+                request: { remark: method.remark ?? '' } as UpdateMethodRequestType,
+              });
+            }
             continue;
           }
 
+          // Remark folded into this same request when dirty — never a second write to the
+          // same method (see onManualNoteSync's contract on PricingAnalysisMethodBoardRow).
           await updateMethodMutation.mutateAsync({
             id: pricingAnalysisId,
             methodId: method.id,
-            request: { methodValue: method.appraisalValue } as UpdateMethodRequestType,
+            request: {
+              methodValue: method.appraisalValue,
+              ...(dirtyRemarkKeys.includes(method.id) ? { remark: method.remark ?? '' } : {}),
+            } as UpdateMethodRequestType,
           });
         }
       }
@@ -397,25 +435,46 @@ export function useSelectionActions({
       // Only approaches whose method choice actually changed are sent (unchanged ones keep
       // the selection from a previous save), but finalApproachId is always sent — it is what
       // the server propagates to FinalAppraisedValue.
-      const changedSelections = state.dirtyMethodApproachTypes
-        .map((approachType: string) => {
-          const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
-          const selectedMethod = appr?.methods.find((m: Method) => m.isSelected);
-          return appr?.id &&
-            isServerId(appr.id) &&
-            selectedMethod?.id &&
-            isServerId(selectedMethod.id)
-            ? { approachId: appr.id, methodId: selectedMethod.id }
-            : null;
-        })
-        .filter((s): s is { approachId: string; methodId: string } => s !== null);
+      // One pair per selected method, not one per approach — a Cost approach can have several
+      // (a Land-role method and a Building-role method selected together), so multiple entries
+      // sharing an approachId compose correctly.
+      //
+      // `fullyDescribedApproachIds` is what makes an UNTICK reach the server. The pairs above
+      // only ever say "this is selected"; a method the appraiser just unticked simply drops out
+      // of the list, and the server's SelectMethod is additive within a Cost approach (it clears
+      // only same-Role siblings), so the old selection survived and came straight back on the
+      // next load. Naming the touched approaches tells the server those lists are complete, so
+      // it clears them first and omission finally means deselection — for those approaches only,
+      // never for ones this save did not touch.
+      //
+      // Note the two are built from the same dirty set but are NOT interchangeable: an approach
+      // whose last method was unticked contributes no pairs at all, yet must still be named here
+      // or the server would never hear about it.
+      const dirtyApproachIds = state.dirtyMethodApproachTypes
+        .map(
+          (approachType: string) =>
+            state.summarySelected.find((a: Approach) => a.approachType === approachType)?.id,
+        )
+        .filter((id): id is string => !!id && isServerId(id));
 
-      const hasSelectionChange = changedSelections.length > 0 || state.dirtyApproachSelection;
+      const changedSelections = state.dirtyMethodApproachTypes.flatMap((approachType: string) => {
+        const appr = state.summarySelected.find((a: Approach) => a.approachType === approachType);
+        if (!appr?.id || !isServerId(appr.id)) return [];
+        return appr.methods
+          .filter((m: Method) => m.isSelected && m.id && isServerId(m.id))
+          .map((m: Method) => ({ approachId: appr.id as string, methodId: m.id as string }));
+      });
+
+      // dirtyApproachIds, not changedSelections, decides whether to call: unticking an
+      // approach's last method leaves no pairs to send but is exactly the change that has to
+      // be persisted.
+      const hasSelectionChange = dirtyApproachIds.length > 0 || state.dirtyApproachSelection;
       if (hasSelectionChange && finalApproach.id && isServerId(finalApproach.id)) {
         await applySelectionMutation.mutateAsync({
           pricingAnalysisId,
           selections: changedSelections,
           finalApproachId: finalApproach.id,
+          fullyDescribedApproachIds: dirtyApproachIds,
         });
       }
 
@@ -458,10 +517,10 @@ export function useSelectionActions({
         queryKey: pricingAnalysisKeys.detail(pricingAnalysisId),
       });
 
-      toast.success(tp('toasts.selectionSaved'));
+      toast.success(t('toasts.selectionSaved'));
       return { success: true, failedFileNames: [] };
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
       return { success: false, failedFileNames: getFailedFileNames() };
     } finally {
       setIsSaving(false);
@@ -503,14 +562,53 @@ export function useSelectionActions({
         request: { methodType: mapToServerMethodType(arg.methodType), status: null },
       });
 
-      // Adding a method invalidates every existing approach/method selection —
-      // consumed by the INIT that follows the query invalidation above.
-      dispatch({ type: 'PREPARE_SELECTION_RESET' });
-
-      toast.success(tp('toasts.methodAdded'));
+      toast.success(t('toasts.methodAdded'));
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.saveFailed'));
+      toast.error(err?.apiError?.detail ?? t('toasts.saveFailed'));
     }
+  };
+
+  // ==================== Add Method (batch — top-bar popover) ====================
+  // Sequential, not Promise.all: two picks landing on the same brand-new approach must share
+  // one created approachId rather than each creating their own. No toast here — the caller
+  // (AddMethodPopover) knows the pick count and needs succeeded/failed to decide whether to
+  // close the popover or leave the failed ones checked for retry.
+  const addMethods = async (
+    picks: MethodKey[],
+  ): Promise<{ succeeded: MethodKey[]; failed: MethodKey[] }> => {
+    const succeeded: MethodKey[] = [];
+    const failed: MethodKey[] = [];
+    const approachIdCache = new Map<string, string>();
+
+    for (const pick of picks) {
+      try {
+        let approachId = approachIdCache.get(pick.approachType);
+        if (!approachId) {
+          const appr = state.editDraft.find((a: Approach) => a.approachType === pick.approachType);
+          if (appr?.id && isServerId(appr.id)) {
+            approachId = appr.id;
+          } else {
+            const res = await addApproachMutation.mutateAsync({
+              pricingAnalysisId,
+              request: { approachType: mapToServerApproachType(pick.approachType), weight: null },
+            });
+            approachId = res.id;
+          }
+          approachIdCache.set(pick.approachType, approachId);
+        }
+
+        await addMethodMutation.mutateAsync({
+          pricingAnalysisId,
+          approachId,
+          request: { methodType: mapToServerMethodType(pick.methodType), status: null },
+        });
+        succeeded.push(pick);
+      } catch {
+        failed.push(pick);
+      }
+    }
+
+    return { succeeded, failed };
   };
 
   // ==================== Delete Method ====================
@@ -548,15 +646,11 @@ export function useSelectionActions({
         methodId: pendingDelete.methodId,
       });
 
-      // Removing a method invalidates every existing approach/method selection —
-      // consumed by the INIT that follows the query invalidation above.
-      dispatch({ type: 'PREPARE_SELECTION_RESET' });
-
-      toast.success(tp('toasts.methodDeleted'));
+      toast.success(t('toasts.methodDeleted'));
       setPendingDelete(null);
       closeDelete();
     } catch (err: any) {
-      toast.error(err?.apiError?.detail ?? tp('toasts.failedReset'));
+      toast.error(err?.apiError?.detail ?? t('toasts.deleteFailed'));
     }
   };
 
@@ -572,11 +666,13 @@ export function useSelectionActions({
     saveEdit,
     selectCandidateMethod,
     selectCandidateApproach,
+    selectMethodRole,
     saveSummary,
     isSavingSummary: isSaving,
     cancelPricingAccordion,
     changeSystemCalculation,
     addMethod,
+    addMethods,
     requestDeleteMethod,
     requestRemoveDocument,
 

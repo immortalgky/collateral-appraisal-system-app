@@ -49,6 +49,12 @@
     "excludeAssigneesFromInherit": "ใช้ค่าจากนิยาม workflow — คลิกเพื่อแทนที่",
     "excludeAssigneesFromReset": "กลับไปใช้ค่าจากนิยาม workflow",
     "excludeAssigneesFromNoActivities": "ไม่พบรายการกิจกรรม",
+    "sameAssigneeAsActivity": "ผู้รับงานคนเดียวกับกิจกรรม",
+    "sameAssigneeAsActivityHint": "(สำหรับกลยุทธ์ same_assignee_as_activity)",
+    "sameAssigneeInherit": "ใช้ค่าจากนิยาม workflow ({{value}})",
+    "sameAssigneeFreePlaceholder": "เช่น ext-appraisal-assignment",
+    "followupSelectionHint": "ขั้นตอนนี้เลือกเจ้าหน้าที่ติดตามภายในโดยอัตโนมัติ เลือกกิจกรรมด้านล่าง ผู้ที่ทำกิจกรรมนั้นเสร็จจะเป็นเจ้าหน้าที่ติดตาม",
+    "activitiesLoading": "กำลังโหลดรายการกิจกรรม…",
     "isActive": "ใช้งาน",
     "isActiveHint": "(ยกเลิกการเลือกเพื่อปิดใช้งานโดยไม่ลบ)"
   },
@@ -63,7 +69,10 @@
     "primary": "กลยุทธ์เริ่มต้น (Primary)",
     "routeBack": "กลยุทธ์เมื่อตีกลับ",
     "baseline": "ค่าตั้งต้น: {{list}}",
-    "baselineNone": "ไม่มี"
+    "baselineNone": "ไม่มี",
+    "orderHint": "ลำดับมีผล: กลยุทธ์แรกที่หาผู้รับงานได้จะถูกใช้",
+    "moveUp": "เลื่อน {{strategy}} ขึ้น",
+    "moveDown": "เลื่อน {{strategy}} ลง"
   },
   "actions": {
     "addOverride": "เพิ่มการกำหนด",

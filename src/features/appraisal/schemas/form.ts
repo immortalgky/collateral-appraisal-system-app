@@ -1,5 +1,6 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
+import { proportionStatus } from '../utils/constructionMoney';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
@@ -16,7 +17,17 @@ import {
   rentalScheduleField,
 } from '../configs/fields';
 
+const landAreaDeductionItem = z.object({
+  id: z.string().nullable().optional(),
+  reasonCode: z.string(),
+  reasonOther: z.string().nullable().optional(),
+  areaInSqWa: z.coerce.number().nullable().optional(),
+  remark: z.string().nullable().optional(),
+});
+
 const landTitleItem = z.object({
+  // Without it the save sends every title as new: the API deletes the stored rows and re-creates them.
+  id: z.string().nullable().optional(),
   titleNumber: z.string(),
   titleType: z.string(),
   bookNumber: z.string().nullable().optional(),
@@ -88,6 +99,7 @@ const rentedOutRefinement = (data: any, ctx: z.RefinementCtx) => {
 
 export const createLandFormBase = z.object({
   titles: z.array(landTitleItem).nullable().optional(),
+  landAreaDeductions: z.array(landAreaDeductionItem).nullable().optional(),
   isRentedOut: z.boolean().optional(),
   leaseAgreement: z.any().nullable().optional(),
   rentalInfo: z.any().nullable().optional(),
@@ -99,19 +111,53 @@ export const createLandForm = buildFormSchema(allLandFields, createLandFormBase)
 
 export const createProjectLandForm = buildFormSchema(
   [
-    ...allLandFields,
+    ...allLandFields.filter(
+      field =>
+        ![
+          'dopaSubDistrict',
+          'dopaSubDistrictName',
+          'dopaDistrict',
+          'dopaDistrictName',
+          'dopaProvince',
+          'dopaProvinceName',
+          'dopaPostcode',
+          'ownerNameLand',
+          'isOwnerVerifiedLand',
+          'landOffice',
+          'latitude',
+          'longitude',
+        ].includes(field.name),
+    ),
     {
-      type: 'parameter-search',
-      label: 'Land Office',
-      name: 'landOffice',
-      group: 'LandOffice',
+      type: 'boolean-toggle',
+      label: 'Check Owner',
+      name: 'isOwnerVerified',
+      options: ['Cannot', 'Can'],
+      wrapperClassName: 'col-span-3',
+    },
+    {
+      type: 'text-input',
+      label: 'Owner',
+      name: 'ownerName',
       wrapperClassName: 'col-span-4',
+      disableWhen: { field: 'isOwnerVerified', is: false },
+      requiredWhen: { field: 'isOwnerVerified', is: true },
+      disabledValue: 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้',
+      maxLength: 100,
     },
   ],
-  createLandFormBase,
+  // Held by a project land (ProjectLand.LandOffice / EncroachmentArea) with no input on this page;
+  // declared so the save carries them back instead of zod dropping them and the update storing null.
+  createLandFormBase.extend({
+    encroachmentArea: z.coerce.number().nullable().optional(),
+    landOffice: z.string().nullable().optional(),
+  }),
 ).superRefine(rentedOutRefinement);
 
+// Row ids are declared on every repeated row: the save sends zod's output, and a row sent without its
+// id is deleted and re-created by the update.
 const surfaceFormItem = z.object({
+  id: z.string().nullable().optional(),
   fromFloorNumber: z.coerce.number().nullable().optional(),
   toFloorNumber: z.coerce.number().nullable().optional(),
   floorType: z.string().nullable().optional(),
@@ -122,6 +168,7 @@ const surfaceFormItem = z.object({
 });
 
 const depreciationPeriodFormItem = z.object({
+  id: z.string().nullable().optional(),
   atYear: z.coerce.number().nullable().optional(),
   toYear: z.coerce.number().nullable().optional(),
   depreciationPerYear: z.coerce.number().nullable().optional(),
@@ -130,6 +177,7 @@ const depreciationPeriodFormItem = z.object({
 });
 
 const depreciationFormItem = z.object({
+  id: z.string().nullable().optional(),
   areaDescription: z.string().nullable().optional(),
   area: z.coerce.number().nullable().optional(),
   isBuilding: z.boolean().nullable().optional(),
@@ -171,6 +219,10 @@ const constructionSummaryFormItem = z.object({
 });
 
 export const createBuildingFormBase = z.object({
+  // The Building Cost Value the appraiser typed; null follows the depreciation table.
+  buildingCostValue: z.coerce.number().nullable().optional(),
+  // The appraiser's own fire-insurance coverage; null falls back to the depreciated building value.
+  buildingInsurancePrice: z.coerce.number().nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
   constructionEnterDetail: z.boolean().nullable().optional(),
@@ -180,12 +232,16 @@ export const createBuildingFormBase = z.object({
 });
 
 const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
-  if (data.constructionEnterDetail) {
+  // Not under construction: the rows are hidden and deleted on save, so they cannot block it.
+  // Null counts as itemized, as on screen (ConstructionInspectionTab: `?? true`).
+  if (data.constructionEnterDetail !== false && data.isUnderConstruction) {
     const total = (data.constructionSubItems ?? []).reduce(
       (sum: number, item: any) => sum + (Number(item.proportionPct) || 0),
       0,
     );
-    if (total > 100) {
+    // The screen's own rule: a 2-decimal split that reads 100% can add up to 100.00000000000001
+    // in floating point and would fail with nothing on screen to explain it.
+    if (proportionStatus(total) === 'over') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         message: `Total proportion is ${total.toFixed(2)}% — cannot exceed 100%`,
@@ -210,6 +266,10 @@ const AreaDetailDto = z
   .passthrough();
 
 export const createCondoFormBase = z.object({
+  // No input on the condo page, but the record holds it and pricing reads it as the usable area.
+  // zod drops an undeclared key and the update overwrites the whole record, so it must be declared.
+  totalBuildingArea: z.coerce.number().nullable().optional(),
+  buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
   areaDetails: z.array(AreaDetailDto).nullable(),
   constructionEnterDetail: z.boolean().nullable().optional(),
   constructionSubItems: z.array(constructionSubItemFormItem).nullable().optional(),
@@ -222,7 +282,12 @@ export const createCondoForm = buildFormSchema(allCondoFields, createCondoFormBa
 );
 
 export const createLandAndBuildingFormBase = z.object({
+  // The Building Cost Value the appraiser typed; null follows the depreciation table.
+  buildingCostValue: z.coerce.number().nullable().optional(),
+  // The appraiser's own fire-insurance coverage; null falls back to the depreciated building value.
+  buildingInsurancePrice: z.coerce.number().nullable().optional(),
   titles: z.array(landTitleItem).nullable().optional(),
+  landAreaDeductions: z.array(landAreaDeductionItem).nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
   constructionEnterDetail: z.boolean().nullable().optional(),
@@ -276,7 +341,10 @@ const makeCondoPMAFormBase = (t: TFunction<'appraisal'>) =>
     titleNumber: z.string().min(1, t('validation.titleNumberRequired')),
     condoRegistrationNumber: z.string().min(1, t('validation.condoRegistrationNumberRequired')),
     roomNumber: z.string().min(1, t('validation.roomNumberRequired')),
-    floorNumber: z.coerce.number(),
+    // A string, as it is everywhere else: the field is a text input and the API binds FloorNumber
+    // as string?. buildFormSchema's field rule wins over this one, so this was never what
+    // validated — but it disagreed with it, and a number here is the wrong shape to copy from.
+    floorNumber: z.string(),
     buildingNumber: z.string().min(1, t('validation.buildingNumberRequired')),
     condoName: z.string().min(1, t('validation.condoNameRequired')),
     subDistrict: z.string().min(1, t('validation.subDistrictRequired')),
@@ -458,9 +526,10 @@ export type createMarketComparableFormType = z.infer<typeof createMarketComparab
 
 export const createLandFormDefault: createLandFormType = {
   titles: [],
+  landAreaDeductions: [],
   propertyName: '',
-  latitude: 0,
-  longitude: 0,
+  latitude: null,
+  longitude: null,
   subDistrict: '',
   subDistrictName: '',
   district: '',
@@ -484,7 +553,7 @@ export const createLandFormDefault: createLandFormType = {
   landCheckMethodTypeOther: '',
   street: '',
   soi: '',
-  distanceFromMainRoad: 0,
+  distanceFromMainRoad: null,
   village: '',
   addressLocation: '',
   landShapeType: '',
@@ -495,12 +564,12 @@ export const createLandFormDefault: createLandFormType = {
   plotLocationTypeOther: '',
   landFillType: '',
   landFillTypeOther: '',
-  landFillPercent: 0,
-  soilLevel: 0,
-  accessRoadWidth: 0,
-  rightOfWay: 0,
-  roadFrontage: 0,
-  numberOfSidesFacingRoad: 0,
+  landFillPercent: null,
+  soilLevel: null,
+  accessRoadWidth: null,
+  rightOfWay: null,
+  roadFrontage: null,
+  numberOfSidesFacingRoad: null,
   roadPassInFrontOfLand: '',
   landAccessibilityType: '',
   landAccessibilityRemark: '',
@@ -523,9 +592,8 @@ export const createLandFormDefault: createLandFormType = {
   royalDecree: '',
   isEncroached: false,
   encroachmentRemark: '',
-  encroachmentArea: 0,
   hasElectricity: false,
-  electricityDistance: 0,
+  electricityDistance: null,
   isLandlocked: false,
   landlockedRemark: '',
   isForestBoundary: false,
@@ -535,15 +603,15 @@ export const createLandFormDefault: createLandFormType = {
   evictionTypeOther: '',
   allocationType: '',
   northAdjacentArea: '',
-  northBoundaryLength: 0,
+  northBoundaryLength: null,
   southAdjacentArea: '',
-  southBoundaryLength: 0,
+  southBoundaryLength: null,
   eastAdjacentArea: '',
-  eastBoundaryLength: 0,
+  eastBoundaryLength: null,
   westAdjacentArea: '',
-  westBoundaryLength: 0,
-  pondArea: 0,
-  pondDepth: 0,
+  westBoundaryLength: null,
+  pondArea: null,
+  pondDepth: null,
   hasBuilding: false,
   hasBuildingOther: '',
   isRentedOut: false,
@@ -570,16 +638,16 @@ export const createBuildingFormDefault: createBuildingFormType = {
   obligationDetails: '',
   buildingType: '',
   buildingTypeOther: '',
-  numberOfFloors: 0,
+  numberOfFloors: null,
   decorationType: '',
   decorationTypeOther: '',
   isEncroachingOthers: false,
   encroachingOthersRemark: '',
-  encroachingOthersArea: 0,
+  encroachingOthersArea: null,
   buildingMaterialType: '',
   buildingStyleType: '',
   isResidential: true,
-  buildingAge: 0,
+  buildingAge: null,
   residentialRemark: '',
   constructionStyleRemark: '',
   constructionStyleType: '',
@@ -601,10 +669,9 @@ export const createBuildingFormDefault: createBuildingFormType = {
   constructionTypeOther: '',
   utilizationType: '',
   utilizationTypeOther: '',
-  totalBuildingArea: 0,
-  buildingInsurancePrice: 0,
-  sellingPrice: 0,
-  forcedSalePrice: 0,
+  totalBuildingArea: null,
+  buildingInsurancePrice: null,
+  buildingCostValue: null,
   remark: '',
   surfaces: [],
   depreciationDetails: [],
@@ -612,10 +679,10 @@ export const createBuildingFormDefault: createBuildingFormType = {
   constructionSubItems: [],
   constructionSummary: {
     summaryDetail: '',
-    summaryPreviousProgressPct: 0,
-    summaryPreviousValue: 0,
-    summaryCurrentProgressPct: 0,
-    summaryCurrentValue: 0,
+    summaryPreviousProgressPct: null,
+    summaryPreviousValue: null,
+    summaryCurrentProgressPct: null,
+    summaryCurrentValue: null,
     documentId: null,
     fileName: null,
     filePath: null,
@@ -636,10 +703,10 @@ export const createCondoFormDefault: createCondoFormType = {
   condoRegistrationNumber: '',
   roomNumber: '',
   floorNumber: '',
-  usableArea: 0,
+  usableArea: null,
   isOwnerVerifiedBuilding: true,
-  latitude: 0,
-  longitude: 0,
+  latitude: null,
+  longitude: null,
   subDistrict: '',
   district: '',
   province: '',
@@ -656,9 +723,9 @@ export const createCondoFormDefault: createCondoFormType = {
   locationType: '',
   street: '',
   soi: '',
-  distanceFromMainRoad: 0,
-  accessRoadWidth: 0,
-  rightOfWay: 0,
+  distanceFromMainRoad: null,
+  accessRoadWidth: null,
+  rightOfWay: null,
   roadSurfaceType: '',
   publicUtilityType: [],
   publicUtilityTypeOther: '',
@@ -670,13 +737,13 @@ export const createCondoFormDefault: createCondoFormType = {
   landEntranceExitType: [],
   landEntranceExitTypeOther: '',
   isMissingFromSurvey: false,
-  governmentPricePerSqm: 0,
-  governmentPrice: 0,
-  fireInsuranceCondition: '',
+  governmentPricePerSqm: null,
+  governmentPrice: null,
+  fireInsuranceCode: '',
   decorationType: '',
   decorationTypeOther: '',
-  buildingAge: 0,
-  numberOfFloors: 0,
+  buildingAge: null,
+  numberOfFloors: null,
   buildingFormType: '',
   constructionMaterialType: '',
   roomLayoutType: '',
@@ -691,7 +758,7 @@ export const createCondoFormDefault: createCondoFormType = {
   roofType: [],
   roofTypeOther: '',
   areaDetails: [],
-  totalBuildingArea: 0,
+  totalBuildingArea: null,
   isExpropriated: false,
   expropriationRemark: '',
   isInExpropriationLine: false,
@@ -702,18 +769,17 @@ export const createCondoFormDefault: createCondoFormType = {
   facilityType: [],
   facilityTypeOther: '',
   environmentType: [],
-  buildingInsurancePrice: 0,
-  sellingPrice: 0,
-  forcedSalePrice: 0,
+  buildingInsurancePrice: null,
+  buildingInsurancePriceOverride: null,
   remark: '',
   constructionEnterDetail: true,
   constructionSubItems: [],
   constructionSummary: {
     summaryDetail: '',
-    summaryPreviousProgressPct: 0,
-    summaryPreviousValue: 0,
-    summaryCurrentProgressPct: 0,
-    summaryCurrentValue: 0,
+    summaryPreviousProgressPct: null,
+    summaryPreviousValue: null,
+    summaryCurrentProgressPct: null,
+    summaryCurrentValue: null,
     documentId: null,
     fileName: null,
     filePath: null,
@@ -726,9 +792,10 @@ export const createCondoFormDefault: createCondoFormType = {
 
 export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   titles: [],
+  landAreaDeductions: [],
   propertyName: '',
-  latitude: 0,
-  longitude: 0,
+  latitude: null,
+  longitude: null,
   subDistrict: '',
   subDistrictName: '',
   district: '',
@@ -752,7 +819,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   landCheckMethodTypeOther: '',
   street: '',
   soi: '',
-  distanceFromMainRoad: 0,
+  distanceFromMainRoad: null,
   village: '',
   addressLocation: '',
   landShapeType: '',
@@ -763,12 +830,12 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   plotLocationTypeOther: '',
   landFillType: '',
   landFillTypeOther: '',
-  landFillPercent: 0,
-  soilLevel: 0,
-  accessRoadWidth: 0,
-  rightOfWay: 0,
-  roadFrontage: 0,
-  numberOfSidesFacingRoad: 0,
+  landFillPercent: null,
+  soilLevel: null,
+  accessRoadWidth: null,
+  rightOfWay: null,
+  roadFrontage: null,
+  numberOfSidesFacingRoad: null,
   roadPassInFrontOfLand: '',
   landAccessibilityType: '',
   landAccessibilityRemark: '',
@@ -791,9 +858,8 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   royalDecree: '',
   isEncroached: false,
   encroachmentRemark: '',
-  encroachmentArea: 0,
   hasElectricity: false,
-  electricityDistance: 0,
+  electricityDistance: null,
   isLandlocked: false,
   landlockedRemark: '',
   isForestBoundary: false,
@@ -803,15 +869,15 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   evictionTypeOther: '',
   allocationType: '',
   northAdjacentArea: '',
-  northBoundaryLength: 0,
+  northBoundaryLength: null,
   southAdjacentArea: '',
-  southBoundaryLength: 0,
+  southBoundaryLength: null,
   eastAdjacentArea: '',
-  eastBoundaryLength: 0,
+  eastBoundaryLength: null,
   westAdjacentArea: '',
-  westBoundaryLength: 0,
-  pondArea: 0,
-  pondDepth: 0,
+  westBoundaryLength: null,
+  pondArea: null,
+  pondDepth: null,
 
   //Building
   buildingNumber: '',
@@ -829,16 +895,16 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   isAppraisable: false,
   buildingType: '',
   buildingTypeOther: '',
-  numberOfFloors: 0,
+  numberOfFloors: null,
   decorationType: '',
   decorationTypeOther: '',
   isEncroachingOthers: false,
   encroachingOthersRemark: '',
-  encroachingOthersArea: 0,
+  encroachingOthersArea: null,
   buildingMaterialType: '',
   buildingStyleType: '',
   isResidential: true,
-  buildingAge: 0,
+  buildingAge: null,
   residentialRemark: '',
   constructionStyleRemark: '',
   constructionStyleType: '',
@@ -860,10 +926,9 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   constructionTypeOther: '',
   utilizationType: '',
   utilizationTypeOther: '',
-  totalBuildingArea: 0,
-  buildingInsurancePrice: 0,
-  sellingPrice: 0,
-  forcedSalePrice: 0,
+  totalBuildingArea: null,
+  buildingInsurancePrice: null,
+  buildingCostValue: null,
   remark: '',
   surfaces: [],
   depreciationDetails: [],
@@ -871,10 +936,10 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   constructionSubItems: [],
   constructionSummary: {
     summaryDetail: '',
-    summaryPreviousProgressPct: 0,
-    summaryPreviousValue: 0,
-    summaryCurrentProgressPct: 0,
-    summaryCurrentValue: 0,
+    summaryPreviousProgressPct: null,
+    summaryPreviousValue: null,
+    summaryCurrentProgressPct: null,
+    summaryCurrentValue: null,
     documentId: null,
     fileName: null,
     filePath: null,
@@ -936,19 +1001,19 @@ export const createMachineryFormDefault: createMachineryFormType = {
 };
 
 export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormType = {
-  buildingInsurancePrice: 0,
-  sellingPrice: 0,
-  forcedSalePrice: 0,
+  buildingInsurancePrice: null,
+  sellingPrice: null,
+  forcedSalePrice: null,
   titleNumber: '',
   rawang: '',
   landNumber: '',
   surveyNumber: '',
   bookNumber: '',
   pageNumber: '',
-  areaRai: 0,
-  areaNgan: 0,
-  areaSquareWa: 0,
-  totalSquareWa: 0,
+  areaRai: null,
+  areaNgan: null,
+  areaSquareWa: null,
+  totalSquareWa: null,
   subDistrict: '',
   subDistrictName: '',
   district: '',
@@ -958,10 +1023,10 @@ export const createLandAndBuildingPMAFormDefault: createLandAndBuildingPMAFormTy
 };
 
 export const createCondoPMAFormDefault: createCondoPMAFormType = {
-  buildingInsurancePrice: 0,
-  sellingPrice: 0,
-  forcedSalePrice: 0,
-  builtOnTitleNumber: '',
+  buildingInsurancePrice: null,
+  sellingPrice: null,
+  forcedSalePrice: null,
+  titleNumber: '',
   condoRegistrationNumber: '',
   roomNumber: '',
   floorNumber: '',
@@ -1058,7 +1123,8 @@ export const rentalInfoFormSchema = buildFormSchema(
   rentalScheduleField,
   rentalInfoBaseSchema,
 ).superRefine(rentalInfoRefinement);
-export type RentalInfoFormType = z.infer<typeof rentalInfoFormSchema>;
+// From the base schema: buildFormSchema returns ZodObject<any>, which would make this type any.
+export type RentalInfoFormType = z.infer<typeof rentalInfoBaseSchema>;
 
 // =============================================================================
 // Combined Lease Agreement Schemas (one form per page)

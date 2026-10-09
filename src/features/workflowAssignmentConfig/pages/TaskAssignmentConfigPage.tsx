@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { arrayMove } from '@dnd-kit/sortable';
+import { ActivityType } from '@features/workflowBuilder/types';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -17,6 +19,12 @@ import {
   type TaskAssignmentConfigDto,
   type WorkflowActivityOption,
 } from '../api/taskAssignmentConfig';
+import {
+  additionalConfigurationForSave,
+  combineUsage,
+  listUsesSameAssignee,
+  withSameAssignee,
+} from '../utils/sameAssignee';
 
 const inputClass =
   'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
@@ -44,6 +52,9 @@ function StrategyPicker({
     onChange(selected.includes(token) ? selected.filter(s => s !== token) : [...selected, token]);
   };
 
+  const move = (index: number, delta: -1 | 1) =>
+    onChange(arrayMove(selected, index, index + delta));
+
   return (
     <div>
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -53,6 +64,37 @@ function StrategyPicker({
             list: baseline.length ? baseline.join(', ') : t('strategies.baselineNone'),
           })}
         </p>
+      )}
+      {selected.length > 0 && (
+        <div className="mb-2">
+          <p className="text-xs text-gray-400 mb-1">{t('strategies.orderHint')}</p>
+          <ol className="rounded-md border border-gray-300 bg-white divide-y divide-gray-100">
+            {selected.map((token, i) => (
+              <li key={token} className="flex items-center gap-2 px-2 py-1 text-xs">
+                <span className="w-4 text-gray-400 text-right">{i + 1}.</span>
+                <span className="flex-1 font-mono text-gray-700">{token}</span>
+                <button
+                  type="button"
+                  onClick={() => move(i, -1)}
+                  disabled={i === 0}
+                  aria-label={t('strategies.moveUp', { strategy: token })}
+                  className="px-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ↑
+                </button>
+                <button
+                  type="button"
+                  onClick={() => move(i, 1)}
+                  disabled={i === selected.length - 1}
+                  aria-label={t('strategies.moveDown', { strategy: token })}
+                  className="px-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  ↓
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
       )}
       <div className="grid grid-cols-2 gap-1">
         {ASSIGNMENT_STRATEGIES.map(token => (
@@ -80,6 +122,7 @@ interface ConfigModalProps {
   onClose: () => void;
   editing: TaskAssignmentConfigDto | null;
   activities: WorkflowActivityOption[];
+  activitiesLoading: boolean;
   activitiesUnavailable: boolean;
   onSave: (body: SaveTaskAssignmentConfigBody, id?: string) => void;
   isSaving: boolean;
@@ -90,6 +133,7 @@ function ConfigModal({
   onClose,
   editing,
   activities,
+  activitiesLoading,
   activitiesUnavailable,
   onSave,
   isSaving,
@@ -108,7 +152,13 @@ function ConfigModal({
   const [teamConstrained, setTeamConstrained] = useState<'' | 'on' | 'off'>('');
   // null = inherit the workflow definition JSON; an array (possibly empty) overrides it.
   const [excludeAssigneesFrom, setExcludeAssigneesFrom] = useState<string[] | null>(null);
+  // Whole bag is kept so unknown keys round-trip; only `sameAssigneeAsActivity` is edited here.
+  const [additionalConfiguration, setAdditionalConfiguration] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [isActive, setIsActive] = useState(true);
+  const sourceFieldId = useId();
 
   // Reset whenever the target row changes (same modal reused for create + each edit).
   useEffect(() => {
@@ -124,6 +174,7 @@ function ConfigModal({
       editing?.teamConstrained == null ? '' : editing.teamConstrained ? 'on' : 'off',
     );
     setExcludeAssigneesFrom(editing?.excludeAssigneesFrom ?? null);
+    setAdditionalConfiguration(editing?.additionalConfiguration ?? null);
     setIsActive(editing?.isActive ?? true);
   }, [editing, isOpen]);
 
@@ -132,25 +183,85 @@ function ConfigModal({
     [activities, activityId],
   );
 
+  const storedSource = additionalConfiguration?.sameAssigneeAsActivity;
+  // Non-string values are shown as text and kept as-is on save unless the admin edits them.
+  const sameAssigneeAsActivity = storedSource == null ? '' : String(storedSource);
+  const baselineSource = baseline?.sameAssigneeAsActivity?.trim() || '';
+  // Automatic system step: no strategies, the source activity is the only thing an override sets.
+  const isFollowupSelection = baseline?.type === ActivityType.INTERNAL_FOLLOWUP_SELECTION;
+  // true = in effect, false = known unused, null = unknown (never drop a stored value then).
+  const sameAssigneeUsed = combineUsage(
+    [
+      listUsesSameAssignee(
+        primaryStrategies,
+        specificAssignee,
+        baseline?.initialAssignmentStrategies,
+      ),
+      listUsesSameAssignee(
+        routeBackStrategies,
+        specificAssignee,
+        baseline?.revisitAssignmentStrategies,
+      ),
+    ],
+    isFollowupSelection,
+  );
+  // From the row as opened (not the live value), so the field stays mounted while it is edited.
+  const hadStoredSource = editing?.additionalConfiguration?.sameAssigneeAsActivity != null;
+  const showSameAssignee =
+    sameAssigneeUsed === true ||
+    (sameAssigneeUsed === null && (hadStoredSource || sameAssigneeAsActivity !== ''));
+  // Automatic steps complete as SYSTEM, so they can be neither a source nor an exclusion.
+  // A missing type (older backend) counts as a task activity.
+  const exclusionOptions = activities.filter(
+    a => a.id !== activityId && a.type !== ActivityType.INTERNAL_FOLLOWUP_SELECTION,
+  );
+  // The BE accepts only a plain TaskActivity as a source (not fan-out).
+  const sourceOptions = activities.filter(
+    a => a.id !== activityId && (!a.type || a.type === ActivityType.TASK),
+  );
+
+  const setSameAssignee = (value: string) =>
+    setAdditionalConfiguration(prev => withSameAssignee(prev, value));
+
   const handleSave = () => {
     if (!activityId.trim()) {
       toast.error(t('errors.activityRequired'));
       return;
     }
+    const source = sameAssigneeAsActivity.trim();
+    const body: SaveTaskAssignmentConfigBody = {
+      activityId: activityId.trim(),
+      bankingSegment: bankingSegment || null,
+      assigneeGroup: assigneeGroup.trim() || null,
+      primaryStrategies,
+      routeBackStrategies,
+      specificAssignee: specificAssignee.trim() || null,
+      adminPoolId: adminPoolId.trim() || null,
+      escalateToAdminPool,
+      teamConstrained: teamConstrained === '' ? null : teamConstrained === 'on',
+      excludeAssigneesFrom,
+      additionalConfiguration: additionalConfigurationForSave(
+        additionalConfiguration,
+        sameAssigneeUsed,
+        source,
+      ),
+      isActive,
+    };
     onSave(
-      {
-        activityId: activityId.trim(),
-        bankingSegment: bankingSegment || null,
-        assigneeGroup: assigneeGroup.trim() || null,
-        primaryStrategies,
-        routeBackStrategies,
-        specificAssignee: specificAssignee.trim() || null,
-        adminPoolId: adminPoolId.trim() || null,
-        escalateToAdminPool,
-        teamConstrained: teamConstrained === '' ? null : teamConstrained === 'on',
-        excludeAssigneesFrom,
-        isActive,
-      },
+      // The follow-up selection step has no strategies (the BE rejects non-empty lists) or pool fields.
+      isFollowupSelection
+        ? {
+            ...body,
+            assigneeGroup: null,
+            primaryStrategies: [],
+            routeBackStrategies: [],
+            specificAssignee: null,
+            adminPoolId: null,
+            escalateToAdminPool: false,
+            teamConstrained: null,
+            excludeAssigneesFrom: null,
+          }
+        : body,
       editing?.id,
     );
   };
@@ -163,237 +274,312 @@ function ConfigModal({
       size="lg"
     >
       <div className="space-y-4">
-        {/* Activity */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('fields.activity')} <span className="text-red-500">*</span>
-          </label>
-          {editing ? (
-            <input type="text" value={activityId} disabled className={`${inputClass} bg-gray-50`} />
-          ) : activitiesUnavailable ? (
-            <>
+        <fieldset disabled={activitiesLoading} className="min-w-0 space-y-4">
+          {activitiesLoading && (
+            <p className="text-xs text-gray-400">{t('fields.activitiesLoading')}</p>
+          )}
+          {/* Activity */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('fields.activity')} <span className="text-red-500">*</span>
+            </label>
+            {editing ? (
               <input
                 type="text"
                 value={activityId}
+                disabled
+                className={`${inputClass} bg-gray-50`}
+              />
+            ) : activitiesUnavailable ? (
+              <>
+                <input
+                  type="text"
+                  value={activityId}
+                  onChange={e => setActivityId(e.target.value)}
+                  className={inputClass}
+                  placeholder={t('fields.activityFreePlaceholder')}
+                />
+                <p className="mt-1 text-xs text-amber-600">{t('fields.activityUnavailable')}</p>
+              </>
+            ) : (
+              <select
+                value={activityId}
                 onChange={e => setActivityId(e.target.value)}
                 className={inputClass}
-                placeholder={t('fields.activityFreePlaceholder')}
-              />
-              <p className="mt-1 text-xs text-amber-600">{t('fields.activityUnavailable')}</p>
-            </>
-          ) : (
+              >
+                <option value="">{t('fields.activitySelect')}</option>
+                {activities.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.name} ({a.id})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          {/* Baseline being overridden */}
+          {baseline && !isFollowupSelection && (
+            <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 space-y-0.5">
+              <p className="font-medium text-gray-500">{t('baseline.heading')}</p>
+              <p>
+                {t('baseline.group')}:{' '}
+                <span className="font-mono">
+                  {baseline.assigneeGroup || <span className="italic text-gray-400">{t('baseline.none')}</span>}
+                </span>
+              </p>
+              <p>
+                {t('baseline.initial')}:{' '}
+                <span className="font-mono">{baseline.initialAssignmentStrategies.join(', ') || '—'}</span>
+              </p>
+              <p>
+                {t('baseline.routeBack')}:{' '}
+                <span className="font-mono">{baseline.revisitAssignmentStrategies.join(', ') || '—'}</span>
+              </p>
+            </div>
+          )}
+
+          {isFollowupSelection && (
+            <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+              {t('fields.followupSelectionHint')}
+            </p>
+          )}
+
+          {/* Banking segment */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">{t('fields.bankingSegment')}</label>
             <select
-              value={activityId}
-              onChange={e => setActivityId(e.target.value)}
+              value={bankingSegment}
+              onChange={e => setBankingSegment(e.target.value as '' | BankingSegment)}
               className={inputClass}
             >
-              <option value="">{t('fields.activitySelect')}</option>
-              {activities.map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.name} ({a.id})
+              <option value="">{t('fields.anySegment')}</option>
+              {SEGMENTS.map(s => (
+                <option key={s} value={s}>
+                  {s}
                 </option>
               ))}
             </select>
-          )}
-        </div>
-
-        {/* Baseline being overridden */}
-        {baseline && (
-          <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 space-y-0.5">
-            <p className="font-medium text-gray-500">{t('baseline.heading')}</p>
-            <p>
-              {t('baseline.group')}:{' '}
-              <span className="font-mono">
-                {baseline.assigneeGroup || <span className="italic text-gray-400">{t('baseline.none')}</span>}
-              </span>
-            </p>
-            <p>
-              {t('baseline.initial')}:{' '}
-              <span className="font-mono">{baseline.initialAssignmentStrategies.join(', ') || '—'}</span>
-            </p>
-            <p>
-              {t('baseline.routeBack')}:{' '}
-              <span className="font-mono">{baseline.revisitAssignmentStrategies.join(', ') || '—'}</span>
-            </p>
           </div>
-        )}
 
-        {/* Banking segment */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('fields.bankingSegment')}</label>
-          <select
-            value={bankingSegment}
-            onChange={e => setBankingSegment(e.target.value as '' | BankingSegment)}
-            className={inputClass}
-          >
-            <option value="">{t('fields.anySegment')}</option>
-            {SEGMENTS.map(s => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {/* Assignee group override */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">{t('fields.assigneeGroup')}</label>
-          <input
-            type="text"
-            value={assigneeGroup}
-            onChange={e => setAssigneeGroup(e.target.value)}
-            className={inputClass}
-            placeholder={
-              baseline?.assigneeGroup
-                ? t('fields.assigneeGroupBaseline', { group: baseline.assigneeGroup })
-                : t('fields.assigneeGroupEmpty')
-            }
-          />
-        </div>
-
-        {/* Strategies */}
-        <StrategyPicker
-          label={t('strategies.primary')}
-          selected={primaryStrategies}
-          onChange={setPrimaryStrategies}
-          baseline={baseline?.initialAssignmentStrategies}
-        />
-        <StrategyPicker
-          label={t('strategies.routeBack')}
-          selected={routeBackStrategies}
-          onChange={setRouteBackStrategies}
-          baseline={baseline?.revisitAssignmentStrategies}
-        />
-
-        {/* Team constraint (tri-state) */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('fields.teamConstrained')}{' '}
-            <span className="text-xs font-normal text-gray-400">{t('fields.teamConstrainedHint')}</span>
-          </label>
-          <select
-            value={teamConstrained}
-            onChange={e => setTeamConstrained(e.target.value as '' | 'on' | 'off')}
-            className={inputClass}
-          >
-            <option value="">{t('fields.teamConstrainedInherit')}</option>
-            <option value="on">{t('fields.teamConstrainedOn')}</option>
-            <option value="off">{t('fields.teamConstrainedOff')}</option>
-          </select>
-        </div>
-
-        {/* Exclude assignees who completed an earlier activity */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('fields.excludeAssigneesFrom')}{' '}
-            <span className="text-xs font-normal text-gray-400">{t('fields.excludeAssigneesFromHint')}</span>
-          </label>
-          {excludeAssigneesFrom === null ? (
-            <button
-              type="button"
-              onClick={() => setExcludeAssigneesFrom([])}
-              className="text-sm text-blue-600 hover:underline"
-            >
-              {t('fields.excludeAssigneesFromInherit')}
-            </button>
-          ) : (
+          {!isFollowupSelection && (
             <>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-gray-200 p-2 max-h-40 overflow-y-auto">
-                {activities.length === 0 ? (
-                  <p className="col-span-2 text-xs text-gray-400">{t('fields.excludeAssigneesFromNoActivities')}</p>
+              {/* Assignee group override */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('fields.assigneeGroup')}</label>
+                <input
+                  type="text"
+                  value={assigneeGroup}
+                  onChange={e => setAssigneeGroup(e.target.value)}
+                  className={inputClass}
+                  placeholder={
+                    baseline?.assigneeGroup
+                      ? t('fields.assigneeGroupBaseline', { group: baseline.assigneeGroup })
+                      : t('fields.assigneeGroupEmpty')
+                  }
+                />
+              </div>
+
+              {/* Strategies */}
+              <StrategyPicker
+                label={t('strategies.primary')}
+                selected={primaryStrategies}
+                onChange={setPrimaryStrategies}
+                baseline={baseline?.initialAssignmentStrategies}
+              />
+              <StrategyPicker
+                label={t('strategies.routeBack')}
+                selected={routeBackStrategies}
+                onChange={setRouteBackStrategies}
+                baseline={baseline?.revisitAssignmentStrategies}
+              />
+
+              {/* Team constraint (tri-state) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('fields.teamConstrained')}{' '}
+                  <span className="text-xs font-normal text-gray-400">{t('fields.teamConstrainedHint')}</span>
+                </label>
+                <select
+                  value={teamConstrained}
+                  onChange={e => setTeamConstrained(e.target.value as '' | 'on' | 'off')}
+                  className={inputClass}
+                >
+                  <option value="">{t('fields.teamConstrainedInherit')}</option>
+                  <option value="on">{t('fields.teamConstrainedOn')}</option>
+                  <option value="off">{t('fields.teamConstrainedOff')}</option>
+                </select>
+              </div>
+
+              {/* Exclude assignees who completed an earlier activity */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('fields.excludeAssigneesFrom')}{' '}
+                  <span className="text-xs font-normal text-gray-400">{t('fields.excludeAssigneesFromHint')}</span>
+                </label>
+                {excludeAssigneesFrom === null ? (
+                  <button
+                    type="button"
+                    onClick={() => setExcludeAssigneesFrom([])}
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    {t('fields.excludeAssigneesFromInherit')}
+                  </button>
                 ) : (
-                  activities
-                    .filter(a => a.id !== activityId)
-                    .map(a => (
-                      <label key={a.id} className="flex items-center gap-2 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={excludeAssigneesFrom.includes(a.id)}
-                          onChange={() =>
-                            setExcludeAssigneesFrom(prev =>
-                              (prev ?? []).includes(a.id)
-                                ? (prev ?? []).filter(x => x !== a.id)
-                                : [...(prev ?? []), a.id],
-                            )
-                          }
-                          className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
-                        />
-                        <span className="font-mono text-gray-700">{a.id}</span>
-                      </label>
-                    ))
+                  <>
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-gray-200 p-2 max-h-40 overflow-y-auto">
+                      {exclusionOptions.length === 0 ? (
+                        <p className="col-span-2 text-xs text-gray-400">{t('fields.excludeAssigneesFromNoActivities')}</p>
+                      ) : (
+                        exclusionOptions.map(a => (
+                          <label key={a.id} className="flex items-center gap-2 text-xs">
+                            <input
+                              type="checkbox"
+                              checked={excludeAssigneesFrom.includes(a.id)}
+                              onChange={() =>
+                                setExcludeAssigneesFrom(prev =>
+                                  (prev ?? []).includes(a.id)
+                                    ? (prev ?? []).filter(x => x !== a.id)
+                                    : [...(prev ?? []), a.id],
+                                )
+                              }
+                              className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                            />
+                            <span className="font-mono text-gray-700">{a.id}</span>
+                          </label>
+                        ))
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setExcludeAssigneesFrom(null)}
+                      className="mt-1 text-xs text-gray-500 hover:underline"
+                    >
+                      {t('fields.excludeAssigneesFromReset')}
+                    </button>
+                  </>
                 )}
               </div>
-              <button
-                type="button"
-                onClick={() => setExcludeAssigneesFrom(null)}
-                className="mt-1 text-xs text-gray-500 hover:underline"
-              >
-                {t('fields.excludeAssigneesFromReset')}
-              </button>
             </>
           )}
-        </div>
 
-        {/* Specific assignee */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            {t('fields.specificAssignee')}{' '}
-            <span className="text-xs font-normal text-gray-400">{t('fields.specificAssigneeHint')}</span>
-          </label>
-          <input
-            type="text"
-            value={specificAssignee}
-            onChange={e => setSpecificAssignee(e.target.value)}
-            className={inputClass}
-            placeholder={t('fields.specificAssigneePlaceholder')}
-          />
-        </div>
+          {/* Same assignee as an earlier activity */}
+          {showSameAssignee && (
+            <div>
+              <label
+                htmlFor={sourceFieldId}
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
+                {t('fields.sameAssigneeAsActivity')}
+                {!isFollowupSelection && (
+                  <span className="text-xs font-normal text-gray-400">
+                    {' '}
+                    {t('fields.sameAssigneeAsActivityHint')}
+                  </span>
+                )}
+              </label>
+              {activitiesUnavailable ? (
+                <input
+                  id={sourceFieldId}
+                  type="text"
+                  value={sameAssigneeAsActivity}
+                  onChange={e => setSameAssignee(e.target.value)}
+                  className={`${inputClass} bg-white`}
+                  placeholder={t('fields.sameAssigneeFreePlaceholder')}
+                />
+              ) : (
+                <select
+                  id={sourceFieldId}
+                  value={sameAssigneeAsActivity}
+                  onChange={e => setSameAssignee(e.target.value)}
+                  className={`${inputClass} bg-white`}
+                >
+                  <option value="">
+                    {t('fields.sameAssigneeInherit', {
+                      value: baselineSource || t('baseline.none'),
+                    })}
+                  </option>
+                  {/* Saved value that is not selectable (activity gone, or the activity itself): show it, not "Inherit". */}
+                  {sameAssigneeAsActivity &&
+                    !sourceOptions.some(a => a.id === sameAssigneeAsActivity) && (
+                      <option value={sameAssigneeAsActivity}>{sameAssigneeAsActivity}</option>
+                    )}
+                  {sourceOptions.map(a => (
+                    <option key={a.id} value={a.id}>
+                      {a.name} ({a.id})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
 
-        {/* Admin pool */}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              {t('fields.adminPoolId')}{' '}
-              <span className="text-xs font-normal text-gray-400">{t('fields.adminPoolHint')}</span>
-            </label>
+          {!isFollowupSelection && (
+            <>
+              {/* Specific assignee */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {t('fields.specificAssignee')}{' '}
+                  <span className="text-xs font-normal text-gray-400">{t('fields.specificAssigneeHint')}</span>
+                </label>
+                <input
+                  type="text"
+                  value={specificAssignee}
+                  onChange={e => setSpecificAssignee(e.target.value)}
+                  className={inputClass}
+                  placeholder={t('fields.specificAssigneePlaceholder')}
+                />
+              </div>
+
+              {/* Admin pool */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    {t('fields.adminPoolId')}{' '}
+                    <span className="text-xs font-normal text-gray-400">
+                      {t('fields.adminPoolHint')}
+                    </span>
+                  </label>
+                  <input
+                    type="text"
+                    value={adminPoolId}
+                    onChange={e => setAdminPoolId(e.target.value)}
+                    className={inputClass}
+                    placeholder={t('fields.adminPoolPlaceholder')}
+                  />
+                </div>
+                <div className="flex items-end pb-2">
+                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                    <input
+                      type="checkbox"
+                      checked={escalateToAdminPool}
+                      onChange={e => setEscalateToAdminPool(e.target.checked)}
+                      className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                    />
+                    {t('fields.escalate')}
+                  </label>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Active toggle */}
+          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
             <input
-              type="text"
-              value={adminPoolId}
-              onChange={e => setAdminPoolId(e.target.value)}
-              className={inputClass}
-              placeholder={t('fields.adminPoolPlaceholder')}
+              type="checkbox"
+              checked={isActive}
+              onChange={e => setIsActive(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-blue-600"
             />
-          </div>
-          <div className="flex items-end pb-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-              <input
-                type="checkbox"
-                checked={escalateToAdminPool}
-                onChange={e => setEscalateToAdminPool(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600"
-              />
-              {t('fields.escalate')}
-            </label>
-          </div>
-        </div>
-
-        {/* Active toggle */}
-        <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-          <input
-            type="checkbox"
-            checked={isActive}
-            onChange={e => setIsActive(e.target.checked)}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600"
-          />
-          {t('fields.isActive')}
-          <span className="text-xs font-normal text-gray-400">{t('fields.isActiveHint')}</span>
-        </label>
+            {t('fields.isActive')}
+            <span className="text-xs font-normal text-gray-400">{t('fields.isActiveHint')}</span>
+          </label>
+        </fieldset>
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" type="button" onClick={onClose}>
             {t('actions.cancel')}
           </Button>
-          <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={!activityId.trim()}>
+          <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={!activityId.trim() || activitiesLoading}>
             {editing ? t('actions.update') : t('actions.add')}
           </Button>
         </div>
@@ -415,7 +601,11 @@ const TaskAssignmentConfigPage = () => {
   const { data: configs = [], isLoading } = useListTaskAssignmentConfigs(
     segmentFilter ? { bankingSegment: segmentFilter } : undefined,
   );
-  const { data: activities = [], isError: activitiesError } = useListWorkflowActivities();
+  const {
+    data: activities = [],
+    isError: activitiesError,
+    isLoading: activitiesLoading,
+  } = useListWorkflowActivities();
 
   const createConfig = useCreateTaskAssignmentConfig();
   const updateConfig = useUpdateTaskAssignmentConfig();
@@ -592,7 +782,8 @@ const TaskAssignmentConfigPage = () => {
         onClose={modal.onClose}
         editing={editing}
         activities={activities}
-        activitiesUnavailable={activitiesError || activities.length === 0}
+        activitiesLoading={activitiesLoading}
+        activitiesUnavailable={!activitiesLoading && (activitiesError || activities.length === 0)}
         onSave={handleSave}
         isSaving={createConfig.isPending || updateConfig.isPending}
       />

@@ -110,6 +110,7 @@ function Pagination({
       <div className="flex items-center gap-1">
         {/* First page button */}
         <button
+          type="button"
           onClick={() => onPageChange(0)}
           disabled={currentPage === 0}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
@@ -120,6 +121,7 @@ function Pagination({
 
         {/* Previous button */}
         <button
+          type="button"
           onClick={() => onPageChange(Math.max(0, currentPage - 1))}
           disabled={currentPage === 0}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
@@ -137,6 +139,7 @@ function Pagination({
           ) : (
             <button
               key={page}
+              type="button"
               onClick={() => onPageChange(page)}
               className={`min-w-[32px] h-8 px-2 rounded text-sm font-medium transition-colors ${
                 page === currentPage ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-200'
@@ -149,6 +152,7 @@ function Pagination({
 
         {/* Next button */}
         <button
+          type="button"
           onClick={() => onPageChange(Math.min(safeTotal - 1, currentPage + 1))}
           disabled={currentPage >= safeTotal - 1}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
@@ -159,6 +163,7 @@ function Pagination({
 
         {/* Last page button */}
         <button
+          type="button"
           onClick={() => onPageChange(safeTotal - 1)}
           disabled={currentPage >= safeTotal - 1}
           className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"

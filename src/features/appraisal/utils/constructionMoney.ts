@@ -24,3 +24,9 @@
  * that should not have been accepted in the first place.
  */
 export const roundBaht = (value: number) => Math.round(Number(value.toFixed(6)));
+
+/** One rule for "does the split reach 100%", read by the screen and by save validation alike. */
+export function proportionStatus(proportion: number): 'ok' | 'short' | 'over' {
+  const rounded = Math.round(proportion * 100) / 100;
+  return rounded === 100 ? 'ok' : rounded < 100 ? 'short' : 'over';
+}

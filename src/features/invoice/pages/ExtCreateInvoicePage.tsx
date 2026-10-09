@@ -9,7 +9,7 @@ import Button from '@/shared/components/Button';
 import Input from '@/shared/components/Input';
 import Modal from '@/shared/components/Modal';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { DateInput } from '@/shared/components/inputs';
+import { DateInput, Dropdown } from '@/shared/components/inputs';
 import { formatLocaleDate } from '@/shared/utils/dateUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
@@ -51,7 +51,11 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
   useBreadcrumb(editId ? t('maintenance.editTitle') : t('maintenance.createTitle'));
 
   // ─── Edit mode: hydrate from existing invoice ─────────────────────────────
-  const { data: existingInvoice, isError: invoiceError, refetch: refetchInvoice } = useGetInvoiceById(editId ?? null);
+  const {
+    data: existingInvoice,
+    isError: invoiceError,
+    refetch: refetchInvoice,
+  } = useGetInvoiceById(editId ?? null);
 
   // ─── Invoice id for this session ─────────────────────────────────────────
   // null = brand-new unsaved, string = created (either editId or newly created)
@@ -61,15 +65,28 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
   const [searchAppraisalNo, setSearchAppraisalNo] = useState('');
   const [submittedDateFrom, setSubmittedDateFrom] = useState<string | null>(null);
   const [submittedDateTo, setSubmittedDateTo] = useState<string | null>(null);
+  const [feePaymentMethodFilter, setFeePaymentMethodFilter] = useState<string | null>(null);
+  const [costCenterFilter, setCostCenterFilter] = useState('');
 
   const debouncedSearch = useDebounce(searchAppraisalNo, 300);
+  const debouncedCostCenter = useDebounce(costCenterFilter, 300);
 
-  const { data: assignments = [], isLoading: isLoadingAssignments, isError: assignmentsError, refetch: refetchAssignments } = useGetEligibleAssignments({
+  const {
+    data: assignments = [],
+    isLoading: isLoadingAssignments,
+    isError: assignmentsError,
+    refetch: refetchAssignments,
+  } = useGetEligibleAssignments({
     searchAppraisalNo: debouncedSearch || undefined,
     submittedDateFrom: toDateOnly(submittedDateFrom),
     submittedDateTo: toDateOnly(submittedDateTo),
     currentInvoiceId: invoiceId ?? undefined,
+    costCenter: debouncedCostCenter || undefined,
   });
+
+  const filteredAssignments = feePaymentMethodFilter
+    ? assignments.filter(a => a.feePaymentType === feePaymentMethodFilter)
+    : assignments;
 
   // ─── Selection state ──────────────────────────────────────────────────────
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -139,16 +156,18 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
   };
 
   const allSelected =
-    assignments.length > 0 && assignments.every(a => selectedIds.has(a.assignmentId));
-  const someSelected = assignments.some(a => selectedIds.has(a.assignmentId)) && !allSelected;
+    filteredAssignments.length > 0 &&
+    filteredAssignments.every(a => selectedIds.has(a.assignmentId));
+  const someSelected =
+    filteredAssignments.some(a => selectedIds.has(a.assignmentId)) && !allSelected;
 
   const toggleSelectAll = () => {
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (allSelected) {
-        assignments.forEach(a => next.delete(a.assignmentId));
+        filteredAssignments.forEach(a => next.delete(a.assignmentId));
       } else {
-        assignments.forEach(a => next.add(a.assignmentId));
+        filteredAssignments.forEach(a => next.add(a.assignmentId));
       }
       return next;
     });
@@ -261,7 +280,9 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">{t('draft.itemsLabel')}</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider">
+                {t('draft.itemsLabel')}
+              </p>
               <p className="text-sm font-semibold text-gray-900 tabular-nums">
                 {selectedAssignments.length}
               </p>
@@ -312,9 +333,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                       <p className="text-xs font-semibold text-gray-900 truncate">
                         {a.appraisalNumber ?? '—'}
                       </p>
-                      <p className="text-[11px] text-gray-500 truncate">
-                        {a.customerName ?? '—'}
-                      </p>
+                      <p className="text-[11px] text-gray-500 truncate">{a.customerName ?? '—'}</p>
                       {a.submittedDate && (
                         <p className="text-[10px] text-gray-400 mt-0.5">
                           {formatLocaleDate(a.submittedDate, i18n.language)}
@@ -370,9 +389,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
           fullWidth
           onClick={handleSubmit}
           isLoading={isSubmitting}
-          disabled={
-            selectedAssignments.length === 0 || !invoiceNumber.trim() || isSubmitting
-          }
+          disabled={selectedAssignments.length === 0 || !invoiceNumber.trim() || isSubmitting}
         >
           {t('maintenance.saveAndSubmit')}
         </Button>
@@ -439,7 +456,28 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                 placeholder="dd/mm/yyyy"
               />
             </div>
-            {(searchAppraisalNo || submittedDateFrom || submittedDateTo) && (
+            <div className="w-44">
+              <Dropdown
+                label={t('book.feePaymentMethod')}
+                group="FeePaymentMethod"
+                value={feePaymentMethodFilter ?? undefined}
+                onChange={(val: string | null) => setFeePaymentMethodFilter(val)}
+                showValuePrefix={false}
+              />
+            </div>
+            <div className="w-40">
+              <Input
+                label={t('book.col.costCenter')}
+                placeholder={t('book.col.costCenter')}
+                value={costCenterFilter}
+                onChange={e => setCostCenterFilter(e.target.value)}
+              />
+            </div>
+            {(searchAppraisalNo ||
+              submittedDateFrom ||
+              submittedDateTo ||
+              feePaymentMethodFilter ||
+              costCenterFilter) && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -447,6 +485,8 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                   setSearchAppraisalNo('');
                   setSubmittedDateFrom(null);
                   setSubmittedDateTo(null);
+                  setFeePaymentMethodFilter(null);
+                  setCostCenterFilter('');
                 }}
               >
                 <Icon style="regular" name="xmark" className="size-3.5 mr-1" />
@@ -468,7 +508,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                         if (el) el.indeterminate = someSelected;
                       }}
                       onChange={toggleSelectAll}
-                      disabled={assignments.length === 0}
+                      disabled={filteredAssignments.length === 0}
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
@@ -480,6 +520,9 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                   </th>
                   <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
                     {t('book.col.customerName')}
+                  </th>
+                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                    {t('book.col.costCenter')}
                   </th>
                   <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
                     {t('book.col.feePaymentMethod')}
@@ -519,6 +562,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                       { width: 'w-32' },
                       { width: 'w-28' },
                       { width: 'w-20' },
+                      { width: 'w-20' },
                       { width: 'w-10' },
                       { width: 'w-20' },
                       { width: 'w-20' },
@@ -531,13 +575,13 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                   />
                 ) : assignmentsError ? (
                   <tr>
-                    <td colSpan={12}>
+                    <td colSpan={13}>
                       <DataErrorState variant="inline" onRetry={() => refetchAssignments()} />
                     </td>
                   </tr>
-                ) : assignments.length === 0 ? (
+                ) : filteredAssignments.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="text-center py-12">
+                    <td colSpan={13} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
                         <Icon style="regular" name="folder-open" className="size-8 text-gray-300" />
                         <p className="text-xs text-gray-500">{t('book.empty')}</p>
@@ -545,7 +589,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                     </td>
                   </tr>
                 ) : (
-                  assignments.map((item, index) => {
+                  filteredAssignments.map((item, index) => {
                     const isSelected = selectedIds.has(item.assignmentId);
                     return (
                       <tr
@@ -567,8 +611,16 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                         <td className="px-3 py-2.5 font-medium text-primary whitespace-nowrap text-xs">
                           {item.appraisalNumber ?? '—'}
                         </td>
-                        <td className="px-3 py-2.5 text-gray-700 text-xs">{item.customerName ?? '—'}</td>
-                        <td className="px-3 py-2.5 text-gray-600 text-xs max-w-36 truncate" title={getFeePaymentMethodLabel(item.feePaymentType)}>
+                        <td className="px-3 py-2.5 text-gray-700 text-xs">
+                          {item.customerName ?? '—'}
+                        </td>
+                        <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">
+                          {item.costCenter ?? '—'}
+                        </td>
+                        <td
+                          className="px-3 py-2.5 text-gray-600 text-xs max-w-36 truncate"
+                          title={getFeePaymentMethodLabel(item.feePaymentType)}
+                        >
                           {getFeePaymentMethodLabel(item.feePaymentType)}
                         </td>
                         <td className="px-3 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap text-xs">
@@ -635,9 +687,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
         title={`${t('draft.title')} (${selectedAssignments.length})`}
         size="md"
       >
-        <div className="h-[70vh] overflow-hidden flex flex-col">
-          {rightPane}
-        </div>
+        <div className="h-[70vh] overflow-hidden flex flex-col">{rightPane}</div>
       </Modal>
     </div>
   );

@@ -92,15 +92,17 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
       if (field.decimalPlaces != null && field.decimalPlaces >= 0) {
         n = n.multipleOf(Math.pow(10, -field.decimalPlaces));
       }
+      // Refining turns the ZodNumber into a ZodEffects, so the checks below go on a wider variable.
+      let checked: z.ZodType<number> = n;
       if (field.maxIntegerDigits != null) {
         const maxInt = field.maxIntegerDigits;
-        n = n.refine(val => Math.trunc(Math.abs(val)).toString().length <= maxInt, {
+        checked = checked.refine(val => Math.trunc(Math.abs(val)).toString().length <= maxInt, {
           message: `Must not exceed ${maxInt} digits before decimal point`,
         });
       }
       // Enforce "required": treat 0 as empty unless allowZero is set.
       if (staticRequired && !field.allowZero) {
-        n = n.refine(val => val !== 0, { message: requiredMsg });
+        checked = checked.refine(val => val !== 0, { message: requiredMsg });
       }
 
       if (needsAllowZeroGuard) {
@@ -108,10 +110,10 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
         // undefined so z.number({ required_error }) rejects with the right msg.
         schema = z.preprocess(
           val => (val == null || val === '') ? undefined : Number(val),
-          n,
+          checked,
         );
       } else {
-        schema = n;
+        schema = checked;
       }
       break;
     }

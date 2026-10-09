@@ -17,7 +17,7 @@
  *
  * Model-level (always from context.model, both types):
  *   modelName, usableAreaMin, usableAreaMax, standardUsableArea,
- *   hasMezzanine, roomLayoutType, fireInsuranceCondition,
+ *   hasMezzanine, roomLayoutType, fireInsuranceCode,
  *   groundFloorMaterialType, upperFloorMaterialType, bathroomFloorMaterialType,
  *   buildingAge (LB only), utilizationType (LB only),
  *   startingPriceMin, startingPriceMax,
@@ -60,7 +60,7 @@ export interface ModelContextDto {
   hasMezzanine?: boolean | null;
   /** May arrive as a string[] from the backend on the LB model side. */
   roomLayoutType?: string[] | string | null;
-  fireInsuranceCondition?: string | null;
+  fireInsuranceCode?: string | null;
   groundFloorMaterialType?: string | null;
   upperFloorMaterialType?: string | null;
   bathroomFloorMaterialType?: string | null;
@@ -155,7 +155,7 @@ export function flattenPricingContext(context: ProjectModelPricingContextDto): F
     standardUsableArea: model.standardUsableArea ?? null,
     hasMezzanine: model.hasMezzanine ?? null,
     roomLayoutType: toDisplayString(model.roomLayoutType),
-    fireInsuranceCondition: model.fireInsuranceCondition ?? null,
+    fireInsuranceCode: model.fireInsuranceCode ?? null,
     groundFloorMaterialType: model.groundFloorMaterialType ?? null,
     upperFloorMaterialType: model.upperFloorMaterialType ?? null,
     bathroomFloorMaterialType: model.bathroomFloorMaterialType ?? null,

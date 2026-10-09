@@ -146,13 +146,12 @@ interface RsqResult {
 interface FinalValueBlock {
   id: string;
   finalValue: number;
-  finalValueRounded: number;
-  finalValueAdjusted: number | null;
+  finalValueOverride: number | null;
   includeLandArea: boolean;
   landArea: number | null;
   landValue: number | null;
   buildingValue: number | null;
-  appraisalPrice: number | null;
+  indicatedValue: number | null;
   hasBuildingValue: boolean;
 }
 
@@ -704,17 +703,11 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
               {formatNumber(data.finalValue.finalValue, 2)}
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Final Value Rounded</span>
-            <span className="text-xs font-medium text-gray-800">
-              {formatNumber(data.finalValue.finalValueRounded, 2)}
-            </span>
-          </div>
-          {data.finalValue.finalValueAdjusted != null && (
+          {data.finalValue.finalValueOverride != null && (
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">Adjusted</span>
               <span className="text-sm font-bold text-teal-700">
-                {formatNumber(data.finalValue.finalValueAdjusted, 2)}
+                {formatNumber(data.finalValue.finalValueOverride, 2)}
               </span>
             </div>
           )}
@@ -748,11 +741,11 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
                   </span>
                 </div>
               )}
-              {data.finalValue.appraisalPrice != null && (
+              {data.finalValue.indicatedValue != null && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">Appraisal Price (Final)</span>
                   <span className="text-xs font-medium text-gray-800">
-                    {formatNumber(data.finalValue.appraisalPrice, 2)}
+                    {formatNumber(data.finalValue.indicatedValue, 2)}
                   </span>
                 </div>
               )}

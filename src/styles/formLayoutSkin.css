@@ -1,0 +1,1460 @@
+/* ============================================================================
+   Appraisal form skins — the rules the two skins share
+   ============================================================================
+   The `grid` layout is drawn by formLayoutCompact.css, the `classic` layout by
+   formLayoutStandard.css; both sit on the same look (grey section bands, one framed sheet from the
+   header down, teal only for the chosen value, one table language, one × delete). The rules whose
+   bodies were the same in both live here once, so a fix to the shared look is made in one place.
+
+   Nothing in the skin files is keyed on anything but the layout: ThemeProvider writes only
+   `data-form-layout`, and a skin is that attribute written twice —
+   `[data-form-layout='grid'][data-form-layout='grid']` (compact) and
+   `[data-form-layout='classic'][data-form-layout='classic']` (standard). A repeated attribute
+   selector counts each time toward specificity, so the pair is one attribute more specific than
+   formLayout.css's single `[data-form-layout='grid']`, which is what the compact rules need to win
+   over it. A rule whose selector is the same in both skins is written once as
+   `:is(<grid pair>, <classic pair>)` — `:is()` takes its most specific argument, both are the same
+   pair, so its specificity is unchanged. Where the two skins spell the selector differently (compact's
+   tripled `.cas-labelled-table`) each keeps its own selector in a two-selector list, so neither
+   changes specificity either.
+
+   LOAD ORDER. main.tsx imports this file AFTER formLayoutCompact.css and formLayoutStandard.css.
+   The rules here used to sit between those files' own rules; moving them only matters where a
+   shared rule and a skin-only rule tie on specificity for the same property on the same element, and
+   every such tie (for example `button[aria-pressed='true']` over `button[aria-pressed]`) resolves the
+   same way when the shared rule comes last. Keep it last. Shared rules that beat each other are
+   kept in the order the standard file had them.
+
+   Sizes are rem calibrated to the 13px root the app runs at (12px = 0.9231rem, 12.5px = 0.9615rem,
+   11px = 0.8462rem, 30px = 2.3077rem, 24px = 1.8462rem), so the density setting keeps working.
+   Borders stay px.
+   ============================================================================ */
+
+/* ── 0. field controls: one size, one box ───────────────────────────────────────────────────
+   The text, number and date inputs, selects, dropdown buttons, comboboxes and text areas of a labelled
+   row are the same box in both skins: 30px tall, 13px text, a 6px corner, 12px of inline padding, a
+   1px edge. These tokens are that definition; each skin's rules read them, so the two cannot drift.
+   `--cas-row-h` is the field row they sit in: the control and 2px above and below. The row-height
+   arithmetic of the grid skin (wrapper margin, pill / chip / toggle sizes) hangs off the same two. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid {
+  --cas-input-h: 2.3077rem;
+  --cas-row-h: calc(var(--cas-input-h) + 4px);
+  --cas-ctl-font: 0.875rem;
+  --cas-ctl-radius: 0.4615rem;
+  --cas-ctl-px: 0.75rem;
+}
+
+/* ── 0b. controls inside a table: the same box ─────────────────────────────────────────────
+   The inputs, number cells, selects and dropdowns of a table (`.cas-labelled-table`, the rental form's
+   `.cas-form-table`) are the same size as a field's: `--cas-input-h` tall, `--cas-ctl-*` text, corner and
+   inline padding, so a deduction or cost table does not read as a smaller form. A cell holding a control
+   is the control plus 2px above and below (the skins set the cell's own padding from the same tokens),
+   which makes a row `--cas-row-h`. The cells' text that is not a control keeps its own size. The
+   components give these controls `h-[1.625rem]!` / `text-[0.875rem]!`; an unlayered `!important` loses to a
+   layered one, so those two are declared in `@layer components`, below. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  td
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], .h-full),
+    select,
+    button[aria-haspopup='listbox']:not([role='combobox'] ~ *)
+  ) {
+  min-height: 0;
+  border-radius: var(--cas-ctl-radius);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  td
+  :is(
+    input:not([type='checkbox'], [type='radio'], [type='hidden'], [type='file'], .h-full),
+    select
+  ) {
+  padding-block: 0;
+  padding-inline: var(--cas-ctl-px);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  td
+  button[aria-haspopup='listbox']:not([role='combobox'] ~ *)
+  > div.truncate {
+  padding-block: 0;
+  padding-inline: var(--cas-ctl-px);
+  line-height: calc(var(--cas-input-h) - 2px);
+}
+
+/* The rental form's tables set `py-1.5` on every cell, which put a 30px box in a 41px row: a cell holding a
+   control is the control plus 2px above and below, like the labelled tables'. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  tbody
+  td:has(input, select, button[aria-haspopup='listbox']) {
+  padding-block: calc((var(--cas-row-h) - var(--cas-input-h)) / 2);
+}
+
+/* ── 1. header frame ────────────────────────────────────────────────────
+   The identity band, the tab strip and the sheet share one 1px #e3e9e8 (`--cas-frame`) rule: the band's
+   top and bottom and the strip's baseline. The frame has no side edges, no bottom rule and no shadow,
+   so all four corners are square and the rules run straight from edge to edge (the sheet's own rules are in each skin file, they differ). All three sit 0.75rem in from
+   the scroller (PropertyEditorHeader's `px-3`, the tab bar's `px-3`, `cas-sidebar-main`'s `px-3`),
+   which is what lines them up. The band is a flat strip, not a floating card. When a tab strip
+   follows, the strip's baseline is the band's bottom edge; when none does (the vehicle and vessel
+   editors of Data Correction render no strip), or nothing joins it below, the band closes on its own
+   bottom rule. Hooks `cas-identity-card`
+   (EditorIdentityCard) and, inside it, `cas-id-cover` / `-cover-empty`, `cas-id-thumb`, `cas-id-addp`,
+   `cas-id-top`, `cas-id-title`, `cas-id-badge` (the type chip, on PropertyTypeChip's own className),
+   `cas-id-pos` and `cas-id-facts`. Under `.cas-form-grid`, so the market-comparable editor, which
+   shares the card but sits outside it, keeps its own look. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-identity-card {
+  gap: 0.9231rem;
+  padding: 0.6154rem 0.7692rem;
+  border-width: 1px 0;
+  border-color: var(--cas-frame);
+  border-radius: 0;
+  /* No shadow: the card's own `shadow-[…]` utility is switched off. */
+  box-shadow: none;
+}
+/* The tab strip sits directly under the band (its `pt-3` goes) and carries no side edge:
+   the list, the same 0.75rem in from the scroller as the band and the sheet. The strip's
+   root keeps its `sticky top-0 z-10 bg-white` and spans the whole scroller, wider than the frame,
+   so while pinned it still covers every row scrolling under it and leaves no sliver at the sides.
+   Its baseline is the #e3e9e8 rule; tabs start 10px in. A one-tab
+   form shows the strip too: EditorTabBar renders it for every property editor that has tabs. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-tabbar {
+  padding-top: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-tabbar-list {
+  padding-inline: 0.6923rem;
+  box-shadow: inset 0 -1px 0 var(--cas-line-2);
+}
+/* The tab labels: the component sets `text-[12.5px]` (px, so it would not follow the density setting);
+   they are rem here, `text-sm` like the section heads and the fields beside them. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-tabbar-list
+  button {
+  font-size: 0.875rem;
+}
+/* No side edges, no bottom rule, square corners: the only rule left is the strip's baseline at the sheet's
+   top. Its ground is the surface: grid's sheet is transparent (its rows paint themselves), so in dark
+   the page's white showed in the gaps. The construction tab draws its own bordered box (TSX), so that
+   gets the same open sides. The Data Correction editor is a flush pane and is left as it is. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid:not(.cas-dc-editor)
+  :is(
+    #land-section:has(.cas-sheet),
+    .cas-sheet:not(#land-section .cas-sheet),
+    #construction-info > .bg-white
+  ) {
+  border-inline-width: 0;
+  border-bottom-width: 0;
+  border-radius: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid:not(.cas-dc-editor)
+  :is(#land-section:has(.cas-sheet), .cas-sheet:not(#land-section .cas-sheet)) {
+  background-color: var(--palette-surface);
+}
+/* The construction box's ground: its colours are hard-coded in the TSX (white, #1f2937 text, #e3e9e8
+   rules), so in dark it stayed a white card with dark text. Same values as the palette in light, so
+   light does not change; in dark they follow the surface tokens like the other grounds. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  #construction-info
+  > .bg-white {
+  background-color: var(--palette-surface);
+  color: var(--palette-ink);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  #construction-info
+  [class*='border-[#e3e9e8]'] {
+  border-color: var(--palette-line);
+}
+
+/* The skyline behind the band whether or not there are photos: the component renders it in both
+   cases and hides it with Tailwind's `hidden` when a tile is shown, which this undoes. Still the
+   card's absolute, `-z-10`, pointer-events-none background, so it adds no height. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-skyline {
+  display: block;
+}
+
+/* Cover tile: 72 × 48, 6px corner, a real 1px border instead of the ring. The empty "add first
+   photo" tile is dashed on #f8fafa at 10.5px. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-cover {
+  width: 5.5385rem;
+  height: 3.6923rem;
+  border: 1px solid var(--cas-line-2);
+  border-radius: 0.4615rem;
+  box-shadow: none;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-cover-empty {
+  border-style: dashed;
+  border-color: var(--cas-line-3);
+  background-color: var(--cas-label-bg);
+  color: var(--cas-ink-2);
+  font-size: 0.8077rem;
+  line-height: var(--cas-leading);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-cover-empty:hover,
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-addp:hover {
+  border-color: var(--cas-pick-fg);
+  color: var(--cas-pick-fg);
+}
+
+/* Thumbnails 40 × 30, 5px corner; the add button 30 × 30, dashed. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-thumb {
+  width: 3.0769rem;
+  height: 2.3077rem;
+  border: 1px solid var(--cas-line-2);
+  border-radius: 0.3846rem;
+  box-shadow: none;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-addp {
+  width: 2.3077rem;
+  height: 2.3077rem;
+  border-color: var(--cas-line-3);
+  border-radius: 0.3846rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-top {
+  gap: 0.4615rem;
+}
+
+/* Type badge: 5px corner, `1px 6px`, 11px / 600, no border; it keeps its per-type colours (the text
+   colour class and the inline `color-mix` fill), and its inline border colour is cleared with
+   `border-width: 0`. Position chip: neutral #edf1f1 / #55636f, 4px corner, `0 6px`, 10.5px / 600
+   on a 17px line. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-badge {
+  border-width: 0;
+  border-radius: 0.3846rem;
+  padding: 0.0769rem 0.4615rem;
+  font-size: 0.8462rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-pos {
+  border-width: 0;
+  border-radius: 0.3077rem;
+  padding: 0 0.4615rem;
+  background-color: var(--cas-neutral-bg);
+  color: var(--cas-ink-2);
+  font-size: 0.8077rem;
+  line-height: 1.3077rem;
+}
+
+/* Title 14px / 600 / ink (the muted "new" state is italic and keeps its grey); facts 12px. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-title {
+  font-size: 1rem;
+  font-weight: 600;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-title:not(.italic) {
+  color: var(--cas-ink);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-id-facts {
+  font-size: 0.9231rem;
+  color: var(--cas-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Data Correction: the "latest correction" card becomes a flat #f8fafa band under the identity
+   band — same side edges, a bottom rule, no gap, label | value rows with the old
+   value struck through. Hooks `cas-dc-head` (the wrapper that stacks it under the identity card),
+   `cas-latest`, `cas-latest-head`, `cas-latest-list`. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-dc-head
+  > * {
+  margin-block: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest {
+  display: grid;
+  gap: 0.3077rem;
+  padding: 0.4615rem 0.7692rem 0.6154rem;
+  border-width: 0 1px 1px;
+  border-color: var(--cas-frame);
+  border-radius: 0 0 0.7692rem 0.7692rem;
+  background-color: var(--cas-label-bg);
+  font-size: 0.9231rem;
+}
+/* With a tab strip right after it, the strip is what closes the block: square bottom corners. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  :has(+ .cas-tabbar)
+  .cas-latest {
+  border-radius: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest
+  > * {
+  margin-block: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest
+  p,
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest-head
+  > button {
+  font-size: 0.9231rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest-head
+  > p {
+  font-weight: 500;
+  color: var(--cas-ink-2);
+  font-variant-numeric: tabular-nums;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest-head
+  > button {
+  color: var(--cas-pick-fg);
+  font-weight: 500;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest-list {
+  padding: 0;
+  background-color: transparent;
+  border-radius: 0;
+  font-size: 0.9231rem;
+  font-variant-numeric: tabular-nums;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-latest-list
+  > dt {
+  color: var(--cas-ink-3);
+}
+
+/* ── 2. group label: 11px / 600 / #55636f, no band ─────────────────────────────────────────
+   Address / Dopa Address headings inside a section. The band (grid layout) is already gone on a
+   sheet in formLayout.css; this only sets the span's type. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  :is(.cas-sheet, #land-title)
+  .cas-group-label
+  span {
+  font-size: 0.8462rem;
+  font-weight: 600;
+  color: var(--cas-ink-2);
+}
+
+/* ── 3. radio pills, checkbox chips, toggle ─────────────────────────────────────────────────
+   Selected: solid primary (`--cas-sel-*`) with white text, weight 500. A radio pill is Headless UI
+   v2's `Radio`, which renders a **span** with role="radio" (not a div), so it is matched as
+   `[role='radio']:not(button)` — the toggle's options are `button[role='radio']`. What is beaten is
+   the component's own utilities (`bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-full h-8 px-4
+   bg-primary text-white shadow-sm`). Sizes and the unselected chip are per skin.
+   Radio pills, unselected: white fill and hairline in place of `bg-gray-100`; hover a light grey
+   (its own rule, because the plain one is stronger than the utility's `hover:bg-gray-200`). */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  [role='radio']:not(button):not([data-checked]):not([aria-checked='true']) {
+  background-color: var(--color-base-100);
+  color: var(--cas-ink-2);
+  box-shadow: inset 0 0 0 1px var(--cas-line-2);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  [role='radio']:not(button):not([data-checked]):not([aria-checked='true']):hover {
+  background-color: var(--cas-label-bg);
+}
+
+/* Selected pill overrides `bg-primary text-white shadow-sm` (and, in the grid layout, formLayout.css's
+   `box-shadow: none`). */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  [role='radio']:not(button):is([data-checked], [aria-checked='true']) {
+  background-color: var(--cas-sel-bg);
+  color: var(--cas-sel-fg);
+  box-shadow: inset 0 0 0 1px var(--cas-sel-bg);
+  font-weight: 500;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  [role='radio']:not(button):is([data-checked], [aria-checked='true']):hover {
+  background-color: var(--cas-sel-hover);
+  box-shadow: inset 0 0 0 1px var(--cas-sel-hover);
+}
+
+/* The tick is a flex item of the inline-flex pill, so a trailing space would collapse: margin. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  [role='radio']:not(button):is([data-checked], [aria-checked='true'])::before {
+  content: '\2713';
+  margin-right: 0.3077rem;
+}
+
+/* Selected chip, including the :hover rule that ties with the base selector; the tick icon takes
+   `color`, so it is white. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  button[aria-pressed='true'] {
+  background-color: var(--cas-sel-bg);
+  color: var(--cas-sel-fg);
+  box-shadow: inset 0 0 0 1px var(--cas-sel-bg);
+  font-weight: 500;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  button[aria-pressed='true']:hover {
+  background-color: var(--cas-sel-hover);
+  color: var(--cas-sel-fg);
+  box-shadow: inset 0 0 0 1px var(--cas-sel-hover);
+}
+
+/* Toggle: the component's own round shape is kept (track `bg-gray-100/80 rounded-full`, thumb
+   `rounded-full` with its drop shadow); only the thumb's colour changes — solid primary by default.
+   A yes/no toggle (marker class `cas-toggle-bool`, from FormBooleanToggle) turns the thumb grey
+   while its first option — false — is active; a string toggle stays primary either way. The error
+   state (`border-danger` on the track, `bg-danger` on the thumb) is excluded by the :not() and keeps
+   its own look. Option sizes are per skin. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  fieldset
+  > div[role='radiogroup']:not(.border-danger)
+  > span {
+  inset-block: 0.0625rem;
+  background-color: var(--cas-sel-bg);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  .cas-toggle-bool
+  fieldset
+  > div[role='radiogroup']:not(.border-danger):has(> button:first-of-type[aria-checked='true'])
+  > span {
+  background-color: var(--cas-off-bg);
+  box-shadow:
+    0 4px 6px -1px color-mix(in srgb, var(--cas-off-bg) 25%, transparent),
+    0 2px 4px -2px color-mix(in srgb, var(--cas-off-bg) 25%, transparent);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  fieldset
+  > div[role='radiogroup']:not(.border-danger)
+  > button[role='radio'][aria-checked='false']:not(:disabled) {
+  color: var(--cas-ink-2);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  fieldset
+  > div[role='radiogroup']:not(.border-danger)
+  > button[role='radio'][aria-checked='true'] {
+  color: var(--cas-sel-fg);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  .cas-toggle-bool
+  fieldset
+  > div[role='radiogroup']:not(.border-danger):has(> button:first-of-type[aria-checked='true'])
+  > button[role='radio'][aria-checked='true'] {
+  color: var(--cas-off-fg);
+}
+
+/* ── 4. one table language ──────────────────────────────────────────
+   Every table in a labelled table — title deeds, land deductions, building cost, surface, boundary,
+   condo area — gets the same cells: heads #f8fafa / 12px / 500 on a 26px line, `padding: 0 8px`, a
+   1px rule under and a 1px #eef2f2 rule to the right of every cell (none after the last); body
+   cells 31px tall (30px line + rule). Total rows are 600 on the head grey. The cell rules that
+   differ between the skins (the editable-control boxes, the td box) stay in their own files.
+
+   Compact's selectors carry `.cas-labelled-table` three times: the cells there are set by a dozen
+   earlier grid-layout rules (the repeater block, the deduction block, `TH` / `TD` utilities), the
+   deepest at five classes and a `:has()`, and three copies put the block at six so it wins on
+   specificity, not on order. Standard has no such rules to beat and keeps one. The two selectors of
+   each pair below are therefore listed separately, unchanged. `:not(td table)` and the child
+   combinators keep the rules off the building table's nested age-band table. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > thead
+  > tr
+  > th,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table)
+  > thead
+  > tr
+  > th {
+  background-color: var(--cas-table-head);
+  color: var(--cas-ink-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 2rem;
+  padding: 0 0.6154rem;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--cas-line-2);
+  border-right: 1px solid var(--cas-line);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > thead
+  > tr
+  > th:last-child,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table)
+  > thead
+  > tr
+  > th:last-child {
+  border-right: 0;
+}
+
+/* The second head row of the building table ends before the last column (the delete cell spans both
+   rows), so its last cell keeps its rule. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > thead
+  > tr
+  + tr
+  > th:last-child,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table)
+  > thead
+  > tr
+  + tr
+  > th:last-child {
+  border-right: 1px solid var(--cas-line);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > :is(tbody, tfoot)
+  > tr
+  > td:last-child,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table)
+  > :is(tbody, tfoot)
+  > tr
+  > td:last-child {
+  border-right: 0;
+}
+
+/* The building table's open age-band row: a sub-row indented under the row it belongs to. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > tbody
+  > tr
+  > td[colspan]:has(> div > table),
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table)
+  > tbody
+  > tr
+  > td[colspan]:has(> div > table) {
+  height: auto;
+  padding: 0.3077rem 0.6154rem 0.4615rem 1.8462rem;
+  line-height: var(--cas-leading);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table)
+  > tbody
+  > tr
+  > td.text-gray-400,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table)
+  > tbody
+  > tr
+  > td.text-gray-400 {
+  color: var(--cas-ink-3);
+}
+
+/* Title deed table: position reads `ระวาง 5136 IV · เลขที่ดิน 27 · หน้าสำรวจ 3028` — muted label,
+   ink value at normal weight, a middle dot between items; secondary figures 12px muted. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-pos,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  .cas-pos {
+  gap: 0;
+  font-size: 0.875rem;
+  line-height: var(--cas-leading);
+  color: var(--cas-ink-3);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-pos
+  > span
+  + span::before,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  .cas-pos
+  > span
+  + span::before {
+  content: '\00b7';
+  margin-inline: 0.4615rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-pos
+  b,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  .cas-pos
+  b {
+  font-weight: 400;
+  color: var(--cas-ink);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  .cas-sub,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  .cas-sub {
+  font-size: 0.875rem;
+  color: var(--cas-ink-3);
+}
+
+/* RentalInfoForm's three hand-built tables (`cas-form-table` hook) sit in no labelled table and no
+   [data-field]: same grey head and 12px body. The growth table's full-width dashed "add" box (a
+   sibling of the table) becomes a teal text link; the up-front table's add control sits in
+   `.cas-outside-form-only` (hidden here, its band carries `.cas-label-add`). The dashed button is
+   `flex w-full`, so it goes back to a left-aligned inline link. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  thead
+  tr,
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  thead
+  th {
+  background-color: var(--cas-table-head);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  thead
+  th {
+  color: var(--cas-ink-2);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  tbody
+  td {
+  font-size: 0.875rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  ~ button.border-dashed {
+  display: inline-flex;
+  width: auto;
+  justify-content: flex-start;
+  border: 0;
+  background-color: transparent;
+  color: var(--cas-pick-fg);
+  font-size: 0.9231rem;
+  font-weight: 500;
+  padding: 0 0.3077rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-form-table
+  ~ button.border-dashed:hover {
+  background-color: transparent;
+  color: var(--cas-pick-fg);
+  text-decoration: underline;
+}
+
+/* The toggle's track stays the component's light `bg-gray-100/80` in dark, under the theme's light ink,
+   which left the unselected option ("Can" next to "Can not") nearly invisible. In dark it takes a surface
+   of the dark palette; the selected thumb (`--cas-sel-bg` / `--cas-off-bg`, white text) is unchanged. */
+:is(
+    [data-theme='dark'][data-form-layout='grid'][data-form-layout='grid'],
+    [data-theme='dark'] [data-form-layout='grid'][data-form-layout='grid'],
+    [data-theme='dark'][data-form-layout='classic'][data-form-layout='classic'],
+    [data-theme='dark'] [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  [data-field]
+  fieldset
+  > div[role='radiogroup'] {
+  background-color: var(--palette-surface-3);
+}
+
+/* ── 5. table bands and add links ───────────────────────────────────────────────────────────
+   A table under its label: the label (`.cas-table-label`) is a sub-band across the top with the
+   table's title, a muted summary (`.cas-label-meta`) and the teal add links (`.cas-label-add`) at
+   the right end. Whatever else the label carries is pushed to the right. Only
+   the tables that carry these in the band render them; every other band is untouched. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-table-label
+  > * {
+  margin-left: auto;
+}
+
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-table-label
+  > .cas-label-meta {
+  margin-left: 0;
+  margin-right: auto;
+  font-weight: 400;
+  color: var(--cas-ink-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-table-label
+  > .cas-label-add {
+  margin-left: 0;
+  padding: 0 0.3077rem;
+  border: 0;
+  background: transparent;
+  color: var(--cas-pick-fg);
+  font-size: 0.9231rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-table-label
+  > .cas-label-add:hover {
+  text-decoration: underline;
+}
+/* A disabled add link (the rental band's Generate) is not a link: the rules above are unlayered, so they
+   beat Tailwind's `disabled:cursor-not-allowed`; same specificity as the hover rule, and later. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-table-label
+  > .cas-label-add:is(:disabled, [aria-disabled='true']) {
+  cursor: not-allowed;
+  color: var(--cas-ink-3);
+  text-decoration: none;
+}
+
+/* `.cas-outside-form-only` marks the copy of a table's add buttons that sits outside its band: the
+   building table's under its rows (BuildingDetail), the deduction table's under the table
+   (LandAreaDeductionTable) and the rental form's add controls (RentalInfoForm). Under
+   `.cas-form-grid` (either layout) the table's band holds them (`.cas-label-add`), so this hides the
+   copy. It only shows outside `.cas-form-grid`, where the same table renders without a band (the
+   block model form). */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-outside-form-only {
+  display: none;
+}
+
+/* The title table's header add button (`.cas-title-add`) is a text link, like the add links in the
+   table bands: no fill, teal, 12px / 500, underlined on hover. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-title-add {
+  padding: 0 0.3077rem;
+  border-radius: 0;
+  background-color: transparent;
+  color: var(--cas-pick-fg);
+  box-shadow: none;
+  font-size: 0.9231rem;
+  font-weight: 500;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-title-add:hover {
+  background-color: transparent;
+  text-decoration: underline;
+}
+
+/* "Add row": a plain teal text link, 12px / 500, underlined on hover; position unchanged. Every add
+   button left in a labelled table is a dashed-outline button (`border-dashed`); the deduction and
+   building tables carry theirs in the band instead. Overrides the utilities' `hover:border-primary-500`. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-labelled-table
+  button.border-dashed {
+  border: 0;
+  background: transparent;
+  color: var(--cas-pick-fg);
+  font-size: 0.9231rem;
+  font-weight: 500;
+  padding-inline: 0.3077rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-labelled-table
+  button.border-dashed:hover {
+  border-color: transparent;
+  background: transparent;
+  color: var(--cas-pick-fg);
+  text-decoration: underline;
+}
+
+/* Row buttons (edit / delete): a quiet grey icon, 22px, no fill; the delete one reddens on hover
+   and shows a × instead of the trash glyph: the glyph is hidden and a 16px × is
+   drawn in the same 22px button, so colour and hover stay the ghost button's. Edit (pen) and the
+   condo table's move arrows are not `cas-row-del` and keep their icons. The rental form's tables (`.cas-form-table`) carry the same buttons; their `text-red-500` utility lost to nothing before, so the × was red at rest. The hover is only for an
+   enabled button: a disabled one (the first row's move-up, the last row's move-down) stays grey. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-labelled-table.cas-labelled-table.cas-labelled-table,
+    .cas-form-table.cas-form-table.cas-form-table
+  )
+  .cas-row-btn,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  .cas-row-btn {
+  flex-shrink: 0;
+  width: 1.6923rem;
+  height: 1.6923rem;
+  background-color: transparent;
+  color: var(--cas-ink-3);
+  border-radius: 0.3077rem;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-labelled-table.cas-labelled-table.cas-labelled-table,
+    .cas-form-table.cas-form-table.cas-form-table
+  )
+  .cas-row-btn:not(:disabled, [aria-disabled='true']):hover,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  .cas-row-btn:not(:disabled, [aria-disabled='true']):hover {
+  background-color: var(--cas-neutral-bg);
+  color: var(--cas-neutral-fg);
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-labelled-table.cas-labelled-table.cas-labelled-table,
+    .cas-form-table.cas-form-table.cas-form-table
+  )
+  .cas-row-btn.cas-row-del:not(:disabled, [aria-disabled='true']):hover,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  .cas-row-btn.cas-row-del:not(:disabled, [aria-disabled='true']):hover {
+  background-color: color-mix(in srgb, #dc2626 9%, transparent);
+  color: #dc2626;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-labelled-table.cas-labelled-table.cas-labelled-table,
+    .cas-form-table.cas-form-table.cas-form-table
+  )
+  .cas-row-del
+  > svg,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  .cas-row-del
+  > svg {
+  display: none;
+}
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  :is(
+    .cas-labelled-table.cas-labelled-table.cas-labelled-table,
+    .cas-form-table.cas-form-table.cas-form-table
+  )
+  .cas-row-del::before,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  .cas-row-del::before {
+  content: '\00d7';
+  font-size: 1.2308rem;
+  line-height: 1;
+}
+
+/* A row-action cell (×, pencil, move arrows, the armed delete pill) holds only the button, sometimes inside an inline tooltip
+   wrapper. An inline box sits on the line's baseline, and the line is as tall as the cell's own
+   line-height (a 30px strut), so the 22px button rode 0.5-3.5px above the row's middle. With no line
+   height of its own the line is exactly the button, and `vertical-align: middle` on the cell centres it. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  :is(.cas-labelled-table, .cas-form-table)
+  td:has(.cas-row-btn, .cas-row-del, .cas-row-del-armed) {
+  line-height: 0;
+  vertical-align: middle;
+  text-align: center;
+  /* Wide enough for the armed delete pill ("Delete?" is 44.5px at 0.75rem) centred on the button, with 2px
+     to spare on each side: arming it neither overlaps the cell beside it nor changes any width. The title
+     and condo-area tables' action columns were already wider. */
+  min-width: 3.75rem;
+}
+/* ConfirmDeleteButton's armed pill hangs off the button's right edge and grows leftwards (its own
+   `right-0`); centred on the button it grows both ways, which the column above has room for. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-row-del-armed {
+  right: auto;
+  left: 50%;
+  translate: -50% -50%;
+}
+
+/* Building cost table: at least 1060px wide, scrolling sideways in its own box. */
+[data-form-layout='grid'][data-form-layout='grid']
+  .cas-form-grid
+  .cas-labelled-table.cas-labelled-table.cas-labelled-table
+  table:not(td table).cas-dep-table,
+[data-form-layout='classic'][data-form-layout='classic']
+  .cas-form-grid
+  .cas-labelled-table
+  table:not(td table).cas-dep-table {
+  min-width: 81.5385rem;
+}
+
+/* The two summary rows under it (Building Cost Value, Building Insurance Price) as ordinary form
+   rows: a label cell 16rem wide (the label column of a full-row field) holding the name and status
+   pill, then the number, the muted source text and the "use calculated" link on one line. The left
+   block becomes `display: contents`, so the name, the source text and the input are three flex
+   items of the row. Sizes: `--cas-row-h` row, 0.875rem label, 11px pill, 11.5px source. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-summary {
+  border-top-color: var(--cas-line);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-summary
+  > .cas-cost-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  /* The field row's height: the control (`--cas-input-h`) and 2px above and below. The content box is
+     what is `--cas-row-h` tall, so the row's rule (on the first row only) comes on top, as it does on a
+     field row; the label cell (`align-self: stretch`) then fills the whole row. */
+  box-sizing: content-box;
+  min-height: var(--cas-row-h);
+  border-color: var(--cas-line);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  > .cas-cost-lead {
+  display: contents;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-name {
+  flex: none;
+  width: 16rem;
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 0 0.7692rem;
+  background-color: var(--cas-label-bg);
+  border-right: 1px solid var(--cas-line);
+  gap: 0.4615rem;
+  color: var(--cas-ink-2);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-name
+  > span:first-child {
+  min-width: 0;
+  /* a field label's size and line */
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 400;
+  color: var(--cas-ink-2);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-name
+  > span:last-child {
+  flex: none;
+  padding: 0.0769rem 0.6154rem;
+  font-size: 0.8462rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  > :not(.cas-cost-lead) {
+  flex: 0 0 12rem;
+  margin: 0 0.6154rem;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  input {
+  width: 100%;
+  font-weight: 400;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-src {
+  order: 3;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding-right: 0.6154rem;
+  font-size: 0.8846rem;
+  color: var(--cas-ink-3);
+  font-variant-numeric: tabular-nums;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-src
+  b {
+  font-weight: 500;
+  color: var(--cas-ink-2);
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-src
+  button {
+  color: var(--cas-pick-fg);
+  font-size: 0.9231rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  .cas-cost-row
+  .cas-cost-src
+  button:hover {
+  text-decoration: underline;
+}
+
+/* ── cell controls that a utility marks `!important` ─────────────────────────────────────────
+   NumCell passes `h-[1.625rem]!` and `text-[0.875rem]!` to every number cell. Tailwind utilities live in
+   `@layer utilities`, and for `!important` declarations the layer order is reversed: an *unlayered*
+   `!important` loses to a layered one whatever its specificity. Declaring them in `@layer components`
+   — earlier than `utilities`, so first for important — is what beats them. The height is the field
+   height (`--cas-input-h`), the text the field text (`--cas-ctl-font`). */
+@layer components {
+  :is(
+      [data-form-layout='grid'][data-form-layout='grid'],
+      [data-form-layout='classic'][data-form-layout='classic']
+    )
+    .cas-form-grid
+    :is(.cas-labelled-table, .cas-form-table)
+    td
+    :is(input:not(.h-full), select, button[aria-haspopup='listbox']) {
+    height: var(--cas-input-h) !important;
+  }
+  :is(
+      [data-form-layout='grid'][data-form-layout='grid'],
+      [data-form-layout='classic'][data-form-layout='classic']
+    )
+    .cas-form-grid
+    :is(.cas-labelled-table, .cas-form-table)
+    td
+    :is(input, textarea, select, button[aria-haspopup='listbox']) {
+    font-size: var(--cas-ctl-font) !important;
+  }
+}
+
+/* Grounds that were hard-white in dark: the identity band, the tab strip's list (the frame-wide row
+   inside the strip's root; the root itself stays `bg-white`, which is the page's own ground beside the
+   frame, and covers what scrolls under a pinned strip) and a table's white card. `--palette-surface`
+   is #fff in light, so light looks the same, and the dark surface (`--color-base-100`) in dark, the
+   same ground as the sheet they sit on. Only cards that are white (`bg-white`): an empty state keeps
+   its own grey. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid
+  :is(.cas-identity-card, .cas-tabbar-list, .cas-labelled-table .cas-table-card.bg-white) {
+  background-color: var(--palette-surface);
+}
+
+/* ── Data Correction editor (`.cas-dc-editor`, on the correction page's form) ──────────────────────
+   The pane is the frame there: the identity band, the latest-correction strip, the tab strip and the
+   sheet run flush to the pane's top edge and to the rail's divider on the left and the pane's right
+   edge, with no gutter, square corners, no outer edge of their own and no lift (the page's outer frame
+   carries the border and the shadow). Rules between the blocks only: a bottom rule under the band, under
+   the latest strip and under the strip's tabs. The skyline stays. Without a tab strip (the vehicle and
+   vessel editors) the band closes on its own the same way: flush, square, a bottom rule. These
+   come last in the file and name the scroller's id, so they win over the property-page frame rules above
+   and over the skin files' own sheet rules. */
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-dc-editor
+  .cas-sidebar-main {
+  padding-inline: 0;
+  padding-top: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-dc-editor
+  #form-scroll-container
+  .cas-identity-card {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-dc-editor
+  #form-scroll-container
+  .cas-latest {
+  border-width: 0 0 1px;
+  border-radius: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-dc-editor
+  #form-scroll-container
+  > .cas-tabbar {
+  padding-inline: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-dc-editor
+  #form-scroll-container
+  .cas-tabbar-list {
+  border-inline: 0;
+}
+:is(
+    [data-form-layout='grid'][data-form-layout='grid'],
+    [data-form-layout='classic'][data-form-layout='classic']
+  )
+  .cas-form-grid.cas-dc-editor.cas-dc-editor
+  #form-scroll-container
+  :is(#land-section:has(.cas-sheet), .cas-sheet:not(#land-section .cas-sheet)) {
+  border-width: 0 0 1px;
+  border-radius: 0;
+  box-shadow: none;
+}

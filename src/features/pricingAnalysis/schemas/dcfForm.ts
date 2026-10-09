@@ -75,6 +75,7 @@ const HighestBestUsedForm = z.object({
 export const DCFForm = z
   .object({
     id: z.string().nullable().optional(),
+    clientId: z.string().nullable().optional(), // set by the initializer; not sent
     templateCode: z.string(),
     templateName: z.string().optional(),
     totalNumberOfYears: z.number(),

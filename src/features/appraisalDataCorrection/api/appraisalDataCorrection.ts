@@ -1,12 +1,18 @@
-import { useMutation, useQuery, useQueryClient, useQueries } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useQueries,
+  type QueryClient,
+} from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { appraisalDocumentKeys } from '@/features/appraisal/api/appraisalDocuments';
+import { propertyGroupKeys } from '@/features/appraisal/api/propertyGroup';
 import type {
   AppraisalSearchParams,
   AppraisalSearchResponse,
 } from '@/features/appraisal/api/appraisalSearch';
 import type {
-  CorrectPropertyDataRequestType,
-  CorrectPropertyDataResponseType,
   GetPropertyCorrectionsResponseType,
   GetPropertyGroupByIdResponseType,
   GetPropertyGroupsResponseType,
@@ -26,6 +32,10 @@ export const appraisalDataCorrectionKeys = {
     ['appraisal-data-correction', appraisalId, 'history'] as const,
   history: (appraisalId: string, propertyId?: string) =>
     [...appraisalDataCorrectionKeys.historyAll(appraisalId), propertyId ?? 'all'] as const,
+  correctionContext: (appraisalId: string) =>
+    ['appraisal-data-correction', appraisalId, 'correction-context'] as const,
+  /** Prefix of the property pages' own queries, e.g. `['appraisals', id, 'land-properties', …]`. */
+  propertyPages: (appraisalId: string) => ['appraisals', appraisalId] as const,
 };
 
 // ── Search (reuses the existing /appraisals endpoint) ───────
@@ -80,7 +90,9 @@ export function useGetAppraisalPropertiesWithType(appraisalId: string | undefine
 
   const detailQueries = useQueries({
     queries: groupIds.map(groupId => ({
-      queryKey: ['appraisal-data-correction', appraisalId, 'property-groups', groupId] as const,
+      // The property pages' own key, so a correction's `propertyGroupKeys.all` invalidation also
+      // refreshes the rail (a corrected property name) and the cache is shared with those pages.
+      queryKey: propertyGroupKeys.detail(appraisalId ?? '', groupId),
       queryFn: async (): Promise<GetPropertyGroupByIdResponseType> => {
         const { data } = await axios.get(`/appraisals/${appraisalId}/property-groups/${groupId}`);
         return data;
@@ -90,17 +102,49 @@ export function useGetAppraisalPropertiesWithType(appraisalId: string | undefine
   });
 
   const isLoading = groupsQuery.isLoading || detailQueries.some(q => q.isLoading);
+  // A failed load must not read as "no properties" (a block appraisal) — callers show an error.
+  // Only a load that left nothing to show: a failed background refetch (the one a save triggers)
+  // keeps the cached list, so the rail and the open editor stay on screen.
+  const isError = groupsQuery.isLoadingError || detailQueries.some(q => q.isLoadingError);
+  const refetch = () => {
+    if (groupsQuery.isError) void groupsQuery.refetch();
+    detailQueries.forEach(q => {
+      if (q.isError) void q.refetch();
+    });
+  };
   const properties = detailQueries.flatMap(q => q.data?.properties ?? []);
 
-  return { properties, isLoading, groups: groupsQuery.data?.groups ?? [] };
+  // The flat `properties` carry no group id, so the rail's grouping comes from the details themselves.
+  const propertyGroups = detailQueries.flatMap(q => (q.data ? [q.data] : []));
+
+  return {
+    properties,
+    propertyGroups,
+    isLoading,
+    isError,
+    refetch,
+  };
 }
 
 // ── Apply a correction ───────────────────────────────────────
-// (No dedicated vehicle/vessel detail hooks here — the detail page fetches every
-// property type, vehicle/vessel included, through the generic `useGetPropertyDetail`
-// in appraisal/api/propertyGroup.ts. Typed per-type hooks were tried and removed as
-// dead code per code review.)
+// (No dedicated detail hooks here — the detail page fetches every property type, vehicle/vessel
+// included, through the generic `useGetPropertyDetail` in appraisal/api/propertyGroup.ts.)
 
+/** What the correction endpoint reports back: the audit row's field paths (`Land.OwnerName`). */
+export interface CorrectPropertyDataResponse {
+  changedFieldCount: number;
+  changedFields: string[];
+}
+
+/**
+ * PUT …/data-correction/{suffix}, where the suffix is the property's own detail route
+ * (`land-detail`, `lease-agreement-condo-detail`, …) and `data` is the body that route's real PUT
+ * takes. That update overwrites the whole record, so `data` must be the complete page payload —
+ * never a diff of what was edited.
+ *
+ * Failures worth branching on, by `errorCode` (see `readApiError`): 409 `APPRAISAL_NOT_COMPLETED`
+ * (reopened or cancelled meanwhile) and 400 `NO_CHANGES` (the record already holds these values).
+ */
 export function useCorrectPropertyData() {
   const queryClient = useQueryClient();
 
@@ -108,11 +152,13 @@ export function useCorrectPropertyData() {
     mutationFn: async (params: {
       appraisalId: string;
       propertyId: string;
-      data: CorrectPropertyDataRequestType;
-    }): Promise<CorrectPropertyDataResponseType> => {
-      const { data } = await axios.patch(
-        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/data-correction`,
-        params.data,
+      suffix: string;
+      reason: string;
+      data: unknown;
+    }): Promise<CorrectPropertyDataResponse> => {
+      const { data } = await axios.put(
+        `/appraisals/${params.appraisalId}/properties/${params.propertyId}/data-correction/${params.suffix}`,
+        { reason: params.reason, data: params.data },
       );
       return data;
     },
@@ -125,20 +171,119 @@ export function useCorrectPropertyData() {
       queryClient.invalidateQueries({
         queryKey: appraisalDataCorrectionKeys.historyAll(variables.appraisalId),
       });
-      // The record just changed — everything the appraisal detail screens read
-      // (property detail, property groups) must be refetched, not just this feature's
-      // own cache. These key roots mirror the ones invalidated by the create/update
-      // hooks in appraisal/api/property.ts and propertyGroup.ts.
+      // The record just changed — everything the appraisal screens read must be refetched,
+      // not just this feature's own cache: the property detail this editor is seeded from,
+      // the property groups, and the property pages' own per-type queries.
       queryClient.invalidateQueries({
-        queryKey: ['appraisal', variables.appraisalId, 'property', variables.propertyId, 'detail'],
+        queryKey: propertyGroupKeys.propertyDetail(variables.appraisalId, variables.propertyId),
       });
+      queryClient.invalidateQueries({ queryKey: propertyGroupKeys.all(variables.appraisalId) });
       queryClient.invalidateQueries({
-        queryKey: ['appraisal', variables.appraisalId, 'property-groups'],
+        queryKey: appraisalDataCorrectionKeys.propertyPages(variables.appraisalId),
       });
       queryClient.invalidateQueries({
         queryKey: appraisalDataCorrectionKeys.properties(variables.appraisalId),
       });
     },
+  });
+}
+
+// ── Valuation documents + summary regeneration ───────────────
+
+/** add only = attach, removeId only = delete, both = replace. */
+export interface CorrectAppraisalDocumentsRequest {
+  reason: string;
+  removeId?: string | null;
+  /** Name, mime and size are read server-side from the stored upload. */
+  add?: {
+    documentTypeCode: string;
+    /** From the `POST /documents` upload that precedes this call. */
+    documentId: string;
+  } | null;
+}
+
+// Both actions write a history row and change what the documents list shows.
+const invalidateDocumentCorrectionQueries = (queryClient: QueryClient, appraisalId: string) => {
+  queryClient.invalidateQueries({ queryKey: appraisalDataCorrectionKeys.historyAll(appraisalId) });
+  queryClient.invalidateQueries({ queryKey: appraisalDocumentKeys.list(appraisalId) });
+};
+
+export function useCorrectAppraisalDocuments() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      data: CorrectAppraisalDocumentsRequest;
+    }): Promise<{ addedId: string | null }> => {
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/document-corrections`,
+        params.data,
+      );
+      return data;
+    },
+    onSuccess: (_, variables) =>
+      invalidateDocumentCorrectionQueries(queryClient, variables.appraisalId),
+  });
+}
+
+/** Resolves on 202: the job is only enqueued, the new file arrives later. */
+export function useRegenerateAppraisalSummary() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      reason: string;
+      /** false = attach the summary but do not tell the source system to collect again. */
+      notifyExternal: boolean;
+    }): Promise<{ jobId: string }> => {
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/documents/regenerate-summary`,
+        { reason: params.reason, notifyExternal: params.notifyExternal },
+      );
+      return data;
+    },
+    onSuccess: (_, variables) =>
+      invalidateDocumentCorrectionQueries(queryClient, variables.appraisalId),
+  });
+}
+
+// ── Source system (the external system that raised the request) ──
+
+/** Non-null only when the appraisal came from an external system that can be notified. */
+export function useGetCorrectionContext(appraisalId: string | undefined) {
+  return useQuery({
+    queryKey: appraisalDataCorrectionKeys.correctionContext(appraisalId ?? ''),
+    enabled: !!appraisalId,
+    // One small call for what GetAppraisalById does not carry: the source system (null when nobody
+    // would be notified) and the committee approval time.
+    queryFn: async (): Promise<{ externalSystem: string | null; completedAt: string | null }> => {
+      const { data } = await axios.get(`/appraisals/${appraisalId}/correction-context`);
+      return data;
+    },
+  });
+}
+
+/** Tells the source system to collect the current documents again; writes one history row. */
+export function useNotifyExternalSystem() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: {
+      appraisalId: string;
+      reason: string;
+    }): Promise<{ externalSystem: string }> => {
+      const { data } = await axios.post(
+        `/appraisals/${params.appraisalId}/documents/notify-external`,
+        { reason: params.reason },
+      );
+      return data;
+    },
+    onSuccess: (_, variables) =>
+      queryClient.invalidateQueries({
+        queryKey: appraisalDataCorrectionKeys.historyAll(variables.appraisalId),
+      }),
   });
 }
 

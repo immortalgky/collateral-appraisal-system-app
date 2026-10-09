@@ -14,7 +14,7 @@ const ActivityTrackingSlideOver = ({ appraisalId, onClose }: ActivityTrackingSli
       isOpen={appraisalId !== null}
       onClose={onClose}
       title={t('list.activityTracking')}
-      width="2xl"
+      width="full"
     >
       {appraisalId && <ActivityTrackingContent appraisalId={appraisalId} />}
     </SlideOverPanel>

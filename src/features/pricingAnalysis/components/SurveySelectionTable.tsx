@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/components';
 import type { FactorDataType, MarketComparableDetailType } from '../schemas';
 import { getFactorDesciption } from '../domain/getFactorDescription';
@@ -44,8 +45,11 @@ function RowPin({ color }: { color: string }) {
   );
 }
 
-const stickyGradient =
-  'after:absolute after:right-0 after:top-0 after:h-full after:w-3 after:bg-gradient-to-r after:from-black/[0.04] after:to-transparent after:translate-x-full';
+// User asked to remove the right-edge shadow ("เอาเงาด้านขวาออกให้ด้วย"), page-by-page
+// parity — this survey picker is a modal the user opens, same rule applies. Left empty
+// (rather than deleting it from every clsx(...) call site below) so the horizontal
+// scrollbar is the only "more content" signal now.
+const stickyGradient = '';
 
 /** Opaque background for sticky body cells so scrolling content doesn't bleed through. */
 function stickyCellBg(isSelected: boolean, isOddRow: boolean) {
@@ -66,6 +70,7 @@ export function SurveySelectionTable({
   onRowHover,
   subjectRows = [],
 }: SurveySelectionTableProps) {
+  const { t } = useTranslation('pricingAnalysis');
   const allChecked = surveys.length > 0 && surveys.every(s => selectedIds.has(s.id ?? ''));
   const someChecked = surveys.some(s => selectedIds.has(s.id ?? '')) && !allChecked;
 
@@ -79,8 +84,8 @@ export function SurveySelectionTable({
   }
 
   return (
-    <ScrollableTableContainer className="flex-1 min-h-0">
-      <table className="table table-xs w-full">
+    <ScrollableTableContainer className="flex-1 min-h-0" edgeShadow>
+      <table className="table w-full text-[12px] tabular-nums">
         <thead className="sticky top-0 z-30">
           <tr className="border-b border-gray-200">
             {/* Checkbox header */}
@@ -96,17 +101,17 @@ export function SurveySelectionTable({
               />
             </th>
             {/* Comparable No header */}
-            <th className="bg-gray-50 sticky left-[50px] z-30 w-[150px] min-w-[150px] px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">
-              Comparable No.
+            <th className="bg-gray-50 sticky left-[50px] z-30 w-[150px] min-w-[150px] px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+              {t('comparativeAnalysis.comparableNoHeader')}
             </th>
             {/* Survey Name header */}
             <th
               className={clsx(
-                'bg-gray-50 sticky left-[200px] z-30 w-[180px] min-w-[180px] px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap relative',
+                'bg-gray-50 sticky left-[200px] z-30 w-[180px] min-w-[180px] px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap relative pa-sticky-edge',
                 stickyGradient,
               )}
             >
-              Survey Name
+              {t('comparativeAnalysis.surveyNameHeader')}
             </th>
             {/* Dynamic factor columns */}
             {factorColumns.map(col => {
@@ -115,7 +120,7 @@ export function SurveySelectionTable({
               return (
                 <th
                   key={col.factorCode}
-                  className="bg-gray-50 px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]"
+                  className="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]"
                   title={label}
                 >
                   <span className="truncate block max-w-[200px]">{label}</span>
@@ -150,7 +155,7 @@ export function SurveySelectionTable({
               </td>
               <td
                 className={clsx(
-                  'sticky left-[200px] z-20 px-3 py-2 border-b border-gray-100 bg-amber-50/60 text-sm text-gray-400 whitespace-nowrap relative',
+                  'sticky left-[200px] z-20 px-3 py-2 border-b border-gray-100 bg-amber-50/60 text-sm text-gray-400 whitespace-nowrap relative pa-sticky-edge',
                   stickyGradient,
                 )}
               >
@@ -229,7 +234,7 @@ export function SurveySelectionTable({
                 {/* Survey Name cell */}
                 <td
                   className={clsx(
-                    'sticky left-[200px] z-20 px-3 py-2 border-b border-gray-100 text-sm text-gray-700 whitespace-nowrap relative',
+                    'sticky left-[200px] z-20 px-3 py-2 border-b border-gray-100 text-sm text-gray-700 whitespace-nowrap relative pa-sticky-edge',
                     stickyCellBg(isSelected, rowIndex % 2 === 1),
                     stickyGradient,
                   )}

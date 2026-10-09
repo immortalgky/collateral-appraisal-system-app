@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import clsx from 'clsx';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Icon } from '@/shared/components';
+import { Button, Icon } from '@/shared/components';
 import { useTranslation } from 'react-i18next';
-import { MethodFooterActions } from '../../MethodFooterActions';
+import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
+import { MethodTopBarPortal } from '../../MethodTopBarPortal';
+import { MethodTabs } from '../../MethodTabs';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import { fmt } from '../../../domain/formatters';
 import {
   LandBuildingFormSchema,
   landBuildingFormDefaults,
@@ -17,7 +19,10 @@ import type {
 } from '../../../types/hypothesis';
 import { UnitDetailsTab } from './UnitDetailsTab';
 import { CostOfBuildingTab } from './CostOfBuildingTab';
-import { LandBuildingSummaryTab } from './LandBuildingSummaryTab';
+import { LandBuildingSummaryTab, useLbSections } from './LandBuildingSummaryTab';
+import { LedgerJumpBar } from '../_shared/summaryAtoms';
+import { KpiSummaryStrip, type KpiCard } from '../../KpiSummaryStrip';
+import { MethodToolbarToggle } from '../../MethodWorkArea';
 import type { UseMutationResult } from '@tanstack/react-query';
 import type {
   SaveHypothesisAnalysisRequest,
@@ -28,15 +33,6 @@ import type {
   CostItemDto,
 } from '../../../types/hypothesis';
 import toast from 'react-hot-toast';
-
-type LandBuildingTabId = 'unitDetails' | 'costOfBuilding' | 'summary';
-
-// Tab labels are translated inside the component — keep empty stubs here
-const TABS_CONFIG = [
-  { id: 'unitDetails' as const, labelKey: 'hypothesis.tabs.unitDetails', icon: 'table' },
-  { id: 'costOfBuilding' as const, labelKey: 'hypothesis.tabs.costOfBuilding', icon: 'building' },
-  { id: 'summary' as const, labelKey: 'hypothesis.tabs.summary', icon: 'chart-bar' },
-];
 
 /**
  * Compute basic per-model aggregates from saved data without calling the server.
@@ -82,22 +78,18 @@ function deriveModelsFromSavedData(
     agg.totalSellingPrice += row.sellingPrice ?? 0;
   }
 
-  // Aggregate cost-of-building items per model (B09/B10/B11 + per-unit C19/C21).
-  for (const ci of savedData.costItems ?? []) {
-    if (ci.category !== 'CostOfBuilding' || !ci.modelName) continue;
-    const agg = grouped.get(ci.modelName.toLowerCase());
+  // Construction cost: only the typed-over total is known without the server (the per-house
+  // building value is resolved by preview a moment later).
+  for (const m of savedData.modelBuildingMappings ?? []) {
+    const agg = grouped.get(m.modelName.trim().toLowerCase());
     if (!agg) continue;
-    agg.totalBuildingAreaSqM += ci.area ?? 0;
-    agg.totalPriceBeforeDepreciation += ci.priceBeforeDepreciation ?? 0;
-    const valueAfterDepre = ci.valueAfterDepreciation ?? ci.amount ?? 0;
-    agg.totalBuildingValueAfterDepreciation += valueAfterDepre;
+    agg.buildingPropertyId = m.appraisalPropertyId;
+    agg.totalCost = m.totalCost;
+    agg.totalValueAfterDepreciationAllUnits = m.totalCost ?? 0;
   }
 
   for (const agg of grouped.values()) {
     agg.avgLandAreaSqWa = agg.unitCount > 0 ? agg.totalLandAreaSqWa / agg.unitCount : 0;
-    agg.totalValueAfterDepreciation = agg.totalBuildingValueAfterDepreciation;
-    agg.totalValueAfterDepreciationAllUnits =
-      agg.totalBuildingValueAfterDepreciation * agg.unitCount;
   }
 
   // devCostRatioPercent: requires C38 (total project dev cost) — sourced from saved summary.
@@ -117,10 +109,13 @@ function deriveModelsFromSavedData(
 
 function mapSavedToFormValues(savedData: GetHypothesisAnalysisResult): LandBuildingFormValues {
   const s = savedData.landBuildingSummary;
-  const cobItems = savedData.costItems.filter(i => i.category === 'CostOfBuilding');
+  // CostOfBuilding rows are no longer edited or sent: the cost comes from the mapped building,
+  // and leaving them out of the payload lets the save drop them (see the one-time data script
+  // 20260921180000_DataFix_HypothesisCostOfBuildingToModelTotalCost.sql).
   const otherItems = savedData.costItems.filter(i => i.category !== 'CostOfBuilding');
 
   return {
+    indicatedValue: savedData.indicatedValue ?? null,
     summary: {
       totalArea: s?.totalArea ?? null,
       sellingAreaPercent: s?.sellingAreaPercent ?? null,
@@ -144,32 +139,10 @@ function mapSavedToFormValues(savedData: GetHypothesisAnalysisResult): LandBuild
       discountRate: s?.discountRate ?? null,
       remark: s?.remark ?? null,
     },
-    costOfBuildingItems: cobItems.map(i => ({
-      id: i.id,
-      category: i.category,
-      kind: i.kind,
-      description: i.description,
-      displaySequence: i.displaySequence,
-      amount: i.amount,
-      rateAmount: i.rateAmount,
-      quantity: i.quantity,
-      ratePercent: i.ratePercent,
-      modelName: i.modelName,
-      area: i.area ?? null,
-      pricePerSqM: i.pricePerSqM ?? null,
-      year: i.year ?? null,
-      annualDepreciationPercent: i.annualDepreciationPercent ?? null,
-      priceBeforeDepreciation: i.priceBeforeDepreciation ?? null,
-      totalDepreciationPercent: i.totalDepreciationPercent ?? null,
-      depreciationAmount: i.depreciationAmount ?? null,
-      valueAfterDepreciation: i.valueAfterDepreciation ?? null,
-      isBuilding: i.isBuilding ?? true,
-      depreciationMethod: i.depreciationMethod ?? 'Gross',
-      depreciationPeriods: (i.depreciationPeriods ?? []).map(p => ({
-        atYear: p.atYear,
-        toYear: p.toYear,
-        depreciationPerYear: p.depreciationPerYear,
-      })),
+    modelBuildingMappings: (savedData.modelBuildingMappings ?? []).map(m => ({
+      modelName: m.modelName,
+      appraisalPropertyId: m.appraisalPropertyId ?? null,
+      totalCost: m.totalCost ?? null,
     })),
     otherCostItems: otherItems.map(i => ({
       id: i.id,
@@ -209,6 +182,8 @@ interface LandBuildingTabsProps {
   onSaveSuccess: (appraisalValue: number) => void;
   onReset: () => void;
   onCancel: () => void;
+  /** The group's properties — source of the Cost of Building tab's building list. */
+  properties?: Record<string, unknown>[];
 }
 
 export function LandBuildingTabs({
@@ -221,10 +196,16 @@ export function LandBuildingTabs({
   onSaveSuccess,
   onReset,
   onCancel,
+  properties,
 }: LandBuildingTabsProps) {
   const { t } = useTranslation('pricingAnalysis');
-  const [activeTab, setActiveTab] = useState<LandBuildingTabId>('unitDetails');
+  const readOnly = usePageReadOnly();
+  // Stable id so the top-bar Save button (portaled outside this <form> via
+  // MethodTopBarPortal) still submits it natively — see LeaseholdPanel.tsx for why.
+  const formId = 'hypothesis-land-building-form';
   const [previewSummary, setPreviewSummary] = useState<LandBuildingSummaryDto | null>(null);
+  const [showChart, setShowChart] = useState(false);
+  const sections = useLbSections();
   const [previewModels, setPreviewModels] = useState<Record<
     string,
     LandBuildingModelAggregate
@@ -256,7 +237,12 @@ export function LandBuildingTabs({
 
   // ─── Debounced preview ────────────────────────────────────────────────────
 
-  const watchedFields = watch(['summary', 'costOfBuildingItems', 'otherCostItems']);
+  const watchedFields = watch([
+    'summary',
+    'modelBuildingMappings',
+    'otherCostItems',
+    'indicatedValue',
+  ]);
   const prevWatchKey = useRef<string | null>(null);
 
   // Stable refs so the debounce timer survives re-renders:
@@ -291,25 +277,6 @@ export function LandBuildingTabs({
         remark: values.summary.remark,
       },
       costItems: [
-        ...(values.costOfBuildingItems ?? []).map((i, idx) => ({
-          id: i.id,
-          category: i.category,
-          kind: i.kind,
-          description: i.description,
-          displaySequence: i.displaySequence ?? idx,
-          amount: i.amount ?? 0,
-          rateAmount: i.rateAmount,
-          quantity: i.quantity,
-          ratePercent: i.ratePercent,
-          modelName: i.modelName,
-          area: i.area,
-          pricePerSqM: i.pricePerSqM,
-          year: i.year,
-          annualDepreciationPercent: i.annualDepreciationPercent,
-          isBuilding: i.isBuilding ?? true,
-          depreciationMethod: i.depreciationMethod ?? 'Gross',
-          depreciationPeriods: i.depreciationPeriods ?? [],
-        })),
         ...(values.otherCostItems ?? []).map((i, idx) => ({
           id: i.id,
           category: i.category,
@@ -326,6 +293,9 @@ export function LandBuildingTabs({
           depreciationPeriods: [],
         })),
       ],
+      modelBuildingMappings: values.modelBuildingMappings,
+      // Only feeds the per-sq.wa figure (C82), which must describe the typed-over value.
+      indicatedValue: values.indicatedValue,
     };
 
     previewMutation.mutate(
@@ -433,25 +403,6 @@ export function LandBuildingTabs({
         remark: values.summary.remark,
       },
       costItems: [
-        ...(values.costOfBuildingItems ?? []).map((i, idx) => ({
-          id: i.id,
-          category: i.category,
-          kind: i.kind,
-          description: i.description,
-          displaySequence: i.displaySequence ?? idx,
-          amount: i.amount ?? 0,
-          rateAmount: i.rateAmount,
-          quantity: i.quantity,
-          ratePercent: i.ratePercent,
-          modelName: i.modelName,
-          area: i.area,
-          pricePerSqM: i.pricePerSqM,
-          year: i.year,
-          annualDepreciationPercent: i.annualDepreciationPercent,
-          isBuilding: i.isBuilding ?? true,
-          depreciationMethod: i.depreciationMethod ?? 'Gross',
-          depreciationPeriods: i.depreciationPeriods ?? [],
-        })),
         ...(values.otherCostItems ?? []).map((i, idx) => ({
           id: i.id,
           category: i.category,
@@ -469,11 +420,14 @@ export function LandBuildingTabs({
         })),
       ],
       remark: values.remark,
+      indicatedValue: values.indicatedValue,
+      modelBuildingMappings: values.modelBuildingMappings,
     };
 
     try {
       const result = await saveMutation.mutateAsync({ pricingAnalysisId, methodId, request });
-      const finalValue = result.landBuildingSummary?.totalAssetValueRounded ?? 0;
+      const finalValue =
+        values.indicatedValue ?? result.landBuildingSummary?.totalAssetValueRounded ?? 0;
       // Reset from the values just submitted — NOT from the `savedData` prop, which is
       // still the pre-save snapshot at this point (the parent's query hasn't refetched
       // yet). Resetting from stale `savedData` was wiping out Cost of Building rows the
@@ -495,73 +449,143 @@ export function LandBuildingTabs({
   const effectiveTotalLandAreaFromTitles =
     previewTotalLandAreaFromTitles ?? savedData.totalLandAreaFromTitles ?? null;
 
+  const indicatedValueWatched = watch('indicatedValue');
+
+  // mock v94 `kpis` — the units and cost tabs carry these in their toolbar.
+  const modelValues = effectiveModels ? Object.values(effectiveModels) : [];
+  const kpiStrip = modelValues.length ? (
+    <KpiSummaryStrip
+      variant="flat"
+      cards={
+        [
+          {
+            label: t('upload.aggTotalLandAreaFromTitle'),
+            value: effectiveTotalLandAreaFromTitles ?? effectiveSummary?.totalArea ?? null,
+            secondary: true,
+          },
+          {
+            label: t('upload.aggTotalSellingArea'),
+            value: modelValues.reduce((s, m) => s + (m.totalLandAreaSqWa ?? 0), 0),
+            secondary: true,
+          },
+          {
+            label: t('upload.aggTotalUnits'),
+            value: modelValues.reduce((s, m) => s + (m.unitCount ?? 0), 0),
+          },
+          {
+            label: t('upload.aggTotalRevenue'),
+            value: modelValues.reduce((s, m) => s + (m.totalSellingPrice ?? 0), 0),
+          },
+          {
+            label: t('hypothesis.ledger.lb.finalValue'),
+            value: effectiveSummary?.finalPropertyValue ?? null,
+            primary: true,
+          },
+        ] satisfies KpiCard[]
+      }
+    />
+  ) : undefined;
+
   return (
     <FormProvider methods={methods} schema={LandBuildingFormSchema}>
+      <MethodTopBarPortal>
+        <div className="flex flex-col items-end leading-tight shrink-0 px-1">
+          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
+          <span className="text-sm font-semibold text-primary tabular-nums">
+            {fmt(indicatedValueWatched ?? effectiveSummary?.totalAssetValueRounded ?? 0)}
+          </span>
+        </div>
+        {!readOnly && (
+          <>
+            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onCancel}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {t('footer.cancel')}
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={onReset}
+              disabled={saveMutation.isPending}
+              title={t('footer.reset')}
+              aria-label={t('footer.reset')}
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+            >
+              <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
+            </Button>
+            <Button
+              type="submit"
+              form={formId}
+              isLoading={saveMutation.isPending}
+              disabled={saveMutation.isPending}
+              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+            >
+              {!saveMutation.isPending && (
+                <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
+              )}
+              {t('footer.save')}
+            </Button>
+          </>
+        )}
+      </MethodTopBarPortal>
       <form
+        id={formId}
         onSubmit={e => {
           e.preventDefault();
           handleSubmit(handleOnSubmit)(e);
         }}
-        className="flex flex-col h-full gap-4"
+        className="flex flex-col h-full min-h-0 gap-4"
       >
-        {/* Tab bar */}
-        <nav className="shrink-0 flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100 self-start">
-          {TABS_CONFIG.map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={clsx(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
-                  isActive
-                    ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
-                )}
-              >
-                <Icon
-                  name={tab.icon}
-                  style="solid"
-                  className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
+        <MethodTabs
+          tabs={[
+            {
+              id: 'unitDetails',
+              label: t('hypothesis.tabs.unitDetails'),
+              tools: kpiStrip,
+              content: (
+                <UnitDetailsTab
+                  pricingAnalysisId={pricingAnalysisId}
+                  methodId={methodId}
+                  uploads={savedData.uploads}
+                  rows={savedData.landBuildingRows}
+                  models={effectiveModels}
                 />
-                {t(tab.labelKey as Parameters<typeof t>[0])}
-              </button>
-            );
-          })}
-        </nav>
-
-        {/* Scrollable content region — keeps the action bar pinned at form bottom */}
-        <div className="flex-1 min-h-0 overflow-auto">
-          {activeTab === 'unitDetails' && (
-            <UnitDetailsTab
-              pricingAnalysisId={pricingAnalysisId}
-              methodId={methodId}
-              uploads={savedData.uploads}
-              rows={savedData.landBuildingRows}
-              models={effectiveModels}
-              totalLandAreaFromTitles={effectiveTotalLandAreaFromTitles}
-            />
-          )}
-
-          {activeTab === 'costOfBuilding' && <CostOfBuildingTab models={effectiveModels} />}
-
-          {activeTab === 'summary' && (
-            <LandBuildingSummaryTab
-              previewSummary={effectiveSummary}
-              models={effectiveModels}
-              totalLandAreaFromTitles={effectiveTotalLandAreaFromTitles}
-              costItems={previewCostItems ?? savedData.costItems}
-              isCalculating={previewMutation.isPending}
-            />
-          )}
-        </div>
-
-        <MethodFooterActions
-          showReset
-          isSubmitting={saveMutation.isPending}
-          onReset={onReset}
-          onCancel={onCancel}
+              ),
+            },
+            {
+              id: 'costOfBuilding',
+              label: t('hypothesis.tabs.costOfBuilding'),
+              tools: kpiStrip,
+              content: <CostOfBuildingTab models={effectiveModels} properties={properties} />,
+            },
+            {
+              id: 'summary',
+              label: t('hypothesis.tabs.summary'),
+              tools: <LedgerJumpBar sections={sections} />,
+              toolsAfterNav: (
+                <MethodToolbarToggle
+                  label={t('hypothesis.ledger.chart')}
+                  pressed={showChart}
+                  onClick={() => setShowChart(v => !v)}
+                />
+              ),
+              content: (
+                <LandBuildingSummaryTab
+                  showChart={showChart}
+                  previewSummary={effectiveSummary}
+                  models={effectiveModels}
+                  totalLandAreaFromTitles={effectiveTotalLandAreaFromTitles}
+                  costItems={previewCostItems ?? savedData.costItems}
+                  isCalculating={previewMutation.isPending}
+                />
+              ),
+            },
+          ]}
         />
       </form>
     </FormProvider>

@@ -9,6 +9,8 @@ interface PropertyTypeChipProps {
   variant?: 'pill' | 'dot';
   /** Rendered before the label, e.g. the count in a group header. */
   prefix?: React.ReactNode;
+  /** Rendered after the label, e.g. " (PMA)". */
+  suffix?: React.ReactNode;
   className?: string;
 }
 
@@ -27,6 +29,7 @@ export const PropertyTypeChip = ({
   code,
   variant = 'pill',
   prefix,
+  suffix,
   className,
 }: PropertyTypeChipProps) => {
   const tone = getTypeDotColor(code).replace('bg-', 'text-');
@@ -62,6 +65,7 @@ export const PropertyTypeChip = ({
     >
       {prefix}
       <ParameterDisplay group="PropertyType" code={code} fallback={code} />
+      {suffix && <span className="ml-1">{suffix}</span>}
     </span>
   );
 };
