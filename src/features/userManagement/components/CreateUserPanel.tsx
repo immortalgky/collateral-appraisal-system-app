@@ -42,6 +42,8 @@ interface FormState {
   groups: string[];
   teams: string[];
   authSource: AuthSource;
+  /** Ad-hoc account: no password, starts closed, gets one per admin-opened access window. */
+  isTemporaryAccess: boolean;
 }
 
 const EMPTY_FORM: FormState = {
@@ -61,6 +63,7 @@ const EMPTY_FORM: FormState = {
   groups: [],
   teams: [],
   authSource: 'Local',
+  isTemporaryAccess: false,
 };
 
 const ICON_COLORS = {
@@ -143,6 +146,17 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
       confirmPassword: src === 'LDAP' ? '' : prev.confirmPassword,
     }));
 
+  // A temporary-access account gets no password at all (one is issued per access window) and
+  // must authenticate locally — LDAP has no concept of an admin-opened window.
+  const setTemporaryAccess = (value: boolean) =>
+    setForm(prev => ({
+      ...prev,
+      isTemporaryAccess: value,
+      authSource: value ? 'Local' : prev.authSource,
+      password: value ? '' : prev.password,
+      confirmPassword: value ? '' : prev.confirmPassword,
+    }));
+
   const handleLdapLookup = () => {
     if (!form.username.trim()) {
       toast.error(t('validation.usernameRequired'));
@@ -177,8 +191,9 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
     if (!form.username.trim()) return t('validation.usernameRequired');
     if (!form.email.trim()) return t('validation.emailRequired');
     if (!/^\S+@\S+\.\S+$/.test(form.email)) return t('validation.emailInvalid');
-    // LDAP users have no local password — it's validated against AD at login.
-    if (!isLdap) {
+    // LDAP users authenticate against AD, and temporary-access accounts get no password at
+    // all (one is issued per access window) — neither carries a local password here.
+    if (!isLdap && !form.isTemporaryAccess) {
       if (!form.password) return t('validation.passwordRequired');
       // Complexity is driven by the DB-maintained policy (see the checklist below the field).
       if (!passwordPolicyMet) return t('validation.passwordPolicyNotMet');
@@ -202,7 +217,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
     createUser.mutate(
       {
         username: form.username.trim(),
-        password: isLdap ? '' : form.password,
+        password: isLdap || form.isTemporaryAccess ? '' : form.password,
         email: form.email.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
@@ -215,6 +230,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
         groupIds: form.groups,
         teamIds: form.teams,
         authSource: form.authSource,
+        isTemporaryAccess: form.isTemporaryAccess,
       },
       {
         onSuccess: data => {
@@ -290,12 +306,14 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
               <button
                 key={src}
                 type="button"
+                disabled={src === 'LDAP' && form.isTemporaryAccess}
                 onClick={() => setAuthSource(src)}
                 className={clsx(
                   'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
                   form.authSource === src
                     ? 'bg-primary text-white'
                     : 'text-gray-500 hover:text-gray-700',
+                  src === 'LDAP' && form.isTemporaryAccess && 'opacity-40 cursor-not-allowed',
                 )}
               >
                 {label}
@@ -309,6 +327,20 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
           <SectionLabel icon="circle-user" color="cyan">
             {t('sections.account', 'Account')}
           </SectionLabel>
+          <label className="mb-4 flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.isTemporaryAccess}
+              onChange={e => setTemporaryAccess(e.target.checked)}
+              className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary/30"
+            />
+            {t('fields.isTemporaryAccess')}
+          </label>
+          {form.isTemporaryAccess && (
+            <div className="mb-4 flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
+              <p className="text-xs text-gray-500">{t('hints.temporaryAccessCreate')}</p>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <TextInput
@@ -347,7 +379,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   )}
                 </p>
               </div>
-            ) : (
+            ) : form.isTemporaryAccess ? null : (
               <>
                 <TextInput
                   label={t('fields.password')}

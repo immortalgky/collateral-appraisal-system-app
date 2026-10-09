@@ -14,12 +14,14 @@ const NumberField = ({
   hint,
   value,
   min,
+  max,
   onChange,
 }: {
   label: string;
   hint?: string;
   value: number;
   min: number;
+  max?: number;
   onChange: (v: number) => void;
 }) => (
   <div>
@@ -27,6 +29,7 @@ const NumberField = ({
     <input
       type="number"
       min={min}
+      max={max}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
       className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
@@ -96,9 +99,7 @@ function PasswordPolicyConfigPage() {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">
-          {t('passwordPolicyConfig.title')}
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-900">{t('passwordPolicyConfig.title')}</h3>
         <p className="text-xs text-gray-500 mt-0.5">{t('passwordPolicyConfig.subtitle')}</p>
         <p className="text-xs text-gray-400 mt-1">{t('passwordPolicyConfig.propagationNote')}</p>
       </div>
@@ -193,6 +194,18 @@ function PasswordPolicyConfigPage() {
         </div>
       </Section>
 
+      {/* Temporary Access */}
+      <Section title={t('passwordPolicyConfig.temporaryAccessSection')}>
+        <NumberField
+          label={t('passwordPolicyConfig.maxAccessWindowHours')}
+          hint={t('passwordPolicyConfig.maxAccessWindowHoursHint')}
+          value={draft.maxAccessWindowHours}
+          min={1}
+          max={720}
+          onChange={v => set('maxAccessWindowHours', v)}
+        />
+      </Section>
+
       {/* Blocklist */}
       <Section title={t('passwordPolicyConfig.blocklist')}>
         <label className="block text-xs font-medium text-gray-700 mb-1">
@@ -208,12 +221,7 @@ function PasswordPolicyConfigPage() {
       </Section>
 
       <div className="flex justify-end">
-        <Button
-          variant="primary"
-          size="sm"
-          isLoading={updatePolicy.isPending}
-          onClick={handleSave}
-        >
+        <Button variant="primary" size="sm" isLoading={updatePolicy.isPending} onClick={handleSave}>
           {t('passwordPolicyConfig.save')}
         </Button>
       </div>

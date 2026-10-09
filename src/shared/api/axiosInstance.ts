@@ -155,24 +155,42 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+/** Decode a JWT's payload, or null when it is missing or unparsable. */
+function decodeTokenPayload(token: string): Record<string, unknown> | null {
+  try {
+    const segment = token.split('.')[1];
+    if (!segment) return null;
+    // base64url → base64, restoring '=' padding to a multiple of 4.
+    const b64 = segment.replace(/-/g, '+').replace(/_/g, '/');
+    const padded = b64 + '==='.slice((b64.length + 3) % 4);
+    return JSON.parse(atob(padded)) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Decode a JWT's `exp` (seconds since epoch) and report whether it is expired
  * (or expires within `skewSeconds`). Returns true on any decode failure so a
  * malformed/unparsable token is treated as needing a refresh. */
 function isTokenExpired(token: string, skewSeconds = 30): boolean {
-  try {
-    const segment = token.split('.')[1];
-    if (!segment) return true;
-    // base64url → base64, restoring '=' padding to a multiple of 4.
-    const b64 = segment.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = b64 + '==='.slice((b64.length + 3) % 4);
-    const json = atob(padded);
-    const exp = JSON.parse(json).exp as number | undefined;
-    if (typeof exp !== 'number') return true;
-    return Date.now() >= (exp - skewSeconds) * 1000;
-  } catch {
-    return true;
-  }
+  const exp = decodeTokenPayload(token)?.exp;
+  if (typeof exp !== 'number') return true;
+  return Date.now() >= (exp - skewSeconds) * 1000;
+}
+
+/**
+ * End of the signed-in account's access window, from the `access_expires_at` claim — null for every
+ * ordinary account, which is almost everyone. Only temporary-access accounts carry it, and the
+ * backend already refuses them once it passes; this is what lets the UI say so before that happens.
+ * The claim is written in the server's local time, which is the clock the whole system runs on.
+ */
+export function getAccessWindowEnd(): Date | null {
+  if (!accessToken) return null;
+  const raw = decodeTokenPayload(accessToken)?.access_expires_at;
+  if (typeof raw !== 'string') return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 /**

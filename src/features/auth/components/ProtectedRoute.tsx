@@ -6,6 +6,7 @@ import { getAccessToken } from '@shared/api/axiosInstance';
 import { useNotificationHub } from '@features/notification/hooks/useNotificationHub';
 import { useReportJobReconciler } from '@features/reportGeneration/hooks/useReportJobReconciler';
 import ForcedPasswordChange from './ForcedPasswordChange';
+import { AccessWindowNotice } from './AccessWindowNotice';
 import type { JSX } from 'react';
 
 export function ProtectedRoute({ component }: { component: JSX.Element }) {
@@ -47,5 +48,12 @@ export function ProtectedRoute({ component }: { component: JSX.Element }) {
     return <ForcedPasswordChange />;
   }
 
-  return component;
+  // The notice sits above every layout for the same reason the hubs do: a temporary account's
+  // window can close on any screen, and the countdown must not restart on navigation.
+  return (
+    <>
+      <AccessWindowNotice />
+      {component}
+    </>
+  );
 }
