@@ -98,7 +98,9 @@ const AccessWindowModal = ({
           handleClose();
         },
         onError: (err: any) =>
-          toast.error(err?.apiError?.detail || err?.apiError?.title || t('toasts.accessWindowFailed')),
+          toast.error(
+            err?.apiError?.detail || err?.apiError?.title || t('toasts.accessWindowFailed'),
+          ),
       },
     );
   };

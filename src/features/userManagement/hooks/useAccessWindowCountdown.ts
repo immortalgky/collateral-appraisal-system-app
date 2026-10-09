@@ -33,7 +33,9 @@ export function useAccessWindowCountdown(expiresAt: string | null): AccessWindow
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
   const label =
-    hours >= 1 ? `${hours}:${String(minutes).padStart(2, '0')}` : `${minutes}:${String(seconds).padStart(2, '0')}`;
+    hours >= 1
+      ? `${hours}:${String(minutes).padStart(2, '0')}`
+      : `${minutes}:${String(seconds).padStart(2, '0')}`;
 
   return {
     label,

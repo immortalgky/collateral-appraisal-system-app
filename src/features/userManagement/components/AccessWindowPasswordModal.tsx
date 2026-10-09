@@ -17,7 +17,11 @@ interface AccessWindowPasswordModalProps {
  * only way out is the confirm checkbox — closing via the X, backdrop, or Esc is blocked until the
  * admin has ticked "I copied this password", since it can never be retrieved again afterwards.
  */
-const AccessWindowPasswordModal = ({ isOpen, onClose, password }: AccessWindowPasswordModalProps) => {
+const AccessWindowPasswordModal = ({
+  isOpen,
+  onClose,
+  password,
+}: AccessWindowPasswordModalProps) => {
   const { t } = useTranslation(['userManagement']);
   const [visible, setVisible] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -47,7 +51,11 @@ const AccessWindowPasswordModal = ({ isOpen, onClose, password }: AccessWindowPa
     >
       <div className="px-6 py-5 space-y-4">
         <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
-          <Icon name="triangle-exclamation" style="solid" className="size-5 text-amber-500 mt-0.5" />
+          <Icon
+            name="triangle-exclamation"
+            style="solid"
+            className="size-5 text-amber-500 mt-0.5"
+          />
           <p className="text-sm text-amber-800">{t('accessWindow.passwordModal.warning')}</p>
         </div>
 
@@ -73,7 +81,9 @@ const AccessWindowPasswordModal = ({ isOpen, onClose, password }: AccessWindowPa
               className="shrink-0 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
             >
               <Icon name={copied ? 'check' : 'copy'} style="regular" className="size-4 mr-1" />
-              {copied ? t('accessWindow.passwordModal.copied') : t('accessWindow.passwordModal.copy')}
+              {copied
+                ? t('accessWindow.passwordModal.copied')
+                : t('accessWindow.passwordModal.copy')}
             </button>
           </div>
         </div>

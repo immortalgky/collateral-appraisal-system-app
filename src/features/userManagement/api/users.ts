@@ -243,7 +243,7 @@ export const useSetAccessWindow = () => {
     }: SetAccessWindowRequest & { id: string }): Promise<SetAccessWindowResponse> => {
       const { data } = await axios.put<SetAccessWindowResponse>(
         `/auth/users/${id}/access-window`,
-        body
+        body,
       );
       return data;
     },

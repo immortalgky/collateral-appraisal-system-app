@@ -336,9 +336,12 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   // Temporary access window
   const setAccessWindow = useSetAccessWindow();
   const { data: passwordPolicyConfig } = useGetPasswordPolicyConfig();
-  const accessWindowOpen = !!user?.accessExpiresAt && new Date(user.accessExpiresAt).getTime() > Date.now();
+  const accessWindowOpen =
+    !!user?.accessExpiresAt && new Date(user.accessExpiresAt).getTime() > Date.now();
   // Ticks every second while a window is open so the countdown label stays live.
-  const countdown = useAccessWindowCountdown(accessWindowOpen ? (user?.accessExpiresAt ?? null) : null);
+  const countdown = useAccessWindowCountdown(
+    accessWindowOpen ? (user?.accessExpiresAt ?? null) : null,
+  );
   const [showAccessWindowModal, setShowAccessWindowModal] = useState(false);
   const [issuedPassword, setIssuedPassword] = useState<string | null>(null);
   const [showCloseWindowConfirm, setShowCloseWindowConfirm] = useState(false);
@@ -366,7 +369,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           setCloseReason('');
         },
         onError: (err: any) =>
-          toast.error(err?.apiError?.detail || err?.apiError?.title || t('toasts.accessWindowFailed')),
+          toast.error(
+            err?.apiError?.detail || err?.apiError?.title || t('toasts.accessWindowFailed'),
+          ),
       },
     );
   };
@@ -670,14 +675,18 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         <section
           className={clsx(
             'bg-white rounded-xl border shadow-sm overflow-hidden',
-            accessWindowOpen && countdown.isUnderWarningThreshold ? 'border-amber-300' : 'border-gray-200',
+            accessWindowOpen && countdown.isUnderWarningThreshold
+              ? 'border-amber-300'
+              : 'border-gray-200',
           )}
         >
           <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
             <span
               className={clsx(
                 'flex size-6 items-center justify-center rounded-md',
-                accessWindowOpen && countdown.isUnderWarningThreshold ? 'bg-amber-50' : 'bg-cyan-50',
+                accessWindowOpen && countdown.isUnderWarningThreshold
+                  ? 'bg-amber-50'
+                  : 'bg-cyan-50',
               )}
             >
               <Icon
@@ -685,11 +694,15 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 style="solid"
                 className={clsx(
                   'size-3',
-                  accessWindowOpen && countdown.isUnderWarningThreshold ? 'text-amber-500' : 'text-cyan-500',
+                  accessWindowOpen && countdown.isUnderWarningThreshold
+                    ? 'text-amber-500'
+                    : 'text-cyan-500',
                 )}
               />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.temporaryAccess')}</span>
+            <span className="text-sm font-semibold text-gray-800">
+              {t('sections.temporaryAccess')}
+            </span>
           </div>
           <div className="px-4 py-4">
             {accessWindowOpen ? (
@@ -711,11 +724,19 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                   })}
                 </p>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setShowAccessWindowModal(true)}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAccessWindowModal(true)}
+                  >
                     <Icon name="clock-rotate-left" style="solid" className="size-3.5 mr-1.5" />
                     {t('accessWindow.extendButton')}
                   </Button>
-                  <Button variant="danger" size="sm" onClick={() => setShowCloseWindowConfirm(true)}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => setShowCloseWindowConfirm(true)}
+                  >
                     <Icon name="lock" style="solid" className="size-3.5 mr-1.5" />
                     {t('accessWindow.closeButton')}
                   </Button>
@@ -725,7 +746,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               <div className="flex flex-col gap-3">
                 <p className="text-sm text-gray-500">{t('accessWindow.closedMessage')}</p>
                 <p className="text-xs text-gray-400">
-                  {t('accessWindow.capHint', { hours: passwordPolicyConfig?.maxAccessWindowHours ?? 8 })}
+                  {t('accessWindow.capHint', {
+                    hours: passwordPolicyConfig?.maxAccessWindowHours ?? 8,
+                  })}
                 </p>
                 <Button
                   variant="primary"
