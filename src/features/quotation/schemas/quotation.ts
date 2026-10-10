@@ -126,8 +126,11 @@ export const AppraisalSummarySchema = z.object({
   appraisalNumber: z.string().nullable().optional(),
   propertyType: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
+  /** Legacy alias of bankingSegment. */
   loanType: z.string().nullable().optional(),
   channel: z.string().nullable().optional(),
+  /** The appraisal's own Banking Segment. */
+  bankingSegment: z.string().nullable().optional(),
   addedAt: z.string().datetime({ offset: true }).optional(),
   addedBy: z.string().nullable().optional(),
   /** v7: requestId from which documents are fetched for the share-docs picker. */
@@ -150,6 +153,10 @@ export const InvitedCompanySchema = z.object({
   companyName: z.string(),
   companyNameLocal: z.string().nullish(),
   email: z.string().nullable().optional(),
+  /** Banking Segments the company can appraise (Company.LoanTypes). */
+  loanTypes: z.array(z.string()).optional().default([]),
+  /** Segment Set entries the company cannot appraise — empty means it covers the quotation. */
+  missingSegments: z.array(z.string()).optional().default([]),
 });
 
 export type InvitedCompanyDto = z.infer<typeof InvitedCompanySchema>;
@@ -161,7 +168,8 @@ export const QuotationDraftSummarySchema = z.object({
   quotationNumber: z.string(),
   requestDate: z.string(),
   cutOffTime: z.string().nullable().optional(),
-  bankingSegment: z.string().nullable().optional(),
+  /** Distinct Banking Segments of the draft's current appraisals (kept in sync server-side on every add/remove). */
+  bankingSegment: z.array(z.string()).optional().default([]),
   totalAppraisals: z.number().int(),
   appraisalNumberPreview: z.array(z.string()).default([]),
   totalCompaniesInvited: z.number().int(),
@@ -224,7 +232,8 @@ export const QuotationRequestDetailSchema = z.object({
   requestId: z.string().uuid().nullable().optional(),
   workflowInstanceId: z.string().uuid().nullable().optional(),
   taskExecutionId: z.string().uuid().nullable().optional(),
-  bankingSegment: z.string().nullable().optional(),
+  /** Distinct Banking Segments of the quotation's current appraisals (kept in sync server-side on every add/remove). */
+  bankingSegment: z.array(z.string()).optional().default([]),
   rmUserId: z.string().uuid().nullable().optional(),
   rmUserName: z.string().nullable().optional(),
   rmUserFullName: z.string().nullable().optional(),

@@ -206,6 +206,7 @@ export const useGetEligibleCompanies = (
           email?: string;
           averageRating?: number;
           activeAssignments?: number;
+          loanTypes?: string[];
           isAssignable?: boolean;
         }) => ({
           id: c.id,
@@ -217,6 +218,7 @@ export const useGetEligibleCompanies = (
           contactEmail: c.email ?? '',
           rating: c.averageRating ?? 0,
           activeAssignments: c.activeAssignments ?? 0,
+          loanTypes: c.loanTypes ?? [],
           isAssignable: c.isAssignable ?? true,
         }),
       );
