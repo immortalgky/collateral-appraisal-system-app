@@ -211,6 +211,7 @@ function ServiceQualityEvaluationListPage() {
                   { key: 'AppraisalNumber', label: t('list.columns.appraisalNumber'), align: 'left' as const, nowrap: true },
                   { key: 'AppraiserCompanyName', label: t('list.columns.appraiser'), align: 'left' as const, nowrap: false },
                   { key: 'CustomerName', label: t('list.columns.customerName'), align: 'left' as const, nowrap: false },
+                  { key: 'InternalFollowupStaffName', label: t('list.columns.internalFollowupStaffName'), align: 'left' as const, nowrap: false },
                   { key: 'ReportReceivedDate', label: t('list.columns.reportReceivedDate'), align: 'left' as const, nowrap: true },
                   { key: 'AppraisalStatus', label: t('list.columns.status'), align: 'left' as const, nowrap: false },
                   { key: 'EvaluationStatus', label: t('list.columns.evaluationStatus'), align: 'left' as const, nowrap: true },
@@ -245,16 +246,18 @@ function ServiceQualityEvaluationListPage() {
                     { width: 'w-28' },
                     { width: 'w-32' },
                     { width: 'w-32' },
+                    { width: 'w-32' },
                     { width: 'w-24' },
                     { width: 'w-20' },
                     { width: 'w-24' },
                     { width: 'w-20' },
+                    { width: 'w-24' },
                   ]}
                   rows={5}
                 />
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16">
+                  <td colSpan={9} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-gray-500 font-medium">{t('list.empty.title')}</p>
@@ -284,6 +287,7 @@ function ServiceQualityEvaluationListPage() {
                         : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-gray-700">{item.customerName || '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{item.internalFollowupStaffName || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                       {formatLocaleDate(item.reportReceivedDate, i18n.language)}
                     </td>

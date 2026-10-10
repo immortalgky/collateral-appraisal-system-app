@@ -2,6 +2,7 @@ export interface AppraisalEvaluationListItem {
   appraisalId: string;
   appraisalNumber: string;
   customerName: string;
+  internalFollowupStaffName: string;
   reportReceivedDate: string | null;
   appraisalStatus: string;
   externalAppraiserName: string;
