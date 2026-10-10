@@ -793,6 +793,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
   // ─── Derived flags ────────────────────────────────────────────────────────
   const isDeclined = mySubmission?.status === 'Declined';
+  const isExpired = mySubmission?.status === 'Expired';
   const isSubmitted = mySubmission?.status === 'Submitted';
   const isPastDue = quotation ? new Date(quotation.cutOffTime) < new Date() : false;
 
@@ -988,6 +989,21 @@ const ExtCompanySubmitQuotationPage = () => {
             </div>
             <div className="px-4 py-3 text-sm text-gray-500">
               {t('shared.invitationDeclinedBody')}
+            </div>
+          </div>
+        )}
+
+        {/* ── Expired banner — deadline passed with no response, never phrased as a decline ──── */}
+        {isExpired && (
+          <div className="rounded-xl border border-gray-200 overflow-hidden mb-5">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <Icon name="clock" style="solid" className="size-5 text-gray-400" />
+              <span className="text-sm font-semibold text-gray-900">
+                {t('shared.invitationExpired')}
+              </span>
+            </div>
+            <div className="px-4 py-3 text-sm text-gray-500">
+              {t('shared.invitationExpiredBody')}
             </div>
           </div>
         )}
