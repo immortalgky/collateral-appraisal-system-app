@@ -7,6 +7,7 @@ import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
+import { DateInput } from '@/shared/components';
 
 import {
   useEligibleAppraisalsForQuotation,
@@ -16,6 +17,13 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+
+/**
+ * DateInput emits a full ISO timestamp with a timezone offset (e.g.
+ * "2020-04-03T00:00:00+07:00"). Keep only the calendar date (yyyy-MM-dd) so the backend's
+ * date comparison can't shift by a day across timezones.
+ */
+const toDateOnly = (v: string | null): string => (v ? v.slice(0, 10) : '');
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,38 +66,6 @@ const EMPTY_FILTERS: AppraisalFilters = {
   district: '',
   province: '',
 };
-
-const STORAGE_KEY = 'quotation-picker-filters-v1';
-
-interface StoredFilterState {
-  filters: Partial<AppraisalFilters>;
-  moreOpen: boolean;
-}
-
-function readStoredFilters(): StoredFilterState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as StoredFilterState;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredFilters(state: StoredFilterState): void {
-  try {
-    // Strip empty strings before persisting
-    const stripped = Object.fromEntries(
-      Object.entries(state.filters).filter(([, v]) => v !== ''),
-    ) as Partial<AppraisalFilters>;
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ filters: stripped, moreOpen: state.moreOpen }),
-    );
-  } catch {
-    // ignore — private mode / storage full
-  }
-}
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -472,25 +448,9 @@ export function AppraisalPicker({
     });
   };
 
-  // ── Filter state + localStorage hydration ──
-  const stored = useMemo(() => readStoredFilters(), []);
-  const [filters, setFilters] = useState<AppraisalFilters>({
-    ...EMPTY_FILTERS,
-    ...(stored?.filters ?? {}),
-  });
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState<boolean>(stored?.moreOpen ?? false);
-
-  // Debounced write-back on filter/toggle changes
-  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    writeTimerRef.current = setTimeout(() => {
-      writeStoredFilters({ filters, moreOpen: moreFiltersOpen });
-    }, 500);
-    return () => {
-      if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    };
-  }, [filters, moreFiltersOpen]);
+  // ── Filter state — always starts blank; not persisted across opens ──
+  const [filters, setFilters] = useState<AppraisalFilters>(EMPTY_FILTERS);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
 
   const [pageNumber, setPageNumber] = useState(0);
   const PAGE_SIZE = 10;
@@ -534,6 +494,10 @@ export function AppraisalPicker({
   const channelOptions = useParameterOptions('Channel');
   const bankingSegmentOptions = useParameterOptions('BankingSegment');
 
+  const purposeLabels = useMemo(
+    () => new Map(purposeOptions.map(o => [o.value ?? '', o.label])),
+    [purposeOptions],
+  );
   const channelLabels = useMemo(
     () => new Map(channelOptions.map(o => [o.value ?? '', o.label])),
     [channelOptions],
@@ -747,11 +711,9 @@ export function AppraisalPicker({
                 <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                   {t('picker.requestDate')}
                 </label>
-                <input
-                  type="date"
+                <DateInput
                   value={filters.requestedAt}
-                  onChange={e => handleFilterChange('requestedAt', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  onChange={v => handleFilterChange('requestedAt', toDateOnly(v))}
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -898,13 +860,16 @@ export function AppraisalPicker({
                 <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   {t('picker.requestedAt')}
                 </th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                  {t('picker.previouslyQuoted')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {/* Enhancement #6 — Select-all hint */}
               {allPageSelected && totalCount > PAGE_SIZE && (
                 <tr>
-                  <td colSpan={9} className="px-3 py-1.5 bg-gray-50">
+                  <td colSpan={10} className="px-3 py-1.5 bg-gray-50">
                     <p className="text-xs text-gray-500">
                       {t('picker.selectAllHint', { page: PAGE_SIZE, total: totalCount })}
                     </p>
@@ -913,7 +878,7 @@ export function AppraisalPicker({
               )}
               {isFetching && items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
+                  <td colSpan={10} className="px-3 py-8 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
                       <Icon name="spinner" style="solid" className="size-4 animate-spin" />
                       <span className="text-xs">{t('common:status.loading')}</span>
@@ -922,13 +887,13 @@ export function AppraisalPicker({
                 </tr>
               ) : appraisalsError ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <DataErrorState variant="inline" onRetry={() => refetchAppraisals()} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
+                  <td colSpan={10} className="px-3 py-8 text-center">
                     <p className="text-xs text-gray-400 italic">
                       {t('empty.noEligibleAppraisals')}
                     </p>
@@ -960,7 +925,7 @@ export function AppraisalPicker({
                         {r.customerName ?? '—'}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.purpose ?? '—'}
+                        {r.purpose ? (purposeLabels.get(r.purpose) ?? r.purpose) : '—'}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         {r.status ? (
@@ -988,6 +953,9 @@ export function AppraisalPicker({
                               year: 'numeric',
                             })
                           : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                        {r.previouslyQuotedNumber ?? '—'}
                       </td>
                     </tr>
                   );
