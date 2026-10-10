@@ -255,10 +255,19 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
       return;
     }
 
-    // Step 1 — DELETE removals
-    for (const id of markedForRemovalIds) {
+    // Step 1 — POST additions FIRST. The API cancels the quotation when a removal leaves it
+    // with zero appraisals, so replacing the only appraisal must add the new ones before
+    // removing the old one. Do not reorder.
+    // Each id is dropped from its set as soon as its call succeeds, so retrying Save after a
+    // partial failure doesn't replay calls that already went through.
+    for (const id of addedAppraisalIds) {
       try {
-        await removeAppraisalAsync(id);
+        await addAppraisalAsync(id);
+        setAddedAppraisalIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       } catch (err: unknown) {
         const apiErr = err as { apiError?: { detail?: string } };
         toast.error(apiErr?.apiError?.detail ?? t('toasts.appraisalRemoveFailed'));
@@ -266,10 +275,15 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
       }
     }
 
-    // Step 2 — POST additions
-    for (const id of addedAppraisalIds) {
+    // Step 2 — DELETE removals (after additions; see Step 1)
+    for (const id of markedForRemovalIds) {
       try {
-        await addAppraisalAsync(id);
+        await removeAppraisalAsync(id);
+        setMarkedForRemovalIds(prev => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
       } catch (err: unknown) {
         const apiErr = err as { apiError?: { detail?: string } };
         toast.error(apiErr?.apiError?.detail ?? t('toasts.appraisalRemoveFailed'));
