@@ -516,7 +516,7 @@ export const AdjustFinalValueSection = ({
           scoring *tables*, not these summary cards — the user has now asked for
           radius here specifically. */}
       <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-        <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+        <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
           {t('wqs.summary.adjustFinalValueTitle')}
         </h4>
         {/* No horizontal padding here any more — each `.kv` row (kvRow below) brings

@@ -285,9 +285,9 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
                   >
                     <table
                       ref={tableRef}
-                      className="w-full min-w-[720px] border-separate border-spacing-0 text-[0.875rem] leading-tight tabular-nums"
+                      className="w-full min-w-[720px] border-separate border-spacing-0 text-sm leading-tight tabular-nums"
                     >
-                      <thead className="text-left text-[0.8125rem] font-medium text-[#55636f]">
+                      <thead className="text-left text-[0.8571rem] font-medium text-[#55636f]">
                         <tr>
                           {canOrder && (
                             <th className={clsx(TH, STICKY, 'w-8')}>
@@ -372,7 +372,7 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
                                       <span className="break-all font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)]">
                                         {hasValue(row.titleNumber) ? String(row.titleNumber) : '—'}
                                       </span>{' '}
-                                      <span className="cas-sub text-[0.75rem] text-gray-500">
+                                      <span className="cas-sub text-[0.8571rem] text-gray-500">
                                         ·{' '}
                                         {t('titleEntry.list.bookPage', {
                                           book: hasValue(row.bookNumber) ? row.bookNumber : '—',
@@ -384,7 +384,7 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
                                       {positions.length === 0 ? (
                                         <span className="text-gray-300">—</span>
                                       ) : (
-                                        <div className="cas-pos flex gap-x-3 gap-y-0.5 text-[0.75rem] text-gray-500 [flex-wrap:wrap]">
+                                        <div className="cas-pos flex gap-x-3 gap-y-0.5 text-[0.8571rem] text-gray-500 [flex-wrap:wrap]">
                                           {positions.map(([field, key]) => (
                                             <span key={field} className="whitespace-nowrap">
                                               {t(key)}{' '}
@@ -400,7 +400,7 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
                                       <span className="font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)]">
                                         {t('titleEntry.list.rai', { rnw: toRaiNganWa(totalWa) })}
                                       </span>{' '}
-                                      <span className="cas-sub text-[0.75rem] text-gray-500">
+                                      <span className="cas-sub text-[0.8571rem] text-gray-500">
                                         {t('titleEntry.list.wa', { wa: formatNumber(totalWa, 2) })}
                                       </span>
                                     </td>
@@ -449,7 +449,7 @@ const LandTitleTable = ({ name, fields, orderable = true }: LandTitleTableProps)
                             <span className="font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)]">
                               {t('titleEntry.list.rai', { rnw: toRaiNganWa(grandTotalWa) })}
                             </span>{' '}
-                            <span className="cas-sub text-[0.75rem] text-gray-500">
+                            <span className="cas-sub text-[0.8571rem] text-gray-500">
                               {t('titleEntry.list.wa', { wa: formatNumber(grandTotalWa, 2) })}
                             </span>
                           </td>

@@ -13,8 +13,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import Icon from '@/shared/components/Icon';
+import { KEYBOARD_RING, NO_OUTLINE } from '@/shared/hooks/usePointerMode';
 
 interface ColumnVisibilityDropdownProps<K extends string> {
+  /**
+   * Opt-in: the button draws its own focus ring instead of the global outline, which is switched
+   * off — 'ring' wears the keyboard ring, 'none' wears nothing (the caller says which, from
+   * usePointerMode). Omitted, the button keeps the global outline as before.
+   */
+  focusRing?: 'ring' | 'none';
   orderedColumns: K[];
   hidden: Set<K>;
   alwaysVisible: Set<K>;
@@ -111,7 +118,7 @@ function SortableColumnRow<K extends string>({
 
       {/* Eye toggle / fixed badge */}
       {alwaysVisible ? (
-        <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
+        <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
           {t('columns.fixed')}
         </span>
       ) : (
@@ -146,6 +153,7 @@ export function ColumnVisibilityDropdown<K extends string>({
   canReset,
   extraToggles,
   panelHeader,
+  focusRing,
 }: ColumnVisibilityDropdownProps<K>) {
   const { t } = useTranslation('common');
   // What the user would see as "off" relative to how the screen looks out of the box: columns they
@@ -176,7 +184,11 @@ export function ColumnVisibilityDropdown<K extends string>({
           `self-stretch` so there IS a definite height to match. */}
       <PopoverButton
         title={t('columns.toggleColumns')}
+        aria-label={t('columns.toggleColumns')}
+        style={focusRing ? NO_OUTLINE : undefined}
         className={`relative flex h-full min-h-9 w-9 items-center justify-center border rounded-lg outline-none transition-all ${
+          focusRing === 'ring' ? KEYBOARD_RING : ''
+        } ${
           hiddenCount > 0
             ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100'
             : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300'
@@ -276,7 +288,7 @@ export function ColumnVisibilityDropdown<K extends string>({
 
         {/* Footer hint */}
         <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
-          <p className="text-[11px] text-gray-400">{t('columns.dragHint')}</p>
+          <p className="text-xs text-gray-400">{t('columns.dragHint')}</p>
         </div>
       </PopoverPanel>
     </Popover>

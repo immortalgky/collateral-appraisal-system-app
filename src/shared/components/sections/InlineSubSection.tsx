@@ -31,13 +31,13 @@ const InlineSubSection = ({
                 className={clsx(
                   compact
                     ? 'text-xs font-medium text-gray-500'
-                    : 'text-[11px] font-semibold text-gray-600 tracking-wider uppercase',
+                    : 'text-xs font-semibold text-gray-600 tracking-wider uppercase',
                 )}
               >
                 {title}
               </h4>
             )}
-            {rightSlot && <span className="text-[11px] text-gray-400">{rightSlot}</span>}
+            {rightSlot && <span className="text-xs text-gray-400">{rightSlot}</span>}
           </div>
           {description && (
             <p className="text-xs text-gray-500 mt-0.5">{description}</p>

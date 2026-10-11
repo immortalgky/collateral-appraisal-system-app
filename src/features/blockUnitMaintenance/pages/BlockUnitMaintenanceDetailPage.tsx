@@ -178,7 +178,7 @@ const SortableTh = ({
   const justifyClass =
     align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
   return (
-    <th className={`py-2 px-3 text-gray-500 font-medium whitespace-nowrap ${alignClass}`}>
+    <th className={`text-xs py-2 px-3 text-gray-500 font-semibold whitespace-nowrap ${alignClass}`}>
       <button
         type="button"
         onClick={() => onSort(columnKey)}
@@ -487,7 +487,7 @@ const BlockUnitMaintenanceDetailPage = () => {
             <Icon style="solid" name="arrow-left" className="size-3.5" />
           </button>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-sm font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-gray-900">
               {project?.projectName ?? '—'}
             </h2>
             {project && projectTypeLabel && (
@@ -653,7 +653,7 @@ const BlockUnitMaintenanceDetailPage = () => {
             <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
               {project && isCondo(project.projectType) ? (
                 <tr>
-                  <th className="py-2 pl-3 pr-1 w-8">
+                  <th className="text-xs py-2 pl-3 pr-1 w-8 font-semibold">
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
@@ -665,19 +665,19 @@ const BlockUnitMaintenanceDetailPage = () => {
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     #
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold">
                     {t('detail.cols.floor')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('detail.cols.towerName')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('detail.cols.regNumber')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('detail.cols.roomNo')}
                   </th>
                   <SortableTh label={t('detail.cols.modelType')} columnKey="modelType" {...sortProps} />
@@ -699,13 +699,13 @@ const BlockUnitMaintenanceDetailPage = () => {
                     align="right"
                     {...sortProps}
                   />
-                  <th className="text-center py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('units.col.purchaseBy')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
                   <SortableTh
@@ -716,7 +716,7 @@ const BlockUnitMaintenanceDetailPage = () => {
                 </tr>
               ) : (
                 <tr>
-                  <th className="py-2 pl-3 pr-1 w-8">
+                  <th className="text-xs py-2 pl-3 pr-1 w-8 font-semibold">
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
@@ -728,7 +728,7 @@ const BlockUnitMaintenanceDetailPage = () => {
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     #
                   </th>
                   <SortableTh label={t('detail.cols.plotNo')} columnKey="plotNumber" {...sortProps} />
@@ -764,13 +764,13 @@ const BlockUnitMaintenanceDetailPage = () => {
                     align="right"
                     {...sortProps}
                   />
-                  <th className="text-center py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('units.col.purchaseBy')}
                   </th>
-                  <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
                   <SortableTh

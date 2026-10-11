@@ -25,15 +25,17 @@
    same way when the shared rule comes last. Keep it last. Shared rules that beat each other are
    kept in the order the standard file had them.
 
-   Sizes are rem calibrated to the 13px root the app runs at (12px = 0.9231rem, 12.5px = 0.9615rem,
-   11px = 0.8462rem, 30px = 2.3077rem, 24px = 1.8462rem), so the density setting keeps working.
-   Borders stay px.
+   Sizes are rem. The geometry (control height, padding, radii: 30px = 2.3077rem, 24px = 1.8462rem)
+   was set for a 13px root; the app now runs a 14px root (15px from 1920px), so each of those renders
+   about 8% larger than the px written in the comments of this file (30px is 32.3px, a 32px row 34.5px,
+   a 28px pill 30.2px). Font sizes follow the 14px root and the 2026-10-10 type scale: 11px = 0.7857rem, 12px = 0.8571rem,
+   13px = 0.9286rem, 15px = 1.0714rem. The density setting keeps working because everything is rem. Borders stay px.
    ============================================================================ */
 
 /* ── 0. field controls: one size, one box ───────────────────────────────────────────────────
    The text, number and date inputs, selects, dropdown buttons, comboboxes and text areas of a labelled
-   row are the same box in both skins: 30px tall, 13px text, a 6px corner, 12px of inline padding, a
-   1px edge. These tokens are that definition; each skin's rules read them, so the two cannot drift.
+   row are the same box in both skins: 2.3077rem tall (32.3px), 13px text (`--cas-ctl-font`), a 6.5px corner,
+   10.5px of inline padding, a 1px edge. These tokens are that definition; each skin's rules read them, so the two cannot drift.
    `--cas-row-h` is the field row they sit in: the control and 2px above and below. The row-height
    arithmetic of the grid skin (wrapper margin, pill / chip / toggle sizes) hangs off the same two. */
 :is(
@@ -43,7 +45,7 @@
   .cas-form-grid {
   --cas-input-h: 2.3077rem;
   --cas-row-h: calc(var(--cas-input-h) + 4px);
-  --cas-ctl-font: 0.875rem;
+  --cas-ctl-font: 0.9286rem;
   --cas-ctl-radius: 0.4615rem;
   --cas-ctl-px: 0.75rem;
 }
@@ -54,7 +56,7 @@
    inline padding, so a deduction or cost table does not read as a smaller form. A cell holding a control
    is the control plus 2px above and below (the skins set the cell's own padding from the same tokens),
    which makes a row `--cas-row-h`. The cells' text that is not a control keeps its own size. The
-   components give these controls `h-[1.625rem]!` / `text-[0.875rem]!`; an unlayered `!important` loses to a
+   components give these controls `h-[1.625rem]!` / `text-sm!`; an unlayered `!important` loses to a
    layered one, so those two are declared in `@layer components`, below. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -163,7 +165,7 @@
   box-shadow: inset 0 -1px 0 var(--cas-line-2);
 }
 /* The tab labels: the component sets `text-[12.5px]` (px, so it would not follow the density setting);
-   they are rem here, `text-sm` like the section heads and the fields beside them. */
+   they are rem here: 0.9286rem (13px), the size of navigation text, not the 15px of the section heads. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
@@ -171,7 +173,7 @@
   .cas-form-grid
   .cas-tabbar-list
   button {
-  font-size: 0.875rem;
+  font-size: 0.9286rem;
 }
 /* No side edges, no bottom rule, square corners: the only rule left is the strip's baseline at the sheet's
    top. Its ground is the surface: grid's sheet is transparent (its rows paint themselves), so in dark
@@ -235,7 +237,7 @@
 }
 
 /* Cover tile: 72 × 48, 6px corner, a real 1px border instead of the ring. The empty "add first
-   photo" tile is dashed on #f8fafa at 10.5px. */
+   photo" tile is dashed on #f8fafa at 12px. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
@@ -258,7 +260,7 @@
   border-color: var(--cas-line-3);
   background-color: var(--cas-label-bg);
   color: var(--cas-ink-2);
-  font-size: 0.8077rem;
+  font-size: 0.8571rem;
   line-height: var(--cas-leading);
 }
 :is(
@@ -310,10 +312,9 @@
   gap: 0.4615rem;
 }
 
-/* Type badge: 5px corner, `1px 6px`, 11px / 600, no border; it keeps its per-type colours (the text
+/* Type badge: 5px corner, `1px 6px`, 12px / 600, no border; it keeps its per-type colours (the text
    colour class and the inline `color-mix` fill), and its inline border colour is cleared with
-   `border-width: 0`. Position chip: neutral #edf1f1 / #55636f, 4px corner, `0 6px`, 10.5px / 600
-   on a 17px line. */
+   `border-width: 0`. Position chip: neutral #edf1f1 / #55636f, 4px corner, `0 6px`, 12px / 600. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
@@ -323,7 +324,7 @@
   border-width: 0;
   border-radius: 0.3846rem;
   padding: 0.0769rem 0.4615rem;
-  font-size: 0.8462rem;
+  font-size: 0.8571rem;
 }
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -336,18 +337,18 @@
   padding: 0 0.4615rem;
   background-color: var(--cas-neutral-bg);
   color: var(--cas-ink-2);
-  font-size: 0.8077rem;
+  font-size: 0.8571rem;
   line-height: 1.3077rem;
 }
 
-/* Title 14px / 600 / ink (the muted "new" state is italic and keeps its grey); facts 12px. */
+/* Title 13px / 600 / ink (the muted "new" state is italic and keeps its grey); facts 12px (0.8571rem). */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
   )
   .cas-form-grid
   .cas-id-title {
-  font-size: 1rem;
+  font-size: 0.9286rem;
   font-weight: 600;
 }
 :is(
@@ -364,7 +365,7 @@
   )
   .cas-form-grid
   .cas-id-facts {
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   color: var(--cas-ink-2);
   font-variant-numeric: tabular-nums;
 }
@@ -395,7 +396,7 @@
   border-color: var(--cas-frame);
   border-radius: 0 0 0.7692rem 0.7692rem;
   background-color: var(--cas-label-bg);
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
 }
 /* With a tab strip right after it, the strip is what closes the block: square bottom corners. */
 :is(
@@ -430,7 +431,7 @@
   .cas-form-grid
   .cas-latest-head
   > button {
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
 }
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -462,7 +463,7 @@
   padding: 0;
   background-color: transparent;
   border-radius: 0;
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   font-variant-numeric: tabular-nums;
 }
 :is(
@@ -475,7 +476,7 @@
   color: var(--cas-ink-3);
 }
 
-/* ── 2. group label: 11px / 600 / #55636f, no band ─────────────────────────────────────────
+/* ── 2. group label: 12px / 600 / #55636f, no band ─────────────────────────────────────────
    Address / Dopa Address headings inside a section. The band (grid layout) is already gone on a
    sheet in formLayout.css; this only sets the span's type. */
 :is(
@@ -486,7 +487,7 @@
   :is(.cas-sheet, #land-title)
   .cas-group-label
   span {
-  font-size: 0.8462rem;
+  font-size: 0.8571rem;
   font-weight: 600;
   color: var(--cas-ink-2);
 }
@@ -583,12 +584,12 @@
   box-shadow: inset 0 0 0 1px var(--cas-sel-hover);
 }
 
-/* Toggle: the component's own round shape is kept (track `bg-gray-100/80 rounded-full`, thumb
-   `rounded-full` with its drop shadow); only the thumb's colour changes — solid primary by default.
-   A yes/no toggle (marker class `cas-toggle-bool`, from FormBooleanToggle) turns the thumb grey
-   while its first option — false — is active; a string toggle stays primary either way. The error
-   state (`border-danger` on the track, `bg-danger` on the thumb) is excluded by the :not() and keeps
-   its own look. Option sizes are per skin. */
+/* Toggle: the component's own round shape is kept (track `bg-gray-100/80 rounded-full`, sliding
+   pill `rounded-full` with its soft shadow); only the pill's colour changes — solid primary by
+   default. A yes/no toggle (marker class `cas-toggle-bool`, from FormBooleanToggle) turns the pill
+   grey while its first option — false — is active; a string toggle stays primary either way. The
+   error state (`border-danger` on the track, `bg-danger` on the pill) is excluded by the :not()
+   and keeps its own look. Option sizes are per skin. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
@@ -600,6 +601,7 @@
   > span {
   inset-block: 0.0625rem;
   background-color: var(--cas-sel-bg);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--cas-sel-bg) 25%, transparent);
 }
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -612,9 +614,7 @@
   > div[role='radiogroup']:not(.border-danger):has(> button:first-of-type[aria-checked='true'])
   > span {
   background-color: var(--cas-off-bg);
-  box-shadow:
-    0 4px 6px -1px color-mix(in srgb, var(--cas-off-bg) 25%, transparent),
-    0 2px 4px -2px color-mix(in srgb, var(--cas-off-bg) 25%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--cas-off-bg) 25%, transparent);
 }
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -655,7 +655,7 @@
    Every table in a labelled table — title deeds, land deductions, building cost, surface, boundary,
    condo area — gets the same cells: heads #f8fafa / 12px / 500 on a 26px line, `padding: 0 8px`, a
    1px rule under and a 1px #eef2f2 rule to the right of every cell (none after the last); body
-   cells 31px tall (30px line + rule). Total rows are 600 on the head grey. The cell rules that
+   text 13px (secondary lines, `.cas-sub` / `.cas-pos`, 12px) in cells 31px tall (30px line + rule). Total rows are 600 on the head grey. The cell rules that
    differ between the skins (the editable-control boxes, the td box) stay in their own files.
 
    Compact's selectors carry `.cas-labelled-table` three times: the cells there are set by a dozen
@@ -680,7 +680,7 @@
   > th {
   background-color: var(--cas-table-head);
   color: var(--cas-ink-2);
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   line-height: 2rem;
   padding: 0 0.6154rem;
@@ -789,7 +789,7 @@
   .cas-labelled-table
   .cas-pos {
   gap: 0;
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   line-height: var(--cas-leading);
   color: var(--cas-ink-3);
 }
@@ -829,12 +829,12 @@
   .cas-form-grid
   .cas-labelled-table
   .cas-sub {
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   color: var(--cas-ink-3);
 }
 
 /* RentalInfoForm's three hand-built tables (`cas-form-table` hook) sit in no labelled table and no
-   [data-field]: same grey head and 12px body. The growth table's full-width dashed "add" box (a
+   [data-field]: same grey 12px head and 14px body. The growth table's full-width dashed "add" box (a
    sibling of the table) becomes a teal text link; the up-front table's add control sits in
    `.cas-outside-form-only` (hidden here, its band carries `.cas-label-add`). The dashed button is
    `flex w-full`, so it goes back to a left-aligned inline link. */
@@ -865,7 +865,7 @@
   thead
   th {
   color: var(--cas-ink-2);
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   font-weight: 500;
 }
 :is(
@@ -876,7 +876,7 @@
   .cas-form-table
   tbody
   td {
-  font-size: 0.875rem;
+  font-size: 0.9286rem;
 }
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
@@ -891,7 +891,7 @@
   border: 0;
   background-color: transparent;
   color: var(--cas-pick-fg);
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   padding: 0 0.3077rem;
 }
@@ -964,7 +964,7 @@
   border: 0;
   background: transparent;
   color: var(--cas-pick-fg);
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
@@ -1008,7 +1008,7 @@
 }
 
 /* The title table's header add button (`.cas-title-add`) is a text link, like the add links in the
-   table bands: no fill, teal, 12px / 500, underlined on hover. */
+   table bands: no fill, teal, 13px (0.9231rem) / 500, underlined on hover. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
@@ -1020,7 +1020,7 @@
   background-color: transparent;
   color: var(--cas-pick-fg);
   box-shadow: none;
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   font-weight: 500;
 }
 :is(
@@ -1033,7 +1033,7 @@
   text-decoration: underline;
 }
 
-/* "Add row": a plain teal text link, 12px / 500, underlined on hover; position unchanged. Every add
+/* "Add row": a plain teal text link, 12px (0.8571rem) / 500, underlined on hover; position unchanged. Every add
    button left in a labelled table is a dashed-outline button (`border-dashed`); the deduction and
    building tables carry theirs in the band instead. Overrides the utilities' `hover:border-primary-500`. */
 :is(
@@ -1046,7 +1046,7 @@
   border: 0;
   background: transparent;
   color: var(--cas-pick-fg);
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   padding-inline: 0.3077rem;
 }
@@ -1193,7 +1193,7 @@
    rows: a label cell 16rem wide (the label column of a full-row field) holding the name and status
    pill, then the number, the muted source text and the "use calculated" link on one line. The left
    block becomes `display: contents`, so the name, the source text and the input are three flex
-   items of the row. Sizes: `--cas-row-h` row, 0.875rem label, 11px pill, 11.5px source. */
+   items of the row. Sizes: `--cas-row-h` row, 12px label (like every field label), 11px pill, 12px source. */
 :is(
     [data-form-layout='grid'][data-form-layout='grid'],
     [data-form-layout='classic'][data-form-layout='classic']
@@ -1256,8 +1256,8 @@
   .cas-cost-name
   > span:first-child {
   min-width: 0;
-  /* a field label's size and line */
-  font-size: 0.875rem;
+  /* a field label's size (12px) and line */
+  font-size: 0.8571rem;
   line-height: 1.25rem;
   font-weight: 400;
   color: var(--cas-ink-2);
@@ -1272,7 +1272,7 @@
   > span:last-child {
   flex: none;
   padding: 0.0769rem 0.6154rem;
-  font-size: 0.8462rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -1307,7 +1307,7 @@
   flex: 0 1 auto;
   min-width: 0;
   padding-right: 0.6154rem;
-  font-size: 0.8846rem;
+  font-size: 0.8571rem;
   color: var(--cas-ink-3);
   font-variant-numeric: tabular-nums;
 }
@@ -1331,7 +1331,7 @@
   .cas-cost-src
   button {
   color: var(--cas-pick-fg);
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   text-decoration: none;
 }
@@ -1347,7 +1347,7 @@
 }
 
 /* ── cell controls that a utility marks `!important` ─────────────────────────────────────────
-   NumCell passes `h-[1.625rem]!` and `text-[0.875rem]!` to every number cell. Tailwind utilities live in
+   NumCell passes `h-[1.625rem]!` and `text-sm!` to every number cell. Tailwind utilities live in
    `@layer utilities`, and for `!important` declarations the layer order is reversed: an *unlayered*
    `!important` loses to a layered one whatever its specificity. Declaring them in `@layer components`
    — earlier than `utilities`, so first for important — is what beats them. The height is the field

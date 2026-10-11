@@ -20,14 +20,15 @@
     "emptyHint": "请尝试调整搜索条件或筛选器",
     "columns": {
       "appraisalNumber": "估价编号",
+      "appraisalNumberCustomer": "估价编号 / 客户",
       "customer": "客户",
       "status": "状态",
       "priority": "优先级",
       "sla": "SLA",
       "province": "省份",
       "assignment": "分配",
-      "bankingSegment": "板块",
-      "purpose": "评估目的",
+      "bankingSegment": "业务组",
+      "purposeAndType": "评估目的 · 评估类型",
       "propertyType": "抵押物类型",
       "company": "公司",
       "appointment": "预约",
@@ -55,8 +56,8 @@
       "createdTo": "创建结束",
       "slaDueFrom": "SLA 截止开始",
       "slaDueTo": "SLA 截止结束",
-      "bankingSegmentLabel": "业务板块",
-      "bankingSegmentPlaceholder": "所有板块",
+      "bankingSegmentLabel": "业务组",
+      "bankingSegmentPlaceholder": "所有业务组",
       "purposeLabel": "评估目的",
       "purposePlaceholder": "所有目的",
       "propertyTypeLabel": "抵押物类型",
@@ -71,6 +72,9 @@
       "slaDue": "SLA 截止",
       "assigneeUserId": "负责人",
       "add": "添加筛选",
+      "more": "更多 +{{count}}",
+      "moreAria_one": "{{label}}（另外 {{count}} 个筛选条件）",
+      "moreAria_other": "{{label}}（另外 {{count}} 个筛选条件）",
       "searchIn": "搜索{{label}}…",
       "showingOf": "显示 {{shown}} / {{total}}",
       "typeToFind": "输入以查找其余项",
@@ -193,10 +197,12 @@
       "label": "分组",
       "none": "不分组",
       "current": "分组：{{label}}",
-      "empty": "未指定"
+      "empty": "未指定",
+      "error": "无法加载分组数量"
     },
     "suggest": {
       "goTo": "前往评估",
+      "scope": "搜索字段",
       "searchIn": "在以下字段搜索“{{term}}”",
       "recent": "最近搜索",
       "matches": "{{count}} 条",
@@ -1470,7 +1476,88 @@
       "saved": "清单已保存"
     }
   },
+  "photoSourceModal": {
+    "title": "添加照片",
+    "uploadTitle": "从设备上传",
+    "uploadHint": "从您的电脑或设备选择照片",
+    "galleryTitle": "从图库选择",
+    "galleryHint": "从之前上传的照片中选择",
+    "supports": "支持：{{types}}（每个文件最大 50MB）",
+    "close": "关闭"
+  },
+  "gallerySelection": {
+    "title": "从图库选择",
+    "available_one": "共 {{count}} 张照片",
+    "available_other": "共 {{count}} 张照片",
+    "searchPlaceholder": "按名称或描述搜索...",
+    "showing": "显示 {{shown}} / {{total}}",
+    "selectAll": "全选",
+    "selected_one": "已选择 {{count}} 张",
+    "selected_other": "已选择 {{count}} 张",
+    "clearSelection": "清除选择",
+    "noPhotos": "未找到照片",
+    "tryDifferent": "请尝试其他搜索词",
+    "uploadFirst": "请先将照片上传到图库",
+    "readyToAdd_one": "{{count}} 张照片待添加",
+    "readyToAdd_other": "{{count}} 张照片待添加",
+    "clickToSelect": "点击照片即可选择",
+    "cancel": "取消",
+    "add_one": "添加 {{count}} 张照片",
+    "add_other": "添加 {{count}} 张照片",
+    "selectPhoto": "选择照片",
+    "close": "关闭"
+  },
   "valuationDocuments": {
+    "appendix": {
+      "title": "附件文件",
+      "addFiles": "添加文件",
+      "addTo": "添加 {{name}}",
+      "editImage": "编辑图片",
+      "empty": "未找到附件类别",
+      "loading": "正在加载附件...",
+      "loadFailed": "无法加载附件",
+      "galleryFailed": "无法加载图库",
+      "deleteDialog": {
+        "title": "删除文件",
+        "message": "确定要删除此文件吗？此操作无法撤销。",
+        "confirm": "删除"
+      }
+    },
+    "appendixTypes": {
+      "BRIEF_MAP": "简略地图",
+      "DETAILED_MAP": "详细地图",
+      "EARTH_MAP": "卫星地图",
+      "LAND_MAP": "地籍图",
+      "CITY_PLAN": "城市规划",
+      "STATUTORY_PLAN": "法定规划",
+      "LAND_PLAN": "土地平面图",
+      "BUILDING_LAYOUT": "建筑布局图",
+      "BLUEPRINT": "建筑蓝图",
+      "PHOTO_SPOT": "照片及拍摄点",
+      "REG_INDEX": "登记索引"
+    },
+    "checklist": {
+      "tablistLabel": "文件分区",
+      "tabs": {
+        "request": "申请文件",
+        "valuation": "评估文件",
+        "appendix": "报告书"
+      },
+      "tabCounts": {
+        "missing": "缺少 {{count}}",
+        "complete": "齐全",
+        "files_one": "{{count}} 个文件",
+        "files_other": "{{count}} 个文件"
+      },
+      "requestTitle": "申请文件",
+      "readOnlyTag": "只读",
+      "requestEmpty": "未找到申请文件",
+      "requestLoadFailed": "无法加载申请文件",
+      "valuationEmpty": "未找到文件类型",
+      "typesWithFiles": "{{done}}/{{total}} 种类型",
+      "noteSaved": "备注已保存",
+      "noteSaveFailed": "无法保存备注"
+    },
     "sections": {
       "documentChecklist": "文件清单",
       "appraisalBookBuilder": "估价报告书编制",
@@ -1486,11 +1573,7 @@
     "typesCount_one": "{{count}} 种类型",
     "typesCount_other": "{{count}} 种类型",
     "progress": "已附加 {{uploaded}} / {{total}}",
-    "expandAll": "全部展开",
-    "collapseAll": "全部收起",
     "noFile": "无文件",
-    "fileCount_one": "{{count}} 个文件",
-    "fileCount_other": "{{count}} 个文件",
     "attach": "附加文件",
     "generate": "生成报告",
     "view": "查看",
@@ -1525,6 +1608,8 @@
     "openInNewTab": "在新标签页中打开",
     "generatePreview": "生成预览",
     "idleHint": "生成鉴定报告预览以在此处查看。",
+    "noPreviewYet": "暂无报告书预览",
+    "previewUnavailable": "无法显示报告书预览",
     "generating": "正在生成预览…",
     "fetchFailed": "加载报告预览失败",
     "renderFailed": "渲染报告预览失败",
@@ -2906,7 +2991,13 @@
       "north": "北",
       "south": "南",
       "east": "东",
-      "west": "西"
+      "west": "西",
+      "condo": {
+        "title": "公寓房屋所有权证书",
+        "sub": "(อ.ช.2)",
+        "landDeed": "土地所有权证号",
+        "location": "公寓单元位置"
+      }
     },
     "list": {
       "sortByNumber": "按地契号排序",

@@ -496,7 +496,7 @@ const ItemsGroupTable = ({
           <ItemsTableColgroup />
           <thead>
             <tr className="border-b border-gray-200">
-              <th className="px-1 pb-2" aria-hidden="true" />
+              <th className="text-xs px-1 pb-2 font-semibold" aria-hidden="true" />
               <th className="px-2 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
                 {t('columns.no')}
               </th>
@@ -530,9 +530,9 @@ const ItemsGroupTable = ({
                 </>
               ) : (
                 <>
-                  <th className="px-3 pb-2" aria-hidden="true" />
-                  <th className="px-3 pb-2" aria-hidden="true" />
-                  <th className="px-3 pb-2" aria-hidden="true" />
+                  <th className="text-xs px-3 pb-2 font-semibold" aria-hidden="true" />
+                  <th className="text-xs px-3 pb-2 font-semibold" aria-hidden="true" />
+                  <th className="text-xs px-3 pb-2 font-semibold" aria-hidden="true" />
                 </>
               )}
             </tr>
@@ -702,7 +702,7 @@ const MeetingItemsGrouped = ({
       )}
 
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
           <Icon name="gavel" style="solid" className="size-3.5 text-primary" />
           {t('sections.decisionItems', { n: decisionShown })}
         </h3>
@@ -723,7 +723,7 @@ const MeetingItemsGrouped = ({
       </div>
 
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-800">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
           <Icon name="circle-info" style="solid" className="size-3.5 text-purple-500" />
           {t('sections.acknowledgementItems', { n: ackShown })}
         </h3>

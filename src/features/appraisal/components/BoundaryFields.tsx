@@ -33,8 +33,8 @@ const BoundaryFields = ({ readOnly: readOnlyProp }: BoundaryFieldsProps) => {
       <div className="cas-labelled-table">
         <div className="cas-table-label">{t('forms.land.sectionTitleBoundary')}</div>
         <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <table className="w-full border-collapse text-[0.875rem] leading-tight tabular-nums">
-            <thead className="bg-[#f8fafa] text-left text-[0.8125rem] font-medium text-[#55636f]">
+          <table className="w-full border-collapse text-sm leading-tight tabular-nums">
+            <thead className="bg-[#f8fafa] text-left text-[0.8571rem] font-medium text-[#55636f]">
               <tr>
                 <th className={clsx(TH, 'w-[110px]')}>{t('boundaryTable.direction')}</th>
                 <th className={TH}>{t('boundaryTable.adjacent')}</th>

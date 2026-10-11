@@ -80,7 +80,7 @@ export default function LandAreaDeductionTable({
                 <button
                   type="button"
                   onClick={() => append(emptyRowFor(deductionColumns))}
-                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
+                  className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.8571rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
                 >
                   <Icon style="solid" name="plus" className="size-2.5" />
                   {tRequest('table.addFirstItem')}

@@ -163,7 +163,7 @@ export const PropertyStackSection = ({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-[13px] font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-gray-900">
                 <ParameterDisplay group="PropertyType" code={type} fallback={type} />
               </h3>
               <span className="text-[11px] text-gray-400 tabular-nums">

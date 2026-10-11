@@ -47,7 +47,7 @@ describe('getFileMeta', () => {
     );
     expect(meta).toMatchObject({
       typeLabel: 'PDF',
-      size: '2.0 KB',
+      size: '2 KB',
       uploadedAt: '30/09/2026 15:40',
     });
   });

@@ -269,7 +269,7 @@ export function CostBuildingPanel({
               type="button"
               onClick={onCancelCalculationMethod}
               disabled={saveMutation.isPending}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
             >
               {t('footer.cancel')}
             </Button>
@@ -291,7 +291,7 @@ export function CostBuildingPanel({
               form={formId}
               isLoading={saveMutation.isPending}
               disabled={saveMutation.isPending}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
             >
               {!saveMutation.isPending && (
                 <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
@@ -525,7 +525,7 @@ function AdjustAppraisalPrice({
         {/* mock:586-587's `.panel` / `.panel h4`. `overflow-hidden` on the card is what
             clips this header band to the rounded corners — it fills edge to edge rather
             than floating inside body padding. */}
-        <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+        <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
           {t('costBuilding.summary.valueByThisMethod')}
         </h4>
         {/* `KvRow` rather than the hand-rolled flex rows this replaced — the same shared

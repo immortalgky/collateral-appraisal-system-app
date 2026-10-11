@@ -31,11 +31,17 @@ const SearchGuideDrawer = ({ isOpen, onClose, onTryQuery }: SearchGuideDrawerPro
               <table className="w-full text-xs border-collapse">
                 <thead>
                   <tr className="text-left text-gray-500">
-                    <th className="pb-1.5 pr-2 font-medium">{t('guide.columnPattern')}</th>
-                    <th className="pb-1.5 pr-2 font-medium">{t('guide.columnSearchesIn')}</th>
-                    <th className="pb-1.5 pr-2 font-medium">{t('guide.columnSpeed')}</th>
-                    <th className="pb-1.5 pr-2 font-medium">{t('guide.columnOldRows')}</th>
-                    <th className="pb-1.5 font-medium">{t('guide.columnUsage')}</th>
+                    <th className="text-xs pb-1.5 pr-2 font-semibold">
+                      {t('guide.columnPattern')}
+                    </th>
+                    <th className="text-xs pb-1.5 pr-2 font-semibold">
+                      {t('guide.columnSearchesIn')}
+                    </th>
+                    <th className="text-xs pb-1.5 pr-2 font-semibold">{t('guide.columnSpeed')}</th>
+                    <th className="text-xs pb-1.5 pr-2 font-semibold">
+                      {t('guide.columnOldRows')}
+                    </th>
+                    <th className="text-xs pb-1.5 font-semibold">{t('guide.columnUsage')}</th>
                   </tr>
                 </thead>
                 <tbody>

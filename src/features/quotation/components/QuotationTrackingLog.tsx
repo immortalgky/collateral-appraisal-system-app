@@ -38,7 +38,7 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
                     className="size-3.5 text-violet-600"
                   />
                 </div>
-                <h2 className="text-sm font-semibold text-gray-700">{t('trackingLog.title')}</h2>
+                <h2 className="text-base font-semibold text-gray-700">{t('trackingLog.title')}</h2>
               </div>
               <DisclosureButton className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
                 <Icon

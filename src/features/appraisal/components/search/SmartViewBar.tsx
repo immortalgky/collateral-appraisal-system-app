@@ -112,7 +112,7 @@ function SmartViewBar({
   // to the whole list, so it stays even when the views endpoint returns nothing or fails.
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1">
+    <div className="flex flex-wrap items-center gap-2">
       <span className="text-xs text-gray-500 shrink-0">{t('list.quickViews')}</span>
       {/* Client-side, not a server view: it is the absence of one, so the backend has nothing to
           describe. Without it the only way back to the whole list was clearing chips one by one. */}

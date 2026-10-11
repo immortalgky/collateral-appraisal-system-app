@@ -39,7 +39,7 @@ export default function WorkflowListPage() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="table">
+          <table className="table text-table">
             <thead>
               <tr>
                 <th>{t('list.columns.name')}</th>
@@ -65,7 +65,7 @@ export default function WorkflowListPage() {
                       {def.isActive ? t('list.status.active') : t('list.status.inactive')}
                     </span>
                   </td>
-                  <td className="text-sm text-base-content/60">
+                  <td className="text-table text-base-content/60">
                     {new Date(def.createdOn).toLocaleDateString()}
                   </td>
                   <td>

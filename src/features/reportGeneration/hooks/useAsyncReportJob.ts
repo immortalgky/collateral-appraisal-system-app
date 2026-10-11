@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import i18n from 'i18next';
 import toast from 'react-hot-toast';
-import {
-  enqueueReportJob,
-  getReportJob,
-  downloadReportJobPdf,
-  reportKeys,
-} from '../api/reports';
+import { enqueueReportJob, getReportJob, downloadReportJobPdf, reportKeys } from '../api/reports';
 import type { ReportJobDetail } from '../api/reports';
 import { useReportJobsStore } from '../store/reportJobsStore';
 import type { TrackedReportJob } from '../store/reportJobsStore';
@@ -58,13 +54,13 @@ export function resolveJob(
   if (status === 'Completed') {
     if (opts.autoOpen) {
       openJobPdf(jobId).catch(() => {
-        toast.error('Report ready but failed to open. Check the notification bell.');
+        toast.error(i18n.t('common:reportJob.openFailed'));
       });
     } else {
-      toast.success('Report is ready. Click the notification bell to download.');
+      toast.success(i18n.t('common:reportJob.ready'));
     }
   } else {
-    const msg = opts.error ?? 'Report generation failed.';
+    const msg = opts.error ?? i18n.t('common:reportJob.failed');
     store.update(jobId, { error: msg });
     toast.error(msg);
   }
@@ -112,11 +108,7 @@ export function JobPoller({ jobId, job }: { jobId: string; job: TrackedReportJob
 // ──────────────────────────────────────────────────────────────────────────────
 
 export interface UseAsyncReportJobReturn {
-  trigger: (
-    reportTypeKey: string,
-    entityId: string,
-    opts: { autoOpen: boolean },
-  ) => Promise<void>;
+  trigger: (reportTypeKey: string, entityId: string, opts: { autoOpen: boolean }) => Promise<void>;
   /** Returns all tracked jobs for the given entityId. */
   jobsForEntity: (entityId: string) => TrackedReportJob[];
 }
@@ -126,17 +118,13 @@ export function useAsyncReportJob(): UseAsyncReportJobReturn {
   const jobs = useReportJobsStore(s => s.jobs);
 
   const trigger = useCallback(
-    async (
-      reportTypeKey: string,
-      entityId: string,
-      opts: { autoOpen: boolean },
-    ): Promise<void> => {
+    async (reportTypeKey: string, entityId: string, opts: { autoOpen: boolean }): Promise<void> => {
       try {
         const { jobId } = await enqueueReportJob(reportTypeKey, entityId);
         track({ jobId, reportTypeKey, entityId, status: 'Pending', autoOpen: opts.autoOpen });
-        toast('Generating report…', { icon: '⏳' });
+        toast(i18n.t('common:reportJob.generating'), { icon: '⏳' });
       } catch {
-        toast.error('Failed to queue report generation.');
+        toast.error(i18n.t('common:reportJob.queueFailed'));
       }
     },
     [track],

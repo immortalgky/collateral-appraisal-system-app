@@ -256,7 +256,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
     <div className="flex min-h-full flex-col">
       {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
-        <h3 className="text-sm font-semibold text-gray-800">{t('dialogs.createUser.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-800">{t('dialogs.createUser.title')}</h3>
         <button
           type="button"
           onClick={onCancel}

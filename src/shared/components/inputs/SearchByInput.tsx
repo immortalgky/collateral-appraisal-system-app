@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
+import { KEYBOARD_RING, usePointerMode } from '@/shared/hooks/usePointerMode';
 
 export interface SearchByOption {
   value: string;
@@ -31,6 +32,12 @@ interface SearchByInputProps {
    * (e.g. "type at least 3 characters") is orphaned and never announced.
    */
   describedBy?: string;
+  /**
+   * 'pill' draws the field selector as the soft grey pill of the top bar's quick search, inside
+   * the same white bordered box, followed by a magnifier — no divider. Opt-in: the other callers
+   * keep the plain selector.
+   */
+  variant?: 'default' | 'pill';
 }
 
 /**
@@ -48,8 +55,11 @@ function SearchByInput({
   className,
   endAdornment,
   describedBy,
+  variant = 'default',
 }: SearchByInputProps) {
   const selected = options.find(o => o.value === field);
+  const pill = variant === 'pill';
+  const { pointerMode, onPointerDownCapture } = usePointerMode();
 
   return (
     <div
@@ -58,20 +68,41 @@ function SearchByInput({
         'focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400',
         className,
       )}
+      onPointerDownCapture={onPointerDownCapture}
     >
       {/* Field selector */}
       <Menu as="div" className="relative shrink-0">
-        <MenuButton
-          style={{ outline: 'none' }}
-          className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-gray-700 whitespace-nowrap hover:bg-gray-50"
-        >
-          {selected?.icon && (
-            <Icon style="solid" name={selected.icon} className="size-3.5 text-gray-500" />
-          )}
-          {selected?.label ?? ''}
-          <Icon style="regular" name="chevron-down" className="size-3 text-gray-400" />
-        </MenuButton>
+        {pill ? (
+          // The top bar's badge, class for class (Navbar), in its grey: icon, label, chevron. The
+          // ring is the keyboard focus ring, not the global outline (switched off inline) — and
+          // not after the mouse (see usePointerMode).
+          <MenuButton
+            style={{ outline: 'none' }}
+            className={clsx(
+              'ml-1.5 flex h-7 items-center gap-1.5 rounded-lg bg-gray-100 px-2 text-xs font-medium whitespace-nowrap text-gray-500 transition-all',
+              !pointerMode && KEYBOARD_RING,
+            )}
+          >
+            {selected?.icon && <Icon style="solid" name={selected.icon} className="size-3" />}
+            <span className="leading-none">{selected?.label ?? ''}</span>
+            <Icon style="solid" name="chevron-down" className="size-2.5 opacity-60" />
+          </MenuButton>
+        ) : (
+          <MenuButton
+            style={{ outline: 'none' }}
+            className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-gray-700 whitespace-nowrap hover:bg-gray-50"
+          >
+            {selected?.icon && (
+              <Icon style="solid" name={selected.icon} className="size-3.5 text-gray-500" />
+            )}
+            {selected?.label ?? ''}
+            <Icon style="regular" name="chevron-down" className="size-3 text-gray-400" />
+          </MenuButton>
+        )}
         <MenuItems
+          // The menu takes the focus when it opens; the global unlayered :focus-visible outline
+          // would box the whole panel in blue, and `focus:outline-none` cannot beat it.
+          style={{ outline: 'none' }}
           anchor="bottom start"
           className="mt-1 min-w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg z-50 focus:outline-none"
         >
@@ -106,11 +137,17 @@ function SearchByInput({
         </MenuItems>
       </Menu>
 
-      {/* Divider */}
-      <div className="h-5 w-px shrink-0 bg-gray-200" />
+      {!pill && <div className="h-5 w-px shrink-0 bg-gray-200" />}
 
       {/* Search input */}
-      <div className="flex flex-1 items-center px-3">
+      <div className={clsx('flex flex-1 items-center', pill ? 'pl-2 pr-3' : 'px-3')}>
+        {pill && (
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            className="pointer-events-none mr-2 size-4 shrink-0 text-gray-400"
+          />
+        )}
         <input
           type="text"
           value={value}

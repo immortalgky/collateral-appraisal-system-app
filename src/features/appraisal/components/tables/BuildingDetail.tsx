@@ -123,7 +123,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
           key={String(isBuilding)}
           type="button"
           onClick={() => handleRequestAdd(isBuilding)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
+          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.8571rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
         >
           <span className={`size-2 rounded-sm ${dot}`} />
           {label}
@@ -198,8 +198,8 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                 <RowSync key={field.id} base={`${name}.${i}`} readOnly={formReadOnly} />
               ))}
               <div className="overflow-x-auto">
-                <table className="cas-dep-table w-full min-w-[980px] border-collapse text-[0.875rem] leading-tight tabular-nums">
-                  <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
+                <table className="cas-dep-table w-full min-w-[980px] border-collapse text-sm leading-tight tabular-nums">
+                  <thead className="bg-[#f8fafa] text-[0.8571rem] font-medium text-[#55636f]">
                     <tr>
                       <th rowSpan={2} className={clsx(TH, 'text-left')}>
                         {t('costBuilding.table.detailHeader')}
@@ -276,7 +276,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                               {formReadOnly ? (
                                 <span
                                   className={clsx(
-                                    'rounded px-1.5 py-0.5 text-[0.75rem] font-medium',
+                                    'rounded px-1.5 py-0.5 text-[0.8571rem] font-medium',
                                     row.isBuilding
                                       ? 'bg-[#e6f4ea] text-[#15803d]'
                                       : 'bg-[#fdf0e1] text-[#c2410c]',
@@ -452,7 +452,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                           </span>
                           <span
                             className={clsx(
-                              'rounded-full px-2 py-0.5 text-[0.75rem] font-semibold',
+                              'rounded-full px-2 py-0.5 text-[0.8571rem] font-semibold',
                               item.override != null
                                 ? 'bg-amber-50 text-amber-700'
                                 : 'bg-primary-50 text-primary-700',
@@ -477,7 +477,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
                           {item.override != null && !formReadOnly && (
                             <button
                               type="button"
-                              className="text-[0.75rem] text-primary-600 underline underline-offset-2"
+                              className="text-[0.8571rem] text-primary-600 underline underline-offset-2"
                               onClick={() => setValue(item.field, null, { shouldDirty: true })}
                             >
                               {t('hypothesis.ledger.useCalculated')}
@@ -566,25 +566,25 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
 
   return (
     <div className="flex max-w-[560px] flex-col gap-1">
-      <table className="w-full text-[0.875rem] tabular-nums">
+      <table className="w-full text-sm tabular-nums">
         <thead className="text-[#55636f]">
           <tr>
-            <th className="px-1 py-0.5 text-right font-medium">
+            <th className="text-xs px-1 py-0.5 text-right font-semibold">
               {t('costBuilding.table.fromYearHeader')}
             </th>
-            <th className="px-1 py-0.5 text-right font-medium">
+            <th className="text-xs px-1 py-0.5 text-right font-semibold">
               {t('costBuilding.table.toYearHeader')}
             </th>
-            <th className="px-1 py-0.5 text-right font-medium">
+            <th className="text-xs px-1 py-0.5 text-right font-semibold">
               {t('costBuilding.table.percentPerYearHeader')}
             </th>
-            <th className="px-1 py-0.5 text-right font-medium">
+            <th className="text-xs px-1 py-0.5 text-right font-semibold">
               {t('costBuilding.table.totalPercentHeader')}
             </th>
-            <th className="px-1 py-0.5 text-right font-medium">
+            <th className="text-xs px-1 py-0.5 text-right font-semibold">
               {t('costBuilding.table.totalPriceHeader')}
             </th>
-            {!readOnly && <th className="w-8" />}
+            {!readOnly && <th className="text-xs w-8 font-semibold" />}
           </tr>
         </thead>
         <tbody>
@@ -635,7 +635,7 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
                 </tr>
                 {invalid && (
                   <tr>
-                    <td colSpan={6} className="px-1 pb-1 text-[0.75rem] text-red-600">
+                    <td colSpan={6} className="px-1 pb-1 text-[0.8571rem] text-red-600">
                       {rowErrors.join(' · ')}
                     </td>
                   </tr>
@@ -658,7 +658,7 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
               priceDepreciation: 0,
             })
           }
-          className="self-start rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-500 hover:border-primary-500 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+          className="self-start rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.8571rem] text-gray-500 hover:border-primary-500 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + {t('costBuilding.table.addPeriod')}
         </button>

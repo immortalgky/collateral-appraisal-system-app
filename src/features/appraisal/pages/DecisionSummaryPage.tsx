@@ -1038,7 +1038,7 @@ const DecisionSummaryPage = () => {
         <form onSubmit={handleSubmit(onSave)} className="flex-1 min-h-0 flex flex-col">
           <div className="flex-1 min-h-0 overflow-y-auto">
             <div className="flex flex-col gap-6 pb-6 pr-4">
-              {/* Open followup banner — compact info at the top; full/interactive lives on the Document Checklist page */}
+              {/* Open followup banner — info-only slim line at the top (no cancel links); the interactive one lives on the Document Checklist page */}
               {taskId && <OpenFollowupBanner raisingTaskId={taskId} compact />}
 
               {/* Group A — Valuation */}
@@ -1102,7 +1102,7 @@ const DecisionSummaryPage = () => {
                           appraised / force-selling / insurance values on the page. */}
                       <div className="grid grid-cols-3 gap-6">
                         <div className="text-left">
-                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
                             {t('decisionSummary.fields.totalAppraisalPrice')}
                           </p>
                           <p className="text-xl font-semibold tabular-nums text-teal-700 mt-1">
@@ -1112,7 +1112,7 @@ const DecisionSummaryPage = () => {
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
                             {t('decisionSummary.fields.forceSellingPrice')}
                           </p>
                           <p className="text-xl font-semibold tabular-nums text-amber-700 mt-1">
@@ -1131,7 +1131,7 @@ const DecisionSummaryPage = () => {
                               <NumberInput
                                 name="forceSellingRateOverride"
                                 fullWidth={false}
-                                className="w-20"
+                                className="w-28"
                                 decimalPlaces={2}
                                 thousandSeparator={false}
                                 maxIntegerDigits={3}
@@ -1155,7 +1155,7 @@ const DecisionSummaryPage = () => {
                           </SectionReadOnlyWrap>
                         </div>
                         <div className="text-right">
-                          <p className="text-[11px] uppercase tracking-wider text-gray-500 font-semibold">
+                          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
                             {t('decisionSummary.fields.buildingInsurance')}
                           </p>
                           <p className="text-xl font-semibold tabular-nums text-gray-700 mt-1">

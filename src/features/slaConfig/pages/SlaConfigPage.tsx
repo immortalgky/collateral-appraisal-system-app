@@ -588,7 +588,7 @@ function SlaConfigPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">OLA / SLA Targets</h3>
+        <h3 className="text-base font-semibold text-gray-900">OLA / SLA Targets</h3>
         <p className="mt-0.5 text-xs text-gray-500">
           Define the end-to-end SLA umbrella and the per-activity / group OLA targets for each loan
           type and appraisal type. Targets apply to new appraisals.

@@ -21,7 +21,7 @@ interface FilterValuePanelProps {
   onChange: (key: string, value: string) => void;
   /** Drops the key entirely. Writing '' instead would leave `?status=` behind in the URL. */
   onRemove: (key: string) => void;
-  /** Rendered as a back arrow when the panel was reached through the "add filter" menu. */
+  /** Rendered as a back arrow when the panel was reached from a list (the overflow menu). */
   onBack?: () => void;
 }
 

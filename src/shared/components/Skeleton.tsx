@@ -145,7 +145,7 @@ export const ListPageSkeleton = ({
           <thead className="bg-gray-50">
             <tr className="border-b border-gray-200 animate-pulse">
               {columns.map((col, i) => (
-                <th key={i} className="px-4 py-2.5">
+                <th key={i} className="text-xs px-4 py-2.5 font-semibold">
                   <div className={clsx('h-4 bg-gray-200 rounded', col.width)} />
                 </th>
               ))}

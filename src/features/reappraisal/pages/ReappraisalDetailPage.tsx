@@ -691,7 +691,7 @@ function ReappraisalDetailPage() {
           </button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-sm font-semibold text-gray-900 tabular-nums">
+              <h2 className="text-base font-semibold text-gray-900 tabular-nums">
                 {detail.oldAppraisalReportNumber}
               </h2>
               <ReappraisalStatusBadge
@@ -954,7 +954,7 @@ function ReappraisalDetailPage() {
           <table className="w-full min-w-max text-xs">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                <th className="px-4 py-2.5 w-8" />
+                <th className="text-xs px-4 py-2.5 w-8 font-semibold" />
                 {[
                   t('detail.group.columns.book'),
                   t('detail.group.columns.source'),
@@ -963,11 +963,14 @@ function ReappraisalDetailPage() {
                   t('columns.lastAppraisal'),
                   t('columns.reviewDue'),
                 ].map(label => (
-                  <th key={label} className="px-3 py-2.5 text-left font-medium whitespace-nowrap">
+                  <th
+                    key={label}
+                    className="text-xs px-3 py-2.5 text-left font-semibold whitespace-nowrap"
+                  >
                     {label}
                   </th>
                 ))}
-                <th className="px-3 py-2.5" />
+                <th className="text-xs px-3 py-2.5 font-semibold" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

@@ -15,7 +15,7 @@ interface SortableThProps {
 export function SortableTh({ label, sortKey, activeKey, dir, onSort, className }: SortableThProps) {
   const active = activeKey === sortKey;
   return (
-    <th className={clsx('px-4 py-3', className)}>
+    <th className={clsx('px-4 py-3 text-xs font-semibold', className)}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}

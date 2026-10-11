@@ -162,26 +162,26 @@ const ParameterDetailTable = ({
       )}
 
       <div className="overflow-x-auto">
-        <table className="table w-full">
+        <table className="table w-full text-table">
           <thead>
             <tr className="bg-primary/10">
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-16">
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-left first:rounded-tl-lg w-16">
                 Seq
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-28">Code</th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-left w-28">Code</th>
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-left">
                 TH Description
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-left">
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-left">
                 EN Description
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-center w-24">
                 Country
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-24">
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-center w-24">
                 Status
               </th>
-              <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-28">
+              <th className="text-primary text-xs font-semibold py-3 px-4 text-center last:rounded-tr-lg w-28">
                 Actions
               </th>
             </tr>
@@ -205,18 +205,20 @@ const ParameterDetailTable = ({
                   className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   <td className="py-3 px-4">
-                    <span className="text-sm text-gray-500">{pair.seqNo}</span>
+                    <span className="text-table text-gray-500">{pair.seqNo}</span>
                   </td>
                   <td className="py-3 px-4">
-                    <span className="text-sm font-mono font-medium text-gray-800">{pair.code}</span>
+                    <span className="text-table font-mono font-medium text-gray-800">
+                      {pair.code}
+                    </span>
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-700">
+                  <td className="py-3 px-4 text-table text-gray-700">
                     {pair.descriptionTh || <span className="text-gray-300 italic text-xs">—</span>}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-700">
+                  <td className="py-3 px-4 text-table text-gray-700">
                     {pair.descriptionEn || <span className="text-gray-300 italic text-xs">—</span>}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-500 text-center">{pair.country}</td>
+                  <td className="py-3 px-4 text-table text-gray-500 text-center">{pair.country}</td>
                   <td className="py-3 px-4 text-center">
                     <span
                       className={clsx(

@@ -102,7 +102,7 @@ function PersonTasksPage() {
       <div className="shrink-0 mb-3 flex items-center gap-3">
         <Avatar name={displayName} size="md" />
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">{displayName}</h2>
+          <h2 className="text-base font-semibold text-gray-900">{displayName}</h2>
           <p className="text-xs text-gray-500 font-mono">{username}</p>
         </div>
         {!isLoading && totalCount > 0 && (

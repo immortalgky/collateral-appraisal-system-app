@@ -157,7 +157,7 @@ export function ConstructionSummaryForm({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-[0.875rem] leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
+        <table className="w-full min-w-max border-separate border-spacing-0 text-sm leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
           <thead>
             <tr>
               <th className={clsx(TH, 'text-left min-w-[320px]')}>
@@ -240,12 +240,12 @@ export function ConstructionSummaryForm({
         </table>
       </div>
       {isPending && (
-        <div className="px-[12px] pt-[6px] text-[0.75rem] text-[color:var(--palette-warn)]">
+        <div className="px-[12px] pt-[6px] text-[0.8571rem] text-[color:var(--palette-warn)]">
           {t('constructionInspection.status.summaryPending')}
         </div>
       )}
       {isRegressed && (
-        <div className="px-[12px] pt-[6px] text-[0.75rem] text-[#dc2626]">
+        <div className="px-[12px] pt-[6px] text-[0.8571rem] text-[#dc2626]">
           ⚠ {t('constructionInspection.status.summaryRegressed')}
         </div>
       )}
@@ -313,7 +313,7 @@ export function ConstructionSummaryForm({
                       </span>{' '}
                       {t('constructionInspection.summaryForm.orDragDrop')}
                     </p>
-                    <p className="text-[0.75rem] text-gray-400 dark:text-[color:var(--palette-ink-3)] mt-0.5">
+                    <p className="text-[0.8571rem] text-gray-400 dark:text-[color:var(--palette-ink-3)] mt-0.5">
                       PDF, DOC, XLS, JPG, PNG
                     </p>
                   </>
@@ -338,7 +338,7 @@ export function ConstructionSummaryForm({
                 <p className="text-xs font-medium text-gray-700 dark:text-[color:var(--palette-ink)] truncate hover:text-primary transition-colors">
                   {summary?.fileName ?? t('constructionInspection.summaryForm.document')}
                 </p>
-                <p className="text-[0.75rem] text-gray-400 dark:text-[color:var(--palette-ink-3)]">
+                <p className="text-[0.8571rem] text-gray-400 dark:text-[color:var(--palette-ink-3)]">
                   {[
                     summary?.fileExtension?.toUpperCase(),
                     summary?.fileSizeBytes != null ? formatFileSize(summary.fileSizeBytes) : null,

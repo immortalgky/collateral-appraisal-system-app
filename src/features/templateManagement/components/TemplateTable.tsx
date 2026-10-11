@@ -151,7 +151,7 @@ const TemplateTable = ({
         </div>
       ) : (
         <div className={clsx('overflow-x-auto', fillHeight && 'flex-1 min-h-0 overflow-y-auto')}>
-          <table className="w-full text-sm">
+          <table className="w-full text-table">
             <thead className={clsx(fillHeight && 'sticky top-0 z-10 bg-gray-50')}>
               <tr className="border-b border-gray-100 bg-gray-50">
                 {sortableHeader('templateCode', t('templates.columns.code'), 'left', 'w-36')}
@@ -177,18 +177,18 @@ const TemplateTable = ({
                   onClick={() => navigate(`${basePath}/${template.id}`)}
                 >
                   <td className="py-3 px-4">
-                    <span className="text-sm text-gray-800">{template.templateCode}</span>
+                    <span className="text-table text-gray-800">{template.templateCode}</span>
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-900">{template.templateName}</td>
-                  <td className="py-3 px-4 text-sm text-gray-900">
+                  <td className="py-3 px-4 text-table text-gray-900">{template.templateName}</td>
+                  <td className="py-3 px-4 text-table text-gray-900">
                     {propertyTypeLabels.get(template.propertyType) ?? template.propertyType}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-500 max-w-xs truncate">
+                  <td className="py-3 px-4 text-table text-gray-500 max-w-xs truncate">
                     {template.description || <span className="text-gray-300">-</span>}
                   </td>
                   <td className="py-3 px-4 text-center">
                     {template.factorCount != null ? (
-                      <span className="inline-flex items-center gap-1 text-sm text-gray-600">
+                      <span className="inline-flex items-center gap-1 text-table text-gray-600">
                         <Icon name="layer-group" style="regular" className="size-3 text-gray-400" />
                         {template.factorCount}
                       </span>

@@ -34,7 +34,7 @@ export function SummaryCard({ title, children }: { title: ReactNode; children: R
     // max-w — SummaryGrid's max-w caps the grid, not the card; with one track the card
     // would otherwise stretch to the whole pane (808px at 1366). Mock cards are ≤540.
     <div className="min-w-0 max-w-[540px] border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-      <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+      <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
         {title}
       </h4>
       <div className="flex flex-col text-[12.5px]">{children}</div>

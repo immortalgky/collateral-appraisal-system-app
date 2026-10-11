@@ -12,6 +12,11 @@ import { useFormReadOnly } from '../form/context';
 interface FileInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'children'> {
   children: ReactNode | ((isDragging: boolean) => ReactNode);
   fullWidth?: boolean;
+  /**
+   * Drop only the files that match `accept` (the default). Turn it off when the caller validates
+   * what it gets and tells the user about the ones it refuses, rather than losing them silently.
+   */
+  filterDroppedFiles?: boolean;
 }
 
 const FileInput = ({
@@ -20,6 +25,7 @@ const FileInput = ({
   disabled,
   onChange,
   accept,
+  filterDroppedFiles = true,
   ...props
 }: FileInputProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,7 +87,9 @@ const FileInput = ({
     setIsDragging(false);
     if (isDisabled || !onChange) return;
 
-    const droppedFiles = Array.from(e.dataTransfer.files).filter(matchesAccept);
+    const droppedFiles = Array.from(e.dataTransfer.files).filter(
+      file => !filterDroppedFiles || matchesAccept(file),
+    );
     if (droppedFiles.length === 0) return;
 
     // Create a synthetic change event with the filtered files

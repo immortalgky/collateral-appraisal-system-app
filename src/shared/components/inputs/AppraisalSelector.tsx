@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
+import { runGuarded } from '@/shared/utils/runGuarded';
 import { useFormReadOnly } from '../form/context';
 import Icon from '../Icon';
 import SearchAppraisalModal from '@/features/request/components/SearchAppraisalModal';
 import { useAppraisalCopyHandler } from '@/features/request/contexts/AppraisalCopyContext';
-import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
+import type { PriorAppraisal } from '@/features/appraisal/api/priorAppraisal';
 
 interface AppraisalSelectorProps {
   /** Form path for display field (reportNo) */
@@ -37,9 +39,10 @@ const AppraisalSelector = ({
 }: AppraisalSelectorProps) => {
   const { setValue, watch } = useFormContext();
   const isReadOnly = useFormReadOnly();
-  // Picks up the copy handler when inside an AppraisalCopyProvider (create mode only)
-  const onCopySelect = useAppraisalCopyHandler();
-  const isDisabled = disabled || isReadOnly;
+  // Picks up the pick handler when inside an AppraisalCopyProvider (request not submitted yet)
+  const copyHandlers = useAppraisalCopyHandler();
+  const { t } = useTranslation('common');
+  const isDisabled = disabled || isReadOnly || !!copyHandlers?.disabled;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -57,22 +60,28 @@ const AppraisalSelector = ({
     setIsModalOpen(false);
   };
 
-  const handleSelectTemplate = (template: AppraisalCopyTemplate) => {
-    if (onCopySelect) {
-      // Full-copy mode: delegate prefill to caller (RequestPage)
-      onCopySelect(template);
+  const handleSelectTemplate = (template: PriorAppraisal) => {
+    if (copyHandlers) {
+      // Delegate to the caller (RequestPage): full copy when creating, reference + files for a draft
+      runGuarded(() => copyHandlers.onSelect(template), t('status.error'));
     } else {
       // Legacy mode: just stamp the three metadata fields
-      const { prevAppraisal } = template;
-      setValue(name, prevAppraisal.appraisalNumber, { shouldDirty: true });
-      setValue(idField, prevAppraisal.appraisalId, { shouldDirty: true });
-      if (valueField) setValue(valueField, prevAppraisal.appraisalValue, { shouldDirty: true });
-      if (dateField) setValue(dateField, prevAppraisal.appraisalDate, { shouldDirty: true });
+      // From the picked appraisal's header (`request.prevAppraisal` is ITS prior book, not this one)
+      setValue(name, template.appraisalNumber, { shouldDirty: true });
+      setValue(idField, template.id, { shouldDirty: true });
+      if (valueField) setValue(valueField, template.appraisalValue, { shouldDirty: true });
+      if (dateField) setValue(dateField, template.appraisalDate, { shouldDirty: true });
     }
   };
 
   const handleClear = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // The caller clears the fields itself, and removes the files carried from the old reference
+    if (copyHandlers) {
+      runGuarded(() => copyHandlers.onClear(), t('status.error'));
+      return;
+    }
 
     // Clear all mapped fields
     setValue(name, null, { shouldDirty: true });

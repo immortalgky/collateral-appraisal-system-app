@@ -60,7 +60,7 @@ function TaskMonitorPage() {
       {/* ── Page header ── */}
       <div className="shrink-0 mb-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-sm font-semibold text-gray-900">{t('nav:taskMonitor.title')}</h2>
+          <h2 className="text-base font-semibold text-gray-900">{t('nav:taskMonitor.title')}</h2>
           {!isLoading && totalCount > 0 && (
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
               {totalCount}

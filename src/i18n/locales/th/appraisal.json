@@ -20,6 +20,7 @@
     "emptyHint": "ลองปรับเงื่อนไขการค้นหาหรือตัวกรอง",
     "columns": {
       "appraisalNumber": "เลขประเมิน",
+      "appraisalNumberCustomer": "เลขประเมิน / ลูกค้า",
       "customer": "ลูกค้า",
       "status": "สถานะ",
       "priority": "ความสำคัญ",
@@ -27,8 +28,8 @@
       "province": "จังหวัด",
       "assignment": "การมอบหมาย",
       "bankingSegment": "กลุ่มธุรกิจ",
-      "purpose": "วัตถุประสงค์",
-      "propertyType": "ประเภทหลักประกัน",
+      "purposeAndType": "วัตถุประสงค์ · ประเภทงาน",
+      "propertyType": "หลักประกัน",
       "company": "บริษัท",
       "appointment": "นัดหมาย",
       "created": "วันที่สร้าง",
@@ -71,6 +72,9 @@
       "slaDue": "กำหนด SLA",
       "assigneeUserId": "ผู้รับผิดชอบ",
       "add": "เพิ่มตัวกรอง",
+      "more": "อื่นๆ +{{count}}",
+      "moreAria_one": "{{label}} (ตัวกรองอื่น {{count}} รายการ)",
+      "moreAria_other": "{{label}} (ตัวกรองอื่น {{count}} รายการ)",
       "searchIn": "ค้นหา{{label}}…",
       "showingOf": "แสดง {{shown}} จาก {{total}}",
       "typeToFind": "พิมพ์เพื่อค้นหาที่เหลือ",
@@ -193,10 +197,12 @@
       "label": "จัดกลุ่ม",
       "none": "ไม่จัดกลุ่ม",
       "current": "จัดกลุ่ม: {{label}}",
-      "empty": "ไม่ระบุ"
+      "empty": "ไม่ระบุ",
+      "error": "โหลดจำนวนของกลุ่มไม่สำเร็จ"
     },
     "suggest": {
       "goTo": "ไปที่ใบประเมิน",
+      "scope": "ค้นในฟิลด์",
       "searchIn": "ค้นหา “{{term}}” ใน",
       "recent": "ค้นหาล่าสุด",
       "matches": "{{count}} รายการ",
@@ -1470,7 +1476,88 @@
       "saved": "บันทึกรายการตรวจเอกสารแล้ว"
     }
   },
+  "photoSourceModal": {
+    "title": "เพิ่มรูปภาพ",
+    "uploadTitle": "อัปโหลดจากเครื่อง",
+    "uploadHint": "เลือกรูปจากคอมพิวเตอร์หรืออุปกรณ์ของคุณ",
+    "galleryTitle": "เลือกจากแกลเลอรี",
+    "galleryHint": "เลือกจากรูปที่อัปโหลดไว้แล้ว",
+    "supports": "รองรับ: {{types}} (สูงสุด 50MB ต่อไฟล์)",
+    "close": "ปิด"
+  },
+  "gallerySelection": {
+    "title": "เลือกจากแกลเลอรี",
+    "available_one": "มีรูปภาพ {{count}} รูป",
+    "available_other": "มีรูปภาพ {{count}} รูป",
+    "searchPlaceholder": "ค้นหาตามชื่อหรือคำอธิบาย...",
+    "showing": "แสดง {{shown}} จาก {{total}}",
+    "selectAll": "เลือกทั้งหมด",
+    "selected_one": "เลือกแล้ว {{count}} รูป",
+    "selected_other": "เลือกแล้ว {{count}} รูป",
+    "clearSelection": "ล้างที่เลือก",
+    "noPhotos": "ไม่พบรูปภาพ",
+    "tryDifferent": "ลองใช้คำค้นอื่น",
+    "uploadFirst": "อัปโหลดรูปไปที่แกลเลอรีก่อน",
+    "readyToAdd_one": "พร้อมเพิ่ม {{count}} รูป",
+    "readyToAdd_other": "พร้อมเพิ่ม {{count}} รูป",
+    "clickToSelect": "คลิกรูปเพื่อเลือก",
+    "cancel": "ยกเลิก",
+    "add_one": "เพิ่ม {{count}} รูป",
+    "add_other": "เพิ่ม {{count}} รูป",
+    "selectPhoto": "เลือกรูป",
+    "close": "ปิด"
+  },
   "valuationDocuments": {
+    "appendix": {
+      "title": "เอกสารภาคผนวก",
+      "addFiles": "เพิ่มไฟล์",
+      "addTo": "เพิ่ม {{name}}",
+      "editImage": "แก้ไขรูป",
+      "empty": "ไม่พบหมวดภาคผนวก",
+      "loading": "กำลังโหลดภาคผนวก...",
+      "loadFailed": "โหลดภาคผนวกไม่สำเร็จ",
+      "galleryFailed": "โหลดแกลเลอรีไม่สำเร็จ",
+      "deleteDialog": {
+        "title": "ลบเอกสาร",
+        "message": "ต้องการลบเอกสารนี้ใช่หรือไม่ การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+        "confirm": "ลบ"
+      }
+    },
+    "appendixTypes": {
+      "BRIEF_MAP": "แผนที่สังเขป",
+      "DETAILED_MAP": "แผนที่ละเอียด",
+      "EARTH_MAP": "แผนที่ Earth",
+      "LAND_MAP": "ระวางแดง",
+      "CITY_PLAN": "ผังเมือง",
+      "STATUTORY_PLAN": "ผังตามกฎหมาย",
+      "LAND_PLAN": "ผังที่ดิน",
+      "BUILDING_LAYOUT": "ผังสิ่งปลูกสร้าง",
+      "BLUEPRINT": "แบบแปลน",
+      "PHOTO_SPOT": "รูปถ่ายกับจุดถ่ายภาพ",
+      "REG_INDEX": "สารบัญจดทะเบียน"
+    },
+    "checklist": {
+      "tablistLabel": "ส่วนของเอกสาร",
+      "tabs": {
+        "request": "เอกสารคำขอ",
+        "valuation": "เอกสารประเมิน",
+        "appendix": "สร้างเล่มรายงาน"
+      },
+      "tabCounts": {
+        "missing": "ขาด {{count}}",
+        "complete": "ครบ",
+        "files_one": "{{count}} ไฟล์",
+        "files_other": "{{count}} ไฟล์"
+      },
+      "requestTitle": "เอกสารคำขอ",
+      "readOnlyTag": "อ่านอย่างเดียว",
+      "requestEmpty": "ไม่พบเอกสารคำขอ",
+      "requestLoadFailed": "โหลดเอกสารคำขอไม่สำเร็จ",
+      "valuationEmpty": "ไม่พบประเภทเอกสาร",
+      "typesWithFiles": "{{done}}/{{total}} ประเภท",
+      "noteSaved": "บันทึกหมายเหตุแล้ว",
+      "noteSaveFailed": "บันทึกหมายเหตุไม่สำเร็จ"
+    },
     "sections": {
       "documentChecklist": "รายการตรวจเอกสาร",
       "appraisalBookBuilder": "จัดทำเล่มรายงานการประเมิน",
@@ -1486,11 +1573,7 @@
     "typesCount_one": "{{count}} ประเภท",
     "typesCount_other": "{{count}} ประเภท",
     "progress": "แนบแล้ว {{uploaded}} / {{total}}",
-    "expandAll": "ขยายทั้งหมด",
-    "collapseAll": "ย่อทั้งหมด",
     "noFile": "ไม่มีไฟล์",
-    "fileCount_one": "{{count}} ไฟล์",
-    "fileCount_other": "{{count}} ไฟล์",
     "attach": "แนบไฟล์",
     "generate": "สร้างรายงาน",
     "view": "ดู",
@@ -1525,6 +1608,8 @@
     "openInNewTab": "เปิดในแท็บใหม่",
     "generatePreview": "สร้างตัวอย่าง",
     "idleHint": "สร้างตัวอย่างรายงานประเมินเพื่อดูที่นี่",
+    "noPreviewYet": "ยังไม่มีตัวอย่างเล่ม",
+    "previewUnavailable": "แสดงตัวอย่างเล่มไม่ได้",
     "generating": "กำลังสร้างตัวอย่าง…",
     "fetchFailed": "ไม่สามารถโหลดตัวอย่างรายงานได้",
     "renderFailed": "ไม่สามารถแสดงตัวอย่างรายงานได้",
@@ -2906,7 +2991,13 @@
       "north": "ทิศเหนือ",
       "south": "ทิศใต้",
       "east": "ทิศตะวันออก",
-      "west": "ทิศตะวันตก"
+      "west": "ทิศตะวันตก",
+      "condo": {
+        "title": "หนังสือกรรมสิทธิ์ห้องชุด",
+        "sub": "(อ.ช.2)",
+        "landDeed": "โฉนดที่ดินเลขที่",
+        "location": "ที่ตั้งห้องชุด"
+      }
     },
     "list": {
       "sortByNumber": "เรียงตามเลขโฉนด",

@@ -1,294 +1,192 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import toast from 'react-hot-toast';
-import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
+import clsx from 'clsx';
+import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import LoadingSpinner from '@/shared/components/LoadingSpinner';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import DocumentActionMenu from './DocumentActionMenu';
+import { useFormReadOnly } from '@/shared/components/form/context';
+import { useAuthStore } from '@features/auth/store.ts';
 import DocumentEditModal from './DocumentEditModal';
 import MoveDocumentModal, { type MoveTargetSection } from './MoveDocumentModal';
-import AppointmentLetterButton from './AppointmentLetterButton';
-import { useUploadDocument, useViewDocument } from '../api';
+import AddTitleDocumentModal from './AddTitleDocumentModal';
+import CarryForwardSummary, { CarryForwardLoadError } from './CarryForwardSummary';
+import CreateRequestFileInput, {
+  type CreateRequestFileInputHandle,
+} from './CreateRequestFileInput';
+import DocumentCardHeader from './documentCard/DocumentCardHeader';
+import DocumentPreviewPane from './documentCard/DocumentPreviewPane';
+import { useCardIsWide, usePreviewPaneShown } from './documentCard/usePaneLayout';
+import SlideOverPanel from '@/shared/components/SlideOverPanel';
+import DocumentSection, { type SectionActions } from './documentCard/DocumentSection';
+import DocumentToolbar from './documentCard/DocumentToolbar';
+import { useTitleLabel } from '../hooks/useTitleLabel';
+import {
+  APPOINTMENT_LETTER_DOC_TYPE,
+  APPOINTMENT_LETTER_FILE,
+  isGeneratedAppointmentLetter,
+  useAppointmentLetter,
+} from '../hooks/useAppointmentLetter';
+import { useTitleEditorOpen } from '../store/titleEditorStore';
+import { MAX_UPLOAD_BYTES, useUploadDocument, useViewDocument } from '../api';
+import {
+  placeInFlight,
+  revertInFlight,
+  runLimited,
+  splitUploadable,
+  startInFlight,
+} from '../utils/uploadFiles';
+import {
+  useGetPriorAppraisalDocuments,
+  type CarryForwardDocument,
+} from '@/features/appraisal/api/priorAppraisal';
+import {
+  removeFiles,
+  deriveCarryForward,
+  carriedTitleRef,
+  makeUploadedRow,
+  restoreTarget,
+  isCarried,
+  placeDocument,
+  pickCarryForwardTitles,
+  titleNumberOf,
+  titleKey,
+  formTitleKey,
+  type CarryForwardTitle,
+  toFormDocument,
+} from '../utils/carryForward';
+import {
+  alwaysShowType,
+  documentKey,
+  filterRows,
+  groupByType,
+  kpis,
+  sectionStats,
+  visibleFiles,
+  withTypeRow,
+  type DocFilter,
+  type TypeRow,
+} from '../utils/documentList';
 import { getDocumentCategory, type UploadedDocument } from '../types/document';
-import { useGetDocumentTypes, getDocumentTypeName } from '../api/documentTypes';
-import clsx from 'clsx';
-import { useAuthStore } from '@features/auth/store.ts';
-import { useFormReadOnly } from '@/shared/components/form/context';
+import {
+  useGetDocumentTypes,
+  getDocumentTypeName,
+  getDocumentTypeSearchText,
+} from '../api/documentTypes';
 
-interface UploadedDocumentRowProps {
-  document: UploadedDocument;
-  entityType: 'request' | 'title';
-  entityIndex: number;
-  isSelected: boolean;
-  onSelect: (selected: boolean) => void;
-  onDelete: (document: UploadedDocument) => void;
-  onEdit: (document: UploadedDocument) => void;
-  onReplace: (document: UploadedDocument) => void;
-  onMove: (document: UploadedDocument) => void;
-  onView: (document: UploadedDocument) => void;
-  onUpload: (document: UploadedDocument) => void;
-  readOnly?: boolean;
-  getDocTypeName: (code: string) => string;
-}
-
-const UploadedDocumentRow: React.FunctionComponent<UploadedDocumentRowProps> = ({
-  document,
-  isSelected,
-  onSelect,
-  onDelete,
-  onEdit,
-  onReplace,
-  onMove,
-  onView,
-  onUpload,
-  readOnly,
-  getDocTypeName,
-}) => {
-  const { t } = useTranslation('request');
-  const formatFileSize = (bytes?: number) => {
-    if (!bytes) return '';
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    return (
-      date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) +
-      ' ' +
-      date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-    );
-  };
-
-  const getFileIcon = (fileName?: string | null) => {
-    if (!fileName) return null;
-    const extension = fileName.split('.').pop()?.toLowerCase();
-
-    if (extension === 'pdf') {
-      return <Icon name="file-pdf" style="solid" className="w-8 h-8 text-red-500" />;
-    }
-    if (['png', 'jpg', 'jpeg', 'gif'].includes(extension || '')) {
-      return <Icon name="file-image" style="solid" className="w-8 h-8 text-blue-500" />;
-    }
-    return <Icon name="file" style="solid" className="w-8 h-8 text-gray-500" />;
-  };
-
-  const isUploading = document?.isUploading || false;
-  const displayName =
-    document.displayName ||
-    (document.documentType ? getDocTypeName(document.documentType) : 'Unknown');
-  const isRequired = document.isRequired;
-  const hasFile = !!document.fileName;
-  const isEmpty = !hasFile;
-  const isRequiredEmpty = isRequired && !hasFile;
-  const noteText = document.notes?.trim() || '';
-  const hasNotes = noteText.length > 0;
-
-  return (
-    <tr
-      className={clsx(
-        'hover:bg-gray-50 transition-colors',
-        isUploading && 'opacity-60',
-        isSelected && 'bg-primary/5',
-        isRequiredEmpty && 'bg-amber-50/50',
-      )}
-    >
-      <td className="px-4 py-3 w-10">
-        {!readOnly && (
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={e => onSelect(e.target.checked)}
-            disabled={isUploading || isEmpty}
-            className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary disabled:opacity-50 cursor-pointer"
-          />
-        )}
-      </td>
-      <td className="px-4 py-3 w-[25%]">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-700 text-sm">{displayName}</span>
-          {isRequired && (
-            <span
-              className={clsx(
-                'inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-medium rounded shrink-0',
-                hasFile ? 'bg-success/10 text-success' : 'bg-amber-100 text-amber-700',
-              )}
-            >
-              <Icon name={hasFile ? 'check' : 'asterisk'} style="solid" className="w-2.5 h-2.5" />
-              {t('documents.requiredBadge')}
-            </span>
-          )}
-        </div>
-      </td>
-      <td className="px-4 py-3 w-[37%]">
-        {isEmpty ? (
-          <button
-            type="button"
-            onClick={() => !readOnly && onUpload(document)}
-            disabled={readOnly}
-            className={clsx('flex items-center gap-2', !readOnly && 'cursor-pointer group')}
-          >
-            <div
-              className={clsx(
-                'w-10 h-10 rounded border-2 border-dashed flex items-center justify-center shrink-0 transition-colors',
-                isRequiredEmpty
-                  ? 'border-amber-300 bg-amber-50 group-hover:border-amber-400 group-hover:bg-amber-100'
-                  : 'border-gray-300 bg-gray-50 group-hover:border-gray-400 group-hover:bg-gray-100',
-              )}
-            >
-              <Icon
-                name="cloud-arrow-up"
-                style="solid"
-                className={clsx('w-4 h-4', isRequiredEmpty ? 'text-amber-400' : 'text-gray-400')}
-              />
-            </div>
-            <div className="flex flex-col min-w-0 text-left">
-              <span
-                className={clsx(
-                  'text-sm font-medium',
-                  isRequiredEmpty ? 'text-amber-700' : 'text-gray-500',
-                )}
-              >
-                {isRequiredEmpty ? t('documents.awaitingUpload') : t('documents.optional')}
-              </span>
-              <span
-                className={clsx('text-xs', isRequiredEmpty ? 'text-amber-500' : 'text-gray-400')}
-              >
-                {t('documents.clickToUpload')}
-              </span>
-            </div>
-          </button>
-        ) : (
-          <div className="flex items-center gap-2">
-            {isUploading ? (
-              <LoadingSpinner size="sm" variant="default" />
-            ) : (
-              <button
-                type="button"
-                onClick={() => onView(document)}
-                className="shrink-0 cursor-pointer"
-              >
-                {getFileIcon(document.fileName)}
-              </button>
-            )}
-            <div className="flex flex-col min-w-0">
-              {isUploading ? (
-                <span className="text-sm font-medium text-gray-900 truncate">
-                  {document.fileName}
-                </span>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => onView(document)}
-                  className="text-sm font-medium text-gray-900 truncate text-left hover:underline hover:text-primary cursor-pointer"
-                >
-                  {document.fileName}
-                </button>
-              )}
-              <span className="text-xs text-gray-500">
-                {isUploading ? t('documents.uploading') : formatFileSize(document.file?.size)}
-              </span>
-            </div>
-          </div>
-        )}
-      </td>
-      <td className="px-4 py-3 w-44 text-sm text-gray-700">
-        {isEmpty ? '-' : formatDate(document.uploadedAt)}
-      </td>
-      <td className="px-4 py-3 w-16 text-center">
-        {hasNotes ? (
-          <Popover className="relative inline-block">
-            <PopoverButton
-              aria-label={t('documents.notesLabel')}
-              title={t('documents.notesLabel')}
-              className="inline-flex items-center justify-center text-amber-500 hover:text-amber-600 focus:outline-none cursor-pointer"
-            >
-              <Icon name="note-sticky" style="solid" className="w-4 h-4" />
-            </PopoverButton>
-            <PopoverPanel
-              anchor="bottom end"
-              className="w-64 max-w-xs bg-white rounded-lg border border-neutral-300 shadow-lg p-3 z-50"
-            >
-              {({ close }) => (
-                <>
-                  <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-[11px] font-semibold text-gray-500 uppercase">
-                      {t('documents.notesLabel')}
-                    </p>
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          close();
-                          onEdit(document);
-                        }}
-                        aria-label={t('documentActions.editDetails')}
-                        title={t('documentActions.editDetails')}
-                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline focus:outline-none cursor-pointer"
-                      >
-                        <Icon name="pen-to-square" style="regular" className="w-3 h-3" />
-                        {t('documentActions.editDetails')}
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-800 whitespace-pre-wrap break-words">
-                    {noteText}
-                  </p>
-                </>
-              )}
-            </PopoverPanel>
-          </Popover>
-        ) : (
-          <span className="text-sm text-gray-300">-</span>
-        )}
-      </td>
-      <td className="px-4 py-3 w-20 text-center">
-        {isUploading ? (
-          <span className="text-xs text-gray-500">{t('documents.processing')}</span>
-        ) : readOnly ? (
-          isEmpty ? (
-            <span className="text-sm text-gray-400">-</span>
-          ) : (
-            <DocumentActionMenu document={document} onView={onView} />
-          )
-        ) : isEmpty ? (
-          <span className="text-sm text-gray-400">-</span>
-        ) : (
-          <DocumentActionMenu
-            document={document}
-            onView={onView}
-            onDelete={onDelete}
-            onEdit={onEdit}
-            onReplace={onReplace}
-            onMove={onMove}
-          />
-        )}
-      </td>
-    </tr>
-  );
-};
+/** More titles than this and their document sections start closed. */
+const COLLAPSE_TITLES_ABOVE = 20;
 
 interface DocumentUploaderProps {
   getOrCreateSession: () => Promise<string>;
-  /** Saved request id — enables the Appointment Letter action in the summary bar. */
+  /** Saved request id: what the appointment letter on the D035 row is generated for. */
   requestId?: string;
+  /** Request not submitted yet: mark files taken from the previous appraisal and let the maker leave some out. */
+  showCarryForward?: boolean;
+  /** Reload (and, after a failed pick, apply) the previous appraisal's documents. */
+  onRetryCarryForward?: () => void;
+  /** The default files still have to be added, whatever the list's own load state says now. */
+  /** A pick is loading: the retry action is held, like the selector is. */
+  carryBusy?: boolean;
+  /**
+   * Show only this title's documents, for the title editor: no card header, toolbar, drop bar,
+   * preview pane or unused-files list, and no Move. A click on a file opens it in a new tab.
+   */
+  scope?: { titleIndex: number; heading: string };
 }
 
-const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
+/** The server's own message for a failed request, when it sent one. */
+const apiErrorDetail = (error: unknown): string | undefined =>
+  (error as { apiError?: { detail?: string } } | null)?.apiError?.detail;
+
+const NO_TITLES: CarryForwardTitle[] = [];
+
+const DocumentCard: React.FunctionComponent<
+  DocumentUploaderProps & { titles: CarryForwardTitle[] }
+> = ({
+  titles,
   getOrCreateSession,
   requestId,
+  showCarryForward = false,
+  onRetryCarryForward,
+  carryBusy = false,
+  scope,
 }) => {
   const { t } = useTranslation(['request', 'common']);
+  const scoped = scope !== undefined;
   const isReadOnly = useFormReadOnly();
   const currentUser = useAuthStore(state => state.user);
   const { data: documentTypes = [] } = useGetDocumentTypes();
-  const { watch, setValue } = useFormContext();
-  const titles = watch('titles') || [];
-  const headerRef = useRef<HTMLTableSectionElement>(null);
-  const [headerHeight, setHeaderHeight] = useState(0);
+  const { control, getValues, setValue } = useFormContext();
+  // What this card renders from is subscribed with useWatch, which re-renders the card alone. A
+  // `watch()` here (anywhere, even in a handler) would re-render the whole page on every keystroke
+  // under that path. Handlers and effects read the current value with getValues. The titles come
+  // in as a prop (see DocumentUploader below).
+  useWatch({ control, name: 'documents' }); // subscribe only; the rows are read with getValues
+  const prevAppraisalId = useWatch({ control, name: 'detail.prevAppraisalId' });
+  const prevAppraisalReportNo = useWatch({ control, name: 'detail.prevAppraisalReportNo' });
+  const requestNumber = useWatch({ control, name: 'requestNumber' });
+  const carryOn = showCarryForward && !isReadOnly;
+  const {
+    data: carryData,
+    isError: carryLoadFailed,
+    isFetching: carryFetching,
+  } = useGetPriorAppraisalDocuments(prevAppraisalId, carryOn);
+  // "Don't use" is only offered while the unused list can bring the file back; without that list a
+  // carried row is deleted like any other, with the confirm.
+  const canDontUse = carryOn && !!carryData && carryData.documents.length > 0;
+  // …and only for a row whose own file the endpoint lists, so it will be in the unused list.
+  const carriedDocumentIds = useMemo(
+    () => new Set(carryData?.documents.map(entry => entry.documentId)),
+    [carryData],
+  );
+  const canDontUseRow = (doc: UploadedDocument) =>
+    canDontUse && isCarried(doc) && carriedDocumentIds.has(doc.documentId ?? '');
+  const uploadBarRef = useRef<CreateRequestFileInputHandle>(null);
+  // The side pane needs room: on a narrow card (the page's own right panel counts) it is not
+  // rendered and the same content opens as a slide-over. The user can also collapse it on a wide one.
+  const titleLabels = useTitleLabel();
+  const [cardRef, cardIsWide] = useCardIsWide();
+  const [paneShown, togglePane] = usePreviewPaneShown();
+  const showSidePane = cardIsWide && paneShown && !scoped;
+  // The slide-over is a dialog: while it is open the rest of the page is inert, so the file picker
+  // (Replace), the move chooser and the delete confirm would not work behind it. They start once
+  // the slide-over has finished closing (its `afterLeave`).
+  const drawerAction = useRef<(() => void) | null>(null);
+  const afterDrawerCloses = (action: () => void) => {
+    drawerAction.current = action;
+    setSelectedFile(null);
+  };
+  const runDrawerAction = () => {
+    const action = drawerAction.current;
+    drawerAction.current = null;
+    action?.();
+  };
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  // A drag that ends anywhere (dropped elsewhere, cancelled with Escape) must not leave the
+  // highlight on.
+  useEffect(() => {
+    const stop = () => setIsDraggingOver(false);
+    window.addEventListener('dragend', stop);
+    window.addEventListener('drop', stop);
+    return () => {
+      window.removeEventListener('dragend', stop);
+      window.removeEventListener('drop', stop);
+    };
+  }, []);
+  // The file open in the side pane, found again by key each render so it follows edits and goes
+  // away when the file does.
+  const [selectedFile, setSelectedFile] = useState<{
+    entityType: 'request' | 'title';
+    entityIndex: number;
+    docKey: string;
+  } | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const [listQuery, setListQuery] = useState({
+    query: '',
+    filter: 'all' as DocFilter,
+  });
   const [editingDocument, setEditingDocument] = useState<{
     document: UploadedDocument;
     entityType: 'request' | 'title';
@@ -306,12 +204,20 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     entityIndex: number;
   } | null>(null);
   const replaceFileInputRef = useRef<HTMLInputElement>(null);
+  // The slide-over's own file input. It lives inside the dialog, so Replace can open the picker in
+  // the click itself (a picker opened later, after the dialog closed, is blocked by Safari).
+  const drawerReplaceInputRef = useRef<HTMLInputElement>(null);
   const [uploadingToDocument, setUploadingToDocument] = useState<{
     docType: string;
+    /** Key of the empty slot row the file goes into (other rows of the type are left alone); null = add a row. */
+    docKey: string | null;
+    required: boolean;
     entityType: 'request' | 'title';
     entityIndex: number;
   } | null>(null);
   const uploadFileInputRef = useRef<HTMLInputElement>(null);
+  // A title's drawer: "add another document" asks for the type, then opens the file picker
+  const [addOtherOpen, setAddOtherOpen] = useState(false);
   const [selectedDocuments, setSelectedDocuments] = useState<Set<string>>(new Set());
   const [deleteConfirm, setDeleteConfirm] = useState<{
     isOpen: boolean;
@@ -320,9 +226,56 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     entityIndex: number;
   }>({ isOpen: false, document: null, entityType: 'request', entityIndex: -1 });
   const [bulkDeleteConfirm, setBulkDeleteConfirm] = useState(false);
-  const [collapsedSections, setCollapsedSections] = useState<Set<string>>(new Set());
+  // Generating the letter when D035 already holds files: what it would replace, until the maker says
+  const [generateConfirm, setGenerateConfirm] = useState<{
+    row: TypeRow;
+    keys: string[];
+    /** The files are the system's own earlier letters (else they are the maker's uploads). */
+    generated: boolean;
+  } | null>(null);
+  const appointment = useAppointmentLetter(requestId, getOrCreateSession);
+  // Sections the maker opened or closed by hand, by section key. Anything not in here follows the
+  // default: with many titles the title sections start closed (see COLLAPSE_TITLES_ABOVE).
+  const [sectionState, setSectionState] = useState<ReadonlyMap<string, boolean>>(new Map());
+  // Decided once, when the card first has titles (a request opened with 80, or 80 imported into an
+  // empty one), and not again: adding the 21st title must not close what the maker has open.
+  // With no titles left it is decided again: every title deleted and 80 imported, or the form
+  // reset to another request without this card remounting.
+  const closedByDefault = useRef<boolean | null>(null);
+  if (titles.length === 0) closedByDefault.current = null;
+  else if (closedByDefault.current === null) {
+    closedByDefault.current = titles.length > COLLAPSE_TITLES_ABOVE;
+  }
+  // A title with no id yet is keyed by its position, so when the titles are removed or reordered
+  // those keys point at other titles: forget what was set by hand for them (the section's open
+  // state and its rows' expanded files). Plain appends keep them. An unsaved title is told apart
+  // by its type and number, so a reorder among unsaved titles is seen too.
+  const prevTitleIds = useRef<string[]>([]);
+  useEffect(() => {
+    const ids = titles.map(
+      title => title.id ?? `new:${title.collateralType}|${titleNumberOf(title)}`,
+    );
+    const prev = prevTitleIds.current;
+    prevTitleIds.current = ids;
+    if (ids.length >= prev.length && prev.every((id, i) => id === ids[i])) return;
+    const withoutStale = (keys: Iterable<string>, drop: (key: string) => void) => {
+      for (const key of [...keys]) if (key.startsWith('title-new-')) drop(key);
+    };
+    setSectionState(state => {
+      const next = new Map(state);
+      withoutStale(state.keys(), key => next.delete(key));
+      return next.size === state.size ? state : next;
+    });
+    setExpandedRows(rows => {
+      const next = new Set(rows);
+      withoutStale(rows, key => next.delete(key));
+      return next.size === rows.size ? rows : next;
+    });
+  }, [titles]);
 
-  const { mutate: uploadDocument } = useUploadDocument();
+  // mutateAsync, not mutate: the callbacks of mutate() are dropped when the component unmounts, which
+  // would leave a row "uploading" for good. The promise settles either way.
+  const { mutateAsync: uploadDocument } = useUploadDocument();
   const viewDocument = useViewDocument();
 
   // Object URLs handed to preview tabs for files that are not uploaded yet, kept so they can be
@@ -352,10 +305,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     if (localPreviewUrls.current.size === 0) return;
 
     const attached = new Set<File>();
-    for (const doc of (watch('documents') as UploadedDocument[] | undefined) ?? []) {
+    for (const doc of (getValues('documents') as UploadedDocument[] | undefined) ?? []) {
       if (doc.file) attached.add(doc.file);
     }
-    for (const title of (watch('titles') as { documents?: UploadedDocument[] }[] | undefined) ??
+    for (const title of (getValues('titles') as { documents?: UploadedDocument[] }[] | undefined) ??
       []) {
       for (const doc of title?.documents ?? []) {
         if (doc.file) attached.add(doc.file);
@@ -379,33 +332,8 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
   // Toggle section collapse state
   const toggleSection = (sectionKey: string) => {
-    setCollapsedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(sectionKey)) {
-        newSet.delete(sectionKey);
-      } else {
-        newSet.add(sectionKey);
-      }
-      return newSet;
-    });
+    setSectionState(prev => new Map(prev).set(sectionKey, !isCollapsedKey(prev, sectionKey)));
   };
-
-  // Expand/collapse all sections
-  const toggleAllSections = (collapse: boolean) => {
-    if (collapse) {
-      const allKeys = generateDocumentSections().map(
-        item => `${item.entityType}-${item.entityIndex}`,
-      );
-      setCollapsedSections(new Set(allKeys));
-    } else {
-      setCollapsedSections(new Set());
-    }
-  };
-
-  // Stable per-document identity. Saved docs use id/documentId; locally-created docs may carry a
-  // rowId; placeholders (one per type) fall back to documentType. Lets same-type duplicates coexist.
-  const getDocKey = (doc: UploadedDocument): string =>
-    doc.rowId ?? doc.id ?? doc.documentId ?? doc.documentType ?? '';
 
   // Helper to create unique document identifier (per section + per document)
   // Uses | as separator to avoid issues with negative entityIndex (-1)
@@ -413,24 +341,20 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     return `${entityType}|${entityIndex}|${docKey}`;
   };
 
-  useEffect(() => {
-    if (headerRef.current) {
-      setHeaderHeight(headerRef.current.offsetHeight);
-    }
-  }, []);
-
   // Get uploaded documents for request level
   const getRequestDocuments = (): UploadedDocument[] => {
-    return watch('documents') || [];
+    return getValues('documents') || [];
   };
 
   // Get uploaded documents for a specific title
   const getTitleDocuments = (entityIndex: number): UploadedDocument[] => {
-    return watch(`titles.${entityIndex}.documents`) || [];
+    return getValues(`titles.${entityIndex}.documents`) || [];
   };
 
   // Generate sections with their uploaded documents
   interface DocumentSection {
+    /** Stays with the section when the titles are reordered: the title's id once it has one. */
+    sectionKey: string;
     entityType: 'request' | 'title';
     entityKey: string;
     entityIndex: number;
@@ -438,22 +362,37 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   }
 
   const generateDocumentSections = (): DocumentSection[] => {
+    // The title editor's list: just its title (no labels are needed, the editor says which)
+    if (scope)
+      return [
+        {
+          sectionKey: titles[scope.titleIndex]?.id
+            ? `title-${titles[scope.titleIndex].id}`
+            : `title-new-${scope.titleIndex}`,
+          entityType: 'title',
+          entityKey: '',
+          entityIndex: scope.titleIndex,
+          documents: getTitleDocuments(scope.titleIndex),
+        },
+      ];
     const sections: DocumentSection[] = [];
-    const requestNumber = watch('requestNumber');
 
     // Add request-level section
     sections.push({
+      sectionKey: 'request',
       entityType: 'request',
-      entityKey: requestNumber || 'This request',
+      entityKey: requestNumber || t('moveDocument.requestLevelLabel'),
       entityIndex: -1,
       documents: getRequestDocuments(),
     });
 
     // Add title-level sections
-    titles.forEach((title: any, index: number) => {
+    const labels = titleLabels(titles);
+    titles.forEach((_title, index) => {
       sections.push({
+        sectionKey: _title?.id ? `title-${_title.id}` : `title-new-${index}`,
         entityType: 'title',
-        entityKey: title?.titleNumber || `Title ${index + 1}`,
+        entityKey: labels[index],
         entityIndex: index,
         documents: getTitleDocuments(index),
       });
@@ -462,63 +401,33 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     return sections;
   };
 
-  // Count total uploaded documents (excluding empty required placeholders)
-  const getTotalUploadedCount = (): number => {
-    const sections = generateDocumentSections();
-    return sections.reduce(
-      (total, section) => total + section.documents.filter(doc => doc.fileName).length,
-      0,
-    );
-  };
-
-  // Count required documents statistics
-  const getRequiredDocStats = (): { total: number; completed: number } => {
-    const sections = generateDocumentSections();
-    let total = 0;
-    let completed = 0;
-
-    sections.forEach(section => {
-      section.documents.forEach(doc => {
-        if (doc.isRequired) {
-          total++;
-          if (doc.fileName) {
-            completed++;
-          }
-        }
-      });
-    });
-
-    return { total, completed };
-  };
-
-  // Get a specific document by entity and document type
-  const getDocumentForSlot = (
+  // The empty slot row with this key, i.e. the one the upload targets, never a filled row of the same type
+  const getEmptySlot = (
     entityType: 'request' | 'title',
     entityIndex: number,
-    docType: string,
-  ): UploadedDocument | null => {
-    if (entityType === 'request') {
-      const documents = getRequestDocuments();
-      return documents.find((doc: UploadedDocument) => doc.documentType === docType) || null;
-    } else {
-      const titleDocuments = getTitleDocuments(entityIndex);
-      return titleDocuments.find((doc: UploadedDocument) => doc.documentType === docType) || null;
-    }
-  };
+    docKey: string,
+  ): UploadedDocument | null =>
+    (entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex)).find(
+      (doc: UploadedDocument) => documentKey(doc) === docKey && !doc.fileName,
+    ) || null;
 
+  // `dirty: false` is for a row that is only on its way (an upload, a letter being made) and for taking
+  // it back out: nothing the maker changed yet, so a failure leaves the form as clean as it was. The
+  // write that settles it (the file arrived) marks the form dirty, as every edit does.
   const updateDocument = (
     entityType: 'request' | 'title',
     entityIndex: number,
     _docType: string,
     updater: (docs: UploadedDocument[]) => UploadedDocument[],
+    dirty = true,
   ) => {
     if (entityType === 'request') {
-      const documents = watch('documents') || [];
-      setValue('documents', updater(documents), { shouldDirty: true });
+      const documents = getValues('documents') || [];
+      setValue('documents', updater(documents), { shouldDirty: dirty });
     } else {
-      const titleDocuments = watch(`titles.${entityIndex}.documents`) || [];
+      const titleDocuments = getValues(`titles.${entityIndex}.documents`) || [];
       setValue(`titles.${entityIndex}.documents`, updater(titleDocuments), {
-        shouldDirty: true,
+        shouldDirty: dirty,
       });
     }
   };
@@ -528,45 +437,59 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     entityType: 'request' | 'title',
     entityIndex: number,
   ) => {
+    if (canDontUseRow(document)) {
+      removeDocument(document, entityType, entityIndex, 'carryForward.toasts.unused');
+      return;
+    }
     setDeleteConfirm({ isOpen: true, document, entityType, entityIndex });
+  };
+
+  const removeDocument = (
+    document: UploadedDocument,
+    entityType: 'request' | 'title',
+    entityIndex: number,
+    // "Don't use" on a carried row says so in its own words instead of "deleted"
+    toastKey?: 'carryForward.toasts.unused',
+  ) => {
+    const targetKey = documentKey(document);
+
+    // A required row keeps an empty slot only when it is the last of its type (see removeFiles)
+    updateDocument(entityType, entityIndex, document.documentType || '', docs =>
+      removeFiles(docs, doc => documentKey(doc) === targetKey),
+    );
+    toast.success(
+      t(
+        toastKey ?? (document.isRequired ? 'toasts.documentFileRemoved' : 'toasts.documentDeleted'),
+      ),
+    );
+  };
+
+  // Puts a carried file into a section: its empty slot of that type, else a new row, stamped PREV
+  const restoreInto = (
+    doc: CarryForwardDocument,
+    target: { entityType: 'request' | 'title'; entityIndex: number },
+  ) => {
+    const titleId = target.entityType === 'title' ? (titles[target.entityIndex]?.id ?? null) : null;
+    updateDocument(target.entityType, target.entityIndex, doc.suggestedType, docs =>
+      placeDocument(docs, toFormDocument(doc, titleId)),
+    );
+    toast.success(t('carryForward.toasts.restored'));
+  };
+
+  // Where a file goes when it comes back: request level, or the one title with its key. A title
+  // file that matches none, or several, asks the maker which section it belongs in.
+  const [restoreChooser, setRestoreChooser] = useState<CarryForwardDocument | null>(null);
+  const handleRestoreCarried = (doc: CarryForwardDocument) => {
+    const target = restoreTarget(titles, doc);
+    if (target) restoreInto(doc, target);
+    else setRestoreChooser(doc);
   };
 
   const confirmDelete = () => {
     if (!deleteConfirm.document) return;
 
     const { document, entityType, entityIndex } = deleteConfirm;
-    const isRequired = document.isRequired;
-    const targetKey = getDocKey(document);
-
-    // Helper to identify the specific document row
-    const isTargetDoc = (doc: UploadedDocument) => getDocKey(doc) === targetKey;
-
-    if (isRequired) {
-      // For required documents: clear file but keep placeholder
-      updateDocument(entityType, entityIndex, document.documentType || '', docs =>
-        docs.map(doc =>
-          isTargetDoc(doc)
-            ? {
-                ...doc,
-                fileName: null,
-                file: undefined,
-                documentId: null,
-                filePath: null,
-                uploadedAt: new Date().toISOString(),
-                uploadedBy: null,
-                uploadedByName: null,
-              }
-            : doc,
-        ),
-      );
-      toast.success(t('toasts.documentFileRemoved'));
-    } else {
-      // For non-required documents: remove entire record
-      updateDocument(entityType, entityIndex, document.documentType || '', docs =>
-        docs.filter(doc => !isTargetDoc(doc)),
-      );
-      toast.success(t('toasts.documentDeleted'));
-    }
+    removeDocument(document, entityType, entityIndex);
 
     setDeleteConfirm({ isOpen: false, document: null, entityType: 'request', entityIndex: -1 });
   };
@@ -583,10 +506,10 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     if (!editingDocument) return;
 
     const { entityType, entityIndex } = editingDocument;
-    const targetKey = getDocKey(editingDocument.document);
+    const targetKey = documentKey(editingDocument.document);
 
     updateDocument(entityType, entityIndex, updatedDocument.documentType || '', docs =>
-      docs.map(doc => (getDocKey(doc) === targetKey ? updatedDocument : doc)),
+      docs.map(doc => (documentKey(doc) === targetKey ? updatedDocument : doc)),
     );
 
     setEditingDocument(null);
@@ -605,57 +528,50 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     if (!movingDocument) return;
 
     const { document, entityType, entityIndex } = movingDocument;
-    const movingKey = getDocKey(document);
+    const movingKey = documentKey(document);
 
     // Remove from the source section (required placeholders are re-added by the required-doc hooks)
     updateDocument(entityType, entityIndex, document.documentType || '', docs =>
-      docs.filter(doc => getDocKey(doc) !== movingKey),
+      docs.filter(doc => documentKey(doc) !== movingKey),
     );
 
-    // Build the moved doc: new identity so the backend deletes the source row and inserts a new one
-    // in the target collection; storage documentId (the file) is preserved.
+    // Build the moved doc: a new row for the target (no id), same file (documentId) and same source.
     const movedDoc: UploadedDocument = {
       ...document,
       id: null,
       rowId: crypto.randomUUID(),
       titleId:
-        target.entityType === 'title' ? (watch(`titles.${target.entityIndex}.id`) ?? null) : null,
+        target.entityType === 'title'
+          ? (getValues(`titles.${target.entityIndex}.id`) ?? null)
+          : null,
     };
 
-    updateDocument(target.entityType, target.entityIndex, document.documentType || '', docs => {
-      // Fill an existing empty placeholder of the same type (e.g. a required slot) instead of
-      // leaving it behind as a duplicate "Awaiting upload" row. Append only if no empty slot exists.
-      const emptyIdx = docs.findIndex(
-        d => d.documentType === movedDoc.documentType && !d.fileName && !d.isUploading,
-      );
-      if (emptyIdx >= 0) {
-        const placeholder = docs[emptyIdx];
-        const filled: UploadedDocument = {
-          ...movedDoc,
-          isRequired: placeholder.isRequired,
-          displayName: placeholder.displayName ?? movedDoc.displayName,
-        };
-        return docs.map((d, i) => (i === emptyIdx ? filled : d));
-      }
-      return [...docs, movedDoc];
-    });
+    // It goes into an empty placeholder of the same type in the target (e.g. a required slot) when
+    // there is one, taking over that slot's id and rowId so a save updates the slot's row instead of
+    // adding one beside it; otherwise it is appended as a new row. The source row was removed above.
+    updateDocument(target.entityType, target.entityIndex, document.documentType || '', docs =>
+      placeDocument(docs, movedDoc),
+    );
 
     setMovingDocument(null);
     toast.success(t('toasts.documentMoved'));
   };
 
+  // `input` is the file input to open: the card's own, or the one inside the slide-over (which must
+  // be opened in the click itself, so Replace never has to wait for the slide-over to close).
   const handleReplace = (
     document: UploadedDocument,
     entityType: 'request' | 'title',
     entityIndex: number,
+    input: React.RefObject<HTMLInputElement | null> = replaceFileInputRef,
   ) => {
     setReplacingDocument({
       docType: document.documentType || '',
-      docKey: getDocKey(document),
+      docKey: documentKey(document),
       entityType,
       entityIndex,
     });
-    replaceFileInputRef.current?.click();
+    input.current?.click();
   };
 
   const handleReplaceFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -664,206 +580,393 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
 
     const { docType, docKey, entityType, entityIndex } = replacingDocument;
 
+    // The same check as a pick of several files: a type the system does not take, or one too big, is
+    // refused here with the same message, and nothing is touched
+    const { valid, skipped } = splitUploadable([file], MAX_UPLOAD_BYTES);
+    if (valid.length === 0) {
+      setReplacingDocument(null);
+      e.target.value = '';
+      toast.error(
+        t('toasts.uploadFilesSkipped', {
+          n: skipped.length,
+          names: skipped.map(item => item.file.name).join(', '),
+        }),
+      );
+      return;
+    }
+
     // Get current document to preserve metadata (match the exact row by key)
     const currentDoc =
       (entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex)).find(
-        d => getDocKey(d) === docKey,
+        d => documentKey(d) === docKey,
       ) || null;
+
+    // The row went (deleted, moved, or replaced by something else) while the picker was open: there is
+    // nothing to replace, and uploading would leave the file attached to nothing.
+    if (!currentDoc) {
+      setReplacingDocument(null);
+      e.target.value = '';
+      toast.error(t('toasts.documentReplaceFailed'));
+      return;
+    }
 
     // The outgoing file leaves the form now but comes back if the upload fails, so its preview URL
     // is pinned until this settles — the reconcile would otherwise release it on the next render
     // and the restored row would point at a dead URL.
-    const outgoing = currentDoc?.file ? localPreviewUrls.current.get(currentDoc.file) : undefined;
+    const outgoing = currentDoc.file ? localPreviewUrls.current.get(currentDoc.file) : undefined;
     if (outgoing) outgoing.pinned = true;
     const unpinOutgoing = () => {
       if (outgoing) outgoing.pinned = false;
     };
 
-    // Create new document preserving metadata
-    const tempDocument: UploadedDocument = {
-      id: currentDoc?.id || null,
-      titleId: currentDoc?.titleId || null,
-      documentId: currentDoc?.documentId || null,
+    // The row's key, held through the whole replace: it stays what it was (the key the selection and
+    // the list know it by), so the file stays selected while it is replaced.
+    const rowKey = documentKey(currentDoc);
+
+    // The replacing row keeps the old row's metadata. The file is the maker's own now (makeUploadedRow
+    // stamps that), even on a row that carried one from the previous appraisal.
+    const tempDocument = makeUploadedRow({
+      id: currentDoc.id || null,
+      titleId: currentDoc.titleId || null,
+      documentId: currentDoc.documentId || null,
       documentType: docType || null,
       fileName: file.name,
-      uploadedAt: new Date().toISOString(),
-      prefix: currentDoc?.prefix || null,
-      notes: currentDoc?.notes || null,
-      filePath: currentDoc?.filePath || null,
-      createdWorkstation: currentDoc?.createdWorkstation || null,
-      isRequired: currentDoc?.isRequired || false,
+      prefix: currentDoc.prefix || null,
+      notes: currentDoc.notes || null,
+      filePath: currentDoc.filePath || null,
+      createdWorkstation: currentDoc.createdWorkstation || null,
+      isRequired: currentDoc.isRequired || false,
       uploadedBy: currentUser?.username || 'anonymous',
       uploadedByName: currentUser?.name || 'Anonymous',
       file,
       isUploading: true,
-      displayName: currentDoc?.displayName,
-      rowId: currentDoc?.rowId,
-    };
+      displayName: currentDoc.displayName,
+      rowId: rowKey,
+    });
 
     // Update document with uploading state
-    updateDocument(entityType, entityIndex, docType, docs =>
-      docs.map(doc => (getDocKey(doc) === docKey ? tempDocument : doc)),
+    updateDocument(
+      entityType,
+      entityIndex,
+      docType,
+      docs => docs.map(doc => (documentKey(doc) === docKey ? tempDocument : doc)),
+      false,
     );
 
     // Reset replace state early
     setReplacingDocument(null);
     e.target.value = '';
 
+    let sessionId: string;
     try {
       // Get or create an upload session
-      const sessionId = await getOrCreateSession();
-
-      // Upload new file with session
-      uploadDocument(
-        {
-          uploadSessionId: sessionId,
-          file,
-          documentType: docType,
-          documentCategory: getDocumentCategory(docType),
-        },
-        {
-          onSuccess: uploadedDoc => {
-            updateDocument(entityType, entityIndex, docType, docs => {
-              const doc = docs.find(d => getDocKey(d) === docKey);
-              if (doc) {
-                doc.documentId = uploadedDoc.documentId;
-                doc.filePath = null;
-                doc.fileName = uploadedDoc.fileName;
-                doc.isUploading = false;
-              }
-              return [...docs];
-            });
-
-            // The old file is gone for good now; let the reconcile have it.
-            unpinOutgoing();
-            toast.success(t('toasts.documentReplaced'));
-          },
-          onError: (error: any) => {
-            // Revert to an original document on error
-            if (currentDoc) {
-              updateDocument(entityType, entityIndex, docType, docs =>
-                docs.map(doc => (getDocKey(doc) === docKey ? currentDoc : doc)),
-              );
-            }
-
-            unpinOutgoing();
-            toast.error(error.apiError?.detail || t('toasts.documentReplaceFailed'));
-          },
-        },
-      );
-    } catch (error: any) {
+      sessionId = await getOrCreateSession();
+    } catch (error) {
       // Session creation failed - revert to original
-      if (currentDoc) {
-        updateDocument(entityType, entityIndex, docType, docs =>
-          docs.map(doc => (getDocKey(doc) === docKey ? currentDoc : doc)),
-        );
-      }
+      updateDocument(
+        entityType,
+        entityIndex,
+        docType,
+        docs => docs.map(doc => (doc.rowId === rowKey ? currentDoc : doc)),
+        false,
+      );
       unpinOutgoing();
-      toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
+      toast.error(apiErrorDetail(error) || t('toasts.sessionFailed'));
+      return;
+    }
+
+    try {
+      // Upload new file with session
+      const uploadedDoc = await uploadDocument({
+        uploadSessionId: sessionId,
+        file,
+        documentType: docType,
+        documentCategory: getDocumentCategory(docType),
+      });
+      // A new object for the row: the watched one is never changed in place
+      updateDocument(entityType, entityIndex, docType, docs =>
+        docs.map(d =>
+          d.rowId === rowKey
+            ? {
+                ...d,
+                documentId: uploadedDoc.documentId,
+                filePath: null,
+                fileName: uploadedDoc.fileName,
+                isUploading: false,
+              }
+            : d,
+        ),
+      );
+
+      // The old file is gone for good now; let the reconcile have it.
+      unpinOutgoing();
+      toast.success(t('toasts.documentReplaced'));
+    } catch (error) {
+      // Revert to an original document on error
+      updateDocument(
+        entityType,
+        entityIndex,
+        docType,
+        docs => docs.map(doc => (doc.rowId === rowKey ? currentDoc : doc)),
+        false,
+      );
+
+      unpinOutgoing();
+      toast.error(apiErrorDetail(error) || t('toasts.documentReplaceFailed'));
     }
   };
 
-  const handleUploadToSlot = (
-    document: UploadedDocument,
-    entityType: 'request' | 'title',
-    entityIndex: number,
-  ) => {
+  // Starts an upload into a type. With an empty slot the file fills that row; without one (a type
+  // that already has files, or a type with none and no slot) it becomes a new row.
+  const startUpload = (row: TypeRow, entityType: 'request' | 'title', entityIndex: number) => {
     setUploadingToDocument({
-      docType: document.documentType || '',
+      docType: row.documentType,
+      docKey: row.slot ? documentKey(row.slot) : null,
+      required: row.required,
       entityType,
       entityIndex,
     });
     uploadFileInputRef.current?.click();
   };
 
+  // A type for this title beyond its asked-for ones. Its own empty slot, if it has one, takes the
+  // first file (so a required row is filled, not left empty beside a new one); otherwise a new row.
+  // The picker opens in this click: a picker opened after the dialog has closed is blocked by Safari.
+  const chooseOtherType = (docType: string) => {
+    if (!scope) return;
+    const slot = getTitleDocuments(scope.titleIndex).find(
+      doc => doc.documentType === docType && !doc.fileName,
+    );
+    setUploadingToDocument({
+      docType,
+      docKey: slot ? documentKey(slot) : null,
+      required: slot?.isRequired ?? false,
+      entityType: 'title',
+      entityIndex: scope.titleIndex,
+    });
+    setAddOtherOpen(false);
+    uploadFileInputRef.current?.click();
+  };
+
+  /**
+   * One or several files into a type's row. The first fills the row's empty slot (keeping its
+   * metadata), the others are rows of their own. Every row shows as uploading at once; the files
+   * go up three at a time, and one that fails leaves the rest alone.
+   */
   const handleUploadFileSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !uploadingToDocument) return;
+    const picked = Array.from(e.target.files ?? []);
+    // Read before the reset: the list is live
+    e.target.value = '';
+    if (picked.length === 0 || !uploadingToDocument) return;
 
-    const { docType, entityType, entityIndex } = uploadingToDocument;
+    const { docType, docKey, required, entityType, entityIndex } = uploadingToDocument;
+    // Reset upload state early
+    setUploadingToDocument(null);
 
-    // Get current document (placeholder) to preserve metadata
-    const currentDoc = getDocumentForSlot(entityType, entityIndex, docType);
+    const { valid, skipped } = splitUploadable(picked, MAX_UPLOAD_BYTES);
+    if (skipped.length > 0) {
+      toast.error(
+        t('toasts.uploadFilesSkipped', {
+          n: skipped.length,
+          names: skipped.map(item => item.file.name).join(', '),
+        }),
+      );
+    }
+    if (valid.length === 0) return;
+
+    // The empty row the first file fills; null when it is added as a new row
+    const firstSlot = docKey === null ? null : getEmptySlot(entityType, entityIndex, docKey);
+    if (docKey !== null && !firstSlot) {
+      // The slot is gone (the row was filled, moved or removed since the picker opened); with no
+      // slot to receive it, the file would replace nothing or the wrong row.
+      toast(t('toasts.uploadSlotGone'));
+      return;
+    }
+
+    // Every file's row goes into the form now; what each one still has to do is a task for later
+    const tasks = valid.map((file, at) =>
+      prepareUpload(file, at === 0 ? firstSlot : null, {
+        docType,
+        required,
+        entityType,
+        entityIndex,
+        quiet: valid.length > 1,
+      }),
+    );
+    const results = await runLimited(tasks);
+    // A single file says so itself; several say it once
+    const done = results.filter(Boolean).length;
+    if (valid.length > 1 && done > 0) toast.success(t('toasts.uploadSuccess', { n: done }));
+  };
+
+  /**
+   * Puts one file's row into the form (uploading) and returns the task that sends it. The task
+   * settles to whether the file went up; it never throws.
+   */
+  const prepareUpload = (
+    file: File,
+    slot: UploadedDocument | null,
+    target: {
+      docType: string;
+      required: boolean;
+      entityType: 'request' | 'title';
+      entityIndex: number;
+      quiet: boolean;
+    },
+  ): (() => Promise<boolean>) => {
+    const { docType, required, entityType, entityIndex, quiet } = target;
+    // The row is found by its key from here on, so a second row of the same type is never touched
+    const flight = startInFlight(
+      entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex),
+      slot,
+    );
+    const rowKey = flight.key;
+    const slotNow = flight.slot;
 
     // Create new document with file data
-    const tempDocument: UploadedDocument = {
-      id: currentDoc?.id || null,
-      titleId: currentDoc?.titleId || null,
-      documentId: null,
+    const tempDocument = makeUploadedRow({
+      id: slotNow?.id || null,
+      // A new row in a title section belongs to that title, like a moved or restored file does
+      titleId:
+        slotNow?.titleId || (entityType === 'title' ? (titles[entityIndex]?.id ?? null) : null),
       documentType: docType || null,
       fileName: file.name,
-      uploadedAt: new Date().toISOString(),
-      prefix: currentDoc?.prefix || null,
-      notes: currentDoc?.notes || null,
-      filePath: null,
-      createdWorkstation: null,
-      isRequired: currentDoc?.isRequired || false,
+      prefix: slotNow?.prefix || null,
+      notes: slotNow?.notes || null,
+      isRequired: slotNow?.isRequired ?? required,
       uploadedBy: currentUser?.username || 'anonymous',
       uploadedByName: currentUser?.name || 'Anonymous',
       file,
       isUploading: true,
-      displayName: currentDoc?.displayName,
-    };
+      displayName: slotNow?.displayName,
+      rowId: rowKey,
+    });
+
+    // Takes the upload back out: the slot returns, or the row added for it goes
+    const revert = (docs: UploadedDocument[]) => revertInFlight(docs, flight);
 
     // Update document with uploading state
-    updateDocument(entityType, entityIndex, docType, docs =>
-      docs.map(doc => (doc.documentType === docType ? tempDocument : doc)),
+    updateDocument(
+      entityType,
+      entityIndex,
+      docType,
+      docs => placeInFlight(docs, flight, tempDocument),
+      false,
     );
 
-    // Reset upload state early
-    setUploadingToDocument(null);
-    e.target.value = '';
+    return async () => {
+      let sessionId: string;
+      try {
+        // Get or create an upload session
+        sessionId = await getOrCreateSession();
+      } catch (error) {
+        // Session creation failed
+        updateDocument(entityType, entityIndex, docType, revert, false);
+        toast.error(apiErrorDetail(error) || t('toasts.sessionFailed'));
+        return false;
+      }
 
-    try {
-      // Get or create an upload session
-      const sessionId = await getOrCreateSession();
-
-      // Upload file with session
-      uploadDocument(
-        {
+      try {
+        // Upload file with session
+        const uploadedDoc = await uploadDocument({
           uploadSessionId: sessionId,
           file,
           documentType: docType,
           documentCategory: getDocumentCategory(docType),
-        },
-        {
-          onSuccess: uploadedDoc => {
-            updateDocument(entityType, entityIndex, docType, docs =>
-              docs.map(doc =>
-                doc.documentType === docType
-                  ? {
-                      ...doc,
-                      documentId: uploadedDoc.documentId,
-                      fileName: uploadedDoc.fileName,
-                      isUploading: false,
-                    }
-                  : doc,
-              ),
-            );
-
-            toast.success(t('toasts.documentUploaded'));
-          },
-          onError: (error: any) => {
-            // Revert to placeholder on error
-            if (currentDoc) {
-              updateDocument(entityType, entityIndex, docType, docs =>
-                docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
-              );
-            }
-
-            toast.error(error.apiError?.detail || t('toasts.documentUploadFailed'));
-          },
-        },
-      );
-    } catch (error: any) {
-      // Session creation failed - revert to placeholder
-      if (currentDoc) {
+        });
         updateDocument(entityType, entityIndex, docType, docs =>
-          docs.map(doc => (doc.documentType === docType ? currentDoc : doc)),
+          docs.map(doc =>
+            doc.rowId === rowKey
+              ? {
+                  ...doc,
+                  documentId: uploadedDoc.documentId,
+                  fileName: uploadedDoc.fileName,
+                  isUploading: false,
+                }
+              : doc,
+          ),
         );
+
+        if (!quiet) toast.success(t('toasts.documentUploaded'));
+        return true;
+      } catch (error) {
+        updateDocument(entityType, entityIndex, docType, revert, false);
+        toast.error(apiErrorDetail(error) || t('toasts.documentUploadFailed'));
+        return false;
       }
-      toast.error(error.apiError?.detail || t('toasts.sessionFailed'));
+    };
+  };
+
+  /**
+   * "Generate" on the D035 row: the system's appointment letter becomes a file of that row. If the
+   * row already has files, the maker is asked first: it replaces the earlier generated letters (the
+   * rest stay), or, when none of the files is one, all of them.
+   */
+  const handleGenerate = (row: TypeRow) => {
+    if (!requestId) {
+      toast(t('appointmentLetter.saveFirst'));
+      return;
     }
+    if (appointment.busy) return;
+    // A file still on its way up is not replaced: it would land on a row that is gone
+    const settled = row.files.filter(file => !file.isUploading);
+    if (settled.length === 0) {
+      void runGenerate(row, []);
+      return;
+    }
+    const earlier = settled.filter(isGeneratedAppointmentLetter);
+    setGenerateConfirm({
+      row,
+      keys: (earlier.length > 0 ? earlier : settled).map(documentKey),
+      generated: earlier.length > 0,
+    });
+  };
+
+  const runGenerate = async (row: TypeRow, replaceKeys: string[]) => {
+    // Fills the row's empty slot when it has no file, to keep its metadata; else it is a new row
+    const flight = startInFlight(getRequestDocuments(), row.files.length === 0 ? row.slot : null);
+    const slot = flight.slot;
+    const rowKey = flight.key;
+    const pending = makeUploadedRow({
+      id: slot?.id ?? null,
+      documentType: APPOINTMENT_LETTER_DOC_TYPE,
+      fileName: APPOINTMENT_LETTER_FILE,
+      prefix: slot?.prefix ?? null,
+      isRequired: slot?.isRequired ?? row.required,
+      uploadedBy: currentUser?.username ?? null,
+      uploadedByName: currentUser?.name ?? null,
+      isUploading: true,
+      displayName: slot?.displayName ?? row.displayName,
+      rowId: rowKey,
+    });
+    const docType = APPOINTMENT_LETTER_DOC_TYPE;
+    // The row shows the letter on its way, as it does for an upload
+    updateDocument('request', -1, docType, docs => placeInFlight(docs, flight, pending), false);
+    const letter = await appointment.generate();
+    if (!letter) {
+      // Takes the pending letter back out: the slot returns, or the row added for it goes
+      updateDocument('request', -1, docType, docs => revertInFlight(docs, flight), false);
+      return;
+    }
+    const replaced = new Set(replaceKeys);
+    updateDocument('request', -1, docType, docs =>
+      docs
+        .filter(doc => doc.rowId === rowKey || !replaced.has(documentKey(doc)))
+        .map(doc =>
+          doc.rowId === rowKey
+            ? {
+                ...doc,
+                documentId: letter.documentId,
+                fileName: letter.fileName,
+                file: letter.file,
+                isUploading: false,
+              }
+            : doc,
+        ),
+    );
+    toast.success(
+      t('appointmentLetter.attached', 'Appointment letter attached. Save the request to keep it.'),
+    );
   };
 
   const handleView = (document: UploadedDocument) => {
@@ -898,41 +1001,45 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
     }
   };
 
-  const handleSelectDocument = (
+  // Ticks or unticks every file of a type row
+  const toggleFiles = (
     entityType: 'request' | 'title',
     entityIndex: number,
-    docKey: string,
-    selected: boolean,
+    files: UploadedDocument[],
+    checked: boolean,
   ) => {
-    const docId = getDocumentId(entityType, entityIndex, docKey);
     setSelectedDocuments(prev => {
-      const newSet = new Set(prev);
-      if (selected) {
-        newSet.add(docId);
-      } else {
-        newSet.delete(docId);
+      const next = new Set(prev);
+      for (const file of files) {
+        if (file.isUploading) continue;
+        const id = getDocumentId(entityType, entityIndex, documentKey(file));
+        if (checked) next.add(id);
+        else next.delete(id);
       }
-      return newSet;
+      return next;
     });
   };
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const sections = generateDocumentSections();
-      const allDocIds = new Set<string>();
+  const handleSelectAll = (ids: string[], checked: boolean) => {
+    setSelectedDocuments(prev => {
+      const next = new Set(prev);
+      for (const id of ids) {
+        if (checked) next.add(id);
+        else next.delete(id);
+      }
+      return next;
+    });
+  };
 
-      sections.forEach(section => {
-        section.documents.forEach(doc => {
-          if (!doc.isUploading && doc.documentType && doc.fileName) {
-            allDocIds.add(getDocumentId(section.entityType, section.entityIndex, getDocKey(doc)));
-          }
-        });
-      });
-
-      setSelectedDocuments(allDocIds);
-    } else {
-      setSelectedDocuments(new Set());
-    }
+  // A file picked in the list or the pane
+  const handleSaveNotes = (doc: UploadedDocument, notes: string) => {
+    if (!selectedFile) return;
+    const { entityType, entityIndex } = selectedFile;
+    const key = documentKey(doc);
+    updateDocument(entityType, entityIndex, doc.documentType || '', docs =>
+      docs.map(d => (documentKey(d) === key ? { ...d, notes: notes.trim() || null } : d)),
+    );
+    toast.success(t('toasts.documentDetailsUpdated'));
   };
 
   const handleBulkDelete = () => {
@@ -948,43 +1055,23 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       const [entityType, entityIndexStr, docKey] = docId.split('|');
       const entityIndex = parseInt(entityIndexStr);
 
-      // Get the document to check if it's required
       const docs =
         entityType === 'request' ? getRequestDocuments() : getTitleDocuments(entityIndex);
-      const targetDoc = docs.find(doc => getDocKey(doc) === docKey);
-
-      if (targetDoc?.isRequired) {
-        // For required documents: clear file but keep placeholder
-        updateDocument(entityType as 'request' | 'title', entityIndex, docKey, docs =>
-          docs.map(doc =>
-            getDocKey(doc) === docKey
-              ? {
-                  ...doc,
-                  fileName: null,
-                  file: undefined,
-                  documentId: null,
-                  filePath: null,
-                  uploadedAt: new Date().toISOString(),
-                  uploadedBy: null,
-                  uploadedByName: null,
-                }
-              : doc,
-          ),
-        );
-        clearedCount++;
-      } else {
-        // For non-required documents: remove entire record
-        updateDocument(entityType as 'request' | 'title', entityIndex, docKey, docs =>
-          docs.filter(doc => getDocKey(doc) !== docKey),
-        );
-        deletedCount++;
-      }
+      // A row that is gone (removed some other way since it was ticked) is nothing to delete
+      if (!docs.some(doc => documentKey(doc) === docKey)) return;
+      // A required row keeps an empty slot only when it is the last of its type (see removeFiles),
+      // so what was removed and what was left as an empty slot is read off the result
+      const next = removeFiles(docs, doc => documentKey(doc) === docKey);
+      updateDocument(entityType as 'request' | 'title', entityIndex, docKey, () => next);
+      if (next.length < docs.length) deletedCount++;
+      else clearedCount++;
     });
 
     setSelectedDocuments(new Set());
     setBulkDeleteConfirm(false);
 
     // Show appropriate message
+    if (clearedCount + deletedCount === 0) return;
     if (clearedCount > 0 && deletedCount > 0) {
       toast.success(t('toasts.bulkDeleted', { deleted: deletedCount, cleared: clearedCount }));
     } else if (clearedCount > 0) {
@@ -995,296 +1082,518 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
   };
 
   const sections = generateDocumentSections();
-  const totalUploadedCount = getTotalUploadedCount();
-  const requiredStats = getRequiredDocStats();
+  // While it can be edited, the request always offers the appointment letter row, whether or not
+  // its checklist lists D035 (read-only shows only what the request holds)
+  const offersLetter = (section: { entityType: string }) =>
+    section.entityType === 'request' && !isReadOnly;
+  const sectionRows = sections.map(section => {
+    const rows = groupByType(section.documents);
+    return offersLetter(section) ? withTypeRow(rows, APPOINTMENT_LETTER_DOC_TYPE) : rows;
+  });
+  const totals = kpis(sectionRows);
+  // The type's own name in the UI language; the row's displayName (the checklist's English name,
+  // kept on the form row) only stands in for a type the list does not have.
+  const nameOfType = (code: string, displayName?: string | null) =>
+    documentTypes.some(dt => dt.code === code)
+      ? getDocumentTypeName(documentTypes, code)
+      : displayName || code;
+  const typeName = (row: TypeRow) => nameOfType(row.documentType, row.displayName);
+  // What a search matches: the name shown, and the type's other name too
+  const searchText = (row: TypeRow) =>
+    `${typeName(row)} ${getDocumentTypeSearchText(documentTypes, row.documentType)}`;
 
-  // Calculate if all selectable documents are selected (only docs with files)
-  const selectableDocuments = sections.flatMap(section =>
-    section.documents
-      .map(doc =>
-        !doc.isUploading && doc.documentType && doc.fileName
-          ? getDocumentId(section.entityType, section.entityIndex, getDocKey(doc))
-          : null,
+  // Rows stamped PREV came from the previous appraisal (persisted, so this holds after a reload).
+  // The endpoint is only needed to tell which of its files are no longer in the form; when it
+  // cannot be loaded the badge still shows and the unused list is simply absent.
+  const { used: carriedUsed, unused: carriedUnused } = deriveCarryForward(
+    carryOn ? (carryData?.documents ?? []) : [],
+    getRequestDocuments(),
+    titles,
+  );
+  const carriedNumber = carryData?.appraisalNumber ?? prevAppraisalReportNo ?? '';
+
+  // "D013 · Deed" for the file shown in the section chooser
+  const typeLabelOf = (code: string | null | undefined) =>
+    code ? `${code} · ${nameOfType(code)}` : undefined;
+  // One row of the section chooser: the section's own label (the helper every list uses), and under
+  // it where the title is and whose it is. A title with the carried file's key is marked as its own.
+  const targetOf = (
+    section: { entityType: 'request' | 'title'; entityIndex: number; entityKey: string },
+    doc?: CarryForwardDocument,
+  ): MoveTargetSection => {
+    if (section.entityType === 'request')
+      return {
+        entityType: 'request',
+        entityIndex: section.entityIndex,
+        label: t('moveDocument.requestLevelLabel'),
+        detail: t('moveDocument.requestLevelHint'),
+      };
+    const form = getValues(`titles.${section.entityIndex}`) as
+      | {
+          ownerName?: string | null;
+          titleAddress?: { districtName?: string; provinceName?: string };
+        }
+      | undefined;
+    const place = [form?.titleAddress?.districtName, form?.titleAddress?.provinceName]
+      .filter(Boolean)
+      .join(' ');
+    const docKey = doc?.level === 'Title' ? titleKey(doc.collateralType, doc.titleNumber) : null;
+    return {
+      entityType: 'title',
+      entityIndex: section.entityIndex,
+      label: section.entityKey,
+      detail: [place, form?.ownerName].filter(Boolean).join(' · ') || undefined,
+      matches: !!docKey && formTitleKey(titles[section.entityIndex]) === docKey,
+    };
+  };
+
+  const selectedSection = selectedFile
+    ? sections.find(
+        section =>
+          section.entityType === selectedFile.entityType &&
+          section.entityIndex === selectedFile.entityIndex,
       )
-      .filter(Boolean),
-  ) as string[];
+    : undefined;
+  const selectedDoc =
+    selectedFile && selectedSection
+      ? (selectedSection.documents.find(
+          doc => documentKey(doc) === selectedFile.docKey && doc.fileName,
+        ) ?? null)
+      : null;
 
-  const allSelected =
-    selectableDocuments.length > 0 &&
-    selectableDocuments.every(docId => selectedDocuments.has(docId));
-  const someSelected = selectedDocuments.size > 0 && !allSelected;
+  const isFiltering = listQuery.query.trim() !== '' || listQuery.filter !== 'all';
+  // A search or filter opens every section that has a match, whatever was closed by hand: it is
+  // looking inside them. Otherwise the maker's own choice wins, else the default: with many titles
+  // the title sections start closed (the request's never does) so that hundreds of rows are not
+  // mounted up front.
+  function isCollapsedKey(state: ReadonlyMap<string, boolean>, key: string) {
+    if (isFiltering) return false;
+    return state.get(key) ?? (closedByDefault.current === true && key !== 'request');
+  }
+  const missingCount = sectionRows.flat().filter(row => row.status === 'miss').length;
+
+  // Files can be dropped anywhere on the card: the bar's own dialog flow takes them from here
+  const editable = !isReadOnly;
+  const isFileDrag = (e: React.DragEvent) => e.dataTransfer.types.includes('Files');
+
+  // What each section shows now, so "select all" and the render agree on what is on screen
+  const views = sections.map((section, i) => {
+    const rows = sectionRows[i];
+    return {
+      section,
+      rows,
+      key: section.sectionKey,
+      ...(offersLetter(section)
+        ? // …as a full row, never folded into the line of empty types
+          alwaysShowType(rows, filterRows(rows, listQuery, searchText), APPOINTMENT_LETTER_DOC_TYPE)
+        : filterRows(rows, listQuery, searchText)),
+    };
+  });
+  // The files of the rows on screen (sections that are open, after search and filters)
+  const onScreenIds = views
+    .filter(view => !isCollapsedKey(sectionState, view.key))
+    .flatMap(view =>
+      view.shown.flatMap(row =>
+        // Only the chips on screen: files folded into "+N" are not selected by select-all
+        visibleFiles(row.files, expandedRows.has(`${view.key}|${row.documentType}`))
+          .filter(file => !file.isUploading)
+          .map(file =>
+            getDocumentId(view.section.entityType, view.section.entityIndex, documentKey(file)),
+          ),
+      ),
+    );
+  const pickedOnScreen = onScreenIds.filter(id => selectedDocuments.has(id)).length;
+
+  // A ticked file that is no longer in the form (Don't use, delete, move, a re-pick or a clear that
+  // dropped it) must not stay in the selection: the bulk bar would count it and a bulk delete
+  // would write to the form for nothing.
+  const liveFileIds = sections
+    .flatMap(section =>
+      section.documents
+        .filter(doc => doc.fileName)
+        .map(doc => getDocumentId(section.entityType, section.entityIndex, documentKey(doc))),
+    )
+    .join('\n');
+  useEffect(() => {
+    const live = new Set(liveFileIds.split('\n'));
+    setSelectedDocuments(prev => {
+      const next = new Set([...prev].filter(id => live.has(id)));
+      return next.size === prev.size ? prev : next;
+    });
+  }, [liveFileIds]);
+
+  // What the sections call. The object never changes, so a section whose data did not change does
+  // not render; each call goes to the handlers of the latest render.
+  const latestActions = useRef<SectionActions | null>(null);
+  latestActions.current = {
+    toggleSection,
+    upload: startUpload,
+    toggleFiles,
+    toggleExpanded: rowKey =>
+      setExpandedRows(prev => {
+        const next = new Set(prev);
+        if (next.has(rowKey)) next.delete(rowKey);
+        else next.add(rowKey);
+        return next;
+      }),
+    select: (entityType, entityIndex, docKey) => {
+      if (!scoped) return setSelectedFile({ entityType, entityIndex, docKey });
+      // No side pane in the title editor: a click opens the file
+      const file = getTitleDocuments(entityIndex).find(
+        d => documentKey(d) === docKey && d.fileName,
+      );
+      if (file) handleView(file);
+    },
+    view: handleView,
+    edit: handleEdit,
+    move: handleMove,
+    replace: (doc, entityType, entityIndex) => handleReplace(doc, entityType, entityIndex),
+    remove: handleDelete,
+    generate: handleGenerate,
+  };
+  const sectionActions = useMemo<SectionActions>(() => {
+    const at = () => latestActions.current as SectionActions;
+    return {
+      // Move needs every section as a target, and the title editor has one
+      ...(scoped
+        ? {}
+        : {
+            move: (...args: Parameters<NonNullable<SectionActions['move']>>) =>
+              at().move?.(...args),
+          }),
+      toggleSection: (...args) => at().toggleSection(...args),
+      upload: (...args) => at().upload(...args),
+      toggleFiles: (...args) => at().toggleFiles(...args),
+      toggleExpanded: (...args) => at().toggleExpanded(...args),
+      select: (...args) => at().select(...args),
+      view: (...args) => at().view(...args),
+      edit: (...args) => at().edit?.(...args),
+      replace: (...args) => at().replace?.(...args),
+      remove: (...args) => at().remove?.(...args),
+      generate: (...args) => at().generate?.(...args),
+    };
+  }, [scoped]);
+
+  let renderedSections = 0;
 
   return (
     <>
-      {/* Document count summary */}
-      <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Icon name="file-lines" style="solid" className="w-5 h-5 text-primary" />
-              <span className="text-sm font-medium text-gray-700">
-                {t('documents.uploadedDocuments')}
-              </span>
-              <span className="text-sm font-semibold text-primary">{totalUploadedCount}</span>
-            </div>
-            {requiredStats.total > 0 && (
-              <>
-                <div className="h-4 w-px bg-gray-200" />
-                <div className="flex items-center gap-2">
-                  <Icon
-                    name="asterisk"
-                    style="solid"
-                    className={clsx(
-                      'w-3 h-3',
-                      requiredStats.completed === requiredStats.total
-                        ? 'text-success'
-                        : 'text-amber-500',
-                    )}
+      <div
+        ref={cardRef}
+        className={clsx(
+          'grid items-start gap-3',
+          showSidePane && 'grid-cols-[minmax(0,1fr)_300px]',
+        )}
+      >
+        <section
+          className={clsx(
+            'min-w-0 bg-white',
+            // Scoped (a title's drawer): the drawer's own box is the frame, so none here
+            scoped ? 'rounded-none' : 'rounded-t-2xl rounded-b-none border shadow-sm',
+            !scoped &&
+              (isDraggingOver ? 'border-primary ring-2 ring-primary/20' : 'border-gray-100'),
+          )}
+          onDragOver={e => {
+            if (scoped || !editable || !isFileDrag(e)) return;
+            e.preventDefault();
+          }}
+          // Capture phase: the nested drop bar stops these events from bubbling, so the card
+          // would otherwise miss a drag moving over the bar, or leaving the card through it.
+          onDragOverCapture={e => {
+            if (!scoped && editable && isFileDrag(e)) setIsDraggingOver(true);
+          }}
+          onDragLeaveCapture={e => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setIsDraggingOver(false);
+          }}
+          onDropCapture={() => setIsDraggingOver(false)}
+          onDrop={e => {
+            if (scoped || !editable || !isFileDrag(e)) return;
+            e.preventDefault();
+            uploadBarRef.current?.addFiles(Array.from(e.dataTransfer.files));
+          }}
+        >
+          {!scoped && (
+            <>
+              <DocumentCardHeader kpis={totals} />
+
+              {carryOn &&
+                prevAppraisalId &&
+                onRetryCarryForward &&
+                carryLoadFailed &&
+                !carryData && (
+                  <div className="px-4 pb-1">
+                    <CarryForwardLoadError
+                      retrying={carryFetching || carryBusy}
+                      onRetry={onRetryCarryForward}
+                    />
+                  </div>
+                )}
+
+              {canDontUse && (
+                <div className="px-4 pb-1">
+                  <CarryForwardSummary
+                    number={carriedNumber}
+                    usedCount={carriedUsed.length}
+                    unused={carriedUnused}
+                    onRestore={handleRestoreCarried}
+                    getDocTypeName={code => getDocumentTypeName(documentTypes, code)}
                   />
-                  <span className="text-sm text-gray-600">{t('documents.required')}</span>
-                  <span
-                    className={clsx(
-                      'text-sm font-semibold',
-                      requiredStats.completed === requiredStats.total
-                        ? 'text-success'
-                        : 'text-amber-600',
-                    )}
-                  >
-                    {requiredStats.completed}/{requiredStats.total}
-                  </span>
-                  {requiredStats.completed === requiredStats.total && requiredStats.total > 0 && (
-                    <Icon name="check-circle" style="solid" className="w-4 h-4 text-success" />
-                  )}
                 </div>
-              </>
+              )}
+
+              <DocumentToolbar
+                query={listQuery.query}
+                onQuery={query => setListQuery(prev => ({ ...prev, query }))}
+                filter={listQuery.filter}
+                onFilter={filter => setListQuery(prev => ({ ...prev, filter }))}
+                missingCount={missingCount}
+                followUpCount={totals.followUps}
+                selectAll={
+                  editable
+                    ? {
+                        checked: onScreenIds.length > 0 && pickedOnScreen === onScreenIds.length,
+                        indeterminate: pickedOnScreen > 0 && pickedOnScreen < onScreenIds.length,
+                        disabled: onScreenIds.length === 0,
+                        onChange: checked => handleSelectAll(onScreenIds, checked),
+                      }
+                    : undefined
+                }
+                onExpandAll={
+                  isFiltering
+                    ? undefined
+                    : () => setSectionState(new Map(views.map(view => [view.key, false])))
+                }
+                onCollapseAll={
+                  isFiltering
+                    ? undefined
+                    : () => setSectionState(new Map(views.map(view => [view.key, true])))
+                }
+                previewToggle={
+                  cardIsWide
+                    ? {
+                        shown: paneShown,
+                        // Hiding just hides: no file stays selected behind it, so no slide-over opens
+                        onToggle: () => {
+                          if (paneShown) setSelectedFile(null);
+                          togglePane();
+                        },
+                      }
+                    : undefined
+                }
+              />
+
+              {selectedDocuments.size > 0 && editable && (
+                <div className="flex flex-wrap items-center gap-3 border-b border-primary/20 bg-primary/10 px-4 py-2 text-sm">
+                  <Icon name="circle-check" style="solid" className="size-3.5 text-primary" />
+                  <span className="font-medium text-primary">
+                    {t('docCard.bulk.selected', { n: selectedDocuments.size })}
+                  </span>
+                  <Button type="button" size="sm" variant="outline" onClick={handleBulkDelete}>
+                    <Icon name="trash" style="solid" className="mr-1 size-3 text-red-600" />
+                    {t('docCard.bulk.delete')}
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedDocuments(new Set())}
+                    className="cursor-pointer text-primary underline underline-offset-2"
+                  >
+                    {t('docCard.bulk.clear')}
+                  </button>
+                </div>
+              )}
+
+              {editable && (
+                <CreateRequestFileInput
+                  ref={uploadBarRef}
+                  getOrCreateSession={getOrCreateSession}
+                />
+              )}
+            </>
+          )}
+
+          {/* A title's drawer: the same section header as the drawer's other sections, the count of
+              types with files on its right. The box below frames the rows; the first row has no top
+              border of its own. */}
+          {scoped && (
+            <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-gray-100 pb-1.5">
+              <h3 className="m-0 text-sm font-semibold text-gray-800">{scope.heading}</h3>
+              <span className="flex items-center gap-3">
+                <span className="text-xs text-gray-500">
+                  {t('docCard.section.typesWithFiles', {
+                    filled: sectionStats(sectionRows[0]).filled,
+                    total: sectionStats(sectionRows[0]).types,
+                  })}
+                </span>
+                {editable && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="bg-primary/10! text-primary! hover:bg-primary/15!"
+                    leftIcon={<Icon style="solid" name="plus" className="text-xs" />}
+                    onClick={() => setAddOtherOpen(true)}
+                  >
+                    {t('docCard.addOther.button')}
+                  </Button>
+                )}
+              </span>
+            </div>
+          )}
+
+          <div className={scoped ? 'overflow-hidden rounded-lg border border-gray-200' : undefined}>
+            {views.map(({ section, rows, shown, hidden, key: sectionKey }) => {
+              // A search or filter leaves out a section with nothing to show
+              if (isFiltering && shown.length === 0 && hidden.length === 0) return null;
+              renderedSections++;
+              const { entityType, entityIndex } = section;
+              // A closed section is its header: its rows are not built, let alone mounted
+              const collapsed = !scoped && isCollapsedKey(sectionState, sectionKey);
+
+              return (
+                <DocumentSection
+                  key={sectionKey}
+                  sectionKey={sectionKey}
+                  entityType={entityType}
+                  entityIndex={entityIndex}
+                  label={section.entityKey}
+                  stats={sectionStats(rows)}
+                  collapsed={collapsed}
+                  locked={isFiltering}
+                  editable={editable}
+                  readOnly={isReadOnly}
+                  headerless={scoped}
+                  bulk={!scoped}
+                  isEmpty={rows.length === 0}
+                  items={
+                    collapsed
+                      ? []
+                      : shown.map(row => ({
+                          row,
+                          name: typeName(row),
+                          selectedCount: row.files.filter(file =>
+                            selectedDocuments.has(
+                              getDocumentId(entityType, entityIndex, documentKey(file)),
+                            ),
+                          ).length,
+                          expanded: expandedRows.has(`${sectionKey}|${row.documentType}`),
+                          // The appointment letter is made by the system, not just attached
+                          generate:
+                            editable &&
+                            entityType === 'request' &&
+                            row.documentType === APPOINTMENT_LETTER_DOC_TYPE,
+                          // The letter is made for a saved request
+                          generateDisabledReason: requestId
+                            ? undefined
+                            : t('appointmentLetter.saveFirst'),
+                          carried: row.files.map(file => carryOn && isCarried(file)),
+                          dontUse: row.files.map(canDontUseRow),
+                        }))
+                  }
+                  emptyTypes={collapsed ? [] : hidden.map(row => ({ row, name: typeName(row) }))}
+                  selectedDocKey={
+                    selectedFile?.entityType === entityType &&
+                    selectedFile.entityIndex === entityIndex
+                      ? selectedFile.docKey
+                      : null
+                  }
+                  carriedNumber={carriedNumber}
+                  actions={sectionActions}
+                  getDocKey={documentKey}
+                />
+              );
+            })}
+            {renderedSections === 0 && (
+              <div className="px-4 py-6 text-center text-sm text-gray-500">
+                {isFiltering ? t('docCard.noMatch') : t('empty.noDocuments')}
+              </div>
             )}
           </div>
+        </section>
 
-          {/* Appointment Letter — generate / generate & attach */}
-          <AppointmentLetterButton requestId={requestId} getOrCreateSession={getOrCreateSession} />
-        </div>
-        {totalUploadedCount === 0 && requiredStats.total === 0 && (
-          <p className="mt-2 text-xs text-gray-500 flex items-center gap-1">
-            <Icon name="info-circle" style="solid" className="w-3 h-3" />
-            {t('documents.noDocsYet')}
-          </p>
-        )}
-        {requiredStats.total > 0 && requiredStats.completed < requiredStats.total && (
-          <p className="mt-2 text-xs text-amber-600 flex items-center gap-1">
-            <Icon name="exclamation-triangle" style="solid" className="w-3 h-3" />
-            {t('documents.pendingRequired', { n: requiredStats.total - requiredStats.completed })}
-          </p>
+        {showSidePane && (
+          <DocumentPreviewPane
+            variant="side"
+            docKey={selectedFile?.docKey}
+            doc={selectedDoc}
+            documentType={selectedDoc?.documentType ?? ''}
+            typeName={
+              selectedDoc ? nameOfType(selectedDoc.documentType ?? '', selectedDoc.displayName) : ''
+            }
+            location={selectedSection?.entityKey ?? ''}
+            carriedFrom={selectedDoc && carryOn && isCarried(selectedDoc) ? carriedNumber : null}
+            dontUse={!!selectedDoc && canDontUseRow(selectedDoc)}
+            editable={editable}
+            onClose={() => setSelectedFile(null)}
+            onView={handleView}
+            onSaveNotes={handleSaveNotes}
+            onReplace={d =>
+              selectedFile && handleReplace(d, selectedFile.entityType, selectedFile.entityIndex)
+            }
+            onMove={d =>
+              selectedFile && handleMove(d, selectedFile.entityType, selectedFile.entityIndex)
+            }
+            onDelete={d =>
+              selectedFile && handleDelete(d, selectedFile.entityType, selectedFile.entityIndex)
+            }
+          />
         )}
       </div>
 
-      {/* Expand/Collapse controls - only show if there are documents or required placeholders */}
-      {(totalUploadedCount > 0 || requiredStats.total > 0) && (
-        <div className="mb-2 flex items-center justify-end gap-2">
-          <button
-            type="button"
-            onClick={() => toggleAllSections(false)}
-            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-          >
-            <Icon name="angles-down" style="solid" className="w-3 h-3" />
-            {t('documents.expandAll')}
-          </button>
-          <span className="text-gray-300">|</span>
-          <button
-            type="button"
-            onClick={() => toggleAllSections(true)}
-            className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded transition-colors"
-          >
-            <Icon name="angles-up" style="solid" className="w-3 h-3" />
-            {t('documents.collapseAll')}
-          </button>
-        </div>
-      )}
-
-      {/* Bulk action bar */}
-      {selectedDocuments.size > 0 && !isReadOnly && (
-        <div className="mb-4 flex items-center justify-between p-4 bg-primary/10 border border-primary/20 rounded-lg">
-          <div className="flex items-center gap-3">
-            <Icon name="circle-check" style="solid" className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-primary">
-              {t('documents.selectedCount', { n: selectedDocuments.size })}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedDocuments(new Set())}
-              className="px-3 py-1.5 text-sm font-medium text-primary hover:text-primary/80 hover:bg-primary/10 rounded transition-colors"
-            >
-              {t('documents.clearSelection')}
-            </button>
-            <button
-              type="button"
-              onClick={handleBulkDelete}
-              className="px-3 py-1.5 text-sm font-medium text-white bg-danger-600 hover:bg-danger-700 rounded transition-colors flex items-center gap-2"
-            >
-              <Icon name="trash" style="solid" className="w-4 h-4" />
-              {t('documents.deleteSelected')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty state when no documents and no required placeholders */}
-      {totalUploadedCount === 0 && requiredStats.total === 0 ? (
-        <div className="h-96 flex flex-col items-center justify-center border-2 border-dashed border-gray-200 rounded-lg bg-gray-50/50">
-          <Icon name="folder-open" style="regular" className="w-16 h-16 text-gray-300 mb-4" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">{t('empty.noDocuments')}</h3>
-          <p className="text-sm text-gray-500 text-center max-w-md">{t('empty.noDocumentsDesc')}</p>
-        </div>
-      ) : (
-        <div className="h-96 overflow-auto rounded-lg">
-          <table className="table w-full">
-            <thead ref={headerRef} className="sticky top-0 z-20 bg-primary-50">
-              <tr>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg w-10">
-                  {!isReadOnly && (
-                    <input
-                      type="checkbox"
-                      checked={allSelected}
-                      ref={input => {
-                        if (input) {
-                          input.indeterminate = someSelected;
-                        }
-                      }}
-                      onChange={e => handleSelectAll(e.target.checked)}
-                      className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
-                      title={allSelected ? 'Deselect all' : 'Select all'}
-                    />
-                  )}
-                </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-[25%]">
-                  {t('documents.columnDocumentType')}
-                </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-[37%]">
-                  {t('documents.columnFileName')}
-                </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left w-44">
-                  {t('documents.columnUploadedAt')}
-                </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-16">
-                  {t('documents.notesLabel')}
-                </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-20"></th>
-              </tr>
-            </thead>
-            {sections.map(section => {
-              const sectionKey = `${section.entityType}-${section.entityIndex}`;
-              const isCollapsed = collapsedSections.has(sectionKey);
-              const uploadedCount = section.documents.filter(d => d.fileName).length;
-              const requiredCount = section.documents.filter(d => d.isRequired).length;
-              const requiredCompleted = section.documents.filter(
-                d => d.isRequired && d.fileName,
-              ).length;
-
-              return (
-                <tbody key={`${section.entityType}.${section.entityKey}`}>
-                  <tr
-                    className={clsx(
-                      'sticky z-10 bg-gray-100 cursor-pointer hover:bg-gray-200 transition-colors',
-                    )}
-                    style={{ top: `${headerHeight}px` }}
-                    onClick={() => toggleSection(sectionKey)}
-                  >
-                    <th colSpan={6} className="px-4 py-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <Icon
-                            name={isCollapsed ? 'chevron-right' : 'chevron-down'}
-                            style="solid"
-                            className="w-4 h-4 text-gray-500 transition-transform"
-                          />
-                          <Icon
-                            name={
-                              section.entityType === 'request' ? 'folder-open' : 'file-certificate'
-                            }
-                            style="solid"
-                            className="w-4 h-4 text-gray-500"
-                          />
-                          <span className="text-sm font-medium text-gray-700">
-                            {section.entityKey}
-                          </span>
-                          <span className="text-xs text-gray-400">
-                            {t('documents.uploaded', { n: uploadedCount })}
-                          </span>
-                          {requiredCount > 0 && (
-                            <span
-                              className={clsx(
-                                'text-xs px-1.5 py-0.5 rounded',
-                                requiredCompleted === requiredCount
-                                  ? 'bg-success/10 text-success'
-                                  : 'bg-amber-100 text-amber-700',
-                              )}
-                            >
-                              {t('documents.requiredProgress', {
-                                done: requiredCompleted,
-                                total: requiredCount,
-                              })}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </th>
-                  </tr>
-                  {!isCollapsed &&
-                    (section.documents.length > 0 ? (
-                      section.documents.map(doc => {
-                        const docKey = getDocKey(doc);
-                        const docId = getDocumentId(
-                          section.entityType,
-                          section.entityIndex,
-                          docKey,
-                        );
-                        const isSelected = selectedDocuments.has(docId);
-
-                        return (
-                          <UploadedDocumentRow
-                            key={`${section.entityType}.${section.entityIndex}.${docKey}`}
-                            document={doc}
-                            entityType={section.entityType}
-                            entityIndex={section.entityIndex}
-                            isSelected={isSelected}
-                            onSelect={selected =>
-                              handleSelectDocument(
-                                section.entityType,
-                                section.entityIndex,
-                                docKey,
-                                selected,
-                              )
-                            }
-                            onDelete={d => handleDelete(d, section.entityType, section.entityIndex)}
-                            onEdit={d => handleEdit(d, section.entityType, section.entityIndex)}
-                            onReplace={d =>
-                              handleReplace(d, section.entityType, section.entityIndex)
-                            }
-                            onMove={d => handleMove(d, section.entityType, section.entityIndex)}
-                            onView={handleView}
-                            onUpload={d =>
-                              handleUploadToSlot(d, section.entityType, section.entityIndex)
-                            }
-                            readOnly={isReadOnly}
-                            getDocTypeName={code => getDocumentTypeName(documentTypes, code)}
-                          />
-                        );
-                      })
-                    ) : (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-6 text-center">
-                          <span className="text-sm text-gray-400">
-                            {t('empty.noDocumentsSection')}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              );
-            })}
-          </table>
-        </div>
+      {/* Narrow card, or the side pane collapsed: a picked file opens the same content in a slide-over.
+          An action that opens a dialog of its own closes the slide-over first, so the two never
+          fight over focus. */}
+      {!scoped && (
+        <SlideOverPanel
+          isOpen={!showSidePane && selectedDoc !== null}
+          onClose={() => setSelectedFile(null)}
+          title={selectedDoc?.fileName ?? ''}
+          width="md"
+          afterLeave={runDrawerAction}
+        >
+          {editable && (
+            <input
+              ref={drawerReplaceInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf,.png,.jpg,.jpeg"
+              onChange={handleReplaceFileSelected}
+            />
+          )}
+          {selectedDoc && selectedFile && (
+            <DocumentPreviewPane
+              variant="drawer"
+              docKey={selectedFile.docKey}
+              doc={selectedDoc}
+              documentType={selectedDoc.documentType ?? ''}
+              typeName={nameOfType(selectedDoc.documentType ?? '', selectedDoc.displayName)}
+              location={selectedSection?.entityKey ?? ''}
+              carriedFrom={carryOn && isCarried(selectedDoc) ? carriedNumber : null}
+              dontUse={canDontUseRow(selectedDoc)}
+              editable={editable}
+              onClose={() => setSelectedFile(null)}
+              onView={handleView}
+              onSaveNotes={handleSaveNotes}
+              onReplace={d =>
+                handleReplace(
+                  d,
+                  selectedFile.entityType,
+                  selectedFile.entityIndex,
+                  drawerReplaceInputRef,
+                )
+              }
+              onMove={d =>
+                afterDrawerCloses(() =>
+                  handleMove(d, selectedFile.entityType, selectedFile.entityIndex),
+                )
+              }
+              onDelete={d =>
+                afterDrawerCloses(() =>
+                  handleDelete(d, selectedFile.entityType, selectedFile.entityIndex),
+                )
+              }
+            />
+          )}
+        </SlideOverPanel>
       )}
 
       {/* Hidden file input for replace functionality */}
@@ -1304,8 +1613,17 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
           ref={uploadFileInputRef}
           type="file"
           className="hidden"
+          multiple
           accept=".pdf,.png,.jpg,.jpeg"
           onChange={handleUploadFileSelected}
+        />
+      )}
+
+      {scoped && editable && (
+        <AddTitleDocumentModal
+          isOpen={addOtherOpen}
+          onClose={() => setAddOtherOpen(false)}
+          onChoose={chooseOtherType}
         />
       )}
 
@@ -1319,12 +1637,44 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         />
       )}
 
+      {/* Where a carried title file goes when its title cannot be found by key */}
+      {restoreChooser && (
+        <MoveDocumentModal
+          isOpen={true}
+          onClose={() => setRestoreChooser(null)}
+          title={t('carryForward.place.title')}
+          description={t('carryForward.place.description')}
+          confirmText={t('carryForward.place.confirm')}
+          file={{
+            fileName: restoreChooser.fileName,
+            typeLabel: [
+              typeLabelOf(restoreChooser.suggestedType),
+              carriedTitleRef(t, restoreChooser),
+            ]
+              .filter(Boolean)
+              .join(' · '),
+            fromLabel: carriedNumber
+              ? t('carryForward.place.fromPrevious', { number: carriedNumber })
+              : undefined,
+          }}
+          targets={sections.map(section => targetOf(section, restoreChooser))}
+          onConfirm={target => {
+            restoreInto(restoreChooser, target);
+            setRestoreChooser(null);
+          }}
+        />
+      )}
+
       {/* Move document modal */}
       {movingDocument && (
         <MoveDocumentModal
           isOpen={true}
           onClose={() => setMovingDocument(null)}
-          targets={generateDocumentSections()
+          file={{
+            fileName: movingDocument.document.fileName ?? '',
+            typeLabel: typeLabelOf(movingDocument.document.documentType),
+          }}
+          targets={sections
             .filter(
               s =>
                 !(
@@ -1332,11 +1682,7 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
                   s.entityIndex === movingDocument.entityIndex
                 ),
             )
-            .map(s => ({
-              entityType: s.entityType,
-              entityIndex: s.entityIndex,
-              label: s.entityType === 'request' ? t('moveDocument.requestLevelLabel') : s.entityKey,
-            }))}
+            .map(s => targetOf(s))}
           onConfirm={performMove}
         />
       )}
@@ -1360,6 +1706,26 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
         variant="danger"
       />
 
+      {/* Generating the appointment letter over files the row already has */}
+      <ConfirmDialog
+        isOpen={generateConfirm !== null}
+        onClose={() => setGenerateConfirm(null)}
+        onConfirm={() => {
+          const pending = generateConfirm;
+          setGenerateConfirm(null);
+          if (pending) void runGenerate(pending.row, pending.keys);
+        }}
+        title={t('appointmentLetter.confirmTitle')}
+        message={
+          generateConfirm?.generated
+            ? t('appointmentLetter.confirmGenerated')
+            : t('appointmentLetter.confirmFiles')
+        }
+        confirmText={t('appointmentLetter.confirm')}
+        cancelText={t('common:actions.cancel')}
+        variant="warning"
+      />
+
       {/* Bulk delete confirmation dialog */}
       <ConfirmDialog
         isOpen={bulkDeleteConfirm}
@@ -1373,6 +1739,50 @@ const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = ({
       />
     </>
   );
+};
+
+const MemoCard = memo(DocumentCard);
+
+/**
+ * The document card. It owns the one subscription to the form's titles and passes them down, so it
+ * can hold the card still: while the title editor is open the card is covered and the titles change
+ * on every key typed there, so the card keeps the last titles it had (this wrapper renders, the
+ * card does not) and picks up the current ones the moment the editor closes.
+ */
+const DocumentUploader: React.FunctionComponent<DocumentUploaderProps> = props => {
+  const { control } = useFormContext();
+  const live = useWatch({ control, name: 'titles', compute: pickCarryForwardTitles });
+  const titleEditorOpen = useTitleEditorOpen();
+  const shown = useRef(live);
+  if (!titleEditorOpen) shown.current = live;
+  return <MemoCard {...props} titles={shown.current ?? NO_TITLES} />;
+};
+
+type TitleDocumentsProps = Omit<DocumentUploaderProps, 'scope'> & {
+  /** Index into the form's `titles`. */
+  index: number;
+  heading: string;
+};
+
+/**
+ * One title's documents, for the title editor. Unlike the page card it is never held still: it
+ * reads this title's rows live, by path, so a key typed in the editor's fields (which changes
+ * other paths) does not re-render it, and an upload or a delete shows at once.
+ */
+export const TitleDocumentsSection = ({ index, heading, ...props }: TitleDocumentsProps) => {
+  const { control } = useFormContext();
+  const id = useWatch({ control, name: `titles.${index}.id` }) as string | null | undefined;
+  const documents = useWatch({ control, name: `titles.${index}.documents` }) as
+    | UploadedDocument[]
+    | undefined;
+  // The card finds the title by its index: the others stand in as empty slots
+  const titles = useMemo<CarryForwardTitle[]>(() => {
+    const list: CarryForwardTitle[] = Array.from({ length: index + 1 }, () => ({}));
+    list[index] = { id, documents };
+    return list;
+  }, [index, id, documents]);
+  const scope = useMemo(() => ({ titleIndex: index, heading }), [index, heading]);
+  return <MemoCard {...props} titles={titles} scope={scope} />;
 };
 
 export default DocumentUploader;

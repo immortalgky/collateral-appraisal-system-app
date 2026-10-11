@@ -26,6 +26,7 @@ import { MonthYearPanel } from './MonthYearPanel';
 import { createHolidayDayButton } from './HolidayDayButton';
 import { useDateSegmentInput } from './useDateSegmentInput';
 import { useCalendarFloating } from './useCalendarFloating';
+import { CALENDAR_BUTTON_PADDING, CalendarButton } from './CalendarButton';
 
 const MONTH_LABELS_SHORT = [
   'Jan',
@@ -441,11 +442,10 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
             name={name}
             type="text"
             className={clsx(
-              'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
-              // The trailing calendar glyph is absolutely positioned over the field. A single date
-              // is short enough to clear it; a range ("11/08/2026 → 15/08/2026") is not, and ran
-              // straight under the icon.
-              isRange && 'pr-9',
+              'block py-2 pl-3 border rounded-lg text-sm transition-colors duration-200',
+              // The calendar button is absolutely positioned over the field's right end: keep the
+              // text clear of it (a range, "11/08/2026 → 15/08/2026", is long enough to reach it).
+              CALENDAR_BUTTON_PADDING,
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
@@ -496,33 +496,12 @@ const DatePickerInput = forwardRef<HTMLInputElement, DatePickerInputProps>(
 
           {/* Calendar icon — the only way to open the calendar on a typeable field, so clicking
               into the text just puts the caret where the user aimed. */}
-          <button
-            ref={calendarButtonRef}
-            type="button"
-            aria-label="Open calendar"
-            {...calendar.triggerProps}
+          <CalendarButton
+            buttonRef={calendarButtonRef}
+            triggerProps={calendar.triggerProps}
             disabled={isDisabled}
             onClick={toggleCalendar}
-            className={clsx(
-              'absolute inset-y-0 right-0 flex items-center pr-3 pl-2 text-gray-400',
-              isDisabled ? 'cursor-not-allowed' : 'hover:text-gray-600',
-            )}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </button>
+          />
 
           {/* Calendar Popover — portalled to <body>, not rendered inside the field.
               react-day-picker builds the month as a <table>, and every rule in the grid form

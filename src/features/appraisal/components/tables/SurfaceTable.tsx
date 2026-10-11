@@ -92,7 +92,7 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
     <button
       type="button"
       onClick={handleAdd}
-      className="inline-flex items-center rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.75rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
+      className="inline-flex items-center rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.8571rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
     >
       + {t('surfaceTable.addFloor')}
     </button>
@@ -171,8 +171,8 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[720px] border-collapse text-[0.875rem] leading-tight tabular-nums">
-                  <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
+                <table className="w-full min-w-[720px] border-collapse text-sm leading-tight tabular-nums">
+                  <thead className="bg-[#f8fafa] text-[0.8571rem] font-medium text-[#55636f]">
                     <tr>
                       <th className={clsx(TH, 'w-[90px] text-right')}>
                         {t('fieldLabels.building.fromFloorNumber')}
@@ -255,7 +255,7 @@ const SurfaceTable = ({ name }: SurfaceTableProps) => {
                             <tr>
                               <td
                                 colSpan={columnCount}
-                                className="px-2 pb-1 text-[0.75rem] text-amber-700"
+                                className="px-2 pb-1 text-[0.8571rem] text-amber-700"
                               >
                                 {warning}
                               </td>

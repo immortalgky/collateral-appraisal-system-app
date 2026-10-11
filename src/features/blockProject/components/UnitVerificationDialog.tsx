@@ -125,31 +125,31 @@ function CondoTable({ units }: { units: ReappraisalPreviewUnit[] }) {
     <table className="w-full text-xs">
       <thead className="bg-gray-50 sticky top-0">
         <tr>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.sqNo')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitVerification.cols.status')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.floor')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.towerName')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.regNumber')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.roomNo')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.modelType')}
           </th>
-          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.usableAreaSqm')}
           </th>
-          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.sellingPriceBaht')}
           </th>
         </tr>
@@ -220,31 +220,31 @@ function LandAndBuildingTable({ units }: { units: ReappraisalPreviewUnit[] }) {
     <table className="w-full text-xs">
       <thead className="bg-gray-50 sticky top-0">
         <tr>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.sqNo')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitVerification.cols.status')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.plotNo')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.houseNo')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.modelName')}
           </th>
-          <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.numFloors')}
           </th>
-          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.landAreaSqWa')}
           </th>
-          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.usableAreaSqm')}
           </th>
-          <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('unitListing.cols.sellingPriceBaht')}
           </th>
         </tr>

@@ -164,8 +164,8 @@ const CountsTable = ({
     <div>
       <div className="cas-labelled-table">
         <div className="cas-table-card min-w-0 flex-1 overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full min-w-[560px] border-collapse text-[0.875rem]">
-            <thead className="bg-[#f8fafa] text-left text-[0.8125rem] font-medium text-[#55636f]">
+          <table className="w-full min-w-[560px] border-collapse text-sm">
+            <thead className="bg-[#f8fafa] text-left text-[0.8571rem] font-medium text-[#55636f]">
               <tr>
                 <th className={clsx(TH, 'text-left')}>
                   {t('propertyInfo.machinerySummary.table.item')}
@@ -266,7 +266,7 @@ const CountsTable = ({
                         const parts = suggested.groups.filter(g => g[name] > 0);
                         if (parts.length === 0)
                           return (
-                            <span className="text-[11px] text-gray-400">
+                            <span className="text-xs text-gray-400">
                               {t('propertyInfo.machinerySummary.table.sourceNone')}
                             </span>
                           );
@@ -288,7 +288,7 @@ const CountsTable = ({
                           )
                           .join(t('propertyInfo.machinerySummary.table.sourceJoin'));
                         return (
-                          <span className="text-[11px] leading-snug text-gray-500">
+                          <span className="text-xs leading-snug text-gray-500">
                             {t('propertyInfo.machinerySummary.table.sourceSentence', { list })}
                           </span>
                         );
@@ -307,7 +307,7 @@ const CountsTable = ({
                               ? t('propertyInfo.machinerySummary.table.useDisabled')
                               : undefined
                           }
-                          className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-[0.3077rem] border px-2 text-[0.75rem] font-medium leading-none transition-colors border-[color:var(--palette-accent-line)] bg-[color:var(--palette-accent-wash)] text-[color:var(--palette-accent-ink)] hover:bg-[color:color-mix(in_srgb,var(--palette-accent)_14%,var(--palette-accent-wash))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--palette-accent)]/40 disabled:cursor-not-allowed disabled:border-[color:var(--palette-line)] disabled:bg-[color:var(--palette-surface-3)] disabled:text-[color:var(--palette-ink-3)]"
+                          className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-[0.3077rem] border px-2 text-[0.8571rem] font-medium leading-none transition-colors border-[color:var(--palette-accent-line)] bg-[color:var(--palette-accent-wash)] text-[color:var(--palette-accent-ink)] hover:bg-[color:color-mix(in_srgb,var(--palette-accent)_14%,var(--palette-accent-wash))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--palette-accent)]/40 disabled:cursor-not-allowed disabled:border-[color:var(--palette-line)] disabled:bg-[color:var(--palette-surface-3)] disabled:text-[color:var(--palette-ink-3)]"
                         >
                           <Icon name="wand-magic-sparkles" style="solid" className="size-2.5" />
                           {t('propertyInfo.machinerySummary.table.use')}

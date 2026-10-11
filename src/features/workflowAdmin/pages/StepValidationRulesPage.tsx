@@ -648,7 +648,7 @@ const StepValidationRulesPage = () => {
     <div className="flex flex-col gap-4">
       {/* Page header */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">Step Validation Rules</h3>
+        <h3 className="text-base font-semibold text-gray-900">Step Validation Rules</h3>
         <p className="text-xs text-gray-500 mt-0.5">
           Configure which validation steps run when completing each workflow activity.
         </p>
@@ -699,7 +699,7 @@ const StepValidationRulesPage = () => {
               <table className="min-w-full divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="w-8 px-2 py-2.5" />
+                    <th className="text-xs w-8 px-2 py-2.5 font-semibold" />
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Order
                     </th>
@@ -718,7 +718,7 @@ const StepValidationRulesPage = () => {
                     <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
                       Status
                     </th>
-                    <th className="w-24 px-4 py-2.5" />
+                    <th className="text-xs w-24 px-4 py-2.5 font-semibold" />
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">

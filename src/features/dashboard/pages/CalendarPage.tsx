@@ -519,7 +519,7 @@ function NextSevenDaysPanel({
   return (
     <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       <div className="shrink-0 px-5 pt-5 pb-3 flex items-center justify-between border-b border-gray-50">
-        <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
         {!isLoading && <span className="text-xs text-gray-400">{eventsCountLabel(total)}</span>}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3">

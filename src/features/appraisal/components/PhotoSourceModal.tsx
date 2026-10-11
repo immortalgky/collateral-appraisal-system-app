@@ -1,4 +1,5 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 
 interface PhotoSourceModalProps {
@@ -29,10 +30,21 @@ export const PhotoSourceModal = ({
   onClose,
   onUploadFromDevice,
   onChooseFromGallery,
-  title = 'Add Photos',
+  title,
   accept = '.jpg,.jpeg,.png',
 }: PhotoSourceModalProps) => {
+  const { t } = useTranslation('appraisal');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Escape closes it, like the other dialogs
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -68,10 +80,13 @@ export const PhotoSourceModal = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            {title ?? t('photoSourceModal.title')}
+          </h2>
           <button
             type="button"
             onClick={onClose}
+            aria-label={t('photoSourceModal.close')}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Icon name="xmark" className="text-lg" />
@@ -90,10 +105,10 @@ export const PhotoSourceModal = ({
               <Icon name="upload" className="text-xl text-primary" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">Upload from Device</p>
-              <p className="text-xs text-gray-500 mt-0.5">
-                Select photos from your computer or device
+              <p className="text-sm font-medium text-gray-900">
+                {t('photoSourceModal.uploadTitle')}
               </p>
+              <p className="text-xs text-gray-500 mt-0.5">{t('photoSourceModal.uploadHint')}</p>
             </div>
             <Icon
               name="chevron-right"
@@ -112,10 +127,10 @@ export const PhotoSourceModal = ({
                 <Icon name="images" className="text-xl text-purple-600" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-gray-900">Choose from Gallery</p>
-                <p className="text-xs text-gray-500 mt-0.5">
-                  Select from previously uploaded photos
+                <p className="text-sm font-medium text-gray-900">
+                  {t('photoSourceModal.galleryTitle')}
                 </p>
+                <p className="text-xs text-gray-500 mt-0.5">{t('photoSourceModal.galleryHint')}</p>
               </div>
               <Icon
                 name="chevron-right"
@@ -138,7 +153,7 @@ export const PhotoSourceModal = ({
         {/* Footer Note */}
         <div className="px-4 pb-4">
           <p className="text-xs text-gray-400 text-center">
-            Supports: {describeAccept(accept)} (Max 50MB per file)
+            {t('photoSourceModal.supports', { types: describeAccept(accept) })}
           </p>
         </div>
       </div>

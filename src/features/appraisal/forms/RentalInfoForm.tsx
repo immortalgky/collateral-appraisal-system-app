@@ -310,22 +310,22 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                         <table className="cas-form-table w-full text-sm border-collapse">
                           <thead>
                             <tr className="border-b border-gray-200 bg-gray-50">
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">
                                 {t('forms.rentalInfo.table.atYear')}
                               </th>
-                              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                              <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">
                                 {t('forms.rentalInfo.table.toYear')}
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                              <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                                 {t('forms.rentalInfo.table.growthRate')}
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                              <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                                 {t('forms.rentalInfo.table.growthAmount')}
                               </th>
-                              <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                              <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                                 {t('forms.rentalInfo.table.totalAmount')}
                               </th>
-                              <th className="px-3 py-2 w-10"></th>
+                              <th className="text-xs px-3 py-2 w-10 font-semibold"></th>
                             </tr>
                           </thead>
                           <tbody>
@@ -479,13 +479,13 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                   <table className="cas-form-table w-full text-sm border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.atDate')}
                         </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.upFrontAmount')}
                         </th>
-                        <th className="px-3 py-2 w-10"></th>
+                        <th className="text-xs px-3 py-2 w-10 font-semibold"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -637,25 +637,25 @@ const RentalInfoForm = ({ namePrefix }: { namePrefix?: string }) => {
                   <table className="cas-form-table w-full text-sm border-collapse">
                     <thead>
                       <tr className="border-b border-gray-200 bg-gray-50">
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.year')}
                         </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.contractStart')}
                         </th>
-                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-left text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.contractEnd')}
                         </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.upFrontPerYear')}
                         </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.rentalFeePerYear')}
                         </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.totalAmount')}
                         </th>
-                        <th className="px-3 py-2 text-right text-xs font-medium text-gray-500">
+                        <th className="px-3 py-2 text-right text-xs font-semibold text-gray-500">
                           {t('forms.rentalInfo.table.growthRatePct')}
                         </th>
                       </tr>

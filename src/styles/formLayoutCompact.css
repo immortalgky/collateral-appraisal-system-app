@@ -15,12 +15,14 @@
    same in both skins are in formLayoutSkin.css (loaded after both); what is left here is what only
    compact needs.
 
-   Design intent: a dense, flat, spreadsheet-like sheet — label column beside the value, one 32px row
+   Design intent: a dense, flat, spreadsheet-like sheet — label column beside the value, one 32px row (34.5px at the 14px root)
    per field, teal only for the chosen value.
 
-   Sizes are rem calibrated to the 13px root the app runs at (12px = 0.9231rem, 12.5px =
-   0.9615rem, 11px = 0.8462rem, 30px = 2.3077rem, 24px = 1.8462rem), so the density setting keeps
-   working. Borders stay px.
+   Sizes are rem. The geometry (control height, padding, radii: 30px = 2.3077rem, 24px = 1.8462rem)
+   was set for a 13px root; the app now runs a 14px root (15px from 1920px), so each of those renders
+   about 8% larger than the px written in the comments of this file (30px is 32.3px, a 32px row 34.5px,
+   a 28px pill 30.2px). Font sizes were set again for the 14px root: 11px = 0.7857rem, 12px = 0.8571rem,
+   14px = 1rem. The density setting keeps working because everything is rem. Borders stay px.
 
    HOW THE RULES WIN. Each override copies the selector of the rule it beats and swaps its leading
    `[data-form-layout='grid']` for `[data-form-layout='grid'][data-form-layout='grid']`: always
@@ -87,7 +89,7 @@
   .cas-form-grid
   :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head)
   span {
-  font-size: 0.875rem;
+  font-size: 1.0714rem;
   font-weight: 600;
   letter-spacing: 0;
 }
@@ -95,17 +97,17 @@
 /* ── 2. label column and row height ─────────────────────────────────────────
    Fill and rule colours are tokens. Size: overrides the "type scale" block's 0.8125rem. Row height:
    overrides the "field: label cell, then control" row and the "standalone checkboxes" row (2.25rem,
-   29.25px at 13px). The label-less arm is limited to rows that hold a checkbox: the standalone
+   31.5px at the 14px root). The label-less arm is limited to rows that hold a checkbox: the standalone
    checkbox rule also matches bare `[data-field]` anchors such as the construction-inspection tab's
    split badge, which is not part of this work. */
 [data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid [data-field] [data-field-label] {
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   font-weight: 400;
   /* One model for every label cell: equal padding above and below, the text centred in the row.
      formLayout.css padded the cell 0.675rem / 0.25rem (tuned for 12px text in a 29px row), which sat the
      text high. A one-line row centres the label by `align-items` with no padding at all (so a
      two-line label still fits the row); beside a tall control (next rule) the label sits in the row's top
-     slot, padded the same above and below. The line is `text-sm`'s own 1.25rem (16.25px for 11.4px text):
+     slot, padded the same above and below. The line is a fixed 1.25rem (17.5px for 12px text):
      Thai stacks tone marks and vowels above and below the letters, and a tighter line let the second line's
      marks touch the first line's lower vowels in a two-line label. Half-leading is symmetric, so the
      line height does not move the ink: the text stays centred whatever the line is. */
@@ -124,7 +126,7 @@
     .cas-repeater
   ) {
   min-height: var(--cas-row-h);
-  font-size: 0.875rem;
+  font-size: 0.9286rem;
 }
 
 /* formLayout.css's "standalone checkboxes" rule (`[data-field]` with no label of its own: flex, 2.25rem tall,
@@ -159,7 +161,7 @@
 
 /* ── 2b. label width never shrinks; a row without room breaks into rows ──────────────────────────
    formLayout.css gave the first field of a shared row (`data-row-lead`) the full 16rem label only once
-   its section's grid was 48rem (half a row) or 72rem (a third) wide, and the narrow 9.5rem below that,
+   its section's grid was 48rem (half a row) or 72rem (a third) wide, and the narrow 11.5rem below that,
    so the first label of a shared row shrank next to the single-field rows' 16rem. Now the lead's label is
    always 16rem, and a row that has no room for it puts its fields on rows of their own, each a normal
    full-width row with the full label. The room is measured on the grid itself (`container-type` is set on
@@ -167,12 +169,12 @@
    on its left) and the right-hand panel opening or closing all decide for themselves.
 
    The minimum is a label plus 7.5rem for the value (a short number, a date, two chips): the lead needs
-   16 + 7.5 = 23.5rem, a field holding a quarter of the row needs its 9.5rem label + 7.5rem = 17rem. Three
+   16 + 7.5 = 23.5rem, a field holding a quarter of the row needs its 11.5rem label + 7.5rem = 19rem. Three
    kinds of shared row:
    - two halves (6 + 6) and the 6 + 3 + 3 row's lead: 23.5rem is half a row, so below 47rem every shared
      row breaks;
-   - rows whose members are a quarter wide (the `col-span-3` pairs, e.g. District | Province): 17rem is a
-     quarter, so below 68rem those and their lead break;
+   - rows whose members are a quarter wide (the `col-span-3` pairs, e.g. District | Province): 19rem is a
+     quarter, so below 76rem those and their lead break;
    - rows led by a third (4 + 8, House No. + No House Number): 23.5rem is a third, so below 70.5rem they
      break. */
 [data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid [data-field][data-row-lead] {
@@ -186,7 +188,7 @@
     --cas-label-w: 16rem;
   }
 }
-@container (max-width: 67.99rem) {
+@container (max-width: 75.99rem) {
   [data-form-layout='grid'][data-form-layout='grid']
     .cas-form-grid
     [data-field]:is(.col-span-3, :has(+ .col-span-3)) {
@@ -474,7 +476,7 @@
   border-color: var(--cas-req-edge);
 }
 /* The wrapper's vertical margin (formLayout.css "Text boxes stand off the label column", 0.1875rem) shrinks so box + margins
-   land on the 32px row: 28px control + 2 × 2px. Same two selectors as the original. */
+   land on the 34.5px row: 30.3px control + 2 × 2px. Same two selectors as the original. */
 [data-form-layout='grid'][data-form-layout='grid']
   .cas-form-grid
   [data-field]:has([data-field-label]):not(:has(table))
@@ -497,7 +499,7 @@
 }
 
 /* ── 4. radio pills and checkbox chips ──────────────────────────────────────
-   Unselected: white, 1px #e3e9e8 hairline, 28px (the control's 30px less 2px, the standard skin's pill), 6px corner, 12px #55636f. Selected: solid primary
+   Unselected: white, 1px #e3e9e8 hairline, the control's height less 2px (30.3px, the standard skin's pill), 6.5px corner, 14px #55636f. Selected: solid primary
    (`--cas-sel-*`) with white text, weight 500.
 
    A radio pill is Headless UI v2's `Radio`, which renders a **span** with role="radio" (not the
@@ -560,17 +562,16 @@
 }
 
 /* ── 5. toggle ──────────────────────────────────────────────────────────────
-   The component's own round shape is kept: the track keeps `bg-gray-100/80 rounded-full`, the thumb
-   `rounded-full` with its drop shadow, and only the thumb's colour changes — solid primary by
-   default. A yes/no toggle (marker class from FormBooleanToggle) turns the thumb grey while its
-   first option — false — is active; a string toggle stays primary either way. The error state
-   (`border-danger` on the track, `bg-danger` on the thumb) is excluded by the :not() and keeps
-   its own look.
+   The component's own round shape is kept: the track keeps `bg-gray-100/80 rounded-full`, the
+   sliding pill `rounded-full` with its soft shadow, and only its colour changes — solid primary
+   by default (formLayoutSkin.css). A yes/no toggle (marker class from FormBooleanToggle) turns the pill
+   grey while its first option — false — is active; a string toggle stays primary either way. The
+   error state (`border-danger` on the track, `bg-danger` on the pill) is excluded by the :not()
+   and keeps its own look.
 
    Sizes: buttons 24px, track padding stays formLayout.css's 0.0625rem (the `fieldset >
-   div[role='radiogroup']` rule), so ≈26px in all. The thumb's `inset-block` (set in the same
-   block) drops to match. The thumb's width and slide distance are the component's own and are not
-   touched. Track margin-block centres it in a 32px row (the row is top-aligned, see "Tall rows" in
+   div[role='radiogroup']` rule), so ≈26px in all. The pill's `inset-block` (set in the same block) drops to match; its width
+   and slide are measured from the active button by the component. Track margin-block centres it in a 32px row (the row is top-aligned, see "Tall rows" in
    formLayout.css). */
 [data-form-layout='grid'][data-form-layout='grid']
   .cas-form-grid
@@ -593,7 +594,7 @@
 }
 
 /* ── 7. tables ───────────────────────────────────────────────────────────────
-   Heads grey #f8fafa / #55636f / 500 / 12px, everywhere. The tables built for the sheet
+   Heads grey #f8fafa / #55636f / 500 / 12px, everywhere; body text 14px. The tables built for the sheet
    (title deeds, boundary, surface, building, condo area) are already grey and only change size;
    the repeater tables (FormTable, the correction screen's title table) and the cost table carry a
    teal head from formLayout.css that is replaced here. Sizes go on th/td because `table-xs` and
@@ -613,7 +614,7 @@
   [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
   thead
   th {
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   color: var(--cas-ink-2);
 }
@@ -637,7 +638,7 @@
   [data-field]:is(.cas-repeater, :has(> table), :has(> div > table), :has(> div > div > table))
   tfoot
   :is(td, th) {
-  font-size: 0.875rem;
+  font-size: 0.9286rem;
 }
 
 /* Cost table head: overrides the teal head of formLayout.css's "the building cost table keeps its own
@@ -662,16 +663,16 @@
 }
 
 /* The tables built for the sheet: sizes on th / td. Their heads are already #f8fafa / #55636f
-   (the `thead` classes and the sticky `bg-[#f8fafa]`), 0.8125rem on the thead, 0.875rem on the
-   table. Also reaches the land-deduction table, where it agrees with the rule above. */
+   (the `thead` classes and the sticky `bg-[#f8fafa]`), 12px on the thead, 14px on the
+   body cells. Also reaches the land-deduction table, where it agrees with the rule above. */
 [data-form-layout='grid'][data-form-layout='grid'] .cas-form-grid .cas-labelled-table thead th {
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
 }
 [data-form-layout='grid'][data-form-layout='grid']
   .cas-form-grid
   .cas-labelled-table
   :is(tbody td, tfoot td) {
-  font-size: 0.875rem;
+  font-size: 0.9286rem;
 }
 
 /* Editable cells (and the two cost-summary override inputs under the building table, which sit in
@@ -827,7 +828,7 @@
   border-bottom: 1px solid var(--cas-line);
   background: transparent;
   color: var(--cas-ink-2);
-  font-size: 0.8462rem;
+  font-size: 0.8571rem;
   font-weight: 600;
   line-height: var(--cas-leading);
 }
@@ -1016,7 +1017,7 @@
   row-gap: 0.1538rem;
 }
 /* ── cell text that a utility marks `!important` ────────────────────────────
-   NumCell passes `text-[0.875rem]!` to every number cell, and BuildingDetailTable puts
+   NumCell passes `text-sm!` to every number cell, and BuildingDetailTable puts
    `[&_tbody_td]:!text-[13px]` on the cost table. Tailwind utilities live in `@layer utilities`, and
    for `!important` declarations the layer order is reversed: an *unlayered* `!important` (which is
    all of formLayout.css) loses to a layered one whatever its specificity. Declaring these in
@@ -1028,6 +1029,6 @@
     [data-field].cas-cost-table
     tbody
     td {
-    font-size: 0.875rem !important;
+    font-size: 0.9286rem !important;
   }
 }
