@@ -23,7 +23,7 @@ type ViewerState =
 
 /**
  * Inline document viewer for shared quotation documents.
- * Fetches the binary via axios (so Bearer auth is forwarded), then renders
+ * Fetches the binary via axios (so the session cookie is forwarded), then renders
  * PDFs in an iframe and images in an img tag.
  * No download control is shown.
  */

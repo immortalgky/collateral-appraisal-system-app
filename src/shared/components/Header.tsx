@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useAuthStore } from '@features/auth/store';
+import { logout } from '@features/auth/utils/logout';
 
 function Header() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
 
   return (
     <header className="bg-blue-600 text-white shadow-md">
@@ -15,7 +16,10 @@ function Header() {
           {user ? (
             <>
               <span className="hidden md:inline">Welcome, {user.name}</span>
-              <button onClick={logout} className="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded">
+              <button
+                onClick={() => void logout()}
+                className="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded"
+              >
                 Logout
               </button>
             </>
