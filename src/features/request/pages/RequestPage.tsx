@@ -80,6 +80,7 @@ import {
 } from '../utils/carryForward';
 import { isRequestSubmitted } from '../utils/status';
 import { hasDirtyFields } from '../utils/formDirty';
+import { MIN_SKELETON_MS } from './skeletonDelay';
 import { emptyRowFor } from '../components/tables/formTableUtils';
 import {
   CUSTOMER_COLUMNS,
@@ -169,15 +170,17 @@ function RequestPage() {
   // When data is cached, isLoadingRequest will be false immediately, so we skip the delay
   const [minLoadingDone, setMinLoadingDone] = useState(true);
 
+  // The timer must outlive the response: it used to depend on isLoadingRequest, so a response inside
+  // the 500 ms cleared it, minLoadingDone stayed false and the skeleton never went away.
+  const loadingAtMount = useRef(isLoadingRequest);
   useEffect(() => {
-    if (isEditMode && isLoadingRequest) {
-      setMinLoadingDone(false);
-      const timer = setTimeout(() => {
-        setMinLoadingDone(true);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isEditMode, isLoadingRequest]);
+    if (!isEditMode || !loadingAtMount.current) return;
+    setMinLoadingDone(false);
+    const timer = setTimeout(() => {
+      setMinLoadingDone(true);
+    }, MIN_SKELETON_MS);
+    return () => clearTimeout(timer);
+  }, [isEditMode]);
 
   // Skeleton until the request has arrived (retries included), and for at least the minimum above.
   // Not on a background refetch of a request we already have. Never the empty form: it used to show

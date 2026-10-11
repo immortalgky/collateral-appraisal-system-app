@@ -2,11 +2,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { Route, Routes } from 'react-router-dom';
 import { delay, http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
+import { mockRequestPageApi } from '@/test/mocks/requestPage';
 import { render, screen, waitFor } from '@/test/test-utils';
 import RequestPage from './RequestPage';
 
 // The page tests run in a memory router, which has no blocker to register
 vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null }));
+
+mockRequestPageApi();
 
 describe('RequestPage shell', () => {
   it('shows the header strip, the section nav and the missing-fields chip on a new request', async () => {

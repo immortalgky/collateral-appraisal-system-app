@@ -8,10 +8,13 @@ import { REQUEST_DOCUMENT_UPLOADS } from '../types/document';
 import { useParameterStore } from '@/shared/store';
 import { render, screen, waitFor, within } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
+import { mockRequestPageApi } from '@/test/mocks/requestPage';
 import type { PriorAppraisal } from '@/features/appraisal/api/priorAppraisal';
 import RequestPage from './RequestPage';
 
 vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null }));
+
+mockRequestPageApi();
 
 // A file as the request holds it once carried from the previous appraisal
 const carriedDoc = {

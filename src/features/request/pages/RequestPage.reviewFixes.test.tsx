@@ -5,10 +5,13 @@ import { act } from '@testing-library/react';
 import { useUploadProgressStore } from '@/shared/api/uploadProgress';
 import { createTestQueryClient, render, screen, waitFor, within } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
+import { mockRequestPageApi } from '@/test/mocks/requestPage';
 import { REQUEST_DOCUMENT_UPLOADS } from '../types/document';
 import RequestPage from './RequestPage';
 
 vi.mock('@/shared/components/UnsavedChangesDialog', () => ({ default: () => null }));
+
+mockRequestPageApi();
 
 const request = (over: Record<string, unknown> = {}) => ({
   id: 'r-1',
@@ -29,6 +32,10 @@ const serveRequest = (body: object) =>
     // `rev` changes on every read, so a refetch is new data (react-query keeps the old object when
     // the response is equal) and the page resets the form to it
     http.get('*/api/requests/r-1', () => HttpResponse.json({ ...body, rev: (rev += 1) })),
+    // the prior appraisal a draft follows is read for its files
+    http.get('*/api/appraisals/prev-1', () =>
+      HttpResponse.json({ id: 'prev-1', appraisalNumber: '69000002', documents: [] }),
+    ),
     http.get('*/api/document-checklist', () =>
       HttpResponse.json({ applicationDocuments: [], propertyTypeGroups: [] }),
     ),
