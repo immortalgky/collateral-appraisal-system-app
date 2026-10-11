@@ -48,15 +48,19 @@ export function formatPercent(value: number, decimalPlaces = 2): string {
 }
 
 /**
- * Format a file size in bytes to a human-readable string
+ * Format a file size in bytes to a human-readable string (1024 base, Bytes to TB), stepping up a
+ * unit once the value reaches 1000 of the current one; "—" when there is no size.
  * @param bytes File size in bytes
  */
-export function formatFileSize(bytes: number): string {
+export function formatFileSize(bytes: number | null | undefined): string {
+  if (bytes == null || !Number.isFinite(bytes) || bytes < 0) return '—';
   if (bytes === 0) return '0 Bytes';
 
   const k = 1024;
   const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  let i = Math.max(0, Math.min(Math.floor(Math.log(bytes) / Math.log(k)), sizes.length - 1));
+  // A number of four digits reads badly ("1000.0 MB"): step up once the value reaches 1000
+  while (i < sizes.length - 1 && bytes / Math.pow(k, i) >= 1000) i++;
 
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }

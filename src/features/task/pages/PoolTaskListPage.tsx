@@ -522,7 +522,7 @@ function PoolTaskListPage({
           <div className={isEmpty ? 'shrink-0 overflow-hidden' : 'flex-1 min-h-0 overflow-auto'}>
             <table
               ref={tableRef}
-              className="table-fixed text-sm"
+              className="table-fixed text-table"
               style={{ width: totalTableWidth }}
             >
               <colgroup>
@@ -566,7 +566,7 @@ function PoolTaskListPage({
                       </th>
                     );
                   })}
-                  <th className="w-10 px-4 py-2.5 bg-gray-50" />
+                  <th className="text-xs w-10 px-4 py-2.5 bg-gray-50 font-semibold" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

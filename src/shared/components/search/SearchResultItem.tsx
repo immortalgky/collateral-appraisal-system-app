@@ -108,7 +108,7 @@ export default function SearchResultItem({
                 key={`${m.field}-${m.value}`}
                 className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-base-300 bg-gray-50 dark:bg-base-300 text-xs text-gray-600 dark:text-gray-300"
               >
-                <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
                   {t(`search.fields.${m.field}` as never, { defaultValue: m.field })}
                 </span>
                 <span className="truncate max-w-[14rem]">{m.value}</span>

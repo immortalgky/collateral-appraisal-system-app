@@ -229,13 +229,13 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
         <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-500 w-36">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 w-36">
                 {t('fee.columns.type')}
               </th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
                 {t('fee.columns.description')}
               </th>
-              <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 w-32">
+              <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500 w-32">
                 {t('fee.columns.amount')}
               </th>
             </tr>
@@ -458,13 +458,13 @@ function FeeAppointmentApprovalTaskPage() {
               <table className="w-full text-sm table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500 w-36">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 w-36">
                       {t('fee.columns.type')}
                     </th>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
                       {t('fee.columns.description')}
                     </th>
-                    <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 w-32">
+                    <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500 w-32">
                       {t('fee.columns.amount')}
                     </th>
                   </tr>

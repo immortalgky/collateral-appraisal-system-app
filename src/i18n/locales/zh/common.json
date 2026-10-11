@@ -29,6 +29,7 @@
     "refresh": "刷新",
     "viewDetails": "查看详情",
     "apply": "应用",
+    "openCalendar": "打开日历",
     "clear": "清除",
     "clearAll": "全部清除"
   },
@@ -177,5 +178,16 @@
     "itemRange": "{{start}}-{{end}}，共 {{total}}",
     "noResults": "无结果",
     "pageSize": "每页条数"
+  },
+  "reportJob": {
+    "generating": "正在生成报告…",
+    "queueFailed": "无法提交报告生成请求。",
+    "ready": "报告已生成。请点击通知铃下载。",
+    "openFailed": "报告已生成但无法打开。请查看通知铃。",
+    "failed": "报告生成失败。"
+  },
+  "imageEditor": {
+    "loadFailed": "无法打开该图片进行编辑。",
+    "loadFailedDiscarded": "无法打开 {{name}}。该文件不会被附加。"
   }
 }

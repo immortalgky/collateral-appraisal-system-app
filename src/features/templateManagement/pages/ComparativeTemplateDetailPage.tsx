@@ -284,7 +284,7 @@ const ComparativeTemplateDetailPage = () => {
           <Icon name="chevron-left" style="solid" className="size-5" />
         </button>
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             {isEditMode ? t('templateDetail.compEditTitle') : t('templateDetail.compCreateTitle')}
           </h3>
           <p className="text-xs text-gray-500 mt-0.5">

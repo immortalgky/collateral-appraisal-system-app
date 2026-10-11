@@ -1,5 +1,6 @@
 import React, { useImperativeHandle, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Input from '@/shared/components/Input';
 import {
@@ -19,7 +20,7 @@ import {
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
-import { emptyRowFor, isRegular, sumColumn } from './formTableUtils';
+import { emptyRowFor, isBlankRow, isRegular, sumColumn } from './formTableUtils';
 
 // --- Types ---
 
@@ -34,6 +35,22 @@ interface FormTableProps {
   hideAddButton?: boolean;
   /** Exposes this table's add-row action to a parent (`ref.current?.()`) while it is mounted. */
   addRowRef?: React.Ref<() => void>;
+  /**
+   * Keep one empty editable row in the table instead of the "add first item" state: it is put there
+   * whenever the array is empty (mount, a reset, the last row deleted), without marking the form
+   * dirty. Never in read-only. Default off.
+   */
+  seedEmptyRow?: boolean;
+  /**
+   * `plain`: rows of inputs on a grid with no header band, borders or add bar, stacking into
+   * label-over-input cards when the table's own container is narrow. Each regular column's `width`
+   * is its grid track (default `minmax(0,1fr)`). The first track is always the row-number circle (a
+   * `rowNumberColumn` entry is not needed), the last the delete button; no reorder (`sequenceField`
+   * is ignored). Default `table`, the daisyUI table every other page uses.
+   */
+  variant?: 'table' | 'plain';
+  /** Label of the total row under a `plain` table (default: the shared "Total"). */
+  totalLabel?: string;
 }
 
 export type FormTableColumn = FormTableRegularColumn | FormTableRowNumberColumn;
@@ -48,6 +65,8 @@ export interface FormTableRegularColumn {
   maxIntegerDigits?: number;
   allowNegative?: boolean;
   maxLength?: number;
+  /** Placeholder of the text or number input. */
+  placeholder?: string;
   options?: ListBoxItem[];
   group?: string;
   otherField?: boolean;
@@ -67,6 +86,44 @@ const isRowNum = (col: FormTableColumn): col is FormTableRowNumberColumn =>
   'rowNumberColumn' in col;
 const fmtNum = (n: number, dp = 2) =>
   n.toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp });
+
+// `plain` variant. Sizes are rem so the viewport step and density scale them with the rest of the UI
+// (the mock's 28/30/24px at a 14px root). The stack point is 640px at 14px, measured on the table's
+// own container (the card), not the viewport. Class names are written out in full for Tailwind.
+const PLAIN_COLS_NARROW = '@max-[45.7143rem]:grid-cols-[2rem_minmax(0,1fr)_2.1429rem]';
+const PLAIN_COLS_NARROW_READONLY = '@max-[45.7143rem]:grid-cols-[2rem_minmax(0,1fr)]';
+// Top-aligned, so an inline error under one cell does not push its neighbours down.
+const PLAIN_ROW = 'grid grid-cols-(--cas-cols) items-start gap-x-[0.5714rem]';
+// The row-number circle and delete button (1.7143rem) are centred on the standard 2.5357rem input
+// (35.5px at a 14px root): 0.4107rem down, plus the label a stacked row shows above its input
+// (1.5357rem) when the table is narrow.
+const PLAIN_ROW_ACTION = 'mt-[0.4107rem] @max-[45.7143rem]:mt-[1.9464rem]';
+const PlainReadOnlyValue = ({
+  column,
+  row,
+}: {
+  column: FormTableRegularColumn;
+  row: Record<string, unknown>;
+}) => {
+  const raw = row[column.name];
+  const text = raw == null ? '' : String(raw);
+  const other = column.otherFieldName ? String(row[column.otherFieldName] ?? '') : '';
+  if (column.inputType === 'dropdown' && column.group && text) {
+    return (
+      <>
+        <ParameterDisplay group={column.group} code={text} />
+        {column.otherField && text === (column.otherTriggerValue ?? '99') && other && (
+          <> — {other}</>
+        )}
+      </>
+    );
+  }
+  if (column.inputType === 'number') {
+    const n = parseFloat(text);
+    return isNaN(n) ? '—' : fmtNum(n, column.decimalPlaces ?? 2);
+  }
+  return text || '—';
+};
 
 const IconBtn = ({
   onClick,
@@ -91,6 +148,18 @@ const IconBtn = ({
     className={`${size === 7 ? 'shrink-0 w-6 h-6' : 'w-7 h-7'} flex items-center justify-center rounded-md transition-colors ${className}`}
   >
     <Icon style="solid" name={icon} className={iconSize} />
+  </button>
+);
+
+// --- AddRowButton: the tinted "+ add" action a parent puts in its section header ---
+
+export const AddRowButton = ({ onClick, label }: { onClick: () => void; label: string }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
+  >
+    <Icon style="solid" name="plus" className="size-3" /> {label}
   </button>
 );
 
@@ -286,6 +355,7 @@ const TableCell = ({
           decimalPlaces={dp}
           maxIntegerDigits={column.maxIntegerDigits}
           allowNegative={column.allowNegative}
+          placeholder={column.placeholder}
         />
       );
     // Spread the whole field (not just value/onChange): without field.ref, react-hook-form has no
@@ -316,7 +386,14 @@ const TableCell = ({
         );
       }
     }
-    return <Input type={column.inputType} {...field} maxLength={column.maxLength} />;
+    return (
+      <Input
+        type={column.inputType}
+        {...field}
+        maxLength={column.maxLength}
+        placeholder={column.placeholder}
+      />
+    );
   };
 
   return (
@@ -338,6 +415,9 @@ const FormTable = ({
   sequenceField,
   hideAddButton = false,
   addRowRef,
+  seedEmptyRow = false,
+  variant = 'table',
+  totalLabel,
 }: FormTableProps) => {
   const { t } = useTranslation(['request', 'common']);
   const { getValues, setValue, control, watch } = useFormContext();
@@ -386,6 +466,16 @@ const FormTable = ({
   }, [columns, sequenceField, getValues, name, append]);
   useImperativeHandle(addRowRef, () => handleAddRow, [handleAddRow]);
 
+  // Reads the array when it runs (not from this render) so a reset that lands first is not undone.
+  // Not dirty: the row is the page's starting point, not an edit.
+  const seeding = seedEmptyRow && !isReadOnly;
+  const rowCount = rowList.length;
+  React.useEffect(() => {
+    if (!seeding || rowCount > 0) return;
+    if (((getValues(name) as unknown[] | undefined) ?? []).length > 0) return;
+    setValue(name, [emptyRowFor(columns)], { shouldDirty: false });
+  }, [seeding, rowCount, name, columns, getValues, setValue]);
+
   const handleSequenceCommit = (originalIndex: number, rawTarget: number) => {
     if (!sequenceField) return;
     const total = displayOrder.length;
@@ -421,6 +511,147 @@ const FormTable = ({
     isRowNum(col)
       ? { width: '60px' }
       : { width: (col as FormTableRegularColumn).width ?? 'auto', minWidth: '100px' };
+
+  if (variant === 'plain') {
+    const regular = columns.filter(isRegular);
+    // The row-number circle is always the first track, whether or not the columns list a
+    // `rowNumberColumn`; each regular column is one track, and the delete button the last.
+    const cols = [
+      '2rem',
+      ...regular.map(c => c.width ?? 'minmax(0,1fr)'),
+      ...(isReadOnly ? [] : ['2.1429rem']),
+    ].join(' ');
+    const rowClass = clsx(PLAIN_ROW, isReadOnly ? PLAIN_COLS_NARROW_READONLY : PLAIN_COLS_NARROW);
+    return (
+      <div data-field={name} className="@container">
+        {isEmpty ? (
+          <div className="flex flex-col items-center gap-1.5 py-4">
+            <div className="flex size-9 items-center justify-center rounded-full bg-gray-100">
+              <Icon style="regular" name="inbox" className="size-4 text-gray-400" />
+            </div>
+            <p className="text-xs text-gray-500">{t('table.noData')}</p>
+            {!isReadOnly && <AddRowButton onClick={handleAddRow} label={t('table.addFirstItem')} />}
+          </div>
+        ) : (
+          <div style={{ '--cas-cols': cols } as React.CSSProperties}>
+            <div
+              className={clsx(
+                rowClass,
+                'pb-[0.2857rem] text-xs font-semibold text-gray-600 @max-[45.7143rem]:hidden',
+              )}
+            >
+              <span>#</span>
+              {regular.map(col => (
+                <span key={col.name} className={clsx(col.align === 'right' && 'text-right')}>
+                  {col.label}
+                </span>
+              ))}
+              {!isReadOnly && <span />}
+            </div>
+            {displayOrder.map((originalIndex, displayPos) => {
+              const row = rowList[originalIndex] as Record<string, unknown>;
+              return (
+                <div
+                  key={fields[originalIndex]?.id ?? originalIndex}
+                  className={clsx(
+                    rowClass,
+                    'py-[0.2143rem] @max-[45.7143rem]:border-b @max-[45.7143rem]:border-gray-100 @max-[45.7143rem]:py-2',
+                  )}
+                >
+                  <span
+                    className={clsx(
+                      'grid size-[1.7143rem] place-items-center rounded-full bg-gray-100 text-xs font-medium text-gray-600',
+                      PLAIN_ROW_ACTION,
+                    )}
+                  >
+                    {displayPos + 1}
+                  </span>
+                  {regular.map((col, ri) => (
+                    <div
+                      key={col.name}
+                      className={clsx('min-w-0', ri > 0 && '@max-[45.7143rem]:col-start-2')}
+                    >
+                      <span className="mb-1 hidden text-xs text-gray-500 @max-[45.7143rem]:block">
+                        {col.label}
+                      </span>
+                      {isReadOnly ? (
+                        <div
+                          className={clsx(
+                            'py-[0.5714rem] text-sm',
+                            col.align === 'right' || col.inputType === 'number'
+                              ? 'text-right tabular-nums'
+                              : 'truncate',
+                          )}
+                        >
+                          <PlainReadOnlyValue column={col} row={row} />
+                        </div>
+                      ) : (
+                        <TableCell
+                          name={name}
+                          index={originalIndex}
+                          column={col}
+                          control={control}
+                        />
+                      )}
+                    </div>
+                  ))}
+                  {!isReadOnly && (
+                    <div
+                      className={clsx(
+                        'flex justify-end @max-[45.7143rem]:col-start-3 @max-[45.7143rem]:row-start-1',
+                        PLAIN_ROW_ACTION,
+                      )}
+                    >
+                      <ConfirmDeleteButton
+                        onConfirm={() => deleteRow(originalIndex)}
+                        rowNumber={displayPos + 1}
+                        disabled={seeding && rowCount === 1 && isBlankRow(row, columns)}
+                        className="flex size-[1.7143rem] items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                      >
+                        <Icon style="solid" name="trash" className="size-3.5" />
+                      </ConfirmDeleteButton>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+            {hasSumRow && (
+              <div className="mt-[0.5714rem] flex items-center gap-3.5 rounded-b-lg border-t-2 border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 tabular-nums">
+                <span className="mr-auto">{totalLabel ?? t('table.total')}</span>
+                {isOverridden && (
+                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                    {t('table.override')}
+                  </span>
+                )}
+                {/* Right edge on the last input's, not the delete column's: that column and its gap
+                    (2.7143rem) less the footer's own 0.75rem padding. */}
+                <div
+                  className={clsx(
+                    'min-w-[8rem]',
+                    !isReadOnly && 'mr-[1.9643rem] @max-[45.7143rem]:mr-0',
+                  )}
+                >
+                  <TotalCell
+                    value={
+                      totalFieldName ? (watch(totalFieldName) ?? calculatedTotal) : calculatedTotal
+                    }
+                    calculatedTotal={calculatedTotal}
+                    totalFieldName={totalFieldName}
+                    isOverridden={isOverridden}
+                    isReadOnly={isReadOnly}
+                    allowOverride={allowOverride}
+                    onOverride={() => setIsOverridden(true)}
+                    onReset={handleResetTotal}
+                    onSetValue={v => totalFieldName && setValue(totalFieldName, v)}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     // Anchored on the array name so an "at least 1 item" error still has somewhere to scroll to:
@@ -536,6 +767,8 @@ const FormTable = ({
                         <ConfirmDeleteButton
                           onConfirm={() => deleteRow(originalIndex)}
                           rowNumber={displayPos + 1}
+                          // The seeded row comes back the moment it goes, so there is nothing to delete
+                          disabled={seeding && rowCount === 1 && isBlankRow(field, columns)}
                           className="cas-row-btn flex h-7 w-7 items-center justify-center rounded-md bg-danger-50 text-danger-600 transition-colors hover:bg-danger-100"
                         >
                           <Icon style="solid" name="trash" className="size-3.5" />

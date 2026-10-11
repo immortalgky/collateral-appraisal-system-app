@@ -25,6 +25,8 @@ interface FormCardProps extends HTMLAttributes<HTMLDivElement> {
   required?: boolean;
   /** Show colored left border accent */
   coloredBorder?: boolean;
+  /** Heading size class (default text-base); only a page that needs another size sets it. */
+  headingClassName?: string;
 }
 
 // Border color styles matching icon colors
@@ -62,6 +64,7 @@ const FormCard = ({
   coloredBorder = false,
   className,
   required,
+  headingClassName,
   ...props
 }: FormCardProps) => {
   return (
@@ -81,6 +84,7 @@ const FormCard = ({
         rightIcon={rightIcon}
         variant="card"
         required={required}
+        headingClassName={headingClassName}
       />
       <div className={clsx(!noPadding && 'p-5')}>{children}</div>
     </div>

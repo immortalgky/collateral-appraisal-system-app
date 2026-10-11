@@ -309,7 +309,7 @@ const LandTitleModal = ({
             )}
             <aside className="grid content-start gap-6 border-t border-gray-200 bg-white p-5 lg:border-l lg:border-t-0">
               <section className="grid gap-3">
-                <h3 className="flex items-baseline gap-2 text-sm font-semibold text-gray-800">
+                <h3 className="flex items-baseline gap-2 text-base font-semibold text-gray-800">
                   {t('titleEntry.checks.title')}
                   <span className="text-xs font-normal text-gray-400">
                     {t('titleEntry.checks.hint')}
@@ -320,7 +320,7 @@ const LandTitleModal = ({
                 </div>
               </section>
               <section className="grid gap-3">
-                <h3 className="text-sm font-semibold text-gray-800">
+                <h3 className="text-base font-semibold text-gray-800">
                   {t('titleEntry.price.title')}
                 </h3>
                 <div className="grid grid-cols-12 gap-3">

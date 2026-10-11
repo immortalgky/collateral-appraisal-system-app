@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -16,9 +16,11 @@ import { SearchByInput } from '@/shared/components/inputs';
 import toast from 'react-hot-toast';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
+import GroupSidebar from '@/shared/components/GroupSidebar';
 import {
   useAppraisalSearch,
   useAppraisalSearchCounts,
+  useAppraisalGroups,
   useSmartViews,
   useSavedSearches,
   useCreateSavedSearch,
@@ -26,6 +28,7 @@ import {
   exportAppraisals,
   MAX_EXPORT_ROWS,
   type AppraisalDto,
+  type AppraisalGroupBy,
   type SmartViewDto,
   type SavedSearchDto,
 } from '../api/appraisalSearch';
@@ -33,6 +36,8 @@ import {
   makeAppraisalFilters,
   makeAppraisalColumns,
   expandFilterKeys,
+  effectiveSort,
+  nextAppraisalSort,
   APPRAISAL_DEFAULT_HIDDEN_COLUMNS,
 } from '../components/search/tabConfigs';
 import {
@@ -53,6 +58,12 @@ import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlid
 import DataErrorState from '@/shared/components/DataErrorState';
 import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
 import { useLocalStorage } from '@/shared/hooks/useLocalStorage';
+import {
+  KEYBOARD_RING,
+  KEYBOARD_RING_PLAIN,
+  NO_OUTLINE,
+  usePointerMode,
+} from '@/shared/hooks/usePointerMode';
 import { useAuthStore } from '@/features/auth/store';
 import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 import { useAppraisalTypeLabel, useProvinceName } from '@/shared/hooks/useCodeLabels';
@@ -79,6 +90,16 @@ const NON_FILTER_KEYS = new Set([
 
 /** localStorage namespace for this screen's column layout. */
 const COLUMN_STORAGE_KEY = 'appraisal-list-columns';
+
+/**
+ * Version of the saved column order and visibility. Bump (any new random code) whenever a change to
+ * the default columns should reset everyone's saved order and visibility: every toggle in the column
+ * picker saves the whole order, so without a new key the new defaults would never reach anyone who
+ * has touched it.
+ * Only visibility uses it — widths, density and the row-number switch keep COLUMN_STORAGE_KEY,
+ * so those preferences survive a reset.
+ */
+const COLUMN_LAYOUT_VERSION = 'd1d29903';
 
 /**
  * Which column the free-text box searches.
@@ -122,11 +143,16 @@ const PINNED_FILTERS = [
 ];
 
 /**
- * Fields the table can group by. Each is also a server sort key, which is what makes grouping
- * work at all: the page sorts by the field, so a group's rows arrive together.
+ * Fields the group rail can group by. Each is also a filter key of the list, which is how picking a
+ * group works: it sets that filter.
  */
-const GROUP_FIELDS = ['status', 'slaStatus', 'priority', 'province', 'assignmentType'] as const;
-type GroupField = (typeof GROUP_FIELDS)[number];
+const GROUP_FIELDS: readonly AppraisalGroupBy[] = [
+  'status',
+  'slaStatus',
+  'priority',
+  'province',
+  'assignmentType',
+];
 
 const RECENT_KEY = 'appraisal-search-recent';
 /** A stored list, or [] when it is missing, blocked, corrupt or not a list of strings. */
@@ -171,6 +197,10 @@ function AppraisalListPage() {
   //
   // Export below is the exception, and it is a real control rather than presentation.
   const canExport = useHasPermission('APPRAISAL_VIEW');
+  // The group and column buttons beside the filter bar: the keyboard ring only, never after the mouse.
+  const { pointerMode: toolsPointer, onPointerDownCapture: onToolsPointerDown } = usePointerMode();
+  const { pointerMode: searchPointer, onPointerDownCapture: onSearchPointerDown } =
+    usePointerMode();
 
   const appraisalTypeLabel = useAppraisalTypeLabel();
   // The type filter reads its wording from the AppraisalType parameter too, so the chip and the
@@ -210,9 +240,9 @@ function AppraisalListPage() {
     searchField: (isSearchField(searchParams.get('searchField'))
       ? searchParams.get('searchField')
       : 'all') as SearchField,
-    // '' is the unsorted state — the server falls back to CreatedAt DESC. Held as empty rather
-    // than as 'CreatedAt' so the header can tell "newest first because nobody chose" apart from
-    // "newest first because the user clicked Created", and show a neutral arrow for the first.
+    // '' is the unsorted state — the server falls back to CreatedAt DESC, which the header shows
+    // as the active sort. Held as empty rather than as 'CreatedAt' so a default load sends and
+    // writes nothing, and "off" stays a state a click can return to.
     ...restoreSort(searchParams.get('sortBy'), searchParams.get('sortDir')),
     view: searchParams.get('view') || null,
     filters: (() => {
@@ -235,7 +265,7 @@ function AppraisalListPage() {
   const [filters, setFilters] = useState<Record<string, string>>(init.filters);
   const [activeViewKey, setActiveViewKey] = useState<string | null>(init.view);
   const [selectedAppraisalId, setSelectedAppraisalId] = useState<string | null>(null);
-  const [groupBy, setGroupBy] = useState<GroupField | null>(null);
+  const [groupBy, setGroupBy] = useState<AppraisalGroupBy | null>(null);
   const [density, setDensity] = useLocalStorage<'comfortable' | 'compact'>(
     `${COLUMN_STORAGE_KEY}-density`,
     'comfortable',
@@ -391,6 +421,10 @@ function AppraisalListPage() {
   const createSavedSearch = useCreateSavedSearch();
   const deleteSavedSearch = useDeleteSavedSearch();
 
+  // What the header marks as sorted: the user's choice, or — when there is none — the order the API
+  // falls back to. `sortBy` stays '' for "no choice" so nothing extra is sent or written to the URL.
+  const shownSort = effectiveSort(sortBy, sortDir);
+
   const items = data?.result.items ?? [];
   const totalCount = data?.result.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -409,28 +443,14 @@ function AppraisalListPage() {
    * Three states per column, cycled by clicking: ascending → descending → off.
    *
    * "Off" is not "sort by Created again" — it clears the choice, so the list goes back to whatever
-   * order the server gives by default and the header stops claiming a column is in charge.
+   * order the server gives by default, and the header then shows that default as the active sort
+   * (see `shownSort`). nextAppraisalSort holds the rule, including the default column's own cycle.
    */
   const handleSort = (field: string) => {
-    if (sortBy !== field) {
-      setSortBy(field);
-      setSortDir('asc');
-      return;
-    }
-    if (sortDir === 'asc') {
-      setSortDir('desc');
-      return;
-    }
-    setSortBy('');
-    setSortDir('desc');
+    const next = nextAppraisalSort(sortBy, sortDir, field);
+    setSortBy(next.sortBy);
+    setSortDir(next.sortDir);
   };
-
-  // Grouping IS a sort. Whatever moves the sort off the grouped field — a header click, sort
-  // switched off, a saved search — drops the grouping, or it would silently return the next time
-  // that column is sorted.
-  useEffect(() => {
-    if (groupBy && sortBy !== groupBy) setGroupBy(null);
-  }, [groupBy, sortBy]);
 
   const handleFilterChange = (key: string, value: string) => {
     setFilters(prev => ({ ...prev, [key]: value }));
@@ -457,27 +477,14 @@ function AppraisalListPage() {
     setDebouncedSearch('');
   };
 
-  // Whether the grouped sort was imposed by grouping, or was already the user's own choice.
-  const groupOwnsSort = useRef(false);
-  const handleGroupBy = (field: GroupField | null) => {
-    // Turning grouping off also drops the sort it imposed — the user never chose that sort. A sort
-    // they picked themselves (on this column or another) is theirs and stays.
-    if (!field) {
-      if (groupBy && sortBy === groupBy && groupOwnsSort.current) {
-        setSortBy('');
-        setSortDir('desc');
-      }
-      setGroupBy(null);
-      return;
-    }
-    // Re-picking the current grouping must not hand its imposed sort over to the user.
-    if (field === groupBy && sortBy === field) return;
-    groupOwnsSort.current = sortBy !== field;
-    setGroupBy(field);
-    if (sortBy !== field) {
-      setSortBy(field);
-      setSortDir('asc');
-    }
+  /**
+   * Picking a group filters the list to it through that field's own filter, so it shows as a chip
+   * and clears like one. Picking the active group again clears it.
+   */
+  const handleGroupSelect = (key: string | null) => {
+    if (!groupBy) return;
+    if (key === null) handleRemoveFilter(groupBy);
+    else handleFilterChange(groupBy, key);
   };
 
   const handleSmartView = (view: SmartViewDto) => {
@@ -536,7 +543,7 @@ function AppraisalListPage() {
       // The appraisal number is the row's identity and its link target, so it is forced to
       // index 0 and cannot be hidden — and AppraisalResultsTable holds it (with the row number)
       // in place while the table scrolls sideways.
-      pinnedColumn: 'appraisalNumber',
+      pinnedColumn: 'appraisalCustomer',
       defaultWidths: Object.fromEntries(
         appraisalColumns.filter(c => c.width).map(c => [c.key, c.width!]),
       ),
@@ -555,46 +562,13 @@ function AppraisalListPage() {
     toggleColumn,
     reorderColumns,
     resetToDefault,
-  } = useColumnVisibility(COLUMN_STORAGE_KEY, columnConfig);
-  const { widths, setWidth, resetWidths, hasCustomWidths, isCustomWidth } = useColumnWidths(
+  } = useColumnVisibility(`${COLUMN_STORAGE_KEY}@${COLUMN_LAYOUT_VERSION}`, columnConfig);
+  const { widths, setWidth, resetWidths, hasCustomWidths } = useColumnWidths(
     COLUMN_STORAGE_KEY,
     columnConfig,
   );
   const { showRowNumber, toggleRowNumber } = useRowNumberColumn(COLUMN_STORAGE_KEY);
   const getAutoFitWidth = useColumnAutoFit(tableRef, { leadingCells: showRowNumber ? 1 : 0 });
-
-  /**
-   * The pinned appraisal-number column sized to what it holds, unless the user dragged it.
-   *
-   * Measures the content element inside each cell, not the cell: a cell's scrollWidth never
-   * reports less than the cell's own width, so measuring the cell can grow a column but never
-   * shrink it. Group-header rows (one colSpan cell) are skipped — their label is not this column.
-   * Not persisted: it follows the rows on screen, and a stored width would count as a user choice.
-   */
-  const [pinnedFitWidth, setPinnedFitWidth] = useState<number | null>(null);
-  const pinnedIndex = visibleColumns.indexOf(columnConfig.pinnedColumn as string);
-  useLayoutEffect(() => {
-    const tbl = tableRef.current;
-    if (!tbl || showSkeleton || !data?.result.items.length || pinnedIndex < 0) return;
-    const at = pinnedIndex + (showRowNumber ? 1 : 0);
-    let max = 0;
-    tbl.querySelectorAll('tr').forEach(row => {
-      const cell = row.children[at] as HTMLTableCellElement | undefined;
-      const content =
-        cell && cell.colSpan === 1 ? (cell.firstElementChild as HTMLElement | null) : null;
-      if (content) max = Math.max(max, content.offsetWidth);
-    });
-    // + the cell's own horizontal padding (px-3 on each side).
-    if (max > 0) setPinnedFitWidth(max + 24);
-    // appraisalColumns: a language switch changes the header label's width without new data.
-  }, [data, showSkeleton, pinnedIndex, showRowNumber, appraisalColumns]);
-  const tableWidths = useMemo(
-    () =>
-      pinnedFitWidth && !isCustomWidth(columnConfig.pinnedColumn as string)
-        ? { ...widths, [columnConfig.pinnedColumn as string]: pinnedFitWidth }
-        : widths,
-    [pinnedFitWidth, isCustomWidth, widths, columnConfig.pinnedColumn],
-  );
 
   /**
    * Icons follow what the quotation listing already uses for the same concepts, so the two
@@ -658,6 +632,18 @@ function AppraisalListPage() {
   };
 
   const handleSearchKeyDown = (e: ReactKeyboardEvent) => {
+    // Anywhere in the panel (a scope chip, a result row): Esc closes it and hands focus back to the
+    // box, without reopening it.
+    if (
+      e.key === 'Escape' &&
+      e.target instanceof HTMLElement &&
+      e.target.closest('[data-suggest-panel]')
+    ) {
+      closeSuggest();
+      skipFocusOpen.current = true;
+      searchWrapRef.current?.querySelector('input')?.focus();
+      return;
+    }
     // Only the text box drives the panel — the field picker's menu handles its own arrows.
     if (!(e.target instanceof HTMLInputElement)) return;
     // An IME (Chinese, Japanese…) uses Enter and the arrows to pick a candidate — not ours.
@@ -717,22 +703,36 @@ function AppraisalListPage() {
   }, [selectedAppraisalId]);
 
   // ── Grouping ────────────────────────────────────────────────────────────────
-  const groupLabelOf = useMemo(() => {
-    if (!groupBy || sortBy !== groupBy) return undefined;
-    const empty = t('list.groupBy.empty');
-    const fns: Record<GroupField, (item: AppraisalDto) => string> = {
-      status: i => t(`list.status.${i.status}`, { defaultValue: i.status }),
-      slaStatus: i =>
-        i.slaStatus ? t(`list.sla.${i.slaStatus}`, { defaultValue: i.slaStatus }) : empty,
-      priority: i => t(`list.priority.${i.priority}`, { defaultValue: i.priority }),
-      province: i => (i.province ? provinceName(i.province) : empty),
-      assignmentType: i =>
-        i.assignmentType
-          ? t(`list.assignmentType.${i.assignmentType}`, { defaultValue: i.assignmentType })
-          : empty,
-    };
-    return { labelOf: fns[groupBy] };
-  }, [groupBy, sortBy, t, provinceName]);
+  // The counts follow the list's filters and search — except the grouped field's own filter, which
+  // is what picking a group sets: counted with it, the rail would shrink to the one group picked.
+  const groupParams = useMemo(
+    () => ({
+      ...searchParam,
+      ...Object.fromEntries(Object.entries(activeFilters).filter(([k]) => k !== groupBy)),
+    }),
+    [searchParam, activeFilters, groupBy],
+  );
+  const {
+    data: groupsData,
+    isLoading: groupsLoading,
+    isError: groupsError,
+  } = useAppraisalGroups(groupBy, groupParams);
+
+  const groupLabel = (field: AppraisalGroupBy, key: string): string => {
+    if (!key) return t('list.groupBy.empty');
+    switch (field) {
+      case 'status':
+        return t(`list.status.${key}`, { defaultValue: key });
+      case 'slaStatus':
+        return t(`list.sla.${key}`, { defaultValue: key });
+      case 'priority':
+        return t(`list.priority.${key}`, { defaultValue: key });
+      case 'province':
+        return provinceName(key);
+      case 'assignmentType':
+        return t(`list.assignmentType.${key}`, { defaultValue: key });
+    }
+  };
 
   const columnLabels = useMemo(
     () => Object.fromEntries(appraisalColumns.map(c => [c.key, c.label])),
@@ -827,7 +827,7 @@ function AppraisalListPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
           <p className="text-xs text-gray-500 mt-0.5">
             {totalCount > 0
               ? t('list.countFound', { count: totalCount.toLocaleString() })
@@ -916,10 +916,15 @@ function AppraisalListPage() {
             invitations, monitoring's pending-quotation section all use it) — same field selector
             with an icon per option and a check on the active one. Reused rather than rebuilt, so
             this box behaves and looks like every other scoped search in the product. */}
-        {/* items-stretch so the picker matches the search pill's height instead of sitting 2px
-            short of it; pr-1 keeps its count badge, which hangs outside the button, clear of the
+        {/* One row: search, then the filters, then the table's own controls. The filters get the
+            middle: the pinned chips always show (wrapping inside it if they alone are too wide), and
+            the added ones that do not fit fold into FilterChipBar's "More +N" chip rather than
+            making the row taller. However many there are, they never take width from the search —
+            which keeps its own floor.
+            Under lg there is no room beside the search, so the filters drop to their own line.
+            pr-1 keeps the controls' count badge, which hangs outside the button, clear of the
             page's overflow-x-hidden edge. */}
-        <div className="flex items-stretch gap-2 pr-1">
+        <div className="flex items-start gap-2 pr-1 max-lg:flex-wrap">
           {/* The wrapper owns the suggestion panel: focus anywhere inside opens it, focus leaving
               closes it, and the text box's keys drive it (see handleSearchKeyDown). The listeners
               only catch events bubbling up from the input and the panel's buttons — the
@@ -928,7 +933,7 @@ function AppraisalListPage() {
           <div
             ref={searchWrapRef}
             role="search"
-            className="relative flex-1 min-w-0 flex"
+            className="relative flex min-w-[22rem] max-w-[28rem] flex-[1_1_24rem] max-lg:order-1 max-lg:min-w-[16rem] max-lg:max-w-none max-lg:flex-1"
             // The text box only: the field picker's button (and its portalled menu, whose events
             // bubble here through React) would otherwise open the panel under its own menu.
             onFocus={e => {
@@ -943,8 +948,10 @@ function AppraisalListPage() {
               if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeSuggest();
             }}
             onKeyDown={handleSearchKeyDown}
+            onPointerDownCapture={onSearchPointerDown}
           >
             <SearchByInput
+              variant="pill"
               className="flex-1 min-w-0"
               options={searchFieldOptions}
               field={searchField}
@@ -975,7 +982,10 @@ function AppraisalListPage() {
                         setDebouncedSearch('');
                       }}
                       aria-label={t('common:actions.clear')}
-                      className="text-gray-400 hover:text-gray-600"
+                      style={NO_OUTLINE}
+                      className={`rounded text-gray-400 hover:text-gray-600 ${
+                        searchPointer ? '' : KEYBOARD_RING_PLAIN
+                      }`}
                     >
                       <Icon style="solid" name="xmark" className="size-4" />
                     </button>
@@ -995,6 +1005,7 @@ function AppraisalListPage() {
                   minLength={MIN_SEARCH_LENGTH}
                   items={isSuggestSettled ? items.slice(0, 5) : []}
                   fieldOptions={searchFieldOptions}
+                  field={searchField}
                   counts={fieldCounts}
                   recent={recentSearches}
                   activeIndex={suggestIndex}
@@ -1007,6 +1018,7 @@ function AppraisalListPage() {
                     skipFocusOpen.current = true;
                     setSelectedAppraisalId(item.id);
                   }}
+                  onChangeField={field => setSearchField(isSearchField(field) ? field : 'all')}
                   onPickField={field => {
                     setSearchField(isSearchField(field) ? field : 'all');
                     addRecent(searchTerm);
@@ -1024,112 +1036,132 @@ function AppraisalListPage() {
           </span>
           {/* Drawn like the column picker beside it — a square icon button, a count badge when it
               is doing something, a titled panel — so the two table controls read as one pair. */}
-          <Menu as="div" className="relative h-full shrink-0">
-            <MenuButton
-              title={
-                groupLabelOf && groupBy
-                  ? t('list.groupBy.current', { label: columnLabels[groupBy] })
-                  : t('list.groupBy.label')
-              }
-              aria-label={t('list.groupBy.label')}
-              className={`relative flex h-full min-h-9 w-9 items-center justify-center rounded-lg border outline-none transition-all ${
-                groupLabelOf
-                  ? 'border-violet-300 bg-violet-50 hover:bg-violet-100'
-                  : 'border-violet-200 bg-violet-50/50 hover:border-violet-300 hover:bg-violet-50'
-              }`}
-            >
-              <Icon style="solid" name="layer-group" className="size-4 text-violet-500" />
-              {groupLabelOf && (
-                <span className="absolute -top-1.5 -right-1.5 inline-flex size-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold leading-none text-white">
-                  1
-                </span>
-              )}
-            </MenuButton>
-            <MenuItems
-              anchor="bottom end"
-              className="z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
-            >
-              <div className="border-b border-gray-100 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                {t('list.groupBy.label')}
-              </div>
-              <div className="py-1">
-                {[null, ...GROUP_FIELDS].map(field => {
-                  const on = (groupLabelOf ? groupBy : null) === field;
-                  return (
-                    <MenuItem key={field ?? 'none'}>
+          <FilterChipBar
+            className="relative flex min-h-[2.5357rem] min-w-0 flex-[6_1_0] flex-wrap content-center items-center gap-2 max-lg:order-3 max-lg:basis-full"
+            filters={appraisalFilters}
+            values={filters}
+            onChange={handleFilterChange}
+            onRemove={handleRemoveFilter}
+            onClear={handleClearFilters}
+            pinned={PINNED_FILTERS}
+          />
+          {/* Both are 35.5px tall, like the search: a definite height is what lets their h-full
+              buttons match it. */}
+          <div
+            className="flex h-[2.5357rem] shrink-0 items-stretch gap-2 max-lg:order-2"
+            onPointerDownCapture={onToolsPointerDown}
+          >
+            <Menu as="div" className="relative h-full shrink-0">
+              <MenuButton
+                style={NO_OUTLINE}
+                title={
+                  groupBy
+                    ? t('list.groupBy.current', { label: columnLabels[groupBy] })
+                    : t('list.groupBy.label')
+                }
+                aria-label={t('list.groupBy.label')}
+                className={`relative flex h-full min-h-9 w-9 items-center justify-center rounded-lg border outline-none transition-all ${
+                  toolsPointer ? '' : KEYBOARD_RING
+                } ${
+                  groupBy
+                    ? 'border-violet-300 bg-violet-50 hover:bg-violet-100'
+                    : 'border-violet-200 bg-violet-50/50 hover:border-violet-300 hover:bg-violet-50'
+                }`}
+              >
+                <Icon style="solid" name="layer-group" className="size-4 text-violet-500" />
+                {groupBy && (
+                  <span className="absolute -top-1.5 -right-1.5 inline-flex size-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold leading-none text-white">
+                    1
+                  </span>
+                )}
+              </MenuButton>
+              <MenuItems
+                anchor="bottom end"
+                className="z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
+              >
+                <div className="border-b border-gray-100 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                  {t('list.groupBy.label')}
+                </div>
+                <div className="py-1">
+                  {[null, ...GROUP_FIELDS].map(field => {
+                    const on = groupBy === field;
+                    return (
+                      <MenuItem key={field ?? 'none'}>
+                        <button
+                          type="button"
+                          onClick={() => setGroupBy(field)}
+                          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm data-focus:bg-gray-50 ${
+                            on ? 'font-medium text-gray-900' : 'text-gray-700'
+                          }`}
+                        >
+                          <span className="flex-1">
+                            {field ? columnLabels[field] : t('list.groupBy.none')}
+                          </span>
+                          {on && (
+                            <Icon style="solid" name="check" className="size-3.5 text-violet-500" />
+                          )}
+                        </button>
+                      </MenuItem>
+                    );
+                  })}
+                </div>
+              </MenuItems>
+            </Menu>
+            <ColumnVisibilityDropdown
+              focusRing={toolsPointer ? 'none' : 'ring'}
+              orderedColumns={orderedColumns}
+              hidden={hidden}
+              alwaysVisible={alwaysVisible}
+              labels={columnLabels}
+              hiddenBeyondDefault={hiddenBeyondDefault}
+              onToggle={toggleColumn}
+              onReorder={reorderColumns}
+              // Reset touches visibility, order, widths and the row-number switch, so it stays live
+              // whenever any of the four differs from the default — not just when a column is hidden.
+              canReset={isCustomized || hasCustomWidths || !showRowNumber || density === 'compact'}
+              onReset={() => {
+                // Everything the picker can change, or "Reset" is a button that visibly does
+                // nothing when the only thing switched off is the row-number column.
+                resetToDefault();
+                resetWidths();
+                if (!showRowNumber) toggleRowNumber();
+                setDensity('comfortable');
+              }}
+              panelHeader={
+                <div className="border-b border-gray-100 px-3 py-2.5">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {t('list.density.title')}
+                  </p>
+                  <div role="radiogroup" className="flex rounded-lg bg-gray-100 p-0.5">
+                    {(['comfortable', 'compact'] as const).map(d => (
                       <button
+                        key={d}
                         type="button"
-                        onClick={() => handleGroupBy(field)}
-                        className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm data-focus:bg-gray-50 ${
-                          on ? 'font-medium text-gray-900' : 'text-gray-700'
+                        role="radio"
+                        aria-checked={density === d}
+                        onClick={() => setDensity(d)}
+                        className={`flex-1 rounded-md py-1 text-sm transition-colors ${
+                          density === d
+                            ? 'bg-white font-medium text-gray-900 shadow-sm'
+                            : 'text-gray-500 hover:text-gray-700'
                         }`}
                       >
-                        <span className="flex-1">
-                          {field ? columnLabels[field] : t('list.groupBy.none')}
-                        </span>
-                        {on && (
-                          <Icon style="solid" name="check" className="size-3.5 text-violet-500" />
-                        )}
+                        {t(`list.density.${d}`)}
                       </button>
-                    </MenuItem>
-                  );
-                })}
-              </div>
-            </MenuItems>
-          </Menu>
-          <ColumnVisibilityDropdown
-            orderedColumns={orderedColumns}
-            hidden={hidden}
-            alwaysVisible={alwaysVisible}
-            labels={columnLabels}
-            hiddenBeyondDefault={hiddenBeyondDefault}
-            onToggle={toggleColumn}
-            onReorder={reorderColumns}
-            // Reset touches visibility, order, widths and the row-number switch, so it stays live
-            // whenever any of the four differs from the default — not just when a column is hidden.
-            canReset={isCustomized || hasCustomWidths || !showRowNumber || density === 'compact'}
-            onReset={() => {
-              // Everything the picker can change, or "Reset" is a button that visibly does
-              // nothing when the only thing switched off is the row-number column.
-              resetToDefault();
-              resetWidths();
-              if (!showRowNumber) toggleRowNumber();
-              setDensity('comfortable');
-            }}
-            panelHeader={
-              <div className="border-b border-gray-100 px-3 py-2.5">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  {t('list.density.title')}
-                </p>
-                <div role="radiogroup" className="flex rounded-lg bg-gray-100 p-0.5">
-                  {(['comfortable', 'compact'] as const).map(d => (
-                    <button
-                      key={d}
-                      type="button"
-                      role="radio"
-                      aria-checked={density === d}
-                      onClick={() => setDensity(d)}
-                      className={`flex-1 rounded-md py-1 text-sm transition-colors ${
-                        density === d
-                          ? 'bg-white font-medium text-gray-900 shadow-sm'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
-                    >
-                      {t(`list.density.${d}`)}
-                    </button>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            }
-            extraToggles={[
-              {
-                key: 'rowNumber',
-                label: t('common:columns.rowNumber'),
-                checked: showRowNumber,
-                onChange: toggleRowNumber,
-              },
-            ]}
-          />
+              }
+              extraToggles={[
+                {
+                  key: 'rowNumber',
+                  label: t('common:columns.rowNumber'),
+                  checked: showRowNumber,
+                  onChange: toggleRowNumber,
+                },
+              ]}
+            />
+          </div>
         </div>
         {/* Kept mounted (sr-only) while the panel shows the same message, so aria-describedby
             still resolves and the live region still announces. */}
@@ -1144,106 +1176,116 @@ function AppraisalListPage() {
         )}
       </div>
 
-      {/* Filters. The chips ARE the filter bar: each one opens the value list it summarises, and
-          "Add filter" offers the fields that are not in use yet — so a filter is drawn once
-          instead of three times (panel, chip row, count badge). */}
-      <div className="shrink-0">
-        <FilterChipBar
-          filters={appraisalFilters}
-          values={filters}
-          onChange={handleFilterChange}
-          onRemove={handleRemoveFilter}
-          onClear={handleClearFilters}
-          pinned={PINNED_FILTERS}
-        />
-      </div>
-
       {/* Results Table */}
       {/* min-w-0: a flex child defaults to min-width:auto, so without it this card refuses to
           shrink below the table's own width. With user-set column widths the table is ~2,200px
           wide, which pushed the card past the viewport and put a scrollbar on the page instead of
           inside the table. */}
-      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
-        <AppraisalResultsTable
-          columns={orderedVisibleColumns}
-          layout={{
-            visibleColumns,
-            widths: tableWidths,
-            setWidth,
-            getAutoFitWidth,
-            showRowNumber,
-            tableRef,
-          }}
-          items={items}
-          isLoading={showSkeleton}
-          sortBy={sortBy}
-          sortDir={sortDir}
-          onSort={handleSort}
-          onRowClick={handleRowClick}
-          pageNumber={servedPageNumber}
-          pageSize={servedPageSize}
-          isStale={isFetching && !showSkeleton}
-          density={density}
-          groupBy={groupLabelOf}
-          pinnedColumn={columnConfig.pinnedColumn}
-          emptyState={
-            <AppraisalEmptyState
-              isFiltered={Boolean(debouncedSearch) || Object.keys(activeFilters).length > 0}
-              actions={[
-                ...(debouncedSearch && searchField !== 'all'
-                  ? [
-                      {
-                        key: 'searchAll',
-                        label: t('list.emptyActions.searchAll'),
-                        onClick: () => setSearchField('all'),
-                      },
-                    ]
-                  : []),
-                ...(activeViewKey
-                  ? [
-                      {
-                        key: 'exitView',
-                        label: t('list.emptyActions.exitView'),
-                        onClick: handleClearFilters,
-                      },
-                    ]
-                  : Object.keys(activeFilters).length > 0
+      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex">
+        {groupBy && (
+          <GroupSidebar
+            caption={t('list.groupBy.label')}
+            title={columnLabels[groupBy]}
+            groups={(groupsData?.groups ?? []).map(g => ({
+              ...g,
+              label: groupLabel(groupBy, g.key),
+              // "None" has no filter that means it, so it is counted but cannot be picked.
+              disabled: g.key === '',
+            }))}
+            isLoading={groupsLoading}
+            // A filter can hold several values ("Pending,Assigned", or a quick view's): all of them
+            // are marked, not just a single exact match.
+            activeKeys={activeFilters[groupBy]?.split(',') ?? []}
+            onSelect={g => handleGroupSelect(g ? g.key : null)}
+            emptyLabel={t('list.empty')}
+            isError={groupsError}
+            errorLabel={t('list.groupBy.error')}
+            // Totals only: the list's SLA column and filters already say what is overdue.
+            showBreached={false}
+            showAtRisk={false}
+          />
+        )}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <AppraisalResultsTable
+            columns={orderedVisibleColumns}
+            layout={{
+              visibleColumns,
+              widths,
+              setWidth,
+              getAutoFitWidth,
+              showRowNumber,
+              tableRef,
+            }}
+            items={items}
+            isLoading={showSkeleton}
+            sortBy={shownSort.by}
+            sortDir={shownSort.dir}
+            onSort={handleSort}
+            onRowClick={handleRowClick}
+            pageNumber={servedPageNumber}
+            pageSize={servedPageSize}
+            isStale={isFetching && !showSkeleton}
+            density={density}
+            pinnedColumn={columnConfig.pinnedColumn}
+            emptyState={
+              <AppraisalEmptyState
+                isFiltered={Boolean(debouncedSearch) || Object.keys(activeFilters).length > 0}
+                actions={[
+                  ...(debouncedSearch && searchField !== 'all'
                     ? [
                         {
-                          key: 'clearFilters',
-                          label: t('list.emptyActions.clearFilters'),
-                          onClick: handleClearFilters,
+                          key: 'searchAll',
+                          label: t('list.emptyActions.searchAll'),
+                          onClick: () => setSearchField('all'),
                         },
                       ]
                     : []),
-                ...(debouncedSearch &&
-                searchField === 'all' &&
-                !debouncedSearch.trim().startsWith('*')
-                  ? [
-                      {
-                        key: 'wildcard',
-                        label: t('list.emptyActions.tryWildcard', {
-                          term: `*${debouncedSearch.trim()}`,
-                        }),
-                        onClick: () => setSearchTerm(`*${debouncedSearch.trim()}`),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          }
-        />
-        <Pagination
-          currentPage={pageNumber}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          onPageChange={setPageNumber}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPageNumber(0);
-          }}
-        />
+                  ...(activeViewKey
+                    ? [
+                        {
+                          key: 'exitView',
+                          label: t('list.emptyActions.exitView'),
+                          onClick: handleClearFilters,
+                        },
+                      ]
+                    : Object.keys(activeFilters).length > 0
+                      ? [
+                          {
+                            key: 'clearFilters',
+                            label: t('list.emptyActions.clearFilters'),
+                            onClick: handleClearFilters,
+                          },
+                        ]
+                      : []),
+                  ...(debouncedSearch &&
+                  searchField === 'all' &&
+                  !debouncedSearch.trim().startsWith('*')
+                    ? [
+                        {
+                          key: 'wildcard',
+                          label: t('list.emptyActions.tryWildcard', {
+                            term: `*${debouncedSearch.trim()}`,
+                          }),
+                          onClick: () => setSearchTerm(`*${debouncedSearch.trim()}`),
+                        },
+                      ]
+                    : []),
+                ]}
+              />
+            }
+          />
+          <Pagination
+            currentPage={pageNumber}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={setPageNumber}
+            onPageSizeChange={size => {
+              setPageSize(size);
+              setPageNumber(0);
+            }}
+          />
+        </div>
       </div>
 
       <ActivityTrackingSlideOver

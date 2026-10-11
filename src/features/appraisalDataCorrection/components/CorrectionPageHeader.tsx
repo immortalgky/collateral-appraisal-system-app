@@ -57,12 +57,12 @@ const CorrectionPageHeader = ({
           </Badge>
         )}
         {approvedAt && (
-          <span className="text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-2)]">
+          <span className="text-xs tabular-nums text-[color:var(--dc-ink-2)]">
             {t('header.approved', { at: formatLocaleDate(approvedAt, i18n.language) })}
           </span>
         )}
         {externalSystem && (
-          <span className="inline-flex items-center gap-1.5 text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-2)]">
+          <span className="inline-flex items-center gap-1.5 text-xs tabular-nums text-[color:var(--dc-ink-2)]">
             {t('header.sourceSystem')}
             <span className="rounded bg-[color:var(--dc-surface-3)] px-[0.3846rem] text-[0.7692rem] font-semibold leading-[1.2308rem] text-[color:var(--dc-ink-2)]">
               {externalSystem}
@@ -70,9 +70,7 @@ const CorrectionPageHeader = ({
           </span>
         )}
         {editCount !== undefined && (
-          <span className="text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-2)]">
-            {editSummary}
-          </span>
+          <span className="text-xs tabular-nums text-[color:var(--dc-ink-2)]">{editSummary}</span>
         )}
       </div>
       <Button

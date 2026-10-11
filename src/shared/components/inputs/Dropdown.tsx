@@ -91,6 +91,8 @@ interface DropdownBaseProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
    * visible rows, and shadowing it with a string union makes the whole interface stop extending.
    */
   compact?: boolean;
+  /** List the "Please select" entry first. Off for a control that always has a value. */
+  showPlaceholderOption?: boolean;
   filterWatchValues?: Record<string, unknown>;
   showValuePrefix?: boolean;
   /**
@@ -151,6 +153,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       filterWatchValues,
       showValuePrefix = true,
       compact = false,
+      showPlaceholderOption = true,
       otherField = false,
       otherTriggerValue = '99',
       otherText,
@@ -187,8 +190,10 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     }, [allOptions, filters, filterWatchValues]);
 
     const dropdownOptions = useMemo(() => {
-      return [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions];
-    }, [filteredOptions, resolvedPlaceholder]);
+      return showPlaceholderOption
+        ? [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions]
+        : filteredOptions;
+    }, [filteredOptions, resolvedPlaceholder, showPlaceholderOption]);
 
     const selectedOption = useMemo(
       () => allOptions.find(opt => opt.value === value) ?? null,

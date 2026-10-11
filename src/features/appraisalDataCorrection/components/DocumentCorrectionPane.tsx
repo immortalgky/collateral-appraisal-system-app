@@ -21,7 +21,7 @@ import DocumentActionDialog, { type DocumentDialogState } from './DocumentAction
 
 // The pricing tables' cells: 26px heads on #f8fafa, 31px rows, hairline rules, group rows on #edf1f1.
 const TH =
-  'border-b border-r border-b-[color:var(--dc-line)] border-r-[color:var(--dc-line-soft)] bg-[color:var(--dc-surface-2)] px-[0.6154rem] text-[0.9231rem] font-medium leading-[2rem] text-[color:var(--dc-ink-2)] whitespace-nowrap';
+  'border-b border-r border-b-[color:var(--dc-line)] border-r-[color:var(--dc-line-soft)] bg-[color:var(--dc-surface-2)] px-[0.6154rem] text-xs font-medium leading-[2rem] text-[color:var(--dc-ink-2)] whitespace-nowrap';
 const TD =
   'h-[2.3846rem] border-b border-[color:var(--dc-line-soft)] border-r-[color:var(--dc-line-soft)] bg-[color:var(--dc-surface)] px-[0.6154rem] leading-[2.3077rem]';
 const GROUP = '!bg-[color:var(--dc-surface-3)] font-semibold text-[color:var(--dc-ink)]';
@@ -103,7 +103,7 @@ const DocumentCorrectionPane = ({
         <h2 className="min-w-0 truncate text-[1.0769rem] font-semibold text-[color:var(--dc-ink)]">
           {t('documents.title')}
         </h2>
-        <span className="text-[0.9231rem] tabular-nums text-[color:var(--dc-ink-3)]">
+        <span className="text-xs tabular-nums text-[color:var(--dc-ink-3)]">
           · {t('documents.fileCount', { count: fileTotal })}
         </span>
         <span className="flex-1" />

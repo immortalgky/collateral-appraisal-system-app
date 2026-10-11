@@ -47,7 +47,7 @@ interface EmailCompositionModalProps {
 const fieldClass =
   'w-full rounded-lg border border-gray-200 bg-gray-50/60 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20';
 const labelClass =
-  'mb-1.5 block text-[11px] font-semibold uppercase tracking-wider text-gray-500';
+  'mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500';
 
 const EmailCompositionModal = ({
   isOpen,

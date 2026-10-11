@@ -59,7 +59,49 @@ export interface AppraisalColumnDef {
    */
   width?: number;
   render?: (item: AppraisalDto) => ReactNode;
+  /**
+   * A column that holds two sortable things in one cell (appraisal number over customer). The
+   * header draws one sort button per entry instead of making the whole header a single sort
+   * target, and `key` is only the column's identity (visibility, width, pinning).
+   */
+  headSorts?: { key: string; label: string }[];
 }
+
+/**
+ * What the API returns when no sort is sent — AppraisalFilterBuilder.BuildOrderBy falls back to
+ * CreatedAt DESC. The list sends nothing for "no sort", so this is what its header must show as
+ * active. Keep it in step with the BE.
+ */
+export const APPRAISAL_DEFAULT_SORT = { by: 'createdAt', dir: 'desc' } as const;
+
+/** What the header shows as sorted: the user's choice, else the API default. */
+export const effectiveSort = (sortBy: string, sortDir: string) =>
+  sortBy
+    ? { by: sortBy, dir: sortDir }
+    : { by: APPRAISAL_DEFAULT_SORT.by, dir: APPRAISAL_DEFAULT_SORT.dir };
+
+const sameKey = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+
+/**
+ * Next sort after a click on a header: ascending → descending → off, where "off" is the API
+ * default (`sortBy: ''`) and the header then shows that default as active.
+ *
+ * The default column is the one wrinkle. It already shows as sorted, so for it the cycle is
+ * default (desc) → asc → back to default: "off" would change nothing, and a click that visibly
+ * does nothing is worse than skipping the state. Same rule as the request listing.
+ */
+export const nextAppraisalSort = (
+  sortBy: string,
+  sortDir: string,
+  field: string,
+): { sortBy: string; sortDir: string } => {
+  const cur = effectiveSort(sortBy, sortDir);
+  const isDefaultField = sameKey(field, APPRAISAL_DEFAULT_SORT.by);
+  const off = { sortBy: '', sortDir: 'desc' };
+  if (!sameKey(cur.by, field)) return { sortBy: field, sortDir: 'asc' };
+  if (cur.dir === 'asc') return isDefaultField ? off : { sortBy: field, sortDir: 'desc' };
+  return isDefaultField ? { sortBy: field, sortDir: 'asc' } : off;
+};
 
 export const makeAppraisalFilters = (t: TFunction<'appraisal'>): FilterField[] => [
   {
@@ -252,26 +294,43 @@ export const expandFilterKeys = (
   );
 
 export const makeAppraisalColumns = (t: TFunction<'appraisal'>): AppraisalColumnDef[] => [
-  { key: 'appraisalNumber', label: t('list.columns.appraisalNumber'), sortable: true, width: 110 },
-  { key: 'customerName', label: t('list.columns.customer'), sortable: true, width: 230 },
-  { key: 'status', label: t('list.columns.status'), sortable: true, width: 110 },
-  { key: 'priority', label: t('list.columns.priority'), sortable: true, width: 90 },
-  { key: 'slaStatus', label: t('list.columns.sla'), sortable: true, width: 170 },
-  // Who has the job, in one cell: the company for External work (the person there is not recorded —
-  // see the note on APPRAISAL_DEFAULT_HIDDEN_COLUMNS), the user code for Internal.
-  { key: 'assignee', label: t('list.columns.assignee'), sortable: false, width: 190 },
-  { key: 'requestor', label: t('list.columns.requestor'), sortable: false, width: 190 },
-  { key: 'province', label: t('list.columns.province'), sortable: true, width: 130 },
-  { key: 'assignmentType', label: t('list.columns.assignment'), sortable: true, width: 110 },
-  { key: 'bankingSegment', label: t('list.columns.bankingSegment'), sortable: true, width: 150 },
-  { key: 'purpose', label: t('list.columns.purpose'), sortable: true, width: 150 },
+  // Number over customer, one column: the number is the row's link and identity, the customer is
+  // who it is for — and while the table scrolls sideways this is the column that stays, so the
+  // two travel together instead of leaving a number with no name beside it.
+  // `appraisalCustomer`, not `appraisalNumber`: widths are stored per column key, and this column
+  // replaced the old number-only one — a ~110px width a user dragged that to would otherwise be
+  // applied here and leave the customer name no room.
+  {
+    key: 'appraisalCustomer',
+    label: t('list.columns.appraisalNumberCustomer'),
+    sortable: true,
+    width: 220,
+    headSorts: [
+      { key: 'appraisalNumber', label: t('list.columns.appraisalNumber') },
+      { key: 'customerName', label: t('list.columns.customer') },
+    ],
+  },
+  { key: 'status', label: t('list.columns.status'), sortable: true, width: 135 },
+  // Purpose over job type (appraisal type): the job type is a second line, not a column, so the
+  // sort stays on the purpose.
+  { key: 'purpose', label: t('list.columns.purposeAndType'), sortable: true, width: 190 },
   // Comma-joined aggregate across the appraisal's properties — not meaningfully sortable
   { key: 'propertyTypes', label: t('list.columns.propertyType'), sortable: false, width: 140 },
-  { key: 'companyName', label: t('list.columns.company'), sortable: false, width: 180 },
+  { key: 'slaStatus', label: t('list.columns.sla'), sortable: true, width: 170 },
+  { key: 'priority', label: t('list.columns.priority'), sortable: true, width: 120 },
+  // Who has the job, in one cell: the company for External work (the person there is not recorded —
+  // see the note on APPRAISAL_DEFAULT_HIDDEN_COLUMNS), the user code for Internal.
+  { key: 'assignee', label: t('list.columns.assignee'), sortable: false, width: 230 },
   { key: 'appointmentDateTime', label: t('list.columns.appointment'), sortable: true, width: 150 },
+  { key: 'province', label: t('list.columns.province'), sortable: true, width: 130 },
+  { key: 'requestor', label: t('list.columns.requestor'), sortable: false, width: 190 },
+  { key: 'bankingSegment', label: t('list.columns.bankingSegment'), sortable: true, width: 150 },
   { key: 'createdAt', label: t('list.columns.created'), sortable: true, width: 150 },
 
-  // Returned by the API but off by default — see APPRAISAL_DEFAULT_HIDDEN_COLUMNS.
+  // Off by default — see APPRAISAL_DEFAULT_HIDDEN_COLUMNS. Kept after the visible ones so turning
+  // one on does not land it in the middle of the default order.
+  { key: 'assignmentType', label: t('list.columns.assignment'), sortable: true, width: 110 },
+  { key: 'companyName', label: t('list.columns.company'), sortable: false, width: 180 },
   { key: 'slaBusinessDays', label: t('list.columns.slaBusinessDays'), sortable: false, width: 120 },
   { key: 'submittedAt', label: t('list.columns.submittedAt'), sortable: false, width: 150 },
   { key: 'groupTag', label: t('list.columns.groupTag'), sortable: false, width: 120 },

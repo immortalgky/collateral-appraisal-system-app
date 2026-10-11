@@ -77,7 +77,7 @@ const AppraisalDataCorrectionSearchPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
       <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">{t('search.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-900">{t('search.title')}</h3>
         <p className="text-xs text-gray-500 mt-0.5">{t('search.subtitle')}</p>
       </div>
 
@@ -95,7 +95,7 @@ const AppraisalDataCorrectionSearchPage = () => {
 
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-table table-fixed">
             {/* Customer names are short; the property-type column holds several Thai chips and is
                 the one that actually needs room, so it takes the slack instead. Left to
                 auto-layout it collapsed and wrapped mid-word. */}
@@ -107,16 +107,16 @@ const AppraisalDataCorrectionSearchPage = () => {
             </colgroup>
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
                   {t('search.col.appraisalNumber')}
                 </th>
-                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
                   {t('search.col.customerName')}
                 </th>
-                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
                   {t('search.col.propertyTypes')}
                 </th>
-                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-center whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-center whitespace-nowrap">
                   {t('search.col.status')}
                 </th>
               </tr>

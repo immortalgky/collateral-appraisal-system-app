@@ -130,7 +130,7 @@ const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => {
       <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
         <Icon name="image" className="text-2xl text-gray-400" />
       </div>
-      <h3 className="mb-1 text-sm font-semibold text-gray-700">{t('gallery.empty.title')}</h3>
+      <h3 className="mb-1 text-base font-semibold text-gray-700">{t('gallery.empty.title')}</h3>
       <p className="mb-5 max-w-sm text-center text-xs text-gray-500">{t('gallery.empty.hint')}</p>
       <Button variant="primary" size="sm" onClick={onUpload}>
         <Icon name="cloud-arrow-up" className="mr-2" />
@@ -779,7 +779,7 @@ export const GalleryTab = () => {
         {/* Toolbar: title, filter-with-counts, search, upload */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900">{t('gallery.sectionTitle')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('gallery.sectionTitle')}</h3>
             <p className="text-xs text-gray-500">
               {t('gallery.summary', { total: stats.total, used: stats.used })}
             </p>

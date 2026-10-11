@@ -28,7 +28,7 @@ function Pagination({
   totalPages,
   totalCount,
   pageSize,
-  pageSizeOptions = [10, 25, 50, 100],
+  pageSizeOptions = [10, 20, 25, 50, 100],
   onPageChange,
   onPageSizeChange,
   showPageSizeSelector = true,
@@ -36,6 +36,12 @@ function Pagination({
 }: PaginationProps) {
   const { t } = useTranslation('common');
   const safeTotal = totalPages || 1;
+  // The current size is listed too, so a size outside the options (one from the URL) still shows
+  // as the selected one instead of an empty choice. Only a sane one: -5 or 5000 is a bad URL.
+  const validCurrent = Number.isInteger(pageSize) && pageSize > 0 && pageSize <= 500;
+  const sizeOptions = [
+    ...new Set(validCurrent ? [...pageSizeOptions, pageSize] : pageSizeOptions),
+  ].sort((x, y) => x - y);
 
   // Generate page numbers with ellipsis
   const getPageNumbers = (): (number | 'ellipsis')[] => {
@@ -89,12 +95,13 @@ function Pagination({
           /* The app's own dropdown, not a native <select>: a select renders as an OS menu — grey
              panel, system font, its own tick — which is why this one control looked foreign on
              every list in the product. `compact` keeps the footer bar the height it always was. */
-          <div className="w-20">
+          <div className="w-24">
             <Dropdown
               compact
+              showPlaceholderOption={false}
               showValuePrefix={false}
               aria-label={t('pagination.pageSize')}
-              options={pageSizeOptions.map(size => ({
+              options={sizeOptions.map(size => ({
                 value: String(size),
                 label: String(size),
                 id: size,

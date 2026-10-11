@@ -62,7 +62,7 @@ export function SegmentedControl<T extends string>({
               name={option.icon}
               style="solid"
               className={clsx(
-                'text-[11px]',
+                'text-xs',
                 active ? 'text-primary' : option.disabled ? 'text-gray-300' : 'text-gray-400',
               )}
             />

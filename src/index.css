@@ -28,6 +28,9 @@
   themes:
     main --default,
     dark;
+  /* Unused, but Tailwind emits it for the word "join" in any `.join(...)` call. Its
+     `> :where(:focus, :has(:focus))` rule made every focus change restyle the whole page. */
+  exclude: join;
 }
 @plugin "daisyui/theme" {
   name: 'main';
@@ -191,28 +194,199 @@
  *
  * --cas-root-step is the automatic, viewport-driven baseline; --cas-density is the
  * user's UI Density preference (see densityConstants.ts, applied by ThemeProvider).
- * Everything rem-based — fonts, Tailwind spacing, the right details panel — follows.
+ * Everything rem-based — fonts, Tailwind spacing, the right details panel — follows. The Tailwind
+ * type scale is expressed for the 14px step (see theme.css), so text-sm is 13px, text-base 15px.
  *
- * Media queries stay in px on purpose: an em/rem query would resolve against the
+ * Viewport steps: 14px (base, up to 1919px wide) and 15px (1920px and up). Media queries stay in px on purpose: an em/rem query would resolve against the
  * initial 16px font, not this one, so px keeps the steps honest and loop-free.
  */
 :root {
-  --cas-root-step: 13px;
+  --cas-root-step: 14px;
   --cas-density: 1;
-  /* Leading for text-xs..text-2xl and body; see theme.css. ~1.8 fully clears stacked Thai marks. */
-  --cas-leading: 1.6;
+  /* Leading for text-xs..text-2xl and body; see theme.css. */
+  --cas-leading: 1.5;
+  /* Leading inside a single-line text input; see "Thai in text inputs" below. */
+  --cas-input-leading: 1.8;
+  /* What an input's vertical padding gives back so the taller line box does not change its height:
+     half the extra leading, on each side. `1em` resolves on the input that uses it. */
+  --cas-lead-trim: calc((var(--cas-input-leading) - var(--cas-leading)) / 2 * 1em);
 }
 
-@media (min-width: 1600px) {
-  :root {
-    --cas-root-step: 14px;
-  }
-}
-
+/* The step is 14px up to 1920px wide. Above that, a slightly larger step, but a small one: 14px to
+   16px would make every size jump a full step (text-sm 14px to 16px) the moment the window
+   crosses 1920px. */
 @media (min-width: 1920px) {
   :root {
-    --cas-root-step: 16px;
+    --cas-root-step: 15px;
   }
+}
+
+/*
+ * daisyUI sizes its components in rem for a 16px root (button .875rem, small .75rem, ...), which at
+ * this app's 14px root is 12.25px / 10.5px, beside shared inputs and body text of 13px / 12px.
+ * These put them on the same scale as the Tailwind type scale in theme.css: md 13px, sm 12px, xs
+ * 11px, lg 15px, xl 18px (badge and kbd stop at 16px at xl). daisyUI keeps its rules in nested
+ * layers (daisyui.l1.l2...); rules written directly in the `daisyui` layer beat those, and the layer
+ * is still below `utilities`, so a `text-*` class on the element wins here as it does over daisyUI.
+ * (The same selectors in `components` lose to daisyUI's layers; measured.)
+ */
+@layer daisyui {
+  .btn.btn {
+    --fontsize: 0.9286rem;
+  }
+  .btn.btn-xs {
+    --fontsize: 0.7857rem;
+  }
+  .btn.btn-sm {
+    --fontsize: 0.8571rem;
+  }
+  .btn.btn-lg {
+    --fontsize: 1.0714rem;
+  }
+  .btn.btn-xl {
+    --fontsize: 1.2857rem;
+  }
+
+  .input.input,
+  .select.select,
+  .textarea.textarea {
+    font-size: 0.9286rem;
+  }
+  .input.input-xs,
+  .select.select-xs,
+  .textarea.textarea-xs {
+    font-size: 0.7857rem;
+  }
+  .input.input-sm,
+  .select.select-sm,
+  .textarea.textarea-sm {
+    font-size: 0.8571rem;
+  }
+  .input.input-lg,
+  .select.select-lg,
+  .textarea.textarea-lg {
+    font-size: 1.0714rem;
+  }
+  .input.input-xl,
+  .select.select-xl,
+  .textarea.textarea-xl {
+    font-size: 1.2857rem;
+  }
+
+  .badge.badge,
+  .kbd.kbd {
+    font-size: 0.9286rem;
+  }
+  .badge.badge-xs,
+  .kbd.kbd-xs {
+    font-size: 0.7857rem;
+  }
+  .badge.badge-sm,
+  .kbd.kbd-sm {
+    font-size: 0.8571rem;
+  }
+  .badge.badge-lg,
+  .kbd.kbd-lg {
+    font-size: 1.0714rem;
+  }
+  .badge.badge-xl,
+  .kbd.kbd-xl {
+    font-size: 1.1429rem;
+  }
+}
+
+/*
+ * Tailwind's `truncate` is `overflow: hidden`, which also clips the y-axis. Thai stacks vowels and
+ * tone marks above and below the baseline (ที่ ปิ่ ฟ้), and Sarabun's content area is about 1.6em
+ * tall, so at a 1.5 line box the tops of those marks were cut off in every truncated text. Only the
+ * x-axis needs to be clipped for the ellipsis. `clip` (unlike `hidden`) leaves the other axis alone.
+ * `hidden` also made a flex or grid item's automatic minimum size 0, which `clip` does not, so a
+ * truncated item would stop shrinking. The :where() rule gives that back without beating a
+ * `min-w-*` class on the same element (zero specificity).
+ */
+@layer utilities {
+  .truncate {
+    overflow-x: clip;
+    overflow-y: visible;
+  }
+  :where(.truncate) {
+    min-width: 0;
+    min-height: 0;
+  }
+}
+
+/*
+ * Thai in text inputs.
+ *
+ * The browser clips an input's text to its line box (the inner editor is exactly `line-height`
+ * tall, and neither `overflow` on the input nor its padding gives it more room). At 1.5 the stacked
+ * Thai marks (ชั้น ที่ กี้) lose their tops and the lower vowels (ปู่ ฏุ) their feet: measured on
+ * "ชั้น ที่ดิ๊น ปู่ ฏุ๊" at 13px, 1.5 shows 95.5% of the ink, 1.7 98.6% and 1.8 all of it.
+ * So single-line inputs get 1.8, and the vertical padding that sets their height gives the
+ * difference back (--cas-lead-trim) so a 35.5px input stays 35.5px. An input with a fixed height
+ * (the form skins, `Input dense`) needs no padding change, only the line-height.
+ * Textareas wrap on their own lines and are not clipped at the first line, so they keep 1.5.
+ */
+input:not(
+  [type='checkbox'],
+  [type='radio'],
+  [type='range'],
+  [type='hidden'],
+  [type='file'],
+  [type='color'],
+  [type='button'],
+  [type='submit'],
+  [type='reset'],
+  [type='image']
+) {
+  line-height: var(--cas-input-leading);
+}
+/* Tailwind's py-N on an input (Input, NumberInput, the date, search and address inputs). The
+   :not() list is the one above, so a checkbox keeps its own padding. */
+input.py-1:not([type='checkbox'], [type='radio']) {
+  padding-block: calc(var(--spacing) * 1 - var(--cas-lead-trim));
+}
+input.py-1\.5:not([type='checkbox'], [type='radio']) {
+  padding-block: calc(var(--spacing) * 1.5 - var(--cas-lead-trim));
+}
+input.py-2:not([type='checkbox'], [type='radio']) {
+  padding-block: calc(var(--spacing) * 2 - var(--cas-lead-trim));
+}
+input.py-2\.5:not([type='checkbox'], [type='radio']) {
+  padding-block: calc(var(--spacing) * 2.5 - var(--cas-lead-trim));
+}
+
+/*
+ * Selects clip Thai marks too. daisyUI's `.select` is fixed-height, so line-height alone fixes it.
+ * A plain native <select> draws its text in a box the browser sizes itself (here ~1.31em, which
+ * ignores line-height and padding): ชั้น loses its tone mark and หนี้ its ้. Only `appearance: none`
+ * makes it an ordinary box, so those lose the native arrow and get a drawn chevron, and the
+ * padding gives back the extra leading as for inputs (--cas-select-trim: 1.8 against the native
+ * 1.31) so a 33px select stays 33px.
+ */
+:root {
+  --cas-select-trim: calc((var(--cas-input-leading) - 1.3077) / 2 * 1em);
+}
+select.select {
+  line-height: var(--cas-input-leading);
+}
+select:not([multiple], [size], .select) {
+  appearance: none;
+  line-height: var(--cas-input-leading);
+  padding-right: 2rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 7.5l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.75rem;
+}
+select.py-1:not([multiple], [size], .select) {
+  padding-block: calc(var(--spacing) * 1 - var(--cas-select-trim));
+}
+select.py-1\.5:not([multiple], [size], .select) {
+  padding-block: calc(var(--spacing) * 1.5 - var(--cas-select-trim));
+}
+select.py-2:not([multiple], [size], .select) {
+  padding-block: calc(var(--spacing) * 2 - var(--cas-select-trim));
 }
 
 html {

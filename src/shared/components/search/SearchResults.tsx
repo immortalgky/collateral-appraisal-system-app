@@ -245,7 +245,7 @@ export default function SearchResults({
                 style="solid"
                 className="size-3 text-gray-400 shrink-0"
               />
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 shrink-0">
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 shrink-0">
                 {t(`search.fields.${group.matchField}` as never, {
                   defaultValue: group.matchField,
                 })}

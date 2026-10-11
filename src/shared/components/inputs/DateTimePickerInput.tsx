@@ -18,6 +18,7 @@ import { MonthYearPanel } from './MonthYearPanel';
 import { createHolidayDayButton } from './HolidayDayButton';
 import { useDateSegmentInput } from './useDateSegmentInput';
 import { useCalendarFloating } from './useCalendarFloating';
+import { CALENDAR_BUTTON_PADDING, CalendarButton } from './CalendarButton';
 
 const MONTH_LABELS_SHORT = [
   'Jan',
@@ -333,9 +334,10 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             name={name}
             type="text"
             className={clsx(
-              // pr-9: the calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is
-              // long enough to run under it in a narrow column.
-              'block px-3 py-2 pr-9 border rounded-lg text-sm transition-colors duration-200',
+              // The calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is long enough
+              // to run under it in a narrow column.
+              'block py-2 pl-3 border rounded-lg text-sm transition-colors duration-200',
+              CALENDAR_BUTTON_PADDING,
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
@@ -371,33 +373,12 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
 
           {/* Calendar icon — the only way to open the calendar, so clicking into the text just
               puts the caret where the user aimed. */}
-          <button
-            ref={calendarButtonRef}
-            type="button"
-            aria-label="Open calendar"
-            {...calendar.triggerProps}
+          <CalendarButton
+            buttonRef={calendarButtonRef}
+            triggerProps={calendar.triggerProps}
             disabled={isDisabled}
             onClick={toggleCalendar}
-            className={clsx(
-              'absolute inset-y-0 right-0 flex items-center pr-3 pl-2 text-gray-400',
-              isDisabled ? 'cursor-not-allowed' : 'hover:text-gray-600',
-            )}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </button>
+          />
         </div>
 
         {/* Calendar Popover with Time — portalled to <body>, not rendered inside the field.

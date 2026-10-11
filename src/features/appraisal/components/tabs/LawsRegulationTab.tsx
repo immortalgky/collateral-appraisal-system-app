@@ -250,7 +250,9 @@ export const LawsRegulationTab = () => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <div className="min-w-0">
-          <h3 className="text-sm font-semibold text-gray-900">{t('lawsRegulations.pageTitle')}</h3>
+          <h3 className="text-base font-semibold text-gray-900">
+            {t('lawsRegulations.pageTitle')}
+          </h3>
           <p className="text-xs text-gray-500">{t('lawsRegulations.count', { n: items.length })}</p>
         </div>
         {!readOnly && (

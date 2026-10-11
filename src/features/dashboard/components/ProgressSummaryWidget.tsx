@@ -252,7 +252,9 @@ function ProgressSummaryWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800">{t('progressSummary.title')}</h3>
+              <h3 className="text-base font-semibold text-gray-800">
+                {t('progressSummary.title')}
+              </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />

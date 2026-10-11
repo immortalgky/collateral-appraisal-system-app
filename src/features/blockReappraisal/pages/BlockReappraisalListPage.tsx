@@ -42,7 +42,7 @@ const SortableTh = ({
   return (
     <th
       onClick={() => onSort(field)}
-      className={`px-4 py-2.5 text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
+      className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
         isActive ? 'text-primary' : 'text-gray-500'
       }`}
     >
@@ -125,7 +125,7 @@ function BlockReappraisalListPage() {
     <div className="flex flex-col h-full min-h-0 min-w-0">
       {/* ── Page header ── */}
       <div className="shrink-0 mb-3">
-        <h2 className="text-sm font-semibold text-gray-900">{t('page.list.title')}</h2>
+        <h2 className="text-base font-semibold text-gray-900">{t('page.list.title')}</h2>
         <p className="text-xs text-gray-500 mt-0.5">{t('page.list.description')}</p>
       </div>
 
@@ -135,7 +135,7 @@ function BlockReappraisalListPage() {
       {/* ── Table ── */}
       <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-table">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-200">
                 <SortableTh field="oldAppraisalNumber" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
@@ -186,7 +186,7 @@ function BlockReappraisalListPage() {
                 >
                   {t('columns.remainingDay')}
                 </SortableTh>
-                <th className="px-4 py-2.5 w-8 bg-gray-50" />
+                <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

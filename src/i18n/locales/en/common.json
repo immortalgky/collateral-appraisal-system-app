@@ -1,6 +1,7 @@
 {
   "actions": {
     "save": "Save",
+    "openCalendar": "Open calendar",
     "cancel": "Cancel",
     "delete": "Delete",
     "confirmDelete": "Delete?",
@@ -177,5 +178,16 @@
     "itemRange": "{{start}}-{{end}} of {{total}}",
     "noResults": "0 results",
     "pageSize": "Rows per page"
+  },
+  "reportJob": {
+    "generating": "Generating report…",
+    "queueFailed": "Failed to queue report generation.",
+    "ready": "Report is ready. Click the notification bell to download.",
+    "openFailed": "Report ready but failed to open. Check the notification bell.",
+    "failed": "Report generation failed."
+  },
+  "imageEditor": {
+    "loadFailed": "The image could not be opened for editing.",
+    "loadFailedDiscarded": "{{name}} could not be opened. This file will not be attached."
   }
 }

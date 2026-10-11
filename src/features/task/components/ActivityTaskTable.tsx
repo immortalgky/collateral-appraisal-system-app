@@ -300,7 +300,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
       {/* Header + quick access (single row to save vertical space) */}
       <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
         <div className="shrink-0">
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
           <p className="text-xs text-gray-500 mt-0.5">{description}</p>
         </div>
 
@@ -690,7 +690,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               >
                 <table
                   ref={tableRef}
-                  className="table-fixed text-sm"
+                  className="table-fixed text-table"
                   style={{ width: totalTableWidth }}
                 >
                   <colgroup>
@@ -732,7 +732,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                           </th>
                         );
                       })}
-                      <th className="px-4 py-2.5 w-8 bg-gray-50" />
+                      <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">

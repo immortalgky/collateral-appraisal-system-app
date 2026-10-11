@@ -99,7 +99,7 @@ function PasswordPolicyConfigPage() {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">{t('passwordPolicyConfig.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-900">{t('passwordPolicyConfig.title')}</h3>
         <p className="text-xs text-gray-500 mt-0.5">{t('passwordPolicyConfig.subtitle')}</p>
         <p className="text-xs text-gray-400 mt-1">{t('passwordPolicyConfig.propagationNote')}</p>
       </div>

@@ -569,17 +569,21 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
             <table className="w-full text-xs">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-2 py-1.5 text-left font-medium text-gray-500">Factor</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Weight</th>
+                  <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                    Factor
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Weight
+                  </th>
                   {hasCollateralScores && (
-                    <th className="px-2 py-1.5 text-right font-medium text-teal-600 bg-teal-50/50">
+                    <th className="text-xs px-2 py-1.5 text-right font-semibold text-teal-600 bg-teal-50/50">
                       Collateral
                     </th>
                   )}
                   {comparables.map(c => (
                     <th
                       key={c.linkId}
-                      className="px-2 py-1.5 text-right font-medium text-gray-500 max-w-[80px] truncate"
+                      className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500 max-w-[80px] truncate"
                     >
                       {surveyNameMap.get(c.marketComparableId) ||
                         c.comparableName ||

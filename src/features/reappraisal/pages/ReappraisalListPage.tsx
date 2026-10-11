@@ -573,7 +573,7 @@ function ReappraisalListPage() {
       {/* ── Table ── */}
       <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-table">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
                 <SortHeader
@@ -592,18 +592,18 @@ function ReappraisalListPage() {
                     <th className={clsx(TH, SHRINK)}>{t('columns.createdFrom')}</th>
                     <SortHeader field="NewAppraisalSubmittedAt" label={t('columns.submittedAt')} />
                     <SortHeader field="NewAppraisalCompletedAt" label={t('columns.completedAt')} />
-                    <th className="w-8" />
+                    <th className="text-xs w-8 font-semibold" />
                   </>
                 ) : isPending ? (
                   <>
                     <th className={clsx(TH, SHRINK)}>{t('columns.progress')}</th>
                     <th className={clsx(TH, SHRINK)}>{t('columns.queuedSince')}</th>
-                    <th className="w-8" />
+                    <th className="text-xs w-8 font-semibold" />
                   </>
                 ) : (
                   <>
                     <th className={clsx(TH, SHRINK)}>{t('columns.lastFileUpdate')}</th>
-                    <th className="w-8" />
+                    <th className="text-xs w-8 font-semibold" />
                   </>
                 )}
               </tr>

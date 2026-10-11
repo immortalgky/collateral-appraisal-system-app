@@ -1084,7 +1084,7 @@ const ExtCompanySubmitQuotationPage = () => {
                   <div key={selectedIndex} className="p-5 space-y-6">
                     {/* Section 1: Appraisal Information (read-only) */}
                     <section aria-label={t('aria.sectionAppraisalInfo')}>
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                      <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         {t('sections.appraisalInformation')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4 text-sm">
@@ -1110,7 +1110,7 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Section 2: Attached Documents — grouped by section, mirroring DocumentChecklist. */}
                     {selectedDocs.length > 0 && (
                       <section aria-label={t('aria.sectionAttachedDocs')}>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.attachDocument')}
                         </h2>
                         <div className="rounded-lg border border-gray-200 overflow-hidden">
@@ -1123,16 +1123,16 @@ const ExtCompanySubmitQuotationPage = () => {
                             </colgroup>
                             <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
                               <tr>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.type')}
                                 </th>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.fileName')}
                                 </th>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.uploadedAt')}
                                 </th>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.notes')}
                                 </th>
                               </tr>
@@ -1226,7 +1226,7 @@ const ExtCompanySubmitQuotationPage = () => {
                       <>
                         {/* Section 3: Quotation Information — Fee Breakdown */}
                         <section aria-label={t('aria.sectionQuotationInfo')}>
-                          <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                             {t('sections.quotationInformationFee')}
                           </h2>
 
@@ -1246,7 +1246,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
                         {/* Section 4: Duration / Mandays */}
                         <section aria-label={t('aria.sectionDuration')}>
-                          <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                             {t('sections.duration')}
                           </h2>
                           <div className="grid grid-cols-2 gap-4">
@@ -1304,7 +1304,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
                         {/* Section 5: Per-item Remark */}
                         <section aria-label={t('sections.appraisalRemark')}>
-                          <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                             {t('sections.appraisalRemark')}
                           </h2>
                           <Controller
@@ -1332,7 +1332,7 @@ const ExtCompanySubmitQuotationPage = () => {
                           <section aria-label={t('sections.itemNegotiationReason')}>
                             <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
                               <div className="flex items-center gap-2 mb-3 pb-1.5 border-b border-indigo-200">
-                                <h2 className="text-sm font-semibold text-indigo-900">
+                                <h2 className="text-base font-semibold text-indigo-900">
                                   {t('sections.itemNegotiationReason')}
                                 </h2>
                                 {!!openNegotiation && (

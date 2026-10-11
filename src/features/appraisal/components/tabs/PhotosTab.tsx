@@ -740,7 +740,7 @@ export const PhotosTab = () => {
     // topics and the right-hand panel scrolls its photos, each inside its own box.
     <div className="flex h-full min-h-0 flex-col gap-3">
       <div className="min-w-0">
-        <h3 className="text-sm font-semibold text-gray-900">{t('photoTopics.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-900">{t('photoTopics.title')}</h3>
         <p className="text-xs text-gray-500">
           {t('photoTopics.summary', { topics: topics.length, photos: totalPhotos })}
         </p>

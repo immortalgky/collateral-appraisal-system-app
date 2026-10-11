@@ -20,7 +20,7 @@ const SKELETON_COLUMNS = [
 ];
 
 const baseCls =
-  'px-4 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap bg-gray-50';
+  'px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap bg-gray-50';
 
 function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
   const { t, i18n } = useTranslation('monitoring');
@@ -35,7 +35,7 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
 
   return (
     <div className="flex-1 min-h-0 overflow-auto">
-      <table className="w-full min-w-max">
+      <table className="w-full min-w-max text-table">
         <thead className="sticky top-0 z-10">
           <tr>
             <th className={baseCls}>Name</th>
@@ -73,7 +73,9 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
                           name="chevron-right"
                           className={`size-3 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`}
                         />
-                        <span className="text-sm font-medium text-gray-900">{row.memberName}</span>
+                        <span className="text-table font-medium text-gray-900">
+                          {row.memberName}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-2.5">
@@ -99,7 +101,7 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
                           <button
                             type="button"
                             onClick={() => onOpenAppraisal(item.appraisalId)}
-                            className="text-sm font-medium text-primary hover:underline"
+                            className="text-table font-medium text-primary hover:underline"
                           >
                             {item.appraisalNumber}
                           </button>
