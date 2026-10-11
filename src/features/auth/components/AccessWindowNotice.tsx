@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
-import { getAccessWindowEnd, getFreshAccessToken } from '@shared/api/axiosInstance';
+import { refreshCurrentUser } from '../api';
 import { useAuthStore } from '../store';
 
 /** Show the bar once the window is this close to closing. */
 const WARN_AT_MS = 10 * 60 * 1000;
-
-const logoutUrl = `${import.meta.env.VITE_API_URL}/connect/logout?client_id=spa&post_logout_redirect_uri=${import.meta.env.VITE_APP_URL}/`;
+/** Minimum gap between /auth/me checks once the window's end has passed. */
+const RECHECK_MS = 10 * 1000;
 
 /** "2:05" under an hour, "1:02:05" above it. */
 function formatRemaining(ms: number): string {
@@ -22,60 +22,49 @@ function formatRemaining(ms: number): string {
 /**
  * Countdown bar for temporary-access accounts, and the sign-out that follows it.
  *
- * These accounts are only usable inside a window an admin opened, and the API stops honouring
- * their tokens the moment it closes. Without this the holder would discover that as a 401 in the
- * middle of whatever they came to do; the token carries the window's end, so the warning can come
- * early and the sign-out can be orderly. Every ordinary account is missing the claim and sees
- * nothing at all.
+ * These accounts are only usable inside a window an admin opened, and the API ends their session
+ * the moment it closes. Without this the holder would discover that as a 401 in the middle of
+ * whatever they came to do; /auth/me carries the window's end, so the warning can come early.
+ * Every ordinary account has no end date and sees nothing at all.
  */
 export function AccessWindowNotice() {
   const { t } = useTranslation('auth');
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const accessExpiresAt = useAuthStore(state => state.user?.accessExpiresAt);
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    // The end is written in the server's local time, which is the clock the whole system runs on.
+    const end = isAuthenticated && accessExpiresAt ? new Date(accessExpiresAt) : null;
+    if (!end || Number.isNaN(end.getTime())) {
       setRemaining(null);
       return;
     }
 
-    let timer: number | undefined;
-    let settling = false;
+    // Earliest time the next /auth/me check may run, so a client clock that runs ahead of the
+    // server's cannot turn the end of the window into a request per second.
+    let nextCheckAt = 0;
 
     const tick = async () => {
-      const end = getAccessWindowEnd();
-      if (!end) {
-        setRemaining(null);
-        return;
-      }
-
       const left = end.getTime() - Date.now();
       setRemaining(left);
-      if (left > 0 || settling) return;
+      if (left > 0 || Date.now() < nextCheckAt) return;
+      nextCheckAt = Date.now() + RECHECK_MS;
 
-      // The window this token describes is over — but an admin may have extended it since the token
-      // was issued, and the new end only reaches us through a refreshed token. Ask for one before
-      // concluding anything: a live window returns a token with a later end, and a closed one fails
-      // the refresh outright (the API rejects it), which is the answer we act on.
-      settling = true;
-      const refreshed = await getFreshAccessToken().catch(() => null);
-      const extendedTo = refreshed ? getAccessWindowEnd() : null;
-      if (extendedTo && extendedTo.getTime() > Date.now()) {
-        settling = false;
-        setRemaining(extendedTo.getTime() - Date.now());
-        return;
-      }
-
-      // Full navigation rather than a client-side redirect: this also ends the server session and
-      // drops the refresh cookie, so a reopened tab cannot resume the closed window.
-      window.clearInterval(timer);
-      window.location.assign(logoutUrl);
+      // The window this page loaded is over — but an admin may have changed it since, and the new
+      // end only reaches us by asking again. The answer lands in the query cache and, through
+      // fetchCurrentUser, in the store, which re-runs this effect: a later end keeps the countdown going, none hides the bar. A closed
+      // window is a 401 (the API ended the session), which the axios interceptor turns into a
+      // sign-in redirect, so there is nothing to do for it here. Any other failure is transient:
+      // try again next time.
+      // No retry: the 10 s re-check below is the retry.
+      await refreshCurrentUser().catch(() => {});
     };
 
     void tick();
-    timer = window.setInterval(() => void tick(), 1000);
+    const timer = window.setInterval(() => void tick(), 1000);
     return () => window.clearInterval(timer);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, accessExpiresAt]);
 
   if (remaining === null || remaining > WARN_AT_MS) return null;
 

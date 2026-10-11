@@ -1,6 +1,8 @@
-import axios, { AxiosHeaders, type AxiosError } from 'axios';
+import axios, { type AxiosError } from 'axios';
 import toast from 'react-hot-toast';
-import { queryClient } from '@app/queryClient';
+import { redirectToLogin } from '@features/auth/utils/auth';
+import { REDIRECT_SETTLE_MS } from './forcedNavigation';
+import { isUserDriven, recordUserRequest } from './userActivity';
 import { extractApiError } from '../utils/errorUtils';
 import type { ProblemDetails } from '../types/api';
 
@@ -32,194 +34,11 @@ const DEV_API_DELAY = Number(import.meta.env.VITE_API_DELAY) || 0;
 // Helper function for delay
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-// --- Memory-only access token ---
-let accessToken: string | null = null;
-
-// Set when /auth/refresh answers 401 — the refresh cookie is gone, expired, or revoked.
-// Deliberately NOT set for a transient failure (offline, DNS, 5xx): those callers must keep
-// retrying at full speed.
-let sessionExpired = false;
-
-/**
- * Whether reconnect loops should back off because refreshing looks hopeless: the last /auth/refresh
- * answered 401 and nothing since has produced a usable token.
- *
- * A hint, not a guarantee, and deliberately biased towards under-reporting:
- * - 401 also covers a token-rotation race between tabs, so consumers slow down rather than stop.
- * - It stays false while a clock-valid access token is being rejected server-side (revoked token,
- *   deleted user) — no refresh runs in that window, so nothing observes the rejection. Bounded by
- *   the access-token TTL, after which the next refresh reports the truth.
- * - The boot refresh in AuthInitializer calls the endpoint directly and does not feed this flag.
- *   By then no hub is running, and the flag is per-page-load state anyway.
- */
-export function isSessionExpired(): boolean {
-  return sessionExpired;
-}
-
-// --- BroadcastChannel for multi-tab sync (feature-detected) ---
-type AuthChannelMessage = { type: 'token_update'; token: string | null } | { type: 'logout' };
-
-type AuthChannel = {
-  postMessage: (message: AuthChannelMessage) => void;
-  addEventListener: (
-    type: 'message',
-    listener: (event: { data?: AuthChannelMessage }) => void,
-  ) => void;
-};
-
-const authChannel: AuthChannel =
-  typeof globalThis !== 'undefined' && typeof globalThis.BroadcastChannel === 'function'
-    ? new globalThis.BroadcastChannel('auth')
-    : {
-        postMessage: () => {},
-        addEventListener: () => {},
-      };
-
-authChannel.addEventListener('message', event => {
-  if (event.data?.type === 'token_update') {
-    accessToken = event.data.token;
-    // Another tab signed in successfully, so this tab's session is alive again — un-stick any
-    // reconnect loop that gave up here.
-    if (event.data.token) sessionExpired = false;
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    /** Let a 401 reach the caller instead of sending the browser to the login page. */
+    skipAuthRedirect?: boolean;
   }
-  if (event.data?.type === 'logout') {
-    accessToken = null;
-    queryClient.clear();
-    window.location.href = '/login';
-  }
-});
-
-export function setAccessToken(token: string | null) {
-  accessToken = token;
-  // A real token means we are authenticated again, whatever happened before.
-  if (token) sessionExpired = false;
-  // Broadcast to other tabs
-  authChannel.postMessage({ type: 'token_update', token });
-}
-
-export function getAccessToken(): string | null {
-  return accessToken;
-}
-
-/**
- * Broadcast an explicit logout to other tabs so they clear their auth state
- * and redirect to /login. Use this (not setAccessToken(null)) when the user
- * initiates sign-out.
- */
-export function broadcastLogout() {
-  accessToken = null;
-  authChannel.postMessage({ type: 'logout' });
-}
-
-// Endpoints that must NOT trigger a silent refresh-and-retry on 401.
-// A 401 from /auth/login means bad credentials; a 401 from /auth/refresh
-// means the refresh cookie is invalid — retrying would loop.
-const AUTH_ENDPOINT_PATTERNS = [/\/auth\/login\b/, /\/auth\/refresh\b/, /\/auth\/token\b/];
-
-function isAuthEndpoint(url: string | undefined): boolean {
-  if (!url) return false;
-  return AUTH_ENDPOINT_PATTERNS.some(re => re.test(url));
-}
-
-// --- Separate axios instance for refresh calls (with cookies) ---
-export const refreshClient = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
-  headers: { 'Content-Type': 'application/json' },
-  withCredentials: true,
-  // Without this a hung refresh leaves refreshPromise pending forever: accessTokenFactory never
-  // resolves, the reconnect attempt stalls, and sessionExpired is never set — bypassing the
-  // back-off entirely. Matches the main instance's timeout.
-  timeout: 1000 * 10,
-});
-
-// --- Refresh queue pattern ---
-let refreshPromise: Promise<string | null> | null = null;
-
-async function refreshAccessToken(): Promise<string | null> {
-  try {
-    const { data } = await refreshClient.post('/auth/refresh');
-    // Clear here rather than leaving it to callers: the invariant consumers want is "the LAST
-    // refresh attempt 401'd", not "some refresh 401'd at some point". Callers that reach for a
-    // still-valid cached token never come through here, so relying on setAccessToken() alone
-    // would let the flag outlive the condition it describes.
-    sessionExpired = false;
-    return data.accessToken ?? null;
-  } catch (error) {
-    // 401 is the server's definitive "this session is over" — the refresh cookie is missing,
-    // expired, or revoked, and retrying can never succeed. Everything else (offline, DNS, 5xx)
-    // may well recover, so leave the flag alone and let callers keep retrying.
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      sessionExpired = true;
-    }
-    return null;
-  }
-}
-
-/** Decode a JWT's payload, or null when it is missing or unparsable. */
-function decodeTokenPayload(token: string): Record<string, unknown> | null {
-  try {
-    const segment = token.split('.')[1];
-    if (!segment) return null;
-    // base64url → base64, restoring '=' padding to a multiple of 4.
-    const b64 = segment.replace(/-/g, '+').replace(/_/g, '/');
-    const padded = b64 + '==='.slice((b64.length + 3) % 4);
-    return JSON.parse(atob(padded)) as Record<string, unknown>;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Decode a JWT's `exp` (seconds since epoch) and report whether it is expired
- * (or expires within `skewSeconds`). Returns true on any decode failure so a
- * malformed/unparsable token is treated as needing a refresh. */
-function isTokenExpired(token: string, skewSeconds = 30): boolean {
-  const exp = decodeTokenPayload(token)?.exp;
-  if (typeof exp !== 'number') return true;
-  return Date.now() >= (exp - skewSeconds) * 1000;
-}
-
-/**
- * End of the signed-in account's access window, from the `access_expires_at` claim — null for every
- * ordinary account, which is almost everyone. Only temporary-access accounts carry it, and the
- * backend already refuses them once it passes; this is what lets the UI say so before that happens.
- * The claim is written in the server's local time, which is the clock the whole system runs on.
- */
-export function getAccessWindowEnd(): Date | null {
-  if (!accessToken) return null;
-  const raw = decodeTokenPayload(accessToken)?.access_expires_at;
-  if (typeof raw !== 'string') return null;
-  const parsed = new Date(raw);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
-}
-
-/**
- * Return a usable access token, refreshing first if the in-memory token is
- * missing or (about to be) expired. Reuses the same single-flight refresh
- * promise as the 401 interceptor so concurrent callers share one refresh.
- *
- * Used by the SignalR accessTokenFactory so reconnects after idle/sleep don't
- * negotiate with a stale token and 401-loop.
- */
-export async function getFreshAccessToken(): Promise<string | null> {
-  if (accessToken && !isTokenExpired(accessToken)) {
-    // Holding a usable token is itself evidence the session is alive, so clear the flag here too.
-    // Without this it can stick: in a two-tab rotation race the loser's 401 can land *after* the
-    // winner has already broadcast its fresh token, leaving this tab authenticated but backed off.
-    // Every later call short-circuits on this branch, so nothing else would ever reset it.
-    sessionExpired = false;
-    return accessToken;
-  }
-  if (!refreshPromise) {
-    refreshPromise = refreshAccessToken().finally(() => {
-      refreshPromise = null;
-    });
-  }
-  const newToken = await refreshPromise;
-  if (newToken) {
-    setAccessToken(newToken);
-  }
-  return newToken;
 }
 
 // Create axios instance with base URL and default headers
@@ -229,23 +48,41 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 1000 * 10,
+  withCredentials: true,
 });
 
-// Add request interceptor for authentication
-axiosInstance.interceptors.request.use(
-  config => {
-    if (accessToken) {
-      if (!config.headers) {
-        config.headers = new AxiosHeaders();
-      }
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    }
-    return config;
-  },
-  error => {
-    return Promise.reject(error);
-  },
-);
+axiosInstance.interceptors.request.use(config => {
+  // Timer-driven traffic must not keep the session alive; see userActivity.ts for the rule.
+  if (isUserDriven()) {
+    recordUserRequest();
+  } else {
+    config.headers.set('X-Background-Request', '1');
+  }
+  return config;
+});
+
+// Several requests in flight usually fail together when the session ends; send the browser once.
+let redirectingToLogin = false;
+// Set while the user is signing out, whose own navigation a racing 401 must not replace.
+let loginRedirectSuspended = false;
+
+export function suspendLoginRedirect(suspended: boolean) {
+  loginRedirectSuspended = suspended;
+}
+
+// The API answers every endpoint with this 403 once the session owes a password change (see the
+// API's MustChangePasswordMiddleware); no other 403 carries this title.
+const PASSWORD_CHANGE_REQUIRED_TITLE = 'Password change required';
+
+// A blob request (a PDF download) gets its error body as a Blob; read it to find the title.
+const errorTitle = async (data: unknown): Promise<unknown> => {
+  try {
+    const body = data instanceof Blob ? JSON.parse(await data.text()) : data;
+    return (body as ProblemDetails | undefined)?.title;
+  } catch {
+    return undefined;
+  }
+};
 
 // Add response interceptor for error handling and dev delay
 axiosInstance.interceptors.response.use(
@@ -259,49 +96,35 @@ axiosInstance.interceptors.response.use(
   async (error: AxiosError<ProblemDetails>) => {
     const { response, config } = error;
 
-    // Handle 401 — attempt silent refresh.
-    // Skip refresh entirely for auth endpoints: a 401 from /auth/login is a
-    // credential failure (not a stale token) and refresh/token endpoints
-    // would loop or mask the real error.
-    if (response && response.status === 401 && config && !isAuthEndpoint(config.url)) {
-      // Only attempt refresh once per request
-      if ((config as any)._retried) {
-        broadcastLogout();
-        queryClient.clear();
-        window.location.href = '/login';
-        return Promise.reject(error);
-      }
-
-      (config as any)._retried = true;
-
-      // Queue pattern: reuse in-flight refresh promise
-      if (!refreshPromise) {
-        refreshPromise = refreshAccessToken().finally(() => {
-          refreshPromise = null;
-        });
-      }
-
-      const newToken = await refreshPromise;
-
-      if (newToken) {
-        setAccessToken(newToken);
-        if (!config.headers) {
-          config.headers = new AxiosHeaders();
-        }
-        config.headers.Authorization = `Bearer ${newToken}`;
-        return axiosInstance(config);
-      }
-
-      // Refresh failed — force logout across tabs
-      broadcastLogout();
-      queryClient.clear();
-      window.location.href = '/login';
-      return Promise.reject(error);
-    }
-
     // Extract ProblemDetails and attach to error for consumers
     const apiError = extractApiError(error);
     (error as AxiosError & { apiError: typeof apiError }).apiError = apiError;
+
+    // The session is gone (expired, revoked, or never there): start a fresh sign-in and come back
+    // to this page. The API answers 401, never a redirect, so this is the only place that decides.
+    if (response?.status === 401 && !config?.skipAuthRedirect) {
+      if (!redirectingToLogin && !loginRedirectSuspended) {
+        redirectingToLogin = true;
+        redirectToLogin();
+        // The navigation is forced (no "Leave site?" prompt), so a page that is really leaving never
+        // runs this; one whose navigation silently failed must not swallow every later 401.
+        setTimeout(() => {
+          redirectingToLogin = false;
+        }, REDIRECT_SETTLE_MS);
+      }
+      return Promise.reject(error);
+    }
+
+    // The session became must-change-password after the page loaded: re-read /auth/me so
+    // ProtectedRoute shows the forced password change. Imported lazily: auth/api imports this file.
+    if (
+      response?.status === 403 &&
+      (await errorTitle(response.data)) === PASSWORD_CHANGE_REQUIRED_TITLE
+    ) {
+      void import('@features/auth/api')
+        .then(({ refreshCurrentUser }) => refreshCurrentUser())
+        .catch(() => {});
+    }
 
     // Map known backend gate-rejection errors to friendly toasts
     if (apiError.detail || apiError.title) {
