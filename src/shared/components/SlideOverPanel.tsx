@@ -1,6 +1,8 @@
 import { Dialog, DialogBackdrop, DialogPanel, Transition } from '@headlessui/react';
 import { type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
+import { NO_OUTLINE } from '@/shared/hooks/usePointerMode';
 import clsx from 'clsx';
 
 interface SlideOverPanelProps {
@@ -38,10 +40,19 @@ const SlideOverPanel = ({
   headerActions,
   afterLeave,
 }: SlideOverPanelProps) => {
+  const { t } = useTranslation('common');
   // Inside a Transition the dialog takes its open state from it (and an `open` prop is not allowed),
   // which is what makes `afterLeave` available; without one the dialog is driven by `open` as before.
   const dialog = (open?: boolean) => (
-    <Dialog {...(open === undefined ? {} : { open })} onClose={onClose} className="relative z-50">
+    // The dialog root (tabindex -1) and the panel take the focus when something inside is clicked
+    // or the drawer opens; they are containers, not controls, so the global :focus-visible outline
+    // — which only an inline style can switch off — must never box them in blue.
+    <Dialog
+      {...(open === undefined ? {} : { open })}
+      onClose={onClose}
+      className="relative z-50"
+      style={NO_OUTLINE}
+    >
       <DialogBackdrop
         transition
         className="fixed inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ease-linear data-closed:opacity-0"
@@ -52,6 +63,7 @@ const SlideOverPanel = ({
           <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
             <DialogPanel
               transition
+              style={NO_OUTLINE}
               className={clsx(
                 widthClasses[width],
                 'pointer-events-auto w-screen',
@@ -72,7 +84,7 @@ const SlideOverPanel = ({
                   <button
                     onClick={onClose}
                     className="ml-3 text-gray-400 hover:text-gray-600 transition-colors"
-                    aria-label="Close panel"
+                    aria-label={t('actions.closePanel')}
                   >
                     <Icon name="xmark" style="regular" className="w-5 h-5" />
                   </button>

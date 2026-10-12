@@ -8,6 +8,7 @@ import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { FormFields } from '@/shared/components/form';
 import { scrollToField } from '@/shared/components/form/utils';
+import { NO_OUTLINE } from '@/shared/hooks/usePointerMode';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { makeTitleInfoFields } from '../../configs/fields';
 import DopaAddressForm from '../../forms/DopaAddressForm';
@@ -281,6 +282,9 @@ export function TitleDrawer({
         aria-modal="true"
         aria-labelledby={headingId}
         tabIndex={-1}
+        // The container takes the focus when the drawer opens or something inside is clicked; the
+        // global :focus-visible outline beats the `outline-none` class, so only inline switches it off.
+        style={NO_OUTLINE}
         className="relative flex h-full w-full max-w-[min(1160px,75vw)] flex-col bg-white shadow-2xl outline-none"
       >
         <header className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-200 px-5 py-3.5">

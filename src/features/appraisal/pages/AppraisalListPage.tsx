@@ -42,6 +42,7 @@ import {
 } from '../components/search/tabConfigs';
 import {
   ColumnVisibilityDropdown,
+  neutralToolButtonClass,
   useColumnAutoFit,
   useColumnVisibility,
   useColumnWidths,
@@ -49,12 +50,14 @@ import {
 } from '@/shared/components/columnLayout';
 import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
 import FilterChipBar from '../components/search/FilterChipBar';
+import { needsOwnRow } from '../components/search/chipOverflow';
 import SearchSuggest from '../components/search/SearchSuggest';
 import AppraisalEmptyState from '../components/search/AppraisalEmptyState';
 import SmartViewBar from '../components/search/SmartViewBar';
 import SavedSearchesDropdown from '../components/search/SavedSearchesDropdown';
 import AppraisalResultsTable from '../components/search/AppraisalResultsTable';
 import ActivityTrackingSlideOver from '../components/search/ActivityTrackingSlideOver';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
 import { useLocalStorage } from '@/shared/hooks/useLocalStorage';
@@ -99,7 +102,7 @@ const COLUMN_STORAGE_KEY = 'appraisal-list-columns';
  * Only visibility uses it — widths, density and the row-number switch keep COLUMN_STORAGE_KEY,
  * so those preferences survive a reset.
  */
-const COLUMN_LAYOUT_VERSION = 'd1d29903';
+const COLUMN_LAYOUT_VERSION = 'd5ba1671';
 
 /**
  * Which column the free-text box searches.
@@ -127,6 +130,40 @@ const SEARCH_FIELD_ICONS: Record<SearchField, string> = {
   customerName: 'user',
   requestNumber: 'file-lines',
 };
+
+/**
+ * Each scope's tint, the way the top bar's quick search tints its scope: only the SELECTED scope
+ * shows its hue (number blue, customer purple, request number amber — the top bar's own palette);
+ * every unselected chip is the same plain gray, and "all" selected stays the neutral gray.
+ * `chip` is a chip at rest, `chipActive` the scope in use (a stronger fill and a ring), `pill` the
+ * box's pill while that scope is selected. Whole class strings, because Tailwind
+ * scans source text and cannot see a built-up `bg-${hue}-100`.
+ */
+const NEUTRAL_CHIP = 'bg-gray-50 text-gray-600 hover:bg-gray-100';
+
+const SEARCH_FIELD_TONES: Record<SearchField, { chip: string; chipActive: string; pill: string }> =
+  {
+    all: {
+      chip: NEUTRAL_CHIP,
+      chipActive: 'bg-gray-200 text-gray-600 ring-1 ring-inset ring-gray-300',
+      pill: 'bg-gray-100 text-gray-500',
+    },
+    appraisalNumber: {
+      chip: NEUTRAL_CHIP,
+      chipActive: 'bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-300',
+      pill: 'bg-blue-100 text-blue-700',
+    },
+    customerName: {
+      chip: NEUTRAL_CHIP,
+      chipActive: 'bg-purple-100 text-purple-700 ring-1 ring-inset ring-purple-300',
+      pill: 'bg-purple-100 text-purple-700',
+    },
+    requestNumber: {
+      chip: NEUTRAL_CHIP,
+      chipActive: 'bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300',
+      pill: 'bg-amber-100 text-amber-800',
+    },
+  };
 
 /**
  * Filters drawn as a button even when unset — the ones reached for on most visits. The company
@@ -177,10 +214,16 @@ const isSearchField = (v: string | null): v is SearchField =>
  * newest-first, the opposite of what was saved. A direction with no field means CreatedAt in that
  * direction. Written once because two copies of this rule, in the URL reader and the saved-search
  * loader, would eventually disagree.
+ *
+ * The SLA column used to sort by `slaStatus` and now sorts by `slaDueDate`: a link or saved search
+ * holding the old field is read as the new one, so its header still shows as the active sort.
  */
 const restoreSort = (sortBy: string | null | undefined, sortDir: string | null | undefined) =>
   sortBy
-    ? { sortBy, sortDir: sortDir || 'desc' }
+    ? {
+        sortBy: sortBy.toLowerCase() === 'slastatus' ? 'slaDueDate' : sortBy,
+        sortDir: sortDir || 'desc',
+      }
     : sortDir
       ? { sortBy: 'CreatedAt', sortDir }
       : { sortBy: '', sortDir: 'desc' };
@@ -272,6 +315,17 @@ function AppraisalListPage() {
   );
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [suggestIndex, setSuggestIndex] = useState(-1);
+  // Whether the text box has the focus: the "/" hint is only shown while it does not.
+  const [boxFocused, setBoxFocused] = useState(false);
+  // Where the filter bar goes: beside the search as one line, or — when it cannot be one line
+  // there — on a full-width row below it. `filterNeed` is the width the bar takes on one line
+  // (reported by the bar), `room` what is left beside the search once the tools and the search's
+  // own width are taken out of the row.
+  const rowRef = useRef<HTMLDivElement>(null);
+  const toolsRef = useRef<HTMLDivElement>(null);
+  const [filterNeed, setFilterNeed] = useState(0);
+  const [rowRoom, setRowRoom] = useState<number | null>(null);
+  const [filtersOwnRow, setFiltersOwnRow] = useState(false);
   // Per user: recent terms are often customer names, and a branch PC is shared between officers.
   const currentUsername = useAuthStore(s => s.user?.username);
   // Re-read whenever the key changes: useLocalStorage reads once at mount, so a username that
@@ -580,6 +634,9 @@ function AppraisalListPage() {
         value: f,
         label: t(`list.searchFieldOptions.${f}`),
         icon: SEARCH_FIELD_ICONS[f],
+        chip: SEARCH_FIELD_TONES[f].chip,
+        chipActive: SEARCH_FIELD_TONES[f].chipActive,
+        pillClass: SEARCH_FIELD_TONES[f].pill,
       })),
     [t],
   );
@@ -674,6 +731,33 @@ function AppraisalListPage() {
     }
   };
 
+  // Room beside the search: the row less the tools, the two gaps and the search's MIN width
+  // (22rem). The search grows to fill whatever the chips leave, so measuring against its grown
+  // width would always push the filters below; against its minimum, they stay beside it whenever
+  // they fit with it at that. Observed, so a resized window or a tools cluster that gains a button
+  // moves the filters in the same frame.
+  useEffect(() => {
+    const row = rowRef.current;
+    const tools = toolsRef.current;
+    if (!row || !tools) return;
+    const read = () => {
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 14;
+      const gap = parseFloat(getComputedStyle(row).columnGap) || 0;
+      setRowRoom(
+        Math.floor(row.clientWidth - tools.getBoundingClientRect().width - gap * 2 - rem * 22),
+      );
+    };
+    read();
+    const ro = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(read);
+    ro?.observe(row);
+    ro?.observe(tools);
+    return () => ro?.disconnect();
+  }, []);
+  useEffect(() => {
+    if (rowRoom === null) return;
+    setFiltersOwnRow(was => needsOwnRow(filterNeed, rowRoom, was));
+  }, [filterNeed, rowRoom]);
+
   // ── Keyboard: "/" to search, j/k to walk the rows ──────────────────────────
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -682,11 +766,29 @@ function AppraisalListPage() {
       // filter panel or menu (portalled, so not under this page) — the keys belong to that control.
       const el = e.target as HTMLElement | null;
       const fromPage = !el || el === document.body || Boolean(tableRef.current?.contains(el));
-      if (!fromPage) return;
       if (e.key === '/') {
+        // From anywhere on the page except while typing (a text box, select or contenteditable)
+        // or inside a dialog, menu or popover panel: those own their keys. Unlike j/k it does not
+        // need the focus to be on the body or the table — a button just clicked is fine.
+        const typing = el?.closest(
+          'input, textarea, select, [contenteditable=""], [contenteditable="true"]',
+        );
+        const inOverlay = el?.closest(
+          '[role="dialog"], [role="menu"], [id^="headlessui-popover-panel"]',
+        );
+        // A dialog that is open owns the keyboard even when the focus is not inside it (the app's
+        // ConfirmDialog is a native <dialog> with no role and no focus trap, and it only exists
+        // while it is open). A closed <dialog> kept in the DOM (no `open`) does not count.
+        const modalOpen = document.querySelector(
+          'dialog[open], dialog.modal-open, [role="dialog"], [role="alertdialog"]',
+        );
+        if (typing || inOverlay || modalOpen) return;
         e.preventDefault();
         searchWrapRef.current?.querySelector('input')?.focus();
-      } else if (e.key === 'j' || e.key === 'k') {
+        return;
+      }
+      if (!fromPage) return;
+      if (e.key === 'j' || e.key === 'k') {
         const rows = Array.from(
           tableRef.current?.querySelectorAll<HTMLElement>('tbody tr[tabindex]') ?? [],
         );
@@ -755,27 +857,26 @@ function AppraisalListPage() {
 
   const [isExporting, setIsExporting] = useState(false);
 
+  // The export waiting for the user's answer on the truncation warning (null: no dialog).
+  const [pendingExport, setPendingExport] = useState<'xlsx' | 'csv' | null>(null);
+
   const handleExport = async (format: 'xlsx' | 'csv') => {
     // The server caps the file at MAX_EXPORT_ROWS in the current sort order and says nothing about
     // it. Downloading 10,000 of 105,475 rows without a word is the worst outcome: the file opens,
-    // looks complete, and is wrong.
-    if (
-      totalCount > MAX_EXPORT_ROWS &&
-      !window.confirm(
-        t('list.exportTruncatedWarning', {
-          total: totalCount.toLocaleString(),
-          max: MAX_EXPORT_ROWS.toLocaleString(),
-        }),
-      )
-    ) {
+    // looks complete, and is wrong. So past the cap it asks first (the dialog below runs it).
+    if (totalCount > MAX_EXPORT_ROWS) {
+      setPendingExport(format);
       return;
     }
+    await runExport(format);
+  };
 
+  const runExport = async (format: 'xlsx' | 'csv') => {
     setIsExporting(true);
     try {
       // searchParam, not `search:` — otherwise pinning the scope to "Appraisal no." showed three
       // rows on screen and exported every row matching the broad three-column OR. totalCount, which
-      // the truncation warning above is measured against, describes the on-screen set.
+      // the truncation warning is measured against, describes the on-screen set.
       await exportAppraisals(
         {
           ...searchParam,
@@ -924,7 +1025,10 @@ function AppraisalListPage() {
             Under lg there is no room beside the search, so the filters drop to their own line.
             pr-1 keeps the controls' count badge, which hangs outside the button, clear of the
             page's overflow-x-hidden edge. */}
-        <div className="flex items-start gap-2 pr-1 max-lg:flex-wrap">
+        <div
+          ref={rowRef}
+          className={`flex items-start gap-2 pr-1 ${filtersOwnRow ? 'flex-wrap' : 'max-lg:flex-wrap'}`}
+        >
           {/* The wrapper owns the suggestion panel: focus anywhere inside opens it, focus leaving
               closes it, and the text box's keys drive it (see handleSearchKeyDown). The listeners
               only catch events bubbling up from the input and the panel's buttons — the
@@ -933,11 +1037,16 @@ function AppraisalListPage() {
           <div
             ref={searchWrapRef}
             role="search"
-            className="relative flex min-w-[22rem] max-w-[28rem] flex-[1_1_24rem] max-lg:order-1 max-lg:min-w-[16rem] max-lg:max-w-none max-lg:flex-1"
+            className={`relative flex ${
+              filtersOwnRow
+                ? 'order-1 min-w-[16rem] max-w-none flex-1'
+                : 'min-w-[22rem] flex-1 max-lg:order-1 max-lg:min-w-[16rem]'
+            }`}
             // The text box only: the field picker's button (and its portalled menu, whose events
             // bubble here through React) would otherwise open the panel under its own menu.
             onFocus={e => {
               if (!(e.target instanceof HTMLInputElement)) return;
+              setBoxFocused(true);
               if (skipFocusOpen.current) {
                 skipFocusOpen.current = false;
                 return;
@@ -945,7 +1054,10 @@ function AppraisalListPage() {
               setSuggestOpen(true);
             }}
             onBlur={e => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) closeSuggest();
+              if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+                setBoxFocused(false);
+                closeSuggest();
+              }
             }}
             onKeyDown={handleSearchKeyDown}
             onPointerDownCapture={onSearchPointerDown}
@@ -956,6 +1068,14 @@ function AppraisalListPage() {
               options={searchFieldOptions}
               field={searchField}
               onFieldChange={v => setSearchField(isSearchField(v) ? v : 'all')}
+              // The pill opens the suggestion panel, whose chips switch the scope — the same as the top
+              // bar's quick search. Focus goes to the box so the user can keep typing.
+              fieldAriaLabel={t('list.suggest.scope')}
+              fieldExpanded={suggestOpen}
+              onFieldClick={() => {
+                searchWrapRef.current?.querySelector('input')?.focus();
+                setSuggestOpen(true);
+              }}
               value={searchTerm}
               onChange={v => {
                 setSearchTerm(v);
@@ -974,21 +1094,31 @@ function AppraisalListPage() {
               endAdornment={
                 isSearchPending ? (
                   <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
+                ) : searchTerm ? (
+                  <button
+                    onClick={() => {
+                      setSearchTerm('');
+                      setDebouncedSearch('');
+                    }}
+                    aria-label={t('common:actions.clear')}
+                    style={NO_OUTLINE}
+                    className={`rounded text-gray-400 hover:text-gray-600 ${
+                      searchPointer ? '' : KEYBOARD_RING_PLAIN
+                    }`}
+                  >
+                    <Icon style="solid" name="xmark" className="size-4" />
+                  </button>
                 ) : (
-                  searchTerm && (
-                    <button
-                      onClick={() => {
-                        setSearchTerm('');
-                        setDebouncedSearch('');
-                      }}
-                      aria-label={t('common:actions.clear')}
-                      style={NO_OUTLINE}
-                      className={`rounded text-gray-400 hover:text-gray-600 ${
-                        searchPointer ? '' : KEYBOARD_RING_PLAIN
-                      }`}
+                  // The key that jumps here, in the top bar's badge style; gone while typing
+                  // or focused (the top bar hides its ⌘K hint on focus too), so it never sits
+                  // under the clear button.
+                  !boxFocused && (
+                    <kbd
+                      aria-hidden="true"
+                      className="pointer-events-none rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-400"
                     >
-                      <Icon style="solid" name="xmark" className="size-4" />
-                    </button>
+                      /
+                    </kbd>
                   )
                 )
               }
@@ -1037,7 +1167,13 @@ function AppraisalListPage() {
           {/* Drawn like the column picker beside it — a square icon button, a count badge when it
               is doing something, a titled panel — so the two table controls read as one pair. */}
           <FilterChipBar
-            className="relative flex min-h-[2.5357rem] min-w-0 flex-[6_1_0] flex-wrap content-center items-center gap-2 max-lg:order-3 max-lg:basis-full"
+            className={`relative flex min-h-[2.5357rem] min-w-0 flex-wrap content-center items-center gap-2 ${
+              filtersOwnRow
+                ? 'order-3 basis-full'
+                : 'shrink grow-0 basis-auto max-lg:order-3 max-lg:basis-full'
+            }`}
+            onOneLineWidth={setFilterNeed}
+            availableWidth={filtersOwnRow ? undefined : (rowRoom ?? undefined)}
             filters={appraisalFilters}
             values={filters}
             onChange={handleFilterChange}
@@ -1048,7 +1184,8 @@ function AppraisalListPage() {
           {/* Both are 35.5px tall, like the search: a definite height is what lets their h-full
               buttons match it. */}
           <div
-            className="flex h-[2.5357rem] shrink-0 items-stretch gap-2 max-lg:order-2"
+            ref={toolsRef}
+            className={`flex h-[2.5357rem] shrink-0 items-stretch gap-2 ${filtersOwnRow ? 'order-2' : 'max-lg:order-2'}`}
             onPointerDownCapture={onToolsPointerDown}
           >
             <Menu as="div" className="relative h-full shrink-0">
@@ -1060,20 +1197,11 @@ function AppraisalListPage() {
                     : t('list.groupBy.label')
                 }
                 aria-label={t('list.groupBy.label')}
-                className={`relative flex h-full min-h-9 w-9 items-center justify-center rounded-lg border outline-none transition-all ${
+                className={`${neutralToolButtonClass(Boolean(groupBy))} ${
                   toolsPointer ? '' : KEYBOARD_RING
-                } ${
-                  groupBy
-                    ? 'border-violet-300 bg-violet-50 hover:bg-violet-100'
-                    : 'border-violet-200 bg-violet-50/50 hover:border-violet-300 hover:bg-violet-50'
                 }`}
               >
-                <Icon style="solid" name="layer-group" className="size-4 text-violet-500" />
-                {groupBy && (
-                  <span className="absolute -top-1.5 -right-1.5 inline-flex size-4 items-center justify-center rounded-full bg-violet-500 text-[10px] font-semibold leading-none text-white">
-                    1
-                  </span>
-                )}
+                <Icon style="solid" name="layer-group" className="size-4" />
               </MenuButton>
               <MenuItems
                 anchor="bottom end"
@@ -1098,7 +1226,7 @@ function AppraisalListPage() {
                             {field ? columnLabels[field] : t('list.groupBy.none')}
                           </span>
                           {on && (
-                            <Icon style="solid" name="check" className="size-3.5 text-violet-500" />
+                            <Icon style="solid" name="check" className="size-3.5 text-gray-600" />
                           )}
                         </button>
                       </MenuItem>
@@ -1109,6 +1237,8 @@ function AppraisalListPage() {
             </Menu>
             <ColumnVisibilityDropdown
               focusRing={toolsPointer ? 'none' : 'ring'}
+              neutralButton
+              checkboxes
               orderedColumns={orderedColumns}
               hidden={hidden}
               alwaysVisible={alwaysVisible}
@@ -1127,31 +1257,6 @@ function AppraisalListPage() {
                 if (!showRowNumber) toggleRowNumber();
                 setDensity('comfortable');
               }}
-              panelHeader={
-                <div className="border-b border-gray-100 px-3 py-2.5">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    {t('list.density.title')}
-                  </p>
-                  <div role="radiogroup" className="flex rounded-lg bg-gray-100 p-0.5">
-                    {(['comfortable', 'compact'] as const).map(d => (
-                      <button
-                        key={d}
-                        type="button"
-                        role="radio"
-                        aria-checked={density === d}
-                        onClick={() => setDensity(d)}
-                        className={`flex-1 rounded-md py-1 text-sm transition-colors ${
-                          density === d
-                            ? 'bg-white font-medium text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        {t(`list.density.${d}`)}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              }
               extraToggles={[
                 {
                   key: 'rowNumber',
@@ -1161,6 +1266,26 @@ function AppraisalListPage() {
                 },
               ]}
             />
+            {/* Row density, beside the other two tools: it is a switch, not a setting buried in the
+                columns panel. Pressed = compact, one line per row. */}
+            <button
+              type="button"
+              aria-pressed={density === 'compact'}
+              // A toggle keeps one name and says its state with aria-pressed: pressed is compact.
+              aria-label={t('list.density.compact')}
+              title={`${t('list.density.title')}: ${t(`list.density.${density}`)}`}
+              onClick={() => setDensity(density === 'compact' ? 'comfortable' : 'compact')}
+              style={NO_OUTLINE}
+              className={`${neutralToolButtonClass(density === 'compact')} ${
+                toolsPointer ? '' : KEYBOARD_RING_PLAIN
+              }`}
+            >
+              <Icon
+                style="solid"
+                name={density === 'compact' ? 'grip-lines' : 'bars'}
+                className="size-4"
+              />
+            </button>
           </div>
         </div>
         {/* Kept mounted (sr-only) while the panel shows the same message, so aria-describedby
@@ -1291,6 +1416,23 @@ function AppraisalListPage() {
       <ActivityTrackingSlideOver
         appraisalId={selectedAppraisalId}
         onClose={() => setSelectedAppraisalId(null)}
+      />
+      <ConfirmDialog
+        isOpen={pendingExport !== null}
+        onClose={() => setPendingExport(null)}
+        onConfirm={() => {
+          const format = pendingExport;
+          setPendingExport(null);
+          if (format) void runExport(format);
+        }}
+        title={t('list.exportTruncatedTitle')}
+        message={t('list.exportTruncatedWarning', {
+          total: totalCount.toLocaleString(),
+          max: MAX_EXPORT_ROWS.toLocaleString(),
+        })}
+        confirmText={t('common:actions.confirm')}
+        cancelText={t('common:actions.cancel')}
+        variant="warning"
       />
     </div>
   );

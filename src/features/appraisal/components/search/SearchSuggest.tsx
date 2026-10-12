@@ -10,6 +10,12 @@ export interface SuggestFieldOption {
   value: string;
   label: string;
   icon: string;
+  /**
+   * The scope's own tint, as whole class strings (Tailwind scans source text): `chip` at rest,
+   * `chipActive` while it is the scope in use. Left out, the chip is the neutral gray one.
+   */
+  chip?: string;
+  chipActive?: string;
 }
 
 interface SearchSuggestProps {
@@ -235,8 +241,8 @@ function SearchSuggest({
                 onClick={() => onChangeField(f.value)}
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
                   active
-                    ? 'bg-gray-200 text-gray-500 ring-1 ring-inset ring-gray-200'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
+                    ? (f.chipActive ?? 'bg-gray-200 text-gray-500 ring-1 ring-inset ring-gray-200')
+                    : (f.chip ?? 'bg-gray-50 text-gray-600 hover:bg-gray-100')
                 } ${pointerMode ? '' : KEYBOARD_RING_PLAIN}`}
               >
                 <Icon style="solid" name={f.icon} className="size-3.5" />

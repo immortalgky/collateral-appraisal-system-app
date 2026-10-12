@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
@@ -14,7 +14,12 @@ import {
   usePropertyTypeLabels,
 } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
-import { ColumnResizeHandle } from '@/shared/components/columnLayout';
+import {
+  ColumnResizeHandle,
+  fillColumnWidths,
+  storedWidthForShown,
+} from '@/shared/components/columnLayout';
+import { usePointerMode } from '@/shared/hooks/usePointerMode';
 import type { ColumnTableLayout } from '@/shared/components/columnLayout';
 
 /**
@@ -85,7 +90,12 @@ function AppraisalResultsTable({
   pinnedColumn,
 }: AppraisalResultsTableProps) {
   const compact = density === 'compact';
-  const cellPad = compact ? 'px-3 py-1.5' : 'px-3 py-2.5';
+  // A row gets the focus back when its drawer closes; that is a keyboard ring only after the
+  // keyboard (Tab, or j/k and Enter on the rows), never after the mouse that opened it.
+  const { pointerMode, onPointerDownCapture } = usePointerMode(['Tab', 'j', 'k', 'Enter', ' ']);
+  // Comfortable rows have a second line, so they are kept to about 50px by the padding alone: the
+  // line height cannot come down, Thai tone marks need the full 1.5 (see DESIGN.md section 4).
+  const cellPad = 'px-3 py-1.5';
   const { t } = useTranslation('appraisal');
   const internalTableRef = useRef<HTMLTableElement>(null);
   const tableRef = layout?.tableRef ?? internalTableRef;
@@ -124,6 +134,63 @@ function AppraisalResultsTable({
         : undefined,
     [layout, columns, showRowNumber],
   );
+
+  // The width of the scroll container, so a table with few columns can reach its edge. A callback
+  // ref in state (not a ref object): the container is swapped between the rows and the empty state,
+  // and the observer has to follow whichever one is mounted.
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    if (!container) return;
+    const read = () => setContainerWidth(container.clientWidth);
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [container]);
+
+  // When the columns do not reach the container, every column grows by its share of the gap (the
+  // user's widths are the minimum); when they pass it, null — and the container scrolls sideways.
+  const filled = useMemo(
+    () =>
+      layout
+        ? fillColumnWidths(
+            columns.map(c => c.key),
+            layout.widths,
+            containerWidth,
+            showRowNumber ? ROW_NUMBER_WIDTH : 0,
+          )
+        : null,
+    [layout, columns, containerWidth, showRowNumber],
+  );
+  const widthOf = (key: string) => filled?.[key] ?? layout?.widths[key];
+  // Auto-fit reads the widest cell's scrollWidth, which for a cell the fill has stretched is the
+  // stretched width, not its content. So it measures with the columns at their stored widths (the
+  // table as it is without the fill) and puts the stretched ones back before anything is painted.
+  const measureAtStoredWidths = (measure: () => number | null) => (): number | null => {
+    const table = tableRef.current;
+    if (!layout || !filled || !table) return measure();
+    const cols = Array.from(table.querySelectorAll('col'));
+    const saved = cols.map(c => c.style.width);
+    const savedTable = table.style.width;
+    const stored = [
+      ...(showRowNumber ? [ROW_NUMBER_WIDTH] : []),
+      ...columns.map(c => layout.widths[c.key]),
+    ];
+    cols.forEach((c, i) => {
+      c.style.width = `${stored[i] ?? 0}px`;
+    });
+    table.style.width = `${totalWidth ?? 0}px`;
+    try {
+      return measure();
+    } finally {
+      cols.forEach((c, i) => {
+        c.style.width = saved[i];
+      });
+      table.style.width = savedTable;
+    }
+  };
+  const tableWidth = totalWidth === undefined ? undefined : Math.max(totalWidth, containerWidth);
 
   const bankingSegments = useParametersByGroup('BankingSegment');
   const segmentCodeToLabel = useMemo(
@@ -197,7 +264,7 @@ function AppraisalResultsTable({
   };
 
   const subLine = (text: string | null | undefined) =>
-    !compact && text ? <div className="truncate text-xs text-gray-400 mt-0.5">{text}</div> : null;
+    !compact && text ? <div className="truncate text-xs text-gray-400">{text}</div> : null;
 
   const slaCell = (item: AppraisalDto) => {
     const closed = isClosed(item);
@@ -256,16 +323,22 @@ function AppraisalResultsTable({
     const who = company ?? item.assigneeUserId;
     if (!who) {
       return (
-        <span className="inline-flex items-center gap-1.5 text-gray-400">
-          <Icon style="regular" name="user" className="size-3 shrink-0" />
-          {t('list.unassigned')}
+        // A dash, not a word and an icon: most rows of a new list have nobody yet, and "not
+        // assigned" repeated down the column was noise. The words stay for screen readers.
+        <span
+          role="img"
+          aria-label={t('list.unassigned')}
+          title={t('list.unassigned')}
+          className="text-gray-400"
+        >
+          —
         </span>
       );
     }
     if (company) {
       return (
         <span className="inline-flex max-w-full items-center gap-1.5">
-          <Icon style="solid" name="building" className="size-3 shrink-0 text-indigo-400" />
+          <Icon style="solid" name="building" className="size-3 shrink-0 text-gray-400" />
           <span className="truncate">{company}</span>
         </span>
       );
@@ -305,7 +378,7 @@ function AppraisalResultsTable({
         <colgroup>
           {showRowNumber && <col style={{ width: ROW_NUMBER_WIDTH }} />}
           {columns.map(col => (
-            <col key={col.key} style={{ width: layout.widths[col.key] }} />
+            <col key={col.key} style={{ width: widthOf(col.key) }} />
           ))}
         </colgroup>
       )}
@@ -322,6 +395,7 @@ function AppraisalResultsTable({
           {columns.map((col, colIndex) => {
             // Case-insensitive: a saved search or old link can carry `CreatedAt`, the API's own spelling.
             const isOn = (key: string) => sortBy.toLowerCase() === key.toLowerCase();
+            const sortField = col.sortKey ?? col.key;
             const sortIcon = (key: string) =>
               isOn(key) ? (
                 <Icon
@@ -336,9 +410,9 @@ function AppraisalResultsTable({
             return (
               <th
                 key={col.key}
-                onClick={() => single && onSort(col.key)}
+                onClick={() => single && onSort(sortField)}
                 aria-sort={
-                  (single ? isOn(col.key) : col.headSorts?.some(h => isOn(h.key)))
+                  (single ? isOn(sortField) : col.headSorts?.some(h => isOn(h.key)))
                     ? sortDir === 'asc'
                       ? 'ascending'
                       : 'descending'
@@ -348,7 +422,7 @@ function AppraisalResultsTable({
                   layout ? 'relative overflow-hidden text-ellipsis' : ''
                 } ${
                   single
-                    ? `cursor-pointer select-none ${isOn(col.key) ? 'text-primary' : 'text-gray-600 hover:text-primary'}`
+                    ? `cursor-pointer select-none ${isOn(sortField) ? 'text-primary' : 'text-gray-600 hover:text-primary'}`
                     : 'text-gray-600'
                 } ${pinned && colIndex === 0 ? `${pinHead} ${pinEdge}` : ''}`}
                 style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
@@ -377,14 +451,33 @@ function AppraisalResultsTable({
                     {col.label}
                     {/* Same indicator as the task tables: a faint double arrow marks a column as
                         sortable at all, and only the one in use turns solid. */}
-                    {col.sortable && sortIcon(col.key)}
+                    {col.sortable && sortIcon(sortField)}
                   </span>
                 )}
                 {layout && (
                   <ColumnResizeHandle
-                    width={layout.widths[col.key]}
-                    onResize={px => layout.setWidth(col.key, px)}
-                    getAutoFitWidth={layout.getAutoFitWidth(col.key, colIndex)}
+                    width={widthOf(col.key) ?? layout.widths[col.key]}
+                    // A drag target is a width ON SCREEN; the stored one is a minimum that the fill
+                    // scales up. Stored as-is it would render wider than the cursor — and the narrower
+                    // the user pulls, the further it would overshoot.
+                    onResize={px =>
+                      layout.setWidth(
+                        col.key,
+                        storedWidthForShown(
+                          columns.map(c => c.key),
+                          layout.widths,
+                          col.key,
+                          px,
+                          containerWidth,
+                          showRowNumber ? ROW_NUMBER_WIDTH : 0,
+                        ),
+                      )
+                    }
+                    // What auto-fit measures is content, so it is stored as it is.
+                    onAutoFit={px => layout.setWidth(col.key, px)}
+                    getAutoFitWidth={measureAtStoredWidths(
+                      layout.getAutoFitWidth(col.key, colIndex),
+                    )}
                   />
                 )}
               </th>
@@ -408,11 +501,11 @@ function AppraisalResultsTable({
         {/* Header only, at the widths the user set: squeezing the columns to fit turned every
             label into an ellipsis. Overflow is CLIPPED rather than scrollable — with no rows under
             it there is nothing to scroll to, and a scrollbar under an empty table is just noise. */}
-        <div className="w-full shrink-0 overflow-hidden">
+        <div ref={setContainer} className="w-full shrink-0 overflow-hidden">
           <table
             ref={tableRef}
             className={`table table-sm text-table ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
-            style={layout ? { width: totalWidth } : undefined}
+            style={layout ? { width: tableWidth } : undefined}
           >
             {tableHead}
           </table>
@@ -432,6 +525,8 @@ function AppraisalResultsTable({
 
   return (
     <div
+      ref={setContainer}
+      onPointerDownCapture={onPointerDownCapture}
       className={`w-full flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-auto transition-opacity ${
         isStale ? 'opacity-60 pointer-events-none' : ''
       }`}
@@ -449,7 +544,7 @@ function AppraisalResultsTable({
       <table
         ref={tableRef}
         className={`table table-sm text-table ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
-        style={layout ? { width: totalWidth } : undefined}
+        style={layout ? { width: tableWidth } : undefined}
       >
         {tableHead}
         <tbody className="divide-y divide-gray-100">
@@ -478,7 +573,14 @@ function AppraisalResultsTable({
                     if (!isAnyLoading && (e.key === 'Enter' || e.key === ' ')) onRowClick(item);
                   }}
                   tabIndex={0}
-                  className={`group transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
+                  // The global :focus-visible outline can only be switched off inline; the ring is inset
+                  // so it stays inside the row, clear of the pinned column's shadow.
+                  style={{ outline: 'none' }}
+                  className={`group transition-colors ${
+                    pointerMode
+                      ? ''
+                      : 'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
+                  } ${
                     isLoadingRow
                       ? 'bg-primary-50 cursor-wait'
                       : isAnyLoading
@@ -522,7 +624,14 @@ function AppraisalResultsTable({
                         // `children` wins over that map, so the translated text is passed in here
                         // rather than by changing Badge — which 31 other files render.
                         // The colour still keys off the raw `value`.
-                        <Badge type="status" value={item.status} size="sm">
+                        // Cancelled is red here (Badge's own status map has it grey, for every other
+                        // screen), so a dead job stands out from the live ones.
+                        <Badge
+                          type="status"
+                          value={item.status}
+                          tone={item.status === 'Cancelled' ? 'red' : undefined}
+                          size="sm"
+                        >
                           {t(`list.status.${item.status}`, { defaultValue: item.status })}
                         </Badge>
                       ) : col.key === 'priority' ? (
@@ -575,6 +684,18 @@ function AppraisalResultsTable({
                               />
                             )}
                             {item.appraisalNumber || '-'}
+                            {item.priority === 'High' && (
+                              // Only High is marked (Normal is most rows). The Priority column is
+                              // off by default, so this flag is how a high-priority job shows.
+                              <span
+                                role="img"
+                                title={t('list.priorityHigh')}
+                                aria-label={t('list.priorityHigh')}
+                                className="inline-flex shrink-0 text-red-600"
+                              >
+                                <Icon style="solid" name="flag" className="size-3" />
+                              </span>
+                            )}
                           </span>
                           <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
                             <span

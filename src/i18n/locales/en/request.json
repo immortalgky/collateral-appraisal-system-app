@@ -188,7 +188,7 @@
     "prevAppraisalDate": "Previous Appraisal Date",
     "inspectionNumber": "Inspection No.",
     "channel": "Channel",
-    "bankingSegment": "Business Group",
+    "bankingSegment": "Banking Segment",
     "loanApplicationNo": "Loan Application No",
     "facilityLimit": "Apply/Limit Amount",
     "additionalFacilityLimit": "Increase Limit Amount",
@@ -727,7 +727,7 @@
     "matches": "Same as the original title"
   },
   "validation": {
-    "bankingSegmentRequired": "Business group is required.",
+    "bankingSegmentRequired": "Banking segment is required.",
     "facilityLimitRequired": "Facility limit must be greater than 0.",
     "sellingPriceRequired": "Selling price must be greater than 0.",
     "houseNumberRequired": "House number is required.",

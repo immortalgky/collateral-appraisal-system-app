@@ -51,10 +51,33 @@ describe('makeAppraisalColumns', () => {
 
   it('only sorts on fields the API accepts', () => {
     const keys = columns.flatMap(c =>
-      c.headSorts ? c.headSorts.map(h => h.key) : c.sortable ? [c.key] : [],
+      c.headSorts ? c.headSorts.map(h => h.key) : c.sortable ? [c.sortKey ?? c.key] : [],
     );
     expect(keys.length).toBeGreaterThan(0);
     for (const k of keys) expect(BE_SORT_FIELDS.has(k.toLowerCase()), k).toBe(true);
+  });
+
+  it('sorts the SLA column by its due date, not by the status name', () => {
+    const sla = columns.find(c => c.key === 'slaStatus');
+    expect(sla?.sortKey).toBe('slaDueDate');
+    // the sort cycle works on that key: ascending first (nearest due date first), then descending
+    expect(nextAppraisalSort('', 'desc', 'slaDueDate')).toEqual({
+      sortBy: 'slaDueDate',
+      sortDir: 'asc',
+    });
+    expect(nextAppraisalSort('slaDueDate', 'asc', 'slaDueDate')).toEqual({
+      sortBy: 'slaDueDate',
+      sortDir: 'desc',
+    });
+    expect(nextAppraisalSort('slaDueDate', 'desc', 'slaDueDate')).toEqual({
+      sortBy: '',
+      sortDir: 'desc',
+    });
+  });
+
+  it('starts with the priority column hidden, still offered in the picker', () => {
+    expect(APPRAISAL_DEFAULT_HIDDEN_COLUMNS).toContain('priority');
+    expect(columns.some(c => c.key === 'priority')).toBe(true);
   });
 
   it('lists the visible columns in the default order, with the hidden ones after them', () => {
@@ -73,7 +96,8 @@ describe('makeAppraisalColumns', () => {
       'bankingSegment',
       'createdAt',
     ]);
-    expect(keys.slice(12)).toEqual([...APPRAISAL_DEFAULT_HIDDEN_COLUMNS]);
+    // priority keeps its place (it lands after SLA when turned on); the rest of the hidden ones trail
+    expect(keys.slice(12)).toEqual(APPRAISAL_DEFAULT_HIDDEN_COLUMNS.filter(k => k !== 'priority'));
   });
 
   it('can show the default sort on one of its columns', () => {

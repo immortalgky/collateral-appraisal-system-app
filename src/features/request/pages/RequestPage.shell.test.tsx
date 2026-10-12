@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
+import i18n from '@/i18n';
 import { Route, Routes } from 'react-router-dom';
 import { delay, http, HttpResponse } from 'msw';
 import { server } from '@/test/mocks/server';
 import { mockRequestPageApi } from '@/test/mocks/requestPage';
-import { render, screen, waitFor } from '@/test/test-utils';
+import { render, screen, waitFor, within } from '@/test/test-utils';
 import RequestPage from './RequestPage';
 
 // The page tests run in a memory router, which has no blocker to register
@@ -95,6 +96,42 @@ describe('RequestPage shell', () => {
     expect(document.querySelector('[data-field="properties.0.propertyType"]')).not.toBeNull();
     await new Promise(resolve => setTimeout(resolve, 400));
     expect(screen.queryByText('Unsaved changes')).toBeNull();
+  });
+
+  it('words the delete-confirm cancel button through i18n, like the other dialogs', async () => {
+    server.use(
+      http.get('*/api/requests/draft-2', () =>
+        HttpResponse.json({
+          id: 'draft-2',
+          requestNumber: null,
+          status: 'Draft',
+          requestedAt: null,
+          purpose: '03',
+          customers: [],
+          properties: [],
+          titles: [],
+          documents: [],
+        }),
+      ),
+    );
+    // The English text equals ConfirmDialog's own default ("Cancel"), so the shared key is given
+    // a marker: only a dialog that really passes common:actions.cancel shows it.
+    const original = i18n.t('common:actions.cancel');
+    i18n.addResource('en', 'common', 'actions.cancel', 'CANCEL-FROM-I18N');
+    try {
+      const { user } = render(
+        <Routes>
+          <Route path="/requests/:requestId" element={<RequestPage />} />
+        </Routes>,
+        { initialEntries: ['/requests/draft-2'] },
+      );
+      await user.click(await screen.findByRole('button', { name: 'Copy / delete' }));
+      await user.click(await screen.findByRole('menuitem', { name: /Delete request/ }));
+      const dialog = (await screen.findByText('Delete Request')).closest('dialog') as HTMLElement;
+      expect(within(dialog).getByText('CANCEL-FROM-I18N')).toBeInTheDocument();
+    } finally {
+      i18n.addResource('en', 'common', 'actions.cancel', original);
+    }
   });
 
   it('keeps the skeleton, not the empty form, up for the whole of a slow load', async () => {

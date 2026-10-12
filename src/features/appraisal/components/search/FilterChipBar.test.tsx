@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import i18n from '@/i18n';
 import { fireEvent } from '@testing-library/react';
 import { render, screen, waitFor, within } from '@/test/test-utils';
@@ -575,5 +575,48 @@ describe('FilterChipBar overflow', () => {
     // the earlier chip it had pushed out is back on the line
     expect(screen.getByRole('button', { name: /^Job type/ }).closest('.invisible')).toBeNull();
     expect(moreButton()).toHaveTextContent('More +3');
+  });
+});
+
+describe('FilterChipBar one-line width', () => {
+  const origW = Object.getOwnPropertyDescriptor(HTMLElement.prototype, 'offsetWidth');
+  afterEach(() => {
+    if (origW) Object.defineProperty(HTMLElement.prototype, 'offsetWidth', origW);
+  });
+
+  const renderBar = (initial: Record<string, string>, onOneLineWidth = vi.fn()) => {
+    Object.defineProperty(HTMLElement.prototype, 'offsetWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        const text = this.textContent ?? '';
+        if (text.includes(L('filters.add'))) return 120; // the tail
+        if (text.startsWith('More +')) return 60;
+        return 100;
+      },
+    });
+    const utils = render(
+      <FilterChipBar
+        filters={wide}
+        values={initial}
+        pinned={['status', 'slaStatus']}
+        onChange={vi.fn()}
+        onRemove={vi.fn()}
+        onClear={vi.fn()}
+        onOneLineWidth={onOneLineWidth}
+      />,
+    );
+    return { onOneLineWidth, ...utils };
+  };
+
+  it('reports the pinned chips plus the tail when nothing is added', () => {
+    const { onOneLineWidth } = renderBar({});
+    // two pinned 100 + the tail 120 (the gap is 0 without layout)
+    expect(onOneLineWidth).toHaveBeenLastCalledWith(320);
+  });
+
+  it('adds the overflow chip (and its slack) once there are added chips', () => {
+    const { onOneLineWidth } = renderBar({ appraisalType: 'New' });
+    // 2 pinned + the overflow chip 60 + 10 slack + the tail
+    expect(onOneLineWidth).toHaveBeenLastCalledWith(390);
   });
 });

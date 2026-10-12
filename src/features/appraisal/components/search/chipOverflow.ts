@@ -89,3 +89,23 @@ export function pickVisible({
   }
   return visible;
 }
+
+/**
+ * Whether the filter bar should leave the row beside the search box for a full-width row of its
+ * own: `need` is the width the bar takes on ONE line (pinned chips, the overflow chip and the
+ * tail), `room` the width left beside the search. Beside, the bar is one line or not at all — it
+ * never wraps next to the search into a second line squeezed under the first.
+ *
+ * Going back beside needs `hysteresis` more room than leaving it did, so a window resized right to
+ * the edge does not flip the layout back and forth. A bar not yet measured (`need` of 0 or less)
+ * keeps the current layout; a `room` of nothing or less is a bar that cannot fit.
+ */
+export function needsOwnRow(
+  need: number,
+  room: number,
+  wasOwnRow: boolean,
+  hysteresis = 24,
+): boolean {
+  if (need <= 0) return wasOwnRow;
+  return wasOwnRow ? need + hysteresis > room : need > room;
+}

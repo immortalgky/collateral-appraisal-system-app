@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { lineCount, pickVisible } from './chipOverflow';
+import { lineCount, needsOwnRow, pickVisible } from './chipOverflow';
 
 const base = { pinned: [] as number[], forced: -1, overflowWidth: 80, tailWidth: 150, gap: 8 };
 
@@ -153,5 +153,34 @@ describe('pickVisible, safety at the edge of the baseline', () => {
         safety: 1,
       }),
     ).toEqual([true, false]);
+  });
+});
+
+describe('needsOwnRow', () => {
+  it('stays beside the search while the one-line width fits in the room', () => {
+    expect(needsOwnRow(600, 700, false)).toBe(false);
+    expect(needsOwnRow(700, 700, false)).toBe(false);
+  });
+
+  it('moves below the search as soon as it does not fit on one line', () => {
+    expect(needsOwnRow(701, 700, false)).toBe(true);
+  });
+
+  it('goes back beside only with the hysteresis to spare, so the edge does not flicker', () => {
+    // 690 fits 700 on its own, but not with the 24px margin once it has left
+    expect(needsOwnRow(690, 700, true)).toBe(true);
+    expect(needsOwnRow(676, 700, true)).toBe(false);
+    // the same widths, coming from beside: no change at all
+    expect(needsOwnRow(690, 700, false)).toBe(false);
+  });
+
+  it('keeps the current layout until the bar is measured', () => {
+    expect(needsOwnRow(0, 700, true)).toBe(true);
+    expect(needsOwnRow(0, 700, false)).toBe(false);
+  });
+
+  it('puts a bar below when there is no room at all beside the search', () => {
+    expect(needsOwnRow(600, 0, false)).toBe(true);
+    expect(needsOwnRow(600, -120, false)).toBe(true);
   });
 });

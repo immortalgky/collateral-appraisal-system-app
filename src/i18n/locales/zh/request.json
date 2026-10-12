@@ -188,7 +188,7 @@
     "prevAppraisalDate": "上次评估日期",
     "inspectionNumber": "检验次数",
     "channel": "渠道",
-    "bankingSegment": "业务组",
+    "bankingSegment": "银行业务分部",
     "loanApplicationNo": "贷款申请编号",
     "facilityLimit": "申请/限额",
     "additionalFacilityLimit": "增加限额",
@@ -727,7 +727,7 @@
     "matches": "与原产权相同"
   },
   "validation": {
-    "bankingSegmentRequired": "业务组为必填项。",
+    "bankingSegmentRequired": "银行业务分部为必填项。",
     "facilityLimitRequired": "授信额度必须大于0。",
     "houseNumberRequired": "门牌号为必填项。",
     "subDistrictRequired": "区/分区为必填项。",
