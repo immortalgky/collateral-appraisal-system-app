@@ -21,7 +21,7 @@ type BadgeStyle = 'soft' | 'solid' | 'outline' | 'minimal' | 'ghost' | 'tag';
  * redesign's dot chips: teal = method/link/reference/building, green =
  * calculated/land, yellow = pending/manual-edit/warning/machinery, gray = method
  * code/count/info). Takes precedence over `type`+`value` when supplied. */
-export type BadgeTone = 'teal' | 'green' | 'yellow' | 'gray';
+export type BadgeTone = 'teal' | 'green' | 'yellow' | 'gray' | 'red';
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   children?: ReactNode;
@@ -124,6 +124,7 @@ const toneColorMap: Record<BadgeTone, keyof typeof colorTokens> = {
   green: 'green',
   yellow: 'amber',
   gray: 'gray',
+  red: 'red',
 };
 
 type ColorKey = keyof typeof colorTokens;

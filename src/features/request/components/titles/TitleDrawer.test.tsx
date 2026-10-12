@@ -104,6 +104,16 @@ beforeEach(() => {
   scrollToField.mockClear();
 });
 
+describe('TitleDrawer focus container', () => {
+  it('switches the global outline off inline on its tabindex -1 dialog, which takes the focus', () => {
+    render(<Harness />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('tabindex', '-1');
+    // the `outline-none` class loses to the unlayered :focus-visible rule; only inline wins
+    expect(dialog.style.outlineStyle).toBe('none');
+  });
+});
+
 describe('TitleDrawer header', () => {
   it('names the title by its type and number, and says where it is in the list', () => {
     render(<Harness />);

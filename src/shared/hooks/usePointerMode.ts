@@ -8,17 +8,20 @@ import { useCallback, useEffect, useState } from 'react';
  * been typed (a search box, an Esc) it stays "keyboard", so the focus handed back to a trigger when
  * its popover — opened with the mouse — closes would still draw the ring. This turns the ring off
  * from a pointer press inside the group (spread `onPointerDownCapture` on its root) until the next
- * Tab anywhere on the page.
+ * Tab anywhere on the page. A group that is also walked with other keys (a table's rows, with
+ * j/k and the arrows) passes them as `resetKeys` too.
  */
-export function usePointerMode() {
+export function usePointerMode(resetKeys: readonly string[] = ['Tab']) {
   const [pointerMode, setPointerMode] = useState(false);
+  const keys = resetKeys.join('|');
   useEffect(() => {
+    const list = keys.split('|');
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') setPointerMode(false);
+      if (list.includes(e.key)) setPointerMode(false);
     };
     document.addEventListener('keydown', onKey, true);
     return () => document.removeEventListener('keydown', onKey, true);
-  }, []);
+  }, [keys]);
   const onPointerDownCapture = useCallback(() => setPointerMode(true), []);
   return { pointerMode, onPointerDownCapture };
 }

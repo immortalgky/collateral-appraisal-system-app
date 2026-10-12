@@ -179,7 +179,7 @@
     "prevAppraisalDate": "วันที่ประเมินเดิม",
     "inspectionNumber": "ครั้งที่",
     "channel": "ช่องทาง",
-    "bankingSegment": "กลุ่มธุรกิจ",
+    "bankingSegment": "กลุ่มลูกค้า",
     "loanApplicationNo": "เลขที่คำขอสินเชื่อ",
     "facilityLimit": "วงเงินสินเชื่อ",
     "additionalFacilityLimit": "วงเงินเพิ่มเติม",
@@ -727,7 +727,7 @@
     "matches": "ตรงกับโฉนดเดิม"
   },
   "validation": {
-    "bankingSegmentRequired": "กรุณาระบุกลุ่มธุรกิจ",
+    "bankingSegmentRequired": "กรุณาระบุกลุ่มลูกค้า",
     "facilityLimitRequired": "วงเงินสินเชื่อต้องมากกว่า 0",
     "sellingPriceRequired": "ราคาซื้อขายต้องมากกว่า 0",
     "houseNumberRequired": "กรุณาระบุบ้านเลขที่",

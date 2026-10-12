@@ -6,6 +6,12 @@ interface ColumnResizeHandleProps {
   minWidth?: number;
   maxWidth?: number;
   onResize: (px: number) => void;
+  /**
+   * What a double-click auto-fit stores, when that differs from what a drag stores (the table's
+   * widths are minimums its fill scales up, so a drag target on screen is converted before it is
+   * stored, and the content width measured by an auto-fit is not). Defaults to `onResize`.
+   */
+  onAutoFit?: (px: number) => void;
   getAutoFitWidth: () => number | null;
 }
 
@@ -14,6 +20,7 @@ export function ColumnResizeHandle({
   minWidth = MIN_COLUMN_WIDTH,
   maxWidth = MAX_AUTOFIT_WIDTH,
   onResize,
+  onAutoFit,
   getAutoFitWidth,
 }: ColumnResizeHandleProps) {
   const startXRef = useRef<number>(0);
@@ -70,10 +77,10 @@ export function ColumnResizeHandle({
       e.stopPropagation();
       const autoFit = getAutoFitWidth();
       if (autoFit !== null) {
-        onResize(clampTo(autoFit, maxWidth));
+        (onAutoFit ?? onResize)(clampTo(autoFit, maxWidth));
       }
     },
-    [getAutoFitWidth, onResize, clampTo, maxWidth],
+    [getAutoFitWidth, onResize, onAutoFit, clampTo, maxWidth],
   );
 
   return (

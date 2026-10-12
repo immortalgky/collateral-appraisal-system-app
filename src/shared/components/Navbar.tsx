@@ -13,6 +13,7 @@ import DensityPicker from '@shared/components/DensityPicker';
 import FormLayoutPicker from '@shared/components/FormLayoutPicker';
 import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
+import { quickSearchHint } from '@shared/utils/platform';
 import SearchResults from '@shared/components/search/SearchResults';
 import type { SearchScope } from '@shared/types/search';
 import NotificationDropdown from '@features/notification/components/NotificationDropdown';
@@ -201,11 +202,11 @@ export default function Navbar({
                   style={{ outline: 'none', boxShadow: 'none' }}
                 />
 
-                {/* Cmd+K hint */}
+                {/* Cmd+K on a Mac, Ctrl K elsewhere */}
                 {!search.isFocused && (
                   <div className="hidden sm:flex items-center gap-1 mr-3 pointer-events-none">
-                    <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-base-300 rounded border border-gray-200 dark:border-base-300">
-                      ⌘K
+                    <kbd className="whitespace-nowrap px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-base-300 rounded border border-gray-200 dark:border-base-300">
+                      {quickSearchHint()}
                     </kbd>
                   </div>
                 )}

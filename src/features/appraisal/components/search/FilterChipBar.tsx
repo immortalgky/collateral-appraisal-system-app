@@ -49,6 +49,19 @@ interface FilterChipBarProps {
    * folded into the overflow chip instead of making it any taller.
    */
   className?: string;
+  /**
+   * Told the width the bar takes on one line — the pinned chips, the overflow chip (when there are
+   * added chips) and the tail, which are what it always shows — so the page can move the whole bar
+   * to a row of its own when that does not fit beside the search. Not told while a panel is open:
+   * the layout is frozen then, and a filter being edited must not move the bar under the cursor.
+   */
+  onOneLineWidth?: (px: number) => void;
+  /**
+   * The width the bar may use, when that is not the width of its own box: a bar that takes only
+   * the room its chips need (the page's, beside the search box) would otherwise measure itself
+   * against its own content and fold chips that had room. Omitted, the box's width is used.
+   */
+  availableWidth?: number;
 }
 
 const PANEL_CLASS =
@@ -342,6 +355,8 @@ function FilterChipBar({
   onClear,
   pinned = [],
   className = 'relative flex min-w-0 flex-wrap items-center gap-2',
+  onOneLineWidth,
+  availableWidth,
 }: FilterChipBarProps) {
   const { t } = useTranslation(['appraisal', 'common']);
   // The field just picked in the "add filter" menu. It is drawn as a chip of its own (empty, like
@@ -421,15 +436,22 @@ function FilterChipBar({
     const widthOf = (el: Element | null | undefined) =>
       el ? el.getBoundingClientRect().width || (el as HTMLElement).offsetWidth : 0;
     const chipWidth = (k: string) => widthOf(chipEls.current.get(k));
+    const gap = parseFloat(getComputedStyle(root).columnGap) || 0;
+    if (onOneLineWidth && !frozen.current) {
+      const items = pinnedIds.map(chipWidth);
+      if (keys.length > 0) items.push(widthOf(overflowEl.current) + OVERFLOW_SLACK);
+      items.push(widthOf(tailEl.current));
+      onOneLineWidth(Math.ceil(items.reduce((a, b) => a + b, 0) + gap * (items.length - 1)));
+    }
     const visible = pickVisible({
       pinned: pinnedIds.map(chipWidth),
       added: keys.map(chipWidth),
       forced: forcedKey ? keys.indexOf(forcedKey) : -1,
-      available: root.clientWidth,
+      available: availableWidth ?? root.clientWidth,
       safety: 1,
       overflowWidth: widthOf(overflowEl.current) + OVERFLOW_SLACK,
       tailWidth: widthOf(tailEl.current),
-      gap: parseFloat(getComputedStyle(root).columnGap) || 0,
+      gap,
     });
     const next = keys.filter((_, i) => !visible[i]);
     // Frozen: nothing moves, except to make room for the filter just added (a new `forcedKey`).
@@ -438,7 +460,7 @@ function FilterChipBar({
     setHiddenKeys(prev =>
       prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
     );
-  }, [keysId, forcedKey]);
+  }, [keysId, forcedKey, onOneLineWidth, availableWidth]);
 
   useLayoutEffect(() => {
     frozen.current = openCount > 0;

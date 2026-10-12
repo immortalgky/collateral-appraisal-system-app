@@ -65,6 +65,12 @@ export interface AppraisalColumnDef {
    * target, and `key` is only the column's identity (visibility, width, pinning).
    */
   headSorts?: { key: string; label: string }[];
+  /**
+   * The field the API sorts by when it is not the column's own key. The SLA column sorts by its due
+   * date (nearest first on ascending), which reads as the deadline order the cell shows, while its
+   * `key` stays what the width, visibility and filters know it by.
+   */
+  sortKey?: string;
 }
 
 /**
@@ -316,7 +322,13 @@ export const makeAppraisalColumns = (t: TFunction<'appraisal'>): AppraisalColumn
   { key: 'purpose', label: t('list.columns.purposeAndType'), sortable: true, width: 190 },
   // Comma-joined aggregate across the appraisal's properties — not meaningfully sortable
   { key: 'propertyTypes', label: t('list.columns.propertyType'), sortable: false, width: 140 },
-  { key: 'slaStatus', label: t('list.columns.sla'), sortable: true, width: 170 },
+  {
+    key: 'slaStatus',
+    label: t('list.columns.sla'),
+    sortable: true,
+    sortKey: 'slaDueDate',
+    width: 170,
+  },
   { key: 'priority', label: t('list.columns.priority'), sortable: true, width: 120 },
   // Who has the job, in one cell: the company for External work (the person there is not recorded —
   // see the note on APPRAISAL_DEFAULT_HIDDEN_COLUMNS), the user code for Internal.
@@ -349,6 +361,8 @@ export const makeAppraisalColumns = (t: TFunction<'appraisal'>): AppraisalColumn
  * 153 External assignments), so a column for either could only ever be empty.
  */
 export const APPRAISAL_DEFAULT_HIDDEN_COLUMNS = [
+  // High priority is a red flag beside the appraisal number, so the column would only repeat it.
+  'priority',
   // Both are folded into `assignee`; still offered in the picker for anyone who wants them apart.
   'assignmentType',
   'companyName',

@@ -2068,7 +2068,7 @@ export const requestFields: FormField[] = [
   },
   {
     type: 'dropdown',
-    label: _st('Business Group'),
+    label: _st('Banking Segment'),
     name: 'detail.loanDetail.bankingSegment',
     group: 'BankingSegment',
     wrapperClassName: 'col-span-1',
