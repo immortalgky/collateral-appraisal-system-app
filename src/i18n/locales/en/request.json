@@ -478,9 +478,10 @@
     },
     "unusedPanel": {
       "title": "Files from the previous appraisal that are not attached to this request. Appraisers will not see them.",
-      "hint": "Press \"Use\" to attach a file again",
+      "hint": "Press \"Use\" to choose where and as which document type to attach a file",
       "use": "Use",
-      "defaultNotUsed": "Document type default: not used"
+      "defaultNotUsed": "Document type default: not used",
+      "viewUnavailable": "This file cannot be viewed yet"
     },
     "menu": {
       "dontUse": "Don't use this file"
@@ -521,7 +522,7 @@
     },
     "place": {
       "title": "Choose where to use this file",
-      "description": "The file will be attached to the section you pick.",
+      "description": "Pick the section the file is attached to. The document type can be changed if it does not match.",
       "confirm": "Use file",
       "fromPrevious": "From prior appraisal {{number}}"
     },
@@ -724,7 +725,8 @@
     "requestLevelHint": "Attached to the request, not to any title",
     "searchPlaceholder": "Search title number, owner or place",
     "noMatch": "No section matches",
-    "matches": "Same as the original title"
+    "matches": "Same as the original title",
+    "documentType": "Document type"
   },
   "validation": {
     "bankingSegmentRequired": "Banking segment is required.",

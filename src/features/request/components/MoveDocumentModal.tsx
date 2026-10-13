@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import { Dropdown } from '@/shared/components/inputs';
 import FileBadgeIcon from './documentCard/FileBadgeIcon';
 
 export interface MoveTargetSection {
@@ -29,7 +30,13 @@ interface MoveDocumentModalProps {
   onClose: () => void;
   /** Selectable destinations (current section already excluded by the caller). */
   targets: MoveTargetSection[];
-  onConfirm: (target: MoveTargetSection) => void;
+  /** `documentType` is the chosen code when `types` is given, else undefined. */
+  onConfirm: (target: MoveTargetSection, documentType?: string) => void;
+  /** The section chosen at the start; without it, the one title marked `matches`. */
+  defaultTarget?: { entityType: 'request' | 'title'; entityIndex: number } | null;
+  /** Document types to pick from; given, the maker picks the type as well as the section. */
+  types?: { code: string; label: string }[];
+  defaultType?: string;
   file?: MoveFileInfo;
   /** Overrides for other uses of the same chooser; the defaults say "Move Document". */
   title?: string;
@@ -47,6 +54,9 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
   onClose,
   targets,
   onConfirm,
+  defaultTarget,
+  types,
+  defaultType,
   file,
   title,
   description,
@@ -55,9 +65,17 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
   const { t } = useTranslation(['request', 'common']);
   // Exactly one title that is the file's own is chosen at the start; several prove nothing.
   const initial = useMemo(() => {
+    if (defaultTarget) {
+      const given = targets.find(
+        s =>
+          s.entityType === defaultTarget.entityType && s.entityIndex === defaultTarget.entityIndex,
+      );
+      if (given) return sectionKey(given);
+    }
     const own = targets.filter(s => s.matches);
     return own.length === 1 ? sectionKey(own[0]) : null;
-  }, [targets]);
+  }, [targets, defaultTarget]);
+  const [documentType, setDocumentType] = useState(defaultType ?? '');
   const [chosen, setChosen] = useState<string | null | undefined>(undefined);
   const selectedKey = chosen === undefined ? initial : chosen;
   const [query, setQuery] = useState('');
@@ -75,12 +93,14 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
   const handleConfirm = () => {
     const target = targets.find(s => sectionKey(s) === selectedKey);
     if (!target) return;
-    onConfirm(target);
+    if (types) onConfirm(target, documentType);
+    else onConfirm(target);
   };
 
   const handleClose = () => {
     setChosen(undefined);
     setQuery('');
+    setDocumentType(defaultType ?? '');
     onClose();
   };
 
@@ -112,6 +132,17 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
               </span>
             )}
           </div>
+        )}
+
+        {types && (
+          <Dropdown
+            label={t('moveDocument.documentType')}
+            showValuePrefix={false}
+            showPlaceholderOption={false}
+            options={types.map(type => ({ value: type.code, label: type.label }))}
+            value={documentType}
+            onChange={setDocumentType}
+          />
         )}
 
         <p className="m-0 text-xs text-gray-500">{description ?? t('moveDocument.description')}</p>
@@ -177,7 +208,11 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
           <Button variant="outline" onClick={handleClose}>
             {t('common:actions.cancel')}
           </Button>
-          <Button variant="primary" onClick={handleConfirm} disabled={!selectedKey}>
+          <Button
+            variant="primary"
+            onClick={handleConfirm}
+            disabled={!selectedKey || (!!types && !documentType)}
+          >
             {confirmText ?? t('moveDocument.confirm')}
           </Button>
         </div>

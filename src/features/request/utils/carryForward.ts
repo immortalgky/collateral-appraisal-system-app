@@ -132,8 +132,8 @@ export const findTitleIndex = (
     : -1;
 
 /**
- * Where "ใช้" puts an entry without asking: request level, or the one title with its key. Null means
- * the maker has to choose a section.
+ * The section the "Use" chooser starts on: request level, or the one title with its key. Null means
+ * nothing is preselected and the maker picks one.
  */
 export const restoreTarget = (
   titles: CarryForwardTitle[],
@@ -219,12 +219,14 @@ export const deriveCarryForward = (
 export const toFormDocument = (
   doc: CarryForwardDocument,
   titleId: string | null = null,
+  // The maker may file it under another type than the suggested one
+  documentType: string = doc.suggestedType,
 ): UploadedDocument => ({
   id: null,
   titleId,
   documentId: doc.documentId,
   // The type the file gets in this request (D036 for the summary report), not its own code
-  documentType: doc.suggestedType,
+  documentType,
   fileName: doc.fileName,
   uploadedAt: doc.uploadedAt,
   prefix: doc.prefix,

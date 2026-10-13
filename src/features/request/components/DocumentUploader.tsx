@@ -73,6 +73,7 @@ import {
   useGetDocumentTypes,
   getDocumentTypeName,
   getDocumentTypeSearchText,
+  documentTypeLabel,
 } from '../api/documentTypes';
 
 /** More titles than this and their document sections start closed. */
@@ -468,22 +469,19 @@ const DocumentCard: React.FunctionComponent<
   const restoreInto = (
     doc: CarryForwardDocument,
     target: { entityType: 'request' | 'title'; entityIndex: number },
+    documentType: string = doc.suggestedType,
   ) => {
     const titleId = target.entityType === 'title' ? (titles[target.entityIndex]?.id ?? null) : null;
-    updateDocument(target.entityType, target.entityIndex, doc.suggestedType, docs =>
-      placeDocument(docs, toFormDocument(doc, titleId)),
+    updateDocument(target.entityType, target.entityIndex, documentType, docs =>
+      placeDocument(docs, toFormDocument(doc, titleId, documentType)),
     );
     toast.success(t('carryForward.toasts.restored'));
   };
 
-  // Where a file goes when it comes back: request level, or the one title with its key. A title
-  // file that matches none, or several, asks the maker which section it belongs in.
+  // "Use" always asks where the file goes and as which document type; the chooser starts on what
+  // would have been picked without asking (the title with its key, else request level) and the
+  // suggested type, so a code or title-number mismatch is fixed there.
   const [restoreChooser, setRestoreChooser] = useState<CarryForwardDocument | null>(null);
-  const handleRestoreCarried = (doc: CarryForwardDocument) => {
-    const target = restoreTarget(titles, doc);
-    if (target) restoreInto(doc, target);
-    else setRestoreChooser(doc);
-  };
 
   const confirmDelete = () => {
     if (!deleteConfirm.document) return;
@@ -1112,6 +1110,16 @@ const DocumentCard: React.FunctionComponent<
   );
   const carriedNumber = carryData?.appraisalNumber ?? prevAppraisalReportNo ?? '';
 
+  // The types the "Use" chooser offers: the uploader's list, plus the suggested one if it is not in it
+  const chooserTypes = (suggested: string) => {
+    const types = documentTypes.flatMap(type =>
+      type.code ? [{ code: type.code, label: documentTypeLabel(type) }] : [],
+    );
+    return types.some(type => type.code === suggested)
+      ? types
+      : [{ code: suggested, label: suggested }, ...types];
+  };
+
   // "D013 · Deed" for the file shown in the section chooser
   const typeLabelOf = (code: string | null | undefined) =>
     code ? `${code} · ${nameOfType(code)}` : undefined;
@@ -1335,7 +1343,8 @@ const DocumentCard: React.FunctionComponent<
                     number={carriedNumber}
                     usedCount={carriedUsed.length}
                     unused={carriedUnused}
-                    onRestore={handleRestoreCarried}
+                    onRestore={setRestoreChooser}
+                    onView={doc => viewDocument(doc.documentId)}
                     getDocTypeName={code => getDocumentTypeName(documentTypes, code)}
                   />
                 </div>
@@ -1637,7 +1646,7 @@ const DocumentCard: React.FunctionComponent<
         />
       )}
 
-      {/* Where a carried title file goes when its title cannot be found by key */}
+      {/* Where, and as which document type, an unused carried file is used */}
       {restoreChooser && (
         <MoveDocumentModal
           isOpen={true}
@@ -1658,8 +1667,11 @@ const DocumentCard: React.FunctionComponent<
               : undefined,
           }}
           targets={sections.map(section => targetOf(section, restoreChooser))}
-          onConfirm={target => {
-            restoreInto(restoreChooser, target);
+          defaultTarget={restoreTarget(titles, restoreChooser)}
+          types={chooserTypes(restoreChooser.suggestedType)}
+          defaultType={restoreChooser.suggestedType}
+          onConfirm={(target, documentType) => {
+            restoreInto(restoreChooser, target, documentType);
             setRestoreChooser(null);
           }}
         />

@@ -34,6 +34,7 @@ describe('CarryForwardSummary', () => {
         usedCount={3}
         unused={[unused]}
         onRestore={onRestore}
+        onView={vi.fn()}
         getDocTypeName={code => code}
       />,
     );
@@ -58,12 +59,45 @@ describe('CarryForwardSummary', () => {
         usedCount={0}
         unused={[entry]}
         onRestore={onRestore}
+        onView={vi.fn()}
         getDocTypeName={code => code}
       />,
     );
     await user.click(screen.getByRole('button', { name: 'Show unused files' }));
     await user.click(screen.getByRole('button', { name: 'Use' }));
     expect(onRestore).toHaveBeenCalledWith(entry);
+  });
+
+  describe('viewing an unused file', () => {
+    const show = async (entry: CarryForwardDocument, onView = vi.fn()) => {
+      const view = render(
+        <CarryForwardSummary
+          number="69000002"
+          usedCount={0}
+          unused={[entry]}
+          onRestore={vi.fn()}
+          onView={onView}
+          getDocTypeName={code => code}
+        />,
+      );
+      await view.user.click(screen.getByRole('button', { name: 'Show unused files' }));
+      return view;
+    };
+
+    it('opens the file without placing it', async () => {
+      const onView = vi.fn();
+      const entry = file({ documentId: 'd2', fileName: 'house-reg.pdf', defaultUse: false });
+      const { user } = await show(entry, onView);
+      await user.click(screen.getByRole('button', { name: /View\/Download house-reg\.pdf/ }));
+      expect(onView).toHaveBeenCalledWith(entry);
+    });
+
+    it('is disabled, with the reason, when the file is withheld', async () => {
+      // A withheld file has no document to open (the endpoint hook filters these out; the guard is the last line)
+      await show(file({ documentId: '' as string, fileName: 'house-reg.pdf' }));
+      expect(screen.getByRole('button', { name: /View\/Download house-reg\.pdf/ })).toBeDisabled();
+      expect(screen.getByTitle('This file cannot be viewed yet')).toBeInTheDocument();
+    });
   });
 
   describe('which title a file came from', () => {
@@ -74,6 +108,7 @@ describe('CarryForwardSummary', () => {
           usedCount={0}
           unused={unused}
           onRestore={vi.fn()}
+          onView={vi.fn()}
           getDocTypeName={code => code}
         />,
       );
@@ -124,6 +159,7 @@ describe('CarryForwardSummary', () => {
         usedCount={2}
         unused={[]}
         onRestore={vi.fn()}
+        onView={vi.fn()}
         getDocTypeName={code => code}
       />,
     );

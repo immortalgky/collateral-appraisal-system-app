@@ -345,6 +345,15 @@ describe('applyCarryForward', () => {
     });
   });
 
+  it('files the row under the type the maker chose instead of the suggested one', () => {
+    const entry = carried({ documentType: 'D013', suggestedType: 'D013' });
+    expect(toFormDocument(entry, null, 'D015')).toMatchObject({
+      documentType: 'D015',
+      documentId: entry.documentId,
+      source: 'PREV',
+    });
+  });
+
   it('a defaultUse=false file is not added and lands in the unused list, the rest are used', () => {
     const entries = [
       carried({ documentId: 'use', defaultUse: true }),

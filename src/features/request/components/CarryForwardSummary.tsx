@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import Icon from '@/shared/components/Icon';
 import FileBadgeIcon from './documentCard/FileBadgeIcon';
 import type { CarryForwardDocument } from '@/features/appraisal/api/priorAppraisal';
 import { carriedTitleRef, carryEntryKey } from '../utils/carryForward';
@@ -9,6 +10,8 @@ interface CarryForwardSummaryProps {
   usedCount: number;
   unused: CarryForwardDocument[];
   onRestore: (doc: CarryForwardDocument) => void;
+  /** Opens the file in a new tab, like View on a file already in the list. */
+  onView: (doc: CarryForwardDocument) => void;
   getDocTypeName: (code: string) => string;
 }
 
@@ -18,6 +21,7 @@ const CarryForwardSummary = ({
   usedCount,
   unused,
   onRestore,
+  onView,
   getDocTypeName,
 }: CarryForwardSummaryProps) => {
   const { t } = useTranslation('request');
@@ -72,6 +76,20 @@ const CarryForwardSummary = ({
                     {t('carryForward.unusedPanel.defaultNotUsed')}
                   </span>
                 )}
+              </span>
+              {/* A disabled button shows no tooltip in every browser, so the span carries it */}
+              <span
+                title={doc.documentId ? undefined : t('carryForward.unusedPanel.viewUnavailable')}
+              >
+                <button
+                  type="button"
+                  onClick={() => onView(doc)}
+                  disabled={!doc.documentId}
+                  aria-label={`${t('documentActions.view')} ${doc.fileName}`}
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <Icon name="eye" style="regular" className="h-4 w-4" />
+                </button>
               </span>
               <button
                 type="button"

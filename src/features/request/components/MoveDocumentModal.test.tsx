@@ -88,4 +88,65 @@ describe('MoveDocumentModal', () => {
       expect.objectContaining({ entityType: 'title', entityIndex: 1 }),
     );
   });
+
+  describe('when the maker also picks the document type', () => {
+    const types = [
+      { code: 'D013', label: 'Deed' },
+      { code: 'D015', label: 'ID card' },
+    ];
+    const renderChooser = (onConfirm = vi.fn()) =>
+      render(
+        <MoveDocumentModal
+          isOpen
+          onClose={vi.fn()}
+          targets={[request, title(0), title(1)]}
+          defaultTarget={{ entityType: 'title', entityIndex: 1 }}
+          types={types}
+          defaultType="D013"
+          onConfirm={onConfirm}
+          confirmText="Use file"
+          file={{ fileName: 'deed.pdf' }}
+        />,
+      );
+
+    it('starts on the given section and the suggested type', async () => {
+      const onConfirm = vi.fn();
+      const { user } = renderChooser(onConfirm);
+      expect(screen.getByRole('radio', { name: /Title 1001/ })).toBeChecked();
+      await user.click(confirm());
+      expect(onConfirm).toHaveBeenCalledWith(
+        expect.objectContaining({ entityType: 'title', entityIndex: 1 }),
+        'D013',
+      );
+    });
+
+    it('confirms with another section and another type', async () => {
+      const onConfirm = vi.fn();
+      const { user } = renderChooser(onConfirm);
+      await user.click(screen.getByRole('radio', { name: /Request level/ }));
+      await user.click(screen.getByRole('button', { name: /Deed/ }));
+      await user.click(screen.getByRole('option', { name: /ID card/ }));
+      await user.click(confirm());
+      expect(onConfirm).toHaveBeenCalledWith(
+        expect.objectContaining({ entityType: 'request', entityIndex: -1 }),
+        'D015',
+      );
+    });
+
+    it('starts on the request level for a request-level file', () => {
+      render(
+        <MoveDocumentModal
+          isOpen
+          onClose={vi.fn()}
+          targets={[request, title(0)]}
+          defaultTarget={{ entityType: 'request', entityIndex: -1 }}
+          types={types}
+          defaultType="D015"
+          onConfirm={vi.fn()}
+          confirmText="Use file"
+        />,
+      );
+      expect(screen.getByRole('radio', { name: /Request level/ })).toBeChecked();
+    });
+  });
 });
