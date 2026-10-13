@@ -55,7 +55,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
       category: editing?.category ?? '',
       sortOrder: editing?.sortOrder ?? 0,
       isActive: editing?.isActive ?? true,
-      carryForwardByDefault: editing?.carryForwardByDefault ?? true,
+      carryForwardByDefault: editing?.carryForwardByDefault ?? false,
     }),
     [editing],
   );

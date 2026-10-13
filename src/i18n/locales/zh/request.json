@@ -478,9 +478,10 @@
     },
     "unusedPanel": {
       "title": "原评估中未附加到本申请的文件，评估人员将看不到这些文件。",
-      "hint": "点击“使用”可重新附加",
+      "hint": "点击“使用”可选择附加的位置和文件类型",
       "use": "使用",
-      "defaultNotUsed": "文件类型默认设置：不使用"
+      "defaultNotUsed": "文件类型默认设置：不使用",
+      "viewUnavailable": "暂时无法查看此文件"
     },
     "menu": {
       "dontUse": "不使用此文件"
@@ -521,7 +522,7 @@
     },
     "place": {
       "title": "选择使用此文件的位置",
-      "description": "文件将附加到您所选的部分。",
+      "description": "选择要附加文件的部分；如类型不符，可更改文件类型。",
       "confirm": "使用文件",
       "fromPrevious": "来自原评估 {{number}}"
     },
@@ -724,7 +725,8 @@
     "requestLevelHint": "附加到申请，不属于任何产权",
     "searchPlaceholder": "搜索产权编号、所有人或地点",
     "noMatch": "没有匹配的部分",
-    "matches": "与原产权相同"
+    "matches": "与原产权相同",
+    "documentType": "文件类型"
   },
   "validation": {
     "bankingSegmentRequired": "银行业务分部为必填项。",
