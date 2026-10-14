@@ -662,7 +662,6 @@
     "requestDeleteListFailed": "ลบคำขอไม่สำเร็จ กรุณาลองใหม่",
     "draftSaved": "บันทึกร่างสำเร็จ",
     "draftSaveFailed": "บันทึกร่างไม่สำเร็จ กรุณาลองใหม่",
-    "requestSubmitted": "ส่งคำขอสำเร็จ",
     "requestSubmitFailed": "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่",
     "requestSaveFailed": "บันทึกคำขอไม่สำเร็จ กรุณาลองใหม่",
     "validationFailed": "กรุณากรอกข้อมูลที่จำเป็นทั้งหมดก่อนส่ง",

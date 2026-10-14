@@ -3,8 +3,6 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
-import GroupCard from '@/shared/components/sections/GroupCard';
-import InlineSubSection from '@/shared/components/sections/InlineSubSection';
 import Dropdown from '@/shared/components/inputs/Dropdown';
 import Textarea from '@/shared/components/inputs/Textarea';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -21,138 +19,56 @@ import {
 } from '@/features/appraisal/api/workflow';
 import { useGetEligibleStaff } from '@/features/appraisal/api/administration';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
-import ActivityTrackingTimeline, { type ActivityStep } from './ActivityTrackingTimeline';
+import ActivityTrackingTimeline, {
+  type ActivityStep,
+  type TimelineGhost,
+  type TimelineReturnTo,
+} from './ActivityTrackingTimeline';
 import { ApprovalListPanel } from './ApprovalListPanel';
 import {
   activityTitle,
   COMMITTEE_ACTIVITY_ID,
-  COMMITTEE_VOTE_VALUES,
   countVotes,
   decisionDisplayLabel,
   destinationName,
   destinationText,
+  endsWorkflow,
   isDissentingVote,
   isManualAssignmentAction,
   movementOf,
   reasonGroupOf,
+  resolveActionKind,
+  sameUser,
+  currentStepOf,
   useCommitteeApproval,
 } from './decisionHelpers';
+import '@/styles/decisionSection.css';
 
-// ==================== Decision-card visual mapping ====================
+// ==================== Decision tiles ====================
 
-type DecisionColor = 'emerald' | 'red' | 'purple' | 'amber' | 'blue' | 'gray';
+/** Where a decision sends the work, which is also its colour: forward teal, back amber, cancel red. */
+type Tone = 'F' | 'B' | 'C';
 
-interface DecisionVisual {
-  icon: string;
-  color: DecisionColor;
-}
+const TONE_ICON: Record<Tone, string> = { F: 'arrow-right', B: 'rotate-left', C: 'ban' };
+const TONE_GROUP: Record<Tone, 'forward' | 'back' | 'cancel'> = {
+  F: 'forward',
+  B: 'back',
+  C: 'cancel',
+};
+const TONE_ORDER: Record<Tone, number> = { F: 0, B: 1, C: 2 };
 
-/** Icon + color per decision kind (the keys resolveDecisionKind returns). */
-const KIND_VISUALS: Record<string, DecisionVisual> = {
-  reject: { icon: 'xmark', color: 'red' },
-  approve: { icon: 'check', color: 'emerald' },
-  routeBack: { icon: 'rotate-left', color: 'purple' },
-  proceed: { icon: 'arrow-right', color: 'blue' },
-  hold: { icon: 'pause', color: 'amber' },
-  default: { icon: 'circle-dot', color: 'gray' },
+/** Committee votes are coloured and iconned by what they are, not by the action's movement. */
+const VOTE_TONE: Record<string, Tone> = { approve: 'F', reject: 'C', route_back: 'B' };
+const VOTE_ICON: Record<string, string> = {
+  approve: 'check',
+  reject: 'xmark',
+  route_back: 'rotate-left',
 };
 
-/** Icon + color for an action. Committee votes are read by value (never guessed from the label),
- *  then movement B / C, then label keywords; falls back to gray + neutral icon. */
-const resolveActionKind = (action: ActivityAction): string => {
-  if (COMMITTEE_VOTE_VALUES.includes(action.value.toLowerCase())) {
-    return resolveDecisionKind(action.value, null);
-  }
-  if (action.movement === 'B') return 'routeBack';
-  if (action.movement === 'C') return 'reject';
-  return resolveDecisionKind(action.value, action.label);
+const toneOf = (action: ActivityAction, isCommittee: boolean): Tone => {
+  const vote = isCommittee ? VOTE_TONE[action.value.toLowerCase()] : undefined;
+  return vote ?? (movementOf(action) as Tone);
 };
-
-const resolveActionVisual = (action: ActivityAction): DecisionVisual =>
-  KIND_VISUALS[resolveActionKind(action)];
-
-const COLOR_CLASSES: Record<
-  DecisionColor,
-  {
-    borderSelected: string;
-    bgSelected: string;
-    textSelected: string;
-    iconBgSelected: string;
-    iconBgIdle: string;
-    iconTextIdle: string;
-  }
-> = {
-  emerald: {
-    borderSelected: 'border-emerald-500',
-    bgSelected: 'bg-emerald-50',
-    textSelected: 'text-emerald-900',
-    iconBgSelected: 'bg-emerald-500',
-    iconBgIdle: 'bg-emerald-100',
-    iconTextIdle: 'text-emerald-600',
-  },
-  red: {
-    borderSelected: 'border-red-500',
-    bgSelected: 'bg-red-50',
-    textSelected: 'text-red-900',
-    iconBgSelected: 'bg-red-500',
-    iconBgIdle: 'bg-red-100',
-    iconTextIdle: 'text-red-600',
-  },
-  purple: {
-    borderSelected: 'border-purple-500',
-    bgSelected: 'bg-purple-50',
-    textSelected: 'text-purple-900',
-    iconBgSelected: 'bg-purple-500',
-    iconBgIdle: 'bg-purple-100',
-    iconTextIdle: 'text-purple-600',
-  },
-  amber: {
-    borderSelected: 'border-amber-500',
-    bgSelected: 'bg-amber-50',
-    textSelected: 'text-amber-900',
-    iconBgSelected: 'bg-amber-500',
-    iconBgIdle: 'bg-amber-100',
-    iconTextIdle: 'text-amber-600',
-  },
-  blue: {
-    borderSelected: 'border-blue-500',
-    bgSelected: 'bg-blue-50',
-    textSelected: 'text-blue-900',
-    iconBgSelected: 'bg-blue-500',
-    iconBgIdle: 'bg-blue-100',
-    iconTextIdle: 'text-blue-600',
-  },
-  gray: {
-    borderSelected: 'border-gray-500',
-    bgSelected: 'bg-gray-50',
-    textSelected: 'text-gray-900',
-    iconBgSelected: 'bg-gray-500',
-    iconBgIdle: 'bg-gray-100',
-    iconTextIdle: 'text-gray-600',
-  },
-};
-
-/** Decision kind from value/label keywords — drives both the card visual and the comment
- *  placeholder. Reject is tested before approve so "Disagree" / "Disapprove" never read as approve. */
-function resolveDecisionKind(value: string | null, label: string | null): string {
-  if (!value) return 'default';
-  const k = `${value} ${label ?? ''}`.toLowerCase();
-  if (/(reject|disagree|disapprove|decline|deny)/.test(k)) return 'reject';
-  if (/(approve|agree|accept|confirm)/.test(k)) return 'approve';
-  if (/(route.?back|send.?back|return)/.test(k)) return 'routeBack';
-  if (/(proceed|forward|next|complete)/.test(k)) return 'proceed';
-  if (/(hold|defer|pause)/.test(k)) return 'hold';
-  return 'default';
-}
-
-// ==================== Decision grouping ====================
-
-/** Actions are grouped by where they send the work, so forward/back/cancel can't be confused. */
-const MOVEMENT_GROUPS = [
-  { movement: 'F', key: 'forward', icon: 'arrow-right', danger: false },
-  { movement: 'B', key: 'back', icon: 'rotate-left', danger: false },
-  { movement: 'C', key: 'cancel', icon: 'ban', danger: true },
-] as const;
 
 // ==================== Helpers ====================
 
@@ -214,80 +130,59 @@ const FoldSection = ({
   </details>
 );
 
-interface DecisionCardProps {
+interface DecisionTileProps {
   action: ActivityAction;
+  tone: Tone;
+  icon: string;
+  /** Small caption above the label: the movement, or "Vote". */
+  tag: string;
   label: string;
   checked: boolean;
   onSelect: () => void;
-  /** Second line: where the work goes, or the vote's effect on the tally. */
+  /** Where the work goes, or the vote's effect on the tally. */
   detail: string | null;
-  detailIcon: string;
-  /** Native radio group; arrow keys move only within one group. */
-  groupName: string;
 }
 
-/** A decision option: a native radio inside a card. Each movement group is its own radio
- *  group, so arrow keys only move within Forward / Back / Cancel — Tab crosses groups. */
-const DecisionCard = ({
+/** The one radio group every tile belongs to (the wrapper in DecisionSection is its radiogroup). */
+const TILE_GROUP_NAME = 'decision-choice';
+
+/** A decision option: a native radio inside a tile, coloured by where it sends the work. All the
+ *  tiles share one name, so they are a single radio group: one Tab stop, and the arrow keys walk
+ *  through every option in order (Forward, Back, Cancel). */
+const DecisionTile = ({
   action,
+  tone,
+  icon,
+  tag,
   label,
   checked,
   onSelect,
   detail,
-  detailIcon,
-  groupName,
-}: DecisionCardProps) => {
-  const visual = resolveActionVisual(action);
-  const c = COLOR_CLASSES[visual.color];
-  return (
-    <label
-      className={clsx(
-        'flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors',
-        'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/30',
-        checked ? [c.borderSelected, c.bgSelected] : 'border-gray-200 hover:bg-gray-50',
-      )}
-    >
-      <input
-        type="radio"
-        name={groupName}
-        value={action.value}
-        checked={checked}
-        onChange={onSelect}
-        // The cards sit inside the page's <form>; Enter must not trigger its implicit submit.
-        onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
-        className="sr-only"
-      />
-      <span
-        className={clsx(
-          'flex size-8 shrink-0 items-center justify-center rounded-full',
-          checked ? [c.iconBgSelected, 'text-white'] : [c.iconBgIdle, c.iconTextIdle],
-        )}
-      >
-        <Icon name={visual.icon} style="solid" className="size-3.5" />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span
-          className={clsx('block text-sm font-medium', checked ? c.textSelected : 'text-gray-900')}
-        >
-          {label}
-        </span>
-        {detail && (
-          <span className="mt-0.5 flex items-center gap-1.5 text-xs text-gray-500">
-            <Icon name={detailIcon} style="solid" className="size-2.5 text-gray-400" />
-            <span className="truncate">{detail}</span>
-          </span>
-        )}
-      </span>
-      <span
-        aria-hidden="true"
-        className={clsx(
-          'size-4 shrink-0 rounded-full border-2',
-          checked ? [c.borderSelected, 'border-[5px]'] : 'border-gray-300',
-        )}
-      />
-    </label>
-  );
-};
+}: DecisionTileProps) => (
+  <label className={clsx('dz-tile', `dz-tone-${tone}`)}>
+    <input
+      type="radio"
+      name={TILE_GROUP_NAME}
+      value={action.value}
+      checked={checked}
+      onChange={onSelect}
+      // The tiles sit inside the page's <form>; Enter must not trigger its implicit submit.
+      onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+      className="dz-tile-input"
+    />
+    <span className="dz-tile-ic">
+      <Icon name={icon} style="solid" className="size-4" />
+    </span>
+    <span className="min-w-0">
+      <span className="dz-tile-tag">{tag}</span>
+      <span className="dz-tile-label">{label}</span>
+      {detail && <span className="dz-tile-dest">{detail}</span>}
+    </span>
+    <span className="dz-tick" aria-hidden="true">
+      <Icon name="check" style="solid" className="size-2.5" />
+    </span>
+  </label>
+);
 
 // ==================== Component ====================
 
@@ -311,6 +206,9 @@ interface DecisionSectionProps {
   /** Appraisal is completed/cancelled — committee votes come from the immutable history. */
   isAppraisalTerminal: boolean;
   appraisalId?: string;
+  /** The decision was just submitted and the page waits behind the success card: stop polling the
+   *  committee round (its data stays on screen). */
+  isSubmitted?: boolean;
 }
 
 const DecisionSection = ({
@@ -327,6 +225,7 @@ const DecisionSection = ({
   showCommitteeVotes,
   isAppraisalTerminal,
   appraisalId,
+  isSubmitted = false,
 }: DecisionSectionProps) => {
   const { t } = useTranslation('appraisal');
   const isPageReadOnly = usePageReadOnly();
@@ -354,6 +253,7 @@ const DecisionSection = ({
     appraisalId,
     workflowInstanceId,
     activityId,
+    paused: isSubmitted,
   });
 
   const selectedAction = useMemo(
@@ -388,44 +288,52 @@ const DecisionSection = ({
     [taskHistoryData],
   );
 
-  const activitySteps = useMemo<ActivityStep[]>(() => {
-    const previewName = activityTitle(selectedAction?.targetActivityId ?? null);
-    // Preview where the picked decision sends the work, as a dashed last row. Not for committee
-    // votes: one vote doesn't move the work — the round resolves on the backend.
-    if (
-      isReadOnly ||
-      isCommitteeStep ||
-      !selectedAction ||
-      !previewName ||
-      movementOf(selectedAction) === 'C'
-    ) {
-      return historySteps;
-    }
-    const assignee = eligibleStaff?.find(s => s.id === selectedAssigneeUserId)?.name ?? null;
-    return [
-      ...historySteps,
-      {
-        stepName: previewName,
-        taskDescription: null,
-        role: '',
-        assigneeName: assignee,
-        assigneeDisplayName: null,
-        startedAt: null,
-        completedAt: null,
-        status: 'pending',
-        movement: movementOf(selectedAction),
-        remark: null,
-        preview: true,
-      },
-    ];
-  }, [
-    historySteps,
-    isReadOnly,
-    isCommitteeStep,
-    selectedAction,
-    eligibleStaff,
-    selectedAssigneeUserId,
-  ]);
+  // Route preview: where the picked decision sends the work, after the current step. Not for a
+  // committee vote (one vote doesn't move the work: the round resolves on the backend) nor for a
+  // read-only viewer. A route back is not a ghost row but the earlier step it returns to.
+  const previewing = !isReadOnly && !isCommitteeStep;
+  const pickedMovement = selectedAction ? movementOf(selectedAction) : null;
+  const returnTo: TimelineReturnTo | null =
+    previewing && selectedAction && pickedMovement === 'B'
+      ? { title: activityTitle(selectedAction.targetActivityId) }
+      : null;
+  const assigneeName = eligibleStaff?.find(s => sameUser(s.id, selectedAssigneeUserId))?.name;
+  const ghost: TimelineGhost | null = !previewing
+    ? null
+    : !selectedAction
+      ? {
+          tone: null,
+          icon: 'arrow-right',
+          title: t('decision.nextStep'),
+          meta: t('decision.route.ghostIdle'),
+        }
+      : pickedMovement === 'C'
+        ? {
+            tone: 'C',
+            icon: 'ban',
+            title: t('decision.route.cancel'),
+            meta: t('decision.route.cancelMeta'),
+          }
+        : endsWorkflow(selectedAction)
+          ? {
+              tone: 'F',
+              icon: 'flag',
+              title: t('decision.route.final'),
+              meta: t('decision.route.finalMeta'),
+            }
+          : pickedMovement === 'F'
+            ? {
+                tone: 'F',
+                icon: 'arrow-right',
+                title: activityTitle(selectedAction.targetActivityId) ?? t('decision.nextStep'),
+                meta: !isManualAssignment
+                  ? null
+                  : assigneeName
+                    ? t('decision.route.assignee', { name: assigneeName })
+                    : t('decision.route.assigneeMissing'),
+                metaWarn: isManualAssignment && !assigneeName,
+              }
+            : null;
 
   const labelOf = (action: ActivityAction) => decisionDisplayLabel(t, activityId, action);
   const badgeLabel = selectedAction ? labelOf(selectedAction) : selectedDecision;
@@ -445,63 +353,108 @@ const DecisionSection = ({
   const commentRequired = isDissentingVote(activityId, selectedDecision);
   const placeholderKey = selectedAction ? resolveActionKind(selectedAction) : 'default';
 
-  /** Committee cards show the vote's effect ("Agree 2 → 3"); the backend owns the outcome. */
-  const cardDetail = (action: ActivityAction): { text: string | null; icon: string } => {
-    if (isCommitteeStep) {
-      // Projection only while the round is open — a resolved round's tally no longer moves.
-      if (
-        committee.data?.status !== 'Pending' ||
-        !COMMITTEE_VOTE_VALUES.includes(action.value.toLowerCase())
-      ) {
-        return { text: null, icon: 'chart-simple' };
-      }
-      const now = countVotes(committee.data, action.value);
-      return {
-        text: t('decision.voteImpact', { from: now, to: now + 1 }),
-        icon: 'chart-simple',
-      };
+  /** The tile's second line: where the work goes, or (committee) what the vote does to the round.
+   *  The backend owns the outcome; this is only the projection. */
+  const tileDetail = (action: ActivityAction): string | null => {
+    if (!isCommitteeStep) {
+      // No target step at all = the last step. A target we have no title for says nothing.
+      if (endsWorkflow(action)) return t('decision.destination.final');
+      return destinationText(t, action);
     }
-    const m = movementOf(action);
-    return {
-      text: destinationText(t, action),
-      icon: m === 'B' ? 'rotate-left' : m === 'C' ? 'ban' : 'arrow-right',
-    };
+    switch (action.value.toLowerCase()) {
+      case 'approve': {
+        // Projection only while the round is open: a resolved round's tally no longer moves.
+        if (committee.data?.status !== 'Pending') return null;
+        const from = countVotes(committee.data, 'approve');
+        const to = from + 1;
+        const minVotes = committee.data.conditions.find(c => c.conditionType === 'MinVotes');
+        const need = minVotes?.minVotesRequired;
+        if (need == null) return t('decision.voteImpact', { from, to });
+        if (to < need) return t('decision.voteImpactShort', { from, to, left: need - to });
+        // "Threshold met" claims the round would pass: only when no other condition (a required
+        // role must still vote, ...) is outstanding. Otherwise just the count.
+        const othersMet = committee.data.conditions.every(c => c === minVotes || c.met);
+        return othersMet
+          ? t('decision.voteImpactMet', { from, to })
+          : t('decision.voteImpact', { from, to });
+      }
+      case 'route_back': {
+        const name = activityTitle(action.targetActivityId);
+        return name ? t('decision.voteBackNow', { name }) : t('decision.voteBackNowNoName');
+      }
+      case 'reject':
+        return t('decision.voteNeedsReason');
+      default:
+        return null;
+    }
   };
 
-  const renderCard = (action: ActivityAction) => {
-    const detail = cardDetail(action);
+  const renderTile = (action: ActivityAction) => {
+    const tone = toneOf(action, isCommitteeStep);
     return (
-      <DecisionCard
+      <DecisionTile
         key={action.value}
         action={action}
+        tone={tone}
+        icon={(isCommitteeStep && VOTE_ICON[action.value.toLowerCase()]) || TONE_ICON[tone]}
+        tag={isCommitteeStep ? t('decision.voteTag') : t(`decision.groups.${TONE_GROUP[tone]}`)}
         label={labelOf(action)}
         checked={selectedDecision === action.value}
         onSelect={() => selectDecision(action.value)}
-        detail={detail.text}
-        detailIcon={detail.icon}
-        // Committee votes are one flat group; decisions are one group per movement, so arrow
-        // keys never slide from Forward into Cancel.
-        groupName={isCommitteeStep ? 'decision-vote' : `decision-${movementOf(action)}`}
+        detail={tileDetail(action)}
       />
     );
   };
+  // Decisions read forward, back, cancel (within a movement the backend's order stands: the sort is
+  // stable). The committee's votes keep the backend's order.
+  const orderOf = (action: ActivityAction) => TONE_ORDER[toneOf(action, false)];
+  const ordered = isCommitteeStep ? actions : [...actions].sort((a, b) => orderOf(a) - orderOf(b));
+  const tiles = ordered.map(renderTile);
 
-  const timeline = isHistoryLoading ? (
-    <div className="flex items-center gap-2 text-sm text-gray-500 py-4">
-      <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-      {t('decision.loadingActivity')}
-    </div>
-  ) : (
-    <ActivityTrackingTimeline activities={activitySteps} />
-  );
+  const renderTimeline = (heading?: string) =>
+    isHistoryLoading ? (
+      <div className="dz-hint flex items-center gap-2 text-sm py-4">
+        <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
+        {t('decision.loadingActivity')}
+      </div>
+    ) : (
+      <ActivityTrackingTimeline
+        activities={historySteps}
+        heading={heading}
+        ghost={ghost}
+        returnTo={returnTo}
+      />
+    );
+
+  // The header chip: which step the work is on and what it is doing. Nothing to say on a finished
+  // appraisal (read-only and terminal); a read-only viewer of a live one just sees the step. The
+  // current step is the one the timeline marks ("here" tag, flowing connector, ghost row).
+  const current = currentStepOf(historySteps);
+  const stepTitle = current
+    ? current.taskDescription || activityTitle(activityId ?? null) || current.stepName
+    : activityTitle(activityId ?? null);
+  const doing = isCommitteeStep ? t('decision.route.awaitingVote') : t('decision.route.inProgress');
+  const nowChip = !stepTitle
+    ? null
+    : !isReadOnly
+      ? `${stepTitle} · ${doing}`
+      : isAppraisalTerminal
+        ? null
+        : stepTitle;
 
   return (
-    <>
-      <GroupCard title={t('decision.sectionTitle')} icon="gavel" iconColor="rose">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr] gap-0 lg:gap-6">
-          {/* Left: committee votes (when there are any) + Activity Tracking */}
+    <section className="dz" aria-labelledby="decision-section-title">
+      <header className="dz-head">
+        <Icon name="gavel" style="solid" className="dz-gavel size-3.5" />
+        <h2 id="decision-section-title">{t('decision.sectionTitle')}</h2>
+        {nowChip && <span className="dz-now">{nowChip}</span>}
+      </header>
+      <div className="dz-grid">
+        {/* Left: the route preview. At the committee step (or when there are votes to show) the
+            vote panel comes first, with the timeline folded below it. */}
+        <div className="dz-left">
           {committee.data || committee.liveLoading || committee.liveFailed ? (
-            <div className="min-w-0 space-y-3">
+            <div className="space-y-3">
               <FoldSection
                 title={t('decision.committeeVotes')}
                 summary={
@@ -536,192 +489,152 @@ const DecisionSection = ({
                     : undefined
                 }
               >
-                {timeline}
+                {renderTimeline()}
               </FoldSection>
             </div>
           ) : (
-            <InlineSubSection title={t('decision.activityTracking')} className="min-w-0">
-              {timeline}
-            </InlineSubSection>
+            renderTimeline(t('decision.route.title'))
           )}
-
-          {/* Vertical divider (lg+) / Horizontal divider (mobile) */}
-          <div className="hidden lg:block w-px bg-gray-200" />
-          <div className="lg:hidden my-6 h-px bg-gray-200" />
-
-          {/* Right: Decision Form — stays in view while the timeline scrolls */}
-          <InlineSubSection className="min-w-0 lg:sticky lg:top-4 lg:self-start">
-            {isReadOnly ? (
-              // Read-only view
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    {t('decision.decisionLabel')}
-                  </label>
-                  {selectedDecision ? (
-                    <Badge
-                      type="vote"
-                      value={
-                        isCommitteeStep
-                          ? selectedDecision
-                          : (selectedAction?.label ?? selectedDecision)
-                      }
-                      size="md"
-                    >
-                      {badgeLabel}
-                    </Badge>
-                  ) : (
-                    <span className="text-sm text-gray-400">{t('decision.noDecision')}</span>
-                  )}
-                </div>
-                {comments && (
-                  <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      {t('decision.commentsLabel')}
-                    </label>
-                    <p className="text-sm text-gray-600">{comments}</p>
-                  </div>
-                )}
-              </div>
-            ) : (
-              // Editable view
-              <div className="space-y-4">
-                {isActionsLoading ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-                    {t('decision.loadingActions')}
-                  </div>
-                ) : actions.length === 0 ? (
-                  // Failed or empty actions query — say so instead of an empty required group.
-                  <p className="text-sm text-gray-500">{t('decision.noActions')}</p>
-                ) : (
-                  <>
-                    {/* Decision cards — grouped by where the work goes; committee votes flat */}
-                    <div>
-                      <div
-                        id="decision-group-label"
-                        className="block text-xs font-medium text-gray-700 mb-2"
-                      >
-                        {isCommitteeStep ? t('decision.yourVote') : t('decision.decisionLabel')}
-                        <span className="text-danger ml-0.5">*</span>
-                      </div>
-                      {isCommitteeStep ? (
-                        <div
-                          role="radiogroup"
-                          aria-labelledby="decision-group-label"
-                          className="space-y-2"
-                        >
-                          {actions.map(renderCard)}
-                        </div>
-                      ) : (
-                        <div className="space-y-4">
-                          {MOVEMENT_GROUPS.map(group => {
-                            const list = actions.filter(a => movementOf(a) === group.movement);
-                            if (list.length === 0) return null;
-                            return (
-                              <div key={group.movement}>
-                                <div
-                                  className={clsx(
-                                    'mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide',
-                                    group.danger ? 'text-red-600' : 'text-gray-500',
-                                  )}
-                                >
-                                  <Icon name={group.icon} style="solid" className="size-3" />
-                                  {t(`decision.groups.${group.key}`)}
-                                </div>
-                                <div
-                                  role="radiogroup"
-                                  aria-label={t(`decision.groups.${group.key}`)}
-                                  className="space-y-2"
-                                >
-                                  {list.map(renderCard)}
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {isManualAssignment &&
-                      (isStaffLoading ? (
-                        <div className="flex items-center gap-2 text-sm text-gray-500">
-                          <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
-                          {t('decision.loadingAssignees')}
-                        </div>
-                      ) : (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-2">
-                            {t('decision.assignNextTo')}
-                            <span className="text-danger ml-0.5">*</span>
-                          </label>
-                          <Dropdown
-                            options={(eligibleStaff ?? []).map(s => ({
-                              value: s.id,
-                              label: s.name,
-                            }))}
-                            value={selectedAssigneeUserId ?? undefined}
-                            onChange={onAssigneeChange}
-                            placeholder={t('decision.assigneePlaceholder')}
-                          />
-                        </div>
-                      ))}
-
-                    {/* Reason dropdown — required for Cancel (C) and Routeback (B) */}
-                    {reasonGroup !== null && (
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-2">
-                          {t('decision.reasonLabel')}
-                          <span className="text-danger ml-0.5">*</span>
-                        </label>
-                        <Dropdown
-                          options={reasonOptions}
-                          value={selectedReasonCode ?? undefined}
-                          onChange={code => {
-                            onReasonChange(code);
-                            // A dissenting vote's comment must be the voter's own words, so the
-                            // reason text is not copied into it at the committee step.
-                            if (isCommitteeStep) return;
-                            const desc = reasonOptions.find(o => o.value === code)?.label ?? '';
-                            onCommentsChange(desc);
-                          }}
-                          placeholder={t('decision.reasonPlaceholder')}
-                        />
-                      </div>
-                    )}
-
-                    <div>
-                      <label className="block text-xs font-medium text-gray-700 mb-2">
-                        {t('decision.commentsLabel')}
-                        {commentRequired && <span className="text-danger ml-0.5">*</span>}
-                      </label>
-                      <Textarea
-                        value={comments}
-                        onChange={e => onCommentsChange(e.target.value)}
-                        placeholder={t(
-                          `decision.commentPlaceholders.${placeholderKey}` as `decision.commentPlaceholders.default`,
-                        )}
-                        maxLength={4000}
-                      />
-                      <div className="mt-1 flex justify-end">
-                        <span
-                          className={clsx(
-                            'text-xs',
-                            comments.length > 4000 ? 'text-danger' : 'text-gray-400',
-                          )}
-                        >
-                          {comments.length}/4000
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </InlineSubSection>
         </div>
-      </GroupCard>
-    </>
+
+        {/* Right: the decision tiles and the fields the pick needs */}
+        <div className="dz-right">
+          {isReadOnly ? (
+            // Read-only view
+            <div className="space-y-4">
+              <div>
+                <label className="dz-label block text-xs font-medium mb-1">
+                  {t('decision.decisionLabel')}
+                </label>
+                {selectedDecision ? (
+                  <Badge
+                    type="vote"
+                    value={
+                      isCommitteeStep
+                        ? selectedDecision
+                        : (selectedAction?.label ?? selectedDecision)
+                    }
+                    size="md"
+                  >
+                    {badgeLabel}
+                  </Badge>
+                ) : (
+                  <span className="dz-hint text-sm">{t('decision.noDecision')}</span>
+                )}
+              </div>
+              {comments && (
+                <div>
+                  <label className="dz-label block text-xs font-medium mb-1">
+                    {t('decision.commentsLabel')}
+                  </label>
+                  <p className="dz-label text-sm">{comments}</p>
+                </div>
+              )}
+            </div>
+          ) : isActionsLoading ? (
+            <div className="dz-hint flex items-center gap-2 text-sm">
+              <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
+              {t('decision.loadingActions')}
+            </div>
+          ) : actions.length === 0 ? (
+            // Failed or empty actions query — say so instead of an empty required group.
+            <p className="dz-hint text-sm">{t('decision.noActions')}</p>
+          ) : (
+            <>
+              <div>
+                <div id="decision-group-label" className="dz-kicker mb-2">
+                  {isCommitteeStep ? t('decision.yourVote') : t('decision.decisionLabel')}
+                  <span className="text-danger ml-0.5">*</span>
+                </div>
+                <div
+                  role="radiogroup"
+                  aria-required="true"
+                  aria-labelledby="decision-group-label"
+                  className="dz-tiles"
+                >
+                  {tiles}
+                </div>
+              </div>
+
+              {/* Only the fields the pick needs: assignee (manual), reason (back / cancel), comment */}
+              <div className="dz-fields">
+                {isManualAssignment &&
+                  (isStaffLoading ? (
+                    <div className="dz-hint flex items-center gap-2 text-sm">
+                      <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin" />
+                      {t('decision.loadingAssignees')}
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="dz-label block text-xs font-medium mb-2">
+                        {t('decision.assignNextTo')}
+                        <span className="text-danger ml-0.5">*</span>
+                      </label>
+                      <Dropdown
+                        options={(eligibleStaff ?? []).map(s => ({
+                          value: s.id,
+                          label: s.name,
+                        }))}
+                        value={selectedAssigneeUserId ?? undefined}
+                        onChange={onAssigneeChange}
+                        placeholder={t('decision.assigneePlaceholder')}
+                      />
+                    </div>
+                  ))}
+
+                {/* Reason dropdown — required for Cancel (C) and Routeback (B) */}
+                {reasonGroup !== null && (
+                  <div>
+                    <label className="dz-label block text-xs font-medium mb-2">
+                      {t('decision.reasonLabel')}
+                      <span className="text-danger ml-0.5">*</span>
+                    </label>
+                    <Dropdown
+                      options={reasonOptions}
+                      value={selectedReasonCode ?? undefined}
+                      onChange={code => {
+                        onReasonChange(code);
+                        // A dissenting vote's comment must be the voter's own words, so the
+                        // reason text is not copied into it at the committee step.
+                        if (isCommitteeStep) return;
+                        const desc = reasonOptions.find(o => o.value === code)?.label ?? '';
+                        onCommentsChange(desc);
+                      }}
+                      placeholder={t('decision.reasonPlaceholder')}
+                    />
+                  </div>
+                )}
+
+                <div className="dz-fields-wide">
+                  <label className="dz-label block text-xs font-medium mb-2">
+                    {t('decision.commentsLabel')}
+                    {commentRequired && <span className="text-danger ml-0.5">*</span>}
+                  </label>
+                  <Textarea
+                    value={comments}
+                    onChange={e => onCommentsChange(e.target.value)}
+                    placeholder={t(
+                      `decision.commentPlaceholders.${placeholderKey}` as `decision.commentPlaceholders.default`,
+                    )}
+                    maxLength={4000}
+                  />
+                  <div className="mt-1 flex justify-end">
+                    <span
+                      className={clsx(
+                        'text-xs',
+                        comments.length > 4000 ? 'text-danger' : 'dz-hint',
+                      )}
+                    >
+                      {comments.length}/4000
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -734,8 +647,6 @@ interface DecisionConfirmSummaryProps {
   assigneeUserId: string | null;
   reasonCode: string | null;
   comments: string;
-  acknowledged: boolean;
-  onAcknowledgedChange: (value: boolean) => void;
 }
 
 /** What is about to be submitted, shown in the page's ConfirmDialog before completing. */
@@ -746,8 +657,6 @@ export const DecisionConfirmSummary = ({
   assigneeUserId,
   reasonCode,
   comments,
-  acknowledged,
-  onAcknowledgedChange,
 }: DecisionConfirmSummaryProps) => {
   const { t } = useTranslation('appraisal');
   const isManual = isManualAssignmentAction(action);
@@ -760,9 +669,8 @@ export const DecisionConfirmSummary = ({
   );
   const label = decisionDisplayLabel(t, activityId, action);
   const destination = destinationName(t, action);
-  const assignee = isManual ? staff?.find(s => s.id === assigneeUserId)?.name : null;
+  const assignee = isManual ? staff?.find(s => sameUser(s.id, assigneeUserId))?.name : null;
   const reason = reasonOptions.find(o => o.value === reasonCode)?.label;
-  const needsAck = isDissentingVote(activityId, action.value);
 
   const rows = (
     [
@@ -791,17 +699,6 @@ export const DecisionConfirmSummary = ({
           </div>
         ))}
       </dl>
-      {needsAck && (
-        <label className="mt-3 flex cursor-pointer items-start gap-2 text-sm text-gray-700">
-          <input
-            type="checkbox"
-            className="checkbox checkbox-sm mt-0.5"
-            checked={acknowledged}
-            onChange={e => onAcknowledgedChange(e.target.checked)}
-          />
-          {t('decisionSummary.confirmDialog.voteAck', { vote: label })}
-        </label>
-      )}
     </div>
   );
 };
