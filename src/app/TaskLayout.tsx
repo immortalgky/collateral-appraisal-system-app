@@ -1,5 +1,5 @@
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Navbar from '@shared/components/Navbar';
@@ -25,6 +25,7 @@ import { useAdminUnlockTask, useHeartbeatTaskLock, useUnlockTask } from '@featur
 import type { PoolTaskUpdateEvent } from '@features/task/hooks/useWorkflowHub';
 import { useWorkflowHub } from '@features/task/hooks/useWorkflowHub';
 import { useAuthStore } from '@features/auth/store';
+import { useLiftoffStore } from '@features/appraisal/store/liftoffStore';
 import { DetailPageSkeleton } from '@shared/components/Skeleton';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -108,6 +109,24 @@ function TaskLayout() {
     isError: isTaskError,
     error: taskError,
   } = useGetTaskById(taskId);
+  // While the submit success card is up this page stays on screen with its task already closed. A
+  // refetch of the task (403 / 404) or of its appraisal failing now must not swap the page for
+  // "Task Not Found" / "Failed to load appraisal" behind the card; a failed refetch keeps the last
+  // data, so the page just carries on until it leaves. Scoped to the card: every other visit
+  // handles those errors as before.
+  // Latched, not just "the card is up": the router commits the next route inside a transition, so
+  // the card can be cleared a frame before this layout is replaced, and that frame would draw the
+  // error. The latch is taken when a card first shows (state set while rendering, as React allows
+  // for derived state) and holds only for that task AND that path: when the location changes (Back
+  // to a sibling tab of the closed task) the real state must show. The old location is still the
+  // one rendered during the transition, so the latch still covers that frame.
+  const { pathname } = useLocation();
+  const cardSeq = useLiftoffStore(s => (s.liftoff ? s.seq : null));
+  const [latch, setLatch] = useState<{ seq: number; taskId?: string; pathname: string } | null>(
+    null,
+  );
+  if (cardSeq !== null && latch?.seq !== cardSeq) setLatch({ seq: cardSeq, taskId, pathname });
+  const isLiftingOff = latch !== null && latch.taskId === taskId && latch.pathname === pathname;
 
   // Step 2: Fetch appraisal data using appraisalId from task (may be null before appraisal is created)
   const appraisalId = taskData?.appraisalId ?? undefined;
@@ -244,7 +263,9 @@ function TaskLayout() {
         <MobileAppraisalSidebar logo={Logo} loading hideGeneralNav />
         <AppraisalSidebar logo={Logo} loading hideGeneralNav />
         <div
-          className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}
+          className={
+            'lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300'
+          }
         >
           <Navbar userNavigation={userNavigation} />
           <main className="py-4 flex-1 flex flex-col min-h-0">
@@ -255,7 +276,7 @@ function TaskLayout() {
         </div>
       </div>
     );
-  } else if (isTaskError) {
+  } else if (isTaskError && !isLiftingOff) {
     const status = (taskError as any)?.response?.status;
     const is403 = status === 403;
 
@@ -280,11 +301,13 @@ function TaskLayout() {
         </Button>
       </div>
     );
-  } else if (appraisalId && isAppraisalError) {
+  } else if (appraisalId && isAppraisalError && !isLiftingOff) {
     body = (
       <div className="h-screen flex flex-col items-center justify-center bg-gray-50 dark:bg-base-200">
         <Icon style="solid" name="triangle-exclamation" className="size-16 text-red-500" />
-        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-base-content">Failed to load appraisal</h2>
+        <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-base-content">
+          Failed to load appraisal
+        </h2>
         <p className="mt-2 text-gray-500 dark:text-gray-400">
           {(appraisalError as Error)?.message || 'Unknown error'}
         </p>
@@ -301,7 +324,9 @@ function TaskLayout() {
         <AppraisalSidebar logo={Logo} hideGeneralNav />
 
         <div
-          className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}
+          className={
+            'lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300'
+          }
         >
           <Navbar userNavigation={userNavigation} />
 

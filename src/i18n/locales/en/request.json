@@ -662,7 +662,6 @@
     "requestDeleteListFailed": "Failed to delete request. Please try again.",
     "draftSaved": "Draft saved successfully",
     "draftSaveFailed": "Failed to save draft. Please try again.",
-    "requestSubmitted": "Request submitted successfully",
     "requestSubmitFailed": "Failed to submit request. Please try again.",
     "requestSaveFailed": "Failed to save request. Please try again.",
     "validationFailed": "Please fill in all required fields before submitting.",

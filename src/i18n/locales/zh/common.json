@@ -190,5 +190,40 @@
   "imageEditor": {
     "loadFailed": "无法打开该图片进行编辑。",
     "loadFailedDiscarded": "无法打开 {{name}}。该文件不会被附加。"
+  },
+  "liftoff": {
+    "title": {
+      "forward": "提交成功",
+      "routeBack": "已退回",
+      "cancel": "工单已取消",
+      "final": "工作已全部完成",
+      "voteApprove": "已投票：同意",
+      "voteReject": "已投票：不同意",
+      "voteRouteBack": "已投票：退回"
+    },
+    "subtitle": {
+      "forward": "工作已转交给下一步骤。",
+      "routeBack": "工作已退回上一步骤。",
+      "cancel": "此工单已终止。",
+      "final": "此工单没有后续步骤。",
+      "votePending": "您的投票已记录。",
+      "voteResolved": "投票已结束，已转交至{{name}}。",
+      "voteMoved": "投票已结束，已转交至下一步骤。",
+      "voteSentBack": "投票完成，已退回至 {{name}}。",
+      "voteSentBackNoName": "投票完成，已退回上一步。",
+      "voteClosed": "投票已结束，此工单已完成。"
+    },
+    "from": "来自",
+    "to": "发送至",
+    "you": "您",
+    "nextStep": "下一步骤",
+    "backTo": "退回至",
+    "referenceLabel": "编号",
+    "sentAt": "提交时间",
+    "done": "确定",
+    "approveStamp": "同意",
+    "routeBackStamp": "退回",
+    "rejectStamp": "不同意",
+    "finalNote": "此工单的所有步骤均已完成。"
   }
 }

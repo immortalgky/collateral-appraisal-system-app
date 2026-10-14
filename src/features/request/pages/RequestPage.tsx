@@ -88,6 +88,11 @@ import {
   buildRequestPayload,
   submitCounts,
 } from '../utils/requestRows';
+import {
+  cancelQueriesFor,
+  originOf,
+  useLiftoffStore,
+} from '@/features/appraisal/store/liftoffStore';
 import { AppraisalCopyProvider } from '../contexts/AppraisalCopyContext';
 import type { CreateRequestRequestType } from '@shared/schemas/v1';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
@@ -326,16 +331,32 @@ function RequestPage() {
   const deleteRequest = useDeleteRequest();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
+  // Set once a submit went through: the success card is up over this page, which stays mounted
+  // (inert) until the card closes and the app navigates to /requests. It holds WHICH request page
+  // was submitted (its id, or 'new' for the create-then-submit page), not a yes/no: this component
+  // is reused across /requests/:id routes, and after a Back from the card to another request the
+  // page must be fully editable. While locked it counts as pending, so every save / submit button
+  // stays disabled, and the handlers below refuse to start a second write.
+  const [liftedOffFor, setLiftedOffFor] = useState<string | null>(null);
+  const liftedOff = liftedOffFor === (requestId ?? 'new');
+
   const isPending =
     isCreating ||
     isUpdating ||
     isSubmitting ||
     isCreatingDraft ||
     isUpdatingDraft ||
-    deleteRequest.isPending;
+    deleteRequest.isPending ||
+    liftedOff;
 
   // Track which save action is in progress (for loading state on the correct button)
   const [saveAction, setSaveAction] = useState<'draft' | 'save' | 'submit' | null>(null);
+  // The success overlay is shown through the app-level store; it plays over this page. Its flight
+  // starts at the Submit button's leading icon, measured at click time: the save step remounts the
+  // form, so the button is gone from the DOM before the submit response arrives. The button's first
+  // svg is the icon (its <Icon> is swapped for a spinner once loading; see shared/Button).
+  const showLiftoff = useLiftoffStore(s => s.show);
+  const submitOriginRef = useRef<ReturnType<typeof originOf>>(null);
 
   // Comments of a request that is not saved yet. Kept here, not in the drawer, so they survive the
   // drawer closing and go out with the create / create-draft / submit-create call.
@@ -808,6 +829,7 @@ function RequestPage() {
   };
 
   const onSubmit: SubmitHandler<createRequestFormType> = data => {
+    if (liftedOff) return;
     // A file still uploading is not on the server: saving now would send its row without it
     if (isBlockedByUploads()) return;
     setSaveAction('save');
@@ -869,7 +891,7 @@ function RequestPage() {
   };
 
   const handleSaveDraft = () => {
-    if (isBlockedByUploads()) return;
+    if (liftedOff || isBlockedByUploads()) return;
     setSaveAction('draft');
     const data = getValues();
 
@@ -928,14 +950,34 @@ function RequestPage() {
     }
   };
 
+  const requestNumber = requestData?.requestNumber;
   const doSubmit = useCallback(
     (id: string) => {
       submitRequest(id, {
         onSuccess: () => {
-          toast.success(t('toasts.requestSubmitted'));
+          // The request is submitted (and locked). This page stays on screen under the success card
+          // until it closes, so stop it asking for the request again: cancel what is in flight (the
+          // save and the submit both just invalidated the request query) and block further writes.
+          setLiftedOffFor(requestId ?? 'new');
+          const closedIds = [id];
+          void cancelQueriesFor(queryClient, closedIds);
+          // The submit API reports only success: no next step or assignee to name. The overlay
+          // navigates to /requests itself when the card closes.
+          showLiftoff({
+            origin: submitOriginRef.current,
+            scene: 'forward',
+            voteOutcome: null,
+            nextActivityName: null,
+            nextAssigneeName: null,
+            referenceNumber: requestNumber ?? null,
+            to: '/requests',
+            // Lift the unsaved-changes guard at the moment the card closes and the app leaves.
+            beforeLeave: skipWarning,
+            closedIds,
+          });
           setSaveAction(null);
+          // Also now, so a Back during the card does not ask about changes that were just saved.
           skipWarning();
-          navigate('/requests');
         },
         onError: (error: any) => {
           toast.error(error.apiError?.detail || t('toasts.requestSubmitFailed'));
@@ -943,7 +985,7 @@ function RequestPage() {
         },
       });
     },
-    [submitRequest, skipWarning, navigate],
+    [submitRequest, showLiftoff, requestNumber, requestId, skipWarning, queryClient],
   );
 
   // The form is valid and the maker pressed Submit: hold the data until they confirm the dialog.
@@ -959,7 +1001,7 @@ function RequestPage() {
    * 3. Save the request, then submit -- backend validates document completeness and returns error if missing
    */
   const handleSubmitRequest = () => {
-    if (isBlockedByUploads()) return;
+    if (liftedOff || isBlockedByUploads()) return;
     handleSubmit(
       data =>
         setPendingSubmit({
@@ -971,7 +1013,7 @@ function RequestPage() {
   };
 
   const confirmSubmit = () => {
-    if (!pendingSubmit) return;
+    if (!pendingSubmit || liftedOff) return;
     // An upload may have started while the dialog was open
     if (isBlockedByUploads()) {
       setPendingSubmit(null);
@@ -1239,7 +1281,12 @@ function RequestPage() {
                                   ? t('page.actions.waitForUploads')
                                   : t('page.actions.submitHint')
                               }
-                              onClick={handleSubmitRequest}
+                              onClick={e => {
+                                submitOriginRef.current = originOf(
+                                  e.currentTarget.querySelector('svg'),
+                                );
+                                handleSubmitRequest();
+                              }}
                               isLoading={isPending && saveAction === 'submit'}
                               disabled={isPending || isPicking || busy}
                             >
