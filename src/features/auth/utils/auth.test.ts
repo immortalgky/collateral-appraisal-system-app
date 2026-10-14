@@ -6,6 +6,8 @@ import {
   clearSavedReturn,
   hopToCanonicalOrigin,
   isLoginPath,
+  isSavedUserOrUnknown,
+  isSavedUserStrict,
   readSavedReturn,
   sameOriginPath,
   saveReturn,
@@ -180,6 +182,126 @@ describe('redirectToLogin', () => {
         userId: 'u1',
       });
       useAuthStore.setState({ user: null, isAuthenticated: false });
+    });
+
+    describe('who timed out', () => {
+      const signedIn = (user: Record<string, string>) =>
+        useAuthStore.setState({ user: { id: 'u1', ...user } as never, isAuthenticated: true });
+      afterEach(() => useAuthStore.setState({ user: null, isAuthenticated: false }));
+
+      it.each(['idle', 'ended'] as const)('is saved, masked, on %s', reason => {
+        stubLocation('https://app.example.com/tasks');
+        signedIn({ username: 'somchai.u', firstName: 'Somchai', lastName: 'Uthai' });
+        redirectToLogin(undefined, reason);
+        expect(readSavedReturn()?.account).toEqual({
+          username: 'somchai.u',
+          displayName: 'Somchai U.',
+          initials: 'SU',
+        });
+        expect(JSON.stringify(sessionStorage)).not.toContain('Uthai');
+      });
+
+      it.each([
+        ['สมชาย', 'ใจดี', 'สมชาย จ.', 'สจ'],
+        ['เกียรติ', 'แก้วใส', 'เกียรติ ก.', 'กก'],
+        ['Ann', 'เ', 'Ann เ.', 'Aเ'], // only a vowel: nothing better to show
+      ])('skips Thai leading vowels: %s %s', (firstName, lastName, displayName, initials) => {
+        stubLocation('https://app.example.com/tasks');
+        signedIn({ username: 'u', firstName, lastName });
+        redirectToLogin(undefined, 'idle');
+        expect(readSavedReturn()?.account).toEqual({ username: 'u', displayName, initials });
+      });
+
+      it('upper-cases the surname letter in the name as in the initials', () => {
+        stubLocation('https://app.example.com/tasks');
+        signedIn({ username: 'u', firstName: 'ann', lastName: 'lee' });
+        redirectToLogin(undefined, 'idle');
+        expect(readSavedReturn()?.account).toMatchObject({ displayName: 'ann L.', initials: 'AL' });
+      });
+
+      it('shows the first name alone when there is no surname', () => {
+        stubLocation('https://app.example.com/tasks');
+        signedIn({ username: 'bob', firstName: 'Bob', lastName: ' ' });
+        redirectToLogin(undefined, 'idle');
+        expect(readSavedReturn()?.account).toEqual({
+          username: 'bob',
+          displayName: 'Bob',
+          initials: 'B',
+        });
+      });
+
+      it.each(['', '   '])(
+        'never shows the username: no first name (%j) saves no one',
+        firstName => {
+          stubLocation('https://app.example.com/tasks');
+          signedIn({ username: 'emp-10234', firstName, lastName: 'Lee' });
+          redirectToLogin(undefined, 'idle');
+          expect(readSavedReturn()?.account).toBeUndefined();
+          expect(JSON.stringify(sessionStorage)).not.toContain('emp-10234');
+        },
+      );
+
+      it('drops a malformed saved account when reading it back', () => {
+        saveReturn({ path: '/tasks', account: { username: 'x' } as never });
+        expect(readSavedReturn()?.account).toBeUndefined();
+      });
+
+      it('is not saved without a username to hint', () => {
+        stubLocation('https://app.example.com/tasks');
+        signedIn({ firstName: 'Ann', lastName: 'Lee' });
+        redirectToLogin(undefined, 'idle');
+        expect(readSavedReturn()?.account).toBeUndefined();
+      });
+
+      describe('at boot, with the card already saved for the page', () => {
+        const card = {
+          path: '/tasks',
+          label: 'Tasks',
+          reason: 'idle' as const,
+          userId: 'u1',
+          account: { username: 'ann', displayName: 'Ann L.', initials: 'AL' },
+        };
+
+        it('keeps who timed out and the label for the same page', () => {
+          saveReturn(card);
+          stubLocation('https://app.example.com/tasks');
+          redirectToLogin(undefined, 'idle');
+          expect(readSavedReturn()).toEqual(card);
+        });
+
+        it('keeps nothing for another page, or after "Not you?"', () => {
+          saveReturn(card);
+          stubLocation('https://app.example.com/other');
+          redirectToLogin(undefined, 'idle');
+          expect(readSavedReturn()).toEqual({ path: '/other', label: '', reason: 'idle' });
+
+          saveReturn({ ...card, notYou: true });
+          stubLocation('https://app.example.com/tasks');
+          redirectToLogin(undefined, 'idle');
+          expect(readSavedReturn()).toEqual({ path: '/tasks', label: '', reason: 'idle' });
+        });
+
+        it('does not lend the old user to a known one', () => {
+          saveReturn(card);
+          stubLocation('https://app.example.com/tasks');
+          signedIn({ id: 'u2', username: 'bob', firstName: '', lastName: '' });
+          redirectToLogin(undefined, 'idle');
+          expect(readSavedReturn()).toMatchObject({ userId: 'u2' });
+          expect(readSavedReturn()?.account).toBeUndefined();
+        });
+      });
+
+      it('is not saved for a sign-out, a first visit, or a boot 401 (nobody in the store)', () => {
+        stubLocation('https://app.example.com/tasks');
+        signedIn({ username: 'ann', firstName: 'Ann', lastName: 'Lee' });
+        redirectToLogin('/tasks', 'signed-out');
+        expect(readSavedReturn()?.account).toBeUndefined();
+        redirectToLogin('/tasks');
+        expect(readSavedReturn()?.account).toBeUndefined();
+        useAuthStore.setState({ user: null, isAuthenticated: false });
+        redirectToLogin(undefined, 'idle');
+        expect(readSavedReturn()?.account).toBeUndefined();
+      });
     });
 
     it('names a record page by its menu, never by the record', () => {
@@ -415,6 +537,14 @@ describe('startSignIn', () => {
     );
   });
 
+  it('adds the encoded username as login_hint', () => {
+    const location = stubLocation('https://app.example.com/login');
+    startSignIn('/tasks', { loginHint: 'a b&c@x' });
+    expect(location.href).toBe(
+      `https://api.example.com/auth/login?returnUrl=${encodeURIComponent('https://app.example.com/tasks')}&login_hint=a%20b%26c%40x`,
+    );
+  });
+
   it.each([
     undefined,
     '/login',
@@ -453,5 +583,17 @@ describe('hopToCanonicalOrigin', () => {
     const location = stubLocation('https://app.example.com/tasks');
     expect(hopToCanonicalOrigin()).toBe(false);
     expect(location.replace).not.toHaveBeenCalled();
+  });
+});
+
+describe('isSavedUserOrUnknown / isSavedUserStrict', () => {
+  it('compare known ids; an unknown saved user matches only the lenient one', () => {
+    expect(isSavedUserOrUnknown('a', 'a')).toBe(true);
+    expect(isSavedUserOrUnknown('a', 'b')).toBe(false);
+    expect(isSavedUserOrUnknown('a', undefined)).toBe(false);
+    expect(isSavedUserOrUnknown(undefined, 'b')).toBe(true);
+    expect(isSavedUserStrict('a', 'a')).toBe(true);
+    expect(isSavedUserStrict('a', 'b')).toBe(false);
+    expect(isSavedUserStrict(undefined, 'b')).toBe(false);
   });
 });

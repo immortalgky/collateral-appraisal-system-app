@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { queryClient } from '@app/queryClient';
+import { leaveWithoutPrompt } from '@shared/api/forcedNavigation';
 import Button from '@shared/components/Button';
 import { currentUserQueryOptions, fetchCurrentUser } from '../api';
 import { useAuthStore } from '../store';
@@ -9,6 +10,8 @@ import {
   clearSavedReturn,
   hopToCanonicalOrigin,
   isLoginPath,
+  isSavedUserOrUnknown,
+  readSavedReturn,
   redirectToLogin,
   sessionEndReason,
 } from '../utils/auth';
@@ -42,7 +45,21 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       .then(user => {
         announceUser(user.id);
         // Only once the user is on an app page: on /login the saved state is still what it shows.
-        if (!isLoginPath(window.location.pathname)) clearSavedReturn();
+        if (!isLoginPath(window.location.pathname)) {
+          const saved = readSavedReturn();
+          // The timed-out user's page, but somebody else signed in: leave their page. The saved state
+          // is cleared first, so the page it lands on cannot do this again.
+          const strangerOnTheirPage =
+            !!saved &&
+            !isSavedUserOrUnknown(saved.userId, user.id) &&
+            saved.path === window.location.pathname &&
+            window.location.pathname !== '/';
+          clearSavedReturn();
+          if (strangerOnTheirPage) {
+            leaveWithoutPrompt(() => window.location.replace('/'));
+            return; // keep the spinner while the page leaves
+          }
+        }
         setState('ready');
       })
       .catch(error => {

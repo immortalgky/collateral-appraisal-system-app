@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { BrowserRouter, MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store';
+import { redirectToLogin } from '../utils/auth';
 import LoginPage from './LoginPage';
 
 type Listener = (event: { data: unknown }) => void;
@@ -13,7 +14,11 @@ const channel = vi.hoisted(() => ({
   },
 }));
 vi.mock('../utils/authChannel', () => ({ authChannel: channel }));
-vi.mock('react-i18next', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (key: string, o?: { name?: string }) => (o?.name ? `${key}:${o.name}` : key),
+  }),
+}));
 vi.mock('@shared/components/LanguageSwitcher', () => ({ default: () => null }));
 
 const APP = 'https://app.example.com';
@@ -206,6 +211,26 @@ describe('LoginPage', () => {
       expect(window.location.search).toBe('?returnUrl=%2Ftasks');
     });
 
+    it('hands a different signed-in user over to the home page, the same user to the page', () => {
+      signedIn(); // user '1'
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks', userId: 'u0' }));
+      const stranger = renderAt('?returnUrl=%2Ftasks');
+      expect(screen.getByText('home')).toBeInTheDocument();
+      stranger.unmount();
+      sessionStorage.removeItem('cas-login-bounce'); // one bounce per 30 s
+
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks', userId: '1' }));
+      renderAt('?returnUrl=%2Ftasks');
+      expect(screen.getByText('tasks page')).toBeInTheDocument();
+    });
+
+    it("sends a different user who typed the saved user's page home, even via router state", () => {
+      signedIn(); // user '1'; the saved user was 'u0' on the same page
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks', userId: 'u0' }));
+      renderAt('', { from: '/tasks' });
+      expect(screen.getByText('home')).toBeInTheDocument();
+    });
+
     it('forgets what was saved when it hands a signed-in visitor back', () => {
       signedIn();
       sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks', label: 'Tasks' }));
@@ -304,6 +329,160 @@ describe('LoginPage', () => {
     renderAt('?reason=idle&returnUrl=%2Fappraisals%2F1');
     expect(screen.getByText('Appraisal 69000125')).toBeInTheDocument();
     expect(screen.getByText('interstitial.returnTo')).toBeInTheDocument();
+  });
+
+  describe('Continue as (a session that timed out under a known user)', () => {
+    const account = { username: 'somchai.u', displayName: 'Somchai U.', initials: 'SU' };
+    const save = (extra: object = {}) =>
+      sessionStorage.setItem(
+        'cas-return',
+        JSON.stringify({ path: '/tasks', label: 'Tasks', reason: 'idle', account, ...extra }),
+      );
+
+    it('shows the masked name with initials, the return line and both buttons', () => {
+      save();
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      expect(screen.getByText('Somchai U.')).toBeInTheDocument();
+      expect(screen.getByText('SU')).toBeInTheDocument();
+      expect(screen.getByText('Tasks')).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'interstitial.continueAs:Somchai U.' }),
+      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'interstitial.notYou' })).toBeInTheDocument();
+    });
+
+    it('keeps the saved-work line and drops the shared-device line (the "not you" link covers it)', () => {
+      save();
+      const { unmount } = renderAt('?reason=idle&returnUrl=%2Ftasks');
+      expect(screen.getByText('interstitial.saved')).toBeInTheDocument();
+      expect(screen.queryByText('interstitial.sharedDevice')).not.toBeInTheDocument();
+      unmount();
+      save({ reason: 'ended' });
+      renderAt('?reason=ended&returnUrl=%2Ftasks');
+      expect(screen.getByText('interstitial.contactAdmin')).toBeInTheDocument();
+    });
+
+    it('continues with the username as login_hint and the return path', () => {
+      save();
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      fireEvent.click(screen.getByRole('button', { name: 'interstitial.continueAs:Somchai U.' }));
+      expect(location.href).toBe(`${apiLogin('/tasks')}&login_hint=somchai.u`);
+    });
+
+    it('"not you" forgets the user and signs in at home with no hint', () => {
+      save();
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      fireEvent.click(screen.getByRole('button', { name: 'interstitial.notYou' }));
+      expect(location.href).toBe(apiLogin('/'));
+      expect(location.href).not.toContain('login_hint');
+      // Nothing of A is left: a reload or Back returns home.
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!)).toEqual({
+        path: '/',
+        notYou: true,
+      });
+    });
+
+    it('"not you" strips the address first, so a reload is a plain sign-in that returns home', () => {
+      save();
+      const hrefWhenStripped: string[] = [];
+      const replaceState = vi
+        .spyOn(window.history, 'replaceState')
+        .mockImplementation(() => void hrefWhenStripped.push(location.href));
+      const first = renderAt('?reason=idle&returnUrl=%2Ftasks');
+      fireEvent.click(screen.getByRole('button', { name: 'interstitial.notYou' }));
+      // The history entry is kept as it is, only the address changes; all before the navigation.
+      expect(replaceState).toHaveBeenCalledWith(window.history.state, '', '/login');
+      expect(hrefWhenStripped).toEqual([`${APP}/login`]);
+      expect(location.href).toBe(apiLogin('/'));
+      replaceState.mockRestore();
+      first.unmount();
+
+      location.href = '';
+      renderAt(''); // the reloaded address
+      expect(screen.queryByText('Somchai U.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tasks')).not.toBeInTheDocument();
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/'));
+    });
+
+    it('ignores a page named by router state after "Not you?" (the history entry still has it)', () => {
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/', notYou: true }));
+      renderAt('', { from: '/tasks' });
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/'));
+      // ...and the marker survives the page's own rewrite of the saved state, for the next reload.
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!).notYou).toBe(true);
+    });
+
+    it('"not you" removes the card and the Continue button before leaving', () => {
+      save();
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      fireEvent.click(screen.getByRole('button', { name: 'interstitial.notYou' }));
+      expect(screen.queryByText('Somchai U.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tasks')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /continueAs/ })).not.toBeInTheDocument();
+      // Back from the identity provider via the back/forward cache: still a plain sign-in, at home.
+      location.href = '';
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/'));
+    });
+
+    it('keeps the card and the saved user when ProtectedRoute names the page (Back, then a reload)', () => {
+      save({ userId: 'u0' });
+      renderAt('', { from: '/tasks' }); // the 401 had no header: no query, only router state
+      expect(screen.getByText('Somchai U.')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
+        'interstitial.idle.title',
+      );
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!)).toMatchObject({
+        userId: 'u0',
+        account,
+        reason: 'idle',
+      });
+    });
+
+    it('shows the card again after Back and a boot 401 (user unknown) for the same page', () => {
+      save({ userId: 'u0' });
+      Object.assign(location, { pathname: '/tasks', search: '', hash: '' });
+      redirectToLogin(undefined, 'idle'); // what AuthInitializer does with the boot 401
+      expect(location.href).toBe('/login?returnUrl=%2Ftasks&reason=idle');
+      location.href = `${APP}/login`;
+      renderAt('?returnUrl=%2Ftasks&reason=idle');
+      expect(screen.getByText('Somchai U.')).toBeInTheDocument();
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!)).toMatchObject({ userId: 'u0' });
+    });
+
+    it('still shows the card when the card page is reloaded (the reason left the address)', () => {
+      save({ userId: 'u0' });
+      renderAt('?returnUrl=%2Ftasks');
+      expect(screen.getByText('Somchai U.')).toBeInTheDocument();
+      expect(screen.getByText('Tasks')).toBeInTheDocument();
+    });
+
+    it('keeps the user through the page rewriting its own saved state', () => {
+      save();
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!).account).toEqual(account);
+    });
+
+    it('is the old single button without a saved user', () => {
+      save({ account: undefined });
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+      expect(signIn()).toBeInTheDocument();
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/tasks'));
+    });
+
+    it('is not shown for a signed-out visit or when the user was saved for another page', () => {
+      save();
+      const { unmount } = renderAt('?reason=signed-out&returnUrl=%2Ftasks');
+      expect(screen.queryByText('Somchai U.')).not.toBeInTheDocument();
+      unmount();
+      renderAt('?reason=idle&returnUrl=%2Fother');
+      expect(screen.queryByText('Somchai U.')).not.toBeInTheDocument();
+      expect(signIn()).toBeInTheDocument();
+    });
   });
 
   it('hides the line when the saved name belongs to another page', () => {
@@ -437,6 +616,14 @@ describe('LoginPage', () => {
   });
 
   describe('when another tab signs in', () => {
+    it('does not treat the saved user as the one who asked for a different page', () => {
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks', userId: 'u1' }));
+      renderAt('?returnUrl=%2Fother');
+      act(() => channel.listeners.forEach(l => l({ data: { type: 'user', id: 'u1' } })));
+      fireEvent.click(screen.getByRole('button', { name: 'interstitial.otherTab.goNow' }));
+      expect(location.replace).toHaveBeenCalledWith(`${APP}/`);
+    });
+
     const announce = (id = 'u1') =>
       act(() => channel.listeners.forEach(l => l({ data: { type: 'user', id } })));
     // What redirectToLogin saved when u1's session ended.
@@ -597,6 +784,53 @@ describe('LoginPage', () => {
         'interstitial.signedOut.title',
       );
       expect(screen.queryByText('interstitial.saved')).not.toBeInTheDocument();
+    });
+
+    it('forgets the timed-out user when another tab signs out, so a bare /login offers no card', () => {
+      sessionStorage.setItem(
+        'cas-return',
+        JSON.stringify({
+          path: '/tasks',
+          reason: 'idle',
+          userId: 'u0',
+          account: { username: 'a', displayName: 'Ann L.', initials: 'AL' },
+        }),
+      );
+      const first = renderAt('?reason=idle&returnUrl=%2Ftasks');
+      act(() => channel.listeners.forEach(l => l({ data: { type: 'logout' } })));
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!)).toEqual({
+        path: '/',
+        notYou: true,
+      });
+      first.unmount();
+
+      renderAt('');
+      expect(screen.queryByText('Ann L.')).not.toBeInTheDocument();
+      expect(screen.getAllByRole('button')).toHaveLength(1);
+    });
+
+    it("treats another tab's sign-out as an explicit one: sign in at home, no page, no hint", () => {
+      sessionStorage.setItem(
+        'cas-return',
+        JSON.stringify({
+          path: '/tasks',
+          label: 'Tasks',
+          reason: 'idle',
+          userId: 'u0',
+          account: { username: 'ann', displayName: 'Ann L.', initials: 'AL' },
+        }),
+      );
+      const replaceState = vi.spyOn(window.history, 'replaceState');
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      expect(screen.getByText('Ann L.')).toBeInTheDocument();
+      act(() => channel.listeners.forEach(l => l({ data: { type: 'logout' } })));
+      expect(replaceState).toHaveBeenCalledWith(window.history.state, '', '/login');
+      replaceState.mockRestore();
+      expect(screen.queryByText('Ann L.')).not.toBeInTheDocument();
+      expect(screen.queryByText('Tasks')).not.toBeInTheDocument();
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/'));
+      expect(location.href).not.toContain('login_hint');
     });
 
     it('cancels the countdown when a sign-out follows the sign-in', () => {

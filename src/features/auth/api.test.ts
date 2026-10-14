@@ -55,19 +55,22 @@ describe('fetchCurrentUser', () => {
     expect(useAuthStore.getState().isAuthenticated).toBe(true);
   });
 
-  it('reloads, and does not publish the other user, when the session changed hands', async () => {
-    const reload = vi.fn();
-    vi.stubGlobal('location', { ...window.location, reload });
+  it('goes home, and does not publish the other user, when the session changed hands', async () => {
+    const replace = vi.fn();
+    vi.stubGlobal('location', { ...window.location, origin: 'https://app.example.com', replace });
+    vi.stubEnv('VITE_APP_URL', 'https://app.example.com');
     server.use(me({ id: 'u1' }));
     await fetchCurrentUser();
-    expect(reload).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
     server.use(me({ id: 'u2' }));
     await expect(fetchCurrentUser()).rejects.toThrow();
-    expect(reload).toHaveBeenCalledTimes(1);
-    // A cancelled reload leaves the tab on u1; the next check must refuse (and reload) again.
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith('https://app.example.com/');
+    // A cancelled navigation leaves the tab on u1; the next check must refuse (and go home) again.
     expect(useAuthStore.getState().user?.id).toBe('u1');
     await expect(fetchCurrentUser()).rejects.toThrow();
-    expect(reload).toHaveBeenCalledTimes(2);
+    expect(replace).toHaveBeenCalledTimes(2);
     vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
   });
 });

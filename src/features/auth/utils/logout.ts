@@ -1,13 +1,13 @@
 import toast from 'react-hot-toast';
 import i18n from '@/i18n';
 import axios, { suspendLoginRedirect } from '@shared/api/axiosInstance';
-import { leaveWithoutPrompt, REDIRECT_SETTLE_MS } from '@shared/api/forcedNavigation';
+import { REDIRECT_SETTLE_MS } from '@shared/api/forcedNavigation';
 import { queryClient } from '@app/queryClient';
 import * as appHub from '@shared/realtime/appHub';
 
 import { useAuthStore } from '../store';
 import { authChannel } from './authChannel';
-import { redirectToLogin, session, SIGNED_OUT_KEY } from './auth';
+import { goHomeAsNewUser, redirectToLogin, session, SIGNED_OUT_KEY } from './auth';
 
 /** Tell the other tabs which user this browser's session cookie belongs to. */
 export function announceUser(id: string) {
@@ -15,7 +15,7 @@ export function announceUser(id: string) {
 }
 
 /**
- * React to the other tabs: navigate to /login when one signs out, and reload when one signs in as
+ * React to the other tabs: navigate to /login when one signs out, and go home when one signs in as
  * a different user (the browser has one session cookie, so this tab's next save would run as them).
  * Returns the unsubscribe function.
  */
@@ -24,7 +24,7 @@ export function listenForRemoteLogout(): () => void {
   const onMessage = (event: MessageEvent<{ type?: string; id?: string }>) => {
     if (event.data?.type === 'user') {
       const mine = useAuthStore.getState().user?.id;
-      if (mine && event.data.id !== mine) leaveWithoutPrompt(() => window.location.reload());
+      if (mine && event.data.id !== mine) goHomeAsNewUser();
       return;
     }
     if (event.data?.type !== 'logout') return;

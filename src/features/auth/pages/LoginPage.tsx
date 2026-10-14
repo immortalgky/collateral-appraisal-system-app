@@ -10,6 +10,8 @@ import skyline from '@assets/login-skyline.jpg';
 import { useAuthStore } from '../store';
 import {
   clearSavedReturn,
+  isSavedUserOrUnknown,
+  isSavedUserStrict,
   readSavedReturn,
   saveReturn,
   safeReturnPath,
@@ -29,10 +31,27 @@ const BOUNCE_WINDOW_MS = 30_000;
 const quietPeriodOver = () =>
   Date.now() - (Number(session.get(BOUNCE_KEY)) || 0) >= BOUNCE_WINDOW_MS;
 
-// The ways to sign in, first one primary. Adding one (a passkey) is one more entry here.
+// The ways to sign in, first one primary. Adding one (a passkey) is one more entry here. `hint` is
+// the username of the user whose session timed out, when known; only a method that `acceptsHint`
+// is given it and is shown as "Continue as <name>".
 const SIGN_IN_METHODS = [
-  { id: 'password', labelKey: 'interstitial.methods.password', start: startSignIn },
+  {
+    id: 'password',
+    labelKey: 'interstitial.methods.password',
+    acceptsHint: true,
+    start: (returnPath: string, hint?: string) => startSignIn(returnPath, { loginHint: hint }),
+  },
 ] as const;
+
+// Drop the old query from the address at once. Not the router's setSearchParams: its update can
+// land after a cross-document navigation has started, and a reload or Back must not revive the page.
+const stripToBareLogin = () => window.history.replaceState(window.history.state, '', '/login');
+
+// Nothing of the previous user's page may come back, by a reload, a Back or a later bare /login.
+const forgetPreviousUser = () => {
+  saveReturn({ path: '/', notYou: true });
+  stripToBareLogin();
+};
 
 const REASONS: readonly LoginReason[] = ['idle', 'ended', 'signed-out'];
 
@@ -55,39 +74,45 @@ const asReason = (value: unknown) => REASONS.find(r => r === value);
 function LoginPage() {
   const { t } = useTranslation('auth');
   const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const signedInId = useAuthStore(state => state.user?.id);
   const [params, setSearchParams] = useSearchParams();
   const location = useLocation();
 
   // Everything about how the user got here, read once. The URL is edited below (the reason is
   // dropped from it) and storage is rewritten as the page runs, so nothing is re-read after this.
   const [arrival] = useState(() => {
-    // ProtectedRoute leaves the page the user asked for in state; redirectToLogin puts it in the URL.
-    const from = (location.state as { from?: string } | null)?.from;
     const saved = readSavedReturn();
+    // ProtectedRoute leaves the page the user asked for in state; redirectToLogin puts it in the URL.
+    // Not after "Not you?" or another tab's sign-out: the history entry still carries it.
+    const from = saved?.notYou ? undefined : (location.state as { from?: string } | null)?.from;
     const noQuery = !params.has('returnUrl') && !params.has('reason');
     // A bare /login (the identity provider's "choose another method" link) lost the query: fall back
     // to what redirectToLogin saved. Not when router state names a page (a plain first visit), or an
     // hours-old saved reason would be shown.
     const bare = noQuery && !from;
-    const returnPath = safeReturnPath(
-      params.get('returnUrl') ??
-        from ??
-        (bare && typeof saved?.path === 'string' ? saved.path : undefined),
-    );
+    const queried = params.get('returnUrl');
+    const restored = bare && typeof saved?.path === 'string' ? saved.path : undefined;
+    const returnPath = safeReturnPath(queried ?? from ?? restored);
+    // What was saved for this page, however the page was named (query, router state or the saved
+    // state itself). By decision, router state naming the saved page gets its saved reason, card and
+    // user: a different person who typed the same URL is sent home after signing in, rather than the
+    // timed-out user's guards being dropped.
+    const forPage = saved?.path === returnPath ? saved : undefined;
     // logout() leaves a flag for the page it lands on (the app home, which sends the user here with
     // only router state); only a query-less visit honours it.
     const flagged = session.get(SIGNED_OUT_KEY) === '1';
+    // The query's reason is stripped on mount, so a reload of the card page falls back to the saved
+    // one. Otherwise only a bare /login restores it; a plain reload shows the generic page.
+    const savedReason = bare || forPage?.account ? asReason((forPage ?? saved)?.reason) : undefined;
     return {
       returnPath,
-      label:
-        saved?.path === returnPath && typeof saved.label === 'string' && saved.label
-          ? saved.label
-          : undefined,
-      reason:
-        asReason(params.get('reason')) ??
-        (noQuery && flagged ? 'signed-out' : bare ? asReason(saved?.reason) : undefined),
+      label: typeof forPage?.label === 'string' && forPage.label ? forPage.label : undefined,
+      reason: asReason(params.get('reason')) ?? (noQuery && flagged ? 'signed-out' : savedReason),
       hadReason: params.has('reason'),
-      userId: saved?.userId,
+      userId: forPage?.userId,
+      // Who timed out, for the "Continue as" card.
+      account: forPage?.account,
+      notYou: saved?.notYou,
       // Reached because of a 401 while /auth/me says the user is signed in (the two disagree, say
       // after a cache mismatch)? Going back would 401 again and loop, so go back at most once per
       // window and then stay here with the normal button.
@@ -96,6 +121,10 @@ function LoginPage() {
     };
   });
   const { returnPath } = arrival;
+
+  // "Not you?" was chosen: the card is gone from the screen, also when the page is shown again
+  // from the back/forward cache (where this state survives).
+  const [forgotten, setForgotten] = useState(false);
   const leavingSignedIn = isAuthenticated && arrival.mayGoBack;
 
   // The flag is one-shot: dropped in every case, in an effect rather than while rendering so
@@ -139,6 +168,9 @@ function LoginPage() {
     const onMessage = (event: MessageEvent<{ type?: string; id?: string }>) => {
       const { type, id } = event.data ?? {};
       if (type !== 'user' && type !== 'logout') return;
+      if (type === 'logout') {
+        forgetPreviousUser(); // signed out on purpose
+      }
       const auto = type === 'user' && quietPeriodOver();
       if (auto) session.set(BOUNCE_KEY, String(Date.now()));
       setSignal(prev => ({ type, id, auto: auto || (prev?.type === type && prev.auto) }));
@@ -148,7 +180,7 @@ function LoginPage() {
   }, []);
   const otherTab = signal?.type === 'user';
   // Back to the page only for the user who was signed out; anyone else starts from the home page.
-  const sameUser = otherTab && arrival.userId !== undefined && signal.id === arrival.userId;
+  const sameUser = otherTab && isSavedUserStrict(arrival.userId, signal.id);
   const target = sameUser ? returnPath : '/';
   const shownReason = signal?.type === 'logout' ? 'signed-out' : arrival.reason;
 
@@ -161,6 +193,8 @@ function LoginPage() {
         label: arrival.label ?? '',
         reason: arrival.reason,
         userId: arrival.userId,
+        account: arrival.account,
+        notYou: arrival.notYou,
       });
     }
   }, [isAuthenticated, returnPath, arrival]);
@@ -181,7 +215,11 @@ function LoginPage() {
     return () => clearTimeout(timer);
   }, [autoReturn, goBack]);
 
-  if (leavingSignedIn) return <Navigate to={returnPath} replace />;
+  // Back to the page only for the user who was signed out; anyone else starts from the home page.
+  if (leavingSignedIn) {
+    const mine = isSavedUserOrUnknown(arrival.userId, signedInId);
+    return <Navigate to={mine ? returnPath : '/'} replace />;
+  }
 
   // The spinner and "taking you back" only when it really will; otherwise a static message and the button.
   const view: View | undefined = otherTab
@@ -193,6 +231,15 @@ function LoginPage() {
     : shownReason && REASON_VIEW[shownReason];
   // Idle and ended say what happens to the user's work and where they land; the others have nothing to add.
   const showReturnBox = shownReason === 'idle' || shownReason === 'ended';
+  // After "Not you?" or another tab's sign-out the sign-in starts at home, with nothing of the old page.
+  const fresh = forgotten || signal?.type === 'logout';
+  const account = showReturnBox && !otherTab && !fresh ? arrival.account : undefined;
+  const label = fresh ? undefined : arrival.label;
+  const returnTo = label && (
+    <>
+      {t('interstitial.returnTo')} <b className="font-medium text-white">{label}</b>
+    </>
+  );
 
   return (
     <div className="flex min-h-screen flex-col bg-[#0a1428] md:flex-row">
@@ -273,17 +320,28 @@ function LoginPage() {
 
           {showReturnBox && !otherTab && (
             <div className="flex flex-col gap-2.5 rounded-lg border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white/85">
+              {account && (
+                <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                  <div
+                    aria-hidden="true"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-600/30 text-base font-semibold text-blue-200"
+                  >
+                    {account.initials}
+                  </div>
+                  <div className="flex min-w-0 flex-col gap-0.5">
+                    <div className="text-base font-medium text-white">{account.displayName}</div>
+                    {returnTo && <div className="text-xs text-white/70">{returnTo}</div>}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center gap-2.5">
                 <Icon name="check" style="solid" className="shrink-0 text-green-400" />
                 <span>{t('interstitial.saved')}</span>
               </div>
-              {arrival.label && (
+              {!account && returnTo && (
                 <div className="flex items-center gap-2.5">
                   <Icon name="reply" style="solid" className="shrink-0 text-blue-300" />
-                  <span>
-                    {t('interstitial.returnTo')}{' '}
-                    <b className="font-medium text-white">{arrival.label}</b>
-                  </span>
+                  <span>{returnTo}</span>
                 </div>
               )}
             </div>
@@ -299,25 +357,53 @@ function LoginPage() {
             </button>
           ) : (
             <div className="mt-auto flex flex-col gap-2.5 md:mt-0">
-              {SIGN_IN_METHODS.map((method, index) => (
+              {SIGN_IN_METHODS.map((method, index) => {
+                const continuing = account && method.acceptsHint;
+                return (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={() =>
+                      method.start(
+                        fresh ? '/' : returnPath,
+                        continuing ? account.username : undefined,
+                      )
+                    }
+                    className={clsx(
+                      'h-12 w-full cursor-pointer rounded-md text-base font-medium text-white',
+                      index === 0
+                        ? 'bg-[#2563eb] hover:bg-[#1d4ed8]'
+                        : 'border border-white/35 hover:bg-white/10',
+                    )}
+                  >
+                    {continuing ? (
+                      <span className="flex items-center justify-center gap-2.5">
+                        <Icon name="lock" style="solid" className="text-lg" />
+                        {t('interstitial.continueAs', { name: account.displayName })}
+                      </span>
+                    ) : (
+                      t(method.labelKey)
+                    )}
+                  </button>
+                );
+              })}
+              {account && (
                 <button
-                  key={method.id}
                   type="button"
-                  onClick={() => method.start(returnPath)}
-                  className={clsx(
-                    'h-12 w-full cursor-pointer rounded-md text-base font-medium text-white',
-                    index === 0
-                      ? 'bg-[#2563eb] hover:bg-[#1d4ed8]'
-                      : 'border border-white/35 hover:bg-white/10',
-                  )}
+                  onClick={() => {
+                    forgetPreviousUser();
+                    setForgotten(true);
+                    startSignIn('/');
+                  }}
+                  className="cursor-pointer px-1 py-1.5 text-center text-sm text-blue-300 hover:text-white hover:underline"
                 >
-                  {t(method.labelKey)}
+                  {t('interstitial.notYou')}
                 </button>
-              ))}
+              )}
             </div>
           )}
 
-          {showReturnBox && !otherTab && (
+          {showReturnBox && !otherTab && !(account && shownReason === 'idle') && (
             <p className="text-center text-xs text-white/60">
               {t(
                 shownReason === 'idle' ? 'interstitial.sharedDevice' : 'interstitial.contactAdmin',
