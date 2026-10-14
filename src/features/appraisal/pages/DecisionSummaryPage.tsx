@@ -3,7 +3,7 @@ import ActivityCompletionChecklist from '../components/ActivityCompletionCheckli
 import ActivityCompletionErrors from '../components/ActivityCompletionErrors';
 import { useActivityProgressStore } from '../store/activityProgressStore';
 import type { StructuredValidationError, StructuredWarning } from '../api/workflow';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   useAppraisalId,
@@ -42,7 +42,8 @@ import {
   useUpdateForceSaleRate,
 } from '../api/decisionSummary';
 import { useQueryClient } from '@tanstack/react-query';
-import { useGetAssignment } from '../api/administration';
+import { useGetAssignment, useGetEligibleStaff } from '../api/administration';
+import { cancelQueriesFor, originOf, useLiftoffStore } from '../store/liftoffStore';
 import ValuationEngagementChips from '../components/ValuationEngagementChips';
 import { useAuthStore } from '@features/auth/store.ts';
 import {
@@ -66,11 +67,14 @@ import GovernmentPriceTable from '../components/summary/GovernmentPriceTable';
 import CondoGovernmentPriceTable from '../components/summary/CondoGovernmentPriceTable';
 import DecisionSection, { DecisionConfirmSummary } from '../components/summary/DecisionSection';
 import {
+  activityTitle,
   COMMITTEE_ACTIVITY_ID,
   decisionDisplayLabel,
   isDissentingVote,
   isManualAssignmentAction,
   reasonGroupOf,
+  resolveLiftoff,
+  sameUser,
 } from '../components/summary/decisionHelpers';
 import { OpenFollowupBanner } from '@/features/document-followup/components/OpenFollowupBanner';
 import ConstructionSummaryTable from '../components/summary/ConstructionSummaryTable';
@@ -463,7 +467,6 @@ const splitWarningMessage = (message: string): string[] =>
 const DecisionSummaryPage = () => {
   const { t } = useTranslation('appraisal');
   const fields = makeDecisionFields(t);
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { taskId } = useParams<{ taskId: string }>();
   const appraisalId = useAppraisalId();
@@ -535,8 +538,13 @@ const DecisionSummaryPage = () => {
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [selectedAssigneeUserId, setSelectedAssigneeUserId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  // Disagree / Route Back votes must be ticked in the confirm dialog before they can be sent.
-  const [voteAcknowledged, setVoteAcknowledged] = useState(false);
+  // The success overlay is shown through the app-level store. It plays over this page, which stays
+  // mounted (but inert) until the card closes and the app navigates to /tasks.
+  const showLiftoff = useLiftoffStore(s => s.show);
+  // Set when the completion succeeded: the task is closed server-side, so from then on this page
+  // sends nothing more (no second submit or save, no approval-list polling).
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const submitIconRef = useRef<HTMLSpanElement>(null);
   const [isHistorySearchOpen, setIsHistorySearchOpen] = useState(false);
   const [isAssetSummaryOpen, setIsAssetSummaryOpen] = useState(false);
   const [failures, setFailures] = useState<StructuredValidationError[]>([]);
@@ -597,6 +605,13 @@ const DecisionSummaryPage = () => {
   );
 
   const isManualAssignment = isManualAssignmentAction(selectedAction);
+  // Same query (and cache key) as DecisionSection: no extra request. Names the picked assignee on
+  // the liftoff overlay, whether picked by click or restored from the task draft.
+  const { data: eligibleStaff } = useGetEligibleStaff(
+    workflowInstanceId,
+    selectedAction?.targetActivityId ?? '',
+    isManualAssignment,
+  );
 
   const reasonRequired = reasonGroupOf(selectedAction) !== null;
   // Only the task owner's Submit casts the vote; a non-owner's Submit just saves the summary.
@@ -641,7 +656,7 @@ const DecisionSummaryPage = () => {
     formState: { isDirty },
   } = methods;
 
-  const { blocker } = useUnsavedChangesWarning(isDirty);
+  const { blocker, skipWarning } = useUnsavedChangesWarning(isDirty);
 
   // When price verification is shown and set to Verified, lock appraiser
   // opinion and additional assumptions (no reasoning needed if price is verified).
@@ -779,6 +794,8 @@ const DecisionSummaryPage = () => {
   }, [mapDataToForm, reset]);
 
   const doCompleteActivity = (acknowledgedWarningTokens?: string[]) => {
+    // Already completed (the success card is up): never complete the same task twice.
+    if (isSubmitted) return;
     const isAckCall = acknowledgedWarningTokens !== undefined;
     // On a fresh (non-ack) call, reset all prior feedback.
     // On an ack re-call, only reset failures so the warning panel stays visible
@@ -837,25 +854,68 @@ const DecisionSummaryPage = () => {
             }
             return;
           }
-          // Success — close dialog and navigate away
+          // Success. The task is closed now, but this page stays on screen under the success card
+          // until the card closes and the app navigates to /tasks. Stop it asking for the task:
+          // cancel what is in flight (the completion's own invalidations just started some), and
+          // below only mark the stale caches rather than refetching them.
+          setIsSubmitted(true);
+          const closedIds = [taskId, workflowInstanceId, resolvedWorkflowInstanceId, appraisalId];
+          void cancelQueriesFor(queryClient, closedIds);
           if (activityId === COMMITTEE_ACTIVITY_ID) {
-            // A vote changes the round's tally (and may resolve it) — don't serve a stale one.
+            // A vote changes the round's tally (and may resolve it) — don't serve a stale one on the
+            // next visit. 'none': mark it stale without refetching, this page is done with it.
             queryClient.invalidateQueries({
               queryKey: decisionSummaryKeys.approvalList(
                 workflowInstanceId!,
                 COMMITTEE_ACTIVITY_ID,
               ),
+              refetchType: 'none',
             });
             if (appraisalId) {
               queryClient.invalidateQueries({
                 queryKey: decisionSummaryKeys.approvalHistory(appraisalId, COMMITTEE_ACTIVITY_ID),
+                refetchType: 'none',
               });
             }
           }
           setWarnings([]);
           setIsConfirmOpen(false);
-          toast.success(t('decisionSummary.toasts.submitted'));
-          navigate('/tasks');
+          // The liftoff overlay replaces the toast. It lives at app level and plays over this page;
+          // hand it everything now. It navigates to /tasks itself when the card closes.
+          const { scene, voteOutcome } = resolveLiftoff({
+            action: selectedAction,
+            activityId,
+            isCompleted: result.isCompleted,
+            nextActivityId: result.nextActivityId,
+          });
+          // The server's name for the next holder (covers system-assigned and route-back steps).
+          // An older backend omits it: then the picked staff member's name, only when the server
+          // routed to that user. The two ids come from different backend paths, so compare ignoring
+          // case.
+          const nextAssigneeName =
+            result.nextAssigneeDisplayName ||
+            (isManualAssignment && sameUser(result.nextAssignee, selectedAssigneeUserId)
+              ? (eligibleStaff?.find(s => sameUser(s.id, selectedAssigneeUserId))?.name ?? null)
+              : null);
+          showLiftoff({
+            origin: originOf(submitIconRef.current),
+            scene,
+            voteOutcome,
+            // Only a step the server reported: never name one it did not.
+            nextActivityName: activityTitle(result.nextActivityId),
+            nextAssigneeName,
+            // result.nextAssignee is a user code: shown beside the name, never on its own.
+            nextAssigneeCode: nextAssigneeName ? (result.nextAssignee ?? null) : null,
+            referenceNumber: appraisal?.appraisalReportNo ?? null,
+            to: '/tasks',
+            // The completion saved the form: let the navigation, when the card closes, through the
+            // unsaved-changes guard (called at that moment, so a form that turned dirty again
+            // meanwhile cannot re-arm it).
+            beforeLeave: skipWarning,
+            closedIds,
+          });
+          // Also now, so a Back during the card does not ask about changes that were just saved.
+          skipWarning();
         },
         onError: (error: unknown) => {
           // Keep dialog open; show the error in the panel
@@ -881,6 +941,7 @@ const DecisionSummaryPage = () => {
   //   Save   → persist summary + task draft only (never completes the activity)
   //   Submit → save summary, then complete the workflow activity (via ConfirmDialog)
   const persistDecision = (formData: DecisionSummaryFormType, complete: boolean) => {
+    if (isSubmitted) return;
     const canComplete =
       complete && isTaskOwner && workflowInstanceId && activityId && selectedDecision;
 
@@ -899,9 +960,9 @@ const DecisionSummaryPage = () => {
       return;
     }
 
-    // A Disagree / Route Back vote needs a comment and the dialog tick. The buttons are disabled
-    // too, but re-check here so no path can send one without them.
-    if (complete && isDissent && (!comments.trim() || !voteAcknowledged)) {
+    // A Disagree / Route Back vote needs a comment. The Submit button is disabled without one too,
+    // but re-check here so no path can send one without it.
+    if (complete && isDissent && !comments.trim()) {
       setIsConfirmOpen(false);
       toast.error(t('decisionSummary.toasts.voteNeedsComment'));
       return;
@@ -1471,19 +1532,27 @@ const DecisionSummaryPage = () => {
                 showCommitteeVotes={showSection('committeeApproval')}
                 isAppraisalTerminal={isTerminalStatus(appraisal?.status)}
                 appraisalId={appraisalId}
+                isSubmitted={isSubmitted}
               />
             </div>
           </div>
 
-          {/* 14. Sticky Footer */}
+          {/* 14. Sticky Footer. data-page-actions: the layouts drop their bottom padding for it (as
+              for ActionBar), so the footer sits on the bottom edge instead of above an empty strip.
+              It is only on the page when the footer renders, so read-only pages keep their padding. */}
           {!isReadOnly && (
-            <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-4">
+            <div
+              data-page-actions=""
+              className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+            >
+              {/* Compact below sm (no dividers, the unsaved label is just its dot, no decision chip)
+                  so it fits a phone; the wrap is the last resort, so it never pushes the page sideways. */}
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <div className="flex items-center gap-2 sm:gap-4">
                   <Button variant="ghost" type="button" onClick={handleCancel}>
                     {t('decisionSummaryPageExtra.cancelButton')}
                   </Button>
-                  <div className="h-6 w-px bg-gray-200" />
+                  <div className="hidden h-6 w-px bg-gray-200 sm:block" />
                   {/* History Search map icon — opens nearby appraisal/MC map */}
                   <button
                     type="button"
@@ -1494,15 +1563,20 @@ const DecisionSummaryPage = () => {
                     <Icon name="map-location-dot" style="solid" className="w-4 h-4" />
                     <span className="hidden sm:inline">{t('decisionSummary.historySearch')}</span>
                   </button>
-                  <div className="h-6 w-px bg-gray-200" />
+                  <div className="hidden h-6 w-px bg-gray-200 sm:block" />
                   {isDirty && (
-                    <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                    <span
+                      className="flex items-center gap-1.5 text-xs font-medium text-amber-600"
+                      title={t('decisionSummary.unsavedChanges')}
+                    >
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                      {t('decisionSummary.unsavedChanges')}
+                      <span className="hidden sm:inline">
+                        {t('decisionSummary.unsavedChanges')}
+                      </span>
                     </span>
                   )}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 sm:gap-3">
                   {(hasEditableSections || (isTaskOwner && !!taskId)) && (
                     <Button
                       variant="outline"
@@ -1510,7 +1584,8 @@ const DecisionSummaryPage = () => {
                       disabled={
                         (!appraisalId && !(isTaskOwner && !!taskId)) ||
                         (!isDirty && !draftDirty && !engagementDirty) ||
-                        isSaving
+                        isSaving ||
+                        isSubmitted
                       }
                     >
                       <Icon style="regular" name="floppy-disk" className="size-4 mr-2" />
@@ -1521,6 +1596,7 @@ const DecisionSummaryPage = () => {
                     type="button"
                     disabled={
                       isSaving ||
+                      isSubmitted ||
                       completeActivity.isPending ||
                       (isTaskOwner && !selectedDecision) ||
                       (isTaskOwner && !!selectedDecision && !selectedAction) ||
@@ -1528,16 +1604,18 @@ const DecisionSummaryPage = () => {
                       (isTaskOwner && reasonRequired && !reasonCode) ||
                       (isDissent && !comments.trim())
                     }
-                    onClick={() => {
-                      setVoteAcknowledged(false);
-                      setIsConfirmOpen(true);
-                    }}
+                    onClick={() => setIsConfirmOpen(true)}
                   >
-                    <Icon style="solid" name="paper-plane" className="size-4 mr-2" />
+                    {/* The liftoff flight starts at this icon's centre; the span carries the margin
+                        so its box is exactly the 16px icon. */}
+                    <span ref={submitIconRef} className="mr-2 inline-flex">
+                      <Icon style="solid" name="paper-plane" className="size-4" />
+                    </span>
                     {t('decisionSummaryPageExtra.submitButton')}
-                    {/* Echo the pick on the button so the last click confirms what is sent */}
+                    {/* Echo the pick on the button so the last click confirms what is sent (hidden on
+                        a phone, where the button must fit; the confirm dialog says it too) */}
                     {isTaskOwner && selectedAction && (
-                      <span className="ml-2 rounded bg-white/20 px-1.5 py-0.5 text-xs font-medium">
+                      <span className="ml-2 hidden rounded bg-white/20 px-1.5 py-0.5 text-xs font-medium sm:inline">
                         {decisionDisplayLabel(t, activityId, selectedAction)}
                       </span>
                     )}
@@ -1582,7 +1660,6 @@ const DecisionSummaryPage = () => {
         cancelText={t('decisionSummary.confirmDialog.cancel')}
         variant="primary"
         isLoading={isSaving || completeActivity.isPending}
-        confirmDisabled={isDissent && !voteAcknowledged}
         hasError={failures.length > 0}
         hasWarning={warnings.length > 0 && failures.length === 0}
         customFooter={
@@ -1654,8 +1731,6 @@ const DecisionSummaryPage = () => {
             assigneeUserId={selectedAssigneeUserId}
             reasonCode={reasonCode}
             comments={comments}
-            acknowledged={voteAcknowledged}
-            onAcknowledgedChange={setVoteAcknowledged}
           />
         ) : null}
       </ConfirmDialog>

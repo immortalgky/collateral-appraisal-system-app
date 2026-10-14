@@ -647,7 +647,6 @@
       "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน",
       "voteTitle": "ยืนยันการลงคะแนน",
       "voteMessage": "ส่งแล้วแก้ไขไม่ได้",
-      "voteAck": "ฉันต้องการลงคะแนน \"{{vote}}\" ต่อราคาประเมินนี้",
       "summary": {
         "decision": "การตัดสินใจ",
         "destination": "ขั้นตอนถัดไป",
@@ -663,12 +662,11 @@
     "toasts": {
       "saved": "บันทึกสรุปการตัดสินใจสำเร็จ",
       "saveFailed": "ไม่สามารถบันทึกสรุปการตัดสินใจได้ กรุณาลองใหม่",
-      "submitted": "ส่งการตัดสินใจสำเร็จ",
       "submitFailed": "ไม่สามารถส่งการตัดสินใจได้",
       "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ",
       "forceSaleRateSaved": "บันทึกอัตราราคาขายบังคับสำเร็จ",
       "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่",
-      "voteNeedsComment": "กรุณาระบุความคิดเห็นและยืนยันการลงคะแนนก่อนส่ง"
+      "voteNeedsComment": "กรุณาระบุความคิดเห็นก่อนลงคะแนน"
     }
   },
   "decision": {
@@ -701,7 +699,32 @@
     "destination": {
       "forward": "ไปที่ {{name}}",
       "back": "กลับไป {{name}}",
-      "cancel": "จบ workflow"
+      "cancel": "จบ workflow",
+      "final": "จบ workflow ที่ขั้นนี้"
+    },
+    "route": {
+      "title": "เส้นทางงาน",
+      "showEarlier_one": "แสดงอีก {{count}} ขั้นก่อนหน้า",
+      "showEarlier_other": "แสดงอีก {{count}} ขั้นก่อนหน้า",
+      "hideEarlier": "ซ่อนขั้นก่อนหน้า",
+      "here": "ขั้นนี้",
+      "inProgress": "กำลังดำเนินการ",
+      "awaitingVote": "รอลงมติ",
+      "showMore": "ดูเพิ่ม",
+      "showLess": "ย่อ",
+      "returnsHere": "งานจะกลับมาที่นี่",
+      "statusCompleted": "เสร็จสิ้น",
+      "statusRoutedBack": "ส่งกลับ",
+      "previewSr": "ตัวอย่างว่างานจะไปที่ไหนเมื่อกดส่ง:",
+      "ghostIdle": "เลือกการตัดสินใจเพื่อดูว่างานจะไปที่ไหน",
+      "final": "จบ workflow",
+      "finalMeta": "ใบงานนี้จะเสร็จสมบูรณ์",
+      "cancel": "ยกเลิกใบงาน",
+      "cancelMeta": "workflow สิ้นสุดที่ขั้นนี้",
+      "assignee": "ผู้รับ {{name}}",
+      "assigneeMissing": "ยังไม่ได้เลือกผู้รับ",
+      "backTo": "ส่งกลับไป {{title}}",
+      "previousStep": "ขั้นตอนก่อนหน้า"
     },
     "committeeVotes": "ผลโหวต",
     "votesSummary": "ลงคะแนนแล้ว {{received}}/{{total}}",
@@ -710,6 +733,12 @@
     "yourVote": "คะแนนของคุณ",
     "nextStep": "ขั้นตอนถัดไป",
     "voteImpact": "{{from}} → {{to}} เสียง",
+    "voteImpactMet": "{{from}} → {{to}} เสียง · ครบเกณฑ์",
+    "voteImpactShort": "{{from}} → {{to}} เสียง · ยังขาด {{left}}",
+    "voteTag": "มติ",
+    "voteBackNow": "ส่งกลับทันที → {{name}}",
+    "voteBackNowNoName": "ส่งกลับทันที",
+    "voteNeedsReason": "ต้องระบุเหตุผล",
     "votesLoadFailed": "โหลดผลโหวตของกรรมการไม่สำเร็จ",
     "noActions": "ไม่มีตัวเลือกการตัดสินใจสำหรับงานนี้ กรุณารีเฟรชหน้า หรือติดต่อผู้ดูแลระบบหากยังพบปัญหา"
   },
@@ -2661,8 +2690,8 @@
     "conditionMinVotesDefault": "ต้องการจำนวนคะแนนขั้นต่ำ",
     "stats": {
       "votesReceived": "จำนวนโหวต",
-      "approve": "อนุมัติ",
-      "reject": "ไม่อนุมัติ",
+      "approve": "เห็นด้วย",
+      "reject": "ไม่เห็นด้วย",
       "routeBack": "ส่งกลับ"
     },
     "voteLabels": {
