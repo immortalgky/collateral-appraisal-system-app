@@ -246,10 +246,10 @@ describe('logout', () => {
     expect(location.href).toBe(START);
   });
 
-  it('announces the signed-in user, and reloads when another tab signs in as someone else', async () => {
-    const reload = vi.fn();
+  it('announces the signed-in user, and goes home when another tab signs in as someone else', async () => {
+    const replace = vi.fn();
     const { announceUser, listenForRemoteLogout } = await load();
-    vi.stubGlobal('location', { ...location, reload });
+    vi.stubGlobal('location', { ...location, origin: 'https://app.example.com', replace });
     const { useAuthStore } = await import('../store');
     announceUser('u1');
     expect(FakeChannel.instances[0].postMessage).toHaveBeenCalledWith({ type: 'user', id: 'u1' });
@@ -259,8 +259,9 @@ describe('logout', () => {
     const receive = (id: string) =>
       FakeChannel.instances[0].listeners.forEach(l => l({ data: { type: 'user', id } }));
     receive('u1');
-    expect(reload).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
     receive('u2');
-    expect(reload).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith('https://app.example.com/');
   });
 });

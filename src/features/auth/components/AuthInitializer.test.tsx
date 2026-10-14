@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
@@ -64,6 +64,51 @@ describe('AuthInitializer', () => {
       sessionStorage.setItem('cas-return', JSON.stringify(saved));
       await boot();
       expect(sessionStorage.getItem('cas-return')).toBeNull();
+    });
+
+    describe('when somebody else signed in', () => {
+      // me() answers as u1; the page was saved for u0.
+      const replace = vi.fn();
+      beforeEach(() => {
+        replace.mockClear();
+        vi.stubGlobal('location', { ...window.location, pathname: '/tasks', replace });
+      });
+      afterEach(() => vi.unstubAllGlobals());
+
+      it("leaves the previous user's page for the home page, once", async () => {
+        me();
+        sessionStorage.setItem('cas-return', JSON.stringify(saved));
+        render(
+          <AuthInitializer>
+            <div>app</div>
+          </AuthInitializer>,
+        );
+        await vi.waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+        // Cleared first, so the page it lands on has nothing left to act on.
+        expect(sessionStorage.getItem('cas-return')).toBeNull();
+        expect(replace).toHaveBeenCalledTimes(1);
+      });
+
+      it('stays when it is the same user', async () => {
+        me();
+        sessionStorage.setItem('cas-return', JSON.stringify({ ...saved, userId: 'u1' }));
+        await boot();
+        expect(replace).not.toHaveBeenCalled();
+      });
+
+      it('stays on a page that is not the saved one', async () => {
+        me();
+        sessionStorage.setItem('cas-return', JSON.stringify({ ...saved, path: '/other' }));
+        await boot();
+        expect(replace).not.toHaveBeenCalled();
+      });
+
+      it('does nothing without a saved user id', async () => {
+        me();
+        sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks' }));
+        await boot();
+        expect(replace).not.toHaveBeenCalled();
+      });
     });
 
     it('survives a boot on /login, where it is still what the page shows', async () => {
