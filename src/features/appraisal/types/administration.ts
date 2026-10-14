@@ -90,6 +90,13 @@ export interface CurrentAssignment {
   createdOn: string | null;
 }
 
+/** GET /appraisals/{appraisalId}/assignment-defaults, in the stored spelling (External, RoundRobin). */
+export interface AssignmentDefaultsResponse {
+  assignmentType: string;
+  assignmentMethod: string;
+  internalFollowupAssignmentMethod: string;
+}
+
 /**
  * Form data for creating/updating assignment
  */

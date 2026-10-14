@@ -2,12 +2,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AssignAppraisalRequestType, AssignAppraisalResponseType } from '@shared/schemas/v1';
 import type {
+  AssignmentDefaultsResponse,
   CurrentAssignment,
   ExternalCompany,
   InternalStaff,
   Quotation,
   StartQuotationFromTaskRequest,
 } from '../types/administration';
+import { type AssignmentDefaults, toFormDefaults } from '../utils/assignmentDefaults';
 
 /**
  * Get a user by ID
@@ -71,6 +73,23 @@ export const useGetAssignment = (appraisalId: string) => {
       return data.assignments ?? [];
     },
     enabled: !!appraisalId,
+  });
+};
+
+/**
+ * Get the Appraisal Type's pre-selected assignment values
+ * GET /appraisals/{appraisalId}/assignment-defaults
+ */
+export const useGetAssignmentDefaults = (appraisalId: string, enabled = true) => {
+  return useQuery({
+    queryKey: ['appraisal', appraisalId, 'assignment-defaults'],
+    queryFn: async (): Promise<AssignmentDefaults> => {
+      const { data } = await axios.get<AssignmentDefaultsResponse>(
+        `/appraisals/${appraisalId}/assignment-defaults`,
+      );
+      return toFormDefaults(data);
+    },
+    enabled: enabled && !!appraisalId,
   });
 };
 

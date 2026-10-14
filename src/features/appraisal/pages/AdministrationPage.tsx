@@ -24,6 +24,7 @@ import {
   useCreateAssignment,
   useGetAppraisalQuotations,
   useGetAssignment,
+  useGetAssignmentDefaults,
   useGetCompanyById,
   useGetEligibleCompanies,
   useGetEligibleStaff,
@@ -33,6 +34,11 @@ import {
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
 import { assignmentFormDefaults, type AssignmentFormType, useAssignmentFormSchema, } from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
+import {
+  type AssignmentDefaults,
+  methodForTypeSwitch,
+  resolveFormDefaults,
+} from '../utils/assignmentDefaults';
 
 import SearchStaffModal from '../components/SearchStaffModal';
 import SearchCompanyModal from '../components/SearchCompanyModal';
@@ -72,6 +78,17 @@ const AdministrationPage = () => {
   // API hooks
   const { data: assignments, isLoading: isLoadingAssignment } = useGetAssignment(appraisalId ?? '');
   const currentAssignment = assignments?.[0] ?? null;
+  // A saved draft or a non-Pending row holds real selections, which win over any default.
+  const hasSavedSelection =
+    !!currentAssignment &&
+    (!!currentAssignment.draftSavedAt ||
+      currentAssignment.assignmentStatus.toLowerCase() !== 'pending');
+  // Appraisal Type defaults, only needed for a fresh row. Waits for requestData so the facility-limit
+  // check is known before a configured Internal default is seeded.
+  const { data: assignmentDefaults } = useGetAssignmentDefaults(
+    appraisalId ?? '',
+    !isLoadingAssignment && !hasSavedSelection && !!requestData,
+  );
   const pageReadOnly = usePageReadOnly();
   const localReadOnly =
     !!currentAssignment && currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
@@ -140,14 +157,13 @@ const AdministrationPage = () => {
   //
   // Fixing this in the defaults rather than with a corrective effect is deliberate: reset() below
   // re-applies assignmentFormDefaults whenever one of its async deps resolves, so an effect that
-  // clears the value afterwards just loses the race.
-  const resolvedFormDefaults: AssignmentFormType = canAssignCompanyInSystem
-    ? assignmentFormDefaults
-    : {
-        ...assignmentFormDefaults,
-        assignmentType: 'external-offline',
-        assignmentMethod: 'manual',
-      };
+  // clears the value afterwards just loses the race. Appraisal Type defaults go through the same rules.
+  const resolvedFormDefaults: AssignmentFormType = resolveFormDefaults({
+    base: assignmentFormDefaults,
+    defaults: assignmentDefaults,
+    canAssignCompanyInSystem,
+    isInternalDisabled,
+  });
 
   // A saved draft can still carry 'external' from before the switch was thrown. Move it to the
   // offline equivalent for the same reason — a disabled option must never remain selected.
@@ -269,7 +285,10 @@ const AdministrationPage = () => {
     setValue('staffId', null);
     setValue('selectedCompany', null);
     setValue('companyId', null);
-    setValue('assignmentMethod', 'manual');
+    setValue(
+      'assignmentMethod',
+      methodForTypeSwitch(value as AssignmentDefaults['assignmentType'], assignmentDefaults),
+    );
     // Neither internal nor off-system external uses a FOLLOWUP staff member: internal has no
     // company to follow up on, and off-system external skips appraisal-book-verification (the
     // only activity that consumes the followup staff) entirely. Both DO use the staff picker
@@ -287,36 +306,27 @@ const AdministrationPage = () => {
   // guard a late-arriving query resets the form underneath the user and discards whatever they had
   // just selected. Seeding is only meaningful before the first edit anyway.
   useEffect(() => {
-    if (isDirty) return;
-    if (currentAssignment) {
-      const formValues = mapAssignmentResponseToForm(currentAssignment);
-      // Only re-seed the saved selections when the row holds real data — i.e. a draft has been
-      // saved, or the assignment is no longer Pending (already assigned/read-only). A freshly
-      // created Pending row keeps the blank defaults (External + Request Quotation).
-      const hasSavedSelection =
-        !!currentAssignment.draftSavedAt ||
-        currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
-      // Staff ids stored on the assignment are usernames (from the eligible-assignees pool), but
-      // useGetUserById hits /auth/users/{id:guid}, which can't resolve a username. Resolve the
-      // display object from the already-loaded eligible pool by id, falling back to the fetch
-      // (for guid-based ids not in the pool).
-      const resolvedStaff =
-        assignedStaff ??
-        eligibleStaff?.find(s => s.id === currentAssignment.assigneeUserId) ??
-        null;
-      const resolvedFollowupStaff =
-        followupStaff ??
-        eligibleStaff?.find(s => s.id === currentAssignment.internalAppraiserId) ??
-        null;
-      reset({
-        ...resolvedFormDefaults,
-        ...(hasSavedSelection ? formValues : {}),
-        selectedStaff: resolvedStaff,
-        selectedCompany: assignedCompany ?? null,
-        selectedFollowupStaff: resolvedFollowupStaff,
-        remarks: currentAssignment.remark ?? '',
-      });
-    }
+    if (isDirty || isLoadingAssignment) return;
+    // Staff ids stored on the assignment are usernames (from the eligible-assignees pool), but
+    // useGetUserById hits /auth/users/{id:guid}, which can't resolve a username. Resolve the
+    // display object from the already-loaded eligible pool by id, falling back to the fetch
+    // (for guid-based ids not in the pool).
+    const resolvedStaff =
+      assignedStaff ?? eligibleStaff?.find(s => s.id === currentAssignment?.assigneeUserId) ?? null;
+    const resolvedFollowupStaff =
+      followupStaff ??
+      eligibleStaff?.find(s => s.id === currentAssignment?.internalAppraiserId) ??
+      null;
+    reset({
+      ...resolvedFormDefaults,
+      ...(currentAssignment && hasSavedSelection
+        ? mapAssignmentResponseToForm(currentAssignment)
+        : {}),
+      selectedStaff: resolvedStaff,
+      selectedCompany: assignedCompany ?? null,
+      selectedFollowupStaff: resolvedFollowupStaff,
+      remarks: currentAssignment?.remark ?? '',
+    });
   }, [
     reset,
     isLoadingAssignment,
@@ -328,6 +338,10 @@ const AdministrationPage = () => {
     // The config query resolves after the first render, so the reset must re-run once the flag is
     // known — otherwise the form keeps the External default seeded before the answer arrived.
     canAssignCompanyInSystem,
+    // Same for the Appraisal Type defaults and the facility limit.
+    assignmentDefaults,
+    isInternalDisabled,
+    hasSavedSelection,
     isDirty,
   ]);
 
