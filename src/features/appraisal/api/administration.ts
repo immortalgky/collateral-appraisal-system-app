@@ -80,7 +80,7 @@ export const useGetAssignment = (appraisalId: string) => {
  * Get the Appraisal Type's pre-selected assignment values
  * GET /appraisals/{appraisalId}/assignment-defaults
  */
-export const useGetAssignmentDefaults = (appraisalId: string, enabled = true) => {
+export const useGetAssignmentDefaults = (appraisalId: string) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'assignment-defaults'],
     queryFn: async (): Promise<AssignmentDefaults> => {
@@ -89,7 +89,9 @@ export const useGetAssignmentDefaults = (appraisalId: string, enabled = true) =>
       );
       return toFormDefaults(data);
     },
-    enabled: enabled && !!appraisalId,
+    enabled: !!appraisalId,
+    // The Administration page waits for this, so a failing call should give up quickly.
+    retry: 1,
   });
 };
 

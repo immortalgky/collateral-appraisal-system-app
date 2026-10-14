@@ -68,7 +68,7 @@ const AdministrationPage = () => {
   const currentUser = useAuthStore(state => state.user);
 
   // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
-  const { data: requestData } = useGetRequestById(requestId ?? '');
+  const { data: requestData, isLoading: isLoadingRequest } = useGetRequestById(requestId ?? '');
   const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as
     | string
     | undefined;
@@ -83,12 +83,13 @@ const AdministrationPage = () => {
     !!currentAssignment &&
     (!!currentAssignment.draftSavedAt ||
       currentAssignment.assignmentStatus.toLowerCase() !== 'pending');
-  // Appraisal Type defaults, only needed for a fresh row. Waits for requestData so the facility-limit
-  // check is known before a configured Internal default is seeded.
-  const { data: assignmentDefaults } = useGetAssignmentDefaults(
+  // Fetched in parallel with the assignment. A fresh row waits for it, and for the request data that
+  // decides the facility-limit rule, so the form opens on its final values instead of the baseline.
+  // isLoading turns false on error, so a failed call opens the page on the built-in defaults.
+  const { data: assignmentDefaults, isLoading: isLoadingDefaults } = useGetAssignmentDefaults(
     appraisalId ?? '',
-    !isLoadingAssignment && !hasSavedSelection && !!requestData,
   );
+  const isWaitingForDefaults = !hasSavedSelection && (isLoadingDefaults || isLoadingRequest);
   const pageReadOnly = usePageReadOnly();
   const localReadOnly =
     !!currentAssignment && currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
@@ -306,7 +307,7 @@ const AdministrationPage = () => {
   // guard a late-arriving query resets the form underneath the user and discards whatever they had
   // just selected. Seeding is only meaningful before the first edit anyway.
   useEffect(() => {
-    if (isDirty || isLoadingAssignment) return;
+    if (isDirty || isLoadingAssignment || isWaitingForDefaults) return;
     // Staff ids stored on the assignment are usernames (from the eligible-assignees pool), but
     // useGetUserById hits /auth/users/{id:guid}, which can't resolve a username. Resolve the
     // display object from the already-loaded eligible pool by id, falling back to the fetch
@@ -342,6 +343,7 @@ const AdministrationPage = () => {
     assignmentDefaults,
     isInternalDisabled,
     hasSavedSelection,
+    isWaitingForDefaults,
     isDirty,
   ]);
 
@@ -490,7 +492,7 @@ const AdministrationPage = () => {
     );
   };
 
-  if (isLoadingAssignment) {
+  if (isLoadingAssignment || isWaitingForDefaults) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
