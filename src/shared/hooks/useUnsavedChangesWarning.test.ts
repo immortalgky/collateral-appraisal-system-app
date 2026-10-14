@@ -1,6 +1,12 @@
+import { createElement, type ReactNode } from 'react';
+import { MemoryRouter, useNavigate } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useUnsavedChangesWarning } from './useUnsavedChangesWarning';
+
+// The hook reads the location, so it needs a router around it.
+const wrapper = ({ children }: { children: ReactNode }) =>
+  createElement(MemoryRouter, { initialEntries: ['/requests/new'] }, children);
 
 /**
  * skipWarning() is for the navigation that immediately follows it (save → navigate). The pages are
@@ -11,6 +17,7 @@ describe('useUnsavedChangesWarning', () => {
   it('lets the navigation after skipWarning() through', () => {
     const { result } = renderHook(({ dirty }) => useUnsavedChangesWarning(dirty), {
       initialProps: { dirty: true },
+      wrapper,
     });
 
     act(() => result.current.skipWarning());
@@ -21,6 +28,7 @@ describe('useUnsavedChangesWarning', () => {
   it('guards again once the form is edited after the skipped navigation', () => {
     const { result, rerender } = renderHook(({ dirty }) => useUnsavedChangesWarning(dirty), {
       initialProps: { dirty: true },
+      wrapper,
     });
 
     act(() => result.current.skipWarning());
@@ -29,5 +37,19 @@ describe('useUnsavedChangesWarning', () => {
 
     expect(result.current.blocker.when).toBe(true);
     expect(result.current.blocker.skipRef.current).toBe(false);
+  });
+
+  it('spends the skip on one navigation: a reused page instance is guarded again', () => {
+    const { result } = renderHook(
+      () => ({ guard: useUnsavedChangesWarning(true), navigate: useNavigate() }),
+      { wrapper },
+    );
+
+    act(() => result.current.guard.skipWarning());
+    expect(result.current.guard.blocker.skipRef.current).toBe(true);
+
+    act(() => result.current.navigate('/requests/abc'));
+
+    expect(result.current.guard.blocker.skipRef.current).toBe(false);
   });
 });

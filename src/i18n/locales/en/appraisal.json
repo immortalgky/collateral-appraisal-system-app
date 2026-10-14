@@ -647,7 +647,6 @@
       "validationErrorsTitle": "Please complete the required fields",
       "voteTitle": "Confirm your vote",
       "voteMessage": "A vote cannot be changed after it is submitted.",
-      "voteAck": "I want to vote \"{{vote}}\" on this appraisal",
       "summary": {
         "decision": "Decision",
         "destination": "Next step",
@@ -663,12 +662,11 @@
     "toasts": {
       "saved": "Decision summary saved successfully",
       "saveFailed": "Failed to save decision summary. Please try again.",
-      "submitted": "Decision submitted successfully",
       "submitFailed": "Failed to submit decision",
       "validationErrors": "Validation errors occurred",
       "forceSaleRateSaved": "Force selling rate saved",
       "forceSaleRateFailed": "Failed to save force selling rate. Please try again.",
-      "voteNeedsComment": "Add a comment and confirm your vote before submitting."
+      "voteNeedsComment": "Add a comment before voting."
     }
   },
   "decision": {
@@ -701,7 +699,32 @@
     "destination": {
       "forward": "Goes to {{name}}",
       "back": "Returns to {{name}}",
-      "cancel": "Ends the workflow"
+      "cancel": "Ends the workflow",
+      "final": "Ends the workflow at this step"
+    },
+    "route": {
+      "title": "Work route",
+      "showEarlier_one": "Show {{count}} earlier step",
+      "showEarlier_other": "Show {{count}} earlier steps",
+      "hideEarlier": "Hide earlier steps",
+      "here": "Current step",
+      "inProgress": "In progress",
+      "awaitingVote": "Awaiting votes",
+      "showMore": "See more",
+      "showLess": "Show less",
+      "returnsHere": "Work returns here",
+      "statusCompleted": "Completed",
+      "statusRoutedBack": "Routed back",
+      "previewSr": "Preview of where the work goes if you submit:",
+      "ghostIdle": "Pick a decision to see where the work goes",
+      "final": "Workflow ends",
+      "finalMeta": "This job will be complete",
+      "cancel": "Job cancelled",
+      "cancelMeta": "The workflow ends at this step",
+      "assignee": "Assignee {{name}}",
+      "assigneeMissing": "No assignee picked yet",
+      "backTo": "Sent back to {{title}}",
+      "previousStep": "the previous step"
     },
     "committeeVotes": "Committee votes",
     "votesSummary": "{{received}}/{{total}} voted",
@@ -710,6 +733,12 @@
     "yourVote": "Your vote",
     "nextStep": "Next step",
     "voteImpact": "{{from}} → {{to}} votes",
+    "voteImpactMet": "{{from}} → {{to}} votes · threshold met",
+    "voteImpactShort": "{{from}} → {{to}} votes · {{left}} more needed",
+    "voteTag": "Vote",
+    "voteBackNow": "Sent back at once → {{name}}",
+    "voteBackNowNoName": "Sent back at once",
+    "voteNeedsReason": "A comment is required",
     "votesLoadFailed": "Could not load the committee votes.",
     "noActions": "No decisions are available for this task. Refresh the page, or contact an administrator if this persists."
   },
@@ -2661,8 +2690,8 @@
     "conditionMinVotesDefault": "Minimum vote count required",
     "stats": {
       "votesReceived": "Votes received",
-      "approve": "Approve",
-      "reject": "Reject",
+      "approve": "Agree",
+      "reject": "Disagree",
       "routeBack": "Route-back"
     },
     "voteLabels": {

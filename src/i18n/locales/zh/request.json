@@ -662,7 +662,6 @@
     "requestDeleteListFailed": "删除申请失败，请重试。",
     "draftSaved": "草稿保存成功",
     "draftSaveFailed": "保存草稿失败，请重试。",
-    "requestSubmitted": "申请提交成功",
     "requestSubmitFailed": "提交申请失败，请重试。",
     "requestSaveFailed": "保存申请失败，请重试。",
     "validationFailed": "请在提交前填写所有必填字段。",
