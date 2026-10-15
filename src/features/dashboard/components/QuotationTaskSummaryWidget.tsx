@@ -72,7 +72,7 @@ function QuotationTaskSummaryWidget() {
     <WidgetWrapper id="quotation-task-summary">
       <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-semibold text-gray-800">{t('quotationSummary.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-800">{t('quotationSummary.title')}</h3>
         </div>
 
         {isError ? (

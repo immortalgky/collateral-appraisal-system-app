@@ -1,4 +1,7 @@
 import { formatNumber } from '@shared/utils/formatUtils';
+import { INPUT_BOX, INPUT_SIZE } from '../tables/denseTable';
+
+export { INPUT_BOX };
 
 /** Shared by the construction inspection grid (detail and summary modes) and the tab's toolbar. */
 
@@ -67,18 +70,23 @@ export function sumWork(items: ComputedItem[]): WorkTotals {
 // Pixel values on purpose: the app's root font-size is 13px, so rem utilities (text-xs, px-2)
 // render smaller than the pricing grids this table matches.
 export const TH =
-  'px-[8px] py-[5px] leading-[14px] align-top whitespace-nowrap bg-[#f8fafa] font-medium text-[#55636f] border-b border-b-[#e3e9e8] border-r border-r-[#eef2f2]';
+  'px-[8px] py-[5px] leading-[1.0769rem] align-top whitespace-nowrap bg-[color:var(--palette-surface-2)] font-medium text-[color:var(--palette-ink-2)] border-b border-b-[color:var(--palette-line)] border-r border-r-[color:var(--palette-line-soft)]';
 /** A cell's rules without its padding, for cells that set their own (p-0 would lose to px-[8px]). */
 export const CELL =
-  'py-0 whitespace-nowrap border-b border-b-[#eef2f2] border-r border-r-[#eef2f2]';
+  'py-0 whitespace-nowrap border-b border-b-[color:var(--palette-line-soft)] border-r border-r-[color:var(--palette-line-soft)]';
 export const TD = `px-[8px] ${CELL}`;
 // The frozen column draws its own edge: `pa-sticky-edge` only has a rule inside the pricing
 // screen's ScrollableTableContainer, which this table does not use.
 export const NAME =
   'sticky left-0 z-10 w-[220px] min-w-[220px] max-w-[220px] overflow-hidden text-ellipsis shadow-[1px_0_0_#e3e9e8]';
-export const RO = 'text-[#8a96a0] bg-[#f8fafa]';
-export const INPUT_TD = `px-[3px] ${CELL}`;
-export const REGRESSED = 'border-[#dc2626]! bg-[#fef2f2]! text-[#dc2626]!';
+export const RO = 'text-[color:var(--palette-ink-3)] bg-[color:var(--palette-surface-2)]';
+/**
+ * A cell holding an input: the input plus 2px above and below, which makes the row `--cas-row-h`
+ * (34px) counting the 1px rule under it. The fallbacks are the skin's light values, for a screen outside `.cas-form-grid`.
+ */
+export const INPUT_TD =
+  'px-[3px] pt-[calc((var(--cas-row-h,2.6154rem)_-_var(--cas-input-h,2.3077rem))_/_2)] pb-[calc((var(--cas-row-h,2.6154rem)_-_var(--cas-input-h,2.3077rem))_/_2_-_1px)] whitespace-nowrap border-b border-b-[color:var(--palette-line-soft)] border-r border-r-[color:var(--palette-line-soft)]';
+export const REGRESSED = `${INPUT_SIZE} border-[#dc2626]! bg-[#fef2f2]! text-[#dc2626]!`;
 
 export const pct = (n: number) => formatNumber(n, 2);
 export const baht = (n: number) => formatNumber(n, 0);

@@ -469,9 +469,10 @@ function TotalAppraisalsWidget() {
   ) => {
     const up = (deltaPct ?? 0) >= 0;
     return (
-      <div className="flex flex-col gap-0.5">
+      <div className="flex min-w-0 flex-col gap-0.5">
         <p className="text-xs text-gray-400 uppercase tracking-wider">{label}</p>
-        <div className="flex items-end gap-2">
+        {/* The change wraps under the number when the card is too narrow for both side by side */}
+        <div className="flex flex-wrap items-end gap-x-2">
           <p className="text-3xl font-bold text-gray-800 tabular-nums">{value}</p>
           {deltaPct !== null && (
             <div
@@ -493,7 +494,7 @@ function TotalAppraisalsWidget() {
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart
         data={data}
-        margin={{ top: 10, right: 12, left: -16, bottom: 0 }}
+        margin={{ top: 10, right: 12, left: 0, bottom: 0 }}
         onClick={state => {
           const idx = state?.activeIndex;
           if (typeof idx === 'number' && data[idx]) handleDotClick(data[idx]);
@@ -502,15 +503,15 @@ function TotalAppraisalsWidget() {
         <CartesianGrid stroke="#f3f4f6" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: '#9ca3af' }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: '#9ca3af' }}
           axisLine={false}
           tickLine={false}
-          width={40}
+          width={52}
         />
         <Tooltip cursor={{ stroke: '#e5e7eb' }} content={<ChartTooltip />} />
         <Legend content={() => renderLineLegend(overviewSeries)} />
@@ -553,7 +554,7 @@ function TotalAppraisalsWidget() {
     <ResponsiveContainer width="100%" height="100%">
       <ComposedChart
         data={byTypeData}
-        margin={{ top: 10, right: 12, left: -16, bottom: 0 }}
+        margin={{ top: 10, right: 12, left: 0, bottom: 0 }}
         onClick={state => {
           const idx = state?.activeIndex;
           if (typeof idx === 'number' && byTypeData[idx]) {
@@ -565,11 +566,16 @@ function TotalAppraisalsWidget() {
         <CartesianGrid stroke="#f3f4f6" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 11, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: '#9ca3af' }}
           axisLine={false}
           tickLine={false}
         />
-        <YAxis tick={{ fontSize: 11, fill: '#9ca3af' }} axisLine={false} tickLine={false} width={40} />
+        <YAxis
+          tick={{ fontSize: 12, fill: '#9ca3af' }}
+          axisLine={false}
+          tickLine={false}
+          width={52}
+        />
         <Tooltip cursor={{ stroke: '#e5e7eb' }} content={<ChartTooltip />} />
         <Legend content={() => renderLineLegend(byTypeSeries)} />
         {typeKeys.map((type, idx) => (
@@ -596,7 +602,9 @@ function TotalAppraisalsWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="font-semibold text-gray-800">{t('totalAppraisals.title')}</h3>
+              <h3 className="text-base font-semibold text-gray-800">
+                {t('totalAppraisals.title')}
+              </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
               <SegmentSelect value={bankingSegment} onChange={handleSegmentChange} />
               <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-xs">
@@ -807,9 +815,11 @@ function TotalAppraisalsWidget() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                   <tr>
-                    <th className="px-3 py-2 text-left">{t('totalAppraisals.table.period')}</th>
+                    <th className="text-xs px-3 py-2 text-left font-semibold">
+                      {t('totalAppraisals.table.period')}
+                    </th>
                     {typeKeys.map(type => (
-                      <th key={type} className="px-3 py-2 text-right">
+                      <th key={type} className="text-xs px-3 py-2 text-right font-semibold">
                         {typeLabel(type)}
                       </th>
                     ))}
@@ -832,13 +842,21 @@ function TotalAppraisalsWidget() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                   <tr>
-                    <th className="px-3 py-2 text-left">{t('totalAppraisals.table.period')}</th>
-                    <th className="px-3 py-2 text-right">{t('totalAppraisals.table.created')}</th>
-                    <th className="px-3 py-2 text-right">{t('totalAppraisals.table.completed')}</th>
-                    <th className="px-3 py-2 text-right">
+                    <th className="text-xs px-3 py-2 text-left font-semibold">
+                      {t('totalAppraisals.table.period')}
+                    </th>
+                    <th className="text-xs px-3 py-2 text-right font-semibold">
+                      {t('totalAppraisals.table.created')}
+                    </th>
+                    <th className="text-xs px-3 py-2 text-right font-semibold">
+                      {t('totalAppraisals.table.completed')}
+                    </th>
+                    <th className="text-xs px-3 py-2 text-right font-semibold">
                       {t('totalAppraisals.table.completionPct')}
                     </th>
-                    <th className="px-3 py-2 text-right">{t('totalAppraisals.table.prior')}</th>
+                    <th className="text-xs px-3 py-2 text-right font-semibold">
+                      {t('totalAppraisals.table.prior')}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">

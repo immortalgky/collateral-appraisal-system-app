@@ -311,7 +311,7 @@ function CalendarWidget() {
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-0.5">
-            <h3 className="font-semibold text-gray-800">{t('calendar.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-800">{t('calendar.title')}</h3>
             <WidgetDateRangeBadge label={`${MONTH_SHORT[month]} ${year}`} />
           </div>
           <Link

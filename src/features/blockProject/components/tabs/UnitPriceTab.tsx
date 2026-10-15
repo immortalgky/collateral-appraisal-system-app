@@ -86,31 +86,31 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
         <thead className="bg-gray-50">
           <tr>
             {isCondo(projectType) && (
-              <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[100px]">
+              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap min-w-[100px]">
                 {t('unitPrice.cols.towerName')}
               </th>
             )}
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap min-w-[160px]">
+            <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap min-w-[160px]">
               {t('unitPrice.cols.model')}
             </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium w-full min-w-[200px]">
+            <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold w-full min-w-[200px]">
               {t('unitPrice.cols.description')}
             </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
               {t('unitPrice.cols.usableAreaSqm2')}
             </th>
             {isLandAndBuildingLike(projectType) && (
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.standardLandSqWa')}
               </th>
             )}
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
               {t('unitPrice.cols.standardPriceBahtSqm')}
             </th>
-            <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
               {t('unitPrice.cols.coverageAmountBahtSqm')}
             </th>
-            <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+            <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
               {t('unitPrice.cols.fireInsuranceCode')}
             </th>
           </tr>
@@ -306,121 +306,121 @@ function UnitPriceResultTable({
         <table className="w-full text-xs">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-center py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-center py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.seqNo')}
               </th>
               {isCondo(projectType) && (
                 <>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.floor')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.towerName')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.regNumber')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.roomNo')}
                   </th>
                 </>
               )}
               {isLandAndBuildingLike(projectType) && (
                 <>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.plotNo')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.houseNo')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.model')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.numberOfFloors')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.landAreaSqWa')}
                   </th>
                 </>
               )}
               {isCondo(projectType) && (
-                <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                   {t('unitPrice.cols.model')}
                 </th>
               )}
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.usableAreaSqm')}
               </th>
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.sellingPrice')}
               </th>
               {/* Common flags */}
               {isCondo(projectType) ? (
                 <>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.standardPrice')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.corner')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.edge')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.poolView')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.south')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.other')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.adjustPriceLocation')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.priceIncrementFloor')}
                   </th>
                 </>
               ) : (
                 <>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.standardPrice')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.corner')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.edge')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.nearGardenClubhouse')}
                   </th>
-                  <th className="text-left py-2.5 px-3 text-gray-500 font-medium">
+                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
                     {t('unitPrice.cols.other')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.landDiffSqWa')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.landPlusMinus')}
                   </th>
-                  <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                     {t('unitPrice.cols.locationAdj')}
                   </th>
                 </>
               )}
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.appraisalValue')}
               </th>
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.roundedValue')}
               </th>
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.forceSalePrice')}
               </th>
-              <th className="text-right py-2.5 px-3 text-gray-500 font-medium whitespace-nowrap">
+              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
                 {t('unitPrice.cols.coverageAmount')}
               </th>
             </tr>
@@ -970,7 +970,6 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
                 isLoading={saveIntent === 'draft' && isBusy}
                 disabled={isBusy}
               >
-                <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                 Save Draft
               </Button>
               <Button type="submit" isLoading={saveIntent === 'full' && isBusy} disabled={isBusy}>

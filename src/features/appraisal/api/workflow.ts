@@ -116,6 +116,8 @@ export interface CompleteActivityResponse {
   nextActivityId: string | null;
   currentAssignee: string | null;
   nextAssignee: string | null;
+  /** The next holder's display name; absent on a backend that predates it. */
+  nextAssigneeDisplayName?: string | null;
   isCompleted: boolean;
   validationErrors: StructuredValidationError[] | null;
   warnings?: StructuredWarning[] | null;

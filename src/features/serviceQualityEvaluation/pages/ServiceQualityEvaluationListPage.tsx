@@ -127,7 +127,7 @@ function ServiceQualityEvaluationListPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
@@ -204,7 +204,7 @@ function ServiceQualityEvaluationListPage() {
       {/* Table */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-table">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
                 {[
@@ -224,7 +224,7 @@ function ServiceQualityEvaluationListPage() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className={`${alignClass} font-medium px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                      className={`text-xs ${alignClass} font-semibold px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
                         col.nowrap ? 'whitespace-nowrap' : ''
                       } ${isActive ? 'text-primary' : 'text-gray-600'}`}
                     >

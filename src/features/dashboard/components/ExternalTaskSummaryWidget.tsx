@@ -67,9 +67,24 @@ type SeriesKey = 'overdue' | 'inProgress' | 'completed';
 
 // Render/legend order. `bar` is the (possibly zeroed-when-hidden) key the chart plots.
 const SERIES = [
-  { key: 'overdue', bar: 'barOverdue', color: SEGMENT_COLORS.overdue, labelKey: 'externalSummary.chart.overdue' },
-  { key: 'inProgress', bar: 'barInProgress', color: SEGMENT_COLORS.inProgress, labelKey: 'externalSummary.chart.inProgress' },
-  { key: 'completed', bar: 'barCompleted', color: SEGMENT_COLORS.completed, labelKey: 'externalSummary.chart.completed' },
+  {
+    key: 'overdue',
+    bar: 'barOverdue',
+    color: SEGMENT_COLORS.overdue,
+    labelKey: 'externalSummary.chart.overdue',
+  },
+  {
+    key: 'inProgress',
+    bar: 'barInProgress',
+    color: SEGMENT_COLORS.inProgress,
+    labelKey: 'externalSummary.chart.inProgress',
+  },
+  {
+    key: 'completed',
+    bar: 'barCompleted',
+    color: SEGMENT_COLORS.completed,
+    labelKey: 'externalSummary.chart.completed',
+  },
 ] as const;
 
 // Row augmented with per-segment bar values (0 when that series is hidden) and their sum.
@@ -93,9 +108,21 @@ function SummaryTooltip({ active, payload }: SummaryTooltipProps) {
 
   // Only the currently-visible (non-hidden, non-zero) segments; total matches the bar.
   const segments = [
-    { color: SEGMENT_COLORS.overdue, label: t('externalSummary.chart.overdue'), value: row.barOverdue },
-    { color: SEGMENT_COLORS.inProgress, label: t('externalSummary.chart.inProgress'), value: row.barInProgress },
-    { color: SEGMENT_COLORS.completed, label: t('externalSummary.chart.completed'), value: row.barCompleted },
+    {
+      color: SEGMENT_COLORS.overdue,
+      label: t('externalSummary.chart.overdue'),
+      value: row.barOverdue,
+    },
+    {
+      color: SEGMENT_COLORS.inProgress,
+      label: t('externalSummary.chart.inProgress'),
+      value: row.barInProgress,
+    },
+    {
+      color: SEGMENT_COLORS.completed,
+      label: t('externalSummary.chart.completed'),
+      value: row.barCompleted,
+    },
   ].filter(s => s.value > 0);
   const pct = row.visible > 0 ? Math.round((row.barCompleted / row.visible) * 100) : 0;
 
@@ -105,7 +132,10 @@ function SummaryTooltip({ active, payload }: SummaryTooltipProps) {
       <div className="space-y-1">
         {segments.map(s => (
           <div key={s.label} className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+            <span
+              className="inline-block w-2 h-2 rounded-full"
+              style={{ backgroundColor: s.color }}
+            />
             <span className="text-gray-600">{s.label}</span>
             <span className="ml-auto font-medium text-gray-800 tabular-nums">{s.value}</span>
           </div>
@@ -277,7 +307,9 @@ function ExternalTaskSummaryWidget() {
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold text-gray-800">{t('externalSummary.title')}</h3>
+              <h3 className="text-base font-semibold text-gray-800">
+                {t('externalSummary.title')}
+              </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />

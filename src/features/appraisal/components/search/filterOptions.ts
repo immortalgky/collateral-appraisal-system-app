@@ -138,3 +138,15 @@ export const isFieldActive = (values: Record<string, string>, field: FilterField
     : // Present-but-empty counts: a field whose values were all unticked keeps its chip (and so
       // keeps its panel mounted) until the user removes it with the X. An absent key does not.
       values[field.key] !== undefined;
+
+/**
+ * Does this field hold a value a filter would use?
+ *
+ * Not the same as `isFieldActive`: a field whose values were all unticked keeps its key, with '',
+ * so its panel can stay open under the cursor. That is "in the bar", not "filtering" — and it must
+ * not be drawn as if it were.
+ */
+export const hasValue = (values: Record<string, string>, field: FilterField): boolean =>
+  field.type === 'date-range'
+    ? isFieldActive(values, field)
+    : selectedValues(values, field.key).length > 0;

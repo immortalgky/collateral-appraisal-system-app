@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import Dropdown from '@shared/components/inputs/Dropdown';
@@ -33,9 +33,16 @@ export default function DocumentRequirementModal({
   initialScope,
   isSaving,
 }: Props) {
-  const { data: documentTypes = [] } = useGetDocumentTypes();
+  const { data: documentTypes, isError, isFetching, refetch } = useGetDocumentTypes();
+  // A failed refetch over cached types is not a load failure: the list is still there.
+  const loadFailed = isError && !documentTypes;
   const types = useMemo(
-    () => documentTypes.map(dt => ({ id: dt.id as string, code: dt.code ?? '', name: dt.name ?? '' })),
+    () =>
+      (documentTypes ?? []).map(dt => ({
+        id: dt.id as string,
+        code: dt.code ?? '',
+        name: dt.name ?? '',
+      })),
     [documentTypes],
   );
 
@@ -55,8 +62,10 @@ export default function DocumentRequirementModal({
     [requirements, propertyTypeCode, purposeCode],
   );
 
-  // (Re)build the tick state whenever the scope (or its existing rows) changes.
-  useEffect(() => {
+  // (Re)build the tick state whenever the modal opens or the scope (or its existing rows) changes.
+  // A layout effect, so the first painted frame after opening already shows the rebuilt ticks.
+  useLayoutEffect(() => {
+    if (!isOpen) return;
     const byDoc = new Map(existingForScope.map(r => [r.documentTypeId, r]));
     const next: Record<string, RowState> = {};
     for (const dt of types) {
@@ -64,11 +73,11 @@ export default function DocumentRequirementModal({
       next[dt.id] = { included: !!ex, isRequired: ex ? ex.isRequired : true };
     }
     setRows(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingForScope, types]);
+  }, [isOpen, existingForScope, types]);
 
-  // Reset scope each time the modal opens.
-  useEffect(() => {
+  // Reset scope each time the modal opens. A layout effect for the same reason as the rebuild above:
+  // the first painted frame already shows the new scope.
+  useLayoutEffect(() => {
     if (isOpen) {
       setPropertyTypeCode(initialScope?.propertyTypeCode ?? null);
       setPurposeCode(initialScope?.purposeCode ?? null);
@@ -89,6 +98,14 @@ export default function DocumentRequirementModal({
     const items = types
       .filter(dt => rows[dt.id]?.included)
       .map(dt => ({ documentTypeId: dt.id, isRequired: rows[dt.id].isRequired }));
+    // The list holds active types only; keep requirements on other types as they are, because the
+    // scope is replaced by exactly what is sent.
+    const listed = new Set(types.map(dt => dt.id));
+    for (const r of existingForScope) {
+      if (listed.has(r.documentTypeId)) continue;
+      listed.add(r.documentTypeId);
+      items.push({ documentTypeId: r.documentTypeId, isRequired: r.isRequired });
+    }
     await onSubmit({ propertyTypeCode: norm(propertyTypeCode), purposeCode: norm(purposeCode), items });
   };
 
@@ -126,7 +143,24 @@ export default function DocumentRequirementModal({
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
             {types.length === 0 ? (
               <div className="px-4 py-6 text-center text-sm text-gray-500">
-                No document types. Add some in the Document Types tab first.
+                {loadFailed ? (
+                  <>
+                    Could not load document types.{' '}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => refetch()}
+                      disabled={isFetching}
+                    >
+                      Retry
+                    </Button>
+                  </>
+                ) : documentTypes ? (
+                  'No document types. Add some in the Document Types tab first.'
+                ) : (
+                  'Loading document types…'
+                )}
               </div>
             ) : (
               types.map(dt => {
@@ -154,7 +188,13 @@ export default function DocumentRequirementModal({
           <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button type="button" variant="primary" onClick={handleSave} isLoading={isSaving}>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleSave}
+            isLoading={isSaving}
+            disabled={!documentTypes}
+          >
             Save
           </Button>
         </div>

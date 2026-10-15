@@ -12,7 +12,14 @@ import { buildCsv, downloadCsv } from '../csv';
 // /public/markers/*.svg and the panel legend.
 function PinIcon({ color, title }: { color: string; title: string }) {
   return (
-    <svg viewBox="0 0 24 24" width="14" height="18" className="block mx-auto" role="img" aria-label={title}>
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="18"
+      className="block mx-auto"
+      role="img"
+      aria-label={title}
+    >
       <title>{title}</title>
       <path
         d="M12 2C7.58 2 4 5.58 4 10c0 5.25 7 11.5 7.3 11.76a1 1 0 0 0 1.4 0C13 21.5 20 15.25 20 10c0-4.42-3.58-8-8-8z"
@@ -94,13 +101,19 @@ function compareRows(a: ResultRow, b: ResultRow, key: SortKey, dir: SortDir): nu
       cmp = a.lon - b.lon;
       break;
     case 'customerName':
-      cmp = text(a.customerName).localeCompare(text(b.customerName), undefined, { sensitivity: 'base' });
+      cmp = text(a.customerName).localeCompare(text(b.customerName), undefined, {
+        sensitivity: 'base',
+      });
       break;
     case 'collateralType':
-      cmp = text(a.collateralType).localeCompare(text(b.collateralType), undefined, { sensitivity: 'base' });
+      cmp = text(a.collateralType).localeCompare(text(b.collateralType), undefined, {
+        sensitivity: 'base',
+      });
       break;
     case 'buildingType':
-      cmp = text(a.buildingType).localeCompare(text(b.buildingType), undefined, { sensitivity: 'base' });
+      cmp = text(a.buildingType).localeCompare(text(b.buildingType), undefined, {
+        sensitivity: 'base',
+      });
       break;
     case 'appraisalValue':
       cmp = num(a.appraisalValue) - num(b.appraisalValue);
@@ -146,7 +159,9 @@ function SortableHeader({
       className={[
         'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50 uppercase tracking-wider',
         className,
-      ].filter(Boolean).join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
       aria-sort={active ? (currentDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
       <button
@@ -206,11 +221,7 @@ export function ResultsList({
   const appraisalTotal = !isExternal && result ? result.appraisals.count : 0;
   const mcItems = result ? result.marketComparables.items : [];
   const mcTotal = result ? result.marketComparables.count : 0;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(appraisalTotal / 50),
-    Math.ceil(mcTotal / 50),
-  );
+  const totalPages = Math.max(1, Math.ceil(appraisalTotal / 50), Math.ceil(mcTotal / 50));
 
   // Always call useMemo unconditionally — deps are empty arrays when result is absent
   const rows = useMemo<ResultRow[]>(() => {
@@ -250,9 +261,7 @@ export function ResultsList({
       pin,
     }));
 
-    return [...appraisalRows, ...mcRows].sort((a, b) =>
-      compareRows(a, b, sortKey, sortDir),
-    );
+    return [...appraisalRows, ...mcRows].sort((a, b) => compareRows(a, b, sortKey, sortDir));
   }, [appraisalItems, mcItems, sortKey, sortDir]);
 
   // Show distance column only when any row carries a non-null distanceKm
@@ -293,11 +302,7 @@ export function ResultsList({
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-3">
         <p className="text-sm text-red-500">{t('resultsList.loadError')}</p>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="text-xs text-blue-600 hover:underline"
-        >
+        <button type="button" onClick={onRetry} className="text-xs text-blue-600 hover:underline">
           {t('resultsList.retry')}
         </button>
       </div>
@@ -308,7 +313,14 @@ export function ResultsList({
     return (
       <div className="flex items-center justify-center py-8">
         <svg className="w-5 h-5 animate-spin text-blue-500" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
         </svg>
       </div>
@@ -322,8 +334,18 @@ export function ResultsList({
   if (!hasAnyResults) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-        <svg className="w-8 h-8 text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        <svg
+          className="w-8 h-8 text-gray-300 mb-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={1.5}
+            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+          />
         </svg>
         <p className="text-xs text-gray-500">{t('resultsList.empty')}</p>
       </div>
@@ -343,7 +365,12 @@ export function ResultsList({
           title={t('resultsList.exportCsv')}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+            />
           </svg>
           {t('resultsList.exportCsv')}
         </button>
@@ -355,7 +382,11 @@ export function ResultsList({
           <thead className="sticky top-0 bg-gray-50 border-b border-gray-200 z-10">
             <tr>
               {/* Pin icon — not sortable */}
-              <th scope="col" className="w-8 px-4 py-2.5 bg-gray-50" aria-label="type" />
+              <th
+                scope="col"
+                className="text-xs w-8 px-4 py-2.5 bg-gray-50 font-semibold"
+                aria-label="type"
+              />
               <SortableHeader
                 label={t('resultsList.columns.appraisalReportNo')}
                 sortKey="reportNo"
@@ -476,7 +507,9 @@ export function ResultsList({
                   className={[
                     'cursor-pointer transition-colors hover:bg-gray-50',
                     isHighlighted ? 'bg-amber-50' : '',
-                  ].filter(Boolean).join(' ')}
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
                 >
                   <td className="px-4 py-3">
                     <PinIcon color={pinColor} title={dotTitle} />
@@ -489,14 +522,22 @@ export function ResultsList({
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
                     {row.collateralType ? (
-                      <ParameterDisplay group="PropertyType" code={row.collateralType} fallback={row.collateralType} />
+                      <ParameterDisplay
+                        group="PropertyType"
+                        code={row.collateralType}
+                        fallback={row.collateralType}
+                      />
                     ) : (
                       '—'
                     )}
                   </td>
                   <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
                     {row.buildingType ? (
-                      <ParameterDisplay group="BuildingType" code={row.buildingType} fallback={row.buildingType} />
+                      <ParameterDisplay
+                        group="BuildingType"
+                        code={row.buildingType}
+                        fallback={row.buildingType}
+                      />
                     ) : (
                       '—'
                     )}

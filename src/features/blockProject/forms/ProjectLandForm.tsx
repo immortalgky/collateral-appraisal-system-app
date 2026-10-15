@@ -168,7 +168,8 @@ export default function ProjectLandForm() {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <TitleDeedForm />
+                    {/* A project land does not store title order, so no order controls. */}
+                    <TitleDeedForm orderable={false} />
                   </Section>
 
                   {/* Land Detail */}
@@ -204,7 +205,6 @@ export default function ProjectLandForm() {
                   isLoading={isPending && saveAction === 'draft'}
                   disabled={isPending}
                 >
-                  <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
                   Save draft
                 </Button>
                 <Button

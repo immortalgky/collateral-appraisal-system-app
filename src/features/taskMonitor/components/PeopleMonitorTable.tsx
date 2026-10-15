@@ -58,7 +58,7 @@ function PeopleMonitorTable({
 
   return (
     <div className="flex-1 min-h-0 overflow-auto">
-      <table className="w-full min-w-max text-sm">
+      <table className="w-full min-w-max text-table">
         <thead className="sticky top-0 z-20">
           <tr className="bg-gray-50 border-b border-gray-200">
             {COLUMNS.map(col => (
@@ -96,18 +96,18 @@ function PeopleMonitorTable({
                       className="flex items-center gap-2 group-hover:text-primary"
                     >
                       <Avatar name={person.displayName || person.userName} size="sm" />
-                      <span className="text-sm font-medium text-gray-900 truncate max-w-[220px]">
+                      <span className="text-table font-medium text-gray-900 truncate max-w-[220px]">
                         {person.displayName || person.userName}
                       </span>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-sm text-gray-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-table text-gray-700">
                     {person.openTasks}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-sm text-gray-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-table text-gray-700">
                     {person.availableTasks}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-sm text-gray-900 font-semibold">
+                  <td className="px-4 py-3 text-right tabular-nums text-table text-gray-900 font-semibold">
                     {person.totalTasks}
                   </td>
                 </tr>

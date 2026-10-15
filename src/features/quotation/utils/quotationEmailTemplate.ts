@@ -46,7 +46,7 @@ const LAND_BUILDING_LABELS: Record<string, string> = {
 };
 const LAND_ONLY_LABELS: Record<string, string> = {
   L: 'ที่ดินเปล่า',
-  LSL: 'สิทธการเช่าที่ดิน',
+  LSL: 'สิทธิการเช่าที่ดิน',
 };
 const CONDO_FAMILIES = new Set(['U', 'LSU']);
 const MACHINE_FAMILIES = new Set(['MAC']);
@@ -125,7 +125,7 @@ function buildPropertyDescription(
       return [
         buildingTypes ? `${label} (${buildingTypes})` : label,
         titleNumbers ? `โฉนดเลขที่ ${titleNumbers}` : '',
-        `เนื้อที่ ${rai}-${ngan}-${wa}`,
+        `เนื้อที่ ${rai}-${ngan}-${wa} ไร่`,
         formatDopaAddress(landTitles),
       ]
         .filter(Boolean)
@@ -186,7 +186,7 @@ const CELL_STYLE =
 const HEADER_CELL_STYLE = `${CELL_STYLE}background:#f2f4f6;font-weight:600;text-align:left;`;
 
 const COLUMN_WIDTHS_PX = [60, 120, 210, 210];
-const TABLE_ROW_THRESHOLD = 5;
+export const TABLE_ROW_THRESHOLD = 5;
 
 export function formatQuotationSubjectCustomerLabel(distinctCustomerNames: string[]): string {
   if (distinctCustomerNames.length > TABLE_ROW_THRESHOLD) return 'ลูกค้าหลายราย';

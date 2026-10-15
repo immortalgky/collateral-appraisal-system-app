@@ -86,9 +86,7 @@ const MyProfilePage = () => {
         <Avatar src={me.avatarUrl} name={fullName} size="lg" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            {/* text-lg! — index.css carries a leftover `h1 { font-size: 3.2em }` from the
-                Vite template, and unlayered CSS beats Tailwind utilities. */}
-            <h1 className="truncate text-lg! font-semibold text-gray-900 dark:text-base-content">
+            <h1 className="truncate text-lg font-semibold text-gray-900 dark:text-base-content">
               {fullName}
             </h1>
             <span

@@ -1,48 +1,225 @@
 {
   "page": {
-    "title": "ดูบันทึกระบบ (Log)",
-    "subtitle": "ค้นหาและตรวจสอบบันทึกแอปพลิเคชันแบบมีโครงสร้างตามระดับ ข้อความ หรือรหัสธุรกิจ"
+    "title": "Application Logs",
+    "subtitle": "ค้นและตรวจสอบ log ของระบบ ตามข้อความ level หรือรหัสอ้างอิงทางธุรกิจ",
+    "backToLogs": "กลับไปที่ Logs"
+  },
+  "metrics": {
+    "stripTitle": "Metric ของเครื่องในช่วงเดียวกัน",
+    "legendRestart": "รีสตาร์ท (app pool recycle)",
+    "restartTitle": "{{machine}} รีสตาร์ทเวลา {{times}}",
+    "legendThreshold": "เกณฑ์ผิดปกติ",
+    "viewHealth": "ดูสุขภาพเครื่อง",
+    "cpuLabel": "CPU ของแอป",
+    "memoryLabel": "Memory ของเครื่องที่ใช้อยู่",
+    "queueLabel": "งานรอคิว (thread pool)",
+    "p95Label": "เวลาตอบ p95",
+    "rpmLabel": "Requests ต่อนาที",
+    "http5xxLabel": "HTTP 5xx ต่อนาที"
+  },
+  "health": {
+    "title": "สุขภาพเครื่อง",
+    "subtitle": "แอปเก็บค่าเองทุก 1 นาทีต่อเครื่อง · คลิกกราฟเพื่อดู log ช่วงนั้น",
+    "noMachines": "ไม่มีเครื่องที่ส่งค่าเข้ามาในช่วง 10 นาทีที่ผ่านมา",
+    "status": {
+      "ok": "ปกติ",
+      "warn": "เฝ้าระวัง",
+      "bad": "ผิดปกติ"
+    },
+    "startedAt": "เริ่ม process ล่าสุด {{time}}",
+    "uptimeDays": "ทำงานมา {{days}} วัน {{hours}} ชม.",
+    "uptimeHours": "ทำงานมา {{hours}} ชม. {{minutes}} นาที",
+    "staleWarning": "ไม่มีค่าใหม่ตั้งแต่ {{time}} — เครื่องนี้อาจหยุดส่งค่า",
+    "extra": {
+      "workingSet": "Working set",
+      "gcHeap": "GC heap",
+      "gen2": "GC รอบใหญ่ (gen2) / ชม.",
+      "threads": "Threads",
+      "requestsPerMin": "Requests / นาที",
+      "exceptionsPerMin": "Exceptions / นาที"
+    },
+    "historyTitle": "ย้อนหลัง",
+    "eventsTitle": "เหตุการณ์ในช่วงนี้",
+    "eventsSubtitle": "ระบบตรวจจากเกณฑ์ แล้วลิงก์ไปที่ log ช่วงเวลาเดียวกัน",
+    "eventsEmpty": "ไม่มีเหตุการณ์ในช่วงนี้",
+    "eventRestart": "App pool รีสตาร์ท",
+    "eventBreach": "{{metric}} ขึ้นถึง {{value}}",
+    "viewLogs": "ดู log ช่วงนี้",
+    "notesTitle": "เก็บอย่างไร และไม่รวมอะไร",
+    "notes": [
+      "ใช้ของที่มีใน .NET 9 ทั้งหมด (Process, GC.GetGCMemoryInfo, ThreadPool, MeterListener) ไม่ต้องลง agent หรือ package เพิ่ม",
+      "\"งานรอคิว\" สูงแต่ CPU ต่ำ = thread ถูกบล็อกรอ I/O (มักเป็น DB) คือสาเหตุคลาสสิกของ \"ระบบค้างทั้งที่เครื่องว่าง\"",
+      "Memory ของเครื่องได้จาก GC ส่วน CPU รวมทั้งเครื่อง (โปรแกรมอื่นด้วย) ไม่รวม ต้องใช้ระบบ monitor ของ server",
+      "ยังไม่รวม DB connection pool และค่าฝั่ง SQL Server (CPU, wait, blocking)"
+    ]
   },
   "columns": {
     "timeStamp": "เวลา",
-    "level": "ระดับ",
+    "level": "Level",
     "message": "ข้อความ",
-    "exception": "ข้อยกเว้น (Exception)",
+    "source": "Source",
     "correlationId": "Correlation ID",
-    "appraisalId": "รหัสการประเมิน",
-    "requestId": "รหัสคำขอ",
-    "entityId": "รหัสเอนทิตี",
-    "workflowInstanceId": "Workflow Instance ID",
-    "collateralId": "รหัสหลักประกัน",
-    "documentId": "รหัสเอกสาร",
-    "machineName": "เครื่อง"
+    "appraisalId": "Appraisal",
+    "requestId": "Request ID",
+    "entityId": "Entity ID",
+    "workflowInstanceId": "Workflow",
+    "collateralId": "Collateral",
+    "documentId": "Document",
+    "userName": "ผู้ใช้",
+    "requestPath": "Request path",
+    "sourceContext": "Source"
   },
   "levels": {
-    "Verbose": "Verbose",
-    "Debug": "Debug",
-    "Information": "Information",
+    "Information": "Info",
     "Warning": "Warning",
     "Error": "Error",
     "Fatal": "Fatal"
   },
-  "filters": {
-    "searchPlaceholder": "ค้นหาข้อความ...",
-    "levelLabel": "ระดับ",
-    "correlationIdPlaceholder": "Correlation ID",
-    "appraisalIdPlaceholder": "รหัสการประเมิน",
-    "requestIdPlaceholder": "รหัสคำขอ",
-    "entityIdPlaceholder": "รหัสเอนทิตี",
+  "search": {
+    "placeholder": "ค้นข้อความ / exception / วาง GUID ได้เลย เช่น timeout  path:/api/v1  user:los",
+    "button": "ค้นหา",
+    "live": "Live",
+    "zoomOut": "ซูมออก",
+    "liveTitle": "ดึงใหม่ทุก 5 วินาที",
+    "dirtyHint": "ยังไม่ได้ค้น กด Enter หรือปุ่ม \"ค้นหา\"",
+    "hint": "กด Enter เพื่อค้น · คำค้นค้นทั้ง Message + Exception · \"วลีตรงตัว\" · -คำ ตัดออก · appraisal: (GUID หรือเลขใบประเมิน) request: corr: user: path: source: · วาง GUID = ค้นทุกคอลัมน์ ID พร้อมกัน",
+    "guideLink": "ดูคู่มือพร้อมตัวอย่าง",
+    "wideRangeWarning": "ช่วงเกิน 7 วันพร้อมคำค้น อาจใช้เวลาค้นนานขึ้น"
+  },
+  "range": {
+    "15m": "15 นาที",
+    "1h": "1 ชม.",
+    "24h": "24 ชม.",
+    "7d": "7 วัน",
+    "30d": "30 วัน",
+    "custom": "กำหนดเอง…",
+    "customModeRange": "ช่วงเวลา",
+    "customModeAround": "รอบเวลาที่เกิดเหตุ",
     "from": "ตั้งแต่",
     "to": "ถึง",
-    "clear": "ล้างตัวกรอง"
+    "incidentTime": "เวลาที่ระบบอื่นแจ้งมา",
+    "plusMinus": "บวกลบ",
+    "plusMinusOption": "± {{minutes}} นาที",
+    "cancel": "ยกเลิก",
+    "apply": "ใช้ช่วงนี้"
+  },
+  "errors": {
+    "invalidRange": "กรอกวันที่และเวลาให้ครบ",
+    "fromAfterTo": "เวลาเริ่มต้องมาก่อนเวลาสิ้นสุด",
+    "futureNotAllowed": "เลือกเวลาในอนาคตไม่ได้",
+    "beyondRetention": "log เก็บไว้ 30 วัน ช่วงนี้ถูกลบไปแล้ว",
+    "spanTooWide": "ช่วงเวลาต้องไม่เกิน 31 วัน"
+  },
+  "filters": {
+    "removeRange": "ลบช่วงเวลา",
+    "removeFilter": "ลบตัวกรอง"
+  },
+  "histogram": {
+    "errorFatalLabel": "Error/Fatal",
+    "clickHint": "คลิกแท่ง = ซูมช่วงนั้น"
+  },
+  "table": {
+    "httpTag": "API ขาเข้า",
+    "filterAppraisal": "กรองใบประเมินนี้",
+    "filterTrace": "ดูทุก log ใน request นี้",
+    "showingMore": "แสดง {{count}} รายการ มีต่ออีก",
+    "showingAll": "แสดงทั้งหมด {{count}} รายการ",
+    "copyLink": "คัดลอกลิงก์ค้นหานี้",
+    "copyLinkToast": "คัดลอกลิงก์แล้ว ส่งให้ทีมเปิดเจอผลเดียวกัน",
+    "copyLinkFailed": "คัดลอกไม่สำเร็จ — ใช้คลิปบอร์ดที่นี่ไม่ได้",
+    "loadMore": "โหลดเพิ่ม",
+    "loadingMore": "กำลังโหลด…"
+  },
+  "sidebar": {
+    "topProblemsTitle": "ปัญหาที่เกิดบ่อย",
+    "topProblemsSubtitle": "Error + Warning จัดกลุ่มตาม message template ในช่วงที่เลือก",
+    "topProblemsEmpty": "ไม่มี Error/Warning ในช่วงนี้",
+    "topProblemsLastSeen": "ล่าสุด {{time}}",
+    "savedSearchesTitle": "ค้นหาที่บันทึกไว้",
+    "savedSearchesSubtitle": "เก็บในเบราว์เซอร์ของแต่ละคน",
+    "savedSearchesNoQuery": "(ไม่มีคำค้น)",
+    "savedSearchesDelete": "ลบการค้นหาที่บันทึกไว้",
+    "savedSearchesSavePlaceholder": "ชื่อการค้นหานี้…",
+    "savedSearchesSave": "บันทึก",
+    "savedSearchesCustomRangeHint": "ช่วงเวลาแบบกำหนดเองบันทึกไม่ได้ — เลือกช่วงสำเร็จรูป (1 ชม./24 ชม./7 วัน/30 วัน) ก่อน"
   },
   "drawer": {
-    "title": "รายละเอียดรายการบันทึก",
+    "title": "รายละเอียด Log",
+    "tabDetail": "รายละเอียด",
+    "tabTrace": "Request trace ({{count}})",
+    "tabTracePlain": "Request trace",
+    "traceHasMoreText": "มีมากกว่า 200 รายการ",
+    "traceHasMoreLink": "ดูทั้งหมด",
+    "tabProperties": "Properties JSON",
+    "request": "Request",
+    "response": "Response",
+    "requestBody": "Request body · ที่ระบบภายนอกส่งมา",
+    "responseBody": "Response body · ที่เราตอบกลับไป",
+    "noBody": "ไม่มี body (GET)",
+    "httpHint": "เก็บ body ฝั่งละไม่เกิน 32KB · ไม่เก็บ header (Authorization ไม่ลง log) · ไฟล์และ multipart ไม่ถูกเก็บ",
+    "exceptionHint": "Exception · สีเขียว = โค้ดเรา, จาง = framework",
     "copy": "คัดลอก",
-    "copied": "คัดลอกแล้ว!"
+    "copied": "คัดลอกแล้ว!",
+    "copyFailed": "คัดลอกไม่สำเร็จ — ใช้คลิปบอร์ดที่นี่ไม่ได้",
+    "copyStack": "คัดลอก stack",
+    "copyAll": "คัดลอกทั้งหมด",
+    "aroundThisLog": "± 2 นาทีรอบ log นี้ (ทุก level)",
+    "traceHint": "ทุก log ที่มี CorrelationId เดียวกัน เรียงตามเวลา คือเส้นทางของ HTTP request นี้ตั้งแต่เข้าจนจบ",
+    "noTrace": "log นี้ไม่ได้อยู่ใน HTTP request (เช่น background job) จึงไม่มี trace",
+    "loading": "กำลังโหลด…",
+    "filterLink": "กรอง"
+  },
+  "guide": {
+    "title": "คู่มือการค้นหา",
+    "subtitle": "คลิกตัวอย่างสีเขียวเพื่อค้นทันที · ใช้หลายแบบรวมกันในช่องเดียวได้",
+    "columnPattern": "รูปแบบ",
+    "columnSearchesIn": "ค้นใน",
+    "columnSpeed": "ความเร็ว",
+    "columnOldRows": "แถวก่อน deploy",
+    "columnUsage": "ใช้อย่างไร / ตัวอย่าง",
+    "speedFast": "เร็วมาก",
+    "speedScan": "ตามช่วงเวลา",
+    "oldRowsYes": "✓ ได้",
+    "oldRowsNo": "✕ เฉพาะแถวใหม่",
+    "recipesTitle": "สูตรที่ใช้บ่อย",
+    "tipsTitle": "ข้อควรรู้",
+    "tips": [
+      "กด Enter หรือปุ่ม \"ค้นหา\" ระบบไม่ค้นระหว่างพิมพ์",
+      "รูปแบบที่ขึ้นว่า \"ตามช่วงเวลา\" ต้องไล่อ่านทุกแถวในช่วงที่เลือก เลือก 24 ชม. เร็วกว่า 30 วันราว 30 เท่า",
+      "รูปแบบที่ขึ้นว่า \"เร็วมาก\" ใช้ index ค้น 30 วันก็ยังเร็ว",
+      "ตัวพิมพ์เล็กหรือใหญ่ให้ผลเหมือนกัน",
+      "log ของ query (การอ่านข้อมูล) ไม่ถูกเก็บ ยกเว้นตอนที่พังหรือช้าเกิน 3 วินาที"
+    ],
+    "sections": {
+      "text": { "title": "ข้อความ" },
+      "ids": { "title": "รหัสอ้างอิง (มี index เร็วมาก)" },
+      "who": { "title": "ใคร / จากไหน" }
+    },
+    "rows": {
+      "word": "พิมพ์คำเดียวหรือหลายคำ หลายคำ = ต้องมีครบทุกคำ",
+      "phrase": "ต้องเจอทั้งวลีติดกัน ใช้เมื่อคำมีช่องว่างหรือมีสัญลักษณ์",
+      "negate": "ไม่เอาแถวที่มีคำนี้ ใช้ตัดผลที่รู้ว่าไม่เกี่ยวออก",
+      "guid": "ไม่ต้องรู้ว่าเป็น ID อะไร ระบบค้นทั้ง Correlation, Appraisal, Request, Workflow, Collateral, Document",
+      "appraisal": "ใส่ GUID หรือเลขใบประเมินก็ได้",
+      "request": "แถวก่อน deploy ใช้ไม่ได้ เพราะคอลัมน์เดิมเก็บค่าผิด",
+      "corr": "ทุก log ของ HTTP request เดียวกัน ตั้งแต่เข้าจนจบ ค่านี้อยู่ใน header X-Correlation-Id ที่ส่งกลับให้ระบบภายนอกด้วย",
+      "user": "ชื่อผู้ใช้ หรือชื่อ client ของระบบภายนอก เช่น los",
+      "path": "URL ที่ถูกเรียก ค้นแบบมีคำนี้อยู่ในนั้น",
+      "source": "ใส่แค่บางส่วนของชื่อ class ได้",
+      "level": "Information, Warning, Error, Fatal (กด chip ด้านบนก็ได้)"
+    },
+    "recipes": {
+      "losFailed": "ระบบภายนอกเรียกเข้าแล้วไม่สำเร็จ",
+      "http400": "API ขาเข้าที่ตอบ 400 (ส่งข้อมูลมาไม่ครบ)",
+      "commandFailed": "command ที่ทำไม่สำเร็จ พร้อมข้อมูลที่ส่งเข้ามา",
+      "slowRequests": "คำขอที่ช้าเกิน 3 วินาที",
+      "dbTimeout": "DB timeout",
+      "losDeliveryFailed": "ส่ง event ไป LOS ไม่ผ่าน",
+      "wholeAppraisal": "ทุกอย่างของใบประเมินใบเดียว"
+    }
   },
   "error": {
-    "failedToLoad": "โหลดบันทึกไม่สำเร็จ"
+    "failedToLoad": "โหลด log ไม่สำเร็จ"
   },
-  "emptyState": "ไม่พบรายการบันทึก"
+  "emptyState": "ไม่พบ log ในช่วงนี้ ลองขยายช่วงเวลาหรือเอาตัวกรองออก"
 }

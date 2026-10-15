@@ -78,7 +78,7 @@ export const useDownloadTitleImportTemplate = () =>
       link.click();
       link.remove();
 
-      // Deferred, matching the rest of the app (documents.ts, AppointmentLetterButton): revoking in
+      // Deferred, matching the rest of the app (documents.ts, useAppointmentLetter): revoking in
       // a finally right after click() can pull the blob out from under a browser that is still
       // resolving it, and the download then fails silently.
       setTimeout(() => URL.revokeObjectURL(url), 60_000);

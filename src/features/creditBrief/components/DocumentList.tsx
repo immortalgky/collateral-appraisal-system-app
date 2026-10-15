@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
+import { formatFileSize } from '@/shared/utils/formatUtils';
 import { saveBlob } from '@/shared/utils/saveBlob';
 import { useDownloadDocument, useViewDocument } from '@features/request/api/documents';
 import type { BriefDocument } from '../api/appraisalBrief';
@@ -20,11 +21,7 @@ interface DocumentListProps {
   lockedReason: string;
 }
 
-const sizeLabel = (bytes: number | null) => {
-  if (bytes == null) return null;
-  const mb = bytes / (1024 * 1024);
-  return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`;
-};
+const sizeLabel = (bytes: number | null) => (bytes == null ? null : formatFileSize(bytes));
 
 /**
  * The glyph and tint for a file, from its actual extension.

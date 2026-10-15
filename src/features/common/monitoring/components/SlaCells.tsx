@@ -99,13 +99,13 @@ export function SlaDueCell({
     } else if (assignedDate && targetHours != null) {
       dueDate = new Date(parseISO(assignedDate).getTime() + targetHours * 3_600_000);
     } else {
-      return <span className="text-gray-400 text-xs">—</span>;
+      return <span className="text-gray-400">—</span>;
     }
   } catch {
-    return <span className="text-gray-400 text-xs">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
   if (Number.isNaN(dueDate.getTime())) {
-    return <span className="text-gray-400 text-xs">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
 
   const variant = variantOf(slaStatus);
@@ -125,18 +125,18 @@ export function SlaDueCell({
           : 'text-gray-400';
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs tabular-nums text-gray-700">
+    <span className="inline-flex items-center gap-1.5 text-table tabular-nums text-gray-700">
       <Icon style="solid" name={iconName} className={`size-3.5 shrink-0 ${iconColor}`} />
       <span className="flex flex-col gap-0.5">
         <span className="inline-flex items-center gap-1.5">
           {format(dueDate, 'dd/MM/yyyy HH:mm')}
           {slaDurationHours != null && (
-            <span className="inline-flex items-center rounded border border-gray-200 px-1 py-px text-[10px] font-medium text-gray-500 tabular-nums">
+            <span className="inline-flex items-center rounded border border-gray-200 px-1 py-px text-xs font-medium text-gray-500 tabular-nums">
               {slaDurationHours}h
             </span>
           )}
         </span>
-        <span className="text-[10px] text-gray-400">
+        <span className="text-xs text-gray-400">
           {formatDistanceToNowStrict(dueDate, { addSuffix: true })}
         </span>
       </span>
@@ -154,9 +154,9 @@ interface ElapsedCellProps {
 
 export function ElapsedCell({ actualHours }: ElapsedCellProps) {
   if (actualHours == null) {
-    return <span className="text-gray-400 text-xs">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
-  return <span className="text-xs tabular-nums font-medium text-gray-700">{actualHours}h</span>;
+  return <span className="text-table tabular-nums font-medium text-gray-700">{actualHours}h</span>;
 }
 
 // ─── Remaining (hrs) ──────────────────────────────────────────────────────────
@@ -171,17 +171,17 @@ interface RemainingCellProps {
 
 export function RemainingCell({ targetHours, actualHours }: RemainingCellProps) {
   if (targetHours == null || actualHours == null) {
-    return <span className="text-gray-400 text-xs">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
   const remaining = targetHours - actualHours;
   if (remaining < 0) {
     return (
-      <span className="text-xs tabular-nums font-medium text-gray-700">
+      <span className="text-table tabular-nums font-medium text-gray-700">
         {Math.abs(remaining)}h<span className="text-red-600"> late</span>
       </span>
     );
   }
-  return <span className="text-xs tabular-nums font-medium text-gray-700">{remaining}h</span>;
+  return <span className="text-table tabular-nums font-medium text-gray-700">{remaining}h</span>;
 }
 
 // ─── SLA Status badge (subtle, with colored dot) ──────────────────────────────
@@ -194,11 +194,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function SlaStatusBadge({ sla }: { sla: string | null }) {
-  if (!sla) return <span className="text-gray-400 text-xs">—</span>;
+  if (!sla) return <span className="text-gray-400">—</span>;
   const variant = variantOf(sla);
   const label = STATUS_LABEL[sla] ?? sla.replace(/([a-z])([A-Z])/g, '$1 $2');
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-100 text-gray-700">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
       <span className={`size-1.5 rounded-full ${DOT_COLOR[variant]}`} />
       {label}
     </span>

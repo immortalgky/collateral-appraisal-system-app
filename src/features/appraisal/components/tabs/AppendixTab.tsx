@@ -3,19 +3,18 @@ import { lazyWithRetry } from '@shared/utils/lazyWithRetry';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
-import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import PhotoSourceModal from '../PhotoSourceModal';
 import GallerySelectionModal from '../GallerySelectionModal';
 import AppendixChooserModal from '../AppendixChooserModal';
-import {
-  ActionDropdown,
-  DocumentFileRow,
-  EmptyUploadState,
-  isImageDocument,
-  openDocumentViewer,
-} from '../documentShared';
+import DocumentListView, {
+  type ListSection,
+} from '@/features/request/components/documentCard/DocumentListView';
+import type { TypeRow } from '@/features/request/utils/documentList';
+import type { UploadedDocument } from '@/features/request/types/document';
+import { isImageDocument, openDocumentViewer } from '../documentShared';
+import { appendixSection } from '../../utils/checklistDocuments';
 import type { GalleryImage } from '../../types/gallery';
 import { toGalleryImage } from '../../types/gallery';
 import { useAppraisalContext } from '../../context/AppraisalContext';
@@ -37,14 +36,18 @@ import type { AppendixDocumentDto, AppraisalAppendixDto } from '../../types/docu
 import type { AnnotationResult } from '@shared/components/ImageAnnotationEditor';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import DataErrorState from '@/shared/components/DataErrorState';
+import {
+  isAllowedValuationDocumentFile,
+  VALUATION_DOCUMENT_ACCEPT,
+} from '../../utils/valuationDocuments';
 
 const ImageAnnotationEditor = lazyWithRetry(
   () => import('@shared/components/ImageAnnotationEditor/ImageAnnotationEditor'),
 );
 
 const isImageFile = (file: File) => /\.(jpg|jpeg|png)$/i.test(file.name);
-// Mirrors ValuationDocumentChecklist.tsx's isAllowedChecklistFile — same page, same accepted types.
-const isAcceptedAppendixFile = (file: File) => /\.(jpe?g|png|pdf)$/i.test(file.name);
+// Same page as the valuation document checklist, same accepted types.
+const isAcceptedAppendixFile = isAllowedValuationDocumentFile;
 
 // Mirrors the server cap (FileStorageConfiguration.MaxFileSizeBytes / appsettings 52428800).
 // The appendix path had no client-side size check at all — the server rejected oversize uploads
@@ -55,6 +58,7 @@ const isWithinSizeLimit = (file: File) => file.size <= MAX_APPENDIX_FILE_SIZE;
 export const AppendixTab = () => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
+  const { t: tCommon } = useTranslation('common');
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
   const currentUser = useAuthStore(state => state.user);
@@ -118,14 +122,12 @@ export const AppendixTab = () => {
   const [editingFileName, setEditingFileName] = useState<string | null>(null);
 
   // Local UI state
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [activeAppendixId, _setActiveAppendixId] = useState<string | null>(null);
   const activeAppendixIdRef = useRef<string | null>(null);
   const setActiveAppendixId = (id: string | null) => {
     activeAppendixIdRef.current = id;
     _setActiveAppendixId(id);
   };
-  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
   const [showPhotoSourceModal, setShowPhotoSourceModal] = useState(false);
   const [showGalleryModal, setShowGalleryModal] = useState(false);
   const [showAppendixChooser, setShowAppendixChooser] = useState(false);
@@ -137,7 +139,6 @@ export const AppendixTab = () => {
 
   // Derived data
   const appendices = useMemo(() => appendicesData?.items ?? [], [appendicesData]);
-  const totalAppendixDocs = appendices.reduce((sum, a) => sum + a.documents.length, 0);
 
   const galleryImages: GalleryImage[] = useMemo(
     () => (galleryData?.photos ?? []).map(toGalleryImage),
@@ -145,27 +146,6 @@ export const AppendixTab = () => {
   );
 
   const activeAppendix = appendices.find(a => a.id === activeAppendixId);
-
-  // Section expand/collapse
-  const handleToggleSection = (appendixId: string) => {
-    setExpandedSections(prev => {
-      const next = new Set(prev);
-      if (next.has(appendixId)) {
-        next.delete(appendixId);
-      } else {
-        next.add(appendixId);
-      }
-      return next;
-    });
-  };
-
-  const handleExpandAll = () => {
-    setExpandedSections(new Set(appendices.map(a => a.id)));
-  };
-
-  const handleCollapseAll = () => {
-    setExpandedSections(new Set());
-  };
 
   // Layout change
   const handleLayoutChange = (appendix: AppraisalAppendixDto, layoutColumns: number) => {
@@ -367,22 +347,10 @@ export const AppendixTab = () => {
     [appraisalId, uploadSingleFile, removeAppendixDocument],
   );
 
-  const handleAnnotationSkip = useCallback(() => {
-    // Read from refs to avoid stale closures
+  // Moves the annotation queue on to the next pending file, or closes it after the last one
+  const advanceAnnotationQueue = useCallback(() => {
     const curPendingFiles = pendingEditFilesRef.current;
     const curFileIndex = editingFileIndexRef.current;
-    const curAppendixId = editingAppendixIdRef.current;
-
-    // Upload the current file without annotation
-    const currentFile = curPendingFiles[curFileIndex];
-
-    if (currentFile && curAppendixId) {
-      void uploadSingleFile(currentFile, curAppendixId).catch(() => {
-        toast.error(t('toasts.fileUploadFailed'));
-      });
-    }
-
-    // Advance to next file
     const nextIndex = curFileIndex + 1;
     if (nextIndex < curPendingFiles.length) {
       setEditingFileIndex(nextIndex);
@@ -392,7 +360,22 @@ export const AppendixTab = () => {
       setEditingFileIndex(0);
       setEditingAppendixId(null);
     }
-  }, [uploadSingleFile]);
+  }, []);
+
+  const handleAnnotationSkip = useCallback(() => {
+    // Read from refs to avoid stale closures
+    const currentFile = pendingEditFilesRef.current[editingFileIndexRef.current];
+    const curAppendixId = editingAppendixIdRef.current;
+
+    // Upload the current file without annotation
+    if (currentFile && curAppendixId) {
+      void uploadSingleFile(currentFile, curAppendixId).catch(() => {
+        toast.error(t('toasts.fileUploadFailed'));
+      });
+    }
+
+    advanceAnnotationQueue();
+  }, [uploadSingleFile, advanceAnnotationQueue]);
 
   const handleAnnotationClose = useCallback(() => {
     setShowAnnotationEditor(false);
@@ -522,23 +505,8 @@ export const AppendixTab = () => {
     );
   };
 
-  // Drag & Drop handlers
-  const handleDragOver = (e: React.DragEvent, appendixId: string) => {
-    e.preventDefault();
-    setDragOverSection(appendixId);
-  };
-
-  const handleDragLeave = () => {
-    setDragOverSection(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, appendixId: string) => {
-    e.preventDefault();
-    setDragOverSection(null);
-    const files = e.dataTransfer.files;
-    if (files.length === 0) return;
-
-    const fileArray = Array.from(files);
+  // Files dropped on an appendix row
+  const handleDropFiles = (fileArray: File[], appendixId: string) => {
     // Buckets stay mutually exclusive and exhaustive: wrong type → rejected; right type but
     // over the cap → oversize; the remainder splits into images and PDFs.
     const rejectedFiles = fileArray.filter(f => !isAcceptedAppendixFile(f));
@@ -567,12 +535,32 @@ export const AppendixTab = () => {
     }
   };
 
+  // The appendix type's name in the UI language, else the one the API sent
+  const typeName = useCallback(
+    (appendix: AppraisalAppendixDto) =>
+      t(`valuationDocuments.appendixTypes.${appendix.appendixTypeCode}`, {
+        defaultValue: appendix.appendixTypeName,
+      }),
+    [t],
+  );
+  const appendixOf = (doc: UploadedDocument) =>
+    appendices.find(appendix => appendix.documents.some(d => d.id === doc.id));
+  const appendixOfRow = (row: TypeRow) =>
+    appendices.find(appendix => appendix.appendixTypeCode === row.documentType);
+  const sections = useMemo<ListSection[]>(
+    () =>
+      appendices.length
+        ? [appendixSection(appendices, typeName, t('valuationDocuments.appendix.title'))]
+        : [],
+    [appendices, typeName, t],
+  );
+
   if (isLoadingAppendices) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading appendix...</p>
+          <p className="text-sm text-gray-500">{t('valuationDocuments.appendix.loading')}</p>
         </div>
       </div>
     );
@@ -583,200 +571,99 @@ export const AppendixTab = () => {
       {isGalleryError && (
         <DataErrorState
           variant="inline"
-          title="Failed to load gallery"
+          title={t('valuationDocuments.appendix.galleryFailed')}
           message={(galleryError as Error)?.message}
           onRetry={refetchGallery}
         />
       )}
 
-      {/* Appendix Documents Section */}
-      <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        {/* Section Header */}
-        <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Icon name="folder-plus" className="text-gray-400" />
-              <h3 className="text-base font-semibold text-gray-900">Appendix Documents</h3>
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                {totalAppendixDocs} files
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleExpandAll}
-                className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-colors"
-              >
-                Expand All
-              </button>
-              <button
-                type="button"
-                onClick={handleCollapseAll}
-                className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-colors"
-              >
-                Collapse All
-              </button>
-              {!readOnly && appendices.length > 0 && (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => setShowAppendixChooser(true)}
-                  className="ml-2"
-                >
-                  <Icon name="plus" className="mr-1.5" />
-                  Add Files
-                </Button>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Appendix Sections */}
-        <div className="divide-y divide-gray-100">
-          {isAppendicesError ? (
-            <DataErrorState
-              variant="inline"
-              title="Failed to load appendices"
-              message={(appendicesError as Error)?.message}
-              onRetry={refetchAppendices}
-            />
-          ) : (
-            appendices.map(appendix => {
-              const isExpanded = expandedSections.has(appendix.id);
-              const isDragOver = dragOverSection === appendix.id;
-              // Explicit `AppendixDocumentDto[]` (not inferred from `appendix.documents`) so the
-              // hand-extended uploadedAt/uploadedBy/uploadedByName fields type-check — see the
-              // note on that type in types/documentChecklist.ts.
-              const sortedDocs: AppendixDocumentDto[] = [...appendix.documents].sort(
-                (a, b) => a.displaySequence - b.displaySequence,
-              );
-
-              return (
-                <div
-                  key={appendix.id}
-                  onDragOver={readOnly ? undefined : e => handleDragOver(e, appendix.id)}
-                  onDragLeave={readOnly ? undefined : handleDragLeave}
-                  onDrop={readOnly ? undefined : e => handleDrop(e, appendix.id)}
-                  className={clsx('transition-colors', !readOnly && isDragOver && 'bg-primary/5')}
-                >
-                  {/* Appendix Header */}
-                  <div
-                    className={clsx(
-                      'px-6 py-3 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors',
-                      isExpanded && 'bg-gray-50/50',
-                    )}
-                    onClick={() => handleToggleSection(appendix.id)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <Icon
-                        name={isExpanded ? 'chevron-down' : 'chevron-right'}
-                        className="text-gray-400 text-sm transition-transform"
-                      />
-                      <span className="text-sm font-medium text-gray-900">
-                        {appendix.appendixTypeName}
-                      </span>
-                      {appendix.documents.length > 0 && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-                          {appendix.documents.length}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-3" onClick={e => e.stopPropagation()}>
-                      {!readOnly && (
-                        <>
-                          {/* Layout Selector */}
-                          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1">
-                            <span className="text-xs text-gray-500">Layout:</span>
-                            <div className="flex gap-1">
-                              {[1, 2, 3].map(num => (
-                                <button
-                                  key={num}
-                                  type="button"
-                                  onClick={() => handleLayoutChange(appendix, num)}
-                                  className={clsx(
-                                    'w-6 h-6 rounded text-xs font-medium transition-colors',
-                                    appendix.layoutColumns === num
-                                      ? 'bg-primary text-white'
-                                      : 'text-gray-500 hover:bg-gray-100',
-                                  )}
-                                >
-                                  {num}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Section Content */}
-                  {isExpanded && (
-                    <div className="border-t border-gray-100">
-                      {sortedDocs.length > 0 ? (
-                        <div className="divide-y divide-gray-50">
-                          {sortedDocs.map(doc => (
-                            <div key={doc.id} className="px-6 py-3 hover:bg-gray-50/50 transition-colors ml-6">
-                              <DocumentFileRow
-                                fileName={doc.fileName}
-                                documentId={doc.documentId}
-                                mimeType={doc.mimeType}
-                                fileExtension={doc.fileExtension}
-                                fileSizeBytes={doc.fileSizeBytes}
-                                uploadedAt={doc.uploadedAt}
-                                uploadedByName={doc.uploadedByName}
-                                uploadedBy={doc.uploadedBy}
-                                onView={() => openDocumentViewer(doc)}
-                                t={t}
-                                actions={
-                                  <ActionDropdown
-                                    onView={() => openDocumentViewer(doc)}
-                                    // PDFs have no annotation-editor path — Edit downloads the blob
-                                    // into the image canvas, which is meaningless for a PDF.
-                                    onEdit={
-                                      isImageDocument(doc.fileName, doc.mimeType)
-                                        ? () => void handleEditDocument(appendix.id, doc)
-                                        : undefined
-                                    }
-                                    onDelete={() => handleDeleteDocument(appendix.id, doc.id)}
-                                    isEditable={!readOnly}
-                                  />
-                                }
-                              />
-                            </div>
-                          ))}
-                        </div>
-                      ) : readOnly ? (
-                        <div className="flex flex-col items-center justify-center py-8">
-                          <p className="text-sm text-gray-400">No documents</p>
-                        </div>
-                      ) : (
-                        <EmptyUploadState
-                          onUpload={() => handleAddFiles(appendix.id)}
-                          isDragging={isDragOver}
-                        />
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
-
-          {appendices.length === 0 && (
-            <div className="px-6 py-8 text-center text-sm text-gray-400">
-              No appendix sections found
-            </div>
-          )}
-        </div>
-      </section>
+      {isAppendicesError ? (
+        <DataErrorState
+          variant="inline"
+          title={t('valuationDocuments.appendix.loadFailed')}
+          message={(appendicesError as Error)?.message}
+          onRetry={refetchAppendices}
+        />
+      ) : (
+        <DocumentListView
+          title={t('valuationDocuments.appendix.title')}
+          icon="folder-plus"
+          sections={sections}
+          typeName={(code, displayName) => displayName || code}
+          editable={!readOnly}
+          flat
+          showSource={false}
+          showNotes={false}
+          allTypesToggleKey="appraisal.documentChecklist.appendixAllTypes"
+          onView={doc => {
+            const original = appendixOf(doc)?.documents.find(d => d.id === doc.id);
+            if (original) openDocumentViewer(original);
+          }}
+          onUpload={
+            readOnly
+              ? undefined
+              : row => {
+                  const appendix = appendixOfRow(row);
+                  if (appendix) handleAddFiles(appendix.id);
+                }
+          }
+          onRemove={
+            readOnly
+              ? undefined
+              : doc => {
+                  const appendix = appendixOf(doc);
+                  if (appendix && doc.id) handleDeleteDocument(appendix.id, doc.id);
+                }
+          }
+          // PDFs have no annotation-editor path: Edit downloads the blob into the image canvas
+          onEdit={
+            readOnly
+              ? undefined
+              : doc => {
+                  const appendix = appendixOf(doc);
+                  const original = appendix?.documents.find(d => d.id === doc.id);
+                  if (appendix && original) void handleEditDocument(appendix.id, original);
+                }
+          }
+          canEdit={doc => {
+            const original = appendixOf(doc)?.documents.find(d => d.id === doc.id);
+            return !!original && isImageDocument(original.fileName, original.mimeType);
+          }}
+          editLabel={t('valuationDocuments.appendix.editImage')}
+          layoutOf={row => appendixOfRow(row)?.layoutColumns}
+          onLayoutChange={
+            readOnly
+              ? undefined
+              : (row, columns) => {
+                  const appendix = appendixOfRow(row);
+                  if (appendix) handleLayoutChange(appendix, columns);
+                }
+          }
+          onDropFiles={
+            readOnly
+              ? undefined
+              : (row, files) => {
+                  const appendix = appendixOfRow(row);
+                  if (appendix) handleDropFiles(files, appendix.id);
+                }
+          }
+          headerExtra={
+            !readOnly && appendices.length > 0 ? (
+              <Button variant="primary" size="sm" onClick={() => setShowAppendixChooser(true)}>
+                <Icon name="plus" className="mr-1.5" />
+                {t('valuationDocuments.appendix.addFiles')}
+              </Button>
+            ) : undefined
+          }
+          emptyLabel={t('valuationDocuments.appendix.empty')}
+        />
+      )}
 
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
         type="file"
-        accept=".jpg,.jpeg,.png,.pdf"
+        accept={VALUATION_DOCUMENT_ACCEPT}
         multiple
         onClick={e => {
           (e.target as HTMLInputElement).value = '';
@@ -791,7 +678,7 @@ export const AppendixTab = () => {
         onClose={() => setShowAppendixChooser(false)}
         appendices={appendices.map(a => ({
           id: a.id,
-          appendixTypeName: a.appendixTypeName,
+          appendixTypeName: typeName(a),
           documentCount: a.documents.length,
         }))}
         onSelect={appendixId => {
@@ -814,8 +701,12 @@ export const AppendixTab = () => {
         }}
         onUploadFromDevice={handleUploadFromDevice}
         onChooseFromGallery={handleChooseFromGallery}
-        title={activeAppendix ? `Add ${activeAppendix.appendixTypeName}` : 'Add Files'}
-        accept=".jpg,.jpeg,.png,.pdf"
+        title={
+          activeAppendix
+            ? t('valuationDocuments.appendix.addTo', { name: typeName(activeAppendix) })
+            : t('valuationDocuments.appendix.addFiles')
+        }
+        accept={VALUATION_DOCUMENT_ACCEPT}
       />
 
       {/* Gallery Selection Modal */}
@@ -835,9 +726,10 @@ export const AppendixTab = () => {
         isOpen={!!deleteConfirm}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={handleConfirmDelete}
-        title="Delete Document"
-        message="Are you sure you want to delete this document? This action cannot be undone."
-        confirmText="Delete"
+        title={t('valuationDocuments.appendix.deleteDialog.title')}
+        message={t('valuationDocuments.appendix.deleteDialog.message')}
+        confirmText={t('valuationDocuments.appendix.deleteDialog.confirm')}
+        cancelText={tCommon('actions.cancel')}
         variant="danger"
         isLoading={removeAppendixDocument.isPending}
       />
@@ -858,6 +750,7 @@ export const AppendixTab = () => {
             imageUrl={editingImageUrl ?? undefined}
             onSave={handleAnnotationSave}
             onSkip={editingDocument ? undefined : handleAnnotationSkip}
+            onDiscard={editingDocument ? undefined : advanceAnnotationQueue}
             fileName={
               editingDocument
                 ? (editingFileName ?? `document-${editingDocument.documentId}.png`)

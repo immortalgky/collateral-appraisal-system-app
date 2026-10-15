@@ -39,7 +39,9 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.landDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Land Identity</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          Land Identity
+        </p>
         <DetailRow label="Land Office Code" value={d.landOfficeCode} />
         <DetailRow label="Province" value={d.province} />
         <DetailRow label="Amphur" value={d.amphur} />
@@ -47,13 +49,17 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Title Deed Type" value={d.titleDeedType} />
         <DetailRow label="Title Deed No" value={d.titleDeedNo} />
         <DetailRow label="Survey / Parcel No" value={d.surveyOrParcelNo} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last-known</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last-known
+        </p>
         <DetailRow label="Land Area (m²)" value={d.landArea} />
         <DetailRow label="Road Frontage (m)" value={d.roadFrontage} />
         <DetailRow label="Land Shape" value={d.landShapeType} />
         <DetailRow label="Zone" value={d.landZoneType} />
         <DetailRow label="Urban Planning" value={d.urbanPlanningType} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Construction</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Construction
+        </p>
         <DetailRow
           label="Under Construction"
           value={d.isUnderConstructionAtLastAppraisal ? 'Yes (at last appraisal)' : 'No'}
@@ -66,12 +72,16 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
               : null
           }
         />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last Appraisal</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last Appraisal
+        </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
         <DetailRow
           label="Value (Land only)"
-          value={d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null}
+          value={
+            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
+          }
         />
         <DetailRow
           label="Value (Land + Buildings)"
@@ -89,7 +99,9 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.condoDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Condo Identity</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          Condo Identity
+        </p>
         <DetailRow label="Land Office Code" value={d.landOfficeCode} />
         <DetailRow label="Condo Registration No" value={d.condoRegistrationNumber} />
         <DetailRow label="Building" value={d.buildingNumber} />
@@ -99,17 +111,23 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Title Type" value={d.titleType} />
         <DetailRow label="Condo Name" value={d.condoName} />
         <DetailRow label="Province" value={d.province} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last-known</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last-known
+        </p>
         <DetailRow label="Usable Area (m²)" value={d.usableArea} />
         <DetailRow label="Location Type" value={d.locationType} />
         <DetailRow label="Building Age" value={d.buildingAge} />
         <DetailRow label="Construction Year" value={d.constructionYear} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last Appraisal</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last Appraisal
+        </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
         <DetailRow
           label="Value"
-          value={d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null}
+          value={
+            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
+          }
         />
       </div>
     );
@@ -119,13 +137,20 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.leaseholdDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Leasehold Identity</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          Leasehold Identity
+        </p>
         <DetailRow label="Lease Registration No" value={d.leaseRegistrationNo} />
         <DetailRow label="Underlying Master ID" value={d.underlyingMasterId} />
         <DetailRow label="Lessor" value={d.lessor} />
         <DetailRow label="Lessee" value={d.lessee} />
-        <DetailRow label="Lease Term Start" value={formatLocaleDate(d.leaseTermStart, i18n.language)} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last-known</p>
+        <DetailRow
+          label="Lease Term Start"
+          value={formatLocaleDate(d.leaseTermStart, i18n.language)}
+        />
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last-known
+        </p>
         <DetailRow label="Lease Term End" value={formatLocaleDate(d.leaseTermEnd, i18n.language)} />
         <DetailRow label="Lease Term (months)" value={d.leaseTermMonths} />
         <DetailRow
@@ -133,12 +158,16 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
           value={d.annualRent != null ? `฿${d.annualRent.toLocaleString('th-TH')}` : null}
         />
         <DetailRow label="Lease Purpose" value={d.leasePurpose} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last Appraisal</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last Appraisal
+        </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
         <DetailRow
           label="Value"
-          value={d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null}
+          value={
+            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
+          }
         />
       </div>
     );
@@ -148,24 +177,32 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.machineDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Machine Identity</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+          Machine Identity
+        </p>
         <DetailRow label="Registration No" value={d.machineRegistrationNo} />
         <DetailRow label="Serial No" value={d.serialNo} />
         <DetailRow label="Brand" value={d.brand} />
         <DetailRow label="Model" value={d.model} />
         <DetailRow label="Manufacturer" value={d.manufacturer} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last-known</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last-known
+        </p>
         <DetailRow label="Engine No" value={d.engineNo} />
         <DetailRow label="Chassis No" value={d.chassisNo} />
         <DetailRow label="Year of Manufacture" value={d.yearOfManufacture} />
         <DetailRow label="Condition" value={d.machineCondition} />
         <DetailRow label="Age (years)" value={d.machineAge} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">Last Appraisal</p>
+        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+          Last Appraisal
+        </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
         <DetailRow
           label="Value"
-          value={d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null}
+          value={
+            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
+          }
         />
       </div>
     );
@@ -473,7 +510,10 @@ export default function CollateralMasterDetailPage() {
           </p>
           <DetailRow label="Type" value={master.collateralType} />
           <DetailRow label="Owner / Lessee" value={master.ownerName} />
-          <DetailRow label="Created" value={formatLocaleDateTime(master.createdOn, i18n.language)} />
+          <DetailRow
+            label="Created"
+            value={formatLocaleDateTime(master.createdOn, i18n.language)}
+          />
           <DetailRow label="Created by" value={master.createdBy} />
           <DetailRow
             label="Updated"
@@ -486,7 +526,7 @@ export default function CollateralMasterDetailPage() {
       {/* Engagement history */}
       <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-3.5 border-b border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             Engagement History{' '}
             <span className="text-xs font-normal text-gray-400">({engTotal} total)</span>
           </h3>
@@ -502,12 +542,22 @@ export default function CollateralMasterDetailPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50">
                 <tr className="border-b border-gray-200">
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5">Appraisal #</th>
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5">Type</th>
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5">Company</th>
-                  <th className="text-left font-medium text-gray-600 px-4 py-2.5">Date</th>
-                  <th className="text-right font-medium text-gray-600 px-4 py-2.5">Value</th>
-                  <th className="w-16 px-4 py-2.5" />
+                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                    Appraisal #
+                  </th>
+                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                    Type
+                  </th>
+                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                    Company
+                  </th>
+                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                    Date
+                  </th>
+                  <th className="text-xs text-right font-semibold text-gray-600 px-4 py-2.5">
+                    Value
+                  </th>
+                  <th className="text-xs w-16 px-4 py-2.5 font-semibold" />
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -519,7 +569,10 @@ export default function CollateralMasterDetailPage() {
                     <td className="px-4 py-2.5 text-xs text-gray-600">{eng.appraisalType}</td>
                     <td className="px-4 py-2.5 text-xs text-gray-600 max-w-[160px] truncate">
                       {eng.appraisalCompanyName
-                        ? localizeCompanyName(eng.appraisalCompanyName, eng.appraisalCompanyNameLocal)
+                        ? localizeCompanyName(
+                            eng.appraisalCompanyName,
+                            eng.appraisalCompanyNameLocal,
+                          )
                         : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-xs text-gray-600 whitespace-nowrap">

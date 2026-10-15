@@ -103,7 +103,7 @@ function RecentTaskWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-800">{t('recentTask.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-800">{t('recentTask.title')}</h3>
           <div className="flex items-center gap-3">
             {updatedLabel && (
               <span className="text-xs text-gray-400">{t('updatedAgo', { n: updatedLabel })}</span>
@@ -134,7 +134,7 @@ function RecentTaskWidget() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className={`${base}${stickyExtra}${activeColor}`}
+                      className={`text-xs ${base}${stickyExtra}${activeColor} font-semibold`}
                     >
                       <div className="flex items-center gap-1">
                         {COLUMN_LABELS[col.key]}
@@ -143,7 +143,7 @@ function RecentTaskWidget() {
                     </th>
                   );
                 })}
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 whitespace-nowrap select-none bg-gray-50">
                   {t('recentTask.columns.status')}
                 </th>
               </tr>

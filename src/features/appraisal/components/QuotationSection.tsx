@@ -47,8 +47,8 @@ import {
   buildQuotationEmailHtml,
   formatQuotationSubjectAppraisalNumbersLabel,
   formatQuotationSubjectCustomerLabel,
+  TABLE_ROW_THRESHOLD,
 } from '@/features/quotation/utils/quotationEmailTemplate';
-import { useQuotationAttachmentUpload } from '@/features/quotation/hooks/useQuotationAttachmentUpload';
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -612,7 +612,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
-  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
   const { mutate: setSharedDocuments, isPending: isSettingDocs } = useSetSharedDocuments(
     activeQuotation?.id ?? '',
   );
@@ -1450,7 +1449,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           showCc={true}
           showBcc={true}
           showAttachments={true}
-          onUploadAttachment={uploadQuotationAttachment}
+          attachmentPicker={{ quotationId: activeQuotation?.id ?? '' }}
+          requireAttachment={(quotationDetail?.appraisals?.length ?? 0) > TABLE_ROW_THRESHOLD}
           subjectLabel="Subject"
           isPending={isBusy}
           richTextContent
@@ -1466,7 +1466,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   <Icon name="file-check" style="solid" className="size-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     {t('quotation.shareDocuments.title')}
                   </h3>
                   <p className="text-xs text-gray-500">{t('quotation.shareDocuments.step')}</p>

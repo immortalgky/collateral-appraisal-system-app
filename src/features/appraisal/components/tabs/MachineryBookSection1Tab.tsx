@@ -116,7 +116,7 @@ export const MachineryBookSection1Tab = () => {
       <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-gray-900">
               {t('machineryBookSection1.title')}
             </h3>
             <p className="text-xs text-gray-500 mt-0.5">{t('machineryBookSection1.subtitle')}</p>

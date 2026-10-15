@@ -3,10 +3,15 @@
     "save": "保存",
     "cancel": "取消",
     "delete": "删除",
+    "confirmDelete": "删除？",
+    "confirmDeleteLabel": "确认删除",
+    "confirmDeletePrompt": "再按一次以确认删除",
+    "deleteRowN": "删除第 {{n}} 行",
     "edit": "编辑",
     "create": "创建",
     "confirm": "确认",
     "close": "关闭",
+    "closePanel": "关闭面板",
     "back": "返回",
     "next": "下一步",
     "retry": "重试",
@@ -25,6 +30,7 @@
     "refresh": "刷新",
     "viewDetails": "查看详情",
     "apply": "应用",
+    "openCalendar": "打开日历",
     "clear": "清除",
     "clearAll": "全部清除"
   },
@@ -32,6 +38,8 @@
     "placeholder": "请选择",
     "searchPlaceholder": "搜索...",
     "typeToSearch": "输入以搜索...",
+    "noResults": "未找到结果",
+    "clearSelection": "清除选择",
     "other": "其他",
     "otherPlaceholder": "请注明",
     "clearOther": "清除并重新选择"
@@ -96,6 +104,13 @@
     "deleteTitle": "确认删除",
     "deleteMessage": "您确定要删除此项吗？此操作无法撤销。",
     "unsavedChanges": "您有未保存的更改。确定要离开吗？"
+  },
+  "unsaved": {
+    "badge": "有未保存的更改",
+    "title": "未保存的更改",
+    "message": "您有未保存的更改。确定要离开此页面吗？您的更改将会丢失。",
+    "stay": "留下",
+    "leave": "离开"
   },
   "validation": {
     "required": "此字段为必填项",
@@ -164,5 +179,51 @@
     "itemRange": "{{start}}-{{end}}，共 {{total}}",
     "noResults": "无结果",
     "pageSize": "每页条数"
+  },
+  "reportJob": {
+    "generating": "正在生成报告…",
+    "queueFailed": "无法提交报告生成请求。",
+    "ready": "报告已生成。请点击通知铃下载。",
+    "openFailed": "报告已生成但无法打开。请查看通知铃。",
+    "failed": "报告生成失败。"
+  },
+  "imageEditor": {
+    "loadFailed": "无法打开该图片进行编辑。",
+    "loadFailedDiscarded": "无法打开 {{name}}。该文件不会被附加。"
+  },
+  "liftoff": {
+    "title": {
+      "forward": "提交成功",
+      "routeBack": "已退回",
+      "cancel": "工单已取消",
+      "final": "工作已全部完成",
+      "voteApprove": "已投票：同意",
+      "voteReject": "已投票：不同意",
+      "voteRouteBack": "已投票：退回"
+    },
+    "subtitle": {
+      "forward": "工作已转交给下一步骤。",
+      "routeBack": "工作已退回上一步骤。",
+      "cancel": "此工单已终止。",
+      "final": "此工单没有后续步骤。",
+      "votePending": "您的投票已记录。",
+      "voteResolved": "投票已结束，已转交至{{name}}。",
+      "voteMoved": "投票已结束，已转交至下一步骤。",
+      "voteSentBack": "投票完成，已退回至 {{name}}。",
+      "voteSentBackNoName": "投票完成，已退回上一步。",
+      "voteClosed": "投票已结束，此工单已完成。"
+    },
+    "from": "来自",
+    "to": "发送至",
+    "you": "您",
+    "nextStep": "下一步骤",
+    "backTo": "退回至",
+    "referenceLabel": "编号",
+    "sentAt": "提交时间",
+    "done": "确定",
+    "approveStamp": "同意",
+    "routeBackStamp": "退回",
+    "rejectStamp": "不同意",
+    "finalNote": "此工单的所有步骤均已完成。"
   }
 }

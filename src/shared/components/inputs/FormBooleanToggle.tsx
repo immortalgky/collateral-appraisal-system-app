@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import Toggle from './Toggle';
 import { useController, useFormContext } from 'react-hook-form';
 import { useParametersByGroup } from '../../utils/parameterUtils';
@@ -49,7 +50,8 @@ const FormBooleanToggle = ({
       options={resolvedOptions}
       size={size}
       disabled={disabled}
-      className={className}
+      // Marker for formLayoutCompact.css: a yes/no toggle gets two colours, a string toggle does not.
+      className={clsx('cas-toggle-bool', className)}
       error={error?.message?.toString()}
       checked={field.value}
       onChange={field.onChange}

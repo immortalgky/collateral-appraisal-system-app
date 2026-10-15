@@ -1,48 +1,225 @@
 {
   "page": {
-    "title": "Log Viewer",
-    "subtitle": "Search and inspect structured application logs by level, message, or business ID"
+    "title": "Application Logs",
+    "subtitle": "Search and inspect application logs by message, level, or business reference",
+    "backToLogs": "Back to logs"
+  },
+  "metrics": {
+    "stripTitle": "Machine metrics for the same window",
+    "legendRestart": "Restart (app pool recycle)",
+    "restartTitle": "{{machine}} restarted at {{times}}",
+    "legendThreshold": "Abnormal threshold",
+    "viewHealth": "Machine health",
+    "cpuLabel": "App CPU",
+    "memoryLabel": "Machine memory in use",
+    "queueLabel": "Thread pool queue",
+    "p95Label": "p95 response time",
+    "rpmLabel": "Requests per minute",
+    "http5xxLabel": "HTTP 5xx per minute"
+  },
+  "health": {
+    "title": "Machine health",
+    "subtitle": "The app samples itself every minute per machine · click a chart to see logs from that time",
+    "noMachines": "No machine has reported in the last 10 minutes",
+    "status": {
+      "ok": "Normal",
+      "warn": "Watch",
+      "bad": "Abnormal"
+    },
+    "startedAt": "Process started {{time}}",
+    "uptimeDays": "Up {{days}}d {{hours}}h",
+    "uptimeHours": "Up {{hours}}h {{minutes}}m",
+    "staleWarning": "No new sample since {{time}} — this machine may have stopped reporting",
+    "extra": {
+      "workingSet": "Working set",
+      "gcHeap": "GC heap",
+      "gen2": "Gen2 GCs / hr",
+      "threads": "Threads",
+      "requestsPerMin": "Requests / min",
+      "exceptionsPerMin": "Exceptions / min"
+    },
+    "historyTitle": "History",
+    "eventsTitle": "Events in this range",
+    "eventsSubtitle": "Detected from the thresholds and linked to the matching log window",
+    "eventsEmpty": "No events in this range",
+    "eventRestart": "App pool restarted",
+    "eventBreach": "{{metric}} reached {{value}}",
+    "viewLogs": "View logs from this window",
+    "notesTitle": "How this is collected, and what's left out",
+    "notes": [
+      "Uses only what .NET 9 already provides (Process, GC.GetGCMemoryInfo, ThreadPool, MeterListener) — no extra agent or package",
+      "A high queue with low CPU means threads are blocked waiting on I/O (usually the database) — the classic \"the system hangs but the machine looks idle\" pattern",
+      "Machine memory comes from the GC; CPU is this process only, not the whole machine (other programs included) — that needs the server's own monitoring",
+      "Does not yet include the DB connection pool or anything on the SQL Server side (CPU, waits, blocking)"
+    ]
   },
   "columns": {
-    "timeStamp": "Timestamp",
+    "timeStamp": "Time",
     "level": "Level",
     "message": "Message",
-    "exception": "Exception",
+    "source": "Source",
     "correlationId": "Correlation ID",
-    "appraisalId": "Appraisal ID",
+    "appraisalId": "Appraisal",
     "requestId": "Request ID",
     "entityId": "Entity ID",
-    "workflowInstanceId": "Workflow Instance ID",
-    "collateralId": "Collateral ID",
-    "documentId": "Document ID",
-    "machineName": "Machine"
+    "workflowInstanceId": "Workflow",
+    "collateralId": "Collateral",
+    "documentId": "Document",
+    "userName": "User",
+    "requestPath": "Request path",
+    "sourceContext": "Source"
   },
   "levels": {
-    "Verbose": "Verbose",
-    "Debug": "Debug",
-    "Information": "Information",
+    "Information": "Info",
     "Warning": "Warning",
     "Error": "Error",
     "Fatal": "Fatal"
   },
-  "filters": {
-    "searchPlaceholder": "Search message...",
-    "levelLabel": "Level",
-    "correlationIdPlaceholder": "Correlation ID",
-    "appraisalIdPlaceholder": "Appraisal ID",
-    "requestIdPlaceholder": "Request ID",
-    "entityIdPlaceholder": "Entity ID",
+  "search": {
+    "placeholder": "Search message / exception, or paste a GUID — e.g. timeout  path:/api/v1  user:los",
+    "button": "Search",
+    "live": "Live",
+    "zoomOut": "Zoom out",
+    "liveTitle": "Refetch every 5 seconds",
+    "dirtyHint": "Not searched yet — press Enter or \"Search\"",
+    "hint": "Press Enter to search · a word searches Message + Exception · \"exact phrase\" · -word excludes it · appraisal: (GUID or appraisal number) request: corr: user: path: source: · pasting a GUID searches every ID column at once",
+    "guideLink": "See the full guide with examples",
+    "wideRangeWarning": "A range over 7 days with a text query may take longer to search"
+  },
+  "range": {
+    "15m": "15 min",
+    "1h": "1 hr",
+    "24h": "24 hr",
+    "7d": "7 days",
+    "30d": "30 days",
+    "custom": "Custom…",
+    "customModeRange": "Date range",
+    "customModeAround": "Time of incident",
     "from": "From",
     "to": "To",
-    "clear": "Clear filters"
+    "incidentTime": "Time the other system reported",
+    "plusMinus": "±",
+    "plusMinusOption": "± {{minutes}} min",
+    "cancel": "Cancel",
+    "apply": "Apply range"
+  },
+  "errors": {
+    "invalidRange": "Fill in both the date and time",
+    "fromAfterTo": "The start time must come before the end time",
+    "futureNotAllowed": "The end time cannot be in the future",
+    "beyondRetention": "Logs are kept for 30 days — this range has already been deleted",
+    "spanTooWide": "The range can't span more than 31 days"
+  },
+  "filters": {
+    "removeRange": "Remove time range",
+    "removeFilter": "Remove filter"
+  },
+  "histogram": {
+    "errorFatalLabel": "Error/Fatal",
+    "clickHint": "Click a bar to zoom into that window"
+  },
+  "table": {
+    "httpTag": "Inbound API",
+    "filterAppraisal": "Filter by this appraisal",
+    "filterTrace": "See every log in this request",
+    "showingMore": "Showing {{count}} rows — more available",
+    "showingAll": "Showing all {{count}} rows",
+    "copyLink": "Copy search link",
+    "copyLinkToast": "Link copied — sharing it reproduces the same view",
+    "copyLinkFailed": "Copy failed — clipboard isn't available here",
+    "loadMore": "Load more",
+    "loadingMore": "Loading…"
+  },
+  "sidebar": {
+    "topProblemsTitle": "Top problems",
+    "topProblemsSubtitle": "Error + Warning grouped by message template in the selected range",
+    "topProblemsEmpty": "No Error/Warning in this range",
+    "topProblemsLastSeen": "Last seen {{time}}",
+    "savedSearchesTitle": "Saved searches",
+    "savedSearchesSubtitle": "Stored in this browser only",
+    "savedSearchesNoQuery": "(no query)",
+    "savedSearchesDelete": "Delete saved search",
+    "savedSearchesSavePlaceholder": "Name this search…",
+    "savedSearchesSave": "Save",
+    "savedSearchesCustomRangeHint": "A custom range can't be saved — pick a preset (1h/24h/7d/30d) first"
   },
   "drawer": {
-    "title": "Log Entry Details",
+    "title": "Log entry details",
+    "tabDetail": "Details",
+    "tabTrace": "Request trace ({{count}})",
+    "tabTracePlain": "Request trace",
+    "traceHasMoreText": "More than 200 rows",
+    "traceHasMoreLink": "View all",
+    "tabProperties": "Properties JSON",
+    "request": "Request",
+    "response": "Response",
+    "requestBody": "Request body · sent by the external system",
+    "responseBody": "Response body · what we replied with",
+    "noBody": "No body (GET)",
+    "httpHint": "Up to 32KB kept per side · headers are never stored (so Authorization never reaches the log) · file uploads and multipart requests are skipped",
+    "exceptionHint": "Exception · green = our code, dim = framework",
     "copy": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "copyFailed": "Copy failed — clipboard isn't available here",
+    "copyStack": "Copy stack",
+    "copyAll": "Copy all",
+    "aroundThisLog": "± 2 minutes around this log (every level)",
+    "traceHint": "Every log sharing this CorrelationId, in order — the full path of this HTTP request from start to finish",
+    "noTrace": "This log isn't part of an HTTP request (e.g. a background job), so there is no trace",
+    "loading": "Loading…",
+    "filterLink": "Filter"
+  },
+  "guide": {
+    "title": "Search guide",
+    "subtitle": "Click any highlighted example to search it right away · patterns can be combined in one box",
+    "columnPattern": "Pattern",
+    "columnSearchesIn": "Searches in",
+    "columnSpeed": "Speed",
+    "columnOldRows": "Works on pre-deploy rows",
+    "columnUsage": "How to use it / examples",
+    "speedFast": "Very fast",
+    "speedScan": "Scans the range",
+    "oldRowsYes": "✓ Yes",
+    "oldRowsNo": "✕ New rows only",
+    "recipesTitle": "Common recipes",
+    "tipsTitle": "Good to know",
+    "tips": [
+      "Press Enter or \"Search\" — the app never searches while you type",
+      "A pattern marked \"scans the range\" reads every row in the selected window — 24h is roughly 30x faster than 30 days",
+      "A pattern marked \"very fast\" uses an index, so even 30 days stays quick",
+      "Case doesn't matter",
+      "Query (read) logs are not stored, except when they fail or take over 3 seconds"
+    ],
+    "sections": {
+      "text": { "title": "Text" },
+      "ids": { "title": "Business IDs (indexed — very fast)" },
+      "who": { "title": "Who / where" }
+    },
+    "rows": {
+      "word": "Type one or several words — several words must all be present",
+      "phrase": "Matches the exact phrase — use it when the term has spaces or punctuation",
+      "negate": "Excludes rows containing this — use it to drop results you know aren't relevant",
+      "guid": "No need to know which ID it is — searches Correlation, Appraisal, Request, Workflow, Collateral and Document IDs at once",
+      "appraisal": "Accepts either a GUID or an appraisal number",
+      "request": "Doesn't work on rows written before this change shipped — the old column stored the wrong value",
+      "corr": "Every log of the same HTTP request, start to finish — this value is also returned in the X-Correlation-Id header to external systems",
+      "user": "A user name, or an external system's client id, e.g. los",
+      "path": "The URL that was called — matches anywhere in the path",
+      "source": "Any part of the class name that wrote the log",
+      "level": "Information, Warning, Error, Fatal (or click a level chip above)"
+    },
+    "recipes": {
+      "losFailed": "An external system called in and it failed",
+      "http400": "Inbound API calls that returned 400 (incomplete data)",
+      "commandFailed": "Commands that failed, with the payload that was sent",
+      "slowRequests": "Requests slower than 3 seconds",
+      "dbTimeout": "Database timeouts",
+      "losDeliveryFailed": "Events to LOS that failed to deliver",
+      "wholeAppraisal": "Everything for a single appraisal"
+    }
   },
   "error": {
     "failedToLoad": "Failed to load logs"
   },
-  "emptyState": "No log entries found"
+  "emptyState": "No log entries in this range — try widening the range or clearing a filter"
 }

@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { AppraisalColumnDef } from './tabConfigs';
@@ -7,7 +7,6 @@ import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { formatDate, isToday } from '@/shared/utils/dateUtils';
-import { hashString } from '@/shared/utils/stringUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import {
   useAppraisalTypeLabel,
@@ -15,7 +14,12 @@ import {
   usePropertyTypeLabels,
 } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
-import { ColumnResizeHandle } from '@/shared/components/columnLayout';
+import {
+  ColumnResizeHandle,
+  fillColumnWidths,
+  storedWidthForShown,
+} from '@/shared/components/columnLayout';
+import { usePointerMode } from '@/shared/hooks/usePointerMode';
 import type { ColumnTableLayout } from '@/shared/components/columnLayout';
 
 /**
@@ -24,24 +28,11 @@ import type { ColumnTableLayout } from '@/shared/components/columnLayout';
  */
 const ROW_NUMBER_WIDTH = 48;
 
-/**
- * A soft colour per banking segment, picked from the code so a segment keeps its colour across
- * rows and visits. Whole class strings — Tailwind only ships classes it finds written out.
- */
-const SEGMENT_TONES = [
-  'bg-sky-50 text-sky-700',
-  'bg-violet-50 text-violet-700',
-  'bg-amber-50 text-amber-700',
-  'bg-emerald-50 text-emerald-700',
-  'bg-indigo-50 text-indigo-700',
-  'bg-slate-100 text-slate-700',
-] as const;
-const segmentTone = (code: string) => SEGMENT_TONES[hashString(code) % SEGMENT_TONES.length];
-
 interface AppraisalResultsTableProps {
   columns: AppraisalColumnDef[];
   items: AppraisalDto[];
   isLoading: boolean;
+  /** The sort the header shows as active — the API default when the user has not chosen one. */
   sortBy: string;
   sortDir: string;
   onSort: (field: string) => void;
@@ -75,11 +66,6 @@ interface AppraisalResultsTableProps {
   /** 'compact' trims row padding and drops each cell's second line. List page only. */
   density?: 'comfortable' | 'compact';
   /**
-   * Draws a header row wherever `labelOf` changes between consecutive rows. The caller sorts by the
-   * same field, so each group arrives contiguous — within a page, which is all the server pages by.
-   */
-  groupBy?: { labelOf: (item: AppraisalDto) => string };
-  /**
    * Column held in place (with the row number before it) while the table scrolls sideways. The
    * layout forces it to index 0, so it is always the first data column when shown.
    */
@@ -101,11 +87,15 @@ function AppraisalResultsTable({
   layout,
   emptyState,
   density = 'comfortable',
-  groupBy,
   pinnedColumn,
 }: AppraisalResultsTableProps) {
   const compact = density === 'compact';
-  const cellPad = compact ? 'px-3 py-1.5' : 'px-3 py-2.5';
+  // A row gets the focus back when its drawer closes; that is a keyboard ring only after the
+  // keyboard (Tab, or j/k and Enter on the rows), never after the mouse that opened it.
+  const { pointerMode, onPointerDownCapture } = usePointerMode(['Tab', 'j', 'k', 'Enter', ' ']);
+  // Comfortable rows have a second line, so they are kept to about 50px by the padding alone: the
+  // line height cannot come down, Thai tone marks need the full 1.5 (see DESIGN.md section 4).
+  const cellPad = 'px-3 py-1.5';
   const { t } = useTranslation('appraisal');
   const internalTableRef = useRef<HTMLTableElement>(null);
   const tableRef = layout?.tableRef ?? internalTableRef;
@@ -125,12 +115,12 @@ function AppraisalResultsTable({
       isLoadingRow ? 'bg-primary-50' : isAnyLoading ? 'bg-white' : 'bg-white group-hover:bg-gray-50'
     }`;
   const pinHead = 'sticky z-30 bg-gray-50';
-  // The hairline is always there; the drop shadow only once columns are actually sliding under the
-  // pinned ones — at rest nothing is underneath, and a shadow there would suggest otherwise.
+  // No edge at rest: the pinned column sits flush against its neighbour like any other column.
+  // The drop shadow appears only once columns are actually sliding under the pinned ones — at rest
+  // nothing is underneath, and a shadow there would suggest otherwise. A shadow, not a border: a
+  // border would stay behind with the table grid instead of travelling with the pinned column.
   const [scrolledX, setScrolledX] = useState(false);
-  const pinEdge = scrolledX
-    ? 'shadow-[inset_-1px_0_0_var(--color-gray-200),6px_0_8px_-4px_rgb(0_0_0/0.12)]'
-    : 'shadow-[inset_-1px_0_0_var(--color-gray-200)]';
+  const pinEdge = scrolledX ? 'shadow-[6px_0_8px_-4px_rgb(0_0_0/0.12)]' : '';
   const localizeCompanyName = useLocalizedCompanyName();
   const provinceName = useProvinceName();
   const propertyTypeLabels = usePropertyTypeLabels();
@@ -144,6 +134,63 @@ function AppraisalResultsTable({
         : undefined,
     [layout, columns, showRowNumber],
   );
+
+  // The width of the scroll container, so a table with few columns can reach its edge. A callback
+  // ref in state (not a ref object): the container is swapped between the rows and the empty state,
+  // and the observer has to follow whichever one is mounted.
+  const [container, setContainer] = useState<HTMLDivElement | null>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  useEffect(() => {
+    if (!container) return;
+    const read = () => setContainerWidth(container.clientWidth);
+    read();
+    const ro = new ResizeObserver(read);
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, [container]);
+
+  // When the columns do not reach the container, every column grows by its share of the gap (the
+  // user's widths are the minimum); when they pass it, null — and the container scrolls sideways.
+  const filled = useMemo(
+    () =>
+      layout
+        ? fillColumnWidths(
+            columns.map(c => c.key),
+            layout.widths,
+            containerWidth,
+            showRowNumber ? ROW_NUMBER_WIDTH : 0,
+          )
+        : null,
+    [layout, columns, containerWidth, showRowNumber],
+  );
+  const widthOf = (key: string) => filled?.[key] ?? layout?.widths[key];
+  // Auto-fit reads the widest cell's scrollWidth, which for a cell the fill has stretched is the
+  // stretched width, not its content. So it measures with the columns at their stored widths (the
+  // table as it is without the fill) and puts the stretched ones back before anything is painted.
+  const measureAtStoredWidths = (measure: () => number | null) => (): number | null => {
+    const table = tableRef.current;
+    if (!layout || !filled || !table) return measure();
+    const cols = Array.from(table.querySelectorAll('col'));
+    const saved = cols.map(c => c.style.width);
+    const savedTable = table.style.width;
+    const stored = [
+      ...(showRowNumber ? [ROW_NUMBER_WIDTH] : []),
+      ...columns.map(c => layout.widths[c.key]),
+    ];
+    cols.forEach((c, i) => {
+      c.style.width = `${stored[i] ?? 0}px`;
+    });
+    table.style.width = `${totalWidth ?? 0}px`;
+    try {
+      return measure();
+    } finally {
+      cols.forEach((c, i) => {
+        c.style.width = saved[i];
+      });
+      table.style.width = savedTable;
+    }
+  };
+  const tableWidth = totalWidth === undefined ? undefined : Math.max(totalWidth, containerWidth);
 
   const bankingSegments = useParametersByGroup('BankingSegment');
   const segmentCodeToLabel = useMemo(
@@ -217,7 +264,7 @@ function AppraisalResultsTable({
   };
 
   const subLine = (text: string | null | undefined) =>
-    !compact && text ? <div className="truncate text-xs text-gray-400 mt-0.5">{text}</div> : null;
+    !compact && text ? <div className="truncate text-xs text-gray-400">{text}</div> : null;
 
   const slaCell = (item: AppraisalDto) => {
     const closed = isClosed(item);
@@ -276,16 +323,22 @@ function AppraisalResultsTable({
     const who = company ?? item.assigneeUserId;
     if (!who) {
       return (
-        <span className="inline-flex items-center gap-1.5 text-gray-400">
-          <Icon style="regular" name="user" className="size-3 shrink-0" />
-          {t('list.unassigned')}
+        // A dash, not a word and an icon: most rows of a new list have nobody yet, and "not
+        // assigned" repeated down the column was noise. The words stay for screen readers.
+        <span
+          role="img"
+          aria-label={t('list.unassigned')}
+          title={t('list.unassigned')}
+          className="text-gray-400"
+        >
+          —
         </span>
       );
     }
     if (company) {
       return (
         <span className="inline-flex max-w-full items-center gap-1.5">
-          <Icon style="solid" name="building" className="size-3 shrink-0 text-indigo-400" />
+          <Icon style="solid" name="building" className="size-3 shrink-0 text-gray-400" />
           <span className="truncate">{company}</span>
         </span>
       );
@@ -325,7 +378,7 @@ function AppraisalResultsTable({
         <colgroup>
           {showRowNumber && <col style={{ width: ROW_NUMBER_WIDTH }} />}
           {columns.map(col => (
-            <col key={col.key} style={{ width: layout.widths[col.key] }} />
+            <col key={col.key} style={{ width: widthOf(col.key) }} />
           ))}
         </colgroup>
       )}
@@ -333,48 +386,103 @@ function AppraisalResultsTable({
         <tr className="border-b border-gray-200">
           {showRowNumber && (
             <th
-              className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap w-12 ${pinned ? pinHead : ''}`}
+              className={`text-xs text-center font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap w-12 ${pinned ? pinHead : ''}`}
               style={pinned ? { left: 0 } : undefined}
             >
               #
             </th>
           )}
-          {columns.map((col, colIndex) => (
-            <th
-              key={col.key}
-              onClick={() => col.sortable && onSort(col.key)}
-              className={`text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap ${
-                layout ? 'relative overflow-hidden text-ellipsis' : ''
-              } ${col.sortable ? 'cursor-pointer hover:text-primary select-none' : ''} ${
-                pinned && colIndex === 0 ? `${pinHead} ${pinEdge}` : ''
-              }`}
-              style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
-            >
-              <span className="inline-flex items-center gap-1">
-                {col.label}
-                {/* Same indicator as the task tables: a faint double arrow marks a column as
-                    sortable at all, and only the one in use turns solid. Showing nothing until a
-                    column was clicked meant the header never said which columns could be sorted. */}
-                {col.sortable &&
-                  (sortBy === col.key ? (
-                    <Icon
-                      style="solid"
-                      name={sortDir === 'asc' ? 'sort-up' : 'sort-down'}
-                      className="size-2.5 text-primary"
-                    />
-                  ) : (
-                    <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />
-                  ))}
-              </span>
-              {layout && (
-                <ColumnResizeHandle
-                  width={layout.widths[col.key]}
-                  onResize={px => layout.setWidth(col.key, px)}
-                  getAutoFitWidth={layout.getAutoFitWidth(col.key, colIndex)}
+          {columns.map((col, colIndex) => {
+            // Case-insensitive: a saved search or old link can carry `CreatedAt`, the API's own spelling.
+            const isOn = (key: string) => sortBy.toLowerCase() === key.toLowerCase();
+            const sortField = col.sortKey ?? col.key;
+            const sortIcon = (key: string) =>
+              isOn(key) ? (
+                <Icon
+                  style="solid"
+                  name={sortDir === 'asc' ? 'sort-up' : 'sort-down'}
+                  className="size-2.5 text-primary"
                 />
-              )}
-            </th>
-          ))}
+              ) : (
+                <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />
+              );
+            const single = col.sortable && !col.headSorts;
+            return (
+              <th
+                key={col.key}
+                onClick={() => single && onSort(sortField)}
+                aria-sort={
+                  (single ? isOn(sortField) : col.headSorts?.some(h => isOn(h.key)))
+                    ? sortDir === 'asc'
+                      ? 'ascending'
+                      : 'descending'
+                    : undefined
+                }
+                className={`text-xs text-left font-semibold px-3 py-2.5 whitespace-nowrap ${
+                  layout ? 'relative overflow-hidden text-ellipsis' : ''
+                } ${
+                  single
+                    ? `cursor-pointer select-none ${isOn(sortField) ? 'text-primary' : 'text-gray-600 hover:text-primary'}`
+                    : 'text-gray-600'
+                } ${pinned && colIndex === 0 ? `${pinHead} ${pinEdge}` : ''}`}
+                style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
+              >
+                {col.headSorts ? (
+                  // Two sortable things under one header: a button each, so either can lead the sort.
+                  <span className="inline-flex items-center gap-1">
+                    {col.headSorts.map((h, i) => (
+                      <Fragment key={h.key}>
+                        {i > 0 && <span className="text-gray-300">/</span>}
+                        <button
+                          type="button"
+                          onClick={() => onSort(h.key)}
+                          className={`inline-flex cursor-pointer select-none items-center gap-1 font-semibold ${
+                            isOn(h.key) ? 'text-primary' : 'hover:text-primary'
+                          }`}
+                        >
+                          {h.label}
+                          {sortIcon(h.key)}
+                        </button>
+                      </Fragment>
+                    ))}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1">
+                    {col.label}
+                    {/* Same indicator as the task tables: a faint double arrow marks a column as
+                        sortable at all, and only the one in use turns solid. */}
+                    {col.sortable && sortIcon(sortField)}
+                  </span>
+                )}
+                {layout && (
+                  <ColumnResizeHandle
+                    width={widthOf(col.key) ?? layout.widths[col.key]}
+                    // A drag target is a width ON SCREEN; the stored one is a minimum that the fill
+                    // scales up. Stored as-is it would render wider than the cursor — and the narrower
+                    // the user pulls, the further it would overshoot.
+                    onResize={px =>
+                      layout.setWidth(
+                        col.key,
+                        storedWidthForShown(
+                          columns.map(c => c.key),
+                          layout.widths,
+                          col.key,
+                          px,
+                          containerWidth,
+                          showRowNumber ? ROW_NUMBER_WIDTH : 0,
+                        ),
+                      )
+                    }
+                    // What auto-fit measures is content, so it is stored as it is.
+                    onAutoFit={px => layout.setWidth(col.key, px)}
+                    getAutoFitWidth={measureAtStoredWidths(
+                      layout.getAutoFitWidth(col.key, colIndex),
+                    )}
+                  />
+                )}
+              </th>
+            );
+          })}
         </tr>
       </thead>
     </>
@@ -393,11 +501,11 @@ function AppraisalResultsTable({
         {/* Header only, at the widths the user set: squeezing the columns to fit turned every
             label into an ellipsis. Overflow is CLIPPED rather than scrollable — with no rows under
             it there is nothing to scroll to, and a scrollbar under an empty table is just noise. */}
-        <div className="w-full shrink-0 overflow-hidden">
+        <div ref={setContainer} className="w-full shrink-0 overflow-hidden">
           <table
             ref={tableRef}
-            className={`table table-sm ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
-            style={layout ? { width: totalWidth } : undefined}
+            className={`table table-sm text-table ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
+            style={layout ? { width: tableWidth } : undefined}
           >
             {tableHead}
           </table>
@@ -417,6 +525,8 @@ function AppraisalResultsTable({
 
   return (
     <div
+      ref={setContainer}
+      onPointerDownCapture={onPointerDownCapture}
       className={`w-full flex-1 min-h-0 min-w-0 overflow-x-auto overflow-y-auto transition-opacity ${
         isStale ? 'opacity-60 pointer-events-none' : ''
       }`}
@@ -433,8 +543,8 @@ function AppraisalResultsTable({
     >
       <table
         ref={tableRef}
-        className={`table table-sm ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
-        style={layout ? { width: totalWidth } : undefined}
+        className={`table table-sm text-table ${layout ? 'table-fixed' : 'min-w-max w-full'}`}
+        style={layout ? { width: tableWidth } : undefined}
       >
         {tableHead}
         <tbody className="divide-y divide-gray-100">
@@ -455,140 +565,47 @@ function AppraisalResultsTable({
             items.map((item, index) => {
               const isLoadingRow = loadingRowId === item.id;
               const isAnyLoading = loadingRowId !== undefined;
-              const group = groupBy?.labelOf(item);
-              const groupRow =
-                groupBy && (index === 0 || groupBy.labelOf(items[index - 1]) !== group) ? (
-                  <tr className="bg-gray-50">
-                    <td
-                      colSpan={columns.length + (showRowNumber ? 1 : 0)}
-                      className="px-3 py-1.5 text-xs font-semibold text-gray-500"
-                    >
-                      {/* Sticky so the label stays in view when the table is scrolled sideways. */}
-                      <span className="sticky left-3">{group}</span>
-                    </td>
-                  </tr>
-                ) : null;
               return (
-                <Fragment key={item.id}>
-                  {groupRow}
-                  <tr
-                    onClick={() => !isAnyLoading && onRowClick(item)}
-                    onKeyDown={e => {
-                      if (!isAnyLoading && (e.key === 'Enter' || e.key === ' ')) onRowClick(item);
-                    }}
-                    tabIndex={0}
-                    className={`group transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary ${
-                      isLoadingRow
-                        ? 'bg-primary-50 cursor-wait'
-                        : isAnyLoading
-                          ? 'cursor-wait opacity-60'
-                          : 'hover:bg-gray-50 cursor-pointer'
-                    }`}
-                  >
-                    {showRowNumber && (
-                      <td
-                        className={`${cellPad} text-gray-400 text-sm ${pinned ? pinBody(isLoadingRow, isAnyLoading) : ''}`}
-                        style={pinned ? { left: 0 } : undefined}
-                      >
-                        {pageNumber * pageSize + index + 1}
-                      </td>
-                    )}
-                    {columns.map((col, colIndex) => (
-                      <td
-                        key={col.key}
-                        className={`${cellPad} text-gray-600 text-sm ${
-                          layout ? 'overflow-hidden text-ellipsis whitespace-nowrap' : ''
-                        } ${pinned && colIndex === 0 ? `${pinBody(isLoadingRow, isAnyLoading)} ${pinEdge}` : ''}`}
-                        style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
-                      >
-                        {col.render ? (
-                          col.key === 'appraisalNumber' ? (
-                            <span className="font-medium text-primary inline-flex items-center gap-1.5">
-                              {isLoadingRow && (
-                                <Icon
-                                  name="spinner"
-                                  style="solid"
-                                  className="size-3 animate-spin text-primary shrink-0"
-                                />
-                              )}
-                              {col.render(item)}
-                            </span>
-                          ) : (
-                            col.render(item)
-                          )
-                        ) : col.key === 'status' ? (
-                          // Badge keeps its own English statusLabelMap and does not go through i18n.
-                          // `children` wins over that map, so the translated text is passed in here
-                          // rather than by changing Badge — which 31 other files render.
-                          // The colour still keys off the raw `value`.
-                          <Badge type="status" value={item.status} size="sm">
-                            {t(`list.status.${item.status}`, { defaultValue: item.status })}
-                          </Badge>
-                        ) : col.key === 'priority' ? (
-                          // Only High is marked. Normal is most rows, and a badge on every one of them
-                          // hid the few that matter.
-                          item.priority === 'High' ? (
-                            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
-                              <Icon style="solid" name="flag" className="size-3" />
-                              {t('list.priority.High')}
-                            </span>
-                          ) : (
-                            <span className="text-xs text-gray-400">
-                              {t(`list.priority.${item.priority}`, { defaultValue: item.priority })}
-                            </span>
-                          )
-                        ) : col.key === 'slaStatus' ? (
-                          slaCell(item)
-                        ) : col.key === 'assignee' ? (
-                          assigneeCell(item)
-                        ) : col.key === 'requestor' ? (
-                          personCell(item.requestorName, item.requestorCode)
-                        ) : col.key === 'appointmentDateTime' &&
-                          item.appointmentDateTime &&
-                          isToday(new Date(item.appointmentDateTime)) ? (
-                          <span className="font-semibold text-primary">
-                            {t('list.today')}{' '}
-                            {formatDate(new Date(item.appointmentDateTime), 'HH:mm')}
-                          </span>
-                        ) : col.key === 'bankingSegment' && item.bankingSegment ? (
-                          <span
-                            className={`inline-flex max-w-full items-center rounded-full px-2 py-0.5 text-[11px] font-semibold ${segmentTone(item.bankingSegment)}`}
-                          >
-                            <span className="truncate">{getCellValue(item, 'bankingSegment')}</span>
-                          </span>
-                        ) : col.key === 'customerName' ? (
-                          <>
-                            <span className="inline-flex max-w-full items-center gap-1.5">
-                              <span className="truncate font-medium text-gray-800">
-                                {item.customerName || '-'}
-                              </span>
-                              {item.customerCount > 1 && (
-                                <span
-                                  title={t('list.moreCustomers', { count: item.customerCount - 1 })}
-                                  className="shrink-0 rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-500"
-                                >
-                                  +{item.customerCount - 1}
-                                </span>
-                              )}
-                            </span>
-                            {/* What is being appraised, under whose name — the list page only: the
-                              copy-from modal frames this table at a fixed height. */}
-                            {layout &&
-                              subLine(
-                                [
-                                  item.propertyTypes
-                                    ? propertyTypeLabels(item.propertyTypes)
-                                    : null,
-                                  appraisalTypeLabel(item.appraisalType) ??
-                                    t(`list.appraisalType.${item.appraisalType}`, {
-                                      defaultValue: item.appraisalType,
-                                    }),
-                                ]
-                                  .filter(Boolean)
-                                  .join(' · '),
-                              )}
-                          </>
-                        ) : col.key === 'appraisalNumber' ? (
+                <tr
+                  key={item.id}
+                  onClick={() => !isAnyLoading && onRowClick(item)}
+                  onKeyDown={e => {
+                    if (!isAnyLoading && (e.key === 'Enter' || e.key === ' ')) onRowClick(item);
+                  }}
+                  tabIndex={0}
+                  // The global :focus-visible outline can only be switched off inline; the ring is inset
+                  // so it stays inside the row, clear of the pinned column's shadow.
+                  style={{ outline: 'none' }}
+                  className={`group transition-colors ${
+                    pointerMode
+                      ? ''
+                      : 'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
+                  } ${
+                    isLoadingRow
+                      ? 'bg-primary-50 cursor-wait'
+                      : isAnyLoading
+                        ? 'cursor-wait opacity-60'
+                        : 'hover:bg-gray-50 cursor-pointer'
+                  }`}
+                >
+                  {showRowNumber && (
+                    <td
+                      className={`${cellPad} text-center text-gray-400 text-table ${pinned ? pinBody(isLoadingRow, isAnyLoading) : ''}`}
+                      style={pinned ? { left: 0 } : undefined}
+                    >
+                      {pageNumber * pageSize + index + 1}
+                    </td>
+                  )}
+                  {columns.map((col, colIndex) => (
+                    <td
+                      key={col.key}
+                      className={`${cellPad} text-gray-600 text-table ${
+                        layout ? 'overflow-hidden text-ellipsis whitespace-nowrap' : ''
+                      } ${pinned && colIndex === 0 ? `${pinBody(isLoadingRow, isAnyLoading)} ${pinEdge}` : ''}`}
+                      style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
+                    >
+                      {col.render ? (
+                        col.key === 'appraisalCustomer' ? (
                           <span className="font-medium text-primary inline-flex items-center gap-1.5">
                             {isLoadingRow && (
                               <Icon
@@ -597,15 +614,133 @@ function AppraisalResultsTable({
                                 className="size-3 animate-spin text-primary shrink-0"
                               />
                             )}
-                            {item.appraisalNumber || '-'}
+                            {col.render(item)}
                           </span>
                         ) : (
-                          getCellValue(item, col.key)
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                </Fragment>
+                          col.render(item)
+                        )
+                      ) : col.key === 'status' ? (
+                        // Badge keeps its own English statusLabelMap and does not go through i18n.
+                        // `children` wins over that map, so the translated text is passed in here
+                        // rather than by changing Badge — which 31 other files render.
+                        // The colour still keys off the raw `value`.
+                        // Cancelled is red here (Badge's own status map has it grey, for every other
+                        // screen), so a dead job stands out from the live ones.
+                        <Badge
+                          type="status"
+                          value={item.status}
+                          tone={item.status === 'Cancelled' ? 'red' : undefined}
+                          size="sm"
+                        >
+                          {t(`list.status.${item.status}`, { defaultValue: item.status })}
+                        </Badge>
+                      ) : col.key === 'priority' ? (
+                        // Only High is marked. Normal is most rows, and a badge on every one of them
+                        // hid the few that matter.
+                        item.priority === 'High' ? (
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                            <Icon style="solid" name="flag" className="size-3" />
+                            {t('list.priority.High')}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">
+                            {t(`list.priority.${item.priority}`, { defaultValue: item.priority })}
+                          </span>
+                        )
+                      ) : col.key === 'slaStatus' ? (
+                        slaCell(item)
+                      ) : col.key === 'assignee' ? (
+                        assigneeCell(item)
+                      ) : col.key === 'requestor' ? (
+                        personCell(item.requestorName, item.requestorCode)
+                      ) : col.key === 'appointmentDateTime' &&
+                        item.appointmentDateTime &&
+                        isToday(new Date(item.appointmentDateTime)) ? (
+                        <span className="font-semibold text-primary">
+                          {t('list.today')}{' '}
+                          {formatDate(new Date(item.appointmentDateTime), 'HH:mm')}
+                        </span>
+                      ) : col.key === 'bankingSegment' && item.bankingSegment ? (
+                        // One neutral badge: the segment is a label, not a state, and a colour per
+                        // code competed with the colours that do mean something (status, SLA).
+                        <span className="inline-flex max-w-full items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                          <span className="truncate">{getCellValue(item, 'bankingSegment')}</span>
+                        </span>
+                      ) : col.key === 'appraisalCustomer' ? (
+                        // Number over customer. The wrapper is inline so it is as wide as its
+                        // widest line; compact density puts both on one line, like it drops
+                        // every other second line.
+                        <span
+                          className={`inline-flex max-w-full ${
+                            compact ? 'items-baseline gap-2' : 'flex-col'
+                          }`}
+                        >
+                          <span className="inline-flex shrink-0 items-center gap-1.5 font-medium text-primary">
+                            {isLoadingRow && (
+                              <Icon
+                                name="spinner"
+                                style="solid"
+                                className="size-3 animate-spin text-primary shrink-0"
+                              />
+                            )}
+                            {item.appraisalNumber || '-'}
+                            {item.priority === 'High' && (
+                              // Only High is marked (Normal is most rows). The Priority column is
+                              // off by default, so this flag is how a high-priority job shows.
+                              <span
+                                role="img"
+                                title={t('list.priorityHigh')}
+                                aria-label={t('list.priorityHigh')}
+                                className="inline-flex shrink-0 text-red-600"
+                              >
+                                <Icon style="solid" name="flag" className="size-3" />
+                              </span>
+                            )}
+                          </span>
+                          <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
+                            <span
+                              className="truncate font-medium text-gray-800"
+                              title={item.customerName || undefined}
+                            >
+                              {item.customerName || '-'}
+                            </span>
+                            {item.customerCount > 1 && (
+                              <span
+                                title={t('list.moreCustomers', { count: item.customerCount - 1 })}
+                                className="shrink-0 rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-500"
+                              >
+                                +{item.customerCount - 1}
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      ) : col.key === 'propertyTypes' ? (
+                        // A long list (several types joined) is cut by the cell: the title has it all.
+                        <span
+                          className="block truncate"
+                          title={getCellValue(item, 'propertyTypes')}
+                        >
+                          {getCellValue(item, 'propertyTypes')}
+                        </span>
+                      ) : col.key === 'purpose' ? (
+                        // Why it is being appraised, and under it what kind of job it is.
+                        <>
+                          <span className="block truncate" title={getCellValue(item, 'purpose')}>
+                            {getCellValue(item, 'purpose')}
+                          </span>
+                          {subLine(
+                            appraisalTypeLabel(item.appraisalType) ??
+                              t(`list.appraisalType.${item.appraisalType}`, {
+                                defaultValue: item.appraisalType,
+                              }),
+                          )}
+                        </>
+                      ) : (
+                        getCellValue(item, col.key)
+                      )}
+                    </td>
+                  ))}
+                </tr>
               );
             })
           )}

@@ -1,4 +1,4 @@
-import type { ReactNode, Ref } from 'react';
+import { useCallback, useRef, type ReactNode, type Ref, type RefObject } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
@@ -63,10 +63,10 @@ export const EditorIdentityCard = ({
       title={cover ? cover.fileName : undefined}
       aria-label={cover ? cover.fileName : t('editorHeader.addFirstPhoto')}
       className={clsx(
-        'relative flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg',
+        'cas-id-cover relative flex h-16 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg',
         cover
           ? 'bg-gray-100 ring-1 ring-gray-200'
-          : 'flex-col gap-1 border border-dashed border-gray-300 bg-gray-50 text-[0.6875rem] text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-700',
+          : 'cas-id-cover-empty flex-col gap-1 border border-dashed border-gray-300 bg-gray-50 text-[0.6875rem] text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-700',
       )}
     >
       {!cover ? (
@@ -98,7 +98,7 @@ export const EditorIdentityCard = ({
             type="button"
             onClick={() => view.onPreview(photo)}
             title={photo.fileName}
-            className="relative flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 ring-1 ring-gray-200"
+            className="cas-id-thumb relative flex h-8 w-11 shrink-0 items-center justify-center overflow-hidden rounded-md bg-gray-100 ring-1 ring-gray-200"
           >
             {photo.isUploading ? (
               <Icon name="spinner" style="solid" className="size-3 animate-spin text-gray-400" />
@@ -106,7 +106,7 @@ export const EditorIdentityCard = ({
               <img src={photo.url} alt={photo.fileName} className="size-full object-cover" />
             )}
             {folds && (
-              <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[11px] font-semibold text-white">
+              <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-[0.8462rem] font-semibold text-white">
                 +{hidden + 1}
               </span>
             )}
@@ -119,7 +119,7 @@ export const EditorIdentityCard = ({
           onClick={view.onAdd}
           title={t('editorHeader.addPhoto')}
           aria-label={t('editorHeader.addPhoto')}
-          className="inline-flex size-8 items-center justify-center rounded-md border border-dashed border-gray-300 bg-white text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-700"
+          className="cas-id-addp inline-flex size-8 items-center justify-center rounded-md border border-dashed border-gray-300 bg-white text-gray-500 transition-colors hover:border-primary-400 hover:text-primary-700"
         >
           <Icon name="plus" style="solid" className="size-3" />
         </button>
@@ -132,16 +132,17 @@ export const EditorIdentityCard = ({
       className={clsx(
         // `isolate` keeps the skyline's -z-10 inside the card. A hairline border plus a firmer
         // shadow: the shadow alone left the card's edge lost against the page.
-        '@container relative isolate flex items-center gap-3.5 overflow-hidden rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.08),0_8px_24px_rgba(15,23,42,0.10)]',
+        'cas-identity-card @container relative isolate flex items-center gap-3.5 overflow-hidden rounded-xl border border-gray-200 bg-white px-3.5 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.08),0_8px_24px_rgba(15,23,42,0.10)]',
       )}
     >
-      {!showTile && <PixelSkyline />}
+      {/* Behind a photo tile it is hidden, except under `.cas-form-grid` (`.cas-id-skyline`, both layouts). */}
+      <PixelSkyline className={showTile ? 'cas-id-skyline hidden' : undefined} />
       {tile}
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <div className="flex flex-wrap items-center gap-2">{top}</div>
+        <div className="cas-id-top flex flex-wrap items-center gap-2">{top}</div>
         <h2
           className={clsx(
-            'text-base font-semibold leading-snug',
+            'cas-id-title text-base font-semibold leading-snug',
             titleMuted ? 'italic text-gray-400' : 'text-gray-900',
           )}
         >
@@ -193,12 +194,15 @@ const scene = (() => {
   return { width: x - SCENE_GAP, height, ...paths };
 })();
 
-const PixelSkyline = () => (
+const PixelSkyline = ({ className }: { className?: string }) => (
   <svg
     viewBox={`0 0 ${scene.width} ${scene.height}`}
     shapeRendering="crispEdges"
     aria-hidden="true"
-    className="pointer-events-none absolute bottom-0 right-4 -z-10 h-[70%] max-h-28 w-auto opacity-70"
+    className={clsx(
+      'pointer-events-none absolute bottom-0 right-4 -z-10 h-[70%] max-h-28 w-auto opacity-70',
+      className,
+    )}
   >
     <path d={scene.other} fill="#D7ECE8" />
     <path d={scene.landmark} fill="#A8D8CF" />
@@ -214,6 +218,12 @@ interface EditorTabBarProps {
   onSelect: (id: string) => void;
   /** `tabs` swaps what is shown; `sections` jumps to a part of one long page. */
   mode?: 'tabs' | 'sections';
+  /**
+   * The header block above the bar. With it, in `tabs` mode, picking a tab while the scroller is
+   * below that block scrolls back up to the block's height — the top of the tab. Without it the bar
+   * never scrolls (the `sections` bar of the market comparable editor does its own jumping).
+   */
+  scrollAnchorRef?: RefObject<HTMLElement | null>;
 }
 
 /**
@@ -227,29 +237,53 @@ export const EditorTabBar = ({
   label,
   onSelect,
   mode = 'tabs',
+  scrollAnchorRef,
 }: EditorTabBarProps) => {
   const isTabs = mode === 'tabs';
+  // One tab is no choice: the strip stays (it joins header and sheet) but is not a tab list.
+  const isTabList = isTabs && tabs.length > 1;
   const List = isTabs ? 'div' : 'nav';
+  const ownRef = useRef<HTMLDivElement | null>(null);
+  const setRefs = useCallback(
+    (node: HTMLDivElement | null) => {
+      ownRef.current = node;
+      if (typeof barRef === 'function') barRef(node);
+      else if (barRef) barRef.current = node;
+    },
+    [barRef],
+  );
+  const select = (id: string) => {
+    onSelect(id);
+    const anchor = scrollAnchorRef?.current;
+    if (!isTabs || !anchor) return;
+    // Deep in a long tab, picking a tab (the open one too) opens it at its top: the scroller goes
+    // back to where the strip pins, under the header block above it.
+    const scroller = ownRef.current?.parentElement;
+    const aboveHeight = anchor.offsetHeight;
+    if (scroller && scroller.scrollTop > aboveHeight) scroller.scrollTo({ top: aboveHeight });
+  };
   return (
-    <div ref={barRef} className="sticky top-0 z-10 bg-white px-3 pt-3">
+    <div ref={setRefs} className="cas-tabbar sticky top-0 z-10 bg-white px-3 pt-3">
       <List
-        role={isTabs ? 'tablist' : undefined}
+        role={isTabList ? 'tablist' : isTabs ? 'group' : undefined}
         aria-label={label}
         // The baseline is an inset shadow, not a border the tabs overlap with -mb-px: the bar scrolls
         // sideways, and that overflow clipped the overlapping pixel, halving the active underline.
-        className="flex h-[34px] items-stretch gap-1 overflow-x-auto px-1 shadow-[inset_0_-1px_0_var(--color-gray-200)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="cas-tabbar-list flex h-[34px] items-stretch gap-1 overflow-x-auto px-1 shadow-[inset_0_-1px_0_var(--color-gray-200)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map(tab => {
           const isActive = tab.id === activeId;
-          const state = isTabs
+          const state = isTabList
             ? { role: 'tab', 'aria-selected': isActive }
-            : { 'aria-current': isActive ? ('location' as const) : undefined };
+            : isTabs
+              ? {}
+              : { 'aria-current': isActive ? ('location' as const) : undefined };
           return (
             <button
               key={tab.id}
               type="button"
               {...state}
-              onClick={() => onSelect(tab.id)}
+              onClick={() => select(tab.id)}
               className={clsx(
                 // Same tab as the pricing screen's method tabs (MethodTabs.tsx).
                 'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-3 text-[12.5px] font-medium transition-colors',
@@ -261,7 +295,7 @@ export const EditorTabBar = ({
               {tab.label}
               {!!tab.count && <span className="tabular-nums text-gray-400">{tab.count}</span>}
               {!!tab.errorCount && (
-                <span className="inline-grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[10px] font-bold tabular-nums text-white">
+                <span className="inline-grid h-4 min-w-4 place-items-center rounded-full bg-danger px-1 text-[0.7692rem] font-bold tabular-nums text-white">
                   {tab.errorCount}
                 </span>
               )}

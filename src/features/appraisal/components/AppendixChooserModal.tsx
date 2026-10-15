@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 
@@ -26,6 +27,16 @@ export const AppendixChooserModal = ({
   onSelect,
 }: AppendixChooserModalProps) => {
   const { t } = useTranslation('appraisal');
+
+  // Escape closes it, like the other dialogs
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 

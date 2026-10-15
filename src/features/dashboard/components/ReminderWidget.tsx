@@ -69,7 +69,7 @@ function ReminderWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
         {/* Header */}
         <div className="flex flex-col gap-0.5 px-5 py-4 border-b border-gray-100 shrink-0">
-          <h3 className="font-semibold text-gray-800">
+          <h3 className="text-base font-semibold text-gray-800">
             {t('reminders.title')}
             {!isLoading && allVisible.length > 0 && (
               <span className="ml-2 text-sm font-normal text-gray-400">· {allVisible.length}</span>

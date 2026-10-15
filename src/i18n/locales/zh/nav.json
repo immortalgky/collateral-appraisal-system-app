@@ -82,7 +82,7 @@
   },
   "formLayout": {
     "label": "估价表单布局",
-    "grid": "表格",
+    "grid": "紧凑",
     "classic": "标准"
   }
 }

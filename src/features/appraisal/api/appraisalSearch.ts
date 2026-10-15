@@ -46,6 +46,9 @@ export interface AppraisalSearchParams {
   assignedDateTo?: string;
   appointmentDateFrom?: string;
   appointmentDateTo?: string;
+  /** The appraisal (valuation) date range; the end day is included. */
+  appraisalDateFrom?: string;
+  appraisalDateTo?: string;
   sortBy?: string;
   sortDir?: string;
   pageNumber: number;
@@ -102,6 +105,8 @@ export interface AppraisalDto {
   district: string | null;
   subDistrict: string | null;
   appointmentDateTime: string | null;
+  /** The valuation date, falling back to the appointment, then the completion (ISO datetime). */
+  appraisalDate?: string | null;
   inspectionNumber: number | null;
   /** Groups appraisals raised together; null for a standalone one. */
   groupTag: string | null;
@@ -130,6 +135,22 @@ export interface AppraisalSearchResponse {
     pageNumber: number;
     pageSize: number;
   };
+}
+
+/** The fields the list can group by — each is also a filter key of the list query. */
+export type AppraisalGroupBy = 'status' | 'slaStatus' | 'priority' | 'province' | 'assignmentType';
+
+/** One group of GET /appraisals/groups. `key` is the raw stored value, '' for "none". */
+export interface AppraisalGroupRow {
+  key: string;
+  count: number;
+  breached: number;
+  atRisk: number;
+}
+
+export interface AppraisalGroupsResponse {
+  groups: AppraisalGroupRow[];
+  total: number;
 }
 
 export interface SmartViewDto {
@@ -224,6 +245,36 @@ export function useAppraisalSearchCounts(
   return Object.fromEntries(
     fields.map((f, i) => [f, results[i].isError ? null : results[i].data]),
   ) as Record<string, number | null | undefined>;
+}
+
+/**
+ * Counts per group for the list's group rail: the same filters and search as the list itself, minus
+ * paging and sorting (they do not change a count). Ordered by count, highest first.
+ */
+export function useAppraisalGroups(
+  groupBy: AppraisalGroupBy | null,
+  params: Omit<AppraisalSearchParams, 'pageNumber' | 'pageSize' | 'sortBy' | 'sortDir'>,
+) {
+  return useQuery({
+    queryKey: [...appraisalSearchKeys.all, 'groups', groupBy, params] as const,
+    queryFn: async ({ signal }) => {
+      const cleanParams = Object.fromEntries(
+        Object.entries({ ...params, groupBy }).filter(
+          ([, v]) => v !== undefined && v !== '' && v !== null,
+        ),
+      );
+      const { data } = await axios.get<AppraisalGroupsResponse>('/appraisals/groups', {
+        params: cleanParams,
+        signal,
+      });
+      return data;
+    },
+    enabled: groupBy !== null,
+    // Keep the old counts while a filter change reloads them, but not across a change of FIELD:
+    // status counts under a province title is worse than a skeleton.
+    placeholderData: (prev, prevQuery) => (prevQuery?.queryKey[2] === groupBy ? prev : undefined),
+    staleTime: 30_000,
+  });
 }
 
 export function useSmartViews() {

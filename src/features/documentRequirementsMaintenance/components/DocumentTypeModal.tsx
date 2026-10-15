@@ -2,6 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
@@ -9,7 +10,8 @@ import NumberInput from '@shared/components/inputs/NumberInput';
 import Checkbox from '@shared/components/inputs/Checkbox';
 import Dropdown from '@shared/components/inputs/Dropdown';
 import Textarea from '@shared/components/inputs/Textarea';
-import type { DocumentTypeDto } from '../types';
+import RadioGroup from '@shared/components/inputs/RadioGroup';
+import { carryForwardLockKind, type DocumentTypeDto } from '../types';
 
 const CATEGORY_OPTIONS = [
   { value: 'VAL_REPORT', label: 'Complete Valuation Report' },
@@ -28,6 +30,7 @@ const Schema = z.object({
   category: z.string().nullable().optional(),
   sortOrder: z.coerce.number(),
   isActive: z.boolean(),
+  carryForwardByDefault: z.boolean(),
 });
 
 export type DocumentTypeFormValues = z.infer<typeof Schema>;
@@ -41,6 +44,7 @@ interface Props {
 }
 
 export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, isSaving }: Props) {
+  const { t } = useTranslation('request');
   const isEditing = !!editing;
 
   const defaults = useMemo<DocumentTypeFormValues>(
@@ -51,6 +55,7 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
       category: editing?.category ?? '',
       sortOrder: editing?.sortOrder ?? 0,
       isActive: editing?.isActive ?? true,
+      carryForwardByDefault: editing?.carryForwardByDefault ?? false,
     }),
     [editing],
   );
@@ -63,6 +68,10 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
     setValue,
     formState: { errors },
   } = useForm<DocumentTypeFormValues>({ resolver: zodResolver(Schema), defaultValues: defaults });
+
+  // The server says which types are locked. A new type has no flag yet; one typed as D036 is
+  // rejected as a duplicate code, so create stays unlocked.
+  const carryLock = editing ? carryForwardLockKind(editing) : null;
 
   useEffect(() => {
     if (isOpen) reset(defaults);
@@ -128,6 +137,41 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
           onChange={e => setValue('sortOrder', e.target.value ?? 0)}
           error={errors.sortOrder?.message}
         />
+
+        <fieldset className="flex flex-col gap-2 rounded-lg border border-gray-200 px-3 py-2.5">
+          <legend className="px-1 text-xs font-medium text-gray-600">
+            {t('carryForward.admin.legend')}
+          </legend>
+          {carryLock ? (
+            <p className="text-sm text-gray-600">
+              {carryLock === 'target'
+                ? t('carryForward.admin.lockedTargetText')
+                : t('carryForward.admin.lockedSourceText')}
+            </p>
+          ) : (
+            <>
+              <RadioGroup
+                size="sm"
+                value={watch('carryForwardByDefault') ? 'use' : 'dontUse'}
+                // The group reports '' when the selected option is clicked again; keep the choice.
+                onChange={v => v && setValue('carryForwardByDefault', v === 'use')}
+                options={[
+                  {
+                    value: 'use',
+                    label: t('carryForward.admin.useLabel'),
+                    description: t('carryForward.admin.useHelp'),
+                  },
+                  {
+                    value: 'dontUse',
+                    label: t('carryForward.admin.dontUseLabel'),
+                    description: t('carryForward.admin.dontUseHelp'),
+                  },
+                ]}
+              />
+              <p className="text-xs text-gray-400">{t('carryForward.admin.appliesLater')}</p>
+            </>
+          )}
+        </fieldset>
 
         {isEditing && (
           <Checkbox label="Active" checked={watch('isActive')} onChange={c => setValue('isActive', c)} />

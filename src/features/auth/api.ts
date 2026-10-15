@@ -1,9 +1,11 @@
-import type { UseQueryOptions } from '@tanstack/react-query';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { queryOptions, replaceEqualDeep, useQuery } from '@tanstack/react-query';
+import type { AxiosRequestConfig } from 'axios';
+import { queryClient } from '@app/queryClient';
 import axios from '@shared/api/axiosInstance';
+import { leaveWithoutPrompt } from '@shared/api/forcedNavigation';
 import { allRoles } from '@features/userManagement/roleMeta';
 import type { UserRole } from '@shared/config/navigationTypes';
-import type { LoginCredentials, LoginResponse, User } from './types';
+import type { User } from './types';
 import { useAuthStore } from './store';
 
 // Narrow backend-provided role strings to our canonical UserRole union.
@@ -15,49 +17,47 @@ const normalizeRoles = (roles: unknown): UserRole[] => {
   return roles.filter((r): r is UserRole => typeof r === 'string' && KNOWN_ROLES.has(r));
 };
 
-// Function to get the current user profile
-export const useCurrentUser = () => {
-  const { setUser } = useAuthStore();
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
-
-  return useQuery<User, Error, User, string[]>({
-    queryKey: ['currentUser'],
-    queryFn: async (): Promise<User> => {
-      const { data } = await axios.get('/auth/me');
-      const user: User = {
-        ...data,
-        name: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || data.username || '',
-        roles: normalizeRoles(data.roles),
-      };
-      setUser(user);
-      return user;
-    },
-    onError: () => {
-      setUser(null);
-    },
-    // Only run if we have an authenticated session
-    enabled: isAuthenticated,
-  } as UseQueryOptions<User, Error, User, string[]>);
+// GET /auth/me and publish the result to the auth store (unless it is identical to what it holds).
+export const fetchCurrentUser = async (config?: AxiosRequestConfig): Promise<User> => {
+  const { data } = await axios.get('/auth/me', config);
+  const fetched: User = {
+    ...data,
+    name: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || data.username || '',
+    roles: normalizeRoles(data.roles),
+  };
+  // The browser has one session cookie: if another tab signed in as someone else, this tab's next
+  // request would run as them. Start over as the user the cookie really belongs to. Never publish
+  // the other user here: the throw below makes this call fail, and if the reload silently did not
+  // happen the store keeps the user this tab was built for, so the next check refuses (and reloads)
+  // again.
+  const { user: current, isAuthenticated, setUser } = useAuthStore.getState();
+  if (current && fetched.id !== current.id) {
+    leaveWithoutPrompt(() => window.location.reload());
+    throw new Error('The session now belongs to a different user');
+  }
+  // Keep the current object when nothing changed: a keep-alive or access-window check every few
+  // minutes must not hand every `useAuthStore(s => s.user)` subscriber a new reference to re-render.
+  const user = replaceEqualDeep(current, fetched);
+  if (user !== current || !isAuthenticated) setUser(user);
+  return user;
 };
 
-// Function to log in
-export const useLogin = () => {
-  const { login, setLoading, setError } = useAuthStore();
+// Everything that reads the signed-in user through the query cache shares these options, so the
+// cache, the store and the boot/keep-alive/access-window checks can never disagree on the key.
+export const currentUserQueryOptions = queryOptions({
+  queryKey: ['currentUser'],
+  queryFn: () => fetchCurrentUser(),
+});
 
-  return useMutation({
-    mutationFn: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-      setLoading(true);
-      setError(null);
-      const { data } = await axios.post('/auth/login', credentials);
-      return data;
-    },
-    onSuccess: data => {
-      login(data.user, data.token);
-      setLoading(false);
-    },
-    onError: (error: any) => {
-      setLoading(false);
-      setError(error.response?.data?.message || 'Login failed');
-    },
-  });
+// Re-read /auth/me now, bypassing the cache (a keep-alive, an access-window check, a gate that
+// changed mid-session). TanStack dedupes concurrent calls, so a burst makes one request.
+export const refreshCurrentUser = () =>
+  queryClient.fetchQuery({ ...currentUserQueryOptions, staleTime: 0, retry: false });
+
+// Function to get the current user profile
+export const useCurrentUser = () => {
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+
+  // Only run if we have an authenticated session
+  return useQuery({ ...currentUserQueryOptions, enabled: isAuthenticated });
 };

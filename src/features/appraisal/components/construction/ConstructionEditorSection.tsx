@@ -14,6 +14,9 @@ interface ConstructionEditorSectionProps {
   ciMode: boolean;
   /** Required so every editor says which it is — a condo has no value base of its own. */
   condo: boolean;
+  /** Hosts outside the property route only: see ConstructionInspectionTab. */
+  propertyId?: string;
+  onSelectProperty?: (propertyId: string) => void;
 }
 
 /**
@@ -26,6 +29,8 @@ export function ConstructionEditorSection({
   readOnly,
   ciMode,
   condo,
+  propertyId,
+  onSelectProperty,
 }: ConstructionEditorSectionProps) {
   const { control } = useFormContext();
   // Mounted while under construction, and while switched off with construction data still on the
@@ -65,7 +70,13 @@ export function ConstructionEditorSection({
             anchor={underConstruction}
             className="flex flex-col gap-6"
           >
-            <ConstructionInspectionTab readOnly={readOnly} ciMode={ciMode} condo={condo} />
+            <ConstructionInspectionTab
+              readOnly={readOnly}
+              ciMode={ciMode}
+              condo={condo}
+              propertyId={propertyId}
+              onSelectProperty={onSelectProperty}
+            />
           </Section>
         </div>
       )}

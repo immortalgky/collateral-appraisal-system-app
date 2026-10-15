@@ -105,14 +105,17 @@ export function SupportingDataTable({
   return (
     <div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
       <div className="overflow-auto">
-        <table className="w-full min-w-max text-sm">
+        <table className="w-full min-w-max text-table">
           <thead className="sticky top-0 z-20">
             <tr className="bg-gray-50 border-b border-gray-200">
               {columns.map(col => {
                 const base =
                   'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
                 return (
-                  <th key={col.key} className={`${base} ${col.thClassName ?? ''}`}>
+                  <th
+                    key={col.key}
+                    className={`text-xs ${base} ${col.thClassName ?? ''} font-semibold`}
+                  >
                     {col.label}
                   </th>
                 );

@@ -317,7 +317,7 @@ function ServiceQualityEvaluationDetailPage() {
       <div className="flex flex-col gap-4 pb-24">
         {/* Appraisal Report Information */}
         <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">{t('detail.infoTitle')}</h3>
+          <h3 className="text-base font-semibold text-gray-900 mb-3">{t('detail.infoTitle')}</h3>
           <dl className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
             {/* Row 1 — identity & subject of evaluation */}
             <InfoRow label={t('detail.info.appraisalNumber')} value={header?.appraisalNumber ?? appraisalNumber ?? '—'} />
@@ -358,7 +358,7 @@ function ServiceQualityEvaluationDetailPage() {
         {/* Evaluation Form */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 border-b border-gray-200">
-            <h3 className="text-sm font-semibold text-gray-900">Evaluation Criteria</h3>
+            <h3 className="text-base font-semibold text-gray-900">Evaluation Criteria</h3>
           </div>
 
           <div className="overflow-x-auto">
@@ -373,22 +373,22 @@ function ServiceQualityEvaluationDetailPage() {
               </colgroup>
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-center font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     No
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     Criteria of consideration
                   </th>
-                  <th className="text-center font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     Weight
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     Rating
                   </th>
-                  <th className="text-center font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     Score
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     Description
                   </th>
                 </tr>

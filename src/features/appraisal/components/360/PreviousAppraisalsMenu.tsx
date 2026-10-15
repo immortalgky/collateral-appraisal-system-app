@@ -47,16 +47,21 @@ function PreviousAppraisalsMenu({ items }: PreviousAppraisalsMenuProps) {
         className="mt-1 w-80 max-h-80 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 focus:outline-none"
       >
         {items.map(item => (
-          <MenuItem key={item.appraisalId}>
+          <MenuItem key={item.appraisalId ?? item.appraisalNumber} disabled={!item.appraisalId}>
             <button
               type="button"
-              onClick={() => handleSelect(item.appraisalId)}
-              className="flex w-full flex-col gap-1 px-3 py-2.5 text-left transition-colors border-b border-gray-100 last:border-b-0 hover:bg-gray-50 data-focus:bg-gray-100"
+              onClick={() => item.appraisalId && handleSelect(item.appraisalId)}
+              className="flex w-full flex-col gap-1 px-3 py-2.5 text-left transition-colors border-b border-gray-100 last:border-b-0 hover:bg-gray-50 data-focus:bg-gray-100 data-disabled:cursor-default data-disabled:hover:bg-transparent"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-semibold text-gray-800 truncate">
                   {item.appraisalNumber}
                 </span>
+                {!item.appraisalId && (
+                  <span className="text-[10px] text-violet-600">
+                    {t('view360.previousAppraisals.legacyBook')}
+                  </span>
+                )}
                 {item.status && (
                   <span>
                     <span className="sr-only">

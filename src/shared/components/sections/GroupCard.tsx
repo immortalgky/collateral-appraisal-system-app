@@ -28,7 +28,7 @@ const GroupCard = ({ icon, iconColor, title, rightSlot, children }: GroupCardPro
     >
       <header className="flex items-center gap-2 px-4 pt-3 pb-5">
         <Icon name={icon} style="solid" className={`size-3.5 ${s.text}`} />
-        <h2 className="text-[11px] font-bold tracking-[0.12em] uppercase text-gray-700">
+        <h2 className="text-xs font-bold tracking-[0.12em] uppercase text-gray-700">
           {title}
         </h2>
         {rightSlot && <div className="ml-auto">{rightSlot}</div>}

@@ -25,9 +25,23 @@ export interface DocumentTypeDto {
   category?: string | null;
   isActive: boolean;
   sortOrder: number;
+  /** Default for a request that references a previous appraisal: true = carry the old file over. */
+  carryForwardByDefault: boolean;
+  /** True for the types the code reads by code (D036, D042, D043): the setting cannot be changed. */
+  isCarryForwardLocked: boolean;
   createdOn?: string | null;
   updatedOn?: string | null;
 }
+
+/**
+ * Why a locked type is locked, for the wording only (the server decides which are locked): D036 is
+ * filled from the previous appraisal's summary report, whose sources D042 / D043 are not carried
+ * directly. null = editable.
+ */
+export const carryForwardLockKind = (
+  dt: Pick<DocumentTypeDto, 'code' | 'isCarryForwardLocked'>,
+): 'target' | 'source' | null =>
+  dt.isCarryForwardLocked ? (dt.code === 'D036' ? 'target' : 'source') : null;
 
 export type RequirementScope = 'application' | 'collateral' | 'purpose';
 
@@ -52,6 +66,7 @@ export interface CreateDocumentTypePayload {
   description?: string | null;
   category?: string | null;
   sortOrder: number;
+  carryForwardByDefault: boolean;
 }
 
 export interface UpdateDocumentTypePayload {
@@ -61,4 +76,5 @@ export interface UpdateDocumentTypePayload {
   category?: string | null;
   sortOrder: number;
   isActive: boolean;
+  carryForwardByDefault: boolean;
 }

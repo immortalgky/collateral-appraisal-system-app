@@ -97,7 +97,7 @@ export default function LandDetailTable() {
                   {header.label}
                 </th>
               ))}
-              <th className="w-20">Actions</th>
+              <th className="text-xs w-20 font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody>

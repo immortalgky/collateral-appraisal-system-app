@@ -47,7 +47,7 @@
     "apply": "应用"
   },
   "segment": {
-    "all": "全部业务板块",
+    "all": "所有业务分部",
     "Retail": "零售",
     "IBG": "IBG"
   },
@@ -146,7 +146,7 @@
       "label": "筛选",
       "assigneeUsername": "负责人用户名",
       "assigneePlaceholder": "例如 P5229",
-      "bankingSegment": "银行细分",
+      "bankingSegment": "银行业务分部",
       "bankingPlaceholder": "例如 SME, Corporate",
       "comparePrior": "与上期比较",
       "apply": "应用"

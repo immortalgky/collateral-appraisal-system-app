@@ -88,11 +88,11 @@ function SupportingDataMaintenanceDetailListPageSkeleton() {
           </div>
           {/* Table skeleton */}
           <div className="p-5">
-            <table className="w-full text-sm">
+            <table className="w-full text-table">
               <thead>
                 <tr className="border-b border-gray-100">
                   {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, i) => (
-                    <th key={i} className="px-4 py-2.5 text-left">
+                    <th key={i} className="text-xs px-4 py-2.5 text-left font-semibold">
                       <div className={`h-4 bg-gray-200 rounded ${w}`} />
                     </th>
                   ))}

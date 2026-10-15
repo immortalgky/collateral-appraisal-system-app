@@ -29,11 +29,11 @@ import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
-import { useQuotationAttachmentUpload } from '../hooks/useQuotationAttachmentUpload';
 import {
   buildQuotationEmailHtml,
   formatQuotationSubjectAppraisalNumbersLabel,
   formatQuotationSubjectCustomerLabel,
+  TABLE_ROW_THRESHOLD,
 } from '../utils/quotationEmailTemplate';
 import { useAuthStore } from '@/features/auth/store';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
@@ -60,7 +60,6 @@ const QuotationSelectionPage = () => {
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
-  const { uploadFile: uploadQuotationAttachment } = useQuotationAttachmentUpload();
 
   // Breadcrumb: Home › Quotations › QTN-...
   useBreadcrumb(quotation?.quotationNumber, 'file-invoice-dollar');
@@ -477,7 +476,7 @@ const QuotationSelectionPage = () => {
       {showSentPanel && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-base font-semibold text-gray-700">
               {t('shared.companyResponses')} ({quotation.invitedCompanies?.length ?? 0})
             </h2>
           </div>
@@ -676,7 +675,7 @@ const QuotationSelectionPage = () => {
       {isRmPickPhase && (
         <div className="rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-base font-semibold text-gray-700">
               {t('draft.shortlistSubmissions')} ({shortlisted.length})
             </h2>
             {showWinnerActions && isIntAdmin && (
@@ -1127,7 +1126,8 @@ const QuotationSelectionPage = () => {
         showCc={true}
         showBcc={true}
         showAttachments={true}
-        onUploadAttachment={uploadQuotationAttachment}
+        attachmentPicker={{ quotationId: id ?? '' }}
+        requireAttachment={(quotation?.appraisals?.length ?? 0) > TABLE_ROW_THRESHOLD}
         subjectLabel={t('email.subjectLabel')}
         isPending={isSendPending}
         richTextContent

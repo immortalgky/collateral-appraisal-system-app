@@ -54,11 +54,11 @@ const MarketComparableTable = ({
           <thead className="bg-gray-50 sticky top-0 z-10">
             <tr className="border-b border-gray-200">
               {headers.map((header, index) => (
-                <th key={index} className="text-gray-600 font-medium px-4 py-3 text-left">
+                <th key={index} className="text-xs text-gray-600 font-semibold px-4 py-3 text-left">
                   {header.label}
                 </th>
               ))}
-              <th className="text-gray-600 font-medium px-4 py-3 text-right">Action</th>
+              <th className="text-xs text-gray-600 font-semibold px-4 py-3 text-right">Action</th>
             </tr>
           </thead>
           <tbody>

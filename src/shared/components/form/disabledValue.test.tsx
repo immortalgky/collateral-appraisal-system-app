@@ -17,7 +17,11 @@ import userEvent from '@testing-library/user-event';
 import { FormProvider } from './FormProvider';
 import { FormFields } from './FormFields';
 import type { FormField } from './types';
-import { machinerySummaryGeneralFields } from '@/features/appraisal/configs/fields';
+import {
+  electricityField,
+  encroachmentField,
+  machinerySummaryGeneralFields,
+} from '@/features/appraisal/configs/fields';
 
 const NOT_VERIFIABLE = 'ไม่สามารถตรวจสอบกรรมสิทธิ์ได้';
 
@@ -439,5 +443,79 @@ describe('a governing toggle flipped and flipped back', () => {
     await user.click(screen.getByRole('radio', { name: 'No' }));
     await user.click(screen.getByRole('radio', { name: 'Yes' }));
     expect(demand()).toBe(JSON.stringify('ความต้องการสูงมาก'));
+  });
+});
+
+describe('figures that are blank whenever their toggle says they do not apply', () => {
+  // Distance from electricity and encroaching area. They used a 0 stand-in, so opening a blank record
+  // put 0 in the form and the next save (or Data Correction, as "— → 0") wrote it. The zeros already
+  // stored are cleared by the 20261002120000 data fix, not by the form.
+  const cases = [
+    ['electricity distance', electricityField, 'hasElectricity', 'electricityDistance'],
+    ['encroaching area', encroachmentField, 'isEncroachingOthers', 'encroachingOthersArea'],
+  ] as const;
+
+  function Harness({
+    configFields,
+    defaults,
+    number,
+  }: {
+    configFields: FormField[];
+    defaults: Record<string, unknown>;
+    number: string;
+  }) {
+    const methods = useForm<Record<string, unknown>>({ defaultValues: defaults });
+    return (
+      <FormProvider methods={methods} schema={z.object({}).passthrough()}>
+        <FormFields fields={configFields} />
+        <output data-testid="value">{JSON.stringify(methods.watch(number))}</output>
+        <output data-testid="dirty">{String(methods.formState.isDirty)}</output>
+        <output data-testid="dirtyFields">
+          {Object.keys(methods.formState.dirtyFields).join(',')}
+        </output>
+      </FormProvider>
+    );
+  }
+
+  it.each(cases)('%s: a blank record stays blank and clean', (_n, configFields, toggle, number) => {
+    render(
+      <Harness
+        configFields={configFields}
+        defaults={{ [toggle]: false, [number]: null }}
+        number={number}
+      />,
+    );
+    expect(screen.getByTestId('value').textContent).toBe('null');
+    expect(screen.getByTestId('dirty').textContent).toBe('false');
+  });
+
+  it.each(cases)('%s: a figure under Yes is left alone', (_n, configFields, toggle, number) => {
+    render(
+      <Harness
+        configFields={configFields}
+        defaults={{ [toggle]: true, [number]: 12 }}
+        number={number}
+      />,
+    );
+    expect(screen.getByTestId('value').textContent).toBe('12');
+    expect(screen.getByTestId('dirty').textContent).toBe('false');
+  });
+
+  it('switching to No clears the figure, and switching back gives it back', async () => {
+    const user = userEvent.setup();
+    render(
+      <Harness
+        configFields={electricityField}
+        defaults={{ hasElectricity: true, electricityDistance: 12 }}
+        number="electricityDistance"
+      />,
+    );
+    const toggle = (name: string) =>
+      screen.getAllByRole('radio').find(r => r.textContent === name) as HTMLElement;
+
+    await user.click(toggle('No'));
+    expect(screen.getByTestId('value').textContent).toBe('null');
+    await user.click(toggle('Yes'));
+    expect(screen.getByTestId('value').textContent).toBe('12');
   });
 });
