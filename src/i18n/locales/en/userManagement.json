@@ -507,6 +507,11 @@
     "temporaryAccessSection": "Temporary Access",
     "maxAccessWindowHours": "Max access window (hours)",
     "maxAccessWindowHoursHint": "Default 8. Hard limit 720 hours (30 days).",
+    "twoFactorSection": "Two-factor authentication",
+    "requireTwoFactorForExternal": "Require 2FA for external users (company accounts)",
+    "requireTwoFactorForExternalHint": "Company users who have not set it up are asked to at their next sign-in.",
+    "twoFactorRememberHours": "Remember a verified device for (hours)",
+    "twoFactorRememberHoursHint": "0 = ask for a code at every sign-in. Up to 720 hours (30 days).",
     "save": "Save policy",
     "saved": "Password policy updated.",
     "saveFailed": "Failed to update password policy."
@@ -609,6 +614,69 @@
       "copied": "Copied",
       "confirmCheckbox": "I copied this password",
       "done": "Done"
+    }
+  },
+  "twoFactor": {
+    "title": "Two-factor authentication",
+    "statusOn": "On",
+    "statusOff": "Off",
+    "statusOnTitle": "Two-factor authentication is on",
+    "statusOffTitle": "Two-factor authentication is off",
+    "hint": "Add a second step to sign-in: a 6-digit code from an authenticator app.",
+    "recoveryCodesLeft": "Recovery codes left: {{n}}",
+    "requiredNote": "Your organisation requires two-factor authentication, so it cannot be turned off.",
+    "requiredNotEnabledNote": "Your organisation requires two-factor authentication for this account. Turn it on here, or you will be asked to set it up at your next sign-in.",
+    "setupFailed": "Could not start two-factor setup.",
+    "codeLabel": "6-digit code",
+    "codePlaceholder": "000000",
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "invalidCode": "That code is not valid. Check your authenticator app and try again.",
+      "lockedOut": "The account is temporarily locked. Try again later.",
+      "alreadyEnabled": "Two-factor authentication is already on.",
+      "notEnabled": "Two-factor authentication is not on.",
+      "requiredByPolicy": "Your organisation requires this account to use two-factor authentication.",
+      "saveFailed": "Could not save. Please contact your administrator."
+    },
+    "enable": {
+      "button": "Turn on",
+      "title": "Turn on two-factor authentication",
+      "scanHint": "Scan this QR code with an authenticator app (Microsoft Authenticator, Google Authenticator, Authy), then enter the 6-digit code it shows.",
+      "qrAlt": "QR code to add this account to an authenticator app",
+      "manualKey": "Cannot scan? Enter this key in the app",
+      "copyKey": "Copy key",
+      "keyCopied": "Key copied",
+      "submit": "Verify and turn on"
+    },
+    "disable": {
+      "button": "Turn off",
+      "title": "Turn off two-factor authentication",
+      "hint": "Enter the current 6-digit code from your authenticator app to confirm.",
+      "submit": "Turn off",
+      "done": "Two-factor authentication is off."
+    },
+    "regenerate": {
+      "button": "New recovery codes",
+      "title": "Generate new recovery codes",
+      "hint": "Enter the current 6-digit code. Your old recovery codes stop working.",
+      "submit": "Generate"
+    },
+    "recovery": {
+      "title": "Your recovery codes",
+      "warning": "Use these codes to sign in when you cannot access your authenticator app. Each code works once. They are shown only now and cannot be retrieved again. Keep them somewhere safe.",
+      "copyAll": "Copy all",
+      "download": "Download .txt",
+      "copied": "Recovery codes copied",
+      "copyFailed": "Could not copy. Select the text and copy it by hand.",
+      "confirmCheckbox": "I saved these recovery codes",
+      "done": "Done"
+    },
+    "admin": {
+      "button": "Reset 2FA",
+      "confirmTitle": "Reset two-factor authentication?",
+      "confirmMessage": "{{name}} will have to set up two-factor authentication again, and will be signed out everywhere.",
+      "done": "Two-factor authentication reset.",
+      "failed": "Failed to reset two-factor authentication."
     }
   }
 }

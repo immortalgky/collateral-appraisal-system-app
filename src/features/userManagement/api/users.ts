@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import axios from '@shared/api/axiosInstance';
+import { extractApiError } from '@shared/utils/errorUtils';
 import { useAuthStore } from '@features/auth/store';
+import { STALE_STATE_CODES } from './twoFactorErrors';
 import type {
   UserProfile,
   AdminUserListResult,
@@ -19,6 +22,9 @@ import type {
   CreateUserResponse,
   LdapLookupResponse,
   PasswordPolicy,
+  TwoFactorSetupResponse,
+  TwoFactorCodeRequest,
+  RecoveryCodesResponse,
 } from '../types';
 
 const ME_KEY = ['me'];
@@ -70,6 +76,84 @@ export const useChangePassword = (userId: string) => {
       // showing the old "Password last changed" right behind the success toast.
       queryClient.invalidateQueries({ queryKey: ME_KEY });
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    },
+  });
+};
+
+// The 2FA responses carry secrets (the authenticator key, the recovery codes). gcTime 0 drops the
+// mutation, and with it the result, as soon as nothing observes it; callers copy what they need
+// into component state and reset().
+const TWO_FACTOR_BASE = '/auth/me/two-factor';
+
+/**
+ * When the API refuses an own-2FA call because the state moved on (already on, not on, required by
+ * policy), re-read /auth/me, cached under two unrelated keys (see useChangePassword), so the card
+ * shows the real state. A wrong code or a failed save changes nothing, so those do not refetch.
+ */
+const useRefreshMeOnRefusal = () => {
+  const queryClient = useQueryClient();
+  return (err: unknown) => {
+    const { errorCode } = extractApiError(err as AxiosError);
+    if (!errorCode || !STALE_STATE_CODES.includes(errorCode)) return;
+    queryClient.invalidateQueries({ queryKey: ME_KEY });
+    queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+  };
+};
+
+/** Own 2FA step 1: a fresh authenticator key and its QR code. Changes nothing until enable. */
+export const useSetupTwoFactor = () => {
+  const refreshMeOnRefusal = useRefreshMeOnRefusal();
+  return useMutation({
+    gcTime: 0,
+    mutationFn: async (): Promise<TwoFactorSetupResponse> => {
+      const { data } = await axios.post<TwoFactorSetupResponse>(`${TWO_FACTOR_BASE}/setup`);
+      return data;
+    },
+    onError: refreshMeOnRefusal,
+  });
+};
+
+/**
+ * Own 2FA mutations that move twoFactorEnabled / recoveryCodesLeft. Both /auth/me keys are
+ * refreshed on success.
+ */
+const useTwoFactorCodeMutation = <T>(path: string) => {
+  const queryClient = useQueryClient();
+  const refreshMeOnRefusal = useRefreshMeOnRefusal();
+  return useMutation({
+    gcTime: 0,
+    mutationFn: async (request: TwoFactorCodeRequest): Promise<T> => {
+      const { data } = await axios.post<T>(`${TWO_FACTOR_BASE}/${path}`, request);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ME_KEY });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
+    },
+    onError: refreshMeOnRefusal,
+  });
+};
+
+/** Own 2FA step 2: confirm a code from the app; returns the recovery codes (shown once). */
+export const useEnableTwoFactor = () => useTwoFactorCodeMutation<RecoveryCodesResponse>('enable');
+
+/** Turn 2FA off; needs a current code. */
+export const useDisableTwoFactor = () => useTwoFactorCodeMutation<void>('disable');
+
+/** Replace all recovery codes; needs a current code. Returns the new ones (shown once). */
+export const useRegenerateRecoveryCodes = () =>
+  useTwoFactorCodeMutation<RecoveryCodesResponse>('recovery-codes');
+
+/** Admin: reset a user's 2FA (key, recovery codes, sessions) so they must set it up again. */
+export const useResetTwoFactor = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { data } = await axios.post(`/auth/users/${id}/two-factor/reset`);
+      return data;
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, id] });
     },
   });
 };
