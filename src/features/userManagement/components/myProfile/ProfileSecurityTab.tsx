@@ -7,6 +7,7 @@ import ChangePasswordModal from '../ChangePasswordModal';
 import type { UserProfile } from '../../types';
 import ProfileSection from './ProfileSection';
 import ReadOnlyField from './ReadOnlyField';
+import TwoFactorCard from './TwoFactorCard';
 
 interface ProfileSecurityTabProps {
   me: UserProfile;
@@ -74,6 +75,9 @@ const ProfileSecurityTab = ({ me, isLdap }: ProfileSecurityTabProps) => {
           </div>
         )}
       </ProfileSection>
+
+      {/* Unlike Change Password, 2FA is offered to LDAP accounts too: the code is checked by us. */}
+      <TwoFactorCard me={me} />
 
       <ProfileSection icon="clock-rotate-left" color="slate" title={t('myProfile.session')}>
         <p className="text-sm text-gray-600 dark:text-gray-300">{t('myProfile.sessionPolicy')}</p>

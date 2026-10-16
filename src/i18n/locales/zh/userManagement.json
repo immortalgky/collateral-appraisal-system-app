@@ -507,6 +507,11 @@
     "temporaryAccessSection": "临时访问",
     "maxAccessWindowHours": "最长访问窗口（小时）",
     "maxAccessWindowHoursHint": "默认 8 小时，上限 720 小时（30 天）。",
+    "twoFactorSection": "两步验证",
+    "requireTwoFactorForExternal": "对外部用户（公司账户）强制启用两步验证",
+    "requireTwoFactorForExternalHint": "尚未设置的公司用户将在下次登录时被要求设置。",
+    "twoFactorRememberHours": "已验证设备的记住时长（小时）",
+    "twoFactorRememberHoursHint": "0 = 每次登录都要求输入验证码。上限 720 小时（30 天）。",
     "save": "Save policy",
     "saved": "Password policy updated.",
     "saveFailed": "Failed to update password policy."
@@ -609,6 +614,69 @@
       "copied": "已复制",
       "confirmCheckbox": "我已复制此密码",
       "done": "完成"
+    }
+  },
+  "twoFactor": {
+    "title": "两步验证",
+    "statusOn": "已开启",
+    "statusOff": "未开启",
+    "statusOnTitle": "两步验证已开启",
+    "statusOffTitle": "两步验证未开启",
+    "hint": "为登录增加第二步：输入验证器应用生成的 6 位验证码。",
+    "recoveryCodesLeft": "剩余恢复码：{{n}}",
+    "requiredNote": "您的组织要求使用两步验证，因此无法关闭。",
+    "requiredNotEnabledNote": "您的组织要求此账户使用两步验证。可在此处开启，否则将在下次登录时要求设置。",
+    "setupFailed": "无法开始设置两步验证。",
+    "codeLabel": "6 位验证码",
+    "codePlaceholder": "000000",
+    "errors": {
+      "generic": "出了点问题，请重试。",
+      "invalidCode": "该验证码无效。请检查验证器应用后重试。",
+      "lockedOut": "账户已被暂时锁定，请稍后再试。",
+      "alreadyEnabled": "两步验证已经开启。",
+      "notEnabled": "尚未开启两步验证。",
+      "requiredByPolicy": "根据策略，此账户必须使用两步验证。",
+      "saveFailed": "保存失败，请联系管理员。"
+    },
+    "enable": {
+      "button": "开启",
+      "title": "开启两步验证",
+      "scanHint": "使用验证器应用（Microsoft Authenticator、Google Authenticator、Authy）扫描此二维码，然后输入应用显示的 6 位验证码。",
+      "qrAlt": "用于将此账户添加到验证器应用的二维码",
+      "manualKey": "无法扫描？请在应用中输入此密钥",
+      "copyKey": "复制密钥",
+      "keyCopied": "密钥已复制",
+      "submit": "验证并开启"
+    },
+    "disable": {
+      "button": "关闭",
+      "title": "关闭两步验证",
+      "hint": "请输入验证器应用当前显示的 6 位验证码以确认。",
+      "submit": "关闭",
+      "done": "两步验证已关闭。"
+    },
+    "regenerate": {
+      "button": "重新生成恢复码",
+      "title": "重新生成恢复码",
+      "hint": "请输入当前的 6 位验证码。旧的恢复码将失效。",
+      "submit": "生成"
+    },
+    "recovery": {
+      "title": "您的恢复码",
+      "warning": "当您无法使用验证器应用时，可使用这些恢复码登录。每个恢复码只能使用一次。恢复码仅在此处显示一次，之后无法再次查看，请妥善保管。",
+      "copyAll": "全部复制",
+      "download": "下载 .txt",
+      "copied": "恢复码已复制",
+      "copyFailed": "无法复制，请选中文本后手动复制。",
+      "confirmCheckbox": "我已保存这些恢复码",
+      "done": "完成"
+    },
+    "admin": {
+      "button": "重置两步验证",
+      "confirmTitle": "重置两步验证？",
+      "confirmMessage": "{{name}} 需要重新设置两步验证，并将在所有设备上退出登录。",
+      "done": "两步验证已重置。",
+      "failed": "重置两步验证失败。"
     }
   }
 }

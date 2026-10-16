@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -11,6 +12,9 @@ import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatDate, formatLocaleDateTime } from '@shared/utils/dateUtils';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
+import { useHasPermission } from '@shared/hooks/useHasPermission';
+import { extractApiError } from '@shared/utils/errorUtils';
+import { useAuthStore } from '@features/auth/store';
 import {
   useGetUserById,
   useAdminUpdateUser,
@@ -20,6 +24,7 @@ import {
   useSetUserActivation,
   useUnlockUser,
   useResetPassword,
+  useResetTwoFactor,
   useLdapLookup,
   useSetAccessWindow,
 } from '../api/users';
@@ -330,6 +335,27 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     unlockUser.mutate(userId, {
       onSuccess: () => toast.success(t('toasts.userUnlocked')),
       onError: () => toast.error(t('toasts.userUnlockFailed')),
+    });
+  };
+
+  // Two-factor reset. The API's policy is CanManageUsers = USER_MANAGE; the other security
+  // buttons have no client-side gate, but this one signs the user out everywhere, so hide it.
+  const canManageUsers = useHasPermission('USER_MANAGE');
+  // Your own 2FA is managed from Profile, not reset here.
+  const currentUserId = useAuthStore(state => state.user?.id);
+  const resetTwoFactor = useResetTwoFactor();
+  const [showResetTwoFactorConfirm, setShowResetTwoFactorConfirm] = useState(false);
+
+  const handleResetTwoFactor = () => {
+    resetTwoFactor.mutate(userId, {
+      onSuccess: () => {
+        toast.success(t('twoFactor.admin.done'));
+        setShowResetTwoFactorConfirm(false);
+      },
+      onError: err => {
+        const apiError = extractApiError(err as AxiosError);
+        toast.error(apiError.detail || apiError.title || t('twoFactor.admin.failed'));
+      },
     });
   };
 
@@ -666,6 +692,12 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 {t('buttons.resetPassword')}
               </Button>
             </>
+          )}
+          {user.twoFactorEnabled && canManageUsers && user.id !== currentUserId && (
+            <Button variant="danger" size="sm" onClick={() => setShowResetTwoFactorConfirm(true)}>
+              <Icon name="mobile-screen-button" style="solid" className="size-3.5! mr-1.5" />
+              {t('twoFactor.admin.button')}
+            </Button>
           )}
         </div>
       </section>
@@ -1230,6 +1262,18 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           </Button>
         </div>
       </Modal>
+
+      {/* Reset 2FA Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showResetTwoFactorConfirm}
+        onClose={() => setShowResetTwoFactorConfirm(false)}
+        onConfirm={handleResetTwoFactor}
+        title={t('twoFactor.admin.confirmTitle')}
+        message={t('twoFactor.admin.confirmMessage', { name: displayName })}
+        confirmText={t('twoFactor.admin.button')}
+        variant="danger"
+        isLoading={resetTwoFactor.isPending}
+      />
 
       {/* Activation Confirm Dialog */}
       <ConfirmDialog

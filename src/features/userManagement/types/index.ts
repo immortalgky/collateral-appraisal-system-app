@@ -238,6 +238,27 @@ export interface UserProfile {
   groups: MeGroup[];
   teams: MeTeam[];
   mustChangePassword: boolean;
+  twoFactorEnabled: boolean;
+  /** The password policy forces 2FA for this account (external user + "require 2FA" on). */
+  twoFactorRequired: boolean;
+  recoveryCodesLeft: number;
+}
+
+export interface TwoFactorSetupResponse {
+  /** Authenticator key, grouped by 4 and lower-case, for typing in by hand. */
+  sharedKey: string;
+  authenticatorUri: string;
+  /** The QR code as an SVG document. */
+  qrSvg: string;
+}
+
+export interface TwoFactorCodeRequest {
+  code: string;
+}
+
+/** Shown once: the server keeps only hashes, so they can never be read again. */
+export interface RecoveryCodesResponse {
+  recoveryCodes: string[];
 }
 
 export interface PasswordPolicy {
@@ -259,6 +280,10 @@ export interface PasswordPolicyConfig extends PasswordPolicy {
   lockoutEnabled: boolean;
   maxFailedAccessAttempts: number;
   lockoutMinutes: number;
+  /** External (company) users must set up 2FA at their next sign-in. */
+  requireTwoFactorForExternal: boolean;
+  /** How long a device that passed the 2FA check skips it, in hours (0 = ask every time). */
+  twoFactorRememberHours: number;
 }
 
 export interface UpdateProfileRequest {
@@ -303,6 +328,7 @@ export interface AdminUserDetail extends AdminUserListItem {
   groups: UserGroup[];
   teams: UserTeam[];
   lastLoginAt: string | null;
+  twoFactorEnabled: boolean;
 }
 
 export interface AdminUserListResult {
