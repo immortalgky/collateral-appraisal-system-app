@@ -904,7 +904,7 @@ export const buildingInfoField: FormField[] = [
     disableWhen: { field: 'noHouseNumber', is: '02' },
     disabledValue: '-',
     required: true,
-    maxLength: 10,
+    maxLength: 50,
   },
 
   {
