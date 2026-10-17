@@ -1292,6 +1292,7 @@ const AdministrationPage = () => {
               <div id="quotation-section">
                 <QuotationSection
                   appraisalId={appraisalId ?? ''}
+                  appraisalBankingSegment={bankingSegment ?? ''}
                   onCreateNew={openQuotationEntryModal}
                 />
               </div>

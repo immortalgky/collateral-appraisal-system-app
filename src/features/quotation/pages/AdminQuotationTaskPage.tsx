@@ -6,6 +6,7 @@ import Icon from '@/shared/components/Icon';
 import QuotationSection from '@/features/appraisal/components/QuotationSection';
 import QuotationEntryModal from '@/features/appraisal/components/QuotationEntryModal';
 import { useGetTaskById } from '@features/appraisal/api/workflow';
+import { useGetRequestById } from '@/features/request/api';
 
 /**
  * Lightweight admin quotation task page.
@@ -23,6 +24,14 @@ const AdminQuotationTaskPage = () => {
   const { data: taskData, isLoading, isError, refetch } = useGetTaskById(taskId);
 
   const appraisalId = taskData?.appraisalId ?? null;
+
+  // Fetch request data to get bankingSegment for company filtering — same source
+  // AdministrationPage uses, so the quotation company picker filters consistently
+  // regardless of which page opened it.
+  const { data: requestData } = useGetRequestById(taskData?.requestId ?? '');
+  const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as
+    | string
+    | undefined;
 
   const [isQuotationEntryModalOpen, setIsQuotationEntryModalOpen] = useState(false);
 
@@ -53,6 +62,7 @@ const AdminQuotationTaskPage = () => {
     <div className="w-full px-6 py-6 space-y-4">
       <QuotationSection
         appraisalId={appraisalId}
+        appraisalBankingSegment={bankingSegment ?? ''}
         onCreateNew={() => setIsQuotationEntryModalOpen(true)}
       />
 
@@ -60,6 +70,7 @@ const AdminQuotationTaskPage = () => {
         isOpen={isQuotationEntryModalOpen}
         onClose={() => setIsQuotationEntryModalOpen(false)}
         appraisalId={appraisalId}
+        bankingSegment={bankingSegment}
       />
     </div>
   );
