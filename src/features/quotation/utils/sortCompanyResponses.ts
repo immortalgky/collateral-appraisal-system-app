@@ -15,15 +15,19 @@ const STATUS_RANK: Record<string, number> = {
   Negotiating: 4,
   Accepted: 5,
   Declined: 6,
-  Rejected: 7,
-  Withdrawn: 8,
-  Draft: 9,
-  PendingCheckerReview: 9,
-  Pending: 9, // synthetic: no CompanyQuotation record at all yet
+  // Expired Invitation (see CONTEXT.md) — ranks one step below Declined: both mean "not a
+  // candidate," but an active decline is ranked slightly ahead of a company that simply never
+  // responded.
+  Expired: 7,
+  Rejected: 8,
+  Withdrawn: 9,
+  Draft: 10,
+  PendingCheckerReview: 10,
+  Pending: 10, // synthetic: no CompanyQuotation record at all yet
 };
 
 /** Bottom bucket — also the fallback for any status this table doesn't know about. */
-const NO_BID_RANK = 9;
+const NO_BID_RANK = 10;
 
 export interface CompanyResponseSortKey {
   /** Raw backend status, or the synthetic 'Pending' key for a company with no CompanyQuotation record. */

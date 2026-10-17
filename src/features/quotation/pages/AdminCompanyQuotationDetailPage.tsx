@@ -323,7 +323,8 @@ export const AdminCompanyQuotationDetailContent = ({
     );
   }
 
-  const isParticipating = companyQuotation.status !== 'Declined';
+  const isParticipating =
+    companyQuotation.status !== 'Declined' && companyQuotation.status !== 'Expired';
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 

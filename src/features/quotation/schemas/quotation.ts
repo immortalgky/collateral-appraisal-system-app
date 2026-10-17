@@ -25,6 +25,7 @@ export const CompanyQuotationStatusSchema = z.enum([
   'Rejected',
   'Withdrawn',
   'Declined',
+  'Expired',
 ]);
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────

@@ -28,7 +28,8 @@
     "UnderReview": "อยู่ระหว่างตรวจสอบ",
     "Declined": "ปฏิเสธ",
     "PendingCheckerReview": "รอ Checker ตรวจสอบ",
-    "Pending": "รอส่ง"
+    "Pending": "รอส่ง",
+    "Expired": "หมดอายุ"
   },
   "vendorStatus": {
     "Pending": "รอส่ง",
@@ -527,6 +528,8 @@
     "specialInstructions": "คำสั่งพิเศษ",
     "invitationDeclined": "ปฏิเสธคำเชิญแล้ว",
     "invitationDeclinedBody": "คุณได้ปฏิเสธคำเชิญนี้แล้ว ธนาคารได้รับแจ้งแล้ว",
+    "invitationExpired": "หมดเขตตอบรับคำเชิญ",
+    "invitationExpiredBody": "กำหนดเวลาของใบเสนอราคานี้สิ้นสุดลงก่อนที่จะมีการส่งคำตอบ ธนาคารได้รับแจ้งแล้ว",
     "quotationSubmittedTitle": "ส่งใบเสนอราคาแล้ว",
     "totalQuotedPrice": "ราคารวมที่เสนอ",
     "estimatedDays": "วันที่ประมาณ",
