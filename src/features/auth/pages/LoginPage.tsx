@@ -14,6 +14,7 @@ import {
   isSavedUserStrict,
   readSavedReturn,
   saveReturn,
+  lastSignInMethod,
   safeReturnPath,
   session,
   SIGNED_OUT_KEY,
@@ -31,16 +32,11 @@ const BOUNCE_WINDOW_MS = 30_000;
 const quietPeriodOver = () =>
   Date.now() - (Number(session.get(BOUNCE_KEY)) || 0) >= BOUNCE_WINDOW_MS;
 
-// The ways to sign in, first one primary. Adding one (a passkey) is one more entry here. `hint` is
-// the username of the user whose session timed out, when known; only a method that `acceptsHint`
-// is given it and is shown as "Continue as <name>".
+// The ways to sign in. The one this browser used last (a cookie the identity provider writes) goes
+// first and is primary; with no cookie that is the password.
 const SIGN_IN_METHODS = [
-  {
-    id: 'password',
-    labelKey: 'interstitial.methods.password',
-    acceptsHint: true,
-    start: (returnPath: string, hint?: string) => startSignIn(returnPath, { loginHint: hint }),
-  },
+  { id: 'password', labelKey: 'interstitial.methods.password', icon: 'lock' },
+  { id: 'passkey', labelKey: 'interstitial.methods.passkey', icon: 'fingerprint' },
 ] as const;
 
 // Drop the old query from the address at once. Not the router's setSearchParams: its update can
@@ -121,6 +117,12 @@ function LoginPage() {
     };
   });
   const { returnPath } = arrival;
+
+  // Read once: the cookie only changes when a sign-in completes, which leaves this page.
+  const [passkeyFirst] = useState(() => lastSignInMethod() === 'passkey');
+  const methods: readonly (typeof SIGN_IN_METHODS)[number][] = passkeyFirst
+    ? [...SIGN_IN_METHODS].reverse()
+    : SIGN_IN_METHODS;
 
   // "Not you?" was chosen: the card is gone from the screen, also when the page is shown again
   // from the back/forward cache (where this state survives).
@@ -357,36 +359,35 @@ function LoginPage() {
             </button>
           ) : (
             <div className="mt-auto flex flex-col gap-2.5 md:mt-0">
-              {SIGN_IN_METHODS.map((method, index) => {
-                const continuing = account && method.acceptsHint;
-                return (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() =>
-                      method.start(
-                        fresh ? '/' : returnPath,
-                        continuing ? account.username : undefined,
-                      )
-                    }
-                    className={clsx(
-                      'h-12 w-full cursor-pointer rounded-md text-base font-medium text-white',
-                      index === 0
-                        ? 'bg-[#2563eb] hover:bg-[#1d4ed8]'
-                        : 'border border-white/35 hover:bg-white/10',
-                    )}
-                  >
-                    {continuing ? (
-                      <span className="flex items-center justify-center gap-2.5">
-                        <Icon name="lock" style="solid" className="text-lg" />
-                        {t('interstitial.continueAs', { name: account.displayName })}
-                      </span>
-                    ) : (
-                      t(method.labelKey)
-                    )}
-                  </button>
-                );
-              })}
+              {methods.map((method, index) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() =>
+                    startSignIn(fresh ? '/' : returnPath, {
+                      // Either method can start from the known account; only the first says so.
+                      loginHint: account?.username,
+                      method: method.id,
+                    })
+                  }
+                  className={clsx(
+                    'h-12 w-full cursor-pointer rounded-md text-base font-medium text-white',
+                    index === 0
+                      ? 'bg-[#2563eb] hover:bg-[#1d4ed8]'
+                      : 'border border-white/35 hover:bg-white/10',
+                  )}
+                >
+                  <span className="flex items-center justify-center gap-2.5">
+                    <Icon name={method.icon} style="solid" className="text-lg" />
+                    {account && index === 0
+                      ? t('interstitial.continueAs', { name: account.displayName })
+                      : t(method.labelKey)}
+                  </span>
+                </button>
+              ))}
+              <p className="text-center text-xs text-white/60">
+                {t(passkeyFirst ? 'interstitial.passkeyFirst' : 'interstitial.noPasskeyYet')}
+              </p>
               {account && (
                 <button
                   type="button"
