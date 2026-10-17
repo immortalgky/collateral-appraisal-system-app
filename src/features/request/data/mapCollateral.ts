@@ -37,3 +37,5 @@ export const mapBuildingType: Record<string, string[]> = {
   U: ['05', '06', '99'],
   LSU: ['05', '06', '99'],
 };
+
+export const NO_BUILDING_PROPERTY_TYPES = ['L', 'LSL', 'MAC', 'VEH', 'VES'];
