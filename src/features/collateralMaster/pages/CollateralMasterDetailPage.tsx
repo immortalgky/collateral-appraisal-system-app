@@ -17,6 +17,9 @@ import {
   useRestoreCollateralMaster,
 } from '../api/hooks';
 import type { CollateralMasterDto } from '../api/types';
+import { useParameterDescription } from '@/shared/utils/parameterUtils';
+import { useDistrictName, useProvinceName, useSubDistrictName } from '@/shared/hooks/useCodeLabels';
+import { formatCurrency } from '@/shared/utils/formatUtils';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -34,8 +37,12 @@ function DetailRow({ label, value }: { label: string; value: ReactNode }) {
 
 function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
   const { i18n } = useTranslation();
+  const provinceName = useProvinceName();
+  const districtName = useDistrictName();
+  const subDistrictName = useSubDistrictName();
+  const baht = (v: number | null | undefined) => (v != null ? formatCurrency(v) : null);
 
-  if (master.collateralType === 'Land' && master.landDetail) {
+  if (master.landDetail) {
     const d = master.landDetail;
     return (
       <div className="flex flex-col gap-0.5">
@@ -43,16 +50,17 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
           Land Identity
         </p>
         <DetailRow label="Land Office Code" value={d.landOfficeCode} />
-        <DetailRow label="Province" value={d.province} />
-        <DetailRow label="Amphur" value={d.amphur} />
-        <DetailRow label="Tambon" value={d.tambon} />
-        <DetailRow label="Title Deed Type" value={d.titleDeedType} />
-        <DetailRow label="Title Deed No" value={d.titleDeedNo} />
-        <DetailRow label="Survey / Parcel No" value={d.surveyOrParcelNo} />
+        <DetailRow label="Province" value={provinceName(d.province) || null} />
+        <DetailRow label="District" value={districtName(d.district) || null} />
+        <DetailRow label="Sub-district" value={subDistrictName(d.subDistrict) || null} />
+        <DetailRow label="Title Type" value={d.titleType} />
+        <DetailRow label="Title Number" value={d.titleNumber} />
+        <DetailRow label="Survey No" value={d.surveyNumber} />
+        <DetailRow label="Land Parcel No" value={d.landParcelNumber} />
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
           Last-known
         </p>
-        <DetailRow label="Land Area (m²)" value={d.landArea} />
+        <DetailRow label="Land Area (sq wa)" value={d.landArea} />
         <DetailRow label="Road Frontage (m)" value={d.roadFrontage} />
         <DetailRow label="Land Shape" value={d.landShapeType} />
         <DetailRow label="Zone" value={d.landZoneType} />
@@ -77,25 +85,12 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
-        <DetailRow
-          label="Value (Land only)"
-          value={
-            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
-          }
-        />
-        <DetailRow
-          label="Value (Land + Buildings)"
-          value={
-            d.lastTotalAppraisedValue != null
-              ? `฿${d.lastTotalAppraisedValue.toLocaleString('th-TH')}`
-              : null
-          }
-        />
+        <DetailRow label="Value" value={baht(d.appraisalValue)} />
       </div>
     );
   }
 
-  if (master.collateralType === 'Condo' && master.condoDetail) {
+  if (master.condoDetail) {
     const d = master.condoDetail;
     return (
       <div className="flex flex-col gap-0.5">
@@ -106,11 +101,11 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Condo Registration No" value={d.condoRegistrationNumber} />
         <DetailRow label="Building" value={d.buildingNumber} />
         <DetailRow label="Floor" value={d.floorNumber} />
-        <DetailRow label="Unit" value={d.unitNumber} />
-        <DetailRow label="Title Number" value={d.titleNumber} />
-        <DetailRow label="Title Type" value={d.titleType} />
+        <DetailRow label="Room" value={d.roomNumber} />
         <DetailRow label="Condo Name" value={d.condoName} />
-        <DetailRow label="Province" value={d.province} />
+        <DetailRow label="Province" value={provinceName(d.province) || null} />
+        <DetailRow label="District" value={districtName(d.district) || null} />
+        <DetailRow label="Sub-district" value={subDistrictName(d.subDistrict) || null} />
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
           Last-known
         </p>
@@ -118,22 +113,18 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Location Type" value={d.locationType} />
         <DetailRow label="Building Age" value={d.buildingAge} />
         <DetailRow label="Construction Year" value={d.constructionYear} />
+        <DetailRow label="Model Name" value={d.modelName} />
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
-        <DetailRow
-          label="Value"
-          value={
-            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
-          }
-        />
+        <DetailRow label="Value" value={baht(d.appraisalValue)} />
       </div>
     );
   }
 
-  if (master.collateralType === 'Leasehold' && master.leaseholdDetail) {
+  if (master.leaseholdDetail) {
     const d = master.leaseholdDetail;
     return (
       <div className="flex flex-col gap-0.5">
@@ -153,27 +144,17 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         </p>
         <DetailRow label="Lease Term End" value={formatLocaleDate(d.leaseTermEnd, i18n.language)} />
         <DetailRow label="Lease Term (months)" value={d.leaseTermMonths} />
-        <DetailRow
-          label="Annual Rent"
-          value={d.annualRent != null ? `฿${d.annualRent.toLocaleString('th-TH')}` : null}
-        />
-        <DetailRow label="Lease Purpose" value={d.leasePurpose} />
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
-        <DetailRow
-          label="Value"
-          value={
-            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
-          }
-        />
+        <DetailRow label="Value" value={baht(master.lastAppraisedValue)} />
       </div>
     );
   }
 
-  if (master.collateralType === 'Machine' && master.machineDetail) {
+  if (master.machineDetail) {
     const d = master.machineDetail;
     return (
       <div className="flex flex-col gap-0.5">
@@ -186,24 +167,11 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Model" value={d.model} />
         <DetailRow label="Manufacturer" value={d.manufacturer} />
         <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
-          Last-known
-        </p>
-        <DetailRow label="Engine No" value={d.engineNo} />
-        <DetailRow label="Chassis No" value={d.chassisNo} />
-        <DetailRow label="Year of Manufacture" value={d.yearOfManufacture} />
-        <DetailRow label="Condition" value={d.machineCondition} />
-        <DetailRow label="Age (years)" value={d.machineAge} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
         <DetailRow label="Date" value={formatLocaleDate(d.lastAppraisedDate, i18n.language)} />
-        <DetailRow
-          label="Value"
-          value={
-            d.lastAppraisedValue != null ? `฿${d.lastAppraisedValue.toLocaleString('th-TH')}` : null
-          }
-        />
+        <DetailRow label="Value" value={baht(master.lastAppraisedValue)} />
       </div>
     );
   }
@@ -343,13 +311,15 @@ function ReasonDialog({
 export default function CollateralMasterDetailPage() {
   const { masterId } = useParams<{ masterId: string }>();
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const localizeCompanyName = useLocalizedCompanyName();
   const user = useAuthStore(s => s.user);
 
   const isAdmin = user?.permissions?.includes('COLLATERAL_ADMIN') ?? false;
 
   const { data: master, isLoading, isError } = useCollateralMaster(masterId);
+  // PropertyType uses the same codes as the backend's collateral types; unknown ones show as the code
+  const typeLabel = useParameterDescription('PropertyType', master?.collateralType);
 
   // Engagement history
   const [engPage, setEngPage] = useState(0);
@@ -453,7 +423,7 @@ export default function CollateralMasterDetailPage() {
           </button>
           <div>
             <h2 className="text-base font-semibold text-gray-900">
-              {master.collateralType} Master
+              {t('collateralMaster.masterTitle', { type: typeLabel })}
               {master.isDeleted && (
                 <span className="ml-2 text-xs font-normal text-red-500">(deleted)</span>
               )}
@@ -508,18 +478,16 @@ export default function CollateralMasterDetailPage() {
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
             Master Record
           </p>
-          <DetailRow label="Type" value={master.collateralType} />
+          <DetailRow label="Type" value={typeLabel} />
           <DetailRow label="Owner / Lessee" value={master.ownerName} />
           <DetailRow
             label="Created"
-            value={formatLocaleDateTime(master.createdOn, i18n.language)}
+            value={formatLocaleDateTime(master.createdAt, i18n.language)}
           />
-          <DetailRow label="Created by" value={master.createdBy} />
           <DetailRow
             label="Updated"
-            value={master.updatedOn ? formatLocaleDateTime(master.updatedOn, i18n.language) : null}
+            value={master.updatedAt ? formatLocaleDateTime(master.updatedAt, i18n.language) : null}
           />
-          <DetailRow label="Updated by" value={master.updatedBy} />
         </div>
       </div>
 
@@ -579,9 +547,7 @@ export default function CollateralMasterDetailPage() {
                       {formatLocaleDate(eng.appraisalDate, i18n.language)}
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-xs text-gray-700">
-                      {eng.appraisedValue != null
-                        ? `฿${eng.appraisedValue.toLocaleString('th-TH')}`
-                        : '—'}
+                      {eng.appraisedValue != null ? formatCurrency(eng.appraisedValue) : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       <button

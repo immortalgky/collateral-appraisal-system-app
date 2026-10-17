@@ -61,7 +61,10 @@ export default function PriorAppraisalBlock({
 
   if (!purpose) {
     return (
-      <div className="col-span-12 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-xs text-gray-600">
+      <div
+        data-field={NAME}
+        className="col-span-12 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-xs text-gray-600"
+      >
         <Icon name="circle-info" style="solid" className="shrink-0 text-blue-500" />
         {t('requestForm.choosePurposeFirst')}
       </div>

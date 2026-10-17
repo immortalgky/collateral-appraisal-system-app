@@ -64,6 +64,10 @@ vi.mock('@/shared/components/ParameterDisplay', () => ({
 }));
 vi.mock('../hooks/useRequiredDocuments', () => ({ useTitleLevelRequiredDocuments: () => {} }));
 vi.mock('../components/TitleImportDialog', () => ({ TitleImportDialog: () => null }));
+// Has its own tests (and its own lookups); here only where it sits is checked.
+vi.mock('../components/PriorAppraisalSummary', () => ({
+  default: () => <div data-testid="prior-summary" />,
+}));
 // The editor has its own tests; here it is a stand-in that exposes what the list hands it.
 vi.mock('../components/titles/TitleDrawer', () => ({
   TitleDrawer: (props: {
@@ -189,6 +193,13 @@ describe('title list tables', () => {
       [...table.querySelectorAll('tbody tr')].map(row => row.querySelectorAll('td')[0].textContent);
     expect(numbers(estateTable())).toEqual(['1', '2']);
     expect(numbers(movableTable())).toEqual(['1']);
+  });
+
+  it('puts the prior-appraisal summary at the top of the title card, above the tables', () => {
+    const { container } = render(<Harness titles={[land('1')]} />);
+    const card = container.querySelector('[data-field="titles"]')!;
+    const summary = within(card as HTMLElement).getByTestId('prior-summary');
+    expect(summary.compareDocumentPosition(estateTable())).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
   });
 
   it('shows the movable table only when there is a movable', () => {

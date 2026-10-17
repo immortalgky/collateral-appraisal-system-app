@@ -545,6 +545,8 @@ export const CONDO_TYPES = ['08', '28', '33'];
 /** A land title's number: the appraisal's LandTitles.TitleNumber column. A condominium's list gets 500. */
 export const LAND_TITLE_NUMBER_MAX = 200;
 export const CONDO_TITLE_NUMBER_MAX = 500;
+/** The title detail (notes): free text, as long as the LOS contract's MaxFreeText and the column allow. */
+export const TITLE_NOTES_MAX = 4000;
 
 const BUILDING_TYPE = ['05', '06', '07', '15', '16', '18', '20', '22'];
 
@@ -712,12 +714,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleDetail'),
       name: 'notes',
       wrapperClassName: 'col-span-6',
-      maxLength: 200,
-      requiredWhen: {
-        field: 'collateralType',
-        is: [...LAND_TYPES, ...CONDO_TYPES],
-        operator: 'in',
-      },
+      maxLength: TITLE_NOTES_MAX,
     },
   ]);
 }
@@ -869,12 +866,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleDetail'),
       name: 'notes',
       wrapperClassName: 'col-span-6',
-      maxLength: 200,
-      requiredWhen: {
-        field: 'collateralType',
-        is: [...LAND_TYPES, ...CONDO_TYPES],
-        operator: 'in',
-      },
+      maxLength: TITLE_NOTES_MAX,
     },
   ];
 }
@@ -963,6 +955,27 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
   return [
     {
       type: 'dropdown',
+      label: t('fields.machineType'),
+      name: 'machineType',
+      group: 'MachineType',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '11' },
+    },
+    {
+      type: 'number-input',
+      label: t('fields.noOfMachines'),
+      name: 'numberOfMachine',
+      wrapperClassName: 'col-span-3',
+      // A blank placeholder (NumberInput turns '' into "0"): an empty box must not look like it holds 0
+      placeholder: ' ',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '11' },
+      decimalPlaces: 0,
+      maxIntegerDigits: 5,
+    },
+    {
+      type: 'dropdown',
       label: t('fields.machineStatus'),
       name: 'installationStatus',
       group: 'MachineStatus',
@@ -971,13 +984,13 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: { field: 'collateralType', is: '11' },
     },
     {
-      type: 'dropdown',
-      label: t('fields.machineType'),
-      name: 'machineType',
-      group: 'MachineType',
+      type: 'text-input',
+      label: t('fields.invoiceNo'),
+      name: 'invoiceNumber',
       wrapperClassName: 'col-span-3',
       required: true,
-      requiredWhen: { field: 'collateralType', is: '11' },
+      requiredWhen: { field: 'installationStatus', is: '2' },
+      maxLength: 20,
     },
     {
       type: 'boolean-toggle',
@@ -1004,25 +1017,6 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
         match: 'all',
       },
       maxLength: 50,
-    },
-    {
-      type: 'text-input',
-      label: t('fields.invoiceNo'),
-      name: 'invoiceNumber',
-      wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'installationStatus', is: '2' },
-      maxLength: 20,
-    },
-    {
-      type: 'number-input',
-      label: t('fields.noOfMachines'),
-      name: 'numberOfMachine',
-      wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'collateralType', is: '11' },
-      decimalPlaces: 0,
-      maxIntegerDigits: 5,
     },
   ];
 }
@@ -1400,8 +1394,7 @@ export const titleLandFields: FormField[] = inScreenOrder([
     label: _st('Title Detail'),
     name: 'notes',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
+    maxLength: TITLE_NOTES_MAX,
   },
 ]);
 
@@ -1539,8 +1532,7 @@ export const titleCondoFields: FormField[] = [
     label: _st('Title Detail'),
     name: 'notes',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
+    maxLength: TITLE_NOTES_MAX,
   },
 ];
 

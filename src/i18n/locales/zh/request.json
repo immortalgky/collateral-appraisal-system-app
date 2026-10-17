@@ -231,7 +231,7 @@
     "ngan": "恩安",
     "sqWa": "平方哇",
     "owner": "所有者",
-    "titleDetail": "产权详情",
+    "titleDetail": "产权详情（补充）",
     "usageArea": "使用面积",
     "numberOfBuilding": "建筑数量",
     "roomNumber": "房间号",
@@ -452,6 +452,19 @@
       "round": "第 {{n}} 次检验",
       "search": "搜索原评估...",
       "createHint": "选择后系统会复制客户、房产、产权、位置和授信额度（不含预约和费用）"
+    },
+    "priorSummary": {
+      "noReportNumber": "尚无报告编号",
+      "status": {"Submitted": "已提交", "Pending": "待处理", "Assigned": "已分配", "InProgress": "进行中", "UnderReview": "审核中"},
+      "inProgressHeading": "所附抵押物中有 {{matched}} 项（共 {{total}} 项）正在其他报告中评估",
+      "inProgressHint": "提交前请核对下方报告，避免对同一抵押物重复评估。",
+      "heading": "所附抵押物中有 {{matched}} 项（共 {{total}} 项）曾被评估过",
+      "hint": "如为重新评估，请在申请信息部分将此报告选为原评估。",
+      "goToPrior": "前往原评估",
+      "report": "报告 {{number}}",
+      "date": "日期 {{date}}",
+      "matchesPrior": "与所选原评估一致",
+      "differsFromPrior": "不是所选原评估"
     }
   },
   "copyBanner": {
@@ -830,6 +843,23 @@
       "titleMissing": "申请中的乡/街道不在产权登记册中，请自行选择。",
       "useRequest": "从申请地址复制"
     },
+    "priorCheck": {
+      "priorHeading": "曾评估过",
+      "titleInProgress": "此地契正在评估中",
+      "titleInProgressGeneric": "此资产正在评估中",
+      "inProgressHeading": "正在其他报告中评估",
+      "inProgressMessage": "保存前请核对下方报告，避免对同一资产重复评估。",
+      "status": "状态",
+      "title": "该产权已评估过",
+      "titleGeneric": "该资产已评估过",
+      "message": "该资产已有评估报告。可返回检查，或继续保存。",
+      "back": "返回修改",
+      "continue": "继续保存",
+      "report": "报告",
+      "date": "日期",
+      "value": "估值",
+      "count": "已评估次数：{{n}}"
+    },
     "cell": {
       "areaBuilding": "建筑 {{area}} 平方米",
       "areaRai": "{{rnw}} 莱",
@@ -888,7 +918,6 @@
         "building": "建筑物",
         "condo": "公寓单元",
         "deed": "产权文件",
-        "deedDetail": "产权详情",
         "machine": "机器设备",
         "vehicle": "车辆",
         "vessel": "船舶",
