@@ -158,6 +158,19 @@ export const useResetTwoFactor = () => {
   });
 };
 
+/** Admin: remove every passkey of a user and end their sessions. */
+export const useRevokePasskeys = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await axios.delete(`/auth/users/${id}/passkeys`);
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: [USERS_KEY, id] });
+    },
+  });
+};
+
 /** Admin: list all users */
 export const useGetUsers = (params: GetUsersParams = {}) => {
   return useQuery({

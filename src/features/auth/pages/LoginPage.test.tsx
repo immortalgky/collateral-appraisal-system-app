@@ -23,7 +23,11 @@ vi.mock('@shared/components/LanguageSwitcher', () => ({ default: () => null }));
 
 const APP = 'https://app.example.com';
 const API = 'https://api.example.com';
-const apiLogin = (path: string) => `${API}/auth/login?returnUrl=${encodeURIComponent(APP + path)}`;
+// `method` null: no method in the URL, the identity provider picks ("Not you?" names none).
+const apiLogin = (path: string, hint?: string, method: string | null = 'password') =>
+  `${API}/auth/login?returnUrl=${encodeURIComponent(APP + path)}${
+    hint ? `&login_hint=${hint}` : ''
+  }${method ? `&method=${method}` : ''}`;
 
 let location: { origin: string; href: string; replace: ReturnType<typeof vi.fn> };
 
@@ -75,7 +79,70 @@ describe('LoginPage', () => {
       'Collateral Appraisal System',
     );
     expect(screen.queryByText('interstitial.saved')).not.toBeInTheDocument();
-    expect(screen.getAllByRole('button')).toHaveLength(1);
+    expect(screen.getAllByRole('button')).toHaveLength(2);
+  });
+
+  describe('sign-in methods (the cas-login-method cookie)', () => {
+    const passkey = () => screen.getByRole('button', { name: 'interstitial.methods.passkey' });
+    const order = () => screen.getAllByRole('button').map(b => b.textContent);
+    const clearCookie = () => {
+      document.cookie = 'cas-login-method=; Max-Age=0; Path=/';
+    };
+    beforeEach(clearCookie);
+    afterEach(clearCookie);
+
+    it('puts the password first, with the passkey hint, when no method was used yet', () => {
+      renderAt('');
+      expect(order()).toEqual(['interstitial.methods.password', 'interstitial.methods.passkey']);
+      expect(screen.getByText('interstitial.noPasskeyYet')).toBeInTheDocument();
+      expect(screen.queryByText('interstitial.passkeyFirst')).not.toBeInTheDocument();
+    });
+
+    it('puts the passkey first, and says why, when it was used last', () => {
+      document.cookie = 'cas-login-method=passkey; Path=/';
+      renderAt('');
+      expect(order()).toEqual(['interstitial.methods.passkey', 'interstitial.methods.password']);
+      expect(screen.getByText('interstitial.passkeyFirst')).toBeInTheDocument();
+      expect(screen.queryByText('interstitial.noPasskeyYet')).not.toBeInTheDocument();
+    });
+
+    it('keeps the password first when that was used last, and ignores an unknown value', () => {
+      document.cookie = 'cas-login-method=password; Path=/';
+      const first = renderAt('');
+      expect(order()[0]).toBe('interstitial.methods.password');
+      first.unmount();
+      document.cookie = 'cas-login-method=fido; Path=/';
+      renderAt('');
+      expect(order()[0]).toBe('interstitial.methods.password');
+    });
+
+    it('each button starts its own method', () => {
+      document.cookie = 'cas-login-method=passkey; Path=/';
+      renderAt('?returnUrl=%2Ftasks');
+      fireEvent.click(passkey());
+      expect(location.href).toBe(apiLogin('/tasks', undefined, 'passkey'));
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/tasks', undefined, 'password'));
+    });
+
+    it('puts "Continue as" on the first button only, and both start from the known user', () => {
+      document.cookie = 'cas-login-method=passkey; Path=/';
+      sessionStorage.setItem(
+        'cas-return',
+        JSON.stringify({
+          path: '/tasks',
+          reason: 'idle',
+          account: { username: 'somchai.u', displayName: 'Somchai U.', initials: 'SU' },
+        }),
+      );
+      renderAt('?reason=idle&returnUrl=%2Ftasks');
+      expect(order()[0]).toBe('interstitial.continueAs:Somchai U.');
+      expect(order()[1]).toBe('interstitial.methods.password');
+      fireEvent.click(screen.getAllByRole('button')[0]);
+      expect(location.href).toBe(apiLogin('/tasks', 'somchai.u', 'passkey'));
+      fireEvent.click(signIn());
+      expect(location.href).toBe(apiLogin('/tasks', 'somchai.u', 'password'));
+    });
   });
 
   it.each([
@@ -366,14 +433,14 @@ describe('LoginPage', () => {
       save();
       renderAt('?reason=idle&returnUrl=%2Ftasks');
       fireEvent.click(screen.getByRole('button', { name: 'interstitial.continueAs:Somchai U.' }));
-      expect(location.href).toBe(`${apiLogin('/tasks')}&login_hint=somchai.u`);
+      expect(location.href).toBe(apiLogin('/tasks', 'somchai.u'));
     });
 
     it('"not you" forgets the user and signs in at home with no hint', () => {
       save();
       renderAt('?reason=idle&returnUrl=%2Ftasks');
       fireEvent.click(screen.getByRole('button', { name: 'interstitial.notYou' }));
-      expect(location.href).toBe(apiLogin('/'));
+      expect(location.href).toBe(apiLogin('/', undefined, null));
       expect(location.href).not.toContain('login_hint');
       // Nothing of A is left: a reload or Back returns home.
       expect(JSON.parse(sessionStorage.getItem('cas-return')!)).toEqual({
@@ -393,7 +460,7 @@ describe('LoginPage', () => {
       // The history entry is kept as it is, only the address changes; all before the navigation.
       expect(replaceState).toHaveBeenCalledWith(window.history.state, '', '/login');
       expect(hrefWhenStripped).toEqual([`${APP}/login`]);
-      expect(location.href).toBe(apiLogin('/'));
+      expect(location.href).toBe(apiLogin('/', undefined, null));
       replaceState.mockRestore();
       first.unmount();
 
@@ -465,10 +532,10 @@ describe('LoginPage', () => {
       expect(JSON.parse(sessionStorage.getItem('cas-return')!).account).toEqual(account);
     });
 
-    it('is the old single button without a saved user', () => {
+    it('is the plain method buttons without a saved user', () => {
       save({ account: undefined });
       renderAt('?reason=idle&returnUrl=%2Ftasks');
-      expect(screen.getAllByRole('button')).toHaveLength(1);
+      expect(screen.getAllByRole('button')).toHaveLength(2);
       expect(signIn()).toBeInTheDocument();
       fireEvent.click(signIn());
       expect(location.href).toBe(apiLogin('/tasks'));
@@ -806,7 +873,7 @@ describe('LoginPage', () => {
 
       renderAt('');
       expect(screen.queryByText('Ann L.')).not.toBeInTheDocument();
-      expect(screen.getAllByRole('button')).toHaveLength(1);
+      expect(screen.getAllByRole('button')).toHaveLength(2);
     });
 
     it("treats another tab's sign-out as an explicit one: sign in at home, no page, no hint", () => {

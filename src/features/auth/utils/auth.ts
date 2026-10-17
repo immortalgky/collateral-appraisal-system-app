@@ -301,9 +301,25 @@ export function redirectToLogin(returnPath?: string | null, reason?: LoginReason
  * Start a fresh sign-in. The API owns the whole OIDC dance and the session cookie; this only sends
  * the browser to it (a top-level navigation, never XHR) and says where to come back to.
  */
-export function startSignIn(returnPath?: string, options?: { loginHint?: string }) {
+export function startSignIn(
+  returnPath?: string,
+  options?: { loginHint?: string; method?: SignInMethod },
+) {
   const appOrigin = canonicalOrigin() ?? window.location.origin;
   const hint = options?.loginHint ? `&login_hint=${encodeURIComponent(options.loginHint)}` : '';
-  const login = `${import.meta.env.VITE_API_URL}/auth/login?returnUrl=${encodeURIComponent(appOrigin + safeReturnPath(returnPath))}${hint}`;
+  // Which page the identity provider opens first; without it, it decides.
+  const method = options?.method ? `&method=${options.method}` : '';
+  const login = `${import.meta.env.VITE_API_URL}/auth/login?returnUrl=${encodeURIComponent(appOrigin + safeReturnPath(returnPath))}${hint}${method}`;
   leaveWithoutPrompt(() => (window.location.href = login));
+}
+
+export type SignInMethod = 'passkey' | 'password';
+
+/**
+ * How this browser last signed in. The identity provider writes the cookie when a sign-in completes
+ * (readable by script, like the language cookie); the sign-in page puts that method first.
+ */
+export function lastSignInMethod(): SignInMethod | undefined {
+  const value = document.cookie.match(/(?:^|;\s*)cas-login-method=([^;]*)/)?.[1];
+  return value === 'passkey' || value === 'password' ? value : undefined;
 }
