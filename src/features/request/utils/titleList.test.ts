@@ -137,7 +137,6 @@ describe('missingFieldPaths / isTitleComplete', () => {
         'titleNumber',
         'areaSquareWa',
         'ownerName',
-        'notes',
         'titleAddress.subDistrict',
         'dopaAddress.subDistrict',
       ]),
@@ -145,9 +144,22 @@ describe('missingFieldPaths / isTitleComplete', () => {
     expect(isTitleComplete(make({ collateralType: '01' }))).toBe(false);
   });
 
+  it('does not ask for the title detail (notes), on land or on a condominium', () => {
+    expect(missingFieldPaths(make({ collateralType: '01' }))).not.toContain('notes');
+    expect(missingFieldPaths(make({ collateralType: '08' }))).not.toContain('notes');
+    // A complete title stays complete with no notes, and keeps one it already has
+    expect(isTitleComplete({ ...completeLand(), notes: '' })).toBe(true);
+    expect(isTitleComplete({ ...completeLand(), notes: 'from LOS' })).toBe(true);
+  });
+
   it('follows the collateral type: a vehicle needs a chassis number, a land title does not', () => {
     expect(missingFieldPaths(make({ collateralType: '10' }))).toContain('vin');
     expect(missingFieldPaths(make({ collateralType: '01' }))).not.toContain('vin');
+  });
+
+  it('asks for the number of machines on a machine: a new one starts empty, not 0', () => {
+    expect(missingFieldPaths(make({ collateralType: '11' }))).toContain('numberOfMachine');
+    expect(missingFieldPaths(make({ collateralType: '01' }))).not.toContain('numberOfMachine');
   });
 
   it('reports each path once', () => {
@@ -770,16 +782,13 @@ describe('withPlaceNames', () => {
 describe('the order of the "still missing" list follows the editor, top to bottom', () => {
   const blank = (over: Partial<RequestTitleDtoType>) => make({ ...over });
 
-  it('reads deed, area, owner, notes, then the title address, then DOPA', () => {
-    const missing = missingFieldPaths(
-      blank({ collateralType: '01', titleType: 'DEED', notes: '' }),
-    );
+  it('reads deed, area, owner, then the title address, then DOPA', () => {
+    const missing = missingFieldPaths(blank({ collateralType: '01', titleType: 'DEED' }));
     const at = (path: string) => missing.indexOf(path);
     for (const path of [
       'titleNumber',
       'areaSquareWa',
       'ownerName',
-      'notes',
       'titleAddress.subDistrict',
       'dopaAddress.subDistrict',
     ])
@@ -788,7 +797,6 @@ describe('the order of the "still missing" list follows the editor, top to botto
       'titleNumber',
       'areaSquareWa',
       'ownerName',
-      'notes',
       'titleAddress.subDistrict',
       'dopaAddress.subDistrict',
     ].map(at);
@@ -821,14 +829,13 @@ describe('the order of the "still missing" list follows the editor, top to botto
     ]);
   });
 
-  it('puts a condominium unit fields before its owner and notes', () => {
+  it('puts a condominium unit fields before its owner and the title address', () => {
     const missing = missingFieldPaths(blank({ collateralType: '08', titleType: 'DEED' }));
     const at = (path: string) => missing.indexOf(path);
     expect(at('titleNumber')).toBeLessThan(at('roomNumber'));
     expect(at('roomNumber')).toBeLessThan(at('condoName'));
     expect(at('usableArea')).toBeLessThan(at('ownerName'));
-    expect(at('ownerName')).toBeLessThan(at('notes'));
-    expect(at('notes')).toBeLessThan(at('titleAddress.subDistrict'));
+    expect(at('ownerName')).toBeLessThan(at('titleAddress.subDistrict'));
   });
 });
 

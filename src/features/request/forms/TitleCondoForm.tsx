@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { FormFields } from '@/shared/components/form';
+import { FormFields, type TextareaField } from '@/shared/components/form';
 import { makeTitleCondoFields } from '../configs/fields';
+import { CollapsibleNotes } from '../components/titles/CollapsibleNotes';
 import { TitleNumbersField } from '../components/titles/TitleNumbersField';
 
 interface TitleCondoFormProps {
@@ -28,13 +29,22 @@ const TitleCondoForm = ({ index, exclude, include }: TitleCondoFormProps) => {
       ),
     [t, exclude, include],
   );
+  // The notes are folded away until asked for
+  const notes = fields.find(
+    (field): field is TextareaField => field.name === 'notes' && field.type === 'textarea',
+  );
   const showNumbers =
     !exclude?.includes('titleNumber') && (!include || include.includes('titleNumber'));
 
   return (
     <>
       {showNumbers && <TitleNumbersField index={index} />}
-      <FormFields fields={fields} namePrefix={'titles'} index={index} />
+      <FormFields
+        fields={fields.filter(field => field !== notes)}
+        namePrefix={'titles'}
+        index={index}
+      />
+      {notes && <CollapsibleNotes index={index} field={notes} />}
     </>
   );
 };

@@ -175,8 +175,6 @@ export function TitleDeedBlock({ index, family }: { index: number; family: Title
       )}
       {(shown === 'deed' || !condo) && (
         <section className="grid gap-3">
-          {/* The form view has no headings of its own: the holder follows the area row. */}
-          {shown === 'deed' && <Heading>{t('titleSection.drawer.section.deedDetail')}</Heading>}
           <div className="grid grid-cols-6 gap-3">
             {condo ? (
               <TitleCondoForm index={index} include={CONDO_NOTES} />

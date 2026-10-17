@@ -3,7 +3,6 @@ import { useCallback, useEffect, useId, useMemo, useRef, type ReactNode } from '
 import { createPortal } from 'react-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { TitleLookupIntegration } from '@/features/collateralMaster/components/TitleLookupIntegration';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { FormFields } from '@/shared/components/form';
@@ -28,6 +27,7 @@ import {
 import { TitleDocumentsSection } from '../DocumentUploader';
 import { TitleDeedBlock } from './TitleDeedBlock';
 import { useMissingFieldLabel } from './titleHooks';
+import { usePriorAppraisalCheck } from './usePriorAppraisalCheck';
 
 const SLIDE_MS = 200;
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -78,9 +78,6 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
 
   return (
     <div className="grid gap-6">
-      {/* Collateral lookup banner — fires when dedup-key fields fill in */}
-      {!readOnly && <TitleLookupIntegration titleIndex={index} />}
-
       <Grid>
         <FormFields fields={typeField} namePrefix="titles" index={index} />
       </Grid>
@@ -94,13 +91,6 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
 
       {(family === 'land' || family === 'landBuilding') && (
         <TitleDeedBlock index={index} family={family} />
-      )}
-      {(family === 'landBuilding' || family === 'building') && (
-        <Section title={t('titleSection.drawer.section.building')}>
-          <Grid>
-            <TitleBuildingForm index={index} variant={family === 'building' ? 3 : 2} />
-          </Grid>
-        </Section>
       )}
       {family === 'condo' && <TitleDeedBlock index={index} family={family} />}
       {family === 'vehicle' && (
@@ -134,6 +124,13 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
           </div>
         </Section>
       )}
+      {(family === 'landBuilding' || family === 'building') && (
+        <Section title={t('titleSection.drawer.section.building')}>
+          <Grid>
+            <TitleBuildingForm index={index} variant={family === 'building' ? 3 : 2} />
+          </Grid>
+        </Section>
+      )}
     </div>
   );
 }
@@ -158,6 +155,11 @@ export interface TitleDrawerProps {
   onCancel: () => void;
   onSaveAndAdd: () => void;
   readOnly: boolean;
+  /**
+   * Properties the user has already acknowledged as previously appraised (see
+   * usePriorAppraisalCheck). Owned by the page so it survives the drawer closing.
+   */
+  acknowledgedPriors?: Set<string>;
   /**
    * What the document list needs from the page (the upload session, the saved request). Without it
    * the editor has no documents section.
@@ -185,6 +187,7 @@ export function TitleDrawer({
   onCancel,
   onSaveAndAdd,
   readOnly,
+  acknowledgedPriors,
   documents,
 }: TitleDrawerProps) {
   const { t } = useTranslation(['request', 'common']);
@@ -196,6 +199,17 @@ export function TitleDrawer({
 
   const title = useWatch({ name: `titles.${index}` }) as RequestTitleDtoType | undefined;
   const missing = useMemo(() => (title ? missingFieldPaths(title) : []), [title]);
+  // Both save buttons ask the collateral master first; a known property is confirmed once
+  const {
+    guard,
+    checking,
+    dialog: priorDialog,
+  } = usePriorAppraisalCheck(index, title, readOnly, acknowledgedPriors);
+  // While the master is being asked, nothing may move the drawer off this title or drop it: the
+  // answer belongs to the save that started it
+  const closeIfFree = useCallback(() => {
+    if (!checking) onClose();
+  }, [checking, onClose]);
 
   const family = titleFamily(title?.collateralType);
   const typeName = title?.collateralType
@@ -245,11 +259,11 @@ export function TitleDrawer({
       )
         return;
       event.stopPropagation();
-      onClose();
+      closeIfFree();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [closeIfFree]);
 
   // A click on the scrim closes, but only when the press started there too: selecting text in a
   // field and releasing outside the panel must not count.
@@ -259,10 +273,10 @@ export function TitleDrawer({
   }, []);
   const onScrimClick = useCallback(
     (event: React.MouseEvent) => {
-      if (pressedScrim.current && event.target === event.currentTarget) onClose();
+      if (pressedScrim.current && event.target === event.currentTarget) closeIfFree();
       pressedScrim.current = false;
     },
-    [onClose],
+    [closeIfFree],
   );
 
   return createPortal(
@@ -310,7 +324,7 @@ export function TitleDrawer({
               variant="outline"
               size="sm"
               className="rounded-full!"
-              disabled={!onPrev}
+              disabled={!onPrev || checking}
               onClick={onPrev}
             >
               <Icon style="solid" name="chevron-left" className="mr-1.5 size-3" />
@@ -320,7 +334,7 @@ export function TitleDrawer({
               variant="outline"
               size="sm"
               className="rounded-full!"
-              disabled={!onNext}
+              disabled={!onNext || checking}
               onClick={onNext}
             >
               {t('titleSection.drawer.next')}
@@ -329,7 +343,8 @@ export function TitleDrawer({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeIfFree}
+            disabled={checking}
             aria-label={t('common:actions.close')}
             title={t('common:actions.close')}
             className="flex size-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
@@ -395,20 +410,32 @@ export function TitleDrawer({
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={onCancel}>
+              <Button variant="ghost" size="sm" disabled={checking} onClick={onCancel}>
                 {t('common:actions.cancel')}
               </Button>
               <span className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={onSaveAndAdd}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={checking}
+                  onClick={() => void guard(onSaveAndAdd)}
+                >
                   {t('titleSection.drawer.saveAndAdd')}
                 </Button>
-                <Button variant="primary" size="sm" onClick={onSave}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  isLoading={checking}
+                  disabled={checking}
+                  onClick={() => void guard(onSave)}
+                >
                   {t('common:actions.save')}
                 </Button>
               </span>
             </>
           )}
         </footer>
+        {priorDialog}
       </aside>
     </div>,
     document.body,

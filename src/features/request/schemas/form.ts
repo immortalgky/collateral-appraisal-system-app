@@ -383,7 +383,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vehicleRegistrationNumber: '',
   installationStatus: '',
   invoiceNumber: '',
-  numberOfMachine: 0,
+  numberOfMachine: null,
   buildingType: '',
   usableArea: null,
   numberOfBuilding: null,
