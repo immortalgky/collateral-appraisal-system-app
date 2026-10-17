@@ -16,6 +16,7 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+import { SegmentChips } from './SegmentBadges';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ export interface SelectedAppraisal {
   appraisalNumber: string;
   customerName: string | null;
   maxAppraisalDays: number | null;
+  bankingSegment?: string | null;
 }
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
@@ -193,6 +195,8 @@ export function SelectedAppraisalRow({
             )}
           </p>
         </div>
+        {/* Appraisal banking segment */}
+        {a.bankingSegment != null && <SegmentChips segments={[a.bankingSegment]} />}
         {/* Max days chip */}
         {a.maxAppraisalDays != null && (
           <span className="shrink-0 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-xs tabular-nums whitespace-nowrap">
@@ -598,6 +602,7 @@ export function AppraisalPicker({
         appraisalNumber: r.appraisalNumber ?? r.id.slice(0, 8),
         customerName: r.customerName ?? null,
         maxAppraisalDays: null,
+        bankingSegment: r.bankingSegment ?? null,
       });
     }
   };
@@ -614,6 +619,7 @@ export function AppraisalPicker({
             appraisalNumber: r.appraisalNumber ?? r.id.slice(0, 8),
             customerName: r.customerName ?? null,
             maxAppraisalDays: null,
+            bankingSegment: r.bankingSegment ?? null,
           });
         }
       });

@@ -543,6 +543,16 @@
     "notParticipatingTitle": "ไม่เข้าร่วม",
     "notParticipatingNoReason": "ไม่ได้ระบุเหตุผล"
   },
+  "segment": {
+    "companyName": "ชื่อบริษัท",
+    "bankingSegment": "กลุ่มธุรกิจ",
+    "missing": "ขาด {{segments}}",
+    "segmentSet": "กลุ่มธุรกิจ",
+    "sendBlockedTitle": "ไม่สามารถส่งได้: บริษัทที่เชิญบางแห่งไม่ครอบคลุมทุกกลุ่มธุรกิจในใบเสนอราคานี้",
+    "sendBlockedItem": "{{company}} - ขาด {{segments}}",
+    "sendBlockedHint": "ลบบริษัทเหล่านี้ หรือลบใบประเมินที่อยู่นอกกลุ่มธุรกิจของบริษัท",
+    "noneSelectedHint": "เลือกใบประเมินเพื่อดูว่าบริษัทใดครอบคลุมกลุ่มธุรกิจของใบประเมิน"
+  },
   "role": {
     "Maker": "Maker",
     "Checker": "Checker"

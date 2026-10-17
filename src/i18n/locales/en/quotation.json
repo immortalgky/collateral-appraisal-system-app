@@ -543,6 +543,16 @@
     "notParticipatingTitle": "Not Participating",
     "notParticipatingNoReason": "No reason provided."
   },
+  "segment": {
+    "companyName": "Company Name",
+    "bankingSegment": "Banking Segment",
+    "missing": "Missing {{segments}}",
+    "segmentSet": "Banking segments",
+    "sendBlockedTitle": "Cannot send: some invited companies do not cover every banking segment in this quotation",
+    "sendBlockedItem": "{{company}} - missing {{segments}}",
+    "sendBlockedHint": "Remove these companies, or remove the appraisals outside their segments.",
+    "noneSelectedHint": "Select appraisals to see which companies cover their banking segments."
+  },
   "role": {
     "Maker": "Maker",
     "Checker": "Checker"

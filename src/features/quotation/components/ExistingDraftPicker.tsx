@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import type { QuotationDraftSummaryDto } from '../schemas/quotation';
+import { SegmentChips } from './SegmentBadges';
 
 interface ExistingDraftPickerProps {
   drafts: QuotationDraftSummaryDto[];
@@ -40,6 +41,7 @@ const ExistingDraftPicker = ({
                 { width: 'w-32' },
                 { width: 'w-24' },
                 { width: 'w-40' },
+                { width: 'w-24' },
                 { width: 'w-16' },
                 { width: 'w-24' },
               ]}
@@ -75,6 +77,9 @@ const ExistingDraftPicker = ({
               </th>
               <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('columns.appraisals')}
+              </th>
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                {t('segment.segmentSet')}
               </th>
               <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 {t('columns.companies')}
@@ -143,6 +148,9 @@ const ExistingDraftPicker = ({
                         </div>
                       )}
                     </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <SegmentChips segments={draft.bankingSegment} />
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className="text-sm text-gray-600">{draft.totalCompaniesInvited}</span>

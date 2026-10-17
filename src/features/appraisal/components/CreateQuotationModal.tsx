@@ -124,7 +124,6 @@ const CreateQuotationModal = ({
         workflowInstanceId,
         taskExecutionId: null,
         cutOffTime: cutOffDateTime,
-        bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: selectedCompanies.map(c => c.id),
         specialRequirements: remarks || null,
         maxAppraisalDays: maxAppraisalDays ?? null,

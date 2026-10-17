@@ -48,6 +48,8 @@ export interface ExternalCompany {
   contactEmail: string;
   rating: number; // 1-5 stars
   activeAssignments: number;
+  // Banking Segments the company can appraise (Company.LoanTypes).
+  loanTypes?: string[];
   // False when the company is outside its MOU approval window. Selecting it would be blocked
   // (escalated) at assignment time, so the picker should flag/disable it. Optional/advisory:
   // absent is treated as assignable.
@@ -177,7 +179,6 @@ export interface StartQuotationFromTaskRequest {
    */
   taskExecutionId?: string | null;
   cutOffTime: string;
-  bankingSegment: string;
   invitedCompanyIds: string[];
   specialRequirements?: string | null;
   /**
