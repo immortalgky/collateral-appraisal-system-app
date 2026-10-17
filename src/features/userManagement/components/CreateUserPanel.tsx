@@ -62,7 +62,7 @@ const EMPTY_FORM: FormState = {
   roles: [],
   groups: [],
   teams: [],
-  authSource: 'Local',
+  authSource: 'LDAP',
   isTemporaryAccess: false,
 };
 
