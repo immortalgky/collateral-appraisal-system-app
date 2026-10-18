@@ -55,7 +55,17 @@
         "refresh": "Refresh (เวลาที่ไม่ได้ใช้งาน)"
       },
       "tokenLifetimeInherit": "ค่าเริ่มต้น",
-      "tokenLifetimeInvalid": "จำนวนเต็ม 1–{{max}}"
+      "tokenLifetimeInvalid": "จำนวนเต็ม 1–{{max}}",
+      "uploadSessionLifetime": "อายุ Upload session",
+      "uploadSessionLifetimeHint": "ระยะเวลาที่ upload session ที่ระบบนี้สร้างจะเปิดค้างไว้ได้ เว้นว่างไว้เพื่อใช้ค่าเริ่มต้นของเซิร์ฟเวอร์ ใส่ได้ตั้งแต่ 1 ชั่วโมงถึง 30 วัน",
+      "uploadSessionLifetimeInvalid": "จำนวนเต็ม 1–{{max}} {{unit}}",
+      "uploadSessionLifetimeUnit": {
+        "label": "หน่วย",
+        "hours": "ชั่วโมง",
+        "days": "วัน",
+        "hoursInline": "ชั่วโมง",
+        "daysInline": "วัน"
+      }
     },
     "grant": {
       "authorization_code": "Authorization Code",
