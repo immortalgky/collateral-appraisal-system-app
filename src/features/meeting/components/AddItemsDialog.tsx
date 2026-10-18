@@ -88,7 +88,7 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50 sticky top-0">
                 <tr>
-                  <th className="px-3 py-2 text-left">
+                  <th className="text-xs px-3 py-2 text-left font-semibold">
                     <input
                       type="checkbox"
                       checked={selected.size === items.length && items.length > 0}

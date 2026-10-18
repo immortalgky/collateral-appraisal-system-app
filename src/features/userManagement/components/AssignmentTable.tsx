@@ -157,7 +157,7 @@ const AssignmentTable = <T,>({
             <table className="w-full text-sm">
               <thead className="sticky top-0 z-10 bg-gray-50">
                 <tr className="border-b border-gray-200">
-                  <th className="w-10 py-2.5 px-3 bg-gray-50">
+                  <th className="text-xs w-10 py-2.5 px-3 bg-gray-50 font-semibold">
                     <input
                       type="checkbox"
                       checked={allFilteredSelected}
@@ -173,7 +173,7 @@ const AssignmentTable = <T,>({
                     return (
                       <th
                         key={col.key}
-                        className="px-3 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50"
+                        className="px-3 py-2.5 text-left text-xs font-semibold text-gray-500 whitespace-nowrap select-none bg-gray-50"
                         aria-sort={
                           isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'
                         }

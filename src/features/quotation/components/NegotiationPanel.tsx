@@ -10,14 +10,17 @@ import QuotationStatusBadge from './QuotationStatusBadge';
 import NegotiationModal from './NegotiationModal';
 import RejectTentativeModal from './RejectTentativeModal';
 import FinalizeModal from './FinalizeModal';
+import { isStandaloneQuotation } from '../utils/isStandaloneQuotation';
 
 const MAX_ROUNDS = 3;
 
 interface NegotiationPanelProps {
   quotation: QuotationRequestDetailDto;
+  /** A host page can switch auto-assign off (the Administration page); it is still standalone-only. */
+  allowAutoAssign?: boolean;
 }
 
-const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
+const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPanelProps) => {
   const { t } = useTranslation('quotation');
   const localizeCompanyName = useLocalizedCompanyName();
   const isIntAdmin = useAuthStore(s => s.user?.roles?.includes('IntAdmin') ?? false);
@@ -296,6 +299,7 @@ const NegotiationPanel = ({ quotation }: NegotiationPanelProps) => {
         companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
         winnerItems={winner.items ?? []}
         appraisals={quotation.appraisals ?? []}
+        allowAutoAssign={allowAutoAssign && isStandaloneQuotation(quotation)}
       />
     </>
   );

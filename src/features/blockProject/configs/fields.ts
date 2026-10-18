@@ -145,7 +145,7 @@ export const projectLocationFields: FormField[] = [
     label: 'House Number',
     name: 'houseNumber',
     wrapperClassName: 'col-span-4',
-    maxLength: 10,
+    maxLength: 50,
   },
   {
     type: 'text-input',

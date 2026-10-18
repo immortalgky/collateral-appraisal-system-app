@@ -53,7 +53,7 @@ const SortableTh = ({
   return (
     <th
       onClick={() => onSort(field)}
-      className={`px-4 py-2.5 text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
+      className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
         isActive ? 'text-primary' : 'text-gray-500'
       }`}
     >
@@ -145,7 +145,7 @@ const BlockUnitMaintenancePage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
@@ -211,7 +211,7 @@ const BlockUnitMaintenancePage = () => {
       {/* Table card */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-table">
             <colgroup>
               <col className="w-36" />
               <col className="w-48" />
@@ -239,7 +239,7 @@ const BlockUnitMaintenancePage = () => {
                 >
                   {t('list.col.projectName')}
                 </SortableTh>
-                <th className="px-4 py-2.5 text-xs font-medium text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
                   {t('list.col.projectType')}
                 </th>
                 <SortableTh field="developer" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>

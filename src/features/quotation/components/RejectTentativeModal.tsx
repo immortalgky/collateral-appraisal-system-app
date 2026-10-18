@@ -10,6 +10,7 @@ import {
   type RejectTentativeFormValues,
 } from '../schemas/quotation';
 import { useRejectTentativeWinner } from '../api/quotation';
+import BoldTrans from './BoldTrans';
 
 interface RejectTentativeModalProps {
   isOpen: boolean;
@@ -66,11 +67,9 @@ const RejectTentativeModal = ({
             className="size-4 text-red-500 shrink-0 mt-0.5"
           />
           <div className="text-sm text-red-700">
-            <p
-              dangerouslySetInnerHTML={{
-                __html: t('rejectWinner.body', { company: `<strong>${companyName}</strong>` }),
-              }}
-            />
+            <p>
+              <BoldTrans i18nKey="rejectWinner.body" values={{ company: companyName }} />
+            </p>
           </div>
         </div>
 

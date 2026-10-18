@@ -50,7 +50,7 @@ const ExtInvoiceDetailPage = () => {
           </button>
           <div>
             <div className="flex items-center gap-2.5">
-              <h3 className="text-sm font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-gray-900">
                 {invoice.invoiceNumber ?? t('detail.draftInvoice')}
               </h3>
               <InvoiceStatusBadge status={invoice.status} viewContext="external" />

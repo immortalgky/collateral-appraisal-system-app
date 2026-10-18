@@ -292,8 +292,13 @@ describe('isAwaitingSeed', () => {
 });
 
 describe('shouldSkipTypeDefaults', () => {
+  const q = (status: string, id = 'q1', requestDate = '2026-01-01T00:00:00Z') => ({
+    id,
+    status,
+    requestDate,
+  });
   const ok = {
-    quotations: [] as { status: string }[] | undefined,
+    quotations: [] as ReturnType<typeof q>[] | undefined,
     isQuotationsError: false,
     hasRequestData: true,
     isRequestError: false,
@@ -302,19 +307,36 @@ describe('shouldSkipTypeDefaults', () => {
 
   it.each([
     { name: 'nothing wrong: defaults apply', input: {}, want: false },
-    {
-      name: 'in-progress quotation blocks',
-      input: { quotations: [{ status: 'Sent' }] },
-      want: true,
-    },
-    {
-      name: 'finalized quotation blocks',
-      input: { quotations: [{ status: 'Finalized' }] },
-      want: true,
-    },
+    { name: 'in-progress quotation blocks', input: { quotations: [q('Sent')] }, want: true },
+    { name: 'finalized quotation blocks', input: { quotations: [q('Finalized')] }, want: true },
     {
       name: 'cancelled quotation does not block',
-      input: { quotations: [{ status: 'Cancelled' }] },
+      input: { quotations: [q('Cancelled')] },
+      want: false,
+    },
+    {
+      name: 'legacy closed quotation does not block',
+      input: { quotations: [q('Closed')] },
+      want: false,
+    },
+    {
+      name: '[Cancelled, Finalized]: the finalized one is the active one, so it blocks',
+      input: { quotations: [q('Cancelled', 'a'), q('Finalized', 'b')] },
+      want: true,
+    },
+    {
+      name: '[Cancelled, Sent]: an in-progress one blocks wherever it is',
+      input: { quotations: [q('Cancelled', 'a'), q('Sent', 'b')] },
+      want: true,
+    },
+    {
+      name: '[Finalized, Cancelled]: blocks',
+      input: { quotations: [q('Finalized', 'a'), q('Cancelled', 'b')] },
+      want: true,
+    },
+    {
+      name: '[Cancelled, Cancelled]: nothing active, does not block',
+      input: { quotations: [q('Cancelled', 'a'), q('Cancelled', 'b')] },
       want: false,
     },
     {
@@ -338,21 +360,6 @@ describe('shouldSkipTypeDefaults', () => {
       want: false,
     },
     { name: 'no requestId blocks', input: { requestId: undefined }, want: true },
-    {
-      name: '[Cancelled, Finalized]: the active (first) one is not finalized, so it does not block',
-      input: { quotations: [{ status: 'Cancelled' }, { status: 'Finalized' }] },
-      want: false,
-    },
-    {
-      name: '[Cancelled, Sent]: an in-progress one blocks wherever it is',
-      input: { quotations: [{ status: 'Cancelled' }, { status: 'Sent' }] },
-      want: true,
-    },
-    {
-      name: '[Finalized, Cancelled]: the active (first) one is finalized, so it blocks',
-      input: { quotations: [{ status: 'Finalized' }, { status: 'Cancelled' }] },
-      want: true,
-    },
   ])('$name', ({ input, want }) => {
     expect(shouldSkipTypeDefaults({ ...ok, ...input })).toBe(want);
   });

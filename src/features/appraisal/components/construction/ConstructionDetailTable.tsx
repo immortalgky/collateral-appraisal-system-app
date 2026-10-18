@@ -83,7 +83,7 @@ function AddItemMenu({
 }) {
   return (
     <Menu>
-      <MenuButton className="inline-flex items-center gap-[4px] h-[21px] px-[7px] rounded-[4px] border border-dashed border-[color:var(--palette-accent-line)] bg-[color:var(--palette-surface)] text-[0.875rem] font-medium text-[color:var(--palette-accent-ink)] hover:border-[#0d9488] focus:outline-none focus:border-[#0d9488]">
+      <MenuButton className="inline-flex items-center gap-[4px] h-[21px] px-[7px] rounded-[4px] border border-dashed border-[color:var(--palette-accent-line)] bg-[color:var(--palette-surface)] text-sm font-medium text-[color:var(--palette-accent-ink)] hover:border-[#0d9488] focus:outline-none focus:border-[#0d9488]">
         {label}
         <Icon name="chevron-down" style="solid" className="size-[8px]" />
       </MenuButton>
@@ -96,7 +96,7 @@ function AddItemMenu({
             <button
               type="button"
               onClick={() => onPick(item)}
-              className="block w-full px-[10px] py-[3px] text-left text-[0.875rem] leading-[1.5385rem] text-[color:var(--palette-ink)] data-[focus]:bg-[color:var(--palette-accent-wash)]"
+              className="block w-full px-[10px] py-[3px] text-left text-sm leading-[1.5385rem] text-[color:var(--palette-ink)] data-[focus]:bg-[color:var(--palette-accent-wash)]"
             >
               {itemLabel(item)}
             </button>
@@ -319,7 +319,7 @@ export function ConstructionDetailTable({
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-[0.875rem] leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
+        <table className="w-full min-w-max border-separate border-spacing-0 text-sm leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
           <thead>
             <tr>{headerCells}</tr>
           </thead>
@@ -465,17 +465,17 @@ export function ConstructionDetailTable({
       </div>
 
       {workGroupsLoading && computedSubItems.length > 0 && (
-        <div className="px-[12px] py-[6px] text-[0.75rem] text-[color:var(--palette-ink-3)] border-t border-t-[color:var(--palette-line)]">
+        <div className="px-[12px] py-[6px] text-[0.8571rem] text-[color:var(--palette-ink-3)] border-t border-t-[color:var(--palette-line)]">
           {t('constructionInspection.grid.workGroupsLoading')}
         </div>
       )}
       {workGroupsFailed && (
-        <div className="px-[12px] py-[6px] text-[0.75rem] text-[#dc2626] border-t border-t-[color:var(--palette-line)]">
+        <div className="px-[12px] py-[6px] text-[0.8571rem] text-[#dc2626] border-t border-t-[color:var(--palette-line)]">
           {t('constructionInspection.grid.workGroupsFailed')}
         </div>
       )}
       {computedSubItems.length === 0 && (
-        <div className="px-[16px] py-[32px] text-center text-[0.875rem] text-[color:var(--palette-ink-3)]">
+        <div className="px-[16px] py-[32px] text-center text-sm text-[color:var(--palette-ink-3)]">
           {readOnly
             ? t('constructionInspection.grid.emptyReadOnly')
             : t('constructionInspection.grid.empty')}
@@ -483,7 +483,7 @@ export function ConstructionDetailTable({
       )}
 
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-x-[14px] gap-y-[2px] min-h-[28px] px-[12px] py-[4px] border-t border-t-[color:var(--palette-line)] bg-[color:var(--palette-surface-2)] text-[0.75rem] text-[color:var(--palette-ink-3)]">
+        <div className="flex flex-wrap items-center gap-x-[14px] gap-y-[2px] min-h-[28px] px-[12px] py-[4px] border-t border-t-[color:var(--palette-line)] bg-[color:var(--palette-surface-2)] text-[0.8571rem] text-[color:var(--palette-ink-3)]">
           {split === 'over' && (
             <span className="font-medium text-[#dc2626]">
               {t('constructionInspection.status.overBlocksSave', { pct: pct(total.proportion) })}

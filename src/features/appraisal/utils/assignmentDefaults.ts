@@ -4,7 +4,8 @@ import {
   FOLLOWUP_STAFF_METHODS,
   type AssignmentFormType,
 } from '../schemas/administration';
-import type { AssignmentDefaultsResponse, QuotationStatus } from '../types/administration';
+import { pickActiveQuotation } from '@/features/quotation/utils/pickActiveQuotation';
+import type { AssignmentDefaultsResponse } from '../types/administration';
 
 /** The form fields an Appraisal Type can pre-select; a field the API did not send validly is absent. */
 export type AssignmentDefaults = Partial<
@@ -164,26 +165,12 @@ export const isAwaitingSeed = ({
 }): boolean =>
   !appraisalId ? isLoadingAssignment || isLoadingConfig : seededAppraisalId !== appraisalId;
 
-/** Quotation statuses that still own the assignment (the page is locked while one exists). */
-const NON_TERMINAL_QUOTATION_STATUSES = [
-  'Draft',
-  'Sent',
-  'UnderAdminReview',
-  'PendingRmSelection',
-  'WinnerTentative',
-  'Negotiating',
-] as const satisfies readonly QuotationStatus[];
-
-export const isNonTerminalQuotationStatus = (status: string): boolean =>
-  (NON_TERMINAL_QUOTATION_STATUSES as readonly string[]).includes(status);
-
 /**
- * Whether the Appraisal Type defaults must be left out and the form opened on the baseline: a
- * quotation is in progress, the quotation the page shows the winner of (the first in the list, the
- * one it loads the detail for) is Finalized, or the quotations or the request (facility limit, also
- * a missing request id) could not be read at all. A Cancelled or legacy 'Closed' quotation does not
- * block: the page only treats 'Finalized' as having a usable winner. A failed background refetch
- * with good cached data still counts as read.
+ * Whether the Appraisal Type defaults must be left out and the form opened on the baseline: the
+ * page has an active quotation (pickActiveQuotation: an open one, else the latest Finalized, whose
+ * winner stays visible), or the quotations or the request (facility limit, also a missing request
+ * id) could not be read at all. Cancelled or legacy 'Closed' quotations do not block. A failed
+ * background refetch with good cached data still counts as read.
  */
 export const shouldSkipTypeDefaults = ({
   quotations,
@@ -192,14 +179,13 @@ export const shouldSkipTypeDefaults = ({
   isRequestError,
   requestId,
 }: {
-  quotations?: { status: string }[];
+  quotations?: { id: string; status: string; requestDate: string; selectedAt?: string | null }[];
   isQuotationsError: boolean;
   hasRequestData: boolean;
   isRequestError: boolean;
   requestId?: string;
 }): boolean =>
-  !!quotations?.some(q => isNonTerminalQuotationStatus(q.status)) ||
-  quotations?.[0]?.status === 'Finalized' ||
+  !!(quotations && pickActiveQuotation(quotations)) ||
   (isQuotationsError && !quotations) ||
   (isRequestError && !hasRequestData) ||
   !requestId;

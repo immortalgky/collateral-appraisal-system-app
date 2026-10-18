@@ -1,9 +1,26 @@
 /// <reference types="node" />
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, searchForWorkspaceRoot } from 'vite';
 import fs from 'fs';
+import path from 'path';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+
+/**
+ * Where the dev server may serve files from. A git worktree often has `node_modules` as a symlink
+ * to the main checkout's, so the real path of packages (the @fontsource font files, say) is outside
+ * the worktree and the dev server answers 403 for them. Allow the workspace root as before, plus
+ * wherever `node_modules` really lives. Dev only.
+ */
+const devFsAllow = () => {
+  const allow = [searchForWorkspaceRoot(process.cwd())];
+  try {
+    allow.push(fs.realpathSync(path.resolve(__dirname, 'node_modules')));
+  } catch {
+    // no node_modules (yet): the workspace root alone is what the server had before
+  }
+  return allow;
+};
 
 // https://vite.dev/config/
 
@@ -50,6 +67,7 @@ export default defineConfig(({ mode }) => {
             }
           : undefined,
       port: 3000,
+      fs: { allow: devFsAllow() },
     },
     plugins: [
       react(),

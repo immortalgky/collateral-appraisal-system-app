@@ -384,7 +384,7 @@ export function ConstructionInspectionTab({
                 disabled={modeLocked}
                 onClick={() => requestMethod(detail)}
                 className={clsx(
-                  'px-[9px] py-[3px] rounded-[6px] text-[0.875rem] whitespace-nowrap disabled:cursor-not-allowed',
+                  'px-[9px] py-[3px] rounded-[6px] text-sm whitespace-nowrap disabled:cursor-not-allowed',
                   active
                     ? 'bg-[color:var(--palette-surface)] text-[color:var(--palette-accent-ink)] font-medium shadow-sm'
                     : clsx('text-[color:var(--palette-ink-2)]', modeLocked && 'opacity-45'),
@@ -401,7 +401,7 @@ export function ConstructionInspectionTab({
           // Said on screen, not only in a tooltip: a disabled button gives no other clue why.
           <span
             title={t('constructionInspection.method.lockedHint')}
-            className="inline-flex items-center gap-[4px] text-[0.75rem] text-[color:var(--palette-ink-3)] whitespace-nowrap"
+            className="inline-flex items-center gap-[4px] text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap"
           >
             <Icon name="lock" style="solid" className="size-[10px]" />
             {t('constructionInspection.method.locked')}
@@ -415,7 +415,7 @@ export function ConstructionInspectionTab({
           items={buildingProperties}
           currentId={propertyId}
           disabled={buildingProperties.length === 0}
-          buttonClassName="group inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-[0.875rem] hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)]"
+          buttonClassName="group inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-sm hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)]"
           button={
             <>
               <span className="text-[color:var(--palette-ink-3)]">
@@ -440,7 +440,7 @@ export function ConstructionInspectionTab({
             title={t('constructionInspection.copyFromTitle')}
             items={otherBuildingProperties}
             disabled={isCopying}
-            buttonClassName="inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-[0.875rem] hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)] text-[color:var(--palette-ink-2)] disabled:opacity-50"
+            buttonClassName="inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-sm hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)] text-[color:var(--palette-ink-2)] disabled:opacity-50"
             button={
               <>
                 {isCopying ? (
@@ -455,9 +455,9 @@ export function ConstructionInspectionTab({
           />
         )}
 
-        <span className="inline-flex items-center gap-[6px] text-[0.875rem] font-semibold whitespace-nowrap">
+        <span className="inline-flex items-center gap-[6px] text-sm font-semibold whitespace-nowrap">
           {inspectionNumber != null && (
-            <span className="rounded-[5px] bg-[color:var(--palette-accent-wash)] px-[6px] py-px text-[0.75rem] text-[color:var(--palette-accent-ink)]">
+            <span className="rounded-[5px] bg-[color:var(--palette-accent-wash)] px-[6px] py-px text-[0.8571rem] text-[color:var(--palette-accent-ink)]">
               {t('constructionInspection.inspectionRound', { n: inspectionNumber })}
             </span>
           )}
@@ -469,19 +469,19 @@ export function ConstructionInspectionTab({
         <div className="ml-auto flex items-center gap-[16px] tabular-nums">
           {hasOwnValueBase && (
             <div className="flex flex-col items-end leading-[1.15]">
-              <span className="text-[0.75rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
+              <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
                 {t('constructionInspection.kpi.value100')}
               </span>
-              <b className="text-[0.875rem] font-semibold">{baht(totalValue)}</b>
+              <b className="text-sm font-semibold">{baht(totalValue)}</b>
             </div>
           )}
           <div className="flex flex-col items-end leading-[1.15]">
-            <span className="text-[0.75rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
+            <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
               {t('constructionInspection.kpi.progress')}
             </span>
-            <b className="text-[0.875rem] font-semibold whitespace-nowrap">
+            <b className="text-sm font-semibold whitespace-nowrap">
               {showPrevious && (
-                <small className="text-[0.75rem] font-normal text-[color:var(--palette-ink-3)]">
+                <small className="text-[0.8571rem] font-normal text-[color:var(--palette-ink-3)]">
                   {pct(previousProgress)} →{' '}
                 </small>
               )}
@@ -489,7 +489,7 @@ export function ConstructionInspectionTab({
             </b>
           </div>
           <div className="flex flex-col items-end leading-[1.15] pr-[6px]">
-            <span className="text-[0.75rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
+            <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
               {!hasOwnValueBase && condo
                 ? t('constructionInspection.kpi.appraisedValue')
                 : t('constructionInspection.kpi.currentValue')}
@@ -504,19 +504,19 @@ export function ConstructionInspectionTab({
 
       {/* Table title + tools */}
       <div className="flex items-center gap-[10px] min-h-[34px] px-[10px] border-b border-[color:var(--palette-line)]">
-        <span className="flex items-center gap-[6px] text-[0.875rem] font-medium text-[color:var(--palette-accent-ink)] whitespace-nowrap">
+        <span className="flex items-center gap-[6px] text-sm font-medium text-[color:var(--palette-accent-ink)] whitespace-nowrap">
           {enterDetail
             ? t('constructionInspection.tabs.items')
             : t('constructionInspection.method.summary')}
           {enterDetail && (
-            <span className="rounded-full bg-[color:var(--palette-surface-3)] px-[6px] text-[0.75rem] leading-[1.2308rem] text-[color:var(--palette-ink-2)]">
+            <span className="rounded-full bg-[color:var(--palette-surface-3)] px-[6px] text-[0.8571rem] leading-[1.2308rem] text-[color:var(--palette-ink-2)]">
               {subItems.length}
             </span>
           )}
         </span>
 
         {enterDetail && (
-          <div className="ml-auto flex items-center gap-[10px] text-[0.75rem] text-[color:var(--palette-ink-2)]">
+          <div className="ml-auto flex items-center gap-[10px] text-[0.8571rem] text-[color:var(--palette-ink-2)]">
             <label className="inline-flex items-center gap-[5px] cursor-pointer whitespace-nowrap">
               <input
                 type="checkbox"
@@ -532,7 +532,7 @@ export function ConstructionInspectionTab({
                 // here through its data-field lookup, like any other field.
                 data-field="constructionSubItems"
                 className={clsx(
-                  'rounded-full px-[8px] text-[0.75rem] font-semibold leading-[1.5385rem] whitespace-nowrap',
+                  'rounded-full px-[8px] text-[0.8571rem] font-semibold leading-[1.5385rem] whitespace-nowrap',
                   split === 'ok'
                     ? 'bg-[#f0fdf4] text-[#15803d]'
                     : split === 'short'
@@ -560,7 +560,7 @@ export function ConstructionInspectionTab({
       {!hasOwnValueBase && (
         <div
           className={clsx(
-            'flex items-start gap-[6px] px-[10px] py-[6px] border-b border-[color:var(--palette-line)] text-[0.75rem] leading-[1.2308rem]',
+            'flex items-start gap-[6px] px-[10px] py-[6px] border-b border-[color:var(--palette-line)] text-[0.8571rem] leading-[1.2308rem]',
             condo
               ? 'bg-[color:var(--palette-surface-2)] text-[color:var(--palette-ink-2)]'
               : 'bg-[color:var(--palette-warn-wash)] text-[color:var(--palette-warn)]',
@@ -677,7 +677,7 @@ function PropertyMenu({
         className="z-50 min-w-[260px] max-h-60 overflow-y-auto rounded-xl border border-gray-200 dark:border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] py-1.5 shadow-xl focus:outline-none"
       >
         <div className="px-3 pb-1.5 mb-1 border-b border-gray-100 dark:border-[color:var(--palette-line-soft)]">
-          <span className="text-[0.75rem] font-semibold uppercase tracking-wider text-gray-400 dark:text-[color:var(--palette-ink-3)]">
+          <span className="text-[0.8571rem] font-semibold uppercase tracking-wider text-gray-400 dark:text-[color:var(--palette-ink-3)]">
             {title}
           </span>
         </div>

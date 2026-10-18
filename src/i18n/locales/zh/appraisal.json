@@ -20,14 +20,15 @@
     "emptyHint": "请尝试调整搜索条件或筛选器",
     "columns": {
       "appraisalNumber": "估价编号",
+      "appraisalNumberCustomer": "估价编号 / 客户",
       "customer": "客户",
       "status": "状态",
       "priority": "优先级",
       "sla": "SLA",
       "province": "省份",
       "assignment": "分配",
-      "bankingSegment": "板块",
-      "purpose": "评估目的",
+      "bankingSegment": "银行业务分部",
+      "purposeAndType": "评估目的 · 评估类型",
       "propertyType": "抵押物类型",
       "company": "公司",
       "appointment": "预约",
@@ -55,8 +56,8 @@
       "createdTo": "创建结束",
       "slaDueFrom": "SLA 截止开始",
       "slaDueTo": "SLA 截止结束",
-      "bankingSegmentLabel": "业务板块",
-      "bankingSegmentPlaceholder": "所有板块",
+      "bankingSegmentLabel": "银行业务分部",
+      "bankingSegmentPlaceholder": "所有业务分部",
       "purposeLabel": "评估目的",
       "purposePlaceholder": "所有目的",
       "propertyTypeLabel": "抵押物类型",
@@ -71,6 +72,9 @@
       "slaDue": "SLA 截止",
       "assigneeUserId": "负责人",
       "add": "添加筛选",
+      "more": "更多 +{{count}}",
+      "moreAria_one": "{{label}}（另外 {{count}} 个筛选条件）",
+      "moreAria_other": "{{label}}（另外 {{count}} 个筛选条件）",
       "searchIn": "搜索{{label}}…",
       "showingOf": "显示 {{shown}} / {{total}}",
       "typeToFind": "输入以查找其余项",
@@ -132,6 +136,7 @@
     "searchTooShort": "请至少输入 {{count}} 个字符进行搜索",
     "searchPrefixHint": "从开头匹配。在关键词前加 * 可匹配中间的内容。",
     "searchSubstringHint": "匹配值中任意位置的内容。",
+    "exportTruncatedTitle": "导出文件将被截断",
     "exportTruncatedWarning": "此搜索匹配 {{total}} 条评估记录，但导出最多包含 {{max}} 行。文件将被截断。是否继续？",
     "exportFailed": "导出失败，请重试。",
     "searchFieldLabel": "搜索范围",
@@ -157,9 +162,23 @@
       "nearing-deadline": "临近截止",
       "external-assignments": "外部任务",
       "my-company-queue": "我司队列",
+      "moreAria_one": "{{label}}（另有 {{count}} 个视图）",
+      "moreAria_other": "{{label}}（另有 {{count}} 个视图）",
       "all": "全部任务",
       "my-requests": "我的申请"
     },
+    "smartViewDescriptions": {
+      "my-assignments": "当前分配给您的评估任务",
+      "my-requests": "您作为申请人提交的申请下的评估任务",
+      "sla-at-risk": "SLA 存在风险或已逾期的进行中评估任务",
+      "todays-appointments": "今天安排了现场查勘的评估任务",
+      "unassigned": "尚未分配的评估任务",
+      "high-priority-active": "正在进行中的高优先级评估任务",
+      "nearing-deadline": "SLA 到期日在未来 3 天内的评估任务",
+      "external-assignments": "已分配给外部公司且仍在进行中的评估任务",
+      "my-company-queue": "分配给贵公司的评估任务"
+    },
+    "priorityHigh": "高优先级",
     "saved": "已保存",
     "saveCurrentSearch": "保存当前搜索",
     "searchNamePlaceholder": "搜索名称...",
@@ -193,10 +212,12 @@
       "label": "分组",
       "none": "不分组",
       "current": "分组：{{label}}",
-      "empty": "未指定"
+      "empty": "未指定",
+      "error": "无法加载分组数量"
     },
     "suggest": {
       "goTo": "前往评估",
+      "scope": "搜索字段",
       "searchIn": "在以下字段搜索“{{term}}”",
       "recent": "最近搜索",
       "matches": "{{count}} 条",
@@ -449,6 +470,8 @@
     "requestQuotation": "请求报价",
     "newQuotation": "新建报价单",
     "sendQuotation": "发送报价单",
+    "sendRequirementsHint": "发送前请至少添加 1 份估价、邀请 1 家公司并设置截止时间",
+    "loadDetailFailed": "无法加载此报价单",
     "cancelQuotation": "取消报价单",
     "cancelQuotationTitle": "取消报价单",
     "rejectWinner": "拒绝赢家",
@@ -473,6 +496,8 @@
     "cancelReasonOptional": "（可选）",
     "cancelReasonPlaceholder": "为什么要取消此报价单？",
     "draftHint": "此报价单仍为草稿。添加估价、邀请公司，然后点击发送报价单以开放投标。",
+    "existingDraftSegmentWarning": "此估价的银行业务分部（{{segment}}）尚未被此草稿覆盖。若已邀请的公司未全部覆盖，将无法发送 — 请移除未覆盖的公司，或移除超出其分部范围的估价。",
+    "segmentLoadFailed": "无法加载此估价的银行业务分部",
     "notSet": "未设置",
     "maxAppraisalDuration": "最长评估期限（天）",
     "specialRequirements": "特殊要求",
@@ -515,7 +540,9 @@
       "companiesInvited": "受邀公司",
       "eligibleFor": "适用于",
       "companySearchPlaceholder": "搜索公司名称...",
-      "noEligibleCompanies": "该细分市场没有符合条件的公司",
+      "noCoveringCompanies": "没有公司覆盖此报价的全部银行业务分部",
+      "failedToLoadCompanies": "无法加载公司列表",
+      "showingEligibleFor": "显示适用于银行业务分部 {{segment}} 的公司",
       "noCompaniesFound": "未找到公司",
       "cutOffTime": "截止时间",
       "appraisalsLabel": "估价",
@@ -562,9 +589,6 @@
       "totalAppraisalPriceReview": "估价总价（审查）",
       "forceSellingPriceReview": "强制出售价格（审查）",
       "buildingInsuranceReview": "建筑保险（审查）",
-      "verifiedStaleTitle": "核实后价格已变动",
-      "verifiedStaleHint": "报告与 AS400 仍使用已核实的数值，直至重新核实。",
-      "verifiedStaleAction": "使用当前价格",
       "condition": "条件",
       "conditionType": "条件类型",
       "conditionTypePlaceholder": "选择条件类型...",
@@ -626,7 +650,6 @@
       "validationErrorsTitle": "请填写必填字段",
       "voteTitle": "确认投票",
       "voteMessage": "投票提交后无法修改。",
-      "voteAck": "我确认对此评估投票“{{vote}}”",
       "summary": {
         "decision": "决定",
         "destination": "下一步",
@@ -638,12 +661,11 @@
     "toasts": {
       "saved": "决策摘要保存成功",
       "saveFailed": "保存决策摘要失败，请重试。",
-      "submitted": "决策提交成功",
       "submitFailed": "提交决策失败",
       "validationErrors": "发生验证错误",
       "forceSaleRateSaved": "强制出售价格比例已保存",
       "forceSaleRateFailed": "保存强制出售价格比例失败，请重试。",
-      "voteNeedsComment": "提交前请填写备注并确认您的投票。"
+      "voteNeedsComment": "投票前请填写备注。"
     },
     "warnings": {
       "title": "继续前请复核",
@@ -680,7 +702,32 @@
     "destination": {
       "forward": "转至 {{name}}",
       "back": "退回至 {{name}}",
-      "cancel": "结束流程"
+      "cancel": "结束流程",
+      "final": "流程在此步骤结束"
+    },
+    "route": {
+      "title": "工作路径",
+      "showEarlier_one": "显示更早的 {{count}} 个步骤",
+      "showEarlier_other": "显示更早的 {{count}} 个步骤",
+      "hideEarlier": "隐藏更早的步骤",
+      "here": "当前步骤",
+      "inProgress": "进行中",
+      "awaitingVote": "等待投票",
+      "showMore": "展开",
+      "showLess": "收起",
+      "returnsHere": "工作将回到此处",
+      "statusCompleted": "已完成",
+      "statusRoutedBack": "已退回",
+      "previewSr": "提交后工作将流向（预览）：",
+      "ghostIdle": "选择决定以查看工作流向",
+      "final": "流程结束",
+      "finalMeta": "此工单将完成",
+      "cancel": "工单已取消",
+      "cancelMeta": "流程在此步骤结束",
+      "assignee": "接收人 {{name}}",
+      "assigneeMissing": "尚未选择接收人",
+      "backTo": "退回至 {{title}}",
+      "previousStep": "上一步骤"
     },
     "committeeVotes": "委员会投票",
     "votesSummary": "已投票 {{received}}/{{total}}",
@@ -689,6 +736,12 @@
     "yourVote": "您的投票",
     "nextStep": "下一步",
     "voteImpact": "{{from}} → {{to}} 票",
+    "voteImpactMet": "{{from}} → {{to}} 票 · 已达标",
+    "voteImpactShort": "{{from}} → {{to}} 票 · 还差 {{left}} 票",
+    "voteTag": "投票",
+    "voteBackNow": "立即退回 → {{name}}",
+    "voteBackNowNoName": "立即退回",
+    "voteNeedsReason": "需填写理由",
     "votesLoadFailed": "无法加载委员会投票。",
     "noActions": "此任务没有可用的决定选项。请刷新页面，如仍有问题请联系管理员。"
   },
@@ -1470,7 +1523,88 @@
       "saved": "清单已保存"
     }
   },
+  "photoSourceModal": {
+    "title": "添加照片",
+    "uploadTitle": "从设备上传",
+    "uploadHint": "从您的电脑或设备选择照片",
+    "galleryTitle": "从图库选择",
+    "galleryHint": "从之前上传的照片中选择",
+    "supports": "支持：{{types}}（每个文件最大 50MB）",
+    "close": "关闭"
+  },
+  "gallerySelection": {
+    "title": "从图库选择",
+    "available_one": "共 {{count}} 张照片",
+    "available_other": "共 {{count}} 张照片",
+    "searchPlaceholder": "按名称或描述搜索...",
+    "showing": "显示 {{shown}} / {{total}}",
+    "selectAll": "全选",
+    "selected_one": "已选择 {{count}} 张",
+    "selected_other": "已选择 {{count}} 张",
+    "clearSelection": "清除选择",
+    "noPhotos": "未找到照片",
+    "tryDifferent": "请尝试其他搜索词",
+    "uploadFirst": "请先将照片上传到图库",
+    "readyToAdd_one": "{{count}} 张照片待添加",
+    "readyToAdd_other": "{{count}} 张照片待添加",
+    "clickToSelect": "点击照片即可选择",
+    "cancel": "取消",
+    "add_one": "添加 {{count}} 张照片",
+    "add_other": "添加 {{count}} 张照片",
+    "selectPhoto": "选择照片",
+    "close": "关闭"
+  },
   "valuationDocuments": {
+    "appendix": {
+      "title": "附件文件",
+      "addFiles": "添加文件",
+      "addTo": "添加 {{name}}",
+      "editImage": "编辑图片",
+      "empty": "未找到附件类别",
+      "loading": "正在加载附件...",
+      "loadFailed": "无法加载附件",
+      "galleryFailed": "无法加载图库",
+      "deleteDialog": {
+        "title": "删除文件",
+        "message": "确定要删除此文件吗？此操作无法撤销。",
+        "confirm": "删除"
+      }
+    },
+    "appendixTypes": {
+      "BRIEF_MAP": "简略地图",
+      "DETAILED_MAP": "详细地图",
+      "EARTH_MAP": "卫星地图",
+      "LAND_MAP": "地籍图",
+      "CITY_PLAN": "城市规划",
+      "STATUTORY_PLAN": "法定规划",
+      "LAND_PLAN": "土地平面图",
+      "BUILDING_LAYOUT": "建筑布局图",
+      "BLUEPRINT": "建筑蓝图",
+      "PHOTO_SPOT": "照片及拍摄点",
+      "REG_INDEX": "登记索引"
+    },
+    "checklist": {
+      "tablistLabel": "文件分区",
+      "tabs": {
+        "request": "申请文件",
+        "valuation": "评估文件",
+        "appendix": "报告书"
+      },
+      "tabCounts": {
+        "missing": "缺少 {{count}}",
+        "complete": "齐全",
+        "files_one": "{{count}} 个文件",
+        "files_other": "{{count}} 个文件"
+      },
+      "requestTitle": "申请文件",
+      "readOnlyTag": "只读",
+      "requestEmpty": "未找到申请文件",
+      "requestLoadFailed": "无法加载申请文件",
+      "valuationEmpty": "未找到文件类型",
+      "typesWithFiles": "{{done}}/{{total}} 种类型",
+      "noteSaved": "备注已保存",
+      "noteSaveFailed": "无法保存备注"
+    },
     "sections": {
       "documentChecklist": "文件清单",
       "appraisalBookBuilder": "估价报告书编制",
@@ -1486,11 +1620,7 @@
     "typesCount_one": "{{count}} 种类型",
     "typesCount_other": "{{count}} 种类型",
     "progress": "已附加 {{uploaded}} / {{total}}",
-    "expandAll": "全部展开",
-    "collapseAll": "全部收起",
     "noFile": "无文件",
-    "fileCount_one": "{{count}} 个文件",
-    "fileCount_other": "{{count}} 个文件",
     "attach": "附加文件",
     "generate": "生成报告",
     "view": "查看",
@@ -1525,6 +1655,8 @@
     "openInNewTab": "在新标签页中打开",
     "generatePreview": "生成预览",
     "idleHint": "生成鉴定报告预览以在此处查看。",
+    "noPreviewYet": "暂无报告书预览",
+    "previewUnavailable": "无法显示报告书预览",
     "generating": "正在生成预览…",
     "fetchFailed": "加载报告预览失败",
     "renderFailed": "渲染报告预览失败",
@@ -2561,8 +2693,8 @@
     "conditionMinVotesDefault": "需达到最低投票数",
     "stats": {
       "votesReceived": "已投票数",
-      "approve": "批准",
-      "reject": "拒绝",
+      "approve": "同意",
+      "reject": "不同意",
       "routeBack": "退回"
     },
     "voteLabels": {
@@ -2906,7 +3038,13 @@
       "north": "北",
       "south": "南",
       "east": "东",
-      "west": "西"
+      "west": "西",
+      "condo": {
+        "title": "公寓房屋所有权证书",
+        "sub": "(อ.ช.2)",
+        "landDeed": "土地所有权证号",
+        "location": "公寓单元位置"
+      }
     },
     "list": {
       "sortByNumber": "按地契号排序",

@@ -29,9 +29,11 @@
    table language, × delete, bands and add links, pills / chips / toggle colours) are in
    formLayoutSkin.css, loaded after this file; what is left here is what only standard needs.
 
-   Sizes are rem calibrated to the 13px root the app runs at (12px = 0.9231rem, 12.5px = 0.9615rem,
-   11px = 0.8462rem, 30px = 2.3077rem, 28px = 2.1538rem, 24px = 1.8462rem), so the density setting
-   keeps working. Borders stay px.
+   Sizes are rem. The geometry (control height, padding, radii: 30px = 2.3077rem, 28px = 2.1538rem,
+   24px = 1.8462rem) was set for a 13px root; the app now runs a 14px root (15px from 1920px), so each
+   of those renders about 8% larger than the px written in the comments of this file. Font sizes were
+   set again for the 14px root: 11px = 0.7857rem, 12px = 0.8571rem, 14px = 1rem. The density setting
+   keeps working because everything is rem. Borders stay px.
    ============================================================================ */
 
 /* ── tokens ─────────────────────────────────────────────────────────────────
@@ -138,7 +140,7 @@
    Each form's SectionRow puts a left rail (icon chip + title), the fields and a rule in one
    5-column grid (`.cas-section-grid`). Here the grid is a plain block: the head becomes a
    full-width band, the fields follow on the 12-column grid with 10px / 16px gaps inside
-   a `0 12px 14px` body, and the rules between sections go. Band #edf1f1, 30px, title 12.5px / 600
+   a `0 12px 14px` body, and the rules between sections go. Band #edf1f1, 30px, title 16px / 600
    #1f2937, no icon, no stripe. The title table's header is the same band with its summary and add
    link in it. */
 [data-form-layout='classic'][data-form-layout='classic'] .cas-form-grid .cas-section-grid {
@@ -162,7 +164,7 @@
   .cas-form-grid
   :is(.cas-sheet .cas-section-head, #land-section:has(.cas-sheet) #land-title .cas-section-head)
   span {
-  font-size: 0.875rem;
+  font-size: 1.0714rem;
   font-weight: 600;
   line-height: var(--cas-leading);
   color: var(--cas-head-ink);
@@ -186,7 +188,7 @@
   #land-title
   .cas-section-head
   > div {
-  font-size: 0.9231rem;
+  font-size: 0.8571rem;
   color: var(--cas-ink-3);
 }
 [data-form-layout='classic'][data-form-layout='classic']
@@ -217,7 +219,7 @@
   [data-field]
   [data-field-label] {
   margin-bottom: 0.2308rem;
-  font-size: 0.875rem;
+  font-size: 0.8571rem;
   font-weight: 500;
   line-height: 1.4286;
   color: var(--cas-ink-2);
@@ -245,7 +247,7 @@
   color: var(--cas-req-ink);
 }
 
-/* ── 4. values: white, 1px edge always drawn, 30px, 6px corner, 13px ────────
+/* ── 4. values: white, 1px edge always drawn, 32.3px, 6.5px corner, 13px ────────
    Text boxes, number boxes, dropdown buttons, the comboboxes (Land Office's is `readonly` but
    opens a search on click, so it is a box too), dates. Excluded: checkbox / radio / hidden /
    file, the "other" input inside a Dropdown's own frame (`.h-full`), and a combobox's chevron
@@ -517,13 +519,13 @@
 }
 
 /* ── 6. toggle ──────────────────────────────────────────────────────────────
-   The component's own round shape and grey track are kept; the thumb is #0d9488. A yes/no toggle
-   (marker class `cas-toggle-bool`, from FormBooleanToggle) turns the thumb #55636f while its first
+   The component's own round shape and grey track are kept; the sliding pill is #0d9488. A yes/no
+   toggle (marker class `cas-toggle-bool`, from FormBooleanToggle) turns the pill #55636f while its first
    option — false — is active; a string toggle stays #0d9488 either way. Labels: white on the
-   thumb, #55636f off it. The error state (`border-danger` on the track, `bg-danger` on the
-   thumb) is excluded by the :not() and keeps its own look.
-   Size: buttons 26px in a track with 1px padding ≈ 28px; the thumb's `inset-block` follows. The
-   thumb's width and slide distance are the component's own and are not touched. */
+   pill, #55636f off it. The error state (`border-danger` on the track, `bg-danger` on the
+   pill) is excluded by the :not() and keeps its own look. The colours are in formLayoutSkin.css.
+   Size: buttons 26px in a track with 1px padding ≈ 28px; the pill's `inset-block` follows, its width and slide are measured
+   from the active button by the component. */
 [data-form-layout='classic'][data-form-layout='classic']
   .cas-form-grid
   [data-field]
@@ -580,7 +582,7 @@
   > td {
   height: 2.3846rem;
   padding: 0 0.6154rem;
-  font-size: 0.875rem;
+  font-size: 0.9286rem;
   line-height: 2.3077rem;
   border-bottom: 1px solid var(--cas-line);
   border-right: 1px solid var(--cas-line);
@@ -740,7 +742,7 @@
   padding: 0.3846rem 0.7692rem;
   border-bottom: 1px solid var(--cas-line);
   color: var(--cas-ink-2);
-  font-size: 0.8462rem;
+  font-size: 0.8571rem;
   font-weight: 600;
   line-height: var(--cas-leading);
 }

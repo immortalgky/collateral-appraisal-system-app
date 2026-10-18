@@ -6,7 +6,103 @@
     "backToListing": "返回列表",
     "requestNotFound": "未找到申请",
     "requestNotFoundDesc": "您查找的申请不存在或已被删除。",
-    "failedToLoad": "加载申请失败"
+    "failedToLoad": "加载申请失败",
+    "cards": {
+      "requestInformation": {
+        "title": "申请信息",
+        "subtitle": "客户、评估目的及授信额度"
+      },
+      "propertiesAndLocation": {
+        "title": "房产及位置",
+        "subtitle": "待评估房产及其地址"
+      },
+      "appointmentAndFee": {
+        "title": "预约及费用",
+        "subtitle": "查勘日期、联系人及费用支付"
+      }
+    },
+    "nav": {
+      "label": "跳转到章节",
+      "s1": "申请信息",
+      "s2": "房产及位置",
+      "s5": "预约及费用",
+      "titles": "产权文件",
+      "docs": "抵押物估价所需提交的文件",
+      "missing": "缺 {{count}}",
+      "complete": "完整",
+      "titleCount": "{{count}} 项",
+      "files": "{{count}} 个文件"
+    },
+    "header": {
+      "noNumber": "尚无申请编号",
+      "unsaved": "未保存",
+      "urgent": "加急",
+      "priorAppraisal": "原评估报告",
+      "requestor": "申请人",
+      "me": "(我)",
+      "changeRequestor": "更换申请人",
+      "change": "更换",
+      "noRequestor": "尚未选择申请人",
+      "pickRequestor": "选择申请人",
+      "createdBy": "创建人 {{name}}",
+      "submittedAt": "提交于 {{date}}",
+      "comments": "评论",
+      "status": {
+        "new": "新建",
+        "draft": "草稿",
+        "submitted": "已提交",
+        "assigned": "已分配",
+        "pending": "待处理",
+        "inprogress": "进行中",
+        "underreview": "审核中",
+        "completed": "已完成",
+        "cancelled": "已取消",
+        "rejected": "已拒绝"
+      }
+    },
+    "comments": {
+      "send": "发送评论",
+      "close": "关闭"
+    },
+    "purposeChange": {
+      "cleared": "评估目的已更改,已清除原评估报告。如有需要请重新选择。",
+      "title": "更改评估目的",
+      "message": "更改评估目的将清除原评估报告 {{old}} 及从中提取的 {{n}} 个文件。",
+      "confirm": "更改并清除"
+    },
+    "missing": {
+      "requestor": "申请人(申请头部)",
+      "customersEmpty": "客户(至少 1 位)",
+      "propertiesEmpty": "房产(至少 1 项)",
+      "titlesEmpty": "产权文件(至少 1 项)",
+      "rowField": "{{label}} 第 {{n}} 项",
+      "titleRow": "第 {{n}} 项产权信息不完整(缺 {{count}} 项)",
+      "docs": "有 {{count}} 类必需文件未附上",
+      "titleDocs": "有 {{count}} 类产权必需文件未附上",
+      "chip": "缺 {{count}} 项",
+      "complete": "已完整,可提交",
+      "popoverTitle": "{{sections}} 个部分共缺 {{count}} 项",
+      "listLabel": "缺少的字段",
+      "goTo": "前往字段"
+    },
+    "submit": {
+      "title": "提交申请",
+      "message": "必填项已全部填写。系统将保存并把该申请送入评估流程。",
+      "customers": "客户",
+      "properties": "房产",
+      "titles": "产权",
+      "files": "文件",
+      "warning": "提交后无法删除或保存草稿,只有被退回时才能编辑。",
+      "confirm": "提交申请"
+    },
+    "actions": {
+      "more": "复制 / 删除",
+      "deleteRequest": "删除申请",
+      "saveDraftHint": "先保存,不检查必填项",
+      "saveHint": "检查必填项后保存,不提交",
+      "submitHint": "保存并提交申请,检查必填项",
+      "waitForUploads": "请先等待文件上传完成"
+    }
   },
   "sections": {
     "requestInformation": "申请信息",
@@ -39,6 +135,9 @@
     "searchPlaceholder": "搜索申请...",
     "allStatus": "所有状态",
     "allPurpose": "所有目的",
+    "statusAll": "全部",
+    "statusGroup": "按状态筛选",
+    "clear": "清除筛选",
     "statusBadge": "状态：{{value}}",
     "purposeBadge": "目的：{{value}}",
     "searchBadge": "搜索：{{value}}"
@@ -46,6 +145,7 @@
   "empty": {
     "noRequests": "未找到申请",
     "noRequestsFiltered": "请尝试其他筛选条件",
+    "noMatch": "没有符合筛选条件的申请",
     "noRequestsCreate": "创建您的第一个申请",
     "noTitles": "暂无产权",
     "noCollateralType": "未选择类型",
@@ -59,14 +159,12 @@
   },
   "forms": {
     "request": "申请",
-    "requestorDetail": "申请人信息",
-    "searchRequestor": "搜索申请人",
     "customers": "客户",
     "properties": "房产",
     "location": "位置",
     "appointmentAndFee": "预约与费用",
     "titleInformation": "产权信息",
-    "attachDocument": "附加文件",
+    "attachDocument": "抵押物估价所需提交的文件",
     "editingTitle": "编辑产权 {{n}}",
     "titleCount": "{{count}} 项"
   },
@@ -133,7 +231,7 @@
     "ngan": "恩安",
     "sqWa": "平方哇",
     "owner": "所有者",
-    "titleDetail": "产权详情",
+    "titleDetail": "产权详情（补充）",
     "usageArea": "使用面积",
     "numberOfBuilding": "建筑数量",
     "roomNumber": "房间号",
@@ -165,7 +263,8 @@
   },
   "titleAddress": {
     "header": "产权文件地址",
-    "dopaHeader": "DOPA地址"
+    "dopaHeader": "DOPA地址",
+    "propertyLocationHeader": "财产所在地"
   },
   "titleOptions": {
     "noCollateralType": "请选择抵押品类型以继续",
@@ -245,15 +344,15 @@
     "uploadComplete": "{{done}}/{{total}} 完成"
   },
   "fileAssignment": {
-    "modalTitle": "分配文件",
-    "description": "将每个上传的文件分配到文件槽。为每个文件选择实体和文件类型。",
+    "modalTitle": "附加文件",
+    "description": "选择每个文件附加到哪里，以及属于哪种文件类型。",
     "columnFile": "文件",
-    "columnEntity": "实体",
+    "columnEntity": "附加到",
     "columnDocumentType": "文件类型",
     "columnNotes": "备注",
     "notesPlaceholder": "可选",
-    "warningSelectAll": "请为所有文件选择实体和文件类型。",
-    "assignToForm": "分配到表单",
+    "warningSelectAll": "请为每个文件选择附加位置和文件类型。",
+    "assignToForm": "附加文件",
     "loadingTypes": "加载中...",
     "selectType": "选择类型..."
   },
@@ -281,31 +380,273 @@
     "submit": "提交"
   },
   "searchUser": {
-    "modalTitle": "选择用户",
-    "searchPlaceholder": "按员工编号或姓名搜索...",
-    "noResults": "未找到匹配的用户。",
-    "loading": "搜索中...",
-    "typeToSearch": "输入关键词搜索员工",
-    "selectToViewDetail": "选择申请人以查看详细信息"
+    "modalTitle": "申请人",
+    "current": "当前申请人",
+    "currentBadge": "当前",
+    "noRequestor": "尚未指定申请人",
+    "searchPlaceholder": "员工编号或姓名…",
+    "searchHint": "输入员工编号或姓名，然后选择新的申请人。",
+    "clearSearch": "清除搜索",
+    "found": "找到 {{n}} 人",
+    "emptyTitle": "未找到匹配的员工",
+    "emptyHint": "请尝试输入部分员工编号或姓名",
+    "errorTitle": "搜索失败",
+    "retry": "重试",
+    "footerHint": "点击或按 Enter 选择 · ↑ ↓ 移动",
+    "confirmNone": "请先从列表中选择新的申请人",
+    "confirmSame": "此人已是当前申请人，请选择其他人"
   },
   "searchAppraisal": {
-    "modalTitle": "搜索历史评估报告",
-    "searchPlaceholder": "按评估编号或客户姓名搜索...",
-    "clickToCopy": "点击行将其数据复制到新申请。",
-    "columnAppraisalNo": "评估编号",
-    "columnCustomer": "客户",
-    "columnLocation": "位置",
-    "columnFacilityLimit": "授信额度",
-    "columnAppraisalValue": "评估价值",
-    "columnAppraisalDate": "评估日期",
-    "dateFilterFrom": "评估日期从",
-    "dateFilterTo": "评估日期至",
-    "columnInspectionNumber": "查勘编号"
+    "modalTitle": "搜索原评估报告",
+    "searchPlaceholder": "报告编号（可输入一部分）、客户、产权编号、车牌…",
+    "searchHint": "可搜索报告编号、申请编号、客户、产权编号、车牌和所有人。",
+    "minChars": "请至少输入 {{n}} 个字符再搜索。",
+    "clearSearch": "清除搜索",
+    "dateFilterLabel": "估价日期",
+    "dateFilterHint": "按估价日期筛选",
+    "clearFilters": "清除日期",
+    "found": "找到 {{n}} 条",
+    "colNumber": "报告编号",
+    "colCustomer": "客户",
+    "colCollateral": "抵押物",
+    "searching": "搜索中…",
+    "appraiserBank": "银行",
+    "colAppraiser": "评估方",
+    "colValue": "评估价值",
+    "colDate": "估价日期",
+    "moreCustomers": "+{{n}} 位",
+    "propertyCount": "{{n}} 项",
+    "round": "第 {{n}} 次",
+    "emptyTitle": "没有匹配的已完成评估",
+    "emptyHint": "请尝试输入报告编号的一部分或客户名称。只能从已完成的评估复制。",
+    "errorTitle": "无法加载列表",
+    "retry": "重试",
+    "footerHint": "点击或按 Enter 选择 · ↑ ↓ 移动"
+  },
+  "requestForm": {
+    "sections": {
+      "purposeAndPrior": "评估目的与原评估",
+      "channelAndLimit": "渠道与授信额度",
+      "properties": "待评估房产",
+      "location": "房产位置",
+      "locationNote": "使用内政部地方行政厅 (DOPA) 的地址数据",
+      "appointmentAndContact": "检验预约与联系人",
+      "fee": "费用"
+    },
+    "customerNamePlaceholder": "姓名 / 公司名称",
+    "customerPhonePlaceholder": "0xx-xxx-xxxx",
+    "totalSellingPrice": "合计售价",
+    "addCustomer": "添加客户",
+    "addProperty": "添加房产",
+    "no": "否",
+    "yes": "是",
+    "limitLabel": "授信额度",
+    "noLimit": "此评估目的不使用授信额度",
+    "totalLimit": "合计额度（新增 + 原有）",
+    "autoCalculated": "自动计算",
+    "choosePurposeFirst": "请先选择评估目的，系统会根据评估目的显示原评估字段",
+    "addressAutofill": "选择区/分区后自动填写（数据来自 DOPA）",
+    "prior": {
+      "change": "更换",
+      "clear": "清除",
+      "valueNone": "价值 —",
+      "round": "第 {{n}} 次检验",
+      "search": "搜索原评估...",
+      "createHint": "选择后系统会复制客户、房产、产权、位置和授信额度（不含预约和费用）"
+    },
+    "priorSummary": {
+      "noReportNumber": "尚无报告编号",
+      "status": {
+        "Submitted": "已提交",
+        "Pending": "待处理",
+        "Assigned": "已分配",
+        "InProgress": "进行中",
+        "UnderReview": "审核中"
+      },
+      "inProgressHeading": "所附抵押物中有 {{matched}} 项（共 {{total}} 项）正在其他报告中评估",
+      "inProgressHint": "提交前请核对下方报告，避免对同一抵押物重复评估。",
+      "heading": "所附抵押物中有 {{matched}} 项（共 {{total}} 项）曾被评估过",
+      "hint": "如为重新评估，请在申请信息部分将此报告选为原评估。",
+      "goToPrior": "前往原评估",
+      "report": "报告 {{number}}",
+      "date": "日期 {{date}}",
+      "matchesPrior": "与所选原评估一致",
+      "differsFromPrior": "不是所选原评估"
+    }
   },
   "copyBanner": {
-    "reappraisalOf": "重新评估",
-    "value": "（价值：{{n}}）",
-    "clearTitle": "清除上次评估参考"
+    "label": "原评估",
+    "value": "价值 {{n}} 泰铢",
+    "date": "评估于 {{date}}",
+    "openTitle": "在新标签页打开此评估",
+    "clearTitle": "清除原评估引用"
+  },
+  "carryForward": {
+    "badge": "来自原评估 {{number}}",
+    "summary": {
+      "from": "来自原评估",
+      "used": "使用",
+      "unused": "不使用",
+      "show": "查看未使用的文件",
+      "hide": "隐藏未使用的文件"
+    },
+    "titleRef": {
+      "none": "产权（无编号）",
+      "land": "产权证 {{n}}",
+      "condo": "公寓单元 {{n}}",
+      "other": "产权 {{n}}"
+    },
+    "unusedPanel": {
+      "title": "原评估中未附加到本申请的文件，评估人员将看不到这些文件。",
+      "hint": "点击“使用”可选择附加的位置和文件类型",
+      "use": "使用",
+      "defaultNotUsed": "文件类型默认设置：不使用",
+      "viewUnavailable": "暂时无法查看此文件"
+    },
+    "menu": {
+      "dontUse": "不使用此文件"
+    },
+    "toasts": {
+      "unused": "已不再使用此文件，可在原评估列表中重新附加。",
+      "restored": "文件已重新附加",
+      "loadFailed": "无法加载原评估的文件，可在文件列表中重试。",
+      "sameAppraisal": "该评估已是本申请引用的原评估。",
+      "waitForUploads": "请先等待文件上传完成。",
+      "changedAppraisal": "已将原评估设置为 {{number}}{{value}}。"
+    },
+    "repick": {
+      "title": "将原评估更改为 {{number}}？",
+      "messageCreate": "取自 {{old}} 的数据和文件将被新评估的内容替换。您自行上传的 {{n}} 个文件将被保留。",
+      "messageDraft": "取自 {{old}} 的文件将被新评估的文件替换。您自行上传的 {{n}} 个文件将被保留。",
+      "confirm": "更改评估"
+    },
+    "clear": {
+      "title": "清除原评估？",
+      "message": "取自 {{old}} 的 {{n}} 个文件将从本申请中移除。您自行上传的 {{own}} 个文件将被保留。",
+      "confirm": "清除"
+    },
+    "admin": {
+      "column": "引用原评估时",
+      "use": "使用原文件",
+      "dontUse": "不使用，重新上传",
+      "lockedTarget": "由原评估的 D042/D043 填充",
+      "lockedSource": "D036 的来源",
+      "legend": "当申请引用原评估时",
+      "useLabel": "使用原评估的文件",
+      "useHelp": "原评估的文件会自动附加到申请中，申请人可点击“不使用”。",
+      "dontUseLabel": "不使用，重新上传",
+      "dontUseHelp": "原评估的文件会放入“不使用”列表，申请人可点击“使用”恢复。适用于必须为最新版本的文件。",
+      "lockedTargetText": "系统始终使用原评估的 D042（施工进度检查）或 D043（常规评估）填充此项，无法更改。",
+      "lockedSourceText": "此类型不会被直接带入，系统将其作为 D036 的来源，无法更改。",
+      "appliesLater": "保存后对选择原评估的申请生效，已选择的申请不受影响。"
+    },
+    "place": {
+      "title": "选择使用此文件的位置",
+      "description": "选择要附加文件的部分；如类型不符，可更改文件类型。",
+      "confirm": "使用文件",
+      "fromPrevious": "来自原评估 {{number}}"
+    },
+    "readd": {
+      "title": "再次添加原评估的文件？",
+      "message": "{{number}} 已是本申请的原评估，但尚未附加其任何文件。是否按各文件类型的默认设置再次添加？",
+      "confirm": "添加文件"
+    },
+    "retry": {
+      "message": "无法加载原评估的文件。",
+      "action": "重试加载原评估的文件"
+    },
+    "badgeShort": "原评估"
+  },
+  "docCard": {
+    "addOther": {
+      "button": "添加其他文件",
+      "title": "为此产权添加其他文件",
+      "description": "先选择文件类型，再选择文件（可一次选多个）。",
+      "chooseFiles": "选择文件"
+    },
+    "kpi": {
+      "required": "必填",
+      "files": "文件",
+      "followUps": "补充要求"
+    },
+    "toolbar": {
+      "search": "搜索类型或文件名",
+      "filterAll": "全部",
+      "filterMissing": "缺少 {{n}}",
+      "filterFollowUp": "补充要求 {{n}}",
+      "selectAll": "选择当前显示的所有文件",
+      "hidePreview": "隐藏预览",
+      "showAllTypes": "显示所有类型",
+      "showPreview": "显示预览"
+    },
+    "drop": {
+      "text": "将文件拖到此卡片任意位置，或",
+      "choose": "选择文件…",
+      "hint": "附加前请先选择类型和产权证",
+      "dragging": "松开以附加文件",
+      "busy": "请先等待当前上传完成。"
+    },
+    "bulk": {
+      "selected": "已选择 {{n}} 个文件",
+      "delete": "删除所选",
+      "clear": "清除选择"
+    },
+    "section": {
+      "typesWithFiles": "{{filled}}/{{total}} 个类型已有文件",
+      "required": "必填 {{done}}/{{total}}"
+    },
+    "row": {
+      "noFile": "尚无文件",
+      "mustAttach": "提交前必须附加",
+      "files": "{{n}} 个文件",
+      "upload": "上传",
+      "addFile": "+ 文件",
+      "generate": "系统生成",
+      "layout": "版式",
+      "layoutColumns": "版式：每行 {{count}} 个",
+      "addFileLabel": "为 {{name}} 添加文件",
+      "selectRow": "选择 {{name}} 的所有文件",
+      "more": "+{{n}} 个文件",
+      "fewer": "收起"
+    },
+    "emptyTypes": "{{n}} 个类型尚无文件：",
+    "noMatch": "没有符合筛选条件的文件",
+    "chip": {
+      "actions": "文件操作",
+      "followUp": "补充要求",
+      "uploading": "上传中…",
+      "hasNote": "有备注"
+    },
+    "status": {
+      "ok": "已有文件",
+      "miss": "必填，缺少",
+      "empty": "选填"
+    },
+    "pane": {
+      "empty": "从列表中选择文件以预览并操作",
+      "label": "文件预览",
+      "fileType": "类型",
+      "location": "位置",
+      "size": "大小",
+      "uploaded": "上传",
+      "source": "来源",
+      "notes": "备注",
+      "notesPlaceholder": "添加备注",
+      "saveNotes": "保存备注",
+      "noNotes": "—",
+      "open": "在新标签页打开",
+      "edit": "编辑",
+      "replace": "替换",
+      "move": "移动…",
+      "delete": "删除",
+      "dontUse": "不使用此文件",
+      "close": "关闭",
+      "sourceFollowUp": "评估人员要求补充",
+      "sourcePrev": "来自原评估 {{number}}",
+      "sourceOwn": "为本申请上传"
+    },
+    "titleLabel": "产权证 {{number}}",
+    "titleFallback": "第 {{n}} 项"
   },
   "actions": {
     "saveDraft": "保存草稿",
@@ -341,7 +682,6 @@
     "requestDeleteListFailed": "删除申请失败，请重试。",
     "draftSaved": "草稿保存成功",
     "draftSaveFailed": "保存草稿失败，请重试。",
-    "requestSubmitted": "申请提交成功",
     "requestSubmitFailed": "提交申请失败，请重试。",
     "requestSaveFailed": "保存申请失败，请重试。",
     "validationFailed": "请在提交前填写所有必填字段。",
@@ -364,6 +704,7 @@
     "bulkDeletedSimple": "已删除 {{n}} 份文件",
     "uploadPartialFailed": "{{n}} 个文件上传失败",
     "uploadSuccess": "成功上传 {{n}} 份文件",
+    "noRequestData": "未找到该评估的申请数据，仅设置了原评估引用，未复制数据。",
     "copiedFromAppraisal": "已从评估 {{number}}{{value}} 复制数据。请在保存前检查并调整。预约和费用未复制。",
     "copyValueSuffix": "（价值：{{n}}）",
     "appraisalNotCompleted": "此评估尚未完成，无法复制。",
@@ -373,7 +714,9 @@
     "missingDocSizeError": "{{name}}：文件大小超过 {{limit}}。",
     "missingDocAttachFailed": "文件已上传，但附加到申请失败，请重试。",
     "missingDocUploadFailed": "上传 {{name}} 失败。",
-    "missingDocSessionFailed": "启动上传会话失败，请重试。"
+    "missingDocSessionFailed": "启动上传会话失败，请重试。",
+    "uploadSlotGone": "该文件位置已不可用，请重试。",
+    "uploadFilesSkipped": "已跳过 {{n}} 个文件（类型不受支持或过大）：{{names}}"
   },
   "seqNo": "序号",
   "table": {
@@ -397,7 +740,12 @@
     "modalTitle": "移动文件",
     "description": "选择要将此文件移动到的位置。",
     "requestLevelLabel": "申请层级",
-    "confirm": "移动"
+    "confirm": "移动",
+    "requestLevelHint": "附加到申请，不属于任何产权",
+    "searchPlaceholder": "搜索产权编号、所有人或地点",
+    "noMatch": "没有匹配的部分",
+    "matches": "与原产权相同",
+    "documentType": "文件类型"
   },
   "validation": {
     "bankingSegmentRequired": "银行业务分部为必填项。",
@@ -412,6 +760,7 @@
     "customerNameRequired": "客户姓名为必填项。",
     "propertyTypeRequired": "房产类型为必填项。",
     "commentRequired": "评论为必填项",
+    "titleNumberTooLong": "产权编号不能超过 {{max}} 个字符。",
     "titleMinItems": "产权信息至少需要1项",
     "sellingPriceRequired": "售价必须大于 0。"
   },
@@ -471,5 +820,199 @@
     "rejectedOnAppend_one": "有 {{count}} 条被表单拒绝（{{rows}}），请联系系统管理员。",
     "tabValid_one": "将导入的记录（{{count}}）",
     "tabInvalid_one": "发现的问题（{{count}}）"
+  },
+  "titleSection": {
+    "add": {
+      "chooseLater": "稍后选择类型…"
+    },
+    "numbers": {
+      "heading_one": "公寓所在土地的所有权证（{{count}} 宗）",
+      "heading_other": "公寓所在土地的所有权证（{{count}} 宗）",
+      "counter_one": "{{length}} / {{max}} 个字符 · {{count}} 宗",
+      "counter_other": "{{length}} / {{max}} 个字符 · {{count}} 宗",
+      "more_one": "+{{count}} 宗",
+      "more_other": "+{{count}} 宗",
+      "hint": "粘贴或输入证号，用逗号、空格或换行分隔。离开输入框时会自动整理。",
+      "goTo": "在下方编辑土地所有权证号"
+    },
+    "address": {
+      "copyFromTitle": "从产权文件地址复制",
+      "copyOverwriteConfirm": "复制产权文件地址",
+      "copyOverwriteMessage": "此 DOPA 地址已有内容，是否用产权文件地址替换？",
+      "copyOverwriteMessageRequest": "此财产所在地已有内容，是否用申请地址替换？",
+      "districtDiffersDopa": "DOPA 登记册中的区为 {{district}}，与产权文件不同，请核对。",
+      "districtDiffersRequest": "DOPA 登记册中的区为 {{district}}，与申请地址不同，请核对。",
+      "districtDiffersTitle": "产权登记册中的区为 {{district}}，与申请地址不同，请核对。",
+      "dopaMissing": "该乡/街道不在 DOPA 登记册中，请自行选择。",
+      "overwriteConfirm": "复制申请地址",
+      "overwriteMessage": "该产权已有地址，是否用申请地址替换？",
+      "overwriteTitle": "替换地址？",
+      "tagDopa": "DOPA",
+      "tagLocation": "财产所在地",
+      "tagTitle": "产权地址",
+      "titleMissing": "申请中的乡/街道不在产权登记册中，请自行选择。",
+      "useRequest": "从申请地址复制",
+      "masterUnavailable": "地址数据仍在加载。若长时间未完成，请重新加载页面。",
+      "requestAddressEmpty": "请先填写申请的地址",
+      "titleAddressEmpty": "请先填写产权文件地址"
+    },
+    "priorCheck": {
+      "priorHeading": "曾评估过",
+      "titleInProgress": "此地契正在评估中",
+      "titleInProgressGeneric": "此资产正在评估中",
+      "inProgressHeading": "正在其他报告中评估",
+      "inProgressMessage": "保存前请核对下方报告，避免对同一资产重复评估。",
+      "status": "状态",
+      "title": "该产权已评估过",
+      "titleGeneric": "该资产已评估过",
+      "message": "该资产已有评估报告。可返回检查，或继续保存。",
+      "back": "返回修改",
+      "continue": "继续保存",
+      "report": "报告",
+      "date": "日期",
+      "value": "估值",
+      "count": "已评估次数：{{n}}"
+    },
+    "cell": {
+      "areaBuilding": "建筑 {{area}} 平方米",
+      "areaRai": "{{rnw}} 莱",
+      "areaSqm": "{{area}} 平方米",
+      "areaWa": "{{wa}} 平方哇",
+      "bookPage": "册 {{book}} · 页 {{page}}",
+      "landDeed": "土地所有权证",
+      "condo": "公寓单元",
+      "condoUnit": "单元号 {{room}}",
+      "floor": "{{n}} 层",
+      "building": "{{n}} 号楼",
+      "book": "册 {{n}}",
+      "page": "页 {{n}}",
+      "buildings": "建筑数量",
+      "chassis": "车架号",
+      "hull": "HIN {{value}}",
+      "registrationBook": "登记簿 {{value}}",
+      "unregistered": "未登记",
+      "usableArea": "使用面积",
+      "vesselType": "船舶类型"
+    },
+    "col": {
+      "actions": "操作",
+      "area": "面积",
+      "deed": "产权文件",
+      "details": "详情",
+      "location": "位置",
+      "owner": "所有人",
+      "position": "位置 / 详情",
+      "registration": "登记",
+      "status": "状态",
+      "type": "抵押品类型"
+    },
+    "dnd": {
+      "blocked": "清除搜索/筛选后才能排序",
+      "cancelled": "已取消移动，第 {{pos}} 项保持原位",
+      "dropped": "已将第 {{pos}} 项移到第 {{to}} 位",
+      "handle": "拖动以排序",
+      "instructions": "按空格键拿起，用方向键移动，再按空格键放下，按 Esc 取消",
+      "movedTo": "第 {{pos}} 项位于第 {{to}} 位上方",
+      "pickedUp": "已拿起第 {{pos}} 项"
+    },
+    "drawer": {
+      "complete": "✓ 信息已完整",
+      "missing_one": "还缺 {{count}} 项：",
+      "missing_other": "还缺 {{count}} 项：",
+      "nav": "切换产权",
+      "newTitle": "新产权",
+      "next": "下一个",
+      "paperNote": "虚线处可填写。",
+      "position": "第 {{pos}} 项，共 {{total}} 项",
+      "prev": "上一个",
+      "saveAndAdd": "保存并添加下一个",
+      "section": {
+        "address": "地址",
+        "building": "建筑物",
+        "condo": "公寓单元",
+        "deed": "产权文件",
+        "machine": "机器设备",
+        "vehicle": "车辆",
+        "vessel": "船舶",
+        "documents": "文件"
+      },
+      "view": "视图",
+      "viewDocument": "文件模拟",
+      "viewForm": "表单"
+    },
+    "empty": {
+      "hint": "添加第一项产权证以开始"
+    },
+    "filter": {
+      "all": "全部",
+      "building": "建筑物",
+      "clear": "清除筛选",
+      "condo": "公寓",
+      "group": "筛选",
+      "incomplete": "信息不全",
+      "land": "土地",
+      "landBuilding": "土地+建筑",
+      "machine": "机器设备",
+      "none": "没有匹配的产权",
+      "search": "搜索编号、所有人或位置",
+      "showing": "显示 {{shown}} / {{total}}",
+      "vehicle": "车辆",
+      "vessel": "船舶"
+    },
+    "group": {
+      "estate": "不动产",
+      "movable": "动产"
+    },
+    "incompleteCount_one": "{{count}} 项不全",
+    "incompleteCount_other": "{{count}} 项不全",
+    "move": {
+      "confirm": "移动",
+      "message": "移动此表中第 {{n}} 项（共 {{total}} 项）",
+      "position": "移到第几位",
+      "title": "移到指定位置"
+    },
+    "position": {
+      "aerialMapName": "航拍图名称",
+      "aerialMapNumber": "航拍图编号",
+      "landParcelNumber": "地块号",
+      "mapSheetNumber": "图幅",
+      "rawang": "Rawang",
+      "surveyNumber": "测量页"
+    },
+    "row": {
+      "menu": "更多操作",
+      "moveBottom": "移到最下",
+      "moveTo": "移到指定位置…",
+      "moveTop": "移到最上"
+    },
+    "sort": {
+      "button": "按产权编号排序",
+      "done": "已按产权编号排序",
+      "undo": "撤销"
+    },
+    "status": {
+      "complete": "完整",
+      "missing_one": "缺 {{count}}",
+      "missing_other": "缺 {{count}}",
+      "missingTooltip": "还缺：{{fields}}"
+    },
+    "total": {
+      "parcels_one": "共 {{count}} 块",
+      "parcels_other": "共 {{count}} 块"
+    },
+    "discard": {
+      "title": "放弃此产权？",
+      "message": "放弃此产权及其已附加的 {{n}} 个文件？这些文件将不会附加到申请。",
+      "confirm": "放弃产权"
+    }
+  },
+  "appointmentLetter": {
+    "attached": "已附加预约函，请保存申请以保留。",
+    "error": "生成预约函失败。",
+    "saveFirst": "请先保存申请，再生成预约函。",
+    "confirmTitle": "生成预约函？",
+    "confirmGenerated": "这将替换之前生成的预约函。此行的其他文件保留。",
+    "confirmFiles": "此行已有文件，且其中没有系统生成的预约函。这些文件将被生成的预约函替换。",
+    "confirm": "生成预约函"
   }
 }

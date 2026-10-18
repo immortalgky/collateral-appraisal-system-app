@@ -216,20 +216,20 @@ const QuotationDocumentsDialog = ({
             <table className="w-full text-sm">
               <thead className="border-b border-gray-200 bg-gray-50/70">
                 <tr className="text-xs tracking-wide text-gray-500">
-                  {selectable && <th className="w-10 py-2.5 pl-4" />}
-                  <th className="px-4 py-2.5 text-left font-semibold">
+                  {selectable && <th className="text-xs w-10 py-2.5 pl-4 font-semibold" />}
+                  <th className="text-xs px-4 py-2.5 text-left font-semibold">
                     {t('documents.colFileName')}
                   </th>
-                  <th className="px-4 py-2.5 text-center font-semibold">
+                  <th className="text-xs px-4 py-2.5 text-center font-semibold">
                     {t('documents.colType')}
                   </th>
-                  <th className="px-4 py-2.5 text-center font-semibold">
+                  <th className="text-xs px-4 py-2.5 text-center font-semibold">
                     {t('documents.colSource')}
                   </th>
-                  <th className="px-4 py-2.5 text-left font-semibold">
+                  <th className="text-xs px-4 py-2.5 text-left font-semibold">
                     {t('documents.colCreated')}
                   </th>
-                  <th className="px-4 py-2.5 text-center font-semibold">
+                  <th className="text-xs px-4 py-2.5 text-center font-semibold">
                     {t('documents.colActions')}
                   </th>
                 </tr>

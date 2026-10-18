@@ -82,3 +82,23 @@ export function isAxiosError(error: unknown): error is AxiosError {
     (error as AxiosError).isAxiosError === true
   );
 }
+
+/**
+ * The message to show for a caught `unknown`: the server's own text when it sent one, else the
+ * caller's (translated) fallback.
+ *
+ * "Its own text" is a ProblemDetails `detail`: the interceptor puts it on `apiError`, and blob
+ * transfers recover it there too. A bare status ("Bad Request - Please check your input") and
+ * axios' English "Network Error" / "canceled" carry nothing the user can act on, so those fall
+ * back to the caller's wording.
+ */
+export function errorText(error: unknown, fallback: string): string {
+  const fromInterceptor = (error as { apiError?: { detail?: string | null } } | null)?.apiError
+    ?.detail;
+  if (fromInterceptor) return fromInterceptor;
+  if (isAxiosError(error)) {
+    const detail = extractApiError(error).detail;
+    if (detail) return detail;
+  }
+  return fallback;
+}

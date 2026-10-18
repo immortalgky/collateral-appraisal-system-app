@@ -1,10 +1,20 @@
 import type { TFunction } from 'i18next';
-import type { FieldArrayField, FormField } from '@/shared/components/form';
+import type {
+  FieldArrayField,
+  FieldConditions,
+  FormField,
+  NumberInputField,
+} from '@/shared/components/form';
 import type { ListBoxItem } from '@/shared/components';
+import { inScreenOrder } from '@/features/appraisal/components/titleScreenOrder';
+import { isBlankRow } from '../components/tables/formTableUtils';
+import { CUSTOMER_COLUMNS, PROPERTY_COLUMNS } from './tableColumns';
 import {
   LAND_CODES,
   LEASE_LAND_CODE,
+  MOVABLE_CODES,
   mapCollateral,
+  NO_BUILDING_PROPERTY_TYPES,
 } from '@features/request/data/mapCollateral.ts';
 import {
   AERIAL_TITLE_TYPES,
@@ -28,28 +38,41 @@ export function prefixFields(fields: FormField[], prefix: string): FormField[] {
 // =============================================================================
 
 // Purpose codes that make this request a Construction Inspection
-const CI_PURPOSES = ['06', '11'];
+export const CI_PURPOSES = ['06', '11'];
 const FACILITIE_LIMIT_AMOUNT_REQUIRED = ['01', '02', '03', '04', '12', '13', '14'];
 
-const PREV_APP_NO_REQUIRED = ['02', '03', '04', '05', '06', '08', '09', '11', '12', '13'];
+export const PREV_APP_NO_REQUIRED = ['02', '03', '04', '05', '06', '08', '09', '11', '12', '13'];
 
-export function makeRequestFields(t: TFunction<'request'>): FormField[] {
+/**
+ * When the prior appraisal is asked for: a purpose that uses one, on a request whose prior is not
+ * locked. A submitted request (a route-back included) and an Initiate draft have it locked, so they
+ * cannot be asked for what they cannot be given. `meta.priorLocked` is a value of the form that is
+ * never sent (the page sets it on load).
+ */
+export const PRIOR_REQUIRED_WHEN: FieldConditions = {
+  conditions: [
+    { field: 'purpose', is: PREV_APP_NO_REQUIRED, operator: 'in' },
+    { field: 'meta.priorLocked', is: true, operator: 'notEquals' },
+  ],
+  match: 'all',
+};
+
+/** The facility limit is the sum of the additional and the previous limit. */
+export const FACILITY_SUM_PURPOSE = '02';
+/** Purposes that carry no facility limit at all. */
+export const NO_FACILITY_PURPOSES = ['07', '08'];
+
+/** Purpose, priority and "customer brings the appraisal book". */
+export function makePurposeFields(t: TFunction<'request'>): FormField[] {
   return [
     {
       type: 'dropdown',
       label: t('fields.appraisalPurpose'),
       name: 'purpose',
       group: 'AppraisalPurpose',
-      wrapperClassName: 'col-span-3',
+      wrapperClassName: 'col-span-6',
       required: true,
       filterOptions: { type: 'isActive', values: true },
-    },
-    {
-      type: 'boolean-toggle',
-      label: t('fields.hasAppraisalBook'),
-      name: 'detail.hasAppraisalBook',
-      options: ['No', 'Yes'],
-      wrapperClassName: 'col-span-1',
     },
     {
       type: 'string-toggle',
@@ -59,57 +82,28 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
         { name: 'Normal', label: t('fields.priorityNormal') },
         { name: 'High', label: t('fields.priorityHigh') },
       ],
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: 'col-span-3',
     },
     {
-      type: 'appraisal-selector',
-      label: t('fields.prevAppraisalReportNo'),
-      name: 'detail.prevAppraisalReportNo',
-      idField: 'detail.prevAppraisalId',
-      valueField: 'detail.prevAppraisalValue',
-      dateField: 'detail.prevAppraisalDate',
-      wrapperClassName: 'col-span-1',
-      requiredWhen: { field: 'purpose', is: PREV_APP_NO_REQUIRED, operator: 'in' },
-      disableWhen: { field: 'purpose', is: '07' },
+      type: 'boolean-toggle',
+      label: t('fields.hasAppraisalBook'),
+      name: 'detail.hasAppraisalBook',
+      // Toggle labels: the stored value is a boolean.
+      options: [t('requestForm.no'), t('requestForm.yes')],
+      wrapperClassName: 'col-span-3',
     },
-    {
-      type: 'number-input',
-      label: t('fields.prevAppraisalValue'),
-      name: 'detail.prevAppraisalValue',
-      disabled: true,
-      wrapperClassName: 'col-span-1',
-    },
-    {
-      type: 'date-input',
-      label: t('fields.prevAppraisalDate'),
-      name: 'detail.prevAppraisalDate',
-      disabled: true,
-      wrapperClassName: 'col-span-1',
-      disableFutureDates: true,
-      disableToday: true,
-    },
-    {
-      type: 'number-input',
-      label: t('fields.inspectionNumber'),
-      name: 'detail.inspectionNumber',
-      disabled: true,
-      wrapperClassName: 'col-span-1',
-      decimalPlaces: 0,
-      // Construction Inspection only, and only once a prior appraisal has been copied.
-      showWhen: {
-        conditions: [
-          { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
-          { field: 'detail.inspectionNumber', operator: 'isNotEmpty' },
-        ],
-        match: 'all',
-      },
-    },
+  ];
+}
+
+/** Channel, banking segment and loan application number: shown for every purpose. */
+export function makeChannelFields(t: TFunction<'request'>): FormField[] {
+  return [
     {
       type: 'dropdown',
       label: t('fields.channel'),
       name: 'channel',
       group: 'Channel',
-      wrapperClassName: 'col-span-1',
+      wrapperClassName: 'col-span-3',
       required: true,
     },
     {
@@ -117,45 +111,88 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.bankingSegment'),
       name: 'detail.loanDetail.bankingSegment',
       group: 'BankingSegment',
-      wrapperClassName: 'col-span-1',
+      wrapperClassName: 'col-span-3',
       required: true,
     },
     {
       type: 'text-input',
       label: t('fields.loanApplicationNo'),
       name: 'detail.loanDetail.loanApplicationNumber',
-      wrapperClassName: 'col-span-1',
+      wrapperClassName: 'col-span-3',
       requiredWhen: { field: 'channel', is: ['LOS', 'CLS'], operator: 'in' },
       maxLength: 20,
     },
-    {
+  ];
+}
+
+/**
+ * The three limit inputs. RequestForm renders only the ones the purpose uses; a limit it leaves out
+ * keeps its value (the disableWhen rules still describe which are inactive, for the schema).
+ */
+export function makeLimitFields(t: TFunction<'request'>): {
+  facility: NumberInputField;
+  additional: NumberInputField;
+  previous: NumberInputField;
+} {
+  return {
+    facility: {
       type: 'number-input',
       label: t('fields.facilityLimit'),
       name: 'detail.loanDetail.facilityLimit',
-      wrapperClassName: 'col-span-1',
+      wrapperClassName: 'col-span-3',
       maxIntegerDigits: 15,
       required: true,
-      disableWhen: { field: 'purpose', is: ['02', '07', '08'], operator: 'in' },
+      disableWhen: {
+        field: 'purpose',
+        is: [FACILITY_SUM_PURPOSE, ...NO_FACILITY_PURPOSES],
+        operator: 'in',
+      },
       requiredWhen: { field: 'purpose', is: FACILITIE_LIMIT_AMOUNT_REQUIRED, operator: 'in' },
     },
-    {
+    additional: {
       type: 'number-input',
       label: t('fields.additionalFacilityLimit'),
       name: 'detail.loanDetail.additionalFacilityLimit',
-      wrapperClassName: 'col-span-1',
+      wrapperClassName: 'col-span-3',
       maxIntegerDigits: 15,
-      requiredWhen: { field: 'purpose', is: '02' },
-      disableWhen: { field: 'purpose', is: ['07', '08'], operator: 'in' },
+      requiredWhen: { field: 'purpose', is: FACILITY_SUM_PURPOSE },
+      disableWhen: { field: 'purpose', is: NO_FACILITY_PURPOSES, operator: 'in' },
     },
-    {
+    previous: {
       type: 'number-input',
       label: t('fields.previousFacilityLimit'),
       name: 'detail.loanDetail.previousFacilityLimit',
-      wrapperClassName: 'col-span-1',
+      wrapperClassName: 'col-span-3',
       maxIntegerDigits: 15,
-      requiredWhen: { field: 'purpose', is: '02' },
-      disableWhen: { field: 'purpose', is: ['07', '08'], operator: 'in' },
+      requiredWhen: { field: 'purpose', is: FACILITY_SUM_PURPOSE },
+      disableWhen: { field: 'purpose', is: NO_FACILITY_PURPOSES, operator: 'in' },
     },
+  };
+}
+
+/**
+ * Every field of the request section, for its labels and rules (the missing-fields list reads them
+ * by name). RequestForm renders the pieces itself: the prior appraisal is PriorAppraisalBlock, and
+ * the limits depend on the purpose. Full dotted paths, no namePrefix at render time.
+ */
+export function makeRequestFields(t: TFunction<'request'>): FormField[] {
+  const { facility, additional, previous } = makeLimitFields(t);
+  return [
+    ...makePurposeFields(t),
+    {
+      type: 'appraisal-selector',
+      label: t('fields.prevAppraisalReportNo'),
+      name: 'detail.prevAppraisalReportNo',
+      idField: 'detail.prevAppraisalId',
+      valueField: 'detail.prevAppraisalValue',
+      dateField: 'detail.prevAppraisalDate',
+      requiredWhen: PRIOR_REQUIRED_WHEN,
+      disableWhen: { field: 'purpose', is: '07' },
+    },
+    ...makeChannelFields(t),
+    facility,
+    additional,
+    previous,
   ];
 }
 
@@ -164,42 +201,45 @@ export function makeRequestFields(t: TFunction<'request'>): FormField[] {
 // Short names — rendered with namePrefix="detail.address".
 // =============================================================================
 
+// Below ~640px of the card's own width every field takes a full row (the form is a `@container`).
+const STACK = '@max-[45.7143rem]:col-span-12';
+
 export function makeAddressFields(t: TFunction<'request'>): FormField[] {
   return [
     {
       type: 'text-input',
       label: t('fields.houseNo'),
       name: 'houseNumber',
-      wrapperClassName: 'col-span-2',
-      maxLength: 10,
+      wrapperClassName: `col-span-6 ${STACK}`,
+      maxLength: 50,
       required: true,
     },
     {
       type: 'text-input',
       label: t('fields.villageBuildingName'),
       name: 'projectName',
-      wrapperClassName: 'col-span-4',
+      wrapperClassName: `col-span-6 ${STACK}`,
       maxLength: 100,
     },
     {
       type: 'text-input',
       label: t('fields.moo'),
       name: 'moo',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: `col-span-3 ${STACK}`,
       maxLength: 10,
     },
     {
       type: 'text-input',
       label: t('fields.soi'),
       name: 'soi',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: `col-span-3 ${STACK}`,
       maxLength: 100,
     },
     {
       type: 'text-input',
       label: t('fields.road'),
       name: 'road',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: `col-span-6 ${STACK}`,
       maxLength: 100,
     },
     {
@@ -214,42 +254,21 @@ export function makeAddressFields(t: TFunction<'request'>): FormField[] {
       subDistrictNameField: 'detail.address.subDistrictName',
       // Administrative address -> DOPA master (กรมการปกครอง), not the Title (deed) master.
       addressSource: 'dopa',
-      wrapperClassName: 'col-span-3',
+      wrapperClassName: `col-span-5 ${STACK}`,
       required: true,
     },
-    {
-      type: 'text-input',
-      label: t('fields.district'),
-      name: 'districtName',
-      disabled: true,
-      wrapperClassName: 'col-span-3',
-    },
-    {
-      type: 'text-input',
-      label: t('fields.province'),
-      name: 'provinceName',
-      disabled: true,
-      wrapperClassName: 'col-span-3',
-    },
-    {
-      type: 'text-input',
-      label: t('fields.postcode'),
-      name: 'postcode',
-      disabled: true,
-      wrapperClassName: 'col-span-3',
-    },
+    // District, province and postcode are not fields here: LocationSelector sets them and AddressForm
+    // shows them as one read-only line.
   ];
 }
 
 // =============================================================================
 // Contact fields (from AddressForm.tsx)
-// Short names — rendered with namePrefix="detail.contact".
+// Short names — rendered with namePrefix="detail.contact". The contact person sits with the
+// appointment; the dealer code stays under the property location.
 // =============================================================================
 
-export function makeContactFields(
-  t: TFunction<'request'>,
-  dealerOptions: ListBoxItem[] = [],
-): FormField[] {
+export function makeContactPersonFields(t: TFunction<'request'>): FormField[] {
   return [
     {
       type: 'text-input',
@@ -267,54 +286,44 @@ export function makeContactFields(
       required: true,
       maxLength: 40,
     },
+  ];
+}
+
+export function makeDealerFields(
+  t: TFunction<'request'>,
+  dealerOptions: ListBoxItem[] = [],
+): FormField[] {
+  return [
     {
       type: 'parameter-search',
       label: t('fields.dealerCode'),
       name: 'dealerCode',
-      wrapperClassName: 'col-span-6',
       options: dealerOptions,
     },
   ];
 }
 
+export function makeContactFields(
+  t: TFunction<'request'>,
+  dealerOptions: ListBoxItem[] = [],
+): FormField[] {
+  return [...makeContactPersonFields(t), ...makeDealerFields(t, dealerOptions)];
+}
+
 // =============================================================================
 // Appointment and Fee fields (from AppointmentAndFeeForm.tsx)
-// Uses full dotted paths — no namePrefix at render time.
+// Uses full dotted paths — no namePrefix at render time. Each group sits in a 6-column grid.
 // =============================================================================
 
 const BANK_ABSORB = ['04'];
 
-export function makeAppointmentAndFeeFields(t: TFunction<'request'>): FormField[] {
+export function makeAppointmentFields(t: TFunction<'request'>): FormField[] {
   return [
-    {
-      type: 'dropdown',
-      label: t('fields.feePaymentType'),
-      name: 'detail.fee.feePaymentType',
-      group: 'FeePaymentMethod',
-      wrapperClassName: 'col-span-1',
-      required: true,
-    },
-    {
-      type: 'number-input',
-      label: t('fields.bankAbsorbAmount'),
-      name: 'detail.fee.absorbedAmount',
-      wrapperClassName: 'col-span-1',
-      maxIntegerDigits: 15,
-      requiredWhen: { field: 'detail.fee.feePaymentType', is: BANK_ABSORB, operator: 'in' },
-      showWhen: { field: 'detail.fee.feePaymentType', is: [...BANK_ABSORB, '99'], operator: 'in' },
-    },
-    {
-      type: 'textarea',
-      label: t('fields.feeRemark'),
-      name: 'detail.fee.feeNotes',
-      wrapperClassName: 'col-span-2',
-      requiredWhen: { field: 'detail.fee.feePaymentType', is: '99' },
-    },
     {
       type: 'datetime-input',
       label: t('fields.appointmentDateTime'),
       name: 'detail.appointment.appointmentDateTime',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: 'col-span-6',
       required: true,
       disablePastDates: true,
       disableToday: true,
@@ -323,11 +332,44 @@ export function makeAppointmentAndFeeFields(t: TFunction<'request'>): FormField[
       type: 'textarea',
       label: t('fields.appointmentLocation'),
       name: 'detail.appointment.appointmentLocation',
-      wrapperClassName: 'col-span-2',
+      wrapperClassName: 'col-span-6',
       maxLength: 4000,
       showCharCount: true,
     },
   ];
+}
+
+export function makeFeeFields(t: TFunction<'request'>): FormField[] {
+  return [
+    {
+      type: 'dropdown',
+      label: t('fields.feePaymentType'),
+      name: 'detail.fee.feePaymentType',
+      group: 'FeePaymentMethod',
+      wrapperClassName: 'col-span-6',
+      required: true,
+    },
+    {
+      type: 'number-input',
+      label: t('fields.bankAbsorbAmount'),
+      name: 'detail.fee.absorbedAmount',
+      wrapperClassName: 'col-span-6',
+      maxIntegerDigits: 15,
+      requiredWhen: { field: 'detail.fee.feePaymentType', is: BANK_ABSORB, operator: 'in' },
+      showWhen: { field: 'detail.fee.feePaymentType', is: [...BANK_ABSORB, '99'], operator: 'in' },
+    },
+    {
+      type: 'textarea',
+      label: t('fields.feeRemark'),
+      name: 'detail.fee.feeNotes',
+      wrapperClassName: 'col-span-6',
+      requiredWhen: { field: 'detail.fee.feePaymentType', is: '99' },
+    },
+  ];
+}
+
+export function makeAppointmentAndFeeFields(t: TFunction<'request'>): FormField[] {
+  return [...makeFeeFields(t), ...makeAppointmentFields(t)];
 }
 
 // =============================================================================
@@ -336,12 +378,17 @@ export function makeAppointmentAndFeeFields(t: TFunction<'request'>): FormField[
 // field-array configs for schema generation.
 // =============================================================================
 
+// A table starts with one empty row that is never sent: it is not validated and does not count
+const blankCustomer = (row: unknown) => isBlankRow(row, CUSTOMER_COLUMNS);
+const blankProperty = (row: unknown) => isBlankRow(row, PROPERTY_COLUMNS);
+
 export function makeCustomersFieldConfig(t: TFunction<'request'>): FieldArrayField {
   return {
     type: 'field-array',
     name: 'customers',
     required: true,
     minItems: 1,
+    skipRow: blankCustomer,
     fields: [
       {
         type: 'text-input',
@@ -366,6 +413,7 @@ export function makePropertiesFieldConfig(t: TFunction<'request'>): FieldArrayFi
     name: 'properties',
     required: true,
     minItems: 1,
+    skipRow: blankProperty,
     fields: [
       {
         type: 'dropdown',
@@ -379,7 +427,11 @@ export function makePropertiesFieldConfig(t: TFunction<'request'>): FieldArrayFi
         name: 'buildingType',
         label: t('fields.buildingType'),
         group: 'BuildingType',
-        required: true,
+        requiredWhen: {
+          field: 'propertyType',
+          is: NO_BUILDING_PROPERTY_TYPES,
+          operator: 'notIn',
+        },
       },
       {
         type: 'number-input',
@@ -495,7 +547,13 @@ const BUILDING_REQUIRED_TYPES = [
   '32',
 ];
 // Condo-specific codes (room/floor/building number, condo name)
-const CONDO_TYPES = ['08', '28', '33'];
+export const CONDO_TYPES = ['08', '28', '33'];
+
+/** A land title's number: the appraisal's LandTitles.TitleNumber column. A condominium's list gets 500. */
+export const LAND_TITLE_NUMBER_MAX = 200;
+export const CONDO_TITLE_NUMBER_MAX = 500;
+/** The title detail (notes): free text, as long as the LOS contract's MaxFreeText and the column allow. */
+export const TITLE_NOTES_MAX = 4000;
 
 const BUILDING_TYPE = ['05', '06', '07', '15', '16', '18', '20', '22'];
 
@@ -529,7 +587,8 @@ export function makeTitleInfoFields(t: TFunction<'request'>): FormField[] {
 }
 
 export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
-  return [
+  // Laid out in the land page's on-screen order (appraisal/components/titleScreenOrder).
+  return inScreenOrder([
     {
       type: 'dropdown',
       label: t('fields.titleType'),
@@ -547,7 +606,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleNumber'),
       name: 'titleNumber',
       wrapperClassName: 'col-span-2',
-      maxLength: 500,
+      maxLength: LAND_TITLE_NUMBER_MAX,
       requiredWhen: {
         field: 'collateralType',
         is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -578,6 +637,22 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
     },
     {
       type: 'text-input',
+      label: t('fields.landParcelNumber'),
+      name: 'landParcelNumber',
+      wrapperClassName: 'col-span-2',
+      maxLength: 10,
+      showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
+      label: t('fields.surveyNumber'),
+      name: 'surveyNumber',
+      wrapperClassName: 'col-span-2',
+      maxLength: 10,
+      showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
+    },
+    {
+      type: 'text-input',
       label: t('fields.mapSheetNumber'),
       name: 'mapSheetNumber',
       wrapperClassName: 'col-span-2',
@@ -599,22 +674,6 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       wrapperClassName: 'col-span-2',
       maxLength: 50,
       showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
-    },
-    {
-      type: 'text-input',
-      label: t('fields.landParcelNumber'),
-      name: 'landParcelNumber',
-      wrapperClassName: 'col-span-2',
-      maxLength: 10,
-      showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
-    },
-    {
-      type: 'text-input',
-      label: t('fields.surveyNumber'),
-      name: 'surveyNumber',
-      wrapperClassName: 'col-span-2',
-      maxLength: 10,
-      showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
     },
     {
       type: 'number-input',
@@ -662,14 +721,9 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleDetail'),
       name: 'notes',
       wrapperClassName: 'col-span-6',
-      maxLength: 200,
-      requiredWhen: {
-        field: 'collateralType',
-        is: [...LAND_TYPES, ...CONDO_TYPES],
-        operator: 'in',
-      },
+      maxLength: TITLE_NOTES_MAX,
     },
-  ];
+  ]);
 }
 
 export function makeTitleBuildingFields(t: TFunction<'request'>): FormField[] {
@@ -745,7 +799,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleNumber'),
       name: 'titleNumber',
       wrapperClassName: 'col-span-4',
-      maxLength: 500,
+      maxLength: CONDO_TITLE_NUMBER_MAX,
       requiredWhen: {
         field: 'collateralType',
         is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -819,12 +873,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleDetail'),
       name: 'notes',
       wrapperClassName: 'col-span-6',
-      maxLength: 200,
-      requiredWhen: {
-        field: 'collateralType',
-        is: [...LAND_TYPES, ...CONDO_TYPES],
-        operator: 'in',
-      },
+      maxLength: TITLE_NOTES_MAX,
     },
   ];
 }
@@ -913,6 +962,25 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
   return [
     {
       type: 'dropdown',
+      label: t('fields.machineType'),
+      name: 'machineType',
+      group: 'MachineType',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '11' },
+    },
+    {
+      type: 'number-input',
+      label: t('fields.noOfMachines'),
+      name: 'numberOfMachine',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '11' },
+      decimalPlaces: 0,
+      maxIntegerDigits: 5,
+    },
+    {
+      type: 'dropdown',
       label: t('fields.machineStatus'),
       name: 'installationStatus',
       group: 'MachineStatus',
@@ -921,13 +989,13 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: { field: 'collateralType', is: '11' },
     },
     {
-      type: 'dropdown',
-      label: t('fields.machineType'),
-      name: 'machineType',
-      group: 'MachineType',
+      type: 'text-input',
+      label: t('fields.invoiceNo'),
+      name: 'invoiceNumber',
       wrapperClassName: 'col-span-3',
       required: true,
-      requiredWhen: { field: 'collateralType', is: '11' },
+      requiredWhen: { field: 'installationStatus', is: '2' },
+      maxLength: 20,
     },
     {
       type: 'boolean-toggle',
@@ -955,25 +1023,6 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
       },
       maxLength: 50,
     },
-    {
-      type: 'text-input',
-      label: t('fields.invoiceNo'),
-      name: 'invoiceNumber',
-      wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'installationStatus', is: '2' },
-      maxLength: 20,
-    },
-    {
-      type: 'number-input',
-      label: t('fields.noOfMachines'),
-      name: 'numberOfMachine',
-      wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'collateralType', is: '11' },
-      decimalPlaces: 0,
-      maxIntegerDigits: 5,
-    },
   ];
 }
 
@@ -989,7 +1038,7 @@ export function makeTitleAddressFields(t: TFunction<'request'>): FormField[] {
         is: [...LAND_CODES, ...LEASE_LAND_CODE],
         operator: 'notIn',
       },
-      maxLength: 10,
+      maxLength: 50,
     },
     {
       type: 'text-input',
@@ -1079,7 +1128,7 @@ export function makeDopaAddressFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.houseNumber'),
       name: 'dopaAddress.houseNumber',
       wrapperClassName: 'col-span-2',
-      maxLength: 10,
+      maxLength: 50,
       requiredWhen: {
         field: 'collateralType',
         is: [...LAND_CODES, ...LEASE_LAND_CODE],
@@ -1218,7 +1267,8 @@ export const titleInfoFields: FormField[] = [
   },
 ];
 
-export const titleLandFields: FormField[] = [
+// In the land page's on-screen order too: the save schema, and so the "still missing" list, follow it.
+export const titleLandFields: FormField[] = inScreenOrder([
   {
     type: 'dropdown',
     label: _st('Title Type'),
@@ -1232,7 +1282,9 @@ export const titleLandFields: FormField[] = [
     label: _st('Title Number'),
     name: 'titleNumber',
     wrapperClassName: 'col-span-2',
-    maxLength: 200,
+    // The schema takes the first title number config it meets, so this is the longest any type may
+    // have (a condominium's list); schemas/form.ts holds every other type to the land limit.
+    maxLength: CONDO_TITLE_NUMBER_MAX,
     requiredWhen: {
       field: 'collateralType',
       is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -1263,6 +1315,22 @@ export const titleLandFields: FormField[] = [
   },
   {
     type: 'text-input',
+    label: _st('Land Parcel Number'),
+    name: 'landParcelNumber',
+    wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
+    label: _st('Survey Number'),
+    name: 'surveyNumber',
+    wrapperClassName: 'col-span-2',
+    maxLength: 10,
+    showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
+  },
+  {
+    type: 'text-input',
     label: _st('Sheet Number'),
     name: 'mapSheetNumber',
     wrapperClassName: 'col-span-2',
@@ -1284,22 +1352,6 @@ export const titleLandFields: FormField[] = [
     wrapperClassName: 'col-span-2',
     maxLength: 50,
     showWhen: { field: 'titleType', is: AERIAL_TITLE_TYPES, operator: 'in' },
-  },
-  {
-    type: 'text-input',
-    label: _st('Land Parcel Number'),
-    name: 'landParcelNumber',
-    wrapperClassName: 'col-span-2',
-    maxLength: 10,
-    showWhen: { field: 'titleType', is: LAND_PARCEL_TITLE_TYPES, operator: 'in' },
-  },
-  {
-    type: 'text-input',
-    label: _st('Survey Number'),
-    name: 'surveyNumber',
-    wrapperClassName: 'col-span-2',
-    maxLength: 10,
-    showWhen: { field: 'titleType', is: SURVEY_TITLE_TYPES, operator: 'in' },
   },
   {
     type: 'number-input',
@@ -1347,10 +1399,9 @@ export const titleLandFields: FormField[] = [
     label: _st('Title Detail'),
     name: 'notes',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
+    maxLength: TITLE_NOTES_MAX,
   },
-];
+]);
 
 export const titleBuildingFields: FormField[] = [
   {
@@ -1412,7 +1463,7 @@ export const titleCondoFields: FormField[] = [
     label: _st('Title Number'),
     name: 'titleNumber',
     wrapperClassName: 'col-span-4',
-    maxLength: 500,
+    maxLength: CONDO_TITLE_NUMBER_MAX,
     requiredWhen: {
       field: 'collateralType',
       is: [...TITLE_NUMBER_TYPES, ...CONDO_TYPES],
@@ -1486,8 +1537,7 @@ export const titleCondoFields: FormField[] = [
     label: _st('Title Detail'),
     name: 'notes',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
+    maxLength: TITLE_NOTES_MAX,
   },
 ];
 
@@ -1636,12 +1686,13 @@ export const titleAddressFields: FormField[] = [
     label: _st('House Number'),
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    // A movable has no title-document address, so nothing here is required for it.
     requiredWhen: {
       field: 'collateralType',
-      is: [...LAND_CODES, ...LEASE_LAND_CODE],
+      is: [...LAND_CODES, ...LEASE_LAND_CODE, ...MOVABLE_CODES],
       operator: 'notIn',
     },
-    maxLength: 10,
+    maxLength: 50,
   },
   {
     type: 'text-input',
@@ -1683,7 +1734,7 @@ export const titleAddressFields: FormField[] = [
     subDistrictNameField: 'titleAddress.subDistrictName',
     addressSource: 'title',
     wrapperClassName: 'col-span-2',
-    required: true,
+    requiredWhen: { field: 'collateralType', is: MOVABLE_CODES, operator: 'notIn' },
   },
   {
     type: 'text-input',
@@ -1729,7 +1780,7 @@ export const dopaAddressFields: FormField[] = [
     label: _st('House Number'),
     name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
-    maxLength: 10,
+    maxLength: 50,
     requiredWhen: {
       field: 'collateralType',
       is: [...LAND_CODES, ...LEASE_LAND_CODE],
@@ -1843,7 +1894,7 @@ export const addressFields: FormField[] = [
     label: _st('House No'),
     name: 'houseNumber',
     wrapperClassName: 'col-span-2',
-    maxLength: 10,
+    maxLength: 50,
     required: true,
   },
   {
@@ -1986,7 +2037,8 @@ export const requestFields: FormField[] = [
     valueField: 'detail.prevAppraisalValue',
     dateField: 'detail.prevAppraisalDate',
     wrapperClassName: 'col-span-1',
-    requiredWhen: { field: 'purpose', is: CI_PURPOSES, operator: 'in' },
+    // The same purposes the field is shown with a star for (makeRequestFields reads the same list)
+    requiredWhen: PRIOR_REQUIRED_WHEN,
   },
   {
     type: 'number-input',
@@ -2106,6 +2158,7 @@ export const customersFieldConfig: FieldArrayField = {
   name: 'customers',
   required: true,
   minItems: 1,
+  skipRow: blankCustomer,
   fields: [
     {
       type: 'text-input',
@@ -2128,6 +2181,7 @@ export const propertiesFieldConfig: FieldArrayField = {
   name: 'properties',
   required: true,
   minItems: 1,
+  skipRow: blankProperty,
   fields: [
     {
       type: 'dropdown',
@@ -2141,7 +2195,11 @@ export const propertiesFieldConfig: FieldArrayField = {
       name: 'buildingType',
       label: _st('Building Type'),
       group: 'BuildingType',
-      required: true,
+      requiredWhen: {
+        field: 'propertyType',
+        is: NO_BUILDING_PROPERTY_TYPES,
+        operator: 'notIn',
+      },
     },
     {
       type: 'text-input',

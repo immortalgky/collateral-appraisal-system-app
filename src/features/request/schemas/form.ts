@@ -1,6 +1,15 @@
+import i18n from 'i18next';
 import { z } from 'zod';
 import { buildFormSchema } from '@/shared/components/form';
-import { allRequestFields, titlesFieldConfig } from '../configs/fields';
+import { isBlankRow } from '../components/tables/formTableUtils';
+import { PROPERTY_COLUMNS } from '../configs/tableColumns';
+import { MOVABLE_CODES } from '../data/mapCollateral';
+import {
+  allRequestFields,
+  CONDO_TYPES,
+  LAND_TITLE_NUMBER_MAX,
+  titlesFieldConfig,
+} from '../configs/fields';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 
@@ -44,11 +53,11 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     prevAppraisalId: z.string().nullable(),
     prevAppraisalValue: z.number().nullable(),
     prevAppraisalDate: z.string().nullable(),
-    // Construction Inspection round number. Stamped from prevAppraisal.nextInspectionNumber
+    // Construction Inspection round number. Stamped from GET /appraisals/{id}/next-inspection-number
     // when copying a prior appraisal — display-only, never user-editable.
     inspectionNumber: z.number().nullish(),
     address: z.object({
-      houseNumber: z.string().max(10).min(1, t('validation.houseNumberRequired')),
+      houseNumber: z.string().max(50).min(1, t('validation.houseNumberRequired')),
       projectName: z.string().max(100).nullable(),
       moo: z.string().max(10).nullable(),
       soi: z.string().max(100).nullable(),
@@ -96,7 +105,7 @@ function makeRequestPropertyDto(t: TFunction<'request'>) {
 
 const AddressDto = z
   .object({
-    houseNumber: z.string().max(10),
+    houseNumber: z.string().max(50),
     projectName: z.string().nullable(),
     moo: z.string().nullable(),
     soi: z.string().nullable(),
@@ -120,6 +129,7 @@ const RequestTitleDocumentDto = z
     prefix: z.string().nullable(),
     notes: z.string().nullable(),
     filePath: z.string().nullable(),
+    source: z.string().nullable(),
     createdWorkstation: z.string().nullable(),
     isRequired: z.boolean(),
     uploadedBy: z.string().nullable(),
@@ -128,6 +138,12 @@ const RequestTitleDocumentDto = z
   })
   .partial();
 
+// A movable has no title-document address, and no field on screen to fix one a record carries, so
+// any invalid value in it would block Save for good. So its `titleAddress` is held back from
+// validation under this key (an empty one stands in) and put back afterwards: the value is neither
+// checked nor lost.
+const MOVABLE_ADDRESS = '__movableTitleAddress';
+
 // Base for fields not expressible as FormField (UUIDs, documents, address sub-schemas)
 const TitleElementBase = z.object({
   id: z.string().uuid().optional(),
@@ -135,10 +151,42 @@ const TitleElementBase = z.object({
   documents: z.array(RequestTitleDocumentDto).optional(),
   titleAddress: AddressDto.optional(),
   dopaAddress: AddressDto.optional(),
+  // Where a movable's title address waits while the title is validated (see `RequestTitleDto`)
+  [MOVABLE_ADDRESS]: z.any().optional(),
 });
 
 // Element schema from field configs + base (deep merge preserves AddressDto sub-fields)
-const RequestTitleDto = buildFormSchema(titlesFieldConfig.fields, TitleElementBase);
+// Only a condominium's title number may run past the land limit (it is a list of land titles).
+const RequestTitleDtoBase = buildFormSchema(titlesFieldConfig.fields, TitleElementBase).superRefine(
+  (title, ctx) => {
+    const isCondo = CONDO_TYPES.includes(String(title.collateralType ?? ''));
+    const number = title.titleNumber;
+    if (!isCondo && typeof number === 'string' && number.length > LAND_TITLE_NUMBER_MAX)
+      ctx.addIssue({
+        code: 'custom',
+        path: ['titleNumber'],
+        // Resolved when it runs (this schema is built once, outside any component): the UI language then
+        message: i18n.t('validation.titleNumberTooLong', {
+          ns: 'request',
+          max: LAND_TITLE_NUMBER_MAX,
+        }),
+      });
+  },
+);
+const RequestTitleDto = z
+  .preprocess(title => {
+    const { titleAddress, ...rest } = (title ?? {}) as Record<string, unknown>;
+    return MOVABLE_CODES.includes(String(rest.collateralType ?? ''))
+      ? { ...rest, titleAddress: {}, [MOVABLE_ADDRESS]: titleAddress }
+      : title;
+  }, RequestTitleDtoBase)
+  .transform(title => {
+    if (!(MOVABLE_ADDRESS in title)) return title;
+    const { [MOVABLE_ADDRESS]: titleAddress, ...rest } = title;
+    // the stand-in `{}` goes either way; a movable that had no address comes back without one
+    delete rest.titleAddress;
+    return titleAddress === undefined ? rest : { ...rest, titleAddress };
+  });
 const RequestDocumentDto = z
   .object({
     id: z.string().uuid().nullable().optional(),
@@ -171,6 +219,36 @@ function makeRequestCommentDto(t: TFunction<'request'>) {
   });
 }
 
+/**
+ * Retail requests must give a selling price on every property. A named function so the page's
+ * missing-fields count can run the very same rule (zod skips this superRefine while any base issue
+ * exists), instead of keeping a copy of it.
+ */
+export function refineRetailSellingPrice(
+  data: {
+    detail?: { loanDetail?: { bankingSegment?: string } };
+    properties?: { sellingPrice?: unknown }[];
+  },
+  ctx: z.RefinementCtx,
+  message: string,
+) {
+  const needSellingPrice = ['RETAIL'].includes(data.detail?.loanDetail?.bankingSegment ?? '');
+  if (!needSellingPrice) return;
+
+  data.properties?.forEach((p, i) => {
+    // An untouched row is never sent, so it asks for nothing
+    if (isBlankRow(p, PROPERTY_COLUMNS)) return;
+    // An untouched price cell holds '' (the table's blank row), which is as empty as null or 0
+    if (p.sellingPrice == null || Number(p.sellingPrice) === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['properties', i, 'sellingPrice'],
+        message,
+      });
+    }
+  });
+}
+
 // Factory: produce the full form schema with translated validation messages.
 export function makeCreateRequestForm(t: TFunction<'request'>) {
   const createRequestFormBase = z.object({
@@ -186,22 +264,16 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
     titles: z.array(RequestTitleDto).min(1, t('validation.titleMinItems')),
     documents: z.array(RequestDocumentDto),
     comments: z.array(makeRequestCommentDto(t)),
+    // Page state that is validated against but never sent. It must be in the shape: zod strips what is
+    // not, and the conditional rules (the prior is not asked for of a submitted request) read it.
+    meta: z
+      .object({ isSubmitted: z.boolean().nullish(), priorLocked: z.boolean().nullish() })
+      .optional(),
   });
 
-  return buildFormSchema(allRequestFields, createRequestFormBase).superRefine((data, ctx) => {
-    const needSellingPrice = ['RETAIL'].includes(data.detail.loanDetail.bankingSegment);
-    if (!needSellingPrice) return;
-
-    data.properties?.forEach((p: any, i: any) => {
-      if (p.sellingPrice == null || p.sellingPrice === 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ['properties', i, 'sellingPrice'],
-          message: t('validation.sellingPriceRequired'),
-        });
-      }
-    });
-  });
+  return buildFormSchema(allRequestFields, createRequestFormBase).superRefine((data, ctx) =>
+    refineRetailSellingPrice(data, ctx, t('validation.sellingPriceRequired')),
+  );
 }
 
 // Hook: resolve the form schema per render (re-built when language changes).
@@ -300,6 +372,8 @@ export const createRequestFormDefault: createRequestFormType = {
   titles: [],
   documents: [],
   comments: [],
+  // Page state, never sent: set from the loaded request (see the page)
+  meta: { isSubmitted: false, priorLocked: false },
 };
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
@@ -334,7 +408,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vehicleRegistrationNumber: '',
   installationStatus: '',
   invoiceNumber: '',
-  numberOfMachine: 0,
+  numberOfMachine: null,
   buildingType: '',
   usableArea: null,
   numberOfBuilding: null,

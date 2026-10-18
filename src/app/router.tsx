@@ -11,7 +11,6 @@ import { lazyWithRetry as lazy } from '@shared/utils/lazyWithRetry';
 // Eager — structural shell, route guards, read-only wrappers, and helpers that
 // must be available immediately (no spinner on the critical path).
 import LoginPage from '@features/auth/pages/LoginPage';
-import CallbackPage from '@features/auth/pages/CallbackPage.tsx';
 import ErrorPage from '@shared/pages/ErrorPage';
 import NotFoundPage from '@shared/pages/NotFoundPage';
 import { useAppraisalRequestId } from '@/features/appraisal/context/AppraisalContext';
@@ -346,10 +345,6 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
-  },
-  {
-    path: '/callback',
-    element: <CallbackPage />,
   },
   {
     path: '/',
@@ -756,11 +751,11 @@ export const router = createBrowserRouter([
       // ─── Service Quality Evaluation Routes ──────────────────────────────────
       {
         path: 'standalone/service-quality-evaluation',
-        element: <ServiceQualityEvaluationListPage />,
-      },
-      {
-        path: 'standalone/service-quality-evaluation/:appraisalId',
-        element: <ServiceQualityEvaluationDetailPage />,
+        element: <RoleProtectedRoute allowedRoles={[]} requiredPermission="REPORT_EVALUATION_VIEW" />,
+        children: [
+          { index: true, element: <ServiceQualityEvaluationListPage /> },
+          { path: ':appraisalId', element: <ServiceQualityEvaluationDetailPage /> },
+        ],
       },
       // support data maintenance
       {

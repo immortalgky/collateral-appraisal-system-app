@@ -77,7 +77,7 @@ const RadioGroup = ({
         {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-2">
             {label && (
-              <Label data-field-label className="block text-sm font-medium text-gray-700">
+              <Label data-field-label className="block text-xs font-medium text-gray-700">
                 {label}
               </Label>
             )}
@@ -85,7 +85,7 @@ const RadioGroup = ({
           </div>
         ) : (
           label && (
-            <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label data-field-label className="block text-xs font-medium text-gray-700 mb-2">
               {label}
             </Label>
           )
@@ -140,7 +140,7 @@ const RadioGroup = ({
         {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-2">
             {label && (
-              <Label data-field-label className="block text-sm font-medium text-gray-700">
+              <Label data-field-label className="block text-xs font-medium text-gray-700">
                 {label}
               </Label>
             )}
@@ -148,7 +148,7 @@ const RadioGroup = ({
           </div>
         ) : (
           label && (
-            <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label data-field-label className="block text-xs font-medium text-gray-700 mb-2">
               {label}
             </Label>
           )
@@ -234,7 +234,7 @@ const RadioGroup = ({
       {labelAddon ? (
         <div className="flex items-center gap-1.5 mb-2">
           {label && (
-            <Label data-field-label className="block text-sm font-medium text-gray-700">
+            <Label data-field-label className="block text-xs font-medium text-gray-700">
               {label}
             </Label>
           )}
@@ -242,7 +242,7 @@ const RadioGroup = ({
         </div>
       ) : (
         label && (
-          <Label data-field-label className="block text-sm font-medium text-gray-700 mb-2">
+          <Label data-field-label className="block text-xs font-medium text-gray-700 mb-2">
             {label}
           </Label>
         )

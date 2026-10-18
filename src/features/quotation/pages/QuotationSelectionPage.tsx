@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -17,16 +18,21 @@ import {
 } from '../api/quotation';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import EditDraftQuotationModal from '../components/EditDraftQuotationModal';
+import BoldTrans from '../components/BoldTrans';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
+import { SegmentGapsAlert } from '../components/SegmentBadges';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import NegotiationPanel from '../components/NegotiationPanel';
 import AppraisalReportListingTable from '../components/AppraisalReportListingTable';
 import InvitedCompaniesTable from '../components/InvitedCompaniesTable';
 import QuotationTrackingLog from '../components/QuotationTrackingLog';
 import FinalizeModal from '../components/FinalizeModal';
+import AssignmentResultSummary from '../components/AssignmentResultSummary';
+import { isStandaloneQuotation } from '../utils/isStandaloneQuotation';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
+import { getSegmentGaps, isSegmentCoverageMismatch } from '../utils/segmentCoverage';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 import {
@@ -36,6 +42,7 @@ import {
   TABLE_ROW_THRESHOLD,
 } from '../utils/quotationEmailTemplate';
 import { useAuthStore } from '@/features/auth/store';
+import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetailPage';
 
@@ -56,7 +63,14 @@ const QuotationSelectionPage = () => {
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
-  const { data: quotation, isLoading, isError } = useGetQuotationById(id);
+  // Admin and IntAdmin both count as admin on the backend (QuotationAccessPolicy.IsAdmin).
+  const isAdmin = hasRoleOrPermission(currentUser, ['Admin', 'IntAdmin']);
+  // This page shows the assignment result, whose follow-up staff lands a moment after finalize.
+  const {
+    data: quotation,
+    isLoading,
+    isError,
+  } = useGetQuotationById(id, { pollAutoAssignFollowup: true });
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
@@ -249,7 +263,7 @@ const QuotationSelectionPage = () => {
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
         <p className="text-sm text-gray-600">{t('errors.unableToLoadQuotation')}</p>
-        <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
+        <Button variant="outline" size="sm" onClick={() => navigate(taskListUrl())}>
           {t('buttons.backToTasks')}
         </Button>
       </div>
@@ -324,10 +338,22 @@ const QuotationSelectionPage = () => {
       },
       onError: (err: unknown) => {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
+        if (isSegmentCoverageMismatch(err)) {
+          // Localized text instead of the API's English detail. useSendQuotation refetches the
+          // detail on error; close the modal so the user lands on the refreshed segment alert
+          // instead of re-submitting the same email.
+          toast.error(t('segment.sendBlockedTitle'));
+          setIsSendConfirmOpen(false);
+        } else {
+          toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
+        }
       },
     });
   };
+
+  // Segment Coverage: invited companies that cannot appraise every banking segment in the quotation.
+  // The API blocks the send too (SEGMENT_COVERAGE_MISMATCH); this disables the button up front.
+  const segmentGaps = getSegmentGaps(quotation?.invitedCompanies);
 
   const handleDraftCancelConfirm = () => {
     cancelQuotation(
@@ -430,7 +456,12 @@ const QuotationSelectionPage = () => {
               <Icon name="pen-to-square" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.edit')}
             </Button>
-            <Button size="sm" onClick={() => setIsSendConfirmOpen(true)} disabled={isSendPending}>
+            <Button
+              size="sm"
+              onClick={() => setIsSendConfirmOpen(true)}
+              disabled={isSendPending || segmentGaps.length > 0}
+              title={segmentGaps.length > 0 ? t('segment.sendBlockedTitle') : undefined}
+            >
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.sendToCompanies')}
             </Button>
@@ -445,6 +476,13 @@ const QuotationSelectionPage = () => {
             </Button>
           </div>
         </div>
+      )}
+
+      {isDraft && (
+        <SegmentGapsAlert
+          gaps={segmentGaps}
+          className="p-3 border border-amber-200 rounded-xl text-sm"
+        />
       )}
 
       {/* ─── Section 1: Appraisal Report Listing ──────────────────────────────── */}
@@ -476,7 +514,7 @@ const QuotationSelectionPage = () => {
       {showSentPanel && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-base font-semibold text-gray-700">
               {t('shared.companyResponses')} ({quotation.invitedCompanies?.length ?? 0})
             </h2>
           </div>
@@ -624,20 +662,20 @@ const QuotationSelectionPage = () => {
             </div>
           </div>
           <div className="px-4 py-3 text-sm text-gray-600">
-            <p
-              dangerouslySetInnerHTML={{
-                __html: t('shared.quotationAwarded', {
-                  company: `<strong class="text-gray-900">${
-                    finalizedWinner
-                      ? localizeCompanyName(
-                          finalizedWinner.companyName,
-                          finalizedWinner.companyNameLocal,
-                        )
-                      : '—'
-                  }</strong>`,
-                }),
-              }}
-            />
+            <p>
+              <BoldTrans
+                i18nKey="shared.quotationAwarded"
+                values={{
+                  company: finalizedWinner
+                    ? localizeCompanyName(
+                        finalizedWinner.companyName,
+                        finalizedWinner.companyNameLocal,
+                      )
+                    : '—',
+                }}
+                strongClassName="text-gray-900"
+              />
+            </p>
             {(() => {
               const finalPrice =
                 finalizedWinner?.currentNegotiatedPrice ?? finalizedWinner?.totalQuotedPrice;
@@ -650,6 +688,11 @@ const QuotationSelectionPage = () => {
               );
             })()}
           </div>
+          <AssignmentResultSummary
+            appraisals={quotation.appraisals ?? []}
+            winnerItems={finalizedWinner?.items ?? []}
+            canOpenAdministration={isAdmin}
+          />
         </div>
       )}
 
@@ -675,7 +718,7 @@ const QuotationSelectionPage = () => {
       {isRmPickPhase && (
         <div className="rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-base font-semibold text-gray-700">
               {t('draft.shortlistSubmissions')} ({shortlisted.length})
             </h2>
             {showWinnerActions && isIntAdmin && (
@@ -916,21 +959,16 @@ const QuotationSelectionPage = () => {
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-start gap-2">
             <Icon name="crown" style="solid" className="size-4 text-indigo-500 shrink-0 mt-0.5" />
-            <p
-              className="text-sm text-indigo-700"
-              dangerouslySetInnerHTML={{
-                __html: t('selectWinner.body', {
-                  company: `<strong>${
-                    pickedCompany
-                      ? localizeCompanyName(
-                          pickedCompany.companyName,
-                          pickedCompany.companyNameLocal,
-                        )
-                      : ''
-                  }</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-indigo-700">
+              <BoldTrans
+                i18nKey="selectWinner.bodyRich"
+                values={{
+                  company: pickedCompany
+                    ? localizeCompanyName(pickedCompany.companyName, pickedCompany.companyNameLocal)
+                    : '',
+                }}
+              />
+            </p>
           </div>
 
           {/* Request negotiation toggle */}
@@ -1012,14 +1050,12 @@ const QuotationSelectionPage = () => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p
-              className="text-sm text-red-700"
-              dangerouslySetInnerHTML={{
-                __html: t('cancel.standaloneBody', {
-                  number: `<strong>${quotation.quotationNumber}</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-red-700">
+              <BoldTrans
+                i18nKey="cancel.standaloneBody"
+                values={{ number: quotation.quotationNumber }}
+              />
+            </p>
           </div>
           <div>
             <label htmlFor="standalone-cancel-reason" className="block text-sm text-gray-600 mb-1">
@@ -1074,6 +1110,7 @@ const QuotationSelectionPage = () => {
           )}
           winnerItems={finalizeTarget.items ?? []}
           appraisals={quotation.appraisals ?? []}
+          allowAutoAssign={isStandaloneQuotation(quotation)}
         />
       )}
 
@@ -1148,14 +1185,12 @@ const QuotationSelectionPage = () => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p
-              className="text-sm text-red-700"
-              dangerouslySetInnerHTML={{
-                __html: t('cancel.draftBody', {
-                  number: `<strong>${quotation.quotationNumber}</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-red-700">
+              <BoldTrans
+                i18nKey="cancel.draftBody"
+                values={{ number: quotation.quotationNumber }}
+              />
+            </p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button

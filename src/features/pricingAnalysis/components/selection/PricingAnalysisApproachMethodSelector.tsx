@@ -227,7 +227,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                 read as a second, competing panel rather than the tail of this one. Heading and
                 body sit directly on the page instead. */}
             <div className="shrink-0">
-              <h4 className="m-0 py-[8px] text-[12.5px] font-semibold text-gray-800">
+              <h4 className="m-0 py-[8px] text-base font-semibold text-gray-800">
                 {t('approaches.documentsCardTitle')}
                 <span className="ml-1 text-[10.5px] font-normal text-gray-400">
                   {t('approaches.documentsCardSubtitle')}
@@ -408,7 +408,7 @@ export const PricingAnalysisApproachMethodSelector = ({
               // of this that sends people hunting; the board's own red banner names the
               // offending methods, and this points at it.
               title={isSaveBlocked ? t('board.formula.saveBlocked') : undefined}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
               onClick={async () => {
                 const { success, failedFileNames } = await onSummaryModeSave(pdfFiles, remark);
                 if (success) {

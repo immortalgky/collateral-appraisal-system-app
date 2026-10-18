@@ -1,4 +1,5 @@
 import '@/features/feeAppointmentApproval/i18n';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -18,7 +19,8 @@ import {
 } from '../api/feeAppointmentApproval';
 import type { FeeAppointmentApprovalLine } from '../types/feeAppointmentApproval';
 import { FEE_ITEM_TYPE_OPTIONS } from '@/features/appraisal/types/appointmentAndFee';
-import { useGetAppraisalFees } from '@/features/appraisal/api/fee';
+import { useGetAppraisalFees, useUpdateAppraisalFee } from '@/features/appraisal/api/fee';
+import { BANK_ABSORB_FEE_TYPES } from '@/features/appraisal/components/FeeInformationSection';
 
 // ---- Helpers ----
 
@@ -53,6 +55,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 // ---- Decision block component ----
 
 type Decision = 'approve' | 'reject' | '';
+type FeePaymentOption = 'customer' | 'bank_absorb';
 
 interface DecisionBlockProps {
   title: string;
@@ -65,6 +68,8 @@ interface DecisionBlockProps {
   onReasonChange: (r: string) => void;
   reasonError?: string;
   disabled?: boolean;
+  paymentOption?: FeePaymentOption;
+  onPaymentOptionChange?: (o: FeePaymentOption) => void;
 }
 
 function DecisionBlock({
@@ -78,6 +83,8 @@ function DecisionBlock({
   onReasonChange,
   reasonError,
   disabled,
+  paymentOption,
+  onPaymentOptionChange,
 }: DecisionBlockProps) {
   const { t } = useTranslation('feeAppointmentApproval');
   return (
@@ -119,6 +126,40 @@ function DecisionBlock({
               <Icon name="xmark" style="solid" className="size-4" />
               {t('decisions.reject')}
             </button>
+          </div>
+        )}
+
+        {decision === 'approve' && !disabled && onPaymentOptionChange && (
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('fee.paymentOption.label')}
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onPaymentOptionChange('customer')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  paymentOption === 'customer'
+                    ? 'bg-primary border-primary text-white'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-primary/5 hover:border-primary/60'
+                }`}
+              >
+                <Icon name="user" style="solid" className="size-3.5" />
+                {t('fee.paymentOption.customerPay')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onPaymentOptionChange('bank_absorb')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  paymentOption === 'bank_absorb'
+                    ? 'bg-primary border-primary text-white'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-primary/5 hover:border-primary/60'
+                }`}
+              >
+                <Icon name="building-columns" style="solid" className="size-3.5" />
+                {t('fee.paymentOption.bankAbsorb')}
+              </button>
+            </div>
           </div>
         )}
 
@@ -229,13 +270,13 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
         <table className="w-full text-sm table-fixed">
           <thead className="bg-gray-50">
             <tr>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-500 w-36">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 w-36">
                 {t('fee.columns.type')}
               </th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
                 {t('fee.columns.description')}
               </th>
-              <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 w-32">
+              <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500 w-32">
                 {t('fee.columns.amount')}
               </th>
             </tr>
@@ -276,10 +317,13 @@ function FeeAppointmentApprovalTaskPage() {
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
 
-  const { data: approval, isLoading, isError } = useGetFeeAppointmentApprovalByWorkflowInstance(
-    workflowInstanceId,
-  );
+  const {
+    data: approval,
+    isLoading,
+    isError,
+  } = useGetFeeAppointmentApprovalByWorkflowInstance(workflowInstanceId);
   const resolveMutation = useResolveFeeAppointmentApproval();
+  const updateAppraisalFee = useUpdateAppraisalFee();
 
   // The appraisal's existing fees — shown read-only so the approver sees the full fee picture,
   // not just the fee(s) being requested for approval.
@@ -290,6 +334,7 @@ function FeeAppointmentApprovalTaskPage() {
   const [appointmentReason, setAppointmentReason] = useState('');
   const [feeDecision, setFeeDecision] = useState<Decision>('');
   const [feeReason, setFeeReason] = useState('');
+  const [feePaymentOption, setFeePaymentOption] = useState<FeePaymentOption>('customer');
   const [appointmentReasonError, setAppointmentReasonError] = useState('');
   const [feeReasonError, setFeeReasonError] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -325,6 +370,12 @@ function FeeAppointmentApprovalTaskPage() {
     .filter(i => !i.requiresApproval || i.approvalStatus === 'Approved');
   const otherFeesTotal = otherFees.reduce((sum, i) => sum + (i.feeAmount ?? 0), 0);
 
+  const currentFee = appraisalFees.length > 0 ? appraisalFees[0] : null;
+  const feeLinesTotal = feeLines.reduce((sum, l) => sum + (l.feeAmount ?? 0), 0);
+
+  // Customer-pay / bank-absorb is decision under fee type '04'
+  const showFeePaymentOption = BANK_ABSORB_FEE_TYPES.includes(currentFee?.feePaymentType ?? '');
+
   const isResolved = approval.status !== 'Open';
 
   // Determine current resolved decisions from line statuses (read-only mode)
@@ -338,11 +389,7 @@ function FeeAppointmentApprovalTaskPage() {
         ? 'reject'
         : '';
   const resolvedFeeDecision: Decision =
-    feeLineStatus === 'Approved'
-      ? 'approve'
-      : feeLineStatus === 'Rejected'
-        ? 'reject'
-        : '';
+    feeLineStatus === 'Approved' ? 'approve' : feeLineStatus === 'Rejected' ? 'reject' : '';
 
   const resolvedAppointmentReason = appointmentLines[0]?.decisionReason ?? '';
   const resolvedFeeReason = feeLines[0]?.decisionReason ?? '';
@@ -400,19 +447,43 @@ function FeeAppointmentApprovalTaskPage() {
     resolveMutation.mutate(
       { id: approval.id, body },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setIsConfirmOpen(false);
+          if (
+            hasFee &&
+            feeDecision === 'approve' &&
+            showFeePaymentOption &&
+            feePaymentOption === 'bank_absorb' &&
+            currentFee
+          ) {
+            try {
+              await updateAppraisalFee.mutateAsync({
+                appraisalId: approval.appraisalId,
+                feeId: currentFee.id ?? '',
+                feePaymentType: currentFee.feePaymentType ?? '',
+                bankAbsorbAmount: (currentFee.bankAbsorbAmount ?? 0) + feeLinesTotal,
+              });
+            } catch {
+              toast.error(t('toasts.bankAbsorbUpdateFailed'));
+              navigate('/tasks?activityId=fee-appointment-approval');
+              return;
+            }
+          }
+
           toast.success(t('toasts.resolveSuccess'));
-          navigate('/tasks?activityId=fee-appointment-approval');
+          navigate(taskListUrl('/tasks?activityId=fee-appointment-approval'));
         },
         onError: (error: unknown) => {
           setIsConfirmOpen(false);
           const status = (error as { response?: { status?: number } })?.response?.status;
           if (status === 409) {
             toast.error(t('toasts.alreadyResolved'));
-            navigate('/tasks?activityId=fee-appointment-approval');
+            navigate(taskListUrl('/tasks?activityId=fee-appointment-approval'));
           } else {
-            const apiError = error as { response?: { data?: { detail?: string } }; message?: string };
+            const apiError = error as {
+              response?: { data?: { detail?: string } };
+              message?: string;
+            };
             const message =
               apiError?.response?.data?.detail ?? apiError?.message ?? t('toasts.resolveFailed');
             toast.error(message);
@@ -428,7 +499,11 @@ function FeeAppointmentApprovalTaskPage() {
       <FormCard title={t('page.title')} icon="clipboard-check" iconColor="primary">
         {/* Info banner */}
         <div className="flex items-start gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100 mb-6">
-          <Icon name="circle-info" style="solid" className="size-5 text-indigo-500 shrink-0 mt-0.5" />
+          <Icon
+            name="circle-info"
+            style="solid"
+            className="size-5 text-indigo-500 shrink-0 mt-0.5"
+          />
           <div>
             <p className="text-sm font-medium text-indigo-800">{t('page.infoTitle')}</p>
             <p className="text-xs text-indigo-600 mt-0.5">{t('page.infoBody')}</p>
@@ -452,19 +527,21 @@ function FeeAppointmentApprovalTaskPage() {
           <div className="mb-4 space-y-2">
             <div className="flex items-center gap-2">
               <Icon name="receipt" style="solid" className="size-3.5 text-gray-400" />
-              <span className="text-xs font-semibold text-gray-500">{t('fee.currentFeesTitle')}</span>
+              <span className="text-xs font-semibold text-gray-500">
+                {t('fee.currentFeesTitle')}
+              </span>
             </div>
             <div className="overflow-hidden rounded-lg border border-gray-100">
               <table className="w-full text-sm table-fixed">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500 w-36">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 w-36">
                       {t('fee.columns.type')}
                     </th>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-500">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
                       {t('fee.columns.description')}
                     </th>
-                    <th className="text-right px-3 py-2 text-xs font-medium text-gray-500 w-32">
+                    <th className="text-right px-3 py-2 text-xs font-semibold text-gray-500 w-32">
                       {t('fee.columns.amount')}
                     </th>
                   </tr>
@@ -506,7 +583,10 @@ function FeeAppointmentApprovalTaskPage() {
               decision={isResolved ? resolvedAppointmentDecision : appointmentDecision}
               reason={isResolved ? resolvedAppointmentReason : appointmentReason}
               onDecisionChange={setAppointmentDecision}
-              onReasonChange={v => { setAppointmentReason(v); setAppointmentReasonError(''); }}
+              onReasonChange={v => {
+                setAppointmentReason(v);
+                setAppointmentReasonError('');
+              }}
               reasonError={appointmentReasonError}
               disabled={isResolved || !isTaskOwner}
             >
@@ -523,9 +603,14 @@ function FeeAppointmentApprovalTaskPage() {
               decision={isResolved ? resolvedFeeDecision : feeDecision}
               reason={isResolved ? resolvedFeeReason : feeReason}
               onDecisionChange={setFeeDecision}
-              onReasonChange={v => { setFeeReason(v); setFeeReasonError(''); }}
+              onReasonChange={v => {
+                setFeeReason(v);
+                setFeeReasonError('');
+              }}
               reasonError={feeReasonError}
               disabled={isResolved || !isTaskOwner}
+              paymentOption={showFeePaymentOption ? feePaymentOption : undefined}
+              onPaymentOptionChange={showFeePaymentOption ? setFeePaymentOption : undefined}
             >
               <FeeGroupBlockContent feeLines={feeLines} />
             </DecisionBlock>
@@ -535,7 +620,7 @@ function FeeAppointmentApprovalTaskPage() {
         {/* Submit button */}
         {isTaskOwner && !isResolved && (
           <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end items-center gap-3">
-            {(!hasAppointment || !appointmentDecision) || (!hasFee || !feeDecision) ? (
+            {!hasAppointment || !appointmentDecision || !hasFee || !feeDecision ? (
               <p className="text-xs text-gray-400">{t('page.decisionHint')}</p>
             ) : null}
             <button

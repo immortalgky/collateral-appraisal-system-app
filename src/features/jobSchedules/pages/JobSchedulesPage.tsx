@@ -175,7 +175,7 @@ const JobSchedulesPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
         <p className="mt-0.5 text-xs text-gray-500">{t('page.subtitle')}</p>
       </div>
 

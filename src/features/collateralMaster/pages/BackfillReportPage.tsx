@@ -96,16 +96,12 @@ export default function BackfillReportPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Backfill Report</h3>
+          <h3 className="text-base font-semibold text-gray-900">Backfill Report</h3>
           <p className="text-xs text-gray-500 mt-0.5">
             One-shot backfill of historical completed appraisals into the collateral master registry
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setConfirmBackfill(true)}
-          isLoading={isStarting}
-        >
+        <Button size="sm" onClick={() => setConfirmBackfill(true)} isLoading={isStarting}>
           <Icon style="solid" name="play" className="size-3.5 mr-1.5" />
           Start Backfill
         </Button>
@@ -115,11 +111,16 @@ export default function BackfillReportPage() {
       <div className="shrink-0 flex gap-3">
         <select
           value={status}
-          onChange={e => { setStatus(e.target.value as BackfillStatus | ''); setPage(0); }}
+          onChange={e => {
+            setStatus(e.target.value as BackfillStatus | '');
+            setPage(0);
+          }}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 min-w-44"
         >
           {STATUS_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       </div>
@@ -137,11 +138,19 @@ export default function BackfillReportPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Appraisal ID</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Status</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Message</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Run At</th>
-                <th className="w-20 px-4 py-2.5" />
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Appraisal ID
+                </th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Status
+                </th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Message
+                </th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Run At
+                </th>
+                <th className="text-xs w-20 px-4 py-2.5 font-semibold" />
               </tr>
             </thead>
             <tbody
@@ -168,7 +177,9 @@ export default function BackfillReportPage() {
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-gray-500 font-medium">No backfill records found</p>
                       <p className="text-xs text-gray-400">
-                        {status ? 'Try a different status filter' : 'Run backfill to start processing historical appraisals'}
+                        {status
+                          ? 'Try a different status filter'
+                          : 'Run backfill to start processing historical appraisals'}
                       </p>
                     </div>
                   </td>

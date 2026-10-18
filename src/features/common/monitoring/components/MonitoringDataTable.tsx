@@ -42,12 +42,14 @@ function SortableTh({
     'px-4 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
 
   if (!isSortable) {
-    return <th className={`${baseCls} ${className ?? ''}`.trim()}>{label}</th>;
+    return (
+      <th className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()}>{label}</th>
+    );
   }
 
   return (
     <th
-      className={`${baseCls} ${className ?? ''}`.trim()}
+      className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()}
       aria-sort={isActive ? (activeSortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
       <button
@@ -144,7 +146,7 @@ function MonitoringDataTable<T>({
 
   return (
     <div className="flex-1 min-h-0 overflow-auto">
-      <table className="w-full min-w-max text-sm">
+      <table className="w-full min-w-max text-table">
         <thead className="sticky top-0 z-20">
           <tr className="bg-gray-50 border-b border-gray-200">
             {columns.map((col, colIdx) => (
@@ -164,7 +166,7 @@ function MonitoringDataTable<T>({
               />
             ))}
             {/* Actions column */}
-            <th className="px-4 py-3 bg-gray-50" />
+            <th className="text-xs px-4 py-3 bg-gray-50 font-semibold" />
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">

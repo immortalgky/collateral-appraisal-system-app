@@ -66,13 +66,13 @@ function RatingGuidelinesTable({ configs }: RatingGuidelinesTableProps) {
           <table className="w-full text-xs">
             <thead>
               <tr className="bg-gray-50 border-t border-b border-gray-200">
-                <th className="text-center font-medium text-gray-600 px-3 py-2 whitespace-nowrap w-8">
+                <th className="text-xs text-center font-semibold text-gray-600 px-3 py-2 whitespace-nowrap w-8">
                   {t('ratingGuidelines.no')}
                 </th>
                 {RATING_VALUES.map(rating => (
                   <th
                     key={rating}
-                    className={`text-center font-medium px-3 py-2 whitespace-nowrap ${RATING_COLOR[rating].header}`}
+                    className={`text-xs text-center font-semibold px-3 py-2 whitespace-nowrap ${RATING_COLOR[rating].header}`}
                   >
                     {t('ratingGuidelines.rating', { value: rating })}
                   </th>

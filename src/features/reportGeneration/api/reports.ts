@@ -70,7 +70,7 @@ export const reportKeys = {
 // intact. Do NOT encodeURIComponent it — an encoded "%2F" is rejected by ASP.NET in the path.
 
 /**
- * Fetches a report PDF as a Blob (Bearer auth auto-attached by axiosInstance).
+ * Fetches a report PDF as a Blob (session cookie sent by axiosInstance).
  */
 export const fetchReportPdf = async (
   reportTypeKey: string,

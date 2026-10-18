@@ -133,6 +133,8 @@ export type DecisionSummaryData = GetDecisionSummaryResponse & {
  */
 export interface ApprovalMember {
   username: string;
+  /** Readable name; absent on a backend that predates it, then the username is shown. */
+  displayName?: string | null;
   role: string;
   status: 'Voted' | 'Pending';
   vote: string | null;
@@ -276,10 +278,15 @@ export const isTransientError = (error: unknown): boolean => {
  *
  * Polls every 10s while the round is still pending (backend-authoritative status),
  * so peer votes surface without a manual refresh.
+ *
+ * `paused` stops all fetching (polling and refetch triggers) but keeps the query key, so the data
+ * already loaded stays on screen: used once the viewer's own vote went through and the page only
+ * waits behind the success card.
  */
 export const useGetApprovalList = (
   workflowInstanceId: string | undefined,
   activityId: string | undefined,
+  paused = false,
 ) => {
   return useQuery({
     queryKey: decisionSummaryKeys.approvalList(workflowInstanceId!, activityId!),
@@ -289,8 +296,9 @@ export const useGetApprovalList = (
       );
       return data;
     },
-    enabled: !!workflowInstanceId && !!activityId,
+    enabled: !!workflowInstanceId && !!activityId && !paused,
     refetchInterval: query => {
+      if (paused) return false;
       const data = query.state.data;
       if (!data) {
         // Keep trying after a transient failed first load so the tally recovers without a reload.

@@ -34,7 +34,7 @@ type ConfirmDeleteButtonProps = ConfirmDeleteName & {
  * column or the table's frame. `cas-row-del-armed` / `data-armed` are the hooks for a skin.
  */
 const ARMED =
-  'cas-row-del-armed absolute right-0 top-1/2 z-10 inline-grid w-[max-content]! h-[1.5385rem] min-w-[1.5385rem] -translate-y-1/2 place-items-center whitespace-nowrap rounded-[4px] bg-[#dc2626] px-[6px] text-[0.75rem] font-medium leading-none text-white';
+  'cas-row-del-armed absolute right-0 top-1/2 z-10 inline-grid w-[max-content]! h-[1.5385rem] min-w-[1.5385rem] -translate-y-1/2 place-items-center whitespace-nowrap rounded-[4px] bg-[#dc2626] px-[6px] text-[0.8571rem] font-medium leading-none text-white';
 
 /**
  * A row's delete without a dialog: the first click arms the button (it turns into a red "Delete?"

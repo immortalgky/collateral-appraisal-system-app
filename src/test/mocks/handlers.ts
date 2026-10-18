@@ -35,53 +35,34 @@ export const mockParameters = [
 // Request Handlers
 // ============================================
 export const handlers = [
+  // CORS preflight: the SPA sends credentials and custom headers (X-Background-Request) on
+  // cross-origin calls, so the browser asks first. Answer it for every path.
+  http.options('*', ({ request }) => {
+    return new HttpResponse(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': request.headers.get('Origin') ?? '*',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE',
+        'Access-Control-Allow-Headers':
+          request.headers.get('Access-Control-Request-Headers') ?? '*',
+      },
+    });
+  }),
+
   // ------------------------------------------
   // Auth Endpoints
   // ------------------------------------------
 
-  // POST /auth/login - Login user
-  http.post(`${API_URL}/auth/login`, async ({ request }) => {
-    await delay(100); // Simulate network delay
-
-    const body = (await request.json()) as { email: string; password: string };
-
-    // Simulate validation
-    if (!body.email || !body.password) {
-      return HttpResponse.json(
-        { message: 'Email and password are required' },
-        { status: 400 }
-      );
-    }
-
-    // Simulate wrong credentials
-    if (body.password === 'wrong') {
-      return HttpResponse.json(
-        { message: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
-
-    return HttpResponse.json({
-      user: mockUser,
-      token: 'mock-jwt-token',
-    });
-  }),
-
-  // POST /auth/logout - Logout user
+  // POST /auth/logout - Ends the session; the API answers with the IdP end-session URL.
   http.post(`${API_URL}/auth/logout`, async () => {
     await delay(50);
-    return HttpResponse.json({ success: true });
+    return HttpResponse.json({ url: 'https://idp.example.com/connect/logout' });
   }),
 
-  // GET /auth/me - Get current user
-  http.get(`${API_URL}/auth/me`, async ({ request }) => {
-    const authHeader = request.headers.get('Authorization');
-
-    // Check if token is provided
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
-    }
-
+  // GET /auth/me - Get current user. The session is an HttpOnly cookie that MSW cannot see, so
+  // answer as a signed-in user; tests for a dead session override this with `errorHandlers.noSession`.
+  http.get(`${API_URL}/auth/me`, async () => {
     await delay(50);
     return HttpResponse.json(mockUser);
   }),
@@ -209,6 +190,11 @@ export const errorHandlers = {
       { message: 'Internal Server Error' },
       { status: 500 }
     );
+  }),
+
+  // No session (cookie missing, expired or revoked): /auth/me answers 401
+  noSession: http.get(`${API_URL}/auth/me`, () => {
+    return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }),
 
   // 401 Unauthorized

@@ -20,6 +20,7 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { QuotationStatus } from '../types/administration';
 import type {
   AppraisalSummaryDto,
+  InvitedCompanyDto,
   SharedDocumentSelectionDto,
 } from '@/features/quotation/schemas/quotation';
 import QuotationStatusBadge from '@/features/quotation/components/QuotationStatusBadge';
@@ -28,10 +29,23 @@ import ShortlistSentPanel from '@/features/quotation/components/ShortlistSentPan
 import NegotiationPanel from '@/features/quotation/components/NegotiationPanel';
 import RejectTentativeModal from '@/features/quotation/components/RejectTentativeModal';
 import FinalizeModal from '@/features/quotation/components/FinalizeModal';
+import { isStandaloneQuotation } from '@/features/quotation/utils/isStandaloneQuotation';
 import NegotiationModal from '@/features/quotation/components/NegotiationModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import AppraisalsPopover from '@/features/quotation/components/AppraisalsPopover';
 import InvitedCompaniesPopover from '@/features/quotation/components/InvitedCompaniesPopover';
+import {
+  MissingSegmentsBadge,
+  SegmentChips,
+  SegmentGapsAlert,
+} from '@/features/quotation/components/SegmentBadges';
+import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
+import { useCoveringCompanySearch } from '@/features/quotation/hooks/useCoveringCompanySearch';
+import {
+  getMissingSegments,
+  getSegmentGaps,
+  isSegmentCoverageMismatch,
+} from '@/features/quotation/utils/segmentCoverage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
@@ -263,8 +277,14 @@ const AppraisalDocTab = ({
 // ─── EditDraftForm ────────────────────────────────────────────────────────────
 // TODO: extract the company-picker JSX into a shared component when time permits.
 
+const EMPTY_SEGMENT_SET: string[] = [];
+const EMPTY_INVITED: InvitedCompanyDto[] = [];
+
 interface EditDraftFormProps {
-  bankingSegment: string | undefined;
+  /** The draft's Segment Set; only companies covering every segment in it are listed. */
+  segmentSet: ReadonlyArray<string>;
+  /** Currently invited companies, with the server's coverage gaps; fallback for `missingFor`. */
+  invitedCompanies: ReadonlyArray<Pick<InvitedCompanyDto, 'companyId' | 'missingSegments'>>;
   editDueDate: string | null;
   onDueDateChange: (v: string | null) => void;
   editCompanyIds: Set<string>;
@@ -280,7 +300,8 @@ interface EditDraftFormProps {
 }
 
 const EditDraftForm = ({
-  bankingSegment,
+  segmentSet,
+  invitedCompanies,
   editDueDate,
   onDueDateChange,
   editCompanyIds,
@@ -296,10 +317,14 @@ const EditDraftForm = ({
 }: EditDraftFormProps) => {
   const { t } = useTranslation(['appraisal', 'common']);
   const localizeCompanyName = useLocalizedCompanyName();
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
-    bankingSegment,
-    true,
-  );
+  const segmentLabel = useSegmentLabel();
+  // Unfiltered: the draft can hold several segments, so coverage is checked client-side against the
+  // whole Segment Set (same as EditDraftQuotationModal). The API's Send guard is authoritative.
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompanies,
+    isError: isCompaniesError,
+  } = useGetEligibleCompanies(undefined, true, false);
 
   const allCompanies = useMemo(
     () =>
@@ -307,20 +332,24 @@ const EditDraftForm = ({
         id: c.id,
         companyName: c.companyName,
         companyNameLocal: c.companyNameLocal,
+        loanTypes: c.loanTypes ?? [],
       })),
     [rawCompanies],
   );
 
-  const filteredCompanies = useMemo(() => {
-    const q = editSearchQuery.toLowerCase().trim();
-    return q
-      ? allCompanies.filter(
-          c =>
-            c.companyName.toLowerCase().includes(q) ||
-            c.companyNameLocal?.toLowerCase().includes(q),
-        )
-      : allCompanies;
-  }, [allCompanies, editSearchQuery]);
+  const { filtered: filteredCompanies, noCoverage } = useCoveringCompanySearch(
+    allCompanies,
+    segmentSet,
+    editSearchQuery,
+  );
+
+  // Segments an already-chosen company lacks. Falls back to the server's per-company gaps when the
+  // company is not in the eligible list (e.g. it was deactivated since it was invited).
+  const missingFor = (companyId: string) => {
+    const company = allCompanies.find(c => c.id === companyId);
+    if (company) return getMissingSegments(segmentSet, company.loanTypes);
+    return invitedCompanies.find(c => c.companyId === companyId)?.missingSegments ?? [];
+  };
 
   const handleToggleCompany = (company: {
     id: string;
@@ -373,9 +402,10 @@ const EditDraftForm = ({
       <div className="flex flex-col gap-2">
         <div className="text-xs font-medium text-gray-700">
           {t('quotation.editDraft.companiesInvited')}
-          {bankingSegment && (
+          {segmentSet.length > 0 && (
             <span className="ml-1.5 text-purple-600 font-normal">
-              ({t('quotation.editDraft.eligibleFor')} <strong>{bankingSegment}</strong>)
+              ({t('quotation.editDraft.eligibleFor')}{' '}
+              <strong>{segmentSet.map(segmentLabel).join(', ')}</strong>)
             </span>
           )}
         </div>
@@ -390,6 +420,7 @@ const EditDraftForm = ({
               >
                 <Icon name="building" style="solid" className="size-3" />
                 <span className="font-medium">{editCompanyNames[id] ?? id.slice(0, 8)}</span>
+                <MissingSegmentsBadge missing={missingFor(id)} />
                 <button
                   type="button"
                   onClick={() => handleRemoveChip(id)}
@@ -428,9 +459,11 @@ const EditDraftForm = ({
               </div>
             ) : filteredCompanies.length === 0 ? (
               <div className="px-4 py-4 text-center text-gray-500 text-xs">
-                {bankingSegment
-                  ? t('quotation.editDraft.noEligibleCompanies')
-                  : t('quotation.editDraft.noCompaniesFound')}
+                {isCompaniesError
+                  ? t('quotation.editDraft.failedToLoadCompanies')
+                  : noCoverage
+                    ? t('quotation.editDraft.noCoveringCompanies')
+                    : t('quotation.editDraft.noCompaniesFound')}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -464,6 +497,7 @@ const EditDraftForm = ({
                       <span className="flex-1 truncate text-gray-900">
                         {localizeCompanyName(company.companyName, company.companyNameLocal)}
                       </span>
+                      <SegmentChips segments={company.loanTypes} />
                     </button>
                   );
                 })}
@@ -531,13 +565,23 @@ interface QuotationSectionProps {
   onCreateNew: () => void;
   /** @deprecated The "add to existing" flow is not used in the IBG quotation model. */
   onAddToExisting?: () => void;
+  /**
+   * Offer "assign every appraisal right after finalize" in the Finalize dialog (standalone
+   * quotations only). The Administration page passes false: the admin has this appraisal's
+   * appraisal-assignment task open there, and auto-assign would resume that same task.
+   */
+  allowAutoAssign?: boolean;
 }
 
 type SendStep = 'confirm' | 'share-docs';
 
-const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
+const QuotationSection = ({
+  appraisalId,
+  onCreateNew,
+  allowAutoAssign = true,
+}: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
-  const { t, i18n } = useTranslation('appraisal');
+  const { t, i18n } = useTranslation(['appraisal', 'quotation']);
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const canOpenQuotation = hasRoleOrPermission(currentUser, QUOTATION_SELECTION_ROLES);
@@ -606,9 +650,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   // If there's an active quotation, fetch its detail (with company submissions)
   const activeQuotation = quotations[0] ?? null;
-  const { data: quotationDetail, isLoading: isLoadingDetail } = useGetQuotationById(
-    activeQuotation?.id ?? null,
-  );
+  const {
+    data: quotationDetail,
+    isLoading: isLoadingDetail,
+    isError: isDetailError,
+  } = useGetQuotationById(activeQuotation?.id ?? null);
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
@@ -650,9 +696,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
     ];
-    const appraisalNumbers = appraisals
-      .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean);
+    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean);
 
     const targetTime = cutOffTime
       ? cutOffTime.toLocaleTimeString('th-TH', {
@@ -1111,7 +1155,26 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const companyCount =
       draftDetail?.totalCompaniesInvited ?? activeQuotation.totalCompaniesInvited ?? 0;
     const hasDueDate = !!activeQuotation.cutOffTime;
-    const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
+    // Segment Coverage: every invited company must be able to appraise every banking segment in
+    // the quotation's Segment Set, otherwise the API refuses to send it.
+    const segmentGaps = getSegmentGaps(draftDetail?.invitedCompanies);
+    // Not sendable until the detail has loaded: without it the gaps are unknown.
+    const canSend =
+      !!draftDetail &&
+      appraisalCount >= 1 &&
+      companyCount >= 1 &&
+      hasDueDate &&
+      segmentGaps.length === 0;
+    // Why Send is disabled (null when sendable), used as the button tooltip.
+    const sendBlockedReason = canSend
+      ? null
+      : !draftDetail
+        ? isDetailError
+          ? t('quotation.loadDetailFailed')
+          : null
+        : segmentGaps.length > 0
+          ? t('quotation:segment.sendBlockedTitle')
+          : t('quotation.sendRequirementsHint');
     const draftAppraisals = draftDetail?.appraisals ?? [];
 
     /** Step 1 (share docs) → Step 2 (email). Requires full doc coverage. */
@@ -1167,7 +1230,17 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               },
               onError: (err: unknown) => {
                 const apiErr = err as { apiError?: { detail?: string } };
-                toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'));
+                if (isSegmentCoverageMismatch(err)) {
+                  // Localized text instead of the API's English detail. useSendQuotation refetches
+                  // the detail; leave the flow so the user lands on the refreshed segment alert
+                  // (shared-doc picks are kept for the next attempt).
+                  toast.error(t('quotation:segment.sendBlockedTitle'));
+                  setSendStep(null);
+                } else {
+                  toast.error(
+                    apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'),
+                  );
+                }
               },
             },
           );
@@ -1305,11 +1378,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                     size="sm"
                     onClick={() => setSendStep('share-docs')}
                     disabled={!canSend || isBusy}
-                    title={
-                      !canSend
-                        ? 'Add at least 1 appraisal, 1 company, and set a due date before sending'
-                        : undefined
-                    }
+                    title={sendBlockedReason ?? undefined}
                   >
                     <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
                     {t('quotation.sendQuotation')}
@@ -1328,10 +1397,21 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             <p className="text-xs text-amber-700">{t('quotation.draftHint')}</p>
           </div>
 
+          {/* Segment Coverage warning — only for users who can fix it, i.e. when the Edit button shows
+              (not read-only, owner of the draft), and not under the inline edit form, which flags
+              gaps per company itself. */}
+          {!readOnly && canEdit && !isEditing && (
+            <SegmentGapsAlert
+              gaps={segmentGaps}
+              className="px-4 py-3 text-xs border-b border-amber-100"
+            />
+          )}
+
           {/* Stats — read-only or edit form */}
           {isEditing ? (
             <EditDraftForm
-              bankingSegment={draftDetail?.bankingSegment || undefined}
+              segmentSet={draftDetail?.bankingSegment ?? EMPTY_SEGMENT_SET}
+              invitedCompanies={draftDetail?.invitedCompanies ?? EMPTY_INVITED}
               editDueDate={editDueDate}
               onDueDateChange={setEditDueDate}
               editCompanyIds={editCompanyIds}
@@ -1371,6 +1451,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                     <InvitedCompaniesPopover
                       companies={draftDetail?.invitedCompanies ?? []}
                       totalInvited={companyCount}
+                      showSegmentGaps
                     />
                   </div>
                   <div
@@ -1396,6 +1477,15 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   </div>
                 </div>
               </div>
+
+              {(draftDetail?.bankingSegment?.length ?? 0) > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="text-xs text-gray-500 mb-1">
+                    {t('quotation:segment.segmentSet')}
+                  </div>
+                  <SegmentChips segments={draftDetail?.bankingSegment} />
+                </div>
+              )}
 
               {/* Request Details — Special Requirements (request-wide). Per-appraisal
                   Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}
@@ -1466,7 +1556,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   <Icon name="file-check" style="solid" className="size-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     {t('quotation.shareDocuments.title')}
                   </h3>
                   <p className="text-xs text-gray-500">{t('quotation.shareDocuments.step')}</p>
@@ -1632,6 +1722,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
               winnerItems={winner.items ?? []}
               appraisals={quotationDetail.appraisals ?? []}
+              allowAutoAssign={allowAutoAssign && isStandaloneQuotation(quotationDetail)}
             />
             <NegotiationModal
               isOpen={isNegotiateOpen}
@@ -1656,7 +1747,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           {renderQuotationNumber('text-sm font-semibold text-gray-700')}
           <QuotationStatusBadge status={status} />
         </div>
-        <NegotiationPanel quotation={quotationDetail} />
+        <NegotiationPanel quotation={quotationDetail} allowAutoAssign={allowAutoAssign} />
         {renderCancelFooter()}
       </div>
     );

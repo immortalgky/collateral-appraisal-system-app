@@ -1,27 +1,35 @@
-import { useTranslation } from 'react-i18next';
-import FormCard from '@/shared/components/sections/FormCard';
-import CreateRequestFileInput from '../components/CreateRequestFileInput';
 import DocumentUploader from '../components/DocumentUploader';
-import { useFormReadOnly } from '@/shared/components/form/context';
 
 interface AttachDocumentFormProps {
   getOrCreateSession: () => Promise<string>;
-  /** Saved request id — enables the Appointment Letter action above the checklist. */
+  /** Saved request id — enables the Appointment Letter action in the card header. */
   requestId?: string;
+  /** Request not submitted yet: show which files came from the previous appraisal. */
+  showCarryForward?: boolean;
+  /** Retry after the previous appraisal's documents could not be loaded. */
+  onRetryCarryForward?: () => void;
+  /** A load is running: the retry action waits. */
+  carryBusy?: boolean;
 }
 
-const AttachDocumentForm = ({ getOrCreateSession, requestId }: AttachDocumentFormProps) => {
-  const { t } = useTranslation('request');
-  const isReadOnly = useFormReadOnly();
-
-  return (
-    <FormCard title={t('forms.attachDocument')} icon="paperclip" iconColor="teal">
-      <div className="flex flex-col gap-6">
-        {!isReadOnly && <CreateRequestFileInput getOrCreateSession={getOrCreateSession} />}
-        <DocumentUploader getOrCreateSession={getOrCreateSession} requestId={requestId} />
-      </div>
-    </FormCard>
-  );
-};
+/**
+ * The document card carries its own header, so it is not wrapped in a FormCard: that
+ * would put a card inside a card.
+ */
+const AttachDocumentForm = ({
+  getOrCreateSession,
+  requestId,
+  showCarryForward,
+  onRetryCarryForward,
+  carryBusy,
+}: AttachDocumentFormProps) => (
+  <DocumentUploader
+    getOrCreateSession={getOrCreateSession}
+    requestId={requestId}
+    showCarryForward={showCarryForward}
+    onRetryCarryForward={onRetryCarryForward}
+    carryBusy={carryBusy}
+  />
+);
 
 export default AttachDocumentForm;

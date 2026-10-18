@@ -21,21 +21,21 @@ export function DateCell({
   withTime?: boolean;
   withAgo?: boolean;
 }) {
-  if (!value) return <span className="text-gray-400 text-xs">—</span>;
+  if (!value) return <span className="text-gray-400">—</span>;
   try {
     const parsed = parseISO(value);
     const fmt = customFormat ?? (withTime ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy');
     return (
       <div className="flex flex-col gap-0.5">
-        <span className="text-xs text-gray-600 tabular-nums">{format(parsed, fmt)}</span>
+        <span className="text-table text-gray-600 tabular-nums">{format(parsed, fmt)}</span>
         {withAgo && (
-          <span className="text-[10px] text-gray-400 tabular-nums">
+          <span className="text-xs text-gray-400 tabular-nums">
             {formatDistanceToNowStrict(parsed, { addSuffix: true })}
           </span>
         )}
       </div>
     );
   } catch {
-    return <span className="text-gray-400 text-xs">—</span>;
+    return <span className="text-gray-400">—</span>;
   }
 }

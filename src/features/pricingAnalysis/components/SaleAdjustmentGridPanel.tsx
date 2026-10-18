@@ -452,7 +452,7 @@ export function SaleAdjustmentGridPanel({
                   type="button"
                   onClick={onCancelCalculationMethod}
                   disabled={saveMutation.isPending}
-                  className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                  className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
                 >
                   {t('footer.cancel')}
                 </Button>
@@ -474,7 +474,7 @@ export function SaleAdjustmentGridPanel({
                   form={formId}
                   isLoading={saveMutation.isPending}
                   disabled={saveMutation.isPending}
-                  className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                  className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
                 >
                   {!saveMutation.isPending && (
                     <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />

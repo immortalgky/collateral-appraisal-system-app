@@ -31,7 +31,12 @@
     "total": "Total Requested",
     "groupHint": "One decision applies to all fee lines above.",
     "currentFeesTitle": "Current fees on this appraisal",
-    "currentFeesTotal": "Current total"
+    "currentFeesTotal": "Current total",
+    "paymentOption": {
+      "label": "Payment type",
+      "customerPay": "Customer pay",
+      "bankAbsorb": "Bank absorb"
+    }
   },
   "decisions": {
     "approve": "Approve",
@@ -46,7 +51,8 @@
   "toasts": {
     "resolveSuccess": "Decision submitted successfully",
     "alreadyResolved": "This approval has already been resolved.",
-    "resolveFailed": "Failed to submit decision"
+    "resolveFailed": "Failed to submit decision",
+    "bankAbsorbUpdateFailed": "Decision was submitted, but updating the bank absorb amount failed. Please update it manually on the Appointment & Fee page."
   },
   "validation": {
     "reasonRequired": "A reason is required when rejecting"

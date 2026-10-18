@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
+import { KEYBOARD_RING_PLAIN, NO_OUTLINE, usePointerMode } from '@/shared/hooks/usePointerMode';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import SearchTips from './SearchTips';
 
@@ -9,6 +10,12 @@ export interface SuggestFieldOption {
   value: string;
   label: string;
   icon: string;
+  /**
+   * The scope's own tint, as whole class strings (Tailwind scans source text): `chip` at rest,
+   * `chipActive` while it is the scope in use. Left out, the chip is the neutral gray one.
+   */
+  chip?: string;
+  chipActive?: string;
 }
 
 interface SearchSuggestProps {
@@ -21,12 +28,16 @@ interface SearchSuggestProps {
   minLength: number;
   items: AppraisalDto[];
   fieldOptions: SuggestFieldOption[];
+  /** The scope the box searches now: the highlighted chip. */
+  field: string;
   /** Rows each field would return. `undefined` while that count is in flight, `null` if it failed. */
   counts: Record<string, number | null | undefined>;
   recent: string[];
   /** Index into the selectable rows, for arrow-key navigation; -1 for none. */
   activeIndex: number;
   onPickItem: (item: AppraisalDto) => void;
+  /** Switches the scope and leaves the panel open (unlike `onPickField`, which also closes it). */
+  onChangeField: (field: string) => void;
   onPickField: (field: string) => void;
   onPickRecent: (term: string) => void;
 }
@@ -47,20 +58,25 @@ function SearchSuggest({
   minLength,
   items,
   fieldOptions,
+  field,
   counts,
   recent,
   activeIndex,
   onPickItem,
+  onChangeField,
   onPickField,
   onPickRecent,
 }: SearchSuggestProps) {
   const { t } = useTranslation('appraisal');
+  const { pointerMode, onPointerDownCapture } = usePointerMode();
   const trimmed = term.trim();
   let index = -1;
+  // Every row is a button the arrow keys also walk; Tab onto one draws the green keyboard ring
+  // (the global blue outline can only be switched off inline — see NO_OUTLINE).
   const rowClass = (i: number) =>
     `flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm ${
       i === activeIndex ? 'bg-gray-100' : 'hover:bg-gray-50'
-    }`;
+    } ${pointerMode ? '' : KEYBOARD_RING_PLAIN}`;
 
   const section = (title: string, body: ReactNode) => (
     <div className="border-b border-gray-100 p-1.5 last:border-b-0">
@@ -86,6 +102,7 @@ function SearchSuggest({
                   type="button"
                   data-suggest-item
                   onClick={() => onPickRecent(r)}
+                  style={NO_OUTLINE}
                   className={rowClass(i)}
                 >
                   <Icon style="solid" name="clock-rotate-left" className="size-3 text-gray-400" />
@@ -131,6 +148,7 @@ function SearchSuggest({
                   type="button"
                   data-suggest-item
                   onClick={() => onPickItem(item)}
+                  style={NO_OUTLINE}
                   className={rowClass(i)}
                 >
                   <span className="shrink-0 font-medium text-primary">{item.appraisalNumber}</span>
@@ -154,6 +172,7 @@ function SearchSuggest({
                 type="button"
                 data-suggest-item
                 onClick={() => onPickField(f.value)}
+                style={NO_OUTLINE}
                 className={rowClass(i)}
               >
                 <Icon style="solid" name={f.icon} className="size-3 text-primary" />
@@ -178,7 +197,61 @@ function SearchSuggest({
   }
 
   return (
-    <div className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[min(70vh,calc(100dvh-16rem))] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+    <div
+      data-suggest-panel
+      onPointerDownCapture={onPointerDownCapture}
+      className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[min(70vh,calc(100dvh-16rem))] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+    >
+      {/* Same chips as the topbar quick search (nav.search.searchIn). Not data-suggest-item: the
+          arrow walk is for results; Tab reaches these, then Left/Right moves along the row. */}
+      <div className="border-b border-gray-100 p-2">
+        <p
+          id="appraisal-suggest-scope"
+          className="px-2 py-1 text-xs font-semibold uppercase tracking-wider text-gray-400"
+        >
+          {t('list.suggest.scope')}
+        </p>
+        {/* The keys only bubble up from the chip buttons inside; the group itself is never the target. */}
+        {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+        <div
+          role="group"
+          aria-labelledby="appraisal-suggest-scope"
+          className="mt-1 flex flex-wrap gap-1.5"
+          onKeyDown={e => {
+            if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+            const chips = Array.from(
+              e.currentTarget.querySelectorAll<HTMLElement>('[data-scope-chip]'),
+            );
+            const at = chips.indexOf(e.target as HTMLElement);
+            if (at < 0) return;
+            e.preventDefault();
+            const step = e.key === 'ArrowRight' ? 1 : -1;
+            chips[(at + step + chips.length) % chips.length].focus();
+          }}
+        >
+          {fieldOptions.map(f => {
+            const active = f.value === field;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                data-scope-chip
+                aria-pressed={active}
+                style={NO_OUTLINE}
+                onClick={() => onChangeField(f.value)}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                  active
+                    ? (f.chipActive ?? 'bg-gray-200 text-gray-500 ring-1 ring-inset ring-gray-200')
+                    : (f.chip ?? 'bg-gray-50 text-gray-600 hover:bg-gray-100')
+                } ${pointerMode ? '' : KEYBOARD_RING_PLAIN}`}
+              >
+                <Icon style="solid" name={f.icon} className="size-3.5" />
+                {f.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
       {content}
       <div className="flex flex-wrap gap-3 border-t border-gray-100 bg-gray-50 px-3.5 py-2 text-[11px] text-gray-500">
         <span>

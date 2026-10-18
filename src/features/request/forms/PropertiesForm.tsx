@@ -1,51 +1,50 @@
+import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import FormTable, { type FormTableColumn } from '../components/tables/FormTable';
+import FormTable, { AddRowButton } from '../components/tables/FormTable';
 import { SectionHeader } from '../../../shared/components';
-import { mapBuildingType } from '../data/mapCollateral';
+import { FormFields } from '@/shared/components/form';
+import { useFormReadOnly } from '@/shared/components/form/context';
+import { useDealerOptions } from '@/shared/utils/parameterUtils';
+import { makeDealerFields } from '../configs/fields';
+import { makePropertyColumns } from '../configs/tableColumns';
 
 const PropertiesForm = () => {
   const { t } = useTranslation('request');
+  const readOnly = useFormReadOnly();
+  const addRow = useRef<() => void>(null);
+  const dealerOptions = useDealerOptions();
+  const dealerFields = useMemo(() => makeDealerFields(t, dealerOptions), [t, dealerOptions]);
 
-  const propertiesColumns: FormTableColumn[] = [
-    {
-      name: 'propertyType',
-      label: t('fields.propertyType'),
-      inputType: 'dropdown',
-      group: 'PropertyType',
-    },
-    {
-      name: 'buildingType',
-      label: t('fields.buildingType'),
-      inputType: 'dropdown',
-      group: 'BuildingType',
-      otherField: true,
-      otherFieldName: 'buildingTypeOther',
-      otherTriggerValue: '99',
-      maxLength: 100,
-      filterOptions: {
-        type: 'dynamic',
-        field: 'propertyType',
-        map: mapBuildingType,
-      },
-    },
-    {
-      name: 'sellingPrice',
-      label: t('fields.sellingPrice'),
-      inputType: 'number',
-      maxIntegerDigits: 15,
-      decimalPlaces: 2,
-    },
-  ];
+  const propertiesColumns = useMemo(() => makePropertyColumns(t), [t]);
 
   return (
     <div>
-      <SectionHeader title={t('forms.properties')} required={true} />
+      <SectionHeader
+        title={t('requestForm.sections.properties')}
+        required={true}
+        rightIcon={
+          !readOnly && (
+            <AddRowButton onClick={() => addRow.current?.()} label={t('requestForm.addProperty')} />
+          )
+        }
+      />
       <FormTable
         name="properties"
         columns={propertiesColumns}
         sumColumns={['sellingPrice']}
         totalFieldName="detail.loanDetail.totalSellingPrice"
+        variant="plain"
+        totalLabel={t('requestForm.totalSellingPrice')}
+        hideAddButton
+        addRowRef={addRow}
+        seedEmptyRow
       />
+      {/* The dealer code is property data (like a project code), so it sits under the table. */}
+      <div className="mt-3 grid grid-cols-12 gap-x-3.5">
+        <div className="col-span-5">
+          <FormFields fields={dealerFields} namePrefix="detail.contact" />
+        </div>
+      </div>
     </div>
   );
 };

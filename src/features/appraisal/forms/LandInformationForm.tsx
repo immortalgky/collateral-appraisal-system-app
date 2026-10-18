@@ -111,7 +111,7 @@ export default function LandInformationForm() {
     <div className="flex gap-6">
       {/* Section Title */}
       <div className="w-44 flex-shrink-0">
-        <h3 className="text-base font-medium">Land Information</h3>
+        <h3 className="text-base font-semibold">Land Information</h3>
       </div>
 
       {/* Form Fields */}

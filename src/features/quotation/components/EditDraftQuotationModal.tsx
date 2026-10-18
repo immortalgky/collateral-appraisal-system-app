@@ -20,6 +20,9 @@ import type {
 } from '../schemas/quotation';
 import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
 import type { SelectedAppraisal } from './AppraisalPicker';
+import { MissingSegmentsBadge, SegmentChips } from './SegmentBadges';
+import { getSelectAllState, useCoveringCompanySearch } from '../hooks/useCoveringCompanySearch';
+import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface EditDraftQuotationModalProps {
@@ -32,6 +35,7 @@ interface SelectedCompany {
   id: string;
   companyName: string;
   companyNameLocal?: string | null;
+  loanTypes: string[];
 }
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
@@ -92,25 +96,39 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
   const isPending = isEditing || isSavingDocs || isAddingAppraisal || isRemovingAppraisal;
 
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetLoanTypeMatchedCompanies(
-    undefined,
-    isOpen,
-  );
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompanies,
+    isError: isCompaniesError,
+  } = useGetLoanTypeMatchedCompanies(undefined, isOpen);
 
   const allCompanies: SelectedCompany[] = useMemo(
     () =>
-      (rawCompanies ?? []).map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal })),
+      (rawCompanies ?? []).map(c => ({
+        id: c.id,
+        companyName: c.name,
+        companyNameLocal: c.nameLocal,
+        loanTypes: c.loanTypes ?? [],
+      })),
     [rawCompanies],
   );
 
-  const filteredCompanies = useMemo(() => {
-    if (!searchQuery.trim()) return allCompanies;
-    const q = searchQuery.toLowerCase();
-    return allCompanies.filter(
-      c =>
-        c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
-    );
-  }, [allCompanies, searchQuery]);
+  // Segment Set of the appraisals currently in the draft (existing + added, minus marked-for-removal).
+  // Only companies that cover every segment in it are listed — the same rule NewQuotationPage's
+  // CompanyPicker applies, and the one the API's Send guard is authoritative on.
+  const segmentSet = useMemo(
+    () =>
+      buildSegmentSet(
+        appraisals.filter(a => !markedForRemovalIds.has(a.id)).map(a => a.bankingSegment),
+      ),
+    [appraisals, markedForRemovalIds],
+  );
+
+  const {
+    covering,
+    filtered: filteredCompanies,
+    noCoverage,
+  } = useCoveringCompanySearch(allCompanies, segmentSet, searchQuery);
 
   // Seed form once per open
 
@@ -122,6 +140,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         id: c.companyId,
         companyName: c.companyName,
         companyNameLocal: c.companyNameLocal,
+        loanTypes: c.loanTypes ?? [],
       })),
     );
     setAppraisals(
@@ -131,6 +150,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
         appraisalNumber: a.appraisalNumber ?? a.appraisalId.slice(0, 8),
         customerName: a.customerName ?? null,
         maxAppraisalDays: a.maxAppraisalDays ?? null,
+        bankingSegment: a.bankingSegment ?? null,
       })),
     );
     const seededDocs: DocSelections = {};
@@ -386,6 +406,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                     <span className="font-medium">
                       {localizeCompanyName(c.companyName, c.companyNameLocal)}
                     </span>
+                    <MissingSegmentsBadge missing={getMissingSegments(segmentSet, c.loanTypes)} />
                     <button
                       type="button"
                       onClick={() => handleRemoveCompany(c.id)}
@@ -427,19 +448,23 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
               {!isLoadingCompanies &&
                 filteredCompanies.length > 0 &&
                 (() => {
-                  const selectedSet = new Set(selectedCompanies.map(c => c.id));
-                  const allVisibleSelected = filteredCompanies.every(c => selectedSet.has(c.id));
-                  const someVisibleSelected = filteredCompanies.some(c => selectedSet.has(c.id));
+                  const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } =
+                    getSelectAllState(filteredCompanies, covering, selectedCompanies, searchQuery);
                   return (
                     <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
                       <input
                         type="checkbox"
-                        checked={allVisibleSelected}
+                        checked={allChecked}
                         ref={el => {
-                          if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                          if (el) el.indeterminate = indeterminate;
                         }}
                         onChange={() =>
-                          handleSetAllVisibleCompanies(filteredCompanies, !allVisibleSelected)
+                          allVisibleSelected
+                            ? handleSetAllVisibleCompanies(
+                                [...filteredCompanies, ...hiddenSelected],
+                                false,
+                              )
+                            : handleSetAllVisibleCompanies(filteredCompanies, true)
                         }
                         className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
                         aria-label={t('aria.selectAllVisibleCompanies')}
@@ -464,7 +489,11 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                   </div>
                 ) : filteredCompanies.length === 0 ? (
                   <div className="px-4 py-6 text-center text-sm text-gray-500">
-                    {t('empty.noCompaniesInvited')}
+                    {isCompaniesError
+                      ? t('errors.failedToLoadCompanies')
+                      : noCoverage
+                        ? t('segment.noCoveringCompany')
+                        : t('empty.noCompaniesInvited')}
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">
@@ -502,6 +531,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                           <span className="text-sm font-medium text-gray-900 truncate flex-1">
                             {localizeCompanyName(c.companyName, c.companyNameLocal)}
                           </span>
+                          <SegmentChips segments={c.loanTypes} />
                         </button>
                       );
                     })}

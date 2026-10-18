@@ -207,7 +207,8 @@
     "confirmReplace": {
       "title": "Replace existing units?",
       "message": "Uploading a new file will replace all current unit data. This cannot be undone.",
-      "confirm": "Replace"
+      "confirm": "Replace",
+      "messageWithPrices": "Uploading a new file replaces all existing unit data and clears every unit price (calculated and imported). Prices must be calculated or imported again. This cannot be undone."
     },
     "summary": {
       "towers": "Towers",
@@ -370,8 +371,10 @@
     "noModelAssumptions": "No model assumptions — add models first",
     "calculatedUnitPrices": "Calculated Unit Prices",
     "noUnitsUploaded": "No units uploaded yet — upload a unit list first",
-    "totalUnits": "{{n}} units",
-    "total": "Total — {{n}} units",
+    "totalUnits_one": "{{n}} unit",
+    "totalUnits_other": "{{n}} units",
+    "total_one": "Total — {{n}} unit",
+    "total_other": "Total — {{n}} units",
     "cols": {
       "seqNo": "Seq No",
       "floor": "Floor",
@@ -407,6 +410,108 @@
       "coverageAmountBahtSqm": "Coverage Amount (Baht/Sq.m)",
       "fireInsuranceCode": "Fire Insurance Condition",
       "description": "Description"
+    },
+    "importedUnitPrices": "Unit prices from imported file",
+    "soldChip": "Sold",
+    "valuesImported": "Values from imported file",
+    "valuesPreview": "Preview (not saved)",
+    "source": {
+      "label": "Unit price source",
+      "calculated": "Calculated in system",
+      "imported": "Import prices from Excel",
+      "loading": "Loading price source"
+    },
+    "switchToCalculated": {
+      "title": "Switch to system calculation?",
+      "message": "The imported prices are kept until you press Save (there is no Save Draft in this mode). Save recalculates and overwrites every unit, and the appraisal total changes with it.",
+      "confirm": "Switch mode"
+    },
+    "import": {
+      "cardTitle": "Imported price file",
+      "hint": "Every unit price comes from the uploaded file. Stored values are shown as is and are not recalculated. To change a price, edit the Excel file and upload it again.",
+      "noFile": "No price file yet. Download the template, fill in the prices outside the system and upload it back, or use the price list approved by the committee.",
+      "emptyPrices": "No prices yet. Upload a price file first; until then the appraisal total keeps its previous value.",
+      "file": "File",
+      "unitsPriced": "Units with a price",
+      "totalValue": "Total appraisal value",
+      "downloadTemplate": "Download template",
+      "downloadTemplateTitle": "Current units + latest prices",
+      "upload": "Upload price file",
+      "templateFailed": "Could not download the template",
+      "dialog": {
+        "title": "Import unit prices from Excel",
+        "choose": "Choose .xlsx file",
+        "chooseAnother": "Choose another file",
+        "hint": "First sheet only · the first row holds the column headers · the totals row at the bottom is used to check the sums and is not imported",
+        "checking": "Checking file",
+        "cancel": "Cancel",
+        "confirm_one": "Import prices for {{n}} unit",
+        "confirm_other": "Import prices for {{n}} units",
+        "success_one": "Imported prices for {{n}} unit",
+        "success_other": "Imported prices for {{n}} units",
+        "importFailed": "Could not import the prices",
+        "previewFailed": "Could not check the file",
+        "invalidType": "Only .xlsx files are supported",
+        "tooLarge": "The file is larger than {{max}} MB",
+        "matched": "Units matched",
+        "matchedBy": "by {{key1}} {{n1}} · {{key2}} {{n2}}",
+        "errorRows": "Rows that cannot be imported",
+        "passed": "Passed",
+        "blocking": "Fix the file",
+        "missingFromFile": "Units with no price in the file (prices will be cleared)",
+        "willClear": "Prices will be cleared",
+        "totalValue": "Total appraisal value",
+        "noSheetTotals": "Not in the file's totals row",
+        "sheetMatch": "Matches the totals row in the file",
+        "sheetMismatch": "Differs from the totals row in the file (file says {{n}})",
+        "errorsBanner_one": "{{n}} error found. Fix the file before importing.",
+        "errorsBanner_other": "{{n}} errors found. Fix the file before importing.",
+        "missingBanner_one": "{{n}} unit has no price in the file (absent from it, or listed with a blank price). Its price will be cleared on import.",
+        "missingBanner_other": "{{n}} units have no price in the file (absent from it, or listed with a blank price). Their prices will be cleared on import.",
+        "diffsBanner_one": "{{n}} unit detail differs from the system. For information only: it does not block the import and is not written.",
+        "diffsBanner_other": "{{n}} unit details differ from the system. For information only: they do not block the import and are not written.",
+        "sampleTitle_one": "Sample of changes (first {{n}} row)",
+        "sampleTitle_other": "Sample of changes (first {{n}} rows)",
+        "writeWarning": "On import, every unit price is replaced by the value in the file · the project mode becomes \"Imported from Excel\" · the appraisal total and the workflow (used to pick the approval tier) update immediately",
+        "keys": {
+          "condo1": "Room",
+          "condo2": "Registration no.",
+          "lb1": "Plot no.",
+          "lb2": "House no."
+        },
+        "cols": {
+          "row": "Row",
+          "key": "Key",
+          "problem": "Problem",
+          "column": "Column",
+          "system": "In system",
+          "file": "In file",
+          "previous": "Previous rounded value",
+          "new": "From file",
+          "diff": "Difference"
+        },
+        "errorCodes": {
+          "MissingHeader": "A required column header is missing from the file",
+          "UnitNotFound": "This unit was not found in the system",
+          "AmbiguousMatch": "This row matches more than one unit",
+          "DuplicateUnit": "This unit is claimed by more than one row",
+          "InvalidNumber": "The number is not valid",
+          "MissingAppraisalValue": "The appraisal value is missing",
+          "MissingPrice": "The forced-sale price is blank on a row that has a price"
+        },
+        "moreItems": "+{{n}} more",
+        "totalForceSale": "Total forced-sale price",
+        "totalCoverage": "Total fire-insurance value",
+        "noMatchBanner": "The file has no priced unit that matches this project, so nothing can be imported."
+      },
+      "fileUnknown": "The prices come from an imported file, but its details are not available (for example after a new unit list was uploaded).",
+      "loadingFigures": "Loading figures"
+    },
+    "valuesCalculated": "Calculated in system",
+    "discardChanges": {
+      "title": "Discard unsaved changes?",
+      "message": "Assumption and flag edits that have not been saved will be dropped and reset to the saved values.",
+      "confirm": "Discard and switch"
     }
   },
   "changeProjectType": {
@@ -650,7 +755,7 @@
       "deleteSuccess": "Upload deleted",
       "deleteFailed": "Failed to delete upload",
       "invalidFileType": "Invalid file type. Only {{extensions}} are supported.",
-      "fileTooLarge": "File size exceeds 10 MB limit."
+      "fileTooLarge": "File size exceeds {{max}} MB limit."
     },
     "pricing": {
       "saveSuccess": "Pricing assumptions saved and unit prices recalculated",

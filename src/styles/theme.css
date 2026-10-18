@@ -270,6 +270,33 @@
 }
 
 /* ========================================
+   Type scale
+   Tailwind's defaults are rem sizes meant for a 16px root. This app's root is 14px (src/index.css),
+   so every step is written in rem against that root. Since 2026-10-10 the scale sits one step under
+   the Tailwind defaults to match the mocks: at the 14px root xs 12, sm 13, base 15, lg 16, xl 18,
+   2xl 22, 3xl 28 (4xl and up unchanged). Body, inputs and Button md are text-sm (13); table rows
+   text-table (12.5); labels, captions, th and badges are text-xs (12); card headings text-base (15).
+   The sizes stay rem, so the viewport step and the user's density setting still scale them.
+   ======================================== */
+@theme {
+    --text-xs: 0.8571rem;
+    --text-sm: 0.9286rem;
+    --text-base: 1.0714rem;
+    --text-lg: 1.1429rem;
+    --text-xl: 1.2857rem;
+    --text-2xl: 1.5714rem;
+    --text-3xl: 2rem;
+    --text-4xl: 2.5714rem;
+    --text-5xl: 3.4286rem;
+    --text-6xl: 4.2857rem;
+    --text-7xl: 5.1429rem;
+    --text-8xl: 6.8571rem;
+    --text-9xl: 9.1429rem;
+    /* Table rows: half a step under the body text (text-sm 13): 12.5px at the 14px root. */
+    --text-table: 0.8929rem;
+}
+
+/* ========================================
    Line height
    Thai glyphs fall back to Sarabun, but a fixed line-height sizes the line box
    from Roboto's metrics (ascent ~0.93em). Stacked Thai marks (ที่ ต้) reach
@@ -284,4 +311,5 @@
     --text-lg--line-height: var(--cas-leading);
     --text-xl--line-height: var(--cas-leading);
     --text-2xl--line-height: var(--cas-leading);
+    --text-table--line-height: var(--cas-leading);
 }

@@ -16,7 +16,6 @@ import {
 } from '@features/common/monitoring/components/SlaCells';
 import PoolTaskListPage from '../pages/PoolTaskListPage';
 import { useGetTaskCounts, useGetTasks } from '../api';
-import { useDebounce } from '@/shared/hooks/useDebounce';
 import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
 import {
   columnDefs,
@@ -29,10 +28,10 @@ import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { TaskFilterDialog } from './TaskFilterDialog';
 import { TaskKanbanBoard } from './TaskKanbanBoard';
+import { useTaskListUrlState } from '../hooks/useTaskListUrlState';
 
 type SortDirection = 'asc' | 'desc';
 type ViewMode = 'list' | 'grid';
-type ActiveTab = 'personal' | 'pool';
 
 interface ContextMenuState {
   visible: boolean;
@@ -108,10 +107,20 @@ const defaultTdClass = 'px-3 py-1.5 text-gray-600 text-xs';
 export function ActivityTaskTable({ activityId, title, description }: ActivityTaskTableProps) {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
-  const [activeTab, setActiveTab] = useState<ActiveTab>('personal');
-  const [poolSearch, setPoolSearch] = useState('');
-  const debouncedPoolSearch = useDebounce(poolSearch, 400);
-  const [poolFilters, setPoolFilters] = useState<TaskFilterParams>({});
+  const {
+    activeTab,
+    setActiveTab,
+    searchTerm,
+    setSearchTerm,
+    debouncedSearch,
+    filters,
+    setFilters,
+    poolSearch,
+    setPoolSearch,
+    debouncedPoolSearch,
+    poolFilters,
+    setPoolFilters,
+  } = useTaskListUrlState(activityId);
   const [poolFilterDialogOpen, setPoolFilterDialogOpen] = useState(false);
   const poolFilterChips = Object.entries(poolFilters).filter(([, v]) => !!v) as [
     keyof TaskFilterParams,
@@ -176,13 +185,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
   const [groupBy, setGroupBy] = useState<GroupByField>('status');
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(25);
-  const [searchTerm, setSearchTerm] = useState('');
-  const debouncedSearch = useDebounce(searchTerm, 400);
   const isSearchPending = searchTerm !== debouncedSearch;
   const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [filters, setFilters] = useState<TaskFilterParams>({});
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     visible: false,
     x: 0,
@@ -300,7 +306,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
       {/* Header + quick access (single row to save vertical space) */}
       <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
         <div className="shrink-0">
-          <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
           <p className="text-xs text-gray-500 mt-0.5">{description}</p>
         </div>
 
@@ -690,7 +696,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               >
                 <table
                   ref={tableRef}
-                  className="table-fixed text-sm"
+                  className="table-fixed text-table"
                   style={{ width: totalTableWidth }}
                 >
                   <colgroup>
@@ -732,7 +738,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                           </th>
                         );
                       })}
-                      <th className="px-4 py-2.5 w-8 bg-gray-50" />
+                      <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">

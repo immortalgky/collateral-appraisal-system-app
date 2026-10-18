@@ -33,7 +33,7 @@ const SavedSearchesPanel = ({
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-      <h2 className="text-sm font-semibold text-gray-900">{t('sidebar.savedSearchesTitle')}</h2>
+      <h2 className="text-base font-semibold text-gray-900">{t('sidebar.savedSearchesTitle')}</h2>
       <p className="text-xs text-gray-500 mt-0.5">{t('sidebar.savedSearchesSubtitle')}</p>
 
       <div className="flex flex-col gap-1.5 mt-2.5">

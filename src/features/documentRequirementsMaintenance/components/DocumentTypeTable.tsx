@@ -14,8 +14,9 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
-import type { DocumentTypeDto } from '../types';
+import { carryForwardLockKind, type DocumentTypeDto } from '../types';
 
 interface Props {
   documentTypes: DocumentTypeDto[];
@@ -30,6 +31,30 @@ interface RowProps {
   onEdit: (dt: DocumentTypeDto) => void;
   onDelete: (dt: DocumentTypeDto) => void;
 }
+
+const pill = 'inline-flex rounded px-1.5 py-0.5 text-[11px] font-medium';
+
+const CarryForwardPill = ({ dt }: { dt: DocumentTypeDto }) => {
+  const { t } = useTranslation('request');
+  const locked = carryForwardLockKind(dt);
+  if (locked === 'target')
+    return (
+      <span className={`${pill} bg-violet-50 text-violet-700`}>
+        {t('carryForward.admin.lockedTarget')}
+      </span>
+    );
+  if (locked === 'source')
+    return (
+      <span className={`${pill} bg-gray-100 text-gray-600`}>
+        {t('carryForward.admin.lockedSource')}
+      </span>
+    );
+  return dt.carryForwardByDefault ? (
+    <span className={`${pill} bg-green-50 text-green-700`}>{t('carryForward.admin.use')}</span>
+  ) : (
+    <span className={`${pill} bg-amber-50 text-amber-700`}>{t('carryForward.admin.dontUse')}</span>
+  );
+};
 
 const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -50,6 +75,9 @@ const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
       <td className="px-4 py-3 font-medium text-gray-900">{dt.code}</td>
       <td className="px-4 py-3 text-gray-700">{dt.name}</td>
       <td className="px-4 py-3 text-gray-500">{dt.category}</td>
+      <td className="px-4 py-3">
+        <CarryForwardPill dt={dt} />
+      </td>
       <td className="px-4 py-3">{dt.isActive ? 'Yes' : 'No'}</td>
       <td className="px-4 py-3">
         <div className="flex justify-end gap-2">
@@ -80,6 +108,7 @@ export default function DocumentTypeTable({
   onDelete,
   onReorder,
 }: Props) {
+  const { t } = useTranslation('request');
   // Local order for optimistic drag feedback; resync when server data changes.
   const [order, setOrder] = useState<DocumentTypeDto[]>(documentTypes);
   useEffect(() => setOrder(documentTypes), [documentTypes]);
@@ -112,15 +141,16 @@ export default function DocumentTypeTable({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
+      <table className="min-w-full divide-y divide-gray-200 text-table">
         <thead className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
           <tr>
-            <th className="px-2 py-3 w-10" />
-            <th className="px-4 py-3">Code</th>
-            <th className="px-4 py-3">Name</th>
-            <th className="px-4 py-3">Category</th>
-            <th className="px-4 py-3">Active</th>
-            <th className="px-4 py-3 text-right">Actions</th>
+            <th className="text-xs px-2 py-3 w-10 font-semibold" />
+            <th className="text-xs px-4 py-3 font-semibold">Code</th>
+            <th className="text-xs px-4 py-3 font-semibold">Name</th>
+            <th className="text-xs px-4 py-3 font-semibold">Category</th>
+            <th className="text-xs px-4 py-3 font-semibold">{t('carryForward.admin.column')}</th>
+            <th className="text-xs px-4 py-3 font-semibold">Active</th>
+            <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">

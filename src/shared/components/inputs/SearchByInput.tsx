@@ -2,12 +2,16 @@ import type { ReactNode } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
+import { KEYBOARD_RING_PLAIN, usePointerMode } from '@/shared/hooks/usePointerMode';
 
 export interface SearchByOption {
   value: string;
   label: string;
   /** Icon name (FA sprite) shown for the field — reflects what you're searching by. */
   icon?: string;
+  /** 'pill' variant: the classes of the pill while this field is the selected one (its tint),
+   *  in place of the default grey. */
+  pillClass?: string;
 }
 
 interface SearchByInputProps {
@@ -31,6 +35,25 @@ interface SearchByInputProps {
    * (e.g. "type at least 3 characters") is orphaned and never announced.
    */
   describedBy?: string;
+  /**
+   * 'pill' draws the field selector as the soft grey pill of the top bar's quick search, inside
+   * the same white bordered box, followed by a magnifier — no divider. Opt-in: the other callers
+   * keep the plain selector.
+   */
+  variant?: 'default' | 'pill';
+  /**
+   * 'pill' only: what clicking the scope pill does. The pill has no menu of its own — the caller
+   * opens its own panel (the page's suggestion panel, with the scope chips), as the top bar's
+   * quick-search badge does. It is a real button, so Enter and Space reach it too.
+   */
+  onFieldClick?: () => void;
+  /**
+   * 'pill' only: what the pill is for, e.g. "Search in field". The button's name then reads
+   * "<this>: <current scope>" instead of just the scope's own label.
+   */
+  fieldAriaLabel?: string;
+  /** 'pill' only: whether the panel the pill opens is showing, for aria-expanded. */
+  fieldExpanded?: boolean;
 }
 
 /**
@@ -48,8 +71,14 @@ function SearchByInput({
   className,
   endAdornment,
   describedBy,
+  variant = 'default',
+  onFieldClick,
+  fieldAriaLabel,
+  fieldExpanded,
 }: SearchByInputProps) {
   const selected = options.find(o => o.value === field);
+  const pill = variant === 'pill';
+  const { pointerMode, onPointerDownCapture } = usePointerMode();
 
   return (
     <div
@@ -58,59 +87,93 @@ function SearchByInput({
         'focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400',
         className,
       )}
+      onPointerDownCapture={onPointerDownCapture}
     >
       {/* Field selector */}
-      <Menu as="div" className="relative shrink-0">
-        <MenuButton
+      {pill ? (
+        // The top bar's badge, class for class (Navbar), in its grey: icon, label, chevron. The
+        // ring is the keyboard focus ring, not the global outline (switched off inline) — and
+        // not after the mouse (see usePointerMode).
+        <button
+          type="button"
+          onClick={onFieldClick}
+          aria-label={fieldAriaLabel ? `${fieldAriaLabel}: ${selected?.label ?? ''}` : undefined}
+          // It opens a panel (not a menu); expanded follows whether that panel is showing.
+          aria-haspopup="dialog"
+          aria-expanded={fieldExpanded}
           style={{ outline: 'none' }}
-          className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-gray-700 whitespace-nowrap hover:bg-gray-50"
-        >
-          {selected?.icon && (
-            <Icon style="solid" name={selected.icon} className="size-3.5 text-gray-500" />
+          className={clsx(
+            'ml-1.5 flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-medium whitespace-nowrap transition-all',
+            selected?.pillClass ?? 'bg-gray-100 text-gray-500',
+            !pointerMode && KEYBOARD_RING_PLAIN,
           )}
-          {selected?.label ?? ''}
-          <Icon style="regular" name="chevron-down" className="size-3 text-gray-400" />
-        </MenuButton>
-        <MenuItems
-          anchor="bottom start"
-          className="mt-1 min-w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg z-50 focus:outline-none"
         >
-          {options.map(o => {
-            const isSelected = o.value === field;
-            return (
-              <MenuItem key={o.value}>
-                <button
-                  type="button"
-                  onClick={() => onFieldChange(o.value)}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors data-focus:bg-gray-100"
-                >
-                  {o.icon && (
-                    <Icon
-                      style="solid"
-                      name={o.icon}
-                      className={clsx('size-3.5', isSelected ? 'text-gray-700' : 'text-gray-400')}
-                    />
-                  )}
-                  <span
-                    className={clsx('flex-1 truncate', isSelected && 'font-medium text-gray-900')}
+          {selected?.icon && <Icon style="solid" name={selected.icon} className="size-3" />}
+          <span className="leading-none">{selected?.label ?? ''}</span>
+          <Icon style="solid" name="chevron-down" className="size-2.5 opacity-60" />
+        </button>
+      ) : (
+        <Menu as="div" className="relative shrink-0">
+          <MenuButton
+            style={{ outline: 'none' }}
+            className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-gray-700 whitespace-nowrap hover:bg-gray-50"
+          >
+            {selected?.icon && (
+              <Icon style="solid" name={selected.icon} className="size-3.5 text-gray-500" />
+            )}
+            {selected?.label ?? ''}
+            <Icon style="regular" name="chevron-down" className="size-3 text-gray-400" />
+          </MenuButton>
+          <MenuItems
+            // The menu takes the focus when it opens; the global unlayered :focus-visible outline
+            // would box the whole panel in blue, and `focus:outline-none` cannot beat it.
+            style={{ outline: 'none' }}
+            anchor="bottom start"
+            className="mt-1 min-w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg z-50 focus:outline-none"
+          >
+            {options.map(o => {
+              const isSelected = o.value === field;
+              return (
+                <MenuItem key={o.value}>
+                  <button
+                    type="button"
+                    onClick={() => onFieldChange(o.value)}
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors data-focus:bg-gray-100"
                   >
-                    {o.label}
-                  </span>
-                  {isSelected && (
-                    <Icon style="solid" name="check" className="size-3.5 text-gray-600" />
-                  )}
-                </button>
-              </MenuItem>
-            );
-          })}
-        </MenuItems>
-      </Menu>
+                    {o.icon && (
+                      <Icon
+                        style="solid"
+                        name={o.icon}
+                        className={clsx('size-3.5', isSelected ? 'text-gray-700' : 'text-gray-400')}
+                      />
+                    )}
+                    <span
+                      className={clsx('flex-1 truncate', isSelected && 'font-medium text-gray-900')}
+                    >
+                      {o.label}
+                    </span>
+                    {isSelected && (
+                      <Icon style="solid" name="check" className="size-3.5 text-gray-600" />
+                    )}
+                  </button>
+                </MenuItem>
+              );
+            })}
+          </MenuItems>
+        </Menu>
+      )}
 
-      {/* Divider */}
-      <div className="h-5 w-px shrink-0 bg-gray-200" />
+      {!pill && <div className="h-5 w-px shrink-0 bg-gray-200" />}
 
       {/* Search input */}
-      <div className="flex flex-1 items-center px-3">
+      <div className={clsx('flex flex-1 items-center', pill ? 'pl-2 pr-3' : 'px-3')}>
+        {pill && (
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            className="pointer-events-none mr-2 size-4 shrink-0 text-gray-400"
+          />
+        )}
         <input
           type="text"
           value={value}

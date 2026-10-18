@@ -8,10 +8,9 @@ import PasswordPolicyChecklist from '@features/userManagement/components/Passwor
 import { usePasswordPolicyChecks } from '@features/userManagement/hooks/usePasswordPolicyChecks';
 import { useChangePassword } from '@features/userManagement/api/users';
 import { useAuthStore } from '../store';
+import { logout } from '../utils/logout';
 
 const emptyForm = { currentPassword: '', newPassword: '', confirmPassword: '' };
-
-const logoutUrl = `${import.meta.env.VITE_API_URL}/connect/logout?client_id=spa&post_logout_redirect_uri=${import.meta.env.VITE_APP_URL}/`;
 
 /**
  * Full-screen, non-dismissable gate shown by ProtectedRoute when the signed-in user has
@@ -137,9 +136,13 @@ const ForcedPasswordChange = () => {
             {t('buttons.changePassword')}
           </Button>
 
-          <a href={logoutUrl} className="text-center text-xs text-gray-400 hover:text-gray-600">
+          <button
+            type="button"
+            onClick={() => void logout()}
+            className="text-center text-xs text-gray-400 hover:text-gray-600"
+          >
             {t('forcedPasswordChange.signOut')}
-          </a>
+          </button>
         </div>
       </div>
     </div>

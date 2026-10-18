@@ -22,10 +22,10 @@ import type {
   InitiateReappraisalResult,
   BlockUnitInfo,
   NearbyReappraisalCandidate,
-  SkippedReappraisalItem,
 } from '../types';
 import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
+import { BookList, InitiateResultModal, TAG } from './InitiateResultModal';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,9 +37,6 @@ function formatNumber(n?: number): string {
 function rowToken(c: NearbyReappraisalCandidate): string {
   return (c.appraisalId ?? c.candidateId) as string;
 }
-
-const TAG =
-  'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border whitespace-nowrap';
 
 /** Why a book is in the group table: AS400 lists it as due, or it is a CAS appraisal brought forward. */
 function SourceTag({ row }: { row: NearbyReappraisalCandidate }) {
@@ -297,33 +294,6 @@ function SkipConfirmModal({
   );
 }
 
-/** One line per book: what its request will start with. */
-function BookList({
-  books,
-}: {
-  books: { bookNumber: string; hasPrior: boolean; tag?: ReactNode; note?: string }[];
-}) {
-  const { t } = useTranslation('reappraisal');
-  return (
-    <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100">
-      {books.map(b => (
-        <li key={b.bookNumber} className="px-3 py-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-primary tabular-nums">{b.bookNumber}</span>
-            {b.tag}
-          </div>
-          <p className="mt-0.5 text-[11px] text-gray-500">
-            {b.note ??
-              (b.hasPrior
-                ? t('detail.initiateModal.copiesPrior')
-                : t('detail.initiateModal.startsEmpty'))}
-          </p>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function InitiateConfirmModal({
   open,
   isPending,
@@ -356,113 +326,6 @@ function InitiateConfirmModal({
           isPending={isPending}
           confirmLabel={t('detail.initiateModal.confirm', { total: books.length })}
         />
-      </div>
-    </Modal>
-  );
-}
-
-const SKIP_REASON_KEY: Record<SkippedReappraisalItem['reason'], string> = {
-  AlreadyInFlight: 'detail.successModal.alreadyInFlight',
-  AlreadyReviewed: 'detail.successModal.alreadyReviewed',
-  NoBookNumber: 'detail.successModal.noBookNumber',
-  NotDue: 'detail.successModal.notDue',
-};
-
-function InitiateResultModal({
-  result,
-  onClose,
-}: {
-  result: InitiateReappraisalResult | null;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation(['reappraisal', 'common']);
-  const navigate = useNavigate();
-  if (!result) return null;
-  const accepted = result.accepted ?? [];
-  const createdCount = result.acceptedCount ?? accepted.length;
-  const skipped = result.skipped ?? [];
-  return (
-    <Modal isOpen onClose={onClose} title={t('detail.successModal.title')} size="md">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={clsx(
-              'size-9 shrink-0 rounded-full flex items-center justify-center',
-              createdCount > 0 ? 'bg-primary/10' : 'bg-amber-50',
-            )}
-          >
-            <Icon
-              style="solid"
-              name={createdCount > 0 ? 'check' : 'ban'}
-              className={clsx('size-4', createdCount > 0 ? 'text-primary' : 'text-amber-600')}
-            />
-          </div>
-          <div className="text-xs">
-            <p className="text-sm font-semibold text-gray-900">
-              {t('detail.successModal.createdDrafts', { total: createdCount })}
-              {createdCount > 0 && (
-                <span className="font-normal text-gray-500">
-                  {' · '}
-                  {t('detail.successModal.groupNumber')}{' '}
-                  <span className="tabular-nums">{result.groupNumber}</span>
-                </span>
-              )}
-            </p>
-            {createdCount > 0 && (
-              <p className="text-gray-500 mt-0.5">{t('detail.successModal.notSubmitted')}</p>
-            )}
-          </div>
-        </div>
-
-        {accepted.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-gray-600">
-              {t('detail.successModal.createdHeading')}
-            </p>
-            <BookList
-              books={accepted.map(a => ({
-                bookNumber: a.bookNumber,
-                hasPrior: a.prevAppraisalId != null,
-                tag: (
-                  <span className={clsx(TAG, 'bg-primary/5 text-primary border-primary/20')}>
-                    {t('progress.draft')}
-                  </span>
-                ),
-              }))}
-            />
-          </div>
-        )}
-
-        {skipped.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-gray-600">
-              {t('detail.successModal.skippedHeading', { total: skipped.length })}
-            </p>
-            <BookList
-              books={skipped.map((s, i) => ({
-                bookNumber: s.oldAppraisalReportNumber ?? `—${i}`,
-                hasPrior: false,
-                tag: (
-                  <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
-                    {t(SKIP_REASON_KEY[s.reason] as 'detail.successModal.notDue')}
-                  </span>
-                ),
-                note: t(`detail.successModal.reasonHint.${s.reason}`),
-              }))}
-            />
-          </div>
-        )}
-
-        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            {t('detail.backToList')}
-          </Button>
-          {createdCount > 0 && (
-            <Button variant="primary" size="sm" onClick={() => navigate('/requests')}>
-              {t('detail.successModal.goToRequests')}
-            </Button>
-          )}
-        </div>
       </div>
     </Modal>
   );
@@ -691,7 +554,7 @@ function ReappraisalDetailPage() {
           </button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-sm font-semibold text-gray-900 tabular-nums">
+              <h2 className="text-base font-semibold text-gray-900 tabular-nums">
                 {detail.oldAppraisalReportNumber}
               </h2>
               <ReappraisalStatusBadge
@@ -954,7 +817,7 @@ function ReappraisalDetailPage() {
           <table className="w-full min-w-max text-xs">
             <thead className="sticky top-0 z-10">
               <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
-                <th className="px-4 py-2.5 w-8" />
+                <th className="text-xs px-4 py-2.5 w-8 font-semibold" />
                 {[
                   t('detail.group.columns.book'),
                   t('detail.group.columns.source'),
@@ -963,11 +826,14 @@ function ReappraisalDetailPage() {
                   t('columns.lastAppraisal'),
                   t('columns.reviewDue'),
                 ].map(label => (
-                  <th key={label} className="px-3 py-2.5 text-left font-medium whitespace-nowrap">
+                  <th
+                    key={label}
+                    className="text-xs px-3 py-2.5 text-left font-semibold whitespace-nowrap"
+                  >
                     {label}
                   </th>
                 ))}
-                <th className="px-3 py-2.5" />
+                <th className="text-xs px-3 py-2.5 font-semibold" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

@@ -45,7 +45,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
 
   switch (field.type) {
     case 'text-input': {
-      let s = staticRequired ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }) : z.string();
+      let s = staticRequired
+        ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+        : z.string();
       const textLabel = getFieldLabel(field);
       if (staticRequired) s = s.min(1, requiredMsg);
       if (field.minLength != null)
@@ -60,7 +62,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
     }
 
     case 'textarea': {
-      let s = staticRequired ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }) : z.string();
+      let s = staticRequired
+        ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+        : z.string();
       const textareaLabel = getFieldLabel(field);
       if (staticRequired) s = s.min(1, requiredMsg);
       if (field.maxLength != null)
@@ -109,7 +113,7 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
         // Manually coerce valid input to number; leave null/undefined/'' as
         // undefined so z.number({ required_error }) rejects with the right msg.
         schema = z.preprocess(
-          val => (val == null || val === '') ? undefined : Number(val),
+          val => (val == null || val === '' ? undefined : Number(val)),
           checked,
         );
       } else {
@@ -120,7 +124,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
 
     case 'date-input':
     case 'datetime-input': {
-      let s = staticRequired ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }) : z.string();
+      let s = staticRequired
+        ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+        : z.string();
       if (staticRequired) s = s.min(1, requiredMsg);
       if (field.formatPattern) {
         s = s.regex(new RegExp(field.formatPattern), field.formatPatternMessage);
@@ -137,7 +143,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
 
     case 'string-toggle':
       schema = staticRequired
-        ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }).min(1, requiredMsg)
+        ? z
+            .string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+            .min(1, requiredMsg)
         : z.string();
       break;
 
@@ -167,7 +175,9 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
     case 'appraisal-selector':
     case 'location-selector':
       schema = staticRequired
-        ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg }).min(1, requiredMsg)
+        ? z
+            .string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
+            .min(1, requiredMsg)
         : z.string();
       break;
 
@@ -181,14 +191,38 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
         ? z.object(elementShape).superRefine(elementRefinement)
         : z.object(elementShape);
 
+      // Untouched rows are left out of the validation, but stay in the array where they are
+      const skipRow = field.skipRow;
+      if (skipRow) {
+        const rowSchema = elementSchema;
+        elementSchema = z.any().transform((row, ctx) => {
+          if (skipRow(row)) return row;
+          const parsed = rowSchema.safeParse(row);
+          if (parsed.success) return parsed.data;
+          // Paths are relative to the row; zod puts the row's index in front
+          parsed.error.issues.forEach(issue => ctx.addIssue(issue as z.IssueData));
+          return z.NEVER;
+        });
+      }
+
       let arr = z.array(elementSchema);
       const arrLabel = getFieldLabel(field);
-      if (staticRequired && field.minItems != null)
-        arr = arr.min(field.minItems, `${arrLabel} must have at least ${field.minItems} item(s)`);
-      else if (staticRequired) arr = arr.min(1, `${arrLabel} must have at least 1 item`);
+      const minItems = staticRequired ? (field.minItems ?? 1) : 0;
+      const minMessage =
+        field.minItems != null
+          ? `${arrLabel} must have at least ${field.minItems} item(s)`
+          : `${arrLabel} must have at least 1 item`;
+      // With skipped rows the minimum is of the rows that count, so it is checked on them below
+      if (minItems > 0 && !skipRow) arr = arr.min(minItems, minMessage);
       if (field.maxItems != null)
         arr = arr.max(field.maxItems, `${arrLabel} must have at most ${field.maxItems} item(s)`);
-      schema = arr;
+      schema =
+        minItems > 0 && skipRow
+          ? arr.superRefine((rows, ctx) => {
+              if (rows.filter(row => !skipRow(row)).length < minItems)
+                ctx.addIssue({ code: z.ZodIssueCode.custom, message: minMessage });
+            })
+          : arr;
       break;
     }
 
@@ -310,7 +344,7 @@ function getFieldLabel(field: FormField): string {
  * disabled state, and required state at validation time — mirroring the
  * same logic used by useFieldState in the UI.
  */
-function buildConditionalRefinement(fields: FormField[]) {
+export function buildConditionalRefinement(fields: FormField[]) {
   const conditionalFields = fields.filter(f => hasConditions(f));
 
   if (conditionalFields.length === 0) return null;
@@ -346,11 +380,7 @@ function buildConditionalRefinement(fields: FormField[]) {
       if (isRequired) {
         const value = getNestedValue(data, field.name);
         const isNumberField = field.type === 'number-input';
-        if (
-          value == null ||
-          value === '' ||
-          (isNumberField && value === 0 && !field.allowZero)
-        ) {
+        if (value == null || value === '' || (isNumberField && value === 0 && !field.allowZero)) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: field.name.split('.'),

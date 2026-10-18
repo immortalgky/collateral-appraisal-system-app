@@ -654,7 +654,7 @@ const TaskAssignmentConfigPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
           <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" type="button" onClick={handleAdd}>

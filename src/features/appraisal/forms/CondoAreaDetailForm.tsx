@@ -186,7 +186,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
       <div className="cas-labelled-table">
         <div className="cas-table-label">
           {t('forms.condo.areaDetail')}
-          <span className="cas-label-meta flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.75rem] font-normal text-gray-500">
+          <span className="cas-label-meta flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[0.8571rem] font-normal text-gray-500">
             {isEmpty ? (
               t('forms.condo.areaDetailHint')
             ) : (
@@ -206,8 +206,8 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
         <div className="min-w-0 flex-1">
           <div className="cas-table-card overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[480px] border-collapse text-[0.875rem] leading-tight tabular-nums">
-                <thead className="bg-[#f8fafa] text-[0.8125rem] font-medium text-[#55636f]">
+              <table className="w-full min-w-[480px] border-collapse text-sm leading-tight tabular-nums">
+                <thead className="bg-[#f8fafa] text-[0.8571rem] font-medium text-[#55636f]">
                   <tr>
                     <th className={clsx(TH, 'w-11 text-center')}>#</th>
                     <th className={clsx(TH, 'text-left')}>
@@ -333,7 +333,7 @@ function CondoAreaDetailForm({ name }: CondoAreaDetailFormProps) {
             <button
               type="button"
               onClick={addRow}
-              className="cas-outside-form-only mt-2 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[11px] text-gray-500 hover:border-primary-500 hover:text-primary-700"
+              className="cas-outside-form-only mt-2 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-xs text-gray-500 hover:border-primary-500 hover:text-primary-700"
             >
               + {t('forms.condo.addArea')}
             </button>
@@ -362,7 +362,7 @@ export function UsableAreaCheck({ name }: { name: string }) {
   const difference = total - toNum(usableArea);
   if (Math.abs(difference) < 0.005)
     return (
-      <span className="whitespace-nowrap rounded-full bg-primary-50 px-2 text-[0.75rem] font-semibold text-primary-700">
+      <span className="whitespace-nowrap rounded-full bg-primary-50 px-2 text-[0.8571rem] font-semibold text-primary-700">
         {t('forms.condo.matchesUsable')}
       </span>
     );
@@ -370,7 +370,7 @@ export function UsableAreaCheck({ name }: { name: string }) {
   return (
     // One line, no flex-wrap: formLayout.css top-aligns any row that holds a .flex-wrap.
     <span className="inline-flex items-center gap-x-1.5 whitespace-nowrap">
-      <span className="rounded-full bg-amber-50 px-2 text-[0.75rem] font-semibold tabular-nums text-amber-700">
+      <span className="rounded-full bg-amber-50 px-2 text-[0.8571rem] font-semibold tabular-nums text-amber-700">
         {t('forms.condo.diffVsUsable', {
           diff: `${difference > 0 ? '+' : '−'}${fmt(Math.abs(difference))}`,
         })}
