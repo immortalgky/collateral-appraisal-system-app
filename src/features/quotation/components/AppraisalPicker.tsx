@@ -7,7 +7,7 @@ import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
-import { DateInput } from '@/shared/components';
+import { DateInput } from '@/shared/components/inputs';
 
 import {
   useEligibleAppraisalsForQuotation,
@@ -18,12 +18,7 @@ import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
 
-/**
- * DateInput emits a full ISO timestamp with a timezone offset (e.g.
- * "2020-04-03T00:00:00+07:00"). Keep only the calendar date (yyyy-MM-dd) so the backend's
- * date comparison can't shift by a day across timezones.
- */
-const toDateOnly = (v: string | null): string => (v ? v.slice(0, 10) : '');
+const EMPTY = <span className="text-gray-400">—</span>;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -451,6 +446,8 @@ export function AppraisalPicker({
   // ── Filter state — always starts blank; not persisted across opens ──
   const [filters, setFilters] = useState<AppraisalFilters>(EMPTY_FILTERS);
   const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  // Bumped on clear to remount the date field, which keeps text it rejected (e.g. 31/02/2026).
+  const [clearCount, setClearCount] = useState(0);
 
   const [pageNumber, setPageNumber] = useState(0);
   const PAGE_SIZE = 10;
@@ -464,16 +461,16 @@ export function AppraisalPicker({
   const debouncedSubDistrict = useDebounced(effectiveFilters.subDistrict, 300).trim();
   const debouncedDistrict = useDebounced(effectiveFilters.district, 300).trim();
 
+  // DateInput's stored ISO is cut to yyyy-MM-dd for the query.
+  const requestedDay = effectiveFilters.requestedAt?.slice(0, 10) ?? '';
+
   const queryParams: EligibleAppraisalsParams = {
     pageNumber,
     pageSize: PAGE_SIZE,
     ...(debouncedCustomerName && { customerName: debouncedCustomerName }),
     ...(debouncedAppraisalNumber && { appraisalNumber: debouncedAppraisalNumber }),
     ...(effectiveFilters.purpose && { purpose: effectiveFilters.purpose }),
-    ...(effectiveFilters.requestedAt && {
-      requestedAtFrom: effectiveFilters.requestedAt,
-      requestedAtTo: effectiveFilters.requestedAt,
-    }),
+    ...(requestedDay && { requestedAtFrom: requestedDay, requestedAtTo: requestedDay }),
     ...(effectiveFilters.channel && { channel: effectiveFilters.channel }),
     ...(effectiveFilters.status && { status: effectiveFilters.status }),
     ...(effectiveFilters.bankingSegment && { bankingSegment: effectiveFilters.bankingSegment }),
@@ -547,6 +544,7 @@ export function AppraisalPicker({
 
   const handleClear = () => {
     setFilters(EMPTY_FILTERS);
+    setClearCount(c => c + 1);
     setPageNumber(0);
   };
 
@@ -712,8 +710,12 @@ export function AppraisalPicker({
                   {t('picker.requestDate')}
                 </label>
                 <DateInput
+                  key={clearCount}
+                  todayLabel={t('picker.today')}
+                  disableFutureDates
                   value={filters.requestedAt}
-                  onChange={v => handleFilterChange('requestedAt', toDateOnly(v))}
+                  onChange={v => handleFilterChange('requestedAt', v ?? '')}
+                  className="pl-2.5! py-1.5! rounded-md! focus:ring-1! focus:ring-primary! focus:border-primary!"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -921,26 +923,24 @@ export function AppraisalPicker({
                       <td className="px-3 py-2 font-medium text-gray-900 whitespace-nowrap">
                         {r.appraisalNumber ?? r.id.slice(0, 8)}
                       </td>
-                      <td className="px-3 py-2 text-gray-700 truncate max-w-[180px]">
-                        {r.customerName ?? '—'}
+                      <td className="px-3 py-2 text-gray-700">
+                        <div className="truncate max-w-[180px]" title={r.customerName || undefined}>
+                          {r.customerName || EMPTY}
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.purpose ? (purposeLabels.get(r.purpose) ?? r.purpose) : '—'}
+                        {r.purpose ? (purposeLabels.get(r.purpose) ?? r.purpose) : EMPTY}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
-                        {r.status ? (
-                          <Badge type="status" value={r.status} size="sm" />
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                        {r.status ? <Badge type="status" value={r.status} size="sm" /> : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : '—'}
+                        {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                         {r.bankingSegment
                           ? (bankingSegmentLabels.get(r.bankingSegment) ?? r.bankingSegment)
-                          : '—'}
+                          : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-gray-700">
                         {r.propertyCount}
@@ -952,10 +952,10 @@ export function AppraisalPicker({
                               month: 'short',
                               year: 'numeric',
                             })
-                          : '—'}
+                          : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.previouslyQuotedNumber ?? '—'}
+                        {r.previouslyQuotedNumber || EMPTY}
                       </td>
                     </tr>
                   );
