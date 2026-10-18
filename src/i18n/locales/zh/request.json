@@ -263,7 +263,8 @@
   },
   "titleAddress": {
     "header": "产权文件地址",
-    "dopaHeader": "DOPA地址"
+    "dopaHeader": "DOPA地址",
+    "propertyLocationHeader": "财产所在地"
   },
   "titleOptions": {
     "noCollateralType": "请选择抵押品类型以继续",
@@ -455,7 +456,13 @@
     },
     "priorSummary": {
       "noReportNumber": "尚无报告编号",
-      "status": {"Submitted": "已提交", "Pending": "待处理", "Assigned": "已分配", "InProgress": "进行中", "UnderReview": "审核中"},
+      "status": {
+        "Submitted": "已提交",
+        "Pending": "待处理",
+        "Assigned": "已分配",
+        "InProgress": "进行中",
+        "UnderReview": "审核中"
+      },
       "inProgressHeading": "所附抵押物中有 {{matched}} 项（共 {{total}} 项）正在其他报告中评估",
       "inProgressHint": "提交前请核对下方报告，避免对同一抵押物重复评估。",
       "heading": "所附抵押物中有 {{matched}} 项（共 {{total}} 项）曾被评估过",
@@ -832,16 +839,22 @@
       "copyFromTitle": "从产权文件地址复制",
       "copyOverwriteConfirm": "复制产权文件地址",
       "copyOverwriteMessage": "此 DOPA 地址已有内容，是否用产权文件地址替换？",
+      "copyOverwriteMessageRequest": "此财产所在地已有内容，是否用申请地址替换？",
       "districtDiffersDopa": "DOPA 登记册中的区为 {{district}}，与产权文件不同，请核对。",
+      "districtDiffersRequest": "DOPA 登记册中的区为 {{district}}，与申请地址不同，请核对。",
       "districtDiffersTitle": "产权登记册中的区为 {{district}}，与申请地址不同，请核对。",
       "dopaMissing": "该乡/街道不在 DOPA 登记册中，请自行选择。",
       "overwriteConfirm": "复制申请地址",
       "overwriteMessage": "该产权已有地址，是否用申请地址替换？",
       "overwriteTitle": "替换地址？",
       "tagDopa": "DOPA",
+      "tagLocation": "财产所在地",
       "tagTitle": "产权地址",
       "titleMissing": "申请中的乡/街道不在产权登记册中，请自行选择。",
-      "useRequest": "从申请地址复制"
+      "useRequest": "从申请地址复制",
+      "masterUnavailable": "地址数据仍在加载。若长时间未完成，请重新加载页面。",
+      "requestAddressEmpty": "请先填写申请的地址",
+      "titleAddressEmpty": "请先填写产权文件地址"
     },
     "priorCheck": {
       "priorHeading": "曾评估过",

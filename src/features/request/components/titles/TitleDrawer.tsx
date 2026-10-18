@@ -16,9 +16,10 @@ import TitleDocumentAddressForm from '../../forms/TitleDocumentAddressForm';
 import TitleMachineForm from '../../forms/TitleMachineForm';
 import TitleVehicleForm from '../../forms/TitleVehicleForm';
 import TitleVesselForm from '../../forms/TitleVesselForm';
-import type { RequestTitleDtoType } from '../../schemas/form';
+import { requestTitleDefault, type RequestTitleDtoType } from '../../schemas/form';
 import {
   defaultTitleType,
+  isMovableFamily,
   missingFieldPaths,
   movableIdentity,
   summariseTitleNumber,
@@ -55,6 +56,7 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
   const { getValues, setValue } = useFormContext();
   const collateralType = useWatch({ name: `titles.${index}.collateralType` }) as string | undefined;
   const family = titleFamily(collateralType);
+  const movable = isMovableFamily(family);
 
   const typeField = useMemo(
     () =>
@@ -65,7 +67,9 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
   );
 
   // Choosing a type here makes a land, land-with-building or condo title a โฉนด unless it already
-  // has a type, as adding one from the menu does. Only on a change made here, not on opening.
+  // has a type, as adding one from the menu does. A change to a movable also empties the title
+  // address, which a movable has no field for (a deed address left from the earlier type would be
+  // saved with it). Only on a change made here, not on opening.
   const previousType = useRef(collateralType);
   useEffect(() => {
     if (previousType.current === collateralType) return;
@@ -74,7 +78,11 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
     const path = `titles.${index}.titleType`;
     const fallback = defaultTitleType(collateralType);
     if (fallback && !getValues(path)) setValue(path, fallback, { shouldDirty: true });
-  }, [collateralType, readOnly, index, getValues, setValue]);
+    if (movable)
+      setValue(`titles.${index}.titleAddress`, structuredClone(requestTitleDefault.titleAddress), {
+        shouldDirty: true,
+      });
+  }, [collateralType, movable, readOnly, index, getValues, setValue]);
 
   return (
     <div className="grid gap-6">
@@ -115,12 +123,17 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
         </Section>
       )}
 
-      {/* Every type keeps both addresses: the schema requires them for movables too. */}
+      {/* A movable has no title document, so only the DOPA card (headed as its location). */}
       {family !== 'none' && (
         <Section title={t('titleSection.drawer.section.address')}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <TitleDocumentAddressForm index={index} isReadOnly={readOnly} />
-            <DopaAddressForm index={index} isReadOnly={readOnly} />
+          <div className={clsx('grid gap-4', !movable && 'md:grid-cols-2')}>
+            {!movable && <TitleDocumentAddressForm index={index} isReadOnly={readOnly} />}
+            <DopaAddressForm
+              key={movable ? 'movable' : 'estate'}
+              index={index}
+              isReadOnly={readOnly}
+              movable={movable}
+            />
           </div>
         </Section>
       )}
@@ -218,7 +231,7 @@ export function TitleDrawer({
     : t('titleSection.drawer.newTitle');
   const condoNumbers = family === 'condo' ? summariseTitleNumber(title?.titleNumber) : null;
   const number = (
-    family === 'vehicle' || family === 'machine' || family === 'vessel'
+    isMovableFamily(family)
       ? movableIdentity(title as RequestTitleDtoType)
       : condoNumbers
         ? // A condominium's number is a list of land titles: the first of them and how many more.
@@ -370,7 +383,7 @@ export function TitleDrawer({
                     onClick={() => scrollToField(`titles.${index}.${path}`)}
                     className="text-amber-700 underline underline-offset-2 hover:no-underline"
                   >
-                    {labelOf(path)}
+                    {labelOf(path, { movable: isMovableFamily(family) })}
                   </button>
                 </span>
               ))}

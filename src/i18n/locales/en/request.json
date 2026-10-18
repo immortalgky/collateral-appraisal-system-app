@@ -263,7 +263,8 @@
   },
   "titleAddress": {
     "header": "Title document address",
-    "dopaHeader": "DOPA address"
+    "dopaHeader": "DOPA address",
+    "propertyLocationHeader": "Property location"
   },
   "titleOptions": {
     "noCollateralType": "Please select a collateral type to continue",
@@ -455,7 +456,13 @@
     },
     "priorSummary": {
       "noReportNumber": "No report number yet",
-      "status": {"Submitted": "Submitted", "Pending": "Pending", "Assigned": "Assigned", "InProgress": "In Progress", "UnderReview": "Under Review"},
+      "status": {
+        "Submitted": "Submitted",
+        "Pending": "Pending",
+        "Assigned": "Assigned",
+        "InProgress": "In Progress",
+        "UnderReview": "Under Review"
+      },
       "inProgressHeading": "{{matched}} of {{total}} attached collateral items are being appraised in another report",
       "inProgressHint": "Check the reports below before submitting, so the same collateral is not appraised twice.",
       "heading": "{{matched}} of {{total}} attached collateral items have been appraised before",
@@ -832,16 +839,22 @@
       "copyFromTitle": "Copy from title-deed address",
       "copyOverwriteConfirm": "Copy title-deed address",
       "copyOverwriteMessage": "This DOPA address already has values. Replace them with the title-deed address?",
+      "copyOverwriteMessageRequest": "This property location already has values. Replace them with the request address?",
       "districtDiffersDopa": "The district in the DOPA register is {{district}}, which differs from the title deed. Please check.",
+      "districtDiffersRequest": "The district in the DOPA register is {{district}}, which differs from the request address. Please check.",
       "districtDiffersTitle": "The district in the title register is {{district}}, which differs from the request's address. Please check.",
       "dopaMissing": "This sub-district is not in the DOPA register. Please choose one.",
       "overwriteConfirm": "Copy request address",
       "overwriteMessage": "This title already has an address. Replace it with the request's address?",
       "overwriteTitle": "Replace the address?",
       "tagDopa": "DOPA",
+      "tagLocation": "property location",
       "tagTitle": "title address",
       "titleMissing": "The request's sub-district is not in the title register. Please choose one.",
-      "useRequest": "Copy from request address"
+      "useRequest": "Copy from request address",
+      "masterUnavailable": "Address data is still loading. If this persists, reload the page.",
+      "requestAddressEmpty": "Fill in the request address first",
+      "titleAddressEmpty": "Fill in the title-deed address first"
     },
     "priorCheck": {
       "priorHeading": "Appraised before",
