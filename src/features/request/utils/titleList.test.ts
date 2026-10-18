@@ -163,7 +163,7 @@ describe('missingFieldPaths / isTitleComplete', () => {
   });
 
   it("ignores the title address of a movable, which has no field to fix it, but not a land title's", () => {
-    const tooLong = { ...requestTitleDefault.titleAddress, houseNumber: 'x'.repeat(15) };
+    const tooLong = { ...requestTitleDefault.titleAddress, houseNumber: 'x'.repeat(51) }; // over the 50 the house number holds
     const dopa = { ...requestTitleDefault.dopaAddress, subDistrict: '100101', district: '1001' };
     const vehicle = make({
       collateralType: '10',
@@ -885,7 +885,7 @@ describe('the order of the "still missing" list follows the editor, top to botto
   });
 
   it("reads each address in the address form's own field order: house number first, then the locality", () => {
-    const tooLong = 'x'.repeat(11); // the house number holds 10 characters
+    const tooLong = 'x'.repeat(51); // the house number holds 50 characters
     const missing = missingFieldPaths(
       blank({
         collateralType: '01',
@@ -904,6 +904,20 @@ describe('the order of the "still missing" list follows the editor, top to botto
       'dopaAddress.houseNumber',
       'dopaAddress.subDistrict',
     ]);
+  });
+
+  it('accepts a house number of exactly 50 characters', () => {
+    const fits = 'x'.repeat(50);
+    const missing = missingFieldPaths(
+      blank({
+        collateralType: '01',
+        titleType: 'DEED',
+        titleAddress: { ...requestTitleDefault.titleAddress, houseNumber: fits },
+        dopaAddress: { ...requestTitleDefault.dopaAddress, houseNumber: fits },
+      }),
+    );
+    expect(missing).not.toContain('titleAddress.houseNumber');
+    expect(missing).not.toContain('dopaAddress.houseNumber');
   });
 
   it('puts a condominium unit fields before its owner and the title address', () => {
