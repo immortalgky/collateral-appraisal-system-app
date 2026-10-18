@@ -19,6 +19,12 @@ import {
   useReappraisalPreview,
 } from '../../api/projectUnit';
 import type { ReappraisalPreviewResult } from '../../api/projectUnit';
+import { useGetUnitPriceSource } from '../../api/projectUnitPrice';
+import {
+  checkXlsx,
+  MAX_REAPPRAISAL_XLSX_UPLOAD_MB,
+  MAX_XLSX_UPLOAD_MB,
+} from '../../utils/xlsxUpload';
 import UnitVerificationDialog from '../UnitVerificationDialog';
 import { isCondo } from '../../types';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
@@ -27,9 +33,6 @@ import type { ApiError } from '@/shared/types/api';
 import Pagination from '@/shared/components/Pagination';
 
 type AppError = AxiosError & { apiError?: ApiError };
-
-const ALLOWED_EXTENSIONS = ['.xlsx', '.xls', '.csv'];
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 // ── Upload history ────────────────────────────────────────────────────────────
 
@@ -405,8 +408,9 @@ function StatStrip({
   // one pass; LB/Land units all carry a null towerName, so it degenerates to a plain distinct
   // count for them.
   const models = isCondo(projectType)
-    ? new Set(units.filter(u => u.modelType).map(u => JSON.stringify([u.towerName ?? '', u.modelType])))
-        .size
+    ? new Set(
+        units.filter(u => u.modelType).map(u => JSON.stringify([u.towerName ?? '', u.modelType])),
+      ).size
     : new Set(units.map(u => u.modelType).filter(Boolean)).size;
 
   return (
@@ -441,7 +445,7 @@ interface UnitListingTabProps {
  * Column definitions branch on projectType; upload & history are identical.
  *
  * Divergences from originals:
- * - Accepts .xlsx, .xls, .csv (Condo convention) — Village only accepted .xlsx.
+ * - Accepts .xlsx only, up to 5 MB, like the backend (ProjectExcelUpload).
  */
 export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const { t } = useTranslation('blockProject');
@@ -457,15 +461,39 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const [modelFilter, setModelFilter] = useState('');
   const [query, setQuery] = useState('');
 
-  const { data: unitsData, isLoading: unitsLoading } = useGetProjectUnits(appraisalId ?? '');
+  const {
+    data: unitsData,
+    isLoading: unitsLoading,
+    isError: unitsError,
+    isFetching: unitsFetching,
+  } = useGetProjectUnits(appraisalId ?? '');
   const { data: uploadsData, isLoading: uploadsLoading } = useGetProjectUnitUploads(
     appraisalId ?? '',
   );
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  // A new unit list cascades away every unit price, so the replace-confirm must say so. Until the
+  // count is known (loading, refreshing or failed, even if a cached count exists) assume there are prices: the stronger warning is the safe one.
+  const {
+    data: priceSource,
+    isFetching: priceSourceFetching,
+    isError: priceSourceFailed,
+  } = useGetUnitPriceSource(appraisalId ?? '', {
+    enabled: pendingFile !== null,
+    alwaysRefetch: true,
+  });
+  const mayHaveStoredPrices =
+    !priceSource || priceSourceFetching || priceSourceFailed || priceSource.pricedUnitCount > 0;
   const { mutate: uploadUnits, isPending: isUploading } = useUploadProjectUnits();
   const { mutate: uploadReappraisalUnits, isPending: isReappraisalUploading } =
     useUploadReappraisalUnits();
   const { mutate: previewReappraisal, isPending: isPreviewing } = useReappraisalPreview();
+  // The replace-confirm (and its price-clear warning) is decided from the loaded unit list, so no
+  // file is accepted before that is known, nor while the price source behind the warning is fetching.
+  // Fetching counts too: a cached (possibly empty) list is not what the confirm should decide on.
+  const unitsUnknown = unitsLoading || unitsFetching || (unitsError && unitsData === undefined);
   const isUploadBusy = isUploading || isPreviewing || isReappraisalUploading;
+  const uploadBlocked =
+    readOnly || isUploadBusy || unitsUnknown || (pendingFile !== null && priceSourceFetching);
 
   const units = unitsData?.units ?? [];
   const uploads = uploadsData ?? [];
@@ -511,7 +539,6 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     setPageNumber(0);
   };
 
-  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [verificationState, setVerificationState] = useState<{
     file: File;
@@ -532,6 +559,15 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     );
   };
 
+  /** The message for a file that must not go any further, or null. */
+  const validateFile = (file: File, maxMb: number): string | null => {
+    const problem = checkXlsx(file, maxMb);
+    if (problem === 'invalidType') {
+      return t('toasts.units.invalidFileType', { extensions: '.xlsx' });
+    }
+    return problem === 'tooLarge' ? t('toasts.units.fileTooLarge', { max: maxMb }) : null;
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (readOnly || !file || !appraisalId) return;
@@ -541,15 +577,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     // dialog (or hitting a validation toast) leaves the button looking dead for that same file.
     e.target.value = '';
 
-    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-    let validationError: string | null = null;
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      validationError = t('toasts.units.invalidFileType', {
-        extensions: ALLOWED_EXTENSIONS.join(', '),
-      });
-    } else if (file.size > MAX_FILE_SIZE_BYTES) {
-      validationError = t('toasts.units.fileTooLarge');
-    }
+    const validationError = validateFile(file, MAX_XLSX_UPLOAD_MB);
     if (validationError) {
       toast.error(validationError);
       return;
@@ -574,15 +602,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     // Reset the input so re-selecting the same file re-triggers the change event
     e.target.value = '';
 
-    const ext = '.' + file.name.split('.').pop()?.toLowerCase();
-    let validationError: string | null = null;
-    if (!ALLOWED_EXTENSIONS.includes(ext)) {
-      validationError = t('toasts.units.invalidFileType', {
-        extensions: ALLOWED_EXTENSIONS.join(', '),
-      });
-    } else if (file.size > MAX_FILE_SIZE_BYTES) {
-      validationError = t('toasts.units.fileTooLarge');
-    }
+    const validationError = validateFile(file, MAX_REAPPRAISAL_XLSX_UPLOAD_MB);
     if (validationError) {
       toast.error(validationError);
       return;
@@ -669,9 +689,9 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const uploadInput = (
     <input
       type="file"
-      accept=".xlsx,.xls,.csv"
+      accept=".xlsx"
       className="sr-only"
-      disabled={readOnly || isUploadBusy}
+      disabled={uploadBlocked}
       onChange={isReappraisal ? handleReappraisalFileChange : handleFileChange}
     />
   );
@@ -692,7 +712,7 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
           <label
             className={clsx(
               'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
-              readOnly || isUploadBusy
+              uploadBlocked
                 ? 'bg-primary/40 text-white cursor-not-allowed'
                 : 'bg-primary text-white hover:bg-primary/90 cursor-pointer',
             )}
@@ -841,7 +861,11 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
         onClose={() => setPendingFile(null)}
         onConfirm={handleConfirmReupload}
         title={t('unitListing.confirmReplace.title')}
-        message={t('unitListing.confirmReplace.message')}
+        message={t(
+          mayHaveStoredPrices
+            ? 'unitListing.confirmReplace.messageWithPrices'
+            : 'unitListing.confirmReplace.message',
+        )}
         confirmText={t('unitListing.confirmReplace.confirm')}
         variant="warning"
         isLoading={isUploading}

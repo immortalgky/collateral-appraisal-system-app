@@ -101,6 +101,13 @@ export const useUploadProjectUnits = () => {
       queryClient.invalidateQueries({
         queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
       });
+      // A new unit list clears every unit price (cascade), so the price grid and its source are stale.
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.source(variables.appraisalId),
+      });
     },
   });
 };

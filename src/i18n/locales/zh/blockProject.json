@@ -207,7 +207,8 @@
     "confirmReplace": {
       "title": "Replace existing units?",
       "message": "Uploading a new file will replace all current unit data. This cannot be undone.",
-      "confirm": "Replace"
+      "confirm": "Replace",
+      "messageWithPrices": "上传新文件将替换所有现有单元数据，并清除所有单元价格（包括计算和导入的）。需要重新计算或导入价格，且无法撤销。"
     },
     "summary": {
       "towers": "楼栋",
@@ -370,8 +371,10 @@
     "noModelAssumptions": "No model assumptions — add models first",
     "calculatedUnitPrices": "Calculated Unit Prices",
     "noUnitsUploaded": "No units uploaded yet — upload a unit list first",
-    "totalUnits": "{{n}} units",
-    "total": "Total — {{n}} units",
+    "totalUnits_one": "{{n}} 个单元",
+    "totalUnits_other": "{{n}} 个单元",
+    "total_one": "合计 — {{n}} 个单元",
+    "total_other": "合计 — {{n}} 个单元",
     "cols": {
       "seqNo": "Seq No",
       "floor": "Floor",
@@ -407,6 +410,108 @@
       "coverageAmountBahtSqm": "Coverage Amount (Baht/Sq.m)",
       "fireInsuranceCode": "Fire Insurance Condition",
       "description": "Description"
+    },
+    "importedUnitPrices": "导入文件中的单元价格",
+    "soldChip": "已售",
+    "valuesImported": "来自导入文件的数值",
+    "valuesPreview": "预览（未保存）",
+    "source": {
+      "label": "单元价格来源",
+      "calculated": "系统计算",
+      "imported": "从 Excel 导入价格",
+      "loading": "正在加载价格来源"
+    },
+    "switchToCalculated": {
+      "title": "切换为系统计算？",
+      "message": "导入的价格会保留到您点击 Save 为止（此模式下没有 Save Draft）。Save 会重新计算并覆盖所有单元，评估总额也会随之变化。",
+      "confirm": "切换模式"
+    },
+    "import": {
+      "cardTitle": "已导入的价格文件",
+      "hint": "所有单元价格均来自上传的文件，系统直接显示已保存的数值，不会重新计算。如需修改价格，请在 Excel 中修改后重新上传。",
+      "noFile": "尚无价格文件。请下载模板，在系统外填写价格后上传，或使用委员会批准的价格表。",
+      "emptyPrices": "尚无价格。请先上传价格文件；在此之前评估总额保持原值。",
+      "file": "文件",
+      "unitsPriced": "已有价格的单元",
+      "totalValue": "评估总值",
+      "downloadTemplate": "下载模板",
+      "downloadTemplateTitle": "当前单元 + 最新价格",
+      "upload": "上传价格文件",
+      "templateFailed": "下载模板失败",
+      "dialog": {
+        "title": "从 Excel 导入单元价格",
+        "choose": "选择 .xlsx 文件",
+        "chooseAnother": "选择其他文件",
+        "hint": "仅使用第一个工作表 · 第一行为列标题 · 末尾的合计行仅用于核对总额，不会导入",
+        "checking": "正在检查文件",
+        "cancel": "取消",
+        "confirm_one": "导入 {{n}} 个单元的价格",
+        "confirm_other": "导入 {{n}} 个单元的价格",
+        "success_one": "已导入 {{n}} 个单元的价格",
+        "success_other": "已导入 {{n}} 个单元的价格",
+        "importFailed": "导入价格失败",
+        "previewFailed": "检查文件失败",
+        "invalidType": "仅支持 .xlsx 文件",
+        "tooLarge": "文件超过 {{max}} MB",
+        "matched": "已匹配单元",
+        "matchedBy": "按{{key1}} {{n1}} · {{key2}} {{n2}}",
+        "errorRows": "无法导入的行",
+        "passed": "通过",
+        "blocking": "需修改文件",
+        "missingFromFile": "文件中没有价格的单元（价格将被清除）",
+        "willClear": "价格将被清除",
+        "totalValue": "评估总值",
+        "noSheetTotals": "文件合计行中没有此项",
+        "sheetMatch": "与文件中的合计行一致",
+        "sheetMismatch": "与文件合计行不一致（文件为 {{n}}）",
+        "errorsBanner_one": "发现 {{n}} 处错误，请先修改文件再导入。",
+        "errorsBanner_other": "发现 {{n}} 处错误，请先修改文件再导入。",
+        "missingBanner_one": "有 {{n}} 个单元在文件中没有价格（不在文件中，或所在行价格为空），导入时这些单元的价格将被清除。",
+        "missingBanner_other": "有 {{n}} 个单元在文件中没有价格（不在文件中，或所在行价格为空），导入时这些单元的价格将被清除。",
+        "diffsBanner_one": "有 {{n}} 处单元信息与系统不一致，仅供参考，不会阻止导入，也不会被写入。",
+        "diffsBanner_other": "有 {{n}} 处单元信息与系统不一致，仅供参考，不会阻止导入，也不会被写入。",
+        "sampleTitle_one": "变更示例（前 {{n}} 行）",
+        "sampleTitle_other": "变更示例（前 {{n}} 行）",
+        "writeWarning": "导入后：所有单元价格将被文件中的数值替换 · 项目模式变为“从 Excel 导入” · 评估总额和工作流（用于选择审批级别）将立即更新",
+        "keys": {
+          "condo1": "房号",
+          "condo2": "登记号",
+          "lb1": "地块号",
+          "lb2": "房屋号"
+        },
+        "cols": {
+          "row": "行",
+          "key": "关键字",
+          "problem": "问题",
+          "column": "列",
+          "system": "系统中",
+          "file": "文件中",
+          "previous": "原取整值",
+          "new": "文件中",
+          "diff": "差额"
+        },
+        "errorCodes": {
+          "MissingHeader": "文件缺少必需的列标题",
+          "UnitNotFound": "系统中找不到此单元",
+          "AmbiguousMatch": "此行匹配多个单元",
+          "DuplicateUnit": "此单元被多行引用",
+          "InvalidNumber": "数字无效",
+          "MissingAppraisalValue": "缺少评估价值",
+          "MissingPrice": "已有价格的行中，强制出售价为空"
+        },
+        "moreItems": "另有 {{n}} 项",
+        "totalForceSale": "强制出售价合计",
+        "totalCoverage": "火险保额合计",
+        "noMatchBanner": "文件中没有与本项目匹配且已定价的单元，因此无法导入。"
+      },
+      "fileUnknown": "项目价格来自导入的文件，但文件详情不可用（例如重新上传单元列表之后）。",
+      "loadingFigures": "正在加载数据"
+    },
+    "valuesCalculated": "系统计算",
+    "discardChanges": {
+      "title": "放弃未保存的修改？",
+      "message": "尚未保存的假设和标记修改将被放弃，并恢复为已保存的数值。",
+      "confirm": "放弃并切换"
     }
   },
   "changeProjectType": {
@@ -650,7 +755,7 @@
       "deleteSuccess": "Upload deleted",
       "deleteFailed": "Failed to delete upload",
       "invalidFileType": "Invalid file type. Only {{extensions}} are supported.",
-      "fileTooLarge": "File size exceeds 10 MB limit."
+      "fileTooLarge": "文件大小超过 {{max}} MB 限制。"
     },
     "pricing": {
       "saveSuccess": "Pricing assumptions saved and unit prices recalculated",

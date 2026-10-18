@@ -78,7 +78,7 @@ export const FIRE_INSURANCE_RATES_QUERY_KEY = ['fire-insurance-rates'] as const;
  * (condo property detail, block project models, unit-price calculation) is appraisal work, so they
  * are no longer bundled into the generic /pricing-parameters payload.
  */
-export function useGetFireInsuranceRates() {
+export function useGetFireInsuranceRates(options: { alwaysRefetch?: boolean } = {}) {
   return useQuery({
     queryKey: FIRE_INSURANCE_RATES_QUERY_KEY,
     queryFn: async (): Promise<FireInsuranceRate[]> => {
@@ -88,6 +88,9 @@ export function useGetFireInsuranceRates() {
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
+    // For a caller that previews what the backend will price with: take the current rates on
+    // mount rather than the ones cached from an earlier page load.
+    ...(options.alwaysRefetch && { staleTime: 0 }),
   });
 }
 
