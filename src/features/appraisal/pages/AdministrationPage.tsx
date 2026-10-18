@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,7 +32,11 @@ import {
   useSaveAssignmentDraft,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import { assignmentFormDefaults, type AssignmentFormType, useAssignmentFormSchema, } from '../schemas/administration';
+import {
+  assignmentFormDefaults,
+  type AssignmentFormType,
+  useAssignmentFormSchema,
+} from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
 import SearchStaffModal from '../components/SearchStaffModal';
@@ -420,7 +425,7 @@ const AdministrationPage = () => {
           toast.success(t('administration.toasts.assignmentCreated'));
           // The form is still dirty after assigning; skip the unsaved-changes guard for this redirect.
           skipWarning();
-          navigate('/tasks');
+          navigate(taskListUrl());
         },
         onError: (error: any) => {
           toast.error(error.apiError?.detail || t('administration.toasts.assignmentFailed'));
