@@ -212,8 +212,11 @@ describe('AddressForm', () => {
     it('should render Location section header', () => {
       render(<AddressFormWrapper />);
 
-      expect(enRequest.forms.location, 'en/request.json lost forms.location').toBeTruthy();
-      expect(screen.getByText('forms.location')).toBeInTheDocument();
+      expect(
+        enRequest.requestForm.sections.location,
+        'en/request.json lost requestForm.sections.location',
+      ).toBeTruthy();
+      expect(screen.getByText('requestForm.sections.location')).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -223,7 +226,7 @@ describe('AddressForm', () => {
       render(<AddressFormWrapper />);
 
       // Check for FormFields components
-      expect(screen.getAllByTestId('form-fields')).toHaveLength(2); // address + contact
+      expect(screen.getAllByTestId('form-fields')).toHaveLength(1); // the address fields only
     });
 
     // ------------------------------------------
@@ -234,18 +237,45 @@ describe('AddressForm', () => {
 
       expect(screen.getByText(label('houseNo'))).toBeInTheDocument();
       expect(screen.getByText(label('subDistrict'))).toBeInTheDocument();
-      expect(screen.getByText(label('province'))).toBeInTheDocument();
+    });
+
+    // District, province and postcode are one read-only line, not three boxes.
+    it('shows district, province and postcode as one autofill line', () => {
+      render(<AddressFormWrapper />);
+
+      expect(screen.queryByTestId('field-detail.address.districtName')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('field-detail.address.provinceName')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('field-detail.address.postcode')).not.toBeInTheDocument();
+      // nothing chosen yet: the hint
+      expect(screen.getByText('requestForm.addressAutofill')).toBeInTheDocument();
+    });
+
+    it('fills the line from the values the location selector wrote', () => {
+      render(
+        <AddressFormWrapper
+          defaultValues={{
+            detail: {
+              address: { districtName: 'Bang Rak', provinceName: 'Bangkok', postcode: '10500' },
+            },
+          }}
+        />,
+      );
+
+      expect(screen.getByText('Bang Rak')).toBeInTheDocument();
+      expect(screen.getByText('Bangkok')).toBeInTheDocument();
+      expect(screen.getByText('10500')).toBeInTheDocument();
+      expect(screen.queryByText('requestForm.addressAutofill')).not.toBeInTheDocument();
     });
 
     // ------------------------------------------
-    // Scenario 4: Renders contact fields
+    // Scenario 4: Neither the contact person nor the dealer code is in the location
     // ------------------------------------------
-    it('should render contact field labels', () => {
+    it('should render no contact person and no dealer code', () => {
       render(<AddressFormWrapper />);
 
-      expect(screen.getByText(label('contactPersonName'))).toBeInTheDocument();
-      expect(screen.getByText(label('contactPersonPhone'))).toBeInTheDocument();
-      expect(screen.getByText(label('dealerCode'))).toBeInTheDocument();
+      expect(screen.queryByText(label('contactPersonName'))).not.toBeInTheDocument();
+      expect(screen.queryByText(label('contactPersonPhone'))).not.toBeInTheDocument();
+      expect(screen.queryByText(label('dealerCode'))).not.toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -366,9 +396,9 @@ describe('AddressForm', () => {
       );
 
       // Fields should exist (in real test, we'd verify input values). The form nests its two
-      // groups under `detail.`, and the address fields are named `houseNumber` and `provinceName`.
+      // groups under `detail.`, and the address fields are named `houseNumber` and `subDistrict`.
       expect(screen.getByTestId('field-detail.address.houseNumber')).toBeInTheDocument();
-      expect(screen.getByTestId('field-detail.address.provinceName')).toBeInTheDocument();
+      expect(screen.getByTestId('field-detail.address.subDistrict')).toBeInTheDocument();
     });
   });
 });

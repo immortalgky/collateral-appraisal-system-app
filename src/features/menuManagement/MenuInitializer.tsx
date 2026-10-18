@@ -21,10 +21,12 @@ export function MenuInitializer({ children }: { children: React.ReactNode }) {
   const setMenu = useMenuStore(state => state.setMenu);
   const setError = useMenuStore(state => state.setError);
   const isLoaded = useMenuStore(state => state.isLoaded);
+  // The API refuses everything but the password change until it is done, menu included.
+  const mustChangePassword = useAuthStore(state => state.user?.mustChangePassword ?? false);
   const hasFetched = useRef(false);
 
   useEffect(() => {
-    if (!isAuthenticated || hasFetched.current) return;
+    if (!isAuthenticated || mustChangePassword || hasFetched.current) return;
 
     hasFetched.current = true;
 
@@ -39,7 +41,7 @@ export function MenuInitializer({ children }: { children: React.ReactNode }) {
           duration: 6000,
         });
       });
-  }, [isAuthenticated, setMenu, setError]);
+  }, [isAuthenticated, mustChangePassword, setMenu, setError]);
 
   // Reset fetch guard when user logs out so next login re-fetches
   useEffect(() => {
@@ -51,7 +53,7 @@ export function MenuInitializer({ children }: { children: React.ReactNode }) {
 
   // Show a minimal inline spinner only on first load (before isLoaded is true)
   // The router and layout still render so direct-URL navigation keeps working.
-  if (isAuthenticated && !isLoaded) {
+  if (isAuthenticated && !mustChangePassword && !isLoaded) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div

@@ -5,8 +5,7 @@ import Icon from '@shared/components/Icon';
 import { useUIStore } from '@shared/store';
 import clsx from 'clsx';
 import { useAuthStore } from '@features/auth/store.ts';
-import { broadcastLogout } from '@shared/api/axiosInstance';
-import { queryClient } from '@app/queryClient';
+import { logout } from '@features/auth/utils/logout';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from '@shared/components/LanguageSwitcher';
 // import ThemeToggle from '@shared/components/ThemeToggle'; // hidden for now
@@ -14,13 +13,13 @@ import DensityPicker from '@shared/components/DensityPicker';
 import FormLayoutPicker from '@shared/components/FormLayoutPicker';
 import Avatar from '@shared/components/Avatar';
 import { useGlobalSearch } from '@shared/hooks/useGlobalSearch';
+import { quickSearchHint } from '@shared/utils/platform';
 import SearchResults from '@shared/components/search/SearchResults';
 import type { SearchScope } from '@shared/types/search';
 import NotificationDropdown from '@features/notification/components/NotificationDropdown';
 import ConnectionStatusIndicator, {
   ConnectionStatusDot,
 } from '@features/notification/components/ConnectionStatusIndicator';
-import * as appHub from '@shared/realtime/appHub';
 import { HeaderFavoritesDropdown } from '@features/menuFavorites/components/HeaderFavoritesDropdown';
 import type { UserNavItem } from '@shared/config/userNavigation';
 
@@ -84,21 +83,6 @@ const userMenuIcons: Record<string, string> = {
   'Your profile': 'user',
   Settings: 'gear',
 };
-
-function handleLogout(href: string) {
-  // Navigate FIRST — clearing Zustand state would trigger ProtectedRoute
-  // to redirect to /login, which cancels the server logout navigation.
-  // Clear storage directly without triggering React re-renders.
-  // Use broadcastLogout so other tabs also clear auth + redirect.
-  // Tear down the realtime connection synchronously (stop() sets the
-  // intentional-stop flag + clears the restart timer before the redirect) so
-  // no auto-restart fires during the unload window.
-  appHub.stop().catch(() => {});
-  broadcastLogout();
-  queryClient.clear();
-  sessionStorage.clear();
-  window.location.replace(href);
-}
 
 export default function Navbar({
   userNavigation,
@@ -218,11 +202,11 @@ export default function Navbar({
                   style={{ outline: 'none', boxShadow: 'none' }}
                 />
 
-                {/* Cmd+K hint */}
+                {/* Cmd+K on a Mac, Ctrl K elsewhere */}
                 {!search.isFocused && (
                   <div className="hidden sm:flex items-center gap-1 mr-3 pointer-events-none">
-                    <kbd className="px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-base-300 rounded border border-gray-200 dark:border-base-300">
-                      ⌘K
+                    <kbd className="whitespace-nowrap px-1.5 py-0.5 text-[10px] font-medium text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-base-300 rounded border border-gray-200 dark:border-base-300">
+                      {quickSearchHint()}
                     </kbd>
                   </div>
                 )}
@@ -382,12 +366,12 @@ export default function Navbar({
                 </div>
 
                 {userNavigation.map(item =>
-                  item.external ? (
+                  item.signOut ? (
                     <MenuItem
                       key={item.name}
                       as="button"
                       type="button"
-                      onClick={() => handleLogout(item.href)}
+                      onClick={() => void logout()}
                       className={userMenuItemClass}
                     >
                       <Icon
@@ -399,7 +383,7 @@ export default function Navbar({
                     </MenuItem>
                   ) : (
                     // In-app destinations go through the router so the SPA does not
-                    // reload (and drop its in-memory access token) on every click.
+                    // reload on every click.
                     <MenuItem key={item.name}>
                       <Link to={item.href} className={userMenuItemClass}>
                         <Icon

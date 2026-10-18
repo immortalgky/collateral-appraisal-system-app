@@ -1,5 +1,6 @@
-import type { ButtonHTMLAttributes } from 'react';
+import { Children, isValidElement, type ButtonHTMLAttributes } from 'react';
 import clsx from 'clsx';
+import Icon from './Icon';
 
 type ButtonVariant =
   | 'primary'
@@ -33,31 +34,34 @@ const Button = ({
   fullWidth = false,
   ...props
 }: ButtonProps) => {
-  // Variant styles using theme colors
+  // Variant styles using theme colors. Every variant has a 1px border (transparent unless it is
+  // the outline one) so all of them are the same height.
   const variantStyles = {
-    primary: 'bg-primary hover:bg-primary/80 text-white shadow-sm',
-    secondary: 'bg-secondary hover:bg-secondary/80 text-white shadow-sm',
+    primary: 'border border-transparent bg-primary hover:bg-primary/80 text-white shadow-sm',
+    secondary: 'border border-transparent bg-secondary hover:bg-secondary/80 text-white shadow-sm',
     outline: 'border border-gray-300 hover:bg-gray-50 text-gray-700',
-    danger: 'bg-danger hover:bg-danger/80 text-white',
-    success: 'bg-success hover:bg-success/80 text-white',
-    warning: 'bg-warning hover:bg-warning/80 text-white shadow-sm',
-    info: 'bg-info hover:bg-info/80 text-white shadow-sm',
-    ghost: 'hover:bg-gray-100 text-gray-700',
+    danger: 'border border-transparent bg-danger hover:bg-danger/80 text-white',
+    success: 'border border-transparent bg-success hover:bg-success/80 text-white',
+    warning: 'border border-transparent bg-warning hover:bg-warning/80 text-white shadow-sm',
+    info: 'border border-transparent bg-info hover:bg-info/80 text-white shadow-sm',
+    ghost: 'border border-transparent hover:bg-gray-100 text-gray-700',
   };
 
   // Size styles
+  // The type scale is relative to a 14px root (theme.css), so a normal button is 13px (text-sm)
+  // and `sm` 12px.
   const sizeStyles = {
     xs: 'px-2 py-1 text-xs',
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-base',
-    lg: 'px-5 py-2.5 text-lg',
-    xl: 'px-6 py-3 text-xl',
+    sm: 'px-3 py-1.5 text-xs',
+    md: 'px-4 py-2 text-sm',
+    lg: 'px-5 py-2.5 text-base',
+    xl: 'px-6 py-3 text-lg',
   };
 
   // Loading spinner component
-  const LoadingSpinner = () => (
+  const LoadingSpinner = ({ beforeLabel }: { beforeLabel: boolean }) => (
     <svg
-      className="animate-spin -ml-1 mr-2 h-4 w-4"
+      className={clsx('animate-spin h-4 w-4', beforeLabel && 'mr-2')}
       xmlns="http://www.w3.org/2000/svg"
       fill="none"
       viewBox="0 0 24 24"
@@ -78,6 +82,15 @@ const Button = ({
     </svg>
   );
 
+  // While loading the spinner stands in for the leading icon, wherever the caller put it
+  // (`leftIcon`, or an <Icon> written as the first child): dropping it keeps the button's width
+  // steady. A trailing <Icon> ("Next ›") stays, and an icon-only button gets a bare, centred
+  // spinner: the margin is only for a label that follows it. A `rightIcon` stays for the same
+  // reason: the button keeps its width.
+  const kids = Children.toArray(children);
+  const leadingIconChild = isLoading && isValidElement(kids[0]) && kids[0].type === Icon;
+  const content = leadingIconChild ? kids.slice(1) : kids;
+
   return (
     <button
       // Default to "button" so a Button rendered inside a <form> doesn't implicitly
@@ -96,10 +109,10 @@ const Button = ({
       disabled={disabled || isLoading}
       {...props}
     >
-      {isLoading && <LoadingSpinner />}
+      {isLoading && <LoadingSpinner beforeLabel={content.length > 0} />}
       {!isLoading && leftIcon && <span className="mr-2">{leftIcon}</span>}
-      {children}
-      {!isLoading && rightIcon && <span className="ml-2">{rightIcon}</span>}
+      {isLoading ? content : children}
+      {rightIcon && <span className="ml-2">{rightIcon}</span>}
     </button>
   );
 };

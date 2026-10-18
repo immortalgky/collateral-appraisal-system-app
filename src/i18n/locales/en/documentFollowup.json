@@ -1,11 +1,13 @@
 {
   "banner": {
-    "title": "Open Document Request",
-    "pendingItems": "{{n}} item(s) pending from the request maker — submission is blocked until resolved",
     "loadingDetails": "Loading details...",
-    "raised": "Raised",
-    "raisedBy": "by {{name}}",
-    "cancelAll": "Cancel all"
+    "cancelAll": "Cancel all",
+    "count": "{{n}} more document(s) requested",
+    "waiting": "waiting for the requester (cannot be submitted until all are in)",
+    "byAt": "requested by {{name}} on {{at}}",
+    "show": "Show list",
+    "hide": "Hide",
+    "cancelItem": "Cancel"
   },
   "columns": {
     "documentType": "Document Type",

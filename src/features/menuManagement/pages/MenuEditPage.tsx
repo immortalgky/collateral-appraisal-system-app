@@ -103,7 +103,7 @@ export default function MenuEditPage() {
           <Icon name="arrow-left" style="solid" className="size-4 text-gray-600" />
         </Link>
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             {isNew
               ? t('editPage.titleNew')
               : t('editPage.titleEdit', {

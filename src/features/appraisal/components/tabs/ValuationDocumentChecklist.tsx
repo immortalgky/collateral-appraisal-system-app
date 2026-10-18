@@ -1,18 +1,17 @@
-import { useCallback, useRef, useState } from 'react';
-import clsx from 'clsx';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
-import Icon from '@shared/components/Icon';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalContext } from '../../context/AppraisalContext';
-import { ActionDropdown, DocumentFileRow } from '../documentShared';
+import DocumentListView from '@/features/request/components/documentCard/DocumentListView';
+import type { TypeRow } from '@/features/request/utils/documentList';
 import {
   useAttachAppraisalDocument,
   useGetAppraisalDocuments,
   useRemoveAppraisalDocument,
+  useUpdateAppraisalDocumentNotes,
 } from '@features/appraisal/api';
 import {
   createUploadSession,
@@ -21,9 +20,15 @@ import {
 } from '@features/request/api/documents';
 import { useAsyncReportJob } from '@features/reportGeneration/hooks/useAsyncReportJob';
 import { useAuthStore } from '@features/auth/store';
-import type { AppraisalDocumentFile, AppraisalDocumentType } from '../../types/appraisalDocuments';
+import type { UploadedDocument } from '@/features/request/types/document';
+import { valuationSection } from '../../utils/checklistDocuments';
+import {
+  documentTypeName,
+  isAllowedValuationDocumentFile,
+  VAL_DOC_CATEGORY,
+  VALUATION_DOCUMENT_ACCEPT,
+} from '../../utils/valuationDocuments';
 
-const VAL_DOC_CATEGORY = 'VAL_DOC';
 const VAL_REPORT_CATEGORY = 'VAL_REPORT';
 
 // System-generated report types available from the checklist — code → report job key.
@@ -34,69 +39,47 @@ const REPORT_TYPE_BY_CODE: Record<string, string> = {
   D043: 'appraisal-summary',
 };
 
-const isAllowedChecklistFile = (file: File) => /\.(jpe?g|png|pdf)$/i.test(file.name);
-
-// Type-count badge shown on each accordion row header — same green/amber palette as
-// StatusBadge (documentShared.tsx), so "has files"/"no files" reads consistently across
-// the whole Documents page.
-const TypeBadge = ({ count, t }: { count: number; t: TFunction<'appraisal'> }) =>
-  count > 0 ? (
-    <span className="px-2 py-0.5 bg-green-50 text-green-700 text-xs font-semibold rounded-full whitespace-nowrap">
-      {t('valuationDocuments.fileCount', { count })}
-    </span>
-  ) : (
-    <span className="px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-medium rounded-full whitespace-nowrap">
-      {t('valuationDocuments.noFile')}
-    </span>
-  );
-
-export const ValuationDocumentChecklist = () => {
+/** `allowGenerate` is false where the list is only a reference (the embedded checklist). */
+export const ValuationDocumentChecklist = ({
+  allowGenerate = true,
+}: {
+  allowGenerate?: boolean;
+}) => {
   const readOnly = usePageReadOnly();
   const { t, i18n } = useTranslation('appraisal');
+  const { t: tCommon } = useTranslation('common');
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
   const currentUser = useAuthStore(state => state.user);
 
-  const {
-    data,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useGetAppraisalDocuments(appraisalId);
+  const { data, isLoading, isError, error, refetch } = useGetAppraisalDocuments(appraisalId);
 
   const attachDocument = useAttachAppraisalDocument();
   const removeDocument = useRemoveAppraisalDocument();
+  const updateNotes = useUpdateAppraisalDocumentNotes();
   const { mutateAsync: uploadDocument } = useUploadDocument();
   const viewDocument = useViewDocument();
   const { trigger: triggerReportJob } = useAsyncReportJob();
 
-  const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
-  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; fileName: string | null } | null>(
-    null,
-  );
+  const [deleteConfirm, setDeleteConfirm] = useState<{
+    id: string;
+    fileName: string | null;
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const pendingTypeCodeRef = useRef<string | null>(null);
   const uploadSessionIdRef = useRef<string | null>(null);
   const sessionPromiseRef = useRef<Promise<string> | null>(null);
 
-  const types = data?.types ?? [];
-  const totalTypes = data?.totalTypes ?? 0;
-  const typesWithFiles = data?.typesWithFiles ?? 0;
-  const completionPct = totalTypes > 0 ? Math.round((typesWithFiles / totalTypes) * 100) : 0;
-
-  const handleToggleType = (code: string) => {
-    setExpandedTypes(prev => {
-      const next = new Set(prev);
-      if (next.has(code)) next.delete(code);
-      else next.add(code);
-      return next;
-    });
-  };
-
-  const handleExpandAll = () => setExpandedTypes(new Set(types.map(ty => ty.code)));
-  const handleCollapseAll = () => setExpandedTypes(new Set());
+  const types = useMemo(() => data?.types ?? [], [data]);
+  const typeByCode = useMemo(() => new Map(types.map(type => [type.code, type])), [types]);
+  const sections = useMemo(
+    () =>
+      types.length > 0
+        ? [valuationSection(types, i18n.language, t('valuationDocuments.boardTitle'))]
+        : [],
+    [types, i18n.language, t],
+  );
 
   const getOrCreateSession = useCallback(async (): Promise<string> => {
     if (uploadSessionIdRef.current) return uploadSessionIdRef.current;
@@ -126,7 +109,7 @@ export const ValuationDocumentChecklist = () => {
       if (!code || !appraisalId) return;
 
       const files = Array.from(fileList);
-      const validFiles = files.filter(isAllowedChecklistFile);
+      const validFiles = files.filter(isAllowedValuationDocumentFile);
       const invalidCount = files.length - validFiles.length;
 
       if (invalidCount > 0) {
@@ -170,25 +153,36 @@ export const ValuationDocumentChecklist = () => {
     [appraisalId, attachDocument, currentUser, getOrCreateSession, t, uploadDocument],
   );
 
-  const handleView = (file: AppraisalDocumentFile) => {
-    if (!file.documentId) return;
+  const handleView = (doc: UploadedDocument) => {
+    if (!doc.documentId) return;
     // The size decides whether this opens inline or downloads — see MAX_INLINE_VIEW_BYTES.
-    viewDocument(file.documentId, file.fileSizeBytes, file.fileName);
+    viewDocument(doc.documentId, doc.fileSizeBytes, doc.fileName);
   };
 
-  const handleRemoveClick = (file: AppraisalDocumentFile) => {
-    setDeleteConfirm({ id: file.id, fileName: file.fileName ?? null });
+  const handleSaveNotes = (doc: UploadedDocument, notes: string) => {
+    if (!appraisalId || !doc.id) return;
+    updateNotes.mutate(
+      { appraisalId, id: doc.id, body: { notes: notes.trim() || null } },
+      {
+        onSuccess: () => toast.success(t('valuationDocuments.checklist.noteSaved')),
+        onError: () => toast.error(t('valuationDocuments.checklist.noteSaveFailed')),
+      },
+    );
   };
 
   // System-generated report types (category VAL_REPORT) — enqueues the real async report job
   // and opens the resulting PDF in a new tab (autoOpen: true), same as ReportPreviewTab's
   // "Generate final PDF" button.
-  const handleGenerateReport = (code: string) => {
+  const handleGenerateReport = (row: TypeRow) => {
     if (!appraisalId) return;
-    const reportTypeKey = REPORT_TYPE_BY_CODE[code];
+    const reportTypeKey = REPORT_TYPE_BY_CODE[row.documentType];
     if (!reportTypeKey) return;
     void triggerReportJob(reportTypeKey, appraisalId, { autoOpen: true });
   };
+
+  const canGenerate = (row: TypeRow) =>
+    typeByCode.get(row.documentType)?.category === VAL_REPORT_CATEGORY &&
+    !!REPORT_TYPE_BY_CODE[row.documentType];
 
   const handleConfirmRemove = () => {
     if (!appraisalId || !deleteConfirm) return;
@@ -227,160 +221,58 @@ export const ValuationDocumentChecklist = () => {
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Board header */}
-      <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="flex items-center gap-3">
-            <Icon name="file-lines" className="text-gray-400" />
-            <h3 className="text-base font-semibold text-gray-900">
-              {t('valuationDocuments.boardTitle')}
-            </h3>
-            <span className="text-xs text-gray-400">{t('valuationDocuments.typesCount', { count: totalTypes })}</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 min-w-[160px]">
-              <div className="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={clsx(
-                    'h-full rounded-full transition-all duration-300',
-                    completionPct === 100 ? 'bg-green-500' : 'bg-primary',
-                  )}
-                  style={{ width: `${completionPct}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-500 whitespace-nowrap">
-                {t('valuationDocuments.progress', { uploaded: typesWithFiles, total: totalTypes })}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleExpandAll}
-                className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-colors"
-              >
-                {t('valuationDocuments.expandAll')}
-              </button>
-              <button
-                type="button"
-                onClick={handleCollapseAll}
-                className="px-3 py-1.5 text-xs text-gray-600 hover:text-gray-800 hover:bg-white/50 rounded-lg transition-colors"
-              >
-                {t('valuationDocuments.collapseAll')}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Accordion rows */}
-      <div className="divide-y divide-gray-100">
-        {types.map((type: AppraisalDocumentType) => {
-          const isExpanded = expandedTypes.has(type.code);
-          // Show one locale-appropriate name only — no code alongside it.
-          const displayName = i18n.language.startsWith('th') ? (type.nameTh ?? type.name) : type.name;
-          return (
-            <div key={type.code}>
-              <div
-                className={clsx(
-                  'px-6 py-3.5 flex items-center gap-3 cursor-pointer hover:bg-gray-50 transition-colors',
-                  isExpanded && 'bg-gray-50/50',
-                )}
-                onClick={() => handleToggleType(type.code)}
-              >
-                <Icon
-                  name={isExpanded ? 'chevron-down' : 'chevron-right'}
-                  className="text-gray-400 text-sm transition-transform flex-shrink-0"
-                />
-                <div className="min-w-0 flex-1 flex items-baseline gap-2">
-                  <span className="text-sm font-medium text-gray-900 truncate">{displayName}</span>
-                </div>
-                <TypeBadge count={type.totalFiles} t={t} />
-              </div>
-
-              {isExpanded && (
-                <div className="px-6 pb-4 pl-[3.25rem]">
-                  <div className="flex flex-col gap-2">
-                    {type.files.length > 0 && (
-                      <div className="border border-gray-100 rounded-lg divide-y divide-gray-100 overflow-hidden">
-                        {type.files.map(file => (
-                          <div key={file.id} className="px-3 py-2.5 hover:bg-gray-50/60 transition-colors">
-                            <DocumentFileRow
-                              fileName={file.fileName}
-                              documentId={file.documentId}
-                              mimeType={file.mimeType}
-                              fileSizeBytes={file.fileSizeBytes}
-                              uploadedAt={file.uploadedAt}
-                              uploadedBy={file.uploadedBy}
-                              uploadedByName={file.uploadedByName}
-                              onView={() => handleView(file)}
-                              t={t}
-                              actions={
-                                <ActionDropdown
-                                  onView={() => handleView(file)}
-                                  onDelete={() => handleRemoveClick(file)}
-                                  isEditable={!readOnly}
-                                />
-                              }
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex flex-wrap items-center gap-2">
-                      {!readOnly && (
-                        <button
-                          type="button"
-                          onClick={() => handleAttachClick(type.code)}
-                          className="inline-flex items-center gap-1.5 border border-dashed border-gray-300 rounded-lg px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 hover:border-primary transition-colors"
-                        >
-                          <Icon name="plus" className="text-xs" />
-                          {t('valuationDocuments.attach')}
-                        </button>
-                      )}
-                      {type.category === VAL_REPORT_CATEGORY && REPORT_TYPE_BY_CODE[type.code] && (
-                        <button
-                          type="button"
-                          onClick={() => handleGenerateReport(type.code)}
-                          disabled={!appraisalId}
-                          className="inline-flex items-center gap-1.5 border border-primary/30 rounded-lg px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          <Icon name="file-export" className="text-xs" />
-                          {t('valuationDocuments.generate')}
-                        </button>
-                      )}
-                    </div>
-                    {readOnly && type.files.length === 0 && (
-                      <p className="text-xs text-gray-400 italic py-2">{t('valuationDocuments.empty')}</p>
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {types.length === 0 && (
-          <div className="px-6 py-8 text-center text-sm text-gray-400">
-            {t('valuationDocuments.noTypes')}
-          </div>
-        )}
-      </div>
-
-      {/* Hidden file input, shared across rows via pendingTypeCodeRef */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".jpg,.jpeg,.png,.pdf"
-        multiple
-        onClick={e => {
-          (e.target as HTMLInputElement).value = '';
+    <>
+      <DocumentListView
+        title={t('valuationDocuments.boardTitle')}
+        icon="file-lines"
+        sections={sections}
+        typeName={(code, displayName) => {
+          const type = typeByCode.get(code);
+          return type ? documentTypeName(type, i18n.language) : displayName || code;
         }}
-        onChange={e => {
-          if (e.target.files) void handleFilesSelected(e.target.files);
-        }}
-        className="hidden"
+        editable={!readOnly}
+        onView={handleView}
+        onUpload={readOnly ? undefined : row => handleAttachClick(row.documentType)}
+        onSaveNotes={readOnly ? undefined : handleSaveNotes}
+        onRemove={
+          readOnly
+            ? undefined
+            : doc => {
+                if (doc.id) setDeleteConfirm({ id: doc.id, fileName: doc.fileName });
+              }
+        }
+        onGenerate={allowGenerate ? handleGenerateReport : undefined}
+        canGenerate={canGenerate}
+        headerExtra={
+          <span>
+            {t('valuationDocuments.checklist.typesWithFiles', {
+              done: data?.typesWithFiles ?? 0,
+              total: data?.totalTypes ?? 0,
+            })}
+          </span>
+        }
+        flat
+        allTypesToggleKey="appraisal.documentChecklist.valuationAllTypes"
+        showSource={false}
+        emptyLabel={t('valuationDocuments.checklist.valuationEmpty')}
       />
+
+      {/* Hidden file input, shared across rows via pendingTypeCodeRef (nothing to attach read-only) */}
+      {!readOnly && (
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept={VALUATION_DOCUMENT_ACCEPT}
+          multiple
+          onClick={e => {
+            (e.target as HTMLInputElement).value = '';
+          }}
+          onChange={e => {
+            if (e.target.files) void handleFilesSelected(e.target.files);
+          }}
+          className="hidden"
+        />
+      )}
 
       {/* Remove confirmation */}
       <ConfirmDialog
@@ -390,10 +282,11 @@ export const ValuationDocumentChecklist = () => {
         title={t('valuationDocuments.deleteDialog.title')}
         message={t('valuationDocuments.deleteDialog.message')}
         confirmText={t('valuationDocuments.deleteDialog.confirm')}
+        cancelText={tCommon('actions.cancel')}
         variant="danger"
         isLoading={removeDocument.isPending}
       />
-    </section>
+    </>
   );
 };
 

@@ -366,7 +366,7 @@
     "hintMultiple": "\"Select as Winner\" is disabled with multiple shortlisted — use \"Send to RM\" instead.",
     "selectWinnerHint0": "Shortlist exactly one company to enable",
     "selectWinnerHintMulti": "Disabled when more than one company is shortlisted — use Send to RM instead",
-    "sendToRmReAppraisalHint": "Can't send to RM — this quotation contains a Re-Appraisal appraisal.",
+    "sendToRmReAppraisalHint": "Can't send to RM — this quotation contains a Re-Appraisal appraisal with SIBS channel.",
     "sendToRmTitle": "Send Shortlist to RM",
     "sendToRmConfirm": "Confirm shortlist submission",
     "sendToRmBody": "You are sending {{count}} shortlisted company bid(s) to the RM for final selection. The RM will pick a tentative winner from these submissions.",

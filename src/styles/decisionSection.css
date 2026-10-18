@@ -1,0 +1,396 @@
+/* ---------------------------------------------------------------------------
+ * Decision section (DecisionSection.tsx): route preview on the left, decision tiles and the
+ * fields the pick needs on the right. Ported from the "decision section" half of
+ * docs/poc/activity-submit-liftoff-mock.html, which is a design reference only.
+ *
+ * Its own stylesheet because of the :has() selectors (a tile reacts to its radio) and the
+ * movement-tone custom properties shared with the timeline's ghost row and connector.
+ * Colours are theme palette tokens (theme.css), so [data-theme=dark] carries over.
+ *
+ * Movement tone: put `.dz-tone-F` (forward, teal), `.dz-tone-B` (back, amber) or `.dz-tone-C`
+ * (cancel / reject, red) on an element and everything inside reads --mc / --mc-soft.
+ * ------------------------------------------------------------------------- */
+
+.dz-tone-F {
+  --mc: var(--palette-accent);
+  --mc-soft: var(--palette-accent-wash);
+}
+.dz-tone-B {
+  --mc: var(--palette-warn);
+  --mc-soft: var(--palette-warn-wash);
+}
+.dz-tone-C {
+  --mc: var(--palette-danger);
+  --mc-soft: color-mix(in srgb, var(--palette-danger) 12%, var(--palette-surface));
+}
+
+/* ---------- the card: header, then two columns flush inside it ---------- */
+.dz {
+  /* Text / icon colour on a solid tone fill. */
+  --dz-on-solid: var(--color-base-100);
+
+  border: 1px solid var(--palette-line);
+  border-radius: 12px;
+  background: var(--palette-surface);
+  color: var(--palette-ink-strong);
+}
+.dz-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--palette-line);
+}
+.dz-head h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dz-gavel {
+  color: var(--palette-danger);
+}
+/* Which step the work is on, with a pulsing dot. */
+.dz-now {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--palette-accent-wash);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--palette-accent-ink);
+}
+.dz-now::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--palette-accent);
+  animation: dz-beat 1.6s ease-in-out infinite;
+}
+@keyframes dz-beat {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.dz-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* ---------- left: route preview (flush: the panel fills the column to the card's corner) ---------- */
+.dz-left {
+  min-width: 0;
+  background: var(--palette-surface-2);
+  /* Stacked (below lg): the decision comes first, the route preview after it, so a phone user does
+     not have to scroll past the whole history to reach the tiles; the divider turns horizontal. */
+  order: 1;
+  border-top: 1px solid var(--palette-line);
+  border-radius: 0 0 12px 12px;
+  padding: 16px 18px 18px;
+}
+@media (min-width: 1024px) {
+  .dz-grid {
+    grid-template-columns: minmax(340px, 2fr) minmax(0, 3fr);
+  }
+  .dz-left {
+    order: 0;
+    border-top: 0;
+    border-right: 1px solid var(--palette-line);
+    border-radius: 0 0 0 12px;
+  }
+}
+/* Dark theme: the route panel's background is a palette token (dark), but the timeline, the
+   committee fold and the vote list inside it are written with fixed Tailwind greys that only suit
+   a light ground (dark text on the dark panel). Point those greys at the theme's ink / surface
+   tokens, inside the panel only. Light theme is untouched. */
+[data-theme='dark'] .dz-left {
+  color: var(--palette-ink-strong);
+  /* Small grey text (dates, comments, the kicker): --palette-ink-3 measured 4.0:1 on this panel,
+     so the panel uses a slightly stronger mix to reach 4.5:1. */
+  --dz-muted: color-mix(in srgb, var(--color-base-content) 64%, var(--color-base-100));
+}
+[data-theme='dark'] .dz-left .dz-kicker {
+  color: var(--dz-muted);
+}
+[data-theme='dark'] .dz-left :is(.text-gray-900, .text-gray-800, .text-gray-700) {
+  color: var(--palette-ink-strong);
+}
+[data-theme='dark'] .dz-left :is(.text-gray-600) {
+  color: var(--palette-ink-2);
+}
+[data-theme='dark'] .dz-left :is(.text-gray-500, .text-gray-400, .text-gray-300) {
+  color: var(--dz-muted);
+}
+[data-theme='dark'] .dz-left :is(.bg-white, .bg-gray-50) {
+  background-color: var(--palette-surface);
+}
+[data-theme='dark'] .dz-left .bg-gray-100 {
+  background-color: var(--palette-surface-3);
+}
+[data-theme='dark'] .dz-left :is(.border-gray-200, .border-gray-100) {
+  border-color: var(--palette-line);
+}
+[data-theme='dark'] .dz-left .divide-gray-100 > :not(:last-child) {
+  border-color: var(--palette-line);
+}
+/* The viewer's own row in the vote list: a pale blue wash would sit under the light text above. */
+[data-theme='dark'] .dz-left .bg-blue-50\/60 {
+  background-color: var(--palette-accent-wash);
+}
+
+.dz-right {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+  align-content: start;
+  padding: 16px 18px 18px;
+}
+/* Side by side, the tiles and fields stay in view while the route list on the left grows. */
+@media (min-width: 1024px) {
+  .dz-right {
+    position: sticky;
+    top: 16px;
+    align-self: start;
+  }
+}
+/* Right-column text colours that follow the theme (the section card is palette-based). */
+.dz-label {
+  color: var(--palette-ink-2);
+}
+.dz-hint {
+  color: var(--palette-ink-2);
+}
+.dz-kicker {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* ink-2, not ink-3: ink-3 on the light panel is 2.9:1, too faint for small text. */
+  color: var(--palette-ink-2);
+}
+/* The "see more / show less" toggle under a clamped remark: the brand teal at -700 in light and
+   -300 in dark reaches 4.5:1 on the panel (plain primary is 3.6:1 light, 2.9:1 dark). */
+.dz-more {
+  color: var(--color-primary-700);
+}
+[data-theme='dark'] .dz-more {
+  color: var(--color-primary-300);
+}
+/* The route head: heading on the left, the "show earlier steps" link on the right. */
+.dz-route-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Compact timeline rows: title (+ tag), then one muted "who  when" line. */
+.dz-step-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  color: var(--palette-ink-strong);
+}
+.dz-step-idle {
+  font-weight: 500;
+  color: var(--dz-muted, var(--palette-ink-2));
+}
+.dz-step-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-size: 12px;
+  color: var(--dz-muted, var(--palette-ink-2));
+}
+.dz-step-remark {
+  color: var(--dz-muted, var(--palette-ink-2));
+}
+.dz-tag-here {
+  display: inline-block;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--palette-accent-wash);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--palette-accent-ink);
+}
+
+.dz-warn {
+  color: var(--palette-warn);
+}
+.dz-line-tone {
+  border-color: var(--mc);
+}
+.dz-dot-target {
+  background: var(--palette-warn);
+  box-shadow: 0 0 0 4px var(--palette-warn-wash);
+}
+.dz-tag-back {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0 8px;
+  background: var(--palette-warn-wash);
+  color: var(--palette-warn);
+}
+/* The ghost row's dot: solid in the tone once a decision is picked, dashed and empty before. */
+.dz-ghost-dot {
+  background: var(--mc);
+  color: var(--dz-on-solid);
+}
+.dz-ghost-dot-idle {
+  border: 2px dashed var(--palette-line-strong);
+  color: var(--palette-ink-3);
+}
+.dz-ghost {
+  animation: dz-slidein 0.3s ease-out;
+}
+/* The connector from the current step to the picked next step: dashes in the movement colour
+   flowing downwards (the gradient is 9px tall and slides one period per cycle). */
+.dz-flow {
+  width: 2px;
+  background: repeating-linear-gradient(to bottom, var(--mc) 0 5px, transparent 5px 9px);
+  background-size: 2px 9px;
+  animation: dz-flow 0.6s linear infinite;
+}
+@keyframes dz-flow {
+  to {
+    background-position: 0 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dz-flow,
+  .dz-ghost,
+  .dz-now::before {
+    animation: none;
+  }
+}
+@keyframes dz-slidein {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+/* ---------- right: decision tiles ---------- */
+.dz-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+.dz-tile {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  align-items: start;
+  padding: 12px 34px 12px 12px;
+  border: 1px solid var(--palette-line);
+  border-radius: 10px;
+  background: var(--palette-surface);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background 0.15s,
+    box-shadow 0.15s;
+}
+.dz-tile:hover {
+  border-color: var(--mc);
+}
+.dz-tile:has(input:focus-visible) {
+  outline: 2px solid var(--mc);
+  outline-offset: 2px;
+}
+.dz-tile:has(input:checked) {
+  border-color: var(--mc);
+  box-shadow: inset 0 0 0 1px var(--mc);
+  background: color-mix(in srgb, var(--mc-soft) 60%, var(--palette-surface));
+}
+/* The native radio stays in the DOM (arrow keys, form semantics); only its look is replaced. */
+.dz-tile-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.dz-tile-ic {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--mc-soft);
+  color: var(--mc);
+}
+.dz-tile-tag {
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--mc);
+}
+.dz-tile-label {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--palette-ink-strong);
+  overflow-wrap: anywhere;
+}
+.dz-tile-dest {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--palette-ink-3);
+  overflow-wrap: anywhere;
+}
+.dz-tick {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--palette-line);
+  display: grid;
+  place-items: center;
+  color: var(--dz-on-solid);
+}
+.dz-tick svg {
+  opacity: 0;
+}
+.dz-tile:has(input:checked) .dz-tick {
+  background: var(--mc);
+  border-color: var(--mc);
+}
+.dz-tile:has(input:checked) .dz-tick svg {
+  opacity: 1;
+}
+
+/* ---------- right: the fields the pick needs ---------- */
+.dz-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+}
+.dz-fields-wide {
+  grid-column: 1 / -1;
+}
+@media (max-width: 640px) {
+  .dz-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dz-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

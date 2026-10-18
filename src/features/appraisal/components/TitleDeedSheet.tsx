@@ -1,10 +1,18 @@
 import clsx from 'clsx';
-import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { get, useFormContext, useWatch } from 'react-hook-form';
 import type { FormField } from '@/shared/components/form';
 import { evaluateConditions } from '@/shared/components/form/conditions';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import type { TitleTypeCode } from '@/shared/constants/titleTypes';
+import { toSquareWa } from '@/shared/utils/landArea';
 import { useTranslation } from 'react-i18next';
 
 /**
@@ -48,7 +56,29 @@ const HEADING_KEYS = {
   },
 } as const satisfies Record<TitleTypeCode, { title: string; sub?: string; noun: string }>;
 
-const NUMERIC = new Set(['rai', 'ngan', 'squareWa']);
+/**
+ * Where the title lives in the form, when it is one row of an array (the request page's `titles`).
+ * Without it the form IS the title and a field's name is its path (the land page's dialog).
+ */
+export interface DeedSheetScope {
+  name: string;
+  index: number;
+}
+
+const ScopeContext = createContext<DeedSheetScope | undefined>(undefined);
+
+const scopedPath = (scope: DeedSheetScope | undefined, fieldName: string) =>
+  scope ? `${scope.name}.${scope.index}.${fieldName}` : fieldName;
+
+/** The title's own values: the whole form on the land page, the one row on the request page. */
+function useTitleValues() {
+  const { control } = useFormContext();
+  const scope = useContext(ScopeContext);
+  return (useWatch({
+    control,
+    name: scope ? (`${scope.name}.${scope.index}` as never) : undefined,
+  }) ?? {}) as Record<string, unknown>;
+}
 
 /**
  * Whether a numeric blank may take this text: the same digit, decimal and max limits the shared
@@ -81,17 +111,30 @@ interface BlankProps {
   label?: string;
   unit?: string;
   className?: string;
+  /** An area part: stored as a number, and held to the config's digit, decimal and max limits. */
+  numeric?: boolean;
+  /**
+   * Drawn in place of the input, for a value the page edits somewhere else on the screen (the
+   * label, the required mark and the error state stay the paper's). It carries no `data-field`:
+   * the editor it points to is what the page scrolls to.
+   */
+  custom?: ReactNode;
 }
 
 /** One dotted blank on the paper, bound to a field config by name. */
-function Blank({ field, label, unit, className }: BlankProps) {
-  const { register, control, formState } = useFormContext();
-  const values = useWatch({ control }) as Record<string, unknown>;
+function Blank({ field, label, unit, className, numeric, custom }: BlankProps) {
+  const { register, formState } = useFormContext();
+  const scope = useContext(ScopeContext);
+  const values = useTitleValues();
   const readOnly = useFormReadOnly();
   // A long value steps the type down, then fades out at the edge with the full text on hover.
   const value = field ? String(values[field.name] ?? '') : '';
   const size =
-    value.length > 28 ? 'text-[11px]' : value.length > 16 ? 'text-[13px]' : 'text-[15px]';
+    value.length > 28
+      ? 'text-[0.7857rem]'
+      : value.length > 16
+        ? 'text-[0.9286rem]'
+        : 'text-[1.0714rem]';
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [overflows, setOverflows] = useState(false);
   useLayoutEffect(() => {
@@ -104,12 +147,13 @@ function Blank({ field, label, unit, className }: BlankProps) {
   const required =
     field.required ||
     (field.requiredWhen ? evaluateConditions(field.requiredWhen, values, '') : false);
-  const error = get(formState.errors, field.name);
-  const id = `deed-${field.name}`;
+  const path = scopedPath(scope, field.name);
+  const error = get(formState.errors, path);
+  const id = `deed-${path}`;
   const maxLength = 'maxLength' in field ? field.maxLength : undefined;
   const registered = register(
-    field.name,
-    NUMERIC.has(field.name)
+    path,
+    numeric
       ? {
           setValueAs: (v: unknown) =>
             v === '' || v == null ? null : Number(String(v).replace(/,/g, '')),
@@ -118,60 +162,74 @@ function Blank({ field, label, unit, className }: BlankProps) {
   );
 
   return (
-    <div className={clsx('flex min-w-0 items-baseline gap-1.5 text-[13.5px]', className)}>
+    <div
+      // Where scrollToField finds it, as it finds a form field; only inside an array, where the
+      // page can name a title's field. On the land page the dialog has no such caller.
+      data-field={scope && !custom ? path : undefined}
+      className={clsx('flex min-w-0 items-baseline gap-1.5 text-[0.9643rem]', className)}
+    >
       {label && (
         <label htmlFor={id} className="whitespace-nowrap">
           {label}
           {required && !readOnly && <span className="ml-px text-danger">*</span>}
         </label>
       )}
+      {/* An editable blank is a white box with a drawn border, so it stands out from the printed
+          lines and skeleton bars around it; read-only shows just the value. */}
       <span
         className={clsx(
-          'flex min-w-0 flex-1 items-baseline border-b-[1.5px] transition-colors',
-          error
-            ? 'border-solid border-danger bg-red-50/60'
-            : readOnly
-              ? 'border-transparent'
-              : 'border-dotted border-[#9AA2A9] hover:bg-blue-50/40 focus-within:border-solid focus-within:border-blue-700 focus-within:bg-blue-50/60',
+          'flex min-w-0 flex-1 items-baseline rounded-md border px-1 transition-colors',
+          readOnly
+            ? 'border-transparent'
+            : clsx(
+                'bg-white focus-within:ring-2',
+                error
+                  ? 'border-danger bg-red-50 focus-within:border-danger focus-within:ring-danger/20'
+                  : required && !value
+                    ? 'border-amber-400 hover:border-amber-500 focus-within:border-primary focus-within:ring-primary/20'
+                    : 'border-gray-300 hover:border-gray-400 focus-within:border-primary focus-within:ring-primary/20',
+              ),
         )}
       >
-        <input
-          id={id}
-          {...registered}
-          ref={element => {
-            registered.ref(element);
-            inputRef.current = element;
-          }}
-          title={overflows ? value : undefined}
-          inputMode={NUMERIC.has(field.name) ? 'decimal' : undefined}
-          // Typing and pasting past the config's limits is refused, not left for the save to reject.
-          onBeforeInput={
-            NUMERIC.has(field.name)
-              ? event => {
-                  const input = event.currentTarget;
-                  const data = (event.nativeEvent as InputEvent).data ?? '';
-                  const next =
-                    input.value.slice(0, input.selectionStart ?? input.value.length) +
-                    data +
-                    input.value.slice(input.selectionEnd ?? input.value.length);
-                  if (!fitsNumber(field, next)) event.preventDefault();
-                }
-              : undefined
-          }
-          maxLength={maxLength}
-          readOnly={readOnly}
-          placeholder={readOnly ? '—' : undefined}
-          aria-invalid={error ? true : undefined}
-          aria-label={label ? undefined : `${field.label}`}
-          className={clsx(
-            'w-full min-w-0 border-0 bg-transparent px-1 pb-px pt-0.5 text-center font-semibold text-blue-700 outline-none placeholder:font-normal placeholder:text-slate-300',
-            size,
-            overflows &&
-              'text-ellipsis text-left [mask-image:linear-gradient(to_right,#000_80%,transparent)] focus:[mask-image:none]',
-          )}
-        />
+        {custom ?? (
+          <input
+            id={id}
+            {...registered}
+            ref={element => {
+              registered.ref(element);
+              inputRef.current = element;
+            }}
+            title={overflows ? value : undefined}
+            inputMode={numeric ? 'decimal' : undefined}
+            // Typing and pasting past the config's limits is refused, not left for the save to reject.
+            onBeforeInput={
+              numeric
+                ? event => {
+                    const input = event.currentTarget;
+                    const data = (event.nativeEvent as InputEvent).data ?? '';
+                    const next =
+                      input.value.slice(0, input.selectionStart ?? input.value.length) +
+                      data +
+                      input.value.slice(input.selectionEnd ?? input.value.length);
+                    if (!fitsNumber(field, next)) event.preventDefault();
+                  }
+                : undefined
+            }
+            maxLength={maxLength}
+            readOnly={readOnly}
+            placeholder={readOnly ? '—' : undefined}
+            aria-invalid={error ? true : undefined}
+            aria-label={label ? undefined : `${field.label}`}
+            className={clsx(
+              'w-full min-w-0 border-0 bg-transparent px-1 pb-px pt-0.5 text-center font-semibold text-blue-700 outline-none placeholder:font-normal placeholder:text-slate-300',
+              size,
+              overflows &&
+                'text-ellipsis text-left [mask-image:linear-gradient(to_right,#000_80%,transparent)] focus:[mask-image:none]',
+            )}
+          />
+        )}
         {unit && (
-          <span className="whitespace-nowrap pr-1 text-[12.5px] text-[#8C949C]">{unit}</span>
+          <span className="whitespace-nowrap pr-1 text-[0.8929rem] text-[#8C949C]">{unit}</span>
         )}
       </span>
     </div>
@@ -199,9 +257,9 @@ const PrintedLine = ({ label, className }: { label: string; className?: string }
 /** Shown on the paper as it is on the record — the property's title address — never edited here. */
 const RecordedLine = ({ label, value }: { label: string; value?: string | null }) =>
   value ? (
-    <div className="flex min-w-0 items-baseline gap-1.5 text-[13.5px] text-[#BCC3C7]">
+    <div className="flex min-w-0 items-baseline gap-1.5 text-[0.9643rem] text-[#BCC3C7]">
       <span className="whitespace-nowrap">{label}</span>
-      <span className="min-w-0 flex-1 truncate border-b border-dotted border-[#DDE2E0] px-1 text-center text-[15px]">
+      <span className="min-w-0 flex-1 truncate border-b border-dotted border-[#DDE2E0] px-1 text-center text-[1.0714rem]">
         {value}
       </span>
     </div>
@@ -285,7 +343,7 @@ function Paper({
             type does not change the paper's size; each layout's empty plot space takes up the rest. */}
         <div className="relative flex min-h-[48rem] flex-col border border-[#2F3338] bg-[#EEF2F0] px-7 pb-7 pt-12">
           <Emblem label={emblem} tone={tone} />
-          <span className="absolute right-3 top-2 text-[10px] uppercase tracking-widest text-[#9AA2A9]">
+          <span className="absolute right-3 top-2 text-[0.7143rem] uppercase tracking-widest text-[#9AA2A9]">
             {t('titleEntry.deed.watermark')}
           </span>
           {children}
@@ -295,16 +353,144 @@ function Paper({
   );
 }
 
+/**
+ * The condominium unit title (อ.ช.2): the land it stands on top left (its title deeds, then the
+ * place from the title address), the unit's location top right, the holder's lines, the unit's
+ * area, and the rest as printed bars like the land papers.
+ */
+function CondoPaper({
+  f,
+  address,
+  holder,
+  titleNumbers,
+}: {
+  f: (name: string) => FormField | undefined;
+  address?: TitleAddress;
+  holder: ReactNode;
+  titleNumbers?: ReactNode;
+}) {
+  const { t } = useTranslation('appraisal');
+  return (
+    <Paper label={t('titleEntry.deed.condo.title')} emblem={t('titleEntry.deed.emblem')} tone="red">
+      <div className="grid justify-items-center gap-1 text-center">
+        <div className="text-[2rem] font-bold leading-tight">
+          {t('titleEntry.deed.condo.title')}
+        </div>
+        <div className="text-xs text-[#8C949C]">{t('titleEntry.deed.condo.sub')}</div>
+        <SkeletonText
+          text={t('titleEntry.deed.issuedUnder')}
+          className="mt-1 h-3 w-1/2 bg-[#DFE4E2]"
+        />
+      </div>
+
+      <div className="mt-6 grid grid-cols-1 items-start gap-x-8 gap-y-4 md:grid-cols-2">
+        <div className="grid content-start gap-1.5">
+          <div className="text-[1.0714rem] font-bold">{t('titleEntry.deed.positionBox')}</div>
+          <Blank
+            field={f('titleNumber')}
+            label={t('titleEntry.deed.condo.landDeed')}
+            custom={titleNumbers}
+          />
+          <RecordedLine label={t('titleEntry.deed.subDistrict')} value={address?.subDistrict} />
+          <RecordedLine label={t('titleEntry.deed.district')} value={address?.district} />
+          <RecordedLine label={t('titleEntry.deed.province')} value={address?.province} />
+        </div>
+        <div className="grid content-start gap-1.5">
+          <div className="text-[1.0714rem] font-bold">{t('titleEntry.deed.condo.location')}</div>
+          {/* Labelled with the form's own wording (the field configs), so the two never drift. */}
+          {[
+            'roomNumber',
+            'floorNumber',
+            'buildingNumber',
+            'condoName',
+            'condoRegistrationNumber',
+          ].map(name => (
+            <Blank key={name} field={f(name)} label={f(name)?.label} />
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-1.5">
+        {holder}
+        <div aria-hidden="true" className="contents">
+          <div className="grid grid-cols-[1fr_1fr_auto] gap-x-3">
+            <PrintedLine label={t('titleEntry.deed.nationality')} />
+            <PrintedLine label={t('titleEntry.deed.houseNo')} />
+            <PrintedLine label={t('titleEntry.deed.moo')} className="w-20" />
+          </div>
+          <div className="grid grid-cols-5 gap-x-3">
+            <PrintedLine label={t('titleEntry.deed.road')} />
+            <PrintedLine label={t('titleEntry.deed.soi')} />
+            <PrintedLine label={t('titleEntry.deed.subDistrict')} />
+            <PrintedLine label={t('titleEntry.deed.district')} />
+            <PrintedLine label={t('titleEntry.deed.province')} />
+          </div>
+        </div>
+      </div>
+
+      <div className="mt-4 flex justify-center">
+        <Blank
+          field={f('usableArea')}
+          label={f('usableArea')?.label}
+          numeric
+          className="w-80 max-w-full"
+        />
+      </div>
+
+      <div aria-hidden="true" className="mt-5 grid flex-1 content-start gap-3">
+        <div className="mx-auto h-3 w-40 rounded bg-[#D3D9D7]">
+          <span className="sr-only">{t('titleEntry.deed.map')}</span>
+        </div>
+        <div className="mx-auto h-40 w-3/4 rounded border border-dashed border-[#C6CDD0]" />
+        <div className="grid grid-cols-3 gap-x-4">
+          <PrintedLine label={t('titleEntry.deed.mapScaleSheet')} />
+          <PrintedLine label={t('titleEntry.deed.mapScale')} />
+          <PrintedLine label={t('titleEntry.deed.issuedOn')} />
+        </div>
+      </div>
+    </Paper>
+  );
+}
+
 export interface TitleAddress {
   subDistrict?: string | null;
   district?: string | null;
   province?: string | null;
 }
 
+/** Config names of the three area blanks, where a page names them differently from the land page. */
+export interface DeedAreaNames {
+  rai: string;
+  ngan: string;
+  squareWa: string;
+}
+
+const LAND_AREA_NAMES: DeedAreaNames = { rai: 'rai', ngan: 'ngan', squareWa: 'squareWa' };
+
 interface TitleDeedSheetProps {
   fields: FormField[];
   /** The property's title address, where the page has one; blank parts stay skeleton bars. */
   address?: TitleAddress;
+  /** Set when the title is one row of an array in the page's form; see {@link DeedSheetScope}. */
+  scope?: DeedSheetScope;
+  /** The area blanks' config names; defaults to the land page's `rai` / `ngan` / `squareWa`. */
+  areaNames?: DeedAreaNames;
+  /**
+   * The holder's field, for a page that keeps it. The paper then has a real blank where the holder is
+   * written; without it (the land page) the line is drawn as a printed bar, since that page does not
+   * keep the holder.
+   */
+  holderField?: FormField;
+  /**
+   * Draws the paper of a condominium unit (อ.ช.2) instead of a land title's. The fields passed are
+   * the condominium's; the land page never sets this.
+   */
+  variant?: 'condo';
+  /**
+   * A condominium's land title numbers are a list kept in one string and edited in a box under the
+   * paper: this is what the paper shows in its place (a one-line summary that leads there).
+   */
+  landTitleNumbers?: ReactNode;
 }
 
 /**
@@ -314,19 +500,49 @@ interface TitleDeedSheetProps {
  * inside a border of fine print. The น.ส.3 family gets its own paper (below); ตราจอง and others keep the
  * โฉนด's bones under their own heading.
  */
-export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
+export function TitleDeedSheet({ scope, ...props }: TitleDeedSheetProps) {
+  return (
+    <ScopeContext.Provider value={scope}>
+      <DeedSheetBody {...props} />
+    </ScopeContext.Provider>
+  );
+}
+
+function DeedSheetBody({
+  fields,
+  address,
+  areaNames = LAND_AREA_NAMES,
+  holderField,
+  variant,
+  landTitleNumbers,
+}: Omit<TitleDeedSheetProps, 'scope'>) {
   const { t } = useTranslation('appraisal');
   const byName = new Map(fields.map(field => [field.name, field]));
   const f = (name: string) => byName.get(name);
 
-  const values = useWatch() as Record<string, unknown>;
+  const values = useTitleValues();
   const titleType = values.titleType as TitleTypeCode | undefined;
   // น.ส.3 and น.ส.3 ข. carry no position fields; the heading stays so the corner still reads right.
   const hasPosition = POSITION_FIELDS.some(name => {
     const field = byName.get(name);
     return field && (!field.showWhen || evaluateConditions(field.showWhen, values, ''));
   });
-  const totalSquareWa = Number(values.totalSquareWa) || 0;
+  // Always from the three parts: a page need not keep a total, and a stored one can be stale.
+  const totalSquareWa = toSquareWa(
+    values[areaNames.rai],
+    values[areaNames.ngan],
+    values[areaNames.squareWa],
+  );
+  const holder = holderField ? (
+    <Blank
+      field={holderField}
+      label={
+        titleType === 'NS3K' || titleType === 'NS3' || titleType === 'NS3KO'
+          ? t('titleEntry.deed.holderName')
+          : t('titleEntry.deed.issuedTo')
+      }
+    />
+  ) : null;
   const headingKeys = (titleType && HEADING_KEYS[titleType]) || HEADING_KEYS.OTHER;
   const heading = {
     title: t(headingKeys.title),
@@ -335,7 +551,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
   };
   const isDeed = titleType === 'DEED';
   const totalText = (
-    <span className="text-[12px] text-[#8C949C]">
+    <span className="text-[0.8571rem] text-[#8C949C]">
       ({t('titleEntry.deed.total')}{' '}
       <b className="tabular-nums text-[#3A3F47]">
         {totalSquareWa.toLocaleString('en-US', {
@@ -346,6 +562,10 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
       {t('titleEntry.deed.waShort')})
     </span>
   );
+
+  if (variant === 'condo') {
+    return <CondoPaper f={f} address={address} holder={holder} titleNumbers={landTitleNumbers} />;
+  }
 
   // The หนังสือรับรองการทำประโยชน์ papers: a black rule, two underlined columns and the holder's lines.
   // น.ส.3 ก. (green emblem) places the land by aerial map and parcel number; น.ส.3 and น.ส.3 ข. only
@@ -359,7 +579,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
         tone={ns3k ? 'green' : 'grey'}
       >
         <div className="grid justify-items-center gap-1.5 text-center">
-          <div className="text-[28px] font-bold leading-tight underline underline-offset-[6px]">
+          <div className="text-[2rem] font-bold leading-tight underline underline-offset-[6px]">
             {heading.title}
           </div>
           <SkeletonText
@@ -370,7 +590,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
 
         <div className="mt-6 grid grid-cols-1 gap-x-10 gap-y-4 md:grid-cols-2">
           <div className="grid auto-rows-[2rem] items-end gap-y-1">
-            <div className="mb-1 justify-self-center text-[15px] font-bold underline underline-offset-4">
+            <div className="mb-1 justify-self-center text-[1.0714rem] font-bold underline underline-offset-4">
               {ns3k ? t('titleEntry.deed.positionBox') : t('titleEntry.deed.landLocated')}
             </div>
             {ns3k ? (
@@ -391,7 +611,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
             )}
           </div>
           <div className="grid auto-rows-[2rem] items-end gap-y-1">
-            <div className="mb-1 justify-self-center text-[15px] font-bold underline underline-offset-4">
+            <div className="mb-1 justify-self-center text-[1.0714rem] font-bold underline underline-offset-4">
               {t('titleEntry.deed.registry')}
             </div>
             {!ns3k && (
@@ -420,35 +640,44 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
           </div>
         </div>
 
-        {/* The holder's lines: printed on the paper, not kept by this dialog. */}
-        <div aria-hidden="true" className="mt-5 grid gap-1.5">
-          <SkeletonText
-            text={t('titleEntry.deed.ns3kIssuedFor')}
-            className="h-3.5 w-1/2 justify-self-center bg-[#DFE4E2]"
-          />
-          <div className="grid grid-cols-[2fr_1fr_1fr] gap-x-3">
-            <PrintedLine label={t('titleEntry.deed.holderName')} />
-            <PrintedLine label={t('titleEntry.deed.nationality')} />
-            <PrintedLine label={t('titleEntry.deed.houseNo')} />
+        {/* The holder's lines: printed on the paper. Where the page keeps the holder, the name is a
+            blank to fill in; everything else stays a printed bar. `contents` lets each printed run
+            hide from screen readers without becoming a box of its own in the grid. */}
+        <div className="mt-5 grid gap-1.5">
+          <div aria-hidden="true" className="contents">
+            <SkeletonText
+              text={t('titleEntry.deed.ns3kIssuedFor')}
+              className="h-3.5 w-1/2 justify-self-center bg-[#DFE4E2]"
+            />
           </div>
-          <div className="grid grid-cols-4 gap-x-3">
-            <PrintedLine label={t('titleEntry.deed.moo')} />
-            <PrintedLine label={t('titleEntry.deed.subDistrict')} />
-            <PrintedLine label={t('titleEntry.deed.district')} />
-            <PrintedLine label={t('titleEntry.deed.province')} />
-          </div>
-          <SkeletonText
-            text={ns3k ? t('titleEntry.deed.ns3kPossessed') : t('titleEntry.deed.ns3Possessed')}
-            className="h-3.5 w-1/2 bg-[#DFE4E2]"
-          />
-          {!ns3k && (
-            <div className="grid gap-1.5 pl-[15%]">
-              <PrintedLine label={t('titleEntry.deed.north')} />
-              <PrintedLine label={t('titleEntry.deed.south')} />
-              <PrintedLine label={t('titleEntry.deed.east')} />
-              <PrintedLine label={t('titleEntry.deed.west')} />
+          {holder}
+          <div aria-hidden="true" className="contents">
+            <div
+              className={clsx('grid gap-x-3', holder ? 'grid-cols-2' : 'grid-cols-[2fr_1fr_1fr]')}
+            >
+              {!holder && <PrintedLine label={t('titleEntry.deed.holderName')} />}
+              <PrintedLine label={t('titleEntry.deed.nationality')} />
+              <PrintedLine label={t('titleEntry.deed.houseNo')} />
             </div>
-          )}
+            <div className="grid grid-cols-4 gap-x-3">
+              <PrintedLine label={t('titleEntry.deed.moo')} />
+              <PrintedLine label={t('titleEntry.deed.subDistrict')} />
+              <PrintedLine label={t('titleEntry.deed.district')} />
+              <PrintedLine label={t('titleEntry.deed.province')} />
+            </div>
+            <SkeletonText
+              text={ns3k ? t('titleEntry.deed.ns3kPossessed') : t('titleEntry.deed.ns3Possessed')}
+              className="h-3.5 w-1/2 bg-[#DFE4E2]"
+            />
+            {!ns3k && (
+              <div className="grid gap-1.5 pl-[15%]">
+                <PrintedLine label={t('titleEntry.deed.north')} />
+                <PrintedLine label={t('titleEntry.deed.south')} />
+                <PrintedLine label={t('titleEntry.deed.east')} />
+                <PrintedLine label={t('titleEntry.deed.west')} />
+              </div>
+            )}
+          </div>
         </div>
 
         <div
@@ -457,9 +686,24 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
           className="mt-4 flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-sm"
         >
           <span>{ns3k ? t('titleEntry.deed.ns3kAreaLead') : t('titleEntry.deed.ns3AreaLead')}</span>
-          <Blank field={f('rai')} unit={t('titleEntry.deed.rai')} className="basis-[110px]" />
-          <Blank field={f('ngan')} unit={t('titleEntry.deed.ngan')} className="basis-[110px]" />
-          <Blank field={f('squareWa')} unit={t('titleEntry.deed.wa')} className="basis-[150px]" />
+          <Blank
+            field={f(areaNames.rai)}
+            numeric
+            unit={t('titleEntry.deed.rai')}
+            className="basis-[110px]"
+          />
+          <Blank
+            field={f(areaNames.ngan)}
+            numeric
+            unit={t('titleEntry.deed.ngan')}
+            className="basis-[110px]"
+          />
+          <Blank
+            field={f(areaNames.squareWa)}
+            numeric
+            unit={t('titleEntry.deed.wa')}
+            className="basis-[150px]"
+          />
           {totalText}
         </div>
 
@@ -484,7 +728,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
     <Paper label={heading.title} emblem={t('titleEntry.deed.emblem')} tone="red">
       <div className="grid grid-cols-1 items-start gap-x-6 gap-y-4 md:grid-cols-[1fr_minmax(0,1.25fr)_1fr]">
         <div className="grid content-start gap-1.5">
-          <div className="text-[15px] font-bold">{t('titleEntry.deed.positionBox')}</div>
+          <div className="text-[1.0714rem] font-bold">{t('titleEntry.deed.positionBox')}</div>
           {hasPosition && (
             <>
               <Blank field={f('rawang')} label={t('titleEntry.deed.rawang')} />
@@ -499,7 +743,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
         </div>
 
         <div className="order-first grid justify-items-center gap-1 pt-4 text-center md:order-none">
-          <div className="text-[30px] font-bold leading-tight">{heading.title}</div>
+          <div className="text-[2.1429rem] font-bold leading-tight">{heading.title}</div>
           {heading.sub && <div className="text-xs text-[#8C949C]">{heading.sub}</div>}
           {isDeed && (
             <>
@@ -515,7 +759,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
         </div>
 
         <div className="grid content-start gap-1.5">
-          <div className="text-[15px] font-bold">{heading.noun}</div>
+          <div className="text-[1.0714rem] font-bold">{heading.noun}</div>
           <Blank field={f('titleNumber')} label={t('titleEntry.deed.number')} />
           <div className="grid grid-cols-2 gap-x-3">
             <Blank field={f('bookNumber')} label={t('titleEntry.deed.book')} />
@@ -526,20 +770,29 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
         </div>
       </div>
 
-      {/* The holder's lines: printed on the paper, not kept by this dialog. */}
-      <div aria-hidden="true" className="mt-5 grid gap-1.5">
-        <div className="grid grid-cols-[2fr_1fr_1fr_auto] gap-x-3">
-          <PrintedLine label={t('titleEntry.deed.issuedTo')} />
-          <PrintedLine label={t('titleEntry.deed.nationality')} />
-          <PrintedLine label={t('titleEntry.deed.houseNo')} />
-          <PrintedLine label={t('titleEntry.deed.moo')} className="w-20" />
-        </div>
-        <div className="grid grid-cols-5 gap-x-3">
-          <PrintedLine label={t('titleEntry.deed.road')} />
-          <PrintedLine label={t('titleEntry.deed.soi')} />
-          <PrintedLine label={t('titleEntry.deed.subDistrict')} />
-          <PrintedLine label={t('titleEntry.deed.district')} />
-          <PrintedLine label={t('titleEntry.deed.province')} />
+      {/* The holder's lines: printed on the paper. Where the page keeps the holder, the name is a
+          blank to fill in; the rest stays a printed bar. */}
+      <div className="mt-5 grid gap-1.5">
+        {holder}
+        <div aria-hidden="true" className="contents">
+          <div
+            className={clsx(
+              'grid gap-x-3',
+              holder ? 'grid-cols-[1fr_1fr_auto]' : 'grid-cols-[2fr_1fr_1fr_auto]',
+            )}
+          >
+            {!holder && <PrintedLine label={t('titleEntry.deed.issuedTo')} />}
+            <PrintedLine label={t('titleEntry.deed.nationality')} />
+            <PrintedLine label={t('titleEntry.deed.houseNo')} />
+            <PrintedLine label={t('titleEntry.deed.moo')} className="w-20" />
+          </div>
+          <div className="grid grid-cols-5 gap-x-3">
+            <PrintedLine label={t('titleEntry.deed.road')} />
+            <PrintedLine label={t('titleEntry.deed.soi')} />
+            <PrintedLine label={t('titleEntry.deed.subDistrict')} />
+            <PrintedLine label={t('titleEntry.deed.district')} />
+            <PrintedLine label={t('titleEntry.deed.province')} />
+          </div>
         </div>
       </div>
 
@@ -549,15 +802,30 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
         className="mt-4 flex flex-wrap items-baseline justify-center gap-x-2.5 gap-y-1 text-sm"
       >
         <span>{t('titleEntry.deed.areaLead')}</span>
-        <Blank field={f('rai')} unit={t('titleEntry.deed.rai')} className="basis-[110px]" />
-        <Blank field={f('ngan')} unit={t('titleEntry.deed.ngan')} className="basis-[110px]" />
-        <Blank field={f('squareWa')} unit={t('titleEntry.deed.wa')} className="basis-[150px]" />
+        <Blank
+          field={f(areaNames.rai)}
+          numeric
+          unit={t('titleEntry.deed.rai')}
+          className="basis-[110px]"
+        />
+        <Blank
+          field={f(areaNames.ngan)}
+          numeric
+          unit={t('titleEntry.deed.ngan')}
+          className="basis-[110px]"
+        />
+        <Blank
+          field={f(areaNames.squareWa)}
+          numeric
+          unit={t('titleEntry.deed.wa')}
+          className="basis-[150px]"
+        />
         {totalText}
       </div>
 
       <div
         aria-hidden="true"
-        className="mt-5 grid grid-cols-3 items-baseline text-[13px] text-[#8C949C]"
+        className="mt-5 grid grid-cols-3 items-baseline text-[0.9286rem] text-[#8C949C]"
       >
         <PrintedLine label={t('titleEntry.deed.mapScaleSheet')} />
         <div className="mx-auto h-3 w-24 rounded bg-[#D3D9D7]">
@@ -567,7 +835,7 @@ export function TitleDeedSheet({ fields, address }: TitleDeedSheetProps) {
       </div>
       <div aria-hidden="true" className="relative mt-2 min-h-44 flex-1">
         {/* North arrow, as drawn beside the plot on the paper. */}
-        <div className="absolute left-4 top-3 grid justify-items-center text-[11px] font-semibold text-[#6B737B]">
+        <div className="absolute left-4 top-3 grid justify-items-center text-[0.7857rem] font-semibold text-[#6B737B]">
           N
           <span className="h-14 w-px bg-[#6B737B]" />
         </div>

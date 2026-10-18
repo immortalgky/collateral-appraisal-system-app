@@ -41,6 +41,8 @@ export interface ImageAnnotationEditorProps {
   imageUrl?: string;
   onSave: (result: AnnotationResult) => Promise<void>;
   onSkip?: () => void;
+  /** The image cannot be opened: drop it from the queue (it is not attached) and go to the next. */
+  onDiscard?: () => void;
   fileName?: string;
 }
 
@@ -65,6 +67,8 @@ export interface FabricCanvasProps {
   onCanvasReady: (canvas: FabricCanvas) => void;
   onSelectionChange: (info: SelectedObjectInfo | null) => void;
   onImageLoaded?: () => void;
+  /** The image could not be loaded (a missing or unreadable file); not called once the canvas is gone. */
+  onLoadError?: (error: unknown) => void;
   pauseSnapshots?: () => void;
   resumeSnapshots?: () => void;
   saveSnapshot?: () => void;

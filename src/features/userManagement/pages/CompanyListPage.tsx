@@ -80,7 +80,7 @@ const CompanyListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('page.companies.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('page.companies.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {companies.length}
             </span>

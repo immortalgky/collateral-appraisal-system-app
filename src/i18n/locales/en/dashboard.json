@@ -47,7 +47,7 @@
     "apply": "Apply"
   },
   "segment": {
-    "all": "All Segments",
+    "all": "All segments",
     "Retail": "Retail",
     "IBG": "IBG"
   },
@@ -146,7 +146,7 @@
       "label": "Filters",
       "assigneeUsername": "Assignee username",
       "assigneePlaceholder": "e.g. P5229",
-      "bankingSegment": "Banking segment",
+      "bankingSegment": "Banking Segment",
       "bankingPlaceholder": "e.g. SME, Corporate",
       "comparePrior": "Compare to prior period",
       "apply": "Apply"

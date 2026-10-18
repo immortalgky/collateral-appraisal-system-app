@@ -72,20 +72,34 @@ const ProfitRentBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
             <table className="w-full text-xs whitespace-nowrap">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Year</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500"># Months</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Year
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    # Months
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
                     Mkt Fee/Sq.Wa
                   </th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Growth %</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Fee/Month</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Fee/Year</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Growth %
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Fee/Month
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Fee/Year
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
                     Contract Fee/Year
                   </th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Returns</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">PV Factor</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">PV</th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Returns
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    PV Factor
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">PV</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">

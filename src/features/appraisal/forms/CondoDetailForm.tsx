@@ -255,8 +255,9 @@ const identityFields = pick(
   'condoName',
   ['roomNumber', 'col-span-6'],
   ['floorNumber', 'col-span-6'],
-  ['buildingNumber', 'col-span-6'],
-  ['condoRegistrationNumber', 'col-span-6'],
+  // Full rows: "ทะเบียนอาคารชุดเลขที่" is too long for the label column of a half row
+  ['buildingNumber', 'col-span-12'],
+  ['condoRegistrationNumber', 'col-span-12'],
   ['modelName', 'col-span-12'],
   'titleNumber',
 );

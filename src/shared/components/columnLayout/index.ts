@@ -7,6 +7,8 @@
  */
 export { ColumnResizeHandle } from './ColumnResizeHandle';
 export { ColumnVisibilityDropdown } from './ColumnVisibilityDropdown';
+export { neutralToolButtonClass } from './toolButton';
+export { fillColumnWidths, storedWidthForShown } from './fillWidths';
 export { useColumnAutoFit } from './useColumnAutoFit';
 export { useColumnVisibility } from './useColumnVisibility';
 export { useColumnWidths } from './useColumnWidths';

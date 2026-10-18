@@ -365,7 +365,7 @@ export function ActivityOverridesPanel() {
                       onSort={onSort}
                       className="text-left py-2.5 w-full"
                     />
-                    <th className="text-center px-4 py-2.5 whitespace-nowrap">
+                    <th className="text-xs text-center px-4 py-2.5 whitespace-nowrap font-semibold">
                       {t('activityOverrides.columns.access')}
                     </th>
                     <SortableTh

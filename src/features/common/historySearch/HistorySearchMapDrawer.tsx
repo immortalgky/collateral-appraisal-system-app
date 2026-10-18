@@ -97,7 +97,7 @@ export function HistorySearchMapDrawer({
       >
         {/* Header */}
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-900">{t('page.title')}</h2>
+          <h2 className="text-base font-semibold text-gray-900">{t('page.title')}</h2>
           <div className="flex items-center gap-1">
             <button
               type="button"

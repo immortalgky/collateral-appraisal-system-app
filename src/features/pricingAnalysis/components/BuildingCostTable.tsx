@@ -13,7 +13,8 @@ import { getPropertyHref, PROPERTY_TYPES } from '../../appraisal/utils/propertyT
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import {
   buildingFinalCostValue,
-  roundToThousand,
+  derivedBuildingCostValue,
+  enteredBuildingCostValue,
   sumBuildingFinalCostValue,
 } from '../domain/calculation';
 import { ScrollableTableContainer } from './ScrollableTableContainer';
@@ -575,7 +576,7 @@ function SubtotalRow({
 // property form shows, which is the one place it can be edited. The figure itself is what
 // the rest of the system already uses: CostBuildingPanel.tsx sums it per
 // building, and the backend's PricingPropertyDataService applies the identical rule
-// (`FinalCostValueOverride ?? ROUND(SUM(PriceAfterDepreciation), -3)`). Until now nothing on
+// (`COALESCE(BuildingCostValue, ROUND(SUM(PriceAfterDepreciation), -3))`). Until now nothing on
 // this screen showed it, so the per-row depreciation figures ran straight into a group total
 // no cell explained. Read-only by design: the only editable figure on the BC screen is the
 // method value in CostBuildingPanel, and per-building edits belong to the building detail
@@ -599,10 +600,13 @@ function FinalCostRow({
   visibleHeaders: FormTableHeader[];
 }) {
   const { t } = useTranslation('pricingAnalysis');
-  const derived = roundToThousand(
-    rows.reduce((acc, row) => acc + toNumber(row['priceAfterDepreciation']), 0),
+  const derived = derivedBuildingCostValue(rows) ?? 0;
+  // The API stores the on-screen figure either way, so "typed" is a stored figure that differs from
+  // what this building's own (stored) rows give.
+  const override = enteredBuildingCostValue(
+    building.buildingCostValue as number | null | undefined,
+    building.depreciationDetails as Record<string, unknown>[] | null | undefined,
   );
-  const override = building.finalCostValueOverride as number | null | undefined;
   // One rule, one place: this used to restate `override ?? roundToThousand(sum)` inline and could
   // drift from the helper the KPI cards and the footer price against. `derived` stays because the
   // provenance line below needs the unrounded comparison, which the helper does not expose.
@@ -610,7 +614,11 @@ function FinalCostRow({
   // goes stale the moment the appraiser edits the schedule, and `diff` right below compares this
   // against a computed-row total — mixing the two would print a provenance delta that is an
   // artefact of the mismatch rather than of anything the appraiser did.
-  const finalCost = buildingFinalCostValue({ ...building, depreciationDetails: rows });
+  const finalCost = buildingFinalCostValue({
+    ...building,
+    buildingCostValue: override,
+    depreciationDetails: rows,
+  });
   const diff = finalCost - derived;
 
   // Both lines are now gated by the same flag — user-ruled twice on BC: first the rounding
@@ -863,8 +871,17 @@ export function BuildingCostTable({
   // unsaved.
   // Each building's computed rows, not its stored ones, for the same reason FinalCostRow uses
   // them: the footer sits under a table the appraiser can edit and has to show what is on screen.
+  // The stored buildingCostValue is the on-screen figure either way, so it is read as typed only when
+  // it differs from what the stored rows give — exactly as FinalCostRow reads it.
   const grandTotalFinalCost = sumBuildingFinalCostValue(
-    buildings.map(b => ({ ...b.building, depreciationDetails: b.computedRows })),
+    buildings.map(b => ({
+      ...b.building,
+      buildingCostValue: enteredBuildingCostValue(
+        b.building.buildingCostValue as number | null | undefined,
+        b.building.depreciationDetails as Record<string, unknown>[] | null | undefined,
+      ),
+      depreciationDetails: b.computedRows,
+    })),
   );
   const grandTotalArea = allComputedRows.reduce((acc, row) => acc + toNumber(row['area']), 0);
   const footerOverrides = {

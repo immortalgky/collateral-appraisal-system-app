@@ -1,23 +1,42 @@
-import { createContext, useContext, type ReactNode } from 'react';
-import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
+import { createContext, useContext, useMemo, type ReactNode } from 'react';
+import type { PriorAppraisal } from '@/features/appraisal/api/priorAppraisal';
 
-type AppraisalCopyHandler = (template: AppraisalCopyTemplate) => void;
+interface AppraisalCopyHandlers {
+  onSelect: (template: PriorAppraisal) => void | Promise<void>;
+  /** The reference is being cleared; the caller also removes the files carried from it. */
+  onClear: () => void | Promise<void>;
+  /** A pick is loading: the selector is locked so no second pick or clear can overlap it. */
+  disabled: boolean;
+  /**
+   * The next Construction Inspection round, display-only: kept out of the form, where a reset (a
+   * save's refetch) would drop it. null when there is none to show.
+   */
+  round: number | null;
+}
 
-const AppraisalCopyContext = createContext<AppraisalCopyHandler | null>(null);
+const AppraisalCopyContext = createContext<AppraisalCopyHandlers | null>(null);
 
 export function AppraisalCopyProvider({
   onCopySelect,
+  onClear,
+  disabled,
+  round = null,
   children,
 }: {
-  onCopySelect: AppraisalCopyHandler;
+  onCopySelect: AppraisalCopyHandlers['onSelect'];
+  onClear: AppraisalCopyHandlers['onClear'];
+  disabled: boolean;
+  round?: number | null;
   children: ReactNode;
 }) {
-  return (
-    <AppraisalCopyContext.Provider value={onCopySelect}>{children}</AppraisalCopyContext.Provider>
+  const value = useMemo(
+    () => ({ onSelect: onCopySelect, onClear, disabled, round }),
+    [onCopySelect, onClear, disabled, round],
   );
+  return <AppraisalCopyContext.Provider value={value}>{children}</AppraisalCopyContext.Provider>;
 }
 
-/** Returns the copy-select handler, or null when outside a provider (e.g. edit mode). */
-export function useAppraisalCopyHandler(): AppraisalCopyHandler | null {
+/** Returns the pick/clear handlers, or null when outside a provider (e.g. a submitted request). */
+export function useAppraisalCopyHandler(): AppraisalCopyHandlers | null {
   return useContext(AppraisalCopyContext);
 }

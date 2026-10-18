@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import type { KeyboardEvent } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import { useRelativeTime } from '@/shared/hooks/useFormatters';
+import { formatDate } from '@/shared/utils/dateUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useDeleteRequest, useGetRequests } from '../api';
 import { isRequestSubmitted, PRE_SUBMIT_STATUSES } from '../utils/status';
@@ -10,19 +13,76 @@ import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
 import Badge from '@/shared/components/Badge';
+import Input from '@/shared/components/Input';
+import Dropdown from '@/shared/components/inputs/Dropdown';
 import Pagination from '@/shared/components/Pagination';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
+import SortableTh from '@/features/taskMonitor/components/SortableTh';
+import type { SortDir } from '@/features/taskMonitor/types';
 
-type SortField =
-  | 'requestNumber'
-  | 'status'
-  | 'purpose'
-  | 'channel'
-  | 'priority'
-  | 'customerName'
-  | 'createdAt';
-type SortDirection = 'asc' | 'desc';
+// Columns the backend can order by (GetMyRequestsQueryHandler). Priority and channel are not
+// here on purpose: the API falls back to created-date order for them, so a sort icon on those
+// headers would claim an order the rows are not in.
+type SortField = 'requestNumber' | 'customerName' | 'status' | 'purpose' | 'createdAt';
+type Sort = { field: SortField; dir: SortDir };
+
+// What the API returns when no sort is sent, and so what the header shows as active.
+const DEFAULT_SORT: Sort = { field: 'createdAt', dir: 'desc' };
+
+interface StatusSegmentsProps {
+  value: string;
+  counts: Record<string, number | undefined>;
+  onChange: (status: string) => void;
+}
+
+/** "All / Draft / New" as one control. The status names come from the request page's status labels. */
+function StatusSegments({ value, counts, onChange }: StatusSegmentsProps) {
+  const { t } = useTranslation('request');
+  const options = [
+    { value: '', label: t('filters.statusAll') },
+    ...PRE_SUBMIT_STATUSES.map(status => ({
+      value: status,
+      label: t(`page.header.status.${status.toLowerCase()}`, { defaultValue: status }),
+    })),
+  ];
+
+  return (
+    <div
+      role="group"
+      aria-label={t('filters.statusGroup')}
+      className="inline-flex rounded-full bg-gray-100/80 p-1 text-sm"
+    >
+      {options.map(option => {
+        const active = option.value === value;
+        const count = counts[option.value];
+        return (
+          <button
+            key={option.value || 'all'}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onChange(option.value)}
+            className={clsx(
+              'flex cursor-pointer items-center gap-1.5 rounded-full px-4 py-[calc(0.25rem+1px)] font-medium whitespace-nowrap transition-colors select-none',
+              active
+                ? 'bg-primary text-white shadow-[0_2px_6px_color-mix(in_srgb,var(--color-primary)_25%,transparent)]'
+                : 'text-gray-600 hover:text-gray-800',
+            )}
+          >
+            {option.label}
+            {count !== undefined && (
+              <span
+                className={clsx('text-xs tabular-nums', active ? 'text-white/80' : 'text-gray-400')}
+              >
+                {count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 function RequestListingPage() {
   const { t } = useTranslation(['request', 'common']);
@@ -38,9 +98,9 @@ function RequestListingPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [purposeFilter, setPurposeFilter] = useState('');
 
-  // Sorting state
-  const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  // Explicit sort chosen by the user; null = the API default, which the header shows as active.
+  const [sort, setSort] = useState<Sort | null>(null);
+  const activeSort = sort ?? DEFAULT_SORT;
 
   // Debounced search value
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -63,7 +123,7 @@ function RequestListingPage() {
   // Reset to first page when filters or sorting change
   useEffect(() => {
     setPageNumber(0);
-  }, [debouncedSearch, statusFilter, purposeFilter, sortField, sortDirection]);
+  }, [debouncedSearch, statusFilter, purposeFilter, sort]);
 
   // Build request params
   const requestParams = {
@@ -72,8 +132,8 @@ function RequestListingPage() {
     search: debouncedSearch || undefined,
     status: statusFilter || undefined,
     purpose: purposeFilter || undefined,
-    sortBy: sortField ?? undefined,
-    sortDirection: sortField ? sortDirection : undefined,
+    sortBy: sort?.field,
+    sortDirection: sort?.dir,
   };
 
   // Fetch requests - backend handles filtering and sorting
@@ -94,24 +154,40 @@ function RequestListingPage() {
   const isFirstLoad = isQueryLoading && requests.length === 0;
   const isRefetching = isFetching && !isFirstLoad;
 
-  // Status summary counts
-  const statusCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const req of requests) {
-      if (req.status) {
-        counts[req.status] = (counts[req.status] || 0) + 1;
+  // Segment counts. The API returns no per-status totals, so a count is only shown where it is
+  // exact: every row is on this page (no status filter, one page) gives all three; otherwise only
+  // the selected segment, whose count is the filtered total.
+  const segmentCounts = useMemo(() => {
+    const counts: Record<string, number | undefined> = {};
+    if (!data) return counts;
+    const wholeResultOnPage = !statusFilter && totalCount === requests.length;
+    if (wholeResultOnPage) {
+      counts[''] = totalCount;
+      for (const status of PRE_SUBMIT_STATUSES) counts[status] = 0;
+      for (const req of requests) {
+        if (req.status) counts[req.status] = (counts[req.status] ?? 0) + 1;
       }
+    } else {
+      counts[statusFilter] = totalCount;
     }
     return counts;
-  }, [requests]);
+  }, [data, requests, statusFilter, totalCount]);
 
-  // Filter options
-  // Same source as the delete gate, so the filter and the gate can never drift apart.
-  const statusOptions = PRE_SUBMIT_STATUSES;
   const purposeParams = useParametersByGroup('AppraisalPurpose');
+  const purposeOptions = useMemo(
+    () => purposeParams.map(p => ({ value: p.code, label: p.description, id: p.code })),
+    [purposeParams],
+  );
+  const purposeLabel = (code: string | null | undefined) =>
+    code ? (purposeParams.find(p => p.code === code)?.description ?? code) : '';
 
-  const handleRowClick = (requestId: string) => {
+  const openRequest = (requestId: string) => {
     navigate(`/requests/${requestId}`);
+  };
+
+  const handleRowKeyDown = (e: KeyboardEvent<HTMLTableRowElement>, requestId: string) => {
+    // Enter on the link or the delete button inside the row belongs to them.
+    if (e.key === 'Enter' && e.target === e.currentTarget) openRequest(requestId);
   };
 
   const handleDelete = (e: React.MouseEvent, requestId: string) => {
@@ -133,33 +209,22 @@ function RequestListingPage() {
     }
   };
 
-  const handleSort = (field: SortField) => {
-    if (sortField === field) {
-      // Cycle: asc → desc → clear
-      if (sortDirection === 'asc') {
-        setSortDirection('desc');
-      } else {
-        // Clear sorting
-        setSortField(null);
-        setSortDirection('asc');
-      }
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
+  // SortableTh cycles asc -> desc -> cleared. Cleared means the default, which is created date
+  // descending; when that is already what the header shows, a clear would change nothing, so
+  // created date flips to ascending instead.
+  const handleSortChange = (field: string | undefined, dir: SortDir | undefined) => {
+    if (!field || !dir) {
+      setSort(activeSort.field === DEFAULT_SORT.field ? { ...DEFAULT_SORT, dir: 'asc' } : null);
+      return;
     }
+    const next = { field: field as SortField, dir };
+    setSort(next.field === DEFAULT_SORT.field && next.dir === DEFAULT_SORT.dir ? null : next);
   };
 
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) {
-      return <Icon style="solid" name="sort" className="size-3 text-gray-300" />;
-    }
-    return (
-      <Icon
-        style="solid"
-        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-3 text-primary"
-      />
-    );
+  const sortProps = {
+    activeSortKey: activeSort.field,
+    activeSortDir: activeSort.dir,
+    onSortChange: handleSortChange,
   };
 
   const handleClearFilters = () => {
@@ -168,11 +233,7 @@ function RequestListingPage() {
     setPurposeFilter('');
   };
 
-  const hasFilters = searchTerm || statusFilter || purposeFilter;
-
-  const handleStatusChipClick = (status: string) => {
-    setStatusFilter(prev => (prev === status ? '' : status));
-  };
+  const hasFilters = Boolean(searchTerm || statusFilter || purposeFilter);
 
   if (isError) {
     return (
@@ -190,7 +251,7 @@ function RequestListingPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
@@ -203,181 +264,68 @@ function RequestListingPage() {
         </Button>
       </div>
 
-      {/* Status Summary Chips */}
-      {Object.keys(statusCounts).length > 0 && (
-        <div className="shrink-0 flex items-center gap-2 flex-wrap">
-          {Object.entries(statusCounts).map(([status, count]) => (
+      {/* Filters: status segments, search, purpose */}
+      <div className="shrink-0 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <StatusSegments value={statusFilter} counts={segmentCounts} onChange={setStatusFilter} />
+
+        <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+          {hasFilters && (
             <button
-              key={status}
-              onClick={() => handleStatusChipClick(status)}
-              className={`transition-all rounded-full ${statusFilter === status ? 'ring-2 ring-primary/30' : ''}`}
+              type="button"
+              onClick={handleClearFilters}
+              className="cursor-pointer text-xs font-medium text-primary hover:underline"
             >
-              <Badge type="status" value={status} size="sm">
-                {status} {count}
-              </Badge>
+              {t('filters.clear')}
             </button>
-          ))}
+          )}
+          <div className="w-72">
+            <Input
+              leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3.5" />}
+              placeholder={t('filters.searchPlaceholder')}
+              aria-label={t('filters.searchPlaceholder')}
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="w-56">
+            <Dropdown
+              options={purposeOptions}
+              value={purposeFilter}
+              onChange={(value: string | null) => setPurposeFilter(value ?? '')}
+              placeholder={t('filters.allPurpose')}
+              aria-label={t('filters.allPurpose')}
+              showValuePrefix={false}
+            />
+          </div>
         </div>
-      )}
-
-      {/* Filters Bar */}
-      <div className="shrink-0 flex items-center gap-3 pb-1">
-        {/* Search */}
-        <div className="relative flex-1 max-w-xs">
-          <Icon
-            style="solid"
-            name="magnifying-glass"
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder={t('filters.searchPlaceholder')}
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-8 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none"
-          />
-        </div>
-
-        {/* Status Filter */}
-        <select
-          value={statusFilter}
-          onChange={e => setStatusFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-28"
-        >
-          <option value="">{t('filters.allStatus')}</option>
-          {statusOptions.map(status => (
-            <option key={status} value={status}>
-              {status}
-            </option>
-          ))}
-        </select>
-
-        {/* Purpose Filter */}
-        <select
-          value={purposeFilter}
-          onChange={e => setPurposeFilter(e.target.value)}
-          className="px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white min-w-28"
-        >
-          <option value="">{t('filters.allPurpose')}</option>
-          {purposeParams.map(p => (
-            <option key={p.code} value={p.code}>
-              {p.description}
-            </option>
-          ))}
-        </select>
-
-        {/* Clear Filters */}
-        {hasFilters && (
-          <Button variant="ghost" size="xs" onClick={handleClearFilters}>
-            <Icon style="solid" name="xmark" className="size-3 mr-1" />
-            Clear all
-          </Button>
-        )}
       </div>
 
-      {/* Active Filter Chips */}
-      {hasFilters && (
-        <div className="shrink-0 flex items-center gap-2 flex-wrap">
-          {statusFilter && (
-            <Badge
-              type="status"
-              value={statusFilter}
-              size="sm"
-              removable
-              onRemove={() => setStatusFilter('')}
-            >
-              {t('filters.statusBadge', { value: statusFilter })}
-            </Badge>
-          )}
-          {purposeFilter && (
-            <Badge size="sm" removable onRemove={() => setPurposeFilter('')}>
-              {t('filters.purposeBadge', { value: purposeFilter })}
-            </Badge>
-          )}
-          {searchTerm && (
-            <Badge size="sm" removable onRemove={() => setSearchTerm('')}>
-              {t('filters.searchBadge', { value: searchTerm })}
-            </Badge>
-          )}
-        </div>
-      )}
-
-      {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
-        <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm">
+      {/* Table card: fills the page height, rows scroll inside it under a sticky header and the
+          pagination stays pinned at the bottom. The minimum keeps a few rows visible on a short
+          screen; below it the page's own scroll container takes over instead of crushing the table. */}
+      <div className="flex min-h-[16rem] flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <div className="flex min-h-0 flex-1 flex-col overflow-auto">
+          <table className="w-full min-w-[52rem] shrink-0 text-table">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th
-                  onClick={() => handleSort('requestNumber')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'requestNumber' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.requestNumber')}
-                    <SortIcon field="requestNumber" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('customerName')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'customerName' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.customer')}
-                    <SortIcon field="customerName" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('status')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'status' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.status')}
-                    <SortIcon field="status" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('priority')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'priority' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.priority')}
-                    <SortIcon field="priority" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('purpose')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'purpose' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.purpose')}
-                    <SortIcon field="purpose" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('channel')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'channel' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.channel')}
-                    <SortIcon field="channel" />
-                  </div>
-                </th>
-                <th
-                  onClick={() => handleSort('createdAt')}
-                  className={`text-left font-medium text-gray-600 px-4 py-2.5 cursor-pointer hover:bg-gray-100 select-none ${sortField === 'createdAt' ? 'bg-primary/5' : ''}`}
-                >
-                  <div className="flex items-center gap-1.5">
-                    {t('columns.createdAt')}
-                    <SortIcon field="createdAt" />
-                  </div>
-                </th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5 w-20">
-                  {t('columns.actions')}
-                </th>
+                <SortableTh
+                  label={t('columns.requestNumber')}
+                  sortKey="requestNumber"
+                  {...sortProps}
+                />
+                <SortableTh label={t('columns.customer')} sortKey="customerName" {...sortProps} />
+                <SortableTh label={t('columns.status')} sortKey="status" {...sortProps} />
+                <SortableTh label={t('columns.purpose')} sortKey="purpose" {...sortProps} />
+                <SortableTh label={t('columns.channel')} />
+                <SortableTh label={t('columns.createdAt')} sortKey="createdAt" {...sortProps} />
+                <SortableTh label={t('columns.actions')} className="w-16 text-center!" />
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={clsx(
+                'divide-y divide-gray-100',
+                isRefetching && 'opacity-50 pointer-events-none',
+              )}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -385,102 +333,147 @@ function RequestListingPage() {
                     { width: 'w-24' },
                     { width: 'w-28' },
                     { width: 'w-20' },
-                    { width: 'w-14' },
-                    { width: 'w-20' },
+                    { width: 'w-32' },
                     { width: 'w-16' },
                     { width: 'w-20' },
-                    { width: 'w-16' },
+                    { width: 'w-6' },
                   ]}
-                  rows={5}
+                  rows={Math.min(pageSize, 8)}
                 />
-              ) : requests.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="text-center py-16">
-                    <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">{t('empty.noRequests')}</p>
-                      <p className="text-xs text-gray-400">
-                        {hasFilters ? t('empty.noRequestsFiltered') : t('empty.noRequestsCreate')}
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                requests.map(request => (
-                  <tr
-                    key={request.id}
-                    onDoubleClick={() => request.id && handleRowClick(request.id)}
-                    className="hover:bg-gray-50 even:bg-gray-50/50 transition-colors"
-                  >
-                    <td className="px-4 py-2.5">
-                      <span
-                        className="font-medium text-primary hover:underline cursor-pointer"
-                        onClick={e => {
-                          e.stopPropagation();
-                          request.id && navigate(`/requests/${request.id}`);
-                        }}
-                      >
-                        {request.requestNumber || '-'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex flex-col">
-                        <span className="text-gray-600">
-                          {request.customerName || (
-                            <span className="text-gray-300 italic text-xs">-</span>
+              ) : requests.length === 0 ? null : (
+                requests.map(request => {
+                  const created = request.createdAt ? formatRelativeTime(request.createdAt) : null;
+                  const purpose = purposeLabel(request.purpose);
+                  return (
+                    <tr
+                      key={request.id}
+                      tabIndex={0}
+                      onClick={() => request.id && openRequest(request.id)}
+                      onKeyDown={e => request.id && handleRowKeyDown(e, request.id)}
+                      className="cursor-pointer transition-colors hover:bg-gray-50 even:bg-gray-50/50 focus-visible:bg-primary/5! focus-visible:outline-none! focus-visible:[&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary)]"
+                    >
+                      <td className="px-4 py-2.5 whitespace-nowrap">
+                        <span className="inline-flex items-center gap-2">
+                          {request.id && request.requestNumber ? (
+                            <Link
+                              to={`/requests/${request.id}`}
+                              onClick={e => e.stopPropagation()}
+                              className="font-medium text-primary hover:underline"
+                            >
+                              {request.requestNumber}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-400">—</span>
+                          )}
+                          {request.priority?.toLowerCase() === 'high' && (
+                            <Badge tone="yellow" className="whitespace-nowrap">
+                              {t('page.header.urgent')}
+                            </Badge>
                           )}
                         </span>
-                        {request.contactNumber && (
-                          <span className="text-gray-400 text-xs">{request.contactNumber}</span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {request.customerName ? (
+                          <div className="flex max-w-[16rem] flex-col">
+                            <span className="truncate text-gray-800" title={request.customerName}>
+                              {request.customerName}
+                            </span>
+                            {request.contactNumber && (
+                              <span className="truncate text-xs text-gray-500">
+                                {request.contactNumber}
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
                         )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <Badge type="status" value={request.status} />
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <Badge type="priority" value={request.priority} />
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-600">
-                      <ParameterDisplay group="AppraisalPurpose" code={request.purpose} />
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <Badge type="channel" value={request.channel}>
-                        <ParameterDisplay group="CHANNEL" code={request.channel} />
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2.5 text-gray-500 text-xs whitespace-nowrap">
-                      {request.createdAt ? (
-                        (() => {
-                          const { relative, absolute } = formatRelativeTime(request.createdAt);
-                          return <span title={absolute}>{relative}</span>;
-                        })()
-                      ) : (
-                        <span className="text-gray-300 italic">-</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center justify-center">
-                        {/* Deleting a submitted request would orphan its appraisal task; the
-                            backend rejects it too, this just keeps the action out of reach. */}
-                        {!isRequestSubmitted(request.status) && (
-                          <button
-                            type="button"
-                            onClick={e => request.id && handleDelete(e, request.id)}
-                            className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                            title={t('actions.delete')}
-                            aria-label={t('actions.delete')}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <Badge type="status" value={request.status} className="whitespace-nowrap">
+                          {request.status
+                            ? t(`page.header.status.${request.status.toLowerCase()}`, {
+                                defaultValue: request.status,
+                              })
+                            : '—'}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-2.5 text-gray-700">
+                        {purpose ? (
+                          <div className="max-w-[16rem] truncate" title={purpose}>
+                            {purpose}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        {request.channel ? (
+                          <Badge tone="gray" className="whitespace-nowrap">
+                            <ParameterDisplay group="CHANNEL" code={request.channel} />
+                          </Badge>
+                        ) : (
+                          <span className="text-gray-400">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5 text-xs whitespace-nowrap text-gray-500">
+                        {created && request.createdAt ? (
+                          <time
+                            dateTime={request.createdAt}
+                            title={formatDate(request.createdAt, 'dd/MM/yyyy HH:mm')}
                           >
-                            <Icon style="regular" name="trash-can" className="size-4" />
-                          </button>
+                            {created.relative}
+                          </time>
+                        ) : (
+                          <span className="text-gray-400">—</span>
                         )}
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex items-center justify-center">
+                          {/* Deleting a submitted request would orphan its appraisal task; the
+                              backend rejects it too, this just keeps the action out of reach. */}
+                          {!isRequestSubmitted(request.status) && (
+                            <button
+                              type="button"
+                              onClick={e => request.id && handleDelete(e, request.id)}
+                              className="flex size-6 cursor-pointer items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-danger/10 hover:text-danger"
+                              title={t('actions.delete')}
+                              aria-label={t('actions.delete')}
+                            >
+                              <Icon style="regular" name="trash-can" className="text-sm" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
+          {!isFirstLoad && requests.length === 0 && (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center">
+              <Icon style="regular" name="folder-open" className="text-3xl text-gray-300" />
+              <p className="text-sm font-medium text-gray-700">
+                {hasFilters ? t('empty.noMatch') : t('empty.noRequests')}
+              </p>
+              {hasFilters ? (
+                <>
+                  <p className="text-xs text-gray-500">{t('empty.noRequestsFiltered')}</p>
+                  <Button variant="outline" size="sm" onClick={handleClearFilters}>
+                    {t('filters.clear')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-gray-500">{t('empty.noRequestsCreate')}</p>
+                  <Button size="sm" onClick={() => navigate('/requests/new')}>
+                    <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
+                    {t('page.newRequest')}
+                  </Button>
+                </>
+              )}
+            </div>
+          )}
           {/* Refetch spinner overlay */}
           {isRefetching && (
             <div className="flex justify-center py-2">
@@ -490,17 +483,19 @@ function RequestListingPage() {
         </div>
 
         {/* Pagination */}
-        <Pagination
-          currentPage={pageNumber}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          onPageChange={setPageNumber}
-          onPageSizeChange={size => {
-            setPageSize(size);
-            setPageNumber(0);
-          }}
-        />
+        {totalCount > 0 && (
+          <Pagination
+            currentPage={pageNumber}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            onPageChange={setPageNumber}
+            onPageSizeChange={size => {
+              setPageSize(size);
+              setPageNumber(0);
+            }}
+          />
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

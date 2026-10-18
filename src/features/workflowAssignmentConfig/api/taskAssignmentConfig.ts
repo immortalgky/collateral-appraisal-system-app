@@ -20,6 +20,7 @@ export const ASSIGNMENT_STRATEGIES = [
   'started_by',
   'pool',
   'variable_assignee',
+  'same_assignee_as_activity',
 ] as const;
 
 export type AssignmentStrategy = (typeof ASSIGNMENT_STRATEGIES)[number];
@@ -39,6 +40,8 @@ export interface TaskAssignmentConfigDto {
   teamConstrained: boolean | null;
   /** null = inherit assignmentRules.excludeAssigneesFrom from the workflow definition JSON. */
   excludeAssigneesFrom: string[] | null;
+  /** Free-form engine overrides, e.g. `sameAssigneeAsActivity`. Unknown keys must round-trip on save. */
+  additionalConfiguration: Record<string, unknown> | null;
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -50,9 +53,13 @@ export interface TaskAssignmentConfigDto {
 export interface WorkflowActivityOption {
   id: string;
   name: string;
+  /** 'TaskActivity' | 'FanOutTaskActivity' | 'InternalFollowupSelectionActivity'; absent on an older backend. */
+  type?: string;
   assigneeGroup: string | null;
   initialAssignmentStrategies: string[];
   revisitAssignmentStrategies: string[];
+  /** JSON baseline for `same_assignee_as_activity` (activity id), null when the definition sets none. */
+  sameAssigneeAsActivity: string | null;
 }
 
 export interface SaveTaskAssignmentConfigBody {
@@ -69,6 +76,8 @@ export interface SaveTaskAssignmentConfigBody {
   teamConstrained?: boolean | null;
   /** null = inherit assignmentRules.excludeAssigneesFrom from the workflow definition JSON. */
   excludeAssigneesFrom?: string[] | null;
+  /** Always send back what was loaded — the backend resets it to null when omitted. */
+  additionalConfiguration?: Record<string, unknown> | null;
   isActive: boolean;
 }
 

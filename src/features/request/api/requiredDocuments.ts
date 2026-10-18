@@ -7,13 +7,17 @@ import type {
   ParameterDocumentChecklistResponse,
 } from '../types/document';
 
+/** The query key of a checklist, so a read of the cache and the hook name the same entry. */
+export const requiredDocumentsKey = (params: GetRequiredDocumentsParams) =>
+  ['requiredDocuments', params] as const;
+
 /**
  * Hook for fetching required documents based on purpose or collateral type.
  * Calls GET /document-checklist from the Parameter module.
  */
 export const useGetRequiredDocuments = (params: GetRequiredDocumentsParams) => {
   return useQuery({
-    queryKey: ['requiredDocuments', params],
+    queryKey: requiredDocumentsKey(params),
     queryFn: async (): Promise<GetRequiredDocumentsResponse> => {
       const queryParams = new URLSearchParams();
 

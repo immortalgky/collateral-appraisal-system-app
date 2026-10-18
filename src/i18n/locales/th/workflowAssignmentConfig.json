@@ -1,14 +1,14 @@
 {
   "page": {
     "title": "การกำหนดผู้รับผิดชอบงานแบบกำหนดเอง",
-    "subtitle": "กำหนดกลุ่มผู้รับผิดชอบ / กลยุทธ์การมอบหมายของกิจกรรมตามกลุ่มธุรกิจ โดยไม่ต้องแก้ไขนิยาม Workflow — เงื่อนไขที่เฉพาะเจาะจงที่สุดจะถูกใช้ (workflow + กลุ่มธุรกิจ > กลุ่มธุรกิจ > ค่าตั้งต้น)"
+    "subtitle": "กำหนดกลุ่มผู้รับผิดชอบ / กลยุทธ์การมอบหมายของกิจกรรมตามกลุ่มลูกค้า โดยไม่ต้องแก้ไขนิยาม Workflow — เงื่อนไขที่เฉพาะเจาะจงที่สุดจะถูกใช้ (workflow + กลุ่มลูกค้า > กลุ่มลูกค้า > ค่าตั้งต้น)"
   },
   "filter": {
     "all": "ทั้งหมด"
   },
   "table": {
     "activity": "กิจกรรม",
-    "segment": "กลุ่มธุรกิจ",
+    "segment": "กลุ่มลูกค้า",
     "group": "กลุ่ม",
     "strategies": "กลยุทธ์",
     "specific": "ระบุผู้รับผิดชอบ",
@@ -27,8 +27,8 @@
     "activitySelect": "— เลือกกิจกรรม —",
     "activityFreePlaceholder": "เช่น ext-appraisal-assignment",
     "activityUnavailable": "ไม่สามารถโหลดรายการกิจกรรมได้ — กรุณากรอกรหัสกิจกรรมให้ตรงกับนิยาม Workflow",
-    "bankingSegment": "กลุ่มธุรกิจ",
-    "anySegment": "ทุกกลุ่มธุรกิจ",
+    "bankingSegment": "กลุ่มลูกค้า",
+    "anySegment": "ทุกกลุ่มลูกค้า",
     "assigneeGroup": "กลุ่มผู้รับผิดชอบ",
     "assigneeGroupBaseline": "ค่าตั้งต้น: {{group}}",
     "assigneeGroupEmpty": "เว้นว่างเพื่อใช้ค่าตั้งต้น",
@@ -49,6 +49,12 @@
     "excludeAssigneesFromInherit": "ใช้ค่าจากนิยาม workflow — คลิกเพื่อแทนที่",
     "excludeAssigneesFromReset": "กลับไปใช้ค่าจากนิยาม workflow",
     "excludeAssigneesFromNoActivities": "ไม่พบรายการกิจกรรม",
+    "sameAssigneeAsActivity": "ผู้รับงานคนเดียวกับกิจกรรม",
+    "sameAssigneeAsActivityHint": "(สำหรับกลยุทธ์ same_assignee_as_activity)",
+    "sameAssigneeInherit": "ใช้ค่าจากนิยาม workflow ({{value}})",
+    "sameAssigneeFreePlaceholder": "เช่น ext-appraisal-assignment",
+    "followupSelectionHint": "ขั้นตอนนี้เลือกเจ้าหน้าที่ติดตามภายในโดยอัตโนมัติ เลือกกิจกรรมด้านล่าง ผู้ที่ทำกิจกรรมนั้นเสร็จจะเป็นเจ้าหน้าที่ติดตาม",
+    "activitiesLoading": "กำลังโหลดรายการกิจกรรม…",
     "isActive": "ใช้งาน",
     "isActiveHint": "(ยกเลิกการเลือกเพื่อปิดใช้งานโดยไม่ลบ)"
   },
@@ -63,7 +69,10 @@
     "primary": "กลยุทธ์เริ่มต้น (Primary)",
     "routeBack": "กลยุทธ์เมื่อตีกลับ",
     "baseline": "ค่าตั้งต้น: {{list}}",
-    "baselineNone": "ไม่มี"
+    "baselineNone": "ไม่มี",
+    "orderHint": "ลำดับมีผล: กลยุทธ์แรกที่หาผู้รับงานได้จะถูกใช้",
+    "moveUp": "เลื่อน {{strategy}} ขึ้น",
+    "moveDown": "เลื่อน {{strategy}} ลง"
   },
   "actions": {
     "addOverride": "เพิ่มการกำหนด",

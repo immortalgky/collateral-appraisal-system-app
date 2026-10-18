@@ -363,7 +363,7 @@ function TaskListingPage() {
       <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
         <div className="shrink-0">
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-gray-900">All Tasks</h2>
+            <h2 className="text-base font-semibold text-gray-900">All Tasks</h2>
             {activeTab === 'personal' && !isListLoading && (
               <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
                 {totalCount}
@@ -382,7 +382,7 @@ function TaskListingPage() {
 
         {/* Quick access — right aligned, label on top, horizontally scrollable */}
         <div className="flex flex-col min-w-0">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 text-right">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1 text-right">
             {t('favorites.row.sectionTitle')}
           </p>
           <div className="min-w-0">
@@ -404,7 +404,7 @@ function TaskListingPage() {
           My
           {!isListLoading && (
             <span
-              className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
+              className={`px-1 py-0.5 rounded text-xs font-semibold tabular-nums ${
                 activeTab === 'personal'
                   ? 'bg-primary/10 text-primary'
                   : 'bg-gray-100 text-gray-500'
@@ -426,7 +426,7 @@ function TaskListingPage() {
           <Icon style="solid" name="users" className="size-3" />
           Pool
           <span
-            className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
+            className={`px-1 py-0.5 rounded text-xs font-semibold tabular-nums ${
               activeTab === 'pool' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
             }`}
           >
@@ -762,7 +762,7 @@ function TaskListingPage() {
               >
                 <table
                   ref={tableRef}
-                  className="table-fixed text-sm"
+                  className="table-fixed text-table"
                   style={{ width: totalTableWidth }}
                 >
                   <colgroup>
@@ -778,7 +778,7 @@ function TaskListingPage() {
                         const isActive = sortField === col.sortField;
                         const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
                         const base =
-                          'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                          'relative px-4 py-2.5 text-left text-xs font-semibold text-gray-500 whitespace-nowrap select-none bg-gray-50';
                         const thClass = isSticky
                           ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
                           : col.sortField
@@ -806,7 +806,7 @@ function TaskListingPage() {
                           </th>
                         );
                       })}
-                      <th className="px-4 py-2.5 w-8 bg-gray-50" />
+                      <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -841,7 +841,7 @@ function TaskListingPage() {
                                   isSticky
                                     ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
                                     : (col.tdClassName ??
-                                      'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap')
+                                      'px-3 py-1.5 text-gray-600 text-table overflow-hidden whitespace-nowrap')
                                 }
                                 onClick={isSticky ? e => e.stopPropagation() : undefined}
                               >

@@ -1,4 +1,5 @@
 import { createContext, useContext, type HTMLAttributes, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import clsx from 'clsx';
 
@@ -18,12 +19,7 @@ interface SidebarContextType {
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);
 
-const ResizableSidebar = ({
-  isOpen,
-  onToggle,
-  children,
-  openedWidth,
-}: ResizableSidebarProps) => {
+const ResizableSidebar = ({ isOpen, onToggle, children, openedWidth }: ResizableSidebarProps) => {
   return (
     <SidebarContext.Provider value={{ isOpen, onToggle, openedWidth }}>
       <div className="relative flex flex-row overflow-hidden">{children}</div>
@@ -40,6 +36,7 @@ const Main = ({ children }: { children: ReactNode }) => {
 };
 
 const Sidebar = ({ children }: { children: ReactNode }) => {
+  const { t } = useTranslation('common');
   const context = useContext(SidebarContext);
   if (!context) {
     throw new Error('Sidebar must be used within ResizableSidebar');
@@ -61,7 +58,7 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
         type="button"
         onClick={onToggle}
         className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all mb-2 shrink-0"
-        title="Close panel"
+        title={t('actions.closePanel')}
       >
         <Icon style="solid" name="xmark" className="size-3.5" />
       </button>

@@ -268,7 +268,7 @@ const FeeApprovalTierPage = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             {t('feeApprovalConfig:tierPage.title')}
           </h3>
           <p className="text-xs text-gray-500 mt-0.5">
@@ -315,7 +315,7 @@ const FeeApprovalTierPage = () => {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
                   {t('feeApprovalConfig:columns.appliesTo')}
                 </th>
-                <th className="w-20 px-4 py-2.5" />
+                <th className="text-xs w-20 px-4 py-2.5 font-semibold" />
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">

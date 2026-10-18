@@ -28,6 +28,58 @@ const createPlaceholder = (
 });
 
 /**
+ * The rows of a section merged with a checklist: a slot for every checklist type that has none,
+ * `isRequired` / `displayName` taken from the checklist, required first. `changed` is false when
+ * nothing needed adding or updating.
+ */
+export const mergeChecklistSlots = (
+  currentDocs: UploadedDocument[],
+  checklist: { documentType: string; displayName: string; isRequired: boolean }[],
+): { docs: UploadedDocument[]; changed: boolean } => {
+  const checklistTypes = new Set(checklist.map(d => d.documentType));
+  const requiredTypes = new Set(checklist.filter(d => d.isRequired).map(d => d.documentType));
+  const displayNameMap = new Map(checklist.map(d => [d.documentType, d.displayName]));
+
+  // Keep docs that have files OR are in the checklist
+  const docsToKeep = currentDocs.filter(
+    doc => doc.fileName || checklistTypes.has(doc.documentType || ''),
+  );
+
+  // Find which checklist types are not yet in the docs
+  const existingTypes = new Set(docsToKeep.map(d => d.documentType));
+  const missingTypes = checklist.filter(d => !existingTypes.has(d.documentType));
+
+  // Check if any existing docs need displayName update
+  const needsUpdate = docsToKeep.some(
+    doc => doc.documentType && checklistTypes.has(doc.documentType) && !doc.displayName,
+  );
+
+  // Create placeholders for all missing checklist types (isRequired from API)
+  const newPlaceholders = missingTypes.map(d =>
+    createPlaceholder(d.documentType, d.displayName, d.isRequired),
+  );
+
+  // Update isRequired flag and displayName from API data
+  const updatedDocs = docsToKeep.map(doc => {
+    const docType = doc.documentType || '';
+    return {
+      ...doc,
+      isRequired: requiredTypes.has(docType),
+      displayName: doc.displayName || displayNameMap.get(docType) || null,
+    };
+  });
+
+  // Combine: existing docs (with updated flags) + new placeholders, sorted by:
+  // 1) isRequired (required first), 2) documentType
+  const docs = [...updatedDocs, ...newPlaceholders].sort((a, b) => {
+    if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
+    return (a.documentType || '').localeCompare(b.documentType || '');
+  });
+
+  return { docs, changed: missingTypes.length > 0 || needsUpdate };
+};
+
+/**
  * Hook for managing request-level required documents based on purpose.
  * Automatically initializes and refreshes required document placeholders.
  */
@@ -41,57 +93,12 @@ export const useRequestLevelRequiredDocuments = () => {
   useEffect(() => {
     if (!data?.documents) return;
 
-    const currentDocs: UploadedDocument[] = documents || [];
-    const checklistTypes = new Set(data.documents.map(d => d.documentType));
-    const requiredTypes = new Set(
-      data.documents.filter(d => d.isRequired).map(d => d.documentType),
-    );
-    const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
-
-    // Keep docs that have files OR are in the checklist
-    const docsToKeep = currentDocs.filter(
-      doc => doc.fileName || checklistTypes.has(doc.documentType || ''),
-    );
-
-    // Find which checklist types are not yet in the docs
-    const existingTypes = new Set(docsToKeep.map(d => d.documentType));
-    const missingTypes = data.documents.filter(d => !existingTypes.has(d.documentType));
-
-    // Check if any existing docs need displayName update
-    const needsUpdate = docsToKeep.some(
-      doc => doc.documentType && checklistTypes.has(doc.documentType) && !doc.displayName,
-    );
+    const { docs, changed } = mergeChecklistSlots(documents || [], data.documents);
 
     // No changes needed — all placeholders exist and metadata is set
-    if (missingTypes.length === 0 && !needsUpdate && prevPurposeRef.current === purpose) return;
+    if (!changed && prevPurposeRef.current === purpose) return;
 
-    // Create placeholders for all missing checklist types (isRequired from API)
-    const newPlaceholders = missingTypes.map(d =>
-      createPlaceholder(d.documentType, d.displayName, d.isRequired),
-    );
-
-    // Update isRequired flag and displayName from API data
-    const updatedDocs = docsToKeep.map(doc => {
-      const docType = doc.documentType || '';
-      return {
-        ...doc,
-        isRequired: requiredTypes.has(docType),
-        displayName: doc.displayName || displayNameMap.get(docType) || null,
-      };
-    });
-
-    // Combine: existing docs (with updated flags) + new placeholders
-    const finalDocs = [...updatedDocs, ...newPlaceholders];
-
-    // Sort by: 1) isRequired (required first), 2) documentType
-    finalDocs.sort((a, b) => {
-      if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
-      const typeA = a.documentType || '';
-      const typeB = b.documentType || '';
-      return typeA.localeCompare(typeB);
-    });
-
-    setValue('documents', finalDocs, { shouldDirty: false });
+    setValue('documents', docs, { shouldDirty: false });
     prevPurposeRef.current = purpose;
   }, [data, purpose, documents, setValue]);
 };
@@ -114,58 +121,13 @@ export const useTitleLevelRequiredDocuments = (titleIndex: number) => {
   useEffect(() => {
     if (!data?.documents) return;
 
-    const currentDocs: UploadedDocument[] = titleDocuments || [];
-    const checklistTypes = new Set(data.documents.map(d => d.documentType));
-    const requiredTypes = new Set(
-      data.documents.filter(d => d.isRequired).map(d => d.documentType),
-    );
-    const displayNameMap = new Map(data.documents.map(d => [d.documentType, d.displayName]));
-
-    // Keep docs that have files OR are in the checklist
-    const docsToKeep = currentDocs.filter(
-      doc => doc.fileName || checklistTypes.has(doc.documentType || ''),
-    );
-
-    // Find which checklist types are not yet in the docs
-    const existingTypes = new Set(docsToKeep.map(d => d.documentType));
-    const missingTypes = data.documents.filter(d => !existingTypes.has(d.documentType));
-
-    // Check if any existing docs need displayName update
-    const needsUpdate = docsToKeep.some(
-      doc => doc.documentType && checklistTypes.has(doc.documentType) && !doc.displayName,
-    );
+    const { docs, changed } = mergeChecklistSlots(titleDocuments || [], data.documents);
 
     // No changes needed — all placeholders exist and metadata is set
     const scopeKey = `${collateralType ?? ''}|${purpose ?? ''}`;
-    if (missingTypes.length === 0 && !needsUpdate && prevScopeRef.current === scopeKey) return;
+    if (!changed && prevScopeRef.current === scopeKey) return;
 
-    // Create placeholders for all missing checklist types (isRequired from API)
-    const newPlaceholders = missingTypes.map(d =>
-      createPlaceholder(d.documentType, d.displayName, d.isRequired),
-    );
-
-    // Update isRequired flag and displayName from API data
-    const updatedDocs = docsToKeep.map(doc => {
-      const docType = doc.documentType || '';
-      return {
-        ...doc,
-        isRequired: requiredTypes.has(docType),
-        displayName: doc.displayName || displayNameMap.get(docType) || null,
-      };
-    });
-
-    // Combine: existing docs (with updated flags) + new placeholders
-    const finalDocs = [...updatedDocs, ...newPlaceholders];
-
-    // Sort by: 1) isRequired (required first), 2) documentType
-    finalDocs.sort((a, b) => {
-      if (a.isRequired !== b.isRequired) return a.isRequired ? -1 : 1;
-      const typeA = a.documentType || '';
-      const typeB = b.documentType || '';
-      return typeA.localeCompare(typeB);
-    });
-
-    setValue(`titles.${titleIndex}.documents`, finalDocs, { shouldDirty: false });
+    setValue(`titles.${titleIndex}.documents`, docs, { shouldDirty: false });
     prevScopeRef.current = scopeKey;
   }, [data, collateralType, purpose, titleDocuments, titleIndex, setValue]);
 };

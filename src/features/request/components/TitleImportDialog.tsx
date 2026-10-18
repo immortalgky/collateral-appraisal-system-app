@@ -16,6 +16,7 @@ import {
   type TitleImportRowError,
   type TitleImportSheet,
 } from '../api/titleImport';
+import { isMovableTitle } from '../utils/titleList';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
@@ -485,7 +486,10 @@ function ValidRowsTable({
             <Td className="text-gray-900">{identityOf(row)}</Td>
             <Td className="text-gray-700">{row.title.ownerName || '—'}</Td>
             <Td className="text-gray-600">
-              {[row.subDistrictName, row.districtName, row.provinceName]
+              {(isMovableTitle(row.title)
+                ? [row.dopaSubDistrictName, row.dopaDistrictName, row.dopaProvinceName]
+                : [row.subDistrictName, row.districtName, row.provinceName]
+              )
                 .filter(Boolean)
                 .join(' / ') || '—'}
             </Td>

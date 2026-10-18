@@ -127,6 +127,7 @@ export const AppraisalSummarySchema = z.object({
   propertyType: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   loanType: z.string().nullable().optional(),
+  channel: z.string().nullable().optional(),
   addedAt: z.string().datetime({ offset: true }).optional(),
   addedBy: z.string().nullable().optional(),
   /** v7: requestId from which documents are fetched for the share-docs picker. */

@@ -44,13 +44,23 @@ const MachineryCostBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: 
         <table className="w-full text-xs">
           <thead>
             <tr className="bg-gray-100">
-              <th className="px-2 py-1.5 text-left font-medium text-gray-500">Property</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">RCN</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Life (yrs)</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Condition</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Func. Obs.</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Econ. Obs.</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">FMV</th>
+              <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                Property
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">RCN</th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Life (yrs)
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Condition
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Func. Obs.
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Econ. Obs.
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">FMV</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">

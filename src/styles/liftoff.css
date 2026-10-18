@@ -1,0 +1,800 @@
+/* ---------------------------------------------------------------------------
+ * Activity-submit "liftoff" overlay (ActivitySubmitLiftoff.tsx).
+ *
+ * After CompleteActivity succeeds, the paper-plane from the Submit button flies
+ * out of the page along a 3D arc, then a success card names the next assignee. It all plays over
+ * the page that submitted (kept on screen, inert); the app leaves for the next page only when the
+ * card closes (countdown end, OK, Enter, Escape), see LiftoffOverlay in App.tsx.
+ * This file is canonical. It started as a port of docs/poc/activity-submit-liftoff-mock.html,
+ * which is now a design reference only and is not kept in sync: edit timings (flight 0.9 s,
+ * card at 0.9 s, stamp impact 1.35 s) and visuals here.
+ *
+ * Its own stylesheet, not utilities: the motion path, 3D transforms and keyframes
+ * have no utility equivalent. Colours come from the theme palette (theme.css), so
+ * the [data-theme=dark] overrides there carry over; only the scrim and shadows,
+ * which have no palette token, are restated for dark below.
+ *
+ * Scenes are root modifiers, one per scene (.liftoff-forward, -approve, -reject,
+ * -routeBack, -cancel, -final). Forward / approve / final use the base teal; the
+ * rest restate the tone variables (--lo-accent, --lo-accent-soft, --lo-on-accent)
+ * or, for reject, the individual rules below. Which scenes stamp (every committee vote:
+ * approve, reject, route back) and the exit direction (top-left for reject / routeBack) are
+ * decided in the component (confetti is the same on every scene); a stamped card carries `.liftoff-stamped`,
+ * and the stamp and stamper follow the scene's tone. `.liftoff-play` is set by the component once
+ * the flight path is aimed, and starts every animation.
+ * ------------------------------------------------------------------------- */
+
+.liftoff {
+  --lo-card: var(--palette-surface);
+  --lo-ink: var(--palette-ink-strong);
+  --lo-ink-2: var(--palette-ink-2);
+  --lo-muted: var(--palette-ink-3);
+  --lo-line: var(--palette-line);
+  --lo-panel: var(--palette-surface-2);
+  --lo-accent: var(--palette-accent);
+  --lo-accent-soft: var(--palette-accent-wash);
+  --lo-danger: var(--palette-danger);
+  --lo-danger-soft: color-mix(in srgb, var(--palette-danger) 12%, var(--palette-surface));
+  /* Text / icon colour on a solid --lo-accent surface (the primary button). */
+  --lo-on-accent: #fff;
+  --lo-scrim: rgba(22, 26, 29, 0.55);
+  --lo-card-shadow: rgba(30, 50, 80, 0.3);
+  --lo-plane: #ffffff;
+  --lo-plane-shade: #7fd4c8;
+  --lo-flame: #ffb547;
+  --lo-coral: #ff5a5f;
+
+  position: fixed;
+  inset: 0;
+  /* The Dialog element can hold focus itself while the card is still invisible. */
+  outline: none;
+  /* Above every dialog layer (Modal z-50, ConfirmDialog z-60, pickers z-110). */
+  z-index: 200;
+  overflow: hidden;
+  perspective: 1000px;
+  perspective-origin: 60% 40%;
+  color: var(--lo-ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+[data-theme='dark'] .liftoff {
+  --lo-scrim: rgba(0, 0, 0, 0.65);
+  --lo-card-shadow: rgba(0, 0, 0, 0.6);
+  --lo-plane-shade: #9adbd2;
+}
+
+/* Tones. The base accent is teal; these scenes retone everything that reads --lo-accent. */
+.liftoff-routeBack {
+  --lo-accent: var(--palette-warn);
+  --lo-accent-soft: var(--palette-warn-wash);
+}
+.liftoff-cancel {
+  --lo-accent: var(--color-secondary);
+  --lo-accent-soft: var(--palette-surface-3);
+  --lo-on-accent: var(--color-secondary-content);
+}
+/* Dark accents are light colours, so the button text flips to the theme's dark "content" colour. */
+[data-theme='dark'] .liftoff-routeBack {
+  --lo-on-accent: var(--color-warning-content);
+}
+[data-theme='dark'] .liftoff-reject {
+  --lo-on-accent: var(--color-danger-content);
+}
+
+/* ---------- flight ---------- */
+.liftoff-scrim {
+  position: absolute;
+  inset: 0;
+  background: var(--lo-scrim);
+  opacity: 0;
+  pointer-events: none;
+}
+.liftoff-play .liftoff-scrim {
+  animation: liftoff-fade 0.4s ease-out 0.55s forwards;
+}
+@keyframes liftoff-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+.liftoff-trail {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+.liftoff-trail path {
+  fill: none;
+  stroke: var(--lo-accent);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.65;
+}
+.liftoff-play .liftoff-trail path {
+  animation:
+    liftoff-draw 0.9s cubic-bezier(0.5, 0, 0.75, 0.3) 0.05s forwards,
+    liftoff-trailfade 0.4s ease-out 0.95s forwards;
+}
+@keyframes liftoff-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes liftoff-trailfade {
+  to {
+    opacity: 0;
+  }
+}
+
+.liftoff-flyer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+  offset-path: var(--path);
+  offset-rotate: auto 45deg;
+  offset-distance: 0%;
+  transform-style: preserve-3d;
+  opacity: 0;
+}
+.liftoff-play .liftoff-flyer {
+  animation: liftoff-fly 0.9s cubic-bezier(0.5, 0, 0.75, 0.3) 0.05s forwards;
+}
+@keyframes liftoff-fly {
+  0% {
+    offset-distance: 0%;
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+}
+.liftoff-plane3d {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+.liftoff-play .liftoff-plane3d {
+  animation: liftoff-bank 0.9s ease-in-out 0.05s forwards;
+}
+@keyframes liftoff-bank {
+  0% {
+    transform: scale(1) rotateX(0deg) rotateY(0deg);
+  }
+  25% {
+    transform: scale(3.2) rotateX(35deg) rotateY(-30deg);
+  }
+  60% {
+    transform: scale(4.5) rotateX(-20deg) rotateY(40deg);
+  }
+  100% {
+    transform: scale(1.4) rotateX(10deg) rotateY(-70deg);
+  }
+}
+.liftoff-flyer svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+}
+.liftoff-flyer use {
+  stroke: var(--lo-accent);
+  stroke-width: 18;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.liftoff-spark {
+  position: absolute;
+  left: var(--lo-x0);
+  top: var(--lo-y0);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--lo-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+.liftoff-spark-flame {
+  background: var(--lo-flame);
+}
+.liftoff-play .liftoff-spark {
+  animation: liftoff-spark 0.5s ease-out 0.05s forwards;
+}
+@keyframes liftoff-spark {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.2);
+  }
+}
+
+.liftoff-confetti {
+  position: absolute;
+  left: 50%;
+  top: 45%;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  pointer-events: none;
+}
+.liftoff-play .liftoff-confetti {
+  animation: liftoff-fall var(--t) cubic-bezier(0.15, 0.6, 0.3, 1) 0.85s forwards;
+}
+@keyframes liftoff-fall {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) rotate(var(--r));
+  }
+}
+
+/* ---------- success card ---------- */
+.liftoff-card {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(440px, calc(100% - 32px));
+  transform: translate(-50%, -40%);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--lo-card);
+  color: var(--lo-ink);
+  border-radius: 16px;
+  padding: 56px 28px 22px;
+  text-align: center;
+  box-shadow: 0 30px 80px var(--lo-card-shadow);
+}
+.liftoff-play .liftoff-card {
+  animation: liftoff-rise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.9s forwards;
+}
+/* Set by the component on the rise animation's end: not clickable while it is still invisible. */
+.liftoff-card-ready {
+  pointer-events: auto;
+}
+@keyframes liftoff-rise {
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+.liftoff-check {
+  position: absolute;
+  left: 50%;
+  top: -44px;
+  width: 88px;
+  height: 88px;
+  margin-left: -44px;
+  border-radius: 50%;
+  background: var(--lo-card);
+  padding: 6px;
+  transform: scale(0.4);
+  opacity: 0;
+}
+.liftoff-play .liftoff-check {
+  animation: liftoff-pop 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.4) 0.8s forwards;
+}
+@keyframes liftoff-pop {
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.liftoff-check > svg:first-child {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.liftoff-ring {
+  fill: var(--lo-accent-soft);
+  stroke: var(--lo-accent);
+  stroke-width: 4;
+  stroke-dasharray: 214;
+  stroke-dashoffset: 214;
+}
+.liftoff-mark {
+  fill: none;
+  stroke: var(--lo-accent);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 48;
+  stroke-dashoffset: 48;
+}
+.liftoff-cross {
+  fill: none;
+  stroke: var(--lo-danger);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 64;
+  stroke-dashoffset: 64;
+}
+.liftoff-play .liftoff-ring {
+  animation: liftoff-draw 0.45s ease-out 0.85s forwards;
+}
+.liftoff-play .liftoff-mark {
+  animation: liftoff-draw 0.3s ease-out 1.25s forwards;
+}
+.liftoff-play .liftoff-cross {
+  animation: liftoff-draw 0.3s ease-out 1.25s forwards;
+}
+/* the plane "lands" as a small badge beside the check */
+.liftoff-landed {
+  position: absolute;
+  right: -6px;
+  top: -4px;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+  transform: rotate(-20deg);
+}
+.liftoff-landed use {
+  fill: var(--lo-accent);
+}
+.liftoff-play .liftoff-landed {
+  animation: liftoff-land 0.3s ease-out 1.35s forwards;
+}
+@keyframes liftoff-land {
+  to {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+}
+
+/* Short viewports: the content scrolls so OK stays reachable. The scroll sits on this inner body,
+   not on .liftoff-card, because the check badge, stamp and stamper hang outside the card's box and
+   an overflow on the card would clip them. The cap leaves room for the card's own padding (56 + 22)
+   and for the badge's 44px overhang above, mirrored below so the card stays centred on screen.
+   The negative margin / padding pair keeps focus rings from being cut at the scroll edge. */
+.liftoff-body {
+  max-height: calc(100vh - 170px);
+  max-height: calc(100dvh - 170px);
+  overflow-y: auto;
+  margin: -4px;
+  padding: 4px;
+}
+/* A stamped card gets 14px more room above the title, so the settled stamp (top-right, tilted)
+   clears it with a visible gap. The stamp and the stamper are positioned from the card's top edge,
+   not its padding, so they do not move and stay aligned with each other. The body cap grows by
+   the same 14px. */
+.liftoff-stamped .liftoff-card {
+  padding-top: 70px;
+}
+.liftoff-stamped .liftoff-body {
+  max-height: calc(100vh - 184px);
+  max-height: calc(100dvh - 184px);
+}
+
+.liftoff-card h2 {
+  /* Focused by script when the card appears (screen-reader announcement), not a control. */
+  outline: none;
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  text-wrap: balance;
+}
+.liftoff-sub {
+  margin: 0;
+  color: var(--lo-muted);
+  font-size: 13px;
+}
+.liftoff-stamped .liftoff-sub {
+  max-width: 32ch;
+  margin-inline: auto;
+}
+
+.liftoff-handoff {
+  display: grid;
+  /* "From" is just "you", so the "to" node (a step or person name) gets all the spare width. */
+  grid-template-columns: auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--lo-panel);
+  border: 1px solid var(--lo-line);
+  text-align: left;
+}
+.liftoff-node {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.liftoff-avatar {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 14px;
+  background: var(--lo-accent-soft);
+  color: var(--lo-accent);
+}
+.liftoff-from .liftoff-avatar {
+  background: var(--lo-line);
+  color: var(--lo-ink-2);
+}
+.liftoff-who {
+  min-width: 0;
+}
+.liftoff-label {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lo-muted);
+}
+/* Names and roles wrap rather than truncate: the card has room, and a cut-off step name is useless. */
+.liftoff-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+/* The user code sits on the name's line; on a narrow card it wraps under the name whole. */
+.liftoff-code {
+  display: inline-block;
+  /* .liftoff-name breaks anywhere; the code must wrap whole, never mid-word. */
+  white-space: nowrap;
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--lo-muted);
+}
+.liftoff-role {
+  font-size: 12px;
+  color: var(--lo-muted);
+  overflow-wrap: anywhere;
+}
+.liftoff-arrow {
+  color: var(--lo-accent);
+  display: grid;
+  place-items: center;
+}
+.liftoff-play .liftoff-arrow svg {
+  animation: liftoff-nudge 1.2s ease-in-out 1.9s infinite;
+}
+/* The phone layout rotates the arrow (--lo-arrow-rot); the nudge has to compose with that rotation
+   rather than replace it, so it carries the same rotation and moves along the rotated axis. */
+@keyframes liftoff-nudge {
+  50% {
+    transform: rotate(var(--lo-arrow-rot, 0deg)) translateX(4px);
+  }
+}
+.liftoff-note {
+  margin: 18px 0 4px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--lo-accent-soft);
+  color: var(--lo-accent);
+  font-weight: 600;
+}
+/* Space above the meta line; the hand-off row and the note already leave their own. */
+.liftoff-meta {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: var(--lo-muted);
+  font-size: 12px;
+}
+.liftoff-handoff + .liftoff-meta,
+.liftoff-note + .liftoff-meta {
+  margin-top: 0;
+}
+.liftoff-meta code {
+  /* The app's own font, not the browser's monospace: only the weight marks it as a value. */
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--lo-ink);
+}
+.liftoff-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+.liftoff-btn {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 10px;
+  padding: 9px 16px;
+  border: 1px solid var(--lo-line);
+  background: var(--lo-panel);
+  color: var(--lo-ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.liftoff-btn-primary {
+  background: var(--lo-accent);
+  border-color: var(--lo-accent);
+  color: var(--lo-on-accent);
+}
+.liftoff-btn:focus-visible {
+  outline: 2px solid var(--lo-accent);
+  outline-offset: 2px;
+}
+.liftoff-countdown {
+  width: 18px;
+  height: 18px;
+}
+.liftoff-countdown circle {
+  fill: none;
+  stroke: color-mix(in srgb, currentColor 35%, transparent);
+  stroke-width: 3;
+}
+.liftoff-countdown circle.liftoff-prog {
+  stroke: currentColor;
+  stroke-dasharray: 44;
+  stroke-dashoffset: 0;
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+/* The countdown is this animation: the component closes the overlay on its animationend. */
+.liftoff-play .liftoff-countdown circle.liftoff-prog {
+  animation: liftoff-drain 4s linear 1.6s forwards;
+}
+/* A timed exit must be pausable (WCAG 2.2.1): hovering the card holds the countdown, and leaving
+   resumes it. Hover only: focus always sits inside the dialog, so pausing on focus would stop the
+   countdown for everyone. The paused animation still ends in animationend, which closes the card.
+   Only where hover is real: on a touch screen :hover sticks after a tap, which would freeze it. */
+@media (hover: hover) {
+  .liftoff-card:hover .liftoff-countdown circle.liftoff-prog {
+    animation-play-state: paused;
+  }
+}
+@keyframes liftoff-drain {
+  to {
+    stroke-dashoffset: 44;
+  }
+}
+
+/* ---------- approver scenes: stamp + stamper ---------- */
+.liftoff-stamp {
+  position: absolute;
+  right: 14px;
+  top: 12px;
+  padding: 4px 14px;
+  border: 3px double var(--lo-accent);
+  border-radius: 8px;
+  color: var(--lo-accent);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  transform: rotate(-12deg) scale(3);
+  opacity: 0;
+  pointer-events: none;
+  background: var(--lo-card);
+  box-shadow: 0 2px 0 var(--lo-accent-soft) inset;
+}
+.liftoff-play .liftoff-stamp {
+  animation: liftoff-slam 0.1s ease-out 1.35s forwards;
+}
+@keyframes liftoff-slam {
+  0% {
+    opacity: 0;
+    transform: rotate(-12deg) scale(1.06);
+  }
+  100% {
+    opacity: 0.95;
+    transform: rotate(-12deg) scale(1);
+  }
+}
+/* A stamped card thuds when the stamp lands (every committee vote stamps; nothing else does). */
+.liftoff-play.liftoff-stamped .liftoff-card {
+  animation:
+    liftoff-rise 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.15) 0.9s forwards,
+    liftoff-thud 0.3s ease-out 1.35s;
+}
+@keyframes liftoff-thud {
+  30% {
+    transform: translate(-50%, -50%) translateY(4px) rotate(0.4deg);
+  }
+  100% {
+    transform: translate(-50%, -50%);
+  }
+}
+
+.liftoff-stamper {
+  position: absolute;
+  right: 8px;
+  top: -34px;
+  width: 124px;
+  height: 106px;
+  pointer-events: none;
+  transform: translateY(-130px) rotate(-12deg);
+  transform-origin: 50% 100%;
+  opacity: 0;
+}
+.liftoff-play .liftoff-stamper {
+  animation: liftoff-press 0.9s cubic-bezier(0.55, 0, 0.3, 1) 1s forwards;
+}
+@keyframes liftoff-press {
+  0% {
+    opacity: 0;
+    transform: translateY(-130px) rotate(-12deg);
+  }
+  12% {
+    opacity: 1;
+  }
+  39% {
+    transform: translateY(0) rotate(-12deg); /* impact ~ 1.35 s */
+  }
+  50% {
+    transform: translateY(2px) rotate(-12deg);
+  }
+  62% {
+    transform: translateY(-30px) rotate(-14deg);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-150px) translateX(60px) rotate(-30deg) rotateX(35deg);
+  }
+}
+.liftoff-handle {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 46px;
+  height: 32px;
+  margin-left: -23px;
+  border-radius: 16px 16px 8px 8px;
+  background: linear-gradient(90deg, #d9a874 0%, #b8793f 45%, #8a5527 100%);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.25) inset;
+}
+.liftoff-neck {
+  position: absolute;
+  left: 50%;
+  top: 30px;
+  width: 18px;
+  height: 16px;
+  margin-left: -9px;
+  background: linear-gradient(90deg, #4d5566, #2a303d 60%, #1b202a);
+}
+.liftoff-base {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 58px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #4b5364 0%, #2b3140 55%, #1a1f2a 100%);
+  border-bottom: 4px solid var(--lo-accent);
+  box-shadow: 0 8px 14px rgba(0, 0, 0, 0.35);
+}
+.liftoff-shadow {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: -6px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  filter: blur(4px);
+  opacity: 0;
+  transform: scale(0.4);
+}
+.liftoff-play .liftoff-shadow {
+  animation: liftoff-shadow 0.9s cubic-bezier(0.55, 0, 0.3, 1) 1s forwards;
+}
+@keyframes liftoff-shadow {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  39% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  62% {
+    opacity: 0.6;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+}
+
+/* ---------- reject: danger colours, hand back (exits top-left, see the component) ---------- */
+.liftoff-reject .liftoff-stamp {
+  color: var(--lo-danger);
+  border-color: var(--lo-danger);
+  box-shadow: none;
+  /* The stamp is right-anchored and grows leftwards towards the title; the disagree text (the
+     only long one: "ไม่เห็นด้วย", "DISAGREE") is a notch smaller so its tilted corner clears it. */
+  font-size: 17px;
+}
+.liftoff-reject .liftoff-ring {
+  fill: var(--lo-danger-soft);
+  stroke: var(--lo-danger);
+}
+.liftoff-reject .liftoff-landed use {
+  fill: var(--lo-danger);
+}
+.liftoff-reject .liftoff-arrow {
+  color: var(--lo-danger);
+}
+.liftoff-reject .liftoff-to .liftoff-avatar {
+  color: var(--lo-danger);
+  background: var(--lo-danger-soft);
+}
+.liftoff-reject .liftoff-trail path,
+.liftoff-reject .liftoff-flyer use {
+  stroke: var(--lo-danger);
+}
+.liftoff-reject .liftoff-spark {
+  background: var(--lo-danger);
+}
+.liftoff-reject .liftoff-btn-primary {
+  background: var(--lo-danger);
+  border-color: var(--lo-danger);
+}
+.liftoff-reject .liftoff-base {
+  border-bottom-color: var(--lo-danger);
+}
+
+@media (max-width: 480px) {
+  .liftoff-stamp {
+    font-size: 16px;
+    right: 10px;
+    top: 10px;
+  }
+  .liftoff-reject .liftoff-stamp {
+    font-size: 14px;
+  }
+  .liftoff-handoff {
+    grid-template-columns: 1fr;
+  }
+  .liftoff-arrow svg {
+    --lo-arrow-rot: 90deg;
+    transform: rotate(var(--lo-arrow-rot));
+  }
+  .liftoff-card h2 {
+    font-size: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .liftoff-play *,
+  .liftoff-play *::before {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+  }
+  /* The countdown still has to run, and it is what closes the overlay. */
+  .liftoff-play .liftoff-countdown circle.liftoff-prog {
+    animation-duration: 4s !important;
+    animation-delay: 0ms !important;
+  }
+}

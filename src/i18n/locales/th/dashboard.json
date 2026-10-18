@@ -47,7 +47,7 @@
     "apply": "นำไปใช้"
   },
   "segment": {
-    "all": "ทุกกลุ่มธุรกิจ",
+    "all": "ทุกกลุ่มลูกค้า",
     "Retail": "รายย่อย",
     "IBG": "IBG"
   },
@@ -146,7 +146,7 @@
       "label": "ตัวกรอง",
       "assigneeUsername": "ชื่อผู้ใช้ผู้รับผิดชอบ",
       "assigneePlaceholder": "เช่น P5229",
-      "bankingSegment": "กลุ่มลูกค้าธนาคาร",
+      "bankingSegment": "กลุ่มลูกค้า",
       "bankingPlaceholder": "เช่น SME, Corporate",
       "comparePrior": "เปรียบเทียบกับงวดก่อน",
       "apply": "นำไปใช้"

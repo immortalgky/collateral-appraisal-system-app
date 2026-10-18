@@ -357,7 +357,7 @@ export function SupportingDataMaintenanceListPage() {
       <div className="shrink-0 mb-3 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-gray-900">{t('page.listTitle')}</h2>
+            <h2 className="text-base font-semibold text-gray-900">{t('page.listTitle')}</h2>
             {!isListLoading && totalCount > 0 && (
               <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
                 {totalCount}
@@ -519,7 +519,7 @@ export function SupportingDataMaintenanceListPage() {
       {/* ── Table ── */}
       <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full min-w-max text-sm">
+          <table className="w-full min-w-max text-table">
             <thead className="sticky top-0 z-20">
               <tr className="bg-gray-50 border-b border-gray-200">
                 {columns.map(col => {
@@ -549,7 +549,7 @@ export function SupportingDataMaintenanceListPage() {
                     </th>
                   );
                 })}
-                <th className="px-4 py-2.5 w-8 bg-gray-50" />
+                <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -610,7 +610,7 @@ export function SupportingDataMaintenanceListPage() {
                           className={
                             isSticky
                               ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                              : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')
+                              : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-table')
                           }
                           onClick={isSticky ? e => e.stopPropagation() : undefined}
                         >

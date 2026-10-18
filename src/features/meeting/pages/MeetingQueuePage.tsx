@@ -224,7 +224,7 @@ const MeetingQueuePage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('page.queue.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('page.queue.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
               {totalCount}
             </span>
@@ -270,7 +270,7 @@ const MeetingQueuePage = () => {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10">
               <tr className="border-b border-gray-200">
-                <th className="px-3 py-2.5 text-left">
+                <th className="text-xs px-3 py-2.5 text-left font-semibold">
                   <input
                     type="checkbox"
                     checked={selected.size === items.length && items.length > 0}
@@ -278,13 +278,13 @@ const MeetingQueuePage = () => {
                     aria-label={t('aria.selectAll')}
                   />
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
                   {t('columns.appraisalNo')}
                 </th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-right font-semibold text-gray-600 px-4 py-2.5">
                   {t('columns.appraisalValue')}
                 </th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
                   {t('columns.enqueued')}
                 </th>
               </tr>

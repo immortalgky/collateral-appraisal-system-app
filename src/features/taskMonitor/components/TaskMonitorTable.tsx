@@ -137,7 +137,7 @@ function TaskMonitorTable({
 
   return (
     <div className="flex-1 min-h-0 overflow-auto">
-      <table className="w-full min-w-max text-sm">
+      <table className="w-full min-w-max text-table">
         <thead className="sticky top-0 z-20">
           <tr className="bg-gray-50 border-b border-gray-200">
             {COLUMNS.map(col => (
@@ -174,7 +174,7 @@ function TaskMonitorTable({
                   {task.customerName ?? '—'}
                 </td>
                 {/* Task Type — prefer human-readable description, fall back to TaskName */}
-                <td className="px-4 py-3 text-gray-900 text-sm font-medium max-w-[220px] truncate">
+                <td className="px-4 py-3 text-gray-900 text-table font-medium max-w-[220px] truncate">
                   {task.taskDescription || task.taskName || '—'}
                 </td>
                 {/* Purpose (with optional amount sub-line) */}

@@ -10,7 +10,8 @@ import { useReportPreviewStore } from '../../store/reportPreviewStore';
  * in a module-level store (useReportPreviewStore), NOT component state — so the render keeps running
  * in the background and the tab shows the true state (spinner / PDF) whenever the user returns.
  */
-export const ReportPreviewTab = () => {
+/** `allowGenerate` is false where the book is only shown, not made (the embedded checklist). */
+export const ReportPreviewTab = ({ allowGenerate = true }: { allowGenerate?: boolean }) => {
   const { t } = useTranslation('appraisal');
   const { appraisal } = useAppraisalContext();
   const appraisalId = appraisal?.appraisalId;
@@ -40,16 +41,13 @@ export const ReportPreviewTab = () => {
         </div>
         {status === 'ready' && (
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleGenerate}>
-              <Icon name="rotate-right" style="solid" className="size-3.5 mr-1.5" />
-              {t('reportPreview.refresh')}
-            </Button>
-            <Button
-              variant="primary"
-              size="sm"
-              onClick={handleOpenInNewTab}
-              disabled={!objectUrl}
-            >
+            {allowGenerate && (
+              <Button variant="outline" size="sm" onClick={handleGenerate}>
+                <Icon name="rotate-right" style="solid" className="size-3.5 mr-1.5" />
+                {t('reportPreview.refresh')}
+              </Button>
+            )}
+            <Button variant="primary" size="sm" onClick={handleOpenInNewTab} disabled={!objectUrl}>
               <Icon name="up-right-from-square" style="solid" className="size-3.5 mr-1.5" />
               {t('reportPreview.openInNewTab')}
             </Button>
@@ -68,16 +66,18 @@ export const ReportPreviewTab = () => {
             ) : status === 'error' ? (
               <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
                 <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
-                  <Icon
-                    name="triangle-exclamation"
-                    style="solid"
-                    className="size-5 text-red-500"
-                  />
+                  <Icon name="triangle-exclamation" style="solid" className="size-5 text-red-500" />
                 </div>
-                <p className="text-sm text-gray-600">{t('reportPreview.renderFailed')}</p>
-                <Button variant="outline" size="sm" onClick={handleGenerate}>
-                  {t('common.retryButton')}
-                </Button>
+                <p className="text-sm text-gray-600">
+                  {allowGenerate
+                    ? t('reportPreview.renderFailed')
+                    : t('reportPreview.previewUnavailable')}
+                </p>
+                {allowGenerate && (
+                  <Button variant="outline" size="sm" onClick={handleGenerate}>
+                    {t('common.retryButton')}
+                  </Button>
+                )}
               </div>
             ) : (
               // idle — explicit generate CTA (no auto-generate)
@@ -85,11 +85,15 @@ export const ReportPreviewTab = () => {
                 <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Icon name="file-pdf" style="solid" className="size-5 text-primary" />
                 </div>
-                <p className="text-sm text-gray-500">{t('reportPreview.idleHint')}</p>
-                <Button variant="primary" size="sm" onClick={handleGenerate}>
-                  <Icon name="file-pdf" style="solid" className="size-3.5 mr-1.5" />
-                  {t('reportPreview.generatePreview')}
-                </Button>
+                <p className="text-sm text-gray-500">
+                  {allowGenerate ? t('reportPreview.idleHint') : t('reportPreview.noPreviewYet')}
+                </p>
+                {allowGenerate && (
+                  <Button variant="primary" size="sm" onClick={handleGenerate}>
+                    <Icon name="file-pdf" style="solid" className="size-3.5 mr-1.5" />
+                    {t('reportPreview.generatePreview')}
+                  </Button>
+                )}
               </div>
             )}
           </div>

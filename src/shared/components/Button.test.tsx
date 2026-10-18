@@ -16,6 +16,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@/test/test-utils';
 import Button from './Button';
+import Icon from './Icon';
 
 describe('Button', () => {
   // ============================================
@@ -36,11 +37,7 @@ describe('Button', () => {
     // Scenario 2: Renders with left icon
     // ------------------------------------------
     it('should render with left icon', () => {
-      render(
-        <Button leftIcon={<span data-testid="left-icon">+</span>}>
-          Add Item
-        </Button>
-      );
+      render(<Button leftIcon={<span data-testid="left-icon">+</span>}>Add Item</Button>);
 
       expect(screen.getByTestId('left-icon')).toBeInTheDocument();
       expect(screen.getByText('Add Item')).toBeInTheDocument();
@@ -50,11 +47,7 @@ describe('Button', () => {
     // Scenario 3: Renders with right icon
     // ------------------------------------------
     it('should render with right icon', () => {
-      render(
-        <Button rightIcon={<span data-testid="right-icon">→</span>}>
-          Next
-        </Button>
-      );
+      render(<Button rightIcon={<span data-testid="right-icon">→</span>}>Next</Button>);
 
       expect(screen.getByTestId('right-icon')).toBeInTheDocument();
       expect(screen.getByText('Next')).toBeInTheDocument();
@@ -70,7 +63,7 @@ describe('Button', () => {
           rightIcon={<span data-testid="right">→</span>}
         >
           Navigate
-        </Button>
+        </Button>,
       );
 
       expect(screen.getByTestId('left')).toBeInTheDocument();
@@ -252,7 +245,7 @@ describe('Button', () => {
       const { user } = render(
         <Button onClick={handleClick} disabled>
           Disabled
-        </Button>
+        </Button>,
       );
 
       await user.click(screen.getByRole('button'));
@@ -305,7 +298,7 @@ describe('Button', () => {
       const { user } = render(
         <Button onClick={handleClick} isLoading>
           Loading
-        </Button>
+        </Button>,
       );
 
       await user.click(screen.getByRole('button'));
@@ -314,9 +307,9 @@ describe('Button', () => {
     });
 
     // ------------------------------------------
-    // Scenario 24: Icons are hidden when loading
+    // Scenario 24: The leading icon gives way to the spinner when loading; a trailing one stays
     // ------------------------------------------
-    it('should hide icons when loading', () => {
+    it('should replace the left icon but keep the right icon when loading', () => {
       render(
         <Button
           isLoading
@@ -324,11 +317,52 @@ describe('Button', () => {
           rightIcon={<span data-testid="right-icon">→</span>}
         >
           Loading
-        </Button>
+        </Button>,
       );
 
       expect(screen.queryByTestId('left-icon')).not.toBeInTheDocument();
-      expect(screen.queryByTestId('right-icon')).not.toBeInTheDocument();
+      expect(screen.getByTestId('right-icon')).toBeInTheDocument();
+    });
+
+    // The spinner replaces a LEADING <Icon> child only; a trailing one and an icon-only button
+    // must not be swallowed or pushed off-centre.
+    it('should replace a leading Icon child with the spinner', () => {
+      render(
+        <Button isLoading>
+          <Icon name="floppy-disk" />
+          Save
+        </Button>,
+      );
+
+      const button = screen.getByRole('button');
+      expect(button.querySelector('svg.icon')).not.toBeInTheDocument();
+      expect(button.querySelector('svg.animate-spin')).toHaveClass('mr-2');
+    });
+
+    it('should keep a trailing Icon child while loading', () => {
+      render(
+        <Button isLoading>
+          Next
+          <Icon name="chevron-right" />
+        </Button>,
+      );
+
+      const button = screen.getByRole('button');
+      expect(button.querySelector('svg.icon')).toBeInTheDocument();
+      expect(button.querySelector('svg.animate-spin')).toHaveClass('mr-2');
+    });
+
+    it('should centre a bare spinner on an icon-only button', () => {
+      render(
+        <Button isLoading aria-label="Edit">
+          <Icon name="pen" />
+        </Button>,
+      );
+
+      const spinner = screen.getByRole('button').querySelector('svg.animate-spin');
+      expect(screen.getByRole('button').querySelector('svg.icon')).not.toBeInTheDocument();
+      expect(spinner).toBeInTheDocument();
+      expect(spinner).not.toHaveClass('mr-2');
     });
 
     // ------------------------------------------

@@ -286,7 +286,7 @@ function TaskSummaryWidget() {
       <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
         <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
           <div className="flex flex-col gap-1">
-            <h3 className="text-lg font-semibold text-gray-800">{t('taskSummary.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-800">{t('taskSummary.title')}</h3>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div className="flex flex-col items-end gap-1.5">

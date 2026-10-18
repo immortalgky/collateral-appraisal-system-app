@@ -389,7 +389,7 @@ const LogViewerPage = () => {
     <div className="flex flex-col h-full min-h-0 min-w-0">
       {view !== 'health' && (
         <div className="shrink-0 mb-3">
-          <h2 className="text-sm font-semibold text-gray-900">{t('page.title')}</h2>
+          <h2 className="text-base font-semibold text-gray-900">{t('page.title')}</h2>
           <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
         </div>
       )}

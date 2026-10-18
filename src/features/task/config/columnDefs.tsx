@@ -47,7 +47,7 @@ function PersonCell({ name }: { name: string | null | undefined }) {
   return (
     <div className="flex items-center gap-2 min-w-0">
       <span
-        className={`inline-flex items-center justify-center size-6 rounded-full text-[10px] font-bold flex-shrink-0 ${avatarColor(name)}`}
+        className={`inline-flex items-center justify-center size-6 rounded-full text-xs font-bold flex-shrink-0 ${avatarColor(name)}`}
       >
         {initials(name)}
       </span>
@@ -202,7 +202,7 @@ export type ColumnDef = {
   label: string;
   /** Backend sort field name. Omit to make the column non-sortable. */
   sortField?: string;
-  /** td className override. Defaults to 'px-3 py-1.5 text-gray-600 text-xs' when not set. */
+  /** td className override. Defaults to 'px-3 py-1.5 text-gray-600 text-table' when not set. */
   tdClassName?: string;
   /** Default column width in px. Falls back to DEFAULT_COLUMN_WIDTH when not set. */
   width?: number;
@@ -265,7 +265,8 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   taskType: {
     label: 'Task Type',
     sortField: 'taskType',
-    width: 150,
+    // "Internal Appraisal Execution" is the longest task name; narrower cuts it mid-word
+    width: 240,
     render: task => task.taskDescription || task.taskType || '-',
   },
   purpose: {

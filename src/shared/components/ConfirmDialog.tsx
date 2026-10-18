@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
+import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import { useLoadingStore } from '@shared/store';
 
@@ -9,6 +10,7 @@ interface ConfirmDialogProps {
   onConfirm: () => void;
   title?: string;
   message?: string;
+  /** Button labels. Left out, they are the translated common:actions.confirm / cancel. */
   confirmText?: string;
   cancelText?: string;
   variant?: 'danger' | 'warning' | 'info' | 'primary';
@@ -55,8 +57,8 @@ const ConfirmDialog = ({
   onConfirm,
   title = 'Confirm Action',
   message = 'Are you sure you want to proceed?',
-  confirmText = 'Confirm',
-  cancelText = 'Cancel',
+  confirmText,
+  cancelText,
   variant = 'danger',
   isLoading = false,
   showActivityProgress = false,
@@ -67,6 +69,7 @@ const ConfirmDialog = ({
   loadingText,
   confirmDisabled = false,
 }: ConfirmDialogProps) => {
+  const { t } = useTranslation('common');
   const progressMessage = useLoadingStore(s => s.message);
 
   // Intercept Escape while open so it closes THIS dialog and does not bubble up to
@@ -125,7 +128,9 @@ const ConfirmDialog = ({
 
   return createPortal(
     <dialog className="modal modal-open z-[60]">
-      <div className={`modal-box bg-white rounded-2xl shadow-xl ${children ? 'max-w-md' : 'max-w-sm'}`}>
+      <div
+        className={`modal-box bg-white rounded-2xl shadow-xl ${children ? 'max-w-md' : 'max-w-sm'}`}
+      >
         <div className="flex flex-col items-center text-center">
           <div
             className={`w-14 h-14 rounded-full flex items-center justify-center mb-4 ${
@@ -152,7 +157,9 @@ const ConfirmDialog = ({
           {children ? (
             <div className="w-full mb-6">{children}</div>
           ) : (
-            <p className={`text-sm mb-6 ${showProgress ? 'text-primary animate-pulse' : 'text-gray-500'}`}>
+            <p
+              className={`text-sm mb-6 ${showProgress ? 'text-primary animate-pulse' : 'text-gray-500'}`}
+            >
               {bodyMessage}
             </p>
           )}
@@ -166,7 +173,7 @@ const ConfirmDialog = ({
                 disabled={isLoading}
                 className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {cancelText}
+                {cancelText ?? t('actions.cancel')}
               </button>
               <button
                 type="button"
@@ -180,17 +187,14 @@ const ConfirmDialog = ({
                     <span className="truncate">{loadingText ?? 'Processing...'}</span>
                   </span>
                 ) : (
-                  confirmText
+                  (confirmText ?? t('actions.confirm'))
                 )}
               </button>
             </div>
           )}
         </div>
       </div>
-      <div
-        className="modal-backdrop bg-black/40"
-        onClick={isLoading ? undefined : onClose}
-      >
+      <div className="modal-backdrop bg-black/40" onClick={isLoading ? undefined : onClose}>
         <button type="button" disabled={isLoading}>
           close
         </button>

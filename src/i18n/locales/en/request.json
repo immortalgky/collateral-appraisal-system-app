@@ -6,7 +6,103 @@
     "backToListing": "Back to Listing",
     "requestNotFound": "Request not found",
     "requestNotFoundDesc": "The request you are looking for does not exist or has been deleted.",
-    "failedToLoad": "Failed to load request"
+    "failedToLoad": "Failed to load request",
+    "cards": {
+      "requestInformation": {
+        "title": "Request Information",
+        "subtitle": "Customers, purpose and credit facility"
+      },
+      "propertiesAndLocation": {
+        "title": "Properties and Location",
+        "subtitle": "Properties to appraise and their address"
+      },
+      "appointmentAndFee": {
+        "title": "Appointment and Fee",
+        "subtitle": "Inspection date, contact and fee payment"
+      }
+    },
+    "nav": {
+      "label": "Jump to section",
+      "s1": "Request Information",
+      "s2": "Properties and Location",
+      "s5": "Appointment and Fee",
+      "titles": "Title Documents",
+      "docs": "Documents required for collateral appraisal",
+      "missing": "{{count}} missing",
+      "complete": "Complete",
+      "titleCount": "{{count}} items",
+      "files": "{{count}} files"
+    },
+    "header": {
+      "noNumber": "No request number yet",
+      "unsaved": "Not saved",
+      "urgent": "Urgent",
+      "priorAppraisal": "Prior report",
+      "requestor": "Requestor",
+      "me": "(me)",
+      "changeRequestor": "Change requestor",
+      "change": "Change",
+      "noRequestor": "No requestor selected",
+      "pickRequestor": "Select requestor",
+      "createdBy": "Created by {{name}}",
+      "submittedAt": "Submitted {{date}}",
+      "comments": "Comments",
+      "status": {
+        "new": "New",
+        "draft": "Draft",
+        "submitted": "Submitted",
+        "assigned": "Assigned",
+        "pending": "Pending",
+        "inprogress": "In progress",
+        "underreview": "Under review",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "rejected": "Rejected"
+      }
+    },
+    "comments": {
+      "send": "Send comment",
+      "close": "Close"
+    },
+    "purposeChange": {
+      "cleared": "Purpose changed, the prior report was cleared. Pick it again if you need one.",
+      "title": "Change purpose",
+      "message": "Changing the purpose clears the prior report {{old}} and the {{n}} files taken from it.",
+      "confirm": "Change and clear"
+    },
+    "missing": {
+      "requestor": "Requestor (request header)",
+      "customersEmpty": "Customers (at least 1)",
+      "propertiesEmpty": "Properties (at least 1)",
+      "titlesEmpty": "Title documents (at least 1)",
+      "rowField": "{{label}} #{{n}}",
+      "titleRow": "Title #{{n}} incomplete ({{count}} missing)",
+      "docs": "{{count}} required document types not attached",
+      "titleDocs": "{{count}} required title document types not attached",
+      "chip": "{{count}} missing",
+      "complete": "Complete, ready to submit",
+      "popoverTitle": "{{count}} missing in {{sections}} sections",
+      "listLabel": "Missing fields",
+      "goTo": "Go to field"
+    },
+    "submit": {
+      "title": "Submit request",
+      "message": "All required fields are filled. The request will be saved and sent to the appraisal process.",
+      "customers": "Customers",
+      "properties": "Properties",
+      "titles": "Titles",
+      "files": "Files",
+      "warning": "After submitting you cannot delete it or save a draft. It can only be edited if it is sent back.",
+      "confirm": "Submit request"
+    },
+    "actions": {
+      "more": "Copy / delete",
+      "deleteRequest": "Delete request",
+      "saveDraftHint": "Keep for later, required fields are not checked",
+      "saveHint": "Check required fields, then save without submitting",
+      "submitHint": "Save and submit the request, required fields are checked",
+      "waitForUploads": "Wait for the file uploads to finish first"
+    }
   },
   "sections": {
     "requestInformation": "Request Information",
@@ -39,6 +135,9 @@
     "searchPlaceholder": "Search requests...",
     "allStatus": "All Status",
     "allPurpose": "All Purpose",
+    "statusAll": "All",
+    "statusGroup": "Filter by status",
+    "clear": "Clear filters",
     "statusBadge": "Status: {{value}}",
     "purposeBadge": "Purpose: {{value}}",
     "searchBadge": "Search: \"{{value}}\""
@@ -46,6 +145,7 @@
   "empty": {
     "noRequests": "No requests found",
     "noRequestsFiltered": "Try different filters",
+    "noMatch": "No requests match the filters",
     "noRequestsCreate": "Create your first request",
     "noTitles": "No titles yet",
     "noCollateralType": "No type selected",
@@ -59,14 +159,12 @@
   },
   "forms": {
     "request": "Request",
-    "requestorDetail": "Requestor Detail",
-    "searchRequestor": "Search Requestor",
     "customers": "Customers",
     "properties": "Properties",
     "location": "Location",
     "appointmentAndFee": "Appointment and Fee",
     "titleInformation": "Title Information",
-    "attachDocument": "Attach Document",
+    "attachDocument": "Documents required for collateral appraisal",
     "editingTitle": "Editing Title {{n}}",
     "titleCount": "{{count}} title(s)"
   },
@@ -134,7 +232,7 @@
     "ngan": "Ngan",
     "sqWa": "Sq.Wa",
     "owner": "Owner",
-    "titleDetail": "Title Detail",
+    "titleDetail": "Title Detail (Additional)",
     "usageArea": "Usage Area",
     "numberOfBuilding": "Number of Building",
     "roomNumber": "Room Number",
@@ -165,7 +263,8 @@
   },
   "titleAddress": {
     "header": "Title document address",
-    "dopaHeader": "DOPA address"
+    "dopaHeader": "DOPA address",
+    "propertyLocationHeader": "Property location"
   },
   "titleOptions": {
     "noCollateralType": "Please select a collateral type to continue",
@@ -245,15 +344,15 @@
     "uploadComplete": "{{done}}/{{total}} complete"
   },
   "fileAssignment": {
-    "modalTitle": "Assign Documents",
-    "description": "Assign each uploaded file to a document slot. Select the entity and document type for each file.",
+    "modalTitle": "Attach Documents",
+    "description": "Choose where each file is attached and which type of document it is.",
     "columnFile": "File",
-    "columnEntity": "Entity",
+    "columnEntity": "Attach to",
     "columnDocumentType": "Document Type",
     "columnNotes": "Notes",
     "notesPlaceholder": "Optional",
-    "warningSelectAll": "Please select an entity and document type for all files.",
-    "assignToForm": "Assign to Form",
+    "warningSelectAll": "Please choose where to attach each file and its document type.",
+    "assignToForm": "Attach files",
     "loadingTypes": "Loading...",
     "selectType": "Select type..."
   },
@@ -281,31 +380,273 @@
     "submit": "Submit"
   },
   "searchUser": {
-    "modalTitle": "Select User",
-    "searchPlaceholder": "Search by Employee ID or name...",
-    "noResults": "No users found matching your search.",
-    "loading": "Searching...",
-    "typeToSearch": "Type to search for employees",
-    "selectToViewDetail": "Select a requestor to view their details"
+    "modalTitle": "Requestor",
+    "current": "Current requestor",
+    "currentBadge": "Current",
+    "noRequestor": "No requestor set yet",
+    "searchPlaceholder": "Employee ID or name…",
+    "searchHint": "Type an employee ID or name, then pick someone new to change the requestor.",
+    "clearSearch": "Clear search",
+    "found": "{{n}} found",
+    "emptyTitle": "No employee matches",
+    "emptyHint": "Try part of the employee ID or name",
+    "errorTitle": "Search failed",
+    "retry": "Try again",
+    "footerHint": "Click, or press Enter, to choose · ↑ ↓ to move",
+    "confirmNone": "Pick a new requestor from the list first",
+    "confirmSame": "This person is already the requestor. Pick someone else"
   },
   "searchAppraisal": {
-    "modalTitle": "Search Previous Appraisal Report",
-    "searchPlaceholder": "Search by appraisal number or customer name...",
-    "clickToCopy": "Click a row to copy its data into the new request.",
-    "columnAppraisalNo": "Appraisal No.",
-    "columnCustomer": "Customer",
-    "columnLocation": "Location",
-    "columnFacilityLimit": "Facility Limit",
-    "columnAppraisalValue": "Appraisal Value",
-    "columnAppraisalDate": "Appraisal Date",
-    "columnInspectionNumber": "Inspection No.",
-    "dateFilterFrom": "Appraisal date from",
-    "dateFilterTo": "Appraisal date to"
+    "modalTitle": "Search prior appraisal reports",
+    "searchPlaceholder": "Report number (a part will do), customer, title number, licence plate…",
+    "searchHint": "Searches report and request numbers, customer, title number, licence plate and owner.",
+    "minChars": "Type at least {{n}} characters to search.",
+    "clearSearch": "Clear search",
+    "dateFilterLabel": "Appraisal date",
+    "dateFilterHint": "Filters by the appraisal date",
+    "clearFilters": "Clear dates",
+    "found": "{{n}} found",
+    "colNumber": "Appraisal No.",
+    "colCustomer": "Customer",
+    "colCollateral": "Collateral",
+    "searching": "Searching…",
+    "appraiserBank": "Bank",
+    "colAppraiser": "Appraiser",
+    "colValue": "Appraisal Value",
+    "colDate": "Appraisal Date",
+    "moreCustomers": "+{{n}}",
+    "propertyCount": "{{n}} items",
+    "round": "Round {{n}}",
+    "emptyTitle": "No completed appraisal matches",
+    "emptyHint": "Try a part of the report number, or the customer name. Only completed appraisals can be copied from.",
+    "errorTitle": "Could not load the list",
+    "retry": "Try again",
+    "footerHint": "Click, or press Enter, to choose · ↑ ↓ to move"
+  },
+  "requestForm": {
+    "sections": {
+      "purposeAndPrior": "Purpose and prior appraisal",
+      "channelAndLimit": "Channel and facility limit",
+      "properties": "Properties to appraise",
+      "location": "Property location",
+      "locationNote": "Uses the address from the Department of Provincial Administration (DOPA)",
+      "appointmentAndContact": "Inspection appointment and contact",
+      "fee": "Fee"
+    },
+    "customerNamePlaceholder": "Full name / company name",
+    "customerPhonePlaceholder": "0xx-xxx-xxxx",
+    "totalSellingPrice": "Total selling price",
+    "addCustomer": "Add customer",
+    "addProperty": "Add property",
+    "no": "No",
+    "yes": "Yes",
+    "limitLabel": "Facility limit",
+    "noLimit": "This purpose does not use a facility limit",
+    "totalLimit": "Total limit (additional + previous)",
+    "autoCalculated": "Calculated automatically",
+    "choosePurposeFirst": "Choose a purpose first. The prior appraisal field is shown according to the purpose",
+    "addressAutofill": "Filled in automatically when you choose a sub-district (data from DOPA)",
+    "prior": {
+      "change": "Change",
+      "clear": "Clear",
+      "valueNone": "Value —",
+      "round": "Inspection round {{n}}",
+      "search": "Search prior appraisal...",
+      "createHint": "Once chosen, customers, properties, titles, location and facility limit are copied over (appointment and fee are not)"
+    },
+    "priorSummary": {
+      "noReportNumber": "No report number yet",
+      "status": {
+        "Submitted": "Submitted",
+        "Pending": "Pending",
+        "Assigned": "Assigned",
+        "InProgress": "In Progress",
+        "UnderReview": "Under Review"
+      },
+      "inProgressHeading": "{{matched}} of {{total}} attached collateral items are being appraised in another report",
+      "inProgressHint": "Check the reports below before submitting, so the same collateral is not appraised twice.",
+      "heading": "{{matched}} of {{total}} attached collateral items have been appraised before",
+      "hint": "If this is a re-appraisal, select this report as the prior appraisal in the request details.",
+      "goToPrior": "Go to prior appraisal",
+      "report": "Report {{number}}",
+      "date": "Dated {{date}}",
+      "matchesPrior": "Matches the selected prior appraisal",
+      "differsFromPrior": "Not the selected prior appraisal"
+    }
   },
   "copyBanner": {
-    "reappraisalOf": "Re-appraisal of",
-    "value": "(value: {{n}})",
-    "clearTitle": "Clear previous appraisal reference"
+    "label": "Prior appraisal",
+    "value": "Value {{n}} THB",
+    "date": "Date {{date}}",
+    "openTitle": "Open this appraisal in a new tab",
+    "clearTitle": "Clear the prior appraisal reference"
+  },
+  "carryForward": {
+    "badge": "From previous appraisal {{number}}",
+    "summary": {
+      "from": "From previous appraisal",
+      "used": "Used",
+      "unused": "Not used",
+      "show": "Show unused files",
+      "hide": "Hide unused files"
+    },
+    "titleRef": {
+      "none": "Title (no number)",
+      "land": "Title deed {{n}}",
+      "condo": "Condo unit {{n}}",
+      "other": "Title {{n}}"
+    },
+    "unusedPanel": {
+      "title": "Files from the previous appraisal that are not attached to this request. Appraisers will not see them.",
+      "hint": "Press \"Use\" to choose where and as which document type to attach a file",
+      "use": "Use",
+      "defaultNotUsed": "Document type default: not used",
+      "viewUnavailable": "This file cannot be viewed yet"
+    },
+    "menu": {
+      "dontUse": "Don't use this file"
+    },
+    "toasts": {
+      "unused": "File is no longer used. You can put it back from the previous appraisal list.",
+      "restored": "File attached again",
+      "loadFailed": "Could not load the documents of the previous appraisal. You can retry from the document list.",
+      "sameAppraisal": "This is already the previous appraisal of this request.",
+      "waitForUploads": "Please wait for the uploads to finish first.",
+      "changedAppraisal": "Previous appraisal set to {{number}}{{value}}."
+    },
+    "repick": {
+      "title": "Change the previous appraisal to {{number}}?",
+      "messageCreate": "Data and documents taken from {{old}} will be replaced with those of the new appraisal. The {{n}} file(s) you uploaded yourself will be kept.",
+      "messageDraft": "Documents taken from {{old}} will be replaced with those of the new appraisal. The {{n}} file(s) you uploaded yourself will be kept.",
+      "confirm": "Change appraisal"
+    },
+    "clear": {
+      "title": "Clear the previous appraisal?",
+      "message": "The {{n}} file(s) taken from {{old}} will be removed from this request. The {{own}} file(s) you uploaded yourself are kept.",
+      "confirm": "Clear"
+    },
+    "admin": {
+      "column": "When a previous appraisal is referenced",
+      "use": "Use previous file",
+      "dontUse": "Don't use, attach new",
+      "lockedTarget": "Filled from D042/D043 of the previous appraisal",
+      "lockedSource": "Source of D036",
+      "legend": "When the request references a previous appraisal",
+      "useLabel": "Use the file from the previous appraisal",
+      "useHelp": "The file is attached to the request automatically. The request maker can press \"Don't use\".",
+      "dontUseLabel": "Don't use, attach a new one",
+      "dontUseHelp": "The file waits in the \"not used\" list and the request maker can press \"Use\" to bring it back. Suits documents that must be the current version.",
+      "lockedTargetText": "The system always fills this slot with D042 (construction inspection) or D043 (regular appraisal) of the previous appraisal. This cannot be changed.",
+      "lockedSourceText": "This type is not carried directly. The system uses it as the source of D036. This cannot be changed.",
+      "appliesLater": "Applies to requests that pick a previous appraisal after saving. Requests that already picked one do not change."
+    },
+    "place": {
+      "title": "Choose where to use this file",
+      "description": "Pick the section the file is attached to. The document type can be changed if it does not match.",
+      "confirm": "Use file",
+      "fromPrevious": "From prior appraisal {{number}}"
+    },
+    "readd": {
+      "title": "Add the previous appraisal's files again?",
+      "message": "{{number}} is already this request's previous appraisal, but none of its files are attached. Add its files again, using the default setting of each document type?",
+      "confirm": "Add files"
+    },
+    "retry": {
+      "message": "The previous appraisal's documents could not be loaded.",
+      "action": "Retry loading the previous appraisal's documents"
+    },
+    "badgeShort": "Previous"
+  },
+  "docCard": {
+    "addOther": {
+      "button": "Add another document",
+      "title": "Add another document to this title",
+      "description": "Choose the type of document, then choose the files (several at once is fine).",
+      "chooseFiles": "Choose files"
+    },
+    "kpi": {
+      "required": "Required",
+      "files": "Files",
+      "followUps": "Requested"
+    },
+    "toolbar": {
+      "search": "Search type or file name",
+      "filterAll": "All",
+      "filterMissing": "Missing {{n}}",
+      "filterFollowUp": "Requested {{n}}",
+      "selectAll": "Select all files on screen",
+      "hidePreview": "Hide preview",
+      "showAllTypes": "Show all types",
+      "showPreview": "Show preview"
+    },
+    "drop": {
+      "text": "Drag files anywhere on this card, or",
+      "choose": "Choose files…",
+      "hint": "You pick the type and title before they are attached",
+      "dragging": "Drop the files to attach them",
+      "busy": "Please wait for the current upload to finish first."
+    },
+    "bulk": {
+      "selected": "{{n}} files selected",
+      "delete": "Delete selected",
+      "clear": "Clear selection"
+    },
+    "section": {
+      "typesWithFiles": "{{filled}}/{{total}} types with files",
+      "required": "Required {{done}}/{{total}}"
+    },
+    "row": {
+      "noFile": "No file yet",
+      "mustAttach": "Attach before Submit",
+      "files": "{{n}} files",
+      "upload": "Upload",
+      "addFile": "+ File",
+      "generate": "Generate",
+      "layout": "Layout",
+      "layoutColumns": "Layout: {{count}} per row",
+      "addFileLabel": "Add a file to {{name}}",
+      "selectRow": "Select the files of {{name}}",
+      "more": "+{{n}} files",
+      "fewer": "Show fewer"
+    },
+    "emptyTypes": "No file yet for {{n}} types:",
+    "noMatch": "No documents match the filter",
+    "chip": {
+      "actions": "File actions",
+      "followUp": "Requested",
+      "uploading": "Uploading…",
+      "hasNote": "Has a note"
+    },
+    "status": {
+      "ok": "Has a file",
+      "miss": "Required, missing",
+      "empty": "Optional"
+    },
+    "pane": {
+      "empty": "Select a file from the list to preview it and act on it",
+      "label": "File preview",
+      "fileType": "Type",
+      "location": "Location",
+      "size": "Size",
+      "uploaded": "Uploaded",
+      "source": "Source",
+      "notes": "Notes",
+      "notesPlaceholder": "Add a note",
+      "saveNotes": "Save note",
+      "noNotes": "—",
+      "open": "Open in new tab",
+      "edit": "Edit",
+      "replace": "Replace",
+      "move": "Move…",
+      "delete": "Delete",
+      "dontUse": "Don't use this file",
+      "close": "Close",
+      "sourceFollowUp": "Requested by an appraiser",
+      "sourcePrev": "From previous appraisal {{number}}",
+      "sourceOwn": "Uploaded for this request"
+    },
+    "titleLabel": "Title {{number}}",
+    "titleFallback": "Item {{n}}"
   },
   "actions": {
     "saveDraft": "Save draft",
@@ -341,7 +682,6 @@
     "requestDeleteListFailed": "Failed to delete request. Please try again.",
     "draftSaved": "Draft saved successfully",
     "draftSaveFailed": "Failed to save draft. Please try again.",
-    "requestSubmitted": "Request submitted successfully",
     "requestSubmitFailed": "Failed to submit request. Please try again.",
     "requestSaveFailed": "Failed to save request. Please try again.",
     "validationFailed": "Please fill in all required fields before submitting.",
@@ -364,6 +704,7 @@
     "bulkDeletedSimple": "Deleted {{n}} document(s)",
     "uploadPartialFailed": "{{n}} file(s) failed to upload",
     "uploadSuccess": "Successfully uploaded {{n}} document(s)",
+    "noRequestData": "This appraisal has no request data to copy, so only its reference was set.",
     "copiedFromAppraisal": "Copied from appraisal {{number}}{{value}}. Review & adjust before saving. Appointment and fee were not copied.",
     "copyValueSuffix": " (value: {{n}})",
     "appraisalNotCompleted": "This appraisal is not completed and cannot be copied.",
@@ -373,7 +714,9 @@
     "missingDocSizeError": "{{name}}: File size exceeds {{limit}}.",
     "missingDocAttachFailed": "File uploaded but failed to attach to request. Please try again.",
     "missingDocUploadFailed": "Failed to upload {{name}}.",
-    "missingDocSessionFailed": "Failed to start upload session. Please try again."
+    "missingDocSessionFailed": "Failed to start upload session. Please try again.",
+    "uploadSlotGone": "That document slot is no longer available. Please try again.",
+    "uploadFilesSkipped": "{{n}} file(s) skipped (unsupported type or too large): {{names}}"
   },
   "seqNo": "Seq.no",
   "table": {
@@ -381,8 +724,6 @@
     "addFirstItem": "Add First Item",
     "addRow": "Add row",
     "deleteRow": "Delete",
-    "deleteRowTitle": "Delete Row",
-    "deleteRowMessage": "Are you sure you want to delete this row? This action cannot be undone.",
     "total": "Total",
     "override": "Override",
     "resetToCalculated": "Reset to calculated sum",
@@ -399,7 +740,12 @@
     "modalTitle": "Move Document",
     "description": "Select where to move this document.",
     "requestLevelLabel": "Request level",
-    "confirm": "Move"
+    "confirm": "Move",
+    "requestLevelHint": "Attached to the request, not to any title",
+    "searchPlaceholder": "Search title number, owner or place",
+    "noMatch": "No section matches",
+    "matches": "Same as the original title",
+    "documentType": "Document type"
   },
   "validation": {
     "bankingSegmentRequired": "Banking segment is required.",
@@ -415,6 +761,7 @@
     "customerNameRequired": "Customer name is required.",
     "propertyTypeRequired": "Property type is required.",
     "commentRequired": "Comment is required",
+    "titleNumberTooLong": "Title number must be at most {{max}} characters.",
     "titleMinItems": "Title Information must have at least 1 item(s)"
   },
   "titleImport": {
@@ -473,5 +820,199 @@
     "tabInvalid_one": "Problem found ({{count}})",
     "tabInvalid_other": "Problems found ({{count}})",
     "missingColumns": "This file has no column for: {{columns}} — some rows need them. Add the column to the header row, or check the header spelling."
+  },
+  "titleSection": {
+    "add": {
+      "chooseLater": "Choose the type later…"
+    },
+    "numbers": {
+      "heading_one": "Title deeds of the land the condominium stands on ({{count}} parcel)",
+      "heading_other": "Title deeds of the land the condominium stands on ({{count}} parcels)",
+      "counter_one": "{{length}} / {{max}} characters · {{count}} parcel",
+      "counter_other": "{{length}} / {{max}} characters · {{count}} parcels",
+      "more_one": "+{{count}} parcel",
+      "more_other": "+{{count}} parcels",
+      "hint": "Paste or type the numbers, separated by commas, spaces or new lines. They are tidied when you leave the box.",
+      "goTo": "Edit the title deed numbers below"
+    },
+    "address": {
+      "copyFromTitle": "Copy from title-deed address",
+      "copyOverwriteConfirm": "Copy title-deed address",
+      "copyOverwriteMessage": "This DOPA address already has values. Replace them with the title-deed address?",
+      "copyOverwriteMessageRequest": "This property location already has values. Replace them with the request address?",
+      "districtDiffersDopa": "The district in the DOPA register is {{district}}, which differs from the title deed. Please check.",
+      "districtDiffersRequest": "The district in the DOPA register is {{district}}, which differs from the request address. Please check.",
+      "districtDiffersTitle": "The district in the title register is {{district}}, which differs from the request's address. Please check.",
+      "dopaMissing": "This sub-district is not in the DOPA register. Please choose one.",
+      "overwriteConfirm": "Copy request address",
+      "overwriteMessage": "This title already has an address. Replace it with the request's address?",
+      "overwriteTitle": "Replace the address?",
+      "tagDopa": "DOPA",
+      "tagLocation": "property location",
+      "tagTitle": "title address",
+      "titleMissing": "The request's sub-district is not in the title register. Please choose one.",
+      "useRequest": "Copy from request address",
+      "masterUnavailable": "Address data is still loading. If this persists, reload the page.",
+      "requestAddressEmpty": "Fill in the request address first",
+      "titleAddressEmpty": "Fill in the title-deed address first"
+    },
+    "priorCheck": {
+      "priorHeading": "Appraised before",
+      "titleInProgress": "This title is being appraised",
+      "titleInProgressGeneric": "This property is being appraised",
+      "inProgressHeading": "Being appraised in another report",
+      "inProgressMessage": "Check the report below before saving, so the same property is not appraised twice.",
+      "status": "Status",
+      "title": "This title has been appraised before",
+      "titleGeneric": "This property has been appraised before",
+      "message": "A report already exists for this property. Go back to check it, or keep saving.",
+      "back": "Go back and edit",
+      "continue": "Continue saving",
+      "report": "Report",
+      "date": "Date",
+      "value": "Value",
+      "count": "Times appraised: {{n}}"
+    },
+    "cell": {
+      "areaBuilding": "Building {{area}} sq.m.",
+      "areaRai": "{{rnw}} rai",
+      "areaSqm": "{{area}} sq.m.",
+      "areaWa": "{{wa}} sq.wa",
+      "bookPage": "Book {{book}} · Page {{page}}",
+      "landDeed": "Land title deed",
+      "condo": "Condominium unit",
+      "condoUnit": "Unit no. {{room}}",
+      "floor": "Floor {{n}}",
+      "building": "Building {{n}}",
+      "book": "Book {{n}}",
+      "page": "Page {{n}}",
+      "buildings": "Buildings",
+      "chassis": "Chassis",
+      "hull": "HIN {{value}}",
+      "registrationBook": "Registration book {{value}}",
+      "unregistered": "Not registered",
+      "usableArea": "Usable area",
+      "vesselType": "Vessel type"
+    },
+    "col": {
+      "actions": "Actions",
+      "area": "Area",
+      "deed": "Title document",
+      "details": "Details",
+      "location": "Location",
+      "owner": "Holder",
+      "position": "Position / details",
+      "registration": "Registration",
+      "status": "Status",
+      "type": "Collateral type"
+    },
+    "dnd": {
+      "blocked": "Clear the search / filter to reorder",
+      "cancelled": "Move cancelled. Title {{pos}} is back where it was.",
+      "dropped": "Moved title {{pos}} to position {{to}}",
+      "handle": "Drag to reorder",
+      "instructions": "Press Space to pick up a title, use the arrow keys to move it, and press Space again to drop it. Press Esc to cancel.",
+      "movedTo": "Title {{pos}} is over position {{to}}",
+      "pickedUp": "Picked up title {{pos}}"
+    },
+    "drawer": {
+      "complete": "✓ All information is filled in",
+      "missing_one": "{{count}} field still missing:",
+      "missing_other": "{{count}} fields still missing:",
+      "nav": "Move between titles",
+      "newTitle": "New title",
+      "next": "Next",
+      "paperNote": "Dotted lines are fields you can fill in.",
+      "position": "Title {{pos}} of {{total}}",
+      "prev": "Previous",
+      "saveAndAdd": "Save and add next",
+      "section": {
+        "address": "Addresses",
+        "building": "Building",
+        "condo": "Condominium unit",
+        "deed": "Title document",
+        "machine": "Machinery",
+        "vehicle": "Vehicle",
+        "vessel": "Vessel",
+        "documents": "Documents"
+      },
+      "view": "View",
+      "viewDocument": "Document",
+      "viewForm": "Form"
+    },
+    "empty": {
+      "hint": "Add the first title to get started"
+    },
+    "filter": {
+      "all": "All",
+      "building": "Building",
+      "clear": "Clear filters",
+      "condo": "Condo",
+      "group": "Filter titles",
+      "incomplete": "Incomplete",
+      "land": "Land",
+      "landBuilding": "Land + building",
+      "machine": "Machinery",
+      "none": "No titles match",
+      "search": "Search number, holder or location",
+      "showing": "Showing {{shown}} of {{total}}",
+      "vehicle": "Vehicle",
+      "vessel": "Vessel"
+    },
+    "group": {
+      "estate": "Real estate",
+      "movable": "Movable assets"
+    },
+    "incompleteCount_one": "{{count}} incomplete",
+    "incompleteCount_other": "{{count}} incomplete",
+    "move": {
+      "confirm": "Move",
+      "message": "Move title {{n}} of {{total}} in this table",
+      "position": "Move to position",
+      "title": "Move to position"
+    },
+    "position": {
+      "aerialMapName": "Aerial photo name",
+      "aerialMapNumber": "Aerial photo no.",
+      "landParcelNumber": "Parcel no.",
+      "mapSheetNumber": "Sheet",
+      "rawang": "Rawang",
+      "surveyNumber": "Survey No."
+    },
+    "row": {
+      "menu": "More actions",
+      "moveBottom": "Move to bottom",
+      "moveTo": "Move to position…",
+      "moveTop": "Move to top"
+    },
+    "sort": {
+      "button": "Sort by title number",
+      "done": "Sorted by title number",
+      "undo": "Undo"
+    },
+    "status": {
+      "complete": "Complete",
+      "missing_one": "Missing {{count}}",
+      "missing_other": "Missing {{count}}",
+      "missingTooltip": "Still missing: {{fields}}"
+    },
+    "total": {
+      "parcels_one": "{{count}} parcel in total",
+      "parcels_other": "{{count}} parcels in total"
+    },
+    "discard": {
+      "title": "Discard this title?",
+      "message": "Discard this title and its {{n}} attached file(s)? The files will not be attached to the request.",
+      "confirm": "Discard title"
+    }
+  },
+  "appointmentLetter": {
+    "attached": "Appointment letter attached. Save the request to keep it.",
+    "error": "Failed to generate the appointment letter.",
+    "saveFirst": "Save the request first to generate the appointment letter.",
+    "confirmTitle": "Generate the appointment letter?",
+    "confirmGenerated": "This replaces the appointment letter generated earlier. Other files on this row stay.",
+    "confirmFiles": "This row already has files, and none of them is a generated letter. They will be replaced by the generated letter.",
+    "confirm": "Generate the letter"
   }
 }

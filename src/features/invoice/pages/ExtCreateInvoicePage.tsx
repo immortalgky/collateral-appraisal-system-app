@@ -420,7 +420,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
     <div className="flex flex-col h-full min-h-0 gap-3">
       {/* Page header — breadcrumb (rendered by Layout) handles navigation back */}
       <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-gray-900">
           {editId ? t('maintenance.editTitle') : t('maintenance.createTitle')}
         </h3>
         <p className="text-xs text-gray-500 mt-0.5">{t('maintenance.subtitle')}</p>
@@ -500,7 +500,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
                 <tr className="border-b border-gray-200">
-                  <th className="px-4 py-2.5 w-10">
+                  <th className="text-xs px-4 py-2.5 w-10 font-semibold">
                     <input
                       type="checkbox"
                       checked={allSelected}
@@ -512,43 +512,43 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                       className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-center font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     No.
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.appraisalReportNo')}
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     {t('book.col.customerName')}
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.costCenter')}
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     {t('book.col.feePaymentMethod')}
                   </th>
-                  <th className="text-right font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.feeAmount')}
                   </th>
-                  <th className="text-right font-medium text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 text-xs">
                     {t('book.col.vat')}
                   </th>
-                  <th className="text-right font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.totalAmount')}
                   </th>
-                  <th className="text-right font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.payPartialAmount')}
                   </th>
-                  <th className="text-right font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.bankAbsorbAmount')}
                   </th>
-                  <th className="text-right font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.remainingFee')}
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.lastPaymentDate')}
                   </th>
-                  <th className="text-left font-medium text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.submittedDate')}
                   </th>
                 </tr>

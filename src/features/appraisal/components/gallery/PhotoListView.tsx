@@ -225,7 +225,7 @@ export const PhotoListView = ({
         <thead>
           <tr className="border-b border-gray-200">
             {onSelectionChange && (
-              <th className="py-3 px-2 w-10">
+              <th className="text-xs py-3 px-2 w-10 font-semibold">
                 <button
                   type="button"
                   onClick={handleSelectAll}
