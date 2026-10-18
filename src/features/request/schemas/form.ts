@@ -56,7 +56,7 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     // when copying a prior appraisal — display-only, never user-editable.
     inspectionNumber: z.number().nullish(),
     address: z.object({
-      houseNumber: z.string().max(10).min(1, t('validation.houseNumberRequired')),
+      houseNumber: z.string().max(50).min(1, t('validation.houseNumberRequired')),
       projectName: z.string().max(100).nullable(),
       moo: z.string().max(10).nullable(),
       soi: z.string().max(100).nullable(),
@@ -104,7 +104,7 @@ function makeRequestPropertyDto(t: TFunction<'request'>) {
 
 const AddressDto = z
   .object({
-    houseNumber: z.string().max(10),
+    houseNumber: z.string().max(50),
     projectName: z.string().nullable(),
     moo: z.string().nullable(),
     soi: z.string().nullable(),

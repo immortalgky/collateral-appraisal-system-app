@@ -800,7 +800,7 @@ describe('the order of the "still missing" list follows the editor, top to botto
   });
 
   it("reads each address in the address form's own field order: house number first, then the locality", () => {
-    const tooLong = 'x'.repeat(11); // the house number holds 10 characters
+    const tooLong = 'x'.repeat(51); // the house number holds 50 characters
     const missing = missingFieldPaths(
       blank({
         collateralType: '01',
@@ -819,6 +819,20 @@ describe('the order of the "still missing" list follows the editor, top to botto
       'dopaAddress.houseNumber',
       'dopaAddress.subDistrict',
     ]);
+  });
+
+  it('accepts a house number of exactly 50 characters', () => {
+    const fits = 'x'.repeat(50);
+    const missing = missingFieldPaths(
+      blank({
+        collateralType: '01',
+        titleType: 'DEED',
+        titleAddress: { ...requestTitleDefault.titleAddress, houseNumber: fits },
+        dopaAddress: { ...requestTitleDefault.dopaAddress, houseNumber: fits },
+      }),
+    );
+    expect(missing).not.toContain('titleAddress.houseNumber');
+    expect(missing).not.toContain('dopaAddress.houseNumber');
   });
 
   it('puts a condominium unit fields before its owner and notes', () => {
