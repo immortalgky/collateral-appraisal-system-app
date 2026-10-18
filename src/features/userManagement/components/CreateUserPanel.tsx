@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -44,6 +44,8 @@ interface FormState {
   authSource: AuthSource;
   /** Ad-hoc account: no password, starts closed, gets one per admin-opened access window. */
   isTemporaryAccess: boolean;
+  /** The admin's last explicit auth choice (initially the LDAP default), restored whenever LDAP is allowed again. */
+  preferredAuth: AuthSource;
 }
 
 const EMPTY_FORM: FormState = {
@@ -62,9 +64,35 @@ const EMPTY_FORM: FormState = {
   roles: [],
   groups: [],
   teams: [],
-  authSource: 'Local',
+  authSource: 'LDAP',
   isTemporaryAccess: false,
+  preferredAuth: 'LDAP',
 };
+
+// LDAP needs an AD account: company staff are outside the bank's AD, and a temporary-access
+// account is issued a local password per access window — both must authenticate locally.
+const canUseLdap = (f: Pick<FormState, 'scope' | 'isTemporaryAccess'>) =>
+  f.scope === 'Bank' && !f.isTemporaryAccess;
+
+// Re-derive the auth source: the admin's preference (LDAP by default) whenever LDAP is allowed,
+// else Local. LDAP users authenticate against AD, so LDAP drops any typed local password; a
+// temporary-access account is issued a password per access window, so it never keeps one either.
+const withDefaultAuth = (f: FormState): FormState => {
+  if (!canUseLdap(f)) {
+    return {
+      ...f,
+      authSource: 'Local',
+      ...(f.isTemporaryAccess && { password: '', confirmPassword: '' }),
+    };
+  }
+  if (f.preferredAuth === 'Local') return { ...f, authSource: 'Local' };
+  return { ...f, authSource: 'LDAP', password: '', confirmPassword: '' };
+};
+
+// A lookup answer may only be applied while the form still matches what was looked up.
+// (LDAP is only selectable when canUseLdap holds, so authSource alone covers scope/temporary.)
+const isLookupCurrent = (f: FormState, sentUsername: string) =>
+  f.authSource === 'LDAP' && f.username.trim().toLowerCase() === sentUsername.toLowerCase();
 
 const ICON_COLORS = {
   blue: 'bg-blue-50 text-blue-500',
@@ -91,16 +119,43 @@ const SectionLabel = ({
   </div>
 );
 
+const Hint = ({
+  id,
+  className,
+  children,
+}: {
+  id?: string;
+  className?: string;
+  children: React.ReactNode;
+}) => (
+  <div
+    id={id}
+    className={clsx(
+      'flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2',
+      className,
+    )}
+  >
+    <p className="text-xs text-gray-500">{children}</p>
+  </div>
+);
+
 const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
   const localizeCompanyName = useLocalizedCompanyName();
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  // Latest form for async callbacks (the lookup answer), so they judge the current state.
+  const formRef = useRef(form);
+  useLayoutEffect(() => {
+    formRef.current = form;
+  }, [form]);
   const [accessTab, setAccessTab] = useState<AccessTab>('roles');
   const createUser = useCreateUser();
   const ldapLookup = useLdapLookup();
 
   const isLdap = form.authSource === 'LDAP';
   const isCompany = form.scope === 'Company';
+  const ldapLocked = !canUseLdap(form);
+  const ldapHintId = useId();
 
   // Live password-policy evaluation (same DB-maintained policy as every other password field).
   const { allPassed: passwordPolicyMet } = usePasswordPolicyChecks(form.password);
@@ -123,47 +178,45 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
   // Switching scope changes which roles/groups/teams are valid, so clear those selections.
   // Bank users carry position/department; Company users carry a company instead.
   const setScope = (scope: Scope) => {
-    setForm(prev => ({
-      ...prev,
-      scope,
-      roles: [],
-      groups: [],
-      teams: [],
-      companyId: scope === 'Bank' ? '' : prev.companyId,
-      department: scope === 'Company' ? '' : prev.department,
-      aoCode: scope === 'Company' ? '' : prev.aoCode,
-      employeeId: scope === 'Company' ? '' : prev.employeeId,
-    }));
+    // Re-clicking the selected scope must not wipe selections or a chosen auth source.
+    setForm(prev =>
+      prev.scope === scope
+        ? prev
+        : withDefaultAuth({
+            ...prev,
+            scope,
+            roles: [],
+            groups: [],
+            teams: [],
+            companyId: scope === 'Bank' ? '' : prev.companyId,
+            department: scope === 'Company' ? '' : prev.department,
+            aoCode: scope === 'Company' ? '' : prev.aoCode,
+            employeeId: scope === 'Company' ? '' : prev.employeeId,
+          }),
+    );
     setAccessTab('roles');
   };
 
-  // Switching to LDAP clears any typed local password (LDAP users authenticate against AD).
   const setAuthSource = (src: AuthSource) =>
-    setForm(prev => ({
-      ...prev,
-      authSource: src,
-      password: src === 'LDAP' ? '' : prev.password,
-      confirmPassword: src === 'LDAP' ? '' : prev.confirmPassword,
-    }));
+    // Company / temporary access can only be Local, so a click there is not a preference.
+    setForm(prev => (canUseLdap(prev) ? withDefaultAuth({ ...prev, preferredAuth: src }) : prev));
 
-  // A temporary-access account gets no password at all (one is issued per access window) and
-  // must authenticate locally — LDAP has no concept of an admin-opened window.
+  // A temporary-access account must authenticate locally — LDAP has no concept of an
+  // admin-opened window — and gets no password here.
   const setTemporaryAccess = (value: boolean) =>
-    setForm(prev => ({
-      ...prev,
-      isTemporaryAccess: value,
-      authSource: value ? 'Local' : prev.authSource,
-      password: value ? '' : prev.password,
-      confirmPassword: value ? '' : prev.confirmPassword,
-    }));
+    setForm(prev => withDefaultAuth({ ...prev, isTemporaryAccess: value }));
 
   const handleLdapLookup = () => {
     if (!form.username.trim()) {
       toast.error(t('validation.usernameRequired'));
       return;
     }
-    ldapLookup.mutate(form.username.trim(), {
+    const sentUsername = form.username.trim();
+    ldapLookup.mutate(sentUsername, {
       onSuccess: data => {
+        // A late answer for a changed form (Local/Company/temporary/other username) is dropped
+        // silently: no fill and no toast.
+        if (!isLookupCurrent(formRef.current, sentUsername)) return;
         if (!data.found) {
           toast.error(t('toasts.ldapUserNotFound', 'User not found in LDAP/AD'));
           return;
@@ -176,8 +229,6 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
           lastName: data.lastName ?? prev.lastName,
           department: data.department ?? prev.department,
           position: data.position ?? prev.position,
-          authSource: 'LDAP',
-          password: '',
         }));
         toast.success(t('toasts.ldapInfoLoaded', 'Loaded info from LDAP'));
       },
@@ -279,6 +330,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
               <button
                 key={s}
                 type="button"
+                aria-pressed={form.scope === s}
                 onClick={() => setScope(s)}
                 className={clsx(
                   'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
@@ -302,24 +354,34 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                 ['Local', t('fields.authSourceLocal', 'Local password')],
                 ['LDAP', t('fields.authSourceLdap', 'LDAP / Active Directory')],
               ] as [AuthSource, string][]
-            ).map(([src, label]) => (
-              <button
-                key={src}
-                type="button"
-                disabled={src === 'LDAP' && form.isTemporaryAccess}
-                onClick={() => setAuthSource(src)}
-                className={clsx(
-                  'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
-                  form.authSource === src
-                    ? 'bg-primary text-white'
-                    : 'text-gray-500 hover:text-gray-700',
-                  src === 'LDAP' && form.isTemporaryAccess && 'opacity-40 cursor-not-allowed',
-                )}
-              >
-                {label}
-              </button>
-            ))}
+            ).map(([src, label]) => {
+              const active = form.authSource === src;
+              const locked = src === 'LDAP' && ldapLocked;
+              return (
+                <button
+                  key={src}
+                  type="button"
+                  aria-pressed={active}
+                  aria-disabled={locked ? true : undefined}
+                  aria-describedby={locked ? ldapHintId : undefined}
+                  onClick={() => setAuthSource(src)}
+                  className={clsx(
+                    'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
+                    active ? 'bg-primary text-white' : 'text-gray-500',
+                    !active && !locked && 'hover:text-gray-700',
+                    locked && 'opacity-40 cursor-not-allowed',
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
+          {ldapLocked && (
+            <Hint id={ldapHintId} className="mt-2">
+              {t('hints.ldapUnavailable')}
+            </Hint>
+          )}
         </section>
 
         {/* Account */}
@@ -337,9 +399,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
             {t('fields.isTemporaryAccess')}
           </label>
           {form.isTemporaryAccess && (
-            <div className="mb-4 flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
-              <p className="text-xs text-gray-500">{t('hints.temporaryAccessCreate')}</p>
-            </div>
+            <Hint className="mb-4">{t('hints.temporaryAccessCreate')}</Hint>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -355,7 +415,9 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   variant="outline"
                   size="xs"
                   className="mt-1.5"
-                  isLoading={ldapLookup.isPending}
+                  isLoading={
+                    ldapLookup.isPending && isLookupCurrent(form, ldapLookup.variables ?? '')
+                  }
                   onClick={handleLdapLookup}
                 >
                   {t('buttons.retrieveFromLdap', 'Retrieve from LDAP')}
@@ -371,14 +433,12 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
               placeholder={t('placeholders.email')}
             />
             {isLdap ? (
-              <div className="sm:col-span-2 flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
-                <p className="text-xs text-gray-500">
-                  {t(
-                    'hints.ldapPassword',
-                    'Password is managed by Active Directory — the user signs in with their AD credentials.',
-                  )}
-                </p>
-              </div>
+              <Hint className="sm:col-span-2">
+                {t(
+                  'hints.ldapPassword',
+                  'Password is managed by Active Directory — the user signs in with their AD credentials.',
+                )}
+              </Hint>
             ) : form.isTemporaryAccess ? null : (
               <>
                 <TextInput
