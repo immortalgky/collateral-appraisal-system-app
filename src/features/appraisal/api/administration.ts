@@ -2,12 +2,14 @@ import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tansta
 import axios from '@shared/api/axiosInstance';
 import type { AssignAppraisalRequestType, AssignAppraisalResponseType } from '@shared/schemas/v1';
 import type {
+  AssignmentDefaultsResponse,
   CurrentAssignment,
   ExternalCompany,
   InternalStaff,
   Quotation,
   StartQuotationFromTaskRequest,
 } from '../types/administration';
+import { type AssignmentDefaults, toFormDefaults } from '../utils/assignmentDefaults';
 
 /**
  * Get a user by ID
@@ -63,13 +65,34 @@ export const useGetCompanyById = (companyId: string | null) => {
  * Get current assignment for an appraisal
  * GET /appraisals/{appraisalId}/assignments
  */
-export const useGetAssignment = (appraisalId: string) => {
+export const useGetAssignment = (appraisalId: string, options?: { staleTime?: number }) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'assignments'],
     queryFn: async (): Promise<CurrentAssignment[]> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/assignments`);
       return data.assignments ?? [];
     },
+    enabled: !!appraisalId,
+    ...(options?.staleTime !== undefined && { staleTime: options.staleTime }),
+  });
+};
+
+/**
+ * Get the Appraisal Type's pre-selected assignment values
+ * GET /appraisals/{appraisalId}/assignment-defaults
+ */
+export const useGetAssignmentDefaults = (appraisalId: string) => {
+  return useQuery({
+    queryKey: ['appraisal', appraisalId, 'assignment-defaults'],
+    queryFn: async (): Promise<AssignmentDefaults> => {
+      const { data } = await axios.get<AssignmentDefaultsResponse>(
+        `/appraisals/${appraisalId}/assignment-defaults`,
+      );
+      return toFormDefaults(data);
+    },
+    // No `retry` override: the global policy skips 4xx but retries 5xx and network errors, so those
+    // keep the page's first seed waiting until the retries are exhausted; it then opens on the
+    // built-in defaults.
     enabled: !!appraisalId,
   });
 };
@@ -256,7 +279,11 @@ export const useGetEligibleCompanies = (
  * invalidate `['quotations', 'list']` also refresh this query (otherwise
  * AdministrationPage stays locked after status transitions).
  */
-export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = true) => {
+export const useGetAppraisalQuotations = (
+  appraisalId: string | null,
+  enabled = true,
+  options?: { staleTime?: number },
+) => {
   return useQuery({
     queryKey: ['quotations', 'list', { appraisalId }],
     queryFn: async (): Promise<Quotation[]> => {
@@ -267,6 +294,7 @@ export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = 
       return result.items ?? [];
     },
     enabled: enabled && !!appraisalId,
+    ...(options?.staleTime !== undefined && { staleTime: options.staleTime }),
   });
 };
 
