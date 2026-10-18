@@ -13,7 +13,11 @@ import {
   useShortlistQuotation,
   useUnshortlistQuotation,
 } from '../api/quotation';
-import type { AppraisalSummaryDto, CompanyQuotationDto } from '../schemas/quotation';
+import {
+  isNonParticipatingStatus,
+  type AppraisalSummaryDto,
+  type CompanyQuotationDto,
+} from '../schemas/quotation';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import SendToRmModal from './SendToRmModal';
@@ -234,7 +238,7 @@ const AdminShortlistPanel = ({
                   const maxEstimateManday = validEstimatedDays.length
                     ? Math.max(...validEstimatedDays)
                     : undefined;
-                  const isDeclined = cq.status === 'Declined';
+                  const isNonParticipating = isNonParticipatingStatus(cq.status);
                   return (
                     <tr
                       key={cq.id}
@@ -244,7 +248,7 @@ const AdminShortlistPanel = ({
                       )}
                     >
                       <td className="px-4 py-3">
-                        {!isDeclined && (
+                        {!isNonParticipating && (
                           <button
                             type="button"
                             onClick={() => handleToggle(cq)}
@@ -303,7 +307,7 @@ const AdminShortlistPanel = ({
                       <td className="px-4 py-3 text-center">
                         <QuotationStatusBadge
                           status={cq.status}
-                          reason={isDeclined ? cq.declineReason : undefined}
+                          reason={cq.status === 'Declined' ? cq.declineReason : undefined}
                         />
                       </td>
                       <td className="px-4 py-3 text-center">

@@ -25,7 +25,12 @@ export const CompanyQuotationStatusSchema = z.enum([
   'Rejected',
   'Withdrawn',
   'Declined',
+  'Expired',
 ]);
+
+/** Declined or Expired — the company has no bid to show and is not a candidate. */
+export const isNonParticipatingStatus = (status: string) =>
+  status === 'Declined' || status === 'Expired';
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────
 

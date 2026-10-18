@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
@@ -26,6 +26,11 @@ interface DeclineInvitationModalProps {
 const DeclineInvitationModal = ({ isOpen, onClose, onConfirm }: DeclineInvitationModalProps) => {
   const { t } = useTranslation(['quotation', 'common']);
   const [reason, setReason] = useState('');
+
+  // The page can close the modal from outside (e.g. the row expired) — drop the typed reason then too.
+  useEffect(() => {
+    if (!isOpen) setReason('');
+  }, [isOpen]);
 
   const handleClose = () => {
     setReason('');

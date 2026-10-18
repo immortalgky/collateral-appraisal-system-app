@@ -36,6 +36,7 @@ const STATUS_CLASS: Record<string, string> = {
   Declined: 'bg-red-100 text-red-700',
   PendingCheckerReview: 'bg-indigo-100 text-indigo-700',
   Pending: 'bg-amber-100 text-amber-700',
+  Expired: 'bg-gray-100 text-gray-600',
 };
 
 interface QuotationStatusBadgeProps {

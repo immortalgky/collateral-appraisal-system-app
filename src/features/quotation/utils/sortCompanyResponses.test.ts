@@ -45,6 +45,23 @@ describe('sortCompanyResponses', () => {
     ]);
   });
 
+  it('ranks Expired one step below Declined, ahead of Rejected and Withdrawn', () => {
+    const rows = [
+      row('withdrawn', 'Withdrawn', 1),
+      row('rejected', 'Rejected', 1),
+      row('expired', 'Expired', 1),
+      row('declined', 'Declined', 1),
+      row('submitted', 'Submitted', 1),
+    ];
+    expect(ids(sortCompanyResponses(rows, r => r))).toEqual([
+      'submitted',
+      'declined',
+      'expired',
+      'rejected',
+      'withdrawn',
+    ]);
+  });
+
   it('sorts by total net amount ascending within the same status', () => {
     const rows = [
       row('high', 'Submitted', 3000),

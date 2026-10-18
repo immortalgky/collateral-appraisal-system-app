@@ -20,7 +20,11 @@ import {
   useSubmitQuotation,
   useTakeWorkflowAction,
 } from '../api/quotation';
-import { submitQuotationFormSchema, type SubmitQuotationFormValues } from '../schemas/quotation';
+import {
+  isNonParticipatingStatus,
+  submitQuotationFormSchema,
+  type SubmitQuotationFormValues,
+} from '../schemas/quotation';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DeclineInvitationModal from '../components/DeclineInvitationModal';
 import SharedDocumentViewer from '../components/SharedDocumentViewer';
@@ -286,6 +290,8 @@ const ExtCompanySubmitQuotationPage = () => {
   // Hydrate form from existing draft/submission once data arrives.
   // Priority: Draft or PendingCheckerReview → editable. Submitted → read-only display.
   const isHydrated = fields.length > 0;
+  // Keys the hydrate effect so it re-runs when the row becomes Expired, not on every status change.
+  const isExpired = mySubmission?.status === 'Expired';
 
   useEffect(() => {
     if (appraisals.length === 0) return;
@@ -293,8 +299,8 @@ const ExtCompanySubmitQuotationPage = () => {
     // Determine the initial item values — prefer from existing draft/submission.
     // Includes post-submission states (Submitted/UnderReview/Tentative/Accepted/Rejected)
     // so the standalone read-only view shows what was actually submitted.
-    // Decline is the only state with no values to show.
-    const hydrateFromSubmission = mySubmission && mySubmission.status !== 'Declined';
+    // Declined/Expired have no values to show (Expired comes back with no price data or quotation number).
+    const hydrateFromSubmission = mySubmission && !isNonParticipatingStatus(mySubmission.status);
 
     const items = appraisals.map(ap => {
       const existingItem = hydrateFromSubmission
@@ -325,12 +331,16 @@ const ExtCompanySubmitQuotationPage = () => {
       },
       // Preserve any in-progress edits across background refetches (e.g. after save-success
       // invalidates the query). Initial hydrate still populates because fields are pristine.
-      { keepDirtyValues: true },
+      // Expired drops unsaved edits so no stale amount survives.
+      { keepDirtyValues: !isExpired },
     );
-    setNotParticipating(!!mySubmission?.declineReason);
-    setDeclineReason(mySubmission?.declineReason ?? '');
+    if (isExpired) setIsDeclineModalOpen(false);
+    // Expired's auto-decline text must never land in local state (or a resent payload).
+    const declineText = isExpired ? '' : (mySubmission?.declineReason ?? '');
+    setNotParticipating(!!declineText);
+    setDeclineReason(declineText);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appraisals.length, mySubmission?.id]);
+  }, [appraisals.length, mySubmission?.id, isExpired]);
 
   // ─── Computed grand total ─────────────────────────────────────────────────
   const watchedItems = useWatch({ control, name: 'items' });
@@ -794,6 +804,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
   // ─── Derived flags ────────────────────────────────────────────────────────
   const isDeclined = mySubmission?.status === 'Declined';
+  const isNonParticipating = isNonParticipatingStatus(mySubmission?.status ?? '');
   const isSubmitted = mySubmission?.status === 'Submitted';
   const isPastDue = quotation ? new Date(quotation.cutOffTime) < new Date() : false;
 
@@ -993,6 +1004,21 @@ const ExtCompanySubmitQuotationPage = () => {
           </div>
         )}
 
+        {/* ── Expired banner — deadline passed with no response, never phrased as a decline ──── */}
+        {isExpired && (
+          <div className="rounded-xl border border-gray-200 overflow-hidden mb-5">
+            <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <Icon name="clock" style="solid" className="size-5 text-gray-400" />
+              <span className="text-sm font-semibold text-gray-900">
+                {t('shared.invitationExpired')}
+              </span>
+            </div>
+            <div className="px-4 py-3 text-sm text-gray-500">
+              {t('shared.invitationExpiredBody')}
+            </div>
+          </div>
+        )}
+
         {/* ── Submitted read-only banner ────────────────────────────────────── */}
         {isSubmitted && !openNegotiation && (
           <div className="rounded-xl border border-green-200 overflow-hidden mb-5">
@@ -1038,7 +1064,7 @@ const ExtCompanySubmitQuotationPage = () => {
         )}
 
         {/* ── Read-only banner (shown when task ownership is absent) ──────────── */}
-        {!canEdit && !isDeclined && !isSubmitted && !isPastDue && appraisals.length > 0 && (
+        {!canEdit && !isNonParticipating && !isSubmitted && !isPastDue && appraisals.length > 0 && (
           <Alert variant="info" className="mb-4">
             {t('shared.readOnlyBanner', { stage: currentStageLabel })}
           </Alert>
@@ -1205,7 +1231,7 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Sections 3–5 (pricing/duration/remark) are void while not participating —
                         replaced with a single reason notice. Sections 1–2 above (appraisal info,
                         attached documents) stay visible either way since they're not pricing. */}
-                    {notParticipating ? (
+                    {isExpired ? null : notParticipating ? (
                       <section aria-label={t('aria.sectionQuotationInfo')}>
                         <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
                           <div className="flex items-center gap-1.5 mb-1">
@@ -1382,72 +1408,74 @@ const ExtCompanySubmitQuotationPage = () => {
               </div>
             </div>
 
-            {/* Footer row */}
-            <div className="border-t border-primary/20 bg-primary/5 px-5 py-4 space-y-4">
-              {/* Total + Participating */}
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <span className="text-sm font-semibold text-gray-700">
-                    {t('fields.totalFeeAmount')}
-                  </span>
-                  <span className="ml-2 text-base font-bold text-primary">
-                    {grandTotal > 0 ? THB.format(grandTotal) : '—'}
-                  </span>
-                </div>
+            {/* Footer row — total, participating toggle and remark are void once Expired */}
+            {!isExpired && (
+              <div className="border-t border-primary/20 bg-primary/5 px-5 py-4 space-y-4">
+                {/* Total + Participating */}
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <span className="text-sm font-semibold text-gray-700">
+                      {t('fields.totalFeeAmount')}
+                    </span>
+                    <span className="ml-2 text-base font-bold text-primary">
+                      {grandTotal > 0 ? THB.format(grandTotal) : '—'}
+                    </span>
+                  </div>
 
-                {/* Participating toggle hidden during negotiation — invitation acceptance
+                  {/* Participating toggle hidden during negotiation — invitation acceptance
                     isn't being decided here; the company can only counter or decline via the
                     action bar below. Shared by Maker and Checker — "not participate" is just a
                     flag on the normal Draft → Send-to-Checker → Submit pipeline now, so either
                     role can flip it while they hold the active task; the Checker's final Submit
                     is what's authoritative for Declined vs Submitted. */}
-                {!isNegotiatingLock && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700">
-                      {t('fields.participating')} <span className="text-danger">*</span>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleParticipatingToggle(false)}
-                        disabled={!canEdit}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          notParticipating
-                            ? 'bg-red-500 text-white border-red-500'
-                            : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-500'
-                        }`}
-                      >
-                        No
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleParticipatingToggle(true)}
-                        disabled={!canEdit}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          !notParticipating
-                            ? 'bg-primary text-white border-primary'
-                            : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
-                        }`}
-                      >
-                        Yes
-                      </button>
+                  {!isNegotiatingLock && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-700">
+                        {t('fields.participating')} <span className="text-danger">*</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleParticipatingToggle(false)}
+                          disabled={!canEdit}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            notParticipating
+                              ? 'bg-red-500 text-white border-red-500'
+                              : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-500'
+                          }`}
+                        >
+                          No
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleParticipatingToggle(true)}
+                          disabled={!canEdit}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            !notParticipating
+                              ? 'bg-primary text-white border-primary'
+                              : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
+                          }`}
+                        >
+                          Yes
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              {/* Quotation Remark */}
-              <div>
-                <Textarea
-                  label={t('fields.quotationRemark')}
-                  disabled={!canEdit || isNegotiatingLock}
-                  placeholder={t('placeholders.remarkHint')}
-                  maxLength={4000}
-                  showCharCount
-                  {...register('remarks')}
-                />
+                {/* Quotation Remark */}
+                <div>
+                  <Textarea
+                    label={t('fields.quotationRemark')}
+                    disabled={!canEdit || isNegotiatingLock}
+                    placeholder={t('placeholders.remarkHint')}
+                    maxLength={4000}
+                    showCharCount
+                    {...register('remarks')}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1488,8 +1516,10 @@ const ExtCompanySubmitQuotationPage = () => {
         )}
       </div>
 
-      {/* ── Sticky action bar — always rendered; buttons disable when !canEdit (read-only). ── */}
+      {/* ── Sticky action bar — buttons disable when !canEdit (read-only); hidden once Expired
+            (it holds only action buttons, no navigation). ── */}
       {appraisals.length > 0 &&
+        !isExpired &&
         (openNegotiation ? (
           /* Negotiation round — Decline this round + Submit Proposal. Maker → bank direct. */
           <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
