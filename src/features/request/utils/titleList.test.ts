@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { requestTitleDefault, type RequestTitleDtoType } from '../schemas/form';
+import { RequestTitleDto, requestTitleDefault, type RequestTitleDtoType } from '../schemas/form';
 import {
   allowedCollateralCodes,
   arrayMove,
@@ -137,7 +137,6 @@ describe('missingFieldPaths / isTitleComplete', () => {
         'titleNumber',
         'areaSquareWa',
         'ownerName',
-        'notes',
         'titleAddress.subDistrict',
         'dopaAddress.subDistrict',
       ]),
@@ -145,9 +144,91 @@ describe('missingFieldPaths / isTitleComplete', () => {
     expect(isTitleComplete(make({ collateralType: '01' }))).toBe(false);
   });
 
+  it('does not ask for the title detail (notes), on land or on a condominium', () => {
+    expect(missingFieldPaths(make({ collateralType: '01' }))).not.toContain('notes');
+    expect(missingFieldPaths(make({ collateralType: '08' }))).not.toContain('notes');
+    // A complete title stays complete with no notes, and keeps one it already has
+    expect(isTitleComplete({ ...completeLand(), notes: '' })).toBe(true);
+    expect(isTitleComplete({ ...completeLand(), notes: 'from LOS' })).toBe(true);
+  });
+
+  it('does not list the title address for a movable, but still does for land', () => {
+    for (const collateralType of ['10', '11', '12']) {
+      const missing = missingFieldPaths(make({ collateralType }));
+      expect(missing.filter(path => path.startsWith('titleAddress.'))).toEqual([]);
+      expect(missing).toContain('dopaAddress.subDistrict');
+    }
+    expect(missingFieldPaths(make({ collateralType: '01' }))).toContain('titleAddress.subDistrict');
+    expect(missingFieldPaths(make({ collateralType: '05' }))).toContain('titleAddress.houseNumber');
+  });
+
+  it("ignores the title address of a movable, which has no field to fix it, but not a land title's", () => {
+    const tooLong = { ...requestTitleDefault.titleAddress, houseNumber: 'x'.repeat(51) }; // over the 50 the house number holds
+    const dopa = { ...requestTitleDefault.dopaAddress, subDistrict: '100101', district: '1001' };
+    const vehicle = make({
+      collateralType: '10',
+      licensePlateNumber: 'AB 1',
+      vehicleRegistrationNumber: 'r',
+      vin: 'v',
+      vehicleType: '01',
+      ownerName: 'o',
+      notes: 'n',
+      titleAddress: tooLong,
+      dopaAddress: { ...dopa, houseNumber: '9' },
+    });
+    expect(missingFieldPaths(vehicle).filter(path => path.startsWith('titleAddress.'))).toEqual([]);
+    const land = make({ collateralType: '01', titleAddress: tooLong });
+    expect(missingFieldPaths(land)).toContain('titleAddress.houseNumber');
+    // and what it carries there is kept, not dropped by the check
+    const parsed = RequestTitleDto.safeParse(vehicle);
+    expect(parsed.success ? parsed.data.titleAddress : null).toEqual(tooLong);
+    expect(parsed.success ? Object.keys(parsed.data) : []).not.toContain('__movableTitleAddress');
+  });
+
+  it('leaves a movable with no title address without one', () => {
+    const noAddress: Record<string, unknown> = make({ collateralType: '10' });
+    delete noAddress.titleAddress;
+    const complete = RequestTitleDto.safeParse({
+      ...noAddress,
+      licensePlateNumber: 'AB 1',
+      vehicleRegistrationNumber: 'r',
+      vin: 'v',
+      vehicleType: '01',
+      ownerName: 'o',
+      notes: 'n',
+      dopaAddress: {
+        ...requestTitleDefault.dopaAddress,
+        houseNumber: '9',
+        subDistrict: '100101',
+        district: '1001',
+      },
+    });
+    expect(complete.success ? [] : complete.error.issues.map(i => i.path.join('.'))).toEqual([]);
+    expect(complete.success && 'titleAddress' in complete.data).toBe(false);
+  });
+
   it('follows the collateral type: a vehicle needs a chassis number, a land title does not', () => {
     expect(missingFieldPaths(make({ collateralType: '10' }))).toContain('vin');
     expect(missingFieldPaths(make({ collateralType: '01' }))).not.toContain('vin');
+  });
+
+  it('asks for the number of machines on a machine: a new one starts empty, not 0', () => {
+    expect(missingFieldPaths(make({ collateralType: '11' }))).toContain('numberOfMachine');
+    expect(missingFieldPaths(make({ collateralType: '01' }))).not.toContain('numberOfMachine');
+  });
+
+  it("lists a machine's fields in the order its form shows them, the address last", () => {
+    const missing = (over: Partial<RequestTitleDtoType>) =>
+      missingFieldPaths(make({ collateralType: '11', ...over })).filter(
+        path => !path.includes('Address.'),
+      );
+    expect(missing({})).toEqual(['machineType', 'numberOfMachine', 'installationStatus']);
+    expect(missing({ installationStatus: '2' })).toEqual([
+      'machineType',
+      'numberOfMachine',
+      'invoiceNumber',
+    ]);
+    expect(missingFieldPaths(make({ collateralType: '11' })).at(-1)).toMatch(/^dopaAddress\./);
   });
 
   it('reports each path once', () => {
@@ -247,6 +328,14 @@ describe('filtering', () => {
     expect(run('ศุภาลัย')).toEqual([1]);
     expect(run('กข 1234')).toEqual([2]);
     expect(run('MR053')).toEqual([2]);
+  });
+
+  it("searches a movable's place in its DOPA address, the only one it has", () => {
+    const movable = make({
+      collateralType: '10',
+      dopaAddress: { ...requestTitleDefault.dopaAddress, districtName: 'ลาดพร้าว' },
+    });
+    expect(matchesTitleFilter(movable, { query: 'ลาดพร้าว', chip: 'all' }, false)).toBe(true);
   });
 
   it('ignores case and needs every word', () => {
@@ -770,16 +859,13 @@ describe('withPlaceNames', () => {
 describe('the order of the "still missing" list follows the editor, top to bottom', () => {
   const blank = (over: Partial<RequestTitleDtoType>) => make({ ...over });
 
-  it('reads deed, area, owner, notes, then the title address, then DOPA', () => {
-    const missing = missingFieldPaths(
-      blank({ collateralType: '01', titleType: 'DEED', notes: '' }),
-    );
+  it('reads deed, area, owner, then the title address, then DOPA', () => {
+    const missing = missingFieldPaths(blank({ collateralType: '01', titleType: 'DEED' }));
     const at = (path: string) => missing.indexOf(path);
     for (const path of [
       'titleNumber',
       'areaSquareWa',
       'ownerName',
-      'notes',
       'titleAddress.subDistrict',
       'dopaAddress.subDistrict',
     ])
@@ -788,7 +874,6 @@ describe('the order of the "still missing" list follows the editor, top to botto
       'titleNumber',
       'areaSquareWa',
       'ownerName',
-      'notes',
       'titleAddress.subDistrict',
       'dopaAddress.subDistrict',
     ].map(at);
@@ -835,14 +920,13 @@ describe('the order of the "still missing" list follows the editor, top to botto
     expect(missing).not.toContain('dopaAddress.houseNumber');
   });
 
-  it('puts a condominium unit fields before its owner and notes', () => {
+  it('puts a condominium unit fields before its owner and the title address', () => {
     const missing = missingFieldPaths(blank({ collateralType: '08', titleType: 'DEED' }));
     const at = (path: string) => missing.indexOf(path);
     expect(at('titleNumber')).toBeLessThan(at('roomNumber'));
     expect(at('roomNumber')).toBeLessThan(at('condoName'));
     expect(at('usableArea')).toBeLessThan(at('ownerName'));
-    expect(at('ownerName')).toBeLessThan(at('notes'));
-    expect(at('notes')).toBeLessThan(at('titleAddress.subDistrict'));
+    expect(at('ownerName')).toBeLessThan(at('titleAddress.subDistrict'));
   });
 });
 

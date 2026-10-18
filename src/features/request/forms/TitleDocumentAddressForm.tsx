@@ -38,6 +38,7 @@ const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressForm
     | undefined;
 
   const prefix = `titles.${index}.titleAddress`;
+  const requestAddress = useWatch({ name: 'detail.address' }) as AddressValue | undefined;
 
   // The request's address is picked from the DOPA master and a title's from the Title master, which
   // number places differently: the typed fields are copied, the locality is looked up in the Title
@@ -65,7 +66,17 @@ const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressForm
           <button
             type="button"
             onClick={handleUseRequestAddress}
-            className="ml-auto rounded-md px-2 py-1 text-sm text-primary transition-colors hover:bg-primary/10"
+            // the locality is looked up in the Title master, so nothing can be placed until it loads;
+            // and an empty request address would only blank a typed one
+            disabled={!addressHasValue(requestAddress) || titleRows.length === 0}
+            title={
+              titleRows.length === 0
+                ? t('titleSection.address.masterUnavailable')
+                : !addressHasValue(requestAddress)
+                  ? t('titleSection.address.requestAddressEmpty')
+                  : undefined
+            }
+            className="ml-auto rounded-md px-2 py-1 text-sm text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
           >
             {t('titleSection.address.useRequest')}
           </button>

@@ -7,27 +7,32 @@ import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import { formatLocaleDate } from '@shared/utils/dateUtils';
 import { useTranslation } from 'react-i18next';
+import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
+import { formatCurrency } from '@/shared/utils/formatUtils';
 import { useCollateralCatalog } from '../api/hooks';
 import type { CollateralCatalogParams, CollateralType } from '../api/types';
 
-const TYPE_OPTIONS: { value: CollateralType | ''; label: string }[] = [
-  { value: '', label: 'All types' },
-  { value: 'Land', label: 'Land' },
-  { value: 'Condo', label: 'Condo' },
-  { value: 'Leasehold', label: 'Leasehold' },
-  { value: 'Machine', label: 'Machine' },
-];
-
 const TYPE_ICON: Record<CollateralType, string> = {
-  Land: 'mountain-sun',
-  Condo: 'building-user',
-  Leasehold: 'file-contract',
-  Machine: 'gear',
+  L: 'mountain-sun',
+  LB: 'mountain-sun',
+  U: 'building-user',
+  LSL: 'file-contract',
+  LSB: 'file-contract',
+  LS: 'file-contract',
+  LSU: 'file-contract',
+  MAC: 'gear',
+  PRJ: 'building',
+  UNK: 'circle-question',
 };
+
+const TYPE_CODES = Object.keys(TYPE_ICON) as CollateralType[];
 
 export default function CollateralCatalogPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // PropertyType uses the same codes as the backend's collateral types; unknown ones show as the code
+  const typeLabel = usePropertyTypeLabels();
+  const provinceName = useProvinceName();
 
   // Filters
   const [type, setType] = useState<CollateralType | ''>('');
@@ -125,9 +130,10 @@ export default function CollateralCatalogPage() {
           }}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 min-w-32"
         >
-          {TYPE_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          <option value="">{t('collateralMaster.allTypes')}</option>
+          {TYPE_CODES.map(code => (
+            <option key={code} value={code}>
+              {typeLabel(code)}
             </option>
           ))}
         </select>
@@ -288,17 +294,19 @@ export default function CollateralCatalogPage() {
                           />
                         </div>
                         <span className="font-medium text-gray-900 text-xs">
-                          {item.collateralType}
+                          {typeLabel(item.collateralType)}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 py-2.5 font-mono text-xs text-gray-700 max-w-[220px] truncate">
-                      {item.dedupKeySnippet}
+                      {item.land_TitleNumber ?? item.condo_CondoName ?? '—'}
                     </td>
                     <td className="px-4 py-2.5 text-gray-600 text-xs max-w-[140px] truncate">
                       {item.ownerName ?? '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 text-xs">{item.province ?? '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-600 text-xs">
+                      {provinceName(item.land_Province ?? item.condo_Province) || '—'}
+                    </td>
                     <td className="px-4 py-2.5 text-center tabular-nums text-gray-700">
                       {item.engagementCount}
                     </td>
@@ -307,7 +315,7 @@ export default function CollateralCatalogPage() {
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 text-xs">
                       {item.lastAppraisedValue != null
-                        ? `฿${item.lastAppraisedValue.toLocaleString('th-TH')}`
+                        ? formatCurrency(item.lastAppraisedValue)
                         : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-center">

@@ -225,5 +225,9 @@
     "rejectStamp": "ไม่เห็นด้วย",
     "routeBackStamp": "ส่งกลับ",
     "finalNote": "ทุกขั้นตอนของใบงานนี้เสร็จสมบูรณ์แล้ว"
+  },
+  "collateralMaster": {
+    "allTypes": "ทุกประเภท",
+    "masterTitle": "ข้อมูลหลัก {{type}}"
   }
 }
