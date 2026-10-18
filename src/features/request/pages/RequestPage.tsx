@@ -115,7 +115,7 @@ const createRequestFormDefaults: createRequestFormType = {
   detail: { ...createRequestFormDefault.detail, prevAppraisalReportNo: null },
   // Form-only facts about the request (never sent): whether it has been submitted, which switches
   // off the rules that only apply before submit (see buildRequestPayload, which drops it)
-  meta: { isSubmitted: false },
+  meta: { isSubmitted: false, priorLocked: false },
   customers: [emptyRowFor(CUSTOMER_COLUMNS)],
   properties: [emptyRowFor(PROPERTY_COLUMNS)],
 };
@@ -171,6 +171,11 @@ function RequestPage() {
   const isSubmitted =
     isEditMode && isRequestSubmitted(requestData?.status, requestData?.requestedAt);
 
+  // The purpose and the prior appraisal cannot be changed: a submitted request, or a draft the
+  // periodical-reappraisal Initiate created (the backend fixes both). Reaches the form as
+  // `meta.priorLocked`, for the parts that read the form rather than the page.
+  const priorLocked = isSubmitted || (isEditMode && !!requestData?.isPeriodicalReappraisal);
+
   // Add minimum loading delay for better UX (show skeleton) - only in edit mode
   // When data is cached, isLoadingRequest will be false immediately, so we skip the delay
   const [minLoadingDone, setMinLoadingDone] = useState(true);
@@ -197,7 +202,10 @@ function RequestPage() {
 
   // Form setup
   const methods = useForm<createRequestFormType>({
-    defaultValues: isEditMode ? createRequestFormDefault : createRequestFormDefaults,
+    // A request already in the cache is locked from the first render, not after the reset below
+    defaultValues: isEditMode
+      ? { ...createRequestFormDefault, meta: { isSubmitted, priorLocked } }
+      : createRequestFormDefaults,
     resolver: zodResolver(createRequestForm),
   });
 
@@ -309,7 +317,7 @@ function RequestPage() {
     if (isEditMode && requestData) {
       const formValues: createRequestFormType = {
         ...mapRequestResponseToForm(requestData),
-        meta: { isSubmitted },
+        meta: { isSubmitted, priorLocked },
       };
       // An editable table always shows a row to type in, also for a draft saved with none (blank
       // rows are never sent). Part of the reset values, so the form stays pristine.
@@ -319,7 +327,7 @@ function RequestPage() {
       }
       reset(formValues);
     }
-  }, [isEditMode, requestData, reset, readOnly, isSubmitted]);
+  }, [isEditMode, requestData, reset, readOnly, isSubmitted, priorLocked]);
 
   // Mutations
   const { mutate: createRequest, isPending: isCreating } = useCreateRequest();
@@ -759,8 +767,9 @@ function RequestPage() {
 
   useEffect(() => {
     // A submitted request keeps its purpose and prior (the appraisal is built from them): they are
-    // read-only there, and nothing here may clear them
-    if (isSubmitted) return;
+    // read-only there, and nothing here may clear them. Same for an Initiate draft, whose purpose
+    // and prior the backend fixes.
+    if (priorLocked) return;
     // Whatever was written before this subscribed (the reset on open) is the baseline
     committedPurpose.current = getValues('purpose') ?? '';
     const subscription = watch((values, { name, type }) => {
@@ -803,7 +812,7 @@ function RequestPage() {
       });
     });
     return () => subscription.unsubscribe();
-  }, [isSubmitted, watch, getValues, putPurposeBack, isBlockedByUploads, clearPrevReference, t]);
+  }, [priorLocked, watch, getValues, putPurposeBack, isBlockedByUploads, clearPrevReference, t]);
 
   const handleConfirmDuplicate = () => {
     const currentData = getValues();
@@ -815,7 +824,7 @@ function RequestPage() {
       // stored ones), and no comments come along. Customer and property rows carry no ids.
       comments: [],
       // a new request is not submitted, whatever the one it is copied from is
-      meta: { isSubmitted: false },
+      meta: { isSubmitted: false, priorLocked: false },
       titles: currentData.titles.map((title: createRequestFormType['titles'][number]) => ({
         ...withoutForeignIds(title),
         documents: [],
@@ -1145,23 +1154,19 @@ function RequestPage() {
                       >
                         <div className="flex flex-col gap-6">
                           <CustomersForm />
-                          {/* Before submit the prior-appraisal strip gets the pick / clear handlers (and the
-                              inspection round) from AppraisalCopyProvider: a full copy when
-                              creating, reference + carried files when reopening a draft. Once
-                              submitted, `submitted` locks the purpose and the prior (display-only);
-                              that lock comes from the flag, not from the provider. */}
-                          {isSubmitted ? (
-                            <RequestForm submitted />
-                          ) : (
-                            <AppraisalCopyProvider
-                              onCopySelect={handlePrevSelect}
-                              onClear={handlePrevClear}
-                              disabled={isPicking}
-                              round={inspectionRound}
-                            >
-                              <RequestForm />
-                            </AppraisalCopyProvider>
-                          )}
+                          {/* The prior-appraisal strip gets the pick / clear handlers (and the inspection
+                              round) from AppraisalCopyProvider: a full copy when creating,
+                              reference + carried files when reopening a draft. A submitted request
+                              and a draft Initiate created have the purpose and the prior locked
+                              (display-only); that lock is `meta.priorLocked`, not the provider. */}
+                          <AppraisalCopyProvider
+                            onCopySelect={handlePrevSelect}
+                            onClear={handlePrevClear}
+                            disabled={isPicking}
+                            round={inspectionRound}
+                          >
+                            <RequestForm />
+                          </AppraisalCopyProvider>
                         </div>
                       </FormCard>
                     </Section>

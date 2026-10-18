@@ -29,6 +29,7 @@ import ShortlistSentPanel from '@/features/quotation/components/ShortlistSentPan
 import NegotiationPanel from '@/features/quotation/components/NegotiationPanel';
 import RejectTentativeModal from '@/features/quotation/components/RejectTentativeModal';
 import FinalizeModal from '@/features/quotation/components/FinalizeModal';
+import { isStandaloneQuotation } from '@/features/quotation/utils/isStandaloneQuotation';
 import NegotiationModal from '@/features/quotation/components/NegotiationModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import AppraisalsPopover from '@/features/quotation/components/AppraisalsPopover';
@@ -564,11 +565,21 @@ interface QuotationSectionProps {
   onCreateNew: () => void;
   /** @deprecated The "add to existing" flow is not used in the IBG quotation model. */
   onAddToExisting?: () => void;
+  /**
+   * Offer "assign every appraisal right after finalize" in the Finalize dialog (standalone
+   * quotations only). The Administration page passes false: the admin has this appraisal's
+   * appraisal-assignment task open there, and auto-assign would resume that same task.
+   */
+  allowAutoAssign?: boolean;
 }
 
 type SendStep = 'confirm' | 'share-docs';
 
-const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
+const QuotationSection = ({
+  appraisalId,
+  onCreateNew,
+  allowAutoAssign = true,
+}: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
   const { t, i18n } = useTranslation(['appraisal', 'quotation']);
   const localizeCompanyName = useLocalizedCompanyName();
@@ -1711,6 +1722,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
               winnerItems={winner.items ?? []}
               appraisals={quotationDetail.appraisals ?? []}
+              allowAutoAssign={allowAutoAssign && isStandaloneQuotation(quotationDetail)}
             />
             <NegotiationModal
               isOpen={isNegotiateOpen}
@@ -1735,7 +1747,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           {renderQuotationNumber('text-sm font-semibold text-gray-700')}
           <QuotationStatusBadge status={status} />
         </div>
-        <NegotiationPanel quotation={quotationDetail} />
+        <NegotiationPanel quotation={quotationDetail} allowAutoAssign={allowAutoAssign} />
         {renderCancelFooter()}
       </div>
     );

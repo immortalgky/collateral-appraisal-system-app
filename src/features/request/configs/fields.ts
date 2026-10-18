@@ -14,6 +14,7 @@ import {
   LEASE_LAND_CODE,
   MOVABLE_CODES,
   mapCollateral,
+  NO_BUILDING_PROPERTY_TYPES,
 } from '@features/request/data/mapCollateral.ts';
 import {
   AERIAL_TITLE_TYPES,
@@ -43,14 +44,15 @@ const FACILITIE_LIMIT_AMOUNT_REQUIRED = ['01', '02', '03', '04', '12', '13', '14
 export const PREV_APP_NO_REQUIRED = ['02', '03', '04', '05', '06', '08', '09', '11', '12', '13'];
 
 /**
- * When the prior appraisal is asked for: a purpose that uses one, on a request not yet submitted. A
- * submitted request (a route-back included) has it locked, so it cannot be asked for what it cannot be
- * given. `meta.isSubmitted` is a value of the form that is never sent (the page sets it on load).
+ * When the prior appraisal is asked for: a purpose that uses one, on a request whose prior is not
+ * locked. A submitted request (a route-back included) and an Initiate draft have it locked, so they
+ * cannot be asked for what they cannot be given. `meta.priorLocked` is a value of the form that is
+ * never sent (the page sets it on load).
  */
 export const PRIOR_REQUIRED_WHEN: FieldConditions = {
   conditions: [
     { field: 'purpose', is: PREV_APP_NO_REQUIRED, operator: 'in' },
-    { field: 'meta.isSubmitted', is: true, operator: 'notEquals' },
+    { field: 'meta.priorLocked', is: true, operator: 'notEquals' },
   ],
   match: 'all',
 };
@@ -425,7 +427,11 @@ export function makePropertiesFieldConfig(t: TFunction<'request'>): FieldArrayFi
         name: 'buildingType',
         label: t('fields.buildingType'),
         group: 'BuildingType',
-        required: true,
+        requiredWhen: {
+          field: 'propertyType',
+          is: NO_BUILDING_PROPERTY_TYPES,
+          operator: 'notIn',
+        },
       },
       {
         type: 'number-input',
@@ -2189,7 +2195,11 @@ export const propertiesFieldConfig: FieldArrayField = {
       name: 'buildingType',
       label: _st('Building Type'),
       group: 'BuildingType',
-      required: true,
+      requiredWhen: {
+        field: 'propertyType',
+        is: NO_BUILDING_PROPERTY_TYPES,
+        operator: 'notIn',
+      },
     },
     {
       type: 'text-input',

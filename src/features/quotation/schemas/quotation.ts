@@ -145,6 +145,23 @@ export const AppraisalSummarySchema = z.object({
   /** Appraisal type: New | ReAppraisal | Progressive | PreAppraisal. Gates the Send-to-RM action. */
   appraisalType: z.string().nullable().optional(),
   titles: z.array(QuotationTitleDetailSchema).optional().default([]),
+  // Finalize auto-assign outcome, written when the winner was assigned at Finalize. Nullable +
+  // optional so an older API (or an old finalization) still parses.
+  /** 'Assigned' | 'Failed' | 'Parked' | 'Skipped' */
+  autoAssignResult: z.string().nullable().optional(),
+  autoAssignMessage: z.string().nullable().optional(),
+  /** Machine code for autoAssignMessage (e.g. 'notPending'); null for a plain Assigned or an old row. */
+  autoAssignReasonCode: z.string().nullable().optional(),
+  autoAssignedAt: z.string().nullable().optional(),
+  /** Live: the activity the appraisal sits at now. */
+  currentActivityId: z.string().nullable().optional(),
+  /** Live: status of the appraisal's current assignment ('Pending' until someone assigns it). */
+  assignmentStatus: z.string().nullable().optional(),
+  /** Task of the appraisal-assignment activity, for opening the Administration page. */
+  assignmentTaskId: z.string().nullable().optional(),
+  followupStaffId: z.string().nullable().optional(),
+  followupStaffName: z.string().nullable().optional(),
+  followupMethod: z.string().nullable().optional(),
 });
 
 export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;

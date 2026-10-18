@@ -155,13 +155,13 @@ describe('collectIssues', () => {
     const issuePaths = (values: object) =>
       collectIssues(createRequestForm, values).map(i => i.path.join('.'));
 
-    expect(issuePaths({ ...base, meta: { isSubmitted: false } })).toContain(
+    expect(issuePaths({ ...base, meta: { priorLocked: false } })).toContain(
       'detail.prevAppraisalReportNo',
     );
     // a draft that never had the meta key (old callers) is still asked
     expect(issuePaths(base)).toContain('detail.prevAppraisalReportNo');
 
-    const submitted = { ...base, meta: { isSubmitted: true } };
+    const submitted = { ...base, meta: { priorLocked: true } };
     expect(issuePaths(submitted)).not.toContain('detail.prevAppraisalReportNo');
     const summary = buildMissingSummary(submitted, collectIssues(createRequestForm, submitted), {
       t: resolver.t,
@@ -199,6 +199,22 @@ describe('collectIssues', () => {
     expect(noRetail).not.toContain('properties.0.sellingPrice');
   });
 
+  it('asks for a building type on every property type that has a building', () => {
+    const types = ['L', 'LSL', 'MAC', 'VEH', 'VES', 'U', 'LSU', 'LB', 'B', 'LS', 'LSB'];
+    const values = {
+      ...createRequestFormDefault,
+      properties: types.map(propertyType => ({
+        propertyType,
+        buildingType: '',
+        buildingTypeOther: '',
+        sellingPrice: 1,
+      })),
+    };
+    const paths = collectIssues(createRequestForm, values).map(i => i.path.join('.'));
+    const asked = types.filter((_, i) => paths.includes(`properties.${i}.buildingType`));
+    expect(asked).toEqual(['U', 'LSU', 'LB', 'B', 'LS', 'LSB']);
+  });
+
   it('counts an untouched price cell (an empty string) the same as null for a RETAIL segment', () => {
     const values = {
       ...createRequestFormDefault,
@@ -233,7 +249,7 @@ describe('collectIssues', () => {
     const PATH = 'detail.prevAppraisalReportNo';
     const summaryFor = (
       purpose: string,
-      extra: Record<string, unknown> & { meta?: { isSubmitted: boolean } } = {},
+      extra: Record<string, unknown> & { meta?: { priorLocked: boolean } } = {},
     ) => {
       const { meta, ...detail } = extra;
       const values = {
@@ -272,13 +288,13 @@ describe('collectIssues', () => {
     });
 
     it('is not asked for of a submitted request, which cannot choose one any more', () => {
-      const meta = { meta: { isSubmitted: true } };
+      const meta = { meta: { priorLocked: true } };
       expect(summaryFor('02', meta).paths).not.toContain(PATH);
       expect(summaryFor('02', meta).summary.items.s1.map(i => i.path)).not.toContain(PATH);
     });
 
     it('is still asked for of a draft, whether the flag is false or absent', () => {
-      expect(summaryFor('02', { meta: { isSubmitted: false } }).paths).toContain(PATH);
+      expect(summaryFor('02', { meta: { priorLocked: false } }).paths).toContain(PATH);
       expect(summaryFor('02').paths).toContain(PATH);
     });
 
