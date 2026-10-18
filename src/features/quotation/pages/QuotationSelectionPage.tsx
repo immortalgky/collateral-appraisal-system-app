@@ -17,6 +17,7 @@ import {
 } from '../api/quotation';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import EditDraftQuotationModal from '../components/EditDraftQuotationModal';
+import BoldTrans from '../components/BoldTrans';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import NegotiationPanel from '../components/NegotiationPanel';
@@ -24,6 +25,8 @@ import AppraisalReportListingTable from '../components/AppraisalReportListingTab
 import InvitedCompaniesTable from '../components/InvitedCompaniesTable';
 import QuotationTrackingLog from '../components/QuotationTrackingLog';
 import FinalizeModal from '../components/FinalizeModal';
+import AssignmentResultSummary from '../components/AssignmentResultSummary';
+import { isStandaloneQuotation } from '../utils/isStandaloneQuotation';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
@@ -36,6 +39,7 @@ import {
   TABLE_ROW_THRESHOLD,
 } from '../utils/quotationEmailTemplate';
 import { useAuthStore } from '@/features/auth/store';
+import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
 import { AdminCompanyQuotationDetailContent } from './AdminCompanyQuotationDetailPage';
 
@@ -56,7 +60,14 @@ const QuotationSelectionPage = () => {
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
-  const { data: quotation, isLoading, isError } = useGetQuotationById(id);
+  // Admin and IntAdmin both count as admin on the backend (QuotationAccessPolicy.IsAdmin).
+  const isAdmin = hasRoleOrPermission(currentUser, ['Admin', 'IntAdmin']);
+  // This page shows the assignment result, whose follow-up staff lands a moment after finalize.
+  const {
+    data: quotation,
+    isLoading,
+    isError,
+  } = useGetQuotationById(id, { pollAutoAssignFollowup: true });
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
@@ -624,20 +635,20 @@ const QuotationSelectionPage = () => {
             </div>
           </div>
           <div className="px-4 py-3 text-sm text-gray-600">
-            <p
-              dangerouslySetInnerHTML={{
-                __html: t('shared.quotationAwarded', {
-                  company: `<strong class="text-gray-900">${
-                    finalizedWinner
-                      ? localizeCompanyName(
-                          finalizedWinner.companyName,
-                          finalizedWinner.companyNameLocal,
-                        )
-                      : '—'
-                  }</strong>`,
-                }),
-              }}
-            />
+            <p>
+              <BoldTrans
+                i18nKey="shared.quotationAwarded"
+                values={{
+                  company: finalizedWinner
+                    ? localizeCompanyName(
+                        finalizedWinner.companyName,
+                        finalizedWinner.companyNameLocal,
+                      )
+                    : '—',
+                }}
+                strongClassName="text-gray-900"
+              />
+            </p>
             {(() => {
               const finalPrice =
                 finalizedWinner?.currentNegotiatedPrice ?? finalizedWinner?.totalQuotedPrice;
@@ -650,6 +661,11 @@ const QuotationSelectionPage = () => {
               );
             })()}
           </div>
+          <AssignmentResultSummary
+            appraisals={quotation.appraisals ?? []}
+            winnerItems={finalizedWinner?.items ?? []}
+            canOpenAdministration={isAdmin}
+          />
         </div>
       )}
 
@@ -916,21 +932,16 @@ const QuotationSelectionPage = () => {
         <div className="flex flex-col gap-4">
           <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-start gap-2">
             <Icon name="crown" style="solid" className="size-4 text-indigo-500 shrink-0 mt-0.5" />
-            <p
-              className="text-sm text-indigo-700"
-              dangerouslySetInnerHTML={{
-                __html: t('selectWinner.body', {
-                  company: `<strong>${
-                    pickedCompany
-                      ? localizeCompanyName(
-                          pickedCompany.companyName,
-                          pickedCompany.companyNameLocal,
-                        )
-                      : ''
-                  }</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-indigo-700">
+              <BoldTrans
+                i18nKey="selectWinner.bodyRich"
+                values={{
+                  company: pickedCompany
+                    ? localizeCompanyName(pickedCompany.companyName, pickedCompany.companyNameLocal)
+                    : '',
+                }}
+              />
+            </p>
           </div>
 
           {/* Request negotiation toggle */}
@@ -1012,14 +1023,12 @@ const QuotationSelectionPage = () => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p
-              className="text-sm text-red-700"
-              dangerouslySetInnerHTML={{
-                __html: t('cancel.standaloneBody', {
-                  number: `<strong>${quotation.quotationNumber}</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-red-700">
+              <BoldTrans
+                i18nKey="cancel.standaloneBody"
+                values={{ number: quotation.quotationNumber }}
+              />
+            </p>
           </div>
           <div>
             <label htmlFor="standalone-cancel-reason" className="block text-sm text-gray-600 mb-1">
@@ -1074,6 +1083,7 @@ const QuotationSelectionPage = () => {
           )}
           winnerItems={finalizeTarget.items ?? []}
           appraisals={quotation.appraisals ?? []}
+          allowAutoAssign={isStandaloneQuotation(quotation)}
         />
       )}
 
@@ -1148,14 +1158,12 @@ const QuotationSelectionPage = () => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p
-              className="text-sm text-red-700"
-              dangerouslySetInnerHTML={{
-                __html: t('cancel.draftBody', {
-                  number: `<strong>${quotation.quotationNumber}</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-red-700">
+              <BoldTrans
+                i18nKey="cancel.draftBody"
+                values={{ number: quotation.quotationNumber }}
+              />
+            </p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button

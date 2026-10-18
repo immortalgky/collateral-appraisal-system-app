@@ -8,7 +8,8 @@ export type NotificationType =
   | 'DocumentFollowupCancelled'
   | 'DocumentLineItemDeclined'
   | 'ReportReady'
-  | 'ReportFailed';
+  | 'ReportFailed'
+  | 'QuotationAutoAssignIncomplete';
 
 export interface Notification {
   id: string;
@@ -58,5 +59,10 @@ export const notificationTypeConfig: Record<
     icon: 'file-xmark',
     iconStyle: 'solid',
     color: 'text-red-500 bg-red-50',
+  },
+  QuotationAutoAssignIncomplete: {
+    icon: 'triangle-exclamation',
+    iconStyle: 'solid',
+    color: 'text-amber-500 bg-amber-50',
   },
 };

@@ -31,7 +31,15 @@ import {
   useSaveAssignmentDraft,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import { assignmentFormDefaults, type AssignmentFormType, useAssignmentFormSchema, } from '../schemas/administration';
+import {
+  NON_TERMINAL_QUOTATION_STATUSES,
+  pickActiveQuotation,
+} from '@/features/quotation/utils/pickActiveQuotation';
+import {
+  assignmentFormDefaults,
+  type AssignmentFormType,
+  useAssignmentFormSchema,
+} from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
 import SearchStaffModal from '../components/SearchStaffModal';
@@ -178,20 +186,18 @@ const AdministrationPage = () => {
   const { data: appraisalQuotations = [] } = useGetAppraisalQuotations(appraisalId ?? null);
 
   // v2: compute lock state — assignment is locked when a non-terminal quotation owns this appraisal
-  const NON_TERMINAL_STATUSES = [
-    'Draft',
-    'Sent',
-    'UnderAdminReview',
-    'PendingRmSelection',
-    'WinnerTentative',
-    'Negotiating',
-  ];
+  // The active quotation for this page: the open one first, else the latest finalized. Only an open
+  // one locks the assignment, and the finalized one supplies the Route-External winner. (The
+  // quotation section on this page shows the newest list row instead, so the two can differ.)
+  const activeQuotation = pickActiveQuotation(appraisalQuotations);
   const activeNonTerminalQuotation =
-    appraisalQuotations.find(q => NON_TERMINAL_STATUSES.includes(q.status)) ?? null;
+    activeQuotation && NON_TERMINAL_QUOTATION_STATUSES.includes(activeQuotation.status)
+      ? activeQuotation
+      : null;
   const isLockedByQuotation = !!activeNonTerminalQuotation;
 
-  // When quotation method is selected, fetch the linked quotation detail to derive winner for Route-External
-  const activeQuotationId = appraisalQuotations[0]?.id ?? null;
+  // When quotation method is selected, fetch the linked quotation detail to derive winner for Route-External.
+  const activeQuotationId = activeQuotation?.id ?? null;
   const { data: quotationDetail } = useGetQuotationById(
     assignmentMethod === 'quotation' ? activeQuotationId : null,
   );
@@ -1293,6 +1299,9 @@ const AdministrationPage = () => {
                 <QuotationSection
                   appraisalId={appraisalId ?? ''}
                   onCreateNew={openQuotationEntryModal}
+                  // This appraisal's appraisal-assignment task is open on this page; auto-assign
+                  // would resume that same task and leave the form below acting on a finished one.
+                  allowAutoAssign={false}
                 />
               </div>
             )}

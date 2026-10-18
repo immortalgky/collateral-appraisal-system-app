@@ -145,6 +145,8 @@ export interface Quotation {
   shortlistSentToRmAt?: string;
   tentativeWinnerQuotationId?: string;
   tentativelySelectedAt?: string;
+  /** When the winner was finalized (list DTO); null until then. */
+  selectedAt?: string | null;
   tentativelySelectedByRole?: string;
 }
 

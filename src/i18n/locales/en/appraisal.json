@@ -515,7 +515,7 @@
       "submittedAt": "Submitted At",
       "status": "Status"
     },
-    "finalizedWith": "Quotation finalized with {{company}}.",
+    "finalizedWith": "Quotation finalized with {{company}}",
     "finalPrice": "Final price:",
     "finalizedHint": "Click \"Assign\" to route externally to this company.",
     "cancelledHint": "This quotation was cancelled. Create a new quotation for this appraisal.",
