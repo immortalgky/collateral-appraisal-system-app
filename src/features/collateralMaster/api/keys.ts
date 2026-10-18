@@ -11,6 +11,10 @@ export const collateralMasterKeys = {
   lookup: (params: CollateralLookupParams) =>
     [...collateralMasterKeys.all, 'lookup', params] as const,
 
+  // Appraisals still open on the same collateral key
+  inProgress: (params: CollateralLookupParams) =>
+    [...collateralMasterKeys.all, 'in-progress', params] as const,
+
   // Catalog (admin paginated list)
   catalogs: () => [...collateralMasterKeys.all, 'catalog'] as const,
   catalog: (params: CollateralCatalogParams) =>

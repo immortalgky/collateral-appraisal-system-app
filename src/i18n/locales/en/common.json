@@ -225,5 +225,9 @@
     "rejectStamp": "DISAGREE",
     "routeBackStamp": "SENT BACK",
     "finalNote": "Every step of this job is complete."
+  },
+  "collateralMaster": {
+    "allTypes": "All types",
+    "masterTitle": "{{type}} Master"
   }
 }

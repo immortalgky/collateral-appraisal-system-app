@@ -1103,7 +1103,9 @@ export const TitleTable = memo(function TitleTable({
                       missingText={
                         found.length
                           ? t('titleSection.status.missingTooltip', {
-                              fields: found.map(labelOf).join(', '),
+                              fields: found
+                                .map(path => labelOf(path, { movable: kind === 'movable' }))
+                                .join(', '),
                             })
                           : ''
                       }

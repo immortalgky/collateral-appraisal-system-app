@@ -1,6 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { act, render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { FormProvider, useForm, type FieldValues, type UseFormReturn } from 'react-hook-form';
 import { requestTitleDefault, type RequestTitleDtoType } from '../../schemas/form';
 import { TitleDrawer, type TitleDrawerProps } from './TitleDrawer';
@@ -16,13 +19,22 @@ vi.mock('@/shared/components/form', async importOriginal => ({
   ...(await importOriginal<typeof import('@/shared/components/form')>()),
   FormFields: () => <div data-testid="form-fields" />,
 }));
+// The save-time check asks the collateral master through this client
+const lookupGet = vi.hoisted(() => vi.fn());
+// The appraisals still open on the same key: a separate endpoint, answering [] unless a test says
+const inFlightGet = vi.hoisted(() => vi.fn());
+vi.mock('@shared/api/axiosInstance', () => ({
+  default: {
+    get: (url: string, config: unknown) =>
+      url === '/appraisals/in-progress-by-collateral'
+        ? inFlightGet(url, config)
+        : lookupGet(url, config),
+  },
+}));
 const scrollToField = vi.hoisted(() => vi.fn());
 vi.mock('@/shared/components/form/utils', async importOriginal => ({
   ...(await importOriginal<typeof import('@/shared/components/form/utils')>()),
   scrollToField,
-}));
-vi.mock('@/features/collateralMaster/components/TitleLookupIntegration', () => ({
-  TitleLookupIntegration: () => <div data-testid="lookup" />,
 }));
 vi.mock('../../forms/TitleBuildingForm', () => ({ default: () => <div data-testid="building" /> }));
 vi.mock('../../forms/TitleCondoForm', () => ({ default: () => <div data-testid="condo" /> }));
@@ -75,31 +87,55 @@ const handlers = {
 function Harness({
   title = completeLand(),
   props = {},
+  submitted = false,
+  before = [],
+  prevAppraisalId,
 }: {
   title?: RequestTitleDtoType;
   props?: Partial<TitleDrawerProps>;
+  submitted?: boolean;
+  /** Rows ahead of the title, so it is not at index 0 (a reorder or a delete moves it). */
+  before?: RequestTitleDtoType[];
+  /** The prior appraisal the request already follows. */
+  prevAppraisalId?: string;
 }) {
-  form = useForm<FieldValues>({ defaultValues: { titles: [title] } });
+  form = useForm<FieldValues>({
+    defaultValues: {
+      titles: [...before, title],
+      meta: { isSubmitted: submitted },
+      detail: { prevAppraisalId },
+    },
+  });
+  const [client] = useState(
+    () => new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+  );
   return (
-    <FormProvider {...form}>
-      <TitleDrawer
-        index={0}
-        position={2}
-        total={4}
-        readOnly={false}
-        onClose={handlers.onClose}
-        onSave={handlers.onSave}
-        onCancel={handlers.onCancel}
-        onSaveAndAdd={handlers.onSaveAndAdd}
-        onPrev={handlers.onPrev}
-        onNext={handlers.onNext}
-        {...props}
-      />
-    </FormProvider>
+    <QueryClientProvider client={client}>
+      <MemoryRouter>
+        <FormProvider {...form}>
+          <TitleDrawer
+            index={before.length}
+            position={2}
+            total={4}
+            readOnly={false}
+            onClose={handlers.onClose}
+            onSave={handlers.onSave}
+            onCancel={handlers.onCancel}
+            onSaveAndAdd={handlers.onSaveAndAdd}
+            onPrev={handlers.onPrev}
+            onNext={handlers.onNext}
+            {...props}
+          />
+        </FormProvider>
+      </MemoryRouter>
+    </QueryClientProvider>
   );
 }
 
 beforeEach(() => {
+  lookupGet.mockReset();
+  inFlightGet.mockReset();
+  inFlightGet.mockResolvedValue({ data: [] });
   Object.values(handlers).forEach(fn => fn.mockClear());
   scrollToField.mockClear();
 });
@@ -310,12 +346,17 @@ describe('closing', () => {
     expect(handlers.onClose).not.toHaveBeenCalled();
   });
 
-  it('is view-only when read-only: one Close button, no lookup banner', () => {
+  it('is view-only when read-only: one Close button', () => {
     render(<Harness props={{ readOnly: true }} />);
     expect(screen.queryByRole('button', { name: 'common:actions.save' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'titleSection.drawer.saveAndAdd' })).toBeNull();
     expect(screen.getAllByRole('button', { name: 'common:actions.close' }).length).toBe(2);
-    expect(screen.queryByTestId('lookup')).toBeNull();
+  });
+
+  it('has no "previously appraised" banner or "use prior data" button, editable or not', () => {
+    render(<Harness />);
+    expect(screen.queryByText('Previously appraised')).toBeNull();
+    expect(screen.queryByText('Use prior data')).toBeNull();
   });
 });
 
@@ -338,6 +379,11 @@ describe('what each type shows', () => {
     expect(ids()).toEqual(expect.arrayContaining(['deed', 'building', 'title-address']));
   });
 
+  it('puts the addresses before the building fields', () => {
+    render(<Harness title={type('02')} />);
+    expect(ids().indexOf('title-address')).toBeLessThan(ids().indexOf('building'));
+  });
+
   it('building only: no deed', () => {
     render(<Harness title={type('05')} />);
     expect(ids()).toContain('building');
@@ -353,10 +399,14 @@ describe('what each type shows', () => {
     ['10', 'vehicle'],
     ['11', 'machine'],
     ['12', 'vessel'],
-  ])('%s: its own fields, and still both addresses (the schema requires them)', (code, id) => {
-    render(<Harness title={type(code)} />);
-    expect(ids()).toEqual(expect.arrayContaining([id, 'title-address', 'dopa-address']));
-  });
+  ])(
+    '%s: its own fields and only the DOPA card (no title document, so no title address)',
+    (code, id) => {
+      render(<Harness title={type(code)} />);
+      expect(ids()).toEqual(expect.arrayContaining([id, 'dopa-address']));
+      expect(ids()).not.toContain('title-address');
+    },
+  );
 
   it('no type yet: only a prompt to choose one', () => {
     render(<Harness title={type('')} />);
@@ -366,6 +416,23 @@ describe('what each type shows', () => {
 });
 
 describe('choosing a type in the editor', () => {
+  it('empties the title address when the type becomes a movable, but not on opening one', () => {
+    const { unmount } = render(<Harness title={completeLand({ collateralType: '10' })} />);
+    expect(form.getValues('titles.0.titleAddress')).toMatchObject(address);
+    unmount();
+
+    render(<Harness />);
+    act(() => form.setValue('titles.0.collateralType', '10'));
+    expect(form.getValues('titles.0.titleAddress')).toEqual(requestTitleDefault.titleAddress);
+    expect(form.getValues('titles.0.dopaAddress')).toMatchObject(address);
+  });
+
+  it('keeps the title address when the type changes to another immovable', () => {
+    render(<Harness />);
+    act(() => form.setValue('titles.0.collateralType', '02'));
+    expect(form.getValues('titles.0.titleAddress')).toMatchObject(address);
+  });
+
   it('makes a land title a deed when it has no type yet, but not on opening', () => {
     render(<Harness title={{ ...structuredClone(requestTitleDefault), collateralType: '' }} />);
     expect(form.getValues('titles.0.titleType')).toBe('');
@@ -393,5 +460,464 @@ describe('choosing a type in the editor', () => {
     render(<Harness title={{ ...structuredClone(requestTitleDefault), collateralType: '' }} />);
     act(() => form.setValue('titles.0.collateralType', '10'));
     expect(form.getValues('titles.0.titleType')).toBe('');
+  });
+});
+
+describe('TitleDrawer save: a title the collateral master already knows', () => {
+  // The backend's flat LookupCollateralMasterResult
+  const known = {
+    id: 'm1',
+    collateralType: 'L',
+    createdAt: '2026-01-01T00:00:00',
+    engagementCount: 3,
+    lastAppraisedValue: 5_250_000,
+    priorAppraisalCompanyIds: [],
+    landDetail: {
+      lastAppraisalId: 'a1',
+      lastAppraisalNumber: 'APP-2026-001',
+      lastAppraisedDate: '2026-03-15T00:00:00',
+      appraisalValue: 5_250_000,
+    },
+  };
+  const save = () => screen.getByRole('button', { name: 'common:actions.save' });
+  const saveAndAdd = () => screen.getByRole('button', { name: 'titleSection.drawer.saveAndAdd' });
+  const dialogTitle = () => screen.queryByText('titleSection.priorCheck.title');
+  const clickAndSettle = async (button: HTMLElement) => {
+    await act(async () => {
+      fireEvent.click(button);
+    });
+  };
+
+  it('shows what is on record and saves nothing until the user decides', async () => {
+    lookupGet.mockResolvedValue({ data: known });
+    render(<Harness />);
+    await clickAndSettle(save());
+    expect(dialogTitle()).toBeInTheDocument();
+    // The report number is plain text: no link
+    // The title already says it: no heading in the box
+    expect(screen.queryByText('titleSection.priorCheck.priorHeading')).toBeNull();
+    expect(screen.getByText('APP-2026-001')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { hidden: true })).toBeNull();
+    expect(screen.getByText(/15\/03\/2026/)).toBeInTheDocument();
+    expect(screen.getByText(/titleSection\.priorCheck\.value 5,250,000/)).toBeInTheDocument();
+    expect(screen.getByText(/titleSection\.priorCheck\.count\{"n":3\}/)).toBeInTheDocument();
+    // The key it asked about: the title's number and place, by code
+    expect(lookupGet).toHaveBeenCalledWith('/collateral-masters/lookup', {
+      params: {
+        type: 'L',
+        titleNumber: '12345',
+        province: '10',
+        district: '1001',
+        subDistrict: '100101',
+      },
+    });
+    expect(handlers.onSave).not.toHaveBeenCalled();
+  });
+
+  it('goes back to editing: nothing saved, and saving again asks again', async () => {
+    lookupGet.mockResolvedValue({ data: known });
+    render(<Harness />);
+    await clickAndSettle(save());
+    await clickAndSettle(
+      screen.getByRole('button', { name: 'titleSection.priorCheck.back', hidden: true }),
+    );
+    expect(dialogTitle()).toBeNull();
+    expect(handlers.onSave).not.toHaveBeenCalled();
+    // Going back acknowledged nothing
+    await clickAndSettle(save());
+    expect(dialogTitle()).toBeInTheDocument();
+    expect(handlers.onSave).not.toHaveBeenCalled();
+  });
+
+  describe('once the user has chosen to continue', () => {
+    const proceed = () =>
+      screen.getByRole('button', { name: 'titleSection.priorCheck.continue', hidden: true });
+
+    it('does not ask again for the same property', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      render(<Harness />);
+      await clickAndSettle(save());
+      await clickAndSettle(proceed());
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeNull();
+      expect(handlers.onSave).toHaveBeenCalledTimes(2);
+    });
+
+    it('remembers it after the drawer is closed and reopened, as the page keeps the memory', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      const acknowledgedPriors = new Set<string>();
+      const first = render(<Harness props={{ acknowledgedPriors }} />);
+      await clickAndSettle(save());
+      await clickAndSettle(proceed());
+      first.unmount();
+      render(<Harness props={{ acknowledgedPriors }} />);
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeNull();
+      expect(handlers.onSave).toHaveBeenCalledTimes(2);
+    });
+
+    it('goes by the property, not its row: a moved row or a duplicate is not asked about again', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      const acknowledgedPriors = new Set<string>();
+      const first = render(<Harness props={{ acknowledgedPriors }} />);
+      await clickAndSettle(save());
+      await clickAndSettle(proceed());
+      first.unmount();
+      // The same title now sits at index 2 (rows were added or reordered ahead of it)...
+      const moved = render(
+        <Harness
+          props={{ acknowledgedPriors }}
+          before={[completeLand({ titleNumber: '777' }), completeLand({ titleNumber: '888' })]}
+        />,
+      );
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeNull();
+      moved.unmount();
+      // ...and a duplicate row with the same identity is the same property
+      render(<Harness props={{ acknowledgedPriors }} before={[completeLand()]} />);
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeNull();
+    });
+
+    it('still asks about a different property', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      const acknowledgedPriors = new Set<string>();
+      const first = render(<Harness props={{ acknowledgedPriors }} />);
+      await clickAndSettle(save());
+      await clickAndSettle(proceed());
+      first.unmount();
+      render(
+        <Harness props={{ acknowledgedPriors }} title={completeLand({ titleNumber: '99999' })} />,
+      );
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeInTheDocument();
+    });
+  });
+
+  it('continues the plain save', async () => {
+    lookupGet.mockResolvedValue({ data: known });
+    render(<Harness />);
+    await clickAndSettle(save());
+    await clickAndSettle(
+      screen.getByRole('button', { name: 'titleSection.priorCheck.continue', hidden: true }),
+    );
+    expect(handlers.onSave).toHaveBeenCalledTimes(1);
+    expect(handlers.onSaveAndAdd).not.toHaveBeenCalled();
+  });
+
+  it('continues a save-and-add as a save-and-add', async () => {
+    lookupGet.mockResolvedValue({ data: known });
+    render(<Harness />);
+    await clickAndSettle(saveAndAdd());
+    expect(handlers.onSaveAndAdd).not.toHaveBeenCalled();
+    await clickAndSettle(
+      screen.getByRole('button', { name: 'titleSection.priorCheck.continue', hidden: true }),
+    );
+    expect(handlers.onSaveAndAdd).toHaveBeenCalledTimes(1);
+    expect(handlers.onSave).not.toHaveBeenCalled();
+  });
+
+  describe('when the prior is the one the request already follows', () => {
+    it('saves with no question', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      render(<Harness prevAppraisalId="a1" />);
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeNull();
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('still asks about another prior', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      render(<Harness prevAppraisalId="other" />);
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeInTheDocument();
+    });
+
+    it('shows only the red box when something is also being appraised elsewhere', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      inFlightGet.mockResolvedValue({
+        data: [{ appraisalId: 'b1', appraisalNumber: 'APP-2026-777', status: 'Pending' }],
+      });
+      render(<Harness prevAppraisalId="a1" />);
+      await clickAndSettle(save());
+      expect(screen.getByText('APP-2026-777')).toBeInTheDocument();
+      expect(screen.queryByText('APP-2026-001')).toBeNull();
+      expect(screen.queryByText('titleSection.priorCheck.priorHeading')).toBeNull();
+    });
+  });
+
+  describe('when another appraisal is working on it', () => {
+    const open = [
+      { appraisalId: 'b1', appraisalNumber: 'APP-2026-777', status: 'UnderReview' },
+      { appraisalId: 'b2', appraisalNumber: 'APP-2026-888', status: 'Weird' },
+    ];
+
+    it('warns with the open reports and their status, without the prior box when there is none', async () => {
+      lookupGet.mockRejectedValue({ response: { status: 404 } });
+      inFlightGet.mockResolvedValue({ data: open });
+      render(<Harness />);
+      await clickAndSettle(save());
+      expect(screen.getByText('titleSection.priorCheck.titleInProgress')).toBeInTheDocument();
+      expect(screen.getByText('titleSection.priorCheck.inProgressHeading')).toBeInTheDocument();
+      expect(screen.getByText('APP-2026-777')).toBeInTheDocument();
+      // A status the app has a translation for, and one it does not (shown as sent)
+      expect(screen.getByText(/UnderReview|list\.status\.UnderReview/)).toBeInTheDocument();
+      expect(screen.getByText(/Weird/)).toBeInTheDocument();
+      expect(screen.queryByRole('link', { hidden: true })).toBeNull();
+      expect(screen.queryByText(/titleSection\.priorCheck\.count/)).toBeNull();
+      // The same key as the lookup
+      expect(inFlightGet).toHaveBeenCalledWith('/appraisals/in-progress-by-collateral', {
+        params: {
+          type: 'L',
+          titleNumber: '12345',
+          province: '10',
+          district: '1001',
+          subDistrict: '100101',
+        },
+      });
+      expect(handlers.onSave).not.toHaveBeenCalled();
+    });
+
+    it('shows both boxes when it has been appraised before as well, and saves on Continue', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      inFlightGet.mockResolvedValue({ data: open });
+      render(<Harness />);
+      await clickAndSettle(save());
+      expect(screen.getByText('titleSection.priorCheck.titleInProgress')).toBeInTheDocument();
+      expect(screen.getByText('APP-2026-777')).toBeInTheDocument();
+      expect(screen.getByText('APP-2026-001')).toBeInTheDocument();
+      expect(screen.getByText('titleSection.priorCheck.priorHeading')).toBeInTheDocument();
+      expect(screen.getByText(/titleSection\.priorCheck\.count\{"n":3\}/)).toBeInTheDocument();
+      await clickAndSettle(
+        screen.getByRole('button', { name: 'titleSection.priorCheck.continue', hidden: true }),
+      );
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('says so when an open appraisal has no report number yet', async () => {
+      lookupGet.mockRejectedValue({ response: { status: 404 } });
+      inFlightGet.mockResolvedValue({
+        data: [{ appraisalId: 'b3', appraisalNumber: null, status: 'Submitted' }],
+      });
+      render(<Harness />);
+      await clickAndSettle(save());
+      expect(screen.getByText('requestForm.priorSummary.noReportNumber')).toBeInTheDocument();
+    });
+
+    it('still asks about the prior when the open-appraisals lookup fails', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      inFlightGet.mockRejectedValue(new Error('boom'));
+      render(<Harness />);
+      await clickAndSettle(save());
+      expect(dialogTitle()).toBeInTheDocument();
+      expect(screen.queryByText('titleSection.priorCheck.inProgressHeading')).toBeNull();
+    });
+
+    it('saves with no question when it fails and the prior lookup misses', async () => {
+      lookupGet.mockRejectedValue({ response: { status: 404 } });
+      inFlightGet.mockRejectedValue(new Error('boom'));
+      render(<Harness />);
+      await clickAndSettle(save());
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops waiting for a slow open-appraisals lookup and asks about the prior', async () => {
+      vi.useFakeTimers();
+      try {
+        lookupGet.mockResolvedValue({ data: known });
+        inFlightGet.mockReturnValue(new Promise(() => {}));
+        render(<Harness />);
+        await clickAndSettle(save());
+        expect(dialogTitle()).toBeNull();
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(3000);
+        });
+        expect(dialogTitle()).toBeInTheDocument();
+        expect(handlers.onSave).not.toHaveBeenCalled();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  it('leaves out a value that is zero', async () => {
+    lookupGet.mockResolvedValue({
+      data: {
+        ...known,
+        lastAppraisedValue: 0,
+        landDetail: { ...known.landDetail, appraisalValue: 0 },
+      },
+    });
+    render(<Harness />);
+    await clickAndSettle(save());
+    expect(dialogTitle()).toBeInTheDocument();
+    expect(screen.queryByText(/titleSection\.priorCheck\.value/)).toBeNull();
+  });
+
+  it('saves with no question on a miss', async () => {
+    lookupGet.mockRejectedValue({ response: { status: 404 } });
+    render(<Harness />);
+    await clickAndSettle(save());
+    expect(dialogTitle()).toBeNull();
+    expect(handlers.onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('saves with no question when the lookup fails', async () => {
+    lookupGet.mockRejectedValue(new Error('boom'));
+    render(<Harness />);
+    await clickAndSettle(save());
+    expect(dialogTitle()).toBeNull();
+    expect(handlers.onSave).toHaveBeenCalledTimes(1);
+  });
+
+  describe('when the master is slow', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it('clears its 3 s timer once the lookup has answered', async () => {
+      lookupGet.mockResolvedValue({ data: null });
+      render(<Harness />);
+      const started = vi.spyOn(globalThis, 'setTimeout');
+      const cleared = vi.spyOn(globalThis, 'clearTimeout');
+      await clickAndSettle(save());
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+      const index = started.mock.calls.findIndex(([, ms]) => ms === 3000);
+      expect(index).toBeGreaterThanOrEqual(0);
+      expect(cleared).toHaveBeenCalledWith(started.mock.results[index].value);
+      started.mockRestore();
+      cleared.mockRestore();
+    });
+
+    it('stops waiting after a few seconds and saves, with the button busy meanwhile', async () => {
+      lookupGet.mockReturnValue(new Promise(() => {}));
+      render(<Harness />);
+      await clickAndSettle(save());
+      expect(handlers.onSave).not.toHaveBeenCalled();
+      expect(save()).toBeDisabled();
+      // a second click while it runs does nothing
+      await clickAndSettle(save());
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3000);
+      });
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+      expect(dialogTitle()).toBeNull();
+    });
+  });
+
+  describe('while the master is being asked', () => {
+    let resolveLookup: (value: unknown) => void;
+    const slowLookup = () =>
+      lookupGet.mockReturnValue(new Promise(resolve => (resolveLookup = resolve)));
+
+    it('keeps the drawer where it is: no Cancel, close, Esc, scrim click, Prev or Next', async () => {
+      slowLookup();
+      render(<Harness props={{ onPrev: handlers.onPrev, onNext: handlers.onNext }} />);
+      await clickAndSettle(save());
+      expect(save()).toBeDisabled();
+      expect(saveAndAdd()).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'common:actions.cancel' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'titleSection.drawer.prev' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'titleSection.drawer.next' })).toBeDisabled();
+      expect(screen.getAllByRole('button', { name: 'common:actions.close' })[0]).toBeDisabled();
+      fireEvent.keyDown(document, { key: 'Escape' });
+      const scrim = document.querySelector('[data-drawer-backdrop]') as HTMLElement;
+      fireEvent.mouseDown(scrim);
+      fireEvent.click(scrim);
+      expect(handlers.onClose).not.toHaveBeenCalled();
+      expect(handlers.onCancel).not.toHaveBeenCalled();
+      expect(handlers.onNext).not.toHaveBeenCalled();
+      // and free again once it has answered
+      await act(async () => resolveLookup({ data: null }));
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+      expect(save()).not.toBeDisabled();
+    });
+
+    it('asks again, and then saves, when the key was edited while it waited (nothing is lost)', async () => {
+      const replies: ((value: unknown) => void)[] = [];
+      lookupGet.mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+      render(<Harness />);
+      await clickAndSettle(save());
+      // The fields stay editable: the title number changes while the first lookup is out
+      act(() => form.setValue('titles.0.titleNumber', '99999'));
+      await act(async () => replies[0]({ data: known }));
+      // The new key is looked up, and it is that answer that decides
+      expect(lookupGet).toHaveBeenCalledTimes(2);
+      expect(lookupGet).toHaveBeenLastCalledWith('/collateral-masters/lookup', {
+        params: expect.objectContaining({ titleNumber: '99999' }),
+      });
+      expect(dialogTitle()).toBeNull();
+      await act(async () => replies[1]({ data: null }));
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+      expect(dialogTitle()).toBeNull();
+    });
+
+    it('shows the dialog for the new key when the edited title is a known one', async () => {
+      const replies: ((value: unknown) => void)[] = [];
+      lookupGet.mockImplementation(() => new Promise(resolve => replies.push(resolve)));
+      render(<Harness />);
+      await clickAndSettle(save());
+      act(() => form.setValue('titles.0.titleNumber', '99999'));
+      await act(async () => replies[0]({ data: null }));
+      await act(async () => replies[1]({ data: known }));
+      expect(dialogTitle()).toBeInTheDocument();
+      expect(handlers.onSave).not.toHaveBeenCalled();
+    });
+
+    it('drops the save when the drawer is on a different title by the time it answers', async () => {
+      let reply: (value: unknown) => void = () => {};
+      lookupGet.mockReturnValue(new Promise(resolve => (reply = resolve)));
+      const view = render(<Harness />);
+      await clickAndSettle(save());
+      // Same form, but the drawer now points at another row
+      view.rerender(<Harness before={[completeLand({ titleNumber: '777' })]} />);
+      await act(async () => reply({ data: known }));
+      expect(dialogTitle()).toBeNull();
+      expect(handlers.onSave).not.toHaveBeenCalled();
+    });
+  });
+
+  it('words the warning for the property when it is not a deed (machinery)', async () => {
+    lookupGet.mockResolvedValue({
+      data: {
+        ...known,
+        collateralType: 'MAC',
+        landDetail: null,
+        machineDetail: {
+          lastAppraisalId: 'a2',
+          lastAppraisalNumber: 'APP-MAC-1',
+          lastAppraisedDate: '2026-03-15T00:00:00',
+        },
+      },
+    });
+    render(
+      <Harness
+        title={completeLand({
+          collateralType: '11',
+          titleType: '',
+          registrationStatus: true,
+          registrationNumber: 'M-1',
+        })}
+      />,
+    );
+    await clickAndSettle(save());
+    expect(screen.getByText('titleSection.priorCheck.titleGeneric')).toBeInTheDocument();
+    expect(screen.queryByText('titleSection.priorCheck.title')).toBeNull();
+  });
+
+  it('does not ask for a key that is not complete', async () => {
+    render(<Harness title={completeLand({ titleNumber: '' })} />);
+    await clickAndSettle(save());
+    expect(lookupGet).not.toHaveBeenCalled();
+    expect(handlers.onSave).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not ask for a request that is already submitted: its own appraisal is on record', async () => {
+    lookupGet.mockResolvedValue({ data: known });
+    render(<Harness submitted />);
+    await clickAndSettle(save());
+    expect(lookupGet).not.toHaveBeenCalled();
+    expect(dialogTitle()).toBeNull();
+    expect(handlers.onSave).toHaveBeenCalledTimes(1);
   });
 });

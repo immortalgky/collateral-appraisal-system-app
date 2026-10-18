@@ -3,7 +3,7 @@ import {
   POSITION_ORDER,
   TITLE_SCREEN_ORDER,
 } from '@/features/appraisal/components/titleScreenOrder';
-import { mapCollateral } from '../data/mapCollateral';
+import { MACHINE_CODE, VEHICLE_CODE, VESSEL_CODE, mapCollateral } from '../data/mapCollateral';
 import { RequestTitleDto, requestTitleDefault, type RequestTitleDtoType } from '../schemas/form';
 
 /**
@@ -35,9 +35,9 @@ export const titleFamily = (code: string | null | undefined): TitleFamily => {
   if (LAND_AND_BUILDING_CODES.includes(code)) return 'landBuilding';
   if (BUILDING_ONLY_CODES.includes(code)) return 'building';
   if (CONDO_FORM_CODES.includes(code)) return 'condo';
-  if (code === '10') return 'vehicle';
-  if (code === '11') return 'machine';
-  if (code === '12') return 'vessel';
+  if (code === VEHICLE_CODE) return 'vehicle';
+  if (code === MACHINE_CODE) return 'machine';
+  if (code === VESSEL_CODE) return 'vessel';
   return 'none';
 };
 
@@ -108,8 +108,8 @@ export function allowedCollateralCodes(
 /**
  * What the editor shows, top to bottom, for each kind of title: the type, the deed (in the land
  * page's screen order), the owner and notes, the kind's own block, and last the two addresses (the
- * title's, then DOPA's). A movable lists as the form does, so only the type leads and the addresses
- * trail. The "still missing" list is read in this order.
+ * title's, then DOPA's). A movable lists its own block in the order of its field config, after the
+ * type, and the addresses trail. The "still missing" list is read in this order.
  */
 const LAND_FORM_ORDER = [
   'collateralType',
@@ -146,9 +146,24 @@ const FORM_ORDER: Record<TitleFamily, readonly string[]> = {
     'ownerName',
     'notes',
   ],
-  vehicle: ['collateralType'],
-  machine: ['collateralType'],
-  vessel: ['collateralType'],
+  vehicle: [
+    'collateralType',
+    'vehicleType',
+    'vehicleRegistrationNumber',
+    'vin',
+    'licensePlateNumber',
+    'vehicleLocation',
+  ],
+  machine: [
+    'collateralType',
+    'machineType',
+    'numberOfMachine',
+    'installationStatus',
+    'invoiceNumber',
+    'registrationStatus',
+    'registrationNumber',
+  ],
+  vessel: ['collateralType', 'vesselType', 'hin', 'vesselRegistrationNumber', 'vesselLocation'],
   none: ['collateralType'],
 };
 
@@ -256,9 +271,13 @@ export const hasActiveFilter = (filter: TitleFilter) =>
 
 const normalise = (value: unknown) => String(value ?? '').toLocaleLowerCase();
 
+/** Where a title's place is read from: a movable has no title document, so only its DOPA address. */
+export const placeAddress = (title: RequestTitleDtoType) =>
+  isMovableTitle(title) ? title.dopaAddress : title.titleAddress;
+
 /** The text a search runs over: number, holder and place (plus a movable's own identifiers). */
 function searchText(title: RequestTitleDtoType) {
-  const address = title.titleAddress ?? {};
+  const address = placeAddress(title) ?? {};
   return normalise(
     [
       title.titleNumber,
@@ -519,7 +538,7 @@ export const ADDRESS_KEYS = [
 
 export type AddressValue = Partial<Record<(typeof ADDRESS_KEYS)[number], string | null>>;
 
-const clean = (value: unknown) => String(value ?? '').trim();
+export const clean = (value: unknown) => String(value ?? '').trim();
 
 /** Equal as the form sees them: null, undefined and blank are the same, and so is stray padding. */
 export const sameAddress = (a: AddressValue | undefined, b: AddressValue | undefined) =>
@@ -587,7 +606,7 @@ export const addressWithLocality = (
 });
 
 /** A locality name without the administrative prefix the two masters do or don't carry. */
-const localityName = (value: unknown) =>
+export const localityName = (value: unknown) =>
   clean(value)
     .replace(/\s+/g, '')
     .replace(/^(แขวง|ตำบล|เขต|อำเภอ|จังหวัด)/, '');

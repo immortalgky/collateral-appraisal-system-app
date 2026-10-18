@@ -214,6 +214,21 @@ describe('collectIssues', () => {
     expect(paths).toContain('properties.0.sellingPrice');
   });
 
+  it('accepts a request house number of exactly 50 characters and rejects 51', () => {
+    const withHouseNumber = (houseNumber: string) => ({
+      ...createRequestFormDefault,
+      detail: {
+        ...createRequestFormDefault.detail,
+        address: { ...createRequestFormDefault.detail.address, houseNumber },
+      },
+    });
+    const issuePaths = (houseNumber: string) =>
+      collectIssues(createRequestForm, withHouseNumber(houseNumber)).map(i => i.path.join('.'));
+
+    expect(issuePaths('x'.repeat(50))).not.toContain('detail.address.houseNumber');
+    expect(issuePaths('x'.repeat(51))).toContain('detail.address.houseNumber');
+  });
+
   describe('the prior appraisal', () => {
     const PATH = 'detail.prevAppraisalReportNo';
     const summaryFor = (

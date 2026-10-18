@@ -3,7 +3,6 @@ import { useCallback, useEffect, useId, useMemo, useRef, type ReactNode } from '
 import { createPortal } from 'react-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { TitleLookupIntegration } from '@/features/collateralMaster/components/TitleLookupIntegration';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { FormFields } from '@/shared/components/form';
@@ -17,9 +16,10 @@ import TitleDocumentAddressForm from '../../forms/TitleDocumentAddressForm';
 import TitleMachineForm from '../../forms/TitleMachineForm';
 import TitleVehicleForm from '../../forms/TitleVehicleForm';
 import TitleVesselForm from '../../forms/TitleVesselForm';
-import type { RequestTitleDtoType } from '../../schemas/form';
+import { requestTitleDefault, type RequestTitleDtoType } from '../../schemas/form';
 import {
   defaultTitleType,
+  isMovableFamily,
   missingFieldPaths,
   movableIdentity,
   summariseTitleNumber,
@@ -28,6 +28,7 @@ import {
 import { TitleDocumentsSection } from '../DocumentUploader';
 import { TitleDeedBlock } from './TitleDeedBlock';
 import { useMissingFieldLabel } from './titleHooks';
+import { usePriorAppraisalCheck } from './usePriorAppraisalCheck';
 
 const SLIDE_MS = 200;
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -55,6 +56,7 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
   const { getValues, setValue } = useFormContext();
   const collateralType = useWatch({ name: `titles.${index}.collateralType` }) as string | undefined;
   const family = titleFamily(collateralType);
+  const movable = isMovableFamily(family);
 
   const typeField = useMemo(
     () =>
@@ -65,7 +67,9 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
   );
 
   // Choosing a type here makes a land, land-with-building or condo title a โฉนด unless it already
-  // has a type, as adding one from the menu does. Only on a change made here, not on opening.
+  // has a type, as adding one from the menu does. A change to a movable also empties the title
+  // address, which a movable has no field for (a deed address left from the earlier type would be
+  // saved with it). Only on a change made here, not on opening.
   const previousType = useRef(collateralType);
   useEffect(() => {
     if (previousType.current === collateralType) return;
@@ -74,13 +78,14 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
     const path = `titles.${index}.titleType`;
     const fallback = defaultTitleType(collateralType);
     if (fallback && !getValues(path)) setValue(path, fallback, { shouldDirty: true });
-  }, [collateralType, readOnly, index, getValues, setValue]);
+    if (movable)
+      setValue(`titles.${index}.titleAddress`, structuredClone(requestTitleDefault.titleAddress), {
+        shouldDirty: true,
+      });
+  }, [collateralType, movable, readOnly, index, getValues, setValue]);
 
   return (
     <div className="grid gap-6">
-      {/* Collateral lookup banner — fires when dedup-key fields fill in */}
-      {!readOnly && <TitleLookupIntegration titleIndex={index} />}
-
       <Grid>
         <FormFields fields={typeField} namePrefix="titles" index={index} />
       </Grid>
@@ -94,13 +99,6 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
 
       {(family === 'land' || family === 'landBuilding') && (
         <TitleDeedBlock index={index} family={family} />
-      )}
-      {(family === 'landBuilding' || family === 'building') && (
-        <Section title={t('titleSection.drawer.section.building')}>
-          <Grid>
-            <TitleBuildingForm index={index} variant={family === 'building' ? 3 : 2} />
-          </Grid>
-        </Section>
       )}
       {family === 'condo' && <TitleDeedBlock index={index} family={family} />}
       {family === 'vehicle' && (
@@ -125,13 +123,25 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
         </Section>
       )}
 
-      {/* Every type keeps both addresses: the schema requires them for movables too. */}
+      {/* A movable has no title document, so only the DOPA card (headed as its location). */}
       {family !== 'none' && (
         <Section title={t('titleSection.drawer.section.address')}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <TitleDocumentAddressForm index={index} isReadOnly={readOnly} />
-            <DopaAddressForm index={index} isReadOnly={readOnly} />
+          <div className={clsx('grid gap-4', !movable && 'md:grid-cols-2')}>
+            {!movable && <TitleDocumentAddressForm index={index} isReadOnly={readOnly} />}
+            <DopaAddressForm
+              key={movable ? 'movable' : 'estate'}
+              index={index}
+              isReadOnly={readOnly}
+              movable={movable}
+            />
           </div>
+        </Section>
+      )}
+      {(family === 'landBuilding' || family === 'building') && (
+        <Section title={t('titleSection.drawer.section.building')}>
+          <Grid>
+            <TitleBuildingForm index={index} variant={family === 'building' ? 3 : 2} />
+          </Grid>
         </Section>
       )}
     </div>
@@ -159,6 +169,11 @@ export interface TitleDrawerProps {
   onSaveAndAdd: () => void;
   readOnly: boolean;
   /**
+   * Properties the user has already acknowledged as previously appraised (see
+   * usePriorAppraisalCheck). Owned by the page so it survives the drawer closing.
+   */
+  acknowledgedPriors?: Set<string>;
+  /**
    * What the document list needs from the page (the upload session, the saved request). Without it
    * the editor has no documents section.
    */
@@ -185,6 +200,7 @@ export function TitleDrawer({
   onCancel,
   onSaveAndAdd,
   readOnly,
+  acknowledgedPriors,
   documents,
 }: TitleDrawerProps) {
   const { t } = useTranslation(['request', 'common']);
@@ -196,6 +212,17 @@ export function TitleDrawer({
 
   const title = useWatch({ name: `titles.${index}` }) as RequestTitleDtoType | undefined;
   const missing = useMemo(() => (title ? missingFieldPaths(title) : []), [title]);
+  // Both save buttons ask the collateral master first; a known property is confirmed once
+  const {
+    guard,
+    checking,
+    dialog: priorDialog,
+  } = usePriorAppraisalCheck(index, title, readOnly, acknowledgedPriors);
+  // While the master is being asked, nothing may move the drawer off this title or drop it: the
+  // answer belongs to the save that started it
+  const closeIfFree = useCallback(() => {
+    if (!checking) onClose();
+  }, [checking, onClose]);
 
   const family = titleFamily(title?.collateralType);
   const typeName = title?.collateralType
@@ -204,7 +231,7 @@ export function TitleDrawer({
     : t('titleSection.drawer.newTitle');
   const condoNumbers = family === 'condo' ? summariseTitleNumber(title?.titleNumber) : null;
   const number = (
-    family === 'vehicle' || family === 'machine' || family === 'vessel'
+    isMovableFamily(family)
       ? movableIdentity(title as RequestTitleDtoType)
       : condoNumbers
         ? // A condominium's number is a list of land titles: the first of them and how many more.
@@ -245,11 +272,11 @@ export function TitleDrawer({
       )
         return;
       event.stopPropagation();
-      onClose();
+      closeIfFree();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [closeIfFree]);
 
   // A click on the scrim closes, but only when the press started there too: selecting text in a
   // field and releasing outside the panel must not count.
@@ -259,10 +286,10 @@ export function TitleDrawer({
   }, []);
   const onScrimClick = useCallback(
     (event: React.MouseEvent) => {
-      if (pressedScrim.current && event.target === event.currentTarget) onClose();
+      if (pressedScrim.current && event.target === event.currentTarget) closeIfFree();
       pressedScrim.current = false;
     },
-    [onClose],
+    [closeIfFree],
   );
 
   return createPortal(
@@ -310,7 +337,7 @@ export function TitleDrawer({
               variant="outline"
               size="sm"
               className="rounded-full!"
-              disabled={!onPrev}
+              disabled={!onPrev || checking}
               onClick={onPrev}
             >
               <Icon style="solid" name="chevron-left" className="mr-1.5 size-3" />
@@ -320,7 +347,7 @@ export function TitleDrawer({
               variant="outline"
               size="sm"
               className="rounded-full!"
-              disabled={!onNext}
+              disabled={!onNext || checking}
               onClick={onNext}
             >
               {t('titleSection.drawer.next')}
@@ -329,7 +356,8 @@ export function TitleDrawer({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeIfFree}
+            disabled={checking}
             aria-label={t('common:actions.close')}
             title={t('common:actions.close')}
             className="flex size-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
@@ -355,7 +383,7 @@ export function TitleDrawer({
                     onClick={() => scrollToField(`titles.${index}.${path}`)}
                     className="text-amber-700 underline underline-offset-2 hover:no-underline"
                   >
-                    {labelOf(path)}
+                    {labelOf(path, { movable: isMovableFamily(family) })}
                   </button>
                 </span>
               ))}
@@ -395,20 +423,32 @@ export function TitleDrawer({
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={onCancel}>
+              <Button variant="ghost" size="sm" disabled={checking} onClick={onCancel}>
                 {t('common:actions.cancel')}
               </Button>
               <span className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={onSaveAndAdd}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={checking}
+                  onClick={() => void guard(onSaveAndAdd)}
+                >
                   {t('titleSection.drawer.saveAndAdd')}
                 </Button>
-                <Button variant="primary" size="sm" onClick={onSave}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  isLoading={checking}
+                  disabled={checking}
+                  onClick={() => void guard(onSave)}
+                >
                   {t('common:actions.save')}
                 </Button>
               </span>
             </>
           )}
         </footer>
+        {priorDialog}
       </aside>
     </div>,
     document.body,

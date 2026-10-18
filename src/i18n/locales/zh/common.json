@@ -225,5 +225,9 @@
     "routeBackStamp": "退回",
     "rejectStamp": "不同意",
     "finalNote": "此工单的所有步骤均已完成。"
+  },
+  "collateralMaster": {
+    "allTypes": "所有类型",
+    "masterTitle": "{{type}}主数据"
   }
 }
