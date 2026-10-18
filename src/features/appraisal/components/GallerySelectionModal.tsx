@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import clsx from 'clsx';
@@ -31,8 +32,9 @@ export const GallerySelectionModal = ({
   images,
   multiSelect = true,
   initialSelectedIds,
-  title = 'Choose From Gallery',
+  title,
 }: GallerySelectionModalProps) => {
+  const { t } = useTranslation('appraisal');
   // Use stable reference for empty array
   const stableInitialIds = initialSelectedIds ?? EMPTY_ARRAY;
 
@@ -50,6 +52,16 @@ export const GallerySelectionModal = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, initialIdsKey]);
+
+  // Escape closes it, like the other dialogs
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [isOpen, onClose]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
@@ -121,13 +133,18 @@ export const GallerySelectionModal = ({
               <Icon name="images" style="solid" className="text-xl text-purple-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-              <p className="text-sm text-gray-500 mt-0.5">{images.length} photos available</p>
+              <h2 className="text-lg font-semibold text-gray-900">
+                {title ?? t('gallerySelection.title')}
+              </h2>
+              <p className="text-sm text-gray-500 mt-0.5">
+                {t('gallerySelection.available', { count: images.length })}
+              </p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
+            aria-label={t('gallerySelection.close')}
             className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
           >
             <Icon name="xmark" className="text-xl" />
@@ -145,7 +162,7 @@ export const GallerySelectionModal = ({
               />
               <input
                 type="text"
-                placeholder="Search by name or description..."
+                placeholder={t('gallerySelection.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
@@ -164,8 +181,10 @@ export const GallerySelectionModal = ({
             {/* Stats & Select All */}
             <div className="flex items-center gap-4">
               <div className="text-sm text-gray-500">
-                Showing <span className="font-medium text-gray-700">{filteredImages.length}</span>{' '}
-                of <span className="font-medium text-gray-700">{images.length}</span>
+                {t('gallerySelection.showing', {
+                  shown: filteredImages.length,
+                  total: images.length,
+                })}
               </div>
 
               {multiSelect && filteredImages.length > 0 && (
@@ -186,7 +205,7 @@ export const GallerySelectionModal = ({
                     >
                       {isAllSelected && <Icon name="check" className="text-xs text-white" />}
                     </div>
-                    Select All
+                    {t('gallerySelection.selectAll')}
                   </button>
                 </>
               )}
@@ -197,14 +216,14 @@ export const GallerySelectionModal = ({
           {selectedIds.size > 0 && (
             <div className="mt-3 flex items-center gap-2">
               <div className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium">
-                {selectedIds.size} photo{selectedIds.size !== 1 ? 's' : ''} selected
+                {t('gallerySelection.selected', { count: selectedIds.size })}
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
                 className="text-sm text-gray-500 hover:text-gray-700"
               >
-                Clear selection
+                {t('gallerySelection.clearSelection')}
               </button>
             </div>
           )}
@@ -217,9 +236,11 @@ export const GallerySelectionModal = ({
               <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
                 <Icon name="images" className="text-3xl text-gray-400" />
               </div>
-              <p className="text-lg font-medium text-gray-500">No photos found</p>
+              <p className="text-lg font-medium text-gray-500">{t('gallerySelection.noPhotos')}</p>
               <p className="text-sm text-gray-400 mt-1">
-                {searchQuery ? 'Try a different search term' : 'Upload photos to the gallery first'}
+                {searchQuery
+                  ? t('gallerySelection.tryDifferent')
+                  : t('gallerySelection.uploadFirst')}
               </p>
             </div>
           ) : (
@@ -298,28 +319,25 @@ export const GallerySelectionModal = ({
         <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50/50">
           <div className="text-sm text-gray-500">
             {selectedIds.size > 0 ? (
-              <span>
-                <span className="font-medium text-primary">{selectedIds.size}</span> photo
-                {selectedIds.size !== 1 ? 's' : ''} ready to add
-              </span>
+              <span>{t('gallerySelection.readyToAdd', { count: selectedIds.size })}</span>
             ) : (
-              'Click photos to select them'
+              t('gallerySelection.clickToSelect')
             )}
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" onClick={onClose} size="lg">
-              Cancel
+            <Button variant="ghost" onClick={onClose} size="md">
+              {t('gallerySelection.cancel')}
             </Button>
             <Button
               variant="primary"
               onClick={handleConfirm}
               disabled={selectedIds.size === 0}
-              size="lg"
+              size="md"
             >
               <Icon name="plus" className="mr-2" />
               {multiSelect
-                ? `Add ${selectedIds.size} Photo${selectedIds.size !== 1 ? 's' : ''}`
-                : 'Select Photo'}
+                ? t('gallerySelection.add', { count: selectedIds.size })
+                : t('gallerySelection.selectPhoto')}
             </Button>
           </div>
         </div>

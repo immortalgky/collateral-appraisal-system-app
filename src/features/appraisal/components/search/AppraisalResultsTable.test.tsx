@@ -1,0 +1,380 @@
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import i18n from '@/i18n';
+import { render, screen, within } from '@/test/test-utils';
+import { fireEvent } from '@testing-library/react';
+import type { ColumnTableLayout } from '@/shared/components/columnLayout';
+import AppraisalResultsTable from './AppraisalResultsTable';
+import { makeAppraisalColumns, type AppraisalColumnDef } from './tabConfigs';
+import type { AppraisalDto } from '../../api/appraisalSearch';
+import type { TFunction } from 'i18next';
+
+// Only the property types are labelled: the other parameter groups stay empty, so codes show as is.
+const PROPERTY_TYPES = [
+  { code: 'B', description: 'Building' },
+  { code: 'L', description: 'Land' },
+  { code: 'LB', description: 'Land and Building' },
+  { code: 'U', description: 'Condo' },
+  { code: 'MAC', description: 'Machinery' },
+  { code: 'VEH', description: 'Vehicle' },
+  { code: 'LS', description: 'Leasehold' },
+];
+vi.mock('@/shared/utils/parameterUtils', async importOriginal => ({
+  ...(await importOriginal<typeof import('@/shared/utils/parameterUtils')>()),
+  useParametersByGroup: (group: string) => (group === 'PropertyType' ? PROPERTY_TYPES : []),
+}));
+
+const item = {
+  id: '1',
+  appraisalNumber: '69105467',
+  status: 'InProgress',
+  appraisalType: 'ReAppraisal',
+  priority: 'Normal',
+  propertyTypes: 'B, L, LB, U, MAC, VEH, LS',
+  bankingSegment: 'RETAIL',
+  customerName: 'Somchai Wongprasert',
+  customerCount: 3,
+} as unknown as AppraisalDto;
+
+const labels: Record<string, string> = {
+  'list.columns.appraisalNumberCustomer': 'No / Customer',
+  'list.columns.appraisalNumber': 'Number',
+  'list.columns.customer': 'Customer',
+  'list.columns.bankingSegment': 'Group',
+  'list.columns.createdAt': 'Created',
+};
+const t = ((k: string) => labels[k] ?? k) as unknown as TFunction<'appraisal'>;
+
+const render_ = (
+  sortBy: string,
+  sortDir: string,
+  onSort = vi.fn(),
+  rowItem: AppraisalDto = item,
+  extra: string[] = [],
+) => {
+  const base = makeAppraisalColumns(t);
+  const columns: AppraisalColumnDef[] = [
+    base.find(c => c.key === 'appraisalCustomer')!,
+    { key: 'bankingSegment', label: 'Group' },
+    { key: 'propertyTypes', label: 'Collateral' },
+    { key: 'createdAt', label: 'Created', sortable: true },
+    ...base.filter(c => extra.includes(c.key)),
+  ];
+  render(
+    <AppraisalResultsTable
+      columns={columns}
+      items={[rowItem]}
+      isLoading={false}
+      sortBy={sortBy}
+      sortDir={sortDir}
+      onSort={onSort}
+      onRowClick={vi.fn()}
+    />,
+  );
+  return onSort;
+};
+
+describe('AppraisalResultsTable', () => {
+  it('shows number over customer in one cell, with the extra-customer count', () => {
+    render_('createdAt', 'desc');
+    const cell = screen.getByText('69105467').closest('td')!;
+    expect(within(cell).getByText('Somchai Wongprasert')).toBeTruthy();
+    expect(within(cell).getByText('+2')).toBeTruthy();
+  });
+
+  it('gives each half of the merged header its own sort button', () => {
+    const onSort = render_('createdAt', 'desc');
+    screen.getByRole('button', { name: 'Customer' }).click();
+    screen.getByRole('button', { name: 'Number' }).click();
+    expect(onSort.mock.calls.map(c => c[0])).toEqual(['customerName', 'appraisalNumber']);
+  });
+
+  it('marks the sort it is given as active, in either spelling of the key', () => {
+    render_('CreatedAt', 'desc');
+    const th = screen.getByRole('columnheader', { name: /Created/ });
+    expect(th.getAttribute('aria-sort')).toBe('descending');
+  });
+
+  it('gives the collateral cell a title with the whole labelled list, since the cell cuts it', () => {
+    render_('createdAt', 'desc');
+    const full = 'Building, Land, Land and Building, Condo, Machinery, Vehicle, Leasehold';
+    const cell = screen.getByTitle(full);
+    // what the title says is what the cell shows (labels, not codes)...
+    expect(cell).toHaveTextContent(full);
+    expect(cell.getAttribute('title')).toBe(cell.textContent);
+    expect(cell.getAttribute('title')).not.toContain('B,');
+    // ...and the cell cuts it with an ellipsis, which is why the title is needed
+    expect(cell.className).toContain('truncate');
+  });
+
+  it('draws the business group as one neutral badge', () => {
+    render_('createdAt', 'desc');
+    const badge = screen.getByText('RETAIL').closest('span.rounded-md');
+    expect(badge?.className).toContain('bg-gray-100');
+  });
+
+  it('flags a high-priority job beside its number, with the tooltip and label, and nothing for normal', () => {
+    render_('createdAt', 'desc', vi.fn(), { ...item, priority: 'High' } as AppraisalDto);
+    const cell = screen.getByText('69105467').closest('td')!;
+    const flag = within(cell).getByRole('img', { name: i18n.t('appraisal:list.priorityHigh') });
+    expect(flag.getAttribute('title')).toBe(i18n.t('appraisal:list.priorityHigh'));
+    expect(flag.className).toContain('text-red-600');
+  });
+
+  it('shows no flag for a normal-priority job', () => {
+    render_('createdAt', 'desc');
+    expect(screen.queryByRole('img', { name: i18n.t('appraisal:list.priorityHigh') })).toBeNull();
+  });
+
+  it('sorts the SLA header by its due date, and marks it active under that key', () => {
+    const onSort = render_('slaDueDate', 'asc', vi.fn(), item, ['slaStatus']);
+    const th = screen.getByRole('columnheader', { name: /list\.columns\.sla/ });
+    expect(th.getAttribute('aria-sort')).toBe('ascending');
+    th.click();
+    expect(onSort).toHaveBeenCalledWith('slaDueDate');
+  });
+
+  it('keeps a two-line row to a 50px height: the cells carry py-1.5, not the old py-2.5', () => {
+    render_('createdAt', 'desc');
+    const cell = screen.getByText('69105467').closest('td')!;
+    expect(cell.className).toContain('py-1.5');
+    expect(cell.className).not.toContain('py-2.5');
+  });
+
+  it('draws a cancelled status as a red badge, and a live one is not red', () => {
+    render_('createdAt', 'desc', vi.fn(), { ...item, status: 'Cancelled' } as AppraisalDto, [
+      'status',
+    ]);
+    const badge = screen.getByText(i18n.t('appraisal:list.status.Cancelled')).closest('span');
+    expect(badge?.className).toContain('bg-red-50');
+    expect(badge?.className).toContain('text-red-700');
+  });
+
+  it('does not tint the badge of a live status red', () => {
+    render_('createdAt', 'desc', vi.fn(), item, ['status']);
+    const badge = screen.getByText(i18n.t('appraisal:list.status.InProgress')).closest('span');
+    expect(badge?.className).not.toContain('bg-red-50');
+  });
+
+  it('shows an unassigned job as a muted dash, named for screen readers, with no icon', () => {
+    render_('createdAt', 'desc', vi.fn(), { ...item, assigneeUserId: null } as AppraisalDto, [
+      'assignee',
+    ]);
+    const dash = screen.getByRole('img', { name: i18n.t('appraisal:list.unassigned') });
+    expect(dash).toHaveTextContent('—');
+    expect(dash.getAttribute('title')).toBe(i18n.t('appraisal:list.unassigned'));
+    expect(dash.className).toContain('text-gray-400');
+    expect(dash.querySelector('svg')).toBeNull();
+    // the words are not printed in the cell
+    expect(screen.queryByText(i18n.t('appraisal:list.unassigned'))).toBeNull();
+  });
+
+  it('draws the external company icon in neutral gray, not purple', () => {
+    render_(
+      'createdAt',
+      'desc',
+      vi.fn(),
+      { ...item, assigneeUserId: null, companyName: 'Thai Valuation Co.' } as AppraisalDto,
+      ['assignee'],
+    );
+    const icon = screen.getByText('Thai Valuation Co.').previousElementSibling;
+    expect(icon?.getAttribute('class')).toContain('text-gray-400');
+    expect(icon?.getAttribute('class')).not.toContain('indigo');
+  });
+});
+
+// ── Row focus ring and filling the container ────────────────────────────────────────────────────
+
+const baseCols = makeAppraisalColumns(t);
+const pick = (...keys: string[]) => keys.map(k => baseCols.find(c => c.key === k)!);
+
+describe('AppraisalResultsTable row focus', () => {
+  const setup = () =>
+    render(
+      <AppraisalResultsTable
+        columns={pick('appraisalCustomer', 'status')}
+        items={[item]}
+        isLoading={false}
+        sortBy="createdAt"
+        sortDir="desc"
+        onSort={vi.fn()}
+        onRowClick={vi.fn()}
+      />,
+    );
+  const row = () => screen.getByText('69105467').closest('tr')!;
+  // The header's sort buttons come first in the tab order.
+  const tabToRow = async (user: ReturnType<typeof render>['user']) => {
+    for (let i = 0; i < 6 && document.activeElement !== row(); i++) await user.tab();
+  };
+
+  it('switches the global outline off inline, and draws an inset keyboard ring on a Tab', async () => {
+    const { user } = setup();
+    // the global :focus-visible outline is unlayered: only an inline style removes it
+    expect(row().style.outlineStyle).toBe('none');
+    await tabToRow(user);
+    expect(row()).toHaveFocus();
+    expect(row().className).toContain('focus-visible:ring-2');
+    expect(row().className).toContain('focus-visible:ring-inset');
+  });
+
+  it('draws no ring on a row after a mouse press, and gets it back on the next Tab', async () => {
+    const { user } = setup();
+    await user.click(row()); // the drawer opens from this; closing hands the focus back to the row
+    expect(row().className).not.toContain('focus-visible:ring-2');
+    expect(row().style.outlineStyle).toBe('none');
+    (document.activeElement as HTMLElement).blur();
+    await tabToRow(user); // onto the row again, by keyboard
+    expect(row().className).toContain('focus-visible:ring-2');
+  });
+
+  it('draws the ring again when the rows are walked with j/k after the mouse', async () => {
+    const { user } = setup();
+    await user.click(row());
+    expect(row().className).not.toContain('focus-visible:ring-2');
+    await user.keyboard('j');
+    expect(row().className).toContain('focus-visible:ring-2');
+  });
+});
+
+describe('AppraisalResultsTable fills its container', () => {
+  const proto = HTMLElement.prototype;
+  const original = Object.getOwnPropertyDescriptor(proto, 'clientWidth');
+  const RO = globalThis.ResizeObserver;
+  afterEach(() => {
+    if (original) Object.defineProperty(proto, 'clientWidth', original);
+    globalThis.ResizeObserver = RO;
+  });
+
+  const widths = { appraisalCustomer: 220, status: 135, purpose: 190 };
+  const layout = {
+    visibleColumns: ['appraisalCustomer', 'status', 'purpose'],
+    widths,
+    setWidth: vi.fn(),
+    getAutoFitWidth: () => () => null,
+    showRowNumber: true,
+  } as ColumnTableLayout;
+
+  const renderAt = (containerWidth: number) => {
+    Object.defineProperty(proto, 'clientWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.className.includes('overflow-x-auto') ? containerWidth : 0;
+      },
+    });
+    globalThis.ResizeObserver = class {
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+    const { container } = render(
+      <AppraisalResultsTable
+        columns={pick('appraisalCustomer', 'status', 'purpose')}
+        items={[item]}
+        isLoading={false}
+        sortBy="createdAt"
+        sortDir="desc"
+        onSort={vi.fn()}
+        onRowClick={vi.fn()}
+        layout={layout}
+        pinnedColumn="appraisalCustomer"
+      />,
+    );
+    const cols = [...container.querySelectorAll('col')].map(c => parseFloat(c.style.width));
+    const table = container.querySelector('table') as HTMLTableElement;
+    return { cols, table };
+  };
+
+  it('stretches the columns to the container, keeping the row-number column and every minimum', () => {
+    const { cols, table } = renderAt(1200);
+    // [row number, customer, status, purpose]
+    expect(cols[0]).toBe(48);
+    expect(cols.reduce((a, b) => a + b, 0)).toBe(1200);
+    expect(cols[1]).toBeGreaterThanOrEqual(220);
+    expect(cols[2]).toBeGreaterThanOrEqual(135);
+    expect(cols[3]).toBeGreaterThanOrEqual(190);
+    expect(table.style.width).toBe('1200px');
+  });
+
+  it('keeps the user widths and scrolls sideways when the columns pass the container', () => {
+    const { cols, table } = renderAt(300);
+    expect(cols).toEqual([48, 220, 135, 190]);
+    expect(table.style.width).toBe(`${48 + 220 + 135 + 190}px`);
+  });
+});
+
+describe('AppraisalResultsTable resizing while filled', () => {
+  const proto = HTMLElement.prototype;
+  const original = Object.getOwnPropertyDescriptor(proto, 'clientWidth');
+  const RO = globalThis.ResizeObserver;
+  const capture = proto.setPointerCapture;
+  afterEach(() => {
+    if (original) Object.defineProperty(proto, 'clientWidth', original);
+    globalThis.ResizeObserver = RO;
+    proto.setPointerCapture = capture;
+  });
+
+  const setWidth = vi.fn();
+  const layout = {
+    visibleColumns: ['appraisalCustomer', 'status'],
+    widths: { appraisalCustomer: 250, status: 250 },
+    setWidth,
+    getAutoFitWidth: () => () => 310,
+    showRowNumber: false,
+  } as ColumnTableLayout;
+
+  const setup = () => {
+    setWidth.mockClear();
+    Object.defineProperty(proto, 'clientWidth', {
+      configurable: true,
+      get(this: HTMLElement) {
+        return this.className.includes('overflow-x-auto') ? 1000 : 0;
+      },
+    });
+    globalThis.ResizeObserver = class {
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as unknown as typeof ResizeObserver;
+    proto.setPointerCapture = vi.fn();
+    const { container } = render(
+      <AppraisalResultsTable
+        columns={pick('appraisalCustomer', 'status')}
+        items={[item]}
+        isLoading={false}
+        sortBy="createdAt"
+        sortDir="desc"
+        onSort={vi.fn()}
+        onRowClick={vi.fn()}
+        layout={layout}
+        pinnedColumn="appraisalCustomer"
+      />,
+    );
+    const colWidths = () =>
+      [...container.querySelectorAll('col')].map(c => parseFloat(c.style.width));
+    const handle = container.querySelector('th .cursor-col-resize') as HTMLElement;
+    return { colWidths, handle };
+  };
+
+  it('starts from what is shown: the table fills, so each column shows 500 of 250 stored', () => {
+    const { colWidths } = setup();
+    expect(colWidths()).toEqual([500, 500]);
+  });
+
+  it('stores a minimum below the shown width when dragged narrower, never an inflated one', () => {
+    const { handle } = setup();
+    fireEvent.pointerDown(handle, { clientX: 500, pointerId: 1 });
+    fireEvent.pointerMove(handle, { clientX: 450, pointerId: 1 }); // 50px narrower on screen
+    expect(setWidth).toHaveBeenLastCalledWith('appraisalCustomer', expect.any(Number));
+    const stored = setWidth.mock.calls.at(-1)![1] as number;
+    // it would have rendered about 643 if the 450 were stored as it is
+    expect(stored).toBeLessThan(450);
+    expect(stored).toBeLessThan(250); // narrower than before, not wider
+    // and the table then shows the column at the cursor's width, not wider than it was (500)
+    expect(Math.floor((1000 * stored) / (stored + 250))).toBeLessThanOrEqual(450);
+  });
+
+  it('stores what auto-fit measures as it is, not scaled again by the fill', () => {
+    const { handle } = setup();
+    fireEvent.doubleClick(handle);
+    expect(setWidth).toHaveBeenLastCalledWith('appraisalCustomer', 310);
+  });
+});

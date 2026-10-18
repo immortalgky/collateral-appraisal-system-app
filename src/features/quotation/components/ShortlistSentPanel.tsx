@@ -153,7 +153,10 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                 <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('columns.status')}
                 </th>
-                <th className="px-4 py-3 w-10" aria-label={t('columns.detail')} />
+                <th
+                  className="text-xs px-4 py-3 w-10 font-semibold"
+                  aria-label={t('columns.detail')}
+                />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

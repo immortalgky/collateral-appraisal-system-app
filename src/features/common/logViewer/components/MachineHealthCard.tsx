@@ -89,7 +89,7 @@ const MachineHealthCard = ({ metric, color }: MachineHealthCardProps) => {
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
             <span className="size-2.5 rounded-sm shrink-0" style={{ background: color }} />
             {metric.machineName}
           </h3>

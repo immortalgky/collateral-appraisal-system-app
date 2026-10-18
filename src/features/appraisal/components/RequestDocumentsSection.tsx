@@ -1,46 +1,69 @@
+import { useMemo } from 'react';
+import { useTitleLabel } from '@/features/request/hooks/useTitleLabel';
 import { useTranslation } from 'react-i18next';
-import Icon from '@shared/components/Icon';
 import DataErrorState from '@/shared/components/DataErrorState';
+import DocumentListView from '@/features/request/components/documentCard/DocumentListView';
+import { useViewDocument } from '@/features/request/api/documents';
+import {
+  getDocumentTypeName,
+  getDocumentTypeSearchText,
+  useGetDocumentTypes,
+} from '@/features/request/api/documentTypes';
+import type { TypeRow } from '@/features/request/utils/documentList';
 import { useAppraisalContext } from '../context/AppraisalContext';
 import { useGetRequestDocuments } from '@features/appraisal/api';
-import type { DocumentItemDto } from '../types/documentChecklist';
-import {
-  ActionDropdown,
-  DocumentFileRow,
-  ProgressBar,
-  StatusBadge,
-  getCollateralTypeIcon,
-  openDocumentViewer,
-} from './documentShared';
+import { requestSections } from '../utils/checklistDocuments';
 
 /**
- * Read-only request-level documents (from the originating Request), shown at the top of
- * the Documents page above the (editable) Valuation Documents checklist and Appraisal Book
- * Builder. Split out of what used to be a single combined AppendixTab so this section loads
- * and errors independently of the appendix editor.
+ * Read-only request documents (from the originating Request): the Request page's document list,
+ * with the request level and one section per title, shown on the Document Checklist page. It loads
+ * and errors independently of the editors next to it.
  */
 export const RequestDocumentsSection = () => {
   const { t } = useTranslation('appraisal');
+  const { t: tRequest } = useTranslation('request');
   const { appraisal } = useAppraisalContext();
-  const requestId = appraisal?.requestId;
+  const { data, isLoading, isError, error, refetch } = useGetRequestDocuments(appraisal?.requestId);
+  const { data: documentTypes = [] } = useGetDocumentTypes();
+  const viewDocument = useViewDocument();
+  const titleLabels = useTitleLabel();
 
-  const {
-    data: requestDocsData,
-    isLoading,
-    isError,
-    error,
-    refetch,
-  } = useGetRequestDocuments(requestId);
-
-  const totalRequestDocs = requestDocsData?.totalDocuments ?? 0;
-  const uploadedRequestDocs = requestDocsData?.totalUploaded ?? 0;
+  // A title section is named like the Request card names it (number summarised for a condo, type
+  // in the UI language, place in its own table), from the identity the API returns for the title
+  const sections = useMemo(() => {
+    const titleNames = (data?.sections ?? [])
+      .filter(section => section.titleId)
+      .map(section => {
+        const id = section.titleIdentifier;
+        return {
+          collateralType: section.collateralType,
+          titleNumber: id,
+          licensePlateNumber: id,
+          vesselRegistrationNumber: id,
+          registrationNumber: id,
+          registrationStatus: true,
+        };
+      });
+    return requestSections(
+      data,
+      tRequest('moveDocument.requestLevelLabel'),
+      titleLabels(titleNames),
+    );
+  }, [data, tRequest, titleLabels]);
+  // The type's name in the UI language; the name the API sent only stands in for a type the list lacks
+  const typeName = (code: string, displayName?: string | null) =>
+    documentTypes.some(dt => dt.code === code)
+      ? getDocumentTypeName(documentTypes, code)
+      : displayName || code;
+  const searchText = (row: TypeRow) =>
+    `${typeName(row.documentType, row.displayName)} ${getDocumentTypeSearchText(documentTypes, row.documentType)}`;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">Loading documents...</p>
+          <p className="text-sm text-gray-500">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -50,7 +73,7 @@ export const RequestDocumentsSection = () => {
     return (
       <DataErrorState
         variant="inline"
-        title="Failed to load documents"
+        title={t('valuationDocuments.checklist.requestLoadFailed')}
         message={(error as Error)?.message}
         onRetry={refetch}
       />
@@ -58,134 +81,23 @@ export const RequestDocumentsSection = () => {
   }
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-      {/* Section Header */}
-      <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Icon name="file-lines" className="text-gray-400" />
-            <h3 className="text-base font-semibold text-gray-900">Request Documents</h3>
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">
-              Read-only
-            </span>
-          </div>
-          <ProgressBar uploaded={uploadedRequestDocs} total={totalRequestDocs} />
-        </div>
-      </div>
-
-      {/* Document Sections */}
-      <div className="divide-y divide-gray-100">
-        {requestDocsData?.sections.map((section, sectionIdx) => {
-          const label =
-            section.sectionLabel ?? section.collateralTypeName ?? `Section ${sectionIdx + 1}`;
-          return (
-            <div key={section.titleId ?? `section-${sectionIdx}`}>
-              {/* Section Sub-Header */}
-              <div className="px-6 py-3.5 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <Icon
-                    name={getCollateralTypeIcon(section.collateralType)}
-                    className="text-gray-500 flex-shrink-0"
-                  />
-                  <h4 className="text-sm font-semibold text-gray-800 truncate">{label}</h4>
-                  <span className="text-xs text-gray-400 flex-shrink-0">
-                    ({section.uploadedDocuments}/{section.totalDocuments} uploaded)
-                  </span>
-                </div>
-                <div className="w-28 flex-shrink-0">
-                  <ProgressBar uploaded={section.uploadedDocuments} total={section.totalDocuments} />
-                </div>
-              </div>
-
-              {/* Section Documents */}
-              {section.documents.map((doc: DocumentItemDto) => {
-                const hasFile = !!doc.fileName;
-                // The primary label is the required document TYPE (e.g. "ID Card"), not the
-                // uploaded filename — this is a checklist of required types, one row per type,
-                // so that context matters more than the raw filename. The actual filename is
-                // still shown, just as part of the row's footer.
-                const typeName = doc.documentTypeName ?? doc.documentType ?? 'Document';
-                const requiredBadge = doc.isRequired && (
-                  <span className="px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-600 bg-red-50 rounded">
-                    Required
-                  </span>
-                );
-
-                if (!hasFile) {
-                  return (
-                    <div
-                      key={doc.id}
-                      className="px-6 py-3.5 flex items-start gap-3 transition-colors bg-gray-50/30 opacity-80"
-                    >
-                      <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center bg-gray-50 border border-dashed border-gray-200">
-                        <Icon name="file" className="text-base text-gray-300" />
-                      </div>
-                      <div className="min-w-0 flex-1 flex flex-col gap-0.5">
-                        <p className="text-sm font-medium text-gray-900 truncate">{typeName}</p>
-                        <p className="text-xs text-gray-400 italic">No file uploaded</p>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {requiredBadge}
-                        <StatusBadge hasFile={false} />
-                      </div>
-                    </div>
-                  );
-                }
-
-                return (
-                  <div key={doc.id} className="px-6 py-3.5 hover:bg-gray-50/60 transition-colors">
-                    <DocumentFileRow
-                      fileName={typeName}
-                      documentId={doc.documentId}
-                      mimeType={doc.mimeType}
-                      fileSizeBytes={doc.fileSizeBytes}
-                      uploadedAt={doc.uploadedAt}
-                      uploadedByName={doc.uploadedByName}
-                      uploadedBy={doc.uploadedBy}
-                      t={t}
-                      footer={
-                        (doc.fileName || doc.notes) && (
-                          <div className="flex flex-col gap-0.5 mt-0.5">
-                            {doc.fileName && (
-                              <p className="text-xs text-gray-400 truncate">{doc.fileName}</p>
-                            )}
-                            {doc.notes && (
-                              <p className="text-xs text-gray-500 italic flex items-start gap-1">
-                                <Icon
-                                  name="note-sticky"
-                                  className="text-gray-400 mt-0.5 flex-shrink-0"
-                                />
-                                <span className="truncate">{doc.notes}</span>
-                              </p>
-                            )}
-                          </div>
-                        )
-                      }
-                      actions={
-                        <>
-                          {requiredBadge}
-                          <StatusBadge hasFile />
-                          <ActionDropdown
-                            onView={() => openDocumentViewer(doc)}
-                            isEditable={false}
-                          />
-                        </>
-                      }
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          );
-        })}
-
-        {(!requestDocsData || requestDocsData.sections.length === 0) && (
-          <div className="px-6 py-8 text-center text-sm text-gray-400">
-            No request documents found
-          </div>
-        )}
-      </div>
-    </section>
+    <DocumentListView
+      title={t('valuationDocuments.checklist.requestTitle')}
+      icon="file-lines"
+      sections={sections}
+      typeName={typeName}
+      searchText={searchText}
+      editable={false}
+      onView={doc => {
+        if (doc.documentId) viewDocument(doc.documentId, doc.fileSizeBytes, doc.fileName);
+      }}
+      headerExtra={
+        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+          {t('valuationDocuments.checklist.readOnlyTag')}
+        </span>
+      }
+      emptyLabel={t('valuationDocuments.checklist.requestEmpty')}
+    />
   );
 };
 

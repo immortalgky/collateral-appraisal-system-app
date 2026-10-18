@@ -82,7 +82,7 @@
   },
   "formLayout": {
     "label": "Appraisal form layout",
-    "grid": "Grid",
-    "classic": "Classic"
+    "grid": "Compact",
+    "classic": "Standard"
   }
 }

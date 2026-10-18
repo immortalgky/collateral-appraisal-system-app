@@ -73,10 +73,18 @@
     "loadFailed": "Failed to load documents",
     "attach": "Attach document",
     "attachFile": "Attach file",
+    "table": {
+      "file": "Document / file",
+      "uploadedAt": "Uploaded",
+      "uploadedBy": "By"
+    },
     "menu": {
       "view": "View",
       "replace": "Replace with new file",
-      "delete": "Delete"
+      "delete": "Delete",
+      "replaceFile": "Replace {{name}}",
+      "deleteFile": "Delete {{name}}",
+      "viewFile": "View {{name}}"
     },
     "strip": {
       "title": "Appraisal summary report",

@@ -521,7 +521,7 @@ const QuotationSelectionPage = () => {
       {showSentPanel && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-base font-semibold text-gray-700">
               {t('shared.companyResponses')} ({quotation.invitedCompanies?.length ?? 0})
             </h2>
           </div>
@@ -720,7 +720,7 @@ const QuotationSelectionPage = () => {
       {isRmPickPhase && (
         <div className="rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h2 className="text-sm font-semibold text-gray-700">
+            <h2 className="text-base font-semibold text-gray-700">
               {t('draft.shortlistSubmissions')} ({shortlisted.length})
             </h2>
             {showWinnerActions && isIntAdmin && (

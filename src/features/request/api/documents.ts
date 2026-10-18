@@ -273,10 +273,9 @@ export const MAX_INLINE_VIEW_BYTES = 300 * 1024 * 1024;
 /**
  * A plain URL, so the browser downloads it itself rather than this tab holding the bytes.
  *
- * That also means it carries no Authorization header: the token lives in memory and is attached by
- * the axios interceptor, which a raw navigation does not go through. It works because
- * DownloadDocumentEndpoint is `.AllowAnonymous()`. If that is ever secured — it should be — this
- * needs a signed URL or a cookie, and every `<img src>` in the app needs the same.
+ * The browser sends the session cookie on a raw navigation, so this works for a signed-in user
+ * either way. DownloadDocumentEndpoint is still `.AllowAnonymous()` (securing it is a follow-up,
+ * not done here); every `<img src>` in the app relies on the same cookie.
  */
 const documentDownloadUrl = (documentId: string) =>
   `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/documents/${documentId}/download?download=true`;

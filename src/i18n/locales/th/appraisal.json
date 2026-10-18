@@ -20,15 +20,16 @@
     "emptyHint": "ลองปรับเงื่อนไขการค้นหาหรือตัวกรอง",
     "columns": {
       "appraisalNumber": "เลขประเมิน",
+      "appraisalNumberCustomer": "เลขประเมิน / ลูกค้า",
       "customer": "ลูกค้า",
       "status": "สถานะ",
       "priority": "ความสำคัญ",
       "sla": "SLA",
       "province": "จังหวัด",
       "assignment": "การมอบหมาย",
-      "bankingSegment": "กลุ่มธุรกิจ",
-      "purpose": "วัตถุประสงค์",
-      "propertyType": "ประเภทหลักประกัน",
+      "bankingSegment": "กลุ่มลูกค้า",
+      "purposeAndType": "วัตถุประสงค์ · ประเภทงาน",
+      "propertyType": "หลักประกัน",
       "company": "บริษัท",
       "appointment": "นัดหมาย",
       "created": "วันที่สร้าง",
@@ -55,8 +56,8 @@
       "createdTo": "สร้างถึง",
       "slaDueFrom": "กำหนด SLA ตั้งแต่",
       "slaDueTo": "กำหนด SLA ถึง",
-      "bankingSegmentLabel": "กลุ่มธุรกิจ",
-      "bankingSegmentPlaceholder": "ทุกกลุ่มธุรกิจ",
+      "bankingSegmentLabel": "กลุ่มลูกค้า",
+      "bankingSegmentPlaceholder": "ทุกกลุ่มลูกค้า",
       "purposeLabel": "วัตถุประสงค์",
       "purposePlaceholder": "ทุกวัตถุประสงค์",
       "propertyTypeLabel": "ประเภทหลักประกัน",
@@ -71,6 +72,9 @@
       "slaDue": "กำหนด SLA",
       "assigneeUserId": "ผู้รับผิดชอบ",
       "add": "เพิ่มตัวกรอง",
+      "more": "อื่นๆ +{{count}}",
+      "moreAria_one": "{{label}} (ตัวกรองอื่น {{count}} รายการ)",
+      "moreAria_other": "{{label}} (ตัวกรองอื่น {{count}} รายการ)",
       "searchIn": "ค้นหา{{label}}…",
       "showingOf": "แสดง {{shown}} จาก {{total}}",
       "typeToFind": "พิมพ์เพื่อค้นหาที่เหลือ",
@@ -132,6 +136,7 @@
     "searchTooShort": "พิมพ์อย่างน้อย {{count}} ตัวอักษรเพื่อค้นหา",
     "searchPrefixHint": "ค้นจากต้นคำ พิมพ์ * นำหน้าเพื่อค้นแบบมีคำนั้นอยู่ตรงกลาง",
     "searchSubstringHint": "ค้นแบบมีคำนั้นอยู่ตรงไหนก็ได้ในค่านั้น",
+    "exportTruncatedTitle": "ไฟล์ส่งออกจะถูกตัด",
     "exportTruncatedWarning": "ผลการค้นหามี {{total}} รายการ แต่ไฟล์ส่งออกได้สูงสุด {{max}} แถว ไฟล์จะถูกตัดให้สั้นลง ต้องการดำเนินการต่อหรือไม่",
     "exportFailed": "ส่งออกไม่สำเร็จ กรุณาลองใหม่อีกครั้ง",
     "searchFieldLabel": "ค้นหาใน",
@@ -157,9 +162,23 @@
       "nearing-deadline": "ใกล้ครบกำหนด",
       "external-assignments": "งานบริษัทภายนอก",
       "my-company-queue": "คิวบริษัทของฉัน",
+      "moreAria_one": "{{label}} (มุมมองอื่นอีก {{count}} รายการ)",
+      "moreAria_other": "{{label}} (มุมมองอื่นอีก {{count}} รายการ)",
       "all": "งานทั้งหมด",
       "my-requests": "งานคำขอของฉัน"
     },
+    "smartViewDescriptions": {
+      "my-assignments": "งานประเมินที่มอบหมายให้คุณในขณะนี้",
+      "my-requests": "งานประเมินในคำขอที่คุณสร้างในฐานะผู้ขอ",
+      "sla-at-risk": "งานที่ยังดำเนินอยู่ซึ่ง SLA เสี่ยงเกินหรือเกินกำหนดแล้ว",
+      "todays-appointments": "งานประเมินที่มีนัดดูทรัพย์ในวันนี้",
+      "unassigned": "งานประเมินที่ยังไม่ได้มอบหมาย",
+      "high-priority-active": "งานประเมินที่มีความสำคัญสูงและกำลังดำเนินการอยู่",
+      "nearing-deadline": "งานประเมินที่ครบกำหนด SLA ภายใน 3 วันข้างหน้า",
+      "external-assignments": "งานประเมินที่มอบหมายให้บริษัทภายนอกและยังดำเนินอยู่",
+      "my-company-queue": "งานประเมินที่มอบหมายให้บริษัทของคุณ"
+    },
+    "priorityHigh": "ความสำคัญสูง",
     "saved": "ที่บันทึกไว้",
     "saveCurrentSearch": "บันทึกการค้นหานี้",
     "searchNamePlaceholder": "ตั้งชื่อการค้นหา...",
@@ -178,7 +197,7 @@
       "coverage": {
         "numbers": "เลขที่ประเมิน · เลขที่คำขอ · เลขที่ใบสมัครสินเชื่อ · เลขที่ประเมินครั้งก่อน",
         "people": "ชื่อลูกค้า (ทุกคนในคำขอ) · เบอร์ลูกค้า · ชื่อและเบอร์ผู้ติดต่อ · ชื่อผู้ขอ",
-        "properties": "เลขที่โฉนด · เลขที่ดิน · เลขห้อง · ทะเบียนรถ · ชื่อเจ้าของ · ชื่อโครงการ · ชื่ออาคารชุด",
+        "properties": "เลขที่โฉนด · เลขที่ดิน · เลขห้อง · ทะเบียนรถ · ชื่อผู้ถือกรรมสิทธิ์ · ชื่อโครงการ · ชื่ออาคารชุด",
         "places": "ชื่อจังหวัด อำเภอ ตำบล (เมื่อคำที่พิมพ์เป็นชื่อที่อยู่)"
       }
     },
@@ -193,10 +212,12 @@
       "label": "จัดกลุ่ม",
       "none": "ไม่จัดกลุ่ม",
       "current": "จัดกลุ่ม: {{label}}",
-      "empty": "ไม่ระบุ"
+      "empty": "ไม่ระบุ",
+      "error": "โหลดจำนวนของกลุ่มไม่สำเร็จ"
     },
     "suggest": {
       "goTo": "ไปที่ใบประเมิน",
+      "scope": "ค้นในฟิลด์",
       "searchIn": "ค้นหา “{{term}}” ใน",
       "recent": "ค้นหาล่าสุด",
       "matches": "{{count}} รายการ",
@@ -563,9 +584,6 @@
       "totalAppraisalPriceReview": "ราคาประเมินรวม (ทบทวน)",
       "forceSellingPriceReview": "ราคาขายบังคับ (ทบทวน)",
       "buildingInsuranceReview": "ประกันสิ่งปลูกสร้าง (ทบทวน)",
-      "verifiedStaleTitle": "ราคาเปลี่ยนหลังตรวจสอบราคาแล้ว",
-      "verifiedStaleHint": "เล่มรายงานและ AS400 ยังใช้ค่าที่ตรวจสอบไว้ จนกว่าจะยืนยันใหม่",
-      "verifiedStaleAction": "ใช้ค่าปัจจุบัน",
       "condition": "เงื่อนไข",
       "conditionType": "ประเภทเงื่อนไข",
       "conditionTypePlaceholder": "เลือกประเภทเงื่อนไข...",
@@ -627,7 +645,6 @@
       "validationErrorsTitle": "กรุณากรอกข้อมูลที่จำเป็นให้ครบถ้วน",
       "voteTitle": "ยืนยันการลงคะแนน",
       "voteMessage": "ส่งแล้วแก้ไขไม่ได้",
-      "voteAck": "ฉันต้องการลงคะแนน \"{{vote}}\" ต่อราคาประเมินนี้",
       "summary": {
         "decision": "การตัดสินใจ",
         "destination": "ขั้นตอนถัดไป",
@@ -643,12 +660,11 @@
     "toasts": {
       "saved": "บันทึกสรุปการตัดสินใจสำเร็จ",
       "saveFailed": "ไม่สามารถบันทึกสรุปการตัดสินใจได้ กรุณาลองใหม่",
-      "submitted": "ส่งการตัดสินใจสำเร็จ",
       "submitFailed": "ไม่สามารถส่งการตัดสินใจได้",
       "validationErrors": "เกิดข้อผิดพลาดในการตรวจสอบ",
       "forceSaleRateSaved": "บันทึกอัตราราคาขายบังคับสำเร็จ",
       "forceSaleRateFailed": "ไม่สามารถบันทึกอัตราราคาขายบังคับได้ กรุณาลองใหม่",
-      "voteNeedsComment": "กรุณาระบุความคิดเห็นและยืนยันการลงคะแนนก่อนส่ง"
+      "voteNeedsComment": "กรุณาระบุความคิดเห็นก่อนลงคะแนน"
     }
   },
   "decision": {
@@ -681,7 +697,32 @@
     "destination": {
       "forward": "ไปที่ {{name}}",
       "back": "กลับไป {{name}}",
-      "cancel": "จบ workflow"
+      "cancel": "จบ workflow",
+      "final": "จบ workflow ที่ขั้นนี้"
+    },
+    "route": {
+      "title": "เส้นทางงาน",
+      "showEarlier_one": "แสดงอีก {{count}} ขั้นก่อนหน้า",
+      "showEarlier_other": "แสดงอีก {{count}} ขั้นก่อนหน้า",
+      "hideEarlier": "ซ่อนขั้นก่อนหน้า",
+      "here": "ขั้นนี้",
+      "inProgress": "กำลังดำเนินการ",
+      "awaitingVote": "รอลงมติ",
+      "showMore": "ดูเพิ่ม",
+      "showLess": "ย่อ",
+      "returnsHere": "งานจะกลับมาที่นี่",
+      "statusCompleted": "เสร็จสิ้น",
+      "statusRoutedBack": "ส่งกลับ",
+      "previewSr": "ตัวอย่างว่างานจะไปที่ไหนเมื่อกดส่ง:",
+      "ghostIdle": "เลือกการตัดสินใจเพื่อดูว่างานจะไปที่ไหน",
+      "final": "จบ workflow",
+      "finalMeta": "ใบงานนี้จะเสร็จสมบูรณ์",
+      "cancel": "ยกเลิกใบงาน",
+      "cancelMeta": "workflow สิ้นสุดที่ขั้นนี้",
+      "assignee": "ผู้รับ {{name}}",
+      "assigneeMissing": "ยังไม่ได้เลือกผู้รับ",
+      "backTo": "ส่งกลับไป {{title}}",
+      "previousStep": "ขั้นตอนก่อนหน้า"
     },
     "committeeVotes": "ผลโหวต",
     "votesSummary": "ลงคะแนนแล้ว {{received}}/{{total}}",
@@ -690,6 +731,12 @@
     "yourVote": "คะแนนของคุณ",
     "nextStep": "ขั้นตอนถัดไป",
     "voteImpact": "{{from}} → {{to}} เสียง",
+    "voteImpactMet": "{{from}} → {{to}} เสียง · ครบเกณฑ์",
+    "voteImpactShort": "{{from}} → {{to}} เสียง · ยังขาด {{left}}",
+    "voteTag": "มติ",
+    "voteBackNow": "ส่งกลับทันที → {{name}}",
+    "voteBackNowNoName": "ส่งกลับทันที",
+    "voteNeedsReason": "ต้องระบุเหตุผล",
     "votesLoadFailed": "โหลดผลโหวตของกรรมการไม่สำเร็จ",
     "noActions": "ไม่มีตัวเลือกการตัดสินใจสำหรับงานนี้ กรุณารีเฟรชหน้า หรือติดต่อผู้ดูแลระบบหากยังพบปัญหา"
   },
@@ -732,7 +779,7 @@
         "latitude": "ละติจูด",
         "longitude": "ลองจิจูด",
         "obligation": "ภาระผูกพัน",
-        "other": "อื่นๆ"
+        "other": "หมายเหตุ"
       },
       "suggested": {
         "applyEmpty": "เติมช่องที่ว่าง",
@@ -754,7 +801,7 @@
         "condition": "สภาพโดยรวมและตลาด",
         "ownership": "กรรมสิทธิ์",
         "location": "ที่ตั้ง",
-        "obligation": "ภาระผูกพันและหมายเหตุ"
+        "remarks": "หมายเหตุ"
       },
       "table": {
         "item": "รายการ",
@@ -762,6 +809,7 @@
         "derived": "คำนวณได้",
         "source": "ที่มา",
         "use": "ใช้",
+        "useDisabled": "ตรงกับค่าที่คำนวณได้แล้ว",
         "ungrouped": "ยังไม่จัดกลุ่ม",
         "sourceSentence": "มาจาก {{list}}",
         "sourcePart_other": "{{group}} {{count}} เครื่อง",
@@ -1139,7 +1187,6 @@
       "encroachingArea": "พื้นที่ที่รุกล้ำผู้อื่น",
       "encroachingOthers": "รุกล้ำที่ผู้อื่น",
       "encroachingRemark": "หมายเหตุการรุกล้ำผู้อื่น",
-      "encroachmentArea": "พื้นที่ถูกรุกล้ำ",
       "encroachmentRemark": "หมายเหตุการรุกล้ำ",
       "energyUse": "การใช้พลังงาน",
       "engineNo": "เลขเครื่องยนต์",
@@ -1153,7 +1200,6 @@
       "fence": "รั้ว",
       "floor": "ชั้นที่",
       "floors": "จำนวนชั้น",
-      "forcedSalePrice": "ราคาบังคับขาย",
       "forestBoundary": "แนวเขตป่า",
       "forestBoundaryRemark": "หมายเหตุแนวเขตป่า",
       "governmentPrice": "ราคาประเมินราชการ",
@@ -1219,7 +1265,6 @@
       "roomLayout": "ผังห้อง",
       "roomNo": "เลขที่ห้อง",
       "royalDecree": "พระราชกฤษฎีกา",
-      "sellingPrice": "ราคาขาย",
       "series": "ซีรีส์",
       "sidesFacingRoad": "จำนวนด้านที่ติดถนน",
       "soi": "ซอย",
@@ -1297,7 +1342,8 @@
         "date": "วันที่",
         "value": "มูลค่า",
         "status": "สถานะ"
-      }
+      },
+      "legacyBook": "หมายเลขประเมินจาก AS400"
     }
   },
   "activityTracking": {
@@ -1472,7 +1518,88 @@
       "saved": "บันทึกรายการตรวจเอกสารแล้ว"
     }
   },
+  "photoSourceModal": {
+    "title": "เพิ่มรูปภาพ",
+    "uploadTitle": "อัปโหลดจากเครื่อง",
+    "uploadHint": "เลือกรูปจากคอมพิวเตอร์หรืออุปกรณ์ของคุณ",
+    "galleryTitle": "เลือกจากแกลเลอรี",
+    "galleryHint": "เลือกจากรูปที่อัปโหลดไว้แล้ว",
+    "supports": "รองรับ: {{types}} (สูงสุด 50MB ต่อไฟล์)",
+    "close": "ปิด"
+  },
+  "gallerySelection": {
+    "title": "เลือกจากแกลเลอรี",
+    "available_one": "มีรูปภาพ {{count}} รูป",
+    "available_other": "มีรูปภาพ {{count}} รูป",
+    "searchPlaceholder": "ค้นหาตามชื่อหรือคำอธิบาย...",
+    "showing": "แสดง {{shown}} จาก {{total}}",
+    "selectAll": "เลือกทั้งหมด",
+    "selected_one": "เลือกแล้ว {{count}} รูป",
+    "selected_other": "เลือกแล้ว {{count}} รูป",
+    "clearSelection": "ล้างที่เลือก",
+    "noPhotos": "ไม่พบรูปภาพ",
+    "tryDifferent": "ลองใช้คำค้นอื่น",
+    "uploadFirst": "อัปโหลดรูปไปที่แกลเลอรีก่อน",
+    "readyToAdd_one": "พร้อมเพิ่ม {{count}} รูป",
+    "readyToAdd_other": "พร้อมเพิ่ม {{count}} รูป",
+    "clickToSelect": "คลิกรูปเพื่อเลือก",
+    "cancel": "ยกเลิก",
+    "add_one": "เพิ่ม {{count}} รูป",
+    "add_other": "เพิ่ม {{count}} รูป",
+    "selectPhoto": "เลือกรูป",
+    "close": "ปิด"
+  },
   "valuationDocuments": {
+    "appendix": {
+      "title": "เอกสารภาคผนวก",
+      "addFiles": "เพิ่มไฟล์",
+      "addTo": "เพิ่ม {{name}}",
+      "editImage": "แก้ไขรูป",
+      "empty": "ไม่พบหมวดภาคผนวก",
+      "loading": "กำลังโหลดภาคผนวก...",
+      "loadFailed": "โหลดภาคผนวกไม่สำเร็จ",
+      "galleryFailed": "โหลดแกลเลอรีไม่สำเร็จ",
+      "deleteDialog": {
+        "title": "ลบเอกสาร",
+        "message": "ต้องการลบเอกสารนี้ใช่หรือไม่ การดำเนินการนี้ไม่สามารถย้อนกลับได้",
+        "confirm": "ลบ"
+      }
+    },
+    "appendixTypes": {
+      "BRIEF_MAP": "แผนที่สังเขป",
+      "DETAILED_MAP": "แผนที่ละเอียด",
+      "EARTH_MAP": "แผนที่ Earth",
+      "LAND_MAP": "ระวางแดง",
+      "CITY_PLAN": "ผังเมือง",
+      "STATUTORY_PLAN": "ผังตามกฎหมาย",
+      "LAND_PLAN": "ผังที่ดิน",
+      "BUILDING_LAYOUT": "ผังสิ่งปลูกสร้าง",
+      "BLUEPRINT": "แบบแปลน",
+      "PHOTO_SPOT": "รูปถ่ายกับจุดถ่ายภาพ",
+      "REG_INDEX": "สารบัญจดทะเบียน"
+    },
+    "checklist": {
+      "tablistLabel": "ส่วนของเอกสาร",
+      "tabs": {
+        "request": "เอกสารคำขอ",
+        "valuation": "เอกสารประเมิน",
+        "appendix": "สร้างเล่มรายงาน"
+      },
+      "tabCounts": {
+        "missing": "ขาด {{count}}",
+        "complete": "ครบ",
+        "files_one": "{{count}} ไฟล์",
+        "files_other": "{{count}} ไฟล์"
+      },
+      "requestTitle": "เอกสารคำขอ",
+      "readOnlyTag": "อ่านอย่างเดียว",
+      "requestEmpty": "ไม่พบเอกสารคำขอ",
+      "requestLoadFailed": "โหลดเอกสารคำขอไม่สำเร็จ",
+      "valuationEmpty": "ไม่พบประเภทเอกสาร",
+      "typesWithFiles": "{{done}}/{{total}} ประเภท",
+      "noteSaved": "บันทึกหมายเหตุแล้ว",
+      "noteSaveFailed": "บันทึกหมายเหตุไม่สำเร็จ"
+    },
     "sections": {
       "documentChecklist": "รายการตรวจเอกสาร",
       "appraisalBookBuilder": "จัดทำเล่มรายงานการประเมิน",
@@ -1488,11 +1615,7 @@
     "typesCount_one": "{{count}} ประเภท",
     "typesCount_other": "{{count}} ประเภท",
     "progress": "แนบแล้ว {{uploaded}} / {{total}}",
-    "expandAll": "ขยายทั้งหมด",
-    "collapseAll": "ย่อทั้งหมด",
     "noFile": "ไม่มีไฟล์",
-    "fileCount_one": "{{count}} ไฟล์",
-    "fileCount_other": "{{count}} ไฟล์",
     "attach": "แนบไฟล์",
     "generate": "สร้างรายงาน",
     "view": "ดู",
@@ -1500,6 +1623,7 @@
     "uploadedBy": "อัปโหลดโดย {{name}}",
     "empty": "ยังไม่มีไฟล์แนบ",
     "noTypes": "ไม่พบประเภทเอกสาร",
+    "untitledFile": "ไม่มีชื่อไฟล์",
     "loadFailed": "ไม่สามารถโหลดรายการตรวจเอกสารได้",
     "deleteDialog": {
       "title": "ลบเอกสาร",
@@ -1526,6 +1650,8 @@
     "openInNewTab": "เปิดในแท็บใหม่",
     "generatePreview": "สร้างตัวอย่าง",
     "idleHint": "สร้างตัวอย่างรายงานประเมินเพื่อดูที่นี่",
+    "noPreviewYet": "ยังไม่มีตัวอย่างเล่ม",
+    "previewUnavailable": "แสดงตัวอย่างเล่มไม่ได้",
     "generating": "กำลังสร้างตัวอย่าง…",
     "fetchFailed": "ไม่สามารถโหลดตัวอย่างรายงานได้",
     "renderFailed": "ไม่สามารถแสดงตัวอย่างรายงานได้",
@@ -1900,7 +2026,6 @@
       "otherGroup": "อื่น ๆ",
       "workGroupsFailed": "โหลดรายการงานต้นแบบไม่สำเร็จ — โหลดหน้าใหม่เพื่อเพิ่มรายการ",
       "workGroupsLoading": "กำลังโหลดรายการงาน…",
-      "confirmDelete": "ลบ?",
       "remove": "ลบ {{name}}",
       "empty": "ยังไม่มีรายการงาน — เลือก \"＋ เพิ่มรายการ…\" ที่หัวกลุ่ม แล้วใส่สัดส่วนให้รวมได้ 100%",
       "emptyReadOnly": "ไม่มีรายการงาน"
@@ -1994,6 +2119,14 @@
     "machinery": {
       "sectionTitle": "รายละเอียดเครื่องจักร"
     },
+    "pma": {
+      "groups": {
+        "titleInfo": "ข้อมูลเอกสารสิทธิ์",
+        "condoInfo": "ข้อมูลห้องชุด",
+        "titleAddress": "ที่อยู่ตามเอกสารสิทธิ์",
+        "value": "ข้อมูลราคา"
+      }
+    },
     "titleDeed": {
       "sectionTitle": "โฉนดที่ดิน"
     },
@@ -2020,6 +2153,12 @@
       "generate": "คำนวณ",
       "generating": "กำลังคำนวณ...",
       "scheduleEmpty": "กด คำนวณ เพื่อสร้างตารางค่าเช่า",
+      "upFrontCount_one": "· {{count}} รายการ",
+      "upFrontCount_other": "· {{count}} รายการ",
+      "scheduleYears_one": "· {{count}} ปี",
+      "scheduleYears_other": "· {{count}} ปี",
+      "growthPeriodCount_one": "· {{count}} ช่วง",
+      "growthPeriodCount_other": "· {{count}} ช่วง",
       "upFrontMismatch": "ยอดรวมค่าเช่าล่วงหน้าในตาราง ({{entries}}) ไม่ตรงกับค่าเช่าจ่ายล่วงหน้า ({{total}})",
       "table": {
         "atYear": "ตั้งแต่ปีที่",
@@ -2312,11 +2451,15 @@
     "navBuilding": "อาคาร",
     "navConstructionInspection": "รายละเอียดงานก่อสร้าง",
     "navMachinery": "เครื่องจักร",
+    "navPma": "ข้อมูล PMA",
     "saveDraft": "บันทึกร่าง",
     "save": "บันทึก"
   },
   "landCharacteristicsForm": {
-    "deductionsLabel": "สาเหตุ",
+    "deductionsTitle": "รายการหักเนื้อที่",
+    "deductionsSummary_one": "· {{count}} รายการ · หัก {{area}} ตร.ว.",
+    "deductionsSummary_other": "· {{count}} รายการ · หัก {{area}} ตร.ว.",
+    "addDeduction": "เพิ่มรายการ",
     "confirmClearDeductions": {
       "title": "ยืนยันการปิดการหักเนื้อที่",
       "message": "ระบบจะลบรายการหักเนื้อที่ที่คีย์ไว้ ({{count}} รายการ) และคืนเนื้อที่ประเมินเป็นเนื้อที่ตามโฉนด"
@@ -2545,8 +2688,8 @@
     "conditionMinVotesDefault": "ต้องการจำนวนคะแนนขั้นต่ำ",
     "stats": {
       "votesReceived": "จำนวนโหวต",
-      "approve": "อนุมัติ",
-      "reject": "ไม่อนุมัติ",
+      "approve": "เห็นด้วย",
+      "reject": "ไม่เห็นด้วย",
       "routeBack": "ส่งกลับ"
     },
     "voteLabels": {
@@ -2655,6 +2798,14 @@
     "untitled": "ยังไม่ตั้งชื่อ",
     "newHint": "บันทึกแล้วข้อมูลหลักจะแสดงที่นี่",
     "position": "{{group}} · ชิ้นที่ {{n}}",
+    "pmaSuffix": "PMA",
+    "pmaTitle": "อัปเดตทรัพย์สิน PMA",
+    "pmaSync": {
+      "synced": "ซิงก์แล้ว",
+      "pending": "รอซิงก์",
+      "failed": "ซิงก์ไม่สำเร็จ",
+      "retryHint": "· กดบันทึกเพื่อลองใหม่"
+    },
     "titleCount": "เอกสารสิทธิ์ {{n}} ฉบับ",
     "titleNo": "เอกสารสิทธิ์ {{no}}"
   },
@@ -2750,6 +2901,12 @@
     "viewLabel": "มุมมอง",
     "viewDocument": "หน้าเอกสาร",
     "viewForm": "ฟอร์ม",
+    "nav": {
+      "group": "เลื่อนดูโฉนด",
+      "prev": "โฉนดก่อนหน้า",
+      "next": "โฉนดถัดไป",
+      "position": "{{current}} / {{total}}"
+    },
     "typeLabel": "ประเภท",
     "summary": "เลขที่ {{no}} · {{area}} ไร่",
     "required": "จำเป็นต้องกรอก",
@@ -2876,9 +3033,24 @@
       "north": "ทิศเหนือ",
       "south": "ทิศใต้",
       "east": "ทิศตะวันออก",
-      "west": "ทิศตะวันตก"
+      "west": "ทิศตะวันตก",
+      "condo": {
+        "title": "หนังสือกรรมสิทธิ์ห้องชุด",
+        "sub": "(อ.ช.2)",
+        "landDeed": "โฉนดที่ดินเลขที่",
+        "location": "ที่ตั้งห้องชุด"
+      }
     },
     "list": {
+      "sortByNumber": "เรียงตามเลขโฉนด",
+      "dnd": {
+        "handle": "ลากเพื่อจัดลำดับ",
+        "instructions": "กด Space เพื่อยกโฉนด ใช้ปุ่มลูกศรเพื่อเลื่อน และกด Space อีกครั้งเพื่อวาง กด Esc เพื่อยกเลิก",
+        "pickedUp": "ยกโฉนดลำดับที่ {{pos}}",
+        "movedTo": "โฉนดลำดับที่ {{pos}} อยู่เหนือลำดับที่ {{to}}",
+        "dropped": "ย้ายโฉนดลำดับที่ {{pos}} ไปลำดับที่ {{to}} แล้ว",
+        "cancelled": "ยกเลิกการย้าย โฉนดลำดับที่ {{pos}} อยู่ที่เดิม"
+      },
       "type": "ประเภท",
       "document": "เลขที่ · เล่ม · หน้า",
       "position": "ตำแหน่งที่ดิน",
@@ -3202,6 +3374,8 @@
   "surfaceTable": {
     "sectionLabel": "พื้นแต่ละชั้น",
     "addFloor": "เพิ่มชั้น",
+    "itemCount_one": "· {{count}} รายการ",
+    "itemCount_other": "· {{count}} รายการ",
     "empty": "ยังไม่มีข้อมูลพื้น",
     "otherPlaceholder": "ระบุ",
     "reversed": "ถึงชั้นที่น้อยกว่าจากชั้นที่",

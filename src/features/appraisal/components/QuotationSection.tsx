@@ -1514,7 +1514,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                   <Icon name="file-check" style="solid" className="size-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     {t('quotation.shareDocuments.title')}
                   </h3>
                   <p className="text-xs text-gray-500">{t('quotation.shareDocuments.step')}</p>

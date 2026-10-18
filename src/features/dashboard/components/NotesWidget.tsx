@@ -124,7 +124,7 @@ function NotesWidget() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
-          <h3 className="font-semibold text-gray-800">{t('notes.title')}</h3>
+          <h3 className="text-base font-semibold text-gray-800">{t('notes.title')}</h3>
           <button
             type="button"
             onClick={handleOpenNew}

@@ -7,27 +7,32 @@ import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import { formatLocaleDate } from '@shared/utils/dateUtils';
 import { useTranslation } from 'react-i18next';
+import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
+import { formatCurrency } from '@/shared/utils/formatUtils';
 import { useCollateralCatalog } from '../api/hooks';
 import type { CollateralCatalogParams, CollateralType } from '../api/types';
 
-const TYPE_OPTIONS: { value: CollateralType | ''; label: string }[] = [
-  { value: '', label: 'All types' },
-  { value: 'Land', label: 'Land' },
-  { value: 'Condo', label: 'Condo' },
-  { value: 'Leasehold', label: 'Leasehold' },
-  { value: 'Machine', label: 'Machine' },
-];
-
 const TYPE_ICON: Record<CollateralType, string> = {
-  Land: 'mountain-sun',
-  Condo: 'building-user',
-  Leasehold: 'file-contract',
-  Machine: 'gear',
+  L: 'mountain-sun',
+  LB: 'mountain-sun',
+  U: 'building-user',
+  LSL: 'file-contract',
+  LSB: 'file-contract',
+  LS: 'file-contract',
+  LSU: 'file-contract',
+  MAC: 'gear',
+  PRJ: 'building',
+  UNK: 'circle-question',
 };
+
+const TYPE_CODES = Object.keys(TYPE_ICON) as CollateralType[];
 
 export default function CollateralCatalogPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // PropertyType uses the same codes as the backend's collateral types; unknown ones show as the code
+  const typeLabel = usePropertyTypeLabels();
+  const provinceName = useProvinceName();
 
   // Filters
   const [type, setType] = useState<CollateralType | ''>('');
@@ -71,7 +76,13 @@ export default function CollateralCatalogPage() {
     setPage(0);
   };
 
-  const hasFilters = type || province || owner || isUnderConstruction != null || lastAppraisedFrom || lastAppraisedTo;
+  const hasFilters =
+    type ||
+    province ||
+    owner ||
+    isUnderConstruction != null ||
+    lastAppraisedFrom ||
+    lastAppraisedTo;
 
   if (isError) {
     return (
@@ -89,7 +100,7 @@ export default function CollateralCatalogPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">Collateral Masters</h3>
+            <h3 className="text-base font-semibold text-gray-900">Collateral Masters</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
@@ -98,7 +109,11 @@ export default function CollateralCatalogPage() {
             Admin catalog of all collateral masters (Land / Condo / Leasehold / Machine)
           </p>
         </div>
-        <Button size="sm" onClick={() => navigate('/admin/collateral-masters/backfill')} variant="outline">
+        <Button
+          size="sm"
+          onClick={() => navigate('/admin/collateral-masters/backfill')}
+          variant="outline"
+        >
           <Icon style="solid" name="database" className="size-3.5 mr-1.5" />
           Backfill Report
         </Button>
@@ -109,11 +124,17 @@ export default function CollateralCatalogPage() {
         {/* Type */}
         <select
           value={type}
-          onChange={e => { setType(e.target.value as CollateralType | ''); setPage(0); }}
+          onChange={e => {
+            setType(e.target.value as CollateralType | '');
+            setPage(0);
+          }}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 min-w-32"
         >
-          {TYPE_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          <option value="">{t('collateralMaster.allTypes')}</option>
+          {TYPE_CODES.map(code => (
+            <option key={code} value={code}>
+              {typeLabel(code)}
+            </option>
           ))}
         </select>
 
@@ -122,7 +143,10 @@ export default function CollateralCatalogPage() {
           type="text"
           placeholder="Province..."
           value={province}
-          onChange={e => { setProvince(e.target.value); setPage(0); }}
+          onChange={e => {
+            setProvince(e.target.value);
+            setPage(0);
+          }}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 w-36"
         />
 
@@ -131,7 +155,10 @@ export default function CollateralCatalogPage() {
           type="text"
           placeholder="Owner..."
           value={owner}
-          onChange={e => { setOwner(e.target.value); setPage(0); }}
+          onChange={e => {
+            setOwner(e.target.value);
+            setPage(0);
+          }}
           className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 w-40"
         />
 
@@ -155,7 +182,10 @@ export default function CollateralCatalogPage() {
           <input
             type="date"
             value={lastAppraisedFrom}
-            onChange={e => { setLastAppraisedFrom(e.target.value); setPage(0); }}
+            onChange={e => {
+              setLastAppraisedFrom(e.target.value);
+              setPage(0);
+            }}
             className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300"
           />
         </div>
@@ -166,7 +196,10 @@ export default function CollateralCatalogPage() {
           <input
             type="date"
             value={lastAppraisedTo}
-            onChange={e => { setLastAppraisedTo(e.target.value); setPage(0); }}
+            onChange={e => {
+              setLastAppraisedTo(e.target.value);
+              setPage(0);
+            }}
             className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300"
           />
         </div>
@@ -185,14 +218,26 @@ export default function CollateralCatalogPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Type</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Identity</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Owner</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Province</th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5">Engagements</th>
-                <th className="text-left font-medium text-gray-600 px-4 py-2.5">Last Appraised</th>
-                <th className="text-right font-medium text-gray-600 px-4 py-2.5">Last Value</th>
-                <th className="text-center font-medium text-gray-600 px-4 py-2.5">Status</th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">Type</th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Identity
+                </th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">Owner</th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Province
+                </th>
+                <th className="text-xs text-center font-semibold text-gray-600 px-4 py-2.5">
+                  Engagements
+                </th>
+                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  Last Appraised
+                </th>
+                <th className="text-xs text-right font-semibold text-gray-600 px-4 py-2.5">
+                  Last Value
+                </th>
+                <th className="text-xs text-center font-semibold text-gray-600 px-4 py-2.5">
+                  Status
+                </th>
               </tr>
             </thead>
             <tbody
@@ -222,7 +267,9 @@ export default function CollateralCatalogPage() {
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-gray-500 font-medium">No collateral masters found</p>
                       <p className="text-xs text-gray-400">
-                        {hasFilters ? 'Try different filters' : 'Run backfill to import existing appraisals'}
+                        {hasFilters
+                          ? 'Try different filters'
+                          : 'Run backfill to import existing appraisals'}
                       </p>
                     </div>
                   </td>
@@ -246,17 +293,19 @@ export default function CollateralCatalogPage() {
                             className="size-3.5 text-primary"
                           />
                         </div>
-                        <span className="font-medium text-gray-900 text-xs">{item.collateralType}</span>
+                        <span className="font-medium text-gray-900 text-xs">
+                          {typeLabel(item.collateralType)}
+                        </span>
                       </div>
                     </td>
                     <td className="px-4 py-2.5 font-mono text-xs text-gray-700 max-w-[220px] truncate">
-                      {item.dedupKeySnippet}
+                      {item.land_TitleNumber ?? item.condo_CondoName ?? '—'}
                     </td>
                     <td className="px-4 py-2.5 text-gray-600 text-xs max-w-[140px] truncate">
                       {item.ownerName ?? '—'}
                     </td>
                     <td className="px-4 py-2.5 text-gray-600 text-xs">
-                      {item.province ?? '—'}
+                      {provinceName(item.land_Province ?? item.condo_Province) || '—'}
                     </td>
                     <td className="px-4 py-2.5 text-center tabular-nums text-gray-700">
                       {item.engagementCount}
@@ -266,7 +315,7 @@ export default function CollateralCatalogPage() {
                     </td>
                     <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 text-xs">
                       {item.lastAppraisedValue != null
-                        ? `฿${item.lastAppraisedValue.toLocaleString('th-TH')}`
+                        ? formatCurrency(item.lastAppraisedValue)
                         : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-center">
@@ -305,7 +354,10 @@ export default function CollateralCatalogPage() {
           totalCount={totalCount}
           pageSize={pageSize}
           onPageChange={setPage}
-          onPageSizeChange={size => { setPageSize(size); setPage(0); }}
+          onPageSizeChange={size => {
+            setPageSize(size);
+            setPage(0);
+          }}
         />
       </div>
     </div>

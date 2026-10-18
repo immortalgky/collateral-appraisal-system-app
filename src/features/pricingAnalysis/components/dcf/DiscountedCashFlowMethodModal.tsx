@@ -297,7 +297,7 @@ export function DiscountedCashFlowMethodModal({
                 onClick={() => {
                   onCancelEditMode();
                 }}
-                className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
               >
                 {t('footer.cancel')}
               </Button>
@@ -306,7 +306,7 @@ export function DiscountedCashFlowMethodModal({
                 variant="primary"
                 size="sm"
                 disabled={isReadOnly}
-                className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+                className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
               >
                 {t('footer.save')}
               </Button>

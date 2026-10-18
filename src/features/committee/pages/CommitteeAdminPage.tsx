@@ -991,7 +991,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <h3 className="text-sm font-semibold text-gray-700">{t('summary.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-700">{t('summary.title')}</h3>
             {committee.description && (
               <p className="mt-0.5 text-xs text-gray-500">{committee.description}</p>
             )}
@@ -1020,7 +1020,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
           Members because they are evaluated against member roles. */}
       <div className="rounded-lg border border-gray-200 bg-white p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-gray-700">
+          <h3 className="text-base font-semibold text-gray-700">
             {t('conditions.title', { count: conditions.filter(c => c.isActive).length })}
           </h3>
           <Button
@@ -1085,7 +1085,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
       </div>
 
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-700">
+        <h3 className="text-base font-semibold text-gray-700">
           {t('panel.membersActive', { count: members.filter(m => m.isActive).length })}
         </h3>
         <Button size="sm" type="button" onClick={addMemberDialog.onOpen}>
@@ -1098,7 +1098,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
         <p className="text-sm text-gray-400 italic py-4 text-center">{t('panel.noMembers')}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
+          <table className="min-w-full divide-y divide-gray-200 text-table">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
@@ -1113,7 +1113,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                 <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
                   {t('columns.status')}
                 </th>
-                <th className="w-20 px-4 py-2.5" />
+                <th className="text-xs w-20 px-4 py-2.5 font-semibold" />
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -1214,7 +1214,7 @@ const CommitteeAdminPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
       <div className="shrink-0">
-        <h3 className="text-sm font-semibold text-gray-900">{t('page.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
         <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
       </div>
 

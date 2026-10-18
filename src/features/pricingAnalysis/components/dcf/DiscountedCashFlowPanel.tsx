@@ -521,7 +521,7 @@ export function DiscountedCashFlowPanel({
               type="button"
               onClick={onCancelCalculationMethod}
               disabled={isSubmitting}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
             >
               {t('footer.cancel')}
             </Button>
@@ -543,7 +543,7 @@ export function DiscountedCashFlowPanel({
               form={formId}
               isLoading={isSubmitting}
               disabled={isSubmitting}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
             >
               {!isSubmitting && (
                 <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />

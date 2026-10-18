@@ -146,7 +146,7 @@ function SortableTh({ label, columnKey, activeKey, dir, onSort, align = 'left' }
   const justifyClass =
     align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
   return (
-    <th className={`py-2 px-3 text-gray-500 font-medium whitespace-nowrap ${alignClass}`}>
+    <th className={`text-xs py-2 px-3 text-gray-500 font-semibold whitespace-nowrap ${alignClass}`}>
       <button
         type="button"
         onClick={() => onSort(columnKey)}
@@ -371,17 +371,19 @@ function CondoUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableProps) {
     <table className="w-full min-w-max text-xs">
       <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
         <tr>
-          <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">#</th>
-          <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+            #
+          </th>
+          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('units.cols.floor')}
           </th>
-          <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('units.cols.towerName')}
           </th>
-          <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('units.cols.regNumber')}
           </th>
-          <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('units.cols.roomNo')}
           </th>
           <SortableTh label={t('units.cols.modelType')} columnKey="modelType" {...sortProps} />
@@ -403,7 +405,7 @@ function CondoUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableProps) {
             align="right"
             {...sortProps}
           />
-          <th className="text-center py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('units.cols.isSold')}
           </th>
           <SortableTh label={t('units.cols.lastUpdated')} columnKey="updatedAt" {...sortProps} />
@@ -455,7 +457,9 @@ function LandBuildingUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableP
     <table className="w-full min-w-max text-xs">
       <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
         <tr>
-          <th className="text-left py-2 px-3 text-gray-500 font-medium whitespace-nowrap">#</th>
+          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+            #
+          </th>
           <SortableTh label={t('units.cols.plotNo')} columnKey="plotNumber" {...sortProps} />
           <SortableTh label={t('units.cols.houseNo')} columnKey="houseNumber" {...sortProps} />
           <SortableTh label={t('units.cols.modelType')} columnKey="modelType" {...sortProps} />
@@ -489,7 +493,7 @@ function LandBuildingUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableP
             align="right"
             {...sortProps}
           />
-          <th className="text-center py-2 px-3 text-gray-500 font-medium whitespace-nowrap">
+          <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
             {t('units.cols.isSold')}
           </th>
           <SortableTh label={t('units.cols.lastUpdated')} columnKey="updatedAt" {...sortProps} />
@@ -709,7 +713,7 @@ function BlockReappraisalDetailPage() {
             <Icon style="solid" name="arrow-left" className="size-3.5" />
           </button>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-sm font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-gray-900">
               {detail.projectName ?? t('detail.unnamedProject')}
             </h2>
             <span className="text-gray-300">·</span>

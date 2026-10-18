@@ -1,11 +1,13 @@
 {
   "banner": {
-    "title": "待处理文件请求",
-    "pendingItems": "来自申请人的 {{n}} 个待处理项目 — 提交被阻止，直至解决",
     "loadingDetails": "正在加载详情...",
-    "raised": "提出于",
-    "raisedBy": "由 {{name}}",
-    "cancelAll": "全部取消"
+    "cancelAll": "全部取消",
+    "count": "已要求补充 {{n}} 项文件",
+    "waiting": "等待申请人提交（收齐前无法提交）",
+    "byAt": "{{name}} 于 {{at}} 提出",
+    "show": "查看列表",
+    "hide": "收起",
+    "cancelItem": "取消"
   },
   "columns": {
     "documentType": "文件类型",

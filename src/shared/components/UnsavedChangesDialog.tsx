@@ -1,4 +1,5 @@
 import { useBlocker } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import ConfirmDialog from './ConfirmDialog';
 import type { UnsavedChangesGuard } from '@/shared/hooks/useUnsavedChangesWarning';
 
@@ -9,6 +10,7 @@ interface UnsavedChangesDialogProps {
 // The blocker lives in the same component as its dialog, so a blocked navigation always has a
 // visible prompt to resolve it.
 const Guard = ({ skipRef }: { skipRef: UnsavedChangesGuard['skipRef'] }) => {
+  const { t } = useTranslation('common');
   const blocker = useBlocker(() => !skipRef.current);
 
   if (blocker.state !== 'blocked') return null;
@@ -18,10 +20,10 @@ const Guard = ({ skipRef }: { skipRef: UnsavedChangesGuard['skipRef'] }) => {
       isOpen
       onClose={() => blocker.reset?.()}
       onConfirm={() => blocker.proceed?.()}
-      title="Unsaved Changes"
-      message="You have unsaved changes. Are you sure you want to leave this page? Your changes will be lost."
-      confirmText="Leave"
-      cancelText="Stay"
+      title={t('unsaved.title')}
+      message={t('unsaved.message')}
+      confirmText={t('unsaved.leave')}
+      cancelText={t('unsaved.stay')}
       variant="warning"
     />
   );

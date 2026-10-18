@@ -3,12 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useUploadProgressStore } from '@shared/api/uploadProgress';
 import type { UploadEntry } from '@shared/api/uploadProgress';
 import Icon from '@shared/components/Icon';
-
-/** Bytes as MB (or KB below a megabyte) — the numbers people recognise from a file listing. */
-const formatSize = (bytes: number): string => {
-  const mb = bytes / 1_000_000;
-  return mb < 1 ? `${Math.round(bytes / 1000)} KB` : `${mb.toFixed(1)} MB`;
-};
+import { formatFileSize } from '@shared/utils/formatUtils';
 
 /**
  * Below this there is nothing worth estimating from: the first chunk of a transfer moves at
@@ -92,8 +87,8 @@ function UploadProgressPanel() {
           : upload.processing
             ? t('transfer.processing')
             : percent === null || upload.total === null
-              ? formatSize(upload.loaded)
-              : `${percent}% · ${formatSize(upload.loaded)} / ${formatSize(upload.total)}`;
+              ? formatFileSize(upload.loaded)
+              : `${percent}% · ${formatFileSize(upload.loaded)} / ${formatFileSize(upload.total)}`;
 
         return (
           <div

@@ -1,7 +1,10 @@
 import type { GetRequestByIdResultType } from '../api';
 import type { createRequestFormType } from '../schemas/form';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
-import type { AppraisalCopyTemplate } from '@/features/appraisal/api/copyTemplate';
+import type {
+  PriorAppraisal,
+  PriorAppraisalRequest,
+} from '@/features/appraisal/api/priorAppraisal';
 
 /**
  * Map Request API response to form values
@@ -95,25 +98,53 @@ export const mapRequestResponseToForm = (
 };
 
 /**
- * Partial detail shape returned by mapCopyTemplateToForm.
+ * Partial detail shape returned by mapPriorAppraisalToForm.
  * Deliberately excludes `appointment` and `fee` — those must be preserved from current form values.
  */
-type CopyTemplateDetailPartial = Omit<createRequestFormType['detail'], 'appointment' | 'fee'>;
+type PriorAppraisalDetailPartial = Omit<createRequestFormType['detail'], 'appointment' | 'fee'>;
+
+type PriorAppraisalHeader = Pick<
+  PriorAppraisal,
+  'id' | 'appraisalNumber' | 'appraisalValue' | 'appraisalDate'
+>;
 
 /**
- * Map a copy-template API response to a partial form value.
- * Appointment and fee are intentionally excluded — the caller in RequestPage
- * merges this with current.detail.appointment and current.detail.fee preserved.
+ * The picked appraisal becomes the new request's previous appraisal: stamped from ITS header (not
+ * from `request.prevAppraisal`, which is the picked appraisal's own prior book).
  */
-export const mapCopyTemplateToForm = (
-  template: AppraisalCopyTemplate,
+export const priorReference = (prior: PriorAppraisalHeader) => ({
+  prevAppraisalId: prior.id,
+  prevAppraisalReportNo: prior.appraisalNumber,
+  prevAppraisalValue: prior.appraisalValue ?? null,
+  prevAppraisalDate: prior.appraisalDate ?? null,
+});
+
+/**
+ * A title copied from another request is a new title here: it keeps neither its own id nor the old
+ * request's, or a save could take it for one already stored. Its documents are not handled here:
+ * both callers replace them (the prior pick re-homes the maker's files, a duplicate starts empty).
+ */
+const omit = (obj: Record<string, unknown>, keys: string[]) =>
+  Object.fromEntries(Object.entries(obj).filter(([key]) => !keys.includes(key)));
+
+export const withoutForeignIds = (title: Record<string, unknown>) =>
+  omit(title, ['id', 'requestId']);
+
+/**
+ * Map the `request` of a prior appraisal (GET /appraisals/{id}?include=request,documents) to a
+ * partial form value. Appointment and fee are intentionally excluded — the caller in RequestPage
+ * merges this with current.detail.appointment and current.detail.fee preserved. The appraisal's
+ * files are not mapped here either: they come as `documents` and are carried by applyCarryForward.
+ */
+export const mapPriorAppraisalToForm = (
+  prior: PriorAppraisalHeader & { request: PriorAppraisalRequest },
 ): {
-  detail: CopyTemplateDetailPartial;
+  detail: PriorAppraisalDetailPartial;
   customers: createRequestFormType['customers'];
   properties: createRequestFormType['properties'];
   titles: createRequestFormType['titles'];
-  documents: createRequestFormType['documents'];
 } => {
+  const template = prior.request;
   const addrLookup = template.detail.address?.subDistrict
     ? findAddressBySubDistrictCode(template.detail.address.subDistrict)
     : undefined;
@@ -129,12 +160,7 @@ export const mapCopyTemplateToForm = (
         previousFacilityLimit: template.detail.loanDetail?.previousFacilityLimit ?? null,
         totalSellingPrice: template.detail.loanDetail?.totalSellingPrice ?? 0,
       },
-      // Stamp prev-appraisal metadata from the snapshot
-      prevAppraisalId: template.prevAppraisal.appraisalId,
-      prevAppraisalReportNo: template.prevAppraisal.appraisalNumber,
-      prevAppraisalValue: template.prevAppraisal.appraisalValue ?? null,
-      prevAppraisalDate: template.prevAppraisal.appraisalDate ?? null,
-      inspectionNumber: template.prevAppraisal.nextInspectionNumber ?? null,
+      ...priorReference(prior),
       address: {
         houseNumber: template.detail.address?.houseNumber ?? '',
         projectName: template.detail.address?.projectName ?? '',
@@ -142,7 +168,7 @@ export const mapCopyTemplateToForm = (
         soi: template.detail.address?.soi ?? '',
         road: template.detail.address?.road ?? '',
         subDistrict: template.detail.address?.subDistrict ?? '',
-        // *Name fields aren't returned by the copy-template endpoint —
+        // *Name fields aren't returned by the endpoint —
         // resolved client-side from the subDistrict code via findAddressBySubDistrictCode.
         subDistrictName: addrLookup?.subDistrictName ?? null,
         district: template.detail.address?.district ?? '',
@@ -167,7 +193,6 @@ export const mapCopyTemplateToForm = (
       buildingTypeOther: p.buildingTypeOther ?? null,
       sellingPrice: p.sellingPrice ?? null,
     })),
-    titles: (template.titles ?? []) as createRequestFormType['titles'],
-    documents: (template.documents ?? []) as createRequestFormType['documents'],
+    titles: (template.titles ?? []).map(withoutForeignIds) as createRequestFormType['titles'],
   };
 };

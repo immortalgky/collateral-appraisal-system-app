@@ -78,6 +78,7 @@ const DocumentRequirementsPage = () => {
           category: values.category,
           sortOrder: values.sortOrder,
           isActive: values.isActive,
+          carryForwardByDefault: values.carryForwardByDefault,
         });
       } else {
         await createType.mutateAsync({
@@ -86,6 +87,7 @@ const DocumentRequirementsPage = () => {
           description: values.description,
           category: values.category,
           sortOrder: values.sortOrder,
+          carryForwardByDefault: values.carryForwardByDefault,
         });
       }
       toast.success('Document type saved');
@@ -144,7 +146,7 @@ const DocumentRequirementsPage = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Document Requirements</h3>
+          <h3 className="text-base font-semibold text-gray-900">Document Requirements</h3>
           <p className="text-xs text-gray-500 mt-0.5">
             Configure required documents by collateral type and purpose
           </p>

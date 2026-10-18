@@ -20,8 +20,10 @@ export const useGetAppraisalById = (appraisalId: string | undefined) => {
 
 // The API serializes with DefaultIgnoreCondition.WhenWritingNull, so null fields are OMITTED
 // from the JSON entirely — use .nullish() (not .nullable()) for every optional field.
+// appraisalId is absent only on the last item of a chain that reaches back past CAS to a legacy
+// AS400 book (99A…): it has a number, date and value but no appraisal to open.
 const previousAppraisalChainItemSchema = z.object({
-  appraisalId: z.string(),
+  appraisalId: z.string().nullish(),
   appraisalNumber: z.string(),
   appraisalDate: z.string().nullish(),
   appraisalValue: z.number().nullish(),

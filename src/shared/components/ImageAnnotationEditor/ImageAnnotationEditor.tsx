@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import i18n from 'i18next';
+import toast from 'react-hot-toast';
 import type { Canvas } from 'fabric';
 import { IText, FabricText, Group, Line, ActiveSelection } from 'fabric';
 import type { ImageAnnotationEditorProps, EditorState, AnnotationTool, ToolOptions, SelectedObjectInfo } from './types';
@@ -16,6 +18,7 @@ export default function ImageAnnotationEditor({
   imageUrl,
   onSave,
   onSkip,
+  onDiscard,
   fileName,
 }: ImageAnnotationEditorProps) {
   const canvasRef = useRef<Canvas | null>(null);
@@ -274,6 +277,20 @@ export default function ImageAnnotationEditor({
     onSkip?.();
   }, [reset, onSkip]);
 
+  // The image could not be opened: say so and leave, instead of an empty editor. In a queue
+  // (onDiscard given) drop just this file, which is not attached, and move on to the next;
+  // cancelling would drop every pending one, and skipping would attach the unreadable file.
+  const handleLoadError = useCallback(() => {
+    if (onDiscard) {
+      toast.error(i18n.t('common:imageEditor.loadFailedDiscarded', { name: fileName ?? '' }));
+      reset();
+      onDiscard();
+    } else {
+      toast.error(i18n.t('common:imageEditor.loadFailed'));
+      handleCancel();
+    }
+  }, [onDiscard, fileName, reset, handleCancel]);
+
   if (!isOpen) return null;
 
   return (
@@ -306,6 +323,7 @@ export default function ImageAnnotationEditor({
           onCanvasReady={handleCanvasReady}
           onSelectionChange={handleSelectionChange}
           onImageLoaded={handleImageLoaded}
+          onLoadError={handleLoadError}
           pauseSnapshots={pauseSnapshots}
           resumeSnapshots={resumeSnapshots}
           saveSnapshot={saveSnapshot}

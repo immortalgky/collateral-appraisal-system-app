@@ -76,21 +76,37 @@ const LeaseholdBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Prop
             <table className="w-full text-xs whitespace-nowrap">
               <thead>
                 <tr className="bg-gray-100">
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Year</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Land Value</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Growth %</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Bldg Value</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Depr Amt</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Depr %</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Year
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Land Value
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Growth %
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Bldg Value
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Depr Amt
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Depr %
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
                     Bldg After Depr
                   </th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">Total L+B</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    Total L+B
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
                     Rental Income
                   </th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">PV Factor</th>
-                  <th className="px-2 py-1.5 text-right font-medium text-gray-500">
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                    PV Factor
+                  </th>
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
                     Net Curr. Rental
                   </th>
                 </tr>

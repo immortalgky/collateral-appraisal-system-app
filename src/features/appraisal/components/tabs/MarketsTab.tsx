@@ -225,7 +225,7 @@ export const MarketsTab = () => {
       <div className="sticky top-0 z-10 flex flex-col gap-3 bg-white pb-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-gray-900">{t('markets.pageTitle')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('markets.pageTitle')}</h3>
             <p className="text-xs text-gray-500">{t('markets.count', { n: comparables.length })}</p>
           </div>
           <div className="ml-auto flex items-center gap-2">

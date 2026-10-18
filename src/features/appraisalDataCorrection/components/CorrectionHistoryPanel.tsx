@@ -9,6 +9,7 @@ import type { PropertyGroupItemDtoType } from '@shared/schemas/v1';
 import { useGetPropertyCorrections } from '../api/appraisalDataCorrection';
 import { documentTypeName } from '@/features/appraisal/utils/valuationDocuments';
 import { ChangeValues } from './LatestCorrectionCard';
+import { isSameDayChange } from '../utils/formDiff';
 import {
   historyFieldLabel,
   isActionField,
@@ -167,6 +168,11 @@ const CorrectionHistoryPanel = ({
               // A null property id marks a document / summary-regeneration entry.
               const propertyId = correction.appraisalPropertyId;
               const isDocument = propertyId == null;
+              // A same-day change of a date-only field reads "01/01/2025 → 01/01/2025": left out of the list;
+              // the entry keeps its header, reason and time.
+              const changes = correction.changes.filter(
+                c => !isSameDayChange(c.field, c.from, c.to),
+              );
               const kind = entryKind(correction);
               const target = targetOf(correction);
               const targetLabel = isDocument
@@ -205,30 +211,35 @@ const CorrectionHistoryPanel = ({
                       )}
                     </div>
 
-                    <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-gray-50 px-3 py-2 text-xs">
-                      {correction.changes.map((change, idx) => (
-                        <Fragment key={`${correction.id}-${idx}`}>
-                          <dt className="text-gray-500">{fieldLabel(change.field, isDocument)}</dt>
-                          <dd className="min-w-0 break-words text-gray-900">
-                            {isDocument && isActionField(change.field) ? (
-                              // One-off actions, not a value that changed: no struck-through "from".
-                              // The backend writes an English literal for a regeneration; localize it.
-                              change.field === SUMMARY_HISTORY_FIELD ? (
-                                t('history.regenerationRequested')
+                    {changes.length > 0 && (
+                      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-gray-50 px-3 py-2 text-xs">
+                        {changes.map((change, idx) => (
+                          <Fragment key={`${correction.id}-${idx}`}>
+                            <dt className="text-gray-500">
+                              {fieldLabel(change.field, isDocument)}
+                            </dt>
+                            <dd className="min-w-0 break-words text-gray-900">
+                              {isDocument && isActionField(change.field) ? (
+                                // One-off actions, not a value that changed: no struck-through "from".
+                                // The backend writes an English literal for a regeneration; localize it.
+                                change.field === SUMMARY_HISTORY_FIELD ? (
+                                  t('history.regenerationRequested')
+                                ) : (
+                                  (change.to ?? '—')
+                                )
                               ) : (
-                                (change.to ?? '—')
-                              )
-                            ) : (
-                              <ChangeValues
-                                from={change.from}
-                                to={change.to}
-                                empty={isDocument ? t('history.deleted') : '—'}
-                              />
-                            )}
-                          </dd>
-                        </Fragment>
-                      ))}
-                    </dl>
+                                <ChangeValues
+                                  field={change.field}
+                                  from={change.from}
+                                  to={change.to}
+                                  empty={isDocument ? t('history.deleted') : '—'}
+                                />
+                              )}
+                            </dd>
+                          </Fragment>
+                        ))}
+                      </dl>
+                    )}
 
                     {correction.reason && (
                       <p className="text-xs text-gray-600">

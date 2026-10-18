@@ -168,7 +168,7 @@ export function ValueRangeCard({ method }: { method: PricingMethodKey }) {
     // the header band's corners to the card's own radius since the band fills edge to edge.
     <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
       <div className="flex items-center justify-between px-[12px] py-[8px] bg-[#f8fafa] border-b border-[#e3e9e8]">
-        <h4 className="m-0 text-[12.5px] font-semibold text-gray-800">{t(config.titleKey)}</h4>
+        <h4 className="m-0 text-base font-semibold text-gray-800">{t(config.titleKey)}</h4>
         <span
           className={
             inRange

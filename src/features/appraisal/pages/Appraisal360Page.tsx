@@ -16,6 +16,7 @@ import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyType } from '../types';
 import { useGetAppraisalMapPins } from '../api/marketComparable';
 import { HistorySearchMapDrawer } from '@/features/common/historySearch/HistorySearchMapDrawer';
+import GoogleMapPinIcon from '@/shared/components/GoogleMapPinIcon';
 import type {
   AppraisalPinDto,
   MarketComparablePinDto,
@@ -261,21 +262,7 @@ const Appraisal360Page = () => {
               onClick={() => setMapOpen(true)}
               className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
             >
-              {/* Google Maps-style multicolor pin */}
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 shrink-0" aria-hidden="true">
-                <defs>
-                  <clipPath id="gmapPin">
-                    <path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z" />
-                  </clipPath>
-                </defs>
-                <g clipPath="url(#gmapPin)">
-                  <rect x="0" y="0" width="12" height="9" fill="#4285F4" />
-                  <rect x="12" y="0" width="12" height="9" fill="#EA4335" />
-                  <rect x="0" y="9" width="12" height="15" fill="#FBBC04" />
-                  <rect x="12" y="9" width="12" height="15" fill="#34A853" />
-                </g>
-                <circle cx="12" cy="9" r="2.6" fill="#fff" />
-              </svg>
+              <GoogleMapPinIcon />
               {t('view360.page.viewOnMap')}
             </button>
           </>

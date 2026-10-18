@@ -870,7 +870,7 @@ export function AppraisalPicker({
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-3 py-2 text-left w-8">
+                <th className="text-xs px-3 py-2 text-left w-8 font-semibold">
                   <input
                     ref={headerCheckboxRef}
                     type="checkbox"

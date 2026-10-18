@@ -1,27 +1,43 @@
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
-export type CollateralType = 'Land' | 'Condo' | 'Leasehold' | 'Machine';
-
-export type TitleDeedType = 'Chanote' | 'NorSor3' | 'NorSor3Kor' | 'SorKor1';
+// Raw codes as returned by the backend (Collateral.Contracts/CollateralTypes.cs).
+export type CollateralType =
+  | 'L'
+  | 'LB'
+  | 'U'
+  | 'LSL'
+  | 'LSB'
+  | 'LS'
+  | 'LSU'
+  | 'MAC'
+  | 'PRJ'
+  | 'UNK';
 
 export type BackfillStatus = 'Processed' | 'SkippedMissingKey' | 'Error';
 
 // ─── Type-specific detail DTOs ────────────────────────────────────────────────
+// Mirror Collateral/Application/Features/CollateralMasters/Lookup/LookupCollateralMasterResult.cs,
+// which both the lookup and the get-by-id responses use.
+
+export interface AliasTitleDto {
+  titleType: string;
+  titleNumber: string;
+  surveyNumber?: string | null;
+}
 
 export interface LandDetailDto {
-  collateralMasterId: string;
-  // Identity (dedup key)
+  // Identity (dedup key: province + district + subDistrict + titleNumber); the geography is geocodes
   landOfficeCode: string;
   province: string;
-  amphur: string;
-  tambon: string;
-  titleDeedType: TitleDeedType;
-  titleDeedNo: string;
-  surveyOrParcelNo?: string | null;
+  district: string;
+  subDistrict: string;
+  titleType: string;
+  titleNumber: string;
+  surveyNumber?: string | null;
+  landParcelNumber?: string | null;
   // Address
   street?: string | null;
   village?: string | null;
-  postalCode?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   // Last-known context
@@ -34,28 +50,27 @@ export interface LandDetailDto {
   // Construction tracking
   isUnderConstructionAtLastAppraisal: boolean;
   overallConstructionProgressPercent?: number | null;
-  lastConstructionInspectionId?: string | null;
   // Appraisal summary
   lastAppraisalId?: string | null;
   lastAppraisalNumber?: string | null;
   lastAppraisedDate?: string | null;
-  lastAppraisedValue?: number | null;
-  lastTotalAppraisedValue?: number | null;
+  appraisalValue?: number | null;
+  /** Other titles of the same multi-title group; empty for a single title */
+  aliasTitles: AliasTitleDto[];
 }
 
 export interface CondoDetailDto {
-  collateralMasterId: string;
-  // Identity (dedup key)
-  landOfficeCode: string;
+  landOfficeCode?: string | null;
+  // Identity
   condoRegistrationNumber: string;
   buildingNumber: string;
   floorNumber: string;
-  unitNumber: string;
-  titleNumber: string;
-  titleType: string;
+  roomNumber: string;
   // Identity-extra
   condoName?: string | null;
   province?: string | null;
+  district?: string | null;
+  subDistrict?: string | null;
   // Last-known
   usableArea?: number | null;
   locationType?: string | null;
@@ -66,12 +81,11 @@ export interface CondoDetailDto {
   lastAppraisalId?: string | null;
   lastAppraisalNumber?: string | null;
   lastAppraisedDate?: string | null;
-  lastAppraisedValue?: number | null;
+  appraisalValue?: number | null;
 }
 
 export interface LeaseholdDetailDto {
-  collateralMasterId: string;
-  // Identity (dedup key)
+  // Identity
   leaseRegistrationNo: string;
   underlyingMasterId: string;
   lessor: string;
@@ -80,35 +94,23 @@ export interface LeaseholdDetailDto {
   // Last-known
   leaseTermEnd?: string | null;
   leaseTermMonths?: number | null;
-  annualRent?: number | null;
-  leasePurpose?: string | null;
   // Appraisal summary
   lastAppraisalId?: string | null;
   lastAppraisalNumber?: string | null;
   lastAppraisedDate?: string | null;
-  lastAppraisedValue?: number | null;
 }
 
 export interface MachineDetailDto {
-  collateralMasterId: string;
-  // Identity (dedup key — tier 1)
+  // Identity (tier 1: registration number; tier 2: serial + brand + model + manufacturer)
   machineRegistrationNo?: string | null;
-  // Identity (dedup key — tier 2, used when tier 1 missing)
   serialNo?: string | null;
   brand?: string | null;
   model?: string | null;
   manufacturer?: string | null;
-  // Identity-extra & last-known
-  engineNo?: string | null;
-  chassisNo?: string | null;
-  yearOfManufacture?: number | null;
-  machineCondition?: string | null;
-  machineAge?: number | null;
   // Appraisal summary
   lastAppraisalId?: string | null;
   lastAppraisalNumber?: string | null;
   lastAppraisedDate?: string | null;
-  lastAppraisedValue?: number | null;
 }
 
 // ─── Engagement ───────────────────────────────────────────────────────────────
@@ -135,48 +137,88 @@ export interface CollateralEngagementSnapshotDto extends CollateralEngagementSum
   snapshot: unknown; // Parsed JSON blob — shape varies by type
 }
 
-// ─── Master ───────────────────────────────────────────────────────────────────
+// ─── Master & lookup ──────────────────────────────────────────────────────────
 
-export interface CollateralMasterDto {
-  id: string;
-  collateralType: CollateralType;
-  ownerName?: string | null;
-  isDeleted: boolean;
-  createdOn: string;
-  createdBy?: string | null;
-  updatedOn?: string | null;
-  updatedBy?: string | null;
-  // Populated by detail join
+/** Only the detail matching the collateral type is filled; the others are null. */
+interface CollateralDetails {
   landDetail?: LandDetailDto | null;
   condoDetail?: CondoDetailDto | null;
   leaseholdDetail?: LeaseholdDetailDto | null;
   machineDetail?: MachineDetailDto | null;
 }
 
-// ─── Lookup ───────────────────────────────────────────────────────────────────
+// GET /collateral-masters/{id}: GetCollateralMasterByIdResult
+export interface CollateralMasterDto extends CollateralDetails {
+  id: string;
+  collateralType: CollateralType;
+  ownerName?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+  engagementCount: number;
+  lastAppraisedDate?: string | null;
+  lastAppraisedValue?: number | null;
+  /** The backend does not send this today; the delete/restore UI reads it */
+  isDeleted?: boolean;
+}
 
-export interface CollateralLookupResult {
-  master: CollateralMasterDto;
-  lastEngagement?: CollateralEngagementSummaryDto | null;
-  /** IDs of all companies that have engaged this collateral — used for appeal exclusion */
+/** GET /appraisals/in-progress-by-collateral: an appraisal not yet finished on the looked-up key. */
+export interface InProgressAppraisalDto {
+  appraisalId: string;
+  /** Null until a number is assigned */
+  appraisalNumber: string | null;
+  /** Submitted, Pending, Assigned, InProgress or UnderReview: only open ones come back */
+  status: string;
+}
+
+export interface LastEngagementSummaryDto {
+  appraisalId: string;
+  appraisalNumber: string;
+  appraisalType: string;
+  appraisalDate: string;
+  appraisalCompanyId?: string | null;
+  appraisalCompanyName?: string | null;
+}
+
+// GET /collateral-masters/lookup: LookupCollateralMasterResult. Flat, not wrapped in `master`.
+export interface CollateralLookupResult extends CollateralDetails {
+  id: string;
+  collateralType: CollateralType;
+  ownerName?: string | null;
+  createdAt: string;
+  engagementCount: number;
+  lastAppraisedDate?: string | null;
+  lastAppraisedValue?: number | null;
+  /** IDs of all companies that have engaged this collateral */
   priorAppraisalCompanyIds: string[];
+  lastEngagement?: LastEngagementSummaryDto | null;
 }
 
 // ─── Catalog (paginated list) ─────────────────────────────────────────────────
 
+// GET /collateral-masters: CollateralCatalogItemDto. Per-type columns keep the view's `Land_` /
+// `Condo_` prefixes and are null for other types. Province, district and subDistrict are geocodes.
 export interface CollateralCatalogItem {
   id: string;
   collateralType: CollateralType;
   ownerName?: string | null;
-  isDeleted: boolean;
-  // Denormalized from detail + view
-  dedupKeySnippet: string;
-  province?: string | null;
+  createdAt: string;
   engagementCount: number;
   lastAppraisedDate?: string | null;
   lastAppraisedValue?: number | null;
+  land_Province?: string | null;
+  land_District?: string | null;
+  land_SubDistrict?: string | null;
+  land_TitleNumber?: string | null;
   isUnderConstructionAtLastAppraisal?: boolean | null;
-  lastAppraisalNumber?: string | null;
+  overallConstructionProgressPercent?: number | null;
+  condo_Province?: string | null;
+  condo_CondoName?: string | null;
+  condo_Latitude?: number | null;
+  condo_Longitude?: number | null;
+  land_Latitude?: number | null;
+  land_Longitude?: number | null;
+  /** The backend does not send this today */
+  isDeleted?: boolean;
 }
 
 export interface CollateralCatalogPage {
@@ -188,30 +230,30 @@ export interface CollateralCatalogPage {
 
 // ─── Lookup params (per type) ─────────────────────────────────────────────────
 
+// Lookup params use the backend's query-string names and type codes
+// (Collateral/Application/Features/CollateralMasters/Lookup). Province, district and subDistrict are
+// geocodes, not names.
 export interface LandLookupParams {
-  type: 'Land';
-  landOfficeCode?: string;
+  type: 'L' | 'LB';
   province?: string;
-  amphur?: string;
-  tambon?: string;
-  titleDeedType?: string;
-  titleDeedNo?: string;
-  surveyOrParcelNo?: string;
+  district?: string;
+  subDistrict?: string;
+  titleNumber?: string;
 }
 
 export interface CondoLookupParams {
-  type: 'Condo';
-  landOfficeCode?: string;
+  type: 'U';
+  province?: string;
+  district?: string;
+  subDistrict?: string;
   condoRegistrationNumber?: string;
   building?: string;
   floor?: string;
   unit?: string;
-  titleNumber?: string;
-  titleType?: string;
 }
 
 export interface LeaseholdLookupParams {
-  type: 'Leasehold';
+  type: 'LSL' | 'LSB' | 'LS' | 'LSU';
   contractNo?: string;
   underlyingMasterId?: string;
   lessor?: string;
@@ -220,7 +262,7 @@ export interface LeaseholdLookupParams {
 }
 
 export interface MachineLookupParams {
-  type: 'Machine';
+  type: 'MAC';
   machineRegistrationNo?: string;
   serialNo?: string;
   brand?: string;

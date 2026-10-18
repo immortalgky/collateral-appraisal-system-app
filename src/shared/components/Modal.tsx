@@ -10,6 +10,8 @@ interface ModalProps {
   children: ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   showCloseButton?: boolean;
+  /** A smaller title, tighter header and body: for a short chooser, not a form. */
+  compact?: boolean;
 }
 
 const Modal: React.FunctionComponent<ModalProps> = ({
@@ -19,6 +21,7 @@ const Modal: React.FunctionComponent<ModalProps> = ({
   children,
   size = 'md',
   showCloseButton = true,
+  compact = false,
 }) => {
   const sizeClasses = {
     sm: 'max-w-md',
@@ -53,8 +56,17 @@ const Modal: React.FunctionComponent<ModalProps> = ({
             )}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+            <div
+              className={clsx(
+                'flex items-center justify-between border-b border-gray-200',
+                compact ? 'px-5 py-3' : 'px-6 py-4',
+              )}
+            >
+              <h2
+                className={clsx('font-semibold text-gray-900', compact ? 'text-base' : 'text-xl')}
+              >
+                {title}
+              </h2>
               {showCloseButton && (
                 <button
                   onClick={onClose}
@@ -67,7 +79,9 @@ const Modal: React.FunctionComponent<ModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="px-6 py-4 overflow-visible">{children}</div>
+            <div className={clsx('overflow-visible', compact ? 'px-5 py-4' : 'px-6 py-4')}>
+              {children}
+            </div>
           </DialogPanel>
         </div>
       </div>

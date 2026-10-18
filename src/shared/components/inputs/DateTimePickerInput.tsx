@@ -1,4 +1,5 @@
 import { forwardRef, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import { FloatingFocusManager, FloatingPortal, useMergeRefs } from '@floating-ui/react';
 import { DayPicker } from 'react-day-picker';
 import { format, formatISO, isValid, setHours, setMinutes } from 'date-fns';
 import clsx from 'clsx';
@@ -16,6 +17,8 @@ import { CalendarNavHeader } from './CalendarNavHeader';
 import { MonthYearPanel } from './MonthYearPanel';
 import { createHolidayDayButton } from './HolidayDayButton';
 import { useDateSegmentInput } from './useDateSegmentInput';
+import { useCalendarFloating } from './useCalendarFloating';
+import { CALENDAR_BUTTON_PADDING, CalendarButton } from './CalendarButton';
 
 const MONTH_LABELS_SHORT = [
   'Jan',
@@ -168,17 +171,20 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     const inputId = uuid;
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
-    const popoverRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    // The toggle button is neither the input nor the popover, so the outside-click handler has to
-    // know about it — otherwise mousedown closes the calendar and the click reopens it, and the
-    // icon can never shut what it opened.
+    // The calendar button: where focus returns when the calendar closes. A press on it is on the
+    // field (it is inside the reference), so it toggles rather than dismisses.
     const calendarButtonRef = useRef<HTMLButtonElement>(null);
     const [isOpen, setIsOpen] = useState(false);
+    const calendar = useCalendarFloating({
+      open: isOpen,
+      onOpenChange: setIsOpen,
+    });
+    const popoverRef = calendar.floating;
+    const setRefs = useMergeRefs([ref, inputRef]);
     const [month, setMonth] = useState(new Date());
     const [showMonths, setShowMonths] = useState(false);
     const [timeValue, setTimeValue] = useState('00:00');
-    const [position, setPosition] = useState<'bottom' | 'top'>('bottom');
 
     const constraints = useMemo(
       () => ({
@@ -213,16 +219,6 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       [holidayMap],
     );
 
-    // Combine refs
-    const setRefs = (element: HTMLInputElement | null) => {
-      inputRef.current = element;
-      if (typeof ref === 'function') {
-        ref(element);
-      } else if (ref) {
-        ref.current = element;
-      }
-    };
-
     // Parse value to Date
     const parseValue = (val: string | Date | null | undefined): Date | undefined => {
       if (!val) return undefined;
@@ -243,50 +239,6 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
         setTimeValue(format(date, 'HH:mm'));
       }
     }, [value]);
-
-    // Calculate position when opening (flip to top if not enough space below)
-    useEffect(() => {
-      if (isOpen && inputRef.current) {
-        const rect = inputRef.current.getBoundingClientRect();
-        const spaceBelow = window.innerHeight - rect.bottom;
-        const calendarHeight = 380; // approximate height of calendar + time picker
-
-        if (spaceBelow < calendarHeight && rect.top > calendarHeight) {
-          setPosition('top');
-        } else {
-          setPosition('bottom');
-        }
-      }
-    }, [isOpen]);
-
-    // Handle click outside to close
-    useEffect(() => {
-      const handleClickOutside = (event: MouseEvent) => {
-        if (
-          popoverRef.current &&
-          !popoverRef.current.contains(event.target as Node) &&
-          inputRef.current &&
-          !inputRef.current.contains(event.target as Node) &&
-          !calendarButtonRef.current?.contains(event.target as Node)
-        ) {
-          setIsOpen(false);
-        }
-      };
-
-      const handleEscape = (event: KeyboardEvent) => {
-        if (event.key === 'Escape') setIsOpen(false);
-      };
-
-      if (isOpen) {
-        document.addEventListener('mousedown', handleClickOutside);
-        document.addEventListener('keydown', handleEscape);
-      }
-
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscape);
-      };
-    }, [isOpen]);
 
     /**
      * Date and time are typed one segment at a time — day, month, year, hour, minute — so a
@@ -371,16 +323,21 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
           </label>
         )}
 
-        <div className={clsx('relative', fullWidth && 'w-full')}>
+        <div
+          ref={calendar.setReference}
+          {...calendar.referenceProps}
+          className={clsx('relative', fullWidth && 'w-full')}
+        >
           <input
             ref={setRefs}
             id={inputId}
             name={name}
             type="text"
             className={clsx(
-              // pr-9: the calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is
-              // long enough to run under it in a narrow column.
-              'block px-3 py-2 pr-9 border rounded-lg text-sm transition-colors duration-200',
+              // The calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is long enough
+              // to run under it in a narrow column.
+              'block py-2 pl-3 border rounded-lg text-sm transition-colors duration-200',
+              CALENDAR_BUTTON_PADDING,
               'placeholder:text-gray-400',
               error
                 ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
@@ -405,147 +362,154 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             placeholder={placeholder}
             autoComplete="off"
             {...segmentInput.inputProps}
+            onFocus={() => {
+              segmentInput.inputProps.onFocus();
+              // The calendar is modal (the page behind it is aria-hidden): going back to type in the
+              // field closes it, which lifts that, instead of leaving both open.
+              setIsOpen(false);
+            }}
             onBlur={handleInputBlur}
           />
 
           {/* Calendar icon — the only way to open the calendar, so clicking into the text just
               puts the caret where the user aimed. */}
-          <button
-            ref={calendarButtonRef}
-            type="button"
-            aria-label="Open calendar"
-            aria-expanded={isOpen}
+          <CalendarButton
+            buttonRef={calendarButtonRef}
+            triggerProps={calendar.triggerProps}
             disabled={isDisabled}
             onClick={toggleCalendar}
-            className={clsx(
-              'absolute inset-y-0 right-0 flex items-center pr-3 pl-2 text-gray-400',
-              isDisabled ? 'cursor-not-allowed' : 'hover:text-gray-600',
-            )}
-          >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-              />
-            </svg>
-          </button>
+          />
         </div>
 
-        {/* Calendar Popover with Time */}
+        {/* Calendar Popover with Time — portalled to <body>, not rendered inside the field.
+            react-day-picker builds the month as a <table>, and every rule in the grid form layout
+            is gated on `[data-field]:not(:has(table))` (so LandTitleTable keeps its own layout). An
+            in-place calendar put a table inside the field the moment it opened, switched the whole
+            two-column row off, and dropped the input onto its own full-width line (building
+            permit expiry, constructionLicenseExpirationDate). Same fix as DatePickerInput. */}
         {isOpen && (
-          <div
-            ref={popoverRef}
-            className={clsx(
-              // right-0: hangs off the input's right edge, under the icon that opened it, rather
-              // than a long way left of it on a wide field.
-              'absolute right-0 z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200',
-              position === 'bottom' ? 'mt-1' : 'bottom-full mb-1',
-            )}
-          >
-            <div className="flex">
-              <div className="p-2">
-                <CalendarNavHeader
-                  label={format(month, 'MMMM yyyy')}
-                  onPrev={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))}
-                  onNext={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))}
-                  onToggle={() => setShowMonths(s => !s)}
-                  expanded={showMonths}
-                  className="mb-1 px-1"
-                />
-                <DayPicker
-                  className="react-day-picker text-xs"
-                  style={CALENDAR_RDP_STYLE}
-                  weekStartsOn={1}
-                  formatters={{ formatWeekdayName: formatNarrowWeekday }}
-                  mode="single"
-                  hideNavigation
-                  selected={selectedDate}
-                  onSelect={handleDaySelect}
-                  month={month}
-                  onMonthChange={setMonth}
-                  showOutsideDays
-                  disabled={disabledMatcher}
-                  modifiers={{ holiday: holidayMatcher }}
-                  components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
-                />
-              </div>
-              {showMonths && (
-                <div className="w-44 p-2 pl-3 border-l border-gray-200">
-                  <MonthYearPanel
-                    year={month.getFullYear()}
-                    selectedMonth={month.getMonth()}
-                    monthLabels={MONTH_LABELS_SHORT}
-                    onSelectMonth={m => {
-                      setMonth(new Date(month.getFullYear(), m, 1));
-                      setShowMonths(false);
-                    }}
-                    onStepYear={delta =>
-                      setMonth(new Date(month.getFullYear() + delta, month.getMonth(), 1))
-                    }
-                    onSelectYear={y => setMonth(new Date(y, month.getMonth(), 1))}
-                  />
+          <FloatingPortal>
+            {/* Modal: it is a dialog with time controls and Done, so Tab stays inside it and the
+                page behind is out of reach; focus lands on the selected day and returns to the
+                calendar button when it closes. */}
+            <FloatingFocusManager
+              context={calendar.context}
+              modal
+              initialFocus={calendar.initialFocusRef}
+              returnFocus={calendarButtonRef}
+            >
+              <div
+                ref={calendar.setFloating}
+                {...calendar.floatingProps}
+                className="z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200"
+              >
+                <div className="flex">
+                  <div className="p-2">
+                    <CalendarNavHeader
+                      label={format(month, 'MMMM yyyy')}
+                      onPrev={() =>
+                        setMonth(new Date(month.getFullYear(), month.getMonth() - 1, 1))
+                      }
+                      onNext={() =>
+                        setMonth(new Date(month.getFullYear(), month.getMonth() + 1, 1))
+                      }
+                      onToggle={() => setShowMonths(s => !s)}
+                      expanded={showMonths}
+                      className="mb-1 px-1"
+                    />
+                    <DayPicker
+                      className="react-day-picker text-xs"
+                      style={CALENDAR_RDP_STYLE}
+                      weekStartsOn={1}
+                      formatters={{ formatWeekdayName: formatNarrowWeekday }}
+                      mode="single"
+                      hideNavigation
+                      selected={selectedDate}
+                      onSelect={handleDaySelect}
+                      month={month}
+                      onMonthChange={setMonth}
+                      showOutsideDays
+                      disabled={disabledMatcher}
+                      modifiers={{ holiday: holidayMatcher }}
+                      components={{ MonthCaption: HiddenCaption, DayButton: holidayDayButton }}
+                    />
+                  </div>
+                  {showMonths && (
+                    <div className="w-44 p-2 pl-3 border-l border-gray-200">
+                      <MonthYearPanel
+                        year={month.getFullYear()}
+                        selectedMonth={month.getMonth()}
+                        monthLabels={MONTH_LABELS_SHORT}
+                        onSelectMonth={m => {
+                          setMonth(new Date(month.getFullYear(), m, 1));
+                          setShowMonths(false);
+                          calendar.focusDays();
+                        }}
+                        onStepYear={delta =>
+                          setMonth(new Date(month.getFullYear() + delta, month.getMonth(), 1))
+                        }
+                        onSelectYear={y => setMonth(new Date(y, month.getMonth(), 1))}
+                      />
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            {/* Today gets a band of its own. Sharing one line with the time controls made the
+                {/* Today gets a band of its own. Sharing one line with the time controls made the
                 footer wider than the seven-column grid, and since the popover takes the width of
                 its widest child, the whole calendar was stretched to fit it. Today only navigates —
                 it jumps the calendar to this month without picking a date. */}
-            <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => {
-                  setMonth(new Date());
-                  setShowMonths(false);
-                }}
-                className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
-              >
-                {todayLabel}
-              </button>
-              {selectedDate && (
-                <span className="ml-auto text-xs text-gray-400">
-                  {format(selectedDate, 'd MMM yyyy')}
-                </span>
-              )}
-            </div>
+                <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMonth(new Date());
+                      setShowMonths(false);
+                    }}
+                    className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                  >
+                    {todayLabel}
+                  </button>
+                  {selectedDate && (
+                    <span className="ml-auto text-xs text-gray-400">
+                      {format(selectedDate, 'd MMM yyyy')}
+                    </span>
+                  )}
+                </div>
 
-            {/* The clock icon stands in for a "Time" label: the two boxes either side of a colon
+                {/* The clock icon stands in for a "Time" label: the two boxes either side of a colon
                 already read as a time, and the word cost more width than the row had. The selects
                 carry their own aria-labels, so nothing is lost to a screen reader. */}
-            <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
-              <svg
-                className="w-4 h-4 text-gray-400 flex-shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <TimeInput24 id={`${inputId}-time`} value={timeValue} onChange={handleTimeChange} />
-              <button
-                type="button"
-                onClick={handleDone}
-                className="ml-auto px-3 py-1 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
-              >
-                Done
-              </button>
-            </div>
-          </div>
+                <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
+                  <svg
+                    className="w-4 h-4 text-gray-400 flex-shrink-0"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <TimeInput24
+                    id={`${inputId}-time`}
+                    value={timeValue}
+                    onChange={handleTimeChange}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDone}
+                    className="ml-auto px-3 py-1 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
+                  >
+                    Done
+                  </button>
+                </div>
+              </div>
+            </FloatingFocusManager>
+          </FloatingPortal>
         )}
 
         {(helperText || error || constraintError) && (

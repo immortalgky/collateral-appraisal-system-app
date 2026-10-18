@@ -20,7 +20,7 @@ export function ComparisonTable({ pins, onClose }: ComparisonTableProps) {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
-        <h3 className="text-sm font-semibold text-gray-800">{t('comparisonTable.title')}</h3>
+        <h3 className="text-base font-semibold text-gray-800">{t('comparisonTable.title')}</h3>
         <button
           type="button"
           onClick={onClose}

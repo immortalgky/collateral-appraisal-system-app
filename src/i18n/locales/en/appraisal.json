@@ -20,15 +20,16 @@
     "emptyHint": "Try adjusting your search or filters",
     "columns": {
       "appraisalNumber": "Appraisal No.",
+      "appraisalNumberCustomer": "Appraisal No. / Customer",
       "customer": "Customer",
       "status": "Status",
       "priority": "Priority",
       "sla": "SLA",
       "province": "Province",
       "assignment": "Assignment",
-      "bankingSegment": "Segment",
-      "purpose": "Purpose",
-      "propertyType": "Property Type",
+      "bankingSegment": "Banking Segment",
+      "purposeAndType": "Purpose · Job Type",
+      "propertyType": "Collateral",
       "company": "Company",
       "appointment": "Appointment",
       "created": "Created",
@@ -71,6 +72,9 @@
       "slaDue": "SLA due",
       "assigneeUserId": "Assignee",
       "add": "Add filter",
+      "more": "More +{{count}}",
+      "moreAria_one": "{{label}} ({{count}} more filter)",
+      "moreAria_other": "{{label}} ({{count}} more filters)",
       "searchIn": "Search {{label}}…",
       "showingOf": "Showing {{shown}} of {{total}}",
       "typeToFind": "Type to find the rest",
@@ -132,6 +136,7 @@
     "searchTooShort": "Type at least {{count}} characters to search",
     "searchPrefixHint": "Matches from the start of a value. Prefix with * to match anywhere.",
     "searchSubstringHint": "Matches anywhere in the value.",
+    "exportTruncatedTitle": "The export will be cut short",
     "exportTruncatedWarning": "This search matches {{total}} appraisals, but an export contains at most {{max}} rows. The file will be cut short. Continue?",
     "exportFailed": "Export failed. Please try again.",
     "searchFieldLabel": "Search in",
@@ -157,9 +162,23 @@
       "nearing-deadline": "Nearing deadline",
       "external-assignments": "External assignments",
       "my-company-queue": "My company queue",
+      "moreAria_one": "{{label}} ({{count}} more view)",
+      "moreAria_other": "{{label}} ({{count}} more views)",
       "all": "All jobs",
       "my-requests": "My requests"
     },
+    "smartViewDescriptions": {
+      "my-assignments": "Appraisals currently assigned to you",
+      "my-requests": "Appraisals on requests you raised as requestor",
+      "sla-at-risk": "Active appraisals where the SLA is at risk or already breached",
+      "todays-appointments": "Appraisals with a site visit scheduled for today",
+      "unassigned": "Appraisals that have not yet been assigned",
+      "high-priority-active": "High priority appraisals that are currently in progress",
+      "nearing-deadline": "Appraisals whose SLA due date falls within the next 3 days",
+      "external-assignments": "Appraisals assigned to external companies that are active",
+      "my-company-queue": "Appraisals assigned to your company"
+    },
+    "priorityHigh": "High priority",
     "saved": "Saved",
     "saveCurrentSearch": "Save current search",
     "searchNamePlaceholder": "Search name...",
@@ -193,10 +212,12 @@
       "label": "Group",
       "none": "No grouping",
       "current": "Group: {{label}}",
-      "empty": "Not set"
+      "empty": "Not set",
+      "error": "Could not load the group counts"
     },
     "suggest": {
       "goTo": "Go to appraisal",
+      "scope": "Search in field",
       "searchIn": "Search “{{term}}” in",
       "recent": "Recent searches",
       "matches": "{{count}} found",
@@ -558,17 +579,11 @@
       "buildingInsuranceHint": "buildings only — excludes land",
       "decisionApproach": "Decision Approach",
       "priceVerification": "Price Verification",
-      "priceVerificationOptions": [
-        "Not Verified",
-        "Verified"
-      ],
+      "priceVerificationOptions": ["Not Verified", "Verified"],
       "reviewPrices": "Review Prices",
       "totalAppraisalPriceReview": "Total Appraisal Price (Review)",
       "forceSellingPriceReview": "Force Selling Price (Review)",
       "buildingInsuranceReview": "Building Insurance (Review)",
-      "verifiedStaleTitle": "Prices changed after verification",
-      "verifiedStaleHint": "The report and AS400 keep the verified figures until you verify again.",
-      "verifiedStaleAction": "Use current prices",
       "condition": "Condition",
       "conditionType": "Condition Type",
       "conditionTypePlaceholder": "Select condition type...",
@@ -630,7 +645,6 @@
       "validationErrorsTitle": "Please complete the required fields",
       "voteTitle": "Confirm your vote",
       "voteMessage": "A vote cannot be changed after it is submitted.",
-      "voteAck": "I want to vote \"{{vote}}\" on this appraisal",
       "summary": {
         "decision": "Decision",
         "destination": "Next step",
@@ -646,12 +660,11 @@
     "toasts": {
       "saved": "Decision summary saved successfully",
       "saveFailed": "Failed to save decision summary. Please try again.",
-      "submitted": "Decision submitted successfully",
       "submitFailed": "Failed to submit decision",
       "validationErrors": "Validation errors occurred",
       "forceSaleRateSaved": "Force selling rate saved",
       "forceSaleRateFailed": "Failed to save force selling rate. Please try again.",
-      "voteNeedsComment": "Add a comment and confirm your vote before submitting."
+      "voteNeedsComment": "Add a comment before voting."
     }
   },
   "decision": {
@@ -684,7 +697,32 @@
     "destination": {
       "forward": "Goes to {{name}}",
       "back": "Returns to {{name}}",
-      "cancel": "Ends the workflow"
+      "cancel": "Ends the workflow",
+      "final": "Ends the workflow at this step"
+    },
+    "route": {
+      "title": "Work route",
+      "showEarlier_one": "Show {{count}} earlier step",
+      "showEarlier_other": "Show {{count}} earlier steps",
+      "hideEarlier": "Hide earlier steps",
+      "here": "Current step",
+      "inProgress": "In progress",
+      "awaitingVote": "Awaiting votes",
+      "showMore": "See more",
+      "showLess": "Show less",
+      "returnsHere": "Work returns here",
+      "statusCompleted": "Completed",
+      "statusRoutedBack": "Routed back",
+      "previewSr": "Preview of where the work goes if you submit:",
+      "ghostIdle": "Pick a decision to see where the work goes",
+      "final": "Workflow ends",
+      "finalMeta": "This job will be complete",
+      "cancel": "Job cancelled",
+      "cancelMeta": "The workflow ends at this step",
+      "assignee": "Assignee {{name}}",
+      "assigneeMissing": "No assignee picked yet",
+      "backTo": "Sent back to {{title}}",
+      "previousStep": "the previous step"
     },
     "committeeVotes": "Committee votes",
     "votesSummary": "{{received}}/{{total}} voted",
@@ -693,6 +731,12 @@
     "yourVote": "Your vote",
     "nextStep": "Next step",
     "voteImpact": "{{from}} → {{to}} votes",
+    "voteImpactMet": "{{from}} → {{to}} votes · threshold met",
+    "voteImpactShort": "{{from}} → {{to}} votes · {{left}} more needed",
+    "voteTag": "Vote",
+    "voteBackNow": "Sent back at once → {{name}}",
+    "voteBackNowNoName": "Sent back at once",
+    "voteNeedsReason": "A comment is required",
     "votesLoadFailed": "Could not load the committee votes.",
     "noActions": "No decisions are available for this task. Refresh the page, or contact an administrator if this persists."
   },
@@ -735,7 +779,7 @@
         "latitude": "Latitude",
         "longitude": "Longitude",
         "obligation": "Obligation",
-        "other": "Other"
+        "other": "Remarks"
       },
       "suggested": {
         "applyEmpty": "Fill blanks",
@@ -757,7 +801,7 @@
         "condition": "CONDITION AND MARKET",
         "ownership": "OWNERSHIP",
         "location": "LOCATION",
-        "obligation": "OBLIGATIONS AND NOTES"
+        "remarks": "REMARKS"
       },
       "table": {
         "item": "Item",
@@ -765,6 +809,7 @@
         "derived": "Derived",
         "source": "Source",
         "use": "use",
+        "useDisabled": "Already equals the calculated value",
         "ungrouped": "Ungrouped",
         "sourceSentence": "{{list}}",
         "sourcePart_one": "{{count}} machine from {{group}}",
@@ -1142,7 +1187,6 @@
       "encroachingArea": "Encroaching Area",
       "encroachingOthers": "Encroaching Others",
       "encroachingRemark": "Encroaching Remark",
-      "encroachmentArea": "Encroachment Area",
       "encroachmentRemark": "Encroachment Remark",
       "energyUse": "Energy Use",
       "engineNo": "Engine No.",
@@ -1156,7 +1200,6 @@
       "fence": "Fence",
       "floor": "Floor",
       "floors": "Floors",
-      "forcedSalePrice": "Forced Sale Price",
       "forestBoundary": "Forest Boundary",
       "forestBoundaryRemark": "Forest Boundary Remark",
       "governmentPrice": "Government Price",
@@ -1222,7 +1265,6 @@
       "roomLayout": "Room Layout",
       "roomNo": "Room No.",
       "royalDecree": "Royal Decree",
-      "sellingPrice": "Selling Price",
       "series": "Series",
       "sidesFacingRoad": "Sides Facing Road",
       "soi": "Soi",
@@ -1300,7 +1342,8 @@
         "date": "Date",
         "value": "Value",
         "status": "Status"
-      }
+      },
+      "legacyBook": "AS400 Legacy Book"
     }
   },
   "activityTracking": {
@@ -1475,7 +1518,88 @@
       "saved": "Checklist saved"
     }
   },
+  "photoSourceModal": {
+    "title": "Add Photos",
+    "uploadTitle": "Upload from Device",
+    "uploadHint": "Select photos from your computer or device",
+    "galleryTitle": "Choose from Gallery",
+    "galleryHint": "Select from previously uploaded photos",
+    "supports": "Supports: {{types}} (Max 50MB per file)",
+    "close": "Close"
+  },
+  "gallerySelection": {
+    "title": "Choose From Gallery",
+    "available_one": "{{count}} photo available",
+    "available_other": "{{count}} photos available",
+    "searchPlaceholder": "Search by name or description...",
+    "showing": "Showing {{shown}} of {{total}}",
+    "selectAll": "Select All",
+    "selected_one": "{{count}} photo selected",
+    "selected_other": "{{count}} photos selected",
+    "clearSelection": "Clear selection",
+    "noPhotos": "No photos found",
+    "tryDifferent": "Try a different search term",
+    "uploadFirst": "Upload photos to the gallery first",
+    "readyToAdd_one": "{{count}} photo ready to add",
+    "readyToAdd_other": "{{count}} photos ready to add",
+    "clickToSelect": "Click photos to select them",
+    "cancel": "Cancel",
+    "add_one": "Add {{count}} Photo",
+    "add_other": "Add {{count}} Photos",
+    "selectPhoto": "Select Photo",
+    "close": "Close"
+  },
   "valuationDocuments": {
+    "appendix": {
+      "title": "Appendix Documents",
+      "addFiles": "Add Files",
+      "addTo": "Add {{name}}",
+      "editImage": "Edit image",
+      "empty": "No appendix sections found",
+      "loading": "Loading appendix...",
+      "loadFailed": "Failed to load appendices",
+      "galleryFailed": "Failed to load gallery",
+      "deleteDialog": {
+        "title": "Delete Document",
+        "message": "Are you sure you want to delete this document? This action cannot be undone.",
+        "confirm": "Delete"
+      }
+    },
+    "appendixTypes": {
+      "BRIEF_MAP": "Brief Map",
+      "DETAILED_MAP": "Detailed Map",
+      "EARTH_MAP": "Earth Map",
+      "LAND_MAP": "Land Map",
+      "CITY_PLAN": "City Plan",
+      "STATUTORY_PLAN": "Statutory Plan",
+      "LAND_PLAN": "Land Plan",
+      "BUILDING_LAYOUT": "Building Layout",
+      "BLUEPRINT": "Blueprint",
+      "PHOTO_SPOT": "Photo and Photo Spot",
+      "REG_INDEX": "Registration Index"
+    },
+    "checklist": {
+      "tablistLabel": "Document sections",
+      "tabs": {
+        "request": "Request documents",
+        "valuation": "Valuation documents",
+        "appendix": "Report Book"
+      },
+      "tabCounts": {
+        "missing": "{{count}} missing",
+        "complete": "Complete",
+        "files_one": "{{count}} file",
+        "files_other": "{{count}} files"
+      },
+      "requestTitle": "Request documents",
+      "readOnlyTag": "Read-only",
+      "requestEmpty": "No request documents found",
+      "requestLoadFailed": "Failed to load request documents",
+      "valuationEmpty": "No document types found",
+      "typesWithFiles": "{{done}}/{{total}} types",
+      "noteSaved": "Note saved",
+      "noteSaveFailed": "Could not save the note"
+    },
     "sections": {
       "documentChecklist": "Document Checklist",
       "appraisalBookBuilder": "Appraisal Book Builder",
@@ -1491,11 +1615,7 @@
     "typesCount_one": "{{count}} type",
     "typesCount_other": "{{count}} types",
     "progress": "{{uploaded}} / {{total}} attached",
-    "expandAll": "Expand all",
-    "collapseAll": "Collapse all",
     "noFile": "No file",
-    "fileCount_one": "{{count}} file",
-    "fileCount_other": "{{count}} files",
     "attach": "Attach",
     "generate": "Generate",
     "view": "View",
@@ -1503,6 +1623,7 @@
     "uploadedBy": "Uploaded by {{name}}",
     "empty": "No files attached",
     "noTypes": "No document types found",
+    "untitledFile": "Untitled document",
     "loadFailed": "Failed to load document checklist",
     "deleteDialog": {
       "title": "Remove Document",
@@ -1529,6 +1650,8 @@
     "openInNewTab": "Open in new tab",
     "generatePreview": "Generate preview",
     "idleHint": "Generate a preview of the appraisal book to view it here.",
+    "noPreviewYet": "No book preview yet",
+    "previewUnavailable": "The book preview can't be shown",
     "generating": "Generating preview…",
     "fetchFailed": "Failed to load the report preview",
     "renderFailed": "Failed to render the report preview",
@@ -1903,7 +2026,6 @@
       "otherGroup": "Other",
       "workGroupsFailed": "Could not load the list of work items — reload the page to add items",
       "workGroupsLoading": "Loading the list of work items…",
-      "confirmDelete": "Delete?",
       "remove": "Remove {{name}}",
       "empty": "No work items yet — pick \"+ Add item…\" on a group, then split the proportions to 100%.",
       "emptyReadOnly": "No work items recorded."
@@ -2003,6 +2125,14 @@
     "machinery": {
       "sectionTitle": "Machinery Details"
     },
+    "pma": {
+      "groups": {
+        "titleInfo": "Title information",
+        "condoInfo": "Condo information",
+        "titleAddress": "Title address",
+        "value": "Value information"
+      }
+    },
     "titleDeed": {
       "sectionTitle": "Title Deed"
     },
@@ -2029,6 +2159,12 @@
       "generate": "GENERATE",
       "generating": "GENERATING...",
       "scheduleEmpty": "Click GENERATE to compute the rental schedule",
+      "upFrontCount_one": "· {{count}} item",
+      "upFrontCount_other": "· {{count}} items",
+      "scheduleYears_one": "· {{count}} year",
+      "scheduleYears_other": "· {{count}} years",
+      "growthPeriodCount_one": "· {{count}} period",
+      "growthPeriodCount_other": "· {{count}} periods",
       "upFrontMismatch": "Total up front entries ({{entries}}) does not match the Up Front amount ({{total}})",
       "table": {
         "atYear": "At Year",
@@ -2315,11 +2451,15 @@
     "navBuilding": "Building",
     "navConstructionInspection": "Construction Detail",
     "navMachinery": "Machinery",
+    "navPma": "PMA Information",
     "saveDraft": "Save draft",
     "save": "Save"
   },
   "landCharacteristicsForm": {
-    "deductionsLabel": "Reason",
+    "deductionsTitle": "Area deductions",
+    "deductionsSummary_one": "· {{count}} item · deducting {{area}} sq.wa",
+    "deductionsSummary_other": "· {{count}} items · deducting {{area}} sq.wa",
+    "addDeduction": "Add item",
     "confirmClearDeductions": {
       "title": "Turn off area deductions?",
       "message": "Switching this off deletes the deduction rows you entered ({{count}}) and restores the appraised area to the registered title area."
@@ -2548,8 +2688,8 @@
     "conditionMinVotesDefault": "Minimum vote count required",
     "stats": {
       "votesReceived": "Votes received",
-      "approve": "Approve",
-      "reject": "Reject",
+      "approve": "Agree",
+      "reject": "Disagree",
       "routeBack": "Route-back"
     },
     "voteLabels": {
@@ -2658,6 +2798,14 @@
     "untitled": "No name yet",
     "newHint": "Key details show here once saved",
     "position": "{{group}} · item {{n}}",
+    "pmaSuffix": "PMA",
+    "pmaTitle": "Updating PMA property",
+    "pmaSync": {
+      "synced": "Synced",
+      "pending": "Pending sync",
+      "failed": "Sync failed",
+      "retryHint": "· Save to retry"
+    },
     "titleCount": "{{n}} title documents",
     "titleNo": "Title {{no}}"
   },
@@ -2753,6 +2901,12 @@
     "viewLabel": "View",
     "viewDocument": "Document",
     "viewForm": "Form",
+    "nav": {
+      "group": "Title navigation",
+      "prev": "Previous title",
+      "next": "Next title",
+      "position": "{{current}} / {{total}}"
+    },
     "typeLabel": "Type",
     "summary": "No. {{no}} · {{area}} rai",
     "required": "Required",
@@ -2790,7 +2944,7 @@
       "pageNumber": "Page",
       "rawang": "Rawang",
       "landParcelNumber": "Land number",
-      "surveyNumber": "Survey page",
+      "surveyNumber": "Survey No.",
       "mapSheetNumber": "Sheet",
       "aerialMapName": "Aerial photo map name",
       "aerialMapNumber": "Aerial photo number",
@@ -2813,7 +2967,7 @@
       "subDistrict": "Sub-district",
       "district": "District",
       "province": "Province",
-      "issuedTo": "Issued to",
+      "issuedTo": "Owner name",
       "nationality": "Nationality",
       "houseNo": "House no.",
       "moo": "Moo",
@@ -2838,7 +2992,7 @@
       "aerialMapNumber": "No.",
       "mapSheet": "Sheet",
       "landParcel": "Land no.",
-      "survey": "Survey page",
+      "survey": "Survey No.",
       "rai": "rai",
       "ngan": "ngan",
       "wa": "sq.wa",
@@ -2879,9 +3033,24 @@
       "north": "North",
       "south": "South",
       "east": "East",
-      "west": "West"
+      "west": "West",
+      "condo": {
+        "title": "Condominium Unit Title",
+        "sub": "(Or Chor 2)",
+        "landDeed": "Title deed no.",
+        "location": "Unit location"
+      }
     },
     "list": {
+      "sortByNumber": "Sort by title number",
+      "dnd": {
+        "handle": "Drag to reorder",
+        "instructions": "Press space to pick up a title, the arrow keys to move it, and space again to drop it. Escape cancels.",
+        "pickedUp": "Picked up title {{pos}}.",
+        "movedTo": "Title {{pos}} is over position {{to}}.",
+        "dropped": "Title {{pos}} moved to position {{to}}.",
+        "cancelled": "Move cancelled. Title {{pos}} stays where it was."
+      },
       "type": "Type",
       "document": "No. · Book · Page",
       "position": "Land position",
@@ -3205,6 +3374,8 @@
   "surfaceTable": {
     "sectionLabel": "Floor surfaces",
     "addFloor": "Add floor",
+    "itemCount_one": "· {{count}} item",
+    "itemCount_other": "· {{count}} items",
     "empty": "No floor data yet",
     "otherPlaceholder": "Specify",
     "reversed": "To floor is lower than from floor",

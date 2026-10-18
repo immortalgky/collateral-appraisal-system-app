@@ -320,7 +320,7 @@ export default function TowerListingTab() {
                 <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   {t('towerListing.cols.numberOfFloors')}
                 </th>
-                <th className="w-16 px-2 py-2" />
+                <th className="text-xs w-16 px-2 py-2 font-semibold" />
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">

@@ -87,19 +87,19 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="table w-full">
+          <table className="table w-full text-table">
             <thead>
               <tr className="bg-primary/10">
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg">
+                <th className="text-primary text-xs font-semibold py-3 px-4 text-left first:rounded-tl-lg">
                   Group
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-32">
+                <th className="text-primary text-xs font-semibold py-3 px-4 text-center w-32">
                   Total
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center w-32">
+                <th className="text-primary text-xs font-semibold py-3 px-4 text-center w-32">
                   Active
                 </th>
-                <th className="text-primary text-sm font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24">
+                <th className="text-primary text-xs font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24">
                   Actions
                 </th>
               </tr>
@@ -116,16 +116,16 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
                       <div className="size-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
                         <Icon name="layer-group" style="solid" className="size-3.5 text-primary" />
                       </div>
-                      <span className="text-sm font-medium text-gray-800">{row.group}</span>
+                      <span className="text-table font-medium text-gray-800">{row.group}</span>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <span className="text-sm text-gray-600">{row.totalCount}</span>
+                    <span className="text-table text-gray-600">{row.totalCount}</span>
                   </td>
                   <td className="py-3 px-4 text-center">
                     <span
                       className={clsx(
-                        'inline-flex items-center gap-1 text-sm',
+                        'inline-flex items-center gap-1 text-table',
                         row.activeCount === row.totalCount
                           ? 'text-emerald-600'
                           : row.activeCount === 0

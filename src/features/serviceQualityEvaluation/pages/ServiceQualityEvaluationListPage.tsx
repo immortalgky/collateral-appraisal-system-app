@@ -127,7 +127,7 @@ function ServiceQualityEvaluationListPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
@@ -204,13 +204,14 @@ function ServiceQualityEvaluationListPage() {
       {/* Table */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-table">
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
                 {[
                   { key: 'AppraisalNumber', label: t('list.columns.appraisalNumber'), align: 'left' as const, nowrap: true },
                   { key: 'AppraiserCompanyName', label: t('list.columns.appraiser'), align: 'left' as const, nowrap: false },
                   { key: 'CustomerName', label: t('list.columns.customerName'), align: 'left' as const, nowrap: false },
+                  { key: 'InternalFollowupStaffName', label: t('list.columns.internalFollowupStaffName'), align: 'left' as const, nowrap: false },
                   { key: 'ReportReceivedDate', label: t('list.columns.reportReceivedDate'), align: 'left' as const, nowrap: true },
                   { key: 'AppraisalStatus', label: t('list.columns.status'), align: 'left' as const, nowrap: false },
                   { key: 'EvaluationStatus', label: t('list.columns.evaluationStatus'), align: 'left' as const, nowrap: true },
@@ -223,7 +224,7 @@ function ServiceQualityEvaluationListPage() {
                     <th
                       key={col.key}
                       onClick={() => handleSort(col.key)}
-                      className={`${alignClass} font-medium px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
+                      className={`text-xs ${alignClass} font-semibold px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
                         col.nowrap ? 'whitespace-nowrap' : ''
                       } ${isActive ? 'text-primary' : 'text-gray-600'}`}
                     >
@@ -245,16 +246,18 @@ function ServiceQualityEvaluationListPage() {
                     { width: 'w-28' },
                     { width: 'w-32' },
                     { width: 'w-32' },
+                    { width: 'w-32' },
                     { width: 'w-24' },
                     { width: 'w-20' },
                     { width: 'w-24' },
                     { width: 'w-20' },
+                    { width: 'w-24' },
                   ]}
                   rows={5}
                 />
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-16">
+                  <td colSpan={9} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
                       <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
                       <p className="text-gray-500 font-medium">{t('list.empty.title')}</p>
@@ -284,6 +287,7 @@ function ServiceQualityEvaluationListPage() {
                         : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-gray-700">{item.customerName || '—'}</td>
+                    <td className="px-4 py-2.5 text-gray-700">{item.internalFollowupStaffName || '—'}</td>
                     <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
                       {formatLocaleDate(item.reportReceivedDate, i18n.language)}
                     </td>

@@ -95,15 +95,29 @@ const LandBuildingView = ({
           <table className="w-full text-xs whitespace-nowrap">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">#</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Plan No</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">House No</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Model</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Location</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Floor</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Land (Sq.Wa)</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Usable (Sq.M)</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Selling Price</th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">#</th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  Plan No
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  House No
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">Model</th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  Location
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Floor
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Land (Sq.Wa)
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Usable (Sq.M)
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Selling Price
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -134,9 +148,7 @@ const LandBuildingView = ({
 
     <CostItemsTable items={costItems} />
 
-    {summary && (
-      <LandBuildingSummaryBlock summary={summary} indicatedValue={indicatedValue} />
-    )}
+    {summary && <LandBuildingSummaryBlock summary={summary} indicatedValue={indicatedValue} />}
 
     {remark && (
       <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{remark}</p>
@@ -168,14 +180,28 @@ const CondominiumView = ({
           <table className="w-full text-xs whitespace-nowrap">
             <thead>
               <tr className="bg-gray-100">
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">#</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Floor</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Building</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Apt No</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Apartment</th>
-                <th className="px-2 py-1.5 text-left font-medium text-gray-500">Model Type</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Usable (Sq.M)</th>
-                <th className="px-2 py-1.5 text-right font-medium text-gray-500">Selling Price</th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">#</th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Floor
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  Building
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  Apt No
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  Apartment
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                  Model Type
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Usable (Sq.M)
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  Selling Price
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -203,9 +229,7 @@ const CondominiumView = ({
 
     <CostItemsTable items={costItems} />
 
-    {summary && (
-      <CondominiumSummaryBlock summary={summary} indicatedValue={indicatedValue} />
-    )}
+    {summary && <CondominiumSummaryBlock summary={summary} indicatedValue={indicatedValue} />}
 
     {remark && (
       <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{remark}</p>
@@ -224,13 +248,27 @@ const CostItemsTable = ({ items }: { items: CostItemDto[] }) => {
         <table className="w-full text-xs whitespace-nowrap">
           <thead>
             <tr className="bg-gray-100">
-              <th className="px-2 py-1.5 text-left font-medium text-gray-500">Category</th>
-              <th className="px-2 py-1.5 text-left font-medium text-gray-500">Description</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Area (Sq.M)</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Price/Sq.M</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Annual Depr %</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Total Depr %</th>
-              <th className="px-2 py-1.5 text-right font-medium text-gray-500">Value After Depr</th>
+              <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                Category
+              </th>
+              <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                Description
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Area (Sq.M)
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Price/Sq.M
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Annual Depr %
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Total Depr %
+              </th>
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                Value After Depr
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">

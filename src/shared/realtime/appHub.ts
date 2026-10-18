@@ -16,7 +16,7 @@ import {
   HubConnectionState,
   type HubConnection,
 } from '@microsoft/signalr';
-import { getFreshAccessToken, isSessionExpired } from '@shared/api/axiosInstance';
+import { refreshCurrentUser } from '@features/auth/api';
 import { signalrLogger } from '@shared/utils/signalrLogger';
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -111,6 +111,26 @@ const _boundEvents = new Set<string>();
 /** Listeners notified whenever the high-level status changes. */
 const _statusListeners = new Set<(status: AppHubStatus) => void>();
 
+let _lastSessionCheckAt = 0;
+/** A hub that is down for a reason other than auth must not turn into a /auth/me every retry. */
+const SESSION_CHECK_MIN_GAP_MS = 60_000;
+
+/**
+ * A failed WebSocket handshake never reaches axios, so a dead session would otherwise retry forever
+ * without anyone noticing. Ask the API who we are: a 401 goes through the axios interceptor and
+ * sends the browser to sign in again. Any other outcome (offline, 5xx, still signed in) is ignored
+ * and the normal retry carries on. Single-flight and at most once a minute, however fast the
+ * retries that trigger it. Timer-driven, so axios marks it as a background request unless the user
+ * is active.
+ */
+function checkSession(): Promise<unknown> {
+  if (Date.now() - _lastSessionCheckAt < SESSION_CHECK_MIN_GAP_MS) return Promise.resolve();
+  _lastSessionCheckAt = Date.now();
+  // Through the query cache so a 200 refreshes the store too (an extended access window, a changed
+  // role); concurrent callers share the one in-flight request.
+  return refreshCurrentUser().catch(() => {});
+}
+
 function setStatus(status: AppHubStatus): void {
   if (_status === status) return;
   _status = status;
@@ -132,9 +152,8 @@ function setStatus(status: AppHubStatus): void {
  * `wsOnly` connects with a single WebSocket request and no negotiate round trip. Deployed
  * environments run two IIS nodes behind an F5 with sticky sessions off: a negotiated connection id
  * lives in one node's memory, so the follow-up request (WS/SSE/long-poll) 404s whenever it lands on
- * the other node, while a lone WebSocket stays pinned to whichever node accepted it. The token
- * rides in the query string (~8 KB when encrypted), so IIS must raise requestFiltering
- * maxQueryString (UAT uses 16384) or the upgrade fails with 404.15.
+ * the other node, while a lone WebSocket stays pinned to whichever node accepted it. The session
+ * cookie authenticates the handshake; there is no token to send.
  *
  * Without `wsOnly` the client negotiates and may fall back to SSE / long polling — for hosts that
  * can't do WebSockets. See connectWithFallback().
@@ -143,14 +162,10 @@ function buildConnection(wsOnly: boolean): HubConnection {
   return (
     new HubConnectionBuilder()
       .withUrl(getHubUrl(), {
-        // Refresh the token before (re)connecting so reconnects after idle/sleep
-        // don't negotiate with an expired token and 401-loop.
-        // On refresh failure getFreshAccessToken() returns null → ''. We do NOT
-        // force a logout here: a null result also covers a transient network
-        // outage (offline), which is exactly when we want to keep retrying.
-        // A genuinely dead session is caught by the axios 401 interceptor on the
-        // next API call, which forces the logout/redirect.
-        accessTokenFactory: async () => (await getFreshAccessToken()) ?? '',
+        // The session cookie rides on the handshake. We do NOT force a logout when the connection
+        // fails: that also covers a transient network outage, which is exactly when we want to
+        // keep retrying. A genuinely dead session is caught by checkSession() before each
+        // reconnect attempt (or by any API call): the axios 401 interceptor sends the user to sign in.
         withCredentials: true,
         ...(wsOnly && { skipNegotiation: true, transport: HttpTransportType.WebSockets }),
       })
@@ -159,13 +174,9 @@ function buildConnection(wsOnly: boolean): HubConnection {
       // 0s, 2s, 4s, 8s, 16s, then 30s forever.
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: ctx => {
-          // Returning null is the only way out of this loop. Do it once the refresh endpoint has
-          // answered 401: every further attempt re-runs accessTokenFactory, gets null, negotiates
-          // without an Authorization header and 401s — roughly a thousand pointless round trips
-          // across an idle night, per tab. This hands over to scheduleRestart()'s slow poll rather
-          // than ending reconnection for good. Logout stays the axios 401 interceptor's job on the
-          // user's next real API call; this only stops the noise.
-          if (isSessionExpired()) return null;
+          // Called once per reconnect attempt, so a session that died during a long reconnect spell
+          // is noticed on the next attempt rather than 401-looping for ever.
+          void checkSession();
           return ctx.previousRetryCount === 0
             ? 0
             : Math.min(30000, 1000 * 2 ** Math.min(ctx.previousRetryCount, 5));
@@ -245,10 +256,8 @@ function attachConnectionHandlers(conn: HubConnection): void {
   });
 }
 
-/** Normal auto-restart cadence after an unexpected close. */
+/** Auto-restart cadence after an unexpected close. */
 const RESTART_DELAY_MS = 5000;
-/** Cadence once /auth/refresh has answered 401 — see the reasoning in scheduleRestart(). */
-const EXPIRED_RETRY_DELAY_MS = 5 * 60 * 1000;
 
 /**
  * Connect WebSocket-only first, and only if that fails retry with negotiation so SSE / long polling
@@ -273,21 +282,15 @@ async function connectWithFallback(): Promise<void> {
 /** Schedule a reconnect attempt after an unexpected close. */
 function scheduleRestart(): void {
   if (_restartTimer || _intentionalStop || !_lastUsername) return;
-  // Back off hard rather than stopping outright once the last refresh came back 401. Stopping was
-  // the first instinct — this path re-arms itself every 5s, so a dead session burned thousands of
-  // pointless requests overnight — but a 401 also covers a token-rotation race, and giving up for
-  // good leaves a tab that never fires 'visibilitychange' (second monitor, kiosk) silently
-  // realtime-dead with nothing but a grey status dot to show for it. The slow poll keeps ~98% of
-  // the saving and restores self-healing.
-  const delay = isSessionExpired() ? EXPIRED_RETRY_DELAY_MS : RESTART_DELAY_MS;
-  _restartTimer = setTimeout(() => {
+  _restartTimer = setTimeout(async () => {
     _restartTimer = null;
+    await checkSession();
     if (!_lastUsername) return;
     start(_lastUsername).catch(err => {
       console.warn('[AppHub] auto-restart failed, will retry:', err);
       scheduleRestart();
     });
-  }, delay);
+  }, RESTART_DELAY_MS);
 }
 
 /** Attach window/document wake listeners once — reconnect on network/focus.
@@ -298,9 +301,6 @@ function attachWakeListeners(): void {
   if (_wakeListenersAttached || typeof window === 'undefined') return;
   _wakeListenersAttached = true;
 
-  // Deliberately NOT gated on isSessionExpired(): coming back online or re-focusing the tab is a
-  // user-driven event, it costs exactly one refresh + one negotiate, and it is the fastest way to
-  // recover a session that turned out to be fine. A failure just falls back into the slow poll.
   window.addEventListener('online', () => {
     if (_lastUsername && _status === 'disconnected') {
       start(_lastUsername).catch(() => {});

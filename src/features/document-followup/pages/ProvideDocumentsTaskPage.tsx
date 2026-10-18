@@ -478,13 +478,13 @@ function ProvideDocumentsTaskPage() {
               <table className="w-full text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600">
                       {t('columns.documentType')}
                     </th>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600">
                       {t('columns.notes')}
                     </th>
-                    <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
+                    <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600">
                       {t('columns.status')}
                     </th>
                   </tr>
@@ -553,7 +553,7 @@ function ProvideDocumentsTaskPage() {
       {/* Inline Document Checklist — read-only reference of currently-attached documents. */}
       <FormCard title={t('page.documentChecklist')} icon="folder-open" iconColor="blue">
         <p className="text-xs text-gray-500 mb-4">{t('page.checklistHint')}</p>
-        <DocumentChecklistTab />
+        <DocumentChecklistTab embedded />
       </FormCard>
 
       {/* Upload dialog (per line item) */}

@@ -26,6 +26,8 @@ const landAreaDeductionItem = z.object({
 });
 
 const landTitleItem = z.object({
+  // Without it the save sends every title as new: the API deletes the stored rows and re-creates them.
+  id: z.string().nullable().optional(),
   titleNumber: z.string(),
   titleType: z.string(),
   bookNumber: z.string().nullable().optional(),
@@ -122,6 +124,8 @@ export const createProjectLandForm = buildFormSchema(
           'ownerNameLand',
           'isOwnerVerifiedLand',
           'landOffice',
+          'latitude',
+          'longitude',
         ].includes(field.name),
     ),
     {
@@ -142,10 +146,18 @@ export const createProjectLandForm = buildFormSchema(
       maxLength: 100,
     },
   ],
-  createLandFormBase,
+  // Held by a project land (ProjectLand.LandOffice / EncroachmentArea) with no input on this page;
+  // declared so the save carries them back instead of zod dropping them and the update storing null.
+  createLandFormBase.extend({
+    encroachmentArea: z.coerce.number().nullable().optional(),
+    landOffice: z.string().nullable().optional(),
+  }),
 ).superRefine(rentedOutRefinement);
 
+// Row ids are declared on every repeated row: the save sends zod's output, and a row sent without its
+// id is deleted and re-created by the update.
 const surfaceFormItem = z.object({
+  id: z.string().nullable().optional(),
   fromFloorNumber: z.coerce.number().nullable().optional(),
   toFloorNumber: z.coerce.number().nullable().optional(),
   floorType: z.string().nullable().optional(),
@@ -156,6 +168,7 @@ const surfaceFormItem = z.object({
 });
 
 const depreciationPeriodFormItem = z.object({
+  id: z.string().nullable().optional(),
   atYear: z.coerce.number().nullable().optional(),
   toYear: z.coerce.number().nullable().optional(),
   depreciationPerYear: z.coerce.number().nullable().optional(),
@@ -164,6 +177,7 @@ const depreciationPeriodFormItem = z.object({
 });
 
 const depreciationFormItem = z.object({
+  id: z.string().nullable().optional(),
   areaDescription: z.string().nullable().optional(),
   area: z.coerce.number().nullable().optional(),
   isBuilding: z.boolean().nullable().optional(),
@@ -205,8 +219,10 @@ const constructionSummaryFormItem = z.object({
 });
 
 export const createBuildingFormBase = z.object({
-  finalCostValueOverride: z.coerce.number().nullable().optional(),
-  buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
+  // The Building Cost Value the appraiser typed; null follows the depreciation table.
+  buildingCostValue: z.coerce.number().nullable().optional(),
+  // The appraiser's own fire-insurance coverage; null falls back to the depreciated building value.
+  buildingInsurancePrice: z.coerce.number().nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
   depreciationDetails: z.array(depreciationFormItem).nullable().optional(),
   constructionEnterDetail: z.boolean().nullable().optional(),
@@ -250,6 +266,9 @@ const AreaDetailDto = z
   .passthrough();
 
 export const createCondoFormBase = z.object({
+  // No input on the condo page, but the record holds it and pricing reads it as the usable area.
+  // zod drops an undeclared key and the update overwrites the whole record, so it must be declared.
+  totalBuildingArea: z.coerce.number().nullable().optional(),
   buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
   areaDetails: z.array(AreaDetailDto).nullable(),
   constructionEnterDetail: z.boolean().nullable().optional(),
@@ -263,8 +282,10 @@ export const createCondoForm = buildFormSchema(allCondoFields, createCondoFormBa
 );
 
 export const createLandAndBuildingFormBase = z.object({
-  finalCostValueOverride: z.coerce.number().nullable().optional(),
-  buildingInsurancePriceOverride: z.coerce.number().nullable().optional(),
+  // The Building Cost Value the appraiser typed; null follows the depreciation table.
+  buildingCostValue: z.coerce.number().nullable().optional(),
+  // The appraiser's own fire-insurance coverage; null falls back to the depreciated building value.
+  buildingInsurancePrice: z.coerce.number().nullable().optional(),
   titles: z.array(landTitleItem).nullable().optional(),
   landAreaDeductions: z.array(landAreaDeductionItem).nullable().optional(),
   surfaces: z.array(surfaceFormItem).nullable().optional(),
@@ -571,7 +592,6 @@ export const createLandFormDefault: createLandFormType = {
   royalDecree: '',
   isEncroached: false,
   encroachmentRemark: '',
-  encroachmentArea: null,
   hasElectricity: false,
   electricityDistance: null,
   isLandlocked: false,
@@ -651,10 +671,7 @@ export const createBuildingFormDefault: createBuildingFormType = {
   utilizationTypeOther: '',
   totalBuildingArea: null,
   buildingInsurancePrice: null,
-  finalCostValueOverride: null,
-  buildingInsurancePriceOverride: null,
-  sellingPrice: null,
-  forcedSalePrice: null,
+  buildingCostValue: null,
   remark: '',
   surfaces: [],
   depreciationDetails: [],
@@ -754,8 +771,6 @@ export const createCondoFormDefault: createCondoFormType = {
   environmentType: [],
   buildingInsurancePrice: null,
   buildingInsurancePriceOverride: null,
-  sellingPrice: null,
-  forcedSalePrice: null,
   remark: '',
   constructionEnterDetail: true,
   constructionSubItems: [],
@@ -843,7 +858,6 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   royalDecree: '',
   isEncroached: false,
   encroachmentRemark: '',
-  encroachmentArea: null,
   hasElectricity: false,
   electricityDistance: null,
   isLandlocked: false,
@@ -914,10 +928,7 @@ export const createLandAndBuildingFormDefault: createLandAndBuildingFormType = {
   utilizationTypeOther: '',
   totalBuildingArea: null,
   buildingInsurancePrice: null,
-  finalCostValueOverride: null,
-  buildingInsurancePriceOverride: null,
-  sellingPrice: null,
-  forcedSalePrice: null,
+  buildingCostValue: null,
   remark: '',
   surfaces: [],
   depreciationDetails: [],

@@ -163,7 +163,6 @@ const landSections = (t: T): SectionDef[] => [
       { key: 'royalDecree', label: t('view360.fields.royalDecree') },
       { key: 'expropriationRemark', label: t('view360.fields.expropriationRemark') },
       { key: 'isEncroached', label: t('view360.fields.encroached'), isBoolean: true },
-      { key: 'encroachmentArea', label: t('view360.fields.encroachmentArea'), isNumber: true },
       { key: 'encroachmentRemark', label: t('view360.fields.encroachmentRemark') },
       { key: 'isLandlocked', label: t('view360.fields.landlocked'), isBoolean: true },
       { key: 'landlockedRemark', label: t('view360.fields.landlockedRemark') },
@@ -360,18 +359,6 @@ const buildingSections = (t: T): SectionDef[] => [
         isNumber: true,
         decimalPlaces: 2,
       },
-      {
-        key: 'sellingPrice',
-        label: t('view360.fields.sellingPrice'),
-        isNumber: true,
-        decimalPlaces: 2,
-      },
-      {
-        key: 'forcedSalePrice',
-        label: t('view360.fields.forcedSalePrice'),
-        isNumber: true,
-        decimalPlaces: 2,
-      },
     ],
   },
   {
@@ -549,18 +536,6 @@ const condoSections = (t: T): SectionDef[] => [
       {
         key: 'buildingInsurancePrice',
         label: t('view360.fields.insurancePrice'),
-        isNumber: true,
-        decimalPlaces: 2,
-      },
-      {
-        key: 'sellingPrice',
-        label: t('view360.fields.sellingPrice'),
-        isNumber: true,
-        decimalPlaces: 2,
-      },
-      {
-        key: 'forceSellingPrice',
-        label: t('view360.fields.forcedSalePrice'),
         isNumber: true,
         decimalPlaces: 2,
       },

@@ -21,6 +21,7 @@
       "appraisalNumber": "Appraisal Number",
       "appraiser": "Appraiser",
       "customerName": "Customer Name",
+      "internalFollowupStaffName": "Internal Followup Staff",
       "reportReceivedDate": "Report Received Date",
       "status": "Status",
       "evaluationStatus": "Evaluation Status",

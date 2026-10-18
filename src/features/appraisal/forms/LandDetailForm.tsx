@@ -227,8 +227,7 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
           initialLon={initialLon}
         />
 
-        {/* The same dialog the table uses to delete a single row: wiping every row at once
-            should not be the less guarded of the two. */}
+        {/* One row takes two clicks (ConfirmDeleteButton); wiping every row at once keeps this dialog. */}
         <ConfirmDialog
           isOpen={pendingClearCount !== null}
           onClose={() => setPendingClearCount(null)}

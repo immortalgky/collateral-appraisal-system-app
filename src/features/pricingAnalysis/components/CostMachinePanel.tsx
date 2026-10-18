@@ -279,7 +279,7 @@ export function CostMachinePanel({
               type="button"
               onClick={onCancelCalculationMethod}
               disabled={saveMutation.isPending}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
             >
               {t('footer.cancel')}
             </Button>
@@ -299,7 +299,7 @@ export function CostMachinePanel({
               form={formId}
               isLoading={saveMutation.isPending}
               disabled={saveMutation.isPending}
-              className="h-[28px]! px-[12px]! py-0! text-[12.5px]! rounded-[7px]!"
+              className="h-[28px]! px-[12px]! py-0! text-sm! rounded-[7px]!"
             >
               {!saveMutation.isPending && (
                 <Icon style="solid" name="check" className="size-[13px] mr-[6px]" />
@@ -357,7 +357,7 @@ export function CostMachinePanel({
               content: (
                 <div className="grid grid-cols-2 items-start gap-[16px] py-[14px] px-[16px]">
                   <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-                    <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+                    <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
                       {t('costMachine.summary.title')}
                     </h4>
                     {/* `KvRow` rather than the hand-rolled flex rows this replaced — the same
@@ -479,7 +479,7 @@ export function CostMachinePanel({
                     </div>
                   </div>
                   <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-                    <h4 className="m-0 px-[12px] py-[8px] text-[12.5px] font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+                    <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
                       {t('costMachine.summary.remarkTitle')}
                     </h4>
                     <div className="px-[12px] py-3">

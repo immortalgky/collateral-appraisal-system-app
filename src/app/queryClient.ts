@@ -12,8 +12,8 @@ export const queryClient = new QueryClient({
        *
        *   - a 4xx returns the same answer every time. A 400 from a rejected sort field, a 403,
        *     a 404 — none of them become a 200 on the second attempt.
-       *   - a 401 is already handled one layer down: the axios interceptor refreshes the token
-       *     and replays the request once, so retrying here only repeats work that was done.
+       *   - a 401 is already handled one layer down: the axios interceptor sends the browser to
+       *     sign in again, so retrying here only repeats a request the page is about to leave.
        *   - a request we cancelled ourselves (a superseded search) is not a failure at all.
        *
        * What is left worth retrying is a network blip or a 5xx, and two attempts past the first
