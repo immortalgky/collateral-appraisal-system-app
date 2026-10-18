@@ -263,7 +263,8 @@
   },
   "titleAddress": {
     "header": "ที่อยู่ตามเอกสารกรรมสิทธิ์",
-    "dopaHeader": "ที่อยู่ตาม DOPA"
+    "dopaHeader": "ที่อยู่ตาม DOPA",
+    "propertyLocationHeader": "ที่ตั้งทรัพย์สิน"
   },
   "titleOptions": {
     "noCollateralType": "กรุณาเลือกประเภทหลักประกันเพื่อดำเนินการต่อ",
@@ -455,7 +456,13 @@
     },
     "priorSummary": {
       "noReportNumber": "ยังไม่มีเลขเล่ม",
-      "status": {"Submitted": "ส่งแล้ว", "Pending": "รอดำเนินการ", "Assigned": "มอบหมายแล้ว", "InProgress": "กำลังดำเนินการ", "UnderReview": "อยู่ระหว่างตรวจสอบ"},
+      "status": {
+        "Submitted": "ส่งแล้ว",
+        "Pending": "รอดำเนินการ",
+        "Assigned": "มอบหมายแล้ว",
+        "InProgress": "กำลังดำเนินการ",
+        "UnderReview": "อยู่ระหว่างตรวจสอบ"
+      },
       "inProgressHeading": "หลักประกัน {{matched}} จาก {{total}} รายการ กำลังอยู่ระหว่างประเมินในเล่มอื่น",
       "inProgressHint": "ตรวจสอบกับเล่มด้านล่างก่อนส่ง เพื่อไม่ให้ประเมินหลักประกันเดียวกันซ้ำซ้อน",
       "heading": "หลักประกันที่แนบมา {{matched}} จาก {{total}} รายการ เคยประเมินแล้ว",
@@ -832,16 +839,22 @@
       "copyFromTitle": "คัดลอกจากที่อยู่ตามเอกสารสิทธิ์",
       "copyOverwriteConfirm": "คัดลอกที่อยู่ตามเอกสารสิทธิ์",
       "copyOverwriteMessage": "ที่อยู่ตาม DOPA มีข้อมูลอยู่แล้ว ต้องการแทนที่ด้วยที่อยู่ตามเอกสารสิทธิ์หรือไม่",
+      "copyOverwriteMessageRequest": "ที่ตั้งทรัพย์สินมีข้อมูลอยู่แล้ว ต้องการแทนที่ด้วยที่อยู่ของคำขอหรือไม่",
       "districtDiffersDopa": "อำเภอ/เขตในทะเบียน DOPA คือ {{district}} ซึ่งต่างจากเอกสารสิทธิ์ กรุณาตรวจสอบ",
+      "districtDiffersRequest": "อำเภอ/เขตในทะเบียน DOPA คือ {{district}} ซึ่งต่างจากที่อยู่ของคำขอ กรุณาตรวจสอบ",
       "districtDiffersTitle": "อำเภอ/เขตในทะเบียนโฉนดคือ {{district}} ซึ่งต่างจากที่อยู่ของคำขอ กรุณาตรวจสอบ",
       "dopaMissing": "ตำบลนี้ไม่มีในทะเบียน DOPA กรุณาเลือกเอง",
       "overwriteConfirm": "คัดลอกที่อยู่ของคำขอ",
       "overwriteMessage": "ที่อยู่ตามเอกสารสิทธิ์มีข้อมูลอยู่แล้ว ต้องการแทนที่ด้วยที่อยู่ของคำขอหรือไม่",
       "overwriteTitle": "แทนที่ที่อยู่?",
       "tagDopa": "DOPA",
+      "tagLocation": "ที่ตั้งทรัพย์สิน",
       "tagTitle": "ที่อยู่ตามเอกสาร",
       "titleMissing": "ตำบลของคำขอไม่มีในทะเบียนโฉนด กรุณาเลือกเอง",
-      "useRequest": "คัดลอกจากที่อยู่ของคำขอ"
+      "useRequest": "คัดลอกจากที่อยู่ของคำขอ",
+      "masterUnavailable": "ข้อมูลที่อยู่ยังโหลดไม่เสร็จ หากค้างนานให้โหลดหน้าใหม่",
+      "requestAddressEmpty": "กรอกที่อยู่ของคำขอก่อน",
+      "titleAddressEmpty": "กรอกที่อยู่ตามเอกสารสิทธิ์ก่อน"
     },
     "priorCheck": {
       "priorHeading": "เคยประเมินแล้ว",

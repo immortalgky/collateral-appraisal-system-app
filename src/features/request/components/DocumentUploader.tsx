@@ -19,6 +19,8 @@ import DocumentCardHeader from './documentCard/DocumentCardHeader';
 import DocumentPreviewPane from './documentCard/DocumentPreviewPane';
 import { useCardIsWide, usePreviewPaneShown } from './documentCard/usePaneLayout';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
+import { placeAddress } from '../utils/titleList';
+import type { RequestTitleDtoType } from '../schemas/form';
 import DocumentSection, { type SectionActions } from './documentCard/DocumentSection';
 import DocumentToolbar from './documentCard/DocumentToolbar';
 import { useTitleLabel } from '../hooks/useTitleLabel';
@@ -1136,15 +1138,9 @@ const DocumentCard: React.FunctionComponent<
         label: t('moveDocument.requestLevelLabel'),
         detail: t('moveDocument.requestLevelHint'),
       };
-    const form = getValues(`titles.${section.entityIndex}`) as
-      | {
-          ownerName?: string | null;
-          titleAddress?: { districtName?: string; provinceName?: string };
-        }
-      | undefined;
-    const place = [form?.titleAddress?.districtName, form?.titleAddress?.provinceName]
-      .filter(Boolean)
-      .join(' ');
+    const form = getValues(`titles.${section.entityIndex}`) as RequestTitleDtoType | undefined;
+    const address = form && placeAddress(form);
+    const place = [address?.districtName, address?.provinceName].filter(Boolean).join(' ');
     const docKey = doc?.level === 'Title' ? titleKey(doc.collateralType, doc.titleNumber) : null;
     return {
       entityType: 'title',

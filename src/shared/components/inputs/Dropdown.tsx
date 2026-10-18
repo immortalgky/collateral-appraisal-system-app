@@ -401,7 +401,7 @@ const OtherInput = ({
             disabled={disabled}
             maxLength={maxLength}
             className={clsx(
-              'block w-full h-full bg-transparent focus:outline-none placeholder:text-gray-400',
+              'block w-full bg-transparent focus:outline-none placeholder:text-gray-400',
               compact ? 'text-xs pl-2 pr-7 py-1' : 'text-sm pl-3 pr-9 py-2',
               disabled ? 'text-gray-500 cursor-not-allowed' : 'text-gray-900',
             )}

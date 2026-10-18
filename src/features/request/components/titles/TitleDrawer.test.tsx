@@ -399,10 +399,14 @@ describe('what each type shows', () => {
     ['10', 'vehicle'],
     ['11', 'machine'],
     ['12', 'vessel'],
-  ])('%s: its own fields, and still both addresses (the schema requires them)', (code, id) => {
-    render(<Harness title={type(code)} />);
-    expect(ids()).toEqual(expect.arrayContaining([id, 'title-address', 'dopa-address']));
-  });
+  ])(
+    '%s: its own fields and only the DOPA card (no title document, so no title address)',
+    (code, id) => {
+      render(<Harness title={type(code)} />);
+      expect(ids()).toEqual(expect.arrayContaining([id, 'dopa-address']));
+      expect(ids()).not.toContain('title-address');
+    },
+  );
 
   it('no type yet: only a prompt to choose one', () => {
     render(<Harness title={type('')} />);
@@ -412,6 +416,23 @@ describe('what each type shows', () => {
 });
 
 describe('choosing a type in the editor', () => {
+  it('empties the title address when the type becomes a movable, but not on opening one', () => {
+    const { unmount } = render(<Harness title={completeLand({ collateralType: '10' })} />);
+    expect(form.getValues('titles.0.titleAddress')).toMatchObject(address);
+    unmount();
+
+    render(<Harness />);
+    act(() => form.setValue('titles.0.collateralType', '10'));
+    expect(form.getValues('titles.0.titleAddress')).toEqual(requestTitleDefault.titleAddress);
+    expect(form.getValues('titles.0.dopaAddress')).toMatchObject(address);
+  });
+
+  it('keeps the title address when the type changes to another immovable', () => {
+    render(<Harness />);
+    act(() => form.setValue('titles.0.collateralType', '02'));
+    expect(form.getValues('titles.0.titleAddress')).toMatchObject(address);
+  });
+
   it('makes a land title a deed when it has no type yet, but not on opening', () => {
     render(<Harness title={{ ...structuredClone(requestTitleDefault), collateralType: '' }} />);
     expect(form.getValues('titles.0.titleType')).toBe('');

@@ -12,6 +12,7 @@ import { CUSTOMER_COLUMNS, PROPERTY_COLUMNS } from './tableColumns';
 import {
   LAND_CODES,
   LEASE_LAND_CODE,
+  MOVABLE_CODES,
   mapCollateral,
 } from '@features/request/data/mapCollateral.ts';
 import {
@@ -967,8 +968,6 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.noOfMachines'),
       name: 'numberOfMachine',
       wrapperClassName: 'col-span-3',
-      // A blank placeholder (NumberInput turns '' into "0"): an empty box must not look like it holds 0
-      placeholder: ' ',
       required: true,
       requiredWhen: { field: 'collateralType', is: '11' },
       decimalPlaces: 0,
@@ -1681,9 +1680,10 @@ export const titleAddressFields: FormField[] = [
     label: _st('House Number'),
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    // A movable has no title-document address, so nothing here is required for it.
     requiredWhen: {
       field: 'collateralType',
-      is: [...LAND_CODES, ...LEASE_LAND_CODE],
+      is: [...LAND_CODES, ...LEASE_LAND_CODE, ...MOVABLE_CODES],
       operator: 'notIn',
     },
     maxLength: 10,
@@ -1728,7 +1728,7 @@ export const titleAddressFields: FormField[] = [
     subDistrictNameField: 'titleAddress.subDistrictName',
     addressSource: 'title',
     wrapperClassName: 'col-span-2',
-    required: true,
+    requiredWhen: { field: 'collateralType', is: MOVABLE_CODES, operator: 'notIn' },
   },
   {
     type: 'text-input',

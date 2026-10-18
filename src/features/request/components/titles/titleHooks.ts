@@ -72,11 +72,14 @@ export function useMissingFieldLabel() {
       for (const field of config)
         if (field.label && !labels.has(field.name)) labels.set(field.name, field.label);
 
-    return (path: string) => {
+    // `movable`: its place is only the DOPA card, which is headed "property location". An options
+    // object, so that `paths.map(labelOf)` (which passes the index second) cannot be taken for it.
+    return (path: string, { movable = false }: { movable?: boolean } = {}) => {
       const label = labels.get(path) ?? path;
       if (path.startsWith('titleAddress.'))
         return `${label} (${t('titleSection.address.tagTitle')})`;
-      if (path.startsWith('dopaAddress.')) return `${label} (${t('titleSection.address.tagDopa')})`;
+      if (path.startsWith('dopaAddress.'))
+        return `${label} (${t(movable ? 'titleSection.address.tagLocation' : 'titleSection.address.tagDopa')})`;
       return label;
     };
   }, [t]);
