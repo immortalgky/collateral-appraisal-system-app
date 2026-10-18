@@ -166,7 +166,7 @@ export const QuotationDraftSummarySchema = z.object({
   quotationNumber: z.string(),
   requestDate: z.string(),
   cutOffTime: z.string().nullable().optional(),
-  /** Distinct Banking Segments of the draft's current appraisals (kept in sync server-side on every add/remove). */
+  /** Distinct Banking Segments of the draft's current appraisals (computed live by the API, sorted). */
   bankingSegment: z.array(z.string()).optional().default([]),
   totalAppraisals: z.number().int(),
   appraisalNumberPreview: z.array(z.string()).default([]),
@@ -230,7 +230,7 @@ export const QuotationRequestDetailSchema = z.object({
   requestId: z.string().uuid().nullable().optional(),
   workflowInstanceId: z.string().uuid().nullable().optional(),
   taskExecutionId: z.string().uuid().nullable().optional(),
-  /** Distinct Banking Segments of the quotation's current appraisals (kept in sync server-side on every add/remove). */
+  /** Distinct Banking Segments of the quotation's current appraisals (computed live by the API, sorted). */
   bankingSegment: z.array(z.string()).optional().default([]),
   rmUserId: z.string().uuid().nullable().optional(),
   rmUserName: z.string().nullable().optional(),

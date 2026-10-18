@@ -39,11 +39,11 @@ import {
   SegmentGapsAlert,
 } from '@/features/quotation/components/SegmentBadges';
 import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
+import { useCoveringCompanySearch } from '@/features/quotation/hooks/useCoveringCompanySearch';
 import {
-  filterCoveringCompanies,
   getMissingSegments,
   getSegmentGaps,
-  searchCompanies,
+  isSegmentCoverageMismatch,
 } from '@/features/quotation/utils/segmentCoverage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Modal from '@/shared/components/Modal';
@@ -319,11 +319,11 @@ const EditDraftForm = ({
   const segmentLabel = useSegmentLabel();
   // Unfiltered: the draft can hold several segments, so coverage is checked client-side against the
   // whole Segment Set (same as EditDraftQuotationModal). The API's Send guard is authoritative.
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
-    undefined,
-    true,
-    false,
-  );
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompanies,
+    isError: isCompaniesError,
+  } = useGetEligibleCompanies(undefined, true, false);
 
   const allCompanies = useMemo(
     () =>
@@ -336,15 +336,10 @@ const EditDraftForm = ({
     [rawCompanies],
   );
 
-  // Search runs on the covering list; an empty `covering` (vs. an empty search result) is what tells
-  // "nobody covers the draft's segments" apart from "the search matched nothing".
-  const covering = useMemo(
-    () => filterCoveringCompanies(allCompanies, segmentSet),
-    [allCompanies, segmentSet],
-  );
-  const filteredCompanies = useMemo(
-    () => searchCompanies(covering, editSearchQuery),
-    [covering, editSearchQuery],
+  const { filtered: filteredCompanies, noCoverage } = useCoveringCompanySearch(
+    allCompanies,
+    segmentSet,
+    editSearchQuery,
   );
 
   // Segments an already-chosen company lacks. Falls back to the server's per-company gaps when the
@@ -463,9 +458,11 @@ const EditDraftForm = ({
               </div>
             ) : filteredCompanies.length === 0 ? (
               <div className="px-4 py-4 text-center text-gray-500 text-xs">
-                {segmentSet.length > 0 && covering.length === 0
-                  ? t('quotation.editDraft.noCoveringCompanies')
-                  : t('quotation.editDraft.noCompaniesFound')}
+                {isCompaniesError
+                  ? t('quotation.editDraft.failedToLoadCompanies')
+                  : noCoverage
+                    ? t('quotation.editDraft.noCoveringCompanies')
+                    : t('quotation.editDraft.noCompaniesFound')}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
@@ -642,9 +639,11 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   // If there's an active quotation, fetch its detail (with company submissions)
   const activeQuotation = quotations[0] ?? null;
-  const { data: quotationDetail, isLoading: isLoadingDetail } = useGetQuotationById(
-    activeQuotation?.id ?? null,
-  );
+  const {
+    data: quotationDetail,
+    isLoading: isLoadingDetail,
+    isError: isDetailError,
+  } = useGetQuotationById(activeQuotation?.id ?? null);
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
@@ -1155,6 +1154,16 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       companyCount >= 1 &&
       hasDueDate &&
       segmentGaps.length === 0;
+    // Why Send is disabled (null when sendable), used as the button tooltip.
+    const sendBlockedReason = canSend
+      ? null
+      : !draftDetail
+        ? isDetailError
+          ? t('quotation.loadDetailFailed')
+          : null
+        : segmentGaps.length > 0
+          ? t('quotation:segment.sendBlockedTitle')
+          : t('quotation.sendRequirementsHint');
     const draftAppraisals = draftDetail?.appraisals ?? [];
 
     /** Step 1 (share docs) → Step 2 (email). Requires full doc coverage. */
@@ -1209,12 +1218,17 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                 setShareSelections({});
               },
               onError: (err: unknown) => {
-                const apiErr = err as { apiError?: { detail?: string; errorCode?: string } };
-                toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'));
-                // useSendQuotation refetches the detail; leave the flow so the user lands on the
-                // refreshed segment alert (shared-doc picks are kept for the next attempt).
-                if (apiErr?.apiError?.errorCode === 'SEGMENT_COVERAGE_MISMATCH') {
+                const apiErr = err as { apiError?: { detail?: string } };
+                if (isSegmentCoverageMismatch(err)) {
+                  // Localized text instead of the API's English detail. useSendQuotation refetches
+                  // the detail; leave the flow so the user lands on the refreshed segment alert
+                  // (shared-doc picks are kept for the next attempt).
+                  toast.error(t('quotation:segment.sendBlockedTitle'));
                   setSendStep(null);
+                } else {
+                  toast.error(
+                    apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'),
+                  );
                 }
               },
             },
@@ -1353,13 +1367,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
                     size="sm"
                     onClick={() => setSendStep('share-docs')}
                     disabled={!canSend || isBusy}
-                    title={
-                      segmentGaps.length > 0
-                        ? t('quotation:segment.sendBlockedTitle')
-                        : !canSend
-                          ? t('quotation.sendRequirementsHint')
-                          : undefined
-                    }
+                    title={sendBlockedReason ?? undefined}
                   >
                     <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
                     {t('quotation.sendQuotation')}

@@ -5,22 +5,34 @@
  * authoritative (Send guard); this only drives filtering and warnings in the UI.
  */
 
+import type { ApiError } from '@/shared/types/api';
+
 const norm = (s: string) => s.trim().toLowerCase();
 
-/** Distinct, non-blank segments, first spelling wins, sorted like the API (ordinal, ignore case). */
+/** errorCode the API returns when Send is refused because an invited company lacks a segment. */
+export const SEGMENT_COVERAGE_MISMATCH = 'SEGMENT_COVERAGE_MISMATCH';
+
+export const isSegmentCoverageMismatch = (err: unknown) =>
+  (err as { apiError?: ApiError })?.apiError?.errorCode === SEGMENT_COVERAGE_MISMATCH;
+
+/**
+ * Distinct, non-blank segments, like the API: among case-insensitive duplicates the ordinal-smallest
+ * spelling is kept ('RETAIL' over 'Retail'), whatever the input order, then the set is sorted
+ * ordinal-ignore-case.
+ */
 export function buildSegmentSet(segments: ReadonlyArray<string | null | undefined>): string[] {
-  const seen = new Set<string>();
-  const result: string[] = [];
+  const byKey = new Map<string, string>();
   for (const s of segments) {
-    if (!s?.trim()) continue;
-    const key = norm(s);
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(s.trim());
+    const trimmed = s?.trim();
+    if (!trimmed) continue;
+    const key = norm(trimmed);
+    const kept = byKey.get(key);
+    // JS string comparison is by UTF-16 code unit, i.e. ordinal.
+    if (kept === undefined || trimmed < kept) byKey.set(key, trimmed);
   }
   // OrdinalIgnoreCase upper-cases, so compare upper-cased UTF-16 units (lower-casing would reorder
   // the punctuation between 'Z' and 'a').
-  return result.sort((a, b) => {
+  return [...byKey.values()].sort((a, b) => {
     const ka = a.toUpperCase();
     const kb = b.toUpperCase();
     return ka < kb ? -1 : ka > kb ? 1 : 0;

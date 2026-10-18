@@ -26,6 +26,10 @@ interface QuotationEntryModalProps {
   requestId?: string;
   workflowInstanceId?: string;
   bankingSegment?: string;
+  /** True while the parent is still loading `bankingSegment`; the Create New company list waits for it. */
+  isSegmentLoading?: boolean;
+  /** True when loading `bankingSegment` failed; the Create New company list shows a load error. */
+  isSegmentError?: boolean;
   onSuccess?: () => void;
   assignmentType?: string | null;
   assignmentMethod?: string | null;
@@ -44,6 +48,8 @@ const QuotationEntryModal = ({
   requestId,
   workflowInstanceId,
   bankingSegment,
+  isSegmentLoading,
+  isSegmentError,
   onSuccess,
   assignmentType,
   assignmentMethod,
@@ -52,7 +58,7 @@ const QuotationEntryModal = ({
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
   const [activeTab, setActiveTab] = useState<Tab>('new');
-  const [selectedDraft, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
+  const [selectedDraftSnapshot, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
   const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
 
   // Every Draft owned by this admin, regardless of banking segment — any appraisal can join any
@@ -62,12 +68,21 @@ const QuotationEntryModal = ({
     isOpen && activeTab === 'existing',
   );
 
+  // Prefer the freshest copy from the list so a refetch (new invited companies, new segments)
+  // updates the warning. A draft that left the list (sent, cancelled or deleted elsewhere) counts as
+  // unselected; the snapshot only stands in while the list is still loading.
+  const selectedDraft =
+    drafts.find(d => d.id === selectedDraftSnapshot?.id) ??
+    (isDraftsLoading ? selectedDraftSnapshot : null);
+
   const { mutate: startFromTask, isPending: isAdding } = useStartQuotationFromTask();
   const segmentLabel = useSegmentLabel();
 
   // Only matters when the draft already has invited companies that could fall short of the new segment.
   // buildSegmentSet drops a blank/whitespace segment, so an appraisal without one never warns.
+  // Not evaluated while the parent is still loading the appraisal's segment.
   const introducesNewSegment =
+    !isSegmentLoading &&
     !!selectedDraft &&
     selectedDraft.totalCompaniesInvited > 0 &&
     getMissingSegments(buildSegmentSet([bankingSegment]), selectedDraft.bankingSegment).length > 0;
@@ -176,9 +191,11 @@ const QuotationEntryModal = ({
               </div>
             )}
 
-            {/* Segment Coverage is warn-only here: adding is never blocked, but a company already
-                invited to this draft may not cover a segment the new appraisal introduces — Send
-                would then block until the admin invites a covering company or removes an appraisal. */}
+            {/* Segment Coverage is warn-only here: adding is never blocked, but Send requires every
+                invited company to cover every segment, so a company already invited to this draft
+                that lacks the segment the new appraisal introduces blocks Send. Inviting another
+                covering company does not help — only removing the non-covering companies or the
+                out-of-segment appraisals does. */}
             {introducesNewSegment && (
               <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
                 <Icon
@@ -219,7 +236,20 @@ const QuotationEntryModal = ({
               <Button
                 onClick={handleAddToExisting}
                 disabled={
-                  readOnly || !selectedDraft || isAdding || !requestId || !workflowInstanceId
+                  readOnly ||
+                  !selectedDraft ||
+                  isAdding ||
+                  isSegmentLoading ||
+                  isSegmentError ||
+                  !requestId ||
+                  !workflowInstanceId
+                }
+                title={
+                  isSegmentLoading
+                    ? t('common.loading')
+                    : isSegmentError
+                      ? t('quotation.segmentLoadFailed')
+                      : undefined
                 }
               >
                 {isAdding ? (
@@ -248,6 +278,8 @@ const QuotationEntryModal = ({
           requestId={requestId}
           workflowInstanceId={workflowInstanceId}
           bankingSegment={bankingSegment}
+          isSegmentLoading={isSegmentLoading}
+          isSegmentError={isSegmentError}
           assignmentType={assignmentType}
           assignmentMethod={assignmentMethod}
           internalFollowupAssignmentMethod={internalFollowupAssignmentMethod}

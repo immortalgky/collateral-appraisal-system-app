@@ -15,6 +15,12 @@ describe('buildSegmentSet', () => {
     ]);
     expect(buildSegmentSet(['sme', 'Retail', 'IBG'])).toEqual(['IBG', 'Retail', 'sme']);
   });
+
+  it('keeps the ordinal-smallest spelling of case-insensitive duplicates, in either input order', () => {
+    expect(buildSegmentSet(['Retail', 'RETAIL', 'retail'])).toEqual(['RETAIL']);
+    expect(buildSegmentSet(['retail', 'RETAIL', 'Retail'])).toEqual(['RETAIL']);
+    expect(buildSegmentSet(['ibg', 'Retail', 'IBG'])).toEqual(['IBG', 'Retail']);
+  });
 });
 
 describe('getSegmentGaps', () => {

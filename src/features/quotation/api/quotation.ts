@@ -262,7 +262,7 @@ export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
 // ─── POST /quotations/start-from-task ────────────────────────────────────────
 
 /**
- * Start a new IBG quotation linked to the current admin workflow task.
+ * Start a new quotation linked to the current admin workflow task.
  * Does NOT complete the task — admin keeps monitoring from the task page.
  */
 export const useStartQuotationFromTask = () => {

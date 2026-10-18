@@ -26,12 +26,8 @@ import {
 } from '../components/AppraisalPicker';
 import type { SelectedAppraisal, DocSelections } from '../components/AppraisalPicker';
 import { MissingSegmentsBadge, SegmentChips } from '../components/SegmentBadges';
-import {
-  buildSegmentSet,
-  filterCoveringCompanies,
-  getMissingSegments,
-  searchCompanies,
-} from '../utils/segmentCoverage';
+import { getSelectAllState, useCoveringCompanySearch } from '../hooks/useCoveringCompanySearch';
+import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -104,13 +100,11 @@ function CompanyPicker({
     [rawCompanies, excludedCompanyId],
   );
 
-  // Search runs on the covering list; an empty `covering` (vs. an empty search result) is what tells
-  // "nobody covers the picked segments" apart from "the search matched nothing".
-  const covering = useMemo(
-    () => filterCoveringCompanies(allCompanies, segmentSet),
-    [allCompanies, segmentSet],
+  const { covering, filtered, noCoverage } = useCoveringCompanySearch(
+    allCompanies,
+    segmentSet,
+    query,
   );
-  const filtered = useMemo(() => searchCompanies(covering, query), [covering, query]);
 
   if (isError) {
     return (
@@ -133,7 +127,7 @@ function CompanyPicker({
       {/* Every company shows until an appraisal is picked — explain why, rather than looking unfiltered.
           Picked appraisals that simply have no segment keep the list unfiltered too, but need no hint. */}
       {selectedAppraisals.length === 0 && (
-        <p className="text-xs text-gray-400 italic">{t('segment.noneSelectedHint')}</p>
+        <p className="text-xs text-gray-400">{t('segment.noneSelectedHint')}</p>
       )}
 
       {/* Selected chips */}
@@ -181,17 +175,21 @@ function CompanyPicker({
         {!isLoading &&
           filtered.length > 0 &&
           (() => {
-            const allVisibleSelected = filtered.every(c => selectedIds.has(c.id));
-            const someVisibleSelected = filtered.some(c => selectedIds.has(c.id));
+            const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } =
+              getSelectAllState(filtered, covering, selected, query);
             return (
               <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={allVisibleSelected}
+                  checked={allChecked}
                   ref={el => {
-                    if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                    if (el) el.indeterminate = indeterminate;
                   }}
-                  onChange={() => onSetAllVisible(filtered, !allVisibleSelected)}
+                  onChange={() =>
+                    allVisibleSelected
+                      ? onSetAllVisible([...filtered, ...hiddenSelected], false)
+                      : onSetAllVisible(filtered, true)
+                  }
                   className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
                   aria-label={t('aria.selectAllVisibleCompanies')}
                 />
@@ -214,10 +212,8 @@ function CompanyPicker({
               <span className="text-xs">{t('shared.searchCompanyName')}</span>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4 italic">
-              {covering.length === 0 && segmentSet.length > 0
-                ? t('segment.noCoveringCompany')
-                : t('empty.noCompaniesInvited')}
+            <p className="text-xs text-gray-400 text-center py-4">
+              {noCoverage ? t('segment.noCoveringCompany') : t('empty.noCompaniesInvited')}
             </p>
           ) : (
             <div className="divide-y divide-gray-50">

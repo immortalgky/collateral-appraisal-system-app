@@ -21,12 +21,8 @@ import type {
 import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
 import type { SelectedAppraisal } from './AppraisalPicker';
 import { MissingSegmentsBadge, SegmentChips } from './SegmentBadges';
-import {
-  buildSegmentSet,
-  filterCoveringCompanies,
-  getMissingSegments,
-  searchCompanies,
-} from '../utils/segmentCoverage';
+import { getSelectAllState, useCoveringCompanySearch } from '../hooks/useCoveringCompanySearch';
+import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface EditDraftQuotationModalProps {
@@ -100,10 +96,11 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
   const isPending = isEditing || isSavingDocs || isAddingAppraisal || isRemovingAppraisal;
 
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetLoanTypeMatchedCompanies(
-    undefined,
-    isOpen,
-  );
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompanies,
+    isError: isCompaniesError,
+  } = useGetLoanTypeMatchedCompanies(undefined, isOpen);
 
   const allCompanies: SelectedCompany[] = useMemo(
     () =>
@@ -127,16 +124,11 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
     [appraisals, markedForRemovalIds],
   );
 
-  // Search runs on the covering list; an empty `covering` (vs. an empty search result) is what tells
-  // "nobody covers the draft's segments" apart from "the search matched nothing".
-  const covering = useMemo(
-    () => filterCoveringCompanies(allCompanies, segmentSet),
-    [allCompanies, segmentSet],
-  );
-  const filteredCompanies = useMemo(
-    () => searchCompanies(covering, searchQuery),
-    [covering, searchQuery],
-  );
+  const {
+    covering,
+    filtered: filteredCompanies,
+    noCoverage,
+  } = useCoveringCompanySearch(allCompanies, segmentSet, searchQuery);
 
   // Seed form once per open
 
@@ -456,19 +448,23 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
               {!isLoadingCompanies &&
                 filteredCompanies.length > 0 &&
                 (() => {
-                  const selectedSet = new Set(selectedCompanies.map(c => c.id));
-                  const allVisibleSelected = filteredCompanies.every(c => selectedSet.has(c.id));
-                  const someVisibleSelected = filteredCompanies.some(c => selectedSet.has(c.id));
+                  const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } =
+                    getSelectAllState(filteredCompanies, covering, selectedCompanies, searchQuery);
                   return (
                     <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
                       <input
                         type="checkbox"
-                        checked={allVisibleSelected}
+                        checked={allChecked}
                         ref={el => {
-                          if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                          if (el) el.indeterminate = indeterminate;
                         }}
                         onChange={() =>
-                          handleSetAllVisibleCompanies(filteredCompanies, !allVisibleSelected)
+                          allVisibleSelected
+                            ? handleSetAllVisibleCompanies(
+                                [...filteredCompanies, ...hiddenSelected],
+                                false,
+                              )
+                            : handleSetAllVisibleCompanies(filteredCompanies, true)
                         }
                         className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
                         aria-label={t('aria.selectAllVisibleCompanies')}
@@ -493,9 +489,11 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                   </div>
                 ) : filteredCompanies.length === 0 ? (
                   <div className="px-4 py-6 text-center text-sm text-gray-500">
-                    {covering.length === 0 && segmentSet.length > 0
-                      ? t('segment.noCoveringCompany')
-                      : t('empty.noCompaniesInvited')}
+                    {isCompaniesError
+                      ? t('errors.failedToLoadCompanies')
+                      : noCoverage
+                        ? t('segment.noCoveringCompany')
+                        : t('empty.noCompaniesInvited')}
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">

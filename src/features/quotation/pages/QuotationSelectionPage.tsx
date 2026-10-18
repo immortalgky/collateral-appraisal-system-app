@@ -28,7 +28,7 @@ import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
-import { getSegmentGaps } from '../utils/segmentCoverage';
+import { getSegmentGaps, isSegmentCoverageMismatch } from '../utils/segmentCoverage';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 import {
@@ -325,12 +325,15 @@ const QuotationSelectionPage = () => {
         setIsSendConfirmOpen(false);
       },
       onError: (err: unknown) => {
-        const apiErr = err as { apiError?: { detail?: string; errorCode?: string } };
-        toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
-        // useSendQuotation refetches the detail on error; close the modal so the user lands on the
-        // refreshed segment alert instead of re-submitting the same email.
-        if (apiErr?.apiError?.errorCode === 'SEGMENT_COVERAGE_MISMATCH') {
+        const apiErr = err as { apiError?: { detail?: string } };
+        if (isSegmentCoverageMismatch(err)) {
+          // Localized text instead of the API's English detail. useSendQuotation refetches the
+          // detail on error; close the modal so the user lands on the refreshed segment alert
+          // instead of re-submitting the same email.
+          toast.error(t('segment.sendBlockedTitle'));
           setIsSendConfirmOpen(false);
+        } else {
+          toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
         }
       },
     });
