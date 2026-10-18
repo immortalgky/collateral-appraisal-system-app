@@ -21,7 +21,12 @@ import type {
 import { AppraisalPicker, SelectedAppraisalRow, SetMaxDaysBar } from './AppraisalPicker';
 import type { SelectedAppraisal } from './AppraisalPicker';
 import { MissingSegmentsBadge, SegmentChips } from './SegmentBadges';
-import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
+import {
+  buildSegmentSet,
+  filterCoveringCompanies,
+  getMissingSegments,
+  searchCompanies,
+} from '../utils/segmentCoverage';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 
 interface EditDraftQuotationModalProps {
@@ -122,16 +127,16 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
     [appraisals, markedForRemovalIds],
   );
 
-  const filteredCompanies = useMemo(() => {
-    const covering = allCompanies.filter(
-      c => getMissingSegments(segmentSet, c.loanTypes).length === 0,
-    );
-    if (!searchQuery.trim()) return covering;
-    const q = searchQuery.toLowerCase();
-    return covering.filter(
-      c => c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
-    );
-  }, [allCompanies, searchQuery, segmentSet]);
+  // Search runs on the covering list; an empty `covering` (vs. an empty search result) is what tells
+  // "nobody covers the draft's segments" apart from "the search matched nothing".
+  const covering = useMemo(
+    () => filterCoveringCompanies(allCompanies, segmentSet),
+    [allCompanies, segmentSet],
+  );
+  const filteredCompanies = useMemo(
+    () => searchCompanies(covering, searchQuery),
+    [covering, searchQuery],
+  );
 
   // Seed form once per open
 
@@ -488,7 +493,9 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                   </div>
                 ) : filteredCompanies.length === 0 ? (
                   <div className="px-4 py-6 text-center text-sm text-gray-500">
-                    {t('empty.noCompaniesInvited')}
+                    {covering.length === 0 && segmentSet.length > 0
+                      ? t('segment.noCoveringCompany')
+                      : t('empty.noCompaniesInvited')}
                   </div>
                 ) : (
                   <div className="divide-y divide-gray-100">

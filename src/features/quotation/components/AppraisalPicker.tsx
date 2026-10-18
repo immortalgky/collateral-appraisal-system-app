@@ -16,6 +16,7 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+import { useSegmentLabel } from '../hooks/useSegmentLabel';
 import { SegmentChips } from './SegmentBadges';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -196,7 +197,7 @@ export function SelectedAppraisalRow({
           </p>
         </div>
         {/* Appraisal banking segment */}
-        {a.bankingSegment != null && <SegmentChips segments={[a.bankingSegment]} />}
+        <SegmentChips segments={[a.bankingSegment]} className="shrink-0" />
         {/* Max days chip */}
         {a.maxAppraisalDays != null && (
           <span className="shrink-0 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-xs tabular-nums whitespace-nowrap">
@@ -542,10 +543,7 @@ export function AppraisalPicker({
     () => new Map(channelOptions.map(o => [o.value ?? '', o.label])),
     [channelOptions],
   );
-  const bankingSegmentLabels = useMemo(
-    () => new Map(bankingSegmentOptions.map(o => [o.value ?? '', o.label])),
-    [bankingSegmentOptions],
-  );
+  const segmentLabel = useSegmentLabel();
 
   const excludeSet = useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
@@ -979,9 +977,7 @@ export function AppraisalPicker({
                         {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : '—'}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.bankingSegment
-                          ? (bankingSegmentLabels.get(r.bankingSegment) ?? r.bankingSegment)
-                          : '—'}
+                        {r.bankingSegment ? segmentLabel(r.bankingSegment) : '—'}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-gray-700">
                         {r.propertyCount}

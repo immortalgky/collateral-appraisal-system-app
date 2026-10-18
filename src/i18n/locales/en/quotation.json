@@ -431,7 +431,6 @@
     "appraisalNo": "Appraisal No.",
     "propertyType": "Property Type",
     "address": "Address",
-    "loanType": "Loan Type",
     "requestDocuments": "Request Documents",
     "titleDocuments": "Title Documents",
     "remove": "Remove",
@@ -544,14 +543,13 @@
     "notParticipatingNoReason": "No reason provided."
   },
   "segment": {
-    "companyName": "Company Name",
-    "bankingSegment": "Banking Segment",
     "missing": "Missing {{segments}}",
     "segmentSet": "Banking segments",
     "sendBlockedTitle": "Cannot send: some invited companies do not cover every banking segment in this quotation",
     "sendBlockedItem": "{{company}} - missing {{segments}}",
     "sendBlockedHint": "Remove these companies, or remove the appraisals outside their segments.",
-    "noneSelectedHint": "Select appraisals to see which companies cover their banking segments."
+    "noneSelectedHint": "Select appraisals to see which companies cover their banking segments.",
+    "noCoveringCompany": "No company covers all selected banking segments"
   },
   "role": {
     "Maker": "Maker",

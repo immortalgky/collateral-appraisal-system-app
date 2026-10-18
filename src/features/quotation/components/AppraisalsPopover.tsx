@@ -91,10 +91,7 @@ const AppraisalsPopover = ({ appraisals, totalAppraisals }: AppraisalsPopoverPro
                       >
                         {ap.appraisalNumber ?? '—'}
                       </span>
-                      <SegmentChips
-                        segments={ap.bankingSegment ? [ap.bankingSegment] : []}
-                        className="shrink-0"
-                      />
+                      <SegmentChips segments={[ap.bankingSegment]} className="shrink-0" />
                       <span className="shrink-0 text-gray-500">
                         {ap.maxAppraisalDays != null
                           ? t('appraisalsPopover.maxDays', { count: ap.maxAppraisalDays })

@@ -1,12 +1,68 @@
 import { describe, it, expect } from 'vitest';
-import { buildSegmentSet, coversSegments, getMissingSegments } from './segmentCoverage';
+import {
+  buildSegmentSet,
+  filterCoveringCompanies,
+  getMissingSegments,
+  getSegmentGaps,
+  searchCompanies,
+} from './segmentCoverage';
 
 describe('buildSegmentSet', () => {
-  it('dedupes case-insensitively and drops blanks', () => {
+  it('dedupes case-insensitively, drops blanks and sorts ignoring case', () => {
     expect(buildSegmentSet(['Retail', 'retail', 'IBG', null, undefined, ' ', 'IBG '])).toEqual([
-      'Retail',
       'IBG',
+      'Retail',
     ]);
+    expect(buildSegmentSet(['sme', 'Retail', 'IBG'])).toEqual(['IBG', 'Retail', 'sme']);
+  });
+});
+
+describe('getSegmentGaps', () => {
+  const a = { companyId: 'a', missingSegments: ['IBG'] };
+  const b = { companyId: 'b', missingSegments: [] };
+  const c = { companyId: 'c', missingSegments: undefined };
+
+  it('keeps only companies with missing segments', () => {
+    expect(getSegmentGaps([a, b, c])).toEqual([a]);
+  });
+
+  it('tolerates a missing list and null missingSegments', () => {
+    expect(getSegmentGaps(undefined)).toEqual([]);
+    expect(getSegmentGaps(null)).toEqual([]);
+    expect(getSegmentGaps([{ missingSegments: null }])).toEqual([]);
+  });
+});
+
+describe('searchCompanies', () => {
+  const alpha = { companyName: 'Alpha Co', companyNameLocal: 'อัลฟา' };
+  const beta = { companyName: 'Beta Co', companyNameLocal: null };
+
+  it('returns everyone for a blank query', () => {
+    expect(searchCompanies([alpha, beta], '  ')).toEqual([alpha, beta]);
+  });
+
+  it('matches name or local name, case-insensitively', () => {
+    expect(searchCompanies([alpha, beta], ' BETA ')).toEqual([beta]);
+    expect(searchCompanies([alpha, beta], 'อัลฟา')).toEqual([alpha]);
+  });
+});
+
+describe('filterCoveringCompanies', () => {
+  const retail = { companyName: 'Alpha Co', companyNameLocal: 'อัลฟา', loanTypes: ['Retail'] };
+  const both = { companyName: 'Beta Co', companyNameLocal: null, loanTypes: ['retail', 'IBG'] };
+  const companies = [retail, both];
+
+  it('keeps only companies covering the whole set', () => {
+    expect(filterCoveringCompanies(companies, ['Retail', 'IBG'])).toEqual([both]);
+  });
+
+  it('lists everyone for an empty set', () => {
+    expect(filterCoveringCompanies(companies, [])).toEqual(companies);
+  });
+
+  it('composes with searchCompanies (search applies to the covering list)', () => {
+    expect(searchCompanies(filterCoveringCompanies(companies, ['IBG']), 'alpha')).toEqual([]);
+    expect(searchCompanies(filterCoveringCompanies(companies, ['IBG']), 'beta')).toEqual([both]);
   });
 });
 
@@ -33,7 +89,7 @@ describe('getMissingSegments', () => {
   });
 
   it('covers everything when the set is empty (no appraisals picked yet)', () => {
-    expect(coversSegments([], [])).toBe(true);
-    expect(coversSegments([], ['Retail'])).toBe(true);
+    expect(getMissingSegments([], [])).toEqual([]);
+    expect(getMissingSegments([], ['Retail'])).toEqual([]);
   });
 });

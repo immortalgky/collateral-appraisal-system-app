@@ -724,9 +724,14 @@ export const useSendQuotation = (quotationId: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+    },
+    // A rejected Send (e.g. SEGMENT_COVERAGE_MISMATCH) means the draft changed since it was loaded,
+    // so refetch to show the server's current Segment Set / per-company coverage. (onSuccess already
+    // covers the detail through `all`.)
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
     },
   });
 };

@@ -18,6 +18,7 @@ import {
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import EditDraftQuotationModal from '../components/EditDraftQuotationModal';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
+import { SegmentGapsAlert } from '../components/SegmentBadges';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import NegotiationPanel from '../components/NegotiationPanel';
 import AppraisalReportListingTable from '../components/AppraisalReportListingTable';
@@ -27,6 +28,7 @@ import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
+import { getSegmentGaps } from '../utils/segmentCoverage';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 import {
@@ -56,12 +58,7 @@ const QuotationSelectionPage = () => {
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const isIntAdmin = currentUser?.roles?.includes('IntAdmin') ?? false;
-  const {
-    data: quotation,
-    isLoading,
-    isError,
-    refetch: refetchQuotation,
-  } = useGetQuotationById(id);
+  const { data: quotation, isLoading, isError } = useGetQuotationById(id);
   const { mutate: pick, isPending: isPickPending } = usePickTentativeWinner(id ?? '');
   const { mutate: cancelQuotation, isPending: isCancelPending } = useCancelQuotation(id ?? '');
   const { mutate: sendQuotation, isPending: isSendPending } = useSendQuotation(id ?? '');
@@ -328,20 +325,20 @@ const QuotationSelectionPage = () => {
         setIsSendConfirmOpen(false);
       },
       onError: (err: unknown) => {
-        const apiErr = err as { apiError?: { detail?: string } };
+        const apiErr = err as { apiError?: { detail?: string; errorCode?: string } };
         toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
-        // The draft may have changed since this page loaded (e.g. SEGMENT_COVERAGE_MISMATCH): pull the
-        // fresh Segment Set / per-company coverage so the warning below matches the server.
-        refetchQuotation();
+        // useSendQuotation refetches the detail on error; close the modal so the user lands on the
+        // refreshed segment alert instead of re-submitting the same email.
+        if (apiErr?.apiError?.errorCode === 'SEGMENT_COVERAGE_MISMATCH') {
+          setIsSendConfirmOpen(false);
+        }
       },
     });
   };
 
   // Segment Coverage: invited companies that cannot appraise every banking segment in the quotation.
   // The API blocks the send too (SEGMENT_COVERAGE_MISMATCH); this disables the button up front.
-  const segmentGaps = (quotation?.invitedCompanies ?? []).filter(
-    c => (c.missingSegments?.length ?? 0) > 0,
-  );
+  const segmentGaps = getSegmentGaps(quotation?.invitedCompanies);
 
   const handleDraftCancelConfirm = () => {
     cancelQuotation(
@@ -448,6 +445,7 @@ const QuotationSelectionPage = () => {
               size="sm"
               onClick={() => setIsSendConfirmOpen(true)}
               disabled={isSendPending || segmentGaps.length > 0}
+              title={segmentGaps.length > 0 ? t('segment.sendBlockedTitle') : undefined}
             >
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.sendToCompanies')}
@@ -465,31 +463,11 @@ const QuotationSelectionPage = () => {
         </div>
       )}
 
-      {isDraft && segmentGaps.length > 0 && (
-        <div
-          role="alert"
-          className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800"
-        >
-          <Icon
-            name="triangle-exclamation"
-            style="solid"
-            className="size-4 text-amber-500 shrink-0 mt-0.5"
-          />
-          <div>
-            <p className="font-medium">{t('segment.sendBlockedTitle')}</p>
-            <ul className="mt-1 list-disc pl-4">
-              {segmentGaps.map(c => (
-                <li key={c.companyId}>
-                  {t('segment.sendBlockedItem', {
-                    company: localizeCompanyName(c.companyName, c.companyNameLocal),
-                    segments: c.missingSegments.join(', '),
-                  })}
-                </li>
-              ))}
-            </ul>
-            <p className="mt-1 text-xs text-amber-700">{t('segment.sendBlockedHint')}</p>
-          </div>
-        </div>
+      {isDraft && (
+        <SegmentGapsAlert
+          gaps={segmentGaps}
+          className="p-3 border border-amber-200 rounded-xl text-sm"
+        />
       )}
 
       {/* ─── Section 1: Appraisal Report Listing ──────────────────────────────── */}

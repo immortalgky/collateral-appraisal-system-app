@@ -126,8 +126,6 @@ export const AppraisalSummarySchema = z.object({
   appraisalNumber: z.string().nullable().optional(),
   propertyType: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
-  /** Legacy alias of bankingSegment. */
-  loanType: z.string().nullable().optional(),
   channel: z.string().nullable().optional(),
   /** The appraisal's own Banking Segment. */
   bankingSegment: z.string().nullable().optional(),

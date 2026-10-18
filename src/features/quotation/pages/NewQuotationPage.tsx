@@ -26,7 +26,12 @@ import {
 } from '../components/AppraisalPicker';
 import type { SelectedAppraisal, DocSelections } from '../components/AppraisalPicker';
 import { MissingSegmentsBadge, SegmentChips } from '../components/SegmentBadges';
-import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
+import {
+  buildSegmentSet,
+  filterCoveringCompanies,
+  getMissingSegments,
+  searchCompanies,
+} from '../utils/segmentCoverage';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -86,7 +91,7 @@ function CompanyPicker({
     [selectedAppraisals],
   );
 
-  const companies: SelectedCompany[] = useMemo(
+  const allCompanies: SelectedCompany[] = useMemo(
     () =>
       (rawCompanies ?? [])
         .filter(c => c.id !== excludedCompanyId)
@@ -95,18 +100,17 @@ function CompanyPicker({
           companyName: c.name,
           companyNameLocal: c.nameLocal,
           loanTypes: c.loanTypes ?? [],
-        }))
-        .filter(c => getMissingSegments(segmentSet, c.loanTypes).length === 0),
-    [rawCompanies, excludedCompanyId, segmentSet],
+        })),
+    [rawCompanies, excludedCompanyId],
   );
 
-  const filtered = useMemo(() => {
-    if (!query.trim()) return companies;
-    const q = query.toLowerCase();
-    return companies.filter(
-      c => c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
-    );
-  }, [companies, query]);
+  // Search runs on the covering list; an empty `covering` (vs. an empty search result) is what tells
+  // "nobody covers the picked segments" apart from "the search matched nothing".
+  const covering = useMemo(
+    () => filterCoveringCompanies(allCompanies, segmentSet),
+    [allCompanies, segmentSet],
+  );
+  const filtered = useMemo(() => searchCompanies(covering, query), [covering, query]);
 
   if (isError) {
     return (
@@ -126,8 +130,9 @@ function CompanyPicker({
         </div>
       )}
 
-      {/* Every company shows until an appraisal is picked — explain why, rather than looking unfiltered. */}
-      {segmentSet.length === 0 && (
+      {/* Every company shows until an appraisal is picked — explain why, rather than looking unfiltered.
+          Picked appraisals that simply have no segment keep the list unfiltered too, but need no hint. */}
+      {selectedAppraisals.length === 0 && (
         <p className="text-xs text-gray-400 italic">{t('segment.noneSelectedHint')}</p>
       )}
 
@@ -210,7 +215,9 @@ function CompanyPicker({
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-xs text-gray-400 text-center py-4 italic">
-              {t('empty.noCompaniesInvited')}
+              {covering.length === 0 && segmentSet.length > 0
+                ? t('segment.noCoveringCompany')
+                : t('empty.noCompaniesInvited')}
             </p>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -240,9 +247,7 @@ function CompanyPicker({
                     <span className="text-sm text-gray-900 flex-1 truncate">
                       {localizeCompanyName(c.companyName, c.companyNameLocal)}
                     </span>
-                    <span className="flex min-w-0">
-                      <SegmentChips segments={c.loanTypes} />
-                    </span>
+                    <SegmentChips segments={c.loanTypes} />
                   </button>
                 );
               })}

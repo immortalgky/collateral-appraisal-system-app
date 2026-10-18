@@ -431,7 +431,6 @@
     "appraisalNo": "เลขที่การประเมิน",
     "propertyType": "ประเภททรัพย์สิน",
     "address": "ที่อยู่",
-    "loanType": "ประเภทสินเชื่อ",
     "requestDocuments": "เอกสารคำร้อง",
     "titleDocuments": "เอกสารโฉนด",
     "remove": "ลบ",
@@ -544,14 +543,13 @@
     "notParticipatingNoReason": "ไม่ได้ระบุเหตุผล"
   },
   "segment": {
-    "companyName": "ชื่อบริษัท",
-    "bankingSegment": "กลุ่มธุรกิจ",
     "missing": "ขาด {{segments}}",
     "segmentSet": "กลุ่มธุรกิจ",
     "sendBlockedTitle": "ไม่สามารถส่งได้: บริษัทที่เชิญบางแห่งไม่ครอบคลุมทุกกลุ่มธุรกิจในใบเสนอราคานี้",
     "sendBlockedItem": "{{company}} - ขาด {{segments}}",
     "sendBlockedHint": "ลบบริษัทเหล่านี้ หรือลบใบประเมินที่อยู่นอกกลุ่มธุรกิจของบริษัท",
-    "noneSelectedHint": "เลือกใบประเมินเพื่อดูว่าบริษัทใดครอบคลุมกลุ่มธุรกิจของใบประเมิน"
+    "noneSelectedHint": "เลือกใบประเมินเพื่อดูว่าบริษัทใดครอบคลุมกลุ่มธุรกิจของใบประเมิน",
+    "noCoveringCompany": "ไม่มีบริษัทที่ครอบคลุมทุกกลุ่มธุรกิจที่เลือก"
   },
   "role": {
     "Maker": "Maker",

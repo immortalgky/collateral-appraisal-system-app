@@ -15,6 +15,7 @@ import {
 import type { QuotationDraftSummaryDto } from '@/features/quotation/schemas/quotation';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
+import { buildSegmentSet, getMissingSegments } from '@/features/quotation/utils/segmentCoverage';
 
 type Tab = 'new' | 'existing';
 
@@ -64,12 +65,12 @@ const QuotationEntryModal = ({
   const { mutate: startFromTask, isPending: isAdding } = useStartQuotationFromTask();
   const segmentLabel = useSegmentLabel();
 
+  // Only matters when the draft already has invited companies that could fall short of the new segment.
+  // buildSegmentSet drops a blank/whitespace segment, so an appraisal without one never warns.
   const introducesNewSegment =
-    !!bankingSegment &&
     !!selectedDraft &&
-    !(selectedDraft.bankingSegment ?? []).some(
-      s => s.toLowerCase() === bankingSegment.toLowerCase(),
-    );
+    selectedDraft.totalCompaniesInvited > 0 &&
+    getMissingSegments(buildSegmentSet([bankingSegment]), selectedDraft.bankingSegment).length > 0;
 
   const handleClose = () => {
     setActiveTab('new');
@@ -183,7 +184,7 @@ const QuotationEntryModal = ({
                 <Icon
                   name="triangle-exclamation"
                   style="solid"
-                  className="size-4 text-amber-500 shrink-0 mt-0.5"
+                  className="size-4! text-amber-500 shrink-0 mt-0.5"
                 />
                 <p className="text-sm text-amber-700">
                   {t('quotation.existingDraftSegmentWarning', {
