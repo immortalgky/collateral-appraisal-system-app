@@ -19,6 +19,7 @@ import {
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
 import EditDraftQuotationModal from '../components/EditDraftQuotationModal';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
+import { SegmentGapsAlert } from '../components/SegmentBadges';
 import AdminShortlistPanel from '../components/AdminShortlistPanel';
 import NegotiationPanel from '../components/NegotiationPanel';
 import AppraisalReportListingTable from '../components/AppraisalReportListingTable';
@@ -28,6 +29,7 @@ import FinalizeModal from '../components/FinalizeModal';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
 import type { CompanyQuotationDto } from '../schemas/quotation';
+import { getSegmentGaps, isSegmentCoverageMismatch } from '../utils/segmentCoverage';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
 import {
@@ -325,10 +327,22 @@ const QuotationSelectionPage = () => {
       },
       onError: (err: unknown) => {
         const apiErr = err as { apiError?: { detail?: string } };
-        toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
+        if (isSegmentCoverageMismatch(err)) {
+          // Localized text instead of the API's English detail. useSendQuotation refetches the
+          // detail on error; close the modal so the user lands on the refreshed segment alert
+          // instead of re-submitting the same email.
+          toast.error(t('segment.sendBlockedTitle'));
+          setIsSendConfirmOpen(false);
+        } else {
+          toast.error(apiErr?.apiError?.detail ?? t('toasts.sendFailed'));
+        }
       },
     });
   };
+
+  // Segment Coverage: invited companies that cannot appraise every banking segment in the quotation.
+  // The API blocks the send too (SEGMENT_COVERAGE_MISMATCH); this disables the button up front.
+  const segmentGaps = getSegmentGaps(quotation?.invitedCompanies);
 
   const handleDraftCancelConfirm = () => {
     cancelQuotation(
@@ -431,7 +445,12 @@ const QuotationSelectionPage = () => {
               <Icon name="pen-to-square" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.edit')}
             </Button>
-            <Button size="sm" onClick={() => setIsSendConfirmOpen(true)} disabled={isSendPending}>
+            <Button
+              size="sm"
+              onClick={() => setIsSendConfirmOpen(true)}
+              disabled={isSendPending || segmentGaps.length > 0}
+              title={segmentGaps.length > 0 ? t('segment.sendBlockedTitle') : undefined}
+            >
               <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.sendToCompanies')}
             </Button>
@@ -446,6 +465,13 @@ const QuotationSelectionPage = () => {
             </Button>
           </div>
         </div>
+      )}
+
+      {isDraft && (
+        <SegmentGapsAlert
+          gaps={segmentGaps}
+          className="p-3 border border-amber-200 rounded-xl text-sm"
+        />
       )}
 
       {/* ─── Section 1: Appraisal Report Listing ──────────────────────────────── */}

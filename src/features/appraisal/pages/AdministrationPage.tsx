@@ -67,7 +67,11 @@ const AdministrationPage = () => {
   const currentUser = useAuthStore(state => state.user);
 
   // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
-  const { data: requestData } = useGetRequestById(requestId ?? '');
+  const {
+    data: requestData,
+    isLoading: isRequestLoading,
+    isError: isRequestError,
+  } = useGetRequestById(requestId ?? '');
   const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as
     | string
     | undefined;
@@ -1414,6 +1418,9 @@ const AdministrationPage = () => {
             requestId={requestId}
             workflowInstanceId={workflowInstanceId ?? undefined}
             bankingSegment={bankingSegment}
+            isSegmentLoading={isRequestLoading}
+            // A failed background refetch keeps the last known data, so it must not blank the segment.
+            isSegmentError={isRequestError && !requestData}
             assignmentType={
               assignmentType
                 ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1)

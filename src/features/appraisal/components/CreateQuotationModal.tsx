@@ -11,6 +11,13 @@ import { useTranslation } from 'react-i18next';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { MissingSegmentsBadge } from '@/features/quotation/components/SegmentBadges';
+import {
+  getSelectAllState,
+  useCoveringCompanySearch,
+} from '@/features/quotation/hooks/useCoveringCompanySearch';
+import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
+import { buildSegmentSet, getMissingSegments } from '@/features/quotation/utils/segmentCoverage';
 
 interface CreateQuotationModalProps {
   isOpen: boolean;
@@ -19,6 +26,10 @@ interface CreateQuotationModalProps {
   requestId?: string;
   workflowInstanceId?: string;
   bankingSegment?: string;
+  /** True while the parent is still loading `bankingSegment`; the company list waits for it. */
+  isSegmentLoading?: boolean;
+  /** True when loading `bankingSegment` failed; the company list shows a load error instead. */
+  isSegmentError?: boolean;
   onSuccess?: () => void;
   /** Optional slot rendered at the top of the modal body (used by QuotationEntryModal to inject the tab bar). */
   headerSlot?: ReactNode;
@@ -31,6 +42,7 @@ interface SelectedCompany {
   id: string;
   companyName: string;
   companyNameLocal?: string | null;
+  loanTypes: string[];
 }
 
 const CreateQuotationModal = ({
@@ -40,14 +52,17 @@ const CreateQuotationModal = ({
   requestId,
   workflowInstanceId,
   bankingSegment,
+  isSegmentLoading,
+  isSegmentError,
   onSuccess,
   headerSlot,
   assignmentType,
   assignmentMethod,
   internalFollowupAssignmentMethod,
 }: CreateQuotationModalProps) => {
-  const { t } = useTranslation('appraisal');
+  const { t } = useTranslation(['appraisal', 'quotation']);
   const localizeCompanyName = useLocalizedCompanyName();
+  const segmentLabel = useSegmentLabel();
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(() =>
@@ -60,30 +75,42 @@ const CreateQuotationModal = ({
   // Wrapped in single-element array for the v1 plural-list contract on start-from-task.
   const excludedCompanyId = useAppealExclusionStore(s => s.excludedCompanyId);
 
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
-    bankingSegment,
-    isOpen,
-  );
+  // Unfiltered fetch, then the same client-side Segment Coverage filter as the other pickers; the
+  // list waits for the parent to finish loading the segment so it never flashes every company.
+  // A blank segment is skipped by Segment Coverage (it covers everything).
+  const segmentReady = !isSegmentLoading && !isSegmentError;
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompaniesQuery,
+    isError: isCompaniesError,
+  } = useGetEligibleCompanies(undefined, isOpen && segmentReady, false);
+  const isLoadingCompanies = isLoadingCompaniesQuery || !!isSegmentLoading;
+
+  const segmentSet = useMemo(() => buildSegmentSet([bankingSegment]), [bankingSegment]);
 
   // Map raw company data to the SelectedCompany shape, filtering out the appeal-excluded company
   const allCompanies: SelectedCompany[] = useMemo(
     () =>
-      (rawCompanies ?? [])
-        .filter(c => c.id !== excludedCompanyId)
-        .map(c => ({ id: c.id, companyName: c.companyName, companyNameLocal: c.companyNameLocal })),
-    [rawCompanies, excludedCompanyId],
+      // A cached full list may exist even though the query is disabled; never show it while the
+      // segment is loading or failed.
+      segmentReady
+        ? (rawCompanies ?? [])
+            .filter(c => c.id !== excludedCompanyId)
+            .map(c => ({
+              id: c.id,
+              companyName: c.companyName,
+              companyNameLocal: c.companyNameLocal,
+              loanTypes: c.loanTypes ?? [],
+            }))
+        : [],
+    [rawCompanies, excludedCompanyId, segmentReady],
   );
 
-  const companyList = useMemo(() => {
-    if (!allCompanies) return [];
-    if (!searchQuery.trim()) return allCompanies;
-    const query = searchQuery.toLowerCase();
-    return allCompanies.filter(
-      c =>
-        c.companyName.toLowerCase().includes(query) ||
-        c.companyNameLocal?.toLowerCase().includes(query),
-    );
-  }, [allCompanies, searchQuery]);
+  const {
+    covering,
+    filtered: companyList,
+    noCoverage,
+  } = useCoveringCompanySearch(allCompanies, segmentSet, searchQuery);
 
   const { mutate: startQuotation, isPending } = useCreateQuotation();
 
@@ -124,7 +151,6 @@ const CreateQuotationModal = ({
         workflowInstanceId,
         taskExecutionId: null,
         cutOffTime: cutOffDateTime,
-        bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: selectedCompanies.map(c => c.id),
         specialRequirements: remarks || null,
         maxAppraisalDays: maxAppraisalDays ?? null,
@@ -148,15 +174,28 @@ const CreateQuotationModal = ({
   };
 
   const isCompanySelected = (companyId: string) => selectedCompanies.some(c => c.id === companyId);
-  const isAllCompanySelected =
-    companyList.length > 0 && companyList.every(c => isCompanySelected(c.id));
+  const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } = getSelectAllState(
+    companyList,
+    covering,
+    selectedCompanies,
+    searchQuery,
+  );
+
+  // Nothing to select, and nothing hidden to clear (or the list is loading / failed to load).
+  const selectAllDisabled =
+    isLoadingCompanies ||
+    !segmentReady ||
+    (companyList.length === 0 && hiddenSelected.length === 0);
 
   const handleToggleAllCompany = () => {
     setSelectedCompanies(prev => {
-      if (isAllCompanySelected) {
-        return prev.filter(c => !companyList.some(vc => vc.id === c.id));
+      // An empty visible list can still hide selected companies: clear them rather than add nothing.
+      if (allVisibleSelected || companyList.length === 0) {
+        const drop = new Set([...companyList, ...hiddenSelected].map(c => c.id));
+        return prev.filter(c => !drop.has(c.id));
       }
-      return [...prev, ...companyList.filter(c => !isCompanySelected(c.id))];
+      const ids = new Set(prev.map(c => c.id));
+      return [...prev, ...companyList.filter(c => !ids.has(c.id))];
     });
   };
 
@@ -180,6 +219,9 @@ const CreateQuotationModal = ({
                   <span className="font-medium">
                     {localizeCompanyName(company.companyName, company.companyNameLocal)}
                   </span>
+                  <MissingSegmentsBadge
+                    missing={getMissingSegments(segmentSet, company.loanTypes)}
+                  />
                   <button
                     type="button"
                     onClick={() => handleRemoveCompany(company.id)}
@@ -198,10 +240,12 @@ const CreateQuotationModal = ({
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Select External Companies <span className="text-danger">*</span>
           </label>
-          {bankingSegment && (
+          {segmentSet.length > 0 && (
             <p className="text-xs text-purple-600 mb-1.5 flex items-center gap-1">
               <Icon name="circle-info" style="solid" className="size-3.5" />
-              Showing companies eligible for <strong>{bankingSegment}</strong> segment
+              {t('quotation.editDraft.showingEligibleFor', {
+                segment: segmentLabel(segmentSet[0]),
+              })}
             </p>
           )}
 
@@ -209,23 +253,29 @@ const CreateQuotationModal = ({
             <div className="flex p-2 border-b border-gray-100">
               <button
                 type="button"
+                role="checkbox"
+                aria-checked={indeterminate ? 'mixed' : allChecked}
+                aria-label={t('quotation:aria.selectAllVisibleCompanies')}
+                disabled={selectAllDisabled}
                 onClick={() => handleToggleAllCompany()}
                 className={clsx(
                   'flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                  isAllCompanySelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  allChecked
+                    ? 'bg-purple-50 enabled:hover:bg-purple-100'
+                    : 'enabled:hover:bg-gray-50',
                 )}
               >
                 <div
                   className={clsx(
                     'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                    isAllCompanySelected
+                    allChecked || indeterminate
                       ? 'bg-purple-500 border-purple-500'
                       : 'border-gray-300 bg-white',
                   )}
                 >
-                  {isAllCompanySelected && (
-                    <Icon name="check" style="solid" className="size-3 text-white" />
-                  )}
+                  {allChecked && <Icon name="check" style="solid" className="size-3 text-white" />}
+                  {indeterminate && <span className="h-0.5 w-2.5 rounded bg-white" />}
                 </div>
               </button>
               <div className="relative w-full">
@@ -255,7 +305,13 @@ const CreateQuotationModal = ({
                 </div>
               ) : companyList.length === 0 ? (
                 <div className="px-4 py-6 text-center text-gray-500 text-sm">
-                  {bankingSegment ? 'No eligible companies for this segment' : 'No companies found'}
+                  {isSegmentError
+                    ? t('quotation.segmentLoadFailed')
+                    : isCompaniesError
+                      ? t('quotation.editDraft.failedToLoadCompanies')
+                      : noCoverage
+                        ? t('quotation.editDraft.noCoveringCompanies')
+                        : t('quotation.editDraft.noCompaniesFound')}
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">

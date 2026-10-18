@@ -25,6 +25,9 @@ import {
   SetMaxDaysBar,
 } from '../components/AppraisalPicker';
 import type { SelectedAppraisal, DocSelections } from '../components/AppraisalPicker';
+import { MissingSegmentsBadge, SegmentChips } from '../components/SegmentBadges';
+import { getSelectAllState, useCoveringCompanySearch } from '../hooks/useCoveringCompanySearch';
+import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
@@ -42,18 +45,26 @@ interface SelectedCompany {
   id: string;
   companyName: string;
   companyNameLocal?: string | null;
+  loanTypes: string[];
 }
 
 // ─── CompanyPicker ────────────────────────────────────────────────────────────
 
 interface CompanyPickerProps {
   selected: SelectedCompany[];
+  selectedAppraisals: SelectedAppraisal[];
   onToggle: (c: SelectedCompany) => void;
   onSetAllVisible: (companies: SelectedCompany[], selectAll: boolean) => void;
   error?: string;
 }
 
-function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPickerProps) {
+function CompanyPicker({
+  selected,
+  selectedAppraisals,
+  onToggle,
+  onSetAllVisible,
+  error,
+}: CompanyPickerProps) {
   const { t } = useTranslation('quotation');
   const localizeCompanyName = useLocalizedCompanyName();
   const [query, setQuery] = useState('');
@@ -69,21 +80,31 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
     refetch,
   } = useGetLoanTypeMatchedCompanies(undefined, true);
 
-  const companies: SelectedCompany[] = useMemo(
+  // Segment Set of the appraisals picked so far. Only companies that cover every segment in it are
+  // listed (empty set = no appraisal picked yet = everyone). The API's Send guard is authoritative.
+  const segmentSet = useMemo(
+    () => buildSegmentSet(selectedAppraisals.map(a => a.bankingSegment)),
+    [selectedAppraisals],
+  );
+
+  const allCompanies: SelectedCompany[] = useMemo(
     () =>
       (rawCompanies ?? [])
         .filter(c => c.id !== excludedCompanyId)
-        .map(c => ({ id: c.id, companyName: c.name, companyNameLocal: c.nameLocal })),
+        .map(c => ({
+          id: c.id,
+          companyName: c.name,
+          companyNameLocal: c.nameLocal,
+          loanTypes: c.loanTypes ?? [],
+        })),
     [rawCompanies, excludedCompanyId],
   );
 
-  const filtered = useMemo(() => {
-    if (!query.trim()) return companies;
-    const q = query.toLowerCase();
-    return companies.filter(
-      c => c.companyName.toLowerCase().includes(q) || c.companyNameLocal?.toLowerCase().includes(q),
-    );
-  }, [companies, query]);
+  const { covering, filtered, noCoverage } = useCoveringCompanySearch(
+    allCompanies,
+    segmentSet,
+    query,
+  );
 
   if (isError) {
     return (
@@ -103,6 +124,12 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
         </div>
       )}
 
+      {/* Every company shows until an appraisal is picked — explain why, rather than looking unfiltered.
+          Picked appraisals that simply have no segment keep the list unfiltered too, but need no hint. */}
+      {selectedAppraisals.length === 0 && (
+        <p className="text-xs text-gray-400">{t('segment.noneSelectedHint')}</p>
+      )}
+
       {/* Selected chips */}
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
@@ -113,6 +140,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
             >
               <Icon name="building" style="solid" className="size-3" />
               <span>{localizeCompanyName(c.companyName, c.companyNameLocal)}</span>
+              <MissingSegmentsBadge missing={getMissingSegments(segmentSet, c.loanTypes)} />
               <button
                 type="button"
                 onClick={() => onToggle(c)}
@@ -147,17 +175,21 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
         {!isLoading &&
           filtered.length > 0 &&
           (() => {
-            const allVisibleSelected = filtered.every(c => selectedIds.has(c.id));
-            const someVisibleSelected = filtered.some(c => selectedIds.has(c.id));
+            const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } =
+              getSelectAllState(filtered, covering, selected, query);
             return (
               <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={allVisibleSelected}
+                  checked={allChecked}
                   ref={el => {
-                    if (el) el.indeterminate = !allVisibleSelected && someVisibleSelected;
+                    if (el) el.indeterminate = indeterminate;
                   }}
-                  onChange={() => onSetAllVisible(filtered, !allVisibleSelected)}
+                  onChange={() =>
+                    allVisibleSelected
+                      ? onSetAllVisible([...filtered, ...hiddenSelected], false)
+                      : onSetAllVisible(filtered, true)
+                  }
                   className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
                   aria-label={t('aria.selectAllVisibleCompanies')}
                 />
@@ -180,8 +212,8 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
               <span className="text-xs">{t('shared.searchCompanyName')}</span>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4 italic">
-              {t('empty.noCompaniesInvited')}
+            <p className="text-xs text-gray-400 text-center py-4">
+              {noCoverage ? t('segment.noCoveringCompany') : t('empty.noCompaniesInvited')}
             </p>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -211,6 +243,7 @@ function CompanyPicker({ selected, onToggle, onSetAllVisible, error }: CompanyPi
                     <span className="text-sm text-gray-900 flex-1 truncate">
                       {localizeCompanyName(c.companyName, c.companyNameLocal)}
                     </span>
+                    <SegmentChips segments={c.loanTypes} />
                   </button>
                 );
               })}
@@ -448,6 +481,7 @@ function NewQuotationPage() {
           </div>
           <CompanyPicker
             selected={selectedCompanies}
+            selectedAppraisals={selectedAppraisals}
             onToggle={handleToggleCompany}
             onSetAllVisible={handleSetAllVisibleCompanies}
             error={errors.invitedCompanyIds?.message}

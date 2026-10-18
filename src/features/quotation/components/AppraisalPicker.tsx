@@ -17,6 +17,8 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+import { useSegmentLabel } from '../hooks/useSegmentLabel';
+import { SegmentChips } from './SegmentBadges';
 
 const EMPTY = <span className="text-gray-400">—</span>;
 
@@ -28,6 +30,7 @@ export interface SelectedAppraisal {
   appraisalNumber: string;
   customerName: string | null;
   maxAppraisalDays: number | null;
+  bankingSegment?: string | null;
 }
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
@@ -164,6 +167,8 @@ export function SelectedAppraisalRow({
             )}
           </p>
         </div>
+        {/* Appraisal banking segment */}
+        <SegmentChips segments={[a.bankingSegment]} className="shrink-0" />
         {/* Max days chip */}
         {a.maxAppraisalDays != null && (
           <span className="shrink-0 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-xs tabular-nums whitespace-nowrap">
@@ -499,10 +504,7 @@ export function AppraisalPicker({
     () => new Map(channelOptions.map(o => [o.value ?? '', o.label])),
     [channelOptions],
   );
-  const bankingSegmentLabels = useMemo(
-    () => new Map(bankingSegmentOptions.map(o => [o.value ?? '', o.label])),
-    [bankingSegmentOptions],
-  );
+  const segmentLabel = useSegmentLabel();
 
   const excludeSet = useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
@@ -560,6 +562,7 @@ export function AppraisalPicker({
         appraisalNumber: r.appraisalNumber ?? r.id.slice(0, 8),
         customerName: r.customerName ?? null,
         maxAppraisalDays: null,
+        bankingSegment: r.bankingSegment ?? null,
       });
     }
   };
@@ -576,6 +579,7 @@ export function AppraisalPicker({
             appraisalNumber: r.appraisalNumber ?? r.id.slice(0, 8),
             customerName: r.customerName ?? null,
             maxAppraisalDays: null,
+            bankingSegment: r.bankingSegment ?? null,
           });
         }
       });
@@ -940,9 +944,7 @@ export function AppraisalPicker({
                         {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.bankingSegment
-                          ? (bankingSegmentLabels.get(r.bankingSegment) ?? r.bankingSegment)
-                          : EMPTY}
+                        {r.bankingSegment ? segmentLabel(r.bankingSegment) : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-gray-700">
                         {r.propertyCount}

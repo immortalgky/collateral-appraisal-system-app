@@ -249,6 +249,7 @@
   },
   "errors": {
     "failedToLoad": "Failed to load quotations",
+    "failedToLoadCompanies": "Couldn't load companies",
     "failedToLoadInvitations": "Failed to load quotation invitations",
     "unableToLoad": "Unable to load quotation invitation.",
     "unableToLoadQuotation": "Unable to load quotation. You may not have access to this resource.",
@@ -431,7 +432,6 @@
     "appraisalNo": "Appraisal No.",
     "propertyType": "Property Type",
     "address": "Address",
-    "loanType": "Loan Type",
     "requestDocuments": "Request Documents",
     "titleDocuments": "Title Documents",
     "remove": "Remove",
@@ -544,6 +544,15 @@
     "searchCompanyName": "Search company name...",
     "notParticipatingTitle": "Not Participating",
     "notParticipatingNoReason": "No reason provided."
+  },
+  "segment": {
+    "missing": "Missing {{segments}}",
+    "segmentSet": "Banking segments",
+    "sendBlockedTitle": "Cannot send: some invited companies do not cover every banking segment in this quotation",
+    "sendBlockedItem": "{{company}} - missing {{segments}}",
+    "sendBlockedHint": "Remove these companies, or remove the appraisals outside their segments.",
+    "noneSelectedHint": "Select appraisals to see which companies cover their banking segments.",
+    "noCoveringCompany": "No company covers all selected banking segments"
   },
   "role": {
     "Maker": "Maker",

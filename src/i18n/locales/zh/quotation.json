@@ -249,6 +249,7 @@
   },
   "errors": {
     "failedToLoad": "Failed to load quotations",
+    "failedToLoadCompanies": "无法加载公司列表",
     "failedToLoadInvitations": "Failed to load quotation invitations",
     "unableToLoad": "Unable to load quotation invitation.",
     "unableToLoadQuotation": "Unable to load quotation. You may not have access to this resource.",
@@ -431,7 +432,6 @@
     "appraisalNo": "Appraisal No.",
     "propertyType": "Property Type",
     "address": "Address",
-    "loanType": "Loan Type",
     "requestDocuments": "Request Documents",
     "titleDocuments": "Title Documents",
     "remove": "Remove",
@@ -544,6 +544,15 @@
     "notParticipatingTitle": "不参与",
     "notParticipatingNoReason": "未提供原因。",
     "feeAfterDiscountZero": "Fee after discount cannot be 0"
+  },
+  "segment": {
+    "missing": "缺少 {{segments}}",
+    "segmentSet": "银行业务分部",
+    "sendBlockedTitle": "无法发送：部分受邀公司未覆盖此报价中的所有银行业务分部",
+    "sendBlockedItem": "{{company}} - 缺少 {{segments}}",
+    "sendBlockedHint": "请移除这些公司，或移除超出其银行业务分部的估价。",
+    "noneSelectedHint": "选择估价以查看哪些公司覆盖其银行业务分部。",
+    "noCoveringCompany": "没有公司覆盖所选的全部银行业务分部"
   },
   "role": {
     "Maker": "Maker",
