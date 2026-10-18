@@ -73,7 +73,7 @@ export const useGetAssignment = (appraisalId: string, options?: { staleTime?: nu
       return data.assignments ?? [];
     },
     enabled: !!appraisalId,
-    ...options,
+    ...(options?.staleTime !== undefined && { staleTime: options.staleTime }),
   });
 };
 
@@ -294,7 +294,7 @@ export const useGetAppraisalQuotations = (
       return result.items ?? [];
     },
     enabled: enabled && !!appraisalId,
-    ...options,
+    ...(options?.staleTime !== undefined && { staleTime: options.staleTime }),
   });
 };
 
