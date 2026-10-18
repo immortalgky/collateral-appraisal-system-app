@@ -3,7 +3,10 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { act } from '@testing-library/react';
 import { useTitleEditorStore } from '../store/titleEditorStore';
 import userEvent from '@testing-library/user-event';
+import { QueryClient } from '@tanstack/react-query';
 import { render, screen, within } from '@/test/test-utils';
+import { collateralMasterKeys } from '@/features/collateralMaster/api/keys';
+import { lookupParamsOf } from './titles/usePriorAppraisalCheck';
 import { FormReadOnlyContext } from '@/shared/components/form/context';
 import PriorAppraisalSummary from './PriorAppraisalSummary';
 
@@ -57,13 +60,17 @@ const answers: Record<string, unknown> = {
 
 function Harness({
   prevAppraisalId,
-  isSubmitted = false,
+  submitted = false,
+  priorLocked = false,
   titles = ['1111', '2222', '3333', '4444'],
   onTyping,
   priorField = true,
 }: {
   prevAppraisalId?: string;
-  isSubmitted?: boolean;
+  /** Submitted: nothing is asked or shown. */
+  submitted?: boolean;
+  /** The prior cannot be picked (an Initiate draft, or submitted): no amber card. */
+  priorLocked?: boolean;
   titles?: string[];
   /** Hands the test a way to type a number into the first title */
   onTyping?: (type: (titleNumber: string) => void) => void;
@@ -74,7 +81,7 @@ function Harness({
     defaultValues: {
       titles: titles.map(land),
       detail: { prevAppraisalId },
-      meta: { isSubmitted },
+      meta: { isSubmitted: submitted, priorLocked: priorLocked || submitted },
     },
   });
   onTyping?.(titleNumber => methods.setValue('titles.0.titleNumber', titleNumber));
@@ -268,9 +275,40 @@ describe('PriorAppraisalSummary', () => {
   });
 
   it('shows nothing and asks nothing on a submitted request', () => {
-    render(<Harness isSubmitted prevAppraisalId="a1" />);
+    render(<Harness submitted prevAppraisalId="a1" />);
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(get).not.toHaveBeenCalled();
+  });
+
+  it('on an Initiate draft keeps the in-progress card, and leaves out the pick-a-prior card and its lookup', async () => {
+    render(<Harness priorLocked prevAppraisalId="a1" />);
+    await screen.findByText(openHeading);
+    expect(screen.queryByText(priorHeading)).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /prior appraisal/i })).not.toBeInTheDocument();
+    expect(get.mock.calls.every(([url]) => url === IN_PROGRESS)).toBe(true);
+  });
+
+  describe('with the collateral master answer already in the cache', () => {
+    // A disabled query still hands back what is cached for its key
+    const seeded = () => {
+      const client = new QueryClient();
+      client.setQueryData(
+        collateralMasterKeys.lookup(lookupParamsOf(land('1111') as never)!),
+        known('a1', '69000180').data,
+      );
+      return client;
+    };
+
+    it('shows the pick-a-prior card where the prior can still be picked', async () => {
+      render(<Harness titles={['1111']} />, { queryClient: seeded() });
+      expect(await screen.findByText(priorHeading)).toBeInTheDocument();
+    });
+
+    it('leaves it out where the prior is locked, and still shows the in-progress card', async () => {
+      render(<Harness priorLocked titles={['1111']} />, { queryClient: seeded() });
+      await screen.findByText(openHeading);
+      expect(screen.queryByText(priorHeading)).not.toBeInTheDocument();
+    });
   });
 
   it('shows nothing when no attached title matches anything', async () => {

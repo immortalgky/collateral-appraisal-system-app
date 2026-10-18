@@ -88,12 +88,16 @@ function Harness({
   title = completeLand(),
   props = {},
   submitted = false,
+  priorLocked = false,
   before = [],
   prevAppraisalId,
 }: {
   title?: RequestTitleDtoType;
   props?: Partial<TitleDrawerProps>;
+  /** Submitted: nothing is checked. */
   submitted?: boolean;
+  /** The prior cannot be picked (an Initiate draft): only the in-progress check runs. */
+  priorLocked?: boolean;
   /** Rows ahead of the title, so it is not at index 0 (a reorder or a delete moves it). */
   before?: RequestTitleDtoType[];
   /** The prior appraisal the request already follows. */
@@ -102,7 +106,7 @@ function Harness({
   form = useForm<FieldValues>({
     defaultValues: {
       titles: [...before, title],
-      meta: { isSubmitted: submitted },
+      meta: { isSubmitted: submitted, priorLocked: priorLocked || submitted },
       detail: { prevAppraisalId },
     },
   });
@@ -914,10 +918,38 @@ describe('TitleDrawer save: a title the collateral master already knows', () => 
 
   it('does not ask for a request that is already submitted: its own appraisal is on record', async () => {
     lookupGet.mockResolvedValue({ data: known });
+    inFlightGet.mockResolvedValue({
+      data: [{ appraisalId: 'b1', appraisalNumber: 'APP-2026-777', status: 'UnderReview' }],
+    });
     render(<Harness submitted />);
     await clickAndSettle(save());
     expect(lookupGet).not.toHaveBeenCalled();
+    expect(inFlightGet).not.toHaveBeenCalled();
     expect(dialogTitle()).toBeNull();
     expect(handlers.onSave).toHaveBeenCalledTimes(1);
+  });
+
+  describe('on an Initiate draft (the prior is locked)', () => {
+    it('does not suggest a prior, and does not ask the collateral master', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      render(<Harness priorLocked />);
+      await clickAndSettle(save());
+      expect(lookupGet).not.toHaveBeenCalled();
+      expect(dialogTitle()).toBeNull();
+      expect(handlers.onSave).toHaveBeenCalledTimes(1);
+    });
+
+    it('still warns when another appraisal is working on the property, with no prior box', async () => {
+      lookupGet.mockResolvedValue({ data: known });
+      inFlightGet.mockResolvedValue({
+        data: [{ appraisalId: 'b1', appraisalNumber: 'APP-2026-777', status: 'UnderReview' }],
+      });
+      render(<Harness priorLocked />);
+      await clickAndSettle(save());
+      expect(screen.getByText('titleSection.priorCheck.titleInProgress')).toBeInTheDocument();
+      expect(screen.getByText('APP-2026-777')).toBeInTheDocument();
+      expect(screen.queryByText('titleSection.priorCheck.priorHeading')).toBeNull();
+      expect(handlers.onSave).not.toHaveBeenCalled();
+    });
   });
 });

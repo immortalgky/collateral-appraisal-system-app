@@ -20,15 +20,6 @@ const DATE = 'detail.prevAppraisalDate';
 
 const linkButton = 'font-medium text-primary hover:underline disabled:opacity-50';
 
-interface PriorAppraisalBlockProps {
-  /**
-   * The prior cannot be picked, changed or cleared: a submitted request (a route-back included), whose
-   * appraisal is built from it. Said by the page, not inferred from the provider; with no provider
-   * (no handlers to pick with) the block is locked all the same, as a safe default.
-   */
-  locked?: boolean;
-}
-
 /**
  * The prior appraisal of the request, in the "purpose and prior appraisal" group: one strip saying
  * which appraisal it follows (with change / clear), or a search field while there is none.
@@ -36,16 +27,18 @@ interface PriorAppraisalBlockProps {
  * Which of the three it is follows the purpose: none yet shows a hint; a purpose that does not use a
  * prior appraisal shows nothing, unless one is already picked (then the strip stays, so nothing
  * hidden is submitted unseen). Picking and clearing go through AppraisalCopyContext (the page's full
- * copy, with its own confirm dialogs). With no provider, or `locked`, the block is display-only: the
+ * copy, with its own confirm dialogs). With no provider, or `meta.priorLocked`, the block is display-only: the
  * strip, or a dash, and no way to pick, change or clear.
  */
-export default function PriorAppraisalBlock({
-  locked: lockedByPage = false,
-}: PriorAppraisalBlockProps) {
+export default function PriorAppraisalBlock() {
   const { t } = useTranslation(['request', 'common']);
   const { control } = useFormContext();
   const readOnly = useFormReadOnly();
   const copy = useAppraisalCopyHandler();
+  // Said by the page, not inferred from the provider: a submitted request (a route-back included),
+  // whose appraisal is built from the prior, or a draft the periodical-reappraisal Initiate created,
+  // whose prior the backend fixes
+  const lockedByPage = !!useWatch({ control, name: 'meta.priorLocked' });
   const canOpen = useCanOpenAppraisalWorkspace();
   const isCreate = !useParams().requestId;
   const [searching, setSearching] = useState(false);
@@ -71,7 +64,9 @@ export default function PriorAppraisalBlock({
     );
   }
   const hasPrior = !!(id || number);
-  // Locked: said by the page, or no handlers to pick with. Read-only is display-only too.
+  // Locked: said by the page, or no handlers to pick with. Read-only is display-only too. The page
+  // always mounts AppraisalCopyProvider, so in the app the lock rests on `meta.priorLocked`; `!copy`
+  // is a safe default for a harness or a future caller with no handlers.
   const locked = lockedByPage || !copy;
   const canEdit = !readOnly && !locked;
 

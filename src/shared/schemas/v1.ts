@@ -263,6 +263,7 @@ const GetRequestByIdResponse = z
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
+    isPeriodicalReappraisal: z.boolean().optional(),
     detail: RequestDetailDto.nullable(),
     customers: z.array(RequestCustomerDto).nullable(),
     properties: z.array(RequestPropertyDto).nullable(),
@@ -5556,7 +5557,6 @@ export type CreateCondoPMAPropertyRequestType = z.infer<typeof CreateCondoPMAPro
 export type CreateCondoPMAPropertyResponseType = z.infer<typeof CreateCondoPMAPropertyResponse>;
 export type UpdateLandPMAPropertyRequestType = z.infer<typeof UpdateLandPMAPropertyRequest>;
 export type UpdateCondoPMAPropertyRequestType = z.infer<typeof UpdateCondoPMAPropertyRequest>;
-
 
 // Property Update response types
 // export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;

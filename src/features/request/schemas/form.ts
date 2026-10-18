@@ -266,7 +266,9 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
     comments: z.array(makeRequestCommentDto(t)),
     // Page state that is validated against but never sent. It must be in the shape: zod strips what is
     // not, and the conditional rules (the prior is not asked for of a submitted request) read it.
-    meta: z.object({ isSubmitted: z.boolean().nullish() }).optional(),
+    meta: z
+      .object({ isSubmitted: z.boolean().nullish(), priorLocked: z.boolean().nullish() })
+      .optional(),
   });
 
   return buildFormSchema(allRequestFields, createRequestFormBase).superRefine((data, ctx) =>
@@ -371,7 +373,7 @@ export const createRequestFormDefault: createRequestFormType = {
   documents: [],
   comments: [],
   // Page state, never sent: set from the loaded request (see the page)
-  meta: { isSubmitted: false },
+  meta: { isSubmitted: false, priorLocked: false },
 };
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
