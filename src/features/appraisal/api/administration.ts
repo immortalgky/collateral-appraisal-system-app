@@ -65,7 +65,7 @@ export const useGetCompanyById = (companyId: string | null) => {
  * Get current assignment for an appraisal
  * GET /appraisals/{appraisalId}/assignments
  */
-export const useGetAssignment = (appraisalId: string) => {
+export const useGetAssignment = (appraisalId: string, options?: { staleTime?: number }) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'assignments'],
     queryFn: async (): Promise<CurrentAssignment[]> => {
@@ -73,6 +73,7 @@ export const useGetAssignment = (appraisalId: string) => {
       return data.assignments ?? [];
     },
     enabled: !!appraisalId,
+    ...options,
   });
 };
 
@@ -281,7 +282,7 @@ export const useGetEligibleCompanies = (
 export const useGetAppraisalQuotations = (
   appraisalId: string | null,
   enabled = true,
-  refetchOnMount?: 'always',
+  options?: { staleTime?: number },
 ) => {
   return useQuery({
     queryKey: ['quotations', 'list', { appraisalId }],
@@ -293,7 +294,7 @@ export const useGetAppraisalQuotations = (
       return result.items ?? [];
     },
     enabled: enabled && !!appraisalId,
-    refetchOnMount,
+    ...options,
   });
 };
 

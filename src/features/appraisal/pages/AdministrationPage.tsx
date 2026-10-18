@@ -72,6 +72,13 @@ import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
  */
 const OFFLINE_DRAFT_METHOD = 'Offline';
 
+/**
+ * The seed decides fresh vs saved row and the quotation skip from the assignment and the quotations
+ * list, so a cached copy of either (global staleTime) must be refetched whenever the page is entered,
+ * including a route change that keeps it mounted; the isFetching gates then wait for the fresh copy.
+ */
+const ENTRY_REFETCH = { staleTime: 0 };
+
 const AdministrationPage = () => {
   const { t } = useTranslation('appraisal');
   const assignmentSchema = useAssignmentFormSchema();
@@ -97,7 +104,7 @@ const AdministrationPage = () => {
     data: assignments,
     isLoading: isLoadingAssignment,
     isFetching: isFetchingAssignment,
-  } = useGetAssignment(appraisalId ?? '');
+  } = useGetAssignment(appraisalId ?? '', ENTRY_REFETCH);
   const currentAssignment = assignments?.[0] ?? null;
   // A saved draft or a non-Pending row holds real selections, which win over any default.
   const isPendingRow = currentAssignment?.assignmentStatus.toLowerCase() === 'pending';
@@ -113,13 +120,13 @@ const AdministrationPage = () => {
     appraisalId ?? '',
   );
   // All quotations for this appraisal (used for the quotation section, the lock check and the defaults).
-  // Refetched on mount: the one-time seed decides from this list, and a cached copy could miss a
-  // quotation someone else started meanwhile.
+  // Refetched on entry (mount or appraisal change): the one-time seed decides from this list, and a
+  // cached copy could miss a quotation someone else started meanwhile.
   const {
     data: quotationsData,
     isError: isQuotationsError,
     isFetching: isFetchingQuotations,
-  } = useGetAppraisalQuotations(appraisalId ?? null, true, 'always');
+  } = useGetAppraisalQuotations(appraisalId ?? null, true, ENTRY_REFETCH);
   const appraisalQuotations = quotationsData ?? [];
   // Whether the Appraisal Type defaults must be left out; see shouldSkipTypeDefaults.
   const skipTypeDefaults = shouldSkipTypeDefaults({
