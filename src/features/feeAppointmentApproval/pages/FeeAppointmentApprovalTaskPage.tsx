@@ -1,4 +1,5 @@
 import '@/features/feeAppointmentApproval/i18n';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { format } from 'date-fns';
@@ -276,9 +277,11 @@ function FeeAppointmentApprovalTaskPage() {
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
 
-  const { data: approval, isLoading, isError } = useGetFeeAppointmentApprovalByWorkflowInstance(
-    workflowInstanceId,
-  );
+  const {
+    data: approval,
+    isLoading,
+    isError,
+  } = useGetFeeAppointmentApprovalByWorkflowInstance(workflowInstanceId);
   const resolveMutation = useResolveFeeAppointmentApproval();
 
   // The appraisal's existing fees — shown read-only so the approver sees the full fee picture,
@@ -338,11 +341,7 @@ function FeeAppointmentApprovalTaskPage() {
         ? 'reject'
         : '';
   const resolvedFeeDecision: Decision =
-    feeLineStatus === 'Approved'
-      ? 'approve'
-      : feeLineStatus === 'Rejected'
-        ? 'reject'
-        : '';
+    feeLineStatus === 'Approved' ? 'approve' : feeLineStatus === 'Rejected' ? 'reject' : '';
 
   const resolvedAppointmentReason = appointmentLines[0]?.decisionReason ?? '';
   const resolvedFeeReason = feeLines[0]?.decisionReason ?? '';
@@ -403,16 +402,19 @@ function FeeAppointmentApprovalTaskPage() {
         onSuccess: () => {
           setIsConfirmOpen(false);
           toast.success(t('toasts.resolveSuccess'));
-          navigate('/tasks?activityId=fee-appointment-approval');
+          navigate(taskListUrl('/tasks?activityId=fee-appointment-approval'));
         },
         onError: (error: unknown) => {
           setIsConfirmOpen(false);
           const status = (error as { response?: { status?: number } })?.response?.status;
           if (status === 409) {
             toast.error(t('toasts.alreadyResolved'));
-            navigate('/tasks?activityId=fee-appointment-approval');
+            navigate(taskListUrl('/tasks?activityId=fee-appointment-approval'));
           } else {
-            const apiError = error as { response?: { data?: { detail?: string } }; message?: string };
+            const apiError = error as {
+              response?: { data?: { detail?: string } };
+              message?: string;
+            };
             const message =
               apiError?.response?.data?.detail ?? apiError?.message ?? t('toasts.resolveFailed');
             toast.error(message);
@@ -428,7 +430,11 @@ function FeeAppointmentApprovalTaskPage() {
       <FormCard title={t('page.title')} icon="clipboard-check" iconColor="primary">
         {/* Info banner */}
         <div className="flex items-start gap-3 p-3 rounded-xl bg-indigo-50 border border-indigo-100 mb-6">
-          <Icon name="circle-info" style="solid" className="size-5 text-indigo-500 shrink-0 mt-0.5" />
+          <Icon
+            name="circle-info"
+            style="solid"
+            className="size-5 text-indigo-500 shrink-0 mt-0.5"
+          />
           <div>
             <p className="text-sm font-medium text-indigo-800">{t('page.infoTitle')}</p>
             <p className="text-xs text-indigo-600 mt-0.5">{t('page.infoBody')}</p>
@@ -452,7 +458,9 @@ function FeeAppointmentApprovalTaskPage() {
           <div className="mb-4 space-y-2">
             <div className="flex items-center gap-2">
               <Icon name="receipt" style="solid" className="size-3.5 text-gray-400" />
-              <span className="text-xs font-semibold text-gray-500">{t('fee.currentFeesTitle')}</span>
+              <span className="text-xs font-semibold text-gray-500">
+                {t('fee.currentFeesTitle')}
+              </span>
             </div>
             <div className="overflow-hidden rounded-lg border border-gray-100">
               <table className="w-full text-sm table-fixed">
@@ -506,7 +514,10 @@ function FeeAppointmentApprovalTaskPage() {
               decision={isResolved ? resolvedAppointmentDecision : appointmentDecision}
               reason={isResolved ? resolvedAppointmentReason : appointmentReason}
               onDecisionChange={setAppointmentDecision}
-              onReasonChange={v => { setAppointmentReason(v); setAppointmentReasonError(''); }}
+              onReasonChange={v => {
+                setAppointmentReason(v);
+                setAppointmentReasonError('');
+              }}
               reasonError={appointmentReasonError}
               disabled={isResolved || !isTaskOwner}
             >
@@ -523,7 +534,10 @@ function FeeAppointmentApprovalTaskPage() {
               decision={isResolved ? resolvedFeeDecision : feeDecision}
               reason={isResolved ? resolvedFeeReason : feeReason}
               onDecisionChange={setFeeDecision}
-              onReasonChange={v => { setFeeReason(v); setFeeReasonError(''); }}
+              onReasonChange={v => {
+                setFeeReason(v);
+                setFeeReasonError('');
+              }}
               reasonError={feeReasonError}
               disabled={isResolved || !isTaskOwner}
             >
@@ -535,7 +549,7 @@ function FeeAppointmentApprovalTaskPage() {
         {/* Submit button */}
         {isTaskOwner && !isResolved && (
           <div className="mt-6 pt-4 border-t border-gray-100 flex justify-end items-center gap-3">
-            {(!hasAppointment || !appointmentDecision) || (!hasFee || !feeDecision) ? (
+            {!hasAppointment || !appointmentDecision || !hasFee || !feeDecision ? (
               <p className="text-xs text-gray-400">{t('page.decisionHint')}</p>
             ) : null}
             <button

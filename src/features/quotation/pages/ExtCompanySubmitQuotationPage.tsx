@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch, type FieldErrors } from 'react-hook-form';
@@ -153,7 +154,7 @@ const ExtCompanySubmitQuotationPage = () => {
       queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
       queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
-      navigate('/tasks');
+      navigate(taskListUrl());
     } else {
       navigate('/ext/quotations');
     }

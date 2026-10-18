@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import ActivityCompletionChecklist from '../components/ActivityCompletionChecklist';
 import ActivityCompletionErrors from '../components/ActivityCompletionErrors';
 import { useActivityProgressStore } from '../store/activityProgressStore';
@@ -899,7 +900,7 @@ const DecisionSummaryPage = () => {
             // result.nextAssignee is a user code: shown beside the name, never on its own.
             nextAssigneeCode: nextAssigneeName ? (result.nextAssignee ?? null) : null,
             referenceNumber: appraisal?.appraisalReportNo ?? null,
-            to: '/tasks',
+            to: taskListUrl(),
             // The completion saved the form: let the navigation, when the card closes, through the
             // unsaved-changes guard (called at that moment, so a form that turned dirty again
             // meanwhile cannot re-arm it).

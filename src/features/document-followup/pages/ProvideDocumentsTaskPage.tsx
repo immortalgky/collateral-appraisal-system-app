@@ -1,4 +1,5 @@
 import '@/features/document-followup/i18n';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -276,14 +277,14 @@ function ProvideDocumentsTaskPage() {
         onSuccess: () => {
           setIsConfirmSubmitOpen(false);
           toast.success(t('toasts.submitSuccess'));
-          navigate('/tasks?activityId=provide-additional-documents');
+          navigate(taskListUrl('/tasks?activityId=provide-additional-documents'));
         },
         onError: (error: unknown) => {
           setIsConfirmSubmitOpen(false);
           const status = (error as { response?: { status?: number } })?.response?.status;
           if (status === 409) {
             toast.error(t('toasts.submitAlreadyDone'));
-            navigate('/tasks?activityId=provide-additional-documents');
+            navigate(taskListUrl('/tasks?activityId=provide-additional-documents'));
           } else if (status === 400) {
             toast.error(t('toasts.submitItemsRequired'));
           } else {
@@ -333,7 +334,7 @@ function ProvideDocumentsTaskPage() {
   // Back-link to parent appraisal
   const parentAppraisalHref = followup.parentAppraisalId
     ? `/tasks/${taskId}`
-    : '/tasks?activityId=provide-additional-documents';
+    : taskListUrl('/tasks?activityId=provide-additional-documents');
 
   const raisedByLabel = followup.raisedBy.displayName ?? followup.raisedBy.userId ?? 'Unknown';
 

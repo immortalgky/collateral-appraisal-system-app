@@ -1,4 +1,5 @@
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -295,7 +296,7 @@ function TaskLayout() {
             ? 'This task is not assigned to you. You do not have permission to view or work on this task.'
             : 'The task you are looking for does not exist or has already been completed.'}
         </p>
-        <Button className="mt-6" onClick={() => navigate('/tasks')}>
+        <Button className="mt-6" onClick={() => navigate(taskListUrl())}>
           <Icon style="solid" name="arrow-left" className="size-4 mr-2" />
           Back to Tasks
         </Button>

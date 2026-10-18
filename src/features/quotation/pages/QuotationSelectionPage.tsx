@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useMemo, useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
@@ -260,7 +261,7 @@ const QuotationSelectionPage = () => {
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
         <p className="text-sm text-gray-600">{t('errors.unableToLoadQuotation')}</p>
-        <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
+        <Button variant="outline" size="sm" onClick={() => navigate(taskListUrl())}>
           {t('buttons.backToTasks')}
         </Button>
       </div>
