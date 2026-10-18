@@ -69,13 +69,16 @@ export const useSaveProjectPricingAssumptions = () => {
       );
       return data;
     },
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({
-        queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
-      });
-      queryClient.invalidateQueries({
-        queryKey: projectUnitPriceKeys.all(variables.appraisalId),
-      });
-    },
+    // Returned: the mutation stays pending until the refetches have landed, so the page is busy for
+    // the whole save and not only the request.
+    onSuccess: (_, variables) =>
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: projectUnitPriceKeys.all(variables.appraisalId),
+        }),
+      ]),
   });
 };

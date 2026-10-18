@@ -316,6 +316,8 @@ export interface ProjectUnitPrice {
   modelType?: string;
   usableArea?: number;
   sellingPrice?: number;
+  /** Sold units still carry a price and count in every total. */
+  isSold: boolean;
   // Condo-only unit fields
   floor?: number;
   towerName?: string;
@@ -341,12 +343,71 @@ export interface ProjectUnitPrice {
   totalAppraisalValue?: number;
   totalAppraisalValueRounded?: number;
   forceSellingPrice?: number;
+  /** Per-unit TOTAL baht (rate x usable area, rounded to 1000), not a per-sq.m. rate. */
   coverageAmount?: number;
   // Condo-only calculated
   priceIncrementPerFloor?: number;
   // LB-only calculated
   landIncreaseDecreaseAmount?: number;
   landAreaDifference?: number;
+}
+
+// ─── Unit price import (Excel) ────────────────────────────────────────────────
+
+export type UnitPriceSource = 'Calculated' | 'Imported';
+
+export interface UnitPriceSourceInfo {
+  source: UnitPriceSource;
+  fileName: string | null;
+  importedAt: string | null;
+  importedBy: string | null;
+  /** Units that currently hold a price, whichever way it got there. */
+  pricedUnitCount: number;
+}
+
+export type UnitPriceImportErrorCode =
+  | 'MissingHeader'
+  | 'UnitNotFound'
+  | 'AmbiguousMatch'
+  | 'DuplicateUnit'
+  | 'InvalidNumber'
+  | 'MissingAppraisalValue'
+  | 'MissingPrice';
+
+export interface UnitPriceImportTotals<T = number> {
+  appraisalValue: T;
+  forceSellingPrice: T;
+  coverageAmount: T;
+}
+
+export interface UnitPriceImportPreview {
+  fileName: string;
+  projectType: 'Condo' | 'LandAndBuilding';
+  rowCount: number;
+  matchedCount: number;
+  matchedByPrimaryKey: number;
+  matchedBySecondaryKey: number;
+  unitsInProject: number;
+  errors: { rowNumber: number; key: string | null; code: string; message: string }[];
+  attributeDiffs: {
+    rowNumber: number;
+    key: string;
+    column: string;
+    systemValue: string | null;
+    fileValue: string | null;
+  }[];
+  unitsMissingFromFile: { projectUnitId: string; key: string | null }[];
+  rows: {
+    rowNumber: number;
+    key: string;
+    projectUnitId: string | null;
+    previousAppraisalValue: number | null;
+    newAppraisalValue: number | null;
+  }[];
+  totals: UnitPriceImportTotals;
+  sheetTotals: UnitPriceImportTotals<number | null> | null;
+  sheetTotalsMatch: boolean | null;
+  canImport: boolean;
 }
 
 /** Request shape for saving location flags on unit prices. */
@@ -398,6 +459,8 @@ export interface ProjectPricingAssumption {
   edgeAdjustment?: number;
   otherAdjustment?: number;
   forceSalePercentage?: number;
+  /** What the BE applies when the saved percentage is null or outside 0..100. */
+  systemDefaultForceSalePercentage?: number;
   // Condo-only
   poolViewAdjustment?: number;
   southAdjustment?: number;

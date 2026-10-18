@@ -5,6 +5,7 @@ import axios from '@shared/api/axiosInstance';
 import { downloadBlob } from '@shared/api/blobTransfer';
 import { useCallback, useRef, useState } from 'react';
 import type { AnyReportRow, BaseReportFilter, PaginatedResult, SortDir } from './types';
+import { parseFileName } from '@/shared/utils/contentDisposition';
 
 // ─── Query key factory ────────────────────────────────────────────────────────
 
@@ -136,13 +137,7 @@ export function useReportExport(
 
         // Derive filename from Content-Disposition if present, else fall back
         const disposition = response.headers['content-disposition'] as string | undefined;
-        let filename = `${slug}-report.${format}`;
-        if (disposition) {
-          const match = disposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/i);
-          if (match?.[1]) {
-            filename = match[1].replace(/['"]/g, '');
-          }
-        }
+        const filename = parseFileName(disposition) ?? `${slug}-report.${format}`;
 
         const url = URL.createObjectURL(response.data as Blob);
         const a = document.createElement('a');
