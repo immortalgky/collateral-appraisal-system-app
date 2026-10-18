@@ -19,7 +19,8 @@ import {
 } from '../api/feeAppointmentApproval';
 import type { FeeAppointmentApprovalLine } from '../types/feeAppointmentApproval';
 import { FEE_ITEM_TYPE_OPTIONS } from '@/features/appraisal/types/appointmentAndFee';
-import { useGetAppraisalFees } from '@/features/appraisal/api/fee';
+import { useGetAppraisalFees, useUpdateAppraisalFee } from '@/features/appraisal/api/fee';
+import { BANK_ABSORB_FEE_TYPES } from '@/features/appraisal/components/FeeInformationSection';
 
 // ---- Helpers ----
 
@@ -54,6 +55,7 @@ const formatCurrency = (amount: number | null | undefined) => {
 // ---- Decision block component ----
 
 type Decision = 'approve' | 'reject' | '';
+type FeePaymentOption = 'customer' | 'bank_absorb';
 
 interface DecisionBlockProps {
   title: string;
@@ -66,6 +68,8 @@ interface DecisionBlockProps {
   onReasonChange: (r: string) => void;
   reasonError?: string;
   disabled?: boolean;
+  paymentOption?: FeePaymentOption;
+  onPaymentOptionChange?: (o: FeePaymentOption) => void;
 }
 
 function DecisionBlock({
@@ -79,6 +83,8 @@ function DecisionBlock({
   onReasonChange,
   reasonError,
   disabled,
+  paymentOption,
+  onPaymentOptionChange,
 }: DecisionBlockProps) {
   const { t } = useTranslation('feeAppointmentApproval');
   return (
@@ -120,6 +126,40 @@ function DecisionBlock({
               <Icon name="xmark" style="solid" className="size-4" />
               {t('decisions.reject')}
             </button>
+          </div>
+        )}
+
+        {decision === 'approve' && !disabled && onPaymentOptionChange && (
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              {t('fee.paymentOption.label')}
+            </label>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => onPaymentOptionChange('customer')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  paymentOption === 'customer'
+                    ? 'bg-primary border-primary text-white'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-primary/5 hover:border-primary/60'
+                }`}
+              >
+                <Icon name="user" style="solid" className="size-3.5" />
+                {t('fee.paymentOption.customerPay')}
+              </button>
+              <button
+                type="button"
+                onClick={() => onPaymentOptionChange('bank_absorb')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  paymentOption === 'bank_absorb'
+                    ? 'bg-primary border-primary text-white'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-primary/5 hover:border-primary/60'
+                }`}
+              >
+                <Icon name="building-columns" style="solid" className="size-3.5" />
+                {t('fee.paymentOption.bankAbsorb')}
+              </button>
+            </div>
           </div>
         )}
 
@@ -283,6 +323,7 @@ function FeeAppointmentApprovalTaskPage() {
     isError,
   } = useGetFeeAppointmentApprovalByWorkflowInstance(workflowInstanceId);
   const resolveMutation = useResolveFeeAppointmentApproval();
+  const updateAppraisalFee = useUpdateAppraisalFee();
 
   // The appraisal's existing fees — shown read-only so the approver sees the full fee picture,
   // not just the fee(s) being requested for approval.
@@ -293,6 +334,7 @@ function FeeAppointmentApprovalTaskPage() {
   const [appointmentReason, setAppointmentReason] = useState('');
   const [feeDecision, setFeeDecision] = useState<Decision>('');
   const [feeReason, setFeeReason] = useState('');
+  const [feePaymentOption, setFeePaymentOption] = useState<FeePaymentOption>('customer');
   const [appointmentReasonError, setAppointmentReasonError] = useState('');
   const [feeReasonError, setFeeReasonError] = useState('');
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
@@ -327,6 +369,12 @@ function FeeAppointmentApprovalTaskPage() {
     .flatMap(f => f.items ?? [])
     .filter(i => !i.requiresApproval || i.approvalStatus === 'Approved');
   const otherFeesTotal = otherFees.reduce((sum, i) => sum + (i.feeAmount ?? 0), 0);
+
+  const currentFee = appraisalFees.length > 0 ? appraisalFees[0] : null;
+  const feeLinesTotal = feeLines.reduce((sum, l) => sum + (l.feeAmount ?? 0), 0);
+
+  // Customer-pay / bank-absorb is decision under fee type '04'
+  const showFeePaymentOption = BANK_ABSORB_FEE_TYPES.includes(currentFee?.feePaymentType ?? '');
 
   const isResolved = approval.status !== 'Open';
 
@@ -399,8 +447,29 @@ function FeeAppointmentApprovalTaskPage() {
     resolveMutation.mutate(
       { id: approval.id, body },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setIsConfirmOpen(false);
+          if (
+            hasFee &&
+            feeDecision === 'approve' &&
+            showFeePaymentOption &&
+            feePaymentOption === 'bank_absorb' &&
+            currentFee
+          ) {
+            try {
+              await updateAppraisalFee.mutateAsync({
+                appraisalId: approval.appraisalId,
+                feeId: currentFee.id ?? '',
+                feePaymentType: currentFee.feePaymentType ?? '',
+                bankAbsorbAmount: (currentFee.bankAbsorbAmount ?? 0) + feeLinesTotal,
+              });
+            } catch {
+              toast.error(t('toasts.bankAbsorbUpdateFailed'));
+              navigate('/tasks?activityId=fee-appointment-approval');
+              return;
+            }
+          }
+
           toast.success(t('toasts.resolveSuccess'));
           navigate(taskListUrl('/tasks?activityId=fee-appointment-approval'));
         },
@@ -540,6 +609,8 @@ function FeeAppointmentApprovalTaskPage() {
               }}
               reasonError={feeReasonError}
               disabled={isResolved || !isTaskOwner}
+              paymentOption={showFeePaymentOption ? feePaymentOption : undefined}
+              onPaymentOptionChange={showFeePaymentOption ? setFeePaymentOption : undefined}
             >
               <FeeGroupBlockContent feeLines={feeLines} />
             </DecisionBlock>
