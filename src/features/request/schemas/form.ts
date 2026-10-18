@@ -138,10 +138,10 @@ const RequestTitleDocumentDto = z
   })
   .partial();
 
-// A movable has no title-document address, and no field on screen to fix one a record carries (a
-// house number of 15 characters from LOS would block Save for good). So its `titleAddress` is held
-// back from validation under this key (an empty one stands in) and put back afterwards: the value is
-// neither checked nor lost.
+// A movable has no title-document address, and no field on screen to fix one a record carries, so
+// any invalid value in it would block Save for good. So its `titleAddress` is held back from
+// validation under this key (an empty one stands in) and put back afterwards: the value is neither
+// checked nor lost.
 const MOVABLE_ADDRESS = '__movableTitleAddress';
 
 // Base for fields not expressible as FormField (UUIDs, documents, address sub-schemas)
