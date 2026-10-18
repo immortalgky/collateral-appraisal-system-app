@@ -175,6 +175,7 @@
   "hints": {
     "loanTypesComma": "Separate multiple loan types with a comma",
     "ldapPassword": "密码由 Active Directory 管理 — 用户使用其 AD 凭据登录。",
+    "ldapUnavailable": "公司用户和临时访问账户不能使用 LDAP——使用本地密码登录。",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
     "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
     "temporaryAccessCreate": "账户创建后默认关闭——在管理员开启访问窗口之前没有密码。",
