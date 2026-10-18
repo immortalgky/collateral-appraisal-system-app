@@ -10,7 +10,7 @@ import AppraisalLeftRail from '../components/AppraisalLeftRail';
 import QuotationStatusBadge from '../components/QuotationStatusBadge';
 import SharedDocumentViewer from '../components/SharedDocumentViewer';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
-import type { CompanyQuotationItemDto } from '../schemas/quotation';
+import { isNonParticipatingStatus, type CompanyQuotationItemDto } from '../schemas/quotation';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -323,8 +323,7 @@ export const AdminCompanyQuotationDetailContent = ({
     );
   }
 
-  const isParticipating =
-    companyQuotation.status !== 'Declined' && companyQuotation.status !== 'Expired';
+  const isParticipating = !isNonParticipatingStatus(companyQuotation.status);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
 

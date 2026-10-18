@@ -57,23 +57,21 @@ const InvitedCompaniesTable = ({ companies }: InvitedCompaniesTableProps) => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                      {companies.map((inv, idx) => {
-                        return (
-                          <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
-                            <td className="px-4 py-2">
-                              <span className="text-sm text-gray-400 tabular-nums">{idx + 1}</span>
-                            </td>
-                            <td className="px-4 py-2">
-                              <span className="text-sm font-medium text-gray-900">
-                                {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
-                              </span>
-                            </td>
-                            <td className="px-4 py-2">
-                              <span className="text-sm text-gray-500">{inv.email ?? '—'}</span>
-                            </td>
-                          </tr>
-                        );
-                      })}
+                      {companies.map((inv, idx) => (
+                        <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-2">
+                            <span className="text-sm text-gray-400 tabular-nums">{idx + 1}</span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="text-sm font-medium text-gray-900">
+                              {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="text-sm text-gray-500">{inv.email ?? '—'}</span>
+                          </td>
+                        </tr>
+                      ))}
                     </tbody>
                   </table>
                 </div>

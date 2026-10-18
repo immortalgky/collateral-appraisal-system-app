@@ -15,7 +15,7 @@ const STATUS_RANK: Record<string, number> = {
   Negotiating: 4,
   Accepted: 5,
   Declined: 6,
-  // Expired Invitation (see CONTEXT.md) — ranks one step below Declined: both mean "not a
+  // Expired invitation — ranks one step below Declined: both mean "not a
   // candidate," but an active decline is ranked slightly ahead of a company that simply never
   // responded.
   Expired: 7,

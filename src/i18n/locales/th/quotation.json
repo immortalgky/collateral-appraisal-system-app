@@ -531,7 +531,7 @@
     "invitationDeclined": "ปฏิเสธคำเชิญแล้ว",
     "invitationDeclinedBody": "คุณได้ปฏิเสธคำเชิญนี้แล้ว ธนาคารได้รับแจ้งแล้ว",
     "invitationExpired": "หมดเขตตอบรับคำเชิญ",
-    "invitationExpiredBody": "กำหนดเวลาของใบเสนอราคานี้สิ้นสุดลงก่อนที่จะมีการส่งคำตอบ ธนาคารได้รับแจ้งแล้ว",
+    "invitationExpiredBody": "กำหนดเวลาของใบเสนอราคานี้สิ้นสุดลงก่อนที่จะมีการส่งคำตอบ",
     "quotationSubmittedTitle": "ส่งใบเสนอราคาแล้ว",
     "totalQuotedPrice": "ราคารวมที่เสนอ",
     "estimatedDays": "วันที่ประมาณ",

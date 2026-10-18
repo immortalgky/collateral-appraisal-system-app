@@ -531,7 +531,7 @@
     "invitationDeclined": "Invitation Declined",
     "invitationDeclinedBody": "You have declined this invitation. The bank has been notified.",
     "invitationExpired": "Response Window Closed",
-    "invitationExpiredBody": "The deadline for this quotation passed before a response was submitted. The bank has been notified.",
+    "invitationExpiredBody": "The deadline for this quotation passed before a response was submitted.",
     "quotationSubmittedTitle": "Quotation Submitted",
     "totalQuotedPrice": "Total Quoted Price",
     "estimatedDays": "Estimated Days",
