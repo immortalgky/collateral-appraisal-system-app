@@ -715,7 +715,9 @@ export function AppraisalPicker({
                   disableFutureDates
                   value={filters.requestedAt}
                   onChange={v => handleFilterChange('requestedAt', v ?? '')}
-                  className="pl-2.5! py-1.5! rounded-md! focus:ring-1! focus:ring-primary! focus:border-primary!"
+                  // py-1.5 spelled as the global input rule's calc (index.css): a plain py-1.5! is !important
+                  // and skips --cas-lead-trim, leaving the field taller than the other inputs.
+                  className="pl-2.5! py-[calc(var(--spacing)*1.5-var(--cas-lead-trim))]! rounded-md! focus:ring-1! focus:ring-primary! focus:border-primary!"
                 />
               </div>
               <div className="flex flex-col gap-1">
