@@ -112,12 +112,14 @@ const AdministrationPage = () => {
   const { data: assignmentDefaults, isFetching: isFetchingDefaults } = useGetAssignmentDefaults(
     appraisalId ?? '',
   );
-  // All quotations for this appraisal (used for the quotation section, the lock check and the defaults)
+  // All quotations for this appraisal (used for the quotation section, the lock check and the defaults).
+  // Refetched on mount: the one-time seed decides from this list, and a cached copy could miss a
+  // quotation someone else started meanwhile.
   const {
     data: quotationsData,
     isError: isQuotationsError,
     isFetching: isFetchingQuotations,
-  } = useGetAppraisalQuotations(appraisalId ?? null);
+  } = useGetAppraisalQuotations(appraisalId ?? null, true, 'always');
   const appraisalQuotations = quotationsData ?? [];
   // Whether the Appraisal Type defaults must be left out; see shouldSkipTypeDefaults.
   const skipTypeDefaults = shouldSkipTypeDefaults({

@@ -278,7 +278,11 @@ export const useGetEligibleCompanies = (
  * invalidate `['quotations', 'list']` also refresh this query (otherwise
  * AdministrationPage stays locked after status transitions).
  */
-export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = true) => {
+export const useGetAppraisalQuotations = (
+  appraisalId: string | null,
+  enabled = true,
+  refetchOnMount?: 'always',
+) => {
   return useQuery({
     queryKey: ['quotations', 'list', { appraisalId }],
     queryFn: async (): Promise<Quotation[]> => {
@@ -289,6 +293,7 @@ export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = 
       return result.items ?? [];
     },
     enabled: enabled && !!appraisalId,
+    refetchOnMount,
   });
 };
 
