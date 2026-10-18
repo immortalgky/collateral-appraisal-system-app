@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -32,12 +32,20 @@ import {
   useSaveAssignmentDraft,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import { assignmentFormDefaults, type AssignmentFormType, useAssignmentFormSchema, } from '../schemas/administration';
+import {
+  assignmentFormDefaults,
+  type AssignmentFormType,
+  useAssignmentFormSchema,
+} from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 import {
-  type AssignmentDefaults,
-  methodForTypeSwitch,
+  correctSavedSelection,
+  isAwaitingSeed,
+  isReadyToSeed,
+  isNonTerminalQuotationStatus,
+  shouldSkipTypeDefaults,
   resolveFormDefaults,
+  shouldSeed,
 } from '../utils/assignmentDefaults';
 
 import SearchStaffModal from '../components/SearchStaffModal';
@@ -48,7 +56,7 @@ import QuotationSection from '../components/QuotationSection';
 import QuotationEntryModal from '../components/QuotationEntryModal';
 import { useAuthStore } from '@features/auth/store.ts';
 import { mapAssignmentResponseToForm } from '@features/appraisal/utils/mappers.ts';
-import { useSystemConfigurationBool } from '@shared/api/systemConfiguration';
+import { configToBool, useSystemConfiguration } from '@shared/api/systemConfiguration';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
@@ -68,7 +76,11 @@ const AdministrationPage = () => {
   const currentUser = useAuthStore(state => state.user);
 
   // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
-  const { data: requestData, isLoading: isLoadingRequest } = useGetRequestById(requestId ?? '');
+  const {
+    data: requestData,
+    isError: isRequestError,
+    isFetching: isFetchingRequest,
+  } = useGetRequestById(requestId ?? '');
   const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as
     | string
     | undefined;
@@ -76,23 +88,42 @@ const AdministrationPage = () => {
   const isInternalDisabled = facilityLimit > 50_000_000;
 
   // API hooks
-  const { data: assignments, isLoading: isLoadingAssignment } = useGetAssignment(appraisalId ?? '');
+  const {
+    data: assignments,
+    isLoading: isLoadingAssignment,
+    isFetching: isFetchingAssignment,
+  } = useGetAssignment(appraisalId ?? '');
   const currentAssignment = assignments?.[0] ?? null;
   // A saved draft or a non-Pending row holds real selections, which win over any default.
+  const isPendingRow = currentAssignment?.assignmentStatus.toLowerCase() === 'pending';
   const hasSavedSelection =
-    !!currentAssignment &&
-    (!!currentAssignment.draftSavedAt ||
-      currentAssignment.assignmentStatus.toLowerCase() !== 'pending');
-  // Fetched in parallel with the assignment. A fresh row waits for it, and for the request data that
-  // decides the facility-limit rule, so the form opens on its final values instead of the baseline.
-  // isLoading turns false on error, so a failed call opens the page on the built-in defaults.
-  const { data: assignmentDefaults, isLoading: isLoadingDefaults } = useGetAssignmentDefaults(
+    !!currentAssignment && (!!currentAssignment.draftSavedAt || !isPendingRow);
+  // Fetched in parallel with the assignment. A fresh row waits for it, for the request data that
+  // decides the facility-limit rule, for the quotations (an existing one wins over the defaults) and
+  // for the kill-switch config, so the reset seeds the form with its final values rather than the baseline.
+  // isFetching turns false once a call has failed (after its retries: the request query retries
+  // everything but a 404 three times, the others follow the global policy), so a failed call opens
+  // the page on the built-in defaults.
+  const { data: assignmentDefaults, isFetching: isFetchingDefaults } = useGetAssignmentDefaults(
     appraisalId ?? '',
   );
-  const isWaitingForDefaults = !hasSavedSelection && (isLoadingDefaults || isLoadingRequest);
+  // All quotations for this appraisal (used for the quotation section, the lock check and the defaults)
+  const {
+    data: quotationsData,
+    isError: isQuotationsError,
+    isFetching: isFetchingQuotations,
+  } = useGetAppraisalQuotations(appraisalId ?? null);
+  const appraisalQuotations = quotationsData ?? [];
+  // Whether the Appraisal Type defaults must be left out; see shouldSkipTypeDefaults.
+  const skipTypeDefaults = shouldSkipTypeDefaults({
+    quotations: quotationsData,
+    isQuotationsError,
+    hasRequestData: !!requestData,
+    isRequestError,
+    requestId,
+  });
   const pageReadOnly = usePageReadOnly();
-  const localReadOnly =
-    !!currentAssignment && currentAssignment.assignmentStatus.toLowerCase() !== 'pending';
+  const localReadOnly = !!currentAssignment && !isPendingRow;
   const isReadOnly = pageReadOnly || localReadOnly;
   const { mutate: createAssignment, isPending: isCreating } = useCreateAssignment();
   const { mutate: saveAssignmentDraft, isPending: isSavingDraft } = useSaveAssignmentDraft();
@@ -106,11 +137,12 @@ const AdministrationPage = () => {
   // carry-over alike — and escalates back to admin. So "Route to External" must not be offered at
   // all: submitting it would hand the case straight back to the admin who just submitted it.
   // Defaults to true so a missing key behaves exactly as before the switch existed.
-  const canAssignCompanyInSystem = useSystemConfigurationBool(
-    'ExternalCompanyAssignmentEnabled',
-    true,
-  );
-
+  const {
+    data: killSwitchConfig,
+    isLoading: isLoadingConfig,
+    isFetching: isFetchingConfig,
+  } = useSystemConfiguration('ExternalCompanyAssignmentEnabled');
+  const canAssignCompanyInSystem = configToBool(killSwitchConfig, isLoadingConfig, true);
   // Relay endpoint advances the appraisal-assignment workflow task, which only the task owner
   // can complete. Gate the Assign button on both: missing workflow context (deep-linked outside
   // a task) or non-owner can browse the page read-only, but cannot submit.
@@ -154,26 +186,33 @@ const AdministrationPage = () => {
   // It falls back to 'external-offline' rather than to no selection because during the go-live
   // window virtually every case reaching this screen IS an off-system engagement — the bank is
   // engaging companies outside CAS, and rule 40 routes all of them here. Internal remains one
-  // click away for the exception. 'quotation' is external-only, so the method falls back to manual.
+  // click away for the exception. Whenever the type has to move off what was configured, the method
+  // falls back to manual too ('quotation' is external-only).
   //
-  // Fixing this in the defaults rather than with a corrective effect is deliberate: reset() below
-  // re-applies assignmentFormDefaults whenever one of its async deps resolves, so an effect that
-  // clears the value afterwards just loses the race. Appraisal Type defaults go through the same rules.
-  const resolvedFormDefaults: AssignmentFormType = resolveFormDefaults({
-    base: assignmentFormDefaults,
-    defaults: assignmentDefaults,
-    canAssignCompanyInSystem,
-    isInternalDisabled,
-  });
-
+  // Fixing this in the defaults rather than with a corrective effect is deliberate: the seeding
+  // reset below writes the whole form, so an effect that clears the value in the same commit would
+  // lose the race. The Appraisal Type defaults (type, method, followup method) are applied here, in
+  // that one seed of a fresh row; the method is kept only if the type is still the configured one.
+  // Switching the type by hand later resets the method to manual.
+  const resolvedFormDefaults = useMemo(
+    () =>
+      resolveFormDefaults({
+        base: assignmentFormDefaults,
+        defaults: assignmentDefaults,
+        canAssignCompanyInSystem,
+        isInternalDisabled,
+        skipTypeDefaults,
+      }),
+    [assignmentDefaults, canAssignCompanyInSystem, isInternalDisabled, skipTypeDefaults],
+  );
   // A saved draft can still carry 'external' from before the switch was thrown. Move it to the
   // offline equivalent for the same reason — a disabled option must never remain selected.
   useEffect(() => {
-    if (!canAssignCompanyInSystem && assignmentType === 'external') {
+    if (!isReadOnly && !canAssignCompanyInSystem && assignmentType === 'external') {
       setValue('assignmentType', 'external-offline');
       setValue('assignmentMethod', 'manual');
     }
-  }, [canAssignCompanyInSystem, assignmentType, setValue]);
+  }, [isReadOnly, canAssignCompanyInSystem, assignmentType, setValue]);
 
   // Eligible internal staff — used for internal manual selection, the external followup staff, and
   // the offline keyer. All three activities resolve to the IntAppraisalStaff group and return the
@@ -191,20 +230,9 @@ const AdministrationPage = () => {
     assignmentType === 'external',
   );
 
-  // Always fetch all quotations for this appraisal (used for both the quotation section and the lock check)
-  const { data: appraisalQuotations = [] } = useGetAppraisalQuotations(appraisalId ?? null);
-
   // v2: compute lock state — assignment is locked when a non-terminal quotation owns this appraisal
-  const NON_TERMINAL_STATUSES = [
-    'Draft',
-    'Sent',
-    'UnderAdminReview',
-    'PendingRmSelection',
-    'WinnerTentative',
-    'Negotiating',
-  ];
   const activeNonTerminalQuotation =
-    appraisalQuotations.find(q => NON_TERMINAL_STATUSES.includes(q.status)) ?? null;
+    appraisalQuotations.find(q => isNonTerminalQuotationStatus(q.status)) ?? null;
   const isLockedByQuotation = !!activeNonTerminalQuotation;
 
   // When quotation method is selected, fetch the linked quotation detail to derive winner for Route-External
@@ -272,12 +300,12 @@ const AdministrationPage = () => {
 
   // Clear internal selection if facilityLimit constraint kicks in
   useEffect(() => {
-    if (isInternalDisabled && assignmentType === 'internal') {
+    if (!isReadOnly && isInternalDisabled && assignmentType === 'internal') {
       setValue('assignmentType', '' as any);
       setValue('selectedStaff', null);
       setValue('staffId', null);
     }
-  }, [isInternalDisabled, assignmentType, setValue]);
+  }, [isReadOnly, isInternalDisabled, assignmentType, setValue]);
 
   // Clear selections when user manually changes assignment type
   const handleAssignmentTypeChange = (value: string, fieldOnChange: (value: string) => void) => {
@@ -286,10 +314,7 @@ const AdministrationPage = () => {
     setValue('staffId', null);
     setValue('selectedCompany', null);
     setValue('companyId', null);
-    setValue(
-      'assignmentMethod',
-      methodForTypeSwitch(value as AssignmentDefaults['assignmentType'], assignmentDefaults),
-    );
+    setValue('assignmentMethod', 'manual');
     // Neither internal nor off-system external uses a FOLLOWUP staff member: internal has no
     // company to follow up on, and off-system external skips appraisal-book-verification (the
     // only activity that consumes the followup staff) entirely. Both DO use the staff picker
@@ -300,14 +325,31 @@ const AdministrationPage = () => {
     }
   };
 
-  // Update form when data is fetched.
-  //
-  // Guarded on isDirty: this effect re-runs whenever ANY of its async dependencies settles
-  // (assignedStaff, assignedCompany, followupStaff, eligibleStaff, the config flag). Without the
-  // guard a late-arriving query resets the form underneath the user and discards whatever they had
-  // just selected. Seeding is only meaningful before the first edit anyway.
+  // Update form when data is fetched. A fresh row is seeded once per appraisal when every input is
+  // idle (so a refetch or a draft save never re-seeds it); a saved row is re-seeded while not dirty
+  // as its staff/company data settles, but not while the assignment is refetching (right after a
+  // draft save the cached row is still the old one). A different appraisal (page kept mounted across
+  // a route change) is always seeded. The isDirty guard stops a late-arriving query from resetting
+  // the form underneath the user. The loading screen below (isAwaitingSeed) holds the page back
+  // until this appraisal has been seeded, so neither the baseline nor another appraisal's cached
+  // selections are shown first.
+  const [seededAppraisalId, setSeededAppraisalId] = useState<string | undefined>(undefined);
+  const isSeedReady = isReadyToSeed({
+    hasSavedSelection,
+    isFetchingAssignment,
+    isFetchingConfig,
+    isFetchingInputs: isFetchingDefaults || isFetchingQuotations || isFetchingRequest,
+  });
+  const seedNow = shouldSeed({
+    seededAppraisalId,
+    appraisalId,
+    hasSavedSelection,
+    isDirty,
+    isReady: isSeedReady,
+  });
   useEffect(() => {
-    if (isDirty || isLoadingAssignment || isWaitingForDefaults) return;
+    if (!seedNow) return;
+    setSeededAppraisalId(appraisalId);
     // Staff ids stored on the assignment are usernames (from the eligible-assignees pool), but
     // useGetUserById hits /auth/users/{id:guid}, which can't resolve a username. Resolve the
     // display object from the already-loaded eligible pool by id, falling back to the fetch
@@ -318,7 +360,7 @@ const AdministrationPage = () => {
       followupStaff ??
       eligibleStaff?.find(s => s.id === currentAssignment?.internalAppraiserId) ??
       null;
-    reset({
+    const values: AssignmentFormType = {
       ...resolvedFormDefaults,
       ...(currentAssignment && hasSavedSelection
         ? mapAssignmentResponseToForm(currentAssignment)
@@ -327,24 +369,33 @@ const AdministrationPage = () => {
       selectedCompany: assignedCompany ?? null,
       selectedFollowupStaff: resolvedFollowupStaff,
       remarks: currentAssignment?.remark ?? '',
-    });
+    };
+    // The correction effects below only see later changes; a reset in the same commit would
+    // overwrite them, so a saved draft is corrected here too (a fresh row's defaults already are).
+    // A read-only page (an assignment that was made, or the history view) shows the values as stored.
+    reset(
+      hasSavedSelection
+        ? correctSavedSelection(values, {
+            canAssignCompanyInSystem,
+            isInternalDisabled,
+            isReadOnly,
+          })
+        : values,
+    );
   }, [
     reset,
-    isLoadingAssignment,
     currentAssignment,
     assignedStaff,
     assignedCompany,
     followupStaff,
     eligibleStaff,
-    // The config query resolves after the first render, so the reset must re-run once the flag is
-    // known — otherwise the form keeps the External default seeded before the answer arrived.
+    appraisalId,
+    resolvedFormDefaults,
     canAssignCompanyInSystem,
-    // Same for the Appraisal Type defaults and the facility limit.
-    assignmentDefaults,
     isInternalDisabled,
     hasSavedSelection,
-    isWaitingForDefaults,
-    isDirty,
+    isReadOnly,
+    seedNow,
   ]);
 
   // Handle form submission
@@ -492,7 +543,14 @@ const AdministrationPage = () => {
     );
   };
 
-  if (isLoadingAssignment || isWaitingForDefaults) {
+  if (
+    isAwaitingSeed({
+      appraisalId,
+      seededAppraisalId,
+      isLoadingAssignment,
+      isLoadingConfig,
+    })
+  ) {
     return (
       <div className="flex items-center justify-center h-64">
         <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />

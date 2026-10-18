@@ -89,9 +89,10 @@ export const useGetAssignmentDefaults = (appraisalId: string) => {
       );
       return toFormDefaults(data);
     },
+    // No `retry` override: the global policy skips 4xx but retries 5xx and network errors, so those
+    // keep the page's first seed waiting until the retries are exhausted; it then opens on the
+    // built-in defaults.
     enabled: !!appraisalId,
-    // The Administration page waits for this, so a failing call should give up quickly.
-    retry: 1,
   });
 };
 

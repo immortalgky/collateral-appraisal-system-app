@@ -30,6 +30,11 @@ export const externalCompanySchema = z.object({
   activeAssignments: z.number(),
 });
 
+/** Allowed form values; the schema and the Appraisal Type defaults mapper share them. */
+export const ASSIGNMENT_TYPES = ['internal', 'external', 'external-offline'] as const;
+export const ASSIGNMENT_METHODS = ['manual', 'roundrobin', 'quotation'] as const;
+export const FOLLOWUP_STAFF_METHODS = ['manual', 'roundrobin'] as const;
+
 /**
  * Assignment form validation schema factory
  */
@@ -40,10 +45,10 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       // appraiser keys that company's book in afterwards. The admin picks nothing here —
       // the company and the book's appraisal date are recorded later by the keyer, who has
       // the paper book in hand.
-      assignmentType: z.enum(['internal', 'external', 'external-offline'], {
+      assignmentType: z.enum(ASSIGNMENT_TYPES, {
         required_error: t('validation.assignmentTypeRequired'),
       }),
-      assignmentMethod: z.enum(['manual', 'roundrobin', 'quotation'], {
+      assignmentMethod: z.enum(ASSIGNMENT_METHODS, {
         required_error: t('validation.assignmentMethodRequired'),
       }),
       staffId: z.string().nullable(),
@@ -52,7 +57,7 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       selectedCompany: externalCompanySchema.nullable(),
       followupStaffId: z.string().nullable(),
       selectedFollowupStaff: internalStaffSchema.nullable(),
-      followupStaffMethod: z.enum(['manual', 'roundrobin']),
+      followupStaffMethod: z.enum(FOLLOWUP_STAFF_METHODS),
       remarks: z.string().max(4000, t('validation.remarksMaxLength')),
     })
     .refine(
