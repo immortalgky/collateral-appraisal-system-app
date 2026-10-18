@@ -38,4 +38,7 @@ export const mapBuildingType: Record<string, string[]> = {
   LSU: ['05', '06', '99'],
 };
 
-export const NO_BUILDING_PROPERTY_TYPES = ['L', 'LSL', 'MAC', 'VEH', 'VES'];
+// Property types with no building, so no Building Type. Keep in step with the BE twin
+// `RequestProperty.NoBuildingPropertyTypes` (collateral-appraisal-system-api,
+// Modules/Request/Request/Domain/Requests/RequestProperty.cs).
+export const NO_BUILDING_PROPERTY_TYPES: readonly string[] = ['L', 'LSL', 'MAC', 'VEH', 'VES'];

@@ -2,9 +2,12 @@ import { createRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
-import FormTable, { type FormTableColumn } from './FormTable';
+import FormTable, { type FormTableColumn, type FormTableRegularColumn } from './FormTable';
 import { FormReadOnlyContext } from '@/shared/components/form/context';
 import { emptyRowFor, isBlankRow, sumColumn } from './formTableUtils';
+import type { GetRequestByIdResultType } from '../../api';
+import { PROPERTY_COLUMNS } from '../../configs/tableColumns';
+import { mapRequestResponseToForm } from '../../utils/mappers';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -182,6 +185,119 @@ describe('FormTable variant', () => {
     render(<Harness variant="plain" cols={plainCols} rows={[]} seedEmptyRow hideAddButton />);
     expect(methods.getValues('rows')).toEqual([emptyRowFor(plainCols)]);
     expect(document.querySelector('button')).toBeDisabled();
+  });
+});
+
+describe('FormTable disableWhen', () => {
+  const disableWhen = { field: 'type', is: ['L'], operator: 'in' } as const;
+  const gated: FormTableColumn[] = [
+    { name: 'type', label: 'Type', inputType: 'text' },
+    {
+      name: 'kind',
+      label: 'Kind',
+      inputType: 'dropdown',
+      options: [{ value: 'x', label: 'X' }],
+      disableWhen,
+    },
+  ];
+  // the Building Type shape: a parameter group with an inline "other" text (DropdownOtherCell)
+  const withOther: FormTableColumn[] = [
+    gated[0],
+    {
+      name: 'kind',
+      label: 'Kind',
+      inputType: 'dropdown',
+      group: 'Kind',
+      otherField: true,
+      otherFieldName: 'kindOther',
+      disableWhen,
+    },
+  ];
+  const cell = (row: number) =>
+    document.querySelector<HTMLButtonElement>(`[data-field="rows.${row}.kind"] button`)!;
+
+  it('disables the cell of a matching row and clears it, leaving the others', () => {
+    render(
+      <Harness
+        cols={gated}
+        hideAddButton
+        rows={[
+          { type: 'L', kind: 'x' },
+          { type: 'LB', kind: 'x' },
+        ]}
+      />,
+    );
+    expect(methods.getValues('rows')).toEqual([
+      { type: 'L', kind: null },
+      { type: 'LB', kind: 'x' },
+    ]);
+    expect(cell(0)).toBeDisabled();
+    expect(cell(1)).not.toBeDisabled();
+  });
+
+  it('clears the cell and its "other" text when the user changes one row\'s type to a matching one', () => {
+    render(<Harness cols={withOther} rows={[{ type: 'LB', kind: '99', kindOther: 'x' }]} />);
+    act(() => methods.setValue('rows.0.type' as never, 'L' as never));
+    expect(methods.getValues('rows.0')).toEqual({ type: 'L', kind: null, kindOther: null });
+  });
+
+  it('drops a stale error on the cell when the type changes in place', () => {
+    render(<Harness cols={gated} rows={[{ type: 'LB', kind: null }]} />);
+    act(() => methods.setError('rows.0.kind' as never, { message: 'required' }));
+    expect(methods.getFieldState('rows.0.kind' as never).error).toBeDefined();
+    act(() => methods.setValue('rows.0.type' as never, 'L' as never));
+    expect(methods.getFieldState('rows.0.kind' as never).error).toBeUndefined();
+  });
+
+  it('clears the cell when its options are also filtered by the same field', () => {
+    const filtered: FormTableColumn[] = [
+      gated[0],
+      {
+        ...(withOther[1] as FormTableRegularColumn),
+        filterOptions: { type: 'dynamic', field: 'type', map: { LB: ['x'] } },
+      },
+    ];
+    render(<Harness cols={filtered} rows={[{ type: 'LB', kind: '99', kindOther: 'x' }]} />);
+    act(() => methods.setValue('rows.0.type' as never, 'L' as never));
+    expect(methods.getValues('rows.0')).toEqual({ type: 'L', kind: null, kindOther: null });
+  });
+
+  it('clears the "other" text even when the cell itself is already empty', () => {
+    render(<Harness cols={withOther} rows={[{ type: 'L', kind: null, kindOther: 'x' }]} />);
+    expect(methods.getValues('rows.0.kindOther')).toBeNull();
+  });
+
+  it('enables the cell again when the gate changes back to a non-matching value', () => {
+    render(<Harness cols={gated} rows={[{ type: 'L', kind: null }]} />);
+    expect(cell(0)).toBeDisabled();
+    act(() => methods.setValue('rows.0.type' as never, 'LB' as never));
+    expect(cell(0)).not.toBeDisabled();
+  });
+
+  it('leaves a legacy row pristine once the real mapper has cleaned it, dirty if it had not', () => {
+    const legacy = [
+      { propertyType: 'L', buildingType: '99', buildingTypeOther: 'x', sellingPrice: 1 },
+    ];
+    const mapped = mapRequestResponseToForm({
+      properties: legacy,
+    } as unknown as GetRequestByIdResultType).properties;
+    render(<Harness cols={PROPERTY_COLUMNS} rows={[]} />);
+
+    act(() => methods.reset({ rows: mapped }));
+    expect(methods.formState.dirtyFields).toEqual({});
+    expect(methods.getValues('rows.0')).toMatchObject({ buildingType: null });
+
+    // the same row without the mapper is changed by the table, and the form says so
+    act(() => methods.reset({ rows: legacy }));
+    expect(methods.formState.dirtyFields).toEqual({ rows: [{ buildingType: true }] });
+  });
+
+  it('clears the "other" text and a stale error with it', () => {
+    render(<Harness cols={withOther} rows={[{ type: 'LB', kind: '99', kindOther: 'x' }]} />);
+    act(() => methods.setError('rows.0.kind', { message: 'required' }));
+    act(() => methods.setValue('rows', [{ type: 'L', kind: '99', kindOther: 'x' }]));
+    expect(methods.getValues('rows.0')).toEqual({ type: 'L', kind: null, kindOther: null });
+    expect(methods.formState.errors.rows).toBeUndefined();
   });
 });
 

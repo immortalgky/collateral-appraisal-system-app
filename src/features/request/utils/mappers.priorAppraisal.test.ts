@@ -129,4 +129,19 @@ describe('mapPriorAppraisalToForm', () => {
     expect(form.detail).not.toHaveProperty('appointment');
     expect(form.detail).not.toHaveProperty('fee');
   });
+
+  it('drops the building type of a copied row whose property type has no building', () => {
+    const legacy = {
+      ...prior,
+      request: {
+        ...prior.request,
+        properties: [{ propertyType: 'L', buildingType: '99', buildingTypeOther: 'x' }],
+      },
+    } as unknown as typeof prior;
+    expect(mapPriorAppraisalToForm(legacy).properties[0]).toMatchObject({
+      propertyType: 'L',
+      buildingType: null,
+      buildingTypeOther: null,
+    });
+  });
 });

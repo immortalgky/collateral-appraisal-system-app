@@ -1,6 +1,6 @@
 import type { TFunction } from 'i18next';
 import type { FormTableColumn, FormTableRegularColumn } from '../components/tables/FormTable';
-import { mapBuildingType } from '../data/mapCollateral';
+import { mapBuildingType, NO_BUILDING_PROPERTY_TYPES } from '../data/mapCollateral';
 
 /**
  * The columns of the customers and properties tables, in one place: the forms draw them, and the
@@ -26,6 +26,7 @@ const PROPERTY_SPECS: ColumnSpec[] = [
     maxLength: 100,
     width: 'minmax(0,1.2fr)',
     filterOptions: { type: 'dynamic', field: 'propertyType', map: mapBuildingType },
+    disableWhen: { field: 'propertyType', is: NO_BUILDING_PROPERTY_TYPES, operator: 'in' },
   },
   {
     name: 'sellingPrice',
