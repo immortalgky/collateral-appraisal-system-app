@@ -25,21 +25,33 @@ const MAX_SHORT_LIVED_MINUTES = 24 * 60;
 const MAX_REFRESH_MINUTES = 30 * 24 * 60;
 
 /** Empty means "inherit the server default", so it is sent as null rather than a number. */
-const toMinutes = (value: string): number | null => (value.trim() ? Number(value) : null);
+const toOptionalNumber = (value: string): number | null => (value.trim() ? Number(value) : null);
+
+// Upload session lifetime is entered in hours or days and always sent as whole hours (1h–30d).
+const MAX_UPLOAD_SESSION_DAYS = 30;
+const MAX_UPLOAD_SESSION_HOURS = MAX_UPLOAD_SESSION_DAYS * 24;
+type UploadSessionUnit = 'hours' | 'days';
+
+/** Empty stays null (server default). Callers validate first, so the product is a whole hour count. */
+const toHours = (value: string, unit: UploadSessionUnit): number | null => {
+  const amount = toOptionalNumber(value);
+  return amount === null ? null : amount * (unit === 'days' ? 24 : 1);
+};
 
 /**
- * Empty is valid. Anything else must be a whole number within the server's range — `min`/`max` on a
- * number input are advisory here because the modal has no <form> to run constraint validation, and a
- * decimal would fail JSON binding server-side and surface as a bare 400 with no message.
+ * Empty is valid (it means "server default"). Anything else must be a whole number within `max`, in
+ * whatever unit the field uses. The check matters because the value arrives as free text: without it
+ * a malformed entry would be submitted as typed, and a decimal would fail JSON binding server-side
+ * and surface as a bare 400 with no message.
  */
-const isLifetimeValid = (value: string, maxMinutes: number): boolean => {
+const isLifetimeValid = (value: string, max: number): boolean => {
   const trimmed = value.trim();
   if (trimmed === '') return true;
-  // Digits only. Number() would happily accept "1e3" and "+5" — both typeable in a number input —
-  // and submit 1000 or 5 while the field still displays what was typed.
+  // Digits only. Number() would happily accept "1e3" and "+5" and submit 1000 or 5 while the
+  // field still displays what was typed.
   if (!/^\d+$/.test(trimmed)) return false;
   const parsed = Number(trimmed);
-  return parsed >= 1 && parsed <= maxMinutes;
+  return parsed >= 1 && parsed <= max;
 };
 
 const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => {
@@ -60,6 +72,8 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
   const [accessTokenLifetimeMinutes, setAccessTokenLifetimeMinutes] = useState('');
   const [identityTokenLifetimeMinutes, setIdentityTokenLifetimeMinutes] = useState('');
   const [refreshTokenLifetimeMinutes, setRefreshTokenLifetimeMinutes] = useState('');
+  const [uploadSessionLifetime, setUploadSessionLifetime] = useState('');
+  const [uploadSessionUnit, setUploadSessionUnit] = useState<UploadSessionUnit>('hours');
 
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient();
@@ -78,6 +92,13 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       setAccessTokenLifetimeMinutes(detail.accessTokenLifetimeMinutes?.toString() ?? '');
       setIdentityTokenLifetimeMinutes(detail.identityTokenLifetimeMinutes?.toString() ?? '');
       setRefreshTokenLifetimeMinutes(detail.refreshTokenLifetimeMinutes?.toString() ?? '');
+      // 0 (or anything non-positive) is not a valid stored value; show it as empty, never "0 Days".
+      const uploadHours = detail.uploadSessionLifetimeHours ?? 0;
+      const inDays = uploadHours > 0 && uploadHours % 24 === 0;
+      setUploadSessionLifetime(
+        uploadHours > 0 ? String(inDays ? uploadHours / 24 : uploadHours) : '',
+      );
+      setUploadSessionUnit(inDays ? 'days' : 'hours');
     } else {
       // Create mode, OR edit mode while the target client's detail is still loading — clear the
       // form so a previously-edited client's values can never linger and be submitted.
@@ -91,6 +112,8 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       setAccessTokenLifetimeMinutes('');
       setIdentityTokenLifetimeMinutes('');
       setRefreshTokenLifetimeMinutes('');
+      setUploadSessionLifetime('');
+      setUploadSessionUnit('hours');
     }
     // Key on detail?.id, not the detail object: this populates once when the client's detail first
     // loads (and re-runs when the edited id changes), but a later background refetch of the same
@@ -104,6 +127,9 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
     );
   };
 
+  // Only client_credentials callers (external systems) create upload sessions through this route.
+  const showUploadSessionLifetime = grantTypes.includes('client_credentials');
+
   const handleSubmit = () => {
     const common = {
       displayName,
@@ -113,9 +139,14 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
       scopes: splitList(scopes),
       // Empty means "no client-specific value" — send null so the server removes the setting
       // rather than storing something it would silently ignore.
-      accessTokenLifetimeMinutes: toMinutes(accessTokenLifetimeMinutes),
-      identityTokenLifetimeMinutes: toMinutes(identityTokenLifetimeMinutes),
-      refreshTokenLifetimeMinutes: toMinutes(refreshTokenLifetimeMinutes),
+      accessTokenLifetimeMinutes: toOptionalNumber(accessTokenLifetimeMinutes),
+      identityTokenLifetimeMinutes: toOptionalNumber(identityTokenLifetimeMinutes),
+      refreshTokenLifetimeMinutes: toOptionalNumber(refreshTokenLifetimeMinutes),
+      // While the field is hidden (no client_credentials) echo back whatever is stored rather than
+      // the form state, so editing another field can never wipe or overwrite it. Create has none.
+      uploadSessionLifetimeHours: showUploadSessionLifetime
+        ? toHours(uploadSessionLifetime, uploadSessionUnit)
+        : (detail?.uploadSessionLifetimeHours ?? null),
     };
 
     if (isEdit) {
@@ -143,12 +174,18 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
     MAX_SHORT_LIVED_MINUTES,
   );
   const isRefreshLifetimeValid = isLifetimeValid(refreshTokenLifetimeMinutes, MAX_REFRESH_MINUTES);
+  const uploadMaxInUnit =
+    uploadSessionUnit === 'days' ? MAX_UPLOAD_SESSION_DAYS : MAX_UPLOAD_SESSION_HOURS;
+  // A hidden field must never block saving, whatever was typed into it before it was hidden.
+  const isUploadLifetimeValid =
+    !showUploadSessionLifetime || isLifetimeValid(uploadSessionLifetime, uploadMaxInUnit);
   const canSubmit =
     displayName.trim() !== '' &&
     grantTypes.length > 0 &&
     isAccessLifetimeValid &&
     isIdentityLifetimeValid &&
     isRefreshLifetimeValid &&
+    isUploadLifetimeValid &&
     (!requiresRedirect || splitLines(redirectUris).length > 0);
 
   return (
@@ -160,10 +197,14 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
     >
       <div className="px-6 py-5 space-y-4 max-h-[70vh] overflow-y-auto">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="client-display-name"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             {t('clients.form.displayName')}
           </label>
           <input
+            id="client-display-name"
             type="text"
             value={displayName}
             onChange={e => setDisplayName(e.target.value)}
@@ -340,6 +381,67 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
             ))}
           </div>
         </div>
+
+        {showUploadSessionLifetime && (
+          <div className="pt-2 border-t border-gray-100">
+            <label
+              id="upload-session-lifetime-label"
+              htmlFor="upload-session-lifetime"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
+              {t('clients.form.uploadSessionLifetime')}
+            </label>
+            <p id="upload-session-lifetime-hint" className="mb-2 text-xs text-gray-400">
+              {t('clients.form.uploadSessionLifetimeHint')}
+            </p>
+            <div className="flex gap-2">
+              <input
+                id="upload-session-lifetime"
+                // Text, not number: a number input reports malformed text ("1e", "-") as '' which
+                // reads as "empty = server default" and would silently clear the stored value.
+                type="text"
+                inputMode="numeric"
+                value={uploadSessionLifetime}
+                onChange={e => setUploadSessionLifetime(e.target.value)}
+                placeholder={t('clients.form.tokenLifetimeInherit')}
+                className={`${inputClass} min-w-0 flex-1`}
+                aria-invalid={!isUploadLifetimeValid}
+                aria-describedby={
+                  isUploadLifetimeValid
+                    ? 'upload-session-lifetime-hint'
+                    : 'upload-session-lifetime-hint upload-session-lifetime-error'
+                }
+              />
+              {/* Fixed-width wrapper: inputClass carries w-full, so sizing the select itself loses. */}
+              <div className="flex w-32 shrink-0">
+                <span id="upload-session-lifetime-unit-label" className="sr-only">
+                  {t('clients.form.uploadSessionLifetimeUnit.label')}
+                </span>
+                <select
+                  // Name is "<field label> <unit label>", e.g. "Upload session lifetime Unit", so
+                  // the select is distinguishable from the number input.
+                  aria-labelledby="upload-session-lifetime-label upload-session-lifetime-unit-label"
+                  value={uploadSessionUnit}
+                  onChange={e => setUploadSessionUnit(e.target.value as UploadSessionUnit)}
+                  className={`${inputClass} bg-white`}
+                >
+                  <option value="hours">{t('clients.form.uploadSessionLifetimeUnit.hours')}</option>
+                  <option value="days">{t('clients.form.uploadSessionLifetimeUnit.days')}</option>
+                </select>
+              </div>
+            </div>
+            {!isUploadLifetimeValid && (
+              <p id="upload-session-lifetime-error" className="mt-1 text-xs text-red-600">
+                {t('clients.form.uploadSessionLifetimeInvalid', {
+                  max: uploadMaxInUnit,
+                  unit: t(
+                    `clients.form.uploadSessionLifetimeUnit.${uploadSessionUnit}Inline` as const,
+                  ),
+                })}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
