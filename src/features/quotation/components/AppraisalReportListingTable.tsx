@@ -85,7 +85,7 @@ const AppraisalReportListingTable = ({
           <div className="size-7 rounded-lg bg-blue-100 flex items-center justify-center">
             <Icon name="file-lines" style="solid" className="size-3.5 text-blue-600" />
           </div>
-          <h2 className="text-sm font-semibold text-gray-700">{t('appraisalReport.title')}</h2>
+          <h2 className="text-base font-semibold text-gray-700">{t('appraisalReport.title')}</h2>
         </div>
         <div className="px-4 py-8 text-center">
           <p className="text-sm text-gray-500">{t('appraisalReport.noAppraisals')}</p>
@@ -100,7 +100,7 @@ const AppraisalReportListingTable = ({
         <div className="size-7 rounded-lg bg-blue-100 flex items-center justify-center">
           <Icon name="file-lines" style="solid" className="size-3.5 text-blue-600" />
         </div>
-        <h2 className="text-sm font-semibold text-gray-700">
+        <h2 className="text-base font-semibold text-gray-700">
           {t('appraisalReport.title')} ({appraisals.length})
         </h2>
       </div>

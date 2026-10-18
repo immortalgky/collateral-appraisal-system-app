@@ -49,6 +49,8 @@ export type UploadEntry = {
 
 type UploadProgressStore = {
   uploads: UploadEntry[];
+  /** The scope of every batch of uploads being worked through, one file after another (see beginBatch). */
+  batches: string[];
   start: (id: number, label: string, direction: 'upload' | 'download', cancel?: () => void) => void;
   update: (id: number, loaded: number, total: number | null) => void;
   /**
@@ -59,10 +61,32 @@ type UploadProgressStore = {
   /** Back to running after a resume, with a fresh way to stop it. */
   resumed: (id: number, cancel: () => void) => void;
   finish: (id: number) => void;
+  /**
+   * Marks a batch of uploads as running until the returned function is called. Between one file of
+   * a batch and the next there is no transfer, and the batch's results only reach the form at the
+   * end, so without this the whole stretch would read as idle. `scope` says whose batch it is, so a
+   * screen can ask about its own uploads only (see isUploadBusy).
+   */
+  beginBatch: (scope: string) => () => void;
 };
 
 export const useUploadProgressStore = create<UploadProgressStore>((set, get) => ({
   uploads: [],
+  batches: [],
+
+  beginBatch: scope => {
+    set(state => ({ batches: [...state.batches, scope] }));
+    let ended = false;
+    return () => {
+      if (ended) return;
+      ended = true;
+      set(state => {
+        // one batch of this scope, not every batch that shares it
+        const at = state.batches.indexOf(scope);
+        return { batches: state.batches.filter((_, i) => i !== at) };
+      });
+    };
+  },
 
   start: (id, label, direction, cancel) => {
     set(state => ({
@@ -163,3 +187,10 @@ export const useUploadProgressStore = create<UploadProgressStore>((set, get) => 
 
 let lastId = 0;
 export const nextUploadId = () => (lastId += 1);
+
+/**
+ * A batch of uploads of this scope is being worked through. Asked per scope, so an upload started
+ * somewhere else in the app is not this screen's business.
+ */
+export const isUploadBusy = (scope: string) =>
+  useUploadProgressStore.getState().batches.includes(scope);

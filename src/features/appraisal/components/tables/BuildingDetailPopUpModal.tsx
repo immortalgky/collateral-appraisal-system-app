@@ -330,7 +330,7 @@ function BuildingDetailPopUpModal({
           </section>
 
           <section className="flex flex-col gap-3 py-5">
-            <h3 className="text-sm font-semibold text-gray-800">Replacement cost new</h3>
+            <h3 className="text-base font-semibold text-gray-800">Replacement cost new</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
               <NumberInput
                 {...register('pricePerSqMBeforeDepreciation', { valueAsNumber: true })}
@@ -417,7 +417,7 @@ function DepreciationSection({
   return (
     <section className="flex flex-col gap-3 pt-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-gray-800">Depreciation</h3>
+        <h3 className="text-base font-semibold text-gray-800">Depreciation</h3>
         <FormStringToggle
           options={[
             { name: 'Gross', label: 'Gross' },

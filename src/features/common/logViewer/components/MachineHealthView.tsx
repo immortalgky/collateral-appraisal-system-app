@@ -96,7 +96,7 @@ const MachineHealthView = ({ onGoToLogs, onBack }: MachineHealthViewProps) => {
       {/* Doubles as the page header when this view is active — the Logs title block is hidden. */}
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h2 className="text-sm font-semibold text-gray-900">{t('health.title')}</h2>
+          <h2 className="text-base font-semibold text-gray-900">{t('health.title')}</h2>
           <p className="text-xs text-gray-500 mt-0.5">{t('health.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
@@ -144,7 +144,7 @@ const MachineHealthView = ({ onGoToLogs, onBack }: MachineHealthViewProps) => {
       {history && hasAnyMetricData(machines) && (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <h2 className="text-sm font-semibold text-gray-900">{t('health.historyTitle')}</h2>
+            <h2 className="text-base font-semibold text-gray-900">{t('health.historyTitle')}</h2>
             <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
               {allMachineNames.map(name => (
                 <span key={name} className="flex items-center gap-1.5">
@@ -187,13 +187,13 @@ const MachineHealthView = ({ onGoToLogs, onBack }: MachineHealthViewProps) => {
       )}
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">{t('health.eventsTitle')}</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-1">{t('health.eventsTitle')}</h2>
         <p className="text-xs text-gray-500 mb-2">{t('health.eventsSubtitle')}</p>
         <MachineEventsList events={events} onViewLogs={onGoToLogs} showDate={hours > 24} />
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-2">{t('health.notesTitle')}</h2>
+        <h2 className="text-base font-semibold text-gray-900 mb-2">{t('health.notesTitle')}</h2>
         <ul className="list-disc pl-5 flex flex-col gap-1 text-xs text-gray-600">
           {(t('health.notes', { returnObjects: true }) as string[]).map((note, i) => (
             <li key={i}>{note}</li>

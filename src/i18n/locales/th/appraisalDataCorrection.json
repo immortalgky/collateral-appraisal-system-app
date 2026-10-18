@@ -73,10 +73,18 @@
     "loadFailed": "ไม่สามารถโหลดรายการเอกสารได้",
     "attach": "แนบเอกสาร",
     "attachFile": "แนบไฟล์",
+    "table": {
+      "file": "เอกสาร / ไฟล์",
+      "uploadedAt": "อัปโหลดเมื่อ",
+      "uploadedBy": "โดย"
+    },
     "menu": {
       "view": "ดูไฟล์",
       "replace": "แทนที่ด้วยไฟล์ใหม่",
-      "delete": "ลบ"
+      "delete": "ลบ",
+      "replaceFile": "แทนที่ {{name}}",
+      "deleteFile": "ลบ {{name}}",
+      "viewFile": "ดูไฟล์ {{name}}"
     },
     "strip": {
       "title": "รายงานสรุปผลการประเมิน",

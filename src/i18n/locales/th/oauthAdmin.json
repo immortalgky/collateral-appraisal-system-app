@@ -60,7 +60,6 @@
     "grant": {
       "authorization_code": "Authorization Code",
       "client_credentials": "Client Credentials",
-      "password": "Password",
       "refresh_token": "Refresh Token"
     },
     "secret": {

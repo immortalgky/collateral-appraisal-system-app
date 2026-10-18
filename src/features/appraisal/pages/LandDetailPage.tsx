@@ -97,7 +97,7 @@ export default function LandDetailPage() {
           <div className="flex flex-col gap-6 overflow-y-auto max-h-[calc(100dvh-24rem)]">
             {/* Appraisal Information Header */}
             <div className="flex items-center justify-between">
-              <h2 className="text-base font-medium">Appraisal Information</h2>
+              <h2 className="text-base font-semibold">Appraisal Information</h2>
               <div className="w-28">
                 <Dropdown
                   name="groupId"

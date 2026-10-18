@@ -52,7 +52,7 @@ export function ConstructionTimelineBar({
       <div className="flex h-7 rounded overflow-hidden border border-gray-200 shadow-sm">
         {prevPct > 0 && (
           <div
-            className="bg-blue-400 flex items-center justify-center text-[11px] font-semibold text-white border-r border-white/50"
+            className="bg-blue-400 flex items-center justify-center text-xs font-semibold text-white border-r border-white/50"
             style={{ width: `${prevPct}%` }}
             title={`Previous: ${formatNumber(safePrev, 2)} (${formatNumber(prevPct, 2)}%)`}
           >
@@ -61,7 +61,7 @@ export function ConstructionTimelineBar({
         )}
         {incPct > 0 && (
           <div
-            className="bg-amber-400 flex items-center justify-center text-[11px] font-semibold text-white border-r border-white/50"
+            className="bg-amber-400 flex items-center justify-center text-xs font-semibold text-white border-r border-white/50"
             style={{ width: `${incPct}%` }}
             title={`Construction Increased: ${formatNumber(incValue, 2)} (${formatNumber(incPct, 2)}%)`}
           >
@@ -70,7 +70,7 @@ export function ConstructionTimelineBar({
         )}
         {remPct > 0 && (
           <div
-            className="bg-orange-200 flex items-center justify-center text-[11px] font-semibold text-orange-800"
+            className="bg-orange-200 flex items-center justify-center text-xs font-semibold text-orange-800"
             style={{ width: `${remPct}%` }}
             title={`Remaining: ${formatNumber(remValue, 2)} (${formatNumber(remPct, 2)}%)`}
           >
@@ -78,7 +78,7 @@ export function ConstructionTimelineBar({
           </div>
         )}
       </div>
-      <div className="flex text-[11px] mt-1.5 gap-4">
+      <div className="flex text-xs mt-1.5 gap-4">
         <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm bg-blue-400" />
           <span className="text-gray-500">Previous:</span>

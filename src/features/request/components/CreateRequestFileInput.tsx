@@ -1,11 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext } from 'react-hook-form';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
-import UploadArea from '@/shared/components/inputs/UploadArea';
+import FileInput from '@/shared/components/inputs/FileInput';
 import {
   MAX_UPLOAD_BYTES,
   sizeLabel,
@@ -13,8 +13,14 @@ import {
   useUploadDocument,
 } from '../api';
 import FileAssignmentModal from './FileAssignmentModal';
-import { getDocumentCategory, type UploadedDocument } from '../types/document';
+import {
+  getDocumentCategory,
+  REQUEST_DOCUMENT_UPLOADS,
+  type UploadedDocument,
+} from '../types/document';
 import { useAuthStore } from '@/features/auth/store';
+import { useUploadProgressStore } from '@/shared/api/uploadProgress';
+import { makeUploadedRow, placeDocument } from '../utils/carryForward';
 
 // The system's ceiling, not this screen's: anything past 20 MB is sent in chunks, so the 10 MB
 // this screen used to enforce was a limit of its own invention and the reason a scanned deed had
@@ -24,38 +30,13 @@ const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg'
 const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
 
 /**
- * Merge new documents with existing documents, updating placeholders for required documents
- * instead of creating duplicates.
+ * Merge new documents with existing documents: each fills an empty placeholder of its type (keeping
+ * the slot's id and rowId) or is appended.
  */
 const mergeDocumentsWithPlaceholders = (
   existingDocs: UploadedDocument[],
   newDocs: UploadedDocument[],
-): UploadedDocument[] => {
-  const result = [...existingDocs];
-
-  newDocs.forEach(newDoc => {
-    // Find existing placeholder with same documentType that has no file
-    const placeholderIndex = result.findIndex(
-      doc => doc.documentType === newDoc.documentType && !doc.fileName,
-    );
-
-    if (placeholderIndex !== -1) {
-      // Update the placeholder with file data
-      result[placeholderIndex] = {
-        ...result[placeholderIndex],
-        ...newDoc,
-        // Preserve isRequired and displayName from the placeholder
-        isRequired: result[placeholderIndex].isRequired,
-        displayName: result[placeholderIndex].displayName,
-      };
-    } else {
-      // No placeholder found, append as new document
-      result.push(newDoc);
-    }
-  });
-
-  return result;
-};
+): UploadedDocument[] => newDocs.reduce(placeDocument, existingDocs);
 
 interface UploadProgress {
   fileName: string;
@@ -63,13 +44,20 @@ interface UploadProgress {
   errorMessage?: string;
 }
 
-interface CreateRequestFileInputProps {
-  getOrCreateSession: () => Promise<string>;
+export interface CreateRequestFileInputHandle {
+  /** Starts the same flow as choosing files: validate, then the type / title assignment dialog. */
+  addFiles: (files: File[]) => void;
 }
 
-const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputProps) => {
+interface CreateRequestFileInputProps {
+  getOrCreateSession: () => Promise<string>;
+  /** Lets the card around this bar take a drop anywhere and hand the files here. */
+  ref?: Ref<CreateRequestFileInputHandle>;
+}
+
+const CreateRequestFileInput = ({ getOrCreateSession, ref }: CreateRequestFileInputProps) => {
   const { t } = useTranslation(['request', 'common']);
-  const { setValue, watch } = useFormContext();
+  const { setValue, getValues } = useFormContext();
   const currentUser = useAuthStore(state => state.user);
   const { mutateAsync: uploadDocument, isPending } = useUploadDocument();
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
@@ -93,11 +81,11 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     };
   }, []);
 
-  const validateFiles = (files: FileList): { valid: File[]; errors: string[] } => {
+  const validateFiles = (files: File[]): { valid: File[]; errors: string[] } => {
     const valid: File[] = [];
     const errors: string[] = [];
 
-    Array.from(files).forEach(file => {
+    files.forEach(file => {
       // Check file size
       if (file.size > MAX_FILE_SIZE) {
         errors.push(
@@ -124,9 +112,18 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     return { valid, errors };
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) {
+  // No new files while a batch is uploading or the assignment dialog is open: a second batch would
+  // share the progress list and the dialog's state. Both the bar and a drop on the card come here.
+  const isBusy =
+    uploadProgress.some(p => p.status === 'pending' || p.status === 'uploading') ||
+    showAssignmentModal;
+
+  const addFiles = (files: File[]) => {
+    if (files.length === 0) {
+      return;
+    }
+    if (isBusy || isPending) {
+      toast(t('docCard.drop.busy'));
       return;
     }
 
@@ -162,6 +159,11 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
     setShowAssignmentModal(true);
   };
 
+  useImperativeHandle(ref, () => ({ addFiles }));
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) =>
+    addFiles(Array.from(e.target.files ?? []));
+
   // Update progress for a specific file
   const updateFileProgress = useCallback(
     (fileName: string, status: UploadProgress['status'], errorMessage?: string) => {
@@ -175,6 +177,10 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
   const handleAssign = async (assignments: any[]) => {
     // Close modal and initialize progress tracking
     setShowAssignmentModal(false);
+
+    // The whole batch counts as an upload in progress until it is finished with, so nothing that
+    // must not run beside an upload (changing the previous appraisal) starts between its files.
+    const endBatch = useUploadProgressStore.getState().beginBatch(REQUEST_DOCUMENT_UPLOADS);
 
     // Initialize progress for all files
     const initialProgress: UploadProgress[] = assignments.map(a => ({
@@ -235,22 +241,20 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       const titleDocsMap: Record<number, UploadedDocument[]> = {};
 
       uploadResults.forEach(({ assignment, documentId, fileName }) => {
-        const newDoc: UploadedDocument = {
-          id: null,
-          titleId: null,
+        const newDoc = makeUploadedRow({
+          // a file attached to a title belongs to that title, as a moved or restored one does
+          titleId:
+            assignment.entityType === 'title'
+              ? (getValues(`titles.${assignment.entityIndex}.id`) ?? null)
+              : null,
           documentId,
           documentType: assignment.docType || null,
-          fileName: fileName,
-          uploadedAt: new Date().toISOString(),
-          prefix: null,
+          fileName,
           notes: assignment.comment || null,
-          filePath: null,
-          createdWorkstation: null,
-          isRequired: false,
           uploadedBy: currentUser?.username || null,
           uploadedByName: currentUser?.name || null,
           file: assignment.file,
-        };
+        });
 
         if (assignment.entityType === 'request') {
           requestDocs.push(newDoc);
@@ -264,7 +268,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
 
       // Update form state - merge with existing placeholders
       if (requestDocs.length > 0) {
-        const currentDocs: UploadedDocument[] = watch('documents') || [];
+        const currentDocs: UploadedDocument[] = getValues('documents') || [];
         const mergedDocs = mergeDocumentsWithPlaceholders(currentDocs, requestDocs);
         setValue('documents', mergedDocs, {
           shouldDirty: true,
@@ -274,7 +278,8 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       // Update title documents - merge with existing placeholders
       Object.entries(titleDocsMap).forEach(([index, docs]) => {
         const titleIndex = parseInt(index);
-        const currentTitleDocs: UploadedDocument[] = watch(`titles.${titleIndex}.documents`) || [];
+        const currentTitleDocs: UploadedDocument[] =
+          getValues(`titles.${titleIndex}.documents`) || [];
         const mergedDocs = mergeDocumentsWithPlaceholders(currentTitleDocs, docs);
         setValue(`titles.${titleIndex}.documents`, mergedDocs, {
           shouldDirty: true,
@@ -321,22 +326,53 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
       setTimeout(() => {
         setUploadProgress([]);
       }, 3000);
+    } finally {
+      endBatch();
     }
   };
 
   return (
     <>
-      <UploadArea
-        onChange={handleChange}
-        accept={ALLOWED_EXTENSIONS.join(', ')}
-        multiple={true}
-        supportedText={t('documents.supportedText', { limit: sizeLabel(MAX_FILE_SIZE) })}
-        isLoading={isPending}
-      />
+      {/* A slim bar: files can also be dropped anywhere on the card (the caller wires that up) */}
+      <div className="mx-4 my-2.5">
+        <FileInput
+          onChange={handleChange}
+          accept={ALLOWED_EXTENSIONS.join(', ')}
+          multiple={true}
+          // Unsupported files are refused with the same message as on a card drop, not dropped silently
+          filterDroppedFiles={false}
+          // Never disabled: a disabled input swallows a drop without a word, and this one answers
+          // with the busy toast (addFiles) whether the drop lands here or elsewhere on the card.
+        >
+          {(isDragging: boolean) => (
+            <span
+              className={clsx(
+                'flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-lg border-[1.5px] border-dashed px-3 py-2 text-sm transition-colors',
+                isDragging
+                  ? 'border-primary bg-primary/5 text-primary'
+                  : 'border-gray-300 text-gray-500 hover:border-gray-400',
+              )}
+            >
+              {isDragging ? (
+                t('docCard.drop.dragging')
+              ) : (
+                <>
+                  {t('docCard.drop.text')}
+                  <span className="rounded-md border border-gray-300 bg-white px-3 py-1 text-gray-700">
+                    {t('docCard.drop.choose')}
+                  </span>
+                  {t('docCard.drop.hint')} ·{' '}
+                  {t('documents.supportedText', { limit: sizeLabel(MAX_FILE_SIZE) })}
+                </>
+              )}
+            </span>
+          )}
+        </FileInput>
+      </div>
 
       {/* Validation errors */}
       {validationErrors.length > 0 && (
-        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mx-3.5 mb-2 p-3 bg-red-50 border border-red-200 rounded-lg">
           <div className="flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
@@ -371,7 +407,7 @@ const CreateRequestFileInput = ({ getOrCreateSession }: CreateRequestFileInputPr
 
       {/* Inline upload progress */}
       {isUploading && (
-        <div className="mt-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="mx-3.5 mb-2 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <LoadingSpinner size="sm" variant="default" />

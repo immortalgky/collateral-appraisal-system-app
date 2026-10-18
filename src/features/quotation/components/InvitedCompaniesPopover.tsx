@@ -15,19 +15,26 @@ import {
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import type { InvitedCompanyDto } from '../schemas/quotation';
+import { MissingSegmentsBadge } from './SegmentBadges';
 
-interface InvitedCompany {
-  companyId: string;
-  companyName: string;
-  companyNameLocal?: string | null;
-}
+type InvitedCompany = Pick<
+  InvitedCompanyDto,
+  'companyId' | 'companyName' | 'companyNameLocal' | 'missingSegments'
+>;
 
 interface InvitedCompaniesPopoverProps {
   companies: InvitedCompany[];
   totalInvited: number;
+  /** Draft only: coverage gaps block Send, so they are meaningless once the quotation is sent. */
+  showSegmentGaps?: boolean;
 }
 
-const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPopoverProps) => {
+const InvitedCompaniesPopover = ({
+  companies,
+  totalInvited,
+  showSegmentGaps = false,
+}: InvitedCompaniesPopoverProps) => {
   const { t } = useTranslation('quotation');
   const localizeCompanyName = useLocalizedCompanyName();
   const [open, setOpen] = useState(false);
@@ -92,6 +99,9 @@ const InvitedCompaniesPopover = ({ companies, totalInvited }: InvitedCompaniesPo
                       >
                         {localizeCompanyName(c.companyName, c.companyNameLocal)}
                       </span>
+                      {showSegmentGaps && (
+                        <MissingSegmentsBadge missing={c.missingSegments ?? []} />
+                      )}
                     </li>
                   ))}
                 </ul>

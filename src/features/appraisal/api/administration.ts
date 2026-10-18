@@ -190,7 +190,8 @@ export const useGetEligibleCompanies = (
   requireSegment = true,
 ) => {
   return useQuery({
-    queryKey: ['eligible-companies', bankingSegment],
+    // requireSegment keeps the disabled filtered call apart from the unfiltered one.
+    queryKey: ['eligible-companies', bankingSegment ?? null, requireSegment],
     queryFn: async (): Promise<ExternalCompany[]> => {
       const { data } = await axios.get('/companies/eligible', {
         params: { loanType: bankingSegment },
@@ -206,6 +207,7 @@ export const useGetEligibleCompanies = (
           email?: string;
           averageRating?: number;
           activeAssignments?: number;
+          loanTypes?: string[];
           isAssignable?: boolean;
         }) => ({
           id: c.id,
@@ -217,6 +219,7 @@ export const useGetEligibleCompanies = (
           contactEmail: c.email ?? '',
           rating: c.averageRating ?? 0,
           activeAssignments: c.activeAssignments ?? 0,
+          loanTypes: c.loanTypes ?? [],
           isAssignable: c.isAssignable ?? true,
         }),
       );

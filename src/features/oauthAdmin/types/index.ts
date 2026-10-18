@@ -2,12 +2,7 @@
 
 export type ClientType = 'public' | 'confidential';
 
-export const GRANT_TYPES = [
-  'authorization_code',
-  'client_credentials',
-  'password',
-  'refresh_token',
-] as const;
+export const GRANT_TYPES = ['authorization_code', 'client_credentials', 'refresh_token'] as const;
 export type GrantType = (typeof GRANT_TYPES)[number];
 
 export interface OAuthClientListItem {

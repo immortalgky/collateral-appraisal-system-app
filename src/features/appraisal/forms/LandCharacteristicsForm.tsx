@@ -13,28 +13,49 @@ export default function LandCharacteristicsForm() {
     { value: 'emptyLand', label: t('landCharacteristicsForm.landfillOptions.emptyLand') },
     { value: 'filled', label: t('landCharacteristicsForm.landfillOptions.filled') },
     { value: 'notFilledYet', label: t('landCharacteristicsForm.landfillOptions.notFilledYet') },
-    { value: 'partiallyFilled', label: t('landCharacteristicsForm.landfillOptions.partiallyFilled') },
+    {
+      value: 'partiallyFilled',
+      label: t('landCharacteristicsForm.landfillOptions.partiallyFilled'),
+    },
     { value: 'other', label: t('landCharacteristicsForm.landfillOptions.other') },
   ];
 
   const landAccessibilityOptions = [
     { value: 'able', label: t('landCharacteristicsForm.landAccessibilityOptions.able') },
     { value: 'unable', label: t('landCharacteristicsForm.landAccessibilityOptions.unable') },
-    { value: 'inAllocation', label: t('landCharacteristicsForm.landAccessibilityOptions.inAllocation') },
+    {
+      value: 'inAllocation',
+      label: t('landCharacteristicsForm.landAccessibilityOptions.inAllocation'),
+    },
   ];
 
   const roadSurfaceOptions = [
-    { value: 'reinforcedConcrete', label: t('landCharacteristicsForm.roadSurfaceOptions.reinforcedConcrete') },
-    { value: 'gravelCrushedStone', label: t('landCharacteristicsForm.roadSurfaceOptions.gravelCrushedStone') },
+    {
+      value: 'reinforcedConcrete',
+      label: t('landCharacteristicsForm.roadSurfaceOptions.reinforcedConcrete'),
+    },
+    {
+      value: 'gravelCrushedStone',
+      label: t('landCharacteristicsForm.roadSurfaceOptions.gravelCrushedStone'),
+    },
     { value: 'soil', label: t('landCharacteristicsForm.roadSurfaceOptions.soil') },
     { value: 'paved', label: t('landCharacteristicsForm.roadSurfaceOptions.paved') },
     { value: 'other', label: t('landCharacteristicsForm.roadSurfaceOptions.other') },
   ];
 
   const publicUtilityOptions = [
-    { value: 'permanentElectricity', label: t('landCharacteristicsForm.publicUtilityOptions.permanentElectricity') },
-    { value: 'tapWaterGroundwater', label: t('landCharacteristicsForm.publicUtilityOptions.tapWaterGroundwater') },
-    { value: 'drainagePipeStone', label: t('landCharacteristicsForm.publicUtilityOptions.drainagePipeStone') },
+    {
+      value: 'permanentElectricity',
+      label: t('landCharacteristicsForm.publicUtilityOptions.permanentElectricity'),
+    },
+    {
+      value: 'tapWaterGroundwater',
+      label: t('landCharacteristicsForm.publicUtilityOptions.tapWaterGroundwater'),
+    },
+    {
+      value: 'drainagePipeStone',
+      label: t('landCharacteristicsForm.publicUtilityOptions.drainagePipeStone'),
+    },
     { value: 'streetlight', label: t('landCharacteristicsForm.publicUtilityOptions.streetlight') },
     { value: 'other', label: t('landCharacteristicsForm.publicUtilityOptions.other') },
   ];
@@ -48,8 +69,14 @@ export default function LandCharacteristicsForm() {
   ];
 
   const landEntranceExitOptions = [
-    { value: 'publicInterest', label: t('landCharacteristicsForm.landEntranceExitOptions.publicInterest') },
-    { value: 'insideAllocationProject', label: t('landCharacteristicsForm.landEntranceExitOptions.insideAllocationProject') },
+    {
+      value: 'publicInterest',
+      label: t('landCharacteristicsForm.landEntranceExitOptions.publicInterest'),
+    },
+    {
+      value: 'insideAllocationProject',
+      label: t('landCharacteristicsForm.landEntranceExitOptions.insideAllocationProject'),
+    },
     { value: 'personal', label: t('landCharacteristicsForm.landEntranceExitOptions.personal') },
     { value: 'servitude', label: t('landCharacteristicsForm.landEntranceExitOptions.servitude') },
     { value: 'other', label: t('landCharacteristicsForm.landEntranceExitOptions.other') },
@@ -64,21 +91,39 @@ export default function LandCharacteristicsForm() {
   ];
 
   const anticipationOptions = [
-    { value: 'veryProspective', label: t('landCharacteristicsForm.anticipationOptions.veryProspective') },
+    {
+      value: 'veryProspective',
+      label: t('landCharacteristicsForm.anticipationOptions.veryProspective'),
+    },
     { value: 'moderate', label: t('landCharacteristicsForm.anticipationOptions.moderate') },
-    { value: 'likelyToProsperInFuture', label: t('landCharacteristicsForm.anticipationOptions.likelyToProsperInFuture') },
-    { value: 'littleChanceOfProsperity', label: t('landCharacteristicsForm.anticipationOptions.littleChanceOfProsperity') },
+    {
+      value: 'likelyToProsperInFuture',
+      label: t('landCharacteristicsForm.anticipationOptions.likelyToProsperInFuture'),
+    },
+    {
+      value: 'littleChanceOfProsperity',
+      label: t('landCharacteristicsForm.anticipationOptions.littleChanceOfProsperity'),
+    },
   ];
 
   const evictionOptions = [
-    { value: 'permanentElectricity', label: t('landCharacteristicsForm.evictionOptions.permanentElectricity') },
+    {
+      value: 'permanentElectricity',
+      label: t('landCharacteristicsForm.evictionOptions.permanentElectricity'),
+    },
     { value: 'subwayLine', label: t('landCharacteristicsForm.evictionOptions.subwayLine') },
     { value: 'other', label: t('landCharacteristicsForm.evictionOptions.other') },
   ];
 
   const allocationOptions = [
-    { value: 'allocateNewProject', label: t('landCharacteristicsForm.allocationOptions.allocateNewProject') },
-    { value: 'allocateOldProject', label: t('landCharacteristicsForm.allocationOptions.allocateOldProject') },
+    {
+      value: 'allocateNewProject',
+      label: t('landCharacteristicsForm.allocationOptions.allocateNewProject'),
+    },
+    {
+      value: 'allocateOldProject',
+      label: t('landCharacteristicsForm.allocationOptions.allocateOldProject'),
+    },
     { value: 'notAllocate', label: t('landCharacteristicsForm.allocationOptions.notAllocate') },
   ];
 
@@ -126,7 +171,9 @@ export default function LandCharacteristicsForm() {
       {/* Landfill Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.landfill')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.landfill')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <RadioGroup name="landfill" options={landfillOptions} />
@@ -156,7 +203,7 @@ export default function LandCharacteristicsForm() {
       {/* Road Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.road')}</h3>
+          <h3 className="text-base font-semibold">{t('landCharacteristicsForm.sections.road')}</h3>
         </div>
         <div className="flex-1">
           <div className="grid grid-cols-6 gap-4">
@@ -170,7 +217,9 @@ export default function LandCharacteristicsForm() {
       {/* Land Accessibility Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.landAccessibility')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.landAccessibility')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <RadioGroup name="landAccessibility" options={landAccessibilityOptions} />
@@ -194,7 +243,9 @@ export default function LandCharacteristicsForm() {
       {/* Road Surface Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.roadSurface')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.roadSurface')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <CheckboxGroup name="roadSurface" options={roadSurfaceOptions} />
@@ -218,7 +269,9 @@ export default function LandCharacteristicsForm() {
       {/* Public Utility Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.publicUtility')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.publicUtility')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <CheckboxGroup name="publicUtility" options={publicUtilityOptions} />
@@ -242,7 +295,9 @@ export default function LandCharacteristicsForm() {
       {/* Land Use Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.landUse')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.landUse')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <CheckboxGroup name="landUse" options={landUseOptions} />
@@ -266,7 +321,9 @@ export default function LandCharacteristicsForm() {
       {/* Land Entrance-Exit Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.landEntranceExit')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.landEntranceExit')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <CheckboxGroup name="landEntranceExit" options={landEntranceExitOptions} />
@@ -290,7 +347,9 @@ export default function LandCharacteristicsForm() {
       {/* Transportation Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.transportation')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.transportation')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <CheckboxGroup name="transportation" options={transportationOptions} />
@@ -314,7 +373,9 @@ export default function LandCharacteristicsForm() {
       {/* Anticipation of Property Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.anticipationOfProperty')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.anticipationOfProperty')}
+          </h3>
         </div>
         <div className="flex-1">
           <RadioGroup name="anticipationOfProperty" options={anticipationOptions} />
@@ -326,7 +387,9 @@ export default function LandCharacteristicsForm() {
       {/* Limitation Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.limitation')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.limitation')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <div className="flex flex-wrap gap-4">
@@ -336,7 +399,9 @@ export default function LandCharacteristicsForm() {
                 {...register('limitation.isExpropriate')}
                 className="checkbox checkbox-sm checkbox-primary"
               />
-              <span className="label-text">{t('landCharacteristicsForm.fields.isExpropriate')}</span>
+              <span className="label-text">
+                {t('landCharacteristicsForm.fields.isExpropriate')}
+              </span>
             </label>
             <label className="label cursor-pointer gap-2">
               <input
@@ -344,7 +409,9 @@ export default function LandCharacteristicsForm() {
                 {...register('limitation.inLineExpropriate')}
                 className="checkbox checkbox-sm checkbox-primary"
               />
-              <span className="label-text">{t('landCharacteristicsForm.fields.inLineExpropriate')}</span>
+              <span className="label-text">
+                {t('landCharacteristicsForm.fields.inLineExpropriate')}
+              </span>
             </label>
             <label className="label cursor-pointer gap-2">
               <input
@@ -384,7 +451,9 @@ export default function LandCharacteristicsForm() {
                 {...register('limitation.isForestBoundary')}
                 className="checkbox checkbox-sm checkbox-primary"
               />
-              <span className="label-text">{t('landCharacteristicsForm.fields.isForestBoundary')}</span>
+              <span className="label-text">
+                {t('landCharacteristicsForm.fields.isForestBoundary')}
+              </span>
             </label>
           </div>
           <div className="grid grid-cols-6 gap-4">
@@ -413,7 +482,9 @@ export default function LandCharacteristicsForm() {
       {/* Eviction Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.eviction')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.eviction')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <CheckboxGroup name="eviction" options={evictionOptions} />
@@ -437,7 +508,9 @@ export default function LandCharacteristicsForm() {
       {/* Allocation Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.allocation')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.allocation')}
+          </h3>
         </div>
         <div className="flex-1">
           <RadioGroup name="allocation" options={allocationOptions} />
@@ -449,7 +522,9 @@ export default function LandCharacteristicsForm() {
       {/* Has Building Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.hasBuilding')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.hasBuilding')}
+          </h3>
         </div>
         <div className="flex-1 flex flex-col gap-4">
           <RadioGroup name="hasBuilding" options={hasBuildingOptions} />
@@ -473,7 +548,9 @@ export default function LandCharacteristicsForm() {
       {/* Remark Section */}
       <div className="flex gap-6">
         <div className="w-44 flex-shrink-0">
-          <h3 className="text-base font-medium">{t('landCharacteristicsForm.sections.remark')}</h3>
+          <h3 className="text-base font-semibold">
+            {t('landCharacteristicsForm.sections.remark')}
+          </h3>
         </div>
         <div className="flex-1">
           <textarea

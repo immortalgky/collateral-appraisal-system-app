@@ -13,7 +13,7 @@ const Table = <T extends Record<string, any>>({ data, headers, ...props }: Table
         <thead>
           <tr className="bg-primary/10">
             {headers.map((header, index) => (
-              <th key={index} className="text-primary text-sm font-semibold py-3 px-4 text-left first:rounded-tl-lg last:rounded-tr-lg">
+              <th key={index} className="text-primary text-xs font-semibold py-3 px-4 text-left first:rounded-tl-lg last:rounded-tr-lg">
                 {header.label}
               </th>
             ))}

@@ -27,7 +27,7 @@ export default function MachinerySummaryPage() {
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-gray-900">
               {t('propertyInfo.machinerySummary.title')}
             </h2>
             {status && <MachinerySummaryStatusPill status={status} />}

@@ -507,7 +507,7 @@ export function MenuTreeTable({
           <table className="w-full text-left">
             <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
               <tr>
-                <th className="px-4 py-3 w-8" />
+                <th className="text-xs px-4 py-3 w-8 font-semibold" />
                 <SortableTh
                   label={t('table.columns.name')}
                   sortKey="name"
@@ -549,7 +549,7 @@ export function MenuTreeTable({
                   className="whitespace-nowrap"
                 />
                 <th
-                  className="px-4 py-3 whitespace-nowrap"
+                  className="text-xs px-4 py-3 whitespace-nowrap font-semibold"
                   aria-label={t('table.columns.actions')}
                 />
               </tr>

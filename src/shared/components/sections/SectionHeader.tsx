@@ -22,6 +22,8 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   rightIcon?: React.ReactNode;
   variant?: 'default' | 'card';
   required?: boolean;
+  /** Heading size class of the card variant; a page that wants another size passes it. */
+  headingClassName?: string;
 }
 
 const iconColorStyles: Record<IconColor, { bg: string; text: string }> = {
@@ -46,6 +48,7 @@ const SectionHeader = ({
   variant = 'default',
   className,
   required,
+  headingClassName = 'text-base',
 }: SectionHeaderProps) => {
   const colorStyle = iconColorStyles[iconColor];
 
@@ -69,7 +72,7 @@ const SectionHeader = ({
             </div>
           )}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800">
+            <h3 className={clsx('font-semibold text-gray-800', headingClassName)}>
               {title}
               {required && <span className="text-danger ml-0.5">*</span>}
             </h3>
@@ -93,7 +96,9 @@ const SectionHeader = ({
             </div>
           )}
           <div>
-            <h3 className="text-sm font-semibold text-gray-800">
+            {/* A section inside a card (no icon) sits one step under the card's own 15px heading;
+                with an icon it is a page header and takes the card heading's size. */}
+            <h3 className={clsx('font-semibold text-gray-800', icon ? 'text-base' : 'text-sm')}>
               {title}
               {required && <span className="text-danger ml-0.5">*</span>}
             </h3>

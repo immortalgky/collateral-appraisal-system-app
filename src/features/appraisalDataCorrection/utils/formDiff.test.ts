@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { diffFormValues, formatDiffValue, groupDiff } from './formDiff';
+import {
+  dateOnlyValue,
+  diffFormValues,
+  formatDiffValue,
+  groupDiff,
+  isSameDayChange,
+} from './formDiff';
 
 const change = (label: string, from: unknown, to: unknown) =>
   expect.objectContaining({ kind: 'changed', label, from, to });
@@ -43,6 +49,88 @@ describe('diffFormValues — plain fields', () => {
       { subDistrict: '100201', subDistrictName: 'Dusit' },
     );
     expect(diff).toEqual([change('Sub District', 'Phra Nakhon', 'Dusit')]);
+  });
+
+  it('never lists what the page fills in for itself as it opens', () => {
+    // Absent from the record, present on screen: the table's average %/year and the postcodes the
+    // location pickers look up from the sub-district.
+    const before = {
+      subDistrict: '100101',
+      dopaSubDistrict: '100101',
+      postcode: null,
+      dopaPostcode: null,
+      depreciationDetails: [{ id: 'd1' }],
+    };
+    const after = {
+      ...before,
+      postcode: '-',
+      dopaPostcode: '10200',
+      depreciationDetails: [{ id: 'd1', totalDepreciationPercentPerYear: 3 }],
+    };
+    expect(diffFormValues(before, after)).toEqual([]);
+    // A postcode with no picker beside it is a stored field like any other.
+    expect(diffFormValues({ postcode: '10200' }, { postcode: '10300' })).toHaveLength(1);
+  });
+
+  it('compares the depreciation figures at the places the record stores them', () => {
+    const row = (v: Record<string, unknown>) => ({ depreciationDetails: [{ id: 'd1', ...v }] });
+
+    // Recomputed on screen to more places, stored the same as before.
+    expect(
+      diffFormValues(
+        row({ pricePerSqMAfterDepreciation: 7754.93, priceDepreciation: 205277.63 }),
+        row({ pricePerSqMAfterDepreciation: 7754.9325, priceDepreciation: 205277.625 }),
+      ),
+    ).toEqual([]);
+    // Percentages at four places: 3 × 1.1 is 3.3000000000000003 in floating point.
+    expect(
+      diffFormValues(
+        row({ totalDepreciationPct: 3.3, depreciationPeriods: [{ totalDepreciationPct: 3.3 }] }),
+        row({
+          totalDepreciationPct: 3 * 1.1,
+          depreciationPeriods: [{ totalDepreciationPct: 3 * 1.1 }],
+        }),
+      ),
+    ).toEqual([]);
+  });
+
+  it('rounds the decimal the payload carries, as the server does, not the float', () => {
+    const row = (v: number) => ({ depreciationDetails: [{ id: 'd1', priceDepreciation: v }] });
+    // 1.005 posts as "1.005" and is stored 1.01; 205277.62499999997 posts as such and is stored .62.
+    expect(diffFormValues(row(1.01), row(1.005))).toEqual([]);
+    expect(diffFormValues(row(205277.62), row(205277.62499999997))).toEqual([]);
+    // A fully depreciated row lands on float noise below zero; it is stored as 0.00, not -0.00.
+    expect(diffFormValues(row(0), row(-1.4551915228366852e-10))).toEqual([]);
+  });
+
+  it('shows a real change as it will be stored', () => {
+    const row = (v: unknown) => ({
+      depreciationDetails: [{ id: 'd1', pricePerSqMAfterDepreciation: v }],
+    });
+    expect(diffFormValues(row(1163239.8), row(1163239.9525))).toEqual([
+      expect.objectContaining({ from: '1163239.80', to: '1163239.95' }),
+    ]);
+    // A blank stays blank, not 0.
+    expect(diffFormValues(row(null), row(5000))).toEqual([
+      expect.objectContaining({ from: null, to: '5000.00' }),
+    ]);
+  });
+
+  it('summarises an added depreciation row with its stored figures', () => {
+    const diff = diffFormValues(
+      { depreciationDetails: [] },
+      { depreciationDetails: [{ areaDescription: 'Main', priceBeforeDepreciation: 1368517.505 }] },
+    );
+    expect(diff).toEqual([
+      expect.objectContaining({ kind: 'added', to: expect.stringContaining('1368517.51') }),
+    ]);
+  });
+
+  it('keeps comparing every other number exactly, and the same names outside the depreciation table', () => {
+    expect(diffFormValues({ latitude: 13.75 }, { latitude: 13.751 })).toHaveLength(1);
+    expect(diffFormValues({ priceDepreciation: 1.23 }, { priceDepreciation: 1.234 })).toHaveLength(
+      1,
+    );
   });
 
   it('compares a list of plain values as a whole', () => {
@@ -99,6 +187,65 @@ describe('diffFormValues — tables', () => {
         to: expect.stringContaining('Title Number 99'),
       }),
     ]);
+  });
+
+  it('reports a move as one title-order entry and nothing per row', () => {
+    const before = { titles: [title('t1', '9876', 1), title('t2', '1234', 1)] };
+    const after = { titles: [title('t2', '1234', 1), title('t1', '9876', 1)] };
+    expect(diffFormValues(before, after)).toEqual([
+      expect.objectContaining({
+        group: 'Land titles',
+        kind: 'changed',
+        label: 'Title Order',
+        from: ['9876', '1234'],
+        to: ['1234', '9876'],
+      }),
+    ]);
+  });
+
+  it('a title added at the end is only an added row; one added on top also moves the order', () => {
+    const before = { titles: [title('t1', '9876', 1)] };
+    const atEnd = diffFormValues(before, {
+      titles: [title('t1', '9876', 1), title(undefined, '1', 1)],
+    });
+    expect(atEnd.map(e => e.kind)).toEqual(['added']);
+
+    const onTop = diffFormValues(before, {
+      titles: [title(undefined, '1', 1), title('t1', '9876', 1)],
+    });
+    expect(onTop.map(e => e.kind)).toEqual(['changed', 'added']);
+    expect(onTop[0]).toMatchObject({ label: 'Title Order', to: ['1', '9876'] });
+  });
+
+  it('tells apart titles that share a number when they swap', () => {
+    const before = { titles: [title('t1', '111', 1), title('t2', '111', 2)] };
+    const after = { titles: [title('t2', '111', 2), title('t1', '111', 1)] };
+    expect(diffFormValues(before, after)).toEqual([
+      expect.objectContaining({
+        label: 'Title Order',
+        from: ['111', '111 (2)'],
+        to: ['111 (2)', '111'],
+      }),
+    ]);
+  });
+
+  it('names a moved title by its new number; a number added back in place is no order change', () => {
+    const renumbered = diffFormValues(
+      { titles: [title('a', '111', 1), title('b', '222', 1)] },
+      { titles: [title('b', '222', 1), title('a', '999', 1)] },
+    );
+    expect(renumbered[0]).toMatchObject({
+      label: 'Title Order',
+      from: ['111', '222'],
+      to: ['222', '999'],
+    });
+
+    const replaced = diffFormValues(
+      { titles: [title('a', '111', 1), title('b', '222', 1)] },
+      { titles: [title(undefined, '111', 1), title('b', '222', 1)] },
+    );
+    const order = replaced.find(e => e.label === 'Title Order');
+    expect(order).toBeUndefined();
   });
 
   it('reports a row that is gone as removed', () => {
@@ -175,8 +322,8 @@ describe('diffFormValues — tables', () => {
       expect.objectContaining({
         group: 'Depreciation',
         label: '#1 · Periods #1 · Depreciation Per Year',
-        from: 2,
-        to: 3,
+        from: '2.0000',
+        to: '3.0000',
       }),
     ]);
   });
@@ -211,5 +358,135 @@ describe('formatDiffValue', () => {
     expect(formatDiffValue(false)).toBe('No');
     expect(formatDiffValue(0)).toBe('0');
     expect(formatDiffValue(['a', 'b'])).toBe('a, b');
+  });
+});
+
+describe('dateOnlyValue', () => {
+  it('drops the time part of a date-input field, however the field is named', () => {
+    expect(dateOnlyValue('constructionLicenseExpirationDate', '2026-05-01T14:30:00')).toBe(
+      '01/05/2026',
+    );
+    expect(
+      dateOnlyValue('Building.ConstructionLicenseExpirationDate', '1991-01-06T09:00:00+07:00'),
+    ).toBe('06/01/1991');
+    // Read off the configs: every date-input field, not one hard-coded name.
+    expect(dateOnlyValue('leaseAgreement.leaseStartDate', '2026-05-01T00:00:00')).toBe(
+      '01/05/2026',
+    );
+    expect(dateOnlyValue('machine.purchaseDate', '2026-05-01T14:30:00')).toBe('01/05/2026');
+    // Drawn by hand in RentalInfoForm, so named explicitly rather than read from a config.
+    expect(dateOnlyValue('rentalInfo.upFrontEntries[0].atYear', '2026-04-01T00:00:00+07:00')).toBe(
+      '01/04/2026',
+    );
+    expect(dateOnlyValue('rentalInfo.scheduleEntries[2].contractEnd', '2028-03-31T00:00:00')).toBe(
+      '31/03/2028',
+    );
+  });
+
+  it('leaves a value that is not an ISO date-time alone', () => {
+    expect(dateOnlyValue('constructionLicenseExpirationDate', '01/05/2026')).toBe('01/05/2026');
+    // A bare date reads the same as a date-time of that day.
+    expect(dateOnlyValue('constructionLicenseExpirationDate', '2026-05-01')).toBe('01/05/2026');
+    expect(dateOnlyValue('constructionLicenseExpirationDate', null)).toBeNull();
+  });
+
+  it('leaves other fields alone, including one that only ends like a date field', () => {
+    expect(dateOnlyValue('appointmentDateTime', '2026-05-01T14:30:00')).toBe('2026-05-01T14:30:00');
+    expect(dateOnlyValue('priorPurchaseDate', '2026-05-01T14:30:00')).toBe('2026-05-01T14:30:00');
+  });
+});
+
+describe('diffFormValues — date-only fields', () => {
+  it('does not list the same day re-picked with another time', () => {
+    const before = { constructionLicenseExpirationDate: '2025-01-01T09:30:00+07:00' };
+    const after = { constructionLicenseExpirationDate: '2025-01-01T00:00:00+07:00' };
+    expect(diffFormValues(before, after)).toEqual([]);
+    // A plain date and the same day with a time are one date too.
+    expect(
+      diffFormValues(
+        { constructionLicenseExpirationDate: '2025-01-01' },
+        { constructionLicenseExpirationDate: '2025-01-01T00:00:00+07:00' },
+      ),
+    ).toEqual([]);
+  });
+
+  it('still lists a different day, and keeps the time of a field that is not date-only', () => {
+    const diff = diffFormValues(
+      { constructionLicenseExpirationDate: '2025-01-01T09:30:00+07:00', appointmentDateTime: 'a' },
+      { constructionLicenseExpirationDate: '2025-01-02T09:30:00+07:00', appointmentDateTime: 'b' },
+    );
+    expect(diff).toHaveLength(2);
+    expect(
+      diffFormValues(
+        { appointmentDateTime: '2025-01-01T09:30:00+07:00' },
+        { appointmentDateTime: '2025-01-01T00:00:00+07:00' },
+      ),
+    ).toHaveLength(1);
+  });
+});
+
+describe('diffFormValues — date-only cells of an added row', () => {
+  it('shows the date of an advance-rent row added, not the raw ISO date-time', () => {
+    const diff = diffFormValues(
+      { rentalInfo: { upFrontEntries: [] } },
+      {
+        rentalInfo: {
+          upFrontEntries: [{ atYear: '2026-04-01T00:00:00+07:00', upFrontAmount: 300000 }],
+        },
+      },
+    );
+    const added = diff.find(d => d.kind === 'added');
+    expect(added?.to).toContain('01/04/2026');
+    expect(added?.to).not.toContain('T00:00');
+  });
+});
+
+describe('date-only fields in the generated vehicle / vessel forms', () => {
+  it('reads registrationDate as a date, from the generated field config', () => {
+    expect(dateOnlyValue('registrationDate', '2026-01-01T09:00:00+07:00')).toBe('01/01/2026');
+    expect(dateOnlyValue('Vessel.RegistrationDate', '2026-01-01T09:00:00')).toBe('01/01/2026');
+  });
+});
+
+describe('isSameDayChange', () => {
+  it('is true for a time-only change of a date-only field, as the audit logs it', () => {
+    expect(
+      isSameDayChange(
+        'Building.ConstructionLicenseExpirationDate',
+        '2025-01-01T09:30:00+07:00',
+        '2025-01-01T00:00:00+07:00',
+      ),
+    ).toBe(true);
+  });
+
+  it('is false for another day, a missing side, or a field that is not date-only', () => {
+    const field = 'Building.ConstructionLicenseExpirationDate';
+    expect(isSameDayChange(field, '2025-01-01T09:30:00', '2025-01-02T09:30:00')).toBe(false);
+    expect(isSameDayChange(field, null, '2025-01-01T00:00:00')).toBe(false);
+    expect(
+      isSameDayChange(
+        'Appointment.AppointmentDateTime',
+        '2025-01-01T09:30:00',
+        '2025-01-01T00:00:00',
+      ),
+    ).toBe(false);
+  });
+});
+
+describe('dateOnlyValue — the summary of a logged row', () => {
+  it('formats the ISO date-time inside an advance-rent row, as written', () => {
+    expect(dateOnlyValue('RentalInfo.UpFrontEntries[2]', '2026-04-01T00:00:00+07:00, 300000')).toBe(
+      '01/04/2026, 300000',
+    );
+    // A summary the backend cut short still reads as a date.
+    expect(dateOnlyValue('RentalInfo.UpFrontEntries[0]', '2026-04-01T00:00:0…')).toBe(
+      '01/04/2026…',
+    );
+  });
+
+  it('leaves the rows of other collections, and the collection itself, alone', () => {
+    const raw = '2026-04-01T00:00:00, 300000';
+    expect(dateOnlyValue('RentalInfo.GrowthPeriodEntries[0]', raw)).toBe(raw);
+    expect(dateOnlyValue('RentalInfo.UpFrontEntries', raw)).toBe(raw);
   });
 });

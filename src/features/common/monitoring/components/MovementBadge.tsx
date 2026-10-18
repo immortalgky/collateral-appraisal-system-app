@@ -14,14 +14,14 @@ const MOVEMENT_STYLES: Record<
 };
 
 function MovementBadge({ value }: MovementBadgeProps) {
-  if (!value) return <span className="text-gray-400 text-xs">—</span>;
+  if (!value) return <span className="text-gray-400">—</span>;
 
   const config = MOVEMENT_STYLES[value];
-  if (!config) return <span className="text-gray-400 text-xs">—</span>;
+  if (!config) return <span className="text-gray-400">—</span>;
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-[11px] font-medium ${config.color}`}
+      className={`inline-flex items-center gap-1.5 text-xs font-medium ${config.color}`}
       title={config.label}
     >
       <Icon style="solid" name={config.icon} className="size-3" />

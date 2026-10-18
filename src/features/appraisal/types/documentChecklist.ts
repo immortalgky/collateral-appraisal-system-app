@@ -15,6 +15,8 @@ import type { z } from 'zod';
 export type DocumentItemDto = z.infer<typeof schemas.DocumentItemDto> & {
   fileSizeBytes?: number | null;
   mimeType?: string | null;
+  /** 'FOLLOWUP' for a file an appraiser asked for; absent while the API does not return it. */
+  source?: string | null;
 };
 export type DocumentSectionDto = z.infer<typeof schemas.DocumentSectionDto>;
 export type GetRequestDocumentsByRequestIdResponse = z.infer<
@@ -45,48 +47,3 @@ export type AddAppendixDocumentRequest =
 export type AddAppendixDocumentResult = z.infer<typeof schemas.AddAppendixDocumentResponse>;
 export type RemoveAppendixDocumentResult = z.infer<typeof schemas.RemoveAppendixDocumentResponse>;
 export type UpdateAppendixLayoutResult = z.infer<typeof schemas.UpdateAppendixLayoutResponse>;
-
-// ==================== UI Constants ====================
-
-// Appendix Document Types from Figma design (still useful for UI labels)
-export const APPENDIX_DOCUMENT_TYPES = [
-  'BRIEF_MAP',
-  'DETAILED_MAP',
-  'EARTH_MAP',
-  'LAND_MAP',
-  'CITY_PLAN',
-  'STATUTORY_PLAN',
-  'LAND_PLAN',
-  'BUILDING_LAYOUT',
-  'BLUEPRINT',
-  'PHOTO_AND_PHOTO_SPOT',
-  'REGISTRATION_INDEX',
-  'RAWANG',
-  'SUPPORTING_DOCUMENT',
-] as const;
-
-export type AppendixDocumentType = (typeof APPENDIX_DOCUMENT_TYPES)[number];
-
-// Display names for document types
-export const APPENDIX_DOCUMENT_TYPE_LABELS: Record<AppendixDocumentType, string> = {
-  BRIEF_MAP: 'Brief Map',
-  DETAILED_MAP: 'Detailed Map',
-  EARTH_MAP: 'Earth Map',
-  LAND_MAP: 'Land Map',
-  CITY_PLAN: 'City Plan',
-  STATUTORY_PLAN: 'Statutory Plan',
-  LAND_PLAN: 'Land Plan',
-  BUILDING_LAYOUT: 'Building Layout',
-  BLUEPRINT: 'Blueprint',
-  PHOTO_AND_PHOTO_SPOT: 'Photo and Photo spot',
-  REGISTRATION_INDEX: 'Registration Index',
-  RAWANG: 'Rawang',
-  SUPPORTING_DOCUMENT: 'Supporting Document',
-};
-
-// Layout options for appendix
-export const APPENDIX_LAYOUT_OPTIONS: { value: number; label: string }[] = [
-  { value: 1, label: '1' },
-  { value: 2, label: '2' },
-  { value: 3, label: '3' },
-];

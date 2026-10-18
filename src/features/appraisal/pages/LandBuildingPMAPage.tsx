@@ -28,6 +28,9 @@ import RightMenuPortal from '@/shared/components/RightMenuPortal';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import ActionBar from '@/shared/components/ActionBar';
+import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
+import PmaSyncStatus from '../components/PmaSyncStatus';
 
 const LandBuildingPMAPage = () => {
   const { t } = useTranslation('appraisal');
@@ -175,12 +178,30 @@ const LandBuildingPMAPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0">
       <FormProvider methods={methods} schema={landAndBuildingPMAFormSchema}>
-        <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="cas-form-grid flex-1 min-h-0 flex flex-col"
+        >
           {/* Scrollable Form Content */}
           <div
             id="form-scroll-container"
             className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
           >
+            <PropertyEditorHeader
+              appraisalId={appraisalId}
+              propertyId={propertyId}
+              typeCode="LB"
+              pma
+              meta={
+                <PmaSyncStatus
+                  status={isEditMode ? propertyData?.externalSyncStatus : undefined}
+                  error={isEditMode ? propertyData?.externalSyncError : undefined}
+                  syncedAt={isEditMode ? propertyData?.externalSyncedAt : undefined}
+                />
+              }
+              tabs={[{ id: 'pma', label: t('createPage.navPma') }]}
+              activeTab="pma"
+            />
             <ResizableSidebar
               isOpen={isOpen}
               onToggle={onToggle}
@@ -194,11 +215,7 @@ const LandBuildingPMAPage = () => {
                     anchor
                     className="flex flex-col gap-6 min-w-0 overflow-hidden"
                   >
-                    <LandBuildingPMAForm
-                      externalSyncStatus={isEditMode ? propertyData?.externalSyncStatus : undefined}
-                      externalSyncError={isEditMode ? propertyData?.externalSyncError : undefined}
-                      externalSyncedAt={isEditMode ? propertyData?.externalSyncedAt : undefined}
-                    />
+                    <LandBuildingPMAForm />
                   </Section>
                 </div>
               </ResizableSidebar.Main>
@@ -206,49 +223,40 @@ const LandBuildingPMAPage = () => {
           </div>
 
           {/* Sticky Action Buttons */}
-          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-4">
-                <CancelButton />
-                {!isReadOnly && (
-                  <>
-                    <div className="h-6 w-px bg-gray-200" />
-                    {hasDirtyFields && (
-                      <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                        Unsaved changes
-                      </span>
-                    )}
-                  </>
-                )}
-              </div>
+          <ActionBar>
+            <ActionBar.Left>
+              <CancelButton />
               {!isReadOnly && (
-                <div className="flex gap-3">
-                  <Button
-                    variant="outline"
-                    type="button"
-                    onClick={handleSaveDraft}
-                    isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending || !hasDirtyFields}
-                  >
-                    <Icon name="floppy-disk" style="regular" className="size-4 mr-2" />
-                    Save draft
-                  </Button>
-                  <Button
-                    type="submit"
-                    isLoading={isPending && saveAction === 'submit'}
-                    disabled={
-                      isPending ||
-                      (!hasDirtyFields && propertyData?.externalSyncStatus !== 'Failed')
-                    }
-                  >
-                    <Icon name="check" style="solid" className="size-4 mr-2" />
-                    Save
-                  </Button>
-                </div>
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                </>
               )}
-            </div>
-          </div>
+            </ActionBar.Left>
+            {!isReadOnly && (
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={isPending && saveAction === 'draft'}
+                  disabled={isPending || !hasDirtyFields}
+                >
+                  {t('createPage.saveDraft')}
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={isPending && saveAction === 'submit'}
+                  disabled={
+                    isPending || (!hasDirtyFields && propertyData?.externalSyncStatus !== 'Failed')
+                  }
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  {t('createPage.save')}
+                </Button>
+              </ActionBar.Right>
+            )}
+          </ActionBar>
 
           <UnsavedChangesDialog blocker={blocker} />
 

@@ -803,123 +803,133 @@ export function HistorySearchMap(props: HistorySearchMapProps) {
           )}
 
           {/* Top-left floating toggle buttons (stacked) */}
-          <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
-            <button
-              type="button"
-              data-popover-toggle
-              onClick={() => setSearchOpen(o => !o)}
-              className={[
-                'flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors',
-                searchOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50',
-              ].join(' ')}
-              title={t('searchPanel.title')}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
-                />
-              </svg>
-              {t('searchPanel.title')}
-            </button>
-            <button
-              type="button"
-              data-popover-toggle
-              onClick={() => setPinLayersOpen(o => !o)}
-              className={[
-                'flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors',
-                pinLayersOpen
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-50',
-              ].join(' ')}
-              title={t('pinFilter.title')}
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M 12 2 L 2 11 L 4 11 L 4 22 L 20 22 L 20 11 L 22 11 Z"
-                />
-              </svg>
-              {t('pinFilter.title')}
-            </button>
-            {/* Reopen results toggle — only shown when results exist, panel is closed, and no pin is selected */}
-            {!resultsOpen && !selectedPin && (result || isPending || isError) && (
+          <div className="pointer-events-none absolute inset-x-3 top-3 bottom-3 z-20 flex gap-2">
+            <div className="pointer-events-auto flex shrink-0 flex-col gap-2 self-start">
               <button
                 type="button"
-                onClick={() => setResultsOpen(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors bg-white text-gray-700 hover:bg-gray-50"
-                title={t('resultsList.title')}
+                data-popover-toggle
+                onClick={() => {
+                  // One popover at a time: the search form needs the row's width
+                  setSearchOpen(o => !o);
+                  setPinLayersOpen(false);
+                }}
+                className={[
+                  'flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors',
+                  searchOpen ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50',
+                ].join(' ')}
+                title={t('searchPanel.title')}
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
                   />
                 </svg>
-                {t('resultsList.title')}
-                {result && (
-                  <span className="ml-0.5 bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none">
-                    {(suppressAppraisalPins ? 0 : result.appraisals.count) +
-                      result.marketComparables.count}
-                  </span>
-                )}
+                {t('searchPanel.title')}
               </button>
-            )}
-          </div>
-
-          {/* Search criteria popover — wide two-column panel anchored top+bottom;
-              the form inside scrolls when criteria overflow on small screens. */}
-          {searchOpen && (
-            <div
-              ref={searchPopoverRef}
-              className="absolute top-3 bottom-3 left-32 z-20 w-[760px] max-w-[calc(100vw-9rem)] bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col"
-            >
-              <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
-                <h3 className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  {t('searchPanel.title')}
-                </h3>
+              <button
+                type="button"
+                data-popover-toggle
+                onClick={() => {
+                  setPinLayersOpen(o => !o);
+                  setSearchOpen(false);
+                }}
+                className={[
+                  'flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors',
+                  pinLayersOpen
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 hover:bg-gray-50',
+                ].join(' ')}
+                title={t('pinFilter.title')}
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M 12 2 L 2 11 L 4 11 L 4 22 L 20 22 L 20 11 L 22 11 Z"
+                  />
+                </svg>
+                {t('pinFilter.title')}
+              </button>
+              {/* Reopen results toggle — only shown when results exist, panel is closed, and no pin is selected */}
+              {!resultsOpen && !selectedPin && (result || isPending || isError) && (
                 <button
                   type="button"
-                  onClick={() => setSearchOpen(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded"
-                  aria-label={t('pinDetail.close')}
+                  onClick={() => setResultsOpen(true)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-md shadow-md text-xs font-medium transition-colors bg-white text-gray-700 hover:bg-gray-50"
+                  title={t('resultsList.title')}
                 >
-                  <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                    />
                   </svg>
+                  {t('resultsList.title')}
+                  {result && (
+                    <span className="ml-0.5 bg-blue-100 text-blue-700 rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+                      {(suppressAppraisalPins ? 0 : result.appraisals.count) +
+                        result.marketComparables.count}
+                    </span>
+                  )}
                 </button>
+              )}
+            </div>
+
+            {/* The popovers sit in the same row as the button stack, to its right, so they never cover
+                their trigger; the search panel shrinks (min-w-0) in a narrow container. It spans the
+                row's height, and the form inside scrolls when criteria overflow. */}
+            {searchOpen && (
+              <div
+                ref={searchPopoverRef}
+                className="pointer-events-auto min-w-0 w-[760px] shrink bg-white rounded-lg shadow-xl border border-gray-200 flex flex-col"
+              >
+                <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
+                  <h3 className="text-base font-semibold text-gray-900">
+                    {t('searchPanel.title')}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(false)}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded"
+                    aria-label={t('pinDetail.close')}
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="flex-1 min-h-0 overflow-hidden">
+                  <SearchPanel
+                    defaultValues={formDefaults}
+                    onSearch={handleSearch}
+                    autoSearch={mode === 'embedded'}
+                    isPending={isPending}
+                  />
+                </div>
               </div>
-              <div className="flex-1 min-h-0 overflow-hidden">
-                <SearchPanel
-                  defaultValues={formDefaults}
-                  onSearch={handleSearch}
-                  autoSearch={mode === 'embedded'}
-                  isPending={isPending}
+            )}
+
+            {/* Pin layers popover */}
+            {pinLayersOpen && (
+              <div
+                ref={pinLayersPopoverRef}
+                className="pointer-events-auto self-start bg-white rounded-lg shadow-xl border border-gray-200 p-3"
+              >
+                <MapPinFilterPanel
+                  filters={pinFilters}
+                  onFiltersChange={setPinFilters}
+                  isExternal={isExternal}
+                  mcOnly={mcOnly}
                 />
               </div>
-            </div>
-          )}
-
-          {/* Pin layers popover */}
-          {pinLayersOpen && (
-            <div
-              ref={pinLayersPopoverRef}
-              className="absolute top-16 left-32 z-20 bg-white rounded-lg shadow-xl border border-gray-200 p-3"
-            >
-              <MapPinFilterPanel
-                filters={pinFilters}
-                onFiltersChange={setPinFilters}
-                isExternal={isExternal}
-                mcOnly={mcOnly}
-              />
-            </div>
-          )}
+            )}
+          </div>
 
           {/* Pin detail drawer — shared by both green (appraisal) and blue (MC) pins */}
           {selectedPin &&

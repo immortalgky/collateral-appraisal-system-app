@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import BuildingDetailForm from '@/features/appraisal/forms/BuildingDetailForm';
@@ -40,6 +40,8 @@ export interface EditorContext {
   ciMode: boolean;
   /** The construction tab's building switcher: another building in this appraisal was picked. */
   onSelectProperty: (propertyId: string) => void;
+  /** The identity block above the tab bar, so picking a tab can scroll back up to it. */
+  scrollAnchorRef?: RefObject<HTMLElement | null>;
 }
 
 /** Which tabs a property type has, in the order its page shows them. */
@@ -56,10 +58,11 @@ export interface TabLayout {
 
 // Typed as plain strings on purpose: threading i18next's overloaded `t` through a keyed lookup is
 // what has made tsc crash here before (see FormSectionHeader).
-const TAB_LABEL_KEY: Record<Exclude<PanelId, 'machinery'>, string> = {
+const TAB_LABEL_KEY: Record<PanelId, string> = {
   land: 'createPage.navLand',
   building: 'createPage.navBuilding',
   condo: 'createPage.navCondo',
+  machinery: 'createPage.navMachinery',
   construction: 'createPage.navConstructionInspection',
   'lease-agreement': 'createPage.navLeaseAgreement',
   'rental-info': 'createPage.navRentalInfo',
@@ -107,7 +110,7 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
   const failed = flattenFormErrors(errors);
   const tabs: EditorTab[] = visible.map(id => ({
     id,
-    label: id === 'machinery' ? '' : String(t(TAB_LABEL_KEY[id] as never)),
+    label: String(t(TAB_LABEL_KEY[id] as never)),
     errorCount: failed.length > 0 ? countFailedIn(`${id}-section`, failed) : 0,
   }));
 
@@ -181,7 +184,7 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
         return (
           <Section
             key={id}
-            id="machinery"
+            id="machinery-section"
             anchor
             className="flex flex-col gap-6 min-w-0 overflow-hidden"
           >
@@ -228,8 +231,9 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
 
   return (
     <>
-      {visible.length > 1 && (
+      {visible.length > 0 && (
         <EditorTabBar
+          scrollAnchorRef={context.scrollAnchorRef}
           tabs={tabs}
           activeId={shown}
           label={t('editorHeader.tabsLabel')}

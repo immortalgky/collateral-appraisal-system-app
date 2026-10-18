@@ -344,9 +344,11 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
                 : dense
                   ? 'bg-[#f6f9f9] hover:border-[#cbd5d3] focus:bg-white'
                   : 'bg-white hover:border-gray-300',
-              leftIcon && 'pl-9',
-              rightIcon && 'pr-12',
-              suffix && !rightIcon && 'pr-10',
+              // `!`: the icon sits over the box, and a table cell's skin padding would put the
+              // (right-aligned) figure under it.
+              leftIcon && 'pl-9!',
+              rightIcon && 'pr-12!',
+              suffix && !rightIcon && 'pr-10!',
               fullWidth && 'w-full',
               className,
             )}

@@ -10,6 +10,12 @@ interface DocumentActionMenuProps {
   onEdit?: (document: UploadedDocument) => void;
   onReplace?: (document: UploadedDocument) => void;
   onMove?: (document: UploadedDocument) => void;
+  /** A file taken from the previous appraisal: "Don't use" stands in for Delete (same effect). */
+  isCarried?: boolean;
+  /** `sm` is the compact trigger for a file chip. */
+  size?: 'md' | 'sm';
+  /** The text of the edit entry ("Notes" by default). */
+  editLabel?: string;
 }
 
 const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
@@ -19,13 +25,30 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
   onEdit,
   onReplace,
   onMove,
+  isCarried = false,
+  size = 'md',
+  editLabel,
 }) => {
   const { t } = useTranslation('request');
 
   return (
-    <Menu as="div" className="relative inline-block text-left">
-      <MenuButton className="inline-flex items-center justify-center w-8 h-8 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors">
-        <Icon name="ellipsis-vertical" style="solid" className="w-5 h-5" />
+    // The compact trigger sits in a flex chip: an inline-block wrapper would put it on the baseline of
+    // its own line box (text height), a couple of pixels above the chip's centre line.
+    <Menu
+      as="div"
+      className={`relative text-left ${size === 'sm' ? 'inline-flex' : 'inline-block'}`}
+    >
+      <MenuButton
+        aria-label={t('docCard.chip.actions')}
+        className={`inline-flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors ${
+          size === 'sm' ? 'w-5 h-5' : 'w-8 h-8'
+        }`}
+      >
+        <Icon
+          name="ellipsis-vertical"
+          style="solid"
+          className={size === 'sm' ? 'w-3.5 h-3.5' : 'w-5 h-5'}
+        />
       </MenuButton>
 
       <MenuItems
@@ -58,7 +81,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
                 } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
               >
                 <Icon name="pen-to-square" style="regular" className="w-4 h-4" />
-                {t('documentActions.editDetails')}
+                {editLabel ?? t('documentActions.editDetails')}
               </button>
             )}
           </MenuItem>
@@ -102,11 +125,17 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               <button
                 onClick={() => onDelete(document)}
                 className={`${
-                  focus ? 'bg-red-100' : ''
-                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 last:rounded-b-lg`}
+                  focus ? (isCarried ? 'bg-violet-100' : 'bg-red-100') : ''
+                } group flex w-full items-center gap-3 px-4 py-2 text-sm ${
+                  isCarried ? 'text-violet-700 font-medium' : 'text-red-600'
+                } last:rounded-b-lg`}
               >
-                <Icon name="trash" style="regular" className="w-4 h-4" />
-                {t('documentActions.delete')}
+                <Icon
+                  name={isCarried ? 'eye-slash' : 'trash'}
+                  style="regular"
+                  className="w-4 h-4"
+                />
+                {isCarried ? t('carryForward.menu.dontUse') : t('documentActions.delete')}
               </button>
             )}
           </MenuItem>

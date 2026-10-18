@@ -15,13 +15,20 @@ import { useCancelLineItem } from '../hooks/useCancelLineItem';
 import { LineItemStatusBadge } from './LineItemStatusBadge';
 import { makeCancelWithReasonSchema, type CancelWithReasonFormValues } from '../schemas/followup';
 
+const formatRaisedAt = (d: string) => {
+  try {
+    return format(new Date(d), 'dd/MM/yyyy HH:mm');
+  } catch {
+    return d;
+  }
+};
+
 interface OpenFollowupBannerProps {
   /** The taskId of the raising task (checker's task) */
   raisingTaskId: string;
   /**
-   * Info-only variant: renders just the summary header (title + pending count), no expandable
-   * details table and no cancel controls. Used on the Decision screen; the Document Checklist
-   * page renders the full interactive banner.
+   * Info-only variant for the Decision screen: the same slim line and list, but no cancel
+   * links in any role. The Document Checklist page renders the interactive banner.
    */
   compact?: boolean;
 }
@@ -116,10 +123,16 @@ function FollowupDetail({
   followupId,
   raisingTaskId,
   currentUsername,
+  showMeta,
+  readOnly,
 }: {
   followupId: string;
   raisingTaskId: string;
   currentUsername: string | undefined;
+  /** Several requests are open, so each says who asked and when (a single one is in the banner line). */
+  showMeta: boolean;
+  /** Info-only: no cancel links, whoever is looking. */
+  readOnly: boolean;
 }) {
   const { t } = useTranslation('documentFollowup');
   const { data: followup, isLoading } = useGetFollowupById(followupId);
@@ -145,15 +158,9 @@ function FollowupDetail({
   // Backend stores RaisingUserId as the username, and the DTO's raisedBy.userId carries
   // that same value — compare against the current user's username, not their GUID id.
   const isRaisingUser =
-    !!currentUsername && currentUsername.toLowerCase() === followup.raisedBy.userId?.toLowerCase();
-
-  const formatDate = (d: string) => {
-    try {
-      return format(new Date(d), 'dd/MM/yyyy HH:mm');
-    } catch {
-      return d;
-    }
-  };
+    !readOnly &&
+    !!currentUsername &&
+    currentUsername.toLowerCase() === followup.raisedBy.userId?.toLowerCase();
 
   // Resolve display name with graceful fallback for null (backend lookup may be pending)
   const raisedByLabel = followup.raisedBy.displayName ?? followup.raisedBy.userId ?? 'Unknown';
@@ -175,79 +182,62 @@ function FollowupDetail({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <Icon name="clock" style="regular" className="size-3.5" />
-          {t('banner.raised')} {formatDate(followup.raisedAt)}
-          <span>{t('banner.raisedBy', { name: raisedByLabel })}</span>
+      {(showMeta || isRaisingUser) && (
+        <div className="mb-1 flex items-center justify-between gap-3 text-xs text-gray-500">
+          <span>
+            {showMeta &&
+              t('banner.byAt', { name: raisedByLabel, at: formatRaisedAt(followup.raisedAt) })}
+          </span>
+          {/* Cancel all — only visible to the user who raised the followup */}
+          {isRaisingUser && (
+            <button
+              type="button"
+              onClick={() => setCancelFollowupOpen(true)}
+              className="font-medium text-danger hover:underline"
+            >
+              {t('banner.cancelAll')}
+            </button>
+          )}
         </div>
-        {/* Cancel all — only visible to the user who raised the followup */}
-        {isRaisingUser && (
-          <button
-            type="button"
-            onClick={() => setCancelFollowupOpen(true)}
-            className="flex items-center gap-1.5 text-xs text-red-600 hover:text-red-700 font-medium px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
-          >
-            <Icon name="xmark" style="solid" className="size-3.5" />
-            {t('banner.cancelAll')}
-          </button>
-        )}
-      </div>
+      )}
 
-      {/* Line items table */}
-      <div className="overflow-hidden rounded-lg border border-amber-100">
-        <table className="w-full text-sm">
-          <thead className="bg-amber-50">
-            <tr>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                {t('columns.documentType')}
-              </th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                {t('columns.notes')}
-              </th>
-              <th className="text-left px-3 py-2 text-xs font-medium text-gray-600">
-                {t('columns.status')}
-              </th>
-              {/* Action column only rendered when viewer is the raising user */}
-              {isRaisingUser && <th className="px-3 py-2 w-10" />}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-amber-50 bg-white">
-            {followup.lineItems.map(item => (
-              <tr key={item.id}>
-                <td className="px-3 py-2.5 text-gray-700 font-medium">
-                  {getDocumentTypeName(documentTypes, item.documentType)}
-                </td>
-                <td className="px-3 py-2.5 text-gray-500 max-w-xs">
-                  <span className="line-clamp-2">{item.notes}</span>
-                  {(item.status === 'Declined' || item.status === 'Cancelled') && item.reason && (
-                    <span className="block text-xs text-red-500 mt-0.5">
-                      {t('page.reasonPrefix')} {item.reason}
-                    </span>
-                  )}
-                </td>
-                <td className="px-3 py-2.5">
-                  <LineItemStatusBadge status={item.status} />
-                </td>
-                {/* Per-item cancel — only for the raising user */}
-                {isRaisingUser && (
-                  <td className="px-3 py-2.5">
-                    {item.status === 'Pending' && (
-                      <button
-                        type="button"
-                        onClick={() => setCancelLineItemTarget(item.id)}
-                        className="p-1 rounded hover:bg-red-50 text-gray-400 hover:text-red-500 transition-colors"
-                        title={t('aria.cancelLineItem')}
-                      >
-                        <Icon name="xmark" style="solid" className="size-3.5" />
-                      </button>
-                    )}
-                  </td>
-                )}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {/* One compact row per document: name and code, the notes, the status and its action */}
+      <div className="grid gap-1 text-xs">
+        {followup.lineItems.map(item => (
+          <div
+            key={item.id}
+            className="grid grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5"
+          >
+            <span className="min-w-0 truncate">
+              <b className="font-semibold text-gray-800">
+                {getDocumentTypeName(documentTypes, item.documentType)}
+              </b>{' '}
+              <span className="text-xs text-gray-400">{item.documentType}</span>
+            </span>
+            <span className="min-w-0 text-gray-600">
+              <span className="line-clamp-2">{item.notes}</span>
+              {(item.status === 'Declined' || item.status === 'Cancelled') && item.reason && (
+                <span className="block text-danger">
+                  {t('page.reasonPrefix')} {item.reason}
+                </span>
+              )}
+            </span>
+            <span className="flex items-center gap-2">
+              <LineItemStatusBadge status={item.status} />
+              {/* Per-item cancel — only for the raising user, and only while it is still pending */}
+              {isRaisingUser && item.status === 'Pending' && (
+                <button
+                  type="button"
+                  onClick={() => setCancelLineItemTarget(item.id)}
+                  className="text-primary hover:underline"
+                  title={t('aria.cancelLineItem')}
+                >
+                  {t('banner.cancelItem')}
+                </button>
+              )}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Cancel followup modal */}
@@ -279,7 +269,8 @@ function FollowupDetail({
 export function OpenFollowupBanner({ raisingTaskId, compact = false }: OpenFollowupBannerProps) {
   const { t } = useTranslation('documentFollowup');
   const { data: followups = [], isLoading } = useOpenFollowupsForTask(raisingTaskId);
-  const [expanded, setExpanded] = useState(true);
+  // One slim line until the maker asks for the list
+  const [expanded, setExpanded] = useState(false);
   // Granular selector — avoids re-renders on unrelated auth store changes.
   // We compare by username because the backend stores/returns the raising user as username.
   const currentUsername = useAuthStore(s => s.user?.username);
@@ -291,56 +282,40 @@ export function OpenFollowupBanner({ raisingTaskId, compact = false }: OpenFollo
 
   const totalPending = openFollowups.reduce((sum, f) => sum + (f.pendingCount ?? 0), 0);
 
-  // Compact info-only variant: static summary header, no expand/table/cancel controls.
-  if (compact) {
-    return (
-      <div className="rounded-xl border border-amber-200 bg-amber-50 flex items-center gap-3 px-4 py-3">
-        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-          <Icon name="file-circle-exclamation" style="solid" className="size-4 text-amber-600" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-800">{t('banner.title')}</p>
-          <p className="text-xs text-amber-600 mt-0.5">
-            {t('banner.pendingItems', { n: totalPending })}
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // One request: who asked and when is in the line. Several: each says so in its own block.
+  const only = openFollowups.length === 1 ? openFollowups[0] : null;
+  const onlyBy = only ? (only.raisedBy.displayName ?? only.raisedBy.userId ?? 'Unknown') : '';
 
   return (
-    <div className="rounded-xl border border-amber-200 bg-amber-50 overflow-hidden">
-      {/* Banner header */}
+    <div
+      role="status"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-gray-700"
+    >
+      <b className="font-semibold text-amber-700">{t('banner.count', { n: totalPending })}</b>
+      <span>
+        {t('banner.waiting')}
+        {only && ` · ${t('banner.byAt', { name: onlyBy, at: formatRaisedAt(only.raisedAt) })}`}
+      </span>
       <button
         type="button"
         onClick={() => setExpanded(p => !p)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-amber-100/50 transition-colors"
+        aria-expanded={expanded}
+        className="font-medium text-primary hover:underline"
       >
-        <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-          <Icon name="file-circle-exclamation" style="solid" className="size-4 text-amber-600" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-amber-800">{t('banner.title')}</p>
-          <p className="text-xs text-amber-600 mt-0.5">
-            {t('banner.pendingItems', { n: totalPending })}
-          </p>
-        </div>
-        <Icon
-          name={expanded ? 'chevron-up' : 'chevron-down'}
-          style="solid"
-          className="size-4 text-amber-500 shrink-0"
-        />
+        {expanded ? t('banner.hide') : t('banner.show')}
       </button>
 
       {/* Expandable details */}
       {expanded && (
-        <div className="px-4 pb-4 border-t border-amber-100 pt-3 space-y-4">
+        <div className="grid w-full gap-3 border-t border-amber-200 pt-1.5">
           {openFollowups.map(f => (
             <FollowupDetail
               key={f.id}
               followupId={f.id}
               raisingTaskId={raisingTaskId}
               currentUsername={currentUsername}
+              showMeta={openFollowups.length > 1}
+              readOnly={compact}
             />
           ))}
         </div>

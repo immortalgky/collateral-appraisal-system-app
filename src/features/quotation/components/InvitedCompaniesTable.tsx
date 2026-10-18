@@ -22,7 +22,7 @@ const InvitedCompaniesTable = ({ companies }: InvitedCompaniesTableProps) => {
                 <div className="size-7 rounded-lg bg-teal-100 flex items-center justify-center">
                   <Icon name="building" style="solid" className="size-3.5 text-teal-600" />
                 </div>
-                <h2 className="text-sm font-semibold text-gray-700">
+                <h2 className="text-base font-semibold text-gray-700">
                   {t('invitedCompanies.title')} ({companies.length})
                 </h2>
               </div>

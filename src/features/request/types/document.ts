@@ -1,3 +1,6 @@
+/** The upload scope of everything the Request page's document card sends (see isUploadBusy). */
+export const REQUEST_DOCUMENT_UPLOADS = 'request-documents';
+
 export interface UploadedDocument {
   id?: string | null;
   titleId?: string | null;
@@ -8,6 +11,8 @@ export interface UploadedDocument {
   prefix: string | null;
   notes: string | null;
   filePath: string | null;
+  /** Where the file came from; 'PREV' = taken from the previous appraisal. Persisted. */
+  source?: string | null;
   createdWorkstation: string | null;
   isRequired: boolean;
   uploadedBy: string | null;
@@ -16,6 +21,8 @@ export interface UploadedDocument {
   file?: File;
   isUploading?: boolean;
   displayName?: string | null;
+  /** Size of a saved file, when the source says (the Document Checklist page's lists). */
+  fileSizeBytes?: number | null;
   /** Local-only stable row identity (used for UI keying when duplicates of a type can coexist). */
   rowId?: string;
 }

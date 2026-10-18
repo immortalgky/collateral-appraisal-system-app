@@ -250,6 +250,7 @@
   },
   "errors": {
     "failedToLoad": "Failed to load quotations",
+    "failedToLoadCompanies": "Couldn't load companies",
     "failedToLoadInvitations": "Failed to load quotation invitations",
     "unableToLoad": "Unable to load quotation invitation.",
     "unableToLoadQuotation": "Unable to load quotation. You may not have access to this resource.",
@@ -432,7 +433,6 @@
     "appraisalNo": "Appraisal No.",
     "propertyType": "Property Type",
     "address": "Address",
-    "loanType": "Loan Type",
     "requestDocuments": "Request Documents",
     "titleDocuments": "Title Documents",
     "remove": "Remove",
@@ -476,6 +476,7 @@
     "fewerFilters": "Fewer filters",
     "filtersActive": "active",
     "requestDate": "Request Date",
+    "today": "Today",
     "channel": "Channel",
     "channelAll": "All channels",
     "bankingSegment": "Banking Segment",
@@ -499,6 +500,7 @@
     "channelCol": "Channel",
     "properties": "Properties",
     "requestedAt": "Requested At",
+    "previouslyQuoted": "Previously Quoted",
     "selectAllHint": "Selected {{page}} on this page. {{total}} appraisals match your filters — refine filters or paginate to select more.",
     "maxDaysAll": "Set max appraisal duration (day) for all:",
     "maxDays": "Max appraisal duration (day):",
@@ -545,6 +547,15 @@
     "searchCompanyName": "Search company name...",
     "notParticipatingTitle": "Not Participating",
     "notParticipatingNoReason": "No reason provided."
+  },
+  "segment": {
+    "missing": "Missing {{segments}}",
+    "segmentSet": "Banking segments",
+    "sendBlockedTitle": "Cannot send: some invited companies do not cover every banking segment in this quotation",
+    "sendBlockedItem": "{{company}} - missing {{segments}}",
+    "sendBlockedHint": "Remove these companies, or remove the appraisals outside their segments.",
+    "noneSelectedHint": "Select appraisals to see which companies cover their banking segments.",
+    "noCoveringCompany": "No company covers all selected banking segments"
   },
   "role": {
     "Maker": "Maker",

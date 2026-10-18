@@ -157,7 +157,9 @@ export const ApprovalListPanel = ({ data }: { data: GetApprovalListResponse }) =
                 className={`px-3 py-2.5 ${member.isCurrentUser ? 'bg-blue-50/60' : ''}`}
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-900 truncate">{member.username}</span>
+                  <span className="text-sm text-gray-900 truncate" title={member.username}>
+                    {member.displayName || member.username}
+                  </span>
                   {member.isCurrentUser && (
                     <Badge variant="info" size="xs">
                       {t('approvalListSection.youBadge')}

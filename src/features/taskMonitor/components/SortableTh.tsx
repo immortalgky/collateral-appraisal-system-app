@@ -46,12 +46,14 @@ function SortableTh({
     'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
 
   if (!isSortable) {
-    return <th className={`${baseCls} ${className ?? ''}`.trim()}>{label}</th>;
+    return (
+      <th className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()}>{label}</th>
+    );
   }
 
   return (
     <th
-      className={`${baseCls} ${className ?? ''}`.trim()}
+      className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()}
       aria-sort={isActive ? (activeSortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
       <button

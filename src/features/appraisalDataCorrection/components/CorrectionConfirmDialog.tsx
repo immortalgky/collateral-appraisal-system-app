@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { formatDiffValue, groupDiff, type DiffEntry } from '../utils/formDiff';
+import { dateOnlyValue, formatDiffValue, groupDiff, type DiffEntry } from '../utils/formDiff';
 
 interface CorrectionConfirmDialogProps {
   isOpen: boolean;
@@ -51,10 +51,12 @@ const CorrectionConfirmDialog = ({
                     <div className="font-medium text-gray-700 mb-0.5">{entry.label}</div>
                     {entry.kind === 'changed' && (
                       <div className="flex items-center gap-2 text-gray-500">
-                        <span className="line-through">{formatDiffValue(entry.from)}</span>
+                        <span className="line-through">
+                          {formatDiffValue(dateOnlyValue(entry.key, entry.from))}
+                        </span>
                         <span aria-hidden="true">→</span>
                         <span className="text-gray-900 font-medium">
-                          {formatDiffValue(entry.to)}
+                          {formatDiffValue(dateOnlyValue(entry.key, entry.to))}
                         </span>
                       </div>
                     )}
@@ -63,7 +65,7 @@ const CorrectionConfirmDialog = ({
                         <span className="mr-2 font-semibold text-emerald-700">
                           {t('confirmDialog.rowAdded')}
                         </span>
-                        {formatDiffValue(entry.to)}
+                        {formatDiffValue(dateOnlyValue(entry.key, entry.to))}
                       </div>
                     )}
                     {entry.kind === 'removed' && (
@@ -71,7 +73,9 @@ const CorrectionConfirmDialog = ({
                         <span className="mr-2 font-semibold text-red-700">
                           {t('confirmDialog.rowRemoved')}
                         </span>
-                        <span className="line-through">{formatDiffValue(entry.from)}</span>
+                        <span className="line-through">
+                          {formatDiffValue(dateOnlyValue(entry.key, entry.from))}
+                        </span>
                       </div>
                     )}
                   </div>

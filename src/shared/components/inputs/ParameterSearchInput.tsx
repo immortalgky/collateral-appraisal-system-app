@@ -280,7 +280,7 @@ const ParameterSearchInput = forwardRef<HTMLInputElement, ParameterSearchInputPr
                 tabIndex={-1}
                 onClick={clearValue}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Clear selection"
+                aria-label={t('select.clearSelection')}
               >
                 <Icon style="solid" name="xmark" className="size-3.5" />
               </button>
@@ -297,56 +297,62 @@ const ParameterSearchInput = forwardRef<HTMLInputElement, ParameterSearchInputPr
               </div>
             )}
           </div>
-        </div>
 
-        {isOpen && (
-          <ul
-            ref={listRef}
-            id={`${inputId}-listbox`}
-            role="listbox"
-            aria-label={label}
-            className={clsx(
-              'absolute left-0 right-0 z-50 bg-white rounded-lg border border-gray-200 shadow-lg py-1 max-h-72 overflow-y-auto',
-              position === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
-            )}
-          >
-            {filtered.length === 0 ? (
-              <li className="px-3 py-3 text-sm text-gray-400 text-center select-none">
-                No results found
-              </li>
-            ) : (
-              filtered.map((opt, idx) => {
-                const isSelected = opt.value === value;
-                const isHighlighted = idx === highlightedIndex;
-                return (
-                  <li
-                    key={opt.id ?? opt.value}
-                    id={`${inputId}-option-${idx}`}
-                    role="option"
-                    aria-selected={isSelected}
-                    onMouseDown={e => {
-                      e.preventDefault();
-                      selectOption(opt);
-                    }}
-                    onMouseEnter={() => setHighlightedIndex(idx)}
-                    className={clsx(
-                      'flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors select-none',
-                      isHighlighted ? 'bg-gray-100 text-gray-900' : 'text-gray-700',
-                      isSelected && 'font-medium',
-                    )}
-                  >
-                    <span className="w-3.5 flex-shrink-0">
-                      {isSelected && (
-                        <Icon style="solid" name="check" className="size-3.5 text-gray-600" />
+          {isOpen && (
+            <ul
+              ref={listRef}
+              id={`${inputId}-listbox`}
+              role="listbox"
+              aria-label={label}
+              className={clsx(
+                'absolute left-0 right-0 z-50 bg-white dark:in-[.cas-form-grid]:bg-[color:var(--palette-surface)] rounded-lg border border-gray-200 dark:in-[.cas-form-grid]:border-[color:var(--palette-line)] shadow-lg py-1 max-h-72 overflow-y-auto',
+                position === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
+              )}
+            >
+              {filtered.length === 0 ? (
+                <li className="px-3 py-3 text-sm text-gray-400 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-3)] text-center select-none">
+                  {t('select.noResults')}
+                </li>
+              ) : (
+                filtered.map((opt, idx) => {
+                  const isSelected = opt.value === value;
+                  const isHighlighted = idx === highlightedIndex;
+                  return (
+                    <li
+                      key={opt.id ?? opt.value}
+                      id={`${inputId}-option-${idx}`}
+                      role="option"
+                      aria-selected={isSelected}
+                      onMouseDown={e => {
+                        e.preventDefault();
+                        selectOption(opt);
+                      }}
+                      onMouseEnter={() => setHighlightedIndex(idx)}
+                      className={clsx(
+                        'flex items-center gap-2 px-3 py-2 text-sm cursor-pointer transition-colors select-none',
+                        isHighlighted
+                          ? 'bg-gray-100 text-gray-900 dark:in-[.cas-form-grid]:bg-[color:var(--palette-surface-3)] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)]'
+                          : 'text-gray-700 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]',
+                        isSelected && 'font-medium',
                       )}
-                    </span>
-                    <span className="truncate">{`${opt.value} - ${opt.label}`}</span>
-                  </li>
-                );
-              })
-            )}
-          </ul>
-        )}
+                    >
+                      <span className="w-3.5 flex-shrink-0">
+                        {isSelected && (
+                          <Icon
+                            style="solid"
+                            name="check"
+                            className="size-3.5 text-gray-600 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-2)]"
+                          />
+                        )}
+                      </span>
+                      <span className="truncate">{`${opt.value} - ${opt.label}`}</span>
+                    </li>
+                  );
+                })
+              )}
+            </ul>
+          )}
+        </div>
 
         {error && <div className="mt-1 text-xs text-danger">{error}</div>}
       </div>

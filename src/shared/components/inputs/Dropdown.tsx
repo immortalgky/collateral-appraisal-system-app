@@ -91,6 +91,8 @@ interface DropdownBaseProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
    * visible rows, and shadowing it with a string union makes the whole interface stop extending.
    */
   compact?: boolean;
+  /** List the "Please select" entry first. Off for a control that always has a value. */
+  showPlaceholderOption?: boolean;
   filterWatchValues?: Record<string, unknown>;
   showValuePrefix?: boolean;
   /**
@@ -151,6 +153,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       filterWatchValues,
       showValuePrefix = true,
       compact = false,
+      showPlaceholderOption = true,
       otherField = false,
       otherTriggerValue = '99',
       otherText,
@@ -187,8 +190,10 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     }, [allOptions, filters, filterWatchValues]);
 
     const dropdownOptions = useMemo(() => {
-      return [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions];
-    }, [filteredOptions, resolvedPlaceholder]);
+      return showPlaceholderOption
+        ? [{ value: null, label: resolvedPlaceholder, id: '' }, ...filteredOptions]
+        : filteredOptions;
+    }, [filteredOptions, resolvedPlaceholder, showPlaceholderOption]);
 
     const selectedOption = useMemo(
       () => allOptions.find(opt => opt.value === value) ?? null,
@@ -396,7 +401,7 @@ const OtherInput = ({
             disabled={disabled}
             maxLength={maxLength}
             className={clsx(
-              'block w-full h-full bg-transparent focus:outline-none placeholder:text-gray-400',
+              'block w-full bg-transparent focus:outline-none placeholder:text-gray-400',
               compact ? 'text-xs pl-2 pr-7 py-1' : 'text-sm pl-3 pr-9 py-2',
               disabled ? 'text-gray-500 cursor-not-allowed' : 'text-gray-900',
             )}

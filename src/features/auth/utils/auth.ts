@@ -1,64 +1,51 @@
-function generateRandomString(length = 64) {
-  const charset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~';
-  let result = '';
-  const array = new Uint8Array(length);
-  window.crypto.getRandomValues(array);
-  for (let i = 0; i < array.length; i++) {
-    result += charset[array[i] % charset.length];
-  }
-  return result;
+import { leaveWithoutPrompt } from '@shared/api/forcedNavigation';
+
+/** `path` as a same-origin path+query+hash; anything that points elsewhere becomes `/`. */
+function sameOriginPath(path: string, origin: string): string {
+  const url = new URL(path, origin);
+  return url.origin === origin ? `${url.pathname}${url.search}${url.hash}` : '/';
 }
 
-async function generateCodeChallenge(verifier: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await window.crypto.subtle.digest('SHA-256', data);
-  const base64url = btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g, '-')
-    .replace(/\//g, '_')
-    .replace(/=+$/, '');
-  return base64url;
+const currentPath = () => {
+  const { pathname, search, hash } = window.location;
+  return `${pathname}${search}${hash}`;
+};
+
+/**
+ * The bare host name and the FQDN are cross-site to the API, so the Lax session cookie it sets
+ * would not be sent back from the other one (and its CORS answers may not cover it). The server
+ * always returns to VITE_APP_URL, so move to that origin first. Returns true when it navigated and
+ * the caller should do nothing more.
+ */
+export function hopToCanonicalOrigin(returnPath?: string): boolean {
+  let appOrigin: string;
+  try {
+    appOrigin = new URL(import.meta.env.VITE_APP_URL).origin;
+  } catch {
+    // Unset or malformed: there is no canonical origin to hop to, and throwing here would brick boot.
+    console.warn('VITE_APP_URL is not a valid URL; skipping the canonical-origin hop');
+    return false;
+  }
+  if (window.location.origin === appOrigin) return false;
+  const target = `${appOrigin}${sameOriginPath(returnPath ?? currentPath(), appOrigin)}`;
+  leaveWithoutPrompt(() => window.location.replace(target));
+  return true;
 }
 
-export async function redirectToLogin() {
-  const clientId = 'spa';
-  const baseApiUrl = import.meta.env.VITE_API_URL;
-  const baseAppUrl = import.meta.env.VITE_APP_URL;
-  const redirectUri = `${baseAppUrl}/callback`;
-  const authorizeUrl = `${baseApiUrl}/connect/authorize`;
+/**
+ * Start a fresh sign-in. The API owns the whole OIDC dance and the session cookie; this only sends
+ * the browser to it (a top-level navigation, never XHR) and says where to come back to.
+ *
+ * `returnPath` is where to land afterwards (a same-origin path, e.g. the page a signed-out user
+ * asked for); it defaults to the current location.
+ */
+export function redirectToLogin(returnPath?: string) {
+  const appOrigin = new URL(import.meta.env.VITE_APP_URL).origin;
+  if (hopToCanonicalOrigin(returnPath)) return;
+  const path = sameOriginPath(returnPath ?? currentPath(), appOrigin);
 
-  // The PKCE state/verifier below live in this origin's sessionStorage, but the server always sends
-  // the user back to VITE_APP_URL. Opened under another host name (e.g. the bare machine name
-  // instead of the FQDN), /callback can't find them and the user has to sign in twice. Hop to the
-  // canonical origin first.
-  const appOrigin = new URL(baseAppUrl).origin;
-  if (window.location.origin !== appOrigin) {
-    window.location.replace(`${appOrigin}/login`);
-    return;
-  }
-
-  const state = generateRandomString();
-  const codeVerifier = generateRandomString();
-  const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-  // Save to sessionStorage for later use in /callback
-  sessionStorage.setItem('pkce_code_verifier', codeVerifier);
-  sessionStorage.setItem('oauth_state', state);
-
-  const url = new URL(authorizeUrl);
-  url.searchParams.set('client_id', clientId);
-  url.searchParams.set('response_type', 'code');
-  url.searchParams.set('redirect_uri', redirectUri);
-  url.searchParams.set('scope', 'openid profile email offline_access');
-  url.searchParams.set('state', state);
-  url.searchParams.set('code_challenge', codeChallenge);
-  url.searchParams.set('code_challenge_method', 'S256');
-  // We only get here once AuthInitializer's silent /auth/refresh has already failed, so the session
-  // is genuinely over. prompt=login tells the server to drop its SSO cookie and show the password
-  // form instead of quietly issuing a new code off a surviving cookie — otherwise reopening the
-  // browser signs the user straight back in without credentials.
-  url.searchParams.set('prompt', 'login');
-
-  // Redirect the browser to login
-  window.location.href = url.toString();
+  // /login only exists to call this function; coming back to it would be a pointless extra hop.
+  const back = new URL(path, appOrigin).pathname === '/login' ? '/' : path;
+  const login = `${import.meta.env.VITE_API_URL}/auth/login?returnUrl=${encodeURIComponent(appOrigin + back)}`;
+  leaveWithoutPrompt(() => (window.location.href = login));
 }

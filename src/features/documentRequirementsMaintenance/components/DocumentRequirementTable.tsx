@@ -74,13 +74,13 @@ export default function DocumentRequirementTable({
   }
 
   return (
-    <table className="min-w-full divide-y divide-gray-200 text-sm">
+    <table className="min-w-full divide-y divide-gray-200 text-table">
       <thead className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
         <tr>
-          <th className="px-4 py-3">Collateral Type</th>
-          <th className="px-4 py-3">Purpose</th>
-          <th className="px-4 py-3">Documents</th>
-          <th className="px-4 py-3 text-right">Actions</th>
+          <th className="text-xs px-4 py-3 font-semibold">Collateral Type</th>
+          <th className="text-xs px-4 py-3 font-semibold">Purpose</th>
+          <th className="text-xs px-4 py-3 font-semibold">Documents</th>
+          <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100">

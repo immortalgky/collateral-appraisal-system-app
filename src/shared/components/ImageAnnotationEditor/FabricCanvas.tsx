@@ -60,6 +60,7 @@ export default function FabricCanvas({
   onCanvasReady,
   onSelectionChange,
   onImageLoaded,
+  onLoadError,
   pauseSnapshots,
   resumeSnapshots,
   saveSnapshot,
@@ -79,6 +80,8 @@ export default function FabricCanvas({
   // to list them as dependencies.
   const onImageLoadedRef = useRef(onImageLoaded);
   onImageLoadedRef.current = onImageLoaded;
+  const onLoadErrorRef = useRef(onLoadError);
+  onLoadErrorRef.current = onLoadError;
 
   // Initialize canvas
   useEffect(() => {
@@ -101,8 +104,13 @@ export default function FabricCanvas({
     canvas.on('selection:updated', emitSelection);
     canvas.on('selection:cleared', () => onSelectionChange(null));
 
+    // Set when this effect is cleaned up (the image changed, or the editor closed): the canvas is
+    // disposed then, and whatever is still on its way to it (the image load) must not touch it.
+    let disposed = false;
+
     // Load background image — delay slightly to ensure container has layout dimensions
     const loadImage = async () => {
+      if (disposed) return;
       let imgUrl: string;
       let shouldRevoke = false;
 
@@ -116,7 +124,18 @@ export default function FabricCanvas({
       }
 
       try {
-        const img = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+        let img: Awaited<ReturnType<typeof FabricImage.fromURL>>;
+        try {
+          img = await FabricImage.fromURL(imgUrl, { crossOrigin: 'anonymous' });
+        } catch (error) {
+          // Only a rejected load means "bad image". A failure after it is a bug in the editor and
+          // is left to surface as one. Once the canvas is gone, nobody is waiting for the answer.
+          if (!disposed) onLoadErrorRef.current?.(error);
+          return;
+        }
+        // The canvas can be gone by the time the image has loaded; a disposed Fabric canvas throws
+        // on setDimensions / renderAll
+        if (disposed) return;
 
         // Use container's current dimensions (flex layout should be resolved by now)
         const containerW = container.clientWidth;
@@ -148,7 +167,12 @@ export default function FabricCanvas({
     };
 
     // Wait a frame so the flex container is fully laid out
-    requestAnimationFrame(() => void loadImage());
+    const frame = requestAnimationFrame(() => {
+      loadImage().catch((error: unknown) => {
+        // Not a bad image (that went to onLoadError): the editor itself failed after the load
+        console.error('Image annotation editor failed after the image loaded:', error);
+      });
+    });
 
     // Resize handler
     const handleResize = () => {
@@ -172,6 +196,8 @@ export default function FabricCanvas({
     observer.observe(container);
 
     return () => {
+      disposed = true;
+      cancelAnimationFrame(frame);
       observer.disconnect();
       canvas.dispose();
       fabricRef.current = null;

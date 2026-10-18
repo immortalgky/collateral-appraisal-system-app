@@ -43,24 +43,10 @@ const RoleProtectedRoute = ({
   children,
 }: RoleProtectedRouteProps) => {
   const user = useAuthStore(s => s.user);
-  const isAuthenticated = useAuthStore(s => s.isAuthenticated);
 
-  /**
-   * A user that has not loaded YET is not a user without access.
-   *
-   * The store has no persist and `/auth/me` is fetched after the app mounts, so `user` is null on
-   * the first render of every cold load — a refresh, a bookmark, a link from a notification.
-   * Treating that as "denied" bounced fully entitled people to the fallback before their
-   * permissions had arrived.
-   *
-   * The wait is gated on `isAuthenticated`, and that distinction matters: `useCurrentUser`'s
-   * onError calls `setUser(null)`, which the store turns into `isAuthenticated: false`, and the
-   * query is `enabled: isAuthenticated` — so after a failed /auth/me it is disabled, `isLoading`
-   * is false, and ProtectedRoute takes neither its spinner branch nor its /login branch (the
-   * token is still in memory). Holding unconditionally there would leave a blank page forever.
-   * Authenticated and still loading → wait. Not authenticated → fall through and redirect.
-   */
-  if (!user && isAuthenticated) return null;
+  // No "still loading" case to wait for: AuthInitializer fetches /auth/me before anything renders
+  // and the store sets `user` and `isAuthenticated` together, so under ProtectedRoute `user` is
+  // always loaded. A missing user is therefore a real "no access", not a transient state.
 
   // Without `deniedPermission` this is an allow-list and everyone else is turned away, which is
   // the right shape for a route that was always gated. With it, the guard targets one audience.

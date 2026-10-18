@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface ActionBarProps {
   children: ReactNode;
@@ -28,11 +29,12 @@ const Right = ({ children }: { children: ReactNode }) => (
 const Divider = () => <div className="h-6 w-px bg-gray-200" aria-hidden="true" />;
 
 const UnsavedIndicator = ({ show }: { show: boolean }) => {
+  const { t } = useTranslation('common');
   if (!show) return null;
   return (
     <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-      Unsaved changes
+      {t('unsaved.badge')}
     </span>
   );
 };

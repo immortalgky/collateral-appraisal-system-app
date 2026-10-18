@@ -415,7 +415,7 @@ export const AdminCompanyQuotationDetailContent = ({
                   <div className="p-5 space-y-6">
                     {/* Section 1 — Appraisal Information */}
                     <section aria-label={t('aria.sectionAppraisalInfo')}>
-                      <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                      <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                         {t('sections.appraisalInformation')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4 text-sm">
@@ -441,7 +441,7 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 2 — Attached Documents (grouped by section, mirrors ext-company submit page) */}
                     {appraisalDocs.length > 0 && (
                       <section aria-label={t('aria.sectionAttachedDocs')}>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.attachDocument')}
                         </h2>
                         <div className="rounded-lg border border-gray-200 overflow-hidden">
@@ -454,16 +454,16 @@ export const AdminCompanyQuotationDetailContent = ({
                             </colgroup>
                             <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
                               <tr>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.type')}
                                 </th>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.fileName')}
                                 </th>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.uploadedAt')}
                                 </th>
-                                <th className="text-left px-3 py-2.5 font-semibold">
+                                <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.notes')}
                                 </th>
                               </tr>
@@ -513,7 +513,7 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 3 — Quotation Information — Appraisal Fee */}
                     {selectedItem && (
                       <section aria-label={t('aria.sectionQuotationInfo')}>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.quotationInformationFee')}
                         </h2>
                         <ReadOnlyFeeGrid item={selectedItem} />
@@ -523,7 +523,7 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 4 — Duration */}
                     {selectedItem && (
                       <section aria-label={t('aria.sectionDuration')}>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.duration')}
                         </h2>
                         <div className="grid grid-cols-2 gap-4">
@@ -550,7 +550,7 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 5 — Remark for this Appraisal */}
                     {selectedItem && (
                       <section aria-label={t('aria.sectionAppraisalRemark')}>
-                        <h2 className="text-sm font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
                           {t('sections.appraisalRemark')}
                         </h2>
                         <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">

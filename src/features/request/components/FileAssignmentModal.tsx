@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { Dropdown } from '@/shared/components/inputs';
 import type { UploadDocumentResponse } from '../api';
-import { useGetDocumentTypes } from '../api/documentTypes';
+import { formatFileSize } from '@/shared/utils/formatUtils';
+import { documentTypeLabel, useGetDocumentTypes } from '../api/documentTypes';
+import { useTitleLabel } from '../hooks/useTitleLabel';
+import { pickCarryForwardTitles } from '../utils/carryForward';
 
 interface FileAssignmentModalProps {
   isOpen: boolean;
@@ -34,9 +37,11 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
   onAssign,
 }) => {
   const { t } = useTranslation(['request', 'common']);
-  const { watch } = useFormContext();
-  const titles = watch('titles') || [];
-  const requestNumber = watch('requestNumber');
+  const { control } = useFormContext();
+  // useWatch re-renders this dialog alone; `watch` would re-render the whole page on every keystroke
+  const titles = useWatch({ control, name: 'titles', compute: pickCarryForwardTitles }) || [];
+  const titleLabels = useTitleLabel();
+  const labels = isOpen ? titleLabels(titles) : [];
   const { data: documentTypes = [], isLoading: isLoadingTypes } = useGetDocumentTypes('SUBMIT_DOC');
 
   const [assignments, setAssignments] = useState<Record<string, Partial<FileAssignment>>>({});
@@ -107,11 +112,6 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
     const validAssignments = Object.values(assignments).filter(isValidAssignment);
     onAssign(validAssignments);
     onClose();
-  };
-
-  const formatFileSize = (bytes: number) => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(1)} MB`;
   };
 
   const getFilePreview = (fileName: string, file?: File) => {
@@ -193,10 +193,10 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                       <Dropdown
                         showValuePrefix={false}
                         options={[
-                          { value: 'request', label: requestNumber || 'This request' },
-                          ...titles.map((title: any, index: number) => ({
+                          { value: 'request', label: t('moveDocument.requestLevelLabel') },
+                          ...titles.map((_title: unknown, index: number) => ({
                             value: `title-${index}`,
-                            label: title?.titleNumber || `Title ${index + 1}`,
+                            label: labels[index],
                           })),
                         ]}
                         value={
@@ -229,7 +229,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                         }
                         options={availableTypes.map(type => ({
                           value: type.code,
-                          label: type.name ?? type.code ?? '',
+                          label: documentTypeLabel(type),
                         }))}
                         value={assignment?.docType || ''}
                         onChange={value => {

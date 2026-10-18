@@ -23,7 +23,7 @@ export const FILTER_LABELS: Record<FilterField, string> = {
   approvedFrom: 'Approved Date From',
   approvedTo: 'Approved Date To',
   status: 'Status',
-  bankingSegment: 'Retail/IBG',
+  bankingSegment: 'Banking Segment',
   appraisalCompany: 'Company',
   internalStaff: 'Internal Staff',
   channel: 'Channel',

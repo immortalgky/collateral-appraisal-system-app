@@ -18,7 +18,7 @@ export interface User {
   roles: UserRole[];
   permissions: string[];
   /**
-   * Company ID for ExtAdmin users. Sourced from the `company_id` JWT claim.
+   * Company ID for ExtAdmin users. Sourced from `/auth/me`.
    * Only populated when the user belongs to an external company.
    */
   companyId?: string;
@@ -27,14 +27,9 @@ export interface User {
    * Local account, or admin password reset). Enforced by ProtectedRoute.
    */
   mustChangePassword?: boolean;
-}
-
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  user: User;
-  token: string;
+  /**
+   * End of the account's access window, in the server's local time with no zone suffix — only
+   * temporary-access accounts have one. Sourced from `/auth/me`.
+   */
+  accessExpiresAt?: string | null;
 }

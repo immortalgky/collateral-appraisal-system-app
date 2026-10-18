@@ -35,8 +35,7 @@ export const quotationKeys = {
   details: () => [...quotationKeys.all, 'detail'] as const,
   detail: (id: string) => [...quotationKeys.details(), id] as const,
   myInvitations: (params: Record<string, unknown>) => ['my-invitations', params] as const,
-  drafts: (bankingSegment?: string) =>
-    [...quotationKeys.all, 'drafts', bankingSegment ?? ''] as const,
+  drafts: () => [...quotationKeys.all, 'drafts'] as const,
   activityLog: (id: string) => [...quotationKeys.detail(id), 'activity-log'] as const,
 };
 
@@ -263,7 +262,7 @@ export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
 // ─── POST /quotations/start-from-task ────────────────────────────────────────
 
 /**
- * Start a new IBG quotation linked to the current admin workflow task.
+ * Start a new quotation linked to the current admin workflow task.
  * Does NOT complete the task — admin keeps monitoring from the task page.
  */
 export const useStartQuotationFromTask = () => {
@@ -594,7 +593,7 @@ export const useCreateQuotation = () => {
  */
 export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, enabled = true) => {
   return useQuery({
-    queryKey: ['eligible-companies', loanType],
+    queryKey: ['eligible-companies', 'raw', loanType],
     queryFn: async () => {
       const { data } = await axios.get('/companies/eligible', {
         params: loanType ? { loanType } : undefined,
@@ -607,6 +606,7 @@ export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, ena
         contactPerson?: string;
         phone?: string;
         email?: string;
+        loanTypes?: string[];
       }>;
     },
     enabled: enabled,
@@ -682,19 +682,17 @@ export const useDeclineInvitation = (quotationId: string) => {
   });
 };
 
-// ─── v2: GET /quotations/drafts?bankingSegment={seg} ─────────────────────────
+// ─── v2: GET /quotations/drafts ───────────────────────────────────────────────
 
 /**
  * Fetch the current admin's Draft quotations for the entry-modal picker.
  * Allows admin to add an appraisal to an existing Draft instead of creating new.
  */
-export const useGetMyDraftsForAssembly = (bankingSegment?: string, enabled = true) => {
+export const useGetMyDraftsForAssembly = (enabled = true) => {
   return useQuery({
-    queryKey: quotationKeys.drafts(bankingSegment),
+    queryKey: quotationKeys.drafts(),
     queryFn: async (): Promise<QuotationDraftSummaryDto[]> => {
-      const { data } = await axios.get('/quotations/drafts', {
-        params: bankingSegment ? { bankingSegment } : undefined,
-      });
+      const { data } = await axios.get('/quotations/drafts');
       return data.drafts ?? data ?? [];
     },
     enabled: enabled,
@@ -726,9 +724,14 @@ export const useSendQuotation = (quotationId: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+    },
+    // A rejected Send (e.g. SEGMENT_COVERAGE_MISMATCH) means the draft changed since it was loaded,
+    // so refetch to show the server's current Segment Set / per-company coverage. (onSuccess already
+    // covers the detail through `all`.)
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
     },
   });
 };

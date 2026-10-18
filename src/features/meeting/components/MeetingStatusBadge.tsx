@@ -37,7 +37,7 @@ const MeetingStatusBadge = ({ status, size = 'sm' }: MeetingStatusBadgeProps) =>
   return (
     <span
       className={clsx(
-        'inline-flex items-center gap-1.5 rounded-full font-medium',
+        'inline-flex items-center gap-1.5 whitespace-nowrap rounded-full font-medium',
         PILL_CLASS,
         SIZE_STYLES[size],
       )}

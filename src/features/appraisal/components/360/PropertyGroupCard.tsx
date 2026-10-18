@@ -38,7 +38,7 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
           <Icon name="layer-group" style="solid" className="w-3.5 h-3.5 text-purple-500" />
         </div>
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-gray-900">
             {group.name || t('view360.groupCard.groupFallback', { n: group.groupNumber ?? '' })}
           </h3>
           {group.description && <p className="text-xs text-gray-500">{group.description}</p>}
@@ -122,7 +122,7 @@ const PropertyGroupCard = ({ group, onPropertyClick }: PropertyGroupCardProps) =
                     <th className="px-4 py-2.5 text-xs font-medium text-gray-500 uppercase">
                       {t('view360.groupCard.columns.location')}
                     </th>
-                    <th className="px-6 py-2.5 w-12" />
+                    <th className="text-xs px-6 py-2.5 w-12 font-semibold" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">

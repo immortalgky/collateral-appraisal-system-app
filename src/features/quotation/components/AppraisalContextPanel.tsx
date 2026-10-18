@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { AppraisalSummaryDto, SharedDocumentEntryDto } from '../schemas/quotation';
 import { useRemoveAppraisalFromDraft } from '../api/quotation';
+import { SegmentChips } from './SegmentBadges';
 import SharedDocumentViewer from './SharedDocumentViewer';
 
 interface AppraisalContextPanelProps {
@@ -152,8 +153,10 @@ const AppraisalContextPanel = ({
                         <p className="font-medium text-gray-800">{ap.address ?? '—'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-400">{t('appraisalPanel.loanType')}</span>
-                        <p className="font-medium text-gray-800">{ap.loanType ?? '—'}</p>
+                        <span className="text-gray-400">{t('picker.bankingSegmentCol')}</span>
+                        <p className="font-medium text-gray-800">
+                          <SegmentChips segments={[ap.bankingSegment]} />
+                        </p>
                       </div>
                     </div>
 

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -31,7 +32,11 @@ import {
   useSaveAssignmentDraft,
 } from '../api/administration';
 import { useGetQuotationById } from '@/features/quotation/api/quotation';
-import { assignmentFormDefaults, type AssignmentFormType, useAssignmentFormSchema, } from '../schemas/administration';
+import {
+  assignmentFormDefaults,
+  type AssignmentFormType,
+  useAssignmentFormSchema,
+} from '../schemas/administration';
 import type { ExternalCompany, InternalStaff } from '../types/administration';
 
 import SearchStaffModal from '../components/SearchStaffModal';
@@ -62,7 +67,11 @@ const AdministrationPage = () => {
   const currentUser = useAuthStore(state => state.user);
 
   // Fetch request data to get bankingSegment for company filtering and facilityLimit for routing constraints
-  const { data: requestData } = useGetRequestById(requestId ?? '');
+  const {
+    data: requestData,
+    isLoading: isRequestLoading,
+    isError: isRequestError,
+  } = useGetRequestById(requestId ?? '');
   const bankingSegment = (requestData as any)?.detail?.loanDetail?.bankingSegment as
     | string
     | undefined;
@@ -420,7 +429,7 @@ const AdministrationPage = () => {
           toast.success(t('administration.toasts.assignmentCreated'));
           // The form is still dirty after assigning; skip the unsaved-changes guard for this redirect.
           skipWarning();
-          navigate('/tasks');
+          navigate(taskListUrl());
         },
         onError: (error: any) => {
           toast.error(error.apiError?.detail || t('administration.toasts.assignmentFailed'));
@@ -1409,6 +1418,9 @@ const AdministrationPage = () => {
             requestId={requestId}
             workflowInstanceId={workflowInstanceId ?? undefined}
             bankingSegment={bankingSegment}
+            isSegmentLoading={isRequestLoading}
+            // A failed background refetch keeps the last known data, so it must not blank the segment.
+            isSegmentError={isRequestError && !requestData}
             assignmentType={
               assignmentType
                 ? assignmentType.charAt(0).toUpperCase() + assignmentType.slice(1)

@@ -100,7 +100,7 @@ const MarketComparableListingPage = () => {
     <PageReadOnlyContext.Provider value={isReadOnly}>
       <div>
         <div>
-          <h3 className="text-sm font-semibold text-gray-900">Market Comparables</h3>
+          <h3 className="text-base font-semibold text-gray-900">Market Comparables</h3>
           <p className="text-xs text-gray-500 mt-0.5">
             {items.length} comparable{items.length !== 1 ? 's' : ''} linked to this appraisal
           </p>

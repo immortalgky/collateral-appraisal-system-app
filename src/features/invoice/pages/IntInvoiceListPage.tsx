@@ -71,7 +71,7 @@ const SortableTh = ({
   return (
     <th
       onClick={() => onSort(field)}
-      className={`font-medium px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
+      className={`text-xs font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
         isActive ? 'text-primary' : 'text-gray-600'
       }`}
     >
@@ -335,7 +335,7 @@ const IntInvoiceListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-sm font-semibold text-gray-900">{t('list.title')}</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
             <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
               {totalCount}
             </span>
@@ -439,7 +439,7 @@ const IntInvoiceListPage = () => {
       {/* Table card */}
       <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-sm table-fixed">
+          <table className="w-full text-table table-fixed">
             <colgroup>
               {tab === 'unpaid' && <col className="w-10" />}
               <col className="w-48" />
@@ -454,7 +454,7 @@ const IntInvoiceListPage = () => {
             <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
               <tr className="border-b border-gray-200">
                 {tab === 'unpaid' && (
-                  <th className="text-left px-4 py-2.5">
+                  <th className="text-xs text-left px-4 py-2.5 font-semibold">
                     <input
                       type="checkbox"
                       checked={headerAllSelected}
@@ -495,7 +495,7 @@ const IntInvoiceListPage = () => {
                 <SortableTh field="status" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.status')}
                 </SortableTh>
-                <th className="px-4 py-2.5" />
+                <th className="text-xs px-4 py-2.5 font-semibold" />
               </tr>
             </thead>
             <tbody
@@ -709,7 +709,7 @@ const IntInvoiceListPage = () => {
         {/* Pinned grand-total row — sits below the scroll area, aligned to table columns */}
         {items.length > 0 && (
           <div className="shrink-0 border-t-2 border-gray-300 bg-gray-50">
-            <table className="w-full text-sm table-fixed">
+            <table className="w-full text-table table-fixed">
               <colgroup>
                 {tab === 'unpaid' && <col className="w-10" />}
                 <col className="w-48" />

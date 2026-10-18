@@ -145,11 +145,7 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     isError: isUnitsError,
     refetch: refetchUnits,
   } = useGetProjectUnits(appraisalId);
-  const {
-    data: pricingData,
-    isError: isPricingError,
-    refetch: refetchPricing,
-  } = useGetProjectPricingAssumptions(appraisalId);
+  const { data: pricingData } = useGetProjectPricingAssumptions(appraisalId);
   const {
     data: landData,
     isError: isLandError,
@@ -192,7 +188,7 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
           />
         );
       case 'unit-listing':
-        return isUnitsError ? (
+        return isUnitsError && unitsData === undefined ? (
           <DataErrorState variant="inline" onRetry={refetchUnits} />
         ) : (
           <UnitListingTab projectType={projectType} />
@@ -216,11 +212,9 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
           <TowerListingTab />
         );
       case 'unit-price':
-        return isPricingError ? (
-          <DataErrorState variant="inline" onRetry={refetchPricing} />
-        ) : (
-          <UnitPriceTab projectType={projectType} />
-        );
+        // Not gated on the assumption query: the tab handles its failure itself (the Calculated view
+        // shows the error with a retry; the Imported view does not need the assumption at all).
+        return <UnitPriceTab projectType={projectType} />;
       case 'markets':
         return <MarketsTab />;
       case 'gallery':

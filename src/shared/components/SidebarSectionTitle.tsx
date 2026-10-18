@@ -23,7 +23,7 @@ export default function SidebarSectionTitle({
       <span className="w-7 flex justify-center shrink-0">
         <Icon name={icon} style="solid" className={clsx('size-2.5', iconColor)} />
       </span>
-      <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">
+      <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider whitespace-nowrap">
         {title}
       </span>
     </div>

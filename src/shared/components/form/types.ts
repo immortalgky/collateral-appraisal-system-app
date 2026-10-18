@@ -410,6 +410,12 @@ export interface FieldArrayField extends BaseFormField {
   minItems?: number;
   /** Maximum number of items (maps to z.array().max()) */
   maxItems?: number;
+  /**
+   * Rows this says are untouched are not validated and do not count toward `minItems`: a table that
+   * starts with one empty row would otherwise fail on a row that is never sent. The errors of the
+   * other rows keep their own positions (a skipped row in between does not shift them).
+   */
+  skipRow?: (row: unknown) => boolean;
 }
 
 // =============================================================================

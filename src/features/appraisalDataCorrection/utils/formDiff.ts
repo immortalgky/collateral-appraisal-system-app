@@ -1,3 +1,6 @@
+import { toNumber, toStoredUnits } from '@/features/pricingAnalysis/domain/calculation';
+import * as fieldConfigs from '@/features/appraisal/configs/fields';
+import * as generatedFields from '../configs/generatedFields';
 import { humanize, labelForTable, labelOrHumanized } from '../configs/fieldLabels';
 
 /**
@@ -33,8 +36,59 @@ const isBlank = (v: unknown) => v === null || v === undefined || v === '';
 /** Dotted path without a leading dot for top-level keys. */
 const join = (path: string, key: string) => (path ? `${path}.${key}` : key);
 
-/** Identity and derived members: never something the admin typed, so never a difference. */
-const SKIPPED_KEYS = new Set(['id', 'reason', 'scheduleEntries']);
+/**
+ * Never something the admin typed, so never a difference: identity, derived members, and the
+ * depreciation table's average %/year column, which the table computes as it opens (the API has no
+ * such field) — absent from the record and present on screen, so every correction listed it.
+ */
+const SKIPPED_KEYS = new Set([
+  'id',
+  'reason',
+  'scheduleEntries',
+  'totalDepreciationPercentPerYear',
+]);
+
+/**
+ * Postcodes the location pickers look up from the sub-district beside them as the page opens; the
+ * property stores none. Skipped only next to that sub-district, so a postcode a form does store is
+ * still compared.
+ */
+const LOOKED_UP_FROM: Record<string, string> = {
+  postcode: 'subDistrict',
+  dopaPostcode: 'dopaSubDistrict',
+};
+
+/**
+ * The building depreciation table's figures (rows and their periods) at the places the record keeps
+ * them: money is decimal(18,2), area and percentages decimal(18,4) / (7,4). The table recomputes them
+ * on screen in floating point (÷ area, × %, 3 × 1.1 = 3.3000000000000003), so without this 7754.93
+ * would read as changed to 7754.9325 on every correction although the database stores 7754.93 again.
+ * Compared — and shown — as they will be stored.
+ */
+const STORED_PLACES: Record<string, number> = {
+  pricePerSqMBeforeDepreciation: 2,
+  priceBeforeDepreciation: 2,
+  priceDepreciation: 2,
+  priceAfterDepreciation: 2,
+  pricePerSqMAfterDepreciation: 2,
+  area: 4,
+  depreciationYearPct: 4,
+  totalDepreciationPct: 4,
+  depreciationPerYear: 4,
+};
+
+/**
+ * A depreciation-table figure as it will be stored, for the dialog: fixed to the column's places, the
+ * way the audit history prints the same decimal. Null when the field is not such a figure or the value
+ * is blank or not a number — the caller then shows the value as it stands.
+ */
+function asStored(key: string, path: string, value: unknown): string | null {
+  const places = /(^|\.)depreciationDetails\[/.test(path) ? STORED_PLACES[key] : undefined;
+  if (places === undefined || (typeof value !== 'number' && typeof value !== 'string')) return null;
+  const n = typeof value === 'string' && value.trim() === '' ? NaN : toNumber(value, NaN);
+  if (Number.isNaN(n)) return null;
+  return (toStoredUnits(n, places) / 10 ** places).toFixed(places);
+}
 
 /**
  * The location selectors keep a geocode beside the name they show. The codes are what gets sent,
@@ -70,6 +124,97 @@ const sameScalar = (a: unknown, b: unknown): boolean => {
 const isValueList = (list: unknown[]) => list.every(v => !isObject(v) && !Array.isArray(v));
 
 const asList = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+
+/** The names of the `type: 'date-input'` fields declared in a config module's field arrays. */
+const dateInputNames = (configs: object): string[] =>
+  Object.values(configs)
+    .filter(Array.isArray)
+    .flat()
+    .filter((f: { type?: string }) => f?.type === 'date-input')
+    .map((f: { name: string }) => f.name.toLowerCase());
+
+/**
+ * The names of the fields the forms edit as a date with no time, read off the field configs (the
+ * `type: 'date-input'` ones, in the property forms and in the generated vehicle / vessel forms) so a
+ * new date field needs no entry here. A value stored with a time part (older rows kept the date-time
+ * picker's) reads as the date only wherever a correction lists it.
+ */
+const DATE_ONLY_FIELDS = new Set([
+  ...dateInputNames(fieldConfigs),
+  ...dateInputNames(generatedFields),
+  // Date fields RentalInfoForm draws by hand (a DatePickerInput, or a formatted cell), which no
+  // config declares. Add a field here when a property form renders a date outside configs/fields.ts.
+  'atyear', // upFrontEntries[].atYear — the date an advance rent falls due
+  'contractstart', // scheduleEntries[].contractStart
+  'contractend', // scheduleEntries[].contractEnd
+]);
+
+/**
+ * Collections with a date-only column. The audit logs an added or removed row of one as a single
+ * string of its cells ("2026-04-01T00:00:00, 300000") under the row's path, so the date has to be
+ * found inside the string. Add a collection here when its rows carry a date-only field.
+ */
+const DATE_ONLY_ROW_COLLECTIONS = new Set(['upfrontentries']);
+
+/**
+ * `v` as dd/MM/yyyy when `field` is a date-only field and `v` is an ISO date or date-time; otherwise `v`. The
+ * audit names the field with its table and in PascalCase ("Building.ConstructionLicenseExpirationDate"),
+ * the form diff by its path in camelCase ("rentalInfo.firstYearStartDate"), so the match takes the
+ * last segment, whole and ignoring case: a name that merely ends the same way is left alone.
+ */
+export function dateOnlyValue<T>(field: string, v: T): T | string {
+  if (typeof v !== 'string') return v;
+  // A whole row's summary: every ISO date-time in it, as written. A truncated one ("…T00:00:0") counts.
+  if (isDateOnlyRow(field))
+    return v.replace(
+      /(\d{4})-(\d{2})-(\d{2})T[\d:.]*(?:Z|[+-]\d{2}:?\d{2})?/g,
+      (_, y, m, d) => `${d}/${m}/${y}`,
+    );
+  if (!isDateOnlyField(field)) return v;
+  // The date as written, not converted to the browser's zone: the audit and the form both write the
+  // local date with its offset, and a conversion could move it a day.
+  const m = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(v);
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : v;
+}
+
+/** Is `field` the path of a row of a collection with a date-only column ("RentalInfo.UpFrontEntries[2]")? */
+function isDateOnlyRow(field: string): boolean {
+  const segment = field.split('.').pop()!;
+  return (
+    /\[\d+\]/.test(segment) &&
+    DATE_ONLY_ROW_COLLECTIONS.has(segment.replace(/[[:].*$/, '').toLowerCase())
+  );
+}
+
+/**
+ * A change of a date-only field whose two sides read as the same day: the audit logs a time-only
+ * change of what the form shows as a date, and a list of changes has no use for "01/01/2025 → 01/01/2025".
+ */
+export function isSameDayChange(field: string, from: unknown, to: unknown): boolean {
+  if (typeof from !== 'string' || typeof to !== 'string' || from === '' || to === '') return false;
+  return isDateOnlyField(field) && dateOnlyValue(field, from) === dateOnlyValue(field, to);
+}
+
+/** Is `field` (a bare name, a form path or an audit "Table.Name") one of the date-only fields? */
+function isDateOnlyField(field: string): boolean {
+  const name = field
+    .split('.')
+    .pop()!
+    .replace(/[[:].*$/, '')
+    .toLowerCase();
+  return DATE_ONLY_FIELDS.has(name);
+}
+
+/**
+ * What a value is compared as. A date-only field is its date, as written, so the same day re-picked
+ * with another time or offset ("…T09:30:00+07:00" against "…T00:00:00+07:00") is not a change the
+ * correction lists; anything else compares as it stands.
+ */
+function comparable(field: string, v: unknown): unknown {
+  if (typeof v !== 'string' || !isDateOnlyField(field)) return v;
+  const m = /^(\d{4}-\d{2}-\d{2})(?:T|$)/.exec(v);
+  return m ? m[1] : v;
+}
 
 /** How a value reads in the dialog; the one place it is decided. */
 export function formatDiffValue(v: unknown): string {
@@ -161,6 +306,68 @@ function pairRows(table: string, before: unknown[], after: unknown[]): RowPair[]
   return pairs;
 }
 
+/**
+ * Whether the rows kept from before are now in a different relative order, or a new row was put
+ * ahead of a kept one. Rows only added at the end or removed do not change the order.
+ */
+function orderChanged(before: unknown[], pairs: RowPair[]): boolean {
+  let previous = -1;
+  let sawNew = false;
+  for (const pair of pairs) {
+    if (pair.after === undefined) continue;
+    if (pair.before === undefined) {
+      sawNew = true;
+      continue;
+    }
+    const index = before.indexOf(pair.before);
+    if (sawNew || index < previous) return true;
+    previous = index;
+  }
+  return false;
+}
+
+/**
+ * Both sides of a title-order entry, by number. On the old side a number held by more than one
+ * title gets " (2)", " (3)"… on its later occurrences. On the new side a title whose number did not
+ * change keeps its old label, so swapping two titles that share a number still reads as a change; a
+ * renumbered or new title shows its new number, with the next suffix not already used on that side.
+ * The audit (SnapshotDiff.TitleOrder) labels the same way.
+ */
+function orderLabels(before: unknown[], pairs: RowPair[]): { from: string[]; to: string[] } {
+  const numberOf = (row: unknown) =>
+    isObject(row) && !isBlank(row.titleNumber) ? String(row.titleNumber) : '—';
+  const withSuffix = (no: string, n: number) => (n === 1 ? no : `${no} (${n})`);
+
+  const seen = new Map<string, number>();
+  const labelOf = new Map<unknown, string>();
+  const from = before.map(row => {
+    const no = numberOf(row);
+    const n = (seen.get(no) ?? 0) + 1;
+    seen.set(no, n);
+    const text = withSuffix(no, n);
+    labelOf.set(row, text);
+    return text;
+  });
+
+  const kept = pairs.filter(pair => pair.after !== undefined);
+  const carried = (pair: RowPair) =>
+    pair.before !== undefined && numberOf(pair.before) === numberOf(pair.after)
+      ? labelOf.get(pair.before)
+      : undefined;
+  const used = new Set(kept.map(carried).filter(Boolean));
+  const to = kept.map(pair => {
+    const label = carried(pair);
+    if (label !== undefined) return label;
+    const no = numberOf(pair.after);
+    let n = 1;
+    while (used.has(withSuffix(no, n))) n += 1;
+    const text = withSuffix(no, n);
+    used.add(text);
+    return text;
+  });
+  return { from, to };
+}
+
 /** "#1234" for a title (its number), "#3" for the third row of anything else. */
 function rowName(table: string, row: unknown, position: number): string {
   if (table === 'titles' && isObject(row) && !isBlank(row.titleNumber)) {
@@ -170,12 +377,15 @@ function rowName(table: string, row: unknown, position: number): string {
 }
 
 /** The row in a line, for a row added or removed as a whole: its first few filled-in cells. */
-function summarize(row: unknown): string {
+function summarize(row: unknown, path: string): string {
   if (!isObject(row)) return formatDiffValue(row);
   const cells = Object.entries(row)
     .filter(([k, v]) => !SKIPPED_KEYS.has(k) && !isObject(v) && !Array.isArray(v) && !isBlank(v))
     .slice(0, 4)
-    .map(([k, v]) => `${labelOrHumanized(k)} ${formatDiffValue(v)}`);
+    .map(
+      ([k, v]) =>
+        `${labelOrHumanized(k)} ${asStored(k, path, v) ?? formatDiffValue(dateOnlyValue(k, v))}`,
+    );
   return cells.length > 0 ? cells.join(' · ') : '—';
 }
 
@@ -203,8 +413,24 @@ function diffArray(
   const table = labelForTable(key);
   const nested = ctx.group !== '';
   const group = nested ? ctx.group : table;
+  const pairs = pairRows(key, before, after);
 
-  for (const pair of pairRows(key, before, after)) {
+  // Title order is saved (the first title is what LOS and AS400 take), so a move is a change of
+  // its own: one entry for the whole list rather than every row reading as edited.
+  // Not when both sides read the same (a title replaced by a new one with the same number, in place):
+  // the added and removed rows already say what happened.
+  const order = key === 'titles' && orderChanged(before, pairs) ? orderLabels(before, pairs) : null;
+  if (order && order.from.join('\u0000') !== order.to.join('\u0000')) {
+    out.push({
+      key: `${join(ctx.path, key)}:order`,
+      group,
+      label: [...ctx.labels, labelOrHumanized('titleOrder')].join(' · '),
+      kind: 'changed',
+      ...order,
+    });
+  }
+
+  for (const pair of pairs) {
     const row = pair.before ?? pair.after;
     const name = rowName(key, row, pair.position);
     // Under a table title the row is just "#3"; inside another table's row it says which table.
@@ -222,7 +448,7 @@ function diffArray(
         group,
         label: labels.join(' · '),
         kind: added ? 'added' : 'removed',
-        ...(added ? { to: summarize(pair.after) } : { from: summarize(pair.before) }),
+        ...(added ? { to: summarize(pair.after, path) } : { from: summarize(pair.before, path) }),
       });
     }
   }
@@ -233,8 +459,11 @@ function diffObject(before: Obj, after: Obj, ctx: Context, out: DiffEntry[]) {
 
   for (const key of keys) {
     if (SKIPPED_KEYS.has(key) || NAME_MIRRORS.has(key) || key.startsWith('_')) continue;
-    const a = before[key];
-    const b = after[key];
+    const lookedUpFrom = LOOKED_UP_FROM[key];
+    if (lookedUpFrom !== undefined && (lookedUpFrom in before || lookedUpFrom in after)) continue;
+    // A depreciation-table figure reads as it will be stored; anything else as it stands.
+    const a = asStored(key, ctx.path, before[key]) ?? before[key];
+    const b = asStored(key, ctx.path, after[key]) ?? after[key];
 
     if (Array.isArray(a) || Array.isArray(b)) {
       diffArray(key, asList(a), asList(b), ctx, out);
@@ -245,7 +474,7 @@ function diffObject(before: Obj, after: Obj, ctx: Context, out: DiffEntry[]) {
         { ...ctx, labels: [...ctx.labels, humanize(key)], path: join(ctx.path, key) },
         out,
       );
-    } else if (!sameScalar(a, b)) {
+    } else if (!sameScalar(comparable(key, a), comparable(key, b))) {
       const nameKey = NAME_OF[key];
       const showName = nameKey !== undefined && (nameKey in before || nameKey in after);
       out.push({

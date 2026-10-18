@@ -107,12 +107,12 @@ function SortableTh({
   const baseCls = 'px-4 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
 
   if (!isSortable) {
-    return <th className={`${baseCls} ${className ?? ''}`.trim()} title={fullLabel}>{label}</th>;
+    return <th className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()} title={fullLabel}>{label}</th>;
   }
 
   return (
     <th
-      className={`${baseCls} ${className ?? ''}`.trim()}
+      className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()}
       title={fullLabel}
       aria-sort={isActive ? (activeSortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
     >
