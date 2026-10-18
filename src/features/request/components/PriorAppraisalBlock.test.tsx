@@ -39,11 +39,13 @@ function Harness({
   round?: number | null;
   locked?: boolean;
 }) {
-  const methods = useForm({ defaultValues: { purpose, detail: { ...detail } } });
+  const methods = useForm({
+    defaultValues: { purpose, detail: { ...detail }, meta: { priorLocked: locked } },
+  });
   const block = (
     <FormReadOnlyContext.Provider value={readOnly}>
       <FormProvider {...methods}>
-        <PriorAppraisalBlock locked={locked} />
+        <PriorAppraisalBlock />
       </FormProvider>
     </FormReadOnlyContext.Provider>
   );

@@ -116,13 +116,15 @@ function Pill({ tone, children }: { tone: 'green' | 'yellow' | 'red'; children: 
  *    that report as the request's prior appraisal instead of starting a new one.
  * Both share the title drawer's lookups (and cache). Informational only: they fail open and show
  * nothing for a title with an incomplete key, a miss, an error or an answer still pending, nor on a
- * submitted or read-only request. Report numbers are plain text. No value is shown: values belong
- * to a whole appraisal.
+ * submitted or read-only request. The amber card is also left out where the prior is locked (an
+ * Initiate draft): nothing there can be picked. Report numbers are plain text. No value is shown:
+ * values belong to a whole appraisal.
  */
 export default function PriorAppraisalSummary() {
   const { t } = useTranslation('request');
   const readOnly = useFormReadOnly();
   const submitted = !!useWatch({ name: 'meta.isSubmitted' });
+  const priorLocked = !!useWatch({ name: 'meta.priorLocked' });
   const live: RequestTitleDtoType[] | undefined = useWatch({ name: 'titles' });
   const prevId: string | undefined = useWatch({ name: 'detail.prevAppraisalId' });
   const active = !submitted && !readOnly;
@@ -164,8 +166,13 @@ export default function PriorAppraisalSummary() {
     () => [...new Map(checked.map(c => [c.key, c.params])).entries()],
     [checked],
   );
+  // The collateral master answers only the amber card: not asked where there is no prior to pick.
+  // A disabled query still returns what is cached for its key, so the data is gated below as well.
   const lookups = useQueries({
-    queries: distinct.map(([, params]) => lookupCollateralMasterOptions(params)),
+    queries: distinct.map(([, params]) => ({
+      ...lookupCollateralMasterOptions(params),
+      enabled: !priorLocked,
+    })),
   });
   const openOnes = useQueries({
     queries: distinct.map(([, params]) => inProgressByCollateralOptions(params)),
@@ -176,7 +183,7 @@ export default function PriorAppraisalSummary() {
   // Pending or failed answers have no data: no match (yet)
   const priorByKey = new Map<string, Item[]>(
     distinct.map(([key], i) => {
-      const prior = lookups[i].data ? priorAppraisalOf(lookups[i].data) : null;
+      const prior = !priorLocked && lookups[i].data ? priorAppraisalOf(lookups[i].data) : null;
       return [key, prior ? [{ id: prior.id, number: prior.number, date: prior.date }] : []];
     }),
   );

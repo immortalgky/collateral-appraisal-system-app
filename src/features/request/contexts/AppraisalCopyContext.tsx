@@ -36,7 +36,10 @@ export function AppraisalCopyProvider({
   return <AppraisalCopyContext.Provider value={value}>{children}</AppraisalCopyContext.Provider>;
 }
 
-/** Returns the pick/clear handlers, or null when outside a provider (e.g. a submitted request). */
+/**
+ * Returns the pick/clear handlers, or null when outside a provider. Whether the prior may be picked
+ * at all is `meta.priorLocked` in the form (a submitted request, an Initiate draft), not this.
+ */
 export function useAppraisalCopyHandler(): AppraisalCopyHandlers | null {
   return useContext(AppraisalCopyContext);
 }

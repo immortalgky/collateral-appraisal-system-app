@@ -12,22 +12,20 @@ import {
 } from '../configs/fields';
 import PriorAppraisalBlock from '../components/PriorAppraisalBlock';
 
-interface RequestFormProps {
-  /**
-   * The request has been submitted (a route-back included): its purpose and its prior appraisal are
-   * locked.
-   */
-  submitted?: boolean;
-}
-
-const RequestForm = ({ submitted = false }: RequestFormProps) => {
+/**
+ * The purpose and the prior appraisal are locked where `meta.priorLocked` is set: a submitted
+ * request (a route-back included), or a draft the periodical-reappraisal Initiate created, whose
+ * purpose and prior the backend fixes.
+ */
+const RequestForm = () => {
   const { t } = useTranslation('request');
+  const locked = !!useWatch({ name: 'meta.priorLocked' });
   const purposeFields = useMemo(
     () =>
       makePurposeFields(t).map(field =>
-        submitted && field.name === 'purpose' ? { ...field, disabled: true } : field,
+        locked && field.name === 'purpose' ? { ...field, disabled: true } : field,
       ),
-    [t, submitted],
+    [t, locked],
   );
   const channelFields = useMemo(() => makeChannelFields(t), [t]);
   const limits = useMemo(() => makeLimitFields(t), [t]);
@@ -69,7 +67,7 @@ const RequestForm = ({ submitted = false }: RequestFormProps) => {
         <SectionHeader title={t('requestForm.sections.purposeAndPrior')} />
         <div className="grid grid-cols-12 gap-x-3.5 gap-y-3">
           <FormFields fields={purposeFields} />
-          <PriorAppraisalBlock locked={submitted} />
+          <PriorAppraisalBlock />
         </div>
       </div>
       <div>

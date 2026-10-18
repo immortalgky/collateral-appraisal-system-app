@@ -78,7 +78,8 @@ const capped = <T,>(request: Promise<T>) =>
  * incomplete key, a miss, an error or a slow answer all save as if nothing had been checked (each
  * of the two lookups on its own).
  * Nothing is asked of a request that is submitted or read-only: its own appraisal is on record and
- * would match.
+ * would match. Where the prior is locked (an Initiate draft) only the in-progress check runs: there
+ * is no prior to suggest.
  *
  * A property is acknowledged only by "Continue saving", and then never asked about again for the
  * page's session. It is remembered by what identifies it (the lookup key), not by its row, so
@@ -93,7 +94,8 @@ export function usePriorAppraisalCheck(
 ) {
   const { t } = useTranslation('request');
   const queryClient = useQueryClient();
-  const isSubmitted = !!useWatch({ name: 'meta.isSubmitted' });
+  const submitted = !!useWatch({ name: 'meta.isSubmitted' });
+  const priorLocked = !!useWatch({ name: 'meta.priorLocked' });
   const prevAppraisalId: string | undefined = useWatch({ name: 'detail.prevAppraisalId' });
   // The prior the request already follows is no news: it is not asked about again
   const newPriorOf = (data: CollateralLookupResult | null) => {
@@ -112,7 +114,7 @@ export function usePriorAppraisalCheck(
     action: () => void;
   } | null>(null);
 
-  const params = title && !readOnly && !isSubmitted ? lookupParamsOf(title) : null;
+  const params = title && !readOnly && !submitted ? lookupParamsOf(title) : null;
   const key = JSON.stringify(params);
 
   const guard = async (action: () => void): Promise<void> => {
@@ -128,7 +130,7 @@ export function usePriorAppraisalCheck(
     let inFlight: InProgressAppraisalDto[] = [];
     try {
       [data, inFlight] = await Promise.all([
-        capped(queryClient.fetchQuery(lookupCollateralMasterOptions(params))),
+        priorLocked ? null : capped(queryClient.fetchQuery(lookupCollateralMasterOptions(params))),
         capped(queryClient.fetchQuery(inProgressByCollateralOptions(params))).then(r => r ?? []),
       ]);
     } finally {

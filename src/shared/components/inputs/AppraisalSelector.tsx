@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useFormContext } from 'react-hook-form';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { runGuarded } from '@/shared/utils/runGuarded';
 import { useFormReadOnly } from '../form/context';
@@ -37,12 +37,14 @@ const AppraisalSelector = ({
   error,
   className,
 }: AppraisalSelectorProps) => {
-  const { setValue, watch } = useFormContext();
+  const { setValue, watch, control } = useFormContext();
   const isReadOnly = useFormReadOnly();
-  // Picks up the pick handler when inside an AppraisalCopyProvider (request not submitted yet)
+  // Picks up the pick handler when inside an AppraisalCopyProvider
   const copyHandlers = useAppraisalCopyHandler();
   const { t } = useTranslation('common');
-  const isDisabled = disabled || isReadOnly || !!copyHandlers?.disabled;
+  // The prior is fixed: a submitted request, or a draft the periodical-reappraisal Initiate created
+  const priorLocked = !!useWatch({ control, name: 'meta.priorLocked' });
+  const isDisabled = disabled || isReadOnly || priorLocked || !!copyHandlers?.disabled;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
 

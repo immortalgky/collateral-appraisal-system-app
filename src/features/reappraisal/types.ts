@@ -206,7 +206,7 @@ export interface SkippedReappraisalItem {
   /** Prior appraisal; absent for a legacy AS400 book (99A…) that is not in CAS. */
   appraisalId?: string;
   oldAppraisalReportNumber?: string;
-  reason: 'AlreadyInFlight' | 'AlreadyReviewed' | 'NoBookNumber' | 'NotDue';
+  reason: 'AlreadyInFlight' | 'AlreadyReviewed' | 'NoBookNumber' | 'NotDue' | 'PriorNotCompleted';
   existingRequestId?: string;
 }
 
