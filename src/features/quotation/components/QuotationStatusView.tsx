@@ -13,6 +13,7 @@ import QuotationStatusBadge from './QuotationStatusBadge';
 import InvitedCompaniesPopover from './InvitedCompaniesPopover';
 import ShortlistSentPanel from './ShortlistSentPanel';
 import NegotiationPanel from './NegotiationPanel';
+import BoldTrans from './BoldTrans';
 import RejectTentativeModal from './RejectTentativeModal';
 import FinalizeModal from './FinalizeModal';
 import NegotiationModal from './NegotiationModal';
@@ -121,14 +122,9 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p
-              className="text-sm text-red-700"
-              dangerouslySetInnerHTML={{
-                __html: t('cancel.body', {
-                  number: `<strong>${quotation.quotationNumber}</strong>`,
-                }),
-              }}
-            />
+            <p className="text-sm text-red-700">
+              <BoldTrans i18nKey="cancel.bodyRich" values={{ number: quotation.quotationNumber }} />
+            </p>
           </div>
           <div>
             <label className="block text-sm text-gray-600 mb-1">
@@ -391,15 +387,17 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
           </div>
         </div>
         <div className="px-4 py-3 text-sm text-gray-600">
-          <p
-            dangerouslySetInnerHTML={{
-              __html: t('shared.quotationAwarded', {
-                company: `<strong class="text-gray-900">${
-                  winner ? localizeCompanyName(winner.companyName, winner.companyNameLocal) : '—'
-                }</strong>`,
-              }),
-            }}
-          />
+          <p>
+            <BoldTrans
+              i18nKey="shared.quotationAwarded"
+              values={{
+                company: winner
+                  ? localizeCompanyName(winner.companyName, winner.companyNameLocal)
+                  : '—',
+              }}
+              strongClassName="text-gray-900"
+            />
+          </p>
           {finalPrice != null && (
             <p className="mt-1">
               {t('shared.finalPrice')}{' '}

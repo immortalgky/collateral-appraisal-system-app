@@ -5,6 +5,9 @@ import { useOpenTask, useUnlockTask } from '../api';
 import LoadingSpinner from '@shared/components/LoadingSpinner';
 import Icon from '@shared/components/Icon';
 
+/** Task sub-routes a caller may ask to land on; router state is not trusted to build the URL. */
+const LAND_ON_ROUTES = ['administration'] as const;
+
 function OpeningTaskPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const navigate = useNavigate();
@@ -12,6 +15,9 @@ function OpeningTaskPage() {
   // PoolTaskListPage passes { lockedTaskId } in navigate state when it acquired a fresh lock.
   // If OpenTask fails, we release the lock so other users can claim the task.
   const lockedTaskId: string | undefined = location.state?.lockedTaskId;
+  // Optional sub-route of the task to land on instead of the default page; unknown values are ignored.
+  const requestedLandOn: unknown = location.state?.landOn;
+  const landOn = LAND_ON_ROUTES.find(route => route === requestedLandOn);
 
   // Guard against React StrictMode double-mounting the effect (which would fire the POST twice)
   const hasFiredRef = useRef(false);
@@ -32,7 +38,7 @@ function OpeningTaskPage() {
     openTask(taskId)
       .then(result => {
         if (result.isSuccess) {
-          navigate(`/tasks/${taskId}`, { replace: true });
+          navigate(landOn ? `/tasks/${taskId}/${landOn}` : `/tasks/${taskId}`, { replace: true });
         } else {
           if (lockedTaskId) unlockTask(lockedTaskId);
           setErrorMessage(result.errorMessage ?? 'Unable to open this task. Please try again.');
