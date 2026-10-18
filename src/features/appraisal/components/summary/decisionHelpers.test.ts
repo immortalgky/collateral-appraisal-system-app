@@ -3,6 +3,7 @@ import type { ActivityAction } from '@/features/appraisal/api/workflow';
 import {
   COMMITTEE_ACTIVITY_ID,
   currentStepOf,
+  deriveForceSellingPriceReview,
   endsWorkflow,
   resolveLiftoff,
   sameUser,
@@ -177,5 +178,66 @@ describe('sameUser', () => {
     expect(sameUser('P5229', 'P5230')).toBe(false);
     expect(sameUser(null, null)).toBe(false);
     expect(sameUser('P5229', undefined)).toBe(false);
+  });
+});
+
+describe('deriveForceSellingPriceReview', () => {
+  const base = {
+    isBlock: false,
+    unitTotal: undefined,
+    unitForceSellingPrice: undefined,
+    blockRate: undefined,
+    effectiveRate: 70,
+  };
+
+  it('non-block: the effective rate of the reviewed total, to the nearest 1,000', () => {
+    expect(deriveForceSellingPriceReview({ ...base, reviewedTotal: 1_234_567 })).toBe(864_000);
+    expect(
+      deriveForceSellingPriceReview({ ...base, reviewedTotal: 1_000_000, effectiveRate: null }),
+    ).toBeNull();
+    expect(deriveForceSellingPriceReview({ ...base, reviewedTotal: null })).toBeNull();
+  });
+
+  const block = {
+    ...base,
+    isBlock: true,
+    unitTotal: 10_000_000,
+    unitForceSellingPrice: 7_300_000,
+    blockRate: 70,
+  };
+
+  it('block: equals the unit forced sale when the reviewed total is the unit total', () => {
+    expect(deriveForceSellingPriceReview({ ...block, reviewedTotal: 10_000_000 })).toBe(7_300_000);
+  });
+
+  it('block: the unit total returns the unit forced sale exactly, not rounded to 1,000', () => {
+    expect(
+      deriveForceSellingPriceReview({
+        ...block,
+        unitForceSellingPrice: 7_000_550,
+        reviewedTotal: 10_000_000,
+      }),
+    ).toBe(7_000_550);
+  });
+
+  it('block: float noise does not flip a half (715,000 on a 10M/7M block -> 501,000)', () => {
+    expect(
+      deriveForceSellingPriceReview({
+        ...block,
+        unitForceSellingPrice: 7_000_000,
+        reviewedTotal: 715_000,
+      }),
+    ).toBe(501_000);
+  });
+
+  it('block: scales in proportion to the unit sums when the reviewer types another total', () => {
+    // 9,000,000 x 0.73 = 6,570,000
+    expect(deriveForceSellingPriceReview({ ...block, reviewedTotal: 9_000_000 })).toBe(6_570_000);
+  });
+
+  it('block: no unit total falls back to the resolved rate', () => {
+    expect(
+      deriveForceSellingPriceReview({ ...block, unitTotal: 0, reviewedTotal: 9_000_000 }),
+    ).toBe(6_300_000);
   });
 });

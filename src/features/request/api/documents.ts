@@ -14,6 +14,7 @@ import type {
   UploadDocumentParams,
   UploadDocumentResult,
 } from '../types/document';
+import { parseFileName } from '@/shared/utils/contentDisposition';
 
 /**
  * The largest file the system accepts, chunked upload included. Matches
@@ -218,12 +219,6 @@ export interface DownloadDocumentResult {
   blob: Blob;
   fileName: string | null;
 }
-
-const parseFileName = (disposition: string | undefined): string | null => {
-  if (!disposition) return null;
-  const match = disposition.match(/filename\*?=(?:UTF-8''|"?)([^";]+)/i);
-  return match ? decodeURIComponent(match[1].replace(/"/g, '')) : null;
-};
 
 /**
  * Downloads a document as a blob, reporting progress as the bytes arrive.

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { taskListUrl } from '../utils/taskReturn';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useOpenTask, useUnlockTask } from '../api';
 import LoadingSpinner from '@shared/components/LoadingSpinner';
@@ -56,7 +57,7 @@ function OpeningTaskPage() {
           </div>
           <h1 className="text-xl font-semibold text-base-content mb-2">Cannot Open Task</h1>
           <p className="text-base-content/60 mb-8">{errorMessage}</p>
-          <button type="button" className="btn btn-primary" onClick={() => navigate('/tasks')}>
+          <button type="button" className="btn btn-primary" onClick={() => navigate(taskListUrl())}>
             <Icon name="arrow-left" style="solid" className="size-4" />
             Go Back
           </button>

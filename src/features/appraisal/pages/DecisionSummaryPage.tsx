@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import ActivityCompletionChecklist from '../components/ActivityCompletionChecklist';
 import ActivityCompletionErrors from '../components/ActivityCompletionErrors';
 import { useActivityProgressStore } from '../store/activityProgressStore';
@@ -70,6 +71,7 @@ import {
   activityTitle,
   COMMITTEE_ACTIVITY_ID,
   decisionDisplayLabel,
+  deriveForceSellingPriceReview,
   isDissentingVote,
   isManualAssignmentAction,
   reasonGroupOf,
@@ -753,12 +755,16 @@ const DecisionSummaryPage = () => {
   // override set). Never hardcode a fallback percentage here.
   const effectiveForceSellingRate = forceSaleRateDraft ?? data?.forceSellingRate ?? null;
 
-  // Force Selling Price (Review) is derived = effective rate % of Total Appraisal Price (Review).
+  // Force Selling Price (Review): see deriveForceSellingPriceReview.
   const totalAppraisalPriceReviewNow = watch('totalAppraisalPriceReview');
-  const forceSellingPriceReviewDerived =
-    totalAppraisalPriceReviewNow != null && effectiveForceSellingRate != null
-      ? Math.round((totalAppraisalPriceReviewNow * effectiveForceSellingRate) / 100 / 1000) * 1000
-      : null;
+  const forceSellingPriceReviewDerived = deriveForceSellingPriceReview({
+    reviewedTotal: totalAppraisalPriceReviewNow,
+    isBlock: !!data?.isBlock,
+    unitTotal: data?.totalAppraisalPrice,
+    unitForceSellingPrice: data?.forceSellingPrice,
+    blockRate: data?.forceSellingRate,
+    effectiveRate: effectiveForceSellingRate,
+  });
 
   // The rate now round-trips through the server on blur, so the displayed FSP amount can
   // come straight from the server-resolved value — no client-side preview needed.
@@ -899,7 +905,7 @@ const DecisionSummaryPage = () => {
             // result.nextAssignee is a user code: shown beside the name, never on its own.
             nextAssigneeCode: nextAssigneeName ? (result.nextAssignee ?? null) : null,
             referenceNumber: appraisal?.appraisalReportNo ?? null,
-            to: '/tasks',
+            to: taskListUrl(),
             // The completion saved the form: let the navigation, when the card closes, through the
             // unsaved-changes guard (called at that moment, so a form that turned dirty again
             // meanwhile cannot re-arm it).
@@ -1173,39 +1179,45 @@ const DecisionSummaryPage = () => {
                               ? formatNumber(forceSellingPriceDisplay, 2)
                               : '-'}
                           </p>
-                          <SectionReadOnlyWrap forceReadOnly={shouldForceReadOnly('priceSummary')}>
-                            <div className="flex items-center justify-center gap-1.5 mt-0.5">
-                              {/* Not an RHF field — persists immediately on blur via a
+                          {/* A block's forced sale is the sum of its unit prices, so the rate
+                              override has no effect there. */}
+                          {!data?.isBlock && (
+                            <SectionReadOnlyWrap
+                              forceReadOnly={shouldForceReadOnly('priceSummary')}
+                            >
+                              <div className="flex items-center justify-center gap-1.5 mt-0.5">
+                                {/* Not an RHF field — persists immediately on blur via a
                                     dedicated endpoint (see handleForceSaleRateBlur), so
                                     FormFields/schema validation don't apply here.
                                     Empty when no override — placeholder shows the resolved
                                     (inherited) rate greyed out, so blank visibly means "using
                                     the system default", not "zero". */}
-                              <NumberInput
-                                name="forceSellingRateOverride"
-                                fullWidth={false}
-                                className="w-28"
-                                decimalPlaces={2}
-                                thousandSeparator={false}
-                                maxIntegerDigits={3}
-                                min={0.01}
-                                max={100}
-                                suffix="%"
-                                value={forceSaleRateDraft}
-                                onChange={e => setForceSaleRateDraft(e.target.value)}
-                                onBlur={handleForceSaleRateBlur}
-                                disabled={updateForceSaleRate.isPending}
-                                placeholder={
-                                  data?.forceSellingRate != null
-                                    ? data.forceSellingRate.toFixed(2)
-                                    : undefined
-                                }
-                              />
-                              <span className="text-xs text-gray-400">
-                                {t('decisionSummary.fields.forceSellingPriceHint')}
-                              </span>
-                            </div>
-                          </SectionReadOnlyWrap>
+                                <NumberInput
+                                  name="forceSellingRateOverride"
+                                  fullWidth={false}
+                                  className="w-28"
+                                  decimalPlaces={2}
+                                  thousandSeparator={false}
+                                  maxIntegerDigits={3}
+                                  min={0.01}
+                                  max={100}
+                                  suffix="%"
+                                  value={forceSaleRateDraft}
+                                  onChange={e => setForceSaleRateDraft(e.target.value)}
+                                  onBlur={handleForceSaleRateBlur}
+                                  disabled={updateForceSaleRate.isPending}
+                                  placeholder={
+                                    data?.forceSellingRate != null
+                                      ? data.forceSellingRate.toFixed(2)
+                                      : undefined
+                                  }
+                                />
+                                <span className="text-xs text-gray-400">
+                                  {t('decisionSummary.fields.forceSellingPriceHint')}
+                                </span>
+                              </div>
+                            </SectionReadOnlyWrap>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
