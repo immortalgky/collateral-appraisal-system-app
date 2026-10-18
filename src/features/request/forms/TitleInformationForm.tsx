@@ -17,7 +17,6 @@ import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import { NumberInput } from '@/shared/components/inputs';
 import { useFormReadOnly } from '@/shared/components/form';
-import { CollateralLookupProvider } from '@/features/collateralMaster/components/CollateralLookupContext';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 import { useCollateralPrefillStore } from '@/features/collateralMaster/store/collateralPrefillStore';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
@@ -29,6 +28,7 @@ import type { TitleImportRow } from '../api/titleImport';
 import { blockedByRequestUploads } from '../utils/carryForward';
 import { useRequestUploadBusy } from '../hooks/useRequestUploadBusy';
 import type { UploadedDocument } from '../types/document';
+import PriorAppraisalSummary from '../components/PriorAppraisalSummary';
 import { TitleDrawer } from '../components/titles/TitleDrawer';
 import { useTitleEditorStore } from '../store/titleEditorStore';
 import { TitleAddMenu } from '../components/titles/TitleAddMenu';
@@ -162,6 +162,9 @@ const TitleInformationForm = memo(function TitleInformationForm({
     name: 'titles',
   });
   const [session, setSession] = useState<EditSession | null>(null);
+  // Properties the user confirmed as previously appraised: kept here, not in the drawer, so closing
+  // and reopening it (or reordering rows) does not ask again. Lives as long as the page.
+  const [acknowledgedPriors] = useState(() => new Set<string>());
   // The list stands still while the editor is open (see useTitlesSnapshot), and so does whatever
   // else on the page renders from the titles (see titleEditorStore).
   const editorOpen = session !== null;
@@ -698,7 +701,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
       : '';
 
   return (
-    <CollateralLookupProvider>
+    <>
       <>
         {/* Initialize required documents for all titles */}
         {snapshot.map((_, index) => (
@@ -745,6 +748,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
             ) : null
           }
         >
+          <PriorAppraisalSummary />
           {titles.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 px-5 py-10 text-center">
               <div className="flex size-14 items-center justify-center rounded-full bg-gray-100">
@@ -837,6 +841,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
               onSave={saveEditor}
               onCancel={cancelEditor}
               onSaveAndAdd={saveAndAddNext}
+              acknowledgedPriors={acknowledgedPriors}
               documents={documentUpload}
             />
           )}
@@ -939,7 +944,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
           />
         </FormCard>
       </>
-    </CollateralLookupProvider>
+    </>
   );
 });
 

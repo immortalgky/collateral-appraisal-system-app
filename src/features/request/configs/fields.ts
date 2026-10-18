@@ -12,6 +12,7 @@ import { CUSTOMER_COLUMNS, PROPERTY_COLUMNS } from './tableColumns';
 import {
   LAND_CODES,
   LEASE_LAND_CODE,
+  MOVABLE_CODES,
   mapCollateral,
 } from '@features/request/data/mapCollateral.ts';
 import {
@@ -207,36 +208,36 @@ export function makeAddressFields(t: TFunction<'request'>): FormField[] {
       type: 'text-input',
       label: t('fields.houseNo'),
       name: 'houseNumber',
-      wrapperClassName: `col-span-2 ${STACK}`,
-      maxLength: 10,
+      wrapperClassName: `col-span-6 ${STACK}`,
+      maxLength: 50,
       required: true,
     },
     {
       type: 'text-input',
       label: t('fields.villageBuildingName'),
       name: 'projectName',
-      wrapperClassName: `col-span-4 ${STACK}`,
+      wrapperClassName: `col-span-6 ${STACK}`,
       maxLength: 100,
     },
     {
       type: 'text-input',
       label: t('fields.moo'),
       name: 'moo',
-      wrapperClassName: `col-span-2 ${STACK}`,
+      wrapperClassName: `col-span-3 ${STACK}`,
       maxLength: 10,
     },
     {
       type: 'text-input',
       label: t('fields.soi'),
       name: 'soi',
-      wrapperClassName: `col-span-2 ${STACK}`,
+      wrapperClassName: `col-span-3 ${STACK}`,
       maxLength: 100,
     },
     {
       type: 'text-input',
       label: t('fields.road'),
       name: 'road',
-      wrapperClassName: `col-span-2 ${STACK}`,
+      wrapperClassName: `col-span-6 ${STACK}`,
       maxLength: 100,
     },
     {
@@ -545,6 +546,8 @@ export const CONDO_TYPES = ['08', '28', '33'];
 /** A land title's number: the appraisal's LandTitles.TitleNumber column. A condominium's list gets 500. */
 export const LAND_TITLE_NUMBER_MAX = 200;
 export const CONDO_TITLE_NUMBER_MAX = 500;
+/** The title detail (notes): free text, as long as the LOS contract's MaxFreeText and the column allow. */
+export const TITLE_NOTES_MAX = 4000;
 
 const BUILDING_TYPE = ['05', '06', '07', '15', '16', '18', '20', '22'];
 
@@ -712,12 +715,7 @@ export function makeTitleLandFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleDetail'),
       name: 'notes',
       wrapperClassName: 'col-span-6',
-      maxLength: 200,
-      requiredWhen: {
-        field: 'collateralType',
-        is: [...LAND_TYPES, ...CONDO_TYPES],
-        operator: 'in',
-      },
+      maxLength: TITLE_NOTES_MAX,
     },
   ]);
 }
@@ -869,12 +867,7 @@ export function makeTitleCondoFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.titleDetail'),
       name: 'notes',
       wrapperClassName: 'col-span-6',
-      maxLength: 200,
-      requiredWhen: {
-        field: 'collateralType',
-        is: [...LAND_TYPES, ...CONDO_TYPES],
-        operator: 'in',
-      },
+      maxLength: TITLE_NOTES_MAX,
     },
   ];
 }
@@ -963,6 +956,25 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
   return [
     {
       type: 'dropdown',
+      label: t('fields.machineType'),
+      name: 'machineType',
+      group: 'MachineType',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '11' },
+    },
+    {
+      type: 'number-input',
+      label: t('fields.noOfMachines'),
+      name: 'numberOfMachine',
+      wrapperClassName: 'col-span-3',
+      required: true,
+      requiredWhen: { field: 'collateralType', is: '11' },
+      decimalPlaces: 0,
+      maxIntegerDigits: 5,
+    },
+    {
+      type: 'dropdown',
       label: t('fields.machineStatus'),
       name: 'installationStatus',
       group: 'MachineStatus',
@@ -971,13 +983,13 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
       requiredWhen: { field: 'collateralType', is: '11' },
     },
     {
-      type: 'dropdown',
-      label: t('fields.machineType'),
-      name: 'machineType',
-      group: 'MachineType',
+      type: 'text-input',
+      label: t('fields.invoiceNo'),
+      name: 'invoiceNumber',
       wrapperClassName: 'col-span-3',
       required: true,
-      requiredWhen: { field: 'collateralType', is: '11' },
+      requiredWhen: { field: 'installationStatus', is: '2' },
+      maxLength: 20,
     },
     {
       type: 'boolean-toggle',
@@ -1005,25 +1017,6 @@ export function makeTitleMachineFields(t: TFunction<'request'>): FormField[] {
       },
       maxLength: 50,
     },
-    {
-      type: 'text-input',
-      label: t('fields.invoiceNo'),
-      name: 'invoiceNumber',
-      wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'installationStatus', is: '2' },
-      maxLength: 20,
-    },
-    {
-      type: 'number-input',
-      label: t('fields.noOfMachines'),
-      name: 'numberOfMachine',
-      wrapperClassName: 'col-span-3',
-      required: true,
-      requiredWhen: { field: 'collateralType', is: '11' },
-      decimalPlaces: 0,
-      maxIntegerDigits: 5,
-    },
   ];
 }
 
@@ -1039,7 +1032,7 @@ export function makeTitleAddressFields(t: TFunction<'request'>): FormField[] {
         is: [...LAND_CODES, ...LEASE_LAND_CODE],
         operator: 'notIn',
       },
-      maxLength: 10,
+      maxLength: 50,
     },
     {
       type: 'text-input',
@@ -1129,7 +1122,7 @@ export function makeDopaAddressFields(t: TFunction<'request'>): FormField[] {
       label: t('fields.houseNumber'),
       name: 'dopaAddress.houseNumber',
       wrapperClassName: 'col-span-2',
-      maxLength: 10,
+      maxLength: 50,
       requiredWhen: {
         field: 'collateralType',
         is: [...LAND_CODES, ...LEASE_LAND_CODE],
@@ -1400,8 +1393,7 @@ export const titleLandFields: FormField[] = inScreenOrder([
     label: _st('Title Detail'),
     name: 'notes',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
+    maxLength: TITLE_NOTES_MAX,
   },
 ]);
 
@@ -1539,8 +1531,7 @@ export const titleCondoFields: FormField[] = [
     label: _st('Title Detail'),
     name: 'notes',
     wrapperClassName: 'col-span-6',
-    maxLength: 200,
-    requiredWhen: { field: 'collateralType', is: [...LAND_TYPES, ...CONDO_TYPES], operator: 'in' },
+    maxLength: TITLE_NOTES_MAX,
   },
 ];
 
@@ -1689,12 +1680,13 @@ export const titleAddressFields: FormField[] = [
     label: _st('House Number'),
     name: 'titleAddress.houseNumber',
     wrapperClassName: 'col-span-2',
+    // A movable has no title-document address, so nothing here is required for it.
     requiredWhen: {
       field: 'collateralType',
-      is: [...LAND_CODES, ...LEASE_LAND_CODE],
+      is: [...LAND_CODES, ...LEASE_LAND_CODE, ...MOVABLE_CODES],
       operator: 'notIn',
     },
-    maxLength: 10,
+    maxLength: 50,
   },
   {
     type: 'text-input',
@@ -1736,7 +1728,7 @@ export const titleAddressFields: FormField[] = [
     subDistrictNameField: 'titleAddress.subDistrictName',
     addressSource: 'title',
     wrapperClassName: 'col-span-2',
-    required: true,
+    requiredWhen: { field: 'collateralType', is: MOVABLE_CODES, operator: 'notIn' },
   },
   {
     type: 'text-input',
@@ -1782,7 +1774,7 @@ export const dopaAddressFields: FormField[] = [
     label: _st('House Number'),
     name: 'dopaAddress.houseNumber',
     wrapperClassName: 'col-span-2',
-    maxLength: 10,
+    maxLength: 50,
     requiredWhen: {
       field: 'collateralType',
       is: [...LAND_CODES, ...LEASE_LAND_CODE],
@@ -1896,7 +1888,7 @@ export const addressFields: FormField[] = [
     label: _st('House No'),
     name: 'houseNumber',
     wrapperClassName: 'col-span-2',
-    maxLength: 10,
+    maxLength: 50,
     required: true,
   },
   {

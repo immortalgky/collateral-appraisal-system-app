@@ -13,6 +13,7 @@ import type {
   ConstructionInspectionWorkDetailsDto,
   EditCollateralMasterBody,
   HostCollateralIdBackfillResponse,
+  InProgressAppraisalDto,
   RestoreBody,
   SoftDeleteBody,
 } from './types';
@@ -20,52 +21,45 @@ import type {
 // ─── GET /collateral-masters/lookup ──────────────────────────────────────────
 
 /**
- * Type-aware autocomplete lookup. Returns the matched master + last engagement
- * + prior company IDs. Returns null on miss (new collateral).
- *
- * Only fires when at least the minimum identifying fields are provided per type.
+ * The lookup as a query, fetched once by the request's title drawer on save (`fetchQuery`), so a
+ * repeat of the same key reuses the cached answer. Returns null on a miss (404).
  */
-export const useLookupCollateralMaster = (
-  params: CollateralLookupParams | null,
-  enabled = true,
-) => {
-  // Determine whether we have enough fields for a meaningful lookup
-  const hasMinFields = (() => {
-    if (!params) return false;
-    switch (params.type) {
-      case 'Land':
-        return !!(params.titleDeedNo && params.province);
-      case 'Condo':
-        return !!(params.titleNumber && params.landOfficeCode);
-      case 'Leasehold':
-        return !!(params.contractNo);
-      case 'Machine':
-        return !!(params.machineRegistrationNo || params.serialNo);
-      default:
-        return false;
+export const lookupCollateralMasterOptions = (params: CollateralLookupParams) => ({
+  queryKey: collateralMasterKeys.lookup(params),
+  queryFn: async (): Promise<CollateralLookupResult | null> => {
+    try {
+      const { data } = await axios.get<CollateralLookupResult>('/collateral-masters/lookup', {
+        params: flattenLookupParams(params),
+      });
+      return data;
+    } catch (err: any) {
+      if (err?.response?.status === 404) return null;
+      throw err;
     }
-  })();
+  },
+  staleTime: 5 * 60_000,
+  // Informational: a failure is read as no match, not retried
+  retry: false,
+});
 
-  return useQuery({
-    queryKey: collateralMasterKeys.lookup(params ?? { type: 'Land' }),
-    queryFn: async (): Promise<CollateralLookupResult | null> => {
-      if (!params) return null;
-      try {
-        const { data } = await axios.get<CollateralLookupResult>(
-          '/collateral-masters/lookup',
-          { params: flattenLookupParams(params) },
-        );
-        return data;
-      } catch (err: any) {
-        if (err?.response?.status === 404) return null;
-        throw err;
-      }
-    },
-    enabled: enabled && hasMinFields,
-    staleTime: 30_000,
-    retry: false,
-  });
-};
+// ─── GET /appraisals/in-progress-by-collateral ───────────────────────────────
+
+/**
+ * Appraisals still open on the same key as the lookup (same params). Empty means none. Errors
+ * throw: callers treat them as "none" (the check only warns, it never blocks).
+ */
+export const inProgressByCollateralOptions = (params: CollateralLookupParams) => ({
+  queryKey: collateralMasterKeys.inProgress(params),
+  queryFn: async (): Promise<InProgressAppraisalDto[]> => {
+    const { data } = await axios.get<InProgressAppraisalDto[]>(
+      '/appraisals/in-progress-by-collateral',
+      { params: flattenLookupParams(params) },
+    );
+    return Array.isArray(data) ? data : [];
+  },
+  staleTime: 60_000,
+  retry: false,
+});
 
 /** Flatten the discriminated union params into a flat query-string object */
 function flattenLookupParams(params: CollateralLookupParams): Record<string, string> {
@@ -256,9 +250,7 @@ export const useReplayBackfill = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (appraisalId: string) => {
-      const { data } = await axios.post(
-        `/collateral-masters/admin/replay/${appraisalId}`,
-      );
+      const { data } = await axios.post(`/collateral-masters/admin/replay/${appraisalId}`);
       return data;
     },
     onSuccess: () => {
@@ -290,11 +282,8 @@ export const useBackfillHostCollateralId = () => {
 
 /**
  * Fetch prior construction work details for Progressive appraisal prefill.
- * Called when lookup returns a master with LastConstructionInspectionId set.
  */
-export const useConstructionInspectionWorkDetails = (
-  inspectionId: string | null | undefined,
-) => {
+export const useConstructionInspectionWorkDetails = (inspectionId: string | null | undefined) => {
   return useQuery({
     queryKey: collateralMasterKeys.inspectionWorkDetails(inspectionId ?? ''),
     queryFn: async (): Promise<ConstructionInspectionWorkDetailsDto> => {

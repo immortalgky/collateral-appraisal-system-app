@@ -232,7 +232,7 @@
     "ngan": "Ngan",
     "sqWa": "Sq.Wa",
     "owner": "Owner",
-    "titleDetail": "Title Detail",
+    "titleDetail": "Title Detail (Additional)",
     "usageArea": "Usage Area",
     "numberOfBuilding": "Number of Building",
     "roomNumber": "Room Number",
@@ -263,7 +263,8 @@
   },
   "titleAddress": {
     "header": "Title document address",
-    "dopaHeader": "DOPA address"
+    "dopaHeader": "DOPA address",
+    "propertyLocationHeader": "Property location"
   },
   "titleOptions": {
     "noCollateralType": "Please select a collateral type to continue",
@@ -452,6 +453,25 @@
       "round": "Inspection round {{n}}",
       "search": "Search prior appraisal...",
       "createHint": "Once chosen, customers, properties, titles, location and facility limit are copied over (appointment and fee are not)"
+    },
+    "priorSummary": {
+      "noReportNumber": "No report number yet",
+      "status": {
+        "Submitted": "Submitted",
+        "Pending": "Pending",
+        "Assigned": "Assigned",
+        "InProgress": "In Progress",
+        "UnderReview": "Under Review"
+      },
+      "inProgressHeading": "{{matched}} of {{total}} attached collateral items are being appraised in another report",
+      "inProgressHint": "Check the reports below before submitting, so the same collateral is not appraised twice.",
+      "heading": "{{matched}} of {{total}} attached collateral items have been appraised before",
+      "hint": "If this is a re-appraisal, select this report as the prior appraisal in the request details.",
+      "goToPrior": "Go to prior appraisal",
+      "report": "Report {{number}}",
+      "date": "Dated {{date}}",
+      "matchesPrior": "Matches the selected prior appraisal",
+      "differsFromPrior": "Not the selected prior appraisal"
     }
   },
   "copyBanner": {
@@ -819,16 +839,39 @@
       "copyFromTitle": "Copy from title-deed address",
       "copyOverwriteConfirm": "Copy title-deed address",
       "copyOverwriteMessage": "This DOPA address already has values. Replace them with the title-deed address?",
+      "copyOverwriteMessageRequest": "This property location already has values. Replace them with the request address?",
       "districtDiffersDopa": "The district in the DOPA register is {{district}}, which differs from the title deed. Please check.",
+      "districtDiffersRequest": "The district in the DOPA register is {{district}}, which differs from the request address. Please check.",
       "districtDiffersTitle": "The district in the title register is {{district}}, which differs from the request's address. Please check.",
       "dopaMissing": "This sub-district is not in the DOPA register. Please choose one.",
       "overwriteConfirm": "Copy request address",
       "overwriteMessage": "This title already has an address. Replace it with the request's address?",
       "overwriteTitle": "Replace the address?",
       "tagDopa": "DOPA",
+      "tagLocation": "property location",
       "tagTitle": "title address",
       "titleMissing": "The request's sub-district is not in the title register. Please choose one.",
-      "useRequest": "Copy from request address"
+      "useRequest": "Copy from request address",
+      "masterUnavailable": "Address data is still loading. If this persists, reload the page.",
+      "requestAddressEmpty": "Fill in the request address first",
+      "titleAddressEmpty": "Fill in the title-deed address first"
+    },
+    "priorCheck": {
+      "priorHeading": "Appraised before",
+      "titleInProgress": "This title is being appraised",
+      "titleInProgressGeneric": "This property is being appraised",
+      "inProgressHeading": "Being appraised in another report",
+      "inProgressMessage": "Check the report below before saving, so the same property is not appraised twice.",
+      "status": "Status",
+      "title": "This title has been appraised before",
+      "titleGeneric": "This property has been appraised before",
+      "message": "A report already exists for this property. Go back to check it, or keep saving.",
+      "back": "Go back and edit",
+      "continue": "Continue saving",
+      "report": "Report",
+      "date": "Date",
+      "value": "Value",
+      "count": "Times appraised: {{n}}"
     },
     "cell": {
       "areaBuilding": "Building {{area}} sq.m.",
@@ -888,7 +931,6 @@
         "building": "Building",
         "condo": "Condominium unit",
         "deed": "Title document",
-        "deedDetail": "Title detail",
         "machine": "Machinery",
         "vehicle": "Vehicle",
         "vessel": "Vessel",

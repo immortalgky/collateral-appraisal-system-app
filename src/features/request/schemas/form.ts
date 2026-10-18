@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { buildFormSchema } from '@/shared/components/form';
 import { isBlankRow } from '../components/tables/formTableUtils';
 import { PROPERTY_COLUMNS } from '../configs/tableColumns';
+import { MOVABLE_CODES } from '../data/mapCollateral';
 import {
   allRequestFields,
   CONDO_TYPES,
@@ -56,7 +57,7 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     // when copying a prior appraisal — display-only, never user-editable.
     inspectionNumber: z.number().nullish(),
     address: z.object({
-      houseNumber: z.string().max(10).min(1, t('validation.houseNumberRequired')),
+      houseNumber: z.string().max(50).min(1, t('validation.houseNumberRequired')),
       projectName: z.string().max(100).nullable(),
       moo: z.string().max(10).nullable(),
       soi: z.string().max(100).nullable(),
@@ -104,7 +105,7 @@ function makeRequestPropertyDto(t: TFunction<'request'>) {
 
 const AddressDto = z
   .object({
-    houseNumber: z.string().max(10),
+    houseNumber: z.string().max(50),
     projectName: z.string().nullable(),
     moo: z.string().nullable(),
     soi: z.string().nullable(),
@@ -137,6 +138,12 @@ const RequestTitleDocumentDto = z
   })
   .partial();
 
+// A movable has no title-document address, and no field on screen to fix one a record carries, so
+// any invalid value in it would block Save for good. So its `titleAddress` is held back from
+// validation under this key (an empty one stands in) and put back afterwards: the value is neither
+// checked nor lost.
+const MOVABLE_ADDRESS = '__movableTitleAddress';
+
 // Base for fields not expressible as FormField (UUIDs, documents, address sub-schemas)
 const TitleElementBase = z.object({
   id: z.string().uuid().optional(),
@@ -144,11 +151,13 @@ const TitleElementBase = z.object({
   documents: z.array(RequestTitleDocumentDto).optional(),
   titleAddress: AddressDto.optional(),
   dopaAddress: AddressDto.optional(),
+  // Where a movable's title address waits while the title is validated (see `RequestTitleDto`)
+  [MOVABLE_ADDRESS]: z.any().optional(),
 });
 
 // Element schema from field configs + base (deep merge preserves AddressDto sub-fields)
 // Only a condominium's title number may run past the land limit (it is a list of land titles).
-const RequestTitleDto = buildFormSchema(titlesFieldConfig.fields, TitleElementBase).superRefine(
+const RequestTitleDtoBase = buildFormSchema(titlesFieldConfig.fields, TitleElementBase).superRefine(
   (title, ctx) => {
     const isCondo = CONDO_TYPES.includes(String(title.collateralType ?? ''));
     const number = title.titleNumber;
@@ -164,6 +173,20 @@ const RequestTitleDto = buildFormSchema(titlesFieldConfig.fields, TitleElementBa
       });
   },
 );
+const RequestTitleDto = z
+  .preprocess(title => {
+    const { titleAddress, ...rest } = (title ?? {}) as Record<string, unknown>;
+    return MOVABLE_CODES.includes(String(rest.collateralType ?? ''))
+      ? { ...rest, titleAddress: {}, [MOVABLE_ADDRESS]: titleAddress }
+      : title;
+  }, RequestTitleDtoBase)
+  .transform(title => {
+    if (!(MOVABLE_ADDRESS in title)) return title;
+    const { [MOVABLE_ADDRESS]: titleAddress, ...rest } = title;
+    // the stand-in `{}` goes either way; a movable that had no address comes back without one
+    delete rest.titleAddress;
+    return titleAddress === undefined ? rest : { ...rest, titleAddress };
+  });
 const RequestDocumentDto = z
   .object({
     id: z.string().uuid().nullable().optional(),
@@ -383,7 +406,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vehicleRegistrationNumber: '',
   installationStatus: '',
   invoiceNumber: '',
-  numberOfMachine: 0,
+  numberOfMachine: null,
   buildingType: '',
   usableArea: null,
   numberOfBuilding: null,
