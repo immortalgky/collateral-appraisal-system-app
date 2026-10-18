@@ -14,6 +14,7 @@ import {
   LEASE_LAND_CODE,
   MOVABLE_CODES,
   mapCollateral,
+  NO_BUILDING_PROPERTY_TYPES,
 } from '@features/request/data/mapCollateral.ts';
 import {
   AERIAL_TITLE_TYPES,
@@ -425,7 +426,11 @@ export function makePropertiesFieldConfig(t: TFunction<'request'>): FieldArrayFi
         name: 'buildingType',
         label: t('fields.buildingType'),
         group: 'BuildingType',
-        required: true,
+        requiredWhen: {
+          field: 'propertyType',
+          is: NO_BUILDING_PROPERTY_TYPES,
+          operator: 'notIn',
+        },
       },
       {
         type: 'number-input',
@@ -2189,7 +2194,11 @@ export const propertiesFieldConfig: FieldArrayField = {
       name: 'buildingType',
       label: _st('Building Type'),
       group: 'BuildingType',
-      required: true,
+      requiredWhen: {
+        field: 'propertyType',
+        is: NO_BUILDING_PROPERTY_TYPES,
+        operator: 'notIn',
+      },
     },
     {
       type: 'text-input',

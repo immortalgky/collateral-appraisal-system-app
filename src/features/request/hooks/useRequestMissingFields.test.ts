@@ -199,6 +199,22 @@ describe('collectIssues', () => {
     expect(noRetail).not.toContain('properties.0.sellingPrice');
   });
 
+  it('asks for a building type on every property type that has a building', () => {
+    const types = ['L', 'LSL', 'MAC', 'VEH', 'VES', 'U', 'LSU', 'LB', 'B', 'LS', 'LSB'];
+    const values = {
+      ...createRequestFormDefault,
+      properties: types.map(propertyType => ({
+        propertyType,
+        buildingType: '',
+        buildingTypeOther: '',
+        sellingPrice: 1,
+      })),
+    };
+    const paths = collectIssues(createRequestForm, values).map(i => i.path.join('.'));
+    const asked = types.filter((_, i) => paths.includes(`properties.${i}.buildingType`));
+    expect(asked).toEqual(['U', 'LSU', 'LB', 'B', 'LS', 'LSB']);
+  });
+
   it('counts an untouched price cell (an empty string) the same as null for a RETAIL segment', () => {
     const values = {
       ...createRequestFormDefault,

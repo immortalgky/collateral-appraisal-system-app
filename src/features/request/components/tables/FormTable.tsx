@@ -19,8 +19,10 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import { evaluateConditions } from '@/shared/components/form/conditions';
+import type { FieldCondition } from '@/shared/components/form/types';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
-import { emptyRowFor, isBlankRow, isRegular, sumColumn } from './formTableUtils';
+import { emptyRowFor, isBlankRow, isEmptyCell, isRegular, sumColumn } from './formTableUtils';
 
 // --- Types ---
 
@@ -73,6 +75,11 @@ export interface FormTableRegularColumn {
   otherFieldName?: string;
   otherTriggerValue?: string;
   filterOptions?: OptionFilter;
+  /**
+   * Disables the cell, and clears it with its "other" text, while this holds for the row.
+   * Row-relative, one plain field only: `$root.` and dotted paths are not supported here.
+   */
+  disableWhen?: FieldCondition;
 }
 
 interface FormTableRowNumberColumn {
@@ -286,6 +293,7 @@ const DropdownOtherCell = ({
   control,
   field,
   filterWatchValues,
+  disabled,
 }: {
   name: string;
   index: number;
@@ -293,6 +301,7 @@ const DropdownOtherCell = ({
   control: Control<FieldValues, any, FieldValues>;
   field: ReturnType<typeof useController>['field'];
   filterWatchValues?: Record<string, unknown>;
+  disabled?: boolean;
 }) => {
   const {
     field: otherField,
@@ -307,6 +316,7 @@ const DropdownOtherCell = ({
   return (
     <Dropdown
       {...field}
+      disabled={disabled}
       group={column.group}
       filterOptions={column.filterOptions}
       filterWatchValues={filterWatchValues}
@@ -341,11 +351,42 @@ const TableCell = ({
   const dp = column.decimalPlaces ?? 2;
 
   const rowField = column.filterOptions?.type === 'dynamic' ? column.filterOptions.field : null;
+  // ponytail: one watch serves the option filter and disableWhen, so they must name the same field
+  const watchedField = rowField ?? column.disableWhen?.field;
   const rowFieldValue = useWatch({
     control,
-    name: `${name}.${index}.${rowField ?? column.name}`,
+    name: `${name}.${index}.${watchedField ?? column.name}`,
   });
   const filterWatchValues = rowField ? { [rowField]: rowFieldValue } : undefined;
+
+  const { setValue, getValues, getFieldState, clearErrors } = useFormContext();
+  const disabled =
+    !!column.disableWhen &&
+    evaluateConditions(column.disableWhen, { [column.disableWhen.field]: rowFieldValue }, '');
+  const isDisabled = disabled || field.disabled;
+  const { value, onChange } = field;
+  React.useEffect(() => {
+    if (!disabled) return;
+    const cell = `${name}.${index}.${column.name}`;
+    const other = column.otherFieldName ? `${name}.${index}.${column.otherFieldName}` : null;
+    if (!isEmptyCell(value)) onChange(null);
+    if (other && !isEmptyCell(getValues(other))) setValue(other, null);
+    // also when already empty, so a stale "required" error goes
+    const paths = other ? [cell, other] : [cell];
+    if (paths.some(path => getFieldState(path).error)) clearErrors(paths);
+  }, [
+    disabled,
+    value,
+    onChange,
+    setValue,
+    getValues,
+    getFieldState,
+    clearErrors,
+    name,
+    index,
+    column.name,
+    column.otherFieldName,
+  ]);
 
   const input = () => {
     if (isNum)
@@ -356,13 +397,15 @@ const TableCell = ({
           maxIntegerDigits={column.maxIntegerDigits}
           allowNegative={column.allowNegative}
           placeholder={column.placeholder}
+          disabled={isDisabled}
         />
       );
     // Spread the whole field (not just value/onChange): without field.ref, react-hook-form has no
     // focusable handle on the dropdown, unlike the number and text branches above.
     // Split branches because Dropdown takes `group` or `options`, and the column type has both optional.
     if (column.inputType === 'dropdown') {
-      if (column.options) return <Dropdown {...field} options={column.options} />;
+      if (column.options)
+        return <Dropdown {...field} disabled={isDisabled} options={column.options} />;
       if (column.group) {
         if (column.otherField && column.otherFieldName) {
           return (
@@ -373,12 +416,14 @@ const TableCell = ({
               control={control}
               field={field}
               filterWatchValues={filterWatchValues}
+              disabled={isDisabled}
             />
           );
         }
         return (
           <Dropdown
             {...field}
+            disabled={isDisabled}
             group={column.group}
             filterOptions={column.filterOptions}
             filterWatchValues={filterWatchValues}
@@ -392,6 +437,7 @@ const TableCell = ({
         {...field}
         maxLength={column.maxLength}
         placeholder={column.placeholder}
+        disabled={isDisabled}
       />
     );
   };
