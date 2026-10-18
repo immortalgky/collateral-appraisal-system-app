@@ -7,6 +7,7 @@ import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
+import { DateInput } from '@/shared/components/inputs';
 
 import {
   useEligibleAppraisalsForQuotation,
@@ -16,6 +17,8 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+
+const EMPTY = <span className="text-gray-400">—</span>;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -58,38 +61,6 @@ const EMPTY_FILTERS: AppraisalFilters = {
   district: '',
   province: '',
 };
-
-const STORAGE_KEY = 'quotation-picker-filters-v1';
-
-interface StoredFilterState {
-  filters: Partial<AppraisalFilters>;
-  moreOpen: boolean;
-}
-
-function readStoredFilters(): StoredFilterState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as StoredFilterState;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredFilters(state: StoredFilterState): void {
-  try {
-    // Strip empty strings before persisting
-    const stripped = Object.fromEntries(
-      Object.entries(state.filters).filter(([, v]) => v !== ''),
-    ) as Partial<AppraisalFilters>;
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ filters: stripped, moreOpen: state.moreOpen }),
-    );
-  } catch {
-    // ignore — private mode / storage full
-  }
-}
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -472,25 +443,11 @@ export function AppraisalPicker({
     });
   };
 
-  // ── Filter state + localStorage hydration ──
-  const stored = useMemo(() => readStoredFilters(), []);
-  const [filters, setFilters] = useState<AppraisalFilters>({
-    ...EMPTY_FILTERS,
-    ...(stored?.filters ?? {}),
-  });
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState<boolean>(stored?.moreOpen ?? false);
-
-  // Debounced write-back on filter/toggle changes
-  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    writeTimerRef.current = setTimeout(() => {
-      writeStoredFilters({ filters, moreOpen: moreFiltersOpen });
-    }, 500);
-    return () => {
-      if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    };
-  }, [filters, moreFiltersOpen]);
+  // ── Filter state — always starts blank; not persisted across opens ──
+  const [filters, setFilters] = useState<AppraisalFilters>(EMPTY_FILTERS);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  // Bumped on clear to remount the date field, which keeps text it rejected (e.g. 31/02/2026).
+  const [clearCount, setClearCount] = useState(0);
 
   const [pageNumber, setPageNumber] = useState(0);
   const PAGE_SIZE = 10;
@@ -504,16 +461,16 @@ export function AppraisalPicker({
   const debouncedSubDistrict = useDebounced(effectiveFilters.subDistrict, 300).trim();
   const debouncedDistrict = useDebounced(effectiveFilters.district, 300).trim();
 
+  // DateInput's stored ISO is cut to yyyy-MM-dd for the query.
+  const requestedDay = effectiveFilters.requestedAt?.slice(0, 10) ?? '';
+
   const queryParams: EligibleAppraisalsParams = {
     pageNumber,
     pageSize: PAGE_SIZE,
     ...(debouncedCustomerName && { customerName: debouncedCustomerName }),
     ...(debouncedAppraisalNumber && { appraisalNumber: debouncedAppraisalNumber }),
     ...(effectiveFilters.purpose && { purpose: effectiveFilters.purpose }),
-    ...(effectiveFilters.requestedAt && {
-      requestedAtFrom: effectiveFilters.requestedAt,
-      requestedAtTo: effectiveFilters.requestedAt,
-    }),
+    ...(requestedDay && { requestedAtFrom: requestedDay, requestedAtTo: requestedDay }),
     ...(effectiveFilters.channel && { channel: effectiveFilters.channel }),
     ...(effectiveFilters.status && { status: effectiveFilters.status }),
     ...(effectiveFilters.bankingSegment && { bankingSegment: effectiveFilters.bankingSegment }),
@@ -534,6 +491,10 @@ export function AppraisalPicker({
   const channelOptions = useParameterOptions('Channel');
   const bankingSegmentOptions = useParameterOptions('BankingSegment');
 
+  const purposeLabels = useMemo(
+    () => new Map(purposeOptions.map(o => [o.value ?? '', o.label])),
+    [purposeOptions],
+  );
   const channelLabels = useMemo(
     () => new Map(channelOptions.map(o => [o.value ?? '', o.label])),
     [channelOptions],
@@ -583,6 +544,7 @@ export function AppraisalPicker({
 
   const handleClear = () => {
     setFilters(EMPTY_FILTERS);
+    setClearCount(c => c + 1);
     setPageNumber(0);
   };
 
@@ -747,11 +709,15 @@ export function AppraisalPicker({
                 <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
                   {t('picker.requestDate')}
                 </label>
-                <input
-                  type="date"
+                <DateInput
+                  key={clearCount}
+                  todayLabel={t('picker.today')}
+                  disableFutureDates
                   value={filters.requestedAt}
-                  onChange={e => handleFilterChange('requestedAt', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  onChange={v => handleFilterChange('requestedAt', v ?? '')}
+                  // py-1.5 spelled as the global input rule's calc (index.css): a plain py-1.5! is !important
+                  // and skips --cas-lead-trim, leaving the field taller than the other inputs.
+                  className="pl-2.5! py-[calc(var(--spacing)*1.5-var(--cas-lead-trim))]! rounded-md! focus:ring-1! focus:ring-primary! focus:border-primary!"
                 />
               </div>
               <div className="flex flex-col gap-1">
@@ -898,13 +864,16 @@ export function AppraisalPicker({
                 <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
                   {t('picker.requestedAt')}
                 </th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                  {t('picker.previouslyQuoted')}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {/* Enhancement #6 — Select-all hint */}
               {allPageSelected && totalCount > PAGE_SIZE && (
                 <tr>
-                  <td colSpan={9} className="px-3 py-1.5 bg-gray-50">
+                  <td colSpan={10} className="px-3 py-1.5 bg-gray-50">
                     <p className="text-xs text-gray-500">
                       {t('picker.selectAllHint', { page: PAGE_SIZE, total: totalCount })}
                     </p>
@@ -913,7 +882,7 @@ export function AppraisalPicker({
               )}
               {isFetching && items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
+                  <td colSpan={10} className="px-3 py-8 text-center">
                     <div className="flex items-center justify-center gap-2 text-gray-400">
                       <Icon name="spinner" style="solid" className="size-4 animate-spin" />
                       <span className="text-xs">{t('common:status.loading')}</span>
@@ -922,13 +891,13 @@ export function AppraisalPicker({
                 </tr>
               ) : appraisalsError ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={10}>
                     <DataErrorState variant="inline" onRetry={() => refetchAppraisals()} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
+                  <td colSpan={10} className="px-3 py-8 text-center">
                     <p className="text-xs text-gray-400 italic">
                       {t('empty.noEligibleAppraisals')}
                     </p>
@@ -956,26 +925,24 @@ export function AppraisalPicker({
                       <td className="px-3 py-2 font-medium text-gray-900 whitespace-nowrap">
                         {r.appraisalNumber ?? r.id.slice(0, 8)}
                       </td>
-                      <td className="px-3 py-2 text-gray-700 truncate max-w-[180px]">
-                        {r.customerName ?? '—'}
+                      <td className="px-3 py-2 text-gray-700">
+                        <div className="truncate max-w-[180px]" title={r.customerName || undefined}>
+                          {r.customerName || EMPTY}
+                        </div>
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.purpose ?? '—'}
+                        {r.purpose ? (purposeLabels.get(r.purpose) ?? r.purpose) : EMPTY}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
-                        {r.status ? (
-                          <Badge type="status" value={r.status} size="sm" />
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                        {r.status ? <Badge type="status" value={r.status} size="sm" /> : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : '—'}
+                        {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
                         {r.bankingSegment
                           ? (bankingSegmentLabels.get(r.bankingSegment) ?? r.bankingSegment)
-                          : '—'}
+                          : EMPTY}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-gray-700">
                         {r.propertyCount}
@@ -987,7 +954,10 @@ export function AppraisalPicker({
                               month: 'short',
                               year: 'numeric',
                             })
-                          : '—'}
+                          : EMPTY}
+                      </td>
+                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
+                        {r.previouslyQuotedNumber || EMPTY}
                       </td>
                     </tr>
                   );
