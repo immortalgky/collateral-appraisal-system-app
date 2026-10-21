@@ -33,6 +33,7 @@ interface FormState {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber: string;
   position: string;
   department: string;
   aoCode: string;
@@ -56,6 +57,7 @@ const EMPTY_FORM: FormState = {
   email: '',
   firstName: '',
   lastName: '',
+  phoneNumber: '',
   position: '',
   department: '',
   aoCode: '',
@@ -272,6 +274,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
         email: form.email.trim(),
         firstName: form.firstName.trim(),
         lastName: form.lastName.trim(),
+        phoneNumber: form.phoneNumber.trim() || null,
         position: form.position.trim() || null,
         department: isCompany ? null : form.department.trim() || null,
         aoCode: isCompany ? null : form.aoCode.trim() || null,
@@ -528,6 +531,13 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   onChange={e => setField('employeeId', e.currentTarget.value)}
                   placeholder={t('placeholders.employeeId')}
                   maxLength={50}
+                />
+                <TextInput
+                  label={t('fields.phone')}
+                  value={form.phoneNumber}
+                  onChange={e => setField('phoneNumber', e.currentTarget.value)}
+                  placeholder={t('placeholders.phone')}
+                  maxLength={40}
                 />
               </>
             )}

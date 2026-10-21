@@ -85,6 +85,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     firstName: '',
     lastName: '',
     email: '',
+    phoneNumber: '',
     position: '',
     department: '',
     companyId: null,
@@ -144,6 +145,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      phoneNumber: user.phoneNumber ?? '',
       position: user.position ?? '',
       department: user.department ?? '',
       companyId: user.companyId,
@@ -180,6 +182,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
         email: editForm.email.trim(),
+        phoneNumber: editForm.phoneNumber || null,
         position: editForm.position || null,
         department: isCompany ? null : editForm.department || null,
         companyId: isCompany ? editForm.companyId || null : null,
@@ -465,6 +468,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                   ]
                 : []),
               { label: t('fields.authSource'), value: user.authSource },
+              { label: t('fields.phone'), value: user.phoneNumber },
               ...(user.lastLoginAt
                 ? [
                     {
@@ -904,6 +908,17 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               />
               {editScope === 'Company' ? (
                 <>
+                  <TextInput
+                    label={t('fields.phone')}
+                    value={editForm.phoneNumber ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, phoneNumber: value }));
+                    }}
+                    placeholder={t('placeholders.phone')}
+                    className="sm:col-span-2"
+                    maxLength={40}
+                  />
                   <Dropdown
                     label={t('fields.company')}
                     required
@@ -927,6 +942,17 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 </>
               ) : (
                 <>
+                  <TextInput
+                    label={t('fields.phone')}
+                    value={editForm.phoneNumber ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, phoneNumber: value }));
+                    }}
+                    placeholder={t('placeholders.phone')}
+                    className="sm:col-span-2"
+                    maxLength={40}
+                  />
                   <TextInput
                     label={t('fields.position')}
                     value={editForm.position ?? ''}
