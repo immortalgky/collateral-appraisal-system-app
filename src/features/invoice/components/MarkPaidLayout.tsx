@@ -45,7 +45,7 @@ const MarkPaidLayout = ({ invoices, isSubmitting, onCancel, onSubmit }: MarkPaid
   const isValid =
     invoices.length > 0 &&
     paymentOrderNo.trim().length > 0 &&
-    paymentOrderNo.trim().length <= 10 &&
+    paymentOrderNo.trim().length <= 15 &&
     paidDate != null;
 
   const handleSubmit = () => {
