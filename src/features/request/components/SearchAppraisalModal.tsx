@@ -19,15 +19,22 @@ import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 import { useAppraisalSearch } from '@/features/appraisal/api/appraisalSearch';
 import type { AppraisalDto } from '@/features/appraisal/api/appraisalSearch';
 import {
+  fetchConstructionChainStatus,
   fetchPriorAppraisal,
   CARRYABLE_STATUS,
+  type ConstructionBlockReason,
+  type ConstructionChainStatus,
   type PriorAppraisal,
 } from '@/features/appraisal/api/priorAppraisal';
+import { CI_PURPOSES } from '../configs/fields';
 
 interface SearchAppraisalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (template: PriorAppraisal) => void;
+  /** `chain` is read only for a construction-inspection purpose, and then it is never blocked. */
+  onSelect: (template: PriorAppraisal, chain?: ConstructionChainStatus) => void;
+  /** The request's purpose: a construction-inspection one asks the chain status before a pick. */
+  purpose?: string | null;
 }
 
 const PAGE_SIZES = [10, 25, 50];
@@ -106,7 +113,12 @@ const Muted = ({ children, title }: { children: ReactNode; title?: string }) => 
   </span>
 );
 
-const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModalProps) => {
+const SearchAppraisalModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  purpose,
+}: SearchAppraisalModalProps) => {
   const { t } = useTranslation(['request', 'common']);
   const localizeCompany = useLocalizedCompanyName();
   const listId = useId();
@@ -212,6 +224,27 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
     onClose();
   };
 
+  const blockedMessage = (
+    reason: ConstructionBlockReason,
+    chain: ConstructionChainStatus,
+    template: PriorAppraisal,
+  ) => {
+    const { construction } = chain;
+    return t(`constructionGuard.blocked.${reason}`, {
+      // The appraisal that holds the 100% may be another one of the chain than the one picked
+      no:
+        reason === 'ConstructionComplete'
+          ? construction.sourceAppraisalNumber
+          : template.appraisalNumber,
+      n: construction.sourceInspectionNumber,
+      date: construction.sourceCompletedAt
+        ? formatDate(construction.sourceCompletedAt, 'dd/MM/yyyy')
+        : '',
+      later: chain.laterInspection?.appraisalNumber,
+      req: chain.openInspectionRequest?.requestNumber,
+    });
+  };
+
   const pick = async (appraisalId: string) => {
     if (isFetchingTemplate) return;
     const token = ++pickToken.current;
@@ -227,7 +260,19 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         setSelectedId(null);
         return;
       }
-      onSelect(template);
+      // A construction inspection follows the chain's latest construction: some appraisals cannot be
+      // its prior (the API refuses them at submit as well; this says so before the maker goes on).
+      let chain: ConstructionChainStatus | undefined;
+      if (CI_PURPOSES.includes(purpose ?? '')) {
+        chain = await fetchConstructionChainStatus(appraisalId);
+        if (!current()) return;
+        if (chain.blockReason) {
+          toast.error(blockedMessage(chain.blockReason, chain, template));
+          setSelectedId(null);
+          return;
+        }
+      }
+      onSelect(template, chain);
       handleClose();
     } catch (err) {
       if (!current()) return;
@@ -520,6 +565,16 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                       <span className="block truncate font-semibold text-primary">
                         <Highlight text={item.appraisalNumber} term={searchQuery} appraisalNumber />
                       </span>
+                      {/* What kind of appraisal it is: the inspection round, else the purpose */}
+                      {(item.inspectionNumber != null || item.purpose) && (
+                        <Muted>
+                          {item.inspectionNumber != null ? (
+                            t('requestForm.prior.round', { n: item.inspectionNumber })
+                          ) : (
+                            <ParameterDisplay group="AppraisalPurpose" code={item.purpose} />
+                          )}
+                        </Muted>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <span className="flex items-baseline gap-1.5">
@@ -559,9 +614,6 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                       <span className="block truncate text-gray-700" title={company ?? undefined}>
                         {company ?? '—'}
                       </span>
-                      {item.inspectionNumber != null && (
-                        <Muted>{t('searchAppraisal.round', { n: item.inspectionNumber })}</Muted>
-                      )}
                     </div>
                     <div className="text-right tabular-nums">
                       <span className={value ? 'font-medium text-gray-900' : 'text-gray-400'}>

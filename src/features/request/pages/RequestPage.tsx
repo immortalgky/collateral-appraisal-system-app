@@ -28,6 +28,7 @@ import MissingFieldsChip from '../components/page/MissingFieldsChip';
 import MoreActionsMenu from '../components/page/MoreActionsMenu';
 import UploadBusyGate from '../components/page/UploadBusyGate';
 import SubmitConfirmDialog from '../components/page/SubmitConfirmDialog';
+import LatestChoiceDialog, { type LatestChoice } from '../components/page/LatestChoiceDialog';
 import {
   MissingFieldsProvider,
   type MissingFieldsHandle,
@@ -63,10 +64,17 @@ import { mergeChecklistSlots } from '../hooks/useRequiredDocuments';
 import { runGuarded } from '@/shared/utils/runGuarded';
 import { requiredDocumentsKey } from '../api/requiredDocuments';
 import {
+  CARRYABLE_STATUS,
   carriableDocuments,
+  constructionRefusalOf,
+  fetchConstructionChainStatus,
+  fetchPriorAppraisal,
   loadPriorAppraisalDocuments,
   priorAppraisalKeys,
+  useConstructionChainStatus,
   useNextInspectionNumber,
+  type ConstructionBlockReason,
+  type ConstructionChainStatus,
   type PriorAppraisal,
   type PriorAppraisalDocuments,
 } from '@/features/appraisal/api/priorAppraisal';
@@ -612,6 +620,36 @@ function RequestPage() {
   // Handed to the prior-appraisal strip through AppraisalCopyProvider, not written into the form: a
   // display-only value in form state is lost on every reset (a save's refetch) and counts as a change.
   const inspectionRound = showRound ? (nextRound ?? null) : null;
+  // The chain status of the prior (construction % and a newer appraisal) is shown and kept under the
+  // same conditions, and handed over the same way. A submit the API refused for it is remembered
+  // with the prior it concerned, so choosing another prior drops the red state without an effect.
+  const { data: chainData } = useConstructionChainStatus(prevIdNow, showRound);
+  const chainStatus = showRound ? (chainData ?? null) : null;
+  const [submitRefusal, setSubmitRefusal] = useState<{
+    priorId: string | null;
+    reason: ConstructionBlockReason;
+  } | null>(null);
+  const priorRefusal =
+    showRound && submitRefusal && submitRefusal.priorId === (prevIdNow ?? null)
+      ? submitRefusal.reason
+      : null;
+
+  // A save or submit the API refused because of the prior's chain (its error carries the reason as a
+  // code): says so on the banner and in a toast, and reads the status again, which may have moved
+  // while the maker filled in the form. False for any other error, which keeps its usual toast.
+  const refusedByChainGuard = useCallback(
+    (error: unknown) => {
+      const reason = constructionRefusalOf(error);
+      if (!reason) return false;
+      const priorId = getValues('detail.prevAppraisalId') ?? null;
+      setSubmitRefusal({ priorId, reason });
+      toast.error(t(`constructionGuard.rejected.${reason}`));
+      if (priorId)
+        void queryClient.invalidateQueries({ queryKey: priorAppraisalKeys.chainStatus(priorId) });
+      return true;
+    },
+    [getValues, queryClient, t],
+  );
 
   // The form already references this appraisal but holds none of its files (a duplicated request, a
   // draft from before files were carried): add its default files, without re-copying anything.
@@ -666,8 +704,12 @@ function RequestPage() {
     null,
   );
 
+  // A construction-inspection pick that is not the latest of its chain: the maker chooses which one
+  // to copy from before anything is applied (the answer re-enters handlePrevSelect, `latestAnswered`).
+  const [pendingLatest, setPendingLatest] = useState<LatestChoice | null>(null);
+
   const handlePrevSelect = useCallback(
-    async (template: PriorAppraisal) => {
+    async (template: PriorAppraisal, chain?: ConstructionChainStatus, latestAnswered = false) => {
       const target = template.id;
       const formId = getValues('detail.prevAppraisalId');
       const current = getValues();
@@ -686,6 +728,14 @@ function RequestPage() {
         return;
       }
 
+      const newer = chain?.latestAppraisal;
+      if (chain && newer && newer.appraisalId !== target && !latestAnswered) {
+        setPendingLatest({ template, chain });
+        return;
+      }
+      // The banner reads this key next, so it need not ask the API again at once
+      if (chain) queryClient.setQueryData(priorAppraisalKeys.chainStatus(target), chain);
+
       if (isBlockedByUploads()) return;
       if (!formId) {
         await applyPrevPick(template);
@@ -697,7 +747,45 @@ function RequestPage() {
         ownCount: countOwnFiles(current.documents, current.titles),
       });
     },
-    [getValues, applyPrevPick, isBlockedByUploads, t],
+    [getValues, applyPrevPick, isBlockedByUploads, queryClient, t],
+  );
+
+  // Picks another appraisal of the chain by its id (the dialog's and the banner's "use the latest"):
+  // reads what the search modal reads for a pick, with the same locks, then goes on as that pick would.
+  const pickAppraisalById = useCallback(
+    async (appraisalId: string) => {
+      runningLoads.current++;
+      setIsPicking(true);
+      let loaded: [PriorAppraisal, ConstructionChainStatus] | null = null;
+      try {
+        loaded = await Promise.all([
+          fetchPriorAppraisal(appraisalId),
+          fetchConstructionChainStatus(appraisalId),
+        ]);
+      } catch (err) {
+        toast.error(
+          t(
+            isAxiosError(err) && err.response?.status === 404
+              ? 'toasts.appraisalNotFound'
+              : 'toasts.appraisalLoadFailed',
+          ),
+        );
+      } finally {
+        runningLoads.current--;
+        setIsPicking(runningLoads.current > 0);
+      }
+      if (!loaded) return;
+      const [template, chain] = loaded;
+      if (template.status !== CARRYABLE_STATUS) {
+        toast.error(t('toasts.appraisalNotCompleted'));
+      } else if (chain.blockReason) {
+        toast.error(t(`constructionGuard.rejected.${chain.blockReason}`));
+      } else {
+        // The latest was asked for: it is not asked about again
+        await handlePrevSelect(template, chain, true);
+      }
+    },
+    [handlePrevSelect, t],
   );
 
   // Clear only the prevAppraisal* metadata fields — do NOT wipe copied data
@@ -842,6 +930,7 @@ function RequestPage() {
     // A file still uploading is not on the server: saving now would send its row without it
     if (isBlockedByUploads()) return;
     setSaveAction('save');
+    setSubmitRefusal(null);
 
     if (isEditMode && requestId) {
       // Update existing request
@@ -859,7 +948,8 @@ function RequestPage() {
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestUpdateFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestUpdateFailed'));
             setSaveAction(null);
           },
         },
@@ -891,7 +981,8 @@ function RequestPage() {
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestCreateFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -989,12 +1080,21 @@ function RequestPage() {
           skipWarning();
         },
         onError: (error: any) => {
-          toast.error(error.apiError?.detail || t('toasts.requestSubmitFailed'));
+          if (!refusedByChainGuard(error))
+            toast.error(error.apiError?.detail || t('toasts.requestSubmitFailed'));
           setSaveAction(null);
         },
       });
     },
-    [submitRequest, showLiftoff, requestNumber, requestId, skipWarning, queryClient],
+    [
+      submitRequest,
+      showLiftoff,
+      requestNumber,
+      requestId,
+      skipWarning,
+      queryClient,
+      refusedByChainGuard,
+    ],
   );
 
   // The form is valid and the maker pressed Submit: hold the data until they confirm the dialog.
@@ -1031,6 +1131,8 @@ function RequestPage() {
     const { data } = pendingSubmit;
     setPendingSubmit(null);
     setSaveAction('submit');
+    // A new attempt: the last refusal is no longer news (a new one sets it again)
+    setSubmitRefusal(null);
 
     if (isEditMode && requestId) {
       // Update existing request first, then check and submit
@@ -1046,7 +1148,8 @@ function RequestPage() {
             doSubmit(requestId);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -1077,7 +1180,8 @@ function RequestPage() {
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -1164,6 +1268,9 @@ function RequestPage() {
                             onClear={handlePrevClear}
                             disabled={isPicking}
                             round={inspectionRound}
+                            chain={chainStatus}
+                            rejection={priorRefusal}
+                            onUseLatest={pickAppraisalById}
                           >
                             <RequestForm />
                           </AppraisalCopyProvider>
@@ -1335,6 +1442,19 @@ function RequestPage() {
           />
         </MissingFieldsProvider>
       </FormProvider>
+
+      <LatestChoiceDialog
+        choice={pendingLatest}
+        onClose={() => setPendingLatest(null)}
+        onUseSelected={({ template, chain }) => {
+          setPendingLatest(null);
+          runGuarded(() => handlePrevSelect(template, chain, true), t('common:status.error'));
+        }}
+        onUseLatest={latestId => {
+          setPendingLatest(null);
+          runGuarded(() => pickAppraisalById(latestId), t('common:status.error'));
+        }}
+      />
 
       <ConfirmDialog
         isOpen={pendingPick !== null}

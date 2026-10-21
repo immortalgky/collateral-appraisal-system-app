@@ -167,6 +167,77 @@ export const useNextInspectionNumber = (appraisalId: string | null | undefined, 
     retry: false,
   });
 
+// ── Construction chain status ──────────────────────────────
+// GET /appraisals/{id}/construction-chain-status — what a construction-inspection (06 / 11) request
+// that copies this appraisal would run into. Computed live by the API; the submit-time guard there
+// is the truth, this only lets the screen say so before the maker fills in the rest.
+
+/** Why the API refuses this appraisal as the prior of a construction-inspection request. */
+export type ConstructionBlockReason =
+  | 'ConstructionComplete'
+  | 'LaterInspectionExists'
+  | 'OpenInspectionRequest';
+
+const BLOCK_REASONS: readonly ConstructionBlockReason[] = [
+  'ConstructionComplete',
+  'LaterInspectionExists',
+  'OpenInspectionRequest',
+];
+
+export const isConstructionBlockReason = (code: unknown): code is ConstructionBlockReason =>
+  (BLOCK_REASONS as readonly unknown[]).includes(code);
+
+/**
+ * The reason the API refused a save or submit for, when the refusal is about the prior appraisal's
+ * chain: its ProblemDetails `errorCode` (put on `apiError` by the axios interceptor) is the reason.
+ * null for any other error.
+ */
+export const constructionRefusalOf = (error: unknown): ConstructionBlockReason | null => {
+  const code = (error as { apiError?: { errorCode?: unknown } } | null)?.apiError?.errorCode;
+  return isConstructionBlockReason(code) ? code : null;
+};
+
+export interface ConstructionChainStatus {
+  appraisalId: string;
+  /** The latest construction of the chain (any branch), not necessarily this appraisal's own. */
+  construction: {
+    status: 'InProgress' | 'Complete' | 'NoData';
+    progressPct: number | null;
+    /** The appraisal that holds `progressPct`; differs from the picked one when it has no data. */
+    sourceAppraisalId: string | null;
+    sourceAppraisalNumber: string | null;
+    sourceInspectionNumber: number | null;
+    sourceCompletedAt: string | null;
+  };
+  /** A construction inspection completed after this appraisal, in the same chain. */
+  laterInspection: {
+    appraisalId: string;
+    appraisalNumber: string;
+    inspectionNumber: number;
+    completedAt: string;
+  } | null;
+  /** A submitted, not yet closed construction-inspection request in the chain. */
+  openInspectionRequest: { requestId: string; requestNumber: string } | null;
+  /** The newest appraisal of the chain when it is not this one (a re-appraisal after it, say). */
+  latestAppraisal: {
+    appraisalId: string;
+    appraisalNumber: string;
+    purposeCode: string;
+    completedAt: string;
+  } | null;
+  blockReason: ConstructionBlockReason | null;
+}
+
+/** Imperative read, called inside the search modal's row-click handler. Not cached. */
+export async function fetchConstructionChainStatus(
+  appraisalId: string,
+): Promise<ConstructionChainStatus> {
+  const { data } = await axios.get<ConstructionChainStatus>(
+    `/appraisals/${appraisalId}/construction-chain-status`,
+  );
+  return data;
+}
+
 export interface PriorAppraisalDocuments {
   appraisalNumber: string | null;
   documents: CarryForwardDocument[];
@@ -174,7 +245,25 @@ export interface PriorAppraisalDocuments {
 
 export const priorAppraisalKeys = {
   documents: (appraisalId: string) => ['appraisal', appraisalId, 'include', 'documents'] as const,
+  chainStatus: (appraisalId: string) =>
+    ['appraisal', appraisalId, 'construction-chain-status'] as const,
 };
+
+/**
+ * The chain status behind the prior-appraisal banner. A pick seeds this key with the answer it
+ * already read, so the banner does not ask again at once; a failed read is just no chip.
+ */
+export const useConstructionChainStatus = (
+  appraisalId: string | null | undefined,
+  enabled: boolean,
+) =>
+  useQuery({
+    queryKey: priorAppraisalKeys.chainStatus(appraisalId ?? ''),
+    queryFn: () => fetchConstructionChainStatus(appraisalId as string),
+    enabled: enabled && !!appraisalId,
+    staleTime: 30 * 1000,
+    retry: false,
+  });
 
 const fetchPriorAppraisalDocuments = async (
   appraisalId: string,

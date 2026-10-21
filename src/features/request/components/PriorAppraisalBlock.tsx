@@ -8,6 +8,7 @@ import { useFormReadOnly } from '@/shared/components/form/context';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { runGuarded } from '@/shared/utils/runGuarded';
+import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import { useCanOpenAppraisalWorkspace } from '@/features/appraisal/hooks/useCanOpenAppraisalWorkspace';
 import { useAppraisalCopyHandler } from '../contexts/AppraisalCopyContext';
 import { CI_PURPOSES, PREV_APP_NO_REQUIRED } from '../configs/fields';
@@ -49,6 +50,10 @@ export default function PriorAppraisalBlock() {
   });
   // Handed down by the page, not read from the form (see AppraisalCopyContext)
   const round = copy?.round ?? null;
+  const latestPurposeName = useParameterDescription(
+    'AppraisalPurpose',
+    copy?.chain?.latestAppraisal?.purposeCode,
+  );
   const { fieldState } = useController({ name: NAME, control });
   const error = fieldState.error?.message;
 
@@ -75,11 +80,31 @@ export default function PriorAppraisalBlock() {
       <SearchAppraisalModal
         isOpen={searching}
         onClose={() => setSearching(false)}
-        onSelect={template => runGuarded(() => copy.onSelect(template), t('common:status.error'))}
+        onSelect={(template, chain) =>
+          runGuarded(() => copy.onSelect(template, chain), t('common:status.error'))
+        }
+        purpose={purpose}
       />
     ) : null;
 
   if (hasPrior) {
+    // The construction-inspection extras: only for those purposes, and only what the page handed
+    // down (it asks for the status only while the request can still be edited)
+    const ci = CI_PURPOSES.includes(purpose);
+    const chain = ci ? (copy?.chain ?? null) : null;
+    const blocked = ci ? (copy?.rejection ?? chain?.blockReason ?? null) : null;
+    const construction = blocked ? null : chain?.construction;
+    const latest = blocked ? null : (chain?.latestAppraisal ?? null);
+    const source =
+      construction?.sourceAppraisalId &&
+      construction.sourceAppraisalId !== id &&
+      construction.sourceAppraisalNumber &&
+      construction.sourceInspectionNumber != null
+        ? t('constructionGuard.source', {
+            no: construction.sourceAppraisalNumber,
+            n: construction.sourceInspectionNumber,
+          })
+        : null;
     const facts = [
       // No value (masked, never set, or 0 from the API) reads "—", as the search modal shows it.
       Number(value) > 0
@@ -88,61 +113,125 @@ export default function PriorAppraisalBlock() {
           })
         : t('requestForm.prior.valueNone'),
       date && t('copyBanner.date', { date: formatDate(date, 'dd/MM/yyyy') }),
-      CI_PURPOSES.includes(purpose) && round != null && t('requestForm.prior.round', { n: round }),
+      ci && !blocked && round != null && t('requestForm.prior.round', { n: round }),
     ].filter(Boolean);
+    const swapToLatest = canEdit ? copy?.onUseLatest : undefined;
     return (
       <div data-field={NAME} className="col-span-12">
         <div
           role="status"
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-primary-200 bg-primary-50/70 px-3 py-1.5 text-xs text-gray-700"
-        >
-          <Icon name="circle-info" style="solid" className="shrink-0 text-primary" />
-          <span className="font-medium text-gray-600">{t('copyBanner.label')}</span>
-          {canOpen && id ? (
-            <Link
-              to={`/appraisals/${id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={t('copyBanner.openTitle')}
-              className="font-semibold text-primary-700 hover:underline"
-            >
-              {number}
-            </Link>
-          ) : (
-            <strong className="font-semibold text-gray-900">{number}</strong>
+          className={clsx(
+            'flex flex-col overflow-hidden rounded-lg border text-xs text-gray-700',
+            blocked ? 'border-danger bg-danger-50' : 'border-primary-200 bg-primary-50/70',
           )}
-          {facts.map(fact => (
-            <span key={String(fact)} className="text-gray-600">
-              <span aria-hidden className="mr-2 text-gray-300">
-                ·
+        >
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5">
+            <Icon
+              name={blocked ? 'circle-exclamation' : 'circle-info'}
+              style="solid"
+              className={clsx('shrink-0', blocked ? 'text-danger' : 'text-primary')}
+            />
+            <span className="font-medium text-gray-600">{t('copyBanner.label')}</span>
+            {canOpen && id ? (
+              <Link
+                to={`/appraisals/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t('copyBanner.openTitle')}
+                className="font-semibold text-primary-700 hover:underline"
+              >
+                {number}
+              </Link>
+            ) : (
+              <strong className="font-semibold text-gray-900">{number}</strong>
+            )}
+            {facts.map(fact => (
+              <span key={String(fact)} className="text-gray-600">
+                <span aria-hidden className="mr-2 text-gray-300">
+                  ·
+                </span>
+                {fact}
               </span>
-              {fact}
-            </span>
-          ))}
-          {canEdit && (
-            <span className="ml-auto flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSearching(true)}
-                disabled={copy.disabled}
-                className={linkButton}
-              >
-                {t('requestForm.prior.change')}
-              </button>
-              <button
-                type="button"
-                onClick={() => runGuarded(() => copy.onClear(), t('common:status.error'))}
-                disabled={copy.disabled}
-                aria-label={t('copyBanner.clearTitle')}
-                title={t('copyBanner.clearTitle')}
-                className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-              >
-                <Icon name="xmark" style="solid" />
-                {t('requestForm.prior.clear')}
-              </button>
-            </span>
+            ))}
+            {construction?.status === 'InProgress' && construction.progressPct != null && (
+              <span className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-2 py-0.5 font-semibold text-primary-800">
+                <span
+                  aria-hidden
+                  className="inline-block h-1 w-11 overflow-hidden rounded-full bg-primary-200"
+                >
+                  <span
+                    className="block h-full bg-primary"
+                    style={{ width: `${Math.min(100, Math.max(0, construction.progressPct))}%` }}
+                  />
+                </span>
+                {t('constructionGuard.chip', {
+                  pct: formatNumber(
+                    construction.progressPct,
+                    Number.isInteger(construction.progressPct) ? 0 : 2,
+                  ),
+                })}
+              </span>
+            )}
+            {construction?.status === 'NoData' && (
+              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">
+                {t('constructionGuard.noData')}
+              </span>
+            )}
+            {source && <span className="text-gray-500">{source}</span>}
+            {canEdit && (
+              <span className="ml-auto flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSearching(true)}
+                  disabled={copy.disabled}
+                  className={linkButton}
+                >
+                  {t('requestForm.prior.change')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => runGuarded(() => copy.onClear(), t('common:status.error'))}
+                  disabled={copy.disabled}
+                  aria-label={t('copyBanner.clearTitle')}
+                  title={t('copyBanner.clearTitle')}
+                  className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                >
+                  <Icon name="xmark" style="solid" />
+                  {t('requestForm.prior.clear')}
+                </button>
+              </span>
+            )}
+          </div>
+          {latest && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-amber-200 bg-amber-50 px-3 py-1.5 text-amber-900">
+              <Icon name="triangle-exclamation" style="solid" className="shrink-0 text-amber-600" />
+              <span>
+                {t('constructionGuard.notLatest', {
+                  latest: latest.appraisalNumber,
+                  purpose: latestPurposeName,
+                  date: formatDate(latest.completedAt, 'dd/MM/yyyy'),
+                })}
+              </span>
+              {swapToLatest && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    runGuarded(() => swapToLatest(latest.appraisalId), t('common:status.error'))
+                  }
+                  disabled={copy?.disabled}
+                  className={clsx(linkButton, 'ml-auto')}
+                >
+                  {t('constructionGuard.useLatestInstead', { latest: latest.appraisalNumber })}
+                </button>
+              )}
+            </div>
           )}
         </div>
+        {blocked && (
+          <p role="alert" className="mt-1 text-xs text-danger">
+            {t(`constructionGuard.rejected.${blocked}`)}
+          </p>
+        )}
         {modal}
       </div>
     );
