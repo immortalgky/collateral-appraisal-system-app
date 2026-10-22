@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import type { TFunction } from 'i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -14,12 +14,34 @@ import {
   useBlockReappraisalDetail,
   useCreateBlockReappraisal,
   useMarkBlockReappraisalNotRequired,
+  useRestoreBlockReappraisal,
 } from '../api/blockReappraisal';
 import type { BlockReappraisalUnitDetail, BlockReappraisalCreateResult } from '../types';
 import { isCondo } from '@/features/blockProject/types';
 import BlockReappraisalNotRequiredModal from '../components/BlockReappraisalNotRequiredModal';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Status banner under the page header — same look as ReappraisalDetailPage's "not reviewing" one. */
+function Banner({
+  title,
+  children,
+  action,
+}: {
+  title: string;
+  children?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div className="shrink-0 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-2 text-rose-900">
+      <div className="flex-1 min-w-0 text-xs leading-relaxed">
+        <p className="font-semibold">{title}</p>
+        {children && <p className="whitespace-pre-line break-words">{children}</p>}
+      </div>
+      {action}
+    </div>
+  );
+}
 
 function formatNumber(n?: number | null): string {
   if (n == null) return '-';
@@ -556,6 +578,7 @@ function BlockReappraisalDetailPage() {
 
   const createMutation = useCreateBlockReappraisal();
   const optOutMutation = useMarkBlockReappraisalNotRequired();
+  const restoreMutation = useRestoreBlockReappraisal();
 
   // Modal states
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
@@ -644,6 +667,18 @@ function BlockReappraisalDetailPage() {
     });
   };
 
+  const handleRestore = () => {
+    if (!collateralMasterId) return;
+    restoreMutation.mutate(collateralMasterId, {
+      onSuccess: () => {
+        toast.success(t('success.restore'));
+      },
+      onError: () => {
+        toast.error(t('error.restoreFailed'));
+      },
+    });
+  };
+
   const handleOptOutConfirm = (remark: string) => {
     if (!collateralMasterId) return;
     optOutMutation.mutate(
@@ -699,6 +734,7 @@ function BlockReappraisalDetailPage() {
   }
 
   const condo = isCondo(detail.projectType);
+  const isNotRequired = detail.status === 'Deleted';
   const soldPct = detail.totalUnits > 0 ? (detail.soldUnits / detail.totalUnits) * 100 : 0;
 
   return (
@@ -737,27 +773,53 @@ function BlockReappraisalDetailPage() {
           </div>
         </div>
 
-        {/* Action buttons */}
+        {/* Action buttons; a not-required project is restored from its banner instead */}
         <div className="flex items-center gap-2 shrink-0">
-          <Button
-            variant="outline"
-            size="sm"
-            className="!text-danger !border-danger/30 hover:!bg-danger/5"
-            onClick={() => setOptOutConfirmOpen(true)}
-            leftIcon={<Icon style="solid" name="ban" className="size-3" />}
-          >
-            {t('actions.notRequired')}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => setCreateConfirmOpen(true)}
-            leftIcon={<Icon style="solid" name="play" className="size-3" />}
-          >
-            {t('actions.createRequest')}
-          </Button>
+          {!isNotRequired && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                className="!text-danger !border-danger/30 hover:!bg-danger/5"
+                onClick={() => setOptOutConfirmOpen(true)}
+                leftIcon={<Icon style="solid" name="ban" className="size-3" />}
+              >
+                {t('actions.notRequired')}
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={() => setCreateConfirmOpen(true)}
+                leftIcon={<Icon style="solid" name="play" className="size-3" />}
+              >
+                {t('actions.createRequest')}
+              </Button>
+            </>
+          )}
         </div>
       </div>
+
+      {/* ── Banner ── */}
+      {isNotRequired && (
+        <Banner
+          title={t('detail.banner.notRequiredTitle')}
+          action={
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRestore}
+              isLoading={restoreMutation.isPending}
+              leftIcon={<Icon style="solid" name="rotate-left" className="size-3" />}
+            >
+              {t('actions.restore')}
+            </Button>
+          }
+        >
+          {detail.notRequiredRemark
+            ? t('detail.banner.notRequiredRemark', { remark: detail.notRequiredRemark })
+            : t('detail.banner.notRequiredNoRemark')}
+        </Banner>
+      )}
 
       {/* ── Summary strip ── */}
       <section className="shrink-0 bg-white rounded-lg border border-gray-200 px-4 py-2.5">
