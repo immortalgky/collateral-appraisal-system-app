@@ -187,6 +187,23 @@ describe('i18n cold boot', () => {
     expect(localStorage.getItem('app-language')).toBe('th');
   });
 
+  it('takes the language from the cas-lang cookie the login page shares, ahead of localStorage', async () => {
+    localStorage.setItem('app-language', 'en');
+    document.cookie = 'cas-lang=zh; Path=/';
+
+    const { i18n } = await bootCollectingFailures();
+
+    expect(i18n.language).toBe('zh');
+  });
+
+  it('normalises a region-tagged cookie value too', async () => {
+    document.cookie = 'cas-lang=th-TH; Path=/';
+
+    const { i18n } = await bootCollectingFailures();
+
+    expect(i18n.language).toBe('th');
+  });
+
   it('falls back to en for a language the app does not ship', async () => {
     // Guards `supportedLngs`: without it a ja-JP browser resolves to `ja`, and
     // every namespace load for it rejects.
@@ -210,6 +227,7 @@ describe('i18n cold boot', () => {
 
     vi.resetModules();
     localStorage.clear();
+    document.cookie = 'cas-lang=; Max-Age=0; Path=/';
     const { i18n } = await bootCollectingFailures();
 
     expect(i18n.resolvedLanguage).toBe('en');

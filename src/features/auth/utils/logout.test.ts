@@ -72,6 +72,23 @@ describe('logout', () => {
     expect(location.replace).toHaveBeenCalledWith('https://idp.example.com/end');
   });
 
+  it('leaves a flag for the sign-in page it lands on, set after sessionStorage was cleared', async () => {
+    sessionStorage.setItem('cas-return', '{}');
+    server.use(http.post('*/api/auth/logout', () => HttpResponse.json({ url: '/idp' })));
+    const { logout } = await load();
+    await logout();
+    expect(sessionStorage.getItem('cas-signed-out')).toBe('1');
+    expect(sessionStorage.getItem('cas-return')).toBeNull();
+    sessionStorage.clear();
+  });
+
+  it('does not leave the flag when the sign-out fails', async () => {
+    server.use(http.post('*/api/auth/logout', () => HttpResponse.json({}, { status: 500 })));
+    const { logout } = await load();
+    await logout();
+    expect(sessionStorage.getItem('cas-signed-out')).toBeNull();
+  });
+
   it.each([401, 403, 500])(
     'stays signed in, tells the user and tears nothing down when the API answers %i',
     async status => {
@@ -182,13 +199,44 @@ describe('logout', () => {
     expect(location.replace).toHaveBeenCalledWith('/login');
   });
 
-  it('sends this tab to /login when another tab signs out', async () => {
-    const { listenForRemoteLogout } = await load();
-    const stop = listenForRemoteLogout();
-    FakeChannel.instances[0].listeners.forEach(l => l({ data: { type: 'logout' } }));
-    expect(location.href).toBe('/login');
-    stop();
-    expect(FakeChannel.instances[0].listeners).toHaveLength(0);
+  describe('when another tab signs out', () => {
+    const here = (pathname: string, search = '') => {
+      const tab = { ...location, pathname, search, hash: '', href: START };
+      vi.stubGlobal('location', tab);
+      return tab;
+    };
+    const signOutElsewhere = () =>
+      FakeChannel.instances[0].listeners.forEach(l => l({ data: { type: 'logout' } }));
+
+    it('sends this tab to sign in saying it was signed out, with no page for the next person', async () => {
+      const { listenForRemoteLogout } = await load();
+      const tab = here('/tasks', '?x=1');
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks?x=1', label: 'Tasks' }));
+      const stop = listenForRemoteLogout();
+      signOutElsewhere();
+      expect(tab.href).toBe('/login?reason=signed-out');
+      expect(sessionStorage.getItem('cas-return')).toBeNull(); // a bare /login cannot bring the page back
+      stop();
+      expect(FakeChannel.instances[0].listeners).toHaveLength(0);
+    });
+
+    it("goes to the canonical origin's sign-in page when this tab is on another host name", async () => {
+      vi.stubEnv('VITE_APP_URL', 'https://app.example.com');
+      const { listenForRemoteLogout } = await load();
+      const tab = here('/tasks', '?x=1');
+      listenForRemoteLogout();
+      signOutElsewhere();
+      expect(tab.replace).toHaveBeenCalledWith('https://app.example.com/login?reason=signed-out');
+      vi.unstubAllEnvs();
+    });
+
+    it('keeps the sign-in page where it is', async () => {
+      const { listenForRemoteLogout } = await load();
+      const tab = here('/login', '?reason=idle');
+      listenForRemoteLogout();
+      signOutElsewhere();
+      expect(tab.href).toBe(START);
+    });
   });
 
   it('ignores other channel messages', async () => {

@@ -7,6 +7,7 @@ import * as appHub from '@shared/realtime/appHub';
 
 import { useAuthStore } from '../store';
 import { authChannel } from './authChannel';
+import { redirectToLogin, session, SIGNED_OUT_KEY } from './auth';
 
 /** Tell the other tabs which user this browser's session cookie belongs to. */
 export function announceUser(id: string) {
@@ -28,7 +29,9 @@ export function listenForRemoteLogout(): () => void {
     }
     if (event.data?.type !== 'logout') return;
     queryClient.clear();
-    leaveWithoutPrompt(() => (window.location.href = '/login'));
+    // Explicit sign-out on a possibly shared computer: say so, but keep no page for the next person.
+    // Does nothing on the sign-in page itself.
+    redirectToLogin(null, 'signed-out');
   };
   authChannel.addEventListener('message', onMessage);
   return () => authChannel?.removeEventListener('message', onMessage);
@@ -88,7 +91,9 @@ async function signOut(): Promise<void> {
   await settleWithin(appHub.stop(), REDIRECT_SETTLE_MS);
   authChannel?.postMessage({ type: 'logout' });
   queryClient.clear();
-  sessionStorage.clear();
+  session.clear();
+  // Read once by the sign-in page this lands on, to say "you signed out" rather than the first-visit text.
+  session.set(SIGNED_OUT_KEY, '1');
   window.location.replace(destination);
   // Held while the page leaves. If it is still here (a cancelled "Leave site?" prompt) the server
   // session is gone anyway, so let the next 401 send the user to sign in.

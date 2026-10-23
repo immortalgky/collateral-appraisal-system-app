@@ -1,6 +1,6 @@
 import axios, { type AxiosError } from 'axios';
 import toast from 'react-hot-toast';
-import { redirectToLogin } from '@features/auth/utils/auth';
+import { redirectToLogin, sessionEndReason } from '@features/auth/utils/auth';
 import { REDIRECT_SETTLE_MS } from './forcedNavigation';
 import { isUserDriven, recordUserRequest } from './userActivity';
 import { extractApiError } from '../utils/errorUtils';
@@ -105,12 +105,17 @@ axiosInstance.interceptors.response.use(
     if (response?.status === 401 && !config?.skipAuthRedirect) {
       if (!redirectingToLogin && !loginRedirectSuspended) {
         redirectingToLogin = true;
-        redirectToLogin();
         // The navigation is forced (no "Leave site?" prompt), so a page that is really leaving never
-        // runs this; one whose navigation silently failed must not swallow every later 401.
+        // runs this; one whose navigation silently failed must not swallow every later 401. Scheduled
+        // first, so even a redirect that throws cannot leave the flag set for good.
         setTimeout(() => {
           redirectingToLogin = false;
         }, REDIRECT_SETTLE_MS);
+        try {
+          redirectToLogin(undefined, sessionEndReason(response.headers['x-session-end']));
+        } catch {
+          // The request still rejects with its own error, not with whatever broke here.
+        }
       }
       return Promise.reject(error);
     }

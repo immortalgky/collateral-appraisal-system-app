@@ -13,14 +13,26 @@ const languages = [
   { code: 'zh', label: '中文', flag: flagZh },
 ] as const;
 
-export default function LanguageSwitcher(): React.ReactNode {
+export default function LanguageSwitcher({
+  onDark = false,
+}: {
+  /** Light-on-dark trigger, for the sign-in page's navy panel. */
+  onDark?: boolean;
+}): React.ReactNode {
   const { i18n } = useTranslation();
 
   const current = languages.find(l => i18n.language?.startsWith(l.code)) ?? languages[0];
 
   return (
     <Menu as="div" className="relative">
-      <MenuButton className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-gray-50 dark:bg-base-200 hover:bg-gray-100 dark:hover:bg-base-300 border border-gray-200/60 dark:border-base-300 text-xs font-semibold text-gray-700 dark:text-base-content transition-all cursor-pointer">
+      <MenuButton
+        className={clsx(
+          'flex items-center gap-1.5 px-2.5 py-1.5 border text-xs font-semibold transition-all cursor-pointer',
+          onDark
+            ? 'rounded-full border-white/25 text-white hover:bg-white/10'
+            : 'rounded-lg bg-gray-50 dark:bg-base-200 hover:bg-gray-100 dark:hover:bg-base-300 border-gray-200/60 dark:border-base-300 text-gray-700 dark:text-base-content',
+        )}
+      >
         <img
           src={current.flag}
           alt={current.code}

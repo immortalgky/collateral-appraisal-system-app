@@ -197,9 +197,14 @@ i18n
       escapeValue: false,
     },
     detection: {
-      order: ['localStorage', 'navigator'],
+      // The cookie is shared with the identity provider's login page (same host, other port: cookies
+      // are not port-scoped), so a language picked on either page is the one the other shows.
+      order: ['cookie', 'localStorage', 'navigator'],
+      lookupCookie: 'cas-lang',
       lookupLocalStorage: 'app-language',
-      caches: ['localStorage'],
+      caches: ['localStorage', 'cookie'],
+      cookieMinutes: 60 * 24 * 365,
+      cookieOptions: { path: '/', sameSite: 'lax', secure: true },
       // The detector returns a LIST — localStorage and navigator concatenated —
       // and `getBestMatchFromCodes` takes the first *supported* entry. So a stored
       // `th-TH` loses to navigator's bare `en`, and the user boots in English with

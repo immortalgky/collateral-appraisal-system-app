@@ -9,11 +9,17 @@ import { hopToCanonicalOrigin, redirectToLogin } from '../utils/auth';
 import { useAuthStore } from '../store';
 import { AuthInitializer } from './AuthInitializer';
 
-vi.mock('../utils/auth', () => ({ redirectToLogin: vi.fn(), hopToCanonicalOrigin: vi.fn() }));
+vi.mock('../utils/auth', async importOriginal => ({
+  ...(await importOriginal<typeof import('../utils/auth')>()),
+  redirectToLogin: vi.fn(),
+  hopToCanonicalOrigin: vi.fn(),
+}));
 
 describe('AuthInitializer', () => {
   beforeEach(() => {
     queryClient.clear();
+    sessionStorage.clear();
+    window.history.pushState(null, '', '/');
     useAuthStore.setState({ user: null, isAuthenticated: false });
     vi.mocked(hopToCanonicalOrigin).mockReturnValue(false);
   });
@@ -34,6 +40,46 @@ describe('AuthInitializer', () => {
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
     expect(state.user?.name).toBe('Ann Lee');
+  });
+
+  describe('the state the sign-in page saved', () => {
+    const me = () =>
+      server.use(
+        http.get('*/api/auth/me', () =>
+          HttpResponse.json({ id: 'u1', username: 'ann', roles: [] }),
+        ),
+      );
+    const saved = { path: '/tasks', label: 'Tasks', userId: 'u0' };
+    const boot = async () => {
+      render(
+        <AuthInitializer>
+          <div>app</div>
+        </AuthInitializer>,
+      );
+      await screen.findByText('app');
+    };
+
+    it('is forgotten once the user is signed in on an app page', async () => {
+      me();
+      sessionStorage.setItem('cas-return', JSON.stringify(saved));
+      await boot();
+      expect(sessionStorage.getItem('cas-return')).toBeNull();
+    });
+
+    it('survives a boot on /login, where it is still what the page shows', async () => {
+      me();
+      window.history.pushState(null, '', '/login');
+      sessionStorage.setItem('cas-return', JSON.stringify(saved));
+      await boot();
+      expect(JSON.parse(sessionStorage.getItem('cas-return')!)).toEqual(saved);
+    });
+
+    it('is not cleared when there is no session', async () => {
+      server.use(errorHandlers.noSession);
+      sessionStorage.setItem('cas-return', JSON.stringify(saved));
+      await boot();
+      expect(sessionStorage.getItem('cas-return')).not.toBeNull();
+    });
   });
 
   it('renders the children as signed out on 401, without redirecting itself', async () => {
