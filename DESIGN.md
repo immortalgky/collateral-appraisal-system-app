@@ -4,7 +4,19 @@ Read this before any UI change. Every value below is taken from the code; the fi
 you can check it. If the code and this file disagree, the code is what renders. Fix one or the other, never
 both silently. Pixel values are given **at the 14px root** (viewport below 1920px, density `normal`).
 
-## 1. Where the styling lives
+**Two kinds of content.** Every numbered section ends with a marker:
+
+| Marker | Meaning |
+|---|---|
+| 🔒 | Technical rule, from the platform or a real bug. Binding for every change and every tool; changing one needs the user's decision. |
+| 🎨 | The current design language. Refinement follows it. A redesign or exploration may propose something else: show it on a mock first; after the user approves, update this file and `theme.css` together. |
+| 📋 | Reference lists, not rules. |
+
+Inside a 🎨 section, a bullet or sentence marked 🔒 is a technical constraint and is binding.
+Tools: edit this file in place. Do not regenerate it or convert it to another format (for example Google
+Stitch DESIGN.md), and keep the section numbers; code comments cite them.
+
+## 1. Where the styling lives 🔒
 
 | File | Owns |
 |---|---|
@@ -18,7 +30,7 @@ both silently. Pixel values are given **at the 14px root** (viewport below 1920p
 Stack: React 19, TypeScript, Vite, Tailwind v4.2 (CSS-first `@theme`), daisyUI 5, Headless UI, `clsx`.
 There is **no tailwind-merge** (see section 12).
 
-## 2. Root size: 1rem is not 16px
+## 2. Root size: 1rem is not 16px 🔒
 
 ```
 html { font-size: calc(var(--cas-root-step) * var(--cas-density)); }
@@ -33,7 +45,7 @@ html { font-size: calc(var(--cas-root-step) * var(--cas-density)); }
 - To get a 1920 value, multiply the 1440 value by 15/14 (text-sm 13 -> 13.9, text-xs 12 -> 12.9).
 - Tailwind's docs assume a 16px root and a different scale. Do not copy their px numbers; use the table below.
 
-## 3. Type scale (`theme.css`)
+## 3. Type scale (`theme.css`) 🎨
 
 Since 2026-10-10 the scale sits one step under the Tailwind defaults, to match the mocks.
 
@@ -48,13 +60,13 @@ Since 2026-10-10 the scale sits one step under the Tailwind defaults, to match t
 | `text-2xl` | 1.5714 | 22 | 23.6 |
 | `text-3xl` | 2 | 28 | 30 |
 
-`text-4xl` and up are unchanged. Line height: `text-xs` to `text-2xl`, `text-table` and `html` all use
+`text-4xl` and up are unchanged. 🔒 Line height: `text-xs` to `text-2xl`, `text-table` and `html` all use
 `--cas-leading` = **1.5** (`index.css`).
 
 Fonts: `'Roboto Variable'` (Latin, digits) then `Sarabun` (Thai subset only), self-hosted. Weights 400/500/600/700.
 No italic face is loaded.
 
-## 4. Thai text and `truncate`
+## 4. Thai text and `truncate` 🔒
 
 `index.css` overrides Tailwind's `truncate` inside `@layer utilities`:
 
@@ -75,7 +87,7 @@ No italic face is loaded.
   `leading-[1.x]` on Thai text inside one. The remaining table-cell `overflow-hidden text-ellipsis` combos
   (8 files, e.g. `AppraisalResultsTable`, `constructionGrid.ts`) are deliberately left untouched.
 
-## 5. Type roles
+## 5. Type roles 🎨
 
 | Role | Classes | px @14 |
 |---|---|---|
@@ -106,7 +118,7 @@ allowed sub-scale size is the label inside the file-type tile (`FileBadgeIcon` s
 `headingClassName` stays on FormCard / SectionHeader / DocumentCardHeader for a page that truly needs
 another size; no page passes it today.
 
-## 6. Colour tokens (`theme.css`)
+## 6. Colour tokens (`theme.css`) 🎨
 
 | Token (Tailwind name) | Value | Use |
 |---|---|---|
@@ -127,10 +139,10 @@ another size; no page passes it today.
   rules, `gray-200` inputs, table heads, list containers; `gray-300` outline button, chips.
 - `--palette-*` (surface, line, ink, input-edge, accent, warn, req…) and `--dc-*` in `theme.css` serve the
   form skins and the Appraisal Data Correction screen only. Every one has a dark value.
-- Dark mode is `[data-theme=dark]` (`@custom-variant dark`), not the OS preference.
-- Global `:focus-visible` is a 2px `#3b82f6` outline; text inputs/textarea/select suppress it and draw their own ring.
+- 🔒 Dark mode is `[data-theme=dark]` (`@custom-variant dark`), not the OS preference.
+- 🔒 Global `:focus-visible` is a 2px `#3b82f6` outline; text inputs/textarea/select suppress it and draw their own ring.
 
-## 7. Status colours and banners
+## 7. Status colours and banners 🎨
 
 | State | Dot | Badge | Row |
 |---|---|---|---|
@@ -139,7 +151,7 @@ another size; no page passes it today.
 | Optional, empty | `bg-gray-300` | `tone="gray"` | default |
 
 Incomplete title row (TitleTable): `bg-[color-mix(in_oklab,var(--color-amber-50)_70%,white)] hover:bg-amber-50`
-plus `shadow-[inset_3px_0_0_#f59e0b]` on the first cell. The tint is opaque on purpose (section 10).
+plus `shadow-[inset_3px_0_0_#f59e0b]` on the first cell. 🔒 The tint is opaque on purpose (section 10).
 Dots are `size-2 rounded-full` with a `title` naming the state.
 
 **Pending-items banner** (pattern: `document-followup/components/OpenFollowupBanner.tsx`). Use it for any
@@ -152,7 +164,7 @@ Dots are `size-2 rounded-full` with a `title` naming the state.
   notes `line-clamp-2`, status badge, action link).
 - `compact` variant (Decision screen) is read-only: same line and list, no cancel links for anyone.
 
-## 8. Cards and surfaces
+## 8. Cards and surfaces 🎨
 
 | Component | Classes |
 |---|---|
@@ -162,14 +174,14 @@ Dots are `size-2 rounded-full` with a `title` naming the state.
 | List-page table box | `bg-white rounded-lg border border-gray-200 overflow-hidden` |
 | Row menu / popover | `rounded-lg border border-gray-200 bg-white py-1 shadow-lg`, items `px-3 py-2 text-sm text-gray-700 data-focus:bg-gray-100` |
 
-- New page/section headers use `SectionHeader` / `FormCard`. Do not build a custom header row; save space by
+- 🔒 New page/section headers use `SectionHeader` / `FormCard`. Do not build a custom header row; save space by
   putting actions in `rightIcon`, not by restyling the title.
 - A card whose table runs to its bottom edge drops the bottom radius, top stays round:
   `FormCard className="rounded-b-none!"` with `noPadding` (`TitleInformationForm.tsx`), or a plain
   `section` with `rounded-t-2xl rounded-b-none`. Remove the last table's own bottom border so the card edge is
   the only line (`[&>section:last-of-type>div:last-child]:border-b-0`).
 
-## 9. Controls
+## 9. Controls 🎨
 
 **Button** (`shared/components/Button.tsx`): `inline-flex items-center justify-center rounded-md font-medium`,
 `type="button"` by default, `disabled:opacity-50`, focus `ring-2 ring-primary/40 ring-offset-2`.
@@ -214,16 +226,16 @@ sliding pill `bg-primary shadow-md shadow-primary/25`, active label white.
 **Badge** (`Badge.tsx`): `inline-flex items-center gap-1.5 font-medium rounded-full`, dot on by default, `badgeStyle="soft"`.
 Sizes: `sm` (default) `px-2 py-0.5 text-xs`; `md` `text-sm`; `lg` `text-base`; `xs` `text-[11px]`.
 Colour by `tone` (`teal | green | yellow | gray`) or `type`+`value` (status, priority, channel…).
-Add `whitespace-nowrap` at the call site in tables; the component does not set it.
+🔒 Add `whitespace-nowrap` at the call site in tables; the component does not set it.
 
 **File chip** (`documentCard/DocumentFileChip.tsx`): `inline-flex max-w-[20rem] items-center gap-1 rounded-md border bg-white py-0.5 pr-1 pl-1.5 text-xs`,
 selected `border-primary bg-primary/5`. Tile `FileBadgeIcon` sm: `grid place-items-center h-[1.3rem] min-w-[1.3rem]`, IMG `bg-blue-600`,
 PDF `bg-red-600`, other `bg-gray-500`. Every child `items-center`; name `truncate` with the full name in `title`.
 
 **SlideOverPanel**: header `px-6 py-4 border-b border-gray-200`, body `px-6 py-4`, optional pinned `footer`;
-widths `md lg xl 2xl(70vw) full`. **Pagination**: `border-t bg-gray-50 px-4 py-2 text-sm`, pages are 0-based.
+widths `md lg xl 2xl(70vw) full`. **Pagination**: `border-t bg-gray-50 px-4 py-2 text-sm`, 🔒 pages are 0-based.
 
-## 10. Tables
+## 10. Tables 🎨
 
 **List page** (`RequestListingPage.tsx` is the reference)
 
@@ -235,7 +247,7 @@ tbody: divide-y divide-gray-100;  tr: hover:bg-gray-50 even:bg-gray-50/50
 td:    px-4 py-2.5;  secondary line text-xs text-gray-400;  badges size sm
 ```
 
-Do not combine daisyUI `table-xs` / `table-sm` with `text-table`: their cell rule beats the table-level class.
+🔒 Do not combine daisyUI `table-xs` / `table-sm` with `text-table`: their cell rule beats the table-level class.
 
 **Which size:** `text-table` (12.5) is for list and catalog pages (requests, tasks, monitoring, admin
 maintenance) and the request title table. Tables inside a modal or a card keep `text-sm` (13) on purpose:
@@ -249,36 +261,36 @@ and the appraisal summary/form tables. `th`, secondary lines and badges are 12 i
 - `th`: `sticky top-0 bg-gray-50 border-b border-gray-200 px-2 py-2 text-xs font-semibold text-gray-600`.
   `td`: `border-b border-gray-100 px-2 py-1 align-middle`. A two-line row (12.5 + 12) is 44.8px at 1440.
 - Status column: `<Badge size="sm" className="whitespace-nowrap">` (12).
-- Stacking, lowest first: body cells, sticky body cells `z-[1]`, sticky `tfoot` `z-[2]`, header `z-10`, header
+- 🔒 Stacking, lowest first: body cells, sticky body cells `z-[1]`, sticky `tfoot` `z-[2]`, header `z-10`, header
   corner `z-20`. Each layer sets its own z and background; never rely on class order.
-- **Sticky actions column** on the right: `sticky right-0 z-[1] bg-inherit`, **no shadow line**. Every row
+- **Sticky actions column** on the right: `sticky right-0 z-[1] bg-inherit`, **no shadow line**. 🔒 Every row
   background must be opaque (white, `gray-50`, or the colour-mixed amber), or content shows through.
 - **Collapse**: when the card is narrower than the table's full min-width, the icons fold into the ⋮ menu:
   edit / duplicate / delete first, then `<div role="separator" className="my-1 border-t border-gray-100" />`,
-  then the other items. Measure the card once (`TitleTableGroup` + `useCardIsWide`, threshold in rem via the
+  then the other items. 🔒 Measure the card once (`TitleTableGroup` + `useCardIsWide`, threshold in rem via the
   root font size) so every table in the card collapses together.
-- Column sizing follows the **card** width: wrap in `@container` and use `@min-[..rem]:w-[..]` (TitleTable
+- 🔒 Column sizing follows the **card** width: wrap in `@container` and use `@min-[..rem]:w-[..]` (TitleTable
   type/area), not viewport breakpoints.
 - Dense rows: at most 2 lines per row. Cut with `truncate` + `title` (full text on hover) instead of wrapping.
   Chips are one line (`inline-flex max-w-full`, value `min-w-0 truncate`). Badges `whitespace-nowrap`.
 - Numbers: right-aligned (`text-right`) with `tabular-nums`; empty value is `<span className="text-gray-400">—</span>`.
-- Rows open on click and on Enter (`tabIndex={0}`); inner buttons `stopPropagation`.
+- 🔒 Rows open on click and on Enter (`tabIndex={0}`); inner buttons `stopPropagation`.
 
-## 11. Toolbars, chips and uploads
+## 11. Toolbars, chips and uploads 🎨
 
 - Toolbar row: `flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 px-4|5 py-2.5|3`; search
   is the shared `Input` with a `size-3.5` magnifier `leftIcon`; status/counter text `text-xs text-gray-500`.
 - Filter chip: idle `border-gray-200|300 bg-white text-gray-600`; active is either solid
   `border-primary bg-primary font-medium text-white` (TitleToolbar) or tinted
   `border-primary bg-primary/10 font-semibold text-primary` (DocumentToolbar). Match the surface you are on.
-- **Uploads** (`DocumentUploader.tsx`, `utils/uploadFiles.ts`): the per-row picker is `multiple`
+- 🔒 **Uploads** (`DocumentUploader.tsx`, `utils/uploadFiles.ts`): the per-row picker is `multiple`
   (`.pdf,.png,.jpg,.jpeg`). `splitUploadable` drops files of the wrong type or over `MAX_UPLOAD_BYTES` and names
   them all in one `toast.error`; the rest go up through `runLimited`, `UPLOAD_CONCURRENCY` = 3 at a time, and a
   multi-file pick shows one success toast. Reuse these helpers; do not write another upload loop.
-- The title drawer's "เอกสารของโฉนดนี้" section is the same document card in scope mode
+- 🔒 The title drawer's "เอกสารของโฉนดนี้" section is the same document card in scope mode
   (`TitleDocumentsSection`, `scope={{ titleIndex, heading }}`), not a second component.
 
-## 12. Technical styling rules
+## 12. Technical styling rules 🔒
 
 - **No tailwind-merge.** `clsx` only concatenates; two conflicting utilities resolve by stylesheet order, not
   by order in the string. To override a component's class, use the `!` suffix (`text-green-700!`,
@@ -300,14 +312,14 @@ and the appraisal summary/form tables. `th`, secondary lines and badges are 12 i
 - Media queries stay px (rem queries resolve against 16px). Container queries may use rem.
 - Before claiming what an element renders, read every matching rule in order or measure the computed style.
 
-## 13. i18n
+## 13. i18n 🔒
 
 - Every visible string, `aria-label`, `title` and `placeholder` goes through `t()`, in `src/i18n/locales/{en,th,zh}/<namespace>.json`.
   The three files keep an identical key set, plural keys (`_one` / `_other`) included. Conventions: `src/i18n/README.md`.
 - Reuse `common` keys (`actions.*`, `status.*`); feature keys go in the feature namespace, grouped by surface.
 - `src/i18n/__tests__/localeParity.test.ts` only runs in the **full** suite; a path-filtered vitest run skips it.
 
-## 14. Verification checklist for UI changes
+## 14. Verification checklist for UI changes 🔒
 
 1. `npx tsc -b --force` (incremental `-b` is unreliable here).
 2. `npx vitest run`, whole suite. Read the `Errors` line too: an unhandled rejection exits 1 with every test green.
@@ -318,7 +330,7 @@ and the appraisal summary/form tables. `th`, secondary lines and badges are 12 i
 6. Thai text: check that the top marks are whole, especially inside `overflow-hidden` boxes.
 7. Screenshots before and after, and look at them.
 
-## 15. Known deviations (do not copy)
+## 15. Known deviations (do not copy) 📋
 
 - `TitleTable` deed / holder / place columns still use viewport breakpoints (`min-[1400px]`, `min-[1700px]`);
   `DocumentTypeRow` uses `@max-[560px]` and px grid tracks.
@@ -331,7 +343,7 @@ and the appraisal summary/form tables. `th`, secondary lines and badges are 12 i
 - Comments in `Button.tsx` and `SectionHeader.tsx` still quote the old 14px / 16px sizes. The classes are
   right; trust the tables above.
 
-## 16. Open decisions (do not decide; ask the user)
+## 16. Open decisions (do not decide; ask the user) 📋
 
 - **Left sidebar menu**: A) 14px items, rem width about 256px, truncate + tooltip; B) keep 12px (`text-xs`
   today), rem width, truncate.
