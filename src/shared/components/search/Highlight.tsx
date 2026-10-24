@@ -11,9 +11,9 @@ const asciiDigits = (s: string) =>
  * between wildcards is what gets marked. Below MIN_SEARCH_LENGTH (counted like the server, `*`
  * included) the term is not searched at all, so nothing is marked.
  *
- * `appraisalNumber` reads the term's Thai and full-width digits as 0-9, as the server does for that
- * field only ('๖๙๑๐๕' finds 69105). Every other field is matched as typed, and stored text is never
- * folded.
+ * `appraisalNumber` reads a term that is all digits ('๖๙๑๐๕') as 0-9, as the server does for that
+ * field only; a term with anything else in it ('๑๒๓*') is matched as typed there too. Every other
+ * field is matched as typed, and stored text is never folded.
  */
 const Highlight = ({
   text,
@@ -31,7 +31,8 @@ const Highlight = ({
     .split('*')
     .reduce((a, b) => (b.length > a.length ? b : a))
     .toLowerCase();
-  const needle = appraisalNumber ? asciiDigits(longest) : longest;
+  const digits = asciiDigits(trimmed);
+  const needle = appraisalNumber && /^\d+$/.test(digits) ? digits : longest;
   const at = needle ? text.toLowerCase().indexOf(needle) : -1;
   if (at < 0) return <>{text}</>;
   return (

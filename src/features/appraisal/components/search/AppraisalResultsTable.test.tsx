@@ -553,6 +553,14 @@ describe('AppraisalResultsTable search matches', () => {
     expect(container.querySelector('mark')).toBeNull();
   });
 
+  it('reads Thai digits as 0-9 in a number only when the whole term is digits', () => {
+    const { container } = setup(
+      { matchedOn: [{ field: 'appraisalNumber', value: '69123456' }], appraisalNumber: '69123456' },
+      '๑๒๓*',
+    );
+    expect(container.querySelector('mark')).toBeNull();
+  });
+
   it('treats a requestor stored with surrounding spaces as shown', () => {
     setup(
       {
