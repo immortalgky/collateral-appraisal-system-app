@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
+import type { SearchMatch } from '@/shared/types/search';
 import type { AppraisalColumnDef } from './tabConfigs';
 import Avatar from '@/shared/components/Avatar';
 import Badge from '@/shared/components/Badge';
@@ -73,11 +74,13 @@ interface AppraisalResultsTableProps {
    */
   pinnedColumn?: string;
   /**
-   * The term the rows were searched by, marked wherever it shows in the number, customer and
-   * province cells. Rows that carry `matchedOn` (the all-fields search) also say which field
-   * matched when it is not one the table shows.
+   * The term the rows were searched by, marked in the number, customer, province and requestor
+   * cells the search matched on. Rows that carry `matchedOn` (the all-fields search) also say
+   * which field matched when no cell shows it.
    */
   searchTerm?: string;
+  /** The field a single-field search looked at; 'all' (the default) reads `matchedOn` instead. */
+  searchField?: string;
 }
 
 function AppraisalResultsTable({
@@ -97,6 +100,7 @@ function AppraisalResultsTable({
   density = 'comfortable',
   pinnedColumn,
   searchTerm,
+  searchField = 'all',
 }: AppraisalResultsTableProps) {
   const compact = density === 'compact';
   // A row gets the focus back when its drawer closes; that is a keyboard ring only after the
@@ -244,21 +248,57 @@ function AppraisalResultsTable({
     return String(val);
   };
 
-  const showsProvince = columns.some(c => c.key === 'province');
+  const visibleColumns = new Set(columns.map(c => c.key));
+
+  /**
+   * Whether a cell on screen already shows this match, marked: the number and customer always do,
+   * the province and requestor only when their column is on.
+   */
+  const shownInCell = (item: AppraisalDto, m: SearchMatch) => {
+    switch (m.field) {
+      case 'appraisalNumber':
+        return true;
+      case 'customerName':
+        return m.value === item.customerName;
+      case 'province':
+      case 'dopaProvince':
+        return visibleColumns.has('province') && m.value === getCellValue(item, 'province');
+      case 'requestorName':
+        return visibleColumns.has('requestor') && m.value === item.requestorName?.trim();
+      default:
+        return false;
+    }
+  };
+
+  /**
+   * The term to mark in a cell showing `fields`, or nothing when the search did not look there:
+   * the all-fields search says what matched, a single-field search looked at that field only.
+   */
+  const termFor = (item: AppraisalDto, ...fields: string[]) =>
+    (
+      item.matchedOn
+        ? item.matchedOn.some(m => fields.includes(m.field))
+        : fields.includes(searchField)
+    )
+      ? searchTerm
+      : undefined;
 
   /**
    * Under the number and customer: which field the search matched when no cell shows it — a
-   * previous appraisal number, a title deed, a customer other than the one displayed, or a
-   * province when that column is off. The best match is named, the rest are counted and listed in
-   * the tooltip.
+   * previous appraisal number, a title deed, a customer other than the one displayed. The best
+   * match is named, the rest are counted and listed in the tooltip. Compact density drops it, as
+   * it drops every second line.
    */
   const matchedOnLine = (item: AppraisalDto) => {
-    const hidden = (item.matchedOn ?? []).filter(
-      m =>
-        m.field !== 'appraisalNumber' &&
-        !(m.field === 'customerName' && m.value === item.customerName) &&
-        !(m.field === 'province' && showsProvince && m.value === getCellValue(item, 'province')),
-    );
+    if (compact) return null;
+    // The deed and DOPA address arms usually agree, and both read "Province".
+    const seen = new Set<string>();
+    const hidden = (item.matchedOn ?? []).filter(m => {
+      const key = `${fieldLabel(m.field)}: ${m.value}`;
+      if (shownInCell(item, m) || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
     if (hidden.length === 0) return null;
     return (
       <span
@@ -390,7 +430,11 @@ function AppraisalResultsTable({
   };
 
   /** A person cell: initials, the name, and the user code under it — or the code alone. */
-  const personCell = (name: string | null | undefined, code: string | null | undefined) => {
+  const personCell = (
+    name: string | null | undefined,
+    code: string | null | undefined,
+    term?: string,
+  ) => {
     const n = name?.trim() || null;
     const shown = n ?? code;
     if (!shown) return '—';
@@ -398,7 +442,9 @@ function AppraisalResultsTable({
       <span className="flex max-w-full items-center gap-2">
         <Avatar name={shown} size="xs" className="size-6!" />
         <span className="min-w-0">
-          <span className="block truncate">{shown}</span>
+          <span className="block truncate">
+            <Highlight text={shown} term={term} />
+          </span>
           {n && code && subLine(code)}
         </span>
       </span>
@@ -694,7 +740,11 @@ function AppraisalResultsTable({
                       ) : col.key === 'assignee' ? (
                         assigneeCell(item)
                       ) : col.key === 'requestor' ? (
-                        personCell(item.requestorName, item.requestorCode)
+                        personCell(
+                          item.requestorName,
+                          item.requestorCode,
+                          termFor(item, 'requestorName'),
+                        )
                       ) : col.key === 'appointmentDateTime' &&
                         item.appointmentDateTime &&
                         isToday(new Date(item.appointmentDateTime)) ? (
@@ -725,7 +775,10 @@ function AppraisalResultsTable({
                                 className="size-3 animate-spin text-primary shrink-0"
                               />
                             )}
-                            <Highlight text={item.appraisalNumber} term={searchTerm} />
+                            <Highlight
+                              text={item.appraisalNumber}
+                              term={termFor(item, 'appraisalNumber')}
+                            />
                             {item.priority === 'High' && (
                               // Only High is marked (Normal is most rows). The Priority column is
                               // off by default, so this flag is how a high-priority job shows.
@@ -744,7 +797,10 @@ function AppraisalResultsTable({
                               className="truncate font-medium text-gray-800"
                               title={item.customerName || undefined}
                             >
-                              <Highlight text={item.customerName} term={searchTerm} />
+                              <Highlight
+                                text={item.customerName}
+                                term={termFor(item, 'customerName')}
+                              />
                             </span>
                             {item.customerCount > 1 && (
                               <span
@@ -779,7 +835,10 @@ function AppraisalResultsTable({
                           )}
                         </>
                       ) : col.key === 'province' ? (
-                        <Highlight text={getCellValue(item, 'province')} term={searchTerm} />
+                        <Highlight
+                          text={getCellValue(item, 'province')}
+                          term={termFor(item, 'province', 'dopaProvince')}
+                        />
                       ) : (
                         getCellValue(item, col.key)
                       )}
