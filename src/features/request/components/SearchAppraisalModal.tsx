@@ -15,6 +15,7 @@ import { formatDate } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAddressStore } from '@/shared/store';
+import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 import { useAppraisalSearch } from '@/features/appraisal/api/appraisalSearch';
 import type { AppraisalDto } from '@/features/appraisal/api/appraisalSearch';
 import {
@@ -29,8 +30,6 @@ interface SearchAppraisalModalProps {
   onSelect: (template: PriorAppraisal) => void;
 }
 
-/** The API matches nothing for a term shorter than this (AppraisalSearchPredicate.MinTermLength). */
-const MIN_TERM = 3;
 const PAGE_SIZES = [10, 25, 50];
 const SKELETON_ROWS = 6;
 
@@ -126,8 +125,10 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
   const debouncedSearch = useDebounce(searchQuery.trim(), 350);
   // A term that is too short is not sent: the API would answer with nothing at all
   const termTooShort =
-    searchQuery.trim().length > 0 && searchQuery.trim().replace(/^\*/, '').length < MIN_TERM;
-  const term = debouncedSearch.replace(/^\*/, '').length >= MIN_TERM ? debouncedSearch : '';
+    searchQuery.trim().length > 0 &&
+    searchQuery.trim().replace(/^\*/, '').length < MIN_SEARCH_LENGTH;
+  const term =
+    debouncedSearch.replace(/^\*/, '').length >= MIN_SEARCH_LENGTH ? debouncedSearch : '';
 
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
@@ -346,7 +347,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         <div className="flex min-h-4 items-baseline justify-between gap-3 text-xs text-gray-500">
           <span className={termTooShort ? 'text-amber-700' : undefined}>
             {termTooShort
-              ? t('searchAppraisal.minChars', { n: MIN_TERM })
+              ? t('searchAppraisal.minChars', { n: MIN_SEARCH_LENGTH })
               : t('searchAppraisal.searchHint')}
           </span>
           {skeleton ? (
@@ -517,11 +518,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                   >
                     <div className="min-w-0">
                       <span className="block truncate font-semibold text-primary">
-                        <Highlight
-                          text={item.appraisalNumber}
-                          term={searchQuery}
-                          minLength={MIN_TERM}
-                        />
+                        <Highlight text={item.appraisalNumber} term={searchQuery} />
                       </span>
                     </div>
                     <div className="min-w-0">
@@ -530,11 +527,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                           className="truncate text-gray-900"
                           title={item.customerName ?? undefined}
                         >
-                          <Highlight
-                            text={item.customerName}
-                            term={searchQuery}
-                            minLength={MIN_TERM}
-                          />
+                          <Highlight text={item.customerName} term={searchQuery} />
                         </span>
                         {item.customerCount > 1 && (
                           <span className="shrink-0 rounded bg-gray-100 px-1 text-xs text-gray-600">

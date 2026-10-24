@@ -13,6 +13,7 @@ import {
   useAppraisalTypeLabel,
   useProvinceName,
   usePropertyTypeLabels,
+  useSearchFieldLabel,
 } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import {
@@ -105,7 +106,7 @@ function AppraisalResultsTable({
   // line height cannot come down, Thai tone marks need the full 1.5 (see DESIGN.md section 4).
   const cellPad = 'px-3 py-1.5';
   const { t } = useTranslation('appraisal');
-  const { t: tNav } = useTranslation('nav');
+  const fieldLabel = useSearchFieldLabel();
   const internalTableRef = useRef<HTMLTableElement>(null);
   const tableRef = layout?.tableRef ?? internalTableRef;
   // Row numbers stay on unless a layout explicitly turns them off, so the no-layout callers are
@@ -243,19 +244,20 @@ function AppraisalResultsTable({
     return String(val);
   };
 
-  const fieldLabel = (field: string) =>
-    tNav(`search.fields.${field}` as never, { defaultValue: field }) as string;
+  const showsProvince = columns.some(c => c.key === 'province');
 
   /**
-   * Under the number and customer: which field the search matched when the cell above does not
-   * show it — a previous appraisal number, a title deed, or a customer other than the one
-   * displayed. The best match is named, the rest are counted and listed in the tooltip.
+   * Under the number and customer: which field the search matched when no cell shows it — a
+   * previous appraisal number, a title deed, a customer other than the one displayed, or a
+   * province when that column is off. The best match is named, the rest are counted and listed in
+   * the tooltip.
    */
   const matchedOnLine = (item: AppraisalDto) => {
     const hidden = (item.matchedOn ?? []).filter(
       m =>
         m.field !== 'appraisalNumber' &&
-        !(m.field === 'customerName' && m.value === item.customerName),
+        !(m.field === 'customerName' && m.value === item.customerName) &&
+        !(m.field === 'province' && showsProvince && m.value === getCellValue(item, 'province')),
     );
     if (hidden.length === 0) return null;
     return (
@@ -723,11 +725,7 @@ function AppraisalResultsTable({
                                 className="size-3 animate-spin text-primary shrink-0"
                               />
                             )}
-                            {item.appraisalNumber ? (
-                              <Highlight text={item.appraisalNumber} term={searchTerm} />
-                            ) : (
-                              '-'
-                            )}
+                            <Highlight text={item.appraisalNumber} term={searchTerm} />
                             {item.priority === 'High' && (
                               // Only High is marked (Normal is most rows). The Priority column is
                               // off by default, so this flag is how a high-priority job shows.
@@ -746,11 +744,7 @@ function AppraisalResultsTable({
                               className="truncate font-medium text-gray-800"
                               title={item.customerName || undefined}
                             >
-                              {item.customerName ? (
-                                <Highlight text={item.customerName} term={searchTerm} />
-                              ) : (
-                                '-'
-                              )}
+                              <Highlight text={item.customerName} term={searchTerm} />
                             </span>
                             {item.customerCount > 1 && (
                               <span

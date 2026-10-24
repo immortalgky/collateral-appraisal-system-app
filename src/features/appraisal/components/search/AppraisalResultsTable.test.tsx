@@ -382,10 +382,14 @@ describe('AppraisalResultsTable resizing while filled', () => {
 // ── Why a row answers the search ───────────────────────────────────────────────────────────────
 
 describe('AppraisalResultsTable search matches', () => {
-  const setup = (row: Partial<AppraisalDto>, searchTerm: string) =>
+  const setup = (
+    row: Partial<AppraisalDto>,
+    searchTerm: string,
+    columns = pick('appraisalCustomer', 'province'),
+  ) =>
     render(
       <AppraisalResultsTable
-        columns={pick('appraisalCustomer', 'province')}
+        columns={columns}
         items={[{ ...item, ...row } as AppraisalDto]}
         isLoading={false}
         sortBy="createdAt"
@@ -444,6 +448,18 @@ describe('AppraisalResultsTable search matches', () => {
     setup({ matchedOn: [{ field: 'customerName', value: 'Malee Srisuk' }] }, 'Malee');
     const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
     expect(line).toHaveTextContent(`${fieldLabel('customerName')}: Malee Srisuk`);
+  });
+
+  it('names a province match only when the province column is off', () => {
+    const row = { province: 'นนทบุรี', matchedOn: [{ field: 'province', value: 'นนทบุรี' }] };
+    const { unmount } = setup(row, 'นนทบุรี');
+    expect(screen.getByText('นนทบุรี').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+    unmount();
+
+    setup(row, 'นนทบุรี', pick('appraisalCustomer'));
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line).toHaveTextContent(`${fieldLabel('province')}: นนทบุรี`);
   });
 
   it('marks the term but adds no line for a single-field search, which sends no matches', () => {
