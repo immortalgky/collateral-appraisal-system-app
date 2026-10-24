@@ -5,6 +5,7 @@ import type { AppraisalColumnDef } from './tabConfigs';
 import Avatar from '@/shared/components/Avatar';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
+import Highlight from '@/shared/components/search/Highlight';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { formatDate, isToday } from '@/shared/utils/dateUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
@@ -70,6 +71,12 @@ interface AppraisalResultsTableProps {
    * layout forces it to index 0, so it is always the first data column when shown.
    */
   pinnedColumn?: string;
+  /**
+   * The term the rows were searched by, marked wherever it shows in the number, customer and
+   * province cells. Rows that carry `matchedOn` (the all-fields search) also say which field
+   * matched when it is not one the table shows.
+   */
+  searchTerm?: string;
 }
 
 function AppraisalResultsTable({
@@ -88,6 +95,7 @@ function AppraisalResultsTable({
   emptyState,
   density = 'comfortable',
   pinnedColumn,
+  searchTerm,
 }: AppraisalResultsTableProps) {
   const compact = density === 'compact';
   // A row gets the focus back when its drawer closes; that is a keyboard ring only after the
@@ -97,6 +105,7 @@ function AppraisalResultsTable({
   // line height cannot come down, Thai tone marks need the full 1.5 (see DESIGN.md section 4).
   const cellPad = 'px-3 py-1.5';
   const { t } = useTranslation('appraisal');
+  const { t: tNav } = useTranslation('nav');
   const internalTableRef = useRef<HTMLTableElement>(null);
   const tableRef = layout?.tableRef ?? internalTableRef;
   // Row numbers stay on unless a layout explicitly turns them off, so the no-layout callers are
@@ -232,6 +241,37 @@ function AppraisalResultsTable({
       return localizeCompanyName(val as string, item.companyNameLocal);
     }
     return String(val);
+  };
+
+  const fieldLabel = (field: string) =>
+    tNav(`search.fields.${field}` as never, { defaultValue: field }) as string;
+
+  /**
+   * Under the number and customer: which field the search matched when the cell above does not
+   * show it — a previous appraisal number, a title deed, or a customer other than the one
+   * displayed. The best match is named, the rest are counted and listed in the tooltip.
+   */
+  const matchedOnLine = (item: AppraisalDto) => {
+    const hidden = (item.matchedOn ?? []).filter(
+      m =>
+        m.field !== 'appraisalNumber' &&
+        !(m.field === 'customerName' && m.value === item.customerName),
+    );
+    if (hidden.length === 0) return null;
+    return (
+      <span
+        className="block max-w-full truncate text-xs font-normal text-gray-500"
+        title={hidden.map(m => `${fieldLabel(m.field)}: ${m.value}`).join('\n')}
+      >
+        {t('list.matchedOn')} {fieldLabel(hidden[0].field)}:{' '}
+        <Highlight text={hidden[0].value} term={searchTerm} />
+        {hidden.length > 1 && (
+          <span className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-xs font-medium">
+            +{hidden.length - 1}
+          </span>
+        )}
+      </span>
+    );
   };
 
   /** Statuses where the clock has stopped, so a countdown would be fiction. */
@@ -683,7 +723,11 @@ function AppraisalResultsTable({
                                 className="size-3 animate-spin text-primary shrink-0"
                               />
                             )}
-                            {item.appraisalNumber || '-'}
+                            {item.appraisalNumber ? (
+                              <Highlight text={item.appraisalNumber} term={searchTerm} />
+                            ) : (
+                              '-'
+                            )}
                             {item.priority === 'High' && (
                               // Only High is marked (Normal is most rows). The Priority column is
                               // off by default, so this flag is how a high-priority job shows.
@@ -702,7 +746,11 @@ function AppraisalResultsTable({
                               className="truncate font-medium text-gray-800"
                               title={item.customerName || undefined}
                             >
-                              {item.customerName || '-'}
+                              {item.customerName ? (
+                                <Highlight text={item.customerName} term={searchTerm} />
+                              ) : (
+                                '-'
+                              )}
                             </span>
                             {item.customerCount > 1 && (
                               <span
@@ -713,6 +761,7 @@ function AppraisalResultsTable({
                               </span>
                             )}
                           </span>
+                          {matchedOnLine(item)}
                         </span>
                       ) : col.key === 'propertyTypes' ? (
                         // A long list (several types joined) is cut by the cell: the title has it all.
@@ -735,6 +784,8 @@ function AppraisalResultsTable({
                               }),
                           )}
                         </>
+                      ) : col.key === 'province' ? (
+                        <Highlight text={getCellValue(item, 'province')} term={searchTerm} />
                       ) : (
                         getCellValue(item, col.key)
                       )}

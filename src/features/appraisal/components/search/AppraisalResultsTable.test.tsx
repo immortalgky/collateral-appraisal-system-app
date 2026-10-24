@@ -378,3 +378,77 @@ describe('AppraisalResultsTable resizing while filled', () => {
     expect(setWidth).toHaveBeenLastCalledWith('appraisalCustomer', 310);
   });
 });
+
+// ── Why a row answers the search ───────────────────────────────────────────────────────────────
+
+describe('AppraisalResultsTable search matches', () => {
+  const setup = (row: Partial<AppraisalDto>, searchTerm: string) =>
+    render(
+      <AppraisalResultsTable
+        columns={pick('appraisalCustomer', 'province')}
+        items={[{ ...item, ...row } as AppraisalDto]}
+        isLoading={false}
+        sortBy="createdAt"
+        sortDir="desc"
+        onSort={vi.fn()}
+        onRowClick={vi.fn()}
+        searchTerm={searchTerm}
+      />,
+    );
+  const matchedLabel = () => i18n.t('appraisal:list.matchedOn');
+  const fieldLabel = (f: string) => i18n.t(`nav:search.fields.${f}` as never) as string;
+
+  it('marks the part of the appraisal number the term matched', () => {
+    setup({ matchedOn: [{ field: 'appraisalNumber', value: '69105467' }] }, '05467');
+    const mark = screen.getByText('05467');
+    expect(mark.tagName).toBe('MARK');
+    expect(mark.closest('td')).toHaveTextContent('69105467');
+  });
+
+  it('says which hidden field matched, with the value marked, and counts the rest', () => {
+    setup(
+      {
+        appraisalNumber: '69105524',
+        matchedOn: [
+          { field: 'prevAppraisalNumber', value: '69105522' },
+          { field: 'loanApplicationNumber', value: '69105522-LT' },
+        ],
+      },
+      '69105522',
+    );
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line).toHaveTextContent(`${fieldLabel('prevAppraisalNumber')}: 69105522`);
+    expect(within(line as HTMLElement).getAllByText('69105522')[0].tagName).toBe('MARK');
+    expect(within(line as HTMLElement).getByText('+1')).toBeTruthy();
+    // the tooltip lists every match, so "+1" is not a dead end
+    expect(line.getAttribute('title')).toContain(
+      `${fieldLabel('loanApplicationNumber')}: 69105522-LT`,
+    );
+  });
+
+  it('adds no line when the match is already on screen and marked', () => {
+    setup(
+      {
+        matchedOn: [
+          { field: 'appraisalNumber', value: '69105467' },
+          { field: 'customerName', value: 'Somchai Wongprasert' },
+        ],
+      },
+      'Somchai',
+    );
+    expect(screen.getByText('Somchai').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+
+  it('still names a customer who is not the one displayed', () => {
+    setup({ matchedOn: [{ field: 'customerName', value: 'Malee Srisuk' }] }, 'Malee');
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line).toHaveTextContent(`${fieldLabel('customerName')}: Malee Srisuk`);
+  });
+
+  it('marks the term but adds no line for a single-field search, which sends no matches', () => {
+    setup({ matchedOn: null }, '69105');
+    expect(screen.getByText('69105').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+});

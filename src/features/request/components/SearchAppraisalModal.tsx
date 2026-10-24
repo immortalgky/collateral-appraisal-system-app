@@ -7,6 +7,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Highlight from '@/shared/components/search/Highlight';
 import Pagination from '@/shared/components/Pagination';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { DateRangeInput } from '@/shared/components/inputs';
@@ -47,24 +48,6 @@ const COLUMNS =
   'grid items-center gap-x-4 grid-cols-[7.5rem_minmax(0,2fr)_minmax(0,1.2fr)_8.5rem_8.5rem] ' +
   '@min-[62rem]:grid-cols-[7.5rem_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8.5rem_8.5rem]';
 const APPRAISER_CELL = 'hidden @min-[62rem]:block';
-
-/** The matched part of the term in bold-tinted text. A leading * only asks for a substring match. */
-const Highlight = ({ text, term }: { text: string | null | undefined; term: string }) => {
-  if (!text) return <>—</>;
-  const needle = term.trim().replace(/^\*/, '').toLowerCase();
-  if (needle.length < MIN_TERM) return <>{text}</>;
-  const at = text.toLowerCase().indexOf(needle);
-  if (at < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, at)}
-      <mark className="rounded-sm bg-amber-100 px-px text-inherit">
-        {text.slice(at, at + needle.length)}
-      </mark>
-      {text.slice(at + needle.length)}
-    </>
-  );
-};
 
 type SortState = { by: SortKey; dir: 'asc' | 'desc' } | null;
 type ShownSort = NonNullable<SortState>;
@@ -534,7 +517,11 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                   >
                     <div className="min-w-0">
                       <span className="block truncate font-semibold text-primary">
-                        <Highlight text={item.appraisalNumber} term={searchQuery} />
+                        <Highlight
+                          text={item.appraisalNumber}
+                          term={searchQuery}
+                          minLength={MIN_TERM}
+                        />
                       </span>
                     </div>
                     <div className="min-w-0">
@@ -543,7 +530,11 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                           className="truncate text-gray-900"
                           title={item.customerName ?? undefined}
                         >
-                          <Highlight text={item.customerName} term={searchQuery} />
+                          <Highlight
+                            text={item.customerName}
+                            term={searchQuery}
+                            minLength={MIN_TERM}
+                          />
                         </span>
                         {item.customerCount > 1 && (
                           <span className="shrink-0 rounded bg-gray-100 px-1 text-xs text-gray-600">
