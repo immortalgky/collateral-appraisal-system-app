@@ -264,7 +264,7 @@ function AppraisalResultsTable({
       case 'dopaProvince':
         return visibleColumns.has('province') && m.value === getCellValue(item, 'province');
       case 'requestorName':
-        return visibleColumns.has('requestor') && m.value === item.requestorName?.trim();
+        return visibleColumns.has('requestor') && m.value.trim() === item.requestorName?.trim();
       default:
         return false;
     }
@@ -272,12 +272,13 @@ function AppraisalResultsTable({
 
   /**
    * The term to mark in a cell showing `fields`, or nothing when the search did not look there:
-   * the all-fields search says what matched, a single-field search looked at that field only.
+   * the all-fields search says what matched (and only a match the cell shows counts, not another
+   * customer's), a single-field search looked at that field only.
    */
   const termFor = (item: AppraisalDto, ...fields: string[]) =>
     (
       item.matchedOn
-        ? item.matchedOn.some(m => fields.includes(m.field))
+        ? item.matchedOn.some(m => fields.includes(m.field) && shownInCell(item, m))
         : fields.includes(searchField)
     )
       ? searchTerm

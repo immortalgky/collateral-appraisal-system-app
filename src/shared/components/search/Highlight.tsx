@@ -18,7 +18,10 @@ const Highlight = ({
   const needle = trimmed
     .split('*')
     .reduce((a, b) => (b.length > a.length ? b : a))
-    .toLowerCase();
+    .toLowerCase()
+    // the server reads Thai and full-width digits as 0-9; each is one code unit, so offsets hold
+    .replace(/[๐-๙]/g, d => String(d.charCodeAt(0) - 0x0e50))
+    .replace(/[０-９]/g, d => String(d.charCodeAt(0) - 0xff10));
   const at = needle ? text.toLowerCase().indexOf(needle) : -1;
   if (at < 0) return <>{text}</>;
   return (

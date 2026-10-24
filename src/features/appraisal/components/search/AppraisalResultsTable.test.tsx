@@ -522,6 +522,29 @@ describe('AppraisalResultsTable search matches', () => {
     expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
   });
 
+  it('does not mark the displayed customer when another customer matched', () => {
+    setup({ matchedOn: [{ field: 'customerName', value: 'Somsak Boonmee' }] }, 'Som');
+    // the line names the customer who matched; the displayed one is left unmarked
+    expect(screen.getAllByText('Som')).toHaveLength(1);
+    expect(screen.getByText('Som').closest('[title]')!.textContent).toContain(matchedLabel());
+  });
+
+  it('marks a number searched in Thai digits', () => {
+    setup({ matchedOn: [{ field: 'appraisalNumber', value: '69105467' }] }, '๐๕๔๖๗');
+    expect(screen.getByText('05467').tagName).toBe('MARK');
+  });
+
+  it('treats a requestor stored with surrounding spaces as shown', () => {
+    setup(
+      {
+        requestorName: 'Malee Srisuk ',
+        matchedOn: [{ field: 'requestorName', value: 'Malee Srisuk ' }],
+      },
+      'Malee',
+    );
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+
   it('marks the longest run between wildcards', () => {
     setup({ matchedOn: [{ field: 'customerName', value: 'Somchai Wongprasert' }] }, '*wong*');
     expect(screen.getByText('Wong').tagName).toBe('MARK');
