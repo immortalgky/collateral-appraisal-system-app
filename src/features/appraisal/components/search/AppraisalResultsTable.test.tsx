@@ -534,6 +534,11 @@ describe('AppraisalResultsTable search matches', () => {
     expect(screen.getByText('05467').tagName).toBe('MARK');
   });
 
+  it('marks a value stored in Thai digits when the term is typed in Thai digits', () => {
+    setup({ matchedOn: [{ field: 'titleNumber', value: 'โฉนด ๑๒๓๔' }] }, '๑๒๓๔');
+    expect(screen.getByText('๑๒๓๔').tagName).toBe('MARK');
+  });
+
   it('treats a requestor stored with surrounding spaces as shown', () => {
     setup(
       {
