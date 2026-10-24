@@ -518,7 +518,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                   >
                     <div className="min-w-0">
                       <span className="block truncate font-semibold text-primary">
-                        <Highlight text={item.appraisalNumber} term={searchQuery} />
+                        <Highlight text={item.appraisalNumber} term={searchQuery} appraisalNumber />
                       </span>
                     </div>
                     <div className="min-w-0">

@@ -779,6 +779,7 @@ function AppraisalResultsTable({
                             <Highlight
                               text={item.appraisalNumber}
                               term={termFor(item, 'appraisalNumber')}
+                              appraisalNumber
                             />
                             {item.priority === 'High' && (
                               // Only High is marked (Normal is most rows). The Priority column is

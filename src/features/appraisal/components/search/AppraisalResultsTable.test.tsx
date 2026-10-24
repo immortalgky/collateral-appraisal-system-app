@@ -546,6 +546,13 @@ describe('AppraisalResultsTable search matches', () => {
     expect(container.querySelector('mark')).toBeNull();
   });
 
+  it('reads Thai digits as 0-9 for the appraisal number only, as the server does', () => {
+    const { container } = setup({ matchedOn: null, customerName: 'บริษัท 123 จำกัด' }, '๑๒๓', {
+      searchField: 'customerName',
+    });
+    expect(container.querySelector('mark')).toBeNull();
+  });
+
   it('treats a requestor stored with surrounding spaces as shown', () => {
     setup(
       {
