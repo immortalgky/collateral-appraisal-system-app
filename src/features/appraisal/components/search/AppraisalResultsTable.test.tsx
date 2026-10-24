@@ -539,6 +539,13 @@ describe('AppraisalResultsTable search matches', () => {
     expect(screen.getByText('๑๒๓๔').tagName).toBe('MARK');
   });
 
+  it('does not mark Thai digits for a term typed in 0-9, which the server never folds', () => {
+    const { container } = setup({ matchedOn: null, customerName: 'หจก. ๑๒๓ ก่อสร้าง' }, '123', {
+      searchField: 'customerName',
+    });
+    expect(container.querySelector('mark')).toBeNull();
+  });
+
   it('treats a requestor stored with surrounding spaces as shown', () => {
     setup(
       {
