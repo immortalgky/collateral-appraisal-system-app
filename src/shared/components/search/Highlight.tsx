@@ -11,9 +11,11 @@ const asciiDigits = (s: string) =>
  * between wildcards is what gets marked. Below MIN_SEARCH_LENGTH (counted like the server, `*`
  * included) the term is not searched at all, so nothing is marked.
  *
- * `appraisalNumber` reads a term that is all digits ('๖๙๑๐๕') as 0-9, as the server does for that
- * field only; a term with anything else in it ('๑๒๓*') is matched as typed there too. Every other
- * field is matched as typed, and stored text is never folded.
+ * `appraisalNumber` reads a term that is all digits ('๖๙๑๐๕') as 0-9, as the all-fields search
+ * does for that field only (AppraisalSearchPredicate.NumberPattern); a term with anything else in
+ * it ('๑๒๓*') is matched as typed. The single-field appraisalNumber filter never folds, so there a
+ * Thai-digit term finds nothing to mark anyway. Every other field is matched as typed, and stored
+ * text is never folded.
  */
 const Highlight = ({
   text,
