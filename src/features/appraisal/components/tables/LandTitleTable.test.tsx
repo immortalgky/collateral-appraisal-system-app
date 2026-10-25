@@ -49,7 +49,7 @@ function Harness({
   );
 }
 
-const totalRow = () => document.querySelector('tr.cas-total-row');
+const totalRow = () => document.querySelector('tfoot tr');
 
 describe('LandTitleTable total row', () => {
   it('shows the total for a single title', () => {

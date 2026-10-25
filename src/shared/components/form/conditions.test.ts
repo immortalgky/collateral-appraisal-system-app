@@ -109,7 +109,11 @@ describe('evaluateCondition', () => {
   });
 
   it('notIn — scalar value is not in target array', () => {
-    const cond: FieldCondition = { field: 'status', is: ['inactive', 'pending'], operator: 'notIn' };
+    const cond: FieldCondition = {
+      field: 'status',
+      is: ['inactive', 'pending'],
+      operator: 'notIn',
+    };
     expect(evaluateCondition(cond, vals, '')).toBe(true);
 
     const cond2: FieldCondition = { field: 'status', is: ['active', 'pending'], operator: 'notIn' };
@@ -200,7 +204,7 @@ describe('evaluateConditions', () => {
   });
 
   it('function condition', () => {
-    expect(evaluateConditions((v) => v.a === 1, vals, '')).toBe(true);
+    expect(evaluateConditions(v => v.a === 1, vals, '')).toBe(true);
     expect(evaluateConditions(() => false, vals, '')).toBe(false);
   });
 });

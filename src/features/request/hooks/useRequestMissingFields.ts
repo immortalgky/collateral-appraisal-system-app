@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import type { RefinementCtx, ZodIssue, ZodTypeAny } from 'zod';
-import type { FormField } from '@/shared/components/form';
+import type { ZodIssue, ZodTypeAny } from 'zod';
 import { buildConditionalRefinement } from '@/shared/components/form/schemaBuilder';
+import {
+  collectFieldLabels,
+  collectSchemaIssues,
+  type MissingFieldsSummary,
+  type RefineRule,
+} from '@/shared/components/form/missing';
 import { refineRetailSellingPrice } from '../schemas/form';
 import {
   allRequestFields,
@@ -252,41 +257,49 @@ export function buildMissingSummary(
 export const sectionTotal = (summary: MissingSummary, section: MissingSection) =>
   summary.items[section].reduce((sum, item) => sum + item.count, 0);
 
-function collectLabels(fields: FormField[], into: Map<string, string>, prefix = '') {
-  for (const field of fields) {
-    const name = `${prefix}${field.name}`;
-    if ('label' in field && typeof field.label === 'string') into.set(name, field.label);
-    if (field.type === 'field-array') collectLabels(field.fields, into, `${name}.`);
-  }
-}
-
 /** Label of every request field by form path (row indexes left out), from the translated configs. */
 export function buildFieldLabeler(t: Parameters<typeof makeRequestFields>[0]) {
   const labels = new Map<string, string>();
-  collectLabels(makeRequestFields(t), labels);
-  collectLabels(prefixFields(makeAddressFields(t), 'detail.address'), labels);
-  collectLabels(prefixFields(makeContactFields(t), 'detail.contact'), labels);
-  collectLabels(makeAppointmentAndFeeFields(t), labels);
-  collectLabels([makeCustomersFieldConfig(t), makePropertiesFieldConfig(t)], labels);
+  collectFieldLabels(makeRequestFields(t), labels);
+  collectFieldLabels(prefixFields(makeAddressFields(t), 'detail.address'), labels);
+  collectFieldLabels(prefixFields(makeContactFields(t), 'detail.contact'), labels);
+  collectFieldLabels(makeAppointmentAndFeeFields(t), labels);
+  collectFieldLabels([makeCustomersFieldConfig(t), makePropertiesFieldConfig(t)], labels);
   return (path: string) => labels.get(path);
 }
 
-// The conditional required rules (requiredWhen, showWhen ...) of the fields the schema is built from.
-// The schema applies them in a superRefine, which zod skips while any base issue exists, so they
-// are run here on their own to count what the schema would report once the base issues are fixed.
-const conditionalRules = buildConditionalRefinement(allRequestFields);
+// The rules the schema applies in a superRefine, which zod skips while any base issue exists, so
+// they are run on their own to count what the schema would report once the base issues are fixed:
+// the conditional required rules (requiredWhen, showWhen ...) of the fields it is built from, and
+// the retail selling price check.
+const requestRules: (RefineRule | null)[] = [
+  buildConditionalRefinement(allRequestFields),
+  (values, ctx) =>
+    refineRetailSellingPrice(values as Parameters<typeof refineRetailSellingPrice>[0], ctx, ''),
+];
 
 /** Every issue the form has: the schema's, plus the rules in its superRefines that it would hide. */
 export function collectIssues(schema: ZodTypeAny, values: unknown): ZodIssue[] {
-  const parsed = schema.safeParse(values);
-  const issues: ZodIssue[] = parsed.success ? [] : [...parsed.error.issues];
-  // zod skips these superRefines while any base issue exists, so run them on their own
-  const ctx = {
-    addIssue: (issue: unknown) => issues.push(issue as ZodIssue),
-  } as unknown as RefinementCtx;
-  conditionalRules?.(values as Record<string, unknown>, ctx);
-  refineRetailSellingPrice(values as Parameters<typeof refineRetailSellingPrice>[0], ctx, '');
-  return issues;
+  return collectSchemaIssues(schema, values, requestRules);
+}
+
+/**
+ * The summary in the shared chip's shape: one section per card that has something missing, its
+ * DOM id as the fallback landing for an item with no field to point at. Items keep their own
+ * `count` (a title row sums its empty fields).
+ */
+export function toChipSummary(
+  summary: MissingSummary,
+  sectionTitle: (section: MissingSection) => string,
+): MissingFieldsSummary {
+  return {
+    total: summary.total,
+    sections: MISSING_SECTIONS.filter(s => summary.items[s].length > 0).map(s => ({
+      id: SECTION_ANCHOR[s],
+      title: sectionTitle(s),
+      items: summary.items[s],
+    })),
+  };
 }
 
 const DEBOUNCE_MS = 300;

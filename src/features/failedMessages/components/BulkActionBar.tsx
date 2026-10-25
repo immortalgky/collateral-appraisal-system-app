@@ -51,7 +51,7 @@ const BulkActionBar = ({
             type="button"
             onClick={onDiscard}
             disabled={disabled}
-            className="rounded-lg border border-red-300 text-red-600 text-[13px] font-medium px-3 py-1.5 hover:bg-red-50 disabled:opacity-50"
+            className="rounded-lg border border-red-300 dark:border-red-500/40 text-(--palette-danger) text-[13px] font-medium px-3 py-1.5 hover:bg-(--palette-req-wash) disabled:opacity-50"
           >
             {t('bulkBar.discard')}
           </button>

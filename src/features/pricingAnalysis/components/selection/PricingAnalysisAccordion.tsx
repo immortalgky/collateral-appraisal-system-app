@@ -74,7 +74,11 @@ interface PricingAnalysisAccordionProps {
   }) => void;
   /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
-  onSelectMethodRole?: (arg: { approachType: string; methodType: string; role: MethodRole }) => void;
+  onSelectMethodRole?: (arg: {
+    approachType: string;
+    methodType: string;
+    role: MethodRole;
+  }) => void;
   onManualNoteSync?: (arg: {
     approachType: string;
     methodType: string;
@@ -215,7 +219,7 @@ export const PricingAnalysisAccordion = ({
           // Faded out, not unmounted — `inert` keeps Tab off controls nobody can see.
           inert={!isPricingAnalysisAccordionOpen}
           className={clsx(
-            'flex pb-4 text-gray-700 transition-opacity duration-200',
+            'flex pb-4 text-(--palette-ink) transition-opacity duration-200',
             // Fill the box rather than growing past it, so each column scrolls its own
             // section — the rail stays pinned while its list scrolls, and the board keeps
             // its header in place (mock:259's `.work`, two siblings owning the screen).

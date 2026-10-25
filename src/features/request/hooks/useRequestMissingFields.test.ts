@@ -9,6 +9,7 @@ import {
   countFiles,
   sectionOf,
   sectionTotal,
+  toChipSummary,
 } from './useRequestMissingFields';
 
 const issue = (...path: (string | number)[]) =>
@@ -99,6 +100,33 @@ describe('buildMissingSummary', () => {
     const summary = buildMissingSummary({}, [], resolver);
     expect(summary.total).toBe(0);
     expect(Object.values(summary.items).flat()).toEqual([]);
+  });
+});
+
+describe('toChipSummary', () => {
+  it('hands the shared chip the cards that have something missing, landing on each card id', () => {
+    const summary = buildMissingSummary(
+      { titles: [{}] },
+      [issue('customers', 0, 'name'), issue('titles', 0, 'titleNumber'), issue('titles', 0, 'x')],
+      resolver,
+    );
+    const chip = toChipSummary(summary, section => `title:${section}`);
+
+    expect(chip.total).toBe(summary.total);
+    // only s1 and titles have items, in the nav's order; ids are the cards' DOM ids
+    expect(chip.sections.map(s => [s.id, s.title])).toEqual([
+      ['s1', 'title:s1'],
+      ['title-document-info', 'title:titles'],
+    ]);
+    // a title row keeps the count of the empty fields it stands for
+    expect(chip.sections[1].items[0]).toMatchObject({ path: 'titles.0', count: 2 });
+  });
+
+  it('has no sections when nothing is missing', () => {
+    expect(toChipSummary(buildMissingSummary({}, [], resolver), s => s)).toEqual({
+      total: 0,
+      sections: [],
+    });
   });
 });
 

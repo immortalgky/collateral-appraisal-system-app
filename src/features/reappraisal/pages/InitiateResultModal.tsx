@@ -18,7 +18,7 @@ export function BookList({
 }) {
   const { t } = useTranslation('reappraisal');
   return (
-    <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+    <ul className="rounded-lg border border-(--palette-line) divide-y divide-(--palette-line-soft)">
       {books.map((b, i) => {
         const note =
           b.note ??
@@ -29,10 +29,12 @@ export function BookList({
           // A book can repeat (several units of a block): the list never reorders, so the index is stable
           <li key={`${b.bookNumber}-${i}`} className="px-3 py-2">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-medium text-primary tabular-nums">{b.bookNumber}</span>
+              <span className="text-xs font-medium text-(--palette-primary-text) tabular-nums">
+                {b.bookNumber}
+              </span>
               {b.tag}
             </div>
-            {note && <p className="mt-0.5 text-[11px] text-gray-500">{note}</p>}
+            {note && <p className="mt-0.5 text-[11px] text-(--palette-gray-500)">{note}</p>}
           </li>
         );
       })}
@@ -68,20 +70,25 @@ export function InitiateResultModal({
           <div
             className={clsx(
               'size-9 shrink-0 rounded-full flex items-center justify-center',
-              createdCount > 0 ? 'bg-primary/10' : 'bg-amber-50',
+              createdCount > 0 ? 'bg-primary/10' : 'bg-(--palette-warn-wash)',
             )}
           >
             <Icon
               style="solid"
               name={createdCount > 0 ? 'check' : 'ban'}
-              className={clsx('size-4', createdCount > 0 ? 'text-primary' : 'text-amber-600')}
+              className={clsx(
+                'size-4',
+                createdCount > 0
+                  ? 'text-(--palette-primary-text)'
+                  : 'text-amber-600 dark:text-amber-400',
+              )}
             />
           </div>
           <div className="text-xs">
-            <p className="text-sm font-semibold text-gray-900">
+            <p className="text-sm font-semibold text-(--palette-ink)">
               {t('detail.successModal.createdDrafts', { total: createdCount })}
               {createdCount > 0 && (
-                <span className="font-normal text-gray-500">
+                <span className="font-normal text-(--palette-gray-500)">
                   {' · '}
                   {t('detail.successModal.groupNumber')}{' '}
                   <span className="tabular-nums">{result.groupNumber}</span>
@@ -89,14 +96,16 @@ export function InitiateResultModal({
               )}
             </p>
             {createdCount > 0 && (
-              <p className="text-gray-500 mt-0.5">{t('detail.successModal.notSubmitted')}</p>
+              <p className="text-(--palette-gray-500) mt-0.5">
+                {t('detail.successModal.notSubmitted')}
+              </p>
             )}
           </div>
         </div>
 
         {accepted.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-gray-600">
+            <p className="text-[11px] font-semibold text-(--palette-gray-600)">
               {t('detail.successModal.createdHeading')}
             </p>
             <BookList
@@ -104,7 +113,12 @@ export function InitiateResultModal({
                 bookNumber: a.bookNumber,
                 hasPrior: a.prevAppraisalId != null,
                 tag: (
-                  <span className={clsx(TAG, 'bg-primary/5 text-primary border-primary/20')}>
+                  <span
+                    className={clsx(
+                      TAG,
+                      'bg-primary/5 text-(--palette-primary-text) border-primary/20',
+                    )}
+                  >
                     {t('progress.draft')}
                   </span>
                 ),
@@ -115,7 +129,7 @@ export function InitiateResultModal({
 
         {skipped.length > 0 && (
           <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-gray-600">
+            <p className="text-[11px] font-semibold text-(--palette-gray-600)">
               {t('detail.successModal.skippedHeading', { total: skipped.length })}
             </p>
             <BookList
@@ -125,7 +139,12 @@ export function InitiateResultModal({
                   bookNumber: s.oldAppraisalReportNumber ?? '—',
                   hasPrior: false,
                   tag: (
-                    <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
+                    <span
+                      className={clsx(
+                        TAG,
+                        'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30',
+                      )}
+                    >
                       {/* A reason this build does not know shows as the backend sent it */}
                       {known
                         ? t(SKIP_REASON_KEY[s.reason] as 'detail.successModal.notDue')
@@ -139,7 +158,7 @@ export function InitiateResultModal({
           </div>
         )}
 
-        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-3 border-t border-(--palette-line-soft)">
           <Button variant="outline" size="sm" onClick={onClose}>
             {t('detail.backToList')}
           </Button>

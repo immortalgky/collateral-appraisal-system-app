@@ -57,7 +57,7 @@ const TABLE_SKELETON_COLUMNS = [
   { width: 'w-10' },
 ];
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-gray-600';
+const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-(--palette-gray-600)';
 
 const WebhookDeliveryListPage = () => {
   const { t, i18n } = useTranslation('webhookAdmin');
@@ -193,13 +193,13 @@ const WebhookDeliveryListPage = () => {
     <div className={clsx('flex flex-col gap-3', canRetry && pickedRows.length > 0 && 'pb-24')}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-64 flex-1">
-          <h2 className="text-base font-semibold text-gray-900">{t('page.title')}</h2>
-          <p className="mt-0.5 text-xs text-gray-500">{t('page.subtitle')}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h2>
+          <p className="mt-0.5 text-xs text-(--palette-gray-500)">{t('page.subtitle')}</p>
         </div>
         {canManageSubscriptions && (
           <Link
             to="/admin/webhook-subscriptions"
-            className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-(--palette-primary-text) hover:underline"
           >
             {t('page.subscriptionsLink')}
             <Icon name="chevron-right" style="regular" className="text-xs" />
@@ -215,8 +215,8 @@ const WebhookDeliveryListPage = () => {
         />
       )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 px-4 py-2.5">
+      <div className="overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line-soft) px-4 py-2.5">
           <CountTabs tabs={tabs} value={tab} onChange={setTab} label={t('tabs.label')} />
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <div className="w-72">
@@ -260,7 +260,7 @@ const WebhookDeliveryListPage = () => {
                     aria-label={t('filters.from')}
                   />
                 </div>
-                <span className="text-xs text-gray-500">{t('filters.to')}</span>
+                <span className="text-xs text-(--palette-gray-500)">{t('filters.to')}</span>
                 <div className="w-40">
                   <Input
                     type="date"
@@ -282,7 +282,7 @@ const WebhookDeliveryListPage = () => {
           />
         )}
         {eventType && tab !== 'Failed' && (
-          <div className="border-b border-gray-100 px-4 py-2">
+          <div className="border-b border-(--palette-line-soft) px-4 py-2">
             <button
               type="button"
               onClick={() => setEventType('')}
@@ -297,8 +297,8 @@ const WebhookDeliveryListPage = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[52rem] text-table">
-            <thead className="bg-gray-50">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="border-b border-(--palette-line)">
                 {canRetry && (
                   <th className="w-9 py-2.5 pr-0 pl-4">
                     {failedRows.length > 0 && (
@@ -324,7 +324,7 @@ const WebhookDeliveryListPage = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
                 <TableRowSkeleton
                   columns={canRetry ? TABLE_SKELETON_COLUMNS : TABLE_SKELETON_COLUMNS.slice(1)}
@@ -338,7 +338,10 @@ const WebhookDeliveryListPage = () => {
                 </tr>
               ) : deliveries.length === 0 ? (
                 <tr>
-                  <td colSpan={columnCount} className="py-12 text-center text-sm text-gray-400">
+                  <td
+                    colSpan={columnCount}
+                    className="py-12 text-center text-sm text-(--palette-gray-400)"
+                  >
                     <Icon
                       name="plug"
                       style="regular"
@@ -363,7 +366,9 @@ const WebhookDeliveryListPage = () => {
                       }}
                       className={clsx(
                         'cursor-pointer transition-colors',
-                        checked ? 'bg-primary-50' : 'even:bg-gray-50/50 hover:bg-gray-50',
+                        checked
+                          ? 'bg-primary-50'
+                          : 'even:bg-(--palette-surface-2)/50 hover:bg-(--palette-surface-2)',
                       )}
                     >
                       {canRetry && (
@@ -380,13 +385,13 @@ const WebhookDeliveryListPage = () => {
                           )}
                         </td>
                       )}
-                      <td className="whitespace-nowrap px-4 py-2.5 tabular-nums text-gray-700">
+                      <td className="whitespace-nowrap px-4 py-2.5 tabular-nums text-(--palette-ink)">
                         {formatShortDateTime(delivery.createdAt, i18n.language, { seconds: true })}
                       </td>
-                      <td className="px-4 py-2.5 font-mono text-xs font-medium text-gray-900">
+                      <td className="px-4 py-2.5 font-mono text-xs font-medium text-(--palette-ink)">
                         {delivery.eventType}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700">{delivery.systemCode}</td>
+                      <td className="px-4 py-2.5 text-(--palette-ink)">{delivery.systemCode}</td>
                       <td className="px-4 py-2.5">
                         <Badge
                           tone={deliveryStatusTone[delivery.status]}
@@ -402,16 +407,16 @@ const WebhookDeliveryListPage = () => {
                               <span
                                 className={clsx(
                                   'font-medium tabular-nums',
-                                  failed ? 'text-red-700' : 'text-gray-700',
+                                  failed ? 'text-red-700' : 'text-(--palette-ink)',
                                 )}
                               >
                                 {code}
                               </span>{' '}
-                              <span className="text-gray-500">{httpReason(code)}</span>
+                              <span className="text-(--palette-gray-500)">{httpReason(code)}</span>
                             </div>
                             {delivery.lastError && (
                               <div
-                                className="truncate text-xs text-gray-500"
+                                className="truncate text-xs text-(--palette-gray-500)"
                                 title={delivery.lastError}
                               >
                                 {delivery.lastError}
@@ -420,13 +425,16 @@ const WebhookDeliveryListPage = () => {
                           </>
                         ) : delivery.lastError ? (
                           <div
-                            className={clsx('truncate', failed ? 'text-red-700' : 'text-gray-500')}
+                            className={clsx(
+                              'truncate',
+                              failed ? 'text-red-700' : 'text-(--palette-gray-500)',
+                            )}
                             title={delivery.lastError}
                           >
                             {delivery.lastError}
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-(--palette-gray-400)">—</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5 text-right tabular-nums">
@@ -443,7 +451,7 @@ const WebhookDeliveryListPage = () => {
                               }}
                               aria-label={t('actions.retry')}
                               title={t('actions.retry')}
-                              className="inline-flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-primary/10 hover:text-primary"
+                              className="inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-primary/10 hover:text-(--palette-primary-text)"
                             >
                               <Icon name="rotate-right" style="regular" className="text-sm" />
                             </button>
@@ -451,7 +459,7 @@ const WebhookDeliveryListPage = () => {
                           <Icon
                             name="chevron-right"
                             style="regular"
-                            className="text-xs text-gray-300"
+                            className="text-xs text-(--palette-gray-300)"
                           />
                         </div>
                       </td>

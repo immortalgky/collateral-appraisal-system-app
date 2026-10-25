@@ -2,13 +2,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import {
-  makeRejectTentativeFormSchema,
-  type RejectTentativeFormValues,
-} from '../schemas/quotation';
+import { rejectTentativeFormSchema, type RejectTentativeFormValues } from '../schemas/quotation';
 import { useRejectTentativeWinner } from '../api/quotation';
 import BoldTrans from './BoldTrans';
 
@@ -34,7 +32,7 @@ const RejectTentativeModal = ({
     reset,
     formState: { errors },
   } = useForm<RejectTentativeFormValues>({
-    resolver: zodResolver(makeRejectTentativeFormSchema(t)),
+    resolver: zodResolver(rejectTentativeFormSchema),
   });
 
   const handleClose = () => {
@@ -60,13 +58,13 @@ const RejectTentativeModal = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('rejectWinner.title')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
+        <div className="p-3 bg-(--palette-req-wash) rounded-lg border border-red-100 dark:border-red-500/20 flex items-start gap-2">
           <Icon
             name="triangle-exclamation"
             style="solid"
             className="size-4 text-red-500 shrink-0 mt-0.5"
           />
-          <div className="text-sm text-red-700">
+          <div className="text-sm text-(--palette-req)">
             <p>
               <BoldTrans i18nKey="rejectWinner.body" values={{ company: companyName }} />
             </p>
@@ -74,16 +72,20 @@ const RejectTentativeModal = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('fields.reason')} <span className="text-danger">*</span>
           </label>
           <textarea
             {...register('reason')}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-danger/20 focus:border-danger outline-none resize-none"
+            className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-danger/20 focus:border-danger outline-none resize-none"
             placeholder={t('placeholders.reason')}
           />
-          {errors.reason && <p className="mt-1 text-xs text-danger">{errors.reason.message}</p>}
+          {errors.reason && (
+            <p className="mt-1 text-xs text-danger">
+              <ValidationText message={errors.reason.message} />
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

@@ -22,27 +22,37 @@ const AppraisalPageHeader = ({ title, icon, iconBgColor }: AppraisalPageHeaderPr
 
   return (
     <div className="shrink-0 pb-3">
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 px-3 py-2">
+      <div className="bg-(--palette-surface) rounded-lg shadow-sm border border-(--palette-line-soft) px-3 py-2">
         <div className="flex items-center justify-between">
           {/* Left side */}
           <div className="flex items-center gap-2.5">
             <ReturnButton />
-            <div className="h-4 w-px bg-gray-200" />
+            <div className="h-4 w-px bg-(--palette-line)" />
 
             {/* Appraisal badge */}
             <div className="flex items-center gap-1.5 px-2 py-1 bg-primary/5 rounded-md">
-              <Icon style="solid" name="file-certificate" className="size-3 text-primary" />
-              <span className="text-xs font-medium text-primary">{appraisalNo}</span>
+              <Icon
+                style="solid"
+                name="file-certificate"
+                className="size-3 text-(--palette-primary-text)"
+              />
+              <span className="text-xs font-medium text-(--palette-primary-text)">
+                {appraisalNo}
+              </span>
             </div>
 
-            <Icon style="solid" name="chevron-right" className="size-2.5 text-gray-300" />
+            <Icon
+              style="solid"
+              name="chevron-right"
+              className="size-2.5 text-(--palette-gray-300)"
+            />
 
             {/* Page icon and title */}
             <div className="flex items-center gap-2">
               <div className={`size-6 rounded-md ${iconBgColor} flex items-center justify-center`}>
                 <Icon style="solid" name={icon} className="size-3 text-white" />
               </div>
-              <span className="text-sm font-semibold text-gray-900">{title}</span>
+              <span className="text-sm font-semibold text-(--palette-ink)">{title}</span>
             </div>
           </div>
         </div>

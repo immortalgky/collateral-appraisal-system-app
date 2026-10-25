@@ -24,11 +24,15 @@ const MeetingChip = ({ meetingId, title, endedAt }: MeetingChipProps) => {
   return (
     <Link
       to={`/meetings/${meetingId}`}
-      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200 hover:bg-blue-100 transition-colors text-xs"
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors text-xs"
     >
-      <Icon name="people-arrows" style="solid" className="w-3.5 h-3.5 text-blue-600" />
-      <span className="font-medium text-blue-700">{title}</span>
-      {formattedDate && <span className="text-blue-600">· {formattedDate}</span>}
+      <Icon
+        name="people-arrows"
+        style="solid"
+        className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400"
+      />
+      <span className="font-medium text-blue-700 dark:text-blue-300">{title}</span>
+      {formattedDate && <span className="text-blue-600 dark:text-blue-400">· {formattedDate}</span>}
     </Link>
   );
 };

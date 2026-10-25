@@ -21,9 +21,9 @@ function EvaluationStatusBadge({ status }: EvaluationStatusBadgeProps) {
 
   // Map to badge variant via the typeColorMap approach — use className override
   const colorClasses: Record<string, string> = {
-    amber: 'bg-amber-50 text-amber-700',
-    emerald: 'bg-emerald-50 text-emerald-700',
-    gray: 'bg-gray-100 text-gray-600',
+    amber: 'bg-(--palette-warn-wash) text-(--palette-warn)',
+    emerald: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+    gray: 'bg-(--palette-surface-3) text-(--palette-gray-600)',
   };
 
   const dotClasses: Record<string, string> = {

@@ -67,15 +67,16 @@ const SortableTh = ({
   children: React.ReactNode;
 }) => {
   const isActive = sortBy === field;
-  const alignCls = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  const alignCls =
+    align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
   const flexAlign =
     align === 'right' ? 'flex-row-reverse' : align === 'center' ? 'justify-center' : '';
   const iconName = isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
   return (
     <th
       onClick={() => onSort(field)}
-      className={`text-xs font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
-        isActive ? 'text-primary' : 'text-gray-600'
+      className={`text-xs font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-(--palette-ink) ${alignCls} ${
+        isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-600)'
       }`}
     >
       <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
@@ -83,7 +84,7 @@ const SortableTh = ({
         <Icon
           style="solid"
           name={iconName}
-          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300'}`}
+          className={`size-2.5 ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)'}`}
         />
       </div>
     </th>
@@ -144,8 +145,7 @@ const ExtInvoiceListPage = () => {
   const statusParam = filters.status ?? tabStatus;
   // Only apply the exclude when no explicit status is selected on the Unpaid tab — otherwise
   // an explicit status filter could conflict with the exclude.
-  const excludeStatusParam =
-    tab === 'unpaid' && !filters.status ? 'Paid' : undefined;
+  const excludeStatusParam = tab === 'unpaid' && !filters.status ? 'Paid' : undefined;
 
   // Map filter date fields to API params (DateOnly = yyyy-MM-dd).
   // Invoice Date applies on both tabs; Paid Date is History-only.
@@ -222,8 +222,8 @@ const ExtInvoiceListPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.loadFailed')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -234,12 +234,12 @@ const ExtInvoiceListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('list.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('list.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('list.subtitle')}</p>
         </div>
         <Button size="sm" onClick={() => navigate('/ext/invoices/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
@@ -319,7 +319,7 @@ const ExtInvoiceListPage = () => {
       </div>
 
       {/* Table card */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table table-fixed">
             <colgroup>
@@ -331,23 +331,45 @@ const ExtInvoiceListPage = () => {
               <col className="w-32" />
               <col className="w-12" />
             </colgroup>
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
-                <SortableTh field="invoiceNumber" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
+                <SortableTh
+                  field="invoiceNumber"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={toggleSort}
+                >
                   {t('list.col.invoiceNumber')}
                 </SortableTh>
                 <SortableTh field="sentDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
                   {t('list.col.sentDate')}
                 </SortableTh>
                 {tab === 'paid' && (
-                  <SortableTh field="paidDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                  <SortableTh
+                    field="paidDate"
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSort={toggleSort}
+                  >
                     {t('list.col.paidDate')}
                   </SortableTh>
                 )}
-                <SortableTh field="totalItems" align="center" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                <SortableTh
+                  field="totalItems"
+                  align="center"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={toggleSort}
+                >
                   {t('list.col.totalItems')}
                 </SortableTh>
-                <SortableTh field="totalAmount" align="right" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                <SortableTh
+                  field="totalAmount"
+                  align="right"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={toggleSort}
+                >
                   {t('list.col.totalAmount')}
                 </SortableTh>
                 <SortableTh field="status" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
@@ -357,7 +379,7 @@ const ExtInvoiceListPage = () => {
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`divide-y divide-(--palette-line-soft) ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -376,9 +398,13 @@ const ExtInvoiceListPage = () => {
                 <tr>
                   <td colSpan={tab === 'paid' ? 7 : 6} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">{t('list.empty')}</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">{t('list.empty')}</p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {activeFilterCount > 0 ? t('list.tryFilters') : t('list.emptyHint')}
                       </p>
                     </div>
@@ -388,7 +414,7 @@ const ExtInvoiceListPage = () => {
                 items.map(item => (
                   <tr
                     key={item.id}
-                    className="hover:bg-gray-50 even:bg-gray-50/50 transition-colors cursor-pointer"
+                    className="hover:bg-(--palette-surface-2) even:bg-(--palette-surface-2)/50 transition-colors cursor-pointer"
                     onClick={() =>
                       navigate(
                         item.status === 'Pending'
@@ -398,31 +424,28 @@ const ExtInvoiceListPage = () => {
                     }
                   >
                     <td className="px-4 py-2.5">
-                      <span className="font-medium text-primary">
+                      <span className="font-medium text-(--palette-primary-text)">
                         {item.invoiceNumber ?? '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                       {formatLocaleDate(item.sentDate, i18n.language)}
                     </td>
                     {tab === 'paid' && (
-                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                         {formatLocaleDate(item.paidDate, i18n.language)}
                       </td>
                     )}
-                    <td className="px-4 py-2.5 text-center text-gray-600 tabular-nums">
+                    <td className="px-4 py-2.5 text-center text-(--palette-gray-600) tabular-nums">
                       {item.itemCount}
                     </td>
-                    <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap">
                       {formatCurrency(item.totalAmount)}
                     </td>
                     <td className="px-4 py-2.5">
                       <InvoiceStatusBadge status={item.status} viewContext="external" />
                     </td>
-                    <td
-                      className="px-4 py-2.5 text-right"
-                      onClick={e => e.stopPropagation()}
-                    >
+                    <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
                       <InvoiceRowActionsMenu
                         actions={
                           item.status === 'Pending'
@@ -456,14 +479,18 @@ const ExtInvoiceListPage = () => {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>
 
         {/* Pinned grand-total row — sits below the scroll area, aligned to table columns */}
         {items.length > 0 && (
-          <div className="shrink-0 border-t-2 border-gray-300 bg-gray-50">
+          <div className="shrink-0 border-t-2 border-(--palette-line-strong) bg-(--palette-surface-2)">
             <table className="w-full text-table table-fixed">
               <colgroup>
                 <col className="w-56" />
@@ -478,14 +505,14 @@ const ExtInvoiceListPage = () => {
                 <tr>
                   <td
                     colSpan={tab === 'paid' ? 3 : 2}
-                    className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                    className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-600) uppercase tracking-wide"
                   >
                     {t('list.grandTotal')}
                   </td>
-                  <td className="px-4 py-2.5 text-center font-semibold text-gray-900 tabular-nums">
+                  <td className="px-4 py-2.5 text-center font-semibold text-(--palette-ink) tabular-nums">
                     {grandItemCount}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-bold text-primary tabular-nums whitespace-nowrap">
+                  <td className="px-4 py-2.5 text-right font-bold text-(--palette-primary-text) tabular-nums whitespace-nowrap">
                     {formatCurrency(grandTotalAmount)}
                   </td>
                   <td />
@@ -496,10 +523,9 @@ const ExtInvoiceListPage = () => {
           </div>
         )}
 
-
         {/* Pagination */}
         {totalCount > 0 && (
-          <div className="shrink-0 border-t border-gray-200">
+          <div className="shrink-0 border-t border-(--palette-line)">
             <Pagination
               currentPage={pageNumber}
               totalPages={totalPages}

@@ -349,18 +349,22 @@ export default function AppointmentAndFeePage() {
         <div className="flex flex-col gap-6 pb-6 pr-4">
           {/* Global approval banner */}
           {hasDraft && (
-            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-300 text-amber-800">
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-(--palette-warn-wash) border border-amber-300 dark:border-amber-500/40 text-amber-800 dark:text-amber-300">
               <Icon
                 name="triangle-exclamation"
                 style="solid"
-                className="size-4 mt-0.5 shrink-0 text-amber-600"
+                className="size-4 mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"
               />
               <span className="text-sm">{t('approval.banner.needsApproval')}</span>
             </div>
           )}
           {hasSubmitted && !hasDraft && (
-            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-300 text-blue-800">
-              <Icon name="clock" style="solid" className="size-4 mt-0.5 shrink-0 text-blue-600" />
+            <div className="flex items-start gap-3 px-4 py-3 rounded-lg bg-blue-50 dark:bg-blue-500/10 border border-blue-300 dark:border-blue-500/40 text-blue-800 dark:text-blue-300">
+              <Icon
+                name="clock"
+                style="solid"
+                className="size-4 mt-0.5 shrink-0 text-blue-600 dark:text-blue-400"
+              />
               <span className="text-sm">{t('approval.banner.awaiting')}</span>
             </div>
           )}
@@ -378,7 +382,7 @@ export default function AppointmentAndFeePage() {
           />
 
           {/* Divider */}
-          <div className="border-b border-gray-200" />
+          <div className="border-b border-(--palette-line)" />
 
           {/* Fee and Payment Section - Two Column Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-6">
@@ -423,7 +427,7 @@ export default function AppointmentAndFeePage() {
       </div>
 
       {/* Sticky Footer */}
-      <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+      <div className="shrink-0 bg-(--palette-surface) border-t border-(--palette-line) px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between gap-3">
           <Button variant="ghost" type="button" onClick={() => navigate(-1)}>
             Cancel

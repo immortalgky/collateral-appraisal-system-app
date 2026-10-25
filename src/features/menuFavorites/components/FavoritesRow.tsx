@@ -42,8 +42,8 @@ function SortableTile({ node, lang }: SortableTileProps) {
       <div
         className={`group relative flex items-center gap-1.5 px-2 py-1 rounded-lg border transition-all select-none max-w-[160px] ${
           isDragging
-            ? 'bg-white shadow-md border-primary/20'
-            : 'bg-white border-gray-100 hover:border-primary/20 hover:bg-primary/5'
+            ? 'bg-(--palette-surface) shadow-md border-primary/20'
+            : 'bg-(--palette-surface) border-(--palette-line-soft) hover:border-primary/20 hover:bg-primary/5'
         }`}
       >
         {/* Drag handle — positioned absolutely to not interfere with link focus */}
@@ -69,10 +69,10 @@ function SortableTile({ node, lang }: SortableTileProps) {
             <Icon
               name={node.iconName}
               style={node.iconStyle}
-              className={`size-2.5 ${node.iconColor ?? 'text-gray-500'}`}
+              className={`size-2.5 ${node.iconColor ?? 'text-(--palette-gray-500)'}`}
             />
           </div>
-          <span className="text-[11px] font-medium text-gray-700 truncate">{label}</span>
+          <span className="text-[11px] font-medium text-(--palette-ink) truncate">{label}</span>
         </Link>
       </div>
     </div>
@@ -107,7 +107,10 @@ export function FavoritesRow() {
     return (
       <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-24 h-7 bg-gray-100 rounded-lg animate-pulse" />
+          <div
+            key={i}
+            className="flex-shrink-0 w-24 h-7 bg-(--palette-surface-3) rounded-lg animate-pulse"
+          />
         ))}
       </div>
     );
@@ -129,16 +132,16 @@ export function FavoritesRow() {
           type="button"
           onClick={() => setPickerOpen(true)}
           title={t('favorites.picker.title')}
-          className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg border border-dashed border-gray-200 bg-white hover:border-primary/30 hover:bg-primary/5 transition-all group cursor-pointer"
+          className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-lg border border-dashed border-(--palette-line) bg-(--palette-surface) hover:border-primary/30 hover:bg-primary/5 transition-all group cursor-pointer"
         >
-          <div className="w-5 h-5 rounded-md bg-gray-50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+          <div className="w-5 h-5 rounded-md bg-(--palette-surface-2) flex items-center justify-center group-hover:bg-primary/10 transition-colors">
             <Icon
               style="solid"
               name="plus"
-              className="size-2.5 text-gray-400 group-hover:text-primary"
+              className="size-2.5 text-(--palette-gray-400) group-hover:text-(--palette-primary-text)"
             />
           </div>
-          <span className="text-[11px] font-medium text-gray-400">
+          <span className="text-[11px] font-medium text-(--palette-gray-400)">
             {favoriteItems.length === 0 ? t('favorites.row.emptyHint') : t('favorites.row.addMore')}
           </span>
         </button>

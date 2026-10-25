@@ -49,16 +49,16 @@ const CollateralAssignmentModal = ({
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+      <div className="relative bg-(--palette-surface) rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <div className="px-6 py-4 border-b border-(--palette-line-soft) flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Icon name="link" className="text-primary" />
+              <Icon name="link" className="text-(--palette-primary-text)" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Assign to Collateral</h3>
-              <p className="text-sm text-gray-500">
+              <h3 className="text-lg font-semibold text-(--palette-ink)">Assign to Collateral</h3>
+              <p className="text-sm text-(--palette-gray-500)">
                 {selectedCount} photo{selectedCount !== 1 ? 's' : ''} selected
               </p>
             </div>
@@ -66,9 +66,9 @@ const CollateralAssignmentModal = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-(--palette-surface-3) rounded-lg transition-colors"
           >
-            <Icon name="xmark" className="text-gray-500" />
+            <Icon name="xmark" className="text-(--palette-gray-500)" />
           </button>
         </div>
 
@@ -76,14 +76,16 @@ const CollateralAssignmentModal = ({
         <div className="p-6 max-h-96 overflow-y-auto">
           {allProperties.length === 0 ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <Icon name="building" className="text-2xl text-gray-400" />
+              <div className="w-16 h-16 rounded-full bg-(--palette-surface-3) flex items-center justify-center mx-auto mb-4">
+                <Icon name="building" className="text-2xl text-(--palette-gray-400)" />
               </div>
-              <p className="text-sm text-gray-500">No collateral properties available</p>
+              <p className="text-sm text-(--palette-gray-500)">
+                No collateral properties available
+              </p>
             </div>
           ) : (
             <div className="space-y-2">
-              <p className="text-sm font-medium text-gray-700 mb-3">
+              <p className="text-sm font-medium text-(--palette-ink) mb-3">
                 Select a collateral property:
               </p>
               {allProperties.map(property => (
@@ -95,11 +97,11 @@ const CollateralAssignmentModal = ({
                     'w-full p-4 rounded-xl border-2 text-left transition-all flex items-center gap-4',
                     selectedCollateralId === property.id
                       ? 'border-primary bg-primary/5'
-                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50',
+                      : 'border-(--palette-line-soft) hover:border-(--palette-line) hover:bg-(--palette-surface-2)',
                   )}
                 >
                   {/* Property Image */}
-                  <div className="w-16 h-16 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                  <div className="w-16 h-16 rounded-lg bg-(--palette-surface-3) overflow-hidden flex-shrink-0">
                     {property.image ? (
                       <img
                         src={property.image}
@@ -108,7 +110,7 @@ const CollateralAssignmentModal = ({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Icon name="image" className="text-gray-400" />
+                        <Icon name="image" className="text-(--palette-gray-400)" />
                       </div>
                     )}
                   </div>
@@ -116,12 +118,16 @@ const CollateralAssignmentModal = ({
                   {/* Property Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-600">
+                      <span className="text-xs font-medium px-2 py-0.5 rounded bg-(--palette-surface-3) text-(--palette-gray-600)">
                         {property.type}
                       </span>
-                      <span className="text-xs text-gray-400">{property.groupName}</span>
+                      <span className="text-xs text-(--palette-gray-400)">
+                        {property.groupName}
+                      </span>
                     </div>
-                    <p className="text-sm font-medium text-gray-900 truncate">{property.address}</p>
+                    <p className="text-sm font-medium text-(--palette-ink) truncate">
+                      {property.address}
+                    </p>
                   </div>
 
                   {/* Selection indicator */}
@@ -130,7 +136,7 @@ const CollateralAssignmentModal = ({
                       'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors',
                       selectedCollateralId === property.id
                         ? 'bg-primary border-primary'
-                        : 'border-gray-300',
+                        : 'border-(--palette-line-strong)',
                     )}
                   >
                     {selectedCollateralId === property.id && (
@@ -144,7 +150,7 @@ const CollateralAssignmentModal = ({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-(--palette-line-soft) flex items-center justify-end gap-3">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
           </Button>

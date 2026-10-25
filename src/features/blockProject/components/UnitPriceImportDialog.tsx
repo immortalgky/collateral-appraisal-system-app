@@ -43,14 +43,14 @@ const fmt = (v: number | null | undefined) =>
 
 function Tile({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 rounded-lg border border-gray-200 bg-white p-3">
-      <span className="text-xs text-gray-500">{label}</span>
+    <div className="flex flex-col gap-1 rounded-lg border border-(--palette-line) bg-(--palette-surface) p-3">
+      <span className="text-xs text-(--palette-gray-500)">{label}</span>
       {children}
     </div>
   );
 }
 
-const tileValue = 'text-base font-semibold text-gray-800 tabular-nums';
+const tileValue = 'text-base font-semibold text-(--palette-ink) tabular-nums';
 
 function Banner({
   tone,
@@ -62,9 +62,10 @@ function Banner({
   children: ReactNode;
 }) {
   const styles = {
-    danger: 'border-red-200 bg-red-50 text-red-800',
-    warning: 'border-amber-200 bg-amber-50 text-gray-700',
-    info: 'border-blue-200 bg-blue-50 text-gray-700',
+    danger: 'border-(--palette-req-line) bg-(--palette-req-wash) text-red-800 dark:text-red-300',
+    warning:
+      'border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) text-(--palette-ink)',
+    info: 'border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-(--palette-ink)',
   };
   return (
     <div
@@ -81,7 +82,7 @@ function More({ total }: { total: number }) {
   const { t } = useTranslation('blockProject');
   if (total <= MAX_LISTED) return null;
   return (
-    <span className="text-xs text-gray-500">
+    <span className="text-xs text-(--palette-gray-500)">
       {t('unitPrice.import.dialog.moreItems', { n: (total - MAX_LISTED).toLocaleString() })}
     </span>
   );
@@ -89,7 +90,7 @@ function More({ total }: { total: number }) {
 
 const Th = ({ children, right }: { children: ReactNode; right?: boolean }) => (
   <th
-    className={`px-3 py-2 text-xs font-semibold text-gray-600 whitespace-nowrap ${right ? 'text-right' : 'text-left'}`}
+    className={`px-3 py-2 text-xs font-semibold text-(--palette-gray-600) whitespace-nowrap ${right ? 'text-right' : 'text-left'}`}
   >
     {children}
   </th>
@@ -101,6 +102,10 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
   const { t } = useTranslation('blockProject');
   const d = 'unitPrice.import.dialog';
   const condo = preview.projectType === 'Condo';
+  // Land is appraised as land only: there is no fire-insurance coverage to total.
+  const totals = SHEET_TOTALS.filter(
+    ([field]) => field !== 'coverageAmount' || preview.projectType !== 'Land',
+  );
   const key1 = t(`${d}.keys.${condo ? 'condo1' : 'lb1'}`);
   const key2 = t(`${d}.keys.${condo ? 'condo2' : 'lb2'}`);
 
@@ -123,7 +128,7 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
           <span className={tileValue}>
             {preview.matchedCount.toLocaleString()} / {preview.unitsInProject.toLocaleString()}
           </span>
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-(--palette-gray-500)">
             {t(`${d}.matchedBy`, {
               key1,
               key2,
@@ -154,15 +159,17 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
         </Tile>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        {SHEET_TOTALS.map(([field, label]) => {
+      <div
+        className={`grid grid-cols-1 gap-3 ${totals.length === 3 ? 'sm:grid-cols-3' : 'sm:grid-cols-2'}`}
+      >
+        {totals.map(([field, label]) => {
           const total = preview.totals[field];
           const sheetValue = preview.sheetTotals?.[field] ?? null;
           return (
             <Tile key={field} label={t(`${d}.${label}`)}>
               <span className={tileValue}>{fmt(total)}</span>
               {sheetValue == null ? (
-                <span className="text-xs text-gray-500">{t(`${d}.noSheetTotals`)}</span>
+                <span className="text-xs text-(--palette-gray-500)">{t(`${d}.noSheetTotals`)}</span>
               ) : Math.abs(sheetValue - total) <= SHEET_TOLERANCE ? (
                 <Badge tone="green" size="sm" dot={false}>
                   {t(`${d}.sheetMatch`)}
@@ -191,23 +198,25 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
               n: preview.errors.length.toLocaleString(),
             })}
           </Banner>
-          <div className="max-h-48 overflow-auto rounded-lg border border-gray-200">
+          <div className="max-h-48 overflow-auto rounded-lg border border-(--palette-line)">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-50">
+              <thead className="sticky top-0 bg-(--palette-surface-2)">
                 <tr>
                   <Th right>{t(`${d}.cols.row`)}</Th>
                   <Th>{t(`${d}.cols.key`)}</Th>
                   <Th>{t(`${d}.cols.problem`)}</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {preview.errors.map((e, i) => (
                   <tr key={`${e.rowNumber}-${e.code}-${i}`}>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-600">
+                    <td className="px-3 py-1.5 text-right tabular-nums text-(--palette-gray-600)">
                       {e.rowNumber}
                     </td>
-                    <td className="px-3 py-1.5 text-gray-800">{e.key ?? '-'}</td>
-                    <td className="px-3 py-1.5 text-gray-700">{errorMessage(e.code, e.message)}</td>
+                    <td className="px-3 py-1.5 text-(--palette-ink)">{e.key ?? '-'}</td>
+                    <td className="px-3 py-1.5 text-(--palette-ink)">
+                      {errorMessage(e.code, e.message)}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -228,7 +237,7 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
             {preview.unitsMissingFromFile.slice(0, MAX_LISTED).map(u => (
               <span
                 key={u.projectUnitId}
-                className="rounded-md border border-gray-200 bg-white px-2 py-0.5 text-xs text-gray-700"
+                className="rounded-md border border-(--palette-line) bg-(--palette-surface) px-2 py-0.5 text-xs text-(--palette-ink)"
               >
                 {u.key ?? '-'}
               </span>
@@ -246,9 +255,9 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
               n: preview.attributeDiffs.length.toLocaleString(),
             })}
           </Banner>
-          <div className="max-h-40 overflow-auto rounded-lg border border-gray-200">
+          <div className="max-h-40 overflow-auto rounded-lg border border-(--palette-line)">
             <table className="w-full text-sm">
-              <thead className="sticky top-0 bg-gray-50">
+              <thead className="sticky top-0 bg-(--palette-surface-2)">
                 <tr>
                   <Th>{t(`${d}.cols.key`)}</Th>
                   <Th>{t(`${d}.cols.column`)}</Th>
@@ -256,15 +265,17 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
                   <Th>{t(`${d}.cols.file`)}</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {preview.attributeDiffs.slice(0, MAX_LISTED).map((x, i) => (
                   <tr key={`${x.rowNumber}-${x.column}-${i}`}>
-                    <td className="px-3 py-1.5 text-gray-800">{x.key}</td>
-                    <td className="px-3 py-1.5 text-gray-700">{x.column}</td>
-                    <td className="px-3 py-1.5 tabular-nums text-gray-700">
+                    <td className="px-3 py-1.5 text-(--palette-ink)">{x.key}</td>
+                    <td className="px-3 py-1.5 text-(--palette-ink)">{x.column}</td>
+                    <td className="px-3 py-1.5 tabular-nums text-(--palette-ink)">
                       {x.systemValue ?? '-'}
                     </td>
-                    <td className="px-3 py-1.5 tabular-nums text-gray-700">{x.fileValue ?? '-'}</td>
+                    <td className="px-3 py-1.5 tabular-nums text-(--palette-ink)">
+                      {x.fileValue ?? '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -276,12 +287,12 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
 
       {sampleRows.length > 0 && (
         <section className="flex flex-col gap-2">
-          <h3 className="text-sm font-semibold text-gray-800">
+          <h3 className="text-sm font-semibold text-(--palette-ink)">
             {t(`${d}.sampleTitle`, { count: sampleRows.length, n: sampleRows.length })}
           </h3>
-          <div className="overflow-auto rounded-lg border border-gray-200">
+          <div className="overflow-auto rounded-lg border border-(--palette-line)">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
+              <thead className="bg-(--palette-surface-2)">
                 <tr>
                   <Th>{t(`${d}.cols.key`)}</Th>
                   <Th right>{t(`${d}.cols.previous`)}</Th>
@@ -289,17 +300,17 @@ function PreviewResult({ preview }: { preview: UnitPriceImportPreview }) {
                   <Th right>{t(`${d}.cols.diff`)}</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {sampleRows.map(r => (
                   <tr key={r.rowNumber}>
-                    <td className="px-3 py-1.5 text-gray-800">{r.key}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
+                    <td className="px-3 py-1.5 text-(--palette-ink)">{r.key}</td>
+                    <td className="px-3 py-1.5 text-right tabular-nums text-(--palette-ink)">
                       {fmt(r.previousAppraisalValue)}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-800">
+                    <td className="px-3 py-1.5 text-right tabular-nums text-(--palette-ink)">
                       {fmt(r.newAppraisalValue)}
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums text-gray-700">
+                    <td className="px-3 py-1.5 text-right tabular-nums text-(--palette-ink)">
                       {r.previousAppraisalValue != null && r.newAppraisalValue != null
                         ? fmt(r.newAppraisalValue - r.previousAppraisalValue)
                         : '-'}
@@ -418,7 +429,7 @@ export default function UnitPriceImportDialog({
   };
 
   const picker = (
-    <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50">
+    <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-(--palette-line-strong) px-3 py-1.5 text-xs font-medium text-(--palette-ink) hover:bg-(--palette-surface-2)">
       <Icon name="file-arrow-up" style="regular" />
       {t(preview || previewMutation.isPending ? `${d}.chooseAnother` : `${d}.choose`)}
       <input
@@ -437,25 +448,25 @@ export default function UnitPriceImportDialog({
         <div className="flex flex-wrap items-center gap-3">
           {picker}
           {file && (
-            <span className="min-w-0 truncate text-xs text-gray-700" title={file.name}>
+            <span className="min-w-0 truncate text-xs text-(--palette-ink)" title={file.name}>
               {file.name}
             </span>
           )}
         </div>
 
-        {!file && <p className="text-xs text-gray-500">{t(`${d}.hint`)}</p>}
+        {!file && <p className="text-xs text-(--palette-gray-500)">{t(`${d}.hint`)}</p>}
 
         {previewMutation.isPending && !preview && (
           <div className="space-y-2" role="status" aria-label={t(`${d}.checking`)}>
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-8 animate-pulse rounded bg-gray-100" />
+              <div key={i} className="h-8 animate-pulse rounded bg-(--palette-surface-3)" />
             ))}
           </div>
         )}
 
         {preview && <PreviewResult preview={preview} />}
 
-        <div className="flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+        <div className="flex items-center justify-end gap-2 border-t border-(--palette-line-soft) pt-3">
           <Button variant="ghost" onClick={handleClose} disabled={isImporting}>
             {t(`${d}.cancel`)}
           </Button>

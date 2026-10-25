@@ -13,7 +13,11 @@ interface CollapsibleSectionProps {
  * content (AppendixTab, the Machinery Summary pane) already renders its own card, so this
  * is just a labeled toggle above it, not a nested card.
  */
-export const CollapsibleSection = ({ title, defaultOpen = true, children }: CollapsibleSectionProps) => {
+export const CollapsibleSection = ({
+  title,
+  defaultOpen = true,
+  children,
+}: CollapsibleSectionProps) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
@@ -25,9 +29,9 @@ export const CollapsibleSection = ({ title, defaultOpen = true, children }: Coll
       >
         <Icon
           name={isOpen ? 'chevron-down' : 'chevron-right'}
-          className="text-gray-400 text-xs transition-transform group-hover:text-gray-600"
+          className="text-(--palette-gray-400) text-xs transition-transform group-hover:text-(--palette-gray-600)"
         />
-        <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide group-hover:text-gray-700">
+        <span className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide group-hover:text-(--palette-ink)">
           {title}
         </span>
       </button>

@@ -245,6 +245,19 @@ describe('UnitPriceImportDialog', () => {
     expect(screen.queryByText(/\(-\)/)).toBeNull();
   });
 
+  it('shows no fire-insurance total for a Land project', async () => {
+    await setup(preview({ projectType: 'Land' }));
+
+    expect(await screen.findByText('Total forced-sale price')).toBeInTheDocument();
+    expect(screen.queryByText('Total fire-insurance value')).toBeNull();
+  });
+
+  it('shows the fire-insurance total for a Land and Building project', async () => {
+    await setup(preview({ projectType: 'LandAndBuilding' }));
+
+    expect(await screen.findByText('Total fire-insurance value')).toBeInTheDocument();
+  });
+
   it('lists at most 50 missing units and diffs, then says how many more', async () => {
     await setup(
       preview({

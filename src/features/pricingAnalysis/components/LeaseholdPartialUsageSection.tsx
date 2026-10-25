@@ -65,7 +65,7 @@ export function LeaseholdPartialUsageSection({
         label={
           <>
             {t('methodTabs.partialUsage.estimateFromPv')}{' '}
-            <span className="text-[10.5px] text-gray-400">
+            <span className="text-[10.5px] text-(--palette-gray-400)">
               {t('methodTabs.partialUsage.roundedThousand')}
             </span>
           </>
@@ -76,14 +76,16 @@ export function LeaseholdPartialUsageSection({
         label={<span className="pl-3">{t('methodTabs.partialUsage.plusUncovered')}</span>}
         value={
           <span className="tabular-nums">
-            <span className="text-[11px] text-gray-400">
+            <span className="text-[11px] text-(--palette-gray-400)">
               {t('methodTabs.partialUsage.uncoveredWorking', {
                 area: fmt(remaining.remainingLandArea),
                 price: fmt(price),
               })}{' '}
               ={' '}
             </span>
-            <span className="font-semibold text-gray-800">{fmt(remaining.remainingLandPrice)}</span>
+            <span className="font-semibold text-(--palette-ink)">
+              {fmt(remaining.remainingLandPrice)}
+            </span>
           </span>
         }
         unit={t('finalValue.baht')}

@@ -54,16 +54,16 @@ const MeetingValueBar = ({ stats, animate = true }: MeetingValueBarProps) => {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-2">
-        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-(--palette-gray-500)">
           <span aria-hidden="true" className="block h-3.5 w-1 rounded-full bg-emerald-500" />
           {t('pulse.valueDistribution')}
         </h4>
-        <span className="text-sm font-semibold text-emerald-700 tabular-nums">
+        <span className="text-sm font-semibold text-emerald-700 dark:text-emerald-300 tabular-nums">
           {formatCompact(total)}
         </span>
       </div>
 
-      <div className="flex h-3 w-full overflow-hidden rounded-full bg-gray-100">
+      <div className="flex h-3 w-full overflow-hidden rounded-full bg-(--palette-surface-3)">
         {segments.map(segment => (
           <div
             key={`${segment.kind}-${segment.group}`}
@@ -85,12 +85,17 @@ const MeetingValueBar = ({ stats, animate = true }: MeetingValueBarProps) => {
               style={{ backgroundColor: colorFor(segment) }}
             />
             <span className="min-w-0">
-              <span className="block text-[11px] text-gray-500 truncate" title={labelFor(segment)}>
+              <span
+                className="block text-[11px] text-(--palette-gray-500) truncate"
+                title={labelFor(segment)}
+              >
                 {labelFor(segment)}
               </span>
-              <span className="block text-xs font-medium text-gray-800 tabular-nums">
+              <span className="block text-xs font-medium text-(--palette-ink) tabular-nums">
                 {formatCompact(segment.value)}
-                <span className="ml-1 font-normal text-gray-400">({segment.count})</span>
+                <span className="ml-1 font-normal text-(--palette-gray-400)">
+                  ({segment.count})
+                </span>
               </span>
             </span>
           </li>

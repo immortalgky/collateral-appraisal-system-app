@@ -21,7 +21,7 @@ export function SegmentChips({ segments, className }: SegmentChipsProps) {
   // contain case/whitespace duplicates — dedupe so React keys stay unique and chips aren't repeated.
   const deduped = buildSegmentSet(segments ?? []);
 
-  if (deduped.length === 0) return <span className="text-gray-400">—</span>;
+  if (deduped.length === 0) return <span className="text-(--palette-gray-400)">—</span>;
 
   // One line (DESIGN.md §10): horizontal overflow is clipped (x only, so Thai tone marks are never
   // cut vertically); the full list stays available as a tooltip.
@@ -74,7 +74,10 @@ export function SegmentGapsAlert({
   return (
     <div
       role="status"
-      className={clsx('flex items-start gap-2 bg-amber-50 text-amber-800', className)}
+      className={clsx(
+        'flex items-start gap-2 bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300',
+        className,
+      )}
     >
       <Icon
         name="triangle-exclamation"
@@ -93,7 +96,7 @@ export function SegmentGapsAlert({
             </li>
           ))}
         </ul>
-        <p className="mt-1 text-xs text-amber-700">{t('segment.sendBlockedHint')}</p>
+        <p className="mt-1 text-xs text-(--palette-warn)">{t('segment.sendBlockedHint')}</p>
       </div>
     </div>
   );

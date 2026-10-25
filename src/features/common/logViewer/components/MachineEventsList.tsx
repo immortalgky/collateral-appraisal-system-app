@@ -23,7 +23,7 @@ const MachineEventsList = ({ events, onViewLogs, showDate }: MachineEventsListPr
   const shown = events.slice(0, 8);
 
   if (shown.length === 0) {
-    return <p className="text-xs text-gray-400 py-3">{t('health.eventsEmpty')}</p>;
+    return <p className="text-xs text-(--palette-gray-400) py-3">{t('health.eventsEmpty')}</p>;
   }
 
   return (
@@ -34,14 +34,14 @@ const MachineEventsList = ({ events, onViewLogs, showDate }: MachineEventsListPr
           className={clsx(
             'grid grid-cols-[80px_1fr_auto] gap-3 items-start rounded-lg px-3 py-2 border-l-4',
             event.kind === 'restart'
-              ? 'border-l-blue-300 bg-blue-50/40'
-              : 'border-l-red-400 bg-red-50/40',
+              ? 'border-l-blue-300 dark:border-l-blue-500/40 bg-blue-50/40 dark:bg-blue-500/10'
+              : 'border-l-red-400 bg-(--palette-req-wash)/40',
           )}
         >
-          <span className="font-mono text-[11px] text-gray-500 tabular-nums pt-0.5">
+          <span className="font-mono text-[11px] text-(--palette-gray-500) tabular-nums pt-0.5">
             {format(new Date(event.ts), showDate ? 'd/M HH:mm:ss' : 'HH:mm:ss')}
           </span>
-          <p className="text-sm text-gray-800 min-w-0">
+          <p className="text-sm text-(--palette-ink) min-w-0">
             <b>{event.machineName}</b>
             {' · '}
             {event.kind === 'restart'
@@ -54,7 +54,7 @@ const MachineEventsList = ({ events, onViewLogs, showDate }: MachineEventsListPr
           <button
             type="button"
             onClick={() => onViewLogs(event.from, event.to)}
-            className="text-xs px-2 py-1 rounded-lg border border-gray-200 hover:border-primary hover:text-primary whitespace-nowrap"
+            className="text-xs px-2 py-1 rounded-lg border border-(--palette-line) hover:border-primary hover:text-(--palette-primary-text) whitespace-nowrap"
           >
             {t('health.viewLogs')}
           </button>

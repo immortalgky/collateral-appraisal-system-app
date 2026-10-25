@@ -68,16 +68,16 @@ const RequestHeaderStrip = ({
   const creatorName = creator?.username || currentUser?.name;
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-gray-100 bg-white px-5 py-2.5 shadow-sm">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) px-5 py-2.5 shadow-sm">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 shadow-sm">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 shadow-sm">
           <Icon style="solid" name="clipboard-list" className="size-4! text-blue-500" />
         </div>
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
           {requestNumber ? (
-            <span className="text-base font-semibold text-gray-800">{requestNumber}</span>
+            <span className="text-base font-semibold text-(--palette-ink)">{requestNumber}</span>
           ) : (
-            <span className="text-sm text-gray-400">{t('page.header.noNumber')}</span>
+            <span className="text-sm text-(--palette-gray-400)">{t('page.header.noNumber')}</span>
           )}
           {status ? (
             <Badge type="status" value={status}>
@@ -91,7 +91,12 @@ const RequestHeaderStrip = ({
 
       <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
         {purpose && (
-          <span className={clsx(chipClass, 'border-gray-200 bg-gray-50 text-gray-700')}>
+          <span
+            className={clsx(
+              chipClass,
+              'border-(--palette-line) bg-(--palette-surface-2) text-(--palette-ink)',
+            )}
+          >
             <span className="truncate" title={purposeLabel}>
               {purposeLabel}
             </span>
@@ -99,13 +104,21 @@ const RequestHeaderStrip = ({
         )}
         {priority === 'High' && (
           <span
-            className={clsx(chipClass, 'border-amber-200 bg-amber-50 font-semibold text-amber-700')}
+            className={clsx(
+              chipClass,
+              'border-amber-200 bg-amber-50 font-semibold text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300',
+            )}
           >
             {t('page.header.urgent')}
           </span>
         )}
         {priorNumber && (
-          <span className={clsx(chipClass, 'border-primary-200 bg-primary-50 text-primary-700')}>
+          <span
+            className={clsx(
+              chipClass,
+              'border-(--palette-accent-line) bg-(--palette-accent-wash) text-(--palette-accent-ink)',
+            )}
+          >
             <Icon style="solid" name="circle-info" className="size-3! shrink-0" />
             <span className="truncate">
               {t('page.header.priorAppraisal')} <b className="font-semibold">{priorNumber}</b>
@@ -114,32 +127,36 @@ const RequestHeaderStrip = ({
         )}
       </div>
 
-      <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-gray-500">
+      <div className="ml-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-(--palette-gray-500)">
         {/* data-field lets the missing-fields popover scroll here and focus the pick button */}
         <span
           data-field="requestor.employeeId"
           className={clsx(
             'inline-flex items-center gap-1.5 rounded-full border py-0.5 pr-1 pl-0.5',
-            errors.requestor ? 'border-danger bg-danger-50' : 'border-transparent',
+            errors.requestor ? 'border-danger bg-(--palette-req-wash)' : 'border-transparent',
           )}
         >
           {hasRequestor ? (
             <>
-              <span className="flex size-6 items-center justify-center rounded-full bg-primary-50 text-xs font-semibold text-primary-700">
+              <span className="flex size-6 items-center justify-center rounded-full bg-(--palette-accent-wash) text-xs font-semibold text-(--palette-accent-ink)">
                 {getInitials(requestorName || Array.from(requestorShown.slice(0, 2)).join(' '))}
               </span>
               <span>
                 {t('page.header.requestor')}{' '}
-                <b className="font-medium text-gray-800">{requestorShown}</b>
-                {isMe && <span className="text-primary-700"> {t('page.header.me')}</span>}{' '}
-                {requestorName && <span className="text-gray-400">{requestor?.employeeId}</span>}
+                <b className="font-medium text-(--palette-ink)">{requestorShown}</b>
+                {isMe && (
+                  <span className="text-(--palette-accent-ink)"> {t('page.header.me')}</span>
+                )}{' '}
+                {requestorName && (
+                  <span className="text-(--palette-gray-400)">{requestor?.employeeId}</span>
+                )}
               </span>
               {!locked && (
                 <button
                   type="button"
                   onClick={userModal.onOpen}
                   title={t('page.header.changeRequestor')}
-                  className="font-medium text-primary hover:underline"
+                  className="font-medium text-(--palette-primary-text) hover:underline"
                 >
                   {t('page.header.change')}
                 </button>
@@ -147,7 +164,7 @@ const RequestHeaderStrip = ({
             </>
           ) : (
             <>
-              <span className="inline-flex items-center gap-1 text-amber-700">
+              <span className="inline-flex items-center gap-1 text-(--palette-warn)">
                 <Icon style="solid" name="triangle-exclamation" className="size-3!" />
                 {t('page.header.noRequestor')}
               </span>

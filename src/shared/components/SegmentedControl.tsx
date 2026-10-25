@@ -38,7 +38,7 @@ export function SegmentedControl<T extends string>({
       role="group"
       aria-label={label}
       className={clsx(
-        'flex items-center gap-0.5 rounded-lg border border-gray-100 bg-gray-50/80 p-0.5',
+        'flex items-center gap-0.5 rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2) p-0.5',
         className,
       )}
     >
@@ -52,10 +52,10 @@ export function SegmentedControl<T extends string>({
             disabled={option.disabled}
             onClick={() => onChange(option.value)}
             className={clsx(
-              'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:text-gray-300 disabled:hover:bg-transparent',
+              'flex items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:text-(--palette-gray-300) disabled:opacity-60 disabled:hover:bg-transparent',
               active
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-gray-500 hover:bg-white/50 hover:text-gray-700',
+                ? 'bg-(--palette-surface) text-(--palette-primary-text) shadow-sm'
+                : 'text-(--palette-gray-500) hover:bg-(--palette-surface)/50 hover:text-(--palette-ink)',
             )}
           >
             <Icon
@@ -63,7 +63,11 @@ export function SegmentedControl<T extends string>({
               style="solid"
               className={clsx(
                 'text-xs',
-                active ? 'text-primary' : option.disabled ? 'text-gray-300' : 'text-gray-400',
+                active
+                  ? 'text-(--palette-primary-text)'
+                  : option.disabled
+                    ? 'text-(--palette-gray-300)'
+                    : 'text-(--palette-gray-400)',
               )}
             />
             <span>{option.label}</span>

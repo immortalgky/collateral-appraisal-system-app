@@ -21,35 +21,41 @@ const TopProblemsPanel = ({ topProblems, onSelect, showDate }: TopProblemsPanelP
   const { t } = useTranslation('logAdmin');
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-      <h2 className="text-base font-semibold text-gray-900">{t('sidebar.topProblemsTitle')}</h2>
-      <p className="text-xs text-gray-500 mt-0.5">{t('sidebar.topProblemsSubtitle')}</p>
+    <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-4">
+      <h2 className="text-base font-semibold text-(--palette-ink)">
+        {t('sidebar.topProblemsTitle')}
+      </h2>
+      <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('sidebar.topProblemsSubtitle')}</p>
       <ul className="flex flex-col gap-1 mt-2.5">
         {topProblems.length === 0 && (
-          <li className="text-xs text-gray-400 py-2">{t('sidebar.topProblemsEmpty')}</li>
+          <li className="text-xs text-(--palette-gray-400) py-2">
+            {t('sidebar.topProblemsEmpty')}
+          </li>
         )}
         {topProblems.map((problem, index) => (
           <li key={`${problem.template}__${problem.exceptionType ?? ''}__${index}`}>
             <button
               type="button"
               onClick={() => onSelect(topProblemToQuery(problem))}
-              className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-gray-50 grid grid-cols-[1fr_auto] gap-x-2 gap-y-0.5"
+              className="w-full text-left rounded-lg px-2 py-1.5 hover:bg-(--palette-surface-2) grid grid-cols-[1fr_auto] gap-x-2 gap-y-0.5"
             >
-              <span className="text-xs text-gray-800 line-clamp-2 flex items-start gap-1.5">
+              <span className="text-xs text-(--palette-ink) line-clamp-2 flex items-start gap-1.5">
                 <span
                   className={`shrink-0 mt-0.5 inline-flex items-center justify-center size-3.5 rounded-full text-[9px] font-bold ${levelLookup(logLevelBadgeClass, problem.level, NEUTRAL_BADGE_CLASS)}`}
                 >
                   {isKnownLevel(problem.level) ? problem.level[0] : '?'}
                 </span>
                 {problem.exceptionType && (
-                  <span className="text-gray-400 font-normal">{problem.exceptionType}: </span>
+                  <span className="text-(--palette-gray-400) font-normal">
+                    {problem.exceptionType}:{' '}
+                  </span>
                 )}
                 {problem.sampleMessage}
               </span>
-              <span className="text-xs font-semibold tabular-nums text-gray-700">
+              <span className="text-xs font-semibold tabular-nums text-(--palette-ink)">
                 {problem.count.toLocaleString()}×
               </span>
-              <span className="col-span-2 text-[11px] text-gray-400">
+              <span className="col-span-2 text-[11px] text-(--palette-gray-400)">
                 {t('sidebar.topProblemsLastSeen', {
                   time: format(new Date(problem.lastSeen), showDate ? 'd/M HH:mm' : 'HH:mm'),
                 })}

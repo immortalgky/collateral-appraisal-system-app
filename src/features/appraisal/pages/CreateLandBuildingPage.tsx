@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { type SubmitHandler, useForm } from 'react-hook-form';
-import { FormProvider } from '@shared/components/form';
+import { FormProvider, UserFormLayoutProvider } from '@shared/components/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -9,11 +9,10 @@ import {
   useIsCiAppraisal,
 } from '@/features/appraisal/context/AppraisalContext';
 
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import Section from '@/shared/components/sections/Section';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import TitleDeedForm from '../forms/TitleDeedForm';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import { allLandBuildingFields } from '../configs/fields';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
@@ -38,7 +37,7 @@ import { useTranslation } from 'react-i18next';
 import { mapLandAndBuildingFormDataToApiPayload } from '../utils/mappers';
 import { landBuildingToForm } from '../utils/propertyFormRecipes';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
-import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
+import { PropertyFormShell } from '../components/PropertyFormShell';
 import { usePageReadOnly, PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { ConstructionEditorSection } from '../components/construction/ConstructionEditorSection';
 import { useConstructionTab } from '../hooks/useConstructionTab';
@@ -147,8 +146,6 @@ const CreateLandBuildingPage = () => {
     }
   };
 
-  const { isOpen, onToggle } = useDisclosure();
-
   const handleSaveDraft = () => {
     setSaveAction('draft');
 
@@ -244,7 +241,11 @@ const CreateLandBuildingPage = () => {
   if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -252,14 +253,15 @@ const CreateLandBuildingPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0">
       <PageReadOnlyContext.Provider value={isReadOnly}>
-        <FormProvider methods={methods} schema={createLandAndBuildingForm}>
-          <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
-            {/* Scrollable Form Content */}
-            <div
-              id="form-scroll-container"
-              className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-            >
-              <PropertyEditorHeader
+        <UserFormLayoutProvider>
+          <FormProvider
+            methods={methods}
+            schema={createLandAndBuildingForm}
+            fields={allLandBuildingFields}
+          >
+            <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+              {/* Scrollable Form Content */}
+              <PropertyFormShell
                 appraisalId={appraisalId}
                 propertyId={propertyId}
                 typeCode="LB"
@@ -267,121 +269,113 @@ const CreateLandBuildingPage = () => {
                 tabs={editorTabs}
                 activeTab={shownTab}
                 onTabChange={id => setActiveTab(id as typeof activeTab)}
-              />
-              <ResizableSidebar
-                isOpen={isOpen}
-                onToggle={onToggle}
-                openedWidth="w-1/5"
-                closedWidth="w-1/50"
               >
-                <ResizableSidebar.Main>
-                  <div className="flex-auto flex flex-col gap-6 min-w-0">
-                    {/* Land Tab Content */}
-                    <div
-                      id="land-section"
-                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'land' ? 'hidden' : ''}`}
+                <div className="flex-auto flex flex-col gap-6 min-w-0">
+                  {/* Land Tab Content */}
+                  <div
+                    id="land-section"
+                    className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'land' ? 'hidden' : ''}`}
+                  >
+                    <Section
+                      id="land-title"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
                     >
-                      <Section
-                        id="land-title"
-                        anchor
-                        className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                      >
-                        <TitleDeedForm />
-                      </Section>
-                      <Section
-                        id="land-info"
-                        anchor
-                        className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                      >
-                        <LandDetailForm propertyType="LB" />
-                      </Section>
-                    </div>
-
-                    {/* Building Tab Content */}
-                    <div
-                      id="building-section"
-                      className={`flex flex-col gap-6 ${shownTab !== 'building' ? 'hidden' : ''}`}
+                      <TitleDeedForm />
+                    </Section>
+                    <Section
+                      id="land-info"
+                      anchor
+                      className="flex flex-col gap-6 min-w-0 overflow-hidden"
                     >
-                      <Section id="building-info" anchor className="flex flex-col gap-6">
-                        <BuildingDetailForm propertyType="LB" />
-                      </Section>
-                    </div>
-
-                    {/* Construction Inspection Tab Content */}
-                    <ConstructionEditorSection
-                      key={propertyId}
-                      shownTab={shownTab}
-                      underConstruction={hasConstructionTab}
-                      readOnly={isReadOnly}
-                      ciMode={isCiAppraisal}
-                      condo={false}
-                    />
-
-                    {/* Lease Agreement Tab Content */}
-                    {isRentedOut && (
-                      <div
-                        id="lease-agreement-section"
-                        className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'lease-agreement' ? 'hidden' : ''}`}
-                      >
-                        <Section anchor className="min-w-0 overflow-hidden">
-                          <LeaseAgreementForm namePrefix="leaseAgreement" />
-                        </Section>
-                      </div>
-                    )}
-
-                    {/* Rental Info Tab Content */}
-                    {isRentedOut && (
-                      <div
-                        id="rental-info-section"
-                        className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'rental-info' ? 'hidden' : ''}`}
-                      >
-                        <Section anchor className="min-w-0 overflow-hidden">
-                          <RentalInfoForm namePrefix="rentalInfo" />
-                        </Section>
-                      </div>
-                    )}
+                      <LandDetailForm propertyType="LB" />
+                    </Section>
                   </div>
-                </ResizableSidebar.Main>
-              </ResizableSidebar>
-            </div>
 
-            {/* Sticky Action Buttons */}
-            <ActionBar>
-              <ActionBar.Left>
-                <CancelButton />
+                  {/* Building Tab Content */}
+                  <div
+                    id="building-section"
+                    className={`flex flex-col gap-6 ${shownTab !== 'building' ? 'hidden' : ''}`}
+                  >
+                    <Section id="building-info" anchor className="flex flex-col gap-6">
+                      <BuildingDetailForm propertyType="LB" />
+                    </Section>
+                  </div>
+
+                  {/* Construction Inspection Tab Content */}
+                  <ConstructionEditorSection
+                    key={propertyId}
+                    shownTab={shownTab}
+                    underConstruction={hasConstructionTab}
+                    readOnly={isReadOnly}
+                    ciMode={isCiAppraisal}
+                    condo={false}
+                  />
+
+                  {/* Lease Agreement Tab Content */}
+                  {isRentedOut && (
+                    <div
+                      id="lease-agreement-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'lease-agreement' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <LeaseAgreementForm namePrefix="leaseAgreement" />
+                      </Section>
+                    </div>
+                  )}
+
+                  {/* Rental Info Tab Content */}
+                  {isRentedOut && (
+                    <div
+                      id="rental-info-section"
+                      className={`flex flex-col gap-6 min-w-0 max-w-full ${shownTab !== 'rental-info' ? 'hidden' : ''}`}
+                    >
+                      <Section anchor className="min-w-0 overflow-hidden">
+                        <RentalInfoForm namePrefix="rentalInfo" />
+                      </Section>
+                    </div>
+                  )}
+                </div>
+              </PropertyFormShell>
+
+              {/* Sticky Action Buttons */}
+              <ActionBar>
+                <ActionBar.Left>
+                  <CancelButton />
+                  {!isReadOnly && (
+                    <>
+                      <ActionBar.Divider />
+                      <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                    </>
+                  )}
+                </ActionBar.Left>
                 {!isReadOnly && (
-                  <>
-                    <ActionBar.Divider />
-                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                  </>
+                  <ActionBar.Right>
+                    <Button
+                      variant="ghost"
+                      type="button"
+                      onClick={handleSaveDraft}
+                      isLoading={isPending && saveAction === 'draft'}
+                      disabled={isPending}
+                    >
+                      {t('createPage.saveDraft')}
+                    </Button>
+                    <Button
+                      type="submit"
+                      isLoading={isPending && saveAction === 'submit'}
+                      disabled={isPending}
+                    >
+                      <Icon name="check" style="solid" className="size-4 mr-2" />
+                      {t('createPage.save')}
+                    </Button>
+                  </ActionBar.Right>
                 )}
-              </ActionBar.Left>
-              {!isReadOnly && (
-                <ActionBar.Right>
-                  <Button
-                    variant="ghost"
-                    type="button"
-                    onClick={handleSaveDraft}
-                    isLoading={isPending && saveAction === 'draft'}
-                    disabled={isPending}
-                  >
-                    {t('createPage.saveDraft')}
-                  </Button>
-                  <Button
-                    type="submit"
-                    isLoading={isPending && saveAction === 'submit'}
-                    disabled={isPending}
-                  >
-                    <Icon name="check" style="solid" className="size-4 mr-2" />
-                    {t('createPage.save')}
-                  </Button>
-                </ActionBar.Right>
-              )}
-            </ActionBar>
+              </ActionBar>
 
-            <UnsavedChangesDialog blocker={blocker} />
-          </form>
-        </FormProvider>
+              <UnsavedChangesDialog blocker={blocker} />
+            </form>
+          </FormProvider>
+        </UserFormLayoutProvider>
       </PageReadOnlyContext.Provider>
     </div>
   );

@@ -157,7 +157,7 @@ function SortableHeader({
     <th
       scope="col"
       className={[
-        'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50 uppercase tracking-wider',
+        'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2) uppercase tracking-wider',
         className,
       ]
         .filter(Boolean)
@@ -167,15 +167,15 @@ function SortableHeader({
       <button
         type="button"
         onClick={() => onSort(sortKey)}
-        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors group ${
-          active ? 'text-primary' : ''
+        className={`inline-flex items-center gap-1 hover:text-(--palette-ink) transition-colors group ${
+          active ? 'text-(--palette-primary-text)' : ''
         }`}
       >
         <span>{label}</span>
         <Icon
           style="solid"
           name={active ? (currentDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
-          className={`size-2.5 ${active ? 'text-primary' : 'text-gray-300 group-hover:text-gray-500'}`}
+          className={`size-2.5 ${active ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300) group-hover:text-(--palette-gray-500)'}`}
         />
       </button>
     </th>
@@ -302,7 +302,11 @@ export function ResultsList({
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-3">
         <p className="text-sm text-red-500">{t('resultsList.loadError')}</p>
-        <button type="button" onClick={onRetry} className="text-xs text-blue-600 hover:underline">
+        <button
+          type="button"
+          onClick={onRetry}
+          className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+        >
           {t('resultsList.retry')}
         </button>
       </div>
@@ -335,7 +339,7 @@ export function ResultsList({
     return (
       <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
         <svg
-          className="w-8 h-8 text-gray-300 mb-2"
+          className="w-8 h-8 text-(--palette-gray-300) mb-2"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -347,7 +351,7 @@ export function ResultsList({
             d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
           />
         </svg>
-        <p className="text-xs text-gray-500">{t('resultsList.empty')}</p>
+        <p className="text-xs text-(--palette-gray-500)">{t('resultsList.empty')}</p>
       </div>
     );
   }
@@ -357,11 +361,11 @@ export function ResultsList({
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Export button bar */}
-      <div className="shrink-0 flex items-center justify-end px-3 py-1.5 border-b border-gray-100 bg-gray-50">
+      <div className="shrink-0 flex items-center justify-end px-3 py-1.5 border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
         <button
           type="button"
           onClick={handleExportCsv}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-gray-600 border border-gray-200 rounded hover:bg-white transition-colors"
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-(--palette-gray-600) border border-(--palette-line) rounded hover:bg-(--palette-surface) transition-colors"
           title={t('resultsList.exportCsv')}
         >
           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -379,12 +383,12 @@ export function ResultsList({
       {/* Table */}
       <div className="flex-1 overflow-auto min-h-0">
         <table className="w-full text-xs border-collapse">
-          <thead className="sticky top-0 bg-gray-50 border-b border-gray-200 z-10">
+          <thead className="sticky top-0 bg-(--palette-surface-2) border-b border-(--palette-line) z-10">
             <tr>
               {/* Pin icon — not sortable */}
               <th
                 scope="col"
-                className="text-xs w-8 px-4 py-2.5 bg-gray-50 font-semibold"
+                className="text-xs w-8 px-4 py-2.5 bg-(--palette-surface-2) font-semibold"
                 aria-label="type"
               />
               <SortableHeader
@@ -479,7 +483,7 @@ export function ResultsList({
               />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {rows.map(row => {
               const isAppraisal = row.kind === 'appraisal';
               // Results are EXISTING pins: collateral (appraisal) = green, MC = blue.
@@ -505,8 +509,8 @@ export function ResultsList({
                   onMouseEnter={() => onRowHover?.(row.pinId)}
                   onMouseLeave={() => onRowHover?.(null)}
                   className={[
-                    'cursor-pointer transition-colors hover:bg-gray-50',
-                    isHighlighted ? 'bg-amber-50' : '',
+                    'cursor-pointer transition-colors hover:bg-(--palette-surface-2)',
+                    isHighlighted ? 'bg-(--palette-warn-wash)' : '',
                   ]
                     .filter(Boolean)
                     .join(' ')}
@@ -514,13 +518,13 @@ export function ResultsList({
                   <td className="px-4 py-3">
                     <PinIcon color={pinColor} title={dotTitle} />
                   </td>
-                  <td className="px-4 py-3 text-xs font-medium text-primary truncate max-w-[160px]">
+                  <td className="px-4 py-3 text-xs font-medium text-(--palette-primary-text) truncate max-w-[160px]">
                     {row.reportNo}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 truncate max-w-[140px]">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) truncate max-w-[140px]">
                     {dash(row.customerName)}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) whitespace-nowrap">
                     {row.collateralType ? (
                       <ParameterDisplay
                         group="PropertyType"
@@ -531,7 +535,7 @@ export function ResultsList({
                       '—'
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) whitespace-nowrap">
                     {row.buildingType ? (
                       <ParameterDisplay
                         group="BuildingType"
@@ -542,27 +546,27 @@ export function ResultsList({
                       '—'
                     )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) whitespace-nowrap">
                     {formatDate(row.date)}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) tabular-nums whitespace-nowrap">
                     {row.lat.toFixed(6)}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) tabular-nums whitespace-nowrap">
                     {row.lon.toFixed(6)}
                   </td>
                   {showDistance && (
-                    <td className="px-4 py-3 text-xs text-gray-600 tabular-nums whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-(--palette-gray-600) tabular-nums whitespace-nowrap">
                       {row.distanceKm != null ? `${row.distanceKm.toFixed(2)} km` : '—'}
                     </td>
                   )}
-                  <td className="px-4 py-3 text-xs text-gray-600 tabular-nums text-right whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) tabular-nums text-right whitespace-nowrap">
                     {formatMoney(row.appraisalValue)}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 tabular-nums text-right whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) tabular-nums text-right whitespace-nowrap">
                     {formatMoney(row.sellingPrice)}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-600 tabular-nums text-right whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-600) tabular-nums text-right whitespace-nowrap">
                     {formatMoney(row.offeringPrice)}
                   </td>
                 </tr>
@@ -574,14 +578,14 @@ export function ResultsList({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="shrink-0 flex items-center justify-between px-3 py-2 border-t border-gray-100 text-xs text-gray-500">
+        <div className="shrink-0 flex items-center justify-between px-3 py-2 border-t border-(--palette-line-soft) text-xs text-(--palette-gray-500)">
           <span>{t('resultsList.pagination', { page: pageNumber + 1, total: totalPages })}</span>
           <div className="flex gap-1">
             <button
               type="button"
               disabled={pageNumber === 0}
               onClick={() => onPageChange(pageNumber - 1)}
-              className="px-2 py-1 border border-gray-200 rounded disabled:opacity-40 hover:bg-gray-50"
+              className="px-2 py-1 border border-(--palette-line) rounded disabled:opacity-40 hover:bg-(--palette-surface-2)"
             >
               &lsaquo;
             </button>
@@ -589,7 +593,7 @@ export function ResultsList({
               type="button"
               disabled={pageNumber >= totalPages - 1}
               onClick={() => onPageChange(pageNumber + 1)}
-              className="px-2 py-1 border border-gray-200 rounded disabled:opacity-40 hover:bg-gray-50"
+              className="px-2 py-1 border border-(--palette-line) rounded disabled:opacity-40 hover:bg-(--palette-surface-2)"
             >
               &rsaquo;
             </button>

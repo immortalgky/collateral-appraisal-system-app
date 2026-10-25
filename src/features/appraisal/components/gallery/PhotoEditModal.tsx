@@ -51,11 +51,11 @@ const PhotoEditModal = ({
 
   return (
     <dialog className="modal modal-open z-[60]">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-md">
+      <div className="modal-box bg-(--palette-surface) rounded-2xl shadow-xl max-w-md">
         <form onSubmit={handleSubmit}>
           <div className="flex flex-col gap-4">
             {/* Thumbnail preview */}
-            <div className="w-full h-40 rounded-xl overflow-hidden bg-gray-100">
+            <div className="w-full h-40 rounded-xl overflow-hidden bg-(--palette-surface-3)">
               <img
                 src={image.thumbnailSrc}
                 alt={image.alt}
@@ -65,8 +65,10 @@ const PhotoEditModal = ({
 
             {/* Filename (read-only) */}
             <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">Filename</label>
-              <p className="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded-lg truncate">
+              <label className="text-xs font-medium text-(--palette-gray-500) mb-1 block">
+                Filename
+              </label>
+              <p className="text-sm text-(--palette-ink) bg-(--palette-surface-2) px-3 py-2 rounded-lg truncate">
                 {image.fileName || image.alt}
               </p>
             </div>
@@ -75,11 +77,15 @@ const PhotoEditModal = ({
             <div className="grid grid-cols-3 gap-3">
               {/* Status */}
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Status</label>
+                <label className="text-xs font-medium text-(--palette-gray-500) mb-1 block">
+                  Status
+                </label>
                 <span
                   className={clsx(
                     'inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium',
-                    image.isInUse ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600',
+                    image.isInUse
+                      ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300'
+                      : 'bg-(--palette-surface-3) text-(--palette-gray-600)',
                   )}
                 >
                   <Icon name={image.isInUse ? 'check-circle' : 'clock'} className="text-[10px]" />
@@ -89,16 +95,20 @@ const PhotoEditModal = ({
 
               {/* Type */}
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Type</label>
-                <p className="text-sm text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg text-center">
+                <label className="text-xs font-medium text-(--palette-gray-500) mb-1 block">
+                  Type
+                </label>
+                <p className="text-sm text-(--palette-ink) bg-(--palette-surface-2) px-3 py-1.5 rounded-lg text-center">
                   {getFileType(image)}
                 </p>
               </div>
 
               {/* Size */}
               <div>
-                <label className="text-xs font-medium text-gray-500 mb-1 block">Size</label>
-                <p className="text-sm text-gray-900 bg-gray-50 px-3 py-1.5 rounded-lg text-center">
+                <label className="text-xs font-medium text-(--palette-gray-500) mb-1 block">
+                  Size
+                </label>
+                <p className="text-sm text-(--palette-ink) bg-(--palette-surface-2) px-3 py-1.5 rounded-lg text-center">
                   {formatFileSize(image.fileSizeBytes)}
                 </p>
               </div>
@@ -108,7 +118,7 @@ const PhotoEditModal = ({
             <div>
               <label
                 htmlFor="photo-caption"
-                className="text-xs font-medium text-gray-500 mb-1 block"
+                className="text-xs font-medium text-(--palette-gray-500) mb-1 block"
               >
                 Description
               </label>
@@ -118,7 +128,7 @@ const PhotoEditModal = ({
                 onChange={e => setCaption(e.target.value)}
                 placeholder="Enter a description for this photo..."
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
               />
             </div>
 
@@ -128,7 +138,7 @@ const PhotoEditModal = ({
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>

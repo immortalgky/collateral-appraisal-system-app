@@ -7,6 +7,7 @@ import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { sumArray, toNumber, type NumberishRow } from '../../../domain/calculation';
 import { jobPositionParameters } from '@/features/pricingAnalysis/data/dcfParameters';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 
 interface MethodPositionBasedSalaryCalculationModalProps {
   name: string;
@@ -93,28 +94,32 @@ export function MethodPositionBasedSalaryCalculationModal({
 
   return (
     <div className="flex flex-col gap-2">
-      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
-      <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
+      {rowsError && (
+        <p className="text-xs text-(--palette-danger)">
+          <ValidationText message={rowsError} />
+        </p>
+      )}
+      <div className="border border-(--palette-line-strong) rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer className="flex-1 min-h-0 max-h-[274px]">
           <div className="overflow-auto max-h-[274px]">
             <table className={'table table-sm'}>
               <thead>
                 <tr>
-                  <th className="px-1.5 py-1.5 bg-gray-100">
+                  <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                     {t('dcf.methods.positionBasedSalary.jobPosition')}
                   </th>
-                  <th className="px-1.5 py-1.5 bg-gray-100">
+                  <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                     <div className="flex flex-col gap-1.5">
                       <span>{t('dcf.methods.positionBasedSalary.salary')}</span>
                       <span>{t('dcf.methods.positionBasedSalary.unitPerPersonMonth')}</span>
                     </div>
                   </th>
-                  <th className="px-1.5 py-1.5 bg-gray-100">
+                  <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                     <div className="flex flex-col gap-1.5">
                       <span>{t('dcf.methods.positionBasedSalary.numberOfEmployees')}</span>
                     </div>
                   </th>
-                  <th className="px-1.5 py-1.5 bg-gray-100">
+                  <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                     <div className="flex flex-col gap-1.5">
                       <span>{t('dcf.methods.positionBasedSalary.totalSalary')}</span>
                       <span>{t('dcf.common.bahtPerYear')}</span>
@@ -127,7 +132,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                   const jobPosition = getValues(`${name}.jobPositionDetails.${index}.jobPosition`);
                   return (
                     <tr key={index}>
-                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                      <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                         <div className="flex flex-row gap-1.5">
                           <RHFInputCell
                             fieldName={`${name}.jobPositionDetails.${index}.jobPosition`}
@@ -150,7 +155,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                             <button
                               type="button"
                               onClick={() => handleOnRemove(index)}
-                              className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                              className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-(--palette-gray-300) hover:text-(--palette-danger) hover:bg-(--palette-req-wash) transition-colors opacity-100"
                               title={t('dcf.common.delete')}
                             >
                               <Icon style="solid" name="trash" className="size-1" />
@@ -158,7 +163,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           )}
                         </div>
                       </td>
-                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                      <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                         <RHFInputCell
                           fieldName={`${name}.jobPositionDetails.${index}.salaryBahtPerPersonPerMonth`}
                           inputType="number"
@@ -166,7 +171,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                         />
                       </td>
-                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                      <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                         <RHFInputCell
                           fieldName={`${name}.jobPositionDetails.${index}.numberOfEmployees`}
                           inputType="number"
@@ -174,7 +179,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                           number={{ decimalPlaces: 0, maxIntegerDigits: 4, allowNegative: false }}
                         />
                       </td>
-                      <td className="px-1.5 py-1.5 border-b border-gray-300">
+                      <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                         <div className="flex justify-end items-center text-right">
                           <RHFInputCell
                             fieldName={`${name}.jobPositionDetails.${index}.totalSalaryPerYear`}
@@ -196,7 +201,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                       <button
                         type="button"
                         onClick={() => handleOnAdd()}
-                        className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                        className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-(--palette-primary-text) hover:bg-primary/10"
                       >
                         {t('dcf.methods.positionBasedSalary.addJobPosition')}
                       </button>
@@ -207,8 +212,10 @@ export function MethodPositionBasedSalaryCalculationModal({
                   </tr>
                 )}
                 <tr>
-                  <td className="sticky bottom-0 px-1.5 bg-white">{t('dcf.common.total')}</td>
-                  <td className="sticky bottom-0 px-1.5 bg-white">
+                  <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
+                    {t('dcf.common.total')}
+                  </td>
+                  <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                     <div className="text-right">
                       <RHFInputCell
                         fieldName={`${name}.sumSalaryBahtPerPersonPerMonth`}
@@ -219,7 +226,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                       />
                     </div>
                   </td>
-                  <td className="sticky bottom-0 px-1.5 bg-white">
+                  <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                     <div className="text-right">
                       <RHFInputCell
                         fieldName={`${name}.sumNumberOfEmployees`}
@@ -230,7 +237,7 @@ export function MethodPositionBasedSalaryCalculationModal({
                       />
                     </div>
                   </td>
-                  <td className="sticky bottom-0 px-1.5 bg-white">
+                  <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                     <div className="text-right">
                       <RHFInputCell
                         fieldName={`${name}.sumTotalSalaryPerYear`}

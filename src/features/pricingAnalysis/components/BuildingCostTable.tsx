@@ -86,8 +86,7 @@ const STICKY_COL_BOX =
   'sticky left-0 w-[190px] min-w-[190px] max-w-[190px] overflow-hidden text-ellipsis ' +
   'shadow-[1px_0_0_#e3e9e8] transition-shadow duration-150 ' +
   'group-data-[scrolled=true]:shadow-[1px_0_0_#e3e9e8,6px_0_8px_-4px_rgba(16,24,32,0.22)]';
-const isStickyCol = (header: FormTableHeader) =>
-  'name' in header && header.name === STICKY_COL;
+const isStickyCol = (header: FormTableHeader) => 'name' in header && header.name === STICKY_COL;
 
 // Built from `t` rather than a module-level constant — the header labels/tooltips and the
 // Building/Non-Building pill and Gross/Period cell text all need translation, and the compute/
@@ -100,7 +99,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       type: 'derived',
       headerName: t('costBuilding.table.detailHeader'),
       name: 'areaDescription',
-      className: clsx('border-r border-r-[#eef2f2]', STICKY_COL_BOX),
+      className: clsx('border-r border-r-(--palette-line-soft)', STICKY_COL_BOX),
       tooltip: t('costBuilding.table.detailTooltip'),
       // The grand total, distinct from each building's own closing `Total` row. Same words as
       // the KPI card above the table, deliberately: same number, same name, twice on one screen.
@@ -110,7 +109,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
     },
     // mock:1778 carries Building/Non-Building as a per-row `ประเภท` pill rather than as
     // banded groups. Replaces ROW_GROUPING: with one band per building (not per type), the
-    // distinction has nowhere else to live. Hex, not `bg-success-100`/`bg-amber-100` — these
+    // distinction has nowhere else to live. Hex, not `bg-success-100`/`bg-amber-100 dark:bg-amber-500/20` — these
     // are the mock's `--ok`/`--ok-wash` and `--warn`/`--warn-wash` (mock:36-40), and Tailwind
     // v4's named colours are OKLCH and do not land on them.
     {
@@ -123,7 +122,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       // cell's `px-[8px]` on both sides = ~107px, against ~92px for "Non-Building". 108 leaves
       // a 1px margin over that, and is only 4px more than the pre-Thai 104. Don't trim this
       // to fit the English text — measure the Thai pill first, it's always the wider one.
-      className: 'w-[108px] border-r border-r-[#eef2f2]',
+      className: 'w-[108px] border-r border-r-(--palette-line-soft)',
       align: 'center',
       render: ({ value }) => (
         <span
@@ -138,7 +137,9 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
             // `h-[18px]` + `leading-[18px]` here is exact, not approximate: 18 < 26, so the row
             // still can't be pushed by it either way.
             'inline-flex items-center justify-center text-[11px] font-medium h-[18px] leading-[18px] px-[7px] py-0 rounded-full',
-            value ? 'bg-[#f0fdf4] text-[#15803d]' : 'bg-[#fffbeb] text-[#b45309]',
+            value
+              ? 'bg-[#f0fdf4] text-[#15803d]'
+              : 'bg-(--palette-warn-wash) text-(--palette-warn)',
           )}
         >
           {value ? t('costBuilding.table.building') : t('costBuilding.table.nonBuilding')}
@@ -152,7 +153,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       // The unit was only ever in the `title` tooltip, so nothing on screen said what this
       // column counts. mock:1778 names it in the header itself.
       headerName: t('costBuilding.table.areaHeader'),
-      className: 'w-[92px] border-r border-r-[#eef2f2]',
+      className: 'w-[92px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
       tooltip: t('costBuilding.table.areaHeader'),
@@ -166,7 +167,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       type: 'group',
       groupName: 'replacementCost',
       headerName: t('costBuilding.table.rcnBeforeDepreHeader'),
-      className: 'border-b border-b-[#eef2f2] border-r border-r-[#eef2f2]',
+      className: 'border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft)',
       align: 'center',
       tooltip: t('costBuilding.table.rcnBeforeDepreTooltip'),
     },
@@ -175,7 +176,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       groupName: 'replacementCost',
       name: 'pricePerSqMBeforeDepreciation',
       headerName: t('costBuilding.table.pricePerSqmHeader'),
-      className: 'w-[80px] border-r border-r-[#eef2f2]',
+      className: 'w-[80px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
       tooltip: t('costBuilding.table.pricePerSqmBeforeTooltip'),
@@ -185,7 +186,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       groupName: 'replacementCost',
       name: 'priceBeforeDepreciation',
       headerName: t('costBuilding.table.totalPriceHeader'),
-      className: 'w-[105px] border-r border-r-[#eef2f2]',
+      className: 'w-[105px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
       compute: ({ row }) => toNum(row['area']) * toNum(row['pricePerSqMBeforeDepreciation']),
@@ -201,7 +202,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       type: 'derived',
       name: 'year',
       headerName: t('costBuilding.table.yearHeader'),
-      className: 'w-[36px] border-r border-r-[#eef2f2]',
+      className: 'w-[36px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
       tooltip: t('costBuilding.table.yearTooltip'),
@@ -210,7 +211,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       type: 'group',
       groupName: 'depreciation',
       headerName: t('costBuilding.table.depreciationHeader'),
-      className: 'border-b border-b-[#eef2f2] border-r border-r-[#eef2f2]',
+      className: 'border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft)',
       align: 'center',
       tooltip: t('costBuilding.table.depreciationTooltip'),
     },
@@ -219,7 +220,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       groupName: 'depreciation',
       name: 'totalDepreciationPercentPerYear',
       headerName: t('costBuilding.table.percentPerYearHeader'),
-      className: 'w-[38px] border-r border-r-[#eef2f2]',
+      className: 'w-[38px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toFixed(1) : value),
       compute: ({ rowIndex, outScopeFields }) => {
@@ -245,7 +246,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       headerName: t('costBuilding.table.totalPercentHeader'),
       groupName: 'depreciation',
       name: 'totalDepreciationPct',
-      className: 'w-[38px] border-r border-r-[#eef2f2]',
+      className: 'w-[38px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toFixed(1) : value),
       compute: ({ rowIndex, outScopeFields }) => {
@@ -260,7 +261,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       groupName: 'depreciation',
       name: 'depreciationMethod',
       headerName: t('costBuilding.table.methodHeader'),
-      className: 'w-[55px] border-r border-r-[#eef2f2]',
+      className: 'w-[55px] border-r border-r-(--palette-line-soft)',
       align: 'center',
       // mock:1783 writes this cell plain (`<td>${meth}</td>`), not as a pill. A `modifier`
       // rather than dropping the mapping entirely: the raw field is only ever 'Gross' or the
@@ -269,7 +270,9 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       // sizing in the grid (`text-[10px] px-1.5 py-0.5`), which at our 13px root rendered at
       // 0.8125x inside a table that is otherwise on exact px.
       modifier: (value: string) =>
-        value === 'Gross' ? t('costBuilding.table.methodGross') : t('costBuilding.table.methodPeriod'),
+        value === 'Gross'
+          ? t('costBuilding.table.methodGross')
+          : t('costBuilding.table.methodPeriod'),
       tooltip: t('costBuilding.table.methodTooltip'),
     },
     {
@@ -277,7 +280,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       groupName: 'depreciation',
       name: 'priceDepreciation',
       headerName: t('costBuilding.table.totalPriceHeader'),
-      className: 'w-[100px] border-r border-r-[#eef2f2]',
+      className: 'w-[100px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
       compute: ({ rowIndex, outScopeFields }) => {
@@ -289,16 +292,14 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       footer: ({ rows }: { rows: any[] }) => {
         if (!Array.isArray(rows) || rows.length === 0) return null;
         const total = rows.reduce((acc, row) => acc + toNumber(row['priceDepreciation']), 0);
-        return (
-          <span className="text-[12px]">{total.toLocaleString()}</span>
-        );
+        return <span className="text-[12px]">{total.toLocaleString()}</span>;
       },
     },
     {
       type: 'group',
       groupName: 'priceAfterDepreciation',
       headerName: t('costBuilding.table.rcnAfterDepreHeader'),
-      className: 'border-b border-b-[#eef2f2]',
+      className: 'border-b border-b-(--palette-line-soft)',
       align: 'center',
       tooltip: t('costBuilding.table.rcnAfterDepreTooltip'),
     },
@@ -310,7 +311,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
       groupName: 'priceAfterDepreciation',
       name: 'pricePerSqMAfterDepreciation',
       headerName: t('costBuilding.table.pricePerSqmHeader'),
-      className: 'w-[85px] border-r border-r-[#eef2f2]',
+      className: 'w-[85px] border-r border-r-(--palette-line-soft)',
       align: 'right',
       modifier: (value: string) => (Number(value) ? Number(value).toLocaleString() : value),
       compute: ({ row }) => {
@@ -326,9 +327,7 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
         );
         if (totalArea === 0) return null;
         return (
-          <span className="text-[12px]">
-            {Math.round(totalAfter / totalArea).toLocaleString()}
-          </span>
+          <span className="text-[12px]">{Math.round(totalAfter / totalArea).toLocaleString()}</span>
         );
       },
       tooltip: t('costBuilding.table.pricePerSqmAfterTooltip'),
@@ -359,8 +358,8 @@ function buildPropertiesTableHeader(t: TFunction<'pricingAnalysis'>): FormTableH
 // are OKLCH. The fill must be opaque: this row's first cell is frozen, and a translucent
 // background lets the columns scrolling underneath show through it.
 const BAND_CELL =
-  'px-[8px] py-0 h-[21px] leading-[21px] bg-[#edf1f1] text-[11px] font-semibold ' +
-  'text-[#55636f] tracking-[0.02em] border-b border-b-[#eef2f2]';
+  'px-[8px] py-0 h-[21px] leading-[21px] bg-(--palette-surface-3) text-[11px] font-semibold ' +
+  'text-(--palette-ink-2) tracking-[0.02em] border-b border-b-(--palette-line-soft)';
 
 function BandRow({
   label,
@@ -388,7 +387,7 @@ function BandRow({
               width/height to 1em and is declared after the Tailwind import, so at equal
               specificity it wins and a `size-*` utility would not take. The wrapper keeps
               the 10px slot either way, so the label cannot shift as the icon turns.
-              No `text-gray-400` from the siblings — `.icon` is `fill: currentColor`, and
+              No `text-(--palette-gray-400)` from the siblings — `.icon` is `fill: currentColor`, and
               this band's ink is #55636f, darker than a form header. */}
           <span
             className={clsx(
@@ -397,7 +396,11 @@ function BandRow({
               collapsed && '-rotate-90',
             )}
           >
-            <Icon style="solid" name="chevron-down" className="text-[10px] text-[#55636f]" />
+            <Icon
+              style="solid"
+              name="chevron-down"
+              className="text-[10px] text-(--palette-ink-2)"
+            />
           </span>
           {label}
         </span>
@@ -427,8 +430,8 @@ function ReadOnlyTableHeader({
   // The fill sits on the cell, never the row: these are sticky, so a row background would
   // not travel with them and the columns would scroll through.
   const thBase = clsx(
-    'text-[#55636f] text-[12px] font-medium px-[8px] py-0 leading-[26px] truncate',
-    'sticky top-0 bg-[#f8fafa] border-b border-b-[#e3e9e8]',
+    'text-(--palette-ink-2) text-[12px] font-medium px-[8px] py-0 leading-[26px] truncate',
+    'sticky top-0 bg-(--palette-surface-2) border-b border-b-(--palette-line)',
     isStickyCol(header) ? 'z-30' : 'z-20',
   );
 
@@ -478,11 +481,11 @@ function ReadOnlyCell({
 
   const h = header as any;
   const tdClass = clsx(
-    'px-[8px] py-0 h-[26px] border-b border-b-[#eef2f2] whitespace-nowrap truncate',
+    'px-[8px] py-0 h-[26px] border-b border-b-(--palette-line-soft) whitespace-nowrap truncate',
     alignClass(header.align),
     // A frozen cell leaves the row's background behind, so it needs its own opaque one —
     // otherwise the columns scrolling underneath show through it.
-    isStickyCol(header) && 'z-10 bg-white',
+    isStickyCol(header) && 'z-10 bg-(--palette-surface)',
     header.className,
   );
 
@@ -495,7 +498,7 @@ function ReadOnlyCell({
 
   return (
     <td className={tdClass}>
-      <span className="truncate text-[#1f2937]">
+      <span className="truncate text-(--palette-ink)">
         {displayValue != null && displayValue !== '' && displayValue !== 0 ? displayValue : 0}
       </span>
     </td>
@@ -517,7 +520,7 @@ function SubtotalRow({
   visibleHeaders: FormTableHeader[];
 }) {
   return (
-    <tr className={clsx('border-t border-t-[#eef2f2]', subtotalClassName)}>
+    <tr className={clsx('border-t border-t-(--palette-line-soft)', subtotalClassName)}>
       {visibleHeaders.map((header, colIdx) => {
         const h = header as any;
         const footerFn = h.footer;
@@ -525,7 +528,7 @@ function SubtotalRow({
         // mock:178 `.g tr.tot` is a uniform weight 600 with no per-column colour, so the
         // weight lives on the cell and the footer spans carry none of their own.
         const tdClass = clsx(
-          'px-[8px] py-0 h-[26px] border-b border-b-[#eef2f2] font-semibold',
+          'px-[8px] py-0 h-[26px] border-b border-b-(--palette-line-soft) font-semibold',
           alignClass(header.align),
           // Repeat the row's tint on the frozen cell — it carries no background of its own.
           sticky && ['z-10', STICKY_COL_BOX, subtotalClassName],
@@ -559,14 +562,14 @@ function SubtotalRow({
 
         return (
           <td key={colIdx} className={tdClass}>
-            <span className="inline-flex items-center justify-center text-[12px]">
-              {content}
-            </span>
+            <span className="inline-flex items-center justify-center text-[12px]">{content}</span>
           </td>
         );
       })}
       {/* action column spacer */}
-      {hasActionCol && <td className="px-[8px] py-0 h-[26px] border-b border-b-[#eef2f2]" />}
+      {hasActionCol && (
+        <td className="px-[8px] py-0 h-[26px] border-b border-b-(--palette-line-soft)" />
+      )}
     </tr>
   );
 }
@@ -582,7 +585,7 @@ function SubtotalRow({
 // method value in CostBuildingPanel, and per-building edits belong to the building detail
 // form. `#f0fdfa` is the mock's own `--accent-wash` (mock:33) written as hex, because
 // Tailwind v4's named colours are OKLCH and do not land on it.
-const FC_ROW_BG = 'bg-[#f0fdfa]';
+const FC_ROW_BG = 'bg-(--palette-accent-wash)';
 
 function FinalCostRow({
   building,
@@ -639,17 +642,20 @@ function FinalCostRow({
     building.propertyId as string | undefined,
   );
 
-  const cellBase = clsx('px-[8px] py-0 h-[30px] border-b border-b-[#eef2f2]', FC_ROW_BG);
+  const cellBase = clsx(
+    'px-[8px] py-0 h-[30px] border-b border-b-(--palette-line-soft)',
+    FC_ROW_BG,
+  );
   // Label, the shortcut spanning the middle, provenance over the two columns before the
   // total, and the value under the group's own total column — the mock's 1 / 8 / 2 / 1 split
   // over its wider header. Derived so an added column widens the shortcut, not the value.
   const shortcutSpan = visibleHeaders.length - 4;
 
   return (
-    <tr className={clsx('border-t border-t-[#eef2f2]', FC_ROW_BG)}>
+    <tr className={clsx('border-t border-t-(--palette-line-soft)', FC_ROW_BG)}>
       {/* The frozen cell carries no row background of its own, so it repeats the tint. */}
       <td className={clsx(cellBase, 'z-10', STICKY_COL_BOX)}>
-        <span className="text-[12px] font-bold text-[#0f766e]">
+        <span className="text-[12px] font-bold text-(--palette-accent-ink)">
           {t('costBuilding.table.buildingCostValueLabel')}
         </span>
       </td>
@@ -660,17 +666,19 @@ function FinalCostRow({
             target="_blank"
             rel="noopener noreferrer"
             title={t('costBuilding.table.editOnBuildingDetailTitle')}
-            className="text-[10.5px] text-[#0f766e] underline"
+            className="text-[10.5px] text-(--palette-accent-ink) underline"
           >
             {t('costBuilding.table.editOnBuildingDetail')}
           </Link>
         ) : null}
       </td>
       <td className={clsx(cellBase, 'text-right')} colSpan={2}>
-        <span className="text-[10.5px] text-[#8a96a0]">{provenance}</span>
+        <span className="text-[10.5px] text-(--palette-ink-3)">{provenance}</span>
       </td>
       <td className={clsx(cellBase, 'text-right')}>
-        <span className="text-[12px] font-bold text-[#0f766e]">{finalCost.toLocaleString()}</span>
+        <span className="text-[12px] font-bold text-(--palette-accent-ink)">
+          {finalCost.toLocaleString()}
+        </span>
       </td>
       {hasActionCol && <td className={cellBase} />}
     </tr>
@@ -697,7 +705,7 @@ function FooterRow({
   overrides?: Record<string, () => ReactNode>;
 }) {
   return (
-    <tfoot className="bg-[#f8fafa] border-t border-t-[#cbd5d3]">
+    <tfoot className="bg-(--palette-surface-2) border-t border-t-(--palette-line-strong)">
       <tr>
         {visibleHeaders.map((header, inner_index) => {
           const h = header as any;
@@ -707,7 +715,7 @@ function FooterRow({
           // colour live here too — mock:180 `tr.fin` is uniform 700 on #1f2937, so the
           // per-column footer spans must not carry their own.
           const tdClass = clsx(
-            'px-[8px] py-0 h-[26px] sticky bottom-0 bg-[#f8fafa] font-bold text-[#1f2937]',
+            'px-[8px] py-0 h-[26px] sticky bottom-0 bg-(--palette-surface-2) font-bold text-(--palette-ink)',
             alignClass(header.align),
             isStickyCol(header) && ['z-10', STICKY_COL_BOX],
           );
@@ -743,13 +751,13 @@ function FooterRow({
               return (
                 <td
                   key={inner_index}
-                  className="px-[8px] py-0 h-[26px] sticky bottom-0 right-0 bg-[#f8fafa]"
+                  className="px-[8px] py-0 h-[26px] sticky bottom-0 right-0 bg-(--palette-surface-2)"
                 />
               );
           }
         })}
         {hasActionCol && (
-          <td className="px-[8px] py-0 h-[26px] sticky bottom-0 right-0 bg-[#f8fafa]" />
+          <td className="px-[8px] py-0 h-[26px] sticky bottom-0 right-0 bg-(--palette-surface-2)" />
         )}
       </tr>
     </tfoot>
@@ -929,7 +937,7 @@ export function BuildingCostTable({
                 ))}
                 {canEdit && (
                   <th
-                    className="text-[#55636f] text-[12px] font-medium px-[8px] py-0 leading-[26px] text-center w-16 bg-[#f8fafa] sticky top-0 right-0 z-21 border-l border-l-[#eef2f2] border-b border-b-[#e3e9e8]"
+                    className="text-(--palette-ink-2) text-[12px] font-medium px-[8px] py-0 leading-[26px] text-center w-16 bg-(--palette-surface-2) sticky top-0 right-0 z-21 border-l border-l-(--palette-line-soft) border-b border-b-(--palette-line)"
                     rowSpan={hasGroups ? 3 : 1}
                   />
                 )}
@@ -944,8 +952,8 @@ export function BuildingCostTable({
                         // mock:146 pins the second header row at 27px — the first row's 26px
                         // line-height plus its 1px bottom border — not at 0, where it would
                         // ride up under the row above it.
-                        'text-[#55636f] text-[12px] font-medium px-[8px] py-0 leading-[26px] truncate',
-                        'bg-[#f8fafa] sticky top-[27px] z-20 border-b border-b-[#e3e9e8]',
+                        'text-(--palette-ink-2) text-[12px] font-medium px-[8px] py-0 leading-[26px] truncate',
+                        'bg-(--palette-surface-2) sticky top-[27px] z-20 border-b border-b-(--palette-line)',
                         header.className,
                         alignClass(header.align),
                       )}
@@ -958,7 +966,7 @@ export function BuildingCostTable({
               )}
             </thead>
 
-            <tbody className="divide-y divide-[#eef2f2]">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {!isEmpty &&
                 buildings.map(({ building, bIdx, computedRows }) => {
                   if (computedRows.length === 0 && !canEdit) return null;
@@ -1012,7 +1020,7 @@ export function BuildingCostTable({
                             <tr
                               key={`${bIdx}-${rowIdxInBuilding}`}
                               className={clsx(
-                                'hover:bg-gray-50 transition-colors',
+                                'hover:bg-(--palette-surface-2) transition-colors',
                                 canEdit && 'cursor-pointer',
                               )}
                               onClick={
@@ -1034,14 +1042,14 @@ export function BuildingCostTable({
                               })}
                               {canEdit && (
                                 <td
-                                  className="py-1 px-1.5 sticky right-0 z-10 bg-white border-l border-l-[#eef2f2] border-b border-b-[#eef2f2]"
+                                  className="py-1 px-1.5 sticky right-0 z-10 bg-(--palette-surface) border-l border-l-(--palette-line-soft) border-b border-b-(--palette-line-soft)"
                                   onClick={e => e.stopPropagation()}
                                 >
                                   <div className="flex gap-0.5 justify-center">
                                     <button
                                       type="button"
                                       onClick={() => handleRequestEdit(bIdx, rowIdxInBuilding)}
-                                      className="w-6 h-6 flex items-center justify-center rounded bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors"
+                                      className="w-6 h-6 flex items-center justify-center rounded bg-(--palette-accent-wash) text-(--palette-primary-text) hover:bg-primary-100 dark:hover:bg-primary-500/20 transition-colors"
                                       title={t('costBuilding.table.editAction')}
                                     >
                                       <Icon style="solid" name="pen" className="size-2.5" />
@@ -1049,7 +1057,7 @@ export function BuildingCostTable({
                                     <button
                                       type="button"
                                       onClick={() => handleRequestDelete(bIdx, rowIdxInBuilding)}
-                                      className="w-6 h-6 flex items-center justify-center rounded bg-danger-50 text-danger-600 hover:bg-danger-100 transition-colors"
+                                      className="w-6 h-6 flex items-center justify-center rounded bg-(--palette-req-wash) text-(--palette-danger) hover:bg-danger-100 dark:hover:bg-danger-500/20 transition-colors"
                                       title={t('costBuilding.table.deleteAction')}
                                     >
                                       <Icon style="solid" name="trash" className="size-2.5" />
@@ -1064,7 +1072,7 @@ export function BuildingCostTable({
                               sections — the band is per building and the type rides each row
                               as a pill. This is only the Building-only sum, kept because it
                               is the on-screen cross-check against the figure that drives
-                              building insurance value on the property form. Plain `bg-white`
+                              building insurance value on the property form. Plain `bg-(--palette-surface)`
                               on purpose: lightest of the three closing rows, so it reads as a
                               check line and leaves the teal Building Cost Value row emphatic.
                               An opaque fill is mandatory, not cosmetic — SubtotalRow puts
@@ -1074,14 +1082,14 @@ export function BuildingCostTable({
                             <>
                               <SubtotalRow
                                 rows={buildingRows}
-                                subtotalClassName="bg-white"
+                                subtotalClassName="bg-(--palette-surface)"
                                 hasActionCol={canEdit}
                                 label={t('costBuilding.table.buildingSubtotal')}
                                 visibleHeaders={visibleHeaders}
                               />
                               <SubtotalRow
                                 rows={nonBuildingRows}
-                                subtotalClassName="bg-white"
+                                subtotalClassName="bg-(--palette-surface)"
                                 hasActionCol={canEdit}
                                 label={t('costBuilding.table.nonBuildingSubtotal')}
                                 visibleHeaders={visibleHeaders}
@@ -1090,12 +1098,12 @@ export function BuildingCostTable({
                           )}
 
                           {/* Per-building subtotal — mock:1787 closes every building with
-                              one (`รวมตามตาราง`), over all of its rows. `bg-[#f8fafa]` is
+                              one (`รวมตามตาราง`), over all of its rows. `bg-(--palette-surface-2)` is
                               the mock's own `tr.tot` fill (mock:178 `--surface-2`), written
                               as hex because Tailwind v4's named colours are OKLCH. */}
                           <SubtotalRow
                             rows={computedRows}
-                            subtotalClassName="bg-[#f8fafa]"
+                            subtotalClassName="bg-(--palette-surface-2)"
                             hasActionCol={canEdit}
                             label={t('costBuilding.table.tableTotal')}
                             visibleHeaders={visibleHeaders}
@@ -1116,12 +1124,12 @@ export function BuildingCostTable({
                             <tr>
                               <td
                                 colSpan={visibleColCount}
-                                className="p-2 border-b border-b-[#eef2f2] bg-gray-50"
+                                className="p-2 border-b border-b-(--palette-line-soft) bg-(--palette-surface-2)"
                               >
                                 <button
                                   type="button"
                                   onClick={() => handleRequestAdd(bIdx)}
-                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-primary-600 hover:bg-primary-50 transition-colors rounded"
+                                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium text-(--palette-primary-text) hover:bg-(--palette-accent-wash) transition-colors rounded"
                                 >
                                   <Icon style="solid" name="plus" className="size-3" />
                                   {t('costBuilding.table.addRow')}
@@ -1150,13 +1158,13 @@ export function BuildingCostTable({
         {/* Empty State */}
         {isEmpty && (
           <div className="flex flex-col items-center justify-center py-6 px-3">
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-              <Icon style="solid" name="building" className="size-5 text-gray-400" />
+            <div className="w-10 h-10 rounded-full bg-(--palette-surface-3) flex items-center justify-center mb-2">
+              <Icon style="solid" name="building" className="size-5 text-(--palette-gray-400)" />
             </div>
-            <h3 className="text-sm font-medium text-gray-700 mb-0.5">
+            <h3 className="text-sm font-medium text-(--palette-ink) mb-0.5">
               {t('costBuilding.table.noDepreciationData')}
             </h3>
-            <p className="text-xs text-gray-500 text-center max-w-sm">
+            <p className="text-xs text-(--palette-gray-500) text-center max-w-sm">
               {t('costBuilding.table.noDepreciationDataHint')}
             </p>
           </div>

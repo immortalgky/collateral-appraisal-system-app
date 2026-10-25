@@ -25,22 +25,24 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
   const { data: rows, isLoading, isError } = useGetQuotationActivityLog(quotationId);
 
   return (
-    <div className="rounded-xl border border-gray-200 overflow-hidden">
+    <div className="rounded-xl border border-(--palette-line) overflow-hidden">
       <Disclosure defaultOpen>
         {({ open }) => (
           <>
-            <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
+            <div className="px-4 py-2 bg-(--palette-surface-2) border-b border-(--palette-line) flex items-center justify-between">
               <div className="flex gap-2 items-center">
-                <div className="size-7 rounded-lg bg-violet-100 flex items-center justify-center">
+                <div className="size-7 rounded-lg bg-violet-100 dark:bg-violet-500/20 flex items-center justify-center">
                   <Icon
                     name="clock-rotate-left"
                     style="solid"
-                    className="size-3.5 text-violet-600"
+                    className="size-3.5 text-violet-600 dark:text-violet-400"
                   />
                 </div>
-                <h2 className="text-base font-semibold text-gray-700">{t('trackingLog.title')}</h2>
+                <h2 className="text-base font-semibold text-(--palette-ink)">
+                  {t('trackingLog.title')}
+                </h2>
               </div>
-              <DisclosureButton className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors cursor-pointer">
+              <DisclosureButton className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) rounded-md transition-colors cursor-pointer">
                 <Icon
                   name={open ? 'chevron-up' : 'chevron-down'}
                   style="solid"
@@ -51,13 +53,17 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
 
             {isLoading && (
               <div className="flex items-center justify-center py-10">
-                <Icon name="spinner" style="solid" className="size-5 animate-spin text-primary" />
+                <Icon
+                  name="spinner"
+                  style="solid"
+                  className="size-5 animate-spin text-(--palette-primary-text)"
+                />
               </div>
             )}
 
             {isError && (
               <div className="px-4 py-6 text-center">
-                <p className="text-sm text-gray-500">{t('trackingLog.unableToLoad')}</p>
+                <p className="text-sm text-(--palette-gray-500)">{t('trackingLog.unableToLoad')}</p>
               </div>
             )}
 
@@ -65,34 +71,37 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
               <DisclosurePanel>
                 {(rows ?? []).length === 0 ? (
                   <div className="px-4 py-8 text-center">
-                    <p className="text-sm text-gray-500">{t('empty.noActivity')}</p>
+                    <p className="text-sm text-(--palette-gray-500)">{t('empty.noActivity')}</p>
                   </div>
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="bg-gray-50 border-b border-gray-200">
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                             {t('columns.activityName')}
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                             {t('columns.actionDateTime')}
                           </th>
-                          <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th className="px-4 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                             {t('columns.actionBy')}
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-100">
+                      <tbody className="divide-y divide-(--palette-line-soft)">
                         {(rows ?? []).map(row => (
-                          <tr key={row.id} className="hover:bg-gray-50 transition-colors">
+                          <tr
+                            key={row.id}
+                            className="hover:bg-(--palette-surface-2) transition-colors"
+                          >
                             <td className="px-4 py-2">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-(--palette-ink)">
                                 {row.activityName}
                               </span>
                               {row.remark && (
-                                <p className="text-xs text-gray-400 mt-0.5">
-                                  <span className="font-medium text-gray-500">
+                                <p className="text-xs text-(--palette-gray-400) mt-0.5">
+                                  <span className="font-medium text-(--palette-gray-500)">
                                     {t('fields.reason')}:
                                   </span>{' '}
                                   {row.remark}
@@ -100,14 +109,18 @@ const QuotationTrackingLog = ({ quotationId }: QuotationTrackingLogProps) => {
                               )}
                             </td>
                             <td className="px-4 py-2">
-                              <span className="text-sm text-gray-600">
+                              <span className="text-sm text-(--palette-gray-600)">
                                 {formatDateTime(row.actionAt)}
                               </span>
                             </td>
                             <td className="px-4 py-2">
-                              <span className="text-sm text-gray-600">{row.actionBy}</span>
+                              <span className="text-sm text-(--palette-gray-600)">
+                                {row.actionBy}
+                              </span>
                               {row.actionByRole && (
-                                <p className="text-xs text-gray-400">{row.actionByRole}</p>
+                                <p className="text-xs text-(--palette-gray-400)">
+                                  {row.actionByRole}
+                                </p>
                               )}
                             </td>
                           </tr>

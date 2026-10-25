@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import clsx from 'clsx';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
@@ -63,9 +64,9 @@ const EMPTY_FORM: FormState = {
 const SectionLabel = ({ icon, children }: { icon: string; children: React.ReactNode }) => (
   <div className="mb-3 flex items-center gap-2">
     <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
-      <Icon name={icon} style="solid" className="size-3 text-primary" />
+      <Icon name={icon} style="solid" className="size-3 text-(--palette-primary-text)" />
     </div>
-    <span className="text-sm font-semibold text-gray-800">{children}</span>
+    <span className="text-sm font-semibold text-(--palette-ink)">{children}</span>
   </div>
 );
 
@@ -227,7 +228,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
         {/* Scope — Bank vs Company drives roles/groups/teams and profile fields */}
         <section>
           <SectionLabel icon="building">{t('fields.scope')}</SectionLabel>
-          <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+          <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5">
             {(['Bank', 'Company'] as Scope[]).map(s => (
               <button
                 key={s}
@@ -235,7 +236,9 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
                 onClick={() => setScope(s)}
                 className={clsx(
                   'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
-                  form.scope === s ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-700',
+                  form.scope === s
+                    ? 'bg-primary text-white'
+                    : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
                 )}
               >
                 {s === 'Bank' ? t('tabs.bank') : t('tabs.company')}
@@ -249,7 +252,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
           <SectionLabel icon="shield-halved">
             {t('fields.authSource', 'Authentication')}
           </SectionLabel>
-          <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+          <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5">
             {(
               [
                 ['Local', t('fields.authSourceLocal', 'Local password')],
@@ -264,7 +267,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
                   'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
                   form.authSource === src
                     ? 'bg-primary text-white'
-                    : 'text-gray-500 hover:text-gray-700',
+                    : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
                 )}
               >
                 {label}
@@ -306,8 +309,8 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
               placeholder={t('placeholders.email')}
             />
             {isLdap ? (
-              <div className="sm:col-span-2 flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2">
-                <p className="text-xs text-gray-500">
+              <div className="sm:col-span-2 flex items-center rounded-lg bg-(--palette-surface-2) border border-(--palette-line-soft) px-3 py-2">
+                <p className="text-xs text-(--palette-gray-500)">
                   {t(
                     'hints.ldapPassword',
                     'Password is managed by Active Directory — the user signs in with their AD credentials.',
@@ -359,13 +362,13 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
             />
             {isCompany ? (
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-medium text-(--palette-ink) mb-1">
                   {t('fields.company')} <span className="text-red-500">*</span>
                 </label>
-                <select
+                <NativeSelect
                   value={form.companyId}
                   onChange={e => setField('companyId', e.target.value)}
-                  className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  className="w-full"
                 >
                   <option value="">{t('placeholders.selectCompany')}</option>
                   {companies.map(c => (
@@ -373,7 +376,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
                       {localizeCompanyName(c.name, c.nameLocal)}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             ) : (
               <>
@@ -395,7 +398,7 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
         {/* Access — roles / groups / teams */}
         <section>
           <SectionLabel icon="user-shield">{t('sections.access', 'Access')}</SectionLabel>
-          <div className="flex gap-1 border-b border-gray-100 mb-3">
+          <div className="flex gap-1 border-b border-(--palette-line-soft) mb-3">
             {ACCESS_TABS.map(tab => (
               <button
                 key={tab.key}
@@ -404,14 +407,14 @@ const CreateUserModal = ({ isOpen, onClose, onCreated }: CreateUserModalProps) =
                 className={clsx(
                   '-mb-px px-3 py-2 text-sm font-medium border-b-2 transition-colors',
                   accessTab === tab.key
-                    ? 'text-primary border-primary'
-                    : 'text-gray-500 border-transparent hover:text-gray-700',
+                    ? 'text-(--palette-primary-text) border-primary'
+                    : 'text-(--palette-gray-500) border-transparent hover:text-(--palette-ink)',
                 )}
               >
                 {tab.label}
                 {tab.required && <span className="text-red-500 ml-0.5">*</span>}
                 {tab.count > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary">
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-(--palette-primary-text)">
                     {tab.count}
                   </span>
                 )}

@@ -33,24 +33,24 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
   const { t } = useTranslation('pricingAnalysis');
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
 
-  const colHl = 'bg-blue-50/60';
+  const colHl = 'bg-blue-50/60 dark:bg-blue-500/10';
 
   // Border/background hex values are the mock's --line-soft/--line/--line-strong/--surface-2/
   // --ink/--ink-2 tokens verbatim (mock:271-276 kpis aside — the .g rules are further up its
   // stylesheet) — Tailwind v4's palette is OKLCH so named grays don't equal these hexes.
   const stickyCell =
-    'sticky left-0 z-10 bg-white px-[8px] py-0 h-[26px] border-b border-b-[#eef2f2] pa-sticky-edge';
+    'sticky left-0 z-10 bg-(--palette-surface) px-[8px] py-0 h-[26px] border-b border-b-(--palette-line-soft) pa-sticky-edge';
   const stickyCellBold =
-    'sticky left-0 z-10 bg-[#f8fafa] px-[8px] py-0 h-[26px] border-b border-b-[#eef2f2] border-t border-t-[#cbd5d3] pa-sticky-edge';
+    'sticky left-0 z-10 bg-(--palette-surface-2) px-[8px] py-0 h-[26px] border-b border-b-(--palette-line-soft) border-t border-t-(--palette-line-strong) pa-sticky-edge';
 
   const dataCls = (col: number) =>
-    `px-[8px] py-0 h-[26px] text-right text-gray-700 border-b border-b-[#eef2f2] border-r border-r-[#eef2f2] ${hoveredCol === col ? colHl : ''}`;
+    `px-[8px] py-0 h-[26px] text-right text-(--palette-ink) border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft) ${hoveredCol === col ? colHl : ''}`;
   const dataBoldCls = (col: number) =>
-    `px-[8px] py-0 h-[26px] text-right text-gray-800 font-bold border-b border-b-[#eef2f2] border-r border-r-[#eef2f2] border-t border-t-[#cbd5d3] ${hoveredCol === col ? colHl : ''}`;
+    `px-[8px] py-0 h-[26px] text-right text-(--palette-ink) font-bold border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft) border-t border-t-(--palette-line-strong) ${hoveredCol === col ? colHl : ''}`;
   // `.g th.yr` (mock CSS) — two-line year header: shorter line-height and padding,
   // plus its own min-width.
   const yearHeadCls = (col: number) =>
-    `px-[8px] py-[4px] leading-[14px] text-right text-[#55636f] font-medium min-w-[96px] bg-[#f8fafa] border-b border-b-[#e3e9e8] border-r border-r-[#eef2f2] ${hoveredCol === col ? colHl : ''}`;
+    `px-[8px] py-[4px] leading-[14px] text-right text-(--palette-ink-2) font-medium min-w-[96px] bg-(--palette-surface-2) border-b border-b-(--palette-line) border-r border-r-(--palette-line-soft) ${hoveredCol === col ? colHl : ''}`;
 
   const cp = (col: number) => ({
     onMouseEnter: () => setHoveredCol(col),
@@ -74,14 +74,14 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
       >
         <thead>
           <tr>
-            <th className="sticky left-0 z-10 bg-[#f8fafa] px-[8px] py-0 h-[26px] leading-[26px] text-left text-[#55636f] font-medium min-w-[360px] border-b border-b-[#e3e9e8] pa-sticky-edge">
+            <th className="sticky left-0 z-10 bg-(--palette-surface-2) px-[8px] py-0 h-[26px] leading-[26px] text-left text-(--palette-ink-2) font-medium min-w-[360px] border-b border-b-(--palette-line) pa-sticky-edge">
               {t('leasehold.table.year')}
             </th>
             {rows.map((r, i) => (
               <th key={r.year} data-nav-col className={yearHeadCls(i)} {...cp(i)}>
                 {r.year.toFixed(1)}
                 {buddhistYear0 != null && (
-                  <span className="block text-[10px] text-[#8a96a0] font-normal leading-[12px]">
+                  <span className="block text-[10px] text-(--palette-ink-3) font-normal leading-[12px]">
                     {i === 0 && appraisalDate ? dayMonthSlash(appraisalDate) : ''}
                     {buddhistYear0 + i}
                   </span>
@@ -92,23 +92,27 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
         </thead>
         <tbody>
           {/* Detail label row */}
-          <tr className="bg-gray-100">
-            <td className="sticky left-0 z-10 bg-gray-100 px-[8px] py-0 h-[26px] border-b border-b-[#eef2f2] pa-sticky-edge">
-              <span className="text-gray-700 font-semibold">{t('leasehold.table.detail')}</span>
+          <tr className="bg-(--palette-surface-3)">
+            <td className="sticky left-0 z-10 bg-(--palette-surface-3) px-[8px] py-0 h-[26px] border-b border-b-(--palette-line-soft) pa-sticky-edge">
+              <span className="text-(--palette-ink) font-semibold">
+                {t('leasehold.table.detail')}
+              </span>
             </td>
             {rows.map((r, i) => (
               <td
                 key={r.year}
-                className={`border-b border-b-[#eef2f2] border-r border-r-[#eef2f2] bg-gray-100 ${hoveredCol === i ? colHl : ''}`}
+                className={`border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft) bg-(--palette-surface-3) ${hoveredCol === i ? colHl : ''}`}
                 {...cp(i)}
               />
             ))}
           </tr>
 
           {/* Land Value */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="font-medium text-gray-700">{t('leasehold.table.landValue')}</span>
+              <span className="font-medium text-(--palette-ink)">
+                {t('leasehold.table.landValue')}
+              </span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -118,9 +122,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Land Growth (%) */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">{t('leasehold.table.landGrowthPercent')}</span>
+              <span className="text-(--palette-ink)">{t('leasehold.table.landGrowthPercent')}</span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -130,9 +134,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Building Value */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">{t('leasehold.table.buildingValue')}</span>
+              <span className="text-(--palette-ink)">{t('leasehold.table.buildingValue')}</span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -142,9 +146,11 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Depreciation (%) */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">{t('leasehold.table.depreciationPercent')}</span>
+              <span className="text-(--palette-ink)">
+                {t('leasehold.table.depreciationPercent')}
+              </span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -154,9 +160,11 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Depreciation Amount */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">{t('leasehold.table.depreciationAmount')}</span>
+              <span className="text-(--palette-ink)">
+                {t('leasehold.table.depreciationAmount')}
+              </span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -166,9 +174,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Building value after depreciation */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">
+              <span className="text-(--palette-ink)">
                 {t('leasehold.table.buildingAfterDepreciation')}
               </span>
             </td>
@@ -180,9 +188,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Total value of land and buildings */}
-          <tr className="bg-[#f8fafa] font-bold">
+          <tr className="bg-(--palette-surface-2) font-bold">
             <td className={stickyCellBold}>
-              <span className="text-gray-800 font-bold">
+              <span className="text-(--palette-ink) font-bold">
                 {t('leasehold.table.totalLandAndBuilding')}
               </span>
             </td>
@@ -194,9 +202,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Rental Income */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">{t('leasehold.table.rentalIncome')}</span>
+              <span className="text-(--palette-ink)">{t('leasehold.table.rentalIncome')}</span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -206,9 +214,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* PV Factor */}
-          <tr className="hover:bg-gray-50/50">
+          <tr className="hover:bg-(--palette-surface-2)/50">
             <td className={stickyCell}>
-              <span className="text-gray-700">{t('leasehold.table.pvFactor')}</span>
+              <span className="text-(--palette-ink)">{t('leasehold.table.pvFactor')}</span>
             </td>
             {rows.map((r, i) => (
               <td key={r.year} className={dataCls(i)} {...cp(i)}>
@@ -218,9 +226,9 @@ export function LeaseholdTable({ result, appraisalDate, className }: LeaseholdTa
           </tr>
 
           {/* Net Current Rental Income */}
-          <tr className="bg-[#f8fafa] font-bold">
+          <tr className="bg-(--palette-surface-2) font-bold">
             <td className={stickyCellBold}>
-              <span className="text-gray-800 font-bold">
+              <span className="text-(--palette-ink) font-bold">
                 {t('leasehold.table.netCurrentRentalIncome')}
               </span>
             </td>

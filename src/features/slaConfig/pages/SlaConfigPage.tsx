@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { useParameterOptions } from '@shared/utils/parameterUtils';
 import {
@@ -27,15 +28,10 @@ const OWNER_GROUPS = [
   { owner: 'Bank', label: 'Bank appraisal step' },
 ] as const;
 
-
 const inputClass =
-  'w-24 rounded-lg border border-gray-300 px-2 py-1.5 text-sm text-right focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
+  'w-24 rounded-lg border border-(--palette-line-strong) px-2 py-1.5 text-sm text-right focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
 
-const selectClass =
-  'rounded-lg border border-gray-300 px-2 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
-
-const daysHint = (hours: number) =>
-  `≈ ${(hours / BUSINESS_HOURS_PER_DAY).toFixed(1)} day(s)`;
+const daysHint = (hours: number) => `≈ ${(hours / BUSINESS_HOURS_PER_DAY).toFixed(1)} day(s)`;
 
 // ─── Anchor selector ──────────────────────────────────────────────────────────
 // Shared between group rows and per-activity rows. Passes null for "no anchor".
@@ -50,8 +46,7 @@ function AnchorSelect({
   disabled?: boolean;
 }) {
   return (
-    <select
-      className={selectClass + (disabled ? ' opacity-40 cursor-not-allowed' : '')}
+    <NativeSelect
       disabled={disabled}
       value={value ?? ''}
       onChange={e => onChange(e.target.value === '' ? null : e.target.value)}
@@ -59,7 +54,7 @@ function AnchorSelect({
       <option value="">No anchor</option>
       <option value="Assignment">Assignment</option>
       <option value="AppointmentDate">Appointment date</option>
-    </select>
+    </NativeSelect>
   );
 }
 
@@ -93,26 +88,26 @@ function GroupSpanEditor({
   const [anchorType, setAnchorType] = useState<string | null>(group?.anchorType ?? null);
 
   return (
-    <div className="rounded-md border border-gray-200 p-3">
+    <div className="rounded-md border border-(--palette-line) p-3">
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <label className="text-xs text-gray-500">Start</label>
-        <select value={start} onChange={e => setStart(e.target.value)} className={selectClass}>
+        <label className="text-xs text-(--palette-gray-500)">Start</label>
+        <NativeSelect value={start} onChange={e => setStart(e.target.value)}>
           <option value="">—</option>
           {activities.map(a => (
             <option key={a.id} value={a.id}>
               {a.name}
             </option>
           ))}
-        </select>
-        <label className="text-xs text-gray-500">End</label>
-        <select value={end} onChange={e => setEnd(e.target.value)} className={selectClass}>
+        </NativeSelect>
+        <label className="text-xs text-(--palette-gray-500)">End</label>
+        <NativeSelect value={end} onChange={e => setEnd(e.target.value)}>
           <option value="">—</option>
           {activities.map(a => (
             <option key={a.id} value={a.id}>
               {a.name}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <input
           type="number"
           min="0"
@@ -120,13 +115,15 @@ function GroupSpanEditor({
           onChange={e => onHoursChange(e.target.value)}
           className={inputClass}
         />
-        <span className="text-xs text-gray-400">hrs</span>
+        <span className="text-xs text-(--palette-gray-400)">hrs</span>
         <AnchorSelect value={anchorType} onChange={setAnchorType} />
         {group &&
           (group.isOverride ? (
-            <span className="rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-600">override</span>
+            <span className="rounded bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 text-xs text-blue-600 dark:text-blue-400">
+              override
+            </span>
           ) : (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+            <span className="rounded bg-(--palette-surface-3) px-1.5 py-0.5 text-xs text-(--palette-gray-500)">
               inherited default
             </span>
           ))}
@@ -143,7 +140,7 @@ function GroupSpanEditor({
             <button
               type="button"
               onClick={onDelete}
-              className="rounded p-1 text-gray-400 hover:text-red-500"
+              className="rounded p-1 text-(--palette-gray-400) hover:text-red-500"
               aria-label="Delete group"
               title="Delete / revert to default"
             >
@@ -153,7 +150,7 @@ function GroupSpanEditor({
         </div>
       </div>
       {group && group.members.length > 0 && (
-        <p className="mt-1 px-1 text-xs text-gray-400">
+        <p className="mt-1 px-1 text-xs text-(--palette-gray-400)">
           Members: {group.members.join(', ')}
         </p>
       )}
@@ -182,7 +179,7 @@ function Pills<T extends string>({
           className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
             value === o.value
               ? 'bg-primary text-white border-primary'
-              : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+              : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line-strong) hover:border-(--palette-line-strong)'
           }`}
         >
           {o.label}
@@ -212,7 +209,10 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
   );
   const [activityHours, setActivityHours] = useState<Record<string, string>>(() =>
     Object.fromEntries(
-      data.activities.map(a => [a.activityId, a.durationHours != null ? String(a.durationHours) : '']),
+      data.activities.map(a => [
+        a.activityId,
+        a.durationHours != null ? String(a.durationHours) : '',
+      ]),
     ),
   );
   const [groupHours, setGroupHours] = useState<Record<string, string>>(() =>
@@ -237,8 +237,7 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
   // ── Persist helpers ──
   const handleError = (e: unknown) => {
     const msg =
-      (e as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-      'Save failed';
+      (e as { response?: { data?: { error?: string } } })?.response?.data?.error ?? 'Save failed';
     toast.error(msg);
   };
 
@@ -396,11 +395,13 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
   return (
     <div className="flex flex-col gap-5">
       {/* SLA umbrella */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface) p-4">
         <div className="flex items-center gap-3">
-          <span className="text-sm font-semibold text-gray-800">SLA umbrella (end-to-end)</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            SLA umbrella (end-to-end)
+          </span>
           {!data.umbrella.isOverride && (
-            <span className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+            <span className="rounded bg-(--palette-surface-3) px-2 py-0.5 text-xs text-(--palette-gray-500)">
               inherited default
             </span>
           )}
@@ -412,7 +413,9 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
               onChange={e => setUmbrella(e.target.value)}
               className={inputClass}
             />
-            <span className="w-24 text-xs text-gray-400">hrs · {daysHint(umbrellaHours)}</span>
+            <span className="w-24 text-xs text-(--palette-gray-400)">
+              hrs · {daysHint(umbrellaHours)}
+            </span>
             <Button size="sm" type="button" onClick={saveUmbrella} isLoading={busy}>
               Save
             </Button>
@@ -421,9 +424,11 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
       </div>
 
       {/* Group OLAs — a shared OLA/SLA window from a Start activity to an End activity. */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
-        <p className="mb-1 text-sm font-semibold text-gray-800">Group windows (Start → End)</p>
-        <p className="mb-2 text-xs text-gray-500">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface) p-4">
+        <p className="mb-1 text-sm font-semibold text-(--palette-ink)">
+          Group windows (Start → End)
+        </p>
+        <p className="mb-2 text-xs text-(--palette-gray-500)">
           A shared OLA/SLA deadline spanning from a start activity to an end activity (e.g. the
           external company's total turnaround), separate from the per-activity hours below.
         </p>
@@ -458,7 +463,7 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
             <button
               type="button"
               onClick={() => setShowAddGroup(true)}
-              className="text-sm text-blue-600 hover:underline"
+              className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
             >
               + Add group
             </button>
@@ -471,8 +476,11 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
         const rows = data.activities.filter(a => a.owner === owner);
         if (rows.length === 0) return null;
         return (
-          <div key={owner} className="rounded-lg border border-gray-200 bg-white p-4">
-            <p className="mb-2 text-sm font-semibold text-gray-800">{label}</p>
+          <div
+            key={owner}
+            className="rounded-lg border border-(--palette-line) bg-(--palette-surface) p-4"
+          >
+            <p className="mb-2 text-sm font-semibold text-(--palette-ink)">{label}</p>
             <div className="space-y-1.5">
               {rows.map(act => {
                 // WindowMember activities are governed by a group window; their
@@ -483,20 +491,20 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
                     key={act.activityId}
                     className="flex items-center gap-3 rounded-md px-2 py-1.5 text-sm"
                   >
-                    <span className="flex-1 text-gray-700">
+                    <span className="flex-1 text-(--palette-ink)">
                       {act.name}
                       {act.scenario !== 'Both' && (
-                        <span className="ml-2 rounded bg-violet-50 px-1.5 py-0.5 text-xs text-violet-600">
+                        <span className="ml-2 rounded bg-violet-50 dark:bg-violet-500/10 px-1.5 py-0.5 text-xs text-violet-600 dark:text-violet-400">
                           {act.scenario === 'ExternalCase' ? 'external case' : 'in-house case'}
                         </span>
                       )}
                       {act.isOverride && (
-                        <span className="ml-2 rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-600">
+                        <span className="ml-2 rounded bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 text-xs text-blue-600 dark:text-blue-400">
                           override
                         </span>
                       )}
                       {isWindowMember && (
-                        <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-400">
+                        <span className="ml-2 rounded bg-(--palette-surface-3) px-1.5 py-0.5 text-xs text-(--palette-gray-400)">
                           governed by {act.governingWindow ?? 'window'}
                         </span>
                       )}
@@ -509,14 +517,14 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
                         setActivityHours(prev => ({ ...prev, [act.activityId]: e.target.value }))
                       }
                       disabled={isWindowMember}
-                      className={inputClass + (isWindowMember ? ' opacity-40 cursor-not-allowed' : '')}
+                      className={
+                        inputClass + (isWindowMember ? ' opacity-40 cursor-not-allowed' : '')
+                      }
                     />
-                    <span className="w-12 text-xs text-gray-400">hrs</span>
+                    <span className="w-12 text-xs text-(--palette-gray-400)">hrs</span>
                     <AnchorSelect
                       value={activityAnchor[act.activityId] ?? null}
-                      onChange={v =>
-                        setActivityAnchor(prev => ({ ...prev, [act.activityId]: v }))
-                      }
+                      onChange={v => setActivityAnchor(prev => ({ ...prev, [act.activityId]: v }))}
                       disabled={isWindowMember}
                     />
                     {!isWindowMember && (
@@ -533,7 +541,7 @@ function MatrixEditor({ data, loanType, appraisalType }: EditorProps) {
                           <button
                             type="button"
                             onClick={() => revertActivity(act)}
-                            className="rounded p-1 text-gray-400 hover:text-red-500"
+                            className="rounded p-1 text-(--palette-gray-400) hover:text-red-500"
                             aria-label="Revert to default"
                             title="Revert to default"
                           >
@@ -588,8 +596,8 @@ function SlaConfigPage() {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h3 className="text-base font-semibold text-gray-900">OLA / SLA Targets</h3>
-        <p className="mt-0.5 text-xs text-gray-500">
+        <h3 className="text-base font-semibold text-(--palette-ink)">OLA / SLA Targets</h3>
+        <p className="mt-0.5 text-xs text-(--palette-gray-500)">
           Define the end-to-end SLA umbrella and the per-activity / group OLA targets for each loan
           type and appraisal type. Targets apply to new appraisals.
         </p>
@@ -598,11 +606,11 @@ function SlaConfigPage() {
       {/* Selectors */}
       <div className="flex flex-col gap-3">
         <div>
-          <p className="mb-1 text-xs font-medium text-gray-600">Loan Type</p>
+          <p className="mb-1 text-xs font-medium text-(--palette-gray-600)">Loan Type</p>
           <Pills options={loanTypeOptions} value={effectiveLoanType} onChange={setLoanType} />
         </div>
         <div>
-          <p className="mb-1 text-xs font-medium text-gray-600">Appraisal Type</p>
+          <p className="mb-1 text-xs font-medium text-(--palette-gray-600)">Appraisal Type</p>
           <Pills
             options={APPRAISAL_TYPES.map(t => ({ value: t, label: t }))}
             value={appraisalType}
@@ -614,7 +622,11 @@ function SlaConfigPage() {
       {/* Editor */}
       {isLoading || !data ? (
         <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="h-5 w-5 animate-spin text-gray-400" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="h-5 w-5 animate-spin text-(--palette-gray-400)"
+          />
         </div>
       ) : (
         <MatrixEditor

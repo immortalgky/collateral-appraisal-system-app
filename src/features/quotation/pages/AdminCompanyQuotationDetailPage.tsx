@@ -49,7 +49,7 @@ interface ReadOnlyFeeGridProps {
 
 /** Disabled-input-styled value display matching NumberInput's disabled appearance. */
 const ValueBox = ({ value }: { value: string }) => (
-  <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600 text-right tabular-nums">
+  <div className="w-full px-2.5 py-1.5 border border-(--palette-line) rounded-lg text-sm bg-(--palette-surface-2) text-(--palette-gray-600) text-right tabular-nums">
     {value}
   </div>
 );
@@ -70,19 +70,21 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
     <div className="space-y-2">
       {/* Fee Amount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label className="text-sm text-gray-600">{t('columns.feeAmount')}</label>
+        <label className="text-sm text-(--palette-gray-600)">{t('columns.feeAmount')}</label>
         <ValueBox value={fmtCurrency(item.feeAmount)} />
       </div>
 
       {/* Discount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label className="text-sm text-gray-600">{t('columns.discount')}</label>
+        <label className="text-sm text-(--palette-gray-600)">{t('columns.discount')}</label>
         <ValueBox value={fmtCurrency(item.discount)} />
       </div>
 
       {/* Negotiated Discount — always shown to mirror the company-input page */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label className="text-sm text-gray-600">{t('columns.discountNegotiate')}</label>
+        <label className="text-sm text-(--palette-gray-600)">
+          {t('columns.discountNegotiate')}
+        </label>
         <ValueBox value={fmtCurrency(item.negotiatedDiscount)} />
       </div>
 
@@ -91,28 +93,32 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
           the same indigo "negotiation" treatment used elsewhere in this feature, so it
           reads as context, not a warning. Only rendered when the company actually gave one. */}
       {item.itemNegotiationReason && (
-        <div className="rounded-lg border border-orange-200 bg-orange-50/60 p-3">
+        <div className="rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/60 dark:bg-orange-500/10 p-3">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs font-semibold text-orange-900">
+            <span className="text-xs font-semibold text-orange-900 dark:text-orange-200">
               {t('sections.itemNegotiationReason')}
             </span>
           </div>
-          <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.itemNegotiationReason}</p>
+          <p className="text-sm text-(--palette-ink) whitespace-pre-wrap">
+            {item.itemNegotiationReason}
+          </p>
         </div>
       )}
 
       {/* ─── Totals block ─────────────────────────────────────────────── */}
-      <div className="mt-3 border-t border-gray-200 pt-2 space-y-1">
+      <div className="mt-3 border-t border-(--palette-line) pt-2 space-y-1">
         {/* Fee After Discount */}
         <div
           className={`grid grid-cols-2 gap-3 items-center px-2.5 py-1.5 rounded ${
-            discountOverflow ? 'bg-red-50 border border-red-200' : ''
+            discountOverflow ? 'bg-(--palette-req-wash) border border-(--palette-req-line)' : ''
           }`}
         >
-          <span className="text-sm text-gray-600 text-right">{t('columns.feeAfterDiscount')}</span>
+          <span className="text-sm text-(--palette-gray-600) text-right">
+            {t('columns.feeAfterDiscount')}
+          </span>
           <span
             className={`text-sm font-semibold text-right tabular-nums ${
-              discountOverflow ? 'text-red-600' : 'text-gray-900'
+              discountOverflow ? 'text-(--palette-danger)' : 'text-(--palette-ink)'
             }`}
           >
             {discountOverflow ? t('shared.discountsExceedFee') : fmt(feeAfterDiscount)}
@@ -121,20 +127,20 @@ const ReadOnlyFeeGrid = ({ item }: ReadOnlyFeeGridProps) => {
 
         {/* VAT — rate + computed amount on one row */}
         <div className="grid grid-cols-2 gap-3 items-center px-2.5 py-1.5">
-          <span className="text-sm text-gray-600 text-right">
+          <span className="text-sm text-(--palette-gray-600) text-right">
             VAT ({(Number(item.vatPercent) || 0).toFixed(2)}%)
           </span>
-          <span className="text-sm font-semibold text-gray-900 text-right tabular-nums">
+          <span className="text-sm font-semibold text-(--palette-ink) text-right tabular-nums">
             {fmt(vatAmount)}
           </span>
         </div>
 
         {/* Net Amount — primary total */}
         <div className="grid grid-cols-2 gap-3 items-center border-t-2 border-primary/30 mt-1 pt-2 px-2.5 py-2 bg-primary/5 rounded-b-lg">
-          <span className="text-sm font-semibold text-gray-800 text-right uppercase tracking-wide">
+          <span className="text-sm font-semibold text-(--palette-ink) text-right uppercase tracking-wide">
             {t('columns.netAmount')}
           </span>
-          <span className="text-base font-bold text-primary text-right tabular-nums">
+          <span className="text-base font-bold text-(--palette-primary-text) text-right tabular-nums">
             {fmt(netAmount)}
           </span>
         </div>
@@ -154,8 +160,8 @@ interface DocRowProps {
 }
 
 const DocRow = ({ fileName, documentTypeName, uploadedAt, notes, onView }: DocRowProps) => (
-  <tr className="hover:bg-gray-50">
-    <td className="px-3 py-2 text-gray-700 truncate" title={documentTypeName ?? ''}>
+  <tr className="hover:bg-(--palette-surface-2)">
+    <td className="px-3 py-2 text-(--palette-ink) truncate" title={documentTypeName ?? ''}>
       {documentTypeName ?? '—'}
     </td>
     <td className="px-3 py-2 truncate" title={fileName ?? ''}>
@@ -163,16 +169,16 @@ const DocRow = ({ fileName, documentTypeName, uploadedAt, notes, onView }: DocRo
         <button
           type="button"
           onClick={onView}
-          className="text-primary hover:text-primary/70 hover:underline underline-offset-2 transition-colors text-left truncate max-w-full"
+          className="text-(--palette-primary-text) hover:text-(--palette-primary-text)/70 hover:underline underline-offset-2 transition-colors text-left truncate max-w-full"
         >
           {fileName}
         </button>
       ) : (
-        <span className="text-gray-500">—</span>
+        <span className="text-(--palette-gray-500)">—</span>
       )}
     </td>
-    <td className="px-3 py-2 text-gray-500 truncate">{fmtDateTime(uploadedAt)}</td>
-    <td className="px-3 py-2 text-gray-500 truncate italic" title={notes ?? ''}>
+    <td className="px-3 py-2 text-(--palette-gray-500) truncate">{fmtDateTime(uploadedAt)}</td>
+    <td className="px-3 py-2 text-(--palette-gray-500) truncate italic" title={notes ?? ''}>
       {notes ?? '—'}
     </td>
   </tr>
@@ -294,7 +300,11 @@ export const AdminCompanyQuotationDetailContent = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="size-6 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-6 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -303,7 +313,7 @@ export const AdminCompanyQuotationDetailContent = ({
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="size-8 text-red-400" />
-        <p className="text-sm text-gray-600">{t('errors.failedToLoadQuotation')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('errors.failedToLoadQuotation')}</p>
         <Button variant="outline" size="sm" onClick={handleBack}>
           {t('buttons.goBack')}
         </Button>
@@ -315,7 +325,7 @@ export const AdminCompanyQuotationDetailContent = ({
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="circle-exclamation" style="solid" className="size-8 text-amber-400" />
-        <p className="text-sm text-gray-600">{t('errors.companyNotFound')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('errors.companyNotFound')}</p>
         <Button variant="outline" size="sm" onClick={handleBack}>
           {t('buttons.back')}
         </Button>
@@ -344,21 +354,21 @@ export const AdminCompanyQuotationDetailContent = ({
       {!isDrawer ? (
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="text-base font-semibold text-gray-900 leading-snug">
+            <div className="text-base font-semibold text-(--palette-ink) leading-snug">
               {t('page.extQuotationTitle')}
             </div>
-            <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
+            <div className="flex items-center gap-3 mt-0.5 text-xs text-(--palette-gray-500) flex-wrap">
               <span>
-                <span className="font-medium text-gray-700">{t('page.quotationId')}:</span>{' '}
+                <span className="font-medium text-(--palette-ink)">{t('page.quotationId')}:</span>{' '}
                 {quotation.quotationNumber}
               </span>
               <span>·</span>
               <span>
-                <span className="font-medium text-gray-700">{t('page.cutOffDate')}:</span>{' '}
+                <span className="font-medium text-(--palette-ink)">{t('page.cutOffDate')}:</span>{' '}
                 {fmtDate(quotation.cutOffTime)}
               </span>
               <span>·</span>
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-(--palette-ink)">
                 {localizeCompanyName(
                   companyQuotation.companyName,
                   companyQuotation.companyNameLocal,
@@ -373,18 +383,18 @@ export const AdminCompanyQuotationDetailContent = ({
           </Button>
         </div>
       ) : (
-        <div className="flex items-center gap-3 text-xs text-gray-500 flex-wrap">
+        <div className="flex items-center gap-3 text-xs text-(--palette-gray-500) flex-wrap">
           <span>
-            <span className="font-medium text-gray-700">{t('page.quotationId')}:</span>{' '}
+            <span className="font-medium text-(--palette-ink)">{t('page.quotationId')}:</span>{' '}
             {quotation.quotationNumber}
           </span>
           <span>·</span>
           <span>
-            <span className="font-medium text-gray-700">{t('page.cutOffDate')}:</span>{' '}
+            <span className="font-medium text-(--palette-ink)">{t('page.cutOffDate')}:</span>{' '}
             {fmtDate(quotation.cutOffTime)}
           </span>
           <span>·</span>
-          <span className="font-medium text-gray-700">
+          <span className="font-medium text-(--palette-ink)">
             {localizeCompanyName(companyQuotation.companyName, companyQuotation.companyNameLocal)}
           </span>
           <QuotationStatusBadge status={companyQuotation.status} />
@@ -392,11 +402,11 @@ export const AdminCompanyQuotationDetailContent = ({
       )}
 
       {/* Main content — left rail + right pane */}
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
+      <div className="rounded-xl border border-(--palette-line) overflow-hidden">
         <div className="flex flex-col md:grid md:grid-cols-[16rem_1fr] min-h-[600px]">
           {/* Left rail */}
           {appraisals.length === 0 ? (
-            <div className="flex items-center justify-center w-full h-40 text-gray-400 text-sm">
+            <div className="flex items-center justify-center w-full h-40 text-(--palette-gray-400) text-sm">
               {t('empty.noAppraisalsQuotation')}
             </div>
           ) : (
@@ -409,28 +419,28 @@ export const AdminCompanyQuotationDetailContent = ({
               />
 
               {/* Right pane */}
-              <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+              <div className="flex-1 overflow-y-auto divide-y divide-(--palette-line-soft)">
                 {selectedAppraisal ? (
                   <div className="p-5 space-y-6">
                     {/* Section 1 — Appraisal Information */}
                     <section aria-label={t('aria.sectionAppraisalInfo')}>
-                      <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                      <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                         {t('sections.appraisalInformation')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="block text-xs text-gray-500 mb-0.5">
+                          <span className="block text-xs text-(--palette-gray-500) mb-0.5">
                             {t('fields.appraisalNumber')}
                           </span>
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-(--palette-ink)">
                             {selectedAppraisal.appraisalNumber?.trim() || '—'}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-xs text-gray-500 mb-0.5">
+                          <span className="block text-xs text-(--palette-gray-500) mb-0.5">
                             {t('fields.customerName')}
                           </span>
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-(--palette-ink)">
                             {selectedAppraisal.customerName ?? '—'}
                           </span>
                         </div>
@@ -440,10 +450,10 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 2 — Attached Documents (grouped by section, mirrors ext-company submit page) */}
                     {appraisalDocs.length > 0 && (
                       <section aria-label={t('aria.sectionAttachedDocs')}>
-                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                           {t('sections.attachDocument')}
                         </h2>
-                        <div className="rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="rounded-lg border border-(--palette-line) overflow-hidden">
                           <table className="w-full text-xs table-fixed">
                             <colgroup>
                               <col className="w-[24%]" />
@@ -451,7 +461,7 @@ export const AdminCompanyQuotationDetailContent = ({
                               <col className="w-[18%]" />
                               <col />
                             </colgroup>
-                            <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
+                            <thead className="bg-(--palette-surface-3) text-[11px] uppercase tracking-wider text-(--palette-ink) border-b-2 border-(--palette-line-strong)">
                               <tr>
                                 <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.type')}
@@ -468,19 +478,22 @@ export const AdminCompanyQuotationDetailContent = ({
                               </tr>
                             </thead>
                             {docSectionGroups.map(group => (
-                              <tbody key={group.label} className="divide-y divide-gray-100">
-                                <tr className="bg-gray-50/60">
+                              <tbody
+                                key={group.label}
+                                className="divide-y divide-(--palette-line-soft)"
+                              >
+                                <tr className="bg-(--palette-surface-2)/60">
                                   <td colSpan={4} className="px-3 py-1.5">
                                     <div className="flex items-center gap-2">
                                       <Icon
                                         name={group.titleNumber ? 'building' : 'file-lines'}
                                         style="solid"
-                                        className="size-3 text-gray-400 shrink-0"
+                                        className="size-3 text-(--palette-gray-400) shrink-0"
                                       />
-                                      <span className="text-[11px] font-medium text-gray-600">
+                                      <span className="text-[11px] font-medium text-(--palette-gray-600)">
                                         {group.label}
                                       </span>
-                                      <span className="text-[10px] text-gray-400">
+                                      <span className="text-[10px] text-(--palette-gray-400)">
                                         ({group.docs.length})
                                       </span>
                                     </div>
@@ -512,7 +525,7 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 3 — Quotation Information — Appraisal Fee */}
                     {selectedItem && (
                       <section aria-label={t('aria.sectionQuotationInfo')}>
-                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                           {t('sections.quotationInformationFee')}
                         </h2>
                         <ReadOnlyFeeGrid item={selectedItem} />
@@ -522,23 +535,23 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 4 — Duration */}
                     {selectedItem && (
                       <section aria-label={t('aria.sectionDuration')}>
-                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                           {t('sections.duration')}
                         </h2>
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm text-gray-600 mb-1">
+                            <label className="block text-sm text-(--palette-gray-600) mb-1">
                               {t('fields.maxAppraisalDuration')}
                             </label>
-                            <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
+                            <div className="w-full px-2.5 py-1.5 border border-(--palette-line) rounded-lg text-sm bg-(--palette-surface-2) text-(--palette-gray-600)">
                               {selectedAppraisal?.maxAppraisalDays ?? '—'}
                             </div>
                           </div>
                           <div>
-                            <label className="block text-sm text-gray-600 mb-1">
+                            <label className="block text-sm text-(--palette-gray-600) mb-1">
                               {t('fields.estimatedMandays')}
                             </label>
-                            <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
+                            <div className="w-full px-2.5 py-1.5 border border-(--palette-line) rounded-lg text-sm bg-(--palette-surface-2) text-(--palette-gray-600)">
                               {selectedItem.estimatedDays ?? '—'}
                             </div>
                           </div>
@@ -549,17 +562,17 @@ export const AdminCompanyQuotationDetailContent = ({
                     {/* Section 5 — Remark for this Appraisal */}
                     {selectedItem && (
                       <section aria-label={t('aria.sectionAppraisalRemark')}>
-                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                           {t('sections.appraisalRemark')}
                         </h2>
-                        <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">
+                        <div className="px-3 py-2 bg-(--palette-surface-2) border border-(--palette-line) rounded-lg text-sm text-(--palette-ink) min-h-[4rem] whitespace-pre-wrap">
                           {selectedItem.itemNotes?.trim() || '—'}
                         </div>
                       </section>
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-40 text-sm text-gray-400">
+                  <div className="flex items-center justify-center h-40 text-sm text-(--palette-gray-400)">
                     {t('empty.selectAppraisalLeft')}
                   </div>
                 )}
@@ -573,20 +586,22 @@ export const AdminCompanyQuotationDetailContent = ({
           {/* Total + Participating */}
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div>
-              <span className="text-sm font-semibold text-gray-700">
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {t('fields.totalFeeAmount')}
               </span>
-              <span className="ml-2 text-base font-bold text-primary">
+              <span className="ml-2 text-base font-bold text-(--palette-primary-text)">
                 {grandTotal > 0 ? THB.format(grandTotal) : '—'}
               </span>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-sm font-medium text-gray-700">{t('fields.participating')}</span>
+              <span className="text-sm font-medium text-(--palette-ink)">
+                {t('fields.participating')}
+              </span>
               <span
                 className={`px-3 py-1 rounded-lg text-sm font-medium border ${
                   isParticipating
-                    ? 'bg-primary/10 text-primary border-primary/30'
-                    : 'bg-red-50 text-red-600 border-red-200'
+                    ? 'bg-primary/10 text-(--palette-primary-text) border-primary/30'
+                    : 'bg-(--palette-req-wash) text-(--palette-danger) border-(--palette-req-line)'
                 }`}
               >
                 {isParticipating ? t('yesNo.yes') : t('yesNo.no')}
@@ -596,10 +611,10 @@ export const AdminCompanyQuotationDetailContent = ({
 
           {/* Quotation Remark (read-only) */}
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
+            <label className="block text-sm text-(--palette-gray-600) mb-1">
               {t('fields.quotationRemark')}
             </label>
-            <div className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-800 min-h-[4rem] whitespace-pre-wrap">
+            <div className="px-3 py-2 bg-(--palette-surface) border border-(--palette-line) rounded-lg text-sm text-(--palette-ink) min-h-[4rem] whitespace-pre-wrap">
               {companyQuotation.remarks ?? '—'}
             </div>
           </div>

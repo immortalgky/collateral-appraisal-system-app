@@ -262,7 +262,7 @@ function MonitoringPage() {
   if (visibleSections.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <p className="text-sm text-gray-500">{t('common.noRecords')}</p>
+        <p className="text-sm text-(--palette-gray-500)">{t('common.noRecords')}</p>
       </div>
     );
   }
@@ -310,7 +310,7 @@ function MonitoringPage() {
 
       {/* Jump-to shortcut chips */}
       <div className="shrink-0 mb-3 flex flex-wrap items-center gap-1.5">
-        <span className="text-[11px] text-gray-500 mr-1">{t('jumpTo')}</span>
+        <span className="text-[11px] text-(--palette-gray-500) mr-1">{t('jumpTo')}</span>
         {visibleSections.map(section => {
           const count = countForSection(section.id);
           return (
@@ -318,12 +318,16 @@ function MonitoringPage() {
               key={section.id}
               type="button"
               onClick={() => scrollToSection(section.id)}
-              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-full hover:border-gray-300 hover:bg-gray-50 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-(--palette-ink) bg-(--palette-surface) border border-(--palette-line) rounded-full hover:border-(--palette-line-strong) hover:bg-(--palette-surface-2) transition-colors"
             >
-              <Icon style="solid" name={section.icon} className="size-3 text-gray-500" />
+              <Icon
+                style="solid"
+                name={section.icon}
+                className="size-3 text-(--palette-gray-500)"
+              />
               <span>{t(section.labelKey)}</span>
               {count !== undefined && (
-                <span className="px-1 text-[10px] font-semibold text-gray-500 tabular-nums">
+                <span className="px-1 text-[10px] font-semibold text-(--palette-gray-500) tabular-nums">
                   {count}
                 </span>
               )}

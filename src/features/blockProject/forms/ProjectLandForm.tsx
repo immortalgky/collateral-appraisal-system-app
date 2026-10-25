@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { type SubmitHandler, useForm } from 'react-hook-form';
+import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -8,13 +8,10 @@ import type { AxiosError } from 'axios';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { useGetProjectLand, useSaveProjectLand } from '../api/projectLand';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import { FormProvider } from '@shared/components/form';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { FormLayoutProvider, FormProvider } from '@shared/components/form';
+import { FormShell } from '@/features/appraisal/components/FormShell';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
-import Section from '@/shared/components/sections/Section';
 import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import Button from '@/shared/components/Button';
@@ -28,6 +25,9 @@ import {
   type createProjectLandFormType,
 } from '@/features/appraisal/schemas/form';
 import { mapProjectLandPropertyResponseToForm } from '@/features/appraisal/utils/mappers';
+import { toRaiNganWa } from '@/features/appraisal/utils/areaFormat';
+import { toSquareWa } from '@/shared/utils/landArea';
+import { formatNumber } from '@/shared/utils/formatUtils';
 import type { ApiError } from '@/shared/types/api';
 
 type AppError = AxiosError & { apiError?: ApiError };
@@ -35,10 +35,10 @@ type AppError = AxiosError & { apiError?: ApiError };
 /**
  * LandAndBuilding-only project land form.
  *
- * Mirrors the structure of `CreateLandPage` (NavAnchors + ResizableSidebar +
- * Section blocks + ActionBar) and reuses the appraisal feature's `TitleDeedForm`
- * and `LandDetailForm`, so the Block Village land flow has the same UX as the
- * Property Land flow. Persistence is wired to BV's PUT /project/land endpoint.
+ * Sits on the same shell body as `CreateLandPage` (`FormShellBody`: the form, and the section TOC in
+ * the rail when wide, no photos) and reuses the appraisal feature's `TitleDeedForm`, so the Block
+ * Village land flow has the same UX as the Property Land flow. Persistence is wired to BV's
+ * PUT /project/land endpoint.
  */
 export default function ProjectLandForm() {
   const { t } = useTranslation('blockProject');
@@ -66,11 +66,21 @@ export default function ProjectLandForm() {
     resolver: zodResolver(createProjectLandForm),
   });
   const {
+    control,
     handleSubmit,
     getValues,
     reset,
     formState: { dirtyFields },
   } = methods;
+
+  // The section head's summary follows the table as it is edited (rows are added before Save).
+  const titles = useWatch({ control, name: 'titles' }) as
+    | { rai?: unknown; ngan?: unknown; squareWa?: unknown }[]
+    | undefined;
+  const titlesWa = (titles ?? []).reduce(
+    (sum, row) => sum + toSquareWa(row.rai, row.ngan, row.squareWa),
+    0,
+  );
 
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
@@ -107,121 +117,79 @@ export default function ProjectLandForm() {
   const onSubmit: SubmitHandler<createLandFormType> = data => persist(data, false);
   const handleSaveDraft = () => persist(getValues(), true);
 
-  const { isOpen, onToggle } = useDisclosure();
-
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="project-land-scroll-container"
-          anchors={[
-            { label: t('landDetail.navAnchors.landTitle'), id: 'land-title', icon: 'file-lines' },
-            { label: t('landDetail.navAnchors.landDetail'), id: 'land-info', icon: 'mountain-sun' },
-          ]}
-        />
-      </div>
+      {/* Block pages are always the Standard layout, whatever the user's setting. */}
+      <FormLayoutProvider layout="standard">
+        <FormProvider methods={methods} schema={createProjectLandForm}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* The property shell without photos: the form, and the section TOC in the rail when
+              wide. Nothing is pinned above it, so sections scroll to the top edge. */}
+            <FormShell bodyClassName="pb-4">
+              <div className="flex flex-col gap-6 min-w-0">
+                {/* A project land does not store title order, so no order controls. */}
+                <TitleDeedForm
+                  orderable={false}
+                  hint={t('landDetail.titlesSummary', {
+                    n: formatNumber(titles?.length ?? 0),
+                    rnw: toRaiNganWa(titlesWa),
+                    wa: formatNumber(titlesWa, 2),
+                  })}
+                />
+                <BlockLandDetailForm />
+              </div>
+            </FormShell>
 
-      <FormProvider methods={methods} schema={createProjectLandForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="project-land-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
-            >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Land Information Header */}
-                  <Section id="properties-section" anchor>
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                        <Icon
-                          name="mountain-sun"
-                          style="solid"
-                          className="w-5 h-5 text-amber-600"
-                        />
-                      </div>
-                      <h2 className="text-lg font-semibold text-gray-900">
-                        {t('landDetail.landInformationHeader')}
-                      </h2>
-                    </div>
-                    <div className="h-px bg-gray-200" />
-                  </Section>
-
-                  {/* Title Deeds */}
-                  <Section
-                    id="land-title"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    {/* A project land does not store title order, so no order controls. */}
-                    <TitleDeedForm orderable={false} />
-                  </Section>
-
-                  {/* Land Detail */}
-                  <Section
-                    id="land-info"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <BlockLandDetailForm />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
-
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!isReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
               {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    {t('actions.saveDraft')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    {t('actions.save')}
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormProvider>
+      </FormLayoutProvider>
     </div>
   );
 }

@@ -21,11 +21,12 @@ type ActionTone = 'emerald' | 'red' | 'amber' | 'slate';
  */
 const TONES: Record<ActionTone, string> = {
   emerald:
-    'bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white focus-visible:ring-emerald-400',
-  red: 'bg-red-50 text-red-600 hover:bg-red-500 hover:text-white focus-visible:ring-red-400',
+    'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500 hover:text-white focus-visible:ring-emerald-400',
+  red: 'bg-(--palette-req-wash) text-(--palette-danger) hover:bg-red-500 hover:text-white focus-visible:ring-red-400',
   amber:
-    'bg-amber-50 text-amber-600 hover:bg-amber-500 hover:text-white focus-visible:ring-amber-400',
-  slate: 'bg-gray-100 text-gray-500 hover:bg-red-500 hover:text-white focus-visible:ring-gray-400',
+    'bg-(--palette-warn-wash) text-amber-600 dark:text-amber-400 hover:bg-amber-500 hover:text-white focus-visible:ring-amber-400',
+  slate:
+    'bg-(--palette-surface-3) text-(--palette-gray-500) hover:bg-red-500 hover:text-white focus-visible:ring-(--palette-line-strong)',
 };
 
 interface DecisionActionButtonProps extends Omit<

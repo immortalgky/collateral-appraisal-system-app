@@ -82,13 +82,16 @@ export const PropertyTypePicker = ({ onPick }: PropertyTypePickerProps) => {
             className={clsx(
               'flex items-center gap-2.5 text-left w-full',
               opts.chip
-                ? 'rounded-full border border-gray-200 bg-white px-2.5 py-1 w-auto'
+                ? 'rounded-full border border-(--palette-line) bg-(--palette-surface) px-2.5 py-1 w-auto'
                 : 'px-3 py-1.5',
               unavailable
                 ? 'opacity-45 cursor-not-allowed'
                 : clsx(
                     'cursor-pointer',
-                    focus && (opts.chip ? 'border-gray-400 bg-gray-100' : 'bg-gray-50'),
+                    focus &&
+                      (opts.chip
+                        ? 'border-(--palette-line-strong) bg-(--palette-surface-3)'
+                        : 'bg-(--palette-surface-2)'),
                   ),
             )}
           >
@@ -110,7 +113,7 @@ export const PropertyTypePicker = ({ onPick }: PropertyTypePickerProps) => {
               />
             </span>
 
-            <span className="flex-1 min-w-0 truncate text-xs text-gray-700">
+            <span className="flex-1 min-w-0 truncate text-xs text-(--palette-ink)">
               <ParameterDisplay group="PropertyType" code={labelCode} fallback={def.type} />
               {opts.short && ` ${t('properties.picker.leaseSuffix')}`}
             </span>
@@ -120,7 +123,7 @@ export const PropertyTypePicker = ({ onPick }: PropertyTypePickerProps) => {
                 {t('properties.picker.soon')}
               </span>
             )}
-            <span className="shrink-0 rounded bg-gray-100 px-1 text-[10px] font-bold tracking-wide text-gray-400">
+            <span className="shrink-0 rounded bg-(--palette-surface-3) px-1 text-[10px] font-bold tracking-wide text-(--palette-gray-400)">
               {def.code}
             </span>
           </button>
@@ -134,27 +137,27 @@ export const PropertyTypePicker = ({ onPick }: PropertyTypePickerProps) => {
 
   return (
     <div className="w-[30rem] max-w-[80vw]">
-      <div className="px-3 py-2 border-b border-gray-100">
-        <h4 className="text-xs font-bold text-gray-800">{t('properties.picker.title')}</h4>
+      <div className="px-3 py-2 border-b border-(--palette-line-soft)">
+        <h4 className="text-xs font-bold text-(--palette-ink)">{t('properties.picker.title')}</h4>
       </div>
 
       <div className="grid grid-cols-2">
         <div>
-          <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-50">
+          <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400) border-b border-(--palette-line-soft)">
             {t('properties.picker.own')}
           </div>
           <div className="py-1">{column('own')}</div>
         </div>
-        <div className="border-l border-gray-100">
-          <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-400 border-b border-gray-50">
+        <div className="border-l border-(--palette-line-soft)">
+          <div className="px-3 pt-1.5 pb-1 text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400) border-b border-(--palette-line-soft)">
             {t('properties.picker.lease')}
           </div>
           <div className="py-1">{column('lease')}</div>
         </div>
       </div>
 
-      <div className="border-t border-gray-100 bg-gray-50/60">
-        <div className="px-3 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+      <div className="border-t border-(--palette-line-soft) bg-(--palette-surface-2)/60">
+        <div className="px-3 pt-1.5 text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400)">
           {t('properties.picker.other')}
         </div>
         <div className="flex flex-wrap gap-1.5 px-3 py-2">

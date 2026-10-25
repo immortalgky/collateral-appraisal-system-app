@@ -54,6 +54,9 @@ function Harness({
   // subscribed to; unread, dirtyFields stays {} and every assertion on it would pass whatever the
   // form did.
   void methods.formState.dirtyFields;
+  // The submit flags too: nothing else on the form (it draws no error banner now) subscribes to them.
+  void methods.formState.isSubmitted;
+  void methods.formState.isSubmitSuccessful;
   // Same order as CondoPMAPage / LandBuildingPMAPage: the form is on screen and the page's effect
   // resets it from the mapped response. Create mode has no record, so nothing resets the form.
   useEffect(() => {

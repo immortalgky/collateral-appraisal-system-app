@@ -29,11 +29,21 @@ const SecretRevealModal = ({ isOpen, onClose, clientId, secret, variant }: Props
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={t('clients.secret.title')} size="md" showCloseButton={false}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('clients.secret.title')}
+      size="md"
+      showCloseButton={false}
+    >
       <div className="px-6 py-5 space-y-4">
-        <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
-          <Icon name="triangle-exclamation" style="solid" className="size-5 text-amber-500 mt-0.5" />
-          <p className="text-sm text-amber-800">
+        <div className="flex items-start gap-3 rounded-lg bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 px-4 py-3">
+          <Icon
+            name="triangle-exclamation"
+            style="solid"
+            className="size-5 text-amber-500 mt-0.5"
+          />
+          <p className="text-sm text-amber-800 dark:text-amber-300">
             {variant === 'created'
               ? t('clients.secret.createdIntro')
               : t('clients.secret.rotatedIntro')}
@@ -41,26 +51,26 @@ const SecretRevealModal = ({ isOpen, onClose, clientId, secret, variant }: Props
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-1">
             {t('clients.secret.clientId')}
           </label>
-          <div className="font-mono text-sm text-gray-800 bg-gray-50 rounded-lg px-3 py-2 break-all">
+          <div className="font-mono text-sm text-(--palette-ink) bg-(--palette-surface-2) rounded-lg px-3 py-2 break-all">
             {clientId}
           </div>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-1">
             {t('clients.secret.secret')}
           </label>
           <div className="flex items-stretch gap-2">
-            <div className="flex-1 font-mono text-sm text-gray-800 bg-gray-50 rounded-lg px-3 py-2 break-all">
+            <div className="flex-1 font-mono text-sm text-(--palette-ink) bg-(--palette-surface-2) rounded-lg px-3 py-2 break-all">
               {secret}
             </div>
             <button
               type="button"
               onClick={copy}
-              className="shrink-0 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="shrink-0 px-3 rounded-lg border border-(--palette-line) text-sm text-(--palette-gray-600) hover:bg-(--palette-surface-2) transition-colors"
             >
               <Icon name={copied ? 'check' : 'copy'} style="regular" className="size-4 mr-1" />
               {copied ? t('clients.secret.copied') : t('clients.secret.copy')}
@@ -69,7 +79,7 @@ const SecretRevealModal = ({ isOpen, onClose, clientId, secret, variant }: Props
         </div>
       </div>
 
-      <div className="flex justify-end px-6 py-4 border-t border-gray-200">
+      <div className="flex justify-end px-6 py-4 border-t border-(--palette-line)">
         <Button onClick={onClose}>{t('clients.secret.done')}</Button>
       </div>
     </Modal>

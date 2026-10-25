@@ -156,14 +156,14 @@ export default function ParameterDetailModal({
 
         {/* Status toggle */}
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium text-gray-700">Status</label>
+          <label className="text-sm font-medium text-(--palette-ink)">Status</label>
           <button
             type="button"
             onClick={() => setValue('isActive', !watch('isActive'))}
             className={`w-fit inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors ${
               watch('isActive')
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
-                : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
+                : 'bg-(--palette-surface-3) text-(--palette-gray-500) border-(--palette-line) hover:bg-(--palette-line)'
             }`}
           >
             <span
@@ -174,7 +174,7 @@ export default function ParameterDetailModal({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={handleClose} disabled={isSaving}>
             Cancel
           </Button>

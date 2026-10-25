@@ -1,6 +1,5 @@
-import { FormFields, type FormField } from '@/shared/components/form';
-import Icon from '@/shared/components/Icon';
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { FormFields, FormSection, FormSheet, type FormField } from '@/shared/components/form';
+import { useEffect, useMemo, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import CondoAreaDetailForm, { UsableAreaCheck } from './CondoAreaDetailForm';
@@ -33,38 +32,11 @@ import {
   remarkFormFields,
 } from '../configs/fields';
 import { PropertyNameTriggerIcon } from '../components/PropertyNameTriggerIcon';
-import FieldGroupLabel from './FieldGroupLabel';
 import { FieldLabels } from '../components/FieldLabels';
-
-// SectionRow component for consistent section styling with icons
-interface SectionRowProps {
-  title: string;
-  icon?: string;
-  children: ReactNode;
-  isLast?: boolean;
-}
-
-const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
-  <>
-    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
-      <div className="flex items-center gap-2">
-        {icon && (
-          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-          </div>
-        )}
-        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
-      </div>
-    </div>
-    <div className="col-span-full xl:col-span-4">
-      <div className="grid grid-cols-12 gap-4">{children}</div>
-    </div>
-    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5" />}
-  </>
-);
 
 function CondoDetailForm() {
   const { t } = useTranslation('appraisal');
+  const { t: tc } = useTranslation('common');
   const { setValue, watch } = useFormContext();
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -100,6 +72,32 @@ function CondoDetailForm() {
         // The area table's total against this figure, with a way to take the table's.
         if (field.name === 'usableArea' && field.type === 'number-input')
           return { ...field, helperText: <UsableAreaCheck name="areaDetails" /> };
+        // Stored as the code '1' (correct) / '2' (incorrect): a toggle like the land location check,
+        // incorrect on the left. The captions are the common toggle texts, in the user's language.
+        if (field.name === 'locationType')
+          return {
+            type: 'string-toggle' as const,
+            label: field.label ?? '',
+            name: field.name,
+            wrapperClassName: field.wrapperClassName,
+            options: [
+              { name: '2', label: tc('toggle.In Correct') },
+              { name: '1', label: tc('toggle.Correct') },
+            ] as [{ name: string; label: string }, { name: string; label: string }],
+          };
+        // Stored as the code '01' (consistent) / '02' (inconsistent): a toggle, inconsistent on the left.
+        if (field.name === 'documentValidationResultType')
+          return {
+            type: 'string-toggle' as const,
+            label: field.label ?? '',
+            name: field.name,
+            required: field.required,
+            wrapperClassName: field.wrapperClassName,
+            options: [
+              { name: '02', label: tc('toggle.Inconsistent') },
+              { name: '01', label: tc('toggle.Consistent') },
+            ] as [{ name: string; label: string }, { name: string; label: string }],
+          };
         if (
           (field.name === 'latitude' || field.name === 'longitude') &&
           field.type === 'number-input'
@@ -107,11 +105,17 @@ function CondoDetailForm() {
           return { ...field, rightIcon: pickerButton };
         return field;
       }),
-    [fillIcon, pickerButton],
+    [fillIcon, pickerButton, tc],
   );
+  const road = useMemo(() => withIcons(roadFields), [withIcons]);
+  const locationCheck = useMemo(() => withIcons(locationCheckFields), [withIcons]);
+  const legal = useMemo(() => withIcons(legalFields), [withIcons]);
   const identity = useMemo(() => withIcons(identityFields), [withIcons]);
-  const coordinates = useMemo(() => withIcons(coordinateFields), [withIcons]);
-  const usableAreaFields = useMemo(() => withIcons(pick('usableArea')), [withIcons]);
+  // One FormFields call, so the land office and the coordinates are read as one row (6 + 3 + 3).
+  const officeAndCoordinates = useMemo(
+    () => [...landOfficeFields, ...withIcons(coordinateFields)],
+    [withIcons],
+  );
 
   // Building Insurance: buildingInsurancePrice is SERVER-DERIVED (rate × usableArea) —
   // unlike Government Price above, there is no client-side computation here. The field
@@ -131,6 +135,7 @@ function CondoDetailForm() {
           if (field.type === 'dropdown' && field.name === 'fireInsuranceCode')
             return {
               ...field,
+              wrapperClassName: 'col-span-4',
               label: t('forms.condo.fireInsuranceCode'),
               options: fireInsuranceOptions,
             };
@@ -139,76 +144,72 @@ function CondoDetailForm() {
     [fireInsuranceOptions, t],
   );
 
-  // FormFields must remain a DIRECT child of each SectionRow grid so every field's
-  // wrapperClassName (col-span-3, col-span-6, etc.) resolves against the section's 12-col grid.
+  // FormFields must remain a DIRECT child of each FormSection so every field's wrapperClassName
+  // (col-span-3, col-span-6, etc.) resolves against the section's 12-col grid.
   return (
     <FieldLabels scope="condo">
-      <div className="cas-condo-form cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <SectionRow title={t('forms.condo.groups.identification')} icon="building">
+      <FormSheet>
+        <FormSection title={t('forms.condo.groups.identification')} icon="building">
           <FormFields fields={identity} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.condo.groups.ownership')} icon="scale-balanced">
-          <FormFields fields={legalFields} />
-        </SectionRow>
+        <FormSection title={t('forms.condo.groups.ownership')} icon="scale-balanced">
+          <FormFields fields={legal} />
+        </FormSection>
 
-        <SectionRow title={t('forms.condo.groups.location')} icon="map-location-dot">
-          <FieldGroupLabel label={t('fieldLabels.condo.titleAddressGroup')} />
-          <FormFields fields={condoAddressFields} />
-          <FieldGroupLabel label={t('fieldLabels.condo.dopaAddressGroup')} />
-          <FormFields fields={condoDopaAddressFields} />
-          <FormFields fields={landOfficeFields} />
+        <FormSection title={t('forms.condo.groups.location')} icon="map-location-dot">
+          <FormFields fields={locationCheck} />
+          <FormFields fields={addressFields} />
+          <FormFields fields={dopaAddressFields} />
           {/* The Latitude field's rightIcon opens the MapLocationPicker. */}
-          <FormFields fields={coordinates} />
-          <FormFields fields={roadFields} />
-        </SectionRow>
+          <FormFields fields={officeAndCoordinates} />
+          <FormFields fields={road} />
+        </FormSection>
 
-        <MapLocationPicker
-          isOpen={pickerOpen}
-          onClose={() => setPickerOpen(false)}
-          onConfirm={(newLat, newLon) => {
-            setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
-            setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
-          }}
-          initialLat={initialLat}
-          initialLon={initialLon}
-        />
-
-        <SectionRow title={t('forms.condo.groups.surroundings')} icon="tree-city">
+        <FormSection title={t('forms.condo.groups.surroundings')} icon="tree-city">
           <FormFields fields={surroundingFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.condo.groups.building')} icon="building-columns">
+        <FormSection title={t('forms.condo.groups.building')} icon="building-columns">
           <FormFields fields={buildingFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.condo.groups.unit')} icon="door-open">
-          {/* The area table sits right under the usable area it is checked against. */}
-          <FormFields fields={usableAreaFields} />
+        <FormSection title={t('forms.condo.groups.unit')} icon="door-open">
+          {/* The table is checked against the usable area in the identification section. */}
           <div className="col-span-12">
             <CondoAreaDetailForm name={'areaDetails'} />
           </div>
           <FormFields fields={unitFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.condo.groups.referencePrices')} icon="money-bill">
-          <FormFields fields={condoGovernmentPriceFields} />
-          <FormFields fields={buildingInsuranceFields} />
-          <CondoInsuranceSummary />
-        </SectionRow>
-
-        <SectionRow
+        <FormSection
           title={t('landCharacteristicsForm.sections.limitation')}
           icon="triangle-exclamation"
         >
-          <FormFields fields={expropriationFields} />
-          <FormFields fields={inForestBoundaryFormFields} />
-        </SectionRow>
+          <FormFields fields={limitationFields} />
+        </FormSection>
 
-        <SectionRow title={t('forms.condo.groups.remark')} icon="comment" isLast>
+        <FormSection title={t('forms.condo.groups.referencePrices')} icon="money-bill">
+          <FormFields fields={governmentPriceFields} />
+          <FormFields fields={buildingInsuranceFields} />
+          <CondoInsuranceSummary />
+        </FormSection>
+
+        <FormSection title={t('forms.condo.groups.remark')} icon="comment">
           <FormFields fields={remarkFormFields} />
-        </SectionRow>
-      </div>
+        </FormSection>
+      </FormSheet>
+
+      <MapLocationPicker
+        isOpen={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onConfirm={(newLat, newLon) => {
+          setValue('latitude', newLat, { shouldDirty: true, shouldValidate: true });
+          setValue('longitude', newLon, { shouldDirty: true, shouldValidate: true });
+        }}
+        initialLat={initialLat}
+        initialLon={initialLon}
+      />
     </FieldLabels>
   );
 }
@@ -218,6 +219,16 @@ function CondoDetailForm() {
  * building, then the unit being appraised. The configs in configs/fields.ts stay as they are and
  * are picked by name here; a span given here replaces the config's own col-span for this screen.
  */
+const urbanPlanChips: FormField = {
+  type: 'radio-group',
+  label: 'Type of urban plan',
+  name: 'urbanPlanningType',
+  orientation: 'horizontal',
+  group: 'TypeOfUrbanPlanning',
+  variant: 'button',
+  wrapperClassName: 'col-span-12',
+};
+
 const byName = new Map(
   [
     ...condoFields,
@@ -236,53 +247,85 @@ const byName = new Map(
     ...roofFormFields,
     ...condoFacilityFields,
     ...environmentFields,
+    ...condoAddressFields,
+    ...condoDopaAddressFields,
+    ...condoGovernmentPriceFields,
+    ...expropriationFields,
+    ...inForestBoundaryFormFields,
+    // Chips on this screen only: the config stays a dropdown elsewhere.
+    urbanPlanChips,
   ].map(field => [field.name, field]),
 );
 
-const pick = (...entries: (string | [name: string, span: string])[]): FormField[] =>
+const pick = (
+  ...entries: (string | [name: string, span: string, narrowSpan?: 3 | 4 | 6 | 12])[]
+): FormField[] =>
   entries.map(entry => {
-    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const [name, span, narrowSpan] = typeof entry === 'string' ? [entry] : entry;
     const field = byName.get(name);
     // Fail loudly: a renamed config field would otherwise just vanish from the form.
     if (!field) throw new Error(`CondoDetailForm: no field config named "${name}"`);
     if (!span) return field;
     const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
-    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim(), narrowSpan };
   });
 
 const identityFields = pick(
-  'propertyName',
-  'condoName',
+  ['propertyName', 'col-span-6'],
+  ['condoName', 'col-span-6'],
   ['roomNumber', 'col-span-6'],
   ['floorNumber', 'col-span-6'],
-  // Full rows: "ทะเบียนอาคารชุดเลขที่" is too long for the label column of a half row
-  ['buildingNumber', 'col-span-12'],
-  ['condoRegistrationNumber', 'col-span-12'],
-  ['modelName', 'col-span-12'],
+  ['buildingNumber', 'col-span-6'],
+  ['condoRegistrationNumber', 'col-span-6'],
+  ['modelName', 'col-span-6'],
+  // Carries the check against the area table below (withIcons), wherever it sits.
+  ['usableArea', 'col-span-6'],
   'titleNumber',
 );
 
 const legalFields = pick(
   // The owner's name sits on its own line under the check, as on the land form.
-  'isOwnerVerified',
-  'ownerName',
+  ['isOwnerVerified', 'col-span-4'],
+  ['ownerName', 'col-span-8'],
   'hasObligation',
-  'obligationDetails',
-  ['documentValidationResultType', 'col-span-12'],
+  ['obligationDetails', 'col-span-12'],
+  // On a row of its own under the obligation; the long captions keep their width when narrow.
+  ['documentValidationResultType', 'col-span-4', 4],
 );
 
-const landOfficeFields = pick('landOffice');
+const addressFields = pick(
+  ['subDistrict', 'col-span-4'],
+  ['districtName', 'col-span-4'],
+  ['provinceName', 'col-span-4'],
+);
 
-const coordinateFields = pick('latitude', 'longitude');
+const dopaAddressFields = pick(
+  ['dopaSubDistrict', 'col-span-4'],
+  ['dopaDistrictName', 'col-span-4'],
+  ['dopaProvinceName', 'col-span-4'],
+);
+
+const governmentPriceFields = pick(
+  ['isMissingFromSurvey', 'col-span-4'],
+  ['governmentPricePerSqm', 'col-span-4'],
+  ['governmentPrice', 'col-span-4'],
+);
+
+// The land office and the coordinates make one row (6 + 3 + 3), right under the DOPA address.
+const landOfficeFields = pick(['landOffice', 'col-span-6']);
+
+const coordinateFields = pick(['latitude', 'col-span-3'], ['longitude', 'col-span-3']);
+
+// First field of the location section, as on the land form.
+const locationCheckFields = pick(['locationType', 'col-span-3', 3]);
 
 const roadFields = pick(
-  'locationType',
-  'street',
-  'soi',
-  ['distanceFromMainRoad', 'col-span-6'],
-  ['accessRoadWidth', 'col-span-3'],
-  ['rightOfWay', 'col-span-3'],
-  'roadSurfaceType',
+  ['street', 'col-span-4'],
+  ['soi', 'col-span-4'],
+  ['distanceFromMainRoad', 'col-span-4'],
+  ['accessRoadWidth', 'col-span-6'],
+  ['rightOfWay', 'col-span-6'],
+  ['roadSurfaceType', 'col-span-6'],
   'roadSurfaceTypeOther',
 );
 
@@ -292,7 +335,7 @@ const surroundingFields = pick(
   'landEntranceExitType',
   'landEntranceExitTypeOther',
   'urbanPlanningType',
-  'landFillType',
+  ['landFillType', 'col-span-8'],
   'landFillTypeOther',
   'landUseType',
   'landUseTypeOther',
@@ -301,18 +344,29 @@ const surroundingFields = pick(
 );
 
 const buildingFields = pick(
-  // One full row each.
-  ['buildingAge', 'col-span-12'],
-  ['numberOfFloors', 'col-span-12'],
-  ['isUnderConstruction', 'col-span-12'],
+  ['buildingAge', 'col-span-3'],
+  ['numberOfFloors', 'col-span-3'],
+  ['isUnderConstruction', 'col-span-6'],
   'buildingConditionType',
   'buildingConditionTypeOther',
-  'buildingFormType',
-  'constructionMaterialType',
+  ['buildingFormType', 'col-span-6'],
+  ['constructionMaterialType', 'col-span-6'],
   'roofType',
   'roofTypeOther',
   'facilityType',
   'facilityTypeOther',
+);
+
+// As on the land form: the two expropriation toggles and the royal decree make one row at every
+// width (3 + 3 + 6), the remarks open as full rows under it, then the forest toggle and its remark.
+const limitationFields = pick(
+  ['isExpropriated', 'col-span-3', 3],
+  ['isInExpropriationLine', 'col-span-3', 3],
+  ['royalDecree', 'col-span-6'],
+  'expropriationRemark',
+  'expropriationLineRemark',
+  ['isForestBoundary', 'col-span-3', 3],
+  'forestBoundaryRemark',
 );
 
 const unitFields = pick(

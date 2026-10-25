@@ -85,7 +85,7 @@ export function ColumnResizeHandle({
 
   return (
     <span
-      className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none z-10 border-r border-gray-100 hover:border-r-2 hover:border-primary hover:bg-primary/10"
+      className="absolute right-0 top-0 h-full w-1.5 cursor-col-resize select-none touch-none z-10 border-r border-(--palette-line-soft) hover:border-r-2 hover:border-primary hover:bg-primary/10"
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={endDrag}

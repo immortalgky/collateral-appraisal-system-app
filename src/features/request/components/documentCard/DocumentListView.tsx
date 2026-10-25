@@ -314,7 +314,7 @@ const DocumentListView = ({
           showSidePane && 'grid-cols-[minmax(0,1fr)_300px]',
         )}
       >
-        <section className="min-w-0 rounded-t-2xl rounded-b-none border border-gray-100 bg-white shadow-sm">
+        <section className="min-w-0 rounded-t-2xl rounded-b-none border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm">
           <DocumentCardHeader kpis={totals} title={title} icon={icon}>
             {headerExtra}
           </DocumentCardHeader>
@@ -395,7 +395,7 @@ const DocumentListView = ({
               );
             })}
             {renderedSections === 0 && (
-              <div className="px-4 py-6 text-center text-sm text-gray-500">
+              <div className="px-4 py-6 text-center text-sm text-(--palette-gray-500)">
                 {isFiltering ? t('docCard.noMatch') : emptyLabel}
               </div>
             )}

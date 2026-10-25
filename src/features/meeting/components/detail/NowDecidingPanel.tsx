@@ -34,9 +34,11 @@ const NowDecidingPanel = ({ meetingId, item, remaining, canDecide }: NowDeciding
 
   if (!item) {
     return (
-      <section className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4">
+      <section className="flex items-center gap-3 rounded-2xl border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-5 py-4">
         <Icon name="circle-check" style="solid" className="size-5 shrink-0 text-emerald-500" />
-        <p className="text-sm font-medium text-emerald-700">{t('session.allReleased')}</p>
+        <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
+          {t('session.allReleased')}
+        </p>
       </section>
     );
   }
@@ -48,7 +50,7 @@ const NowDecidingPanel = ({ meetingId, item, remaining, canDecide }: NowDeciding
       : t('decisionGroups.other');
 
   return (
-    <section className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-amber-200 dark:border-amber-500/30 bg-gradient-to-br from-(--palette-warn-wash) to-(--palette-surface) p-5 shadow-sm">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
@@ -56,10 +58,10 @@ const NowDecidingPanel = ({ meetingId, item, remaining, canDecide }: NowDeciding
               <span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-75" />
               <span className="relative inline-flex size-2 rounded-full bg-amber-500" />
             </span>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-amber-700">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-(--palette-warn)">
               {t('session.nowDeciding')}
             </h3>
-            <span className="text-xs text-amber-600/80">
+            <span className="text-xs text-amber-600/80 dark:text-amber-400">
               {t(remaining === 1 ? 'session.remaining' : 'session.remainingPlural', {
                 n: remaining,
               })}
@@ -69,27 +71,27 @@ const NowDecidingPanel = ({ meetingId, item, remaining, canDecide }: NowDeciding
           <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <Link
               to={`/appraisals/${item.appraisalId}/summary`}
-              className="text-lg font-semibold text-blue-700 hover:underline"
+              className="text-lg font-semibold text-blue-700 dark:text-blue-300 hover:underline"
             >
               {label}
             </Link>
-            <span className="rounded-full bg-white/70 px-2 py-0.5 text-[11px] font-medium text-gray-600 ring-1 ring-inset ring-gray-200">
+            <span className="rounded-full bg-(--palette-surface)/70 px-2 py-0.5 text-[11px] font-medium text-(--palette-gray-600) ring-1 ring-inset ring-(--palette-line)">
               {typeLabel}
             </span>
           </div>
 
           <dl className="mt-2.5 flex flex-wrap gap-x-6 gap-y-1 text-sm">
             <div className="flex items-baseline gap-1.5">
-              <dt className="text-xs text-gray-500">{t('columns.customerName')}</dt>
-              <dd className="font-medium text-gray-800">{item.customerName}</dd>
+              <dt className="text-xs text-(--palette-gray-500)">{t('columns.customerName')}</dt>
+              <dd className="font-medium text-(--palette-ink)">{item.customerName}</dd>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <dt className="text-xs text-gray-500">{t('columns.appraisalStaff')}</dt>
-              <dd className="font-medium text-gray-800">{item.appraisalStaff}</dd>
+              <dt className="text-xs text-(--palette-gray-500)">{t('columns.appraisalStaff')}</dt>
+              <dd className="font-medium text-(--palette-ink)">{item.appraisalStaff}</dd>
             </div>
             <div className="flex items-baseline gap-1.5">
-              <dt className="text-xs text-gray-500">{t('columns.appraisalValue')}</dt>
-              <dd className="font-semibold tabular-nums text-gray-900">
+              <dt className="text-xs text-(--palette-gray-500)">{t('columns.appraisalValue')}</dt>
+              <dd className="font-semibold tabular-nums text-(--palette-ink)">
                 {formatMoney(item.appraisedValue)}
               </dd>
             </div>

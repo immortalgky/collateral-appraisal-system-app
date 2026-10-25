@@ -18,8 +18,12 @@ const InfoRow = ({ icon, label, value, muted }: InfoRowProps) => {
   return (
     <div className="flex items-start justify-between gap-3">
       {/* The label is capped at half the row and wraps past that, so it cannot squeeze the value. */}
-      <div className="flex max-w-1/2 shrink-0 items-start gap-2 text-xs text-gray-500">
-        <Icon style="regular" name={icon} className="mt-0.5 size-3.5 shrink-0 text-gray-400" />
+      <div className="flex max-w-1/2 shrink-0 items-start gap-2 text-xs text-(--palette-gray-500)">
+        <Icon
+          style="regular"
+          name={icon}
+          className="mt-0.5 size-3.5 shrink-0 text-(--palette-gray-400)"
+        />
         <span className="min-w-0 break-words">{label}</span>
       </div>
       <span
@@ -27,7 +31,7 @@ const InfoRow = ({ icon, label, value, muted }: InfoRowProps) => {
         className={clsx(
           'min-w-0 flex-1 text-xs font-medium text-right',
           isCode ? 'truncate' : 'line-clamp-5 break-words',
-          muted ? 'text-gray-400' : 'text-gray-700',
+          muted ? 'text-(--palette-gray-400)' : 'text-(--palette-ink)',
         )}
       >
         {value}

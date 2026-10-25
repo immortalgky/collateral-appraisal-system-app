@@ -23,18 +23,16 @@ type SaveProjectRequest = Omit<Project, 'id' | 'appraisalId'>;
  *
  * Returns 204 (null) if no project exists yet.
  *
- * When `expectedType` is provided, the hook returns `null` if the fetched
- * project's projectType does not match — this prevents a Condo page from
- * accidentally rendering LandAndBuilding data after a project-type switch.
+ * The stored `projectType` is the source of truth, not the route: `block-village` serves both LB
+ * and L, so a route-vs-stored mismatch must not blank the project. BlockProjectPage reads the type
+ * off the result and hands it to every tab.
  */
-export const useGetProject = (appraisalId: string, expectedType?: ProjectType) => {
+export const useGetProject = (appraisalId: string) => {
   return useQuery({
     queryKey: projectKeys.detail(appraisalId),
     queryFn: async (): Promise<Project | null> => {
       const { data } = await axios.get<Project | null>(`/appraisals/${appraisalId}/project`);
-      if (!data) return null;
-      if (expectedType && data.projectType !== expectedType) return null;
-      return data;
+      return data ?? null;
     },
     enabled: !!appraisalId,
   });

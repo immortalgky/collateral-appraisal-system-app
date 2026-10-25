@@ -38,8 +38,12 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
 
   if (!winner) {
     return (
-      <div className="p-4 text-center text-sm text-gray-500">
-        <Icon name="crown" style="regular" className="size-8 text-gray-300 mx-auto mb-2" />
+      <div className="p-4 text-center text-sm text-(--palette-gray-500)">
+        <Icon
+          name="crown"
+          style="regular"
+          className="size-8 text-(--palette-gray-300) mx-auto mb-2"
+        />
         <p>{t('selectWinner.rmPickInstruction')}</p>
       </div>
     );
@@ -63,17 +67,17 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
     <>
       {/* ── v4: RM negotiation recommendation callout ── */}
       {rmRequestsNegotiation && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
-          <div className="size-7 rounded-lg bg-amber-200 flex items-center justify-center shrink-0 mt-0.5">
-            <Icon name="comment-dots" style="solid" className="size-3.5 text-amber-700" />
+        <div className="rounded-xl border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-4 py-3 flex items-start gap-3">
+          <div className="size-7 rounded-lg bg-amber-200 dark:bg-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+            <Icon name="comment-dots" style="solid" className="size-3.5 text-(--palette-warn)" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-amber-900">
+            <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
               {t('negotiation.rmRequestsNegotiation')}{' '}
               <strong>{localizeCompanyName(winner.companyName, winner.companyNameLocal)}</strong>
             </p>
             {rmNegotiationNote && (
-              <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 italic">
+              <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xs text-amber-800 dark:text-amber-300 italic">
                 {rmNegotiationNote}
               </blockquote>
             )}
@@ -81,16 +85,22 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
         </div>
       )}
 
-      <div className="rounded-xl border border-indigo-200 overflow-hidden">
+      <div className="rounded-xl border border-indigo-200 dark:border-indigo-500/30 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 bg-indigo-50 border-b border-indigo-200">
+        <div className="flex items-center justify-between px-4 py-3 bg-indigo-50 dark:bg-indigo-500/10 border-b border-indigo-200 dark:border-indigo-500/30">
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-indigo-200 flex items-center justify-center">
-              <Icon name="handshake" style="solid" className="size-4 text-indigo-700" />
+            <div className="size-8 rounded-lg bg-indigo-200 dark:bg-indigo-500/30 flex items-center justify-center">
+              <Icon
+                name="handshake"
+                style="solid"
+                className="size-4 text-indigo-700 dark:text-indigo-300"
+              />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">{t('negotiation.title')}</span>
-              <span className="ml-2 text-xs text-indigo-700">
+              <span className="text-sm font-semibold text-(--palette-ink)">
+                {t('negotiation.title')}
+              </span>
+              <span className="ml-2 text-xs text-indigo-700 dark:text-indigo-300">
                 {quotation.status === 'WinnerTentative'
                   ? t('negotiation.winnerSelectedNoRound')
                   : t('negotiation.roundInProgress')}
@@ -104,7 +114,7 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
                 size="sm"
                 disabled={quotation.status !== 'WinnerTentative'}
                 onClick={openReject}
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-(--palette-danger) border-red-300 dark:border-red-500/40 hover:bg-(--palette-req-wash)"
                 title={
                   quotation.status === 'Negotiating' ? t('negotiation.awaitingResponse') : undefined
                 }
@@ -129,25 +139,29 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
         </div>
 
         {/* Winner card */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-4">
-            <div className="size-12 rounded-xl bg-indigo-100 flex items-center justify-center shrink-0">
-              <Icon name="crown" style="solid" className="size-6 text-indigo-600" />
+            <div className="size-12 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
+              <Icon
+                name="crown"
+                style="solid"
+                className="size-6 text-indigo-600 dark:text-indigo-400"
+              />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-semibold text-gray-900">
+                <span className="text-base font-semibold text-(--palette-ink)">
                   {localizeCompanyName(winner.companyName, winner.companyNameLocal)}
                 </span>
                 <QuotationStatusBadge status={winner.status} />
               </div>
-              <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+              <div className="flex items-center gap-4 mt-1 text-sm text-(--palette-gray-600)">
                 {winner.currentNegotiatedPrice != null && (
                   <span>
-                    <span className="text-gray-400">
+                    <span className="text-(--palette-gray-400)">
                       {t('negotiation.counter', { price: '' }).replace(': ', ': ')}
                     </span>
-                    <span className="font-medium text-indigo-700">
+                    <span className="font-medium text-indigo-700 dark:text-indigo-300">
                       {formatCurrency(winner.currentNegotiatedPrice)}
                     </span>
                   </span>
@@ -162,12 +176,12 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
                   key={i}
                   className={clsx(
                     'size-3 rounded-full',
-                    i < roundsUsed ? 'bg-indigo-500' : 'bg-gray-200',
+                    i < roundsUsed ? 'bg-indigo-500' : 'bg-(--palette-surface-3)',
                   )}
                   title={`Round ${i + 1}`}
                 />
               ))}
-              <span className="ml-1.5 text-xs text-gray-500">
+              <span className="ml-1.5 text-xs text-(--palette-gray-500)">
                 {t('negotiation.roundsCount', { used: roundsUsed, max: MAX_ROUNDS })}
               </span>
             </div>
@@ -192,12 +206,12 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
               {t('buttons.openRound', { n: roundsUsed + 1 })}
             </Button>
             {roundsExhausted && (
-              <span className="ml-3 text-xs text-amber-600">
+              <span className="ml-3 text-xs text-amber-600 dark:text-amber-400">
                 {t('negotiation.maxRoundsNote', { max: MAX_ROUNDS })}
               </span>
             )}
             {awaitingResponse && !roundsExhausted && (
-              <span className="ml-3 text-xs text-amber-600">
+              <span className="ml-3 text-xs text-amber-600 dark:text-amber-400">
                 {t('negotiation.awaitingResponse')}
               </span>
             )}
@@ -207,38 +221,42 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
         {/* Negotiation timeline */}
         {(winner.negotiations ?? []).length > 0 && (
           <div className="px-4 py-3">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+            <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider mb-3">
               {t('negotiation.history')}
             </p>
             <div className="space-y-3">
               {(winner.negotiations ?? []).map((neg, idx, arr) => (
                 <div key={neg.id} className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className="size-6 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                      <span className="text-xs font-bold text-indigo-600">{neg.roundNumber}</span>
+                    <div className="size-6 rounded-full bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                        {neg.roundNumber}
+                      </span>
                     </div>
-                    <div className="flex-1 w-px bg-gray-200 my-1" />
+                    <div className="flex-1 w-px bg-(--palette-line) my-1" />
                   </div>
                   <div className="flex-1 pb-3">
-                    <div className="rounded-lg border border-gray-200 p-3 text-sm">
+                    <div className="rounded-lg border border-(--palette-line) p-3 text-sm">
                       <div className="flex items-center justify-between mb-1">
-                        <span className="font-medium text-gray-700">
+                        <span className="font-medium text-(--palette-ink)">
                           {neg.initiatedByUserName ?? neg.initiatedBy ?? 'Admin'}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-(--palette-gray-400)">
                           {neg.initiatedAt ? new Date(neg.initiatedAt).toLocaleString('th-TH') : ''}
                         </span>
                       </div>
-                      {neg.message && <p className="text-gray-600 text-xs mt-1">{neg.message}</p>}
+                      {neg.message && (
+                        <p className="text-(--palette-gray-600) text-xs mt-1">{neg.message}</p>
+                      )}
                       {neg.verb && (
                         <div
                           className={clsx(
-                            'mt-2 pt-2 border-t border-gray-100 text-xs',
+                            'mt-2 pt-2 border-t border-(--palette-line-soft) text-xs',
                             neg.verb === 'Accept'
-                              ? 'text-green-700'
+                              ? 'text-green-700 dark:text-green-300'
                               : neg.verb === 'Reject'
-                                ? 'text-red-700'
-                                : 'text-amber-700',
+                                ? 'text-(--palette-req)'
+                                : 'text-(--palette-warn)',
                           )}
                         >
                           <span className="font-medium">
@@ -258,12 +276,14 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
                             </span>
                           )}
                           {neg.responseMessage && (
-                            <p className="mt-0.5 text-gray-500">{neg.responseMessage}</p>
+                            <p className="mt-0.5 text-(--palette-gray-500)">
+                              {neg.responseMessage}
+                            </p>
                           )}
                         </div>
                       )}
                       {!neg.verb && idx === arr.length - 1 && (
-                        <div className="mt-2 pt-2 border-t border-gray-100 text-xs text-amber-600">
+                        <div className="mt-2 pt-2 border-t border-(--palette-line-soft) text-xs text-amber-600 dark:text-amber-400">
                           {t('negotiation.awaitingResponse')}
                         </div>
                       )}

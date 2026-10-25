@@ -266,7 +266,7 @@ describe('the bulk import button', () => {
     const button = screen.getByRole('button', { name: /titleImport\.button/ });
     expect(button.className).not.toMatch(/\btext-green/);
     expect(button.className).toContain('bg-transparent!');
-    expect(button.className).toContain('hover:bg-gray-100');
+    expect(button.className).toContain('hover:bg-(--palette-surface-3)');
     expect(button.className).not.toMatch(/\b(bg|border)-green/);
     expect(button.querySelector('svg')).toBeNull();
   });

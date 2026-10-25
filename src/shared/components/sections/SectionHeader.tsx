@@ -1,6 +1,7 @@
 import type { HTMLAttributes } from 'react';
 import clsx from 'clsx';
 import Icon from '../Icon';
+import { useFormReadOnly } from '../form/context';
 
 type IconColor =
   | 'primary'
@@ -24,6 +25,11 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   required?: boolean;
   /** Heading size class of the card variant; a page that wants another size passes it. */
   headingClassName?: string;
+  /**
+   * Card variant only. `md` (default) is `px-5 py-4`; `sm` is the compact card header for
+   * data-dense panes, `px-4 py-2.5` (DESIGN.md section 8).
+   */
+  size?: 'md' | 'sm';
   /** Default variant: beside the title on its line, e.g. a count. */
   titleAddon?: React.ReactNode;
   /** Default variant: after the title block, still on the left, e.g. a view switch. */
@@ -31,16 +37,17 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
 }
 
 const iconColorStyles: Record<IconColor, { bg: string; text: string }> = {
-  primary: { bg: 'bg-primary/10', text: 'text-primary' },
-  blue: { bg: 'bg-blue-50', text: 'text-blue-500' },
-  purple: { bg: 'bg-purple-50', text: 'text-purple-500' },
-  amber: { bg: 'bg-amber-50', text: 'text-amber-500' },
-  cyan: { bg: 'bg-cyan-50', text: 'text-cyan-500' },
-  emerald: { bg: 'bg-emerald-50', text: 'text-emerald-500' },
-  teal: { bg: 'bg-teal-50', text: 'text-teal-500' },
-  rose: { bg: 'bg-rose-50', text: 'text-rose-500' },
-  orange: { bg: 'bg-orange-50', text: 'text-orange-500' },
-  gray: { bg: 'bg-gray-100', text: 'text-gray-500' },
+  primary: { bg: 'bg-primary/10', text: 'text-(--palette-primary-text)' },
+  // A tint of the icon's own colour (not a -50 shade, which is near-white in dark).
+  blue: { bg: 'bg-blue-500/10', text: 'text-blue-500' },
+  purple: { bg: 'bg-purple-500/10', text: 'text-purple-500' },
+  amber: { bg: 'bg-amber-500/10', text: 'text-amber-500' },
+  cyan: { bg: 'bg-cyan-500/10', text: 'text-cyan-500' },
+  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-500' },
+  teal: { bg: 'bg-teal-500/10', text: 'text-teal-500' },
+  rose: { bg: 'bg-rose-500/10', text: 'text-rose-500' },
+  orange: { bg: 'bg-orange-500/10', text: 'text-orange-500' },
+  gray: { bg: 'bg-(--palette-surface-3)', text: 'text-(--palette-gray-500)' },
 };
 
 const SectionHeader = ({
@@ -53,16 +60,21 @@ const SectionHeader = ({
   className,
   required,
   headingClassName = 'text-base',
+  size = 'md',
   titleAddon,
   afterTitle,
 }: SectionHeaderProps) => {
   const colorStyle = iconColorStyles[iconColor];
+  // A read page draws no required mark (DESIGN.md 17.3).
+  const readOnly = useFormReadOnly();
+  const showRequired = required && !readOnly;
 
   if (variant === 'card') {
     return (
       <div
         className={clsx(
-          'flex items-center justify-between px-5 py-4 border-b border-gray-100',
+          'flex items-center justify-between border-b border-(--palette-line-soft)',
+          size === 'sm' ? 'px-4 py-2.5' : 'px-5 py-4',
           className,
         )}
       >
@@ -78,11 +90,11 @@ const SectionHeader = ({
             </div>
           )}
           <div>
-            <h3 className={clsx('font-semibold text-gray-800', headingClassName)}>
+            <h3 className={clsx('font-semibold text-(--palette-ink)', headingClassName)}>
               {title}
-              {required && <span className="text-danger ml-0.5">*</span>}
+              {showRequired && <span className="text-(--palette-req) ml-0.5">*</span>}
             </h3>
-            {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-(--palette-gray-500) mt-0.5">{subtitle}</p>}
           </div>
         </div>
         {rightIcon && rightIcon}
@@ -91,9 +103,9 @@ const SectionHeader = ({
   }
 
   const heading = (
-    <h3 className={clsx('font-semibold text-gray-800', icon ? 'text-base' : 'text-sm')}>
+    <h3 className={clsx('font-semibold text-(--palette-ink)', icon ? 'text-base' : 'text-sm')}>
       {title}
-      {required && <span className="text-danger ml-0.5">*</span>}
+      {showRequired && <span className="text-(--palette-req) ml-0.5">*</span>}
     </h3>
   );
 
@@ -119,13 +131,13 @@ const SectionHeader = ({
             ) : (
               heading
             )}
-            {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
+            {subtitle && <p className="text-xs text-(--palette-gray-500) mt-0.5">{subtitle}</p>}
           </div>
           {afterTitle}
         </div>
         {rightIcon && rightIcon}
       </div>
-      {!icon && <hr className="border-gray-200 mt-2" />}
+      {!icon && <hr className="border-(--palette-line) mt-2" />}
     </div>
   );
 };

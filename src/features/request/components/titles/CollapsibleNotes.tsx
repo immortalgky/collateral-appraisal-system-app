@@ -24,7 +24,7 @@ export function CollapsibleNotes({ index, field }: { index: number; field: Texta
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         onClick={() => setOpen(value => !value)}
-        className="flex w-fit items-center gap-1 rounded-sm text-xs font-medium text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="flex w-fit items-center gap-1 rounded-sm text-xs font-medium text-(--palette-ink) focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
       >
         {field.label}
         <Icon name={open ? 'chevron-down' : 'chevron-right'} style="solid" className="size-2.5" />

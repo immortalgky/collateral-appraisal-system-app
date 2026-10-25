@@ -27,6 +27,6 @@ describe('QuotationStatusView', () => {
     const bold = paragraph.querySelectorAll('strong');
     expect(bold).toHaveLength(1);
     expect(bold[0].textContent).toBe(hostile);
-    expect(bold[0]).toHaveClass('text-gray-900');
+    expect(bold[0]).toHaveClass('text-(--palette-ink)');
   });
 });

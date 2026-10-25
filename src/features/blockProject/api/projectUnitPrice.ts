@@ -27,6 +27,9 @@ export const projectUnitPriceKeys = {
  */
 const CALCULATE_TIMEOUT_MS = 120_000;
 
+/** Lets the project header tell that new figures arrive from a recalculation, not from a plain load. */
+export const CALCULATE_MUTATION_KEY = ['project-unit-prices', 'calculate'] as const;
+
 // Returned (not fire-and-forget) so a mutation whose onSuccess returns it stays pending until the
 // refetches have landed: the page is then busy for the whole write, not just the request.
 const invalidateAfterPriceWrite = (queryClient: QueryClient, appraisalId: string) => {
@@ -78,6 +81,7 @@ export const useCalculateProjectUnitPrices = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: CALCULATE_MUTATION_KEY,
     mutationFn: async (params: { appraisalId: string }): Promise<void> => {
       // Recalculating a large block outlasts the shared 10 s cap; give this one call longer, so the
       // refetch in onSettled does not run before the server has committed.

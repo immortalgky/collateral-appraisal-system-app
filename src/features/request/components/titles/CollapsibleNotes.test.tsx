@@ -37,7 +37,7 @@ describe('CollapsibleNotes', () => {
     render(<Harness notes="hello" />);
     expect(toggle()).toHaveAttribute('aria-expanded', 'true');
     expect(box()).toHaveValue('hello');
-    expect(screen.getByText('5/4000')).toBeInTheDocument();
+    expect(screen.getByText('5/4,000')).toBeInTheDocument();
     // the label is shown once: the box is named by it, not labelled again
     expect(screen.getAllByText('Title detail')).toHaveLength(1);
     expect(document.getElementById(toggle().getAttribute('aria-controls')!)).toContainElement(
@@ -63,12 +63,14 @@ describe('CollapsibleNotes', () => {
 
   it('follows the same rule in read-only mode', async () => {
     const { unmount } = render(<Harness notes="read me" readOnly />);
-    expect(box()).toHaveValue('read me');
-    expect(box()).toBeDisabled();
+    // A read page shows the text, not a disabled box.
+    expect(screen.getByText('read me')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     unmount();
     render(<Harness readOnly />);
-    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    expect(screen.queryByText('—')).not.toBeInTheDocument();
     await userEvent.click(toggle());
-    expect(box()).toBeDisabled();
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import { useQueryClient } from '@tanstack/react-query';
 import Pagination from '@shared/components/Pagination';
 import { useHasPermission } from '@shared/hooks/useHasPermission';
@@ -365,18 +366,20 @@ const FailedMessagesPage = () => {
     <div className={`flex flex-col gap-4 ${canManage && selectionCount > 0 ? 'pb-32' : ''}`}>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-64 flex-1">
-          <h2 className="text-base font-semibold text-gray-900">{menuLabel ?? t('page.title')}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">
+            {menuLabel ?? t('page.title')}
+          </h2>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-gray-500">
+        <div className="flex items-center gap-2 text-[12px] text-(--palette-gray-500)">
           <span>{t('page.refreshed', { time: formatClock(summaryQuery.data?.serverTime) })}</span>
           {summaryQuery.data && summaryQuery.isError && (
-            <span className="text-amber-700">{t('page.refreshFailed')}</span>
+            <span className="text-(--palette-warn)">{t('page.refreshFailed')}</span>
           )}
           <button
             type="button"
             onClick={handleRefresh}
-            className="rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-[12px] font-medium text-gray-700 hover:bg-gray-50"
+            className="rounded-lg border border-(--palette-line-strong) bg-(--palette-surface) px-2.5 py-1 text-[12px] font-medium text-(--palette-ink) hover:bg-(--palette-surface-2)"
           >
             {t('page.refresh')}
           </button>
@@ -468,7 +471,7 @@ const FailedMessagesPage = () => {
                   {t(tab.labelKey)}
                   {chip !== undefined && (
                     <span
-                      className={`ml-[5px] rounded-full px-1.5 text-[11px] tabular-nums ${active ? 'bg-primary/10 text-primary' : 'bg-base-300 text-base-content/60'}`}
+                      className={`ml-[5px] rounded-full px-1.5 text-[11px] tabular-nums ${active ? 'bg-primary/10 text-(--palette-primary-text)' : 'bg-base-300 text-base-content/60'}`}
                     >
                       {chip}
                     </span>
@@ -486,7 +489,7 @@ const FailedMessagesPage = () => {
                   setConsumerExceptionType('');
                   resetPageAndSelection();
                 }}
-                className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 text-primary px-2.5 py-1 text-[12px]"
+                className="inline-flex items-center gap-1 rounded-full border border-primary/40 bg-primary/10 text-(--palette-primary-text) px-2.5 py-1 text-[12px]"
               >
                 {exceptionTypeLabel(t, consumerExceptionType)} ✕
               </button>
@@ -508,14 +511,14 @@ const FailedMessagesPage = () => {
             />
             {source === 'consumer' ? (
               <>
-                <select
+                <NativeSelect
                   value={consumerQueue}
                   onChange={e => {
                     setConsumerQueue(e.target.value);
                     resetPageAndSelection();
                   }}
                   aria-label={t('filters.queueLabel')}
-                  className="px-2.5 py-1.5 border border-base-300 rounded-lg text-[13px] bg-base-100"
+                  className="max-w-full"
                 >
                   <option value="">{t('filters.allQueues')}</option>
                   {/* The summary may have moved on (or a queue-row click set a queue the summary no
@@ -531,15 +534,15 @@ const FailedMessagesPage = () => {
                       {q}
                     </option>
                   ))}
-                </select>
-                <select
+                </NativeSelect>
+                <NativeSelect
                   value={consumerNode}
                   onChange={e => {
                     setConsumerNode(e.target.value);
                     resetPageAndSelection();
                   }}
                   aria-label={t('filters.nodeLabel')}
-                  className="px-2.5 py-1.5 border border-base-300 rounded-lg text-[13px] bg-base-100"
+                  className="max-w-full"
                 >
                   <option value="">{t('filters.allNodes')}</option>
                   {consumerNode && !nodeOptions.includes(consumerNode) && (
@@ -552,17 +555,17 @@ const FailedMessagesPage = () => {
                       {n}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </>
             ) : (
-              <select
+              <NativeSelect
                 value={outboxModule}
                 onChange={e => {
                   setOutboxModule(e.target.value as OutboxModule | '');
                   resetPageAndSelection();
                 }}
                 aria-label={t('filters.moduleLabel')}
-                className="px-2.5 py-1.5 border border-base-300 rounded-lg text-[13px] bg-base-100"
+                className="max-w-full"
               >
                 <option value="">{t('filters.allModules')}</option>
                 {OUTBOX_MODULES.map(m => (
@@ -570,7 +573,7 @@ const FailedMessagesPage = () => {
                     {moduleLabel(t, m)}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             )}
           </div>
         </div>

@@ -154,16 +154,24 @@ const AssignmentResultSummary = ({
     {
       label: t('assignSummary.stats.assigned'),
       value: count('Assigned', 'AssignedElsewhere'),
-      color: 'text-green-600',
+      color: 'text-green-600 dark:text-green-400',
     },
-    { label: t('assignSummary.stats.failed'), value: count('Failed'), color: 'text-red-600' },
-    { label: t('assignSummary.stats.parked'), value: count('Parked'), color: 'text-amber-600' },
+    {
+      label: t('assignSummary.stats.failed'),
+      value: count('Failed'),
+      color: 'text-(--palette-danger)',
+    },
+    {
+      label: t('assignSummary.stats.parked'),
+      value: count('Parked'),
+      color: 'text-amber-600 dark:text-amber-400',
+    },
     ...(count('Returned') > 0
       ? [
           {
             label: t('assignSummary.stats.returned'),
             value: count('Returned'),
-            color: 'text-amber-600',
+            color: 'text-amber-600 dark:text-amber-400',
           },
         ]
       : []),
@@ -172,7 +180,7 @@ const AssignmentResultSummary = ({
           {
             label: t('assignSummary.stats.skipped'),
             value: count('Skipped'),
-            color: 'text-gray-600',
+            color: 'text-(--palette-gray-600)',
           },
         ]
       : []),
@@ -206,22 +214,25 @@ const AssignmentResultSummary = ({
   };
 
   return (
-    <div className="flex flex-col gap-3 border-t border-green-100 px-4 py-3">
-      <h3 className="text-sm font-semibold text-gray-800">{t('assignSummary.title')}</h3>
+    <div className="flex flex-col gap-3 border-t border-green-100 dark:border-green-500/20 px-4 py-3">
+      <h3 className="text-sm font-semibold text-(--palette-ink)">{t('assignSummary.title')}</h3>
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(10rem,1fr))] gap-2.5">
         {stats.map(s => (
-          <div key={s.label} className="flex flex-col rounded-lg border border-gray-200 px-3 py-2">
+          <div
+            key={s.label}
+            className="flex flex-col rounded-lg border border-(--palette-line) px-3 py-2"
+          >
             <span className={`text-2xl font-bold tabular-nums ${s.color}`}>{s.value}</span>
-            <span className="text-xs text-gray-500">{s.label}</span>
+            <span className="text-xs text-(--palette-gray-500)">{s.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="overflow-x-auto rounded-lg border border-gray-200">
+      <div className="overflow-x-auto rounded-lg border border-(--palette-line)">
         <table className="w-full min-w-[48rem] text-sm">
           <thead>
-            <tr className="border-b border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600">
+            <tr className="border-b border-(--palette-line) bg-(--palette-surface-2) text-left text-xs font-semibold text-(--palette-gray-600)">
               <th className="px-3 py-2">{t('finalize.appraisal')}</th>
               <th className="px-3 py-2">{t('assignSummary.columns.result')}</th>
               <th className="px-3 py-2">{t('assignSummary.columns.currentActivity')}</th>
@@ -231,7 +242,7 @@ const AssignmentResultSummary = ({
               <th className="px-3 py-2" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {rows.map(({ appraisal: a, outcome }) => {
               const method = methodLabel(a.followupMethod);
               const fee = feeFor(a.appraisalId);
@@ -241,7 +252,7 @@ const AssignmentResultSummary = ({
                   : null;
               return (
                 <tr key={a.appraisalId} className="align-top">
-                  <td className="px-3 py-2 font-medium text-gray-900">
+                  <td className="px-3 py-2 font-medium text-(--palette-ink)">
                     {a.appraisalNumber?.trim() || a.appraisalId.slice(0, 8)}
                   </td>
                   <td className="px-3 py-2">
@@ -250,34 +261,40 @@ const AssignmentResultSummary = ({
                     </Badge>
                   </td>
                   <td
-                    className="px-3 py-2 text-xs text-gray-600"
+                    className="px-3 py-2 text-xs text-(--palette-gray-600)"
                     title={a.currentActivityId ?? undefined}
                   >
                     {a.currentActivityId ? (
                       (getActivityConfig(a.currentActivityId)?.title ?? a.currentActivityId)
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-(--palette-gray-400)">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2">
                     {a.followupStaffName ? (
                       <>
                         {a.followupStaffName}
-                        {method && <span className="block text-xs text-gray-500">{method}</span>}
+                        {method && (
+                          <span className="block text-xs text-(--palette-gray-500)">{method}</span>
+                        )}
                       </>
                     ) : (
-                      <span className="text-gray-400">—</span>
+                      <span className="text-(--palette-gray-400)">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">
-                    {fee != null ? formatCurrency(fee) : <span className="text-gray-400">—</span>}
+                    {fee != null ? (
+                      formatCurrency(fee)
+                    ) : (
+                      <span className="text-(--palette-gray-400)">—</span>
+                    )}
                   </td>
-                  <td className="px-3 py-2 text-xs text-gray-500">
+                  <td className="px-3 py-2 text-xs text-(--palette-gray-500)">
                     {/* The cap sits on a div: Firefox ignores max-width on table cells. */}
                     <div className="max-w-[18rem]">
                       {noteKey
                         ? t(noteKey)
-                        : (reasonText(a) ?? <span className="text-gray-400">—</span>)}
+                        : (reasonText(a) ?? <span className="text-(--palette-gray-400)">—</span>)}
                     </div>
                   </td>
                   <td className="px-3 py-2 text-right">

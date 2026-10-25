@@ -33,13 +33,13 @@ export const ChangeValues = ({
       {/* '' is as empty as null: the audit stores a cleared text field as an empty string. */}
       {from != null && from !== '' && (
         <>
-          <s className="text-gray-400">{from}</s>
-          <span className="text-gray-400" aria-hidden="true">
+          <s className="text-(--palette-gray-400)">{from}</s>
+          <span className="text-(--palette-gray-400)" aria-hidden="true">
             {' → '}
           </span>
         </>
       )}
-      {to != null && to !== '' ? to : <s className="text-gray-400">{empty}</s>}
+      {to != null && to !== '' ? to : <s className="text-(--palette-gray-400)">{empty}</s>}
     </>
   );
 };
@@ -53,27 +53,26 @@ const LatestCorrectionCard = ({ correction, onViewAll }: LatestCorrectionCardPro
   const hidden = changes.length - shown.length;
 
   return (
-    // `cas-latest`: the compact skin flattens this into a band under the identity card.
-    <div className="cas-latest space-y-2 rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <div className="cas-latest-head flex items-center justify-between gap-3">
-        <p className="min-w-0 truncate text-xs font-semibold text-gray-600 dark:text-[color:var(--dc-ink-2)]">
+    <div className="space-y-2 rounded-section border border-(--palette-line) bg-(--palette-surface) px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="min-w-0 truncate text-xs font-semibold tabular-nums text-(--palette-gray-600)">
           {t('detail.latestEdit')} · {formatLocaleDateTime(correction.changedAt, i18n.language)} ·{' '}
           {correction.changedBy}
         </p>
         <button
           type="button"
           onClick={onViewAll}
-          className="shrink-0 rounded text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="shrink-0 rounded text-xs font-semibold text-(--palette-primary-text) hover:underline"
         >
           {t('detail.viewAll')}
         </button>
       </div>
       {shown.length > 0 && (
-        <dl className="cas-latest-list grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-0.5 rounded-md bg-gray-50 px-3 py-2 text-xs">
+        <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-4 gap-y-0.5 rounded-md bg-(--palette-surface-2) px-3 py-2 text-xs tabular-nums">
           {shown.map((change, idx) => (
             <Fragment key={`${change.field}-${idx}`}>
-              <dt className="text-gray-500">{propertyFieldLabel(change.field)}</dt>
-              <dd className="min-w-0 break-words text-[color:var(--palette-ink-strong)]">
+              <dt className="text-(--palette-gray-500)">{propertyFieldLabel(change.field)}</dt>
+              <dd className="min-w-0 break-words text-(--palette-ink)">
                 <ChangeValues field={change.field} from={change.from} to={change.to} />
               </dd>
             </Fragment>
@@ -81,11 +80,13 @@ const LatestCorrectionCard = ({ correction, onViewAll }: LatestCorrectionCardPro
         </dl>
       )}
       {hidden > 0 && (
-        <p className="text-[11px] text-gray-400">{t('detail.moreChanges', { count: hidden })}</p>
+        <p className="text-[11px] text-(--palette-gray-400)">
+          {t('detail.moreChanges', { count: hidden })}
+        </p>
       )}
       {correction.reason && (
-        <p className="text-xs text-gray-600 dark:text-[color:var(--dc-ink-2)]">
-          <span className="text-gray-400">{t('history.reasonLabel')}</span>{' '}
+        <p className="text-xs text-(--palette-gray-600)">
+          <span className="text-(--palette-gray-400)">{t('history.reasonLabel')}</span>{' '}
           <span className="italic">{correction.reason}</span>
         </p>
       )}

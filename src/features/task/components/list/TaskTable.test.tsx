@@ -162,7 +162,7 @@ describe('TaskTable', () => {
     setup({ visibleColumns: ['appraisalNumber', 'purpose'], tasks: [task({ purpose: null })] });
     const dash = within(row('69000001')).getAllByRole('cell')[1].querySelector('span');
     expect(dash).toHaveTextContent('—');
-    expect(dash).toHaveClass('text-gray-400');
+    expect(dash).toHaveClass('text-(--palette-gray-400)');
   });
 
   it('puts the customer under the appraisal number', () => {

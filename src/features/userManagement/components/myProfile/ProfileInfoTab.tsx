@@ -79,7 +79,7 @@ const ProfileInfoTab = ({ me, isLdap }: ProfileInfoTabProps) => {
   return (
     <div className="flex flex-col gap-4">
       {isLdap && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 bg-blue-50/60 px-4 py-3 text-sm text-blue-800">
+        <div className="flex items-start gap-2.5 rounded-xl border border-blue-100 dark:border-blue-500/20 bg-blue-50/60 dark:bg-blue-500/10 px-4 py-3 text-sm text-blue-800 dark:text-blue-300">
           <Icon name="circle-info" style="solid" className="mt-0.5 size-4 shrink-0" />
           <p>{t('myProfile.ldapManaged')}</p>
         </div>

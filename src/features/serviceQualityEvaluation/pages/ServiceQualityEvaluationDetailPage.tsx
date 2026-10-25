@@ -40,8 +40,8 @@ import { useHasPermission } from '@shared/hooks/useHasPermission';
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-gray-500">{label}</dt>
-      <dd className="text-sm text-gray-900 mt-0.5">{value || '—'}</dd>
+      <dt className="text-xs font-medium text-(--palette-gray-500)">{label}</dt>
+      <dd className="text-sm text-(--palette-ink) mt-0.5">{value || '—'}</dd>
     </div>
   );
 }
@@ -88,19 +88,19 @@ function EvaluationTotalRow({ values, totalLabel, configs }: EvaluationTotalRowP
   const starScore = (totalScore / maxTotal) * 5;
 
   return (
-    <tr className="bg-gray-50 font-medium">
-      <td className="px-3 py-2.5 text-sm text-gray-500 text-center" />
-      <td className="px-3 py-2.5 text-sm text-gray-700">{totalLabel}</td>
-      <td className="px-3 py-2.5 text-sm text-gray-700 text-center tabular-nums">
+    <tr className="bg-(--palette-surface-2) font-medium">
+      <td className="px-3 py-2.5 text-sm text-(--palette-gray-500) text-center" />
+      <td className="px-3 py-2.5 text-sm text-(--palette-ink)">{totalLabel}</td>
+      <td className="px-3 py-2.5 text-sm text-(--palette-ink) text-center tabular-nums">
         {totalWeight.toFixed(2)}
       </td>
       <td className="px-3 py-2.5" />
-      <td className="px-3 py-2.5 text-sm text-gray-700 text-center tabular-nums">
+      <td className="px-3 py-2.5 text-sm text-(--palette-ink) text-center tabular-nums">
         {totalScore.toFixed(2)}
       </td>
-      <td className="px-3 py-2.5 text-sm text-gray-700">
+      <td className="px-3 py-2.5 text-sm text-(--palette-ink)">
         <div className="inline-flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 bg-primary/10 text-primary px-2 py-0.5 rounded-md font-semibold">
+          <span className="inline-flex items-center gap-1 bg-primary/10 text-(--palette-primary-text) px-2 py-0.5 rounded-md font-semibold">
             {pct}%
           </span>
           <StarRating score={starScore} />
@@ -118,11 +118,24 @@ function ServiceQualityEvaluationDetailPage() {
   const localizeCompanyName = useLocalizedCompanyName();
   const isReadOnly = !useHasPermission('REPORT_EVALUATION_EDIT'); // TODO: Replace with outer stage in the future
 
-  const { data: appraisal, isLoading: appraisalLoading, isError: appraisalError, refetch: refetchAppraisal } = useGetAppraisalById(appraisalId);
-  const { data: header, isLoading: headerLoading, isError: headerError, refetch: refetchHeader } = useGetEvaluationHeader(appraisalId ?? '');
-  const { data: evaluation, isLoading: evalLoading, isError: evalError, refetch: refetchEval } = useGetEvaluationByAppraisal(
-    appraisalId ?? '',
-  );
+  const {
+    data: appraisal,
+    isLoading: appraisalLoading,
+    isError: appraisalError,
+    refetch: refetchAppraisal,
+  } = useGetAppraisalById(appraisalId);
+  const {
+    data: header,
+    isLoading: headerLoading,
+    isError: headerError,
+    refetch: refetchHeader,
+  } = useGetEvaluationHeader(appraisalId ?? '');
+  const {
+    data: evaluation,
+    isLoading: evalLoading,
+    isError: evalError,
+    refetch: refetchEval,
+  } = useGetEvaluationByAppraisal(appraisalId ?? '');
 
   // Load config once we know the bankingSegment from the header.
   const bankingSegment = header?.bankingSegment ?? undefined;
@@ -281,7 +294,11 @@ function ServiceQualityEvaluationDetailPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon style="solid" name="spinner" className="size-8 text-primary animate-spin" />
+        <Icon
+          style="solid"
+          name="spinner"
+          className="size-8 text-(--palette-primary-text) animate-spin"
+        />
       </div>
     );
   }
@@ -306,7 +323,7 @@ function ServiceQualityEvaluationDetailPage() {
     if (configs && configs.length > 0) {
       const cfg = configs.find(c => c.criteriaSlot === slot);
       if (cfg) {
-        return i18n.language.startsWith('th') ? (cfg.labelTh || cfg.labelEn) : cfg.labelEn;
+        return i18n.language.startsWith('th') ? cfg.labelTh || cfg.labelEn : cfg.labelEn;
       }
     }
     return CRITERIA_LABELS[slot - 1];
@@ -316,17 +333,25 @@ function ServiceQualityEvaluationDetailPage() {
     <FormProvider {...methods}>
       <div className="flex flex-col gap-4 pb-24">
         {/* Appraisal Report Information */}
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h3 className="text-base font-semibold text-gray-900 mb-3">{t('detail.infoTitle')}</h3>
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+          <h3 className="text-base font-semibold text-(--palette-ink) mb-3">
+            {t('detail.infoTitle')}
+          </h3>
           <dl className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-4">
             {/* Row 1 — identity & subject of evaluation */}
-            <InfoRow label={t('detail.info.appraisalNumber')} value={header?.appraisalNumber ?? appraisalNumber ?? '—'} />
+            <InfoRow
+              label={t('detail.info.appraisalNumber')}
+              value={header?.appraisalNumber ?? appraisalNumber ?? '—'}
+            />
             <InfoRow label={t('detail.info.customerName')} value={header?.customerName ?? '—'} />
             <InfoRow
               label={t('detail.info.appraiserCompany')}
               value={
                 header?.appraiserCompanyName
-                  ? localizeCompanyName(header.appraiserCompanyName, header.appraiserCompanyNameLocal)
+                  ? localizeCompanyName(
+                      header.appraiserCompanyName,
+                      header.appraiserCompanyNameLocal,
+                    )
                   : '—'
               }
             />
@@ -340,7 +365,10 @@ function ServiceQualityEvaluationDetailPage() {
             />
             {/* Row 2 — what was appraised & when */}
             <InfoRow label={t('detail.info.propertyType')} value={header?.collateralTypes ?? '—'} />
-            <InfoRow label={t('detail.info.appraisalDate')} value={header?.inspectionDates ?? '—'} />
+            <InfoRow
+              label={t('detail.info.appraisalDate')}
+              value={header?.inspectionDates ?? '—'}
+            />
             <InfoRow
               label={t('detail.info.reportReceivedDate')}
               value={formatLocaleDate(header?.reportReceivedDate, i18n.language)}
@@ -356,9 +384,9 @@ function ServiceQualityEvaluationDetailPage() {
         <RatingGuidelinesTable configs={configs} />
 
         {/* Evaluation Form */}
-        <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-200">
-            <h3 className="text-base font-semibold text-gray-900">Evaluation Criteria</h3>
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden">
+          <div className="px-4 py-3 border-b border-(--palette-line)">
+            <h3 className="text-base font-semibold text-(--palette-ink)">Evaluation Criteria</h3>
           </div>
 
           <div className="overflow-x-auto">
@@ -371,24 +399,24 @@ function ServiceQualityEvaluationDetailPage() {
                 <col className="w-20" />
                 <col />
               </colgroup>
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                 <tr>
-                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-center font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     No
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     Criteria of consideration
                   </th>
-                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-center font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     Weight
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     Rating
                   </th>
-                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-center font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     Score
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     Description
                   </th>
                 </tr>
@@ -403,9 +431,15 @@ function ServiceQualityEvaluationDetailPage() {
                       index={index}
                       criteriaLabel={getCriteriaLabel(slot)}
                       disabled={isCompleted || isReadOnly}
-                      forceDisabled={index === 1 ? (watchedValues.criteria2AutoLocked ?? false) : false}
-                      deliveryAutoDetected={index === 1 ? (watchedValues.criteria2IsAutoDetected ?? false) : false}
-                      deliveryDetectedDays={index === 1 ? (watchedValues.criteria2DetectedDays ?? null) : null}
+                      forceDisabled={
+                        index === 1 ? (watchedValues.criteria2AutoLocked ?? false) : false
+                      }
+                      deliveryAutoDetected={
+                        index === 1 ? (watchedValues.criteria2IsAutoDetected ?? false) : false
+                      }
+                      deliveryDetectedDays={
+                        index === 1 ? (watchedValues.criteria2DetectedDays ?? null) : null
+                      }
                       weight={cfg?.weight}
                       guidance={cfg?.guidance}
                     />
@@ -421,7 +455,7 @@ function ServiceQualityEvaluationDetailPage() {
           </div>
 
           {/* Text areas */}
-          <div className="p-4 border-t border-gray-200 flex flex-col gap-4">
+          <div className="p-4 border-t border-(--palette-line) flex flex-col gap-4">
             <Textarea
               label={t('detail.comments.additionalLabel')}
               placeholder={t('detail.comments.additionalPlaceholder')}

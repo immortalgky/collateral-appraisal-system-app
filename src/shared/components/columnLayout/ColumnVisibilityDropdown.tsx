@@ -114,17 +114,17 @@ function SortableColumnRow<K extends string>({
       onClick={alwaysVisible ? undefined : () => onToggle(columnKey)}
       className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
         isDragging
-          ? 'bg-gray-100 shadow-sm'
+          ? 'bg-(--palette-surface-3) shadow-sm'
           : alwaysVisible
             ? 'cursor-default'
-            : 'hover:bg-gray-50 cursor-pointer'
+            : 'hover:bg-(--palette-surface-2) cursor-pointer'
       } ${!isVisible && !isDragging ? 'opacity-60' : ''}`}
     >
       {/* Drag handle */}
       <button
         {...attributes}
         {...listeners}
-        className={`text-gray-300 hover:text-gray-500 flex-shrink-0 cursor-grab active:cursor-grabbing ${
+        className={`text-(--palette-gray-300) hover:text-(--palette-gray-500) flex-shrink-0 cursor-grab active:cursor-grabbing ${
           alwaysVisible ? 'invisible' : ''
         }`}
         tabIndex={-1}
@@ -150,7 +150,7 @@ function SortableColumnRow<K extends string>({
       {/* Label */}
       <span
         className={`min-w-0 flex-1 select-none truncate text-sm ${
-          isVisible ? 'text-gray-700' : 'text-gray-400'
+          isVisible ? 'text-(--palette-ink)' : 'text-(--palette-gray-400)'
         } ${!checkbox && !isVisible ? 'line-through' : ''}`}
       >
         {label}
@@ -158,7 +158,7 @@ function SortableColumnRow<K extends string>({
 
       {/* Eye toggle / fixed badge. In pin mode the pin button says what "fixed" meant. */}
       {onTogglePin ? null : alwaysVisible ? (
-        <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
+        <span className="text-xs text-(--palette-gray-400) bg-(--palette-surface-3) px-1.5 py-0.5 rounded flex-shrink-0">
           {t('columns.fixed')}
         </span>
       ) : checkbox ? null : (
@@ -169,8 +169,8 @@ function SortableColumnRow<K extends string>({
           }}
           className={`flex-shrink-0 p-0.5 rounded transition-colors ${
             isVisible
-              ? 'text-emerald-500 hover:text-emerald-600'
-              : 'text-gray-300 hover:text-gray-400'
+              ? 'text-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'
+              : 'text-(--palette-gray-300) hover:text-(--palette-gray-400)'
           }`}
           aria-label={isVisible ? t('columns.hideColumn') : t('columns.showColumn')}
         >
@@ -198,8 +198,10 @@ function SortableColumnRow<K extends string>({
                 ?.focus(),
             );
           }}
-          className={`flex-shrink-0 rounded p-1 transition-colors hover:bg-gray-100 ${
-            isPinned ? 'text-primary' : 'text-gray-300 hover:text-gray-500'
+          className={`flex-shrink-0 rounded p-1 transition-colors hover:bg-(--palette-surface-3) ${
+            isPinned
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-300) hover:text-(--palette-gray-500)'
           }`}
         >
           <Icon style="solid" name="thumbtack" className="text-xs" />
@@ -289,8 +291,8 @@ export function ColumnVisibilityDropdown<K extends string>({
                 focusRing === 'ring' ? KEYBOARD_RING : ''
               } ${
                 hiddenCount > 0
-                  ? 'border-indigo-300 bg-indigo-50 hover:bg-indigo-100'
-                  : 'border-indigo-200 bg-indigo-50/50 hover:bg-indigo-50 hover:border-indigo-300'
+                  ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50 dark:bg-indigo-500/10 hover:bg-indigo-100 dark:hover:bg-indigo-500/20'
+                  : 'border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/50 dark:bg-indigo-500/10 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:border-indigo-300 dark:hover:border-indigo-500/40'
               }`
         }
       >
@@ -309,16 +311,16 @@ export function ColumnVisibilityDropdown<K extends string>({
       <PopoverPanel
         // padding: keep clear of the screen edge, which a button at the right of a toolbar is near
         anchor={{ to: 'bottom start', padding: 16 }}
-        className={`z-50 mt-1.5 ${checkboxes ? 'w-72' : 'w-64'} bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden`}
+        className={`z-50 mt-1.5 ${checkboxes ? 'w-72' : 'w-64'} bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-lg overflow-hidden`}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <div className="flex items-center justify-between px-3 py-2.5 border-b border-(--palette-line-soft)">
+          <span className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
             {t('columns.title')}
           </span>
           <button
             onClick={onReset}
-            className="text-xs text-primary hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
+            className="text-xs text-(--palette-primary-text) hover:underline disabled:opacity-40 disabled:cursor-not-allowed"
             // The dropdown cannot know what `onReset` restores — on the appraisal list it also
             // clears column widths and switches the row-number column back on. Callers that reset
             // more than visibility pass `canReset` so resizing a column without hiding one does
@@ -340,11 +342,11 @@ export function ColumnVisibilityDropdown<K extends string>({
           >
             {pinMode ? (
               <>
-                <p className="px-3 pt-1 pb-0.5 text-xs font-semibold text-gray-400">
+                <p className="px-3 pt-1 pb-0.5 text-xs font-semibold text-(--palette-gray-400)">
                   {t('columns.pinnedGroup')}
                 </p>
                 {renderGroup(pinnedKeys)}
-                <p className="mt-1 border-t border-gray-100 px-3 pt-2 pb-0.5 text-xs font-semibold text-gray-400">
+                <p className="mt-1 border-t border-(--palette-line-soft) px-3 pt-2 pb-0.5 text-xs font-semibold text-(--palette-gray-400)">
                   {t('columns.otherGroup')}
                 </p>
                 {renderGroup(otherKeys)}
@@ -357,14 +359,14 @@ export function ColumnVisibilityDropdown<K extends string>({
 
         {/* Toggles that are not part of the reorderable, persisted set */}
         {extraToggles && extraToggles.length > 0 && (
-          <div className="border-t border-gray-100 p-1.5">
+          <div className="border-t border-(--palette-line-soft) p-1.5">
             {extraToggles.map(x =>
               checkboxes ? (
                 // A label, so a click anywhere on the row toggles the real checkbox inside it (a
                 // button cannot hold one).
                 <label
                   key={x.key}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-gray-50"
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 transition-colors hover:bg-(--palette-surface-2)"
                 >
                   <span className="size-3.5 flex-shrink-0" />
                   <input
@@ -374,7 +376,7 @@ export function ColumnVisibilityDropdown<K extends string>({
                     className="checkbox checkbox-xs checkbox-primary shrink-0 rounded-[4px]"
                   />
                   <span
-                    className={`flex-1 select-none text-sm ${x.checked ? 'text-gray-700' : 'text-gray-400'}`}
+                    className={`flex-1 select-none text-sm ${x.checked ? 'text-(--palette-ink)' : 'text-(--palette-gray-400)'}`}
                   >
                     {x.label}
                   </span>
@@ -390,20 +392,20 @@ export function ColumnVisibilityDropdown<K extends string>({
                   role="switch"
                   aria-checked={x.checked}
                   onClick={x.onChange}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors hover:bg-gray-50 cursor-pointer text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-md transition-colors hover:bg-(--palette-surface-2) cursor-pointer text-left"
                 >
                   {/* Spacer matching the drag handle above, so the labels line up */}
                   <span className="size-3.5 flex-shrink-0" />
                   <span
                     className={`text-sm flex-1 select-none ${
-                      x.checked ? 'text-gray-700' : 'text-gray-400 line-through'
+                      x.checked ? 'text-(--palette-ink)' : 'text-(--palette-gray-400) line-through'
                     }`}
                   >
                     {x.label}
                   </span>
                   <span
                     className={`flex-shrink-0 p-0.5 rounded transition-colors ${
-                      x.checked ? 'text-emerald-500' : 'text-gray-300'
+                      x.checked ? 'text-emerald-500' : 'text-(--palette-gray-300)'
                     }`}
                   >
                     <Icon
@@ -419,8 +421,8 @@ export function ColumnVisibilityDropdown<K extends string>({
         )}
 
         {/* Footer hint */}
-        <div className="px-3 py-2 border-t border-gray-100 bg-gray-50">
-          <p className="text-xs text-gray-400">{t('columns.dragHint')}</p>
+        <div className="px-3 py-2 border-t border-(--palette-line-soft) bg-(--palette-surface-2)">
+          <p className="text-xs text-(--palette-gray-400)">{t('columns.dragHint')}</p>
         </div>
       </PopoverPanel>
     </Popover>

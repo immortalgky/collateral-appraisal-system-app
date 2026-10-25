@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT, vmsg } from '@/shared/components/form/validationMessage';
 
 // ─── Status ───────────────────────────────────────────────────────────────────
 
@@ -299,9 +300,11 @@ export const makeOpenNegotiationFormSchema = (t: TFunction<'quotation'>) =>
     message: z.string().min(1, t('validation.messageRequired')),
   });
 
-export const openNegotiationFormSchema = z.object({
-  message: z.string().min(1, 'Message is required'),
-});
+// The static schemas below are the factories built with the token `t`: each message is the token of
+// the same `quotation:validation.*` key, translated where it is shown.
+const tokens = tokenT('quotation');
+
+export const openNegotiationFormSchema = makeOpenNegotiationFormSchema(tokens);
 
 export type OpenNegotiationFormValues = z.infer<typeof openNegotiationFormSchema>;
 
@@ -312,11 +315,7 @@ export const makeRespondNegotiationFormSchema = (t: TFunction<'quotation'>) =>
     message: z.string().nullable().optional(),
   });
 
-export const respondNegotiationFormSchema = z.object({
-  verb: z.enum(['Accept', 'Counter', 'Reject']),
-  counterPrice: z.number().positive('Must be positive').nullable().optional(),
-  message: z.string().nullable().optional(),
-});
+export const respondNegotiationFormSchema = makeRespondNegotiationFormSchema(tokens);
 
 export type RespondNegotiationFormValues = z.infer<typeof respondNegotiationFormSchema>;
 
@@ -336,9 +335,7 @@ export const makeRejectTentativeFormSchema = (t: TFunction<'quotation'>) =>
     reason: z.string().min(1, t('validation.reasonRequired')),
   });
 
-export const rejectTentativeFormSchema = z.object({
-  reason: z.string().min(1, 'Reason is required'),
-});
+export const rejectTentativeFormSchema = makeRejectTentativeFormSchema(tokens);
 
 export type RejectTentativeFormValues = z.infer<typeof rejectTentativeFormSchema>;
 
@@ -349,15 +346,7 @@ export const makePickWinnerFormSchema = (t: TFunction<'quotation'>) =>
     negotiationNote: z.string().max(500, t('validation.noteMax')).nullable().optional(),
   });
 
-export const pickWinnerFormSchema = z.object({
-  reason: z.string().min(1, 'Please provide a reason for your selection'),
-  requestNegotiation: z.boolean().optional().default(false),
-  negotiationNote: z
-    .string()
-    .max(500, 'Note must be 500 characters or fewer')
-    .nullable()
-    .optional(),
-});
+export const pickWinnerFormSchema = makePickWinnerFormSchema(tokens);
 
 export type PickWinnerFormValues = z.infer<typeof pickWinnerFormSchema>;
 
@@ -400,49 +389,8 @@ export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
       }
     });
 
-export const submitQuotationItemSchema = z
-  .object({
-    appraisalId: z.string().uuid(),
-    // Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
-    estimatedDays: z
-      .number({
-        required_error: 'Estimated Mandays is required',
-        invalid_type_error: 'Estimated Mandays is required',
-      })
-      .int('Must be a whole number')
-      .positive('Estimated Mandays must be positive'),
-    // Fee-breakdown fields — used in the Maker/Checker path.
-    feeAmount: z
-      .number({
-        required_error: 'Fee Amount is required',
-        invalid_type_error: 'Fee Amount is required',
-      })
-      .positive('Fee Amount must be positive'),
-    // Optional numeric fields — a cleared input emits null, so allow it (treated as 0 downstream).
-    discount: z.number().nonnegative().nullable().optional(),
-    negotiatedDiscount: z.number().nonnegative().nullable().optional(),
-    vatPercent: z.number().nonnegative().nullable().optional(),
-    /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
-    itemNotes: z.string().nullable().optional(),
-    /** Required when negotiatedDiscount resolves to 0/null on a Counter response. */
-    itemNegotiationReason: z
-      .string()
-      .max(500, 'Must be 500 characters or fewer')
-      .nullable()
-      .optional(),
-  })
-  .superRefine((item, ctx) => {
-    if (item.feeAmount === undefined) return;
-    const discount = item.discount ?? 0;
-    const negotiated = item.negotiatedDiscount ?? 0;
-    if (discount + negotiated > item.feeAmount) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['negotiatedDiscount'],
-        message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
-      });
-    }
-  });
+// Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
+export const submitQuotationItemSchema = makeSubmitQuotationItemSchema(tokens);
 
 export type SubmitQuotationItemValues = z.infer<typeof submitQuotationItemSchema>;
 
@@ -460,22 +408,9 @@ export const makeSubmitQuotationFormSchema = (t: TFunction<'quotation'>) =>
     contactPhone: z.string().nullable().optional(),
   });
 
-export const submitQuotationFormSchema = z.object({
-  // Kept in the schema so the save/submit payloads still wire through an empty string,
-  // but no longer surfaced as a form input — removed because it's the company's own
-  // external reference and often left blank. Empty string passes validation.
-  quotationNumber: z.string(),
-  /** Per-appraisal line items — at least one required. */
-  items: z.array(submitQuotationItemSchema).min(1, 'At least one appraisal item is required'),
-  validUntil: z.string().nullable().optional(),
-  proposedStartDate: z.string().nullable().optional(),
-  proposedCompletionDate: z.string().nullable().optional(),
-  remarks: z.string().nullable().optional(),
-  termsAndConditions: z.string().nullable().optional(),
-  contactName: z.string().nullable().optional(),
-  contactEmail: z.string().email('Invalid email').nullable().optional(),
-  contactPhone: z.string().nullable().optional(),
-});
+// `quotationNumber` stays in the schema so the save/submit payloads still wire through an empty
+// string, but is no longer a form input (the company's own external reference, often blank).
+export const submitQuotationFormSchema = makeSubmitQuotationFormSchema(tokens);
 
 export type SubmitQuotationFormValues = z.infer<typeof submitQuotationFormSchema>;
 
@@ -501,7 +436,7 @@ export const SaveDraftQuotationItemSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['negotiatedDiscount'],
-        message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
+        message: vmsg('quotation:validation.discountExceedsFee'),
       });
     }
   });
@@ -567,10 +502,7 @@ export const makeEditDraftQuotationSchema = (t: TFunction<'quotation'>) =>
     companyIds: z.array(z.string().uuid()).min(0),
   });
 
-export const EditDraftQuotationSchema = z.object({
-  cutOffTime: z.string().min(1, 'Cut off time is required'),
-  companyIds: z.array(z.string().uuid()).min(0),
-});
+export const EditDraftQuotationSchema = makeEditDraftQuotationSchema(tokens);
 
 export type EditDraftQuotationFormValues = z.infer<typeof EditDraftQuotationSchema>;
 

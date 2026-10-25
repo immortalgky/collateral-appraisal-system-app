@@ -22,7 +22,7 @@ export function FieldTooltip({ text }: { text: string }) {
       <Icon
         name="circle-question"
         style="regular"
-        className="size-3 text-gray-400 cursor-help hover:text-primary transition-colors"
+        className="size-3 text-(--palette-gray-400) cursor-help hover:text-(--palette-primary-text) transition-colors"
       />
       {pos && (
         <div
@@ -35,7 +35,7 @@ export function FieldTooltip({ text }: { text: string }) {
             zIndex: 9999,
           }}
         >
-          <div className="bg-white border border-gray-200 rounded-lg shadow-xl px-3 py-2.5 text-xs text-gray-700 leading-relaxed w-[360px] whitespace-normal text-left">
+          <div className="bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-xl px-3 py-2.5 text-xs text-(--palette-ink) leading-relaxed w-[360px] whitespace-normal text-left">
             {text}
           </div>
         </div>

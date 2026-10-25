@@ -102,23 +102,23 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
       : Boolean(values[field.key]);
 
   const header = (
-    <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+    <div className="flex items-center gap-2 pb-2 border-b border-(--palette-line-soft)">
       {onBack && (
         <button
           type="button"
           onClick={onBack}
           aria-label={t('common:actions.back')}
-          className="text-gray-400 hover:text-gray-600"
+          className="text-(--palette-gray-400) hover:text-(--palette-gray-600)"
         >
           <Icon style="solid" name="arrow-left" className="size-3" />
         </button>
       )}
-      <span className="text-sm font-medium text-gray-900">{field.label}</span>
+      <span className="text-sm font-medium text-(--palette-ink)">{field.label}</span>
       {hasValue && (
         <button
           type="button"
           onClick={clear}
-          className="ml-auto text-xs text-gray-500 hover:text-gray-700"
+          className="ml-auto text-xs text-(--palette-gray-500) hover:text-(--palette-ink)"
         >
           {t('common:actions.clear')}
         </button>
@@ -148,8 +148,8 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
                 onClick={() => setRange(from, to)}
                 className={`rounded-md border px-2 py-0.5 text-xs transition-colors ${
                   on
-                    ? 'border-primary bg-primary-50 text-primary'
-                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    ? 'border-primary bg-(--palette-accent-wash) text-(--palette-primary-text)'
+                    : 'border-(--palette-line) text-(--palette-gray-600) hover:border-(--palette-line-strong)'
                 }`}
               >
                 {t(`appraisal:list.filters.presets.${preset.key}`)}
@@ -189,7 +189,7 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
     return (
       <div className="w-64 flex flex-col gap-2">
         {header}
-        <p className="px-2 py-4 text-center text-xs text-gray-400">
+        <p className="px-2 py-4 text-center text-xs text-(--palette-gray-400)">
           {t('appraisal:list.filters.optionsUnavailable')}
         </p>
       </div>
@@ -206,7 +206,13 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
           onChange={e => setQuery(e.target.value)}
           placeholder={t('appraisal:list.filters.searchIn', { label: field.label })}
           aria-label={t('appraisal:list.filters.searchIn', { label: field.label })}
-          leftIcon={<Icon style="solid" name="magnifying-glass" className="size-3 text-gray-400" />}
+          leftIcon={
+            <Icon
+              style="solid"
+              name="magnifying-glass"
+              className="size-3 text-(--palette-gray-400)"
+            />
+          }
         />
       )}
 
@@ -215,7 +221,7 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
           {pinned.map(value => (
             <span
               key={value}
-              className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-gray-100 px-2 py-0.5 text-xs text-gray-700"
+              className="inline-flex items-center gap-1 rounded-md border border-(--palette-line) bg-(--palette-surface-3) px-2 py-0.5 text-xs text-(--palette-ink)"
             >
               {labelFor(value)}
               <button
@@ -233,18 +239,21 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
 
       <div className="max-h-56 overflow-y-auto -mx-1">
         {remotePending ? (
-          <p className="px-2 py-4 text-center text-xs text-gray-400">
+          <p className="px-2 py-4 text-center text-xs text-(--palette-gray-400)">
             {t('common:status.loading')}
           </p>
         ) : visible.length === 0 ? (
-          <p className="px-2 py-4 text-center text-xs text-gray-400">
+          <p className="px-2 py-4 text-center text-xs text-(--palette-gray-400)">
             {isRemote && !query.trim()
               ? t('appraisal:list.filters.typeToSearch')
               : t('appraisal:list.filters.noMatch')}
           </p>
         ) : (
           visible.map(option => (
-            <div key={option.value} className="rounded-lg px-2 py-1.5 hover:bg-gray-50">
+            <div
+              key={option.value}
+              className="rounded-lg px-2 py-1.5 hover:bg-(--palette-surface-2)"
+            >
               <Checkbox
                 size="sm"
                 checked={selected.includes(option.value)}
@@ -257,7 +266,7 @@ function FilterValuePanel({ field, values, onChange, onRemove, onBack }: FilterV
       </div>
 
       {isBig && (
-        <p className="flex justify-between gap-2 border-t border-gray-100 pt-1.5 text-[11px] text-gray-400">
+        <p className="flex justify-between gap-2 border-t border-(--palette-line-soft) pt-1.5 text-[11px] text-(--palette-gray-400)">
           <span>
             {t('appraisal:list.filters.showingOf', {
               shown: visible.length,

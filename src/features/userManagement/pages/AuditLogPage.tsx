@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Icon from '@shared/components/Icon';
 import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
@@ -28,18 +29,20 @@ const parseChanges = (raw: string | null): ChangesJsonParsed | null => {
 
 const ChangesCell = ({ changesJson }: { changesJson: string | null }) => {
   const parsed = parseChanges(changesJson);
-  if (!parsed) return <span className="text-gray-400 text-xs">—</span>;
+  if (!parsed) return <span className="text-(--palette-gray-400) text-xs">—</span>;
 
   if (parsed.added !== undefined || parsed.removed !== undefined) {
     const added = parsed.added ?? [];
     const removed = parsed.removed ?? [];
     return (
       <div className="flex flex-wrap gap-1">
-        {parsed.setName && <span className="text-xs text-gray-500 mr-1">{parsed.setName}:</span>}
+        {parsed.setName && (
+          <span className="text-xs text-(--palette-gray-500) mr-1">{parsed.setName}:</span>
+        )}
         {added.map((val, i) => (
           <span
             key={`add-${i}`}
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700"
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
           >
             +{val}
           </span>
@@ -47,13 +50,13 @@ const ChangesCell = ({ changesJson }: { changesJson: string | null }) => {
         {removed.map((val, i) => (
           <span
             key={`rem-${i}`}
-            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-red-50 text-red-600"
+            className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-(--palette-req-wash) text-(--palette-danger)"
           >
             -{val}
           </span>
         ))}
         {added.length === 0 && removed.length === 0 && (
-          <span className="text-gray-400 text-xs">—</span>
+          <span className="text-(--palette-gray-400) text-xs">—</span>
         )}
       </div>
     );
@@ -64,8 +67,8 @@ const ChangesCell = ({ changesJson }: { changesJson: string | null }) => {
   return (
     <div className="flex flex-wrap gap-1">
       {entries.map(([k, v]) => (
-        <span key={k} className="text-xs text-gray-600">
-          <span className="text-gray-400">{k}:</span> {String(v ?? '—')}
+        <span key={k} className="text-xs text-(--palette-gray-600)">
+          <span className="text-(--palette-gray-400)">{k}:</span> {String(v ?? '—')}
         </span>
       ))}
     </div>
@@ -73,10 +76,10 @@ const ChangesCell = ({ changesJson }: { changesJson: string | null }) => {
 };
 
 const actionBadgeClass: Record<AuditAction, string> = {
-  Created: 'bg-emerald-50 text-emerald-700',
-  Updated: 'bg-blue-50 text-blue-700',
-  Deleted: 'bg-red-50 text-red-700',
-  AssignmentChanged: 'bg-amber-50 text-amber-700',
+  Created: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  Updated: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  Deleted: 'bg-(--palette-req-wash) text-(--palette-req)',
+  AssignmentChanged: 'bg-(--palette-warn-wash) text-(--palette-warn)',
 };
 
 const AuditLogPage = () => {
@@ -113,27 +116,29 @@ const AuditLogPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.auditLogs.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('page.auditLogs.title')}
+            </h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.auditLogs.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.auditLogs.subtitle')}</p>
         </div>
       </div>
 
       {/* Filter bar */}
-      <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+      <div className="mt-4 bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-4">
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* Entity Type */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
               {t('filters.entityType')}
             </label>
-            <select
+            <NativeSelect
               value={filters.entityType}
               onChange={e => handleFilterChange('entityType', e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full"
             >
               <option value="">{t('filters.all')}</option>
               {ENTITY_TYPES.map(et => (
@@ -141,18 +146,18 @@ const AuditLogPage = () => {
                   {et}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           {/* Action */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
               {t('filters.action')}
             </label>
-            <select
+            <NativeSelect
               value={filters.action}
               onChange={e => handleFilterChange('action', e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full"
             >
               <option value="">{t('filters.all')}</option>
               {ACTIONS.map(a => (
@@ -160,90 +165,93 @@ const AuditLogPage = () => {
                   {a}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           {/* Actor */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
               {t('filters.actor')}
             </label>
             <div className="relative">
               <Icon
                 name="magnifying-glass"
                 style="regular"
-                className="size-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                className="size-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
               />
               <input
                 type="text"
                 value={filters.actorName}
                 onChange={e => handleFilterChange('actorName', e.target.value)}
                 placeholder={t('placeholders.searchActor')}
-                className="w-full pl-7 pr-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="w-full pl-7 pr-2 py-1.5 text-xs border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
           </div>
 
           {/* From */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
               {t('filters.from')}
             </label>
             <input
               type="date"
               value={filters.from}
               onChange={e => handleFilterChange('from', e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full"
             />
           </div>
 
           {/* To */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
               {t('filters.to')}
             </label>
             <input
               type="date"
               value={filters.to}
               onChange={e => handleFilterChange('to', e.target.value)}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full"
             />
           </div>
         </div>
       </div>
 
       {/* Table */}
-      <div className="flex-1 mt-4 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col min-h-0">
+      <div className="flex-1 mt-4 bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm flex flex-col min-h-0">
         <div className="flex-1 overflow-auto">
           <table className="w-full text-sm">
             <thead className="sticky top-0 bg-primary/10 z-10">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-primary whitespace-nowrap">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-primary-text) whitespace-nowrap">
                   {t('columns.when')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-primary whitespace-nowrap">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-primary-text) whitespace-nowrap">
                   {t('columns.actor')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-primary whitespace-nowrap">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-primary-text) whitespace-nowrap">
                   {t('columns.action')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-primary whitespace-nowrap">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-primary-text) whitespace-nowrap">
                   {t('columns.entityType')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-primary whitespace-nowrap">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-primary-text) whitespace-nowrap">
                   {t('columns.entityName')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-primary">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-primary-text)">
                   {t('columns.changes')}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
                 <TableRowSkeleton columns={Array(6).fill({ width: 'w-full' })} rows={10} />
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-gray-400 text-sm">
+                  <td
+                    colSpan={6}
+                    className="px-4 py-12 text-center text-(--palette-gray-400) text-sm"
+                  >
                     <Icon
                       name="clock-rotate-left"
                       style="regular"
@@ -254,23 +262,27 @@ const AuditLogPage = () => {
                 </tr>
               ) : (
                 rows.map(row => (
-                  <tr key={row.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-2.5 text-gray-600 text-xs whitespace-nowrap">
+                  <tr key={row.id} className="hover:bg-(--palette-surface-2) transition-colors">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) text-xs whitespace-nowrap">
                       {formatLocaleDateTime(row.occurredAt, i18n.language)}
                     </td>
                     <td className="px-4 py-2.5">
-                      <div className="text-xs font-medium text-gray-800">{row.actorName}</div>
-                      <div className="text-xs text-gray-400">{row.actorUserId}</div>
+                      <div className="text-xs font-medium text-(--palette-ink)">
+                        {row.actorName}
+                      </div>
+                      <div className="text-xs text-(--palette-gray-400)">{row.actorUserId}</div>
                     </td>
                     <td className="px-4 py-2.5">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${actionBadgeClass[row.action] ?? 'bg-gray-100 text-gray-600'}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${actionBadgeClass[row.action] ?? 'bg-(--palette-surface-3) text-(--palette-gray-600)'}`}
                       >
                         {row.action}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-600">{row.entityType}</td>
-                    <td className="px-4 py-2.5 text-xs font-medium text-gray-800">
+                    <td className="px-4 py-2.5 text-xs text-(--palette-gray-600)">
+                      {row.entityType}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs font-medium text-(--palette-ink)">
                       {row.entityName}
                     </td>
                     <td className="px-4 py-2.5 max-w-xs">

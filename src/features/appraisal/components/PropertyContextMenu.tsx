@@ -79,7 +79,7 @@ export const PropertyContextMenu = ({ x, y, items, onClose }: PropertyContextMen
         left: position.x,
         zIndex: 9999,
       }}
-      className="bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[180px]"
+      className="bg-(--palette-surface) rounded-lg shadow-lg border border-(--palette-line) py-1 min-w-[180px]"
     >
       {items.map((item, index) => (
         <button
@@ -93,10 +93,10 @@ export const PropertyContextMenu = ({ x, y, items, onClose }: PropertyContextMen
           disabled={item.disabled}
           className={`w-full px-4 py-2 text-left flex items-center gap-3 transition-colors ${
             item.disabled
-              ? 'text-gray-400 cursor-not-allowed'
+              ? 'text-(--palette-gray-400) cursor-not-allowed'
               : item.danger
-                ? 'text-red-600 hover:bg-red-50'
-                : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-(--palette-danger) hover:bg-(--palette-req-wash)'
+                : 'text-(--palette-ink) hover:bg-(--palette-surface-3)'
           }`}
         >
           <Icon name={item.icon} className="w-4" />

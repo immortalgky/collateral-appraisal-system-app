@@ -7,7 +7,7 @@ interface MeetingStatusBadgeProps {
   size?: 'xs' | 'sm' | 'md' | 'lg';
 }
 
-const PILL_CLASS = 'bg-gray-100 text-gray-700';
+const PILL_CLASS = 'bg-(--palette-surface-3) text-(--palette-ink)';
 
 const DOT_COLOR: Record<MeetingStatus, string> = {
   New: 'bg-blue-500',

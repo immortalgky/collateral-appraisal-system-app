@@ -18,6 +18,7 @@ import toast from 'react-hot-toast';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Textarea from '@/shared/components/inputs/Textarea';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 
@@ -78,6 +79,28 @@ const OFFLINE_DRAFT_METHOD = 'Offline';
  * including a route change that keeps it mounted; the isFetching gates then wait for the fresh copy.
  */
 const ENTRY_REFETCH = { staleTime: 0 };
+
+/** Assignment-type card colours. Static strings so Tailwind sees them, each with its dark pair. */
+const ASSIGNMENT_TYPE_COLORS = {
+  emerald: {
+    card: 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15',
+    iconBox: 'bg-emerald-200 dark:bg-emerald-500/30',
+    icon: 'text-emerald-600 dark:text-emerald-300',
+    check: 'text-emerald-500 dark:text-emerald-300',
+  },
+  purple: {
+    card: 'border-purple-500 bg-purple-50 dark:bg-purple-500/15',
+    iconBox: 'bg-purple-200 dark:bg-purple-500/30',
+    icon: 'text-purple-600 dark:text-purple-300',
+    check: 'text-purple-500 dark:text-purple-300',
+  },
+  amber: {
+    card: 'border-amber-500 bg-amber-50 dark:bg-amber-500/15',
+    iconBox: 'bg-amber-200 dark:bg-amber-500/30',
+    icon: 'text-amber-600 dark:text-amber-300',
+    check: 'text-amber-500 dark:text-amber-300',
+  },
+} as const;
 
 const AdministrationPage = () => {
   const { t } = useTranslation('appraisal');
@@ -573,7 +596,11 @@ const AdministrationPage = () => {
   ) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -586,13 +613,13 @@ const AdministrationPage = () => {
           <div className="flex flex-col gap-6 pb-6 pr-4">
             {/* Assignment lock banner — shown when a non-terminal quotation owns this appraisal */}
             {isLockedByQuotation && activeNonTerminalQuotation && (
-              <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
+              <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-4 py-3 flex items-start gap-3">
                 <Icon name="lock" style="solid" className="size-4 text-amber-500 shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-amber-800">
+                  <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
                     {t('administration.assignmentLocked')}
                   </p>
-                  <p className="text-xs text-amber-700 mt-0.5">
+                  <p className="text-xs text-(--palette-warn) mt-0.5">
                     {t('administration.assignmentLockedDesc', {
                       quotationNumber: activeNonTerminalQuotation.quotationNumber,
                       status: activeNonTerminalQuotation.status,
@@ -601,7 +628,7 @@ const AdministrationPage = () => {
                 </div>
                 <a
                   href="#quotation-section"
-                  className="shrink-0 flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900 underline underline-offset-2"
+                  className="shrink-0 flex items-center gap-1 text-xs font-medium text-(--palette-warn) hover:text-amber-900 dark:hover:text-amber-200 underline underline-offset-2"
                 >
                   {t('administration.openQuotation')}
                   <Icon name="arrow-down" style="solid" className="size-3" />
@@ -670,8 +697,10 @@ const AdministrationPage = () => {
                               ? 'pointer-events-none opacity-50 cursor-not-allowed'
                               : 'cursor-pointer',
                             checked
-                              ? `border-${option.color}-500 bg-${option.color}-50`
-                              : 'border-gray-200 hover:border-gray-300 bg-white',
+                              ? ASSIGNMENT_TYPE_COLORS[
+                                  option.color as keyof typeof ASSIGNMENT_TYPE_COLORS
+                                ].card
+                              : 'border-(--palette-line) hover:border-(--palette-line-strong) bg-(--palette-surface)',
                           )
                         }
                       >
@@ -680,7 +709,11 @@ const AdministrationPage = () => {
                             <div
                               className={clsx(
                                 'w-10 h-10 rounded-lg flex items-center justify-center shrink-0',
-                                checked ? `bg-${option.color}-200` : 'bg-gray-100',
+                                checked
+                                  ? ASSIGNMENT_TYPE_COLORS[
+                                      option.color as keyof typeof ASSIGNMENT_TYPE_COLORS
+                                    ].iconBox
+                                  : 'bg-(--palette-surface-3)',
                               )}
                             >
                               <Icon
@@ -688,7 +721,11 @@ const AdministrationPage = () => {
                                 style="solid"
                                 className={clsx(
                                   'w-5 h-5',
-                                  checked ? `text-${option.color}-600` : 'text-gray-400',
+                                  checked
+                                    ? ASSIGNMENT_TYPE_COLORS[
+                                        option.color as keyof typeof ASSIGNMENT_TYPE_COLORS
+                                      ].icon
+                                    : 'text-(--palette-ink-2)',
                                 )}
                               />
                             </div>
@@ -696,12 +733,12 @@ const AdministrationPage = () => {
                               <div
                                 className={clsx(
                                   'text-sm font-medium',
-                                  checked ? 'text-gray-900' : 'text-gray-700',
+                                  checked ? 'text-(--palette-ink)' : 'text-(--palette-ink)',
                                 )}
                               >
                                 {option.label}
                               </div>
-                              <div className="text-xs text-gray-500 mt-0.5">
+                              <div className="text-xs text-(--palette-gray-500) mt-0.5">
                                 {option.description}
                               </div>
                             </div>
@@ -709,7 +746,12 @@ const AdministrationPage = () => {
                               <Icon
                                 name="circle-check"
                                 style="solid"
-                                className={`w-5 h-5 text-${option.color}-500`}
+                                className={clsx(
+                                  'w-5 h-5',
+                                  ASSIGNMENT_TYPE_COLORS[
+                                    option.color as keyof typeof ASSIGNMENT_TYPE_COLORS
+                                  ].check,
+                                )}
                               />
                             )}
                           </div>
@@ -720,28 +762,30 @@ const AdministrationPage = () => {
                 )}
               />
               {errors.assignmentType && (
-                <p className="mt-2 text-sm text-danger">{errors.assignmentType.message}</p>
+                <p className="mt-2 text-sm text-danger">
+                  <ValidationText message={errors.assignmentType.message} />
+                </p>
               )}
               {isInternalDisabled && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 px-3 py-2">
                   <Icon
                     name="circle-info"
                     style="solid"
                     className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
                   />
-                  <p className="text-xs text-amber-700">
+                  <p className="text-xs text-(--palette-warn)">
                     {t('administration.assignmentType.internalDisabledHint')}
                   </p>
                 </div>
               )}
               {!canAssignCompanyInSystem && (
-                <div className="mt-3 flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2">
+                <div className="mt-3 flex items-start gap-2 rounded-lg bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 px-3 py-2">
                   <Icon
                     name="circle-info"
                     style="solid"
                     className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
                   />
-                  <p className="text-xs text-amber-700">
+                  <p className="text-xs text-(--palette-warn)">
                     {t('administration.assignmentType.externalDisabledHint')}
                   </p>
                 </div>
@@ -761,7 +805,7 @@ const AdministrationPage = () => {
                     Assignment Details card: the person is an internal appraiser, but the decision
                     belongs to this engagement and reads as part of it. */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-(--palette-ink) mb-3">
                     {t('administration.offlineExternal.keyerMethodLabel')}
                   </label>
                   <Controller
@@ -796,8 +840,8 @@ const AdministrationPage = () => {
                                 'rounded-lg border p-3 transition-all',
                                 disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
                                 checked
-                                  ? 'border-amber-500 bg-amber-50'
-                                  : 'border-gray-200 hover:border-gray-300',
+                                  ? 'border-amber-500 bg-(--palette-warn-wash)'
+                                  : 'border-(--palette-line) hover:border-(--palette-line-strong)',
                               )
                             }
                           >
@@ -808,26 +852,30 @@ const AdministrationPage = () => {
                                   style={checked ? 'solid' : 'regular'}
                                   className={clsx(
                                     'w-4 h-4 shrink-0',
-                                    checked ? 'text-amber-600' : 'text-gray-400',
+                                    checked
+                                      ? 'text-amber-600 dark:text-amber-400'
+                                      : 'text-(--palette-gray-400)',
                                   )}
                                 />
                                 <div className="flex-1 min-w-0">
                                   <div
                                     className={clsx(
                                       'text-sm font-medium',
-                                      checked ? 'text-gray-900' : 'text-gray-600',
+                                      checked
+                                        ? 'text-(--palette-ink)'
+                                        : 'text-(--palette-gray-600)',
                                     )}
                                   >
                                     {option.label}
                                   </div>
-                                  <div className="text-xs text-gray-500 truncate">
+                                  <div className="text-xs text-(--palette-gray-500) truncate">
                                     {option.description}
                                   </div>
                                 </div>
                                 <div
                                   className={clsx(
                                     'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                                    checked ? 'border-amber-500' : 'border-gray-300',
+                                    checked ? 'border-amber-500' : 'border-(--palette-line-strong)',
                                   )}
                                 >
                                   {checked && <div className="w-2 h-2 rounded-full bg-amber-500" />}
@@ -845,7 +893,7 @@ const AdministrationPage = () => {
                   <div className="mt-6">
                     {/* Same classes and spacing as the "Who keys in the book" label above, so the
                         two read as one stack rather than two differently-spaced sections. */}
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-(--palette-ink) mb-3">
                       {t('administration.manualStaff.label')} <span className="text-danger">*</span>
                     </label>
                     {selectedStaff ? (
@@ -865,27 +913,29 @@ const AdministrationPage = () => {
                         <button
                           type="button"
                           onClick={openStaffModal}
-                          className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-amber-50 hover:border-amber-400 transition-colors flex items-center justify-between"
+                          className="w-full border border-dashed border-(--palette-line-strong) rounded-lg p-4 text-left hover:bg-(--palette-warn-wash) hover:border-amber-400 transition-colors flex items-center justify-between"
                         >
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-(--palette-gray-500)">
                             {t('administration.manualStaff.placeholder')}
                           </span>
                           <Icon
                             name="magnifying-glass"
                             style="regular"
-                            className="w-4 h-4 text-gray-400"
+                            className="w-4 h-4 text-(--palette-gray-400)"
                           />
                         </button>
                       )
                     )}
                     {errors.staffId && (
-                      <p className="mt-2 text-sm text-danger">{errors.staffId.message}</p>
+                      <p className="mt-2 text-sm text-danger">
+                        <ValidationText message={errors.staffId.message} />
+                      </p>
                     )}
                   </div>
                 )}
 
                 {assignmentMethod === 'roundrobin' && (
-                  <div className="mt-6 rounded-lg bg-amber-50 p-4">
+                  <div className="mt-6 rounded-lg bg-(--palette-warn-wash) p-4">
                     <div className="flex items-start gap-3">
                       <Icon
                         name="circle-info"
@@ -893,10 +943,10 @@ const AdministrationPage = () => {
                         className="w-5 h-5 mt-0.5 text-amber-500"
                       />
                       <div>
-                        <p className="text-sm font-medium text-amber-900">
+                        <p className="text-sm font-medium text-amber-900 dark:text-amber-200">
                           {t('administration.roundrobinInfo.title')}
                         </p>
-                        <p className="text-sm mt-1 text-amber-700">
+                        <p className="text-sm mt-1 text-(--palette-warn)">
                           {t('administration.offlineExternal.keyerRoundrobinDesc')}
                         </p>
                       </div>
@@ -924,7 +974,7 @@ const AdministrationPage = () => {
               >
                 {/* Assignment Method */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-(--palette-ink) mb-3">
                     {t('administration.assignmentDetails.methodLabel')}
                   </label>
                   <Controller
@@ -981,9 +1031,9 @@ const AdministrationPage = () => {
                                   disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
                                   checked
                                     ? isExternal
-                                      ? 'border-purple-500 bg-purple-50'
-                                      : 'border-emerald-500 bg-emerald-50'
-                                    : 'border-gray-200 hover:border-gray-300',
+                                      ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10'
+                                      : 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10'
+                                    : 'border-(--palette-line) hover:border-(--palette-line-strong)',
                                 )
                               }
                             >
@@ -996,21 +1046,23 @@ const AdministrationPage = () => {
                                       'w-4 h-4 shrink-0',
                                       checked
                                         ? isExternal
-                                          ? 'text-purple-600'
-                                          : 'text-emerald-600'
-                                        : 'text-gray-400',
+                                          ? 'text-purple-600 dark:text-purple-400'
+                                          : 'text-emerald-600 dark:text-emerald-400'
+                                        : 'text-(--palette-gray-400)',
                                     )}
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div
                                       className={clsx(
                                         'text-sm font-medium',
-                                        checked ? 'text-gray-900' : 'text-gray-600',
+                                        checked
+                                          ? 'text-(--palette-ink)'
+                                          : 'text-(--palette-gray-600)',
                                       )}
                                     >
                                       {option.label}
                                     </div>
-                                    <div className="text-xs text-gray-500 truncate">
+                                    <div className="text-xs text-(--palette-gray-500) truncate">
                                       {option.description}
                                     </div>
                                   </div>
@@ -1021,7 +1073,7 @@ const AdministrationPage = () => {
                                         ? isExternal
                                           ? 'border-purple-500'
                                           : 'border-emerald-500'
-                                        : 'border-gray-300',
+                                        : 'border-(--palette-line-strong)',
                                     )}
                                   >
                                     {checked && (
@@ -1046,7 +1098,7 @@ const AdministrationPage = () => {
                 {/* Manual Selection - Internal Staff */}
                 {assignmentMethod === 'manual' && assignmentType === 'internal' && (
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-(--palette-ink) mb-2">
                       {t('administration.manualStaff.label')} <span className="text-danger">*</span>
                     </label>
                     {selectedStaff ? (
@@ -1067,21 +1119,23 @@ const AdministrationPage = () => {
                         <button
                           type="button"
                           onClick={openStaffModal}
-                          className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
+                          className="w-full border border-dashed border-(--palette-line-strong) rounded-lg p-4 text-left hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) transition-colors flex items-center justify-between"
                         >
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-(--palette-gray-500)">
                             {t('administration.manualStaff.placeholder')}
                           </span>
                           <Icon
                             name="magnifying-glass"
                             style="regular"
-                            className="w-4 h-4 text-gray-400"
+                            className="w-4 h-4 text-(--palette-gray-400)"
                           />
                         </button>
                       )
                     )}
                     {errors.staffId && (
-                      <p className="mt-2 text-sm text-danger">{errors.staffId.message}</p>
+                      <p className="mt-2 text-sm text-danger">
+                        <ValidationText message={errors.staffId.message} />
+                      </p>
                     )}
                   </div>
                 )}
@@ -1089,7 +1143,7 @@ const AdministrationPage = () => {
                 {/* Manual Selection - External Company */}
                 {assignmentMethod === 'manual' && assignmentType === 'external' && (
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-(--palette-ink) mb-2">
                       {t('administration.manualCompany.label')}{' '}
                       <span className="text-danger">*</span>
                     </label>
@@ -1111,21 +1165,23 @@ const AdministrationPage = () => {
                         <button
                           type="button"
                           onClick={openCompanyModal}
-                          className="w-full border border-dashed border-gray-300 rounded-lg p-4 text-left hover:bg-gray-50 hover:border-gray-400 transition-colors flex items-center justify-between"
+                          className="w-full border border-dashed border-(--palette-line-strong) rounded-lg p-4 text-left hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) transition-colors flex items-center justify-between"
                         >
-                          <span className="text-sm text-gray-500">
+                          <span className="text-sm text-(--palette-gray-500)">
                             {t('administration.manualCompany.placeholder')}
                           </span>
                           <Icon
                             name="magnifying-glass"
                             style="regular"
-                            className="w-4 h-4 text-gray-400"
+                            className="w-4 h-4 text-(--palette-gray-400)"
                           />
                         </button>
                       )
                     )}
                     {errors.companyId && (
-                      <p className="mt-2 text-sm text-danger">{errors.companyId.message}</p>
+                      <p className="mt-2 text-sm text-danger">
+                        <ValidationText message={errors.companyId.message} />
+                      </p>
                     )}
                   </div>
                 )}
@@ -1135,7 +1191,9 @@ const AdministrationPage = () => {
                   <div
                     className={clsx(
                       'mb-6 rounded-lg p-4',
-                      assignmentType === 'internal' ? 'bg-emerald-50' : 'bg-purple-50',
+                      assignmentType === 'internal'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10'
+                        : 'bg-purple-50 dark:bg-purple-500/10',
                     )}
                   >
                     <div className="flex items-start gap-3">
@@ -1151,7 +1209,9 @@ const AdministrationPage = () => {
                         <p
                           className={clsx(
                             'text-sm font-medium',
-                            assignmentType === 'internal' ? 'text-emerald-900' : 'text-purple-900',
+                            assignmentType === 'internal'
+                              ? 'text-emerald-900 dark:text-emerald-200'
+                              : 'text-purple-900 dark:text-purple-200',
                           )}
                         >
                           {t('administration.roundrobinInfo.title')}
@@ -1159,7 +1219,9 @@ const AdministrationPage = () => {
                         <p
                           className={clsx(
                             'text-sm mt-1',
-                            assignmentType === 'internal' ? 'text-emerald-700' : 'text-purple-700',
+                            assignmentType === 'internal'
+                              ? 'text-emerald-700 dark:text-emerald-300'
+                              : 'text-purple-700 dark:text-purple-300',
                           )}
                         >
                           {assignmentType === 'internal'
@@ -1174,7 +1236,7 @@ const AdministrationPage = () => {
                 {/* Internal Followup Staff - Only for external assignments */}
                 {assignmentType === 'external' && (
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-(--palette-ink) mb-3">
                       {t('administration.followupStaff.label')}{' '}
                       {followupStaffMethod === 'manual' && <span className="text-danger">*</span>}
                     </label>
@@ -1214,8 +1276,8 @@ const AdministrationPage = () => {
                                   'rounded-lg border p-3 transition-all',
                                   disabled ? 'pointer-events-none opacity-60' : 'cursor-pointer',
                                   checked
-                                    ? 'border-purple-500 bg-purple-50'
-                                    : 'border-gray-200 hover:border-gray-300',
+                                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-500/10'
+                                    : 'border-(--palette-line) hover:border-(--palette-line-strong)',
                                 )
                               }
                             >
@@ -1226,26 +1288,32 @@ const AdministrationPage = () => {
                                     style={checked ? 'solid' : 'regular'}
                                     className={clsx(
                                       'w-4 h-4 shrink-0',
-                                      checked ? 'text-purple-600' : 'text-gray-400',
+                                      checked
+                                        ? 'text-purple-600 dark:text-purple-400'
+                                        : 'text-(--palette-gray-400)',
                                     )}
                                   />
                                   <div className="flex-1 min-w-0">
                                     <div
                                       className={clsx(
                                         'text-sm font-medium',
-                                        checked ? 'text-gray-900' : 'text-gray-600',
+                                        checked
+                                          ? 'text-(--palette-ink)'
+                                          : 'text-(--palette-gray-600)',
                                       )}
                                     >
                                       {option.label}
                                     </div>
-                                    <div className="text-xs text-gray-500 truncate">
+                                    <div className="text-xs text-(--palette-gray-500) truncate">
                                       {option.description}
                                     </div>
                                   </div>
                                   <div
                                     className={clsx(
                                       'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0',
-                                      checked ? 'border-purple-500' : 'border-gray-300',
+                                      checked
+                                        ? 'border-purple-500'
+                                        : 'border-(--palette-line-strong)',
                                     )}
                                   >
                                     {checked && (
@@ -1262,7 +1330,7 @@ const AdministrationPage = () => {
 
                     {/* Round-robin info box */}
                     {followupStaffMethod === 'roundrobin' && (
-                      <div className="rounded-lg p-4 bg-purple-50">
+                      <div className="rounded-lg p-4 bg-purple-50 dark:bg-purple-500/10">
                         <div className="flex items-start gap-3">
                           <Icon
                             name="circle-info"
@@ -1270,10 +1338,10 @@ const AdministrationPage = () => {
                             className="w-5 h-5 mt-0.5 text-purple-500"
                           />
                           <div>
-                            <p className="text-sm font-medium text-purple-900">
+                            <p className="text-sm font-medium text-purple-900 dark:text-purple-200">
                               {t('administration.roundrobinInfo.title')}
                             </p>
-                            <p className="text-sm mt-1 text-purple-700">
+                            <p className="text-sm mt-1 text-purple-700 dark:text-purple-300">
                               {t('administration.followupStaff.roundrobinInfo')}
                             </p>
                           </div>
@@ -1303,9 +1371,9 @@ const AdministrationPage = () => {
                             <button
                               type="button"
                               onClick={openFollowupStaffModal}
-                              className="w-full border border-dashed border-purple-300 rounded-lg p-4 text-left hover:bg-purple-50 hover:border-purple-400 transition-colors flex items-center justify-between"
+                              className="w-full border border-dashed border-purple-300 dark:border-purple-500/40 rounded-lg p-4 text-left hover:bg-purple-50 dark:hover:bg-purple-500/10 hover:border-purple-400 transition-colors flex items-center justify-between"
                             >
-                              <span className="text-sm text-gray-500">
+                              <span className="text-sm text-(--palette-gray-500)">
                                 {t('administration.followupStaff.placeholder')}
                               </span>
                               <Icon
@@ -1318,7 +1386,7 @@ const AdministrationPage = () => {
                         )}
                         {errors.followupStaffId && (
                           <p className="mt-2 text-sm text-danger">
-                            {errors.followupStaffId.message}
+                            <ValidationText message={errors.followupStaffId.message} />
                           </p>
                         )}
                       </>
@@ -1338,16 +1406,16 @@ const AdministrationPage = () => {
             {/*  >*/}
             {/*    <div className="space-y-4">*/}
             {/*      <div className="flex items-center gap-4">*/}
-            {/*        <div className="size-12 rounded-full bg-primary-100 flex items-center justify-center">*/}
-            {/*          <Icon name="user" style="solid" className="size-5 text-primary-700" />*/}
+            {/*        <div className="size-12 rounded-full bg-primary-100 dark:bg-primary-500/20 flex items-center justify-center">*/}
+            {/*          <Icon name="user" style="solid" className="size-5 text-(--palette-accent-ink)" />*/}
             {/*        </div>*/}
             {/*        <div>*/}
-            {/*          <div className="text-sm font-medium text-gray-900">*/}
+            {/*          <div className="text-sm font-medium text-(--palette-ink)">*/}
             {/*            {currentAssignment.externalAppraiserName ||*/}
             {/*              currentAssignment.assigneeUserId ||*/}
             {/*              'Assigned'}*/}
             {/*          </div>*/}
-            {/*          <div className="text-xs text-gray-500">*/}
+            {/*          <div className="text-xs text-(--palette-gray-500)">*/}
             {/*            {currentAssignment.assignmentType}*/}
             {/*          </div>*/}
             {/*        </div>*/}
@@ -1358,16 +1426,16 @@ const AdministrationPage = () => {
             {/*        />*/}
             {/*      </div>*/}
 
-            {/*      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-100">*/}
+            {/*      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-(--palette-line-soft)">*/}
             {/*        <div>*/}
-            {/*          <div className="text-xs text-gray-500">Assignment Source</div>*/}
-            {/*          <div className="text-sm font-medium text-gray-900">*/}
+            {/*          <div className="text-xs text-(--palette-gray-500)">Assignment Source</div>*/}
+            {/*          <div className="text-sm font-medium text-(--palette-ink)">*/}
             {/*            {currentAssignment.assignmentMethod}*/}
             {/*          </div>*/}
             {/*        </div>*/}
             {/*        <div>*/}
-            {/*          <div className="text-xs text-gray-500">Assigned At</div>*/}
-            {/*          <div className="text-sm font-medium text-gray-900">*/}
+            {/*          <div className="text-xs text-(--palette-gray-500)">Assigned At</div>*/}
+            {/*          <div className="text-sm font-medium text-(--palette-ink)">*/}
             {/*            {new Date(currentAssignment.assignedAt).toLocaleString('th-TH')}*/}
             {/*          </div>*/}
             {/*        </div>*/}
@@ -1421,15 +1489,15 @@ const AdministrationPage = () => {
 
         {/* Sticky Action Buttons */}
         {!isReadOnly && (
-          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+          <div className="shrink-0 bg-(--palette-surface) border-t border-(--palette-line) px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-4">
                 <Button variant="ghost" type="button" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <div className="h-6 w-px bg-gray-200" />
+                <div className="h-6 w-px bg-(--palette-line)" />
                 {isDirty && (
-                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600">
+                  <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                     {t('administration.unsavedChanges')}
                   </span>

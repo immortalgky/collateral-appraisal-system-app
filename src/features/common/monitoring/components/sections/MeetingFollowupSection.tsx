@@ -35,20 +35,28 @@ const COLUMNS: ColumnDef<MeetingFollowup>[] = [
     key: 'appraisalNumber',
     label: 'Appraisal No.',
     sortKey: 'AppraisalNumber',
-    render: row => <span className="text-sm font-medium text-primary">{row.appraisalNumber}</span>,
+    render: row => (
+      <span className="text-sm font-medium text-(--palette-primary-text)">
+        {row.appraisalNumber}
+      </span>
+    ),
   },
   {
     key: 'customerName',
     label: 'Customer Name',
     sortKey: 'CustomerName',
-    render: row => <span className="text-xs text-gray-500">{row.customerName ?? '—'}</span>,
+    render: row => (
+      <span className="text-xs text-(--palette-gray-500)">{row.customerName ?? '—'}</span>
+    ),
     className: 'max-w-[160px] truncate',
   },
   {
     key: 'approvalTier',
     label: 'Group Type',
     sortKey: 'ApprovalTier',
-    render: row => <span className="text-xs text-gray-700 tabular-nums">{row.approvalTier}</span>,
+    render: row => (
+      <span className="text-xs text-(--palette-ink) tabular-nums">{row.approvalTier}</span>
+    ),
   },
   {
     key: 'votes',
@@ -56,7 +64,7 @@ const COLUMNS: ColumnDef<MeetingFollowup>[] = [
     render: row => {
       const voted = row.totalApprovers - row.pendingCount;
       return (
-        <span className="text-xs text-gray-700 tabular-nums">
+        <span className="text-xs text-(--palette-ink) tabular-nums">
           {voted} / {row.totalApprovers}
         </span>
       );
@@ -67,9 +75,11 @@ const COLUMNS: ColumnDef<MeetingFollowup>[] = [
     label: 'Meeting No.',
     render: row =>
       row.approvalTier === 3 && row.meetingId ? (
-        <span className="text-sm font-medium text-primary">{row.meetingNumber ?? '—'}</span>
+        <span className="text-sm font-medium text-(--palette-primary-text)">
+          {row.meetingNumber ?? '—'}
+        </span>
       ) : (
-        <span className="text-gray-400 text-xs">—</span>
+        <span className="text-(--palette-gray-400) text-xs">—</span>
       ),
   },
   {
@@ -80,7 +90,7 @@ const COLUMNS: ColumnDef<MeetingFollowup>[] = [
       row.approvalTier === 3 ? (
         <DateCell value={row.meetingDate} />
       ) : (
-        <span className="text-gray-400 text-xs">—</span>
+        <span className="text-(--palette-gray-400) text-xs">—</span>
       ),
   },
 ];
@@ -237,14 +247,14 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
               }}
               className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-full border transition-colors ${
                 isActive
-                  ? 'text-primary bg-primary/5 border-primary/30'
-                  : 'text-gray-700 bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                  ? 'text-(--palette-primary-text) bg-primary/5 border-primary/30'
+                  : 'text-(--palette-ink) bg-(--palette-surface) border-(--palette-line) hover:border-(--palette-line-strong) hover:bg-(--palette-surface-2)'
               }`}
             >
               <Icon
                 style="solid"
                 name={tab.icon}
-                className={`size-3 ${isActive ? 'text-primary' : 'text-gray-500'}`}
+                className={`size-3 ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-500)'}`}
               />
               <span>{tab.label}</span>
             </button>
@@ -321,7 +331,7 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
           <button
             type="button"
             onClick={handleClearFilters}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:border-gray-300 hover:text-gray-700 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-(--palette-gray-500) border border-(--palette-line) rounded-lg hover:border-(--palette-line-strong) hover:text-(--palette-ink) transition-all"
           >
             <Icon style="solid" name="xmark" className="size-3.5" />
             {t('common.clearAll')}
@@ -331,16 +341,16 @@ function MeetingFollowupSection({ onCountChange }: MeetingFollowupSectionProps) 
 
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-3">
-          <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+          <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
-          <p className="text-sm font-medium text-gray-800">{t('common.loadError')}</p>
-          <p className="text-xs text-gray-400">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('common.loadError')}</p>
+          <p className="text-xs text-(--palette-gray-400)">{(error as Error)?.message}</p>
         </div>
       )}
 
       {!isError && (
-        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           {isCommittee ? (
             <CommitteeFollowupTable
               rows={committeeRows}

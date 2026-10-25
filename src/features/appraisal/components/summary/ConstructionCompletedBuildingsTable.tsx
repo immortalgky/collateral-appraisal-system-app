@@ -6,13 +6,13 @@ interface Props {
   rows: ConstructionCompletedBuildingRow[];
 }
 
-const thClass = 'px-3 py-2.5 text-right text-xs font-semibold text-gray-600';
-const thLeftClass = 'px-3 py-2.5 text-left text-xs font-semibold text-gray-600';
-const tdClass = 'px-3 py-2 text-right text-gray-700 tabular-nums';
-const tdLeftClass = 'px-3 py-2 text-left text-gray-700';
+const thClass = 'px-3 py-2.5 text-right text-xs font-semibold text-(--palette-gray-600)';
+const thLeftClass = 'px-3 py-2.5 text-left text-xs font-semibold text-(--palette-gray-600)';
+const tdClass = 'px-3 py-2 text-right text-(--palette-ink) tabular-nums';
+const tdLeftClass = 'px-3 py-2 text-left text-(--palette-ink)';
 const thSeqClass =
-  'w-20 whitespace-nowrap px-3 py-2.5 text-center text-xs font-semibold text-gray-600';
-const tdSeqClass = 'w-20 px-3 py-2 text-center text-gray-700 tabular-nums';
+  'w-20 whitespace-nowrap px-3 py-2.5 text-center text-xs font-semibold text-(--palette-gray-600)';
+const tdSeqClass = 'w-20 px-3 py-2 text-center text-(--palette-ink) tabular-nums';
 
 /**
  * Buildings already completed (100%) before the construction inspection —
@@ -27,10 +27,10 @@ const ConstructionCompletedBuildingsTable = ({ rows }: Props) => {
   const totalAppraisalValue = rows.reduce((sum, r) => sum + r.appraisalValue, 0);
 
   return (
-    <div className="overflow-x-auto rounded border border-gray-200">
+    <div className="overflow-x-auto rounded border border-(--palette-line)">
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
             <th className={thSeqClass}>{t('constructionCompletedBuildingsTable.columns.seqNo')}</th>
             <th className={thLeftClass}>
               {t('constructionCompletedBuildingsTable.columns.houseNumber')}
@@ -46,7 +46,7 @@ const ConstructionCompletedBuildingsTable = ({ rows }: Props) => {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {rows.map((row, idx) => (
             <tr key={row.appraisalPropertyId}>
               <td className={tdSeqClass}>{idx + 1}</td>
@@ -58,7 +58,7 @@ const ConstructionCompletedBuildingsTable = ({ rows }: Props) => {
           ))}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-50 font-semibold border-t border-gray-200">
+          <tr className="bg-(--palette-surface-2) font-semibold border-t border-(--palette-line)">
             <td colSpan={4} className={tdLeftClass}>
               {t('constructionCompletedBuildingsTable.totalRow')}
             </td>

@@ -18,7 +18,7 @@ export function SectionHeader({ title, totalNumberOfYears, open, onToggle }: Sec
     <tr onClick={onToggle} className="cursor-pointer select-none">
       <td
         colSpan={2}
-        className="border-b border-gray-300 px-[8px] py-0 h-[22px] leading-[21px] truncate bg-[#edf1f1] text-[11px] font-semibold tracking-[0.02em] text-[#55636f]"
+        className="border-b border-(--palette-line-strong) px-[8px] py-0 h-[22px] leading-[21px] truncate bg-(--palette-surface-3) text-[11px] font-semibold tracking-[0.02em] text-(--palette-ink-2)"
       >
         <span
           className={clsx('inline-block w-[10px] transition-transform', !open && '-rotate-90')}
@@ -28,7 +28,10 @@ export function SectionHeader({ title, totalNumberOfYears, open, onToggle }: Sec
         </span>{' '}
         {title}
       </td>
-      <td colSpan={totalNumberOfYears} className="border-b border-gray-300 h-[22px] bg-[#edf1f1]" />
+      <td
+        colSpan={totalNumberOfYears}
+        className="border-b border-(--palette-line-strong) h-[22px] bg-(--palette-surface-3)"
+      />
     </tr>
   );
 }
@@ -41,12 +44,12 @@ interface SectionTotalRowProps {
 function SectionTotalRow({ totalSectionValues, label }: SectionTotalRowProps) {
   return (
     <tr>
-      <td className={clsx(STK_CLASS, 'bg-[#f8fafa] font-semibold')} title={label}>
+      <td className={clsx(STK_CLASS, 'bg-(--palette-surface-2) font-semibold')} title={label}>
         {label}
       </td>
-      <td className={clsx(STK2_CLASS, 'bg-[#f8fafa]')} />
+      <td className={clsx(STK2_CLASS, 'bg-(--palette-surface-2)')} />
       {(totalSectionValues ?? []).map((val, index) => (
-        <td key={index} className={clsx(YEAR_CELL_CLASS, 'bg-[#f8fafa] font-semibold')}>
+        <td key={index} className={clsx(YEAR_CELL_CLASS, 'bg-(--palette-surface-2) font-semibold')}>
           {(val ?? 0).toLocaleString()}
         </td>
       ))}

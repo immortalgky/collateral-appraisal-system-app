@@ -224,7 +224,7 @@ describe('PoolTaskListPage', () => {
     render(<PoolTaskListPage {...props} visibleColumns={[...props.visibleColumns]} />);
     // the number is the teal link, and its click does not also fire the row's
     const number = screen.getByRole('button', { name: '69000002' });
-    expect(number).toHaveClass('text-primary');
+    expect(number).toHaveClass('text-(--palette-primary-text)');
     fireEvent.click(number);
     expect(navigate).toHaveBeenCalledTimes(1);
     expect(navigate).toHaveBeenLastCalledWith('/tasks/t2/opening');

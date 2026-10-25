@@ -40,7 +40,7 @@ const Highlight = ({
   return (
     <>
       {text.slice(0, at)}
-      <mark className="rounded-sm bg-amber-100 px-px text-inherit">
+      <mark className="rounded-sm bg-amber-100 dark:bg-amber-500/20 px-px text-inherit">
         {text.slice(at, at + needle.length)}
       </mark>
       {text.slice(at + needle.length)}

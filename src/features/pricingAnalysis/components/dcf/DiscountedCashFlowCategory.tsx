@@ -72,12 +72,12 @@ export function DiscountedCashFlowCategory({
       <tr
         onClick={() => setExpanded(!isExpanded)}
         data-category={{ category: category }}
-        className="cursor-pointer hover:bg-gray-50/60"
+        className="cursor-pointer hover:bg-(--palette-surface-2)/60"
       >
         <td className={clsx(STK_CLASS_FLEX, 'font-semibold')}>
           <div className="flex flex-row items-center gap-1.5">
             {/* mock `.g.dcf .chev2` — a ▾/▸ glyph, 10px wide, ink-3. */}
-            <span className="inline-block w-[10px] shrink-0 text-[#8a96a0]" aria-hidden>
+            <span className="inline-block w-[10px] shrink-0 text-(--palette-ink-3)" aria-hidden>
               {isExpanded ? '▾' : '▸'}
             </span>
             <span
@@ -89,7 +89,7 @@ export function DiscountedCashFlowCategory({
             <span
               className={clsx(
                 // mock `.g.dcf .cnt` — neutral chip, not the section colour.
-                'inline-flex items-center justify-center min-w-4 h-[15px] px-[5px] rounded-lg text-[10.5px] font-medium shrink-0 bg-[#edf1f1] text-[#55636f]',
+                'inline-flex items-center justify-center min-w-4 h-[15px] px-[5px] rounded-lg text-[10.5px] font-medium shrink-0 bg-(--palette-surface-3) text-(--palette-ink-2)',
               )}
             >
               {fields.length}
@@ -157,7 +157,7 @@ export function DiscountedCashFlowCategory({
               {/* mock:2123 — `<td class="stkw" colspan="2">…</td><td colspan="${n}">`:
                   one wide sticky cell for the button, one plain cell spanning every year
                   column instead of N empty cells. */}
-              <td colSpan={2} className={clsx(STKW_CLASS, 'bg-white')}>
+              <td colSpan={2} className={clsx(STKW_CLASS, 'bg-(--palette-surface)')}>
                 <div className="flex flex-row items-center h-[26px]">
                   <button
                     type="button"
@@ -165,13 +165,16 @@ export function DiscountedCashFlowCategory({
                     // mock `.addrow` (mock:350): 11px, line-height 18px, padding 1px 8px →
                     // 22px tall, so it sits inside the 26px row. Without its own leading it
                     // inherited the cell's 25px and overflowed, clipping the dashed border.
-                    className="inline-flex items-center px-[8px] py-[1px] text-[11px] leading-[18px] text-primary rounded-[6px] border border-dashed border-primary hover:bg-primary/10 cursor-pointer"
+                    className="inline-flex items-center px-[8px] py-[1px] text-[11px] leading-[18px] text-(--palette-primary-text) rounded-[6px] border border-dashed border-primary hover:bg-primary/10 cursor-pointer"
                   >
                     + {t('dcf.assumption.addAssumption')}
                   </button>
                 </div>
               </td>
-              <td colSpan={totalNumberOfYears} className="border-b border-gray-300 bg-white" />
+              <td
+                colSpan={totalNumberOfYears}
+                className="border-b border-(--palette-line-strong) bg-(--palette-surface)"
+              />
             </tr>
           )}
         </>

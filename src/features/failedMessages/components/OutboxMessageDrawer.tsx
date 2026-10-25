@@ -94,14 +94,14 @@ const OutboxMessageDrawer = ({
       </div>
     ) : canResend ? (
       <div className="flex justify-end">
-        <span className="text-[13px] text-gray-500">{t('drawer.viewOnly')}</span>
+        <span className="text-[13px] text-(--palette-gray-500)">{t('drawer.viewOnly')}</span>
       </div>
     ) : (
       <div className="flex justify-end">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-gray-300 text-[13px] font-medium px-4 py-2"
+          className="rounded-lg border border-(--palette-line-strong) text-[13px] font-medium px-4 py-2"
         >
           {t('drawer.close')}
         </button>
@@ -129,7 +129,7 @@ const OutboxMessageDrawer = ({
       ) : isError && !data ? (
         // A 404/403 on the very first fetch never recovers on retry — say so instead of offering it.
         gone ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-[12px] text-(--palette-warn)">
             {t('drawer.goneOrForbidden')}
           </div>
         ) : (
@@ -138,7 +138,7 @@ const OutboxMessageDrawer = ({
       ) : data ? (
         <>
           {isError && (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+            <div className="mb-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-[12px] text-(--palette-warn)">
               {gone ? t('drawer.goneOrForbidden') : t('drawer.refreshFailed')}
             </div>
           )}
@@ -303,7 +303,7 @@ const OutboxMessageDrawerBody = ({
       {data.error && (
         <section>
           <SectionTitle>{t('table.latestError')}</SectionTitle>
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-[13px] text-red-700">
+          <div className="rounded-xl border border-(--palette-req-line) bg-(--palette-req-wash) px-3 py-2.5 text-[13px] text-(--palette-req)">
             <span className="font-mono break-all">{data.error}</span>
           </div>
         </section>
