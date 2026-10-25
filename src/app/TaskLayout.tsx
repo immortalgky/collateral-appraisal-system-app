@@ -171,8 +171,8 @@ function TaskLayout() {
     onPoolTaskUpdate: useCallback(
       (event: PoolTaskUpdateEvent) => {
         if (event.taskId !== taskId) return;
-        if (event.type === 'PoolTaskClaimed') {
-          // Task has been permanently claimed by another user — refetch to get updated state
+        if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
+          // Task has been permanently claimed by another user or completed — refetch to get updated state
           queryClient.invalidateQueries({ queryKey: ['task', taskId] });
           return;
         }

@@ -326,7 +326,7 @@ function PoolTaskListPage({
               }
             : old,
         );
-      } else if (event.type === 'PoolTaskClaimed') {
+      } else if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
         queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }

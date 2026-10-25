@@ -32,7 +32,7 @@ const isPoolGroupCountsQuery = (query: Query) =>
  * - PoolTaskLocked / PoolTaskUnlocked: patch the matching task's lock fields
  *   in place across every pool kanban-column infinite-query page (no refetch,
  *   preserves scroll position).
- * - PoolTaskClaimed: the task leaves the pool entirely, so invalidate
+ * - PoolTaskClaimed / PoolTaskCompleted: the task leaves the pool entirely, so invalidate
  *   (refetch) the pool kanban-column queries and the pool group-counts.
  */
 export function usePoolKanbanRealtime() {
@@ -75,7 +75,7 @@ export function usePoolKanbanRealtime() {
                 }
               : old,
         );
-      } else if (event.type === 'PoolTaskClaimed') {
+      } else if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
         queryClient.invalidateQueries({ predicate: isPoolKanbanQuery });
         queryClient.invalidateQueries({ predicate: isPoolGroupCountsQuery });
       }
