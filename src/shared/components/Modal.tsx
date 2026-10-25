@@ -83,8 +83,17 @@ const Modal: React.FunctionComponent<ModalProps> = ({
             </div>
 
             {/* Content */}
-            {/* Context crosses the portal: a dialog opened from a Compact sheet is still Standard. */}
-            <div className={clsx('overflow-visible', compact ? 'px-5 py-4' : 'px-6 py-4')}>
+            {/*
+              Stop submit here: React bubbles synthetic submit through the portal, so a form inside
+              this modal would also submit an enclosing page <form>. It must be a plain div, not
+              DialogPanel: HeadlessUI skips merged on* handlers once preventDefault was called
+              (react-hook-form's handleSubmit calls it), so a handler on the panel never runs.
+              The layout provider crosses the portal: a dialog opened from a Compact sheet is still Standard.
+            */}
+            <div
+              onSubmit={e => e.stopPropagation()}
+              className={clsx('overflow-visible', compact ? 'px-5 py-4' : 'px-6 py-4')}
+            >
               <FormLayoutProvider layout="standard">{children}</FormLayoutProvider>
             </div>
           </DialogPanel>

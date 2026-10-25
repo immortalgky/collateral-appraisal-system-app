@@ -65,6 +65,7 @@ const REASON_KEYS = {
   documentFollowupOpen: 'assignSummary.reasons.documentFollowupOpen',
   winnerUnavailable: 'assignSummary.reasons.winnerUnavailable',
   unpriced: 'assignSummary.reasons.unpriced',
+  feeBaseMissing: 'assignSummary.reasons.feeBaseMissing',
   stopped: 'assignSummary.reasons.stopped',
   unexpectedStop: 'assignSummary.reasons.unexpectedStop',
   stateUnreadable: 'assignSummary.reasons.stateUnreadable',

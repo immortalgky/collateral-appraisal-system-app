@@ -18,15 +18,11 @@ import {
   useResolveFeeAppointmentApproval,
 } from '../api/feeAppointmentApproval';
 import type { FeeAppointmentApprovalLine } from '../types/feeAppointmentApproval';
-import { FEE_ITEM_TYPE_OPTIONS } from '@/features/appraisal/types/appointmentAndFee';
+import { useFeeTypeLabel } from '@/features/appraisal/utils/useFeeTypeLabel';
 import { useGetAppraisalFees, useUpdateAppraisalFee } from '@/features/appraisal/api/fee';
 import { BANK_ABSORB_FEE_TYPES } from '@/features/appraisal/components/FeeInformationSection';
 
 // ---- Helpers ----
-
-// Maps the fee code to its friendly type label (matches the Appointment & Fee page).
-const getFeeTypeLabel = (code: string | null | undefined) =>
-  FEE_ITEM_TYPE_OPTIONS.find(opt => opt.value === code)?.label ?? code ?? '—';
 
 const formatDate = (d: string | null | undefined) => {
   if (!d) return '—';
@@ -268,6 +264,8 @@ interface FeeGroupBlockContentProps {
 
 function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
   const { t } = useTranslation('feeAppointmentApproval');
+  // The fee code's type label, from the same key set as the Appointment & Fee page.
+  const getFeeTypeLabel = useFeeTypeLabel();
   const total = feeLines.reduce((sum, l) => sum + (l.feeAmount ?? 0), 0);
 
   return (
@@ -291,7 +289,7 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
             {feeLines.map(line => (
               <tr key={line.id}>
                 <td className="px-3 py-2.5 text-(--palette-gray-600)">
-                  {getFeeTypeLabel(line.feeCode)}
+                  {line.feeCode ? getFeeTypeLabel(line.feeCode) : '—'}
                 </td>
                 <td className="px-3 py-2.5 text-(--palette-ink)">{line.feeDescription ?? '—'}</td>
                 <td className="px-3 py-2.5 text-right text-(--palette-ink)">
@@ -324,6 +322,7 @@ function FeeGroupBlockContent({ feeLines }: FeeGroupBlockContentProps) {
 
 function FeeAppointmentApprovalTaskPage() {
   const { t } = useTranslation(['feeAppointmentApproval', 'common']);
+  const getFeeTypeLabel = useFeeTypeLabel();
   const navigate = useNavigate();
   const workflowInstanceId = useWorkflowInstanceId();
   const isTaskOwner = useIsTaskOwner();
@@ -571,7 +570,7 @@ function FeeAppointmentApprovalTaskPage() {
                   {otherFees.map((item, idx) => (
                     <tr key={item.id ?? idx}>
                       <td className="px-3 py-2.5 text-(--palette-gray-600)">
-                        {getFeeTypeLabel(item.feeCode)}
+                        {item.feeCode ? getFeeTypeLabel(item.feeCode) : '—'}
                       </td>
                       <td className="px-3 py-2.5 text-(--palette-ink)">
                         {item.feeDescription ?? '—'}

@@ -83,6 +83,53 @@ describe('resolveFormDefaults', () => {
   });
 });
 
+describe('resolveFormDefaults: previous company', () => {
+  const company = {
+    id: 'c-old',
+    companyName: 'Old Co',
+    registrationNo: '123',
+    contactPerson: '',
+    contactPhone: '',
+    contactEmail: '',
+    rating: 0,
+    activeAssignments: 0,
+  };
+  const internalDefaults = { assignmentType: 'internal', assignmentMethod: 'roundrobin' } as const;
+  const resolve = (flags: Partial<typeof open>, preselectCompany: typeof company | null) =>
+    resolveFormDefaults({
+      base: assignmentFormDefaults,
+      defaults: internalDefaults,
+      ...open,
+      ...flags,
+      preselectCompany,
+    });
+
+  it('chooses External + Manual with the company, over the Appraisal Type defaults', () => {
+    expect(resolve({}, company)).toMatchObject({
+      assignmentType: 'external',
+      assignmentMethod: 'manual',
+      companyId: 'c-old',
+      selectedCompany: company,
+    });
+  });
+
+  it('leaves the defaults alone when there is nothing to preselect', () => {
+    expect(resolve({}, null)).toMatchObject({
+      assignmentType: 'internal',
+      assignmentMethod: 'roundrobin',
+      companyId: null,
+      selectedCompany: null,
+    });
+  });
+
+  it.each([
+    { name: 'in-system assignment is switched off', flags: { canAssignCompanyInSystem: false } },
+    { name: 'a quotation owns the page', flags: { skipTypeDefaults: true } },
+  ])('does not preselect when $name', ({ flags }) => {
+    expect(resolve(flags, company)).toMatchObject({ companyId: null, selectedCompany: null });
+  });
+});
+
 describe('toFormDefaults', () => {
   it('lowercases known values', () => {
     expect(

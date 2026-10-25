@@ -296,6 +296,10 @@
     "vat": "VAT ({{rate}}%)",
     "vatTooltip": "Value Added Tax calculated on subtotal",
     "total": "Total",
+    "adminChip": "Set by admin",
+    "systemAmount": "System calculated {{amount}}",
+    "lockedAria": "Locked: set by admin",
+    "lockedTitle": "Set by admin, cannot be edited",
     "constructionInspectionFee": "Construction Inspection Fee",
     "constructionInspectionFeeHint": "This fee is reused as the appraisal fee on the next Construction Inspection application for this collateral.",
     "bankAbsorbAmount": "Bank Absorb Amount",
@@ -324,6 +328,7 @@
     "toasts": {
       "feeAdded": "Fee added successfully",
       "feeAddFailed": "Failed to add fee item.",
+      "changeInProgress": "Another fee change is still being saved. Please wait a moment and try again.",
       "feeUpdated": "Fee updated successfully",
       "feeUpdateFailed": "Failed to update fee item.",
       "feeDeleted": "Fee deleted successfully",
@@ -444,6 +449,36 @@
     "unsavedChanges": "Unsaved changes",
     "assigning": "Assigning...",
     "assign": "Assign",
+    "noData": "No data",
+    "workload_one": "{{count}} task",
+    "workload_other": "{{count}} tasks",
+    "activeCount_one": "{{count}} active",
+    "activeCount_other": "{{count}} active",
+    "clearSelection": "Clear selection",
+    "changeStaff": "Change",
+    "changeCompanyButton": "Change company",
+    "readOnlyBanner": {
+      "viewOnly": "You are viewing this page read-only",
+      "assigned": "Assigned — this page is read-only"
+    },
+    "modal": {
+      "select": "Select",
+      "staff": {
+        "title": "Select Staff Member",
+        "search": "Search by name, employee ID, or department...",
+        "loading": "Loading staff...",
+        "empty": "No staff found matching your search.",
+        "code": "ID {{code}}"
+      },
+      "company": {
+        "title": "Select External Company",
+        "search": "Search by company name, registration number, or contact...",
+        "loading": "Loading companies...",
+        "empty": "No companies found matching your search.",
+        "registrationNo": "Reg. no. {{no}}",
+        "mouExpired": "MOU expired"
+      }
+    },
     "toasts": {
       "assignmentCreated": "Assignment created successfully",
       "assignmentFailed": "Failed to create assignment. Please try again.",
@@ -461,7 +496,146 @@
     "remark": {
       "title": "Remark",
       "subtitle": "Optional note about this assignment decision",
-      "placeholder": "Enter a remark for this assignment..."
+      "placeholder": "Enter a remark for this assignment...",
+      "empty": "No remark"
+    },
+    "previousCompany": {
+      "title": "The previous inspection was appraised by {{company}}",
+      "book": "Prior appraisal {{appraisalNumber}}",
+      "inspection": "Inspection no. {{n}}",
+      "hintSelected": "The system has selected this company for you. You can change it (you will be asked to confirm).",
+      "hintAvailable": "This company's MOU is active. If you pick another company you will be asked to confirm.",
+      "hintMouInactive": "This company's MOU is not active, so it was not preselected. Please choose another company.",
+      "hintNotEligible": "This company is not in the list that can be chosen for this customer segment, so it was not preselected. Please choose another company.",
+      "badge": "Previous company · inspection no. {{n}}",
+      "badgeNoInspection": "Previous company"
+    },
+    "changeCompany": {
+      "title": "Use a different company instead of the previous inspection company?",
+      "description": "The previous inspection of this collateral was appraised by the company below. If you confirm, the system will assign the company you picked instead.",
+      "previous": "Previous company",
+      "selected": "Selected company",
+      "fee": "Fee",
+      "feeKept": "Still uses the agreed construction inspection fee {{amount}} (before VAT)",
+      "feeAdmin": "The appraisal fee charged is the amount set by an admin, {{amount}} (before VAT)",
+      "keepPrevious": "Keep previous company",
+      "confirm": "Confirm change"
+    },
+    "slip": {
+      "title": "Assignment slip",
+      "status": {
+        "draft": "Draft",
+        "assigned": "Assigned"
+      },
+      "segment": {
+        "type": "Type",
+        "assignee": "Assignee",
+        "keyer": "Keyed by",
+        "followup": "Follow-up",
+        "fee": "Fee"
+      },
+      "offlineSuffix": "(appraised offline)",
+      "previousCompany": "(previous company)",
+      "notSelected": "Not selected yet",
+      "awaitingWinner": "Awaiting winner",
+      "auto": "Auto-assigned",
+      "fee": {
+        "total": "Total",
+        "beforeVat": "Before VAT {{amount}}",
+        "vat": "VAT {{amount}}",
+        "none": "No fee amount yet"
+      },
+      "checks": {
+        "title": "Check before sending",
+        "titleQuotation": "Before assigning",
+        "fix": "Fix",
+        "fixAria": "Fix: {{label}}",
+        "progress": "{{ok}} of {{total}} checks passed",
+        "status": {
+          "ok": "Passed",
+          "warn": "Warning",
+          "error": "Not passed",
+          "todo": "Not reached yet"
+        },
+        "typeMissing": "Assignment type not selected",
+        "assigneeOk": "Assignee selected",
+        "assigneeAuto": "The system will assign the assignee automatically",
+        "staffMissing": "Staff member not selected",
+        "companyMissing": "Company not selected",
+        "keyerOk": "Keying staff selected",
+        "keyerAuto": "The system will assign the keying staff automatically",
+        "keyerMissing": "Keying staff not selected",
+        "followupOk": "Follow-up staff set",
+        "followupMissing": "Follow-up staff not selected",
+        "quotationSentOk": "Quotation sent",
+        "quotationSentTodo": "Quotation not sent yet",
+        "winnerOk": "Winner finalized",
+        "winnerTodo": "Winner not finalized yet",
+        "feeOk": "Fee amount set",
+        "feeMissing": "Fee amount not set",
+        "remarksTooLong": "Remark exceeds {{max}} characters"
+      },
+      "reason": {
+        "companyMissing": "No external company selected",
+        "staffMissing": "No staff member selected",
+        "feeMissing": "Set the fee amount before assigning",
+        "quotationNotFinalized": "The quotation must be finalized with a winner before assigning"
+      },
+      "readOnly": {
+        "assignedAt": "Assigned on {{at}}",
+        "assignedBy": "by {{by}}"
+      },
+      "bar": {
+        "open": "View assignment slip"
+      }
+    }
+  },
+  "feePreview": {
+    "title": "Fee to be charged",
+    "subtitle": "Estimate for the assignment",
+    "subtitleEditable": "Estimate before assignment. You can change the amount or add items; they take effect immediately without approval.",
+    "loading": "Loading fee estimate",
+    "loadFailed": "Could not load the fee estimate.",
+    "selectTypeFirst": "Select an assignment type first",
+    "columns": {
+      "item": "Item",
+      "source": "Source",
+      "amount": "Amount (THB)"
+    },
+    "editBase": "Edit amount",
+    "setBase": "Set amount",
+    "resetBase": "Reset",
+    "edit": "Edit",
+    "delete": "Delete",
+    "tierOpenEnded": "{{min}} and above",
+    "pending": {
+      "title": "Awaiting quotation result",
+      "hint": "The amount will show once quotation {{quotationNumber}} has a winner.",
+      "hintNoNumber": "The amount will show once the quotation has a winner."
+    },
+    "type": {
+      "01": "Appraisal fee",
+      "02": "Inspection fee",
+      "99": "Other"
+    },
+    "source": {
+      "ConstructionInspectionFee": "Source: construction inspection fee agreed on prior appraisal {{appraisalNumber}}",
+      "Tier": "Source: fee schedule · selling price {{sellingPrice}} falls in {{range}}",
+      "Quotation": "Source: quotation {{quotationNumber}} · winner {{winner}}",
+      "NoneFromPrior": "Appraisal {{appraisalNumber}} did not record a construction inspection fee for the next round, so the system adds no amount — use \"Set amount\" to enter one",
+      "None": "No fee source applies to the selected assignment (no fee schedule, quotation or earlier inspection fee) — use \"Set amount\" to enter one"
+    },
+    "aria": {
+      "editBase": "Edit appraisal fee amount",
+      "setBase": "Set appraisal fee amount",
+      "resetBase": "Reset appraisal fee to the system amount",
+      "editItem": "Edit fee: {{description}}",
+      "deleteItem": "Delete fee: {{description}}"
+    },
+    "resetDialog": {
+      "message": "Remove the amount set by admin? The appraisal fee goes back to the system-calculated {{amount}}.",
+      "messageNoSystem": "Remove the amount set by admin? The appraisal fee will have no system-calculated amount.",
+      "confirm": "Reset"
     }
   },
   "quotation": {
@@ -2244,8 +2418,9 @@
     "headerRequired": "Header is required",
     "assignmentTypeRequired": "Please select an assignment type",
     "assignmentMethodRequired": "Please select an assignment method",
-    "remarksMaxLength": "Remarks must not exceed 500 characters",
+    "remarksMaxLength": "Remarks must not exceed {{max}} characters",
     "selectAssignee": "Please select an assignee",
+    "selectCompany": "Please select an external company",
     "selectFollowupStaff": "Please select an internal followup staff"
   },
   "photoGallery": {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
-import { useTranslation } from 'react-i18next';
+import { Trans, useTranslation } from 'react-i18next';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -57,6 +57,8 @@ const QuotationEntryModal = ({
 }: QuotationEntryModalProps) => {
   const readOnly = usePageReadOnly();
   const { t } = useTranslation('appraisal');
+  // Quotation namespace on its own: <Trans> below needs a `t` bound to that namespace.
+  const { t: tq } = useTranslation('quotation');
   const [activeTab, setActiveTab] = useState<Tab>('new');
   const [selectedDraftSnapshot, setSelectedDraft] = useState<QuotationDraftSummaryDto | null>(null);
   const [maxAppraisalDays, setMaxAppraisalDays] = useState<number | null>(null);
@@ -121,22 +123,27 @@ const QuotationEntryModal = ({
         },
         onError: (err: unknown) => {
           const apiErr = err as { apiError?: { detail?: string } };
-          toast.error(apiErr?.apiError?.detail ?? 'Failed to add appraisal to draft');
+          toast.error(apiErr?.apiError?.detail ?? tq('entryModal.addFailed'));
         },
       },
     );
   };
 
   const tabs: { key: Tab; label: string; icon: string }[] = [
-    { key: 'new', label: 'Create New', icon: 'file-circle-plus' },
-    { key: 'existing', label: 'Add to Existing Draft', icon: 'layer-plus' },
+    { key: 'new', label: tq('entryModal.tabNew'), icon: 'file-circle-plus' },
+    { key: 'existing', label: tq('entryModal.tabExisting'), icon: 'layer-plus' },
   ];
 
   return (
     <>
       {/* Outer modal — only for the tab switcher + "existing" tab content */}
       {activeTab === 'existing' && (
-        <Modal isOpen={isOpen} onClose={handleClose} title="Request Quotation" size="xl">
+        <Modal
+          isOpen={isOpen}
+          onClose={handleClose}
+          title={t('quotation.requestQuotation')}
+          size="xl"
+        >
           <div className="flex flex-col gap-4">
             {/* Tab bar */}
             <div className="flex border-b border-(--palette-line) -mt-1">
@@ -164,8 +171,7 @@ const QuotationEntryModal = ({
             {/* Existing draft picker */}
             <div>
               <p className="text-sm text-(--palette-gray-600) mb-3">
-                Select an existing Draft quotation to add this appraisal into. Multiple appraisals
-                can share one bid invitation.
+                {tq('entryModal.existingHint')}
               </p>
               <ExistingDraftPicker
                 drafts={drafts}
@@ -184,9 +190,17 @@ const QuotationEntryModal = ({
                   className="size-4 text-purple-500 shrink-0 mt-0.5"
                 />
                 <p className="text-sm text-purple-700 dark:text-purple-300">
-                  Appraisal will be added to <strong>{selectedDraft.quotationNumber}</strong> (
-                  {selectedDraft.totalAppraisals} existing appraisal
-                  {selectedDraft.totalAppraisals !== 1 ? 's' : ''})
+                  {/* Same hardening as BoldTrans: values are escaped, then unescaped as text. */}
+                  <Trans
+                    t={tq}
+                    ns="quotation"
+                    i18nKey="entryModal.addedToDraft"
+                    count={selectedDraft.totalAppraisals}
+                    values={{ quotationNumber: selectedDraft.quotationNumber }}
+                    tOptions={{ interpolation: { escapeValue: true } }}
+                    shouldUnescape
+                    components={{ strong: <strong /> }}
+                  />
                 </p>
               </div>
             )}
@@ -215,9 +229,9 @@ const QuotationEntryModal = ({
             {selectedDraft && (
               <div>
                 <NumberInput
-                  label="Max Appraisal Duration (Day)"
-                  helperText="Maximum duration you allow the appraiser to complete this appraisal. Applies to the appraisal being added."
-                  placeholder="e.g. 7"
+                  label={t('quotation.maxAppraisalDuration')}
+                  helperText={tq('entryModal.maxDurationHelper')}
+                  placeholder={tq('picker.maxDaysPlaceholder')}
                   value={maxAppraisalDays}
                   decimalPlaces={0}
                   thousandSeparator={false}
@@ -231,7 +245,7 @@ const QuotationEntryModal = ({
             {/* Footer */}
             <div className="flex justify-end gap-3 pt-2">
               <Button variant="outline" onClick={handleClose}>
-                Cancel
+                {t('quotation.cancel')}
               </Button>
               <Button
                 onClick={handleAddToExisting}
@@ -255,12 +269,12 @@ const QuotationEntryModal = ({
                 {isAdding ? (
                   <>
                     <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                    Adding...
+                    {tq('entryModal.adding')}
                   </>
                 ) : (
                   <>
                     <Icon name="layer-plus" style="solid" className="size-4 mr-2" />
-                    Add to Draft
+                    {tq('entryModal.addToDraft')}
                   </>
                 )}
               </Button>

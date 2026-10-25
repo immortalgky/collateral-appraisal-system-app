@@ -8,6 +8,8 @@ import Modal from '@/shared/components/Modal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useCancelQuotation } from '../api/quotation';
+import { MAX_NEGOTIATION_ROUNDS } from '../constants';
+import { sumQuotationItems } from '../utils/sumQuotationItems';
 import type { QuotationRequestDetailDto } from '../schemas/quotation';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import InvitedCompaniesPopover from './InvitedCompaniesPopover';
@@ -273,18 +275,8 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                     const cq = companyQuotations.find(q => q.companyId === inv.companyId);
                     const items = cq?.items ?? [];
                     const hasItems = items.length > 0;
-                    const totalFeeAmount = items.reduce(
-                      (sum, item) => sum + (item.feeAmount ?? 0),
-                      0,
-                    );
-                    const totalDiscount = items.reduce(
-                      (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
-                      0,
-                    );
-                    const totalEstimateManday = items.reduce(
-                      (sum, item) => sum + (item.estimatedDays ?? 0),
-                      0,
-                    );
+                    const { totalFeeAmount, totalDiscount, totalEstimateManday } =
+                      sumQuotationItems(items);
                     return (
                       <tr
                         key={inv.companyId}
@@ -515,9 +507,9 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
                 variant="outline"
                 size="sm"
                 onClick={openNegotiate}
-                disabled={(winner.negotiationRounds ?? 0) >= 3}
+                disabled={(winner.negotiationRounds ?? 0) >= MAX_NEGOTIATION_ROUNDS}
                 title={
-                  (winner.negotiationRounds ?? 0) >= 3
+                  (winner.negotiationRounds ?? 0) >= MAX_NEGOTIATION_ROUNDS
                     ? t('negotiation.maxRoundsReached')
                     : undefined
                 }

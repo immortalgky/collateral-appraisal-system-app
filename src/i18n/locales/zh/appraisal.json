@@ -296,6 +296,10 @@
     "vat": "增值税 ({{rate}}%)",
     "vatTooltip": "按小计计算的增值税",
     "total": "合计",
+    "adminChip": "管理员设置",
+    "systemAmount": "系统计算 {{amount}}",
+    "lockedAria": "已锁定：管理员设置",
+    "lockedTitle": "管理员设置，无法修改",
     "constructionInspectionFee": "施工检验费",
     "constructionInspectionFeeHint": "此费用将用于该抵押品下次施工检验申请的评估费。",
     "bankAbsorbAmount": "银行承担金额",
@@ -324,6 +328,7 @@
     "toasts": {
       "feeAdded": "费用添加成功",
       "feeAddFailed": "添加费用失败。",
+      "changeInProgress": "上一项费用变更仍在保存中，请稍候再试。",
       "feeUpdated": "费用更新成功",
       "feeUpdateFailed": "更新费用失败。",
       "feeDeleted": "费用删除成功",
@@ -444,6 +449,36 @@
     "unsavedChanges": "有未保存的更改",
     "assigning": "分配中...",
     "assign": "分配",
+    "noData": "无数据",
+    "workload_one": "{{count}} 项任务",
+    "workload_other": "{{count}} 项任务",
+    "activeCount_one": "{{count}} 项进行中",
+    "activeCount_other": "{{count}} 项进行中",
+    "clearSelection": "清除所选",
+    "changeStaff": "更换",
+    "changeCompanyButton": "更换公司",
+    "readOnlyBanner": {
+      "viewOnly": "您正以只读模式查看此页面",
+      "assigned": "已分配——此页面为只读"
+    },
+    "modal": {
+      "select": "选择",
+      "staff": {
+        "title": "选择员工",
+        "search": "按姓名、员工编号或部门搜索...",
+        "loading": "正在加载员工...",
+        "empty": "没有找到符合搜索条件的员工。",
+        "code": "编号 {{code}}"
+      },
+      "company": {
+        "title": "选择外部公司",
+        "search": "按公司名称、注册号或联系人搜索...",
+        "loading": "正在加载公司...",
+        "empty": "没有找到符合搜索条件的公司。",
+        "registrationNo": "注册号 {{no}}",
+        "mouExpired": "MOU 已失效"
+      }
+    },
     "toasts": {
       "assignmentCreated": "分配创建成功",
       "assignmentFailed": "创建分配失败，请重试。",
@@ -461,7 +496,146 @@
     "remark": {
       "title": "备注",
       "subtitle": "关于此分配决定的可选备注",
-      "placeholder": "输入此分配的备注..."
+      "placeholder": "输入此分配的备注...",
+      "empty": "无备注"
+    },
+    "previousCompany": {
+      "title": "上一期检验由 {{company}} 评估",
+      "book": "原评估 {{appraisalNumber}}",
+      "inspection": "第 {{n}} 期检验",
+      "hintSelected": "系统已为您选择该公司，可以更改（更改前会请您确认）。",
+      "hintAvailable": "该公司的 MOU 有效。若选择其他公司，会先请您确认。",
+      "hintMouInactive": "该公司的 MOU 已失效，因此系统未预选。请选择其他公司。",
+      "hintNotEligible": "该公司不在此客户分类可选的名单中，因此系统未预选。请选择其他公司。",
+      "badge": "原公司 · 第 {{n}} 期检验",
+      "badgeNoInspection": "原公司"
+    },
+    "changeCompany": {
+      "title": "要改用其他公司代替上次检查的公司吗？",
+      "description": "此抵押品上一期检验由下列公司评估。确认后，系统将改为分配给您选择的公司。",
+      "previous": "原公司",
+      "selected": "所选公司",
+      "fee": "费用",
+      "feeKept": "仍使用已约定的施工检验费 {{amount}}（不含增值税）",
+      "feeAdmin": "将收取的评估费为管理员设定的金额 {{amount}}（不含增值税）",
+      "keepPrevious": "继续使用原公司",
+      "confirm": "确认更换公司"
+    },
+    "slip": {
+      "title": "分配单",
+      "status": {
+        "draft": "草稿",
+        "assigned": "已分配"
+      },
+      "segment": {
+        "type": "类型",
+        "assignee": "受理人",
+        "keyer": "录入人",
+        "followup": "跟进",
+        "fee": "费用"
+      },
+      "offlineSuffix": "（系统外评估）",
+      "previousCompany": "（原公司）",
+      "notSelected": "尚未选择",
+      "awaitingWinner": "等待中标者",
+      "auto": "自动分配",
+      "fee": {
+        "total": "合计",
+        "beforeVat": "不含增值税 {{amount}}",
+        "vat": "增值税 {{amount}}",
+        "none": "暂无费用金额"
+      },
+      "checks": {
+        "title": "发送前检查",
+        "titleQuotation": "分配前",
+        "fix": "去修改",
+        "fixAria": "去修改：{{label}}",
+        "progress": "已通过 {{ok}} / {{total}} 项检查",
+        "status": {
+          "ok": "通过",
+          "warn": "警告",
+          "error": "未通过",
+          "todo": "尚未到此步骤"
+        },
+        "typeMissing": "尚未选择分配类型",
+        "assigneeOk": "已选择受理人",
+        "assigneeAuto": "系统将自动分配受理人",
+        "staffMissing": "尚未选择员工",
+        "companyMissing": "尚未选择公司",
+        "keyerOk": "已选择录入人员",
+        "keyerAuto": "系统将自动分配录入人员",
+        "keyerMissing": "尚未选择录入人员",
+        "followupOk": "已指定跟进人员",
+        "followupMissing": "尚未选择跟进人员",
+        "quotationSentOk": "报价单已发送",
+        "quotationSentTodo": "报价单尚未发送",
+        "winnerOk": "已确定中标者",
+        "winnerTodo": "尚未确定中标者",
+        "feeOk": "已设定费用金额",
+        "feeMissing": "尚未设置费用金额",
+        "remarksTooLong": "备注超过 {{max}} 个字符"
+      },
+      "reason": {
+        "companyMissing": "尚未选择外部公司",
+        "staffMissing": "尚未选择员工",
+        "feeMissing": "分配前必须设置费用金额",
+        "quotationNotFinalized": "分配前必须确定报价单的中标者"
+      },
+      "readOnly": {
+        "assignedAt": "分配时间 {{at}}",
+        "assignedBy": "分配人 {{by}}"
+      },
+      "bar": {
+        "open": "查看分配单"
+      }
+    }
+  },
+  "feePreview": {
+    "title": "将收取的费用",
+    "subtitle": "此分配的费用估算",
+    "subtitleEditable": "分配前的估算 · 管理员可修改金额或添加费用项（立即生效，无需审批）",
+    "loading": "正在加载费用估算",
+    "loadFailed": "无法加载费用估算。",
+    "selectTypeFirst": "请先选择分配类型",
+    "columns": {
+      "item": "项目",
+      "source": "来源",
+      "amount": "金额（泰铢）"
+    },
+    "editBase": "修改金额",
+    "setBase": "设置金额",
+    "resetBase": "重置",
+    "edit": "编辑",
+    "delete": "删除",
+    "tierOpenEnded": "{{min}} 及以上",
+    "pending": {
+      "title": "等待报价结果",
+      "hint": "报价单 {{quotationNumber}} 产生中标方后将显示金额。",
+      "hintNoNumber": "报价单产生中标方后将显示金额。"
+    },
+    "type": {
+      "01": "评估费",
+      "02": "检验费",
+      "99": "其他"
+    },
+    "source": {
+      "ConstructionInspectionFee": "来源：原评估 {{appraisalNumber}} 中约定的施工检验费",
+      "Tier": "来源：收费表 · 成交价 {{sellingPrice}} 位于 {{range}}",
+      "Quotation": "来源：报价单 {{quotationNumber}} · 中标方 {{winner}}",
+      "NoneFromPrior": "评估 {{appraisalNumber}} 未记录下一期的施工检验费，因此系统不预填金额 — 请点击“设置金额”自行填写",
+      "None": "所选分配没有可用的费用来源（无收费表、报价或此前的检查费）— 请点击“设置金额”录入"
+    },
+    "aria": {
+      "editBase": "修改评估费金额",
+      "setBase": "设置评估费金额",
+      "resetBase": "重置评估费为系统计算金额",
+      "editItem": "编辑费用：{{description}}",
+      "deleteItem": "删除费用：{{description}}"
+    },
+    "resetDialog": {
+      "message": "移除管理员设置的金额吗？评估费将恢复为系统计算的 {{amount}}。",
+      "messageNoSystem": "移除管理员设置的金额吗？评估费将没有系统计算的金额。",
+      "confirm": "重置"
     }
   },
   "quotation": {
@@ -2241,8 +2415,9 @@
     "headerRequired": "标题为必填项",
     "assignmentTypeRequired": "请选择分配类型",
     "assignmentMethodRequired": "请选择分配方式",
-    "remarksMaxLength": "备注不得超过 500 个字符",
+    "remarksMaxLength": "备注不得超过 {{max}} 个字符",
     "selectAssignee": "请选择被分配人",
+    "selectCompany": "请选择外部公司",
     "selectFollowupStaff": "请选择内部跟进人员",
     "contactPersonRequired": "请填写联系人姓名",
     "contactPhoneRequired": "请填写联系电话",

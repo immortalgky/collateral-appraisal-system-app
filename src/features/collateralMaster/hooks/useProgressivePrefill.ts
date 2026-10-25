@@ -11,12 +11,17 @@ import type { ConstructionWorkDetailDto } from '../api/types';
  * 1. By `constructionWorkItemId` (template FK)
  * 2. Fallback by `workItemName` (free-text items)
  *
- * For summary-mode inspections: copies `summaryCurrentProgressPct → new summaryPreviousProgressPct`.
+ * A new round starts at the previous figure: `CurrentProgressPct` is seeded equal to the previous one.
+ *
+ * For summary-mode inspections: copies `summaryCurrentProgressPct → new summaryPreviousProgressPct`
+ * (and the current figure starts equal to it).
  */
 export function useProgressivePrefill(inspectionId: string | null | undefined) {
-  const { data: priorDetails, isLoading, isError } = useConstructionInspectionWorkDetails(
-    inspectionId,
-  );
+  const {
+    data: priorDetails,
+    isLoading,
+    isError,
+  } = useConstructionInspectionWorkDetails(inspectionId);
 
   /**
    * Builds seed rows for the new construction inspection.
@@ -34,34 +39,39 @@ export function useProgressivePrefill(inspectionId: string | null | undefined) {
     if (priorDetails.isFullDetail && priorDetails.workDetails) {
       // Match prior rows to template (if provided), else return all prior rows
       const rows = templateItems
-        ? templateItems.map(tmpl => {
-            // Try match by constructionWorkItemId first
-            const byId = priorDetails.workDetails!.find(
-              d => d.constructionWorkItemId && d.constructionWorkItemId === tmpl.constructionWorkItemId,
-            );
-            // Fallback by workItemName
-            const byName = !byId
-              ? priorDetails.workDetails!.find(
-                  d =>
-                    d.workItemName.trim().toLowerCase() ===
-                    (tmpl.workItemName ?? '').trim().toLowerCase(),
-                )
-              : null;
+        ? (templateItems
+            .map(tmpl => {
+              // Try match by constructionWorkItemId first
+              const byId = priorDetails.workDetails!.find(
+                d =>
+                  d.constructionWorkItemId &&
+                  d.constructionWorkItemId === tmpl.constructionWorkItemId,
+              );
+              // Fallback by workItemName
+              const byName = !byId
+                ? priorDetails.workDetails!.find(
+                    d =>
+                      d.workItemName.trim().toLowerCase() ===
+                      (tmpl.workItemName ?? '').trim().toLowerCase(),
+                  )
+                : null;
 
-            const matched = byId ?? byName;
-            if (!matched) return null;
+              const matched = byId ?? byName;
+              if (!matched) return null;
 
-            return {
-              constructionWorkItemId: matched.constructionWorkItemId ?? undefined,
-              constructionWorkGroupId: matched.constructionWorkGroupId ?? undefined,
-              workItemName: matched.workItemName,
-              proportionPct: matched.proportionPct,
-              constructionValue: matched.constructionValue ?? undefined,
-              displayOrder: matched.displayOrder,
-              previousProgressPct: matched.currentProgressPct, // <-- key: prior current → new previous
-              currentProgressPct: 0,
-            };
-          }).filter(Boolean) as Array<Partial<ConstructionWorkDetailDto>>
+              return {
+                constructionWorkItemId: matched.constructionWorkItemId ?? undefined,
+                constructionWorkGroupId: matched.constructionWorkGroupId ?? undefined,
+                workItemName: matched.workItemName,
+                proportionPct: matched.proportionPct,
+                constructionValue: matched.constructionValue ?? undefined,
+                displayOrder: matched.displayOrder,
+                previousProgressPct: matched.currentProgressPct, // <-- key: prior current → new previous
+                // A new round starts where the last one ended, so the figure is carried, not zeroed.
+                currentProgressPct: matched.currentProgressPct,
+              };
+            })
+            .filter(Boolean) as Array<Partial<ConstructionWorkDetailDto>>)
         : priorDetails.workDetails.map(d => ({
             constructionWorkItemId: d.constructionWorkItemId ?? undefined,
             constructionWorkGroupId: d.constructionWorkGroupId ?? undefined,
@@ -70,18 +80,19 @@ export function useProgressivePrefill(inspectionId: string | null | undefined) {
             constructionValue: d.constructionValue ?? undefined,
             displayOrder: d.displayOrder,
             previousProgressPct: d.currentProgressPct,
-            currentProgressPct: 0,
+            currentProgressPct: d.currentProgressPct,
           }));
 
       return rows;
     }
 
     // Summary mode — return a single summary seed
+    const summaryPct = priorDetails.summaryCurrentProgressPct ?? 0;
     return [
       {
         workItemName: 'Summary',
-        previousProgressPct: priorDetails.summaryCurrentProgressPct ?? 0,
-        currentProgressPct: 0,
+        previousProgressPct: summaryPct,
+        currentProgressPct: summaryPct,
         proportionPct: 100,
         displayOrder: 0,
       },

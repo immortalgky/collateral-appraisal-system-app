@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
   EditDraftQuotationBody,
@@ -15,6 +21,7 @@ import { isAxiosError } from 'axios';
 import { parseLocalDateTime } from '@/features/failedMessages/utils/queueHealth';
 import { notifyFinalizeError, notifyFinalizeSuccess } from './finalizeToasts';
 import { invalidateTaskLists } from '@/features/appraisal/api/administration';
+import { invalidateFeePreviews } from '@/features/appraisal/api/feePreview';
 import type {
   Quotation,
   StartQuotationFromTaskRequest,
@@ -45,6 +52,23 @@ export const quotationKeys = {
   // re-fetch of the preview there could fail and silently switch auto-assign off.
   autoAssignPreview: (id: string) => [...quotationKeys.all, 'auto-assign-preview', id] as const,
 };
+
+/**
+ * Marks the fee-previews of the appraisals a quotation covers stale: the ones named (when the
+ * mutation knows them) plus those in the quotation's cached detail. If neither is known, every
+ * appraisal's preview is marked.
+ */
+const invalidateQuotationFees = (
+  queryClient: QueryClient,
+  quotationId: string,
+  appraisalIds: string[] = [],
+) =>
+  invalidateFeePreviews(queryClient, [
+    ...appraisalIds,
+    ...(queryClient
+      .getQueryData<QuotationRequestDetailDto>(quotationKeys.detail(quotationId))
+      ?.appraisals?.map(a => a.appraisalId) ?? []),
+  ]);
 
 // ─── GET /quotations/{id} ─────────────────────────────────────────────────────
 
@@ -312,8 +336,10 @@ export const useStartQuotationFromTask = () => {
       const { data } = await axios.post('/quotations/start-from-task', request);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, request) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      // A quotation now exists for the appraisal: its fee preview (the quotation source) is stale.
+      invalidateFeePreviews(queryClient, [request.appraisalId]);
     },
   });
 };
@@ -426,6 +452,7 @@ export const usePickTentativeWinner = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -442,6 +469,7 @@ export const useOpenNegotiation = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -473,6 +501,7 @@ export const useRespondNegotiation = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -493,6 +522,7 @@ export const useRejectTentativeWinner = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -512,8 +542,8 @@ export interface AutoAssignPreviewAppraisal {
   predictedOutcome: 'Ready' | 'Skipped' | 'Failed' | 'Parked';
   /**
    * null when Ready. Skipped: deleted | workflowEnded | noAssignment | notPending.
-   * Failed: constructionInspection | taskHeld | winnerUnavailable | unpriced | assignmentNotReset |
-   * documentFollowupOpen.
+   * Failed: constructionInspection | taskHeld | winnerUnavailable | unpriced | feeBaseMissing |
+   * assignmentNotReset | documentFollowupOpen.
    * Parked: notAtAssignment.
    */
   reason: string | null;
@@ -603,6 +633,7 @@ export const useFinalizeQuotation = (quotationId: string) => {
     onSettled: (data, error, payload) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId, data?.appraisalIds);
       if (!payload.autoAssign) return;
       // A 4xx means the request was refused on facts the preview may have shown wrongly (e.g. the
       // go-live flag was switched off after it loaded): re-read it, or every retry fails the same way.
@@ -649,6 +680,7 @@ export const useCancelQuotation = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -734,8 +766,11 @@ export const useCreateQuotation = () => {
       const { data } = await axios.post('/quotations', body);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, body) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      // An empty list would read as "every appraisal" to invalidateFeePreviews: skip it instead.
+      const appraisalIds = body.appraisals?.map(a => a.appraisalId) ?? [];
+      if (appraisalIds.length > 0) invalidateFeePreviews(queryClient, appraisalIds);
     },
   });
 };
@@ -787,10 +822,11 @@ export const useAddAppraisalToDraft = (quotationId: string) => {
       const { data } = await axios.post(`/quotations/${quotationId}/appraisals`, { appraisalId });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, appraisalId) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      invalidateFeePreviews(queryClient, [appraisalId]);
     },
   });
 };
@@ -809,10 +845,11 @@ export const useRemoveAppraisalFromDraft = (quotationId: string) => {
       const { data } = await axios.delete(`/quotations/${quotationId}/appraisals/${appraisalId}`);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, appraisalId) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      invalidateFeePreviews(queryClient, [appraisalId]);
     },
   });
 };
@@ -885,6 +922,7 @@ export const useSendQuotation = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      invalidateQuotationFees(queryClient, quotationId);
     },
     // A rejected Send (e.g. SEGMENT_COVERAGE_MISMATCH) means the draft changed since it was loaded,
     // so refetch to show the server's current Segment Set / per-company coverage. (onSuccess already

@@ -5,7 +5,7 @@ import {
   type AssignmentFormType,
 } from '../schemas/administration';
 import { pickActiveQuotation } from '@/features/quotation/utils/pickActiveQuotation';
-import type { AssignmentDefaultsResponse } from '../types/administration';
+import type { AssignmentDefaultsResponse, ExternalCompany } from '../types/administration';
 
 /** The form fields an Appraisal Type can pre-select; a field the API did not send validly is absent. */
 export type AssignmentDefaults = Partial<
@@ -39,12 +39,16 @@ interface ResolveFormDefaultsInput {
   isInternalDisabled: boolean;
   /** An existing quotation, or a failed read of the case data, means the Appraisal Type defaults do not apply. */
   skipTypeDefaults: boolean;
+  /** The prior inspection's company (active MOU, fresh row only): External + Manual with it chosen. */
+  preselectCompany?: ExternalCompany | null;
 }
 
 /**
  * Static defaults, overlaid with the Appraisal Type defaults, corrected to what this case allows.
  * The configured method only holds while the type stays as configured; if the type had to move,
- * the method is Manual.
+ * the method is Manual. The prior inspection's company wins over both, but only where in-system
+ * assignment is open and no quotation owns the page (skipTypeDefaults), the same cases the type
+ * defaults give way in.
  */
 export const resolveFormDefaults = ({
   base,
@@ -52,6 +56,7 @@ export const resolveFormDefaults = ({
   canAssignCompanyInSystem,
   isInternalDisabled,
   skipTypeDefaults,
+  preselectCompany,
 }: ResolveFormDefaultsInput): AssignmentFormType => {
   const applied = skipTypeDefaults ? undefined : defaults;
   const configuredType = applied?.assignmentType ?? base.assignmentType;
@@ -64,12 +69,22 @@ export const resolveFormDefaults = ({
   if (assignmentType !== configuredType || !isMethodValidForType(assignmentType, assignmentMethod))
     assignmentMethod = 'manual';
 
-  return {
+  const resolved: AssignmentFormType = {
     ...base,
     assignmentType,
     assignmentMethod,
     followupStaffMethod: applied?.followupStaffMethod ?? base.followupStaffMethod,
   };
+  if (preselectCompany && !skipTypeDefaults && canAssignCompanyInSystem) {
+    return {
+      ...resolved,
+      assignmentType: 'external',
+      assignmentMethod: 'manual',
+      companyId: preselectCompany.id,
+      selectedCompany: preselectCompany,
+    };
+  }
+  return resolved;
 };
 
 /**

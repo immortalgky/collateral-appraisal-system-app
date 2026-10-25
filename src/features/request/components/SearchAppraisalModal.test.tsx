@@ -1,7 +1,9 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '@/i18n';
 import { http, HttpResponse } from 'msw';
 import { act } from '@testing-library/react';
+import toast from 'react-hot-toast';
+import { useParameterStore } from '@/shared/store';
 import { render, screen, waitFor } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
 import SearchAppraisalModal from './SearchAppraisalModal';
@@ -215,7 +217,8 @@ describe('SearchAppraisalModal', () => {
     expect(screen.getAllByRole('option')[1]).toHaveAttribute('aria-selected', 'true');
     await user.keyboard('{Enter}');
     await waitFor(() => expect(onSelect).toHaveBeenCalledTimes(1));
-    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'a-2' }));
+    // no chain status is asked for without a construction-inspection purpose
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'a-2' }), undefined);
   });
 
   it('says so when nothing matches, and offers to clear the dates', async () => {
@@ -370,5 +373,243 @@ describe('SearchAppraisalModal closing while a pick loads', () => {
     const { user } = open(onSelect);
     await user.click(await screen.findByText('Customer 1'));
     await waitFor(() => expect(onSelect).toHaveBeenCalledTimes(1));
+  });
+});
+
+describe('SearchAppraisalModal on a construction-inspection purpose', () => {
+  const chainStatus = (over: Record<string, unknown> = {}) => ({
+    appraisalId: 'a-1',
+    construction: {
+      status: 'InProgress',
+      progressPct: 72.69,
+      sourceAppraisalId: 'a-1',
+      sourceAppraisalNumber: '69100001',
+      sourceInspectionNumber: 3,
+      sourceCompletedAt: '2026-09-15T00:00:00',
+    },
+    selected: { status: 'InProgress', progressPct: 72.69 },
+    laterInspection: null,
+    openInspectionRequest: null,
+    latestAppraisal: null,
+    blockReason: null,
+    ...over,
+  });
+
+  /** The list holds appraisal 1; the server answers its read and its chain status with `chain`. */
+  const serve = (chain: object | number) => {
+    const asked = { chain: 0 };
+    respond([row(1)]);
+    server.use(
+      http.get('*/api/appraisals/a-1', () =>
+        HttpResponse.json({
+          id: 'a-1',
+          appraisalNumber: '69100001',
+          status: 'Completed',
+          request: null,
+          documents: [],
+        }),
+      ),
+      http.get('*/api/appraisals/a-1/construction-chain-status', () => {
+        asked.chain++;
+        return typeof chain === 'number'
+          ? HttpResponse.json({}, { status: chain })
+          : HttpResponse.json(chain);
+      }),
+    );
+    return asked;
+  };
+
+  const pick = async (purpose: string | null) => {
+    const onSelect = vi.fn();
+    const onClose = vi.fn();
+    const { user, unmount } = render(
+      <SearchAppraisalModal isOpen onClose={onClose} onSelect={onSelect} purpose={purpose} />,
+    );
+    await user.click(await screen.findByText('Customer 1'));
+    return { onSelect, onClose, unmount };
+  };
+
+  const spyOnToastError = () => vi.spyOn(toast, 'error');
+  let error: ReturnType<typeof spyOnToastError>;
+  beforeEach(() => {
+    error = spyOnToastError();
+  });
+  afterEach(() => error.mockRestore());
+
+  it('asks for the chain status and hands it over with the pick, for 06 and for 11', async () => {
+    for (const purpose of ['06', '11']) {
+      const asked = serve(
+        chainStatus({
+          latestAppraisal: {
+            appraisalId: 'a-9',
+            appraisalNumber: '69100009',
+            purposeCode: '03',
+            completedAt: '2026-10-01T00:00:00',
+            progressPct: null,
+          },
+        }),
+      );
+      const { onSelect, unmount } = await pick(purpose);
+      await waitFor(() => expect(onSelect).toHaveBeenCalledTimes(1));
+      expect(asked.chain).toBe(1);
+      expect(onSelect).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'a-1' }),
+        expect.objectContaining({
+          latestAppraisal: expect.objectContaining({ appraisalNumber: '69100009' }),
+        }),
+      );
+      expect(error).not.toHaveBeenCalled();
+      unmount();
+    }
+  });
+
+  it('does not ask for it on any other purpose, or before one is chosen', async () => {
+    for (const purpose of ['03', null]) {
+      const asked = serve(chainStatus());
+      const { onSelect, unmount } = await pick(purpose);
+      await waitFor(() => expect(onSelect).toHaveBeenCalledTimes(1));
+      expect(asked.chain).toBe(0);
+      expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: 'a-1' }), undefined);
+      unmount();
+    }
+  });
+
+  const refused: [string, Record<string, unknown>, string][] = [
+    [
+      'ConstructionComplete',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: 5,
+          sourceCompletedAt: '2026-09-15T00:00:00',
+        },
+      }),
+      // names the appraisal that holds the 100%, which need not be the one that was picked
+      'Appraisal 69142210 is already 100% built (inspection round 5 on 15/09/2026). No further inspection is needed.',
+    ],
+    [
+      'ConstructionComplete without an inspection round',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        selected: { status: 'NoData', progressPct: null },
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: null,
+          sourceCompletedAt: '2026-09-15T00:00:00',
+        },
+      }),
+      // no empty "inspection round" in the text
+      'Appraisal 69142210 is already 100% built (on 15/09/2026). No further inspection is needed.',
+    ],
+    [
+      'ConstructionComplete without a date',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: 5,
+          sourceCompletedAt: null,
+        },
+      }),
+      'Appraisal 69142210 is already 100% built (inspection round 5). No further inspection is needed.',
+    ],
+    [
+      'ConstructionComplete without a round or a date',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        selected: { status: 'NoData', progressPct: null },
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: null,
+          sourceCompletedAt: null,
+        },
+      }),
+      'Appraisal 69142210 is already 100% built. No further inspection is needed.',
+    ],
+    [
+      'LaterInspectionExists',
+      chainStatus({
+        blockReason: 'LaterInspectionExists',
+        laterInspection: {
+          appraisalId: 'a-2',
+          appraisalNumber: '69142210',
+          inspectionNumber: 4,
+          completedAt: '2026-09-20T00:00:00',
+        },
+      }),
+      'Appraisal 69100001 already has a later inspection (appraisal 69142210). Please pick the latest one.',
+    ],
+    [
+      'OpenInspectionRequest',
+      chainStatus({
+        blockReason: 'OpenInspectionRequest',
+        openInspectionRequest: { requestId: 'q-1', requestNumber: 'R69-004512' },
+      }),
+      'Inspection request R69-004512 in this chain is still open. Wait until it is closed.',
+    ],
+  ];
+
+  it.each(refused)(
+    'refuses a %s appraisal with a toast, and neither selects it nor closes the dialog',
+    async (_reason, chain, message) => {
+      serve(chain);
+      const { onSelect, onClose } = await pick('06');
+      await waitFor(() => expect(error).toHaveBeenCalledWith(message));
+      expect(onSelect).not.toHaveBeenCalled();
+      expect(onClose).not.toHaveBeenCalled();
+      // the row is free to be clicked again: nothing is left loading
+      await waitFor(() => expect(screen.getByRole('option')).not.toHaveClass('opacity-60'));
+    },
+  );
+
+  it('refuses the pick, with the load-failed toast, when the status cannot be read', async () => {
+    serve(500);
+    const { onSelect } = await pick('06');
+    await waitFor(() => expect(error).toHaveBeenCalledTimes(1));
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it('says under the number what kind of appraisal each row is: the round, else the purpose', async () => {
+    useParameterStore.getState().setParameters([
+      {
+        parId: 3,
+        group: 'AppraisalPurpose',
+        country: 'TH',
+        language: 'en',
+        code: '03',
+        description: 'Re-appraisal',
+        isActive: true,
+        seqNo: 3,
+      },
+    ] as never);
+    try {
+      respond([
+        row(1, { inspectionNumber: 3, purpose: '06' }),
+        row(2, { purpose: '03' }),
+        row(3, { purpose: null }),
+      ]);
+      render(<SearchAppraisalModal isOpen onClose={vi.fn()} onSelect={vi.fn()} purpose="06" />);
+      await screen.findByText('Customer 1');
+      const [round, purposeOnly, neither] = screen.getAllByRole('option');
+      expect(round).toHaveTextContent('Inspection round 3');
+      expect(round).not.toHaveTextContent('06');
+      expect(purposeOnly).toHaveTextContent('Re-appraisal');
+      expect(neither).not.toHaveTextContent('Re-appraisal');
+    } finally {
+      useParameterStore.getState().setParameters([]);
+    }
   });
 });

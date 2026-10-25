@@ -23,6 +23,33 @@ import RichTextEditor from './RichTextEditor';
  */
 type AttachmentPickerConfig = { meetingId: string } | { quotationId: string };
 
+/** Field captions; callers override the ones they translate, the rest stay English. */
+interface EmailCompositionLabels {
+  from: string;
+  to: string;
+  cc: string;
+  bcc: string;
+  content: string;
+  attachments: string;
+  addAttachment: string;
+  attachmentPlaceholder: string;
+  send: string;
+  cancel: string;
+}
+
+const DEFAULT_LABELS: EmailCompositionLabels = {
+  from: 'From',
+  to: 'To',
+  cc: 'Cc',
+  bcc: 'Bcc',
+  content: 'Content',
+  attachments: 'Attachments',
+  addAttachment: 'Add attachment',
+  attachmentPlaceholder: 'Type and press Enter to add',
+  send: 'Send',
+  cancel: 'Cancel',
+};
+
 interface EmailCompositionModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -39,6 +66,7 @@ interface EmailCompositionModalProps {
   /** When true, at least one attachment is required to submit. */
   requireAttachment?: boolean;
   subjectLabel?: string;
+  labels?: Partial<EmailCompositionLabels>;
   isPending?: boolean;
   /** When true, Content is a rich-text/HTML editor (e.g. quotation tables) instead of a plain textarea. */
   richTextContent?: boolean;
@@ -63,10 +91,12 @@ const EmailCompositionModal = ({
   onUploadAttachment,
   requireAttachment = false,
   subjectLabel = 'Subject',
+  labels: labelOverrides,
   isPending = false,
   richTextContent = false,
   onSubmit,
 }: EmailCompositionModalProps) => {
+  const labels = { ...DEFAULT_LABELS, ...labelOverrides };
   const {
     register,
     handleSubmit,
@@ -212,7 +242,7 @@ const EmailCompositionModal = ({
         {/* From (optional — hidden when the sender is fixed by server config) */}
         {showFrom && (
           <div>
-            <label className={labelClass}>From</label>
+            <label className={labelClass}>{labels.from}</label>
             <input {...register('from')} type="text" className={fieldClass} />
             {errors.from && (
               <p className="mt-1 text-xs text-red-500">
@@ -224,7 +254,7 @@ const EmailCompositionModal = ({
 
         {/* To */}
         <div>
-          <label className={labelClass}>To</label>
+          <label className={labelClass}>{labels.to}</label>
           <input
             {...register('to')}
             type="text"
@@ -241,7 +271,7 @@ const EmailCompositionModal = ({
         {/* Cc */}
         {showCc && (
           <div>
-            <label className={labelClass}>Cc</label>
+            <label className={labelClass}>{labels.cc}</label>
             <input {...register('cc')} type="text" className={fieldClass} />
             {errors.cc && (
               <p className="mt-1 text-xs text-red-500">
@@ -254,7 +284,7 @@ const EmailCompositionModal = ({
         {/* Bcc */}
         {showBcc && (
           <div>
-            <label className={labelClass}>Bcc</label>
+            <label className={labelClass}>{labels.bcc}</label>
             <input {...register('bcc')} type="text" className={fieldClass} />
             {errors.bcc && (
               <p className="mt-1 text-xs text-red-500">
@@ -278,7 +308,7 @@ const EmailCompositionModal = ({
         {/* Attachments (conditional) */}
         {showAttachments && (
           <div>
-            <label className={labelClass}>Attachments</label>
+            <label className={labelClass}>{labels.attachments}</label>
             {attachmentPicker || onUploadAttachment ? (
               /* ── Document chips (name opens the file, × removes it) + a single trigger that
                   either opens the picker dialog (meeting) or uploads directly (quotation) ── */
@@ -337,7 +367,7 @@ const EmailCompositionModal = ({
                     )}
                   >
                     <Icon name="paperclip" style="solid" className="size-3.5" />
-                    Add attachment
+                    {labels.addAttachment}
                   </button>
                 ) : (
                   <div className="mr-auto">
@@ -361,7 +391,7 @@ const EmailCompositionModal = ({
                           ) : (
                             <Icon name="paperclip" style="solid" className="size-3.5" />
                           )}
-                          Add attachment
+                          {labels.addAttachment}
                         </span>
                       )}
                     </FileInput>
@@ -396,7 +426,7 @@ const EmailCompositionModal = ({
                   value={attachmentInput}
                   onChange={e => setAttachmentInput(e.target.value)}
                   onKeyDown={handleAttachmentKeyDown}
-                  placeholder={attachments.length === 0 ? 'Type and press Enter to add' : ''}
+                  placeholder={attachments.length === 0 ? labels.attachmentPlaceholder : ''}
                   className="min-w-[140px] flex-1 bg-transparent py-0.5 text-sm outline-none"
                 />
               </div>
@@ -406,7 +436,7 @@ const EmailCompositionModal = ({
 
         {/* Content */}
         <div>
-          <label className={labelClass}>Content</label>
+          <label className={labelClass}>{labels.content}</label>
           {richTextContent ? (
             <RichTextEditor
               value={watch('content') ?? ''}
@@ -429,7 +459,7 @@ const EmailCompositionModal = ({
         {/* Footer — full-bleed bar (counteracts the Modal's px-6 py-4 padding) */}
         <div className="-mx-6 -mb-4 mt-1 flex items-center justify-end gap-3 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-4">
           <Button type="button" variant="ghost" onClick={handleClose} disabled={isPending}>
-            Cancel
+            {labels.cancel}
           </Button>
           <Button
             type="submit"
@@ -440,7 +470,7 @@ const EmailCompositionModal = ({
               !isPending ? <Icon name="paper-plane" style="solid" className="size-4" /> : undefined
             }
           >
-            Send
+            {labels.send}
           </Button>
         </div>
       </form>

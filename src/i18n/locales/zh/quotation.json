@@ -425,6 +425,7 @@
         "noAssignment": "no assignment",
         "notPending": "assignment not pending",
         "unpriced": "no price from the winner",
+        "feeBaseMissing": "没有基础评估费 (01) — 请先设置费用再分配",
         "constructionInspection": "construction inspection",
         "taskHeld": "task held by {{name}}",
         "taskHeldUnknown": "task is held by another user",
@@ -473,6 +474,7 @@
       "documentFollowupOpen": "An open document follow-up must be cleared first. Then assign it on the Administration page.",
       "winnerUnavailable": "The winning company is not available. Check the company, then assign it on the Administration page.",
       "unpriced": "The winner did not quote a price for this appraisal, so it was not assigned.",
+      "feeBaseMissing": "没有基础评估费 (01) — 请先设置费用再分配",
       "stopped": "Assignment stopped before it finished. Assign it on the Administration page.",
       "unexpectedStop": "Assignment stopped unexpectedly. Assign it on the Administration page.",
       "stateUnreadable": "The workflow state could not be read. Check the appraisal, then assign it on the Administration page.",
@@ -566,7 +568,17 @@
   },
   "email": {
     "draftingTitle": "Drafting email to send to external appraisal company",
-    "subjectLabel": "Subject"
+    "subjectLabel": "Subject",
+    "from": "发件人",
+    "send": "发送",
+    "cancel": "取消",
+    "to": "收件人",
+    "cc": "抄送 (Cc)",
+    "bcc": "密送 (Bcc)",
+    "content": "正文",
+    "attachments": "附件",
+    "addAttachment": "添加附件",
+    "attachmentPlaceholder": "输入后按 Enter 添加"
   },
   "picker": {
     "customerName": "Customer Name",
@@ -669,5 +681,21 @@
   "yesNo": {
     "yes": "Yes",
     "no": "No"
+  },
+  "entryModal": {
+    "tabNew": "新建",
+    "tabExisting": "添加到现有草稿",
+    "existingHint": "选择一份现有的草稿报价单，将此估价加入其中。多个估价可共用同一份报价邀请。",
+    "addedToDraft_one": "此估价将添加到 <strong>{{quotationNumber}}</strong>（已有 {{count}} 个估价）",
+    "addedToDraft_other": "此估价将添加到 <strong>{{quotationNumber}}</strong>（已有 {{count}} 个估价）",
+    "maxDurationHelper": "您允许评估师完成此估价的最长时间。适用于正在添加的估价。",
+    "adding": "添加中...",
+    "addToDraft": "添加到草稿",
+    "addFailed": "无法将估价添加到草稿"
+  },
+  "section": {
+    "removeCompany": "移除 {{company}}",
+    "latestCancelled": "最新报价单 {{number}} 已取消",
+    "dateTimePlaceholder": "日/月/年 时:分"
   }
 }

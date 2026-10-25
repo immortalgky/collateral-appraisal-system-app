@@ -8,13 +8,16 @@ import type {
   UpdatePaymentRequestType,
 } from '@shared/schemas/v1';
 import type { Sent } from '@/shared/types';
+import type { FeeItemSource } from '../types/feePreview';
+import { feePreviewKeys } from './feePreview';
 
 // Fields GetAppraisalFeesResult always sends.
 
+// `source` rides the DTO's passthrough index signature; absent on rows from before it existed.
 export type AppraisalFeeItem = Sent<
   NonNullable<AppraisalFeeDtoType['items']>[number],
   'id' | 'appraisalFeeId' | 'feeCode' | 'feeDescription' | 'feeAmount'
->;
+> & { source?: FeeItemSource | null };
 export type AppraisalFeePayment = Sent<
   NonNullable<AppraisalFeeDtoType['paymentHistory']>[number],
   'id' | 'paymentAmount' | 'paymentDate'
@@ -266,6 +269,9 @@ export const useRemovePayment = () => {
 /**
  * Add fee item to an existing fee
  * POST /appraisals/{appraisalId}/fees/{feeId}/items
+ *
+ * Without a feeId (the appraisal has no fee row yet) it posts to
+ * POST /appraisals/{appraisalId}/fees/items, where the server creates the row.
  */
 export const useAddFeeItem = () => {
   const queryClient = useQueryClient();
@@ -275,13 +281,15 @@ export const useAddFeeItem = () => {
       appraisalId,
       feeId,
       ...body
-    }: AddFeeItemRequestType & { appraisalId: string; feeId: string }) => {
-      await axios.post(`/appraisals/${appraisalId}/fees/${feeId}/items`, body);
+    }: AddFeeItemRequestType & { appraisalId: string; feeId?: string }) => {
+      const base = `/appraisals/${appraisalId}/fees`;
+      await axios.post(feeId ? `${base}/${feeId}/items` : `${base}/items`, body);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'fees'],
       });
+      queryClient.invalidateQueries({ queryKey: feePreviewKeys.all(variables.appraisalId) });
     },
   });
 };
@@ -310,6 +318,7 @@ export const useUpdateFeeItem = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'fees'],
       });
+      queryClient.invalidateQueries({ queryKey: feePreviewKeys.all(variables.appraisalId) });
     },
   });
 };
@@ -337,6 +346,7 @@ export const useRemoveFeeItem = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'fees'],
       });
+      queryClient.invalidateQueries({ queryKey: feePreviewKeys.all(variables.appraisalId) });
     },
   });
 };

@@ -9,6 +9,7 @@ import { ValidationText } from '@/shared/components/form/ValidationText';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { runGuarded } from '@/shared/utils/runGuarded';
+import { useParameterDescription } from '@/shared/utils/parameterUtils';
 import { useCanOpenAppraisalWorkspace } from '@/features/appraisal/hooks/useCanOpenAppraisalWorkspace';
 import { useAppraisalCopyHandler } from '../contexts/AppraisalCopyContext';
 import { CI_PURPOSES, PREV_APP_NO_REQUIRED } from '../configs/fields';
@@ -50,6 +51,10 @@ export default function PriorAppraisalBlock() {
   });
   // Handed down by the page, not read from the form (see AppraisalCopyContext)
   const round = copy?.round ?? null;
+  const latestPurposeName = useParameterDescription(
+    'AppraisalPurpose',
+    copy?.chain?.latestAppraisal?.purposeCode,
+  );
   const { fieldState } = useController({ name: NAME, control });
   const error = fieldState.error?.message;
 
@@ -76,11 +81,26 @@ export default function PriorAppraisalBlock() {
       <SearchAppraisalModal
         isOpen={searching}
         onClose={() => setSearching(false)}
-        onSelect={template => runGuarded(() => copy.onSelect(template), t('common:status.error'))}
+        onSelect={(template, chain) =>
+          runGuarded(() => copy.onSelect(template, chain), t('common:status.error'))
+        }
+        purpose={purpose}
       />
     ) : null;
 
   if (hasPrior) {
+    // The construction-inspection extras: only for those purposes, and only what the page handed
+    // down. For a submitted or read-only request the page leaves out the block reason and the newer
+    // appraisal (they would only describe this request itself), so the prior's own figure and the
+    // round stay and nothing red shows.
+    const ci = CI_PURPOSES.includes(purpose);
+    const chain = ci ? (copy?.chain ?? null) : null;
+    const blocked = ci ? (copy?.rejection ?? chain?.blockReason ?? null) : null;
+    // Only this appraisal's own figure is shown beside its number, never one the chain took from
+    // another appraisal (`chain.construction` decides blocking, not display)
+    const own = blocked ? null : chain?.selected;
+    const ownPct = own?.progressPct;
+    const latest = blocked ? null : (chain?.latestAppraisal ?? null);
     const facts = [
       // No value (masked, never set, or 0 from the API) reads "—", as the search modal shows it.
       Number(value) > 0
@@ -89,65 +109,122 @@ export default function PriorAppraisalBlock() {
           })
         : t('requestForm.prior.valueNone'),
       date && t('copyBanner.date', { date: formatDate(date, 'dd/MM/yyyy') }),
-      CI_PURPOSES.includes(purpose) && round != null && t('requestForm.prior.round', { n: round }),
+      ci && !blocked && round != null && t('requestForm.prior.round', { n: round }),
     ].filter(Boolean);
+    const swapToLatest = canEdit ? copy?.onUseLatest : undefined;
     return (
       <div data-field={NAME} className="col-span-12">
         <div
           role="status"
-          className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-(--palette-accent-line) bg-(--palette-accent-wash) px-3 py-1.5 text-xs text-(--palette-ink)"
-        >
-          <Icon
-            name="circle-info"
-            style="solid"
-            className="shrink-0 text-(--palette-primary-text)"
-          />
-          <span className="font-medium text-(--palette-gray-600)">{t('copyBanner.label')}</span>
-          {canOpen && id ? (
-            <Link
-              to={`/appraisals/${id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={t('copyBanner.openTitle')}
-              className="font-semibold text-(--palette-accent-ink) hover:underline"
-            >
-              {number}
-            </Link>
-          ) : (
-            <strong className="font-semibold text-(--palette-ink)">{number}</strong>
+          className={clsx(
+            'flex flex-col overflow-hidden rounded-lg border text-xs text-(--palette-ink)',
+            blocked
+              ? 'border-danger bg-(--palette-req-wash)'
+              : 'border-(--palette-accent-line) bg-(--palette-accent-wash)',
           )}
-          {facts.map(fact => (
-            <span key={String(fact)} className="text-(--palette-gray-600)">
-              <span aria-hidden className="mr-2 text-(--palette-gray-300)">
-                ·
+        >
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5">
+            <Icon
+              name={blocked ? 'circle-exclamation' : 'circle-info'}
+              style="solid"
+              className={clsx(
+                'shrink-0',
+                blocked ? 'text-danger' : 'text-(--palette-primary-text)',
+              )}
+            />
+            <span className="font-medium text-(--palette-gray-600)">{t('copyBanner.label')}</span>
+            {canOpen && id ? (
+              <Link
+                to={`/appraisals/${id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={t('copyBanner.openTitle')}
+                className="font-semibold text-(--palette-accent-ink) hover:underline"
+              >
+                {number}
+              </Link>
+            ) : (
+              <strong className="font-semibold text-(--palette-ink)">{number}</strong>
+            )}
+            {facts.map(fact => (
+              <span key={String(fact)} className="text-(--palette-gray-600)">
+                <span aria-hidden className="mr-2 text-(--palette-gray-300)">
+                  ·
+                </span>
+                {fact}
               </span>
-              {fact}
-            </span>
-          ))}
-          {canEdit && (
-            <span className="ml-auto flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setSearching(true)}
-                disabled={copy.disabled}
-                className={linkButton}
-              >
-                {t('requestForm.prior.change')}
-              </button>
-              <button
-                type="button"
-                onClick={() => runGuarded(() => copy.onClear(), t('common:status.error'))}
-                disabled={copy.disabled}
-                aria-label={t('copyBanner.clearTitle')}
-                title={t('copyBanner.clearTitle')}
-                className="inline-flex items-center gap-1 text-(--palette-gray-500) hover:text-(--palette-ink) disabled:opacity-50"
-              >
-                <Icon name="xmark" style="solid" />
-                {t('requestForm.prior.clear')}
-              </button>
-            </span>
+            ))}
+            {/* Same rule as the latest-choice dialog: undefined = nothing, null = no data, number = chip. */}
+            {ownPct !== undefined && (
+              <span className="text-(--palette-gray-600)">
+                <span aria-hidden className="mr-2 text-(--palette-gray-300)">
+                  ·
+                </span>
+                {ownPct === null
+                  ? t('constructionGuard.noData')
+                  : t('constructionGuard.chip', {
+                      pct: formatNumber(ownPct, Number.isInteger(ownPct) ? 0 : 2),
+                    })}
+              </span>
+            )}
+            {canEdit && (
+              <span className="ml-auto flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSearching(true)}
+                  disabled={copy.disabled}
+                  className={linkButton}
+                >
+                  {t('requestForm.prior.change')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => runGuarded(() => copy.onClear(), t('common:status.error'))}
+                  disabled={copy.disabled}
+                  aria-label={t('copyBanner.clearTitle')}
+                  title={t('copyBanner.clearTitle')}
+                  className="inline-flex items-center gap-1 text-(--palette-gray-500) hover:text-(--palette-ink) disabled:opacity-50"
+                >
+                  <Icon name="xmark" style="solid" />
+                  {t('requestForm.prior.clear')}
+                </button>
+              </span>
+            )}
+          </div>
+          {latest && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-1.5 text-amber-900 dark:text-amber-200">
+              <Icon
+                name="triangle-exclamation"
+                style="solid"
+                className="shrink-0 text-amber-600 dark:text-amber-400"
+              />
+              <span>
+                {t('constructionGuard.notLatest', {
+                  latest: latest.appraisalNumber,
+                  purpose: latestPurposeName,
+                  date: formatDate(latest.completedAt, 'dd/MM/yyyy'),
+                })}
+              </span>
+              {swapToLatest && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    runGuarded(() => swapToLatest(latest.appraisalId), t('common:status.error'))
+                  }
+                  disabled={copy?.disabled}
+                  className={clsx(linkButton, 'ml-auto')}
+                >
+                  {t('constructionGuard.useLatestInstead', { latest: latest.appraisalNumber })}
+                </button>
+              )}
+            </div>
           )}
         </div>
+        {blocked && (
+          <p role="alert" className="mt-1 text-xs text-danger">
+            {t(`constructionGuard.rejected.${blocked}`)}
+          </p>
+        )}
         {modal}
       </div>
     );

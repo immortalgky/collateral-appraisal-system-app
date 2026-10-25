@@ -10,9 +10,8 @@ import QuotationStatusBadge from './QuotationStatusBadge';
 import NegotiationModal from './NegotiationModal';
 import RejectTentativeModal from './RejectTentativeModal';
 import FinalizeModal from './FinalizeModal';
+import { MAX_NEGOTIATION_ROUNDS } from '../constants';
 import { isStandaloneQuotation } from '../utils/isStandaloneQuotation';
-
-const MAX_ROUNDS = 3;
 
 interface NegotiationPanelProps {
   quotation: QuotationRequestDetailDto;
@@ -54,7 +53,7 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
 
   const roundsUsed = winner.negotiationRounds ?? 0;
   const canOpenRound = quotation.status === 'WinnerTentative' || quotation.status === 'Negotiating';
-  const roundsExhausted = roundsUsed >= MAX_ROUNDS;
+  const roundsExhausted = roundsUsed >= MAX_NEGOTIATION_ROUNDS;
   const awaitingResponse =
     quotation.status === 'Negotiating' && winner.negotiations?.some(n => !n.verb && !n.respondedAt);
 
@@ -171,7 +170,7 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
 
             {/* Rounds counter */}
             <div className="flex items-center gap-1 shrink-0">
-              {Array.from({ length: MAX_ROUNDS }).map((_, i) => (
+              {Array.from({ length: MAX_NEGOTIATION_ROUNDS }).map((_, i) => (
                 <div
                   key={i}
                   className={clsx(
@@ -182,7 +181,7 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
                 />
               ))}
               <span className="ml-1.5 text-xs text-(--palette-gray-500)">
-                {t('negotiation.roundsCount', { used: roundsUsed, max: MAX_ROUNDS })}
+                {t('negotiation.roundsCount', { used: roundsUsed, max: MAX_NEGOTIATION_ROUNDS })}
               </span>
             </div>
           </div>
@@ -207,7 +206,7 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
             </Button>
             {roundsExhausted && (
               <span className="ml-3 text-xs text-amber-600 dark:text-amber-400">
-                {t('negotiation.maxRoundsNote', { max: MAX_ROUNDS })}
+                {t('negotiation.maxRoundsNote', { max: MAX_NEGOTIATION_ROUNDS })}
               </span>
             )}
             {awaitingResponse && !roundsExhausted && (
@@ -303,7 +302,7 @@ const NegotiationPanel = ({ quotation, allowAutoAssign = true }: NegotiationPane
         companyQuotationId={winner.id}
         companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
         currentRounds={roundsUsed}
-        maxRounds={MAX_ROUNDS}
+        maxRounds={MAX_NEGOTIATION_ROUNDS}
       />
       <RejectTentativeModal
         isOpen={isRejectOpen}

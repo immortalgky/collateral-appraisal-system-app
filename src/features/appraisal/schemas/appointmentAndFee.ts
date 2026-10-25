@@ -84,10 +84,15 @@ export const RescheduleFormSchema = z.object({
  * Schema for add fee modal
  */
 export const AddFeeFormSchema = z.object({
-  type: z.enum(['01', '02', '99']),
+  // Any code: an item being edited keeps the code it has (the server accepts an unchanged
+  // legacy one), while a new item is always created as "Other" (99) by the modal.
+  type: z.string().min(1),
   description: z.string().min(1, msg('descriptionRequired')),
-  amount: z.number().min(0, msg('amountNonNegative')),
+  // The server rejects a fee item of 0 or less, so the form does too.
+  amount: z.number().positive(msg('amountPositive')),
 });
+
+export type AddFeeFormData = z.infer<typeof AddFeeFormSchema>;
 
 /**
  * Schema for add payment modal
