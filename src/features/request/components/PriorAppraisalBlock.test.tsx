@@ -287,6 +287,7 @@ describe('PriorAppraisalBlock construction chain', () => {
       sourceInspectionNumber: 4,
       sourceCompletedAt: '2026-09-23T00:00:00',
     },
+    selected: { status: 'InProgress', progressPct: 72.69 },
     laterInspection: null,
     openInspectionRequest: null,
     latestAppraisal: null,
@@ -298,52 +299,56 @@ describe('PriorAppraisalBlock construction chain', () => {
     appraisalNumber: '69120871',
     purposeCode: '03',
     completedAt: '2026-08-02T00:00:00',
+    progressPct: null,
   };
   const show = (props: Partial<Parameters<typeof Harness>[0]> = {}) => {
     asUser(['APPRAISAL_VIEW']);
     return render(<Harness purpose="06" detail={prior} handlers={handlers()} {...props} />);
   };
 
-  it('shows the latest construction as a chip while it is in progress', () => {
+  it("shows the picked appraisal's own construction % as a chip", () => {
     show({ chain: chainOf() });
-    const strip = screen.getByRole('status');
-    expect(strip).toHaveTextContent('Latest construction 72.69%');
-    // the picked appraisal holds the figure itself: no source to name
-    expect(strip).not.toHaveTextContent('from appraisal');
+    expect(screen.getByRole('status')).toHaveTextContent('Construction 72.69%');
   });
 
-  it('names the appraisal the figure comes from when it is not the picked one', () => {
+  it('shows a whole-number % without decimals, 100% included', () => {
+    show({ chain: chainOf({ selected: { status: 'Complete', progressPct: 100 } }) });
+    expect(screen.getByRole('status')).toHaveTextContent('Construction 100%');
+  });
+
+  it('says the appraisal has no construction % when the chain has one from another appraisal', () => {
     show({
       chain: chainOf({
+        selected: { status: 'NoData', progressPct: null },
+        // the chain holds 6.75% on an earlier appraisal: not this one's, so it is not shown
         construction: {
           status: 'InProgress',
-          progressPct: 72.69,
+          progressPct: 6.75,
           sourceAppraisalId: 'a-0',
-          sourceAppraisalNumber: '69105522',
+          sourceAppraisalNumber: '69105454',
           sourceInspectionNumber: 3,
           sourceCompletedAt: '2026-05-12T00:00:00',
         },
       }),
     });
-    expect(screen.getByRole('status')).toHaveTextContent('(from appraisal 69105522, round 3)');
+    const strip = screen.getByRole('status');
+    expect(strip).toHaveTextContent('No construction % on this appraisal');
+    expect(strip).not.toHaveTextContent('6.75');
+    expect(strip).not.toHaveTextContent('69105454');
+    expect(strip).not.toHaveTextContent('Construction 6');
   });
 
-  it('says there is no inspection data for the first round of a chain', () => {
-    show({
-      chain: chainOf({
-        construction: {
-          status: 'NoData',
-          progressPct: null,
-          sourceAppraisalId: null,
-          sourceAppraisalNumber: null,
-          sourceInspectionNumber: null,
-          sourceCompletedAt: null,
-        },
-      }),
-    });
+  it('says there is no construction % whenever it is null, whatever the status says', () => {
+    show({ chain: chainOf({ selected: { status: 'InProgress', progressPct: null } }) });
+    expect(screen.getByRole('status')).toHaveTextContent('No construction % on this appraisal');
+  });
+
+  it('shows no construction figure at all when the API sends no `selected`', () => {
+    show({ chain: chainOf({ selected: undefined }) });
     const strip = screen.getByRole('status');
-    expect(strip).toHaveTextContent('No inspection data yet');
-    expect(strip).not.toHaveTextContent('Latest construction');
+    expect(strip).not.toHaveTextContent('Construction');
+    expect(strip).not.toHaveTextContent('No construction %');
+    expect(strip).not.toHaveTextContent('72.69');
   });
 
   it('warns that a newer appraisal exists, and swaps to it from the link', async () => {
@@ -372,13 +377,13 @@ describe('PriorAppraisalBlock construction chain', () => {
 
   it('shows none of it for a purpose that is not a construction inspection, or with no chain', () => {
     const { unmount } = show({ purpose: '03', chain: chainOf({ latestAppraisal: newer }) });
-    expect(screen.getByRole('status')).not.toHaveTextContent('Latest construction');
+    expect(screen.getByRole('status')).not.toHaveTextContent('Construction 72.69%');
     expect(screen.getByRole('status')).not.toHaveTextContent('Not the latest');
     unmount();
 
     show({ chain: null });
-    expect(screen.getByRole('status')).not.toHaveTextContent('Latest construction');
-    expect(screen.getByRole('status')).not.toHaveTextContent('No inspection data');
+    expect(screen.getByRole('status')).not.toHaveTextContent('Construction 72.69%');
+    expect(screen.getByRole('status')).not.toHaveTextContent('No construction %');
   });
 
   it.each<[ConstructionBlockReason, RegExp]>([
@@ -391,7 +396,7 @@ describe('PriorAppraisalBlock construction chain', () => {
     const strip = screen.getByRole('status');
     expect(strip).toHaveClass('border-danger');
     // what described a usable prior is gone while it is refused
-    expect(strip).not.toHaveTextContent('Latest construction');
+    expect(strip).not.toHaveTextContent('Construction 72.69%');
     expect(strip).not.toHaveTextContent('Not the latest');
     expect(strip).not.toHaveTextContent('Inspection round');
   });

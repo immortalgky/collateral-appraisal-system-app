@@ -483,6 +483,9 @@
   "constructionGuard": {
     "blocked": {
       "ConstructionComplete": "评估 {{no}} 已 100% 建成（第 {{n}} 次检验，{{date}}），无需再检验。",
+      "ConstructionCompleteNoDate": "评估 {{no}} 已 100% 建成（第 {{n}} 次检验），无需再检验。",
+      "ConstructionCompleteNoRound": "评估 {{no}} 已 100% 建成（{{date}}），无需再检验。",
+      "ConstructionCompleteNoRoundNoDate": "评估 {{no}} 已 100% 建成，无需再检验。",
       "LaterInspectionExists": "评估 {{no}} 已有后续检验（评估 {{later}}），请选择最新的评估。",
       "OpenInspectionRequest": "此链中的检验申请 {{req}} 尚未关闭，请等待其关闭。"
     },
@@ -491,9 +494,8 @@
       "LaterInspectionExists": "所选原评估已有后续检验，请改为最新的评估。",
       "OpenInspectionRequest": "此链中有尚未关闭的检验申请。请选择其他评估或等待该申请关闭。"
     },
-    "chip": "最新施工进度 {{pct}}%",
-    "source": "（来自评估 {{no}}，第 {{n}} 次）",
-    "noData": "暂无检验数据",
+    "chip": "施工 {{pct}}%",
+    "noData": "此评估无施工进度 %",
     "notLatest": "不是链中最新的评估：评估 {{latest}}（{{purpose}} · {{date}}）更新。系统将从所选评估复制。",
     "useLatestInstead": "改用评估 {{latest}}",
     "dialog": {

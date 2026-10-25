@@ -230,16 +230,32 @@ const SearchAppraisalModal = ({
     template: PriorAppraisal,
   ) => {
     const { construction } = chain;
-    return t(`constructionGuard.blocked.${reason}`, {
+    // A missing round number (the 100% is not an inspection round) or date picks the variant that
+    // leaves that part out, so the text never reads "round " or "(on )"
+    const date = construction.sourceCompletedAt
+      ? formatDate(construction.sourceCompletedAt, 'dd/MM/yyyy')
+      : '';
+    const noRound = construction.sourceInspectionNumber == null;
+    const noDate = !date;
+    // Literal keys, so the typed `t` still checks each against the locale
+    const key =
+      reason !== 'ConstructionComplete'
+        ? reason
+        : noRound
+          ? noDate
+            ? 'ConstructionCompleteNoRoundNoDate'
+            : 'ConstructionCompleteNoRound'
+          : noDate
+            ? 'ConstructionCompleteNoDate'
+            : reason;
+    return t(`constructionGuard.blocked.${key}`, {
       // The appraisal that holds the 100% may be another one of the chain than the one picked
       no:
         reason === 'ConstructionComplete'
           ? construction.sourceAppraisalNumber
           : template.appraisalNumber,
       n: construction.sourceInspectionNumber,
-      date: construction.sourceCompletedAt
-        ? formatDate(construction.sourceCompletedAt, 'dd/MM/yyyy')
-        : '',
+      date,
       later: chain.laterInspection?.appraisalNumber,
       req: chain.openInspectionRequest?.requestNumber,
     });

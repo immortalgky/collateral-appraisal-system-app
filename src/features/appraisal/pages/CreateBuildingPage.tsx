@@ -130,16 +130,22 @@ const CreateBuildingPage = () => {
             displayOrder: s.displayOrder ?? 0,
             proportionPct: s.proportionPct ?? 0,
             previousProgressPct: s.previousProgressPct ?? 0,
-            currentProgressPct: 0, // fresh inspection starts at 0 delta from previous
+            // a new round starts where the last one ended
+            currentProgressPct: s.currentProgressPct ?? 0,
           })),
           { shouldDirty: true },
         );
       }
     } else {
-      // Summary mode: seed the previous progress from prior summary
+      // Summary mode: seed the previous progress from prior summary; the current one starts equal
       methods.setValue('constructionEnterDetail', false, { shouldDirty: true });
       methods.setValue(
         'constructionSummary.summaryPreviousProgressPct',
+        summaryPreviousProgressPct ?? 0,
+        { shouldDirty: true },
+      );
+      methods.setValue(
+        'constructionSummary.summaryCurrentProgressPct',
         summaryPreviousProgressPct ?? 0,
         { shouldDirty: true },
       );
@@ -288,7 +294,10 @@ const CreateBuildingPage = () => {
     <div className="flex flex-col h-full min-h-0">
       <PageReadOnlyContext.Provider value={isReadOnly}>
         <FormProvider methods={methods} schema={createBuildingForm}>
-          <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="cas-form-grid flex-1 min-h-0 flex flex-col"
+          >
             {/* Scrollable Form Content */}
             <div
               id="form-scroll-container"

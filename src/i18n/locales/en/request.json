@@ -483,6 +483,9 @@
   "constructionGuard": {
     "blocked": {
       "ConstructionComplete": "Appraisal {{no}} is already 100% built (inspection round {{n}} on {{date}}). No further inspection is needed.",
+      "ConstructionCompleteNoDate": "Appraisal {{no}} is already 100% built (inspection round {{n}}). No further inspection is needed.",
+      "ConstructionCompleteNoRound": "Appraisal {{no}} is already 100% built (on {{date}}). No further inspection is needed.",
+      "ConstructionCompleteNoRoundNoDate": "Appraisal {{no}} is already 100% built. No further inspection is needed.",
       "LaterInspectionExists": "Appraisal {{no}} already has a later inspection (appraisal {{later}}). Please pick the latest one.",
       "OpenInspectionRequest": "Inspection request {{req}} in this chain is still open. Wait until it is closed."
     },
@@ -491,9 +494,8 @@
       "LaterInspectionExists": "The selected prior appraisal already has a later inspection. Change it to the latest appraisal.",
       "OpenInspectionRequest": "An inspection request in this chain is still open. Choose another appraisal or wait until that request is closed."
     },
-    "chip": "Latest construction {{pct}}%",
-    "source": "(from appraisal {{no}}, round {{n}})",
-    "noData": "No inspection data yet",
+    "chip": "Construction {{pct}}%",
+    "noData": "No construction % on this appraisal",
     "notLatest": "Not the latest appraisal in the chain: appraisal {{latest}} ({{purpose}} · {{date}}) is newer. The system copies from the selected appraisal.",
     "useLatestInstead": "Use appraisal {{latest}} instead",
     "dialog": {

@@ -12,6 +12,7 @@ export const requestPageHandlers = [
   http.get('*/api/appraisals/:id/construction-chain-status', ({ params }) =>
     HttpResponse.json({
       appraisalId: params.id,
+      selected: { status: 'NoData', progressPct: null },
       construction: {
         status: 'NoData',
         progressPct: null,

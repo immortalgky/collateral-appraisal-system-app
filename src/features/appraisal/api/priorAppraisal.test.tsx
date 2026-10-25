@@ -108,6 +108,7 @@ describe('construction chain status', () => {
       sourceInspectionNumber: 3,
       sourceCompletedAt: '2026-05-12T00:00:00',
     },
+    selected: { status: 'InProgress', progressPct: 72.69 },
     laterInspection: null,
     openInspectionRequest: null,
     latestAppraisal: null,

@@ -64,6 +64,7 @@ const chain = (over: Partial<ConstructionChainStatus> = {}): ConstructionChainSt
     sourceInspectionNumber: 3,
     sourceCompletedAt: '2026-03-14T00:00:00',
   },
+  selected: { status: 'InProgress', progressPct: 72.69 },
   laterInspection: null,
   openInspectionRequest: null,
   // a re-appraisal after the picked appraisal: allowed, but the maker is asked
@@ -72,6 +73,7 @@ const chain = (over: Partial<ConstructionChainStatus> = {}): ConstructionChainSt
     appraisalNumber: '69120871',
     purposeCode: '03',
     completedAt: '2026-08-02T00:00:00',
+    progressPct: null,
   },
   blockReason: null,
   ...over,
@@ -173,10 +175,33 @@ describe('RequestPage: a construction-inspection pick that is not the latest of 
     expect(await screen.findByText(/aerial\.pdf/)).toBeInTheDocument();
     expect(screen.queryByText(DIALOG_TITLE)).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '69000002' })).toBeInTheDocument();
-    expect(await screen.findByText(/Latest construction 72\.69%/)).toBeInTheDocument();
+    expect(await screen.findByText(/Construction 72\.69%/)).toBeInTheDocument();
     expect(
       screen.getByText(/Not the latest appraisal in the chain: appraisal 69120871/),
     ).toBeInTheDocument();
+  });
+
+  it('the banner says the picked appraisal has no construction %, not the one the chain holds', async () => {
+    handed.chain = chain({
+      latestAppraisal: null,
+      selected: { status: 'NoData', progressPct: null },
+      construction: {
+        status: 'InProgress',
+        progressPct: 6.75,
+        sourceAppraisalId: 'earlier-1',
+        sourceAppraisalNumber: '69105454',
+        sourceInspectionNumber: 2,
+        sourceCompletedAt: '2026-01-10T00:00:00',
+      },
+    });
+    serve(chain({ latestAppraisal: null }));
+    await pickOnPurpose('06');
+    // the chain has no newer appraisal here, so the pick is applied without the dialog
+    expect(await screen.findByText(/aerial\.pdf/)).toBeInTheDocument();
+    expect(screen.queryByText(DIALOG_TITLE)).not.toBeInTheDocument();
+    expect(await screen.findByText(/No construction % on this appraisal/)).toBeInTheDocument();
+    expect(screen.queryByText(/6\.75/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/69105454/)).not.toBeInTheDocument();
   });
 
   it('"use the latest" picks the latest appraisal: reads it, and does not ask again', async () => {

@@ -40,18 +40,20 @@ const LatestChoiceDialog = ({
   const latestPurpose = useParameterDescription('AppraisalPurpose', latest?.purposeCode);
 
   const template = choice?.template;
-  const construction = choice?.chain.construction;
-  // The chain's construction belongs to the picked appraisal only when it is the one that holds it
-  const progress =
-    template &&
-    construction?.status === 'InProgress' &&
-    construction.progressPct != null &&
-    construction.sourceAppraisalId === template.id
-      ? formatNumber(construction.progressPct, Number.isInteger(construction.progressPct) ? 0 : 2)
-      : null;
+  // Each row shows that appraisal's own figure, or says it has none: never one taken from the chain.
+  // undefined = field absent (older API): show nothing; null = no data; number = the figure.
+  const progressOf = (pct: number | null | undefined) => {
+    if (pct === undefined) return null;
+    return pct === null
+      ? t('constructionGuard.noData')
+      : t('constructionGuard.dialog.construction', {
+          pct: formatNumber(pct, Number.isInteger(pct) ? 0 : 2),
+        });
+  };
+  const latestProgress = latest && progressOf(latest.progressPct);
   const selected = [
     template?.appraisalDate && formatDate(template.appraisalDate, 'dd/MM/yyyy'),
-    progress && t('constructionGuard.dialog.construction', { pct: progress }),
+    choice?.chain.selected && progressOf(choice.chain.selected.progressPct),
   ].filter(Boolean);
 
   return (
@@ -90,6 +92,7 @@ const LatestChoiceDialog = ({
           <dd className="m-0 text-gray-700">
             <strong className="font-semibold text-gray-900">{latest?.appraisalNumber}</strong>
             {` · ${latestPurpose} · ${latest ? formatDate(latest.completedAt, 'dd/MM/yyyy') : ''}`}
+            {latestProgress && ` · ${latestProgress}`}
           </dd>
         </div>
       </dl>

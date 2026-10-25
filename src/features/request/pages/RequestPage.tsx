@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider } from '@shared/components/form';
 import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
@@ -606,31 +606,43 @@ function RequestPage() {
     ],
   );
 
-  // The round a new Construction Inspection would be is display-only: it is asked for, and shown,
-  // only while a prior is set and the purpose is a construction-inspection one, whatever order those
-  // came in (a pick, a purpose chosen afterwards, a draft or duplicate that arrives with both). The
-  // query key carries the prior, so a late answer for an appraisal picked before is never shown.
+  // What the prior-appraisal strip shows for a construction inspection is display-only: it is asked
+  // for, and shown, only while a prior is set and the purpose is a construction-inspection one,
+  // whatever order those came in (a pick, a purpose chosen afterwards, a draft or duplicate that
+  // arrives with both). The query keys carry the prior, so a late answer for an appraisal picked
+  // before is never shown.
   const purposeNow = useWatch({ control: methods.control, name: 'purpose' });
   const prevIdNow = useWatch({ control: methods.control, name: 'detail.prevAppraisalId' });
-  // Only while the request can still be edited: the next number counts this request's own appraisal
-  // once it is submitted, and a request does not store a round, so there is none to show then.
-  const roundApplies = !readOnly && !isSubmitted;
-  const showRound = roundApplies && !!prevIdNow && CI_PURPOSES.includes(purposeNow ?? '');
-  const { data: nextRound } = useNextInspectionNumber(prevIdNow, showRound);
+  const isCiPrior = !!prevIdNow && CI_PURPOSES.includes(purposeNow ?? '');
+  // Submitted: this request is itself the chain's open inspection request and its appraisal counts
+  // in the chain, so the block, the red state, "use latest" and the next number no longer apply to
+  // it. The round is the one stamped on its own appraisal, null until that exists. A read-only draft
+  // (a checker or non-owner looking at it) is not submitted, so it still shows what the maker saw.
+  const settled = isSubmitted;
+  const { data: nextRound } = useNextInspectionNumber(prevIdNow, isCiPrior && !settled);
   // Handed to the prior-appraisal strip through AppraisalCopyProvider, not written into the form: a
   // display-only value in form state is lost on every reset (a save's refetch) and counts as a change.
-  const inspectionRound = showRound ? (nextRound ?? null) : null;
-  // The chain status of the prior (construction % and a newer appraisal) is shown and kept under the
-  // same conditions, and handed over the same way. A submit the API refused for it is remembered
-  // with the prior it concerned, so choosing another prior drops the red state without an effect.
-  const { data: chainData } = useConstructionChainStatus(prevIdNow, showRound);
-  const chainStatus = showRound ? (chainData ?? null) : null;
+  const inspectionRound = !isCiPrior
+    ? null
+    : settled
+      ? (requestData?.inspectionNumber ?? null)
+      : (nextRound ?? null);
+  // The chain status of the prior is read whenever it is shown, submitted or not: the prior's own
+  // construction % does not depend on this request. Once settled it is handed over without the
+  // parts about the chain's other work (blockReason, latestAppraisal), which would only describe
+  // this very request. A submit the API refused for it is remembered with the prior it concerned,
+  // so choosing another prior drops the red state without an effect.
+  const { data: chainData } = useConstructionChainStatus(prevIdNow, isCiPrior);
+  const chainStatus = useMemo(() => {
+    if (!isCiPrior || !chainData) return null;
+    return settled ? { ...chainData, blockReason: null, latestAppraisal: null } : chainData;
+  }, [isCiPrior, chainData, settled]);
   const [submitRefusal, setSubmitRefusal] = useState<{
     priorId: string | null;
     reason: ConstructionBlockReason;
   } | null>(null);
   const priorRefusal =
-    showRound && submitRefusal && submitRefusal.priorId === (prevIdNow ?? null)
+    isCiPrior && !settled && submitRefusal && submitRefusal.priorId === (prevIdNow ?? null)
       ? submitRefusal.reason
       : null;
 

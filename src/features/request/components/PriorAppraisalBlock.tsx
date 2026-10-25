@@ -89,22 +89,17 @@ export default function PriorAppraisalBlock() {
 
   if (hasPrior) {
     // The construction-inspection extras: only for those purposes, and only what the page handed
-    // down (it asks for the status only while the request can still be edited)
+    // down. For a submitted or read-only request the page leaves out the block reason and the newer
+    // appraisal (they would only describe this request itself), so the prior's own figure and the
+    // round stay and nothing red shows.
     const ci = CI_PURPOSES.includes(purpose);
     const chain = ci ? (copy?.chain ?? null) : null;
     const blocked = ci ? (copy?.rejection ?? chain?.blockReason ?? null) : null;
-    const construction = blocked ? null : chain?.construction;
+    // Only this appraisal's own figure is shown beside its number, never one the chain took from
+    // another appraisal (`chain.construction` decides blocking, not display)
+    const own = blocked ? null : chain?.selected;
+    const ownPct = own?.progressPct;
     const latest = blocked ? null : (chain?.latestAppraisal ?? null);
-    const source =
-      construction?.sourceAppraisalId &&
-      construction.sourceAppraisalId !== id &&
-      construction.sourceAppraisalNumber &&
-      construction.sourceInspectionNumber != null
-        ? t('constructionGuard.source', {
-            no: construction.sourceAppraisalNumber,
-            n: construction.sourceInspectionNumber,
-          })
-        : null;
     const facts = [
       // No value (masked, never set, or 0 from the API) reads "—", as the search modal shows it.
       Number(value) > 0
@@ -153,31 +148,19 @@ export default function PriorAppraisalBlock() {
                 {fact}
               </span>
             ))}
-            {construction?.status === 'InProgress' && construction.progressPct != null && (
-              <span className="ml-1 inline-flex items-center gap-1.5 rounded-full bg-primary-100 px-2 py-0.5 font-semibold text-primary-800">
-                <span
-                  aria-hidden
-                  className="inline-block h-1 w-11 overflow-hidden rounded-full bg-primary-200"
-                >
-                  <span
-                    className="block h-full bg-primary"
-                    style={{ width: `${Math.min(100, Math.max(0, construction.progressPct))}%` }}
-                  />
+            {/* Same rule as the latest-choice dialog: undefined = nothing, null = no data, number = chip. */}
+            {ownPct !== undefined && (
+              <span className="text-gray-600">
+                <span aria-hidden className="mr-2 text-gray-300">
+                  ·
                 </span>
-                {t('constructionGuard.chip', {
-                  pct: formatNumber(
-                    construction.progressPct,
-                    Number.isInteger(construction.progressPct) ? 0 : 2,
-                  ),
-                })}
+                {ownPct === null
+                  ? t('constructionGuard.noData')
+                  : t('constructionGuard.chip', {
+                      pct: formatNumber(ownPct, Number.isInteger(ownPct) ? 0 : 2),
+                    })}
               </span>
             )}
-            {construction?.status === 'NoData' && (
-              <span className="ml-1 rounded-full bg-gray-100 px-2 py-0.5 font-medium text-gray-600">
-                {t('constructionGuard.noData')}
-              </span>
-            )}
-            {source && <span className="text-gray-500">{source}</span>}
             {canEdit && (
               <span className="ml-auto flex items-center gap-3">
                 <button

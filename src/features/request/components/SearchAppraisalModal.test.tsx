@@ -387,6 +387,7 @@ describe('SearchAppraisalModal on a construction-inspection purpose', () => {
       sourceInspectionNumber: 3,
       sourceCompletedAt: '2026-09-15T00:00:00',
     },
+    selected: { status: 'InProgress', progressPct: 72.69 },
     laterInspection: null,
     openInspectionRequest: null,
     latestAppraisal: null,
@@ -444,6 +445,7 @@ describe('SearchAppraisalModal on a construction-inspection purpose', () => {
             appraisalNumber: '69100009',
             purposeCode: '03',
             completedAt: '2026-10-01T00:00:00',
+            progressPct: null,
           },
         }),
       );
@@ -488,6 +490,54 @@ describe('SearchAppraisalModal on a construction-inspection purpose', () => {
       }),
       // names the appraisal that holds the 100%, which need not be the one that was picked
       'Appraisal 69142210 is already 100% built (inspection round 5 on 15/09/2026). No further inspection is needed.',
+    ],
+    [
+      'ConstructionComplete without an inspection round',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        selected: { status: 'NoData', progressPct: null },
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: null,
+          sourceCompletedAt: '2026-09-15T00:00:00',
+        },
+      }),
+      // no empty "inspection round" in the text
+      'Appraisal 69142210 is already 100% built (on 15/09/2026). No further inspection is needed.',
+    ],
+    [
+      'ConstructionComplete without a date',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: 5,
+          sourceCompletedAt: null,
+        },
+      }),
+      'Appraisal 69142210 is already 100% built (inspection round 5). No further inspection is needed.',
+    ],
+    [
+      'ConstructionComplete without a round or a date',
+      chainStatus({
+        blockReason: 'ConstructionComplete',
+        selected: { status: 'NoData', progressPct: null },
+        construction: {
+          status: 'Complete',
+          progressPct: 100,
+          sourceAppraisalId: 'a-5',
+          sourceAppraisalNumber: '69142210',
+          sourceInspectionNumber: null,
+          sourceCompletedAt: null,
+        },
+      }),
+      'Appraisal 69142210 is already 100% built. No further inspection is needed.',
     ],
     [
       'LaterInspectionExists',

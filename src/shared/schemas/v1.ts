@@ -264,6 +264,9 @@ const GetRequestByIdResponse = z
     priority: z.string().nullable(),
     isPma: z.boolean(),
     isPeriodicalReappraisal: z.boolean().optional(),
+    // The Construction Inspection round stamped on this request's own appraisal; null until that
+    // appraisal exists (and for any other purpose)
+    inspectionNumber: z.number().int().nullable().optional(),
     detail: RequestDetailDto.nullable(),
     customers: z.array(RequestCustomerDto).nullable(),
     properties: z.array(RequestPropertyDto).nullable(),

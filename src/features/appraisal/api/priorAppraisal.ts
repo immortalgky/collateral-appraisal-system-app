@@ -199,7 +199,18 @@ export const constructionRefusalOf = (error: unknown): ConstructionBlockReason |
 
 export interface ConstructionChainStatus {
   appraisalId: string;
-  /** The latest construction of the chain (any branch), not necessarily this appraisal's own. */
+  /**
+   * This appraisal's own construction figure, the only one the screen shows next to it. `NoData`
+   * means it has none, whatever the chain holds. Absent from an older API: show nothing then.
+   */
+  selected?: {
+    status: 'InProgress' | 'Complete' | 'NoData';
+    progressPct: number | null;
+  };
+  /**
+   * The latest construction of the chain (any branch), not necessarily this appraisal's own. Drives
+   * the block rules and the blocked-message wording only; never display its `progressPct`.
+   */
   construction: {
     status: 'InProgress' | 'Complete' | 'NoData';
     progressPct: number | null;
@@ -224,6 +235,8 @@ export interface ConstructionChainStatus {
     appraisalNumber: string;
     purposeCode: string;
     completedAt: string;
+    /** The latest appraisal's own construction figure; null when it has none, absent from an older API. */
+    progressPct?: number | null;
   } | null;
   blockReason: ConstructionBlockReason | null;
 }
