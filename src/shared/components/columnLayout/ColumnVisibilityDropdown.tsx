@@ -38,6 +38,13 @@ interface ColumnVisibilityDropdownProps<K extends string> {
   hidden: Set<K>;
   alwaysVisible: Set<K>;
   /**
+   * Opt-in column pinning (give both props, from `useColumnVisibility` on a `pinnable` config).
+   * Each row gets a pin button, and the list splits into the pinned columns (pin order) and the
+   * others. Omitted, the list is one reorderable list as before.
+   */
+  pinned?: readonly K[];
+  onTogglePin?: (key: K) => void;
+  /**
    * How many columns the user has hidden BEYOND the screen's defaults. Drives the badge and
    * whether Reset is offered; falls back to `hidden.size` for callers with no defaults.
    */
@@ -73,6 +80,8 @@ function SortableColumnRow<K extends string>({
   alwaysVisible,
   onToggle,
   checkbox,
+  isPinned,
+  onTogglePin,
   t,
 }: {
   columnKey: K;
@@ -81,6 +90,9 @@ function SortableColumnRow<K extends string>({
   alwaysVisible: boolean;
   onToggle: (key: K) => void;
   checkbox: boolean;
+  /** Pin mode only: whether this column is pinned, and the toggle (its presence turns pin mode on). */
+  isPinned?: boolean;
+  onTogglePin?: (key: K) => void;
   t: TFunction<'common'>;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -144,8 +156,8 @@ function SortableColumnRow<K extends string>({
         {label}
       </span>
 
-      {/* Eye toggle / fixed badge */}
-      {alwaysVisible ? (
+      {/* Eye toggle / fixed badge. In pin mode the pin button says what "fixed" meant. */}
+      {onTogglePin ? null : alwaysVisible ? (
         <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
           {t('columns.fixed')}
         </span>
@@ -165,6 +177,34 @@ function SortableColumnRow<K extends string>({
           <Icon style="solid" name={isVisible ? 'eye' : 'eye-slash'} className="size-3.5" />
         </button>
       )}
+
+      {onTogglePin && (
+        <button
+          type="button"
+          data-pin-button={columnKey}
+          aria-pressed={isPinned}
+          aria-label={t(isPinned ? 'columns.unpin' : 'columns.pin', { label })}
+          title={t(isPinned ? 'columns.unpin' : 'columns.pin', { label })}
+          onClick={e => {
+            e.stopPropagation();
+            onTogglePin(columnKey);
+            // The row moves to the other group, which remounts this button and drops the focus
+            // on the page: hand it to the button's new self, so the keyboard (and Esc) stay here.
+            requestAnimationFrame(() =>
+              document
+                .querySelector<HTMLElement>(
+                  `[data-pin-button="${globalThis.CSS.escape(columnKey)}"]`,
+                )
+                ?.focus(),
+            );
+          }}
+          className={`flex-shrink-0 rounded p-1 transition-colors hover:bg-gray-100 ${
+            isPinned ? 'text-primary' : 'text-gray-300 hover:text-gray-500'
+          }`}
+        >
+          <Icon style="solid" name="thumbtack" className="text-xs" />
+        </button>
+      )}
     </div>
   );
 }
@@ -173,6 +213,8 @@ export function ColumnVisibilityDropdown<K extends string>({
   orderedColumns,
   hidden,
   alwaysVisible,
+  pinned,
+  onTogglePin,
   labels,
   hiddenBeyondDefault,
   onToggle,
@@ -193,6 +235,30 @@ export function ColumnVisibilityDropdown<K extends string>({
     (hiddenBeyondDefault ?? hidden.size) + (extraToggles?.filter(x => !x.checked).length ?? 0);
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  // Pin mode: the pinned columns (pin order) and the others are two lists, each reorderable on its own.
+  const pinMode = pinned !== undefined && onTogglePin !== undefined;
+  const pinnedKeys = pinned ? pinned.filter(k => orderedColumns.includes(k)) : [];
+  const otherKeys = pinMode ? orderedColumns.filter(k => !pinnedKeys.includes(k)) : orderedColumns;
+
+  const renderGroup = (keys: K[]) => (
+    <SortableContext items={keys} strategy={verticalListSortingStrategy}>
+      {keys.map(key => (
+        <SortableColumnRow
+          key={key}
+          columnKey={key}
+          label={labels[key] ?? key}
+          isVisible={!hidden.has(key)}
+          alwaysVisible={alwaysVisible.has(key)}
+          onToggle={onToggle}
+          checkbox={checkboxes}
+          isPinned={pinMode ? pinnedKeys.includes(key) : undefined}
+          onTogglePin={pinMode ? onTogglePin : undefined}
+          t={t}
+        />
+      ))}
+    </SortableContext>
+  );
 
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -241,7 +307,8 @@ export function ColumnVisibilityDropdown<K extends string>({
       </PopoverButton>
 
       <PopoverPanel
-        anchor="bottom start"
+        // padding: keep clear of the screen edge, which a button at the right of a toolbar is near
+        anchor={{ to: 'bottom start', padding: 16 }}
         className={`z-50 mt-1.5 ${checkboxes ? 'w-72' : 'w-64'} bg-white rounded-xl border border-gray-200 shadow-lg overflow-hidden`}
       >
         {/* Header */}
@@ -271,20 +338,20 @@ export function ColumnVisibilityDropdown<K extends string>({
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
-            <SortableContext items={orderedColumns} strategy={verticalListSortingStrategy}>
-              {orderedColumns.map(key => (
-                <SortableColumnRow
-                  key={key}
-                  columnKey={key}
-                  label={labels[key] ?? key}
-                  isVisible={!hidden.has(key)}
-                  alwaysVisible={alwaysVisible.has(key)}
-                  onToggle={onToggle}
-                  checkbox={checkboxes}
-                  t={t}
-                />
-              ))}
-            </SortableContext>
+            {pinMode ? (
+              <>
+                <p className="px-3 pt-1 pb-0.5 text-xs font-semibold text-gray-400">
+                  {t('columns.pinnedGroup')}
+                </p>
+                {renderGroup(pinnedKeys)}
+                <p className="mt-1 border-t border-gray-100 px-3 pt-2 pb-0.5 text-xs font-semibold text-gray-400">
+                  {t('columns.otherGroup')}
+                </p>
+                {renderGroup(otherKeys)}
+              </>
+            ) : (
+              renderGroup(orderedColumns)
+            )}
           </DndContext>
         </div>
 

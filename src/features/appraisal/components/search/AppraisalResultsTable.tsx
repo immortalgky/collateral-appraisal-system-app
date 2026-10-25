@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
 import type { SearchMatch } from '@/shared/types/search';
@@ -17,11 +17,7 @@ import {
   useSearchFieldLabel,
 } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
-import {
-  ColumnResizeHandle,
-  fillColumnWidths,
-  storedWidthForShown,
-} from '@/shared/components/columnLayout';
+import { ColumnResizeHandle, useFilledColumns } from '@/shared/components/columnLayout';
 import { usePointerMode } from '@/shared/hooks/usePointerMode';
 import type { ColumnTableLayout } from '@/shared/components/columnLayout';
 
@@ -140,71 +136,14 @@ function AppraisalResultsTable({
   const propertyTypeLabels = usePropertyTypeLabels();
   const appraisalTypeLabel = useAppraisalTypeLabel();
 
-  const totalWidth = useMemo(
-    () =>
-      layout
-        ? columns.reduce((sum, c) => sum + (layout.widths[c.key] ?? 0), 0) +
-          (showRowNumber ? ROW_NUMBER_WIDTH : 0)
-        : undefined,
-    [layout, columns, showRowNumber],
-  );
-
-  // The width of the scroll container, so a table with few columns can reach its edge. A callback
-  // ref in state (not a ref object): the container is swapped between the rows and the empty state,
-  // and the observer has to follow whichever one is mounted.
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  useEffect(() => {
-    if (!container) return;
-    const read = () => setContainerWidth(container.clientWidth);
-    read();
-    const ro = new ResizeObserver(read);
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [container]);
-
-  // When the columns do not reach the container, every column grows by its share of the gap (the
-  // user's widths are the minimum); when they pass it, null — and the container scrolls sideways.
-  const filled = useMemo(
-    () =>
-      layout
-        ? fillColumnWidths(
-            columns.map(c => c.key),
-            layout.widths,
-            containerWidth,
-            showRowNumber ? ROW_NUMBER_WIDTH : 0,
-          )
-        : null,
-    [layout, columns, containerWidth, showRowNumber],
-  );
-  const widthOf = (key: string) => filled?.[key] ?? layout?.widths[key];
-  // Auto-fit reads the widest cell's scrollWidth, which for a cell the fill has stretched is the
-  // stretched width, not its content. So it measures with the columns at their stored widths (the
-  // table as it is without the fill) and puts the stretched ones back before anything is painted.
-  const measureAtStoredWidths = (measure: () => number | null) => (): number | null => {
-    const table = tableRef.current;
-    if (!layout || !filled || !table) return measure();
-    const cols = Array.from(table.querySelectorAll('col'));
-    const saved = cols.map(c => c.style.width);
-    const savedTable = table.style.width;
-    const stored = [
-      ...(showRowNumber ? [ROW_NUMBER_WIDTH] : []),
-      ...columns.map(c => layout.widths[c.key]),
-    ];
-    cols.forEach((c, i) => {
-      c.style.width = `${stored[i] ?? 0}px`;
-    });
-    table.style.width = `${totalWidth ?? 0}px`;
-    try {
-      return measure();
-    } finally {
-      cols.forEach((c, i) => {
-        c.style.width = saved[i];
-      });
-      table.style.width = savedTable;
-    }
-  };
-  const tableWidth = totalWidth === undefined ? undefined : Math.max(totalWidth, containerWidth);
+  // Widths: the scroll box's width, columns grown to its edge, and the drag / auto-fit conversions
+  const columnKeys = useMemo(() => columns.map(c => c.key), [columns]);
+  const { setContainer, widthOf, tableWidth, storedFor, measureAtStoredWidths } = useFilledColumns({
+    keys: columnKeys,
+    widths: layout?.widths,
+    leading: showRowNumber ? [ROW_NUMBER_WIDTH] : [],
+    tableRef,
+  });
 
   const bankingSegments = useParametersByGroup('BankingSegment');
   const segmentCodeToLabel = useMemo(
@@ -546,22 +485,7 @@ function AppraisalResultsTable({
                 {layout && (
                   <ColumnResizeHandle
                     width={widthOf(col.key) ?? layout.widths[col.key]}
-                    // A drag target is a width ON SCREEN; the stored one is a minimum that the fill
-                    // scales up. Stored as-is it would render wider than the cursor — and the narrower
-                    // the user pulls, the further it would overshoot.
-                    onResize={px =>
-                      layout.setWidth(
-                        col.key,
-                        storedWidthForShown(
-                          columns.map(c => c.key),
-                          layout.widths,
-                          col.key,
-                          px,
-                          containerWidth,
-                          showRowNumber ? ROW_NUMBER_WIDTH : 0,
-                        ),
-                      )
-                    }
+                    onResize={px => layout.setWidth(col.key, storedFor(col.key, px))}
                     // What auto-fit measures is content, so it is stored as it is.
                     onAutoFit={px => layout.setWidth(col.key, px)}
                     getAutoFitWidth={measureAtStoredWidths(

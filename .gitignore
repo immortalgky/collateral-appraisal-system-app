@@ -64,3 +64,6 @@ dist-ssr
 **/.impeccable/live/deferred-svelte-component-accepts.json
 **/.impeccable/live/*.png
 # impeccable-ignore-end
+
+# The whole .impeccable/ folder (surface briefs, mocks, critique output) stays out of the repo
+.impeccable/

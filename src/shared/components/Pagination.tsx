@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
 import Dropdown from './inputs/Dropdown';
@@ -21,6 +22,8 @@ export interface PaginationProps {
   showPageSizeSelector?: boolean;
   /** Show item count info */
   showItemCount?: boolean;
+  /** Anything that belongs in the bar after the count and page size, e.g. a legend. */
+  leftSlot?: ReactNode;
 }
 
 function Pagination({
@@ -33,6 +36,7 @@ function Pagination({
   onPageSizeChange,
   showPageSizeSelector = true,
   showItemCount = true,
+  leftSlot,
 }: PaginationProps) {
   const { t } = useTranslation('common');
   const safeTotal = totalPages || 1;
@@ -111,6 +115,7 @@ function Pagination({
             />
           </div>
         )}
+        {leftSlot}
       </div>
 
       {/* Right side: Page navigation */}

@@ -24,6 +24,10 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
   required?: boolean;
   /** Heading size class of the card variant; a page that wants another size passes it. */
   headingClassName?: string;
+  /** Default variant: beside the title on its line, e.g. a count. */
+  titleAddon?: React.ReactNode;
+  /** Default variant: after the title block, still on the left, e.g. a view switch. */
+  afterTitle?: React.ReactNode;
 }
 
 const iconColorStyles: Record<IconColor, { bg: string; text: string }> = {
@@ -49,6 +53,8 @@ const SectionHeader = ({
   className,
   required,
   headingClassName = 'text-base',
+  titleAddon,
+  afterTitle,
 }: SectionHeaderProps) => {
   const colorStyle = iconColorStyles[iconColor];
 
@@ -84,6 +90,13 @@ const SectionHeader = ({
     );
   }
 
+  const heading = (
+    <h3 className={clsx('font-semibold text-gray-800', icon ? 'text-base' : 'text-sm')}>
+      {title}
+      {required && <span className="text-danger ml-0.5">*</span>}
+    </h3>
+  );
+
   return (
     <div className={clsx('mb-3', className)}>
       <div className="flex items-center justify-between">
@@ -98,12 +111,17 @@ const SectionHeader = ({
           <div>
             {/* A section inside a card (no icon) sits one step under the card's own 15px heading;
                 with an icon it is a page header and takes the card heading's size. */}
-            <h3 className={clsx('font-semibold text-gray-800', icon ? 'text-base' : 'text-sm')}>
-              {title}
-              {required && <span className="text-danger ml-0.5">*</span>}
-            </h3>
+            {titleAddon ? (
+              <div className="flex items-center gap-2">
+                {heading}
+                {titleAddon}
+              </div>
+            ) : (
+              heading
+            )}
             {subtitle && <p className="text-xs text-gray-500 mt-0.5">{subtitle}</p>}
           </div>
+          {afterTitle}
         </div>
         {rightIcon && rightIcon}
       </div>

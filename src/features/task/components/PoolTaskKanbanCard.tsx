@@ -18,6 +18,7 @@ import {
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { isSameUser } from '../utils/isSameUser';
 
 interface PoolTaskKanbanCardProps {
   task: PoolTask;
@@ -185,17 +186,17 @@ export const PoolTaskKanbanCard = ({ task, onClick }: PoolTaskKanbanCardProps) =
     return () => document.removeEventListener('click', handleClickOutside);
   }, [menuOpen]);
 
-  const isLockedBySelf = task.workingBy === currentUsername;
-  const isLockedByOther = !!task.workingBy && task.workingBy !== currentUsername;
+  const isLockedBySelf = isSameUser(task.workingBy, currentUsername);
+  const isLockedByOther = !!task.workingBy && !isLockedBySelf;
 
   // Mirrors PoolTaskListPage.handleEditInPool exactly: locked-by-other → view the
   // appraisal read-only; locked-by-self → resume editing; unlocked → lock then open.
   const handleEditInPool = () => {
-    if (task.workingBy && task.workingBy !== currentUsername) {
+    if (isLockedByOther) {
       if (task.appraisalId) navigate(`/appraisals/${task.appraisalId}`);
       return;
     }
-    if (task.workingBy === currentUsername) {
+    if (isLockedBySelf) {
       navigate(`/tasks/${task.id}/opening`);
       return;
     }
@@ -251,7 +252,11 @@ export const PoolTaskKanbanCard = ({ task, onClick }: PoolTaskKanbanCardProps) =
       onClick={onClick}
       onKeyDown={handleKeyDown}
       className={`relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 ${BORDER_ACCENT[bucket === 'healthy' ? 'none' : bucket]} ${
-        isLockedBySelf ? 'ring-1 ring-blue-200 bg-blue-50/30' : isLockedByOther ? 'ring-1 ring-amber-200 bg-amber-50/30' : ''
+        isLockedBySelf
+          ? 'ring-1 ring-blue-200 bg-blue-50/30'
+          : isLockedByOther
+            ? 'ring-1 ring-amber-200 bg-amber-50/30'
+            : ''
       }`}
     >
       {/* Activity header */}
@@ -398,11 +403,7 @@ export const PoolTaskKanbanCard = ({ task, onClick }: PoolTaskKanbanCardProps) =
         {fields.map(key => {
           const meta = FIELD_META[key];
           return (
-            <div
-              key={key}
-              title={meta.label}
-              className="flex items-center gap-1.5 text-gray-600"
-            >
+            <div key={key} title={meta.label} className="flex items-center gap-1.5 text-gray-600">
               <Icon
                 style="regular"
                 name={meta.icon}
