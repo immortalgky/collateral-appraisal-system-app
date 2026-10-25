@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import LoadingSpinner from '@/shared/components/LoadingSpinner';
 
@@ -33,9 +34,11 @@ interface ContextMenuState {
   photoId: string | null;
 }
 
-const CARD_WIDTH = 144; // w-36
-const UPLOAD_BTN_WIDTH = 148; // w-[148px]
-const GAP = 8; // gap-2
+// The strip's tile sizes in rem (DESIGN.md 17.9), so the visible count follows the root font size.
+const CARD_REM = 9; // w-36
+const UPLOAD_BTN_REM = 10.5714; // w-[10.5714rem]
+const GAP_REM = 0.5; // gap-2
+const rootFontPx = () => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 
 const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   photos,
@@ -48,6 +51,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   onSelect,
   disabled = false,
 }) => {
+  const { t } = useTranslation('appraisal');
   const [contextMenu, setContextMenu] = useState<ContextMenuState>({
     isOpen: false,
     x: 0,
@@ -73,9 +77,11 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   // Calculate how many photo cards fit
   const maxVisible = useMemo(() => {
     if (containerWidth === 0 || photos.length === 0) return photos.length;
-    const availableForPhotos = containerWidth - UPLOAD_BTN_WIDTH - GAP;
+    const rem = rootFontPx();
+    const gap = GAP_REM * rem;
+    const availableForPhotos = containerWidth - UPLOAD_BTN_REM * rem - gap;
     if (availableForPhotos <= 0) return 0;
-    const count = Math.floor((availableForPhotos + GAP) / (CARD_WIDTH + GAP));
+    const count = Math.floor((availableForPhotos + gap) / (CARD_REM * rem + gap));
     return Math.max(1, count);
   }, [containerWidth, photos.length]);
 
@@ -149,25 +155,39 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
   return (
     <div className="relative min-w-0" onClick={handleContainerClick}>
       <div ref={containerRef} className="flex items-center gap-2 overflow-hidden pb-2">
-        {/* Add Button */}
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={disabled ? undefined : onAddClick}
-          onKeyDown={e => {
-            if (!disabled && (e.key === 'Enter' || e.key === ' ')) onAddClick();
-          }}
-          className={clsx(
-            'flex flex-col items-center justify-center',
-            'w-[148px] h-28 shrink-0',
-            'bg-gray-50 border border-dashed border-gray-300 rounded-lg',
-            'cursor-pointer hover:bg-gray-100 hover:border-gray-400 transition-colors',
-            disabled && 'opacity-50 cursor-not-allowed',
-          )}
-        >
-          <Icon name="plus" style="solid" className="w-5 h-5 text-gray-400 mb-1" />
-          <span className="text-xs text-gray-500 text-center px-2">Click to add picture</span>
-        </div>
+        {/* Add Button; a read page has none, and says so when there are no photos */}
+        {disabled ? (
+          photos.length === 0 && (
+            <div className="flex h-28 w-[10.5714rem] shrink-0 flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-(--palette-line-strong) bg-(--palette-surface-2) text-xs text-(--palette-ink-2)">
+              <Icon name="image" style="solid" className="text-[1.25rem] text-(--palette-ink-3)" />
+              {t('photoGallery.noPhotos')}
+            </div>
+          )
+        ) : (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={onAddClick}
+            onKeyDown={e => {
+              if (e.key === 'Enter' || e.key === ' ') onAddClick();
+            }}
+            className={clsx(
+              'flex flex-col items-center justify-center',
+              'w-[10.5714rem] h-28 shrink-0',
+              'bg-(--palette-surface-2) border border-dashed border-(--palette-line-strong) rounded-lg',
+              'cursor-pointer hover:bg-(--palette-surface-3) transition-colors',
+            )}
+          >
+            <Icon
+              name="plus"
+              style="solid"
+              className="text-[1.25rem] text-(--palette-gray-400) mb-1"
+            />
+            <span className="text-xs text-(--palette-gray-500) text-center px-2">
+              {t('photoGallery.addPicture')}
+            </span>
+          </div>
+        )}
 
         {/* Photo Thumbnails */}
         {visiblePhotos.map((photo, index) => {
@@ -189,7 +209,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
               onContextMenu={e => !isLastAndOverflow && handleContextMenu(e, photo.id)}
             >
               {photo.isUploading ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                <div className="absolute inset-0 flex items-center justify-center bg-(--palette-surface-3)">
                   <LoadingSpinner size="sm" />
                 </div>
               ) : (
@@ -214,15 +234,17 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
               {/* Cover Badge */}
               {isThumbnail && !photo.isUploading && !isLastAndOverflow && (
-                <div className="absolute top-1 left-1 bg-amber-400 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
-                  Cover
+                <div className="absolute top-[0.2857rem] left-[0.2857rem] rounded bg-amber-400 px-1.5 text-xs font-semibold leading-normal text-warning-content">
+                  {t('photoGallery.cover')}
                 </div>
               )}
 
               {/* Uploading Overlay */}
               {photo.isUploading && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-                  <span className="text-xs text-white font-medium">Uploading...</span>
+                  <span className="text-xs text-white font-medium">
+                    {t('photoGallery.uploading')}
+                  </span>
                 </div>
               )}
             </div>
@@ -238,7 +260,7 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
 
           {/* Menu */}
           <div
-            className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[160px]"
+            className="fixed z-50 bg-(--palette-surface) rounded-lg shadow-lg border border-(--palette-line) py-1 min-w-[160px]"
             style={{
               left: contextMenu.x,
               top: contextMenu.y,
@@ -246,33 +268,37 @@ const PhotoGallery: React.FC<PhotoGalleryProps> = ({
           >
             <button
               type="button"
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+              className="w-full px-4 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
               onClick={() => handleContextMenuAction('view')}
             >
               <Icon name="eye" style="regular" className="w-4 h-4" />
-              View
+              {t('photoGallery.view')}
             </button>
             {!disabled && (
               <>
                 <button
                   type="button"
                   className={clsx(
-                    'w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center gap-2',
-                    thumbnailId === contextMenu.photoId ? 'text-amber-600' : 'text-gray-700',
+                    'w-full px-4 py-2 text-left text-sm hover:bg-(--palette-surface-3) flex items-center gap-2',
+                    thumbnailId === contextMenu.photoId
+                      ? 'text-(--palette-warn)'
+                      : 'text-(--palette-ink)',
                   )}
                   onClick={() => handleContextMenuAction('thumbnail')}
                 >
                   <Icon name="image" style="regular" className="w-4 h-4" />
-                  {thumbnailId === contextMenu.photoId ? 'Remove as cover' : 'Set as cover'}
+                  {thumbnailId === contextMenu.photoId
+                    ? t('photoGallery.removeCover')
+                    : t('photoGallery.setCover')}
                 </button>
-                <div className="border-t border-gray-100 my-1" />
+                <div className="border-t border-(--palette-line-soft) my-1" />
                 <button
                   type="button"
-                  className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                  className="w-full px-4 py-2 text-left text-sm text-(--palette-danger) hover:bg-(--palette-req-wash) flex items-center gap-2"
                   onClick={() => handleContextMenuAction('delete')}
                 >
                   <Icon name="trash" style="regular" className="w-4 h-4" />
-                  Delete
+                  {t('photoGallery.delete')}
                 </button>
               </>
             )}

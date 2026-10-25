@@ -8,16 +8,16 @@ import type { ReactNode } from 'react';
 
 export const UT_TABLE = 'w-full border-separate border-spacing-0 text-[12px] tabular-nums';
 export const UT_TH =
-  'px-[8px] py-0 leading-[26px] font-medium text-[#55636f] bg-[#f8fafa] border-b border-b-[#e3e9e8] border-r border-r-[#eef2f2] whitespace-nowrap sticky top-0 z-[2]';
+  'px-[8px] py-0 leading-[26px] font-medium text-(--palette-ink-2) bg-(--palette-surface-2) border-b border-b-(--palette-line) border-r border-r-(--palette-line-soft) whitespace-nowrap sticky top-0 z-[2]';
 export const UT_TD =
-  'px-[8px] py-0 leading-[25px] bg-white border-b border-b-[#eef2f2] border-r border-r-[#eef2f2] whitespace-nowrap';
+  'px-[8px] py-0 leading-[25px] bg-(--palette-surface) border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft) whitespace-nowrap';
 export const UT_FIN =
-  'px-[8px] py-0 leading-[25px] font-bold bg-[#f8fafa] border-t border-t-[#cbd5d3] border-b border-b-[#eef2f2] border-r border-r-[#eef2f2] whitespace-nowrap';
+  'px-[8px] py-0 leading-[25px] font-bold bg-(--palette-surface-2) border-t border-t-(--palette-line-strong) border-b border-b-(--palette-line-soft) border-r border-r-(--palette-line-soft) whitespace-nowrap';
 
 // mock `.mpill.mA/.mB/.mC` — accent, warn, ok washes, cycled by the model's position.
 const PILL_TONES = [
-  'bg-[#f0fdfa] text-[#0f766e]',
-  'bg-[#fffbeb] text-[#b45309]',
+  'bg-(--palette-accent-wash) text-(--palette-accent-ink)',
+  'bg-(--palette-warn-wash) text-(--palette-warn)',
   'bg-[#f0fdf4] text-[#15803d]',
 ];
 

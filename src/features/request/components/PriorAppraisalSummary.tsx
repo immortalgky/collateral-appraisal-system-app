@@ -61,8 +61,10 @@ function Card({
     <div
       role="status"
       className={clsx(
-        'm-3 rounded-lg border px-3 py-2 text-gray-700',
-        red ? 'border-red-300 bg-red-50' : 'border-amber-200 bg-amber-50',
+        'm-3 rounded-lg border px-3 py-2 text-(--palette-ink)',
+        red
+          ? 'border-red-300 bg-red-50 dark:border-red-500/40 dark:bg-red-500/10'
+          : 'border-amber-200 bg-amber-50 dark:border-amber-500/40 dark:bg-amber-500/10',
       )}
     >
       <div className="flex items-center gap-2 text-sm">
@@ -71,15 +73,20 @@ function Card({
           style="solid"
           className={clsx('shrink-0', red ? 'text-red-500' : 'text-amber-500')}
         />
-        <span className={clsx('font-semibold', red ? 'text-red-700' : 'text-amber-700')}>
+        <span
+          className={clsx(
+            'font-semibold',
+            red ? 'text-red-700 dark:text-red-300' : 'text-amber-700 dark:text-amber-300',
+          )}
+        >
           {heading}
         </span>
       </div>
-      <p className="m-0 mt-0.5 text-xs text-gray-600">{hint}</p>
+      <p className="m-0 mt-0.5 text-xs text-(--palette-gray-600)">{hint}</p>
       <ul
         className={clsx(
           'm-0 mt-2 grid list-none gap-2 border-t p-0 pt-2',
-          red ? 'border-red-200' : 'border-amber-200',
+          red ? 'border-(--palette-req-line)' : 'border-amber-200 dark:border-amber-500/30',
         )}
       >
         {children}
@@ -97,10 +104,10 @@ function Pill({ tone, children }: { tone: 'green' | 'yellow' | 'red'; children: 
       dot={false}
       rounded
       className={clsx(
-        'bg-white! ring-1 ring-inset',
-        tone === 'green' && 'ring-green-300',
-        tone === 'yellow' && 'ring-amber-300',
-        tone === 'red' && 'ring-red-300 text-red-700!',
+        'bg-(--palette-surface)! ring-1 ring-inset',
+        tone === 'green' && 'ring-green-300 dark:ring-green-500/40',
+        tone === 'yellow' && 'ring-amber-300 dark:ring-amber-500/40',
+        tone === 'red' && 'ring-red-300 dark:ring-red-500/40 text-(--palette-req)!',
       )}
     >
       {children}
@@ -211,14 +218,14 @@ export default function PriorAppraisalSummary() {
         : 'purpose',
     );
   const identities = (items: string[]) => (
-    <ul className="m-0 list-none p-0 text-xs text-gray-600">
+    <ul className="m-0 list-none p-0 text-xs text-(--palette-gray-600)">
       {items.map((identity, i) => (
         <li key={i}>{identity}</li>
       ))}
     </ul>
   );
   const report = (number: string | null) => (
-    <strong className="text-sm font-semibold text-gray-900">
+    <strong className="text-sm font-semibold text-(--palette-ink)">
       {number
         ? t('requestForm.priorSummary.report', { number })
         : t('requestForm.priorSummary.noReportNumber')}
@@ -267,7 +274,7 @@ export default function PriorAppraisalSummary() {
               <button
                 type="button"
                 onClick={goToPrior}
-                className="font-medium text-primary hover:underline"
+                className="font-medium text-(--palette-primary-text) hover:underline"
               >
                 {t('requestForm.priorSummary.goToPrior')}
               </button>
@@ -279,7 +286,7 @@ export default function PriorAppraisalSummary() {
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 {report(item.number)}
                 {item.date && (
-                  <span className="text-xs text-gray-600">
+                  <span className="text-xs text-(--palette-gray-600)">
                     {t('requestForm.priorSummary.date', {
                       date: formatDate(item.date, 'dd/MM/yyyy'),
                     })}

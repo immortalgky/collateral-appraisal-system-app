@@ -104,7 +104,11 @@ const ProfilePreferencesTab = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start gap-2.5 rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm text-gray-600 dark:border-base-300 dark:bg-base-200 dark:text-gray-300">
-        <Icon name="circle-info" style="solid" className="mt-0.5 size-4 shrink-0 text-gray-400" />
+        <Icon
+          name="circle-info"
+          style="solid"
+          className="mt-0.5 size-4 shrink-0 text-(--palette-gray-400)"
+        />
         <p>{t('myProfile.browserOnlySetting')}</p>
       </div>
 

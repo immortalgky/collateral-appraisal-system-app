@@ -9,7 +9,18 @@ import Button from '@shared/components/Button';
 import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { FormFields, type FormField } from '@/shared/components/form';
+import {
+  FormFields,
+  FormSection,
+  FormSheet,
+  FormTable,
+  FormTableDash,
+  UserFormLayoutProvider,
+  useFormLayout,
+  type FormField,
+  type FormTableColumn,
+} from '@/shared/components/form';
+import NumberInput from '@/shared/components/inputs/NumberInput';
 import FieldHelp from '@/shared/components/form/FieldHelp';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -25,10 +36,12 @@ import {
   machinerySummaryFormDefault,
   type machinerySummaryFormType,
 } from '../../schemas/form';
-import { machinerySummaryGeneralFields, machinerySummaryLegalFields } from '../../configs/fields';
+import {
+  allMachinerySummaryFields,
+  machinerySummaryGeneralFields,
+  machinerySummaryLegalFields,
+} from '../../configs/fields';
 import { mapMachinerySummaryResponseToForm } from '../../utils/mappers';
-import SectionRow from '../SectionRow';
-import { TD, TH } from '../tables/denseTable';
 import { MapLocationPicker, MapPickerTriggerIcon } from '@/shared/components/MapLocationPicker';
 
 // Literal key map — the strictly-typed `t()` rejects a dynamically-concatenated key
@@ -105,7 +118,7 @@ const FillEmptyLink = ({
       type="button"
       onClick={onClick}
       disabled={nothingToFill}
-      className="cas-title-add ml-auto inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-medium text-primary-700 transition-colors hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline!"
+      className="inline-flex shrink-0 items-center gap-1.5 text-xs font-semibold text-(--palette-accent-ink) hover:underline disabled:cursor-not-allowed disabled:opacity-40 disabled:no-underline!"
     >
       {t('propertyInfo.machinerySummary.suggested.applyEmpty')}
     </button>
@@ -128,6 +141,7 @@ const CountsTable = ({
   onApply: (name: SuggestedCountName, value: number) => void;
 }) => {
   const { t } = useTranslation('appraisal');
+  const layout = useFormLayout();
   const { control, setValue } = useFormContext();
   const entered = useWatch({ control, name: SUGGESTED_COUNT_NAMES }) as Array<number | null>;
 
@@ -160,170 +174,179 @@ const CountsTable = ({
       );
   }
 
+  /** The sentence saying which groups a derived total came from (see the comment below). */
+  const sourceOf = (name: SuggestedCountName) => {
+    // Said as a sentence rather than shown as chips: the reader is checking a
+    // number they did not compute, and "มาจาก Group 2 5 เครื่อง และ Group 3 2 เครื่อง"
+    // answers "where did 7 come from" the way a colleague would. Groups
+    // contributing nothing are left out.
+    // Nothing derived yet (still loading, or the request failed): the Derived
+    // cell shows — and this one has to agree, rather than asserting that no
+    // machine matches.
+    if (!suggested) return <FormTableDash />;
+    const parts = suggested.groups.filter(g => g[name] > 0);
+    if (parts.length === 0)
+      return (
+        <span className="text-xs text-(--palette-ink-2)">
+          {t('propertyInfo.machinerySummary.table.sourceNone')}
+        </span>
+      );
+    const list = parts
+      .map(g =>
+        t('propertyInfo.machinerySummary.table.sourcePart', {
+          count: g[name],
+          // Keyed on the id, not the name: a real group saved without a name
+          // would otherwise be reported as machines belonging to no group,
+          // which is the opposite of what this cell exists to say.
+          group:
+            g.groupId === null
+              ? t('propertyInfo.machinerySummary.table.sourceUngrouped')
+              : (g.groupName?.trim() ??
+                t('propertyInfo.machinerySummary.table.sourceGroupNumber', {
+                  number: g.groupNumber ?? '?',
+                })),
+        }),
+      )
+      .join(t('propertyInfo.machinerySummary.table.sourceJoin'));
+    return (
+      <span className="text-xs text-(--palette-ink-2)">
+        {t('propertyInfo.machinerySummary.table.sourceSentence', { list })}
+      </span>
+    );
+  };
+
+  const labelOf = (name: SuggestedCountName) =>
+    t(FIELD_LABEL_KEYS[name as keyof typeof FIELD_LABEL_KEYS]);
+
+  const rows = SUGGESTED_COUNT_NAMES.map((name, i) => ({ name, i }));
+  const columns: FormTableColumn<(typeof rows)[number]>[] = [
+    {
+      key: 'item',
+      // `index` so that, in card mode, the label is the card's title rather than a field of its own.
+      kind: 'index',
+      align: 'start',
+      width: '16rem',
+      header: t('propertyInfo.machinerySummary.table.item'),
+      card: { title: ({ name }) => labelOf(name) },
+      cell: ({ name }) => (
+        <span className="inline-flex items-center gap-1.5 text-(--palette-ink)">
+          {labelOf(name)}
+          {/* The rule behind the derived number. It lived on the number-input's label
+            before these six moved into this table, and the reader needs it more here,
+            not less: the Derived column states a figure without saying how it was
+            counted. */}
+          {suggested && (
+            <FieldHelp
+              config={{
+                title: t('propertyInfo.machinerySummary.suggested.helpTitle'),
+                lines: [
+                  t(SUGGESTED_COUNT_RULE_KEYS[name]),
+                  t('propertyInfo.machinerySummary.suggested.helpComputed', {
+                    value: suggested[name],
+                  }),
+                  t('propertyInfo.machinerySummary.suggested.helpNote'),
+                ],
+              }}
+            />
+          )}
+        </span>
+      ),
+    },
+    {
+      key: 'entered',
+      kind: 'input',
+      align: 'end',
+      width: '8rem',
+      header: t('propertyInfo.machinerySummary.table.entered'),
+      card: { span: 6 },
+      cell: ({ name, i }) => (
+        <div className="ml-auto w-full max-w-[6.5rem]">
+          {/* Capped at the same digits the schema refines on (`MAX_COUNT_DIGITS`): a longer number
+              would fail validation with nothing on screen to say so, and Save would do nothing. */}
+          <NumberInput
+            cell
+            decimalPlaces={0}
+            maxIntegerDigits={MAX_COUNT_DIGITS[name] ?? 5}
+            thousandSeparator={false}
+            placeholder="-"
+            disabled={readOnly}
+            aria-label={labelOf(name)}
+            value={value(i)}
+            onChange={e => {
+              setValue(name, e.target.value, { shouldDirty: true, shouldValidate: false });
+            }}
+          />
+        </div>
+      ),
+    },
+    {
+      key: 'derived',
+      kind: 'derived',
+      align: 'end',
+      width: '7rem',
+      header: t('propertyInfo.machinerySummary.table.derived'),
+      cell: ({ name, i }) => {
+        const derived = suggested?.[name];
+        if (derived === undefined) return <FormTableDash />;
+        const typed = value(i);
+        const differs = typed !== null && typed !== derived;
+        return (
+          <span
+            className={differs ? 'font-semibold text-(--palette-warn)' : 'text-(--palette-ink-2)'}
+          >
+            {derived}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'source',
+      kind: 'text',
+      header: t('propertyInfo.machinerySummary.table.source'),
+      card: { zone: 'input', span: 12 },
+      cell: ({ name }) => sourceOf(name),
+    },
+    {
+      key: 'use',
+      kind: 'action',
+      width: '6rem',
+      cell: ({ name, i }) => {
+        const derived = suggested?.[name];
+        const typed = value(i);
+        // Always there so the column keeps its shape; disabled once the entered number already is
+        // the calculated one.
+        if (readOnly || derived === undefined) return null;
+        return (
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={() => onApply(name, derived)}
+              disabled={typed === derived}
+              title={
+                typed === derived ? t('propertyInfo.machinerySummary.table.useDisabled') : undefined
+              }
+              leftIcon={<Icon name="wand-magic-sparkles" style="solid" />}
+            >
+              {t('propertyInfo.machinerySummary.table.use')}
+            </Button>
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <div>
-      <div className="cas-labelled-table">
-        <div className="cas-table-card min-w-0 flex-1 overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="w-full min-w-[560px] border-collapse text-sm">
-            <thead className="bg-[#f8fafa] text-left text-[0.8571rem] font-medium text-[#55636f]">
-              <tr>
-                <th className={clsx(TH, 'text-left')}>
-                  {t('propertyInfo.machinerySummary.table.item')}
-                </th>
-                <th className={clsx(TH, 'text-right')}>
-                  {t('propertyInfo.machinerySummary.table.entered')}
-                </th>
-                <th className={clsx(TH, 'text-right')}>
-                  {t('propertyInfo.machinerySummary.table.derived')}
-                </th>
-                <th className={clsx(TH, 'text-left')}>
-                  {t('propertyInfo.machinerySummary.table.source')}
-                </th>
-                <th className={clsx(TH, 'w-px')} />
-              </tr>
-            </thead>
-            <tbody className="text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
-              {SUGGESTED_COUNT_NAMES.map((name, i) => {
-                const derived = suggested?.[name];
-                const typed = value(i);
-                const differs = typed !== null && derived !== undefined && typed !== derived;
-                return (
-                  <tr
-                    key={name}
-                    className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/60"
-                  >
-                    <td className={TD}>
-                      <span className="inline-flex items-center gap-1.5">
-                        {t(FIELD_LABEL_KEYS[name as keyof typeof FIELD_LABEL_KEYS])}
-                        {/* The rule behind the derived number. It lived on the number-input's label
-                          before these six moved into this table, and the reader needs it more here,
-                          not less: the Derived column states a figure without saying how it was
-                          counted. */}
-                        {suggested && (
-                          <FieldHelp
-                            config={{
-                              title: t('propertyInfo.machinerySummary.suggested.helpTitle'),
-                              lines: [
-                                t(SUGGESTED_COUNT_RULE_KEYS[name]),
-                                t('propertyInfo.machinerySummary.suggested.helpComputed', {
-                                  value: suggested[name],
-                                }),
-                                t('propertyInfo.machinerySummary.suggested.helpNote'),
-                              ],
-                            }}
-                          />
-                        )}
-                      </span>
-                    </td>
-                    <td className={clsx(TD, 'text-right')}>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        disabled={readOnly}
-                        aria-label={t(FIELD_LABEL_KEYS[name as keyof typeof FIELD_LABEL_KEYS])}
-                        value={typed === null ? '' : String(typed)}
-                        onChange={e => {
-                          // Capped here because this cell is a plain input, not the number-input the
-                          // rest of the form uses: the schema still refines on maxIntegerDigits, and
-                          // a longer number would fail validation with nothing on screen to say so —
-                          // Save would just do nothing.
-                          const digits = e.target.value
-                            .replace(/[^0-9]/g, '')
-                            .slice(0, MAX_COUNT_DIGITS[name] ?? 5);
-                          setValue(name, digits === '' ? null : Number(digits), {
-                            shouldDirty: true,
-                            shouldValidate: false,
-                          });
-                        }}
-                        className={clsx(
-                          'w-20 rounded-md border px-2 py-1 text-right text-sm tabular-nums',
-                          typed !== null
-                            ? 'border-primary-500 bg-primary-50'
-                            : 'border-gray-200 bg-white',
-                          readOnly && 'cursor-not-allowed bg-gray-50 text-gray-500',
-                        )}
-                      />
-                    </td>
-                    <td
-                      className={clsx(
-                        TD,
-                        'text-right tabular-nums',
-                        differs ? 'font-semibold text-warning' : 'text-gray-500',
-                      )}
-                    >
-                      {derived ?? '—'}
-                    </td>
-                    <td className={TD}>
-                      {(() => {
-                        // Said as a sentence rather than shown as chips: the reader is checking a
-                        // number they did not compute, and "มาจาก Group 2 5 เครื่อง และ Group 3 2 เครื่อง"
-                        // answers "where did 7 come from" the way a colleague would. Groups
-                        // contributing nothing are left out.
-                        // Nothing derived yet (still loading, or the request failed): the Derived
-                        // cell shows — and this one has to agree, rather than asserting that no
-                        // machine matches.
-                        if (!suggested) return <span className="text-gray-300">—</span>;
-                        const parts = suggested.groups.filter(g => g[name] > 0);
-                        if (parts.length === 0)
-                          return (
-                            <span className="text-xs text-gray-400">
-                              {t('propertyInfo.machinerySummary.table.sourceNone')}
-                            </span>
-                          );
-                        const list = parts
-                          .map(g =>
-                            t('propertyInfo.machinerySummary.table.sourcePart', {
-                              count: g[name],
-                              // Keyed on the id, not the name: a real group saved without a name
-                              // would otherwise be reported as machines belonging to no group,
-                              // which is the opposite of what this cell exists to say.
-                              group:
-                                g.groupId === null
-                                  ? t('propertyInfo.machinerySummary.table.sourceUngrouped')
-                                  : (g.groupName?.trim() ??
-                                    t('propertyInfo.machinerySummary.table.sourceGroupNumber', {
-                                      number: g.groupNumber ?? '?',
-                                    })),
-                            }),
-                          )
-                          .join(t('propertyInfo.machinerySummary.table.sourceJoin'));
-                        return (
-                          <span className="text-xs leading-snug text-gray-500">
-                            {t('propertyInfo.machinerySummary.table.sourceSentence', { list })}
-                          </span>
-                        );
-                      })()}
-                    </td>
-                    <td className={clsx(TD, 'align-middle leading-[0]')}>
-                      {/* Always there so the column keeps its shape; disabled once the entered number
-                          already is the calculated one. */}
-                      {!readOnly && derived !== undefined && (
-                        <button
-                          type="button"
-                          onClick={() => onApply(name, derived)}
-                          disabled={typed === derived}
-                          title={
-                            typed === derived
-                              ? t('propertyInfo.machinerySummary.table.useDisabled')
-                              : undefined
-                          }
-                          className="inline-flex h-6 items-center gap-1 whitespace-nowrap rounded-[0.3077rem] border px-2 text-[0.8571rem] font-medium leading-none transition-colors border-[color:var(--palette-accent-line)] bg-[color:var(--palette-accent-wash)] text-[color:var(--palette-accent-ink)] hover:bg-[color:color-mix(in_srgb,var(--palette-accent)_14%,var(--palette-accent-wash))] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--palette-accent)]/40 disabled:cursor-not-allowed disabled:border-[color:var(--palette-line)] disabled:bg-[color:var(--palette-surface-3)] disabled:text-[color:var(--palette-ink-3)]"
-                        >
-                          <Icon name="wand-magic-sparkles" style="solid" className="size-2.5" />
-                          {t('propertyInfo.machinerySummary.table.use')}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <FormTable columns={columns} rows={rows} rowKey={row => row.name} minWidth={40} />
 
       {issues.length > 0 && (
-        <p className="mt-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-content dark:in-[.cas-form-grid]:border-[color:var(--palette-warn)]/30 dark:in-[.cas-form-grid]:bg-[color:var(--palette-warn-wash)] dark:in-[.cas-form-grid]:text-[color:var(--palette-warn)] in-data-[form-layout=grid]:mx-2 in-data-[form-layout=grid]:mb-2">
+        <p
+          className={clsx(
+            'mt-2 rounded-md border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-xs text-(--palette-warn)',
+            layout === 'compact' && 'mx-2 mb-2',
+          )}
+        >
           <b className="font-semibold">{t('propertyInfo.machinerySummary.checks.title')}</b>{' '}
           {issues.join(' · ')} — {t('propertyInfo.machinerySummary.checks.note')}
         </p>
@@ -370,19 +393,15 @@ const MachinerySummaryLegalForm = ({ readOnly }: { readOnly: boolean }) => {
 
   return (
     <>
-      <SectionRow title={t('propertyInfo.machinerySummary.groups.ownership')} icon="user">
+      <FormSection title={t('propertyInfo.machinerySummary.groups.ownership')} icon="user">
         <FormFields fields={pick('proprietor', 'owner', 'obligation')} disabled={readOnly} />
-      </SectionRow>
-      <SectionRow title={t('propertyInfo.machinerySummary.groups.location')} icon="location-dot">
+      </FormSection>
+      <FormSection title={t('propertyInfo.machinerySummary.groups.location')} icon="location-dot">
         <FormFields fields={pick('machineAddress', 'latitude', 'longitude')} disabled={readOnly} />
-      </SectionRow>
-      <SectionRow
-        title={t('propertyInfo.machinerySummary.groups.remarks')}
-        icon="note-sticky"
-        isLast
-      >
+      </FormSection>
+      <FormSection title={t('propertyInfo.machinerySummary.groups.remarks')} icon="note-sticky">
         <FormFields fields={pick('other')} disabled={readOnly} />
-      </SectionRow>
+      </FormSection>
       <MapLocationPicker
         isOpen={pickerOpen}
         onClose={() => setPickerOpen(false)}
@@ -506,7 +525,11 @@ export const MachinerySummaryTab = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
-        <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-6 h-6 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -523,71 +546,77 @@ export const MachinerySummaryTab = ({
   }
 
   return (
-    <FormProvider methods={methods} schema={machinerySummaryForm}>
-      <form onSubmit={methods.handleSubmit(onSubmit)} className="cas-form-grid flex flex-col gap-4">
-        {/* No page heading here: the tab is already labelled "สรุปเครื่องจักร". The sheet is the
-            machinery form's own (`cas-sheet` + `SectionRow`), so labels and section heads come from
-            the form skin. Counters: each field's own `showCharCount` wins; only the condition block
-            sets the flag form-wide, for the market-demand textarea (4000) whose config has none. */}
-        <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
-          <SectionRow
-            title={t('propertyInfo.machinerySummary.groups.counts')}
-            icon="gears"
-            action={
-              !readOnly && suggestedCounts ? (
-                <FillEmptyLink suggested={suggestedCounts} onClick={applySuggestedToEmpty} />
-              ) : undefined
-            }
-          >
-            <div className="col-span-12">
-              <CountsTable suggested={suggestedCounts} readOnly={readOnly} onApply={applyCount} />
-            </div>
-          </SectionRow>
-          <SectionRow
-            title={t('propertyInfo.machinerySummary.groups.condition')}
-            icon="clipboard-check"
-          >
-            <FormFields fields={descriptiveFields} disabled={readOnly} showCharCount />
-          </SectionRow>
-          <MachinerySummaryLegalForm readOnly={readOnly} />
-        </div>
+    <UserFormLayoutProvider>
+      <FormProvider
+        methods={methods}
+        schema={machinerySummaryForm}
+        fields={allMachinerySummaryFields}
+      >
+        <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-4">
+          {/* No page heading here: the tab is already labelled "สรุปเครื่องจักร". The sheet is a
+            FormSheet, like the machinery form's. Counters: each field's own `showCharCount` wins;
+            only the condition block sets the flag form-wide, for the market-demand textarea (4000)
+            whose config has none. */}
+          <FormSheet>
+            <FormSection
+              title={t('propertyInfo.machinerySummary.groups.counts')}
+              icon="gears"
+              actions={
+                !readOnly && suggestedCounts ? (
+                  <FillEmptyLink suggested={suggestedCounts} onClick={applySuggestedToEmpty} />
+                ) : undefined
+              }
+            >
+              <div className="col-span-12">
+                <CountsTable suggested={suggestedCounts} readOnly={readOnly} onApply={applyCount} />
+              </div>
+            </FormSection>
+            <FormSection
+              title={t('propertyInfo.machinerySummary.groups.condition')}
+              icon="clipboard-check"
+            >
+              <FormFields fields={descriptiveFields} disabled={readOnly} showCharCount />
+            </FormSection>
+            <MachinerySummaryLegalForm readOnly={readOnly} />
+          </FormSheet>
 
-        {/* Sticky footer actions — pinned to the bottom of the scroll area. Cancel is there even
+          {/* Sticky footer actions — pinned to the bottom of the scroll area. Cancel is there even
             when read-only, the same as the property forms: it is the way back to the list. */}
-        <ActionBar>
-          <ActionBar.Left>
-            <CancelButton fallbackPath={cancelPath} />
+          <ActionBar>
+            <ActionBar.Left>
+              <CancelButton fallbackPath={cancelPath} />
+              {!readOnly && (
+                <>
+                  <ActionBar.Divider />
+                  <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
+                </>
+              )}
+            </ActionBar.Left>
             {!readOnly && (
-              <>
-                <ActionBar.Divider />
-                <ActionBar.UnsavedIndicator show={methods.formState.isDirty} />
-              </>
+              <ActionBar.Right>
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={handleSaveDraft}
+                  isLoading={saveMutation.isPending && saveAction === 'draft'}
+                  disabled={saveMutation.isPending}
+                >
+                  {t('propertyInfo.machinerySummary.saveDraft')}
+                </Button>
+                <Button
+                  type="submit"
+                  isLoading={saveMutation.isPending}
+                  disabled={saveMutation.isPending}
+                >
+                  <Icon name="check" style="solid" className="size-4 mr-2" />
+                  {t('propertyInfo.machinerySummary.save')}
+                </Button>
+              </ActionBar.Right>
             )}
-          </ActionBar.Left>
-          {!readOnly && (
-            <ActionBar.Right>
-              <Button
-                variant="ghost"
-                type="button"
-                onClick={handleSaveDraft}
-                isLoading={saveMutation.isPending && saveAction === 'draft'}
-                disabled={saveMutation.isPending}
-              >
-                {t('propertyInfo.machinerySummary.saveDraft')}
-              </Button>
-              <Button
-                type="submit"
-                isLoading={saveMutation.isPending}
-                disabled={saveMutation.isPending}
-              >
-                <Icon name="check" style="solid" className="size-4 mr-2" />
-                {t('propertyInfo.machinerySummary.save')}
-              </Button>
-            </ActionBar.Right>
-          )}
-        </ActionBar>
-      </form>
-    </FormProvider>
+          </ActionBar>
+        </form>
+      </FormProvider>
+    </UserFormLayoutProvider>
   );
 };
 

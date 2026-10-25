@@ -173,7 +173,10 @@ function DinoLoader({
       ) : null}
       {/* Height reserved so the card does not jump when the hint appears. aria-hidden keeps the
           score and hint out of the overlay's live region. */}
-      <div aria-hidden="true" className="mt-1 h-4 text-xs font-medium text-primary">
+      <div
+        aria-hidden="true"
+        className="mt-1 h-4 text-xs font-medium text-(--palette-primary-text)"
+      >
         {interactive ? hint : ''}
       </div>
     </div>

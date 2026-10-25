@@ -13,7 +13,7 @@ import {
 } from '../api/jobSchedules';
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none';
 
 // A standard 5-field cron. The server is the authority — Hangfire parses the expression and the
 // endpoint rejects a bad one — so this only catches the obvious shape mistake before a round trip.
@@ -70,13 +70,17 @@ function EditModal({ isOpen, onClose, job, onSave, isSaving }: EditModalProps) {
     <Modal isOpen={isOpen} onClose={onClose} title={t('modal.title')} size="md">
       <div className="space-y-4 p-6">
         <div>
-          <p className="text-xs font-medium uppercase text-gray-500">{t('fields.jobId')}</p>
-          <p className="font-mono text-sm text-gray-900">{job.jobId}</p>
-          {job.description && <p className="mt-1 text-xs text-gray-500">{job.description}</p>}
+          <p className="text-xs font-medium uppercase text-(--palette-gray-500)">
+            {t('fields.jobId')}
+          </p>
+          <p className="font-mono text-sm text-(--palette-ink)">{job.jobId}</p>
+          {job.description && (
+            <p className="mt-1 text-xs text-(--palette-gray-500)">{job.description}</p>
+          )}
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-(--palette-ink)">
             {t('fields.cronExpression')}
           </label>
           <input
@@ -85,13 +89,13 @@ function EditModal({ isOpen, onClose, job, onSave, isSaving }: EditModalProps) {
             onChange={e => setCronExpression(e.target.value)}
             className={inputClass + ' font-mono'}
           />
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-(--palette-gray-400)">
             {t('hints.default')} <span className="font-mono">{job.defaultCron}</span>
           </p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-(--palette-ink)">
             {t('fields.timeZoneId')}
           </label>
           <input
@@ -101,19 +105,19 @@ function EditModal({ isOpen, onClose, job, onSave, isSaving }: EditModalProps) {
             placeholder={t('fields.timeZonePlaceholder', { timeZone: job.effectiveTimeZoneId })}
             className={inputClass}
           />
-          <p className="mt-1 text-xs text-gray-400">{t('hints.timeZone')}</p>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">{t('hints.timeZone')}</p>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 text-sm text-(--palette-ink)">
           <input
             type="checkbox"
             checked={isEnabled}
             onChange={e => setIsEnabled(e.target.checked)}
-            className="rounded border-gray-300 text-primary focus:ring-primary/20"
+            className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20"
           />
           {t('fields.isEnabled')}
         </label>
-        <p className="text-xs text-gray-400">{t('hints.isEnabled')}</p>
+        <p className="text-xs text-(--palette-gray-400)">{t('hints.isEnabled')}</p>
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="ghost" type="button" onClick={onClose}>
@@ -175,23 +179,30 @@ const JobSchedulesPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-        <p className="mt-0.5 text-xs text-gray-500">{t('page.subtitle')}</p>
+        <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+        <p className="mt-0.5 text-xs text-(--palette-gray-500)">{t('page.subtitle')}</p>
       </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="h-5 w-5 animate-spin text-gray-400" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="h-5 w-5 animate-spin text-(--palette-gray-400)"
+          />
         </div>
       ) : jobs.length === 0 ? (
-        <p className="py-6 text-center text-sm text-gray-400">{t('page.empty')}</p>
+        <p className="py-6 text-center text-sm text-(--palette-gray-400)">{t('page.empty')}</p>
       ) : (
         byModule.map(([module, rows]) => (
-          <div key={module} className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-            <p className="border-b border-gray-100 bg-gray-50 px-4 py-2 text-xs font-semibold uppercase text-gray-500">
+          <div
+            key={module}
+            className="overflow-x-auto rounded-lg border border-(--palette-line) bg-(--palette-surface)"
+          >
+            <p className="border-b border-(--palette-line-soft) bg-(--palette-surface-2) px-4 py-2 text-xs font-semibold uppercase text-(--palette-gray-500)">
               {module}
             </p>
-            <table className="min-w-full divide-y divide-gray-200 text-sm">
+            <table className="min-w-full divide-y divide-(--palette-line) text-sm">
               <thead>
                 <tr>
                   {[
@@ -203,45 +214,57 @@ const JobSchedulesPage = () => {
                   ].map((h, i) => (
                     <th
                       key={i}
-                      className="px-4 py-2 text-left text-xs font-medium uppercase text-gray-400 last:w-16"
+                      className="px-4 py-2 text-left text-xs font-medium uppercase text-(--palette-gray-400) last:w-16"
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
+              <tbody className="divide-y divide-(--palette-line-soft) bg-(--palette-surface)">
                 {rows.map(job => (
                   <tr
                     key={job.jobId}
-                    className={job.isEnabled ? 'hover:bg-gray-50' : 'bg-gray-50/60'}
+                    className={
+                      job.isEnabled
+                        ? 'hover:bg-(--palette-surface-2)'
+                        : 'bg-(--palette-surface-2)/60'
+                    }
                   >
                     <td className="px-4 py-3 align-top">
-                      <p className="font-mono text-xs font-medium text-gray-900">{job.jobId}</p>
+                      <p className="font-mono text-xs font-medium text-(--palette-ink)">
+                        {job.jobId}
+                      </p>
                       {job.description && (
-                        <p className="mt-0.5 max-w-md text-xs text-gray-500">{job.description}</p>
+                        <p className="mt-0.5 max-w-md text-xs text-(--palette-gray-500)">
+                          {job.description}
+                        </p>
                       )}
                     </td>
                     <td className="px-4 py-3 align-top">
-                      <span className="font-mono text-sm text-gray-800">{job.effectiveCron}</span>
+                      <span className="font-mono text-sm text-(--palette-ink)">
+                        {job.effectiveCron}
+                      </span>
                       {job.isOverridden && (
-                        <span className="ml-2 rounded bg-blue-50 px-1.5 py-0.5 text-xs text-blue-600">
+                        <span className="ml-2 rounded bg-blue-50 dark:bg-blue-500/10 px-1.5 py-0.5 text-xs text-blue-600 dark:text-blue-400">
                           {t('table.overridden')}
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 align-top text-xs text-gray-600">
+                    <td className="px-4 py-3 align-top text-xs text-(--palette-gray-600)">
                       {job.effectiveTimeZoneId}
                       {!job.timeZoneId && (
-                        <span className="ml-1 text-gray-400">({t('table.appDefault')})</span>
+                        <span className="ml-1 text-(--palette-gray-400)">
+                          ({t('table.appDefault')})
+                        </span>
                       )}
                     </td>
                     <td className="px-4 py-3 align-top">
                       <span
                         className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
                           job.isEnabled
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-gray-100 text-gray-500'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                         }`}
                       >
                         {job.isEnabled ? t('status.enabled') : t('status.disabled')}
@@ -251,7 +274,7 @@ const JobSchedulesPage = () => {
                       <button
                         type="button"
                         onClick={() => handleEdit(job)}
-                        className="p-1 text-gray-400 hover:text-gray-600"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                         aria-label={t('actions.edit')}
                       >
                         <Icon name="pen" style="solid" className="size-3.5" />

@@ -35,7 +35,7 @@ const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion:
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="grid gap-3">
-    <h3 className="m-0 border-b border-gray-100 pb-1.5 text-sm font-semibold text-gray-800">
+    <h3 className="m-0 border-b border-(--palette-line-soft) pb-1.5 text-sm font-semibold text-(--palette-ink)">
       {title}
     </h3>
     {children}
@@ -91,8 +91,12 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
       </Grid>
 
       {family === 'none' && (
-        <div className="py-8 text-center text-gray-500">
-          <Icon style="regular" name="hand-pointer" className="mx-auto mb-2 size-8 text-gray-400" />
+        <div className="py-8 text-center text-(--palette-gray-500)">
+          <Icon
+            style="regular"
+            name="hand-pointer"
+            className="mx-auto mb-2 size-8 text-(--palette-gray-400)"
+          />
           <p className="m-0">{t('titleOptions.noCollateralType')}</p>
         </div>
       )}
@@ -312,9 +316,9 @@ export function TitleDrawer({
         // The container takes the focus when the drawer opens or something inside is clicked; the
         // global :focus-visible outline beats the `outline-none` class, so only inline switches it off.
         style={NO_OUTLINE}
-        className="relative flex h-full w-full max-w-[min(1160px,75vw)] flex-col bg-white shadow-2xl outline-none"
+        className="relative flex h-full w-full max-w-[min(1160px,75vw)] flex-col bg-(--palette-surface) shadow-2xl outline-none"
       >
-        <header className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-200 px-5 py-3.5">
+        <header className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line) px-5 py-3.5">
           <div className="min-w-0 flex-1">
             <h2
               id={headingId}
@@ -324,7 +328,7 @@ export function TitleDrawer({
               {typeName}
               {number ? ` · ${number}` : ''}
             </h2>
-            <p className="m-0 text-sm text-gray-500">
+            <p className="m-0 text-sm text-(--palette-gray-500)">
               {t('titleSection.drawer.position', { pos: position, total })}
             </p>
           </div>
@@ -360,7 +364,7 @@ export function TitleDrawer({
             disabled={checking}
             aria-label={t('common:actions.close')}
             title={t('common:actions.close')}
-            className="flex size-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            className="flex size-8 items-center justify-center rounded-md text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
           >
             <Icon style="regular" name="xmark" className="size-5" />
           </button>
@@ -370,18 +374,18 @@ export function TitleDrawer({
           (missing.length > 0 ? (
             <div
               role="status"
-              className="mx-5 mt-3 flex shrink-0 flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm"
+              className="mx-5 mt-3 flex shrink-0 flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-sm"
             >
-              <b className="text-amber-700">
+              <b className="text-(--palette-warn)">
                 {t('titleSection.drawer.missing', { count: missing.length })}
               </b>
               {missing.map((path, i) => (
                 <span key={path}>
-                  {i > 0 && <span className="mr-1.5 text-amber-700/60">·</span>}
+                  {i > 0 && <span className="mr-1.5 text-(--palette-warn)/60">·</span>}
                   <button
                     type="button"
                     onClick={() => scrollToField(`titles.${index}.${path}`)}
-                    className="text-amber-700 underline underline-offset-2 hover:no-underline"
+                    className="text-(--palette-warn) underline underline-offset-2 hover:no-underline"
                   >
                     {labelOf(path, { movable: isMovableFamily(family) })}
                   </button>
@@ -391,7 +395,7 @@ export function TitleDrawer({
           ) : (
             <div
               role="status"
-              className="mx-5 mt-3 shrink-0 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700"
+              className="mx-5 mt-3 shrink-0 rounded-lg bg-green-50 dark:bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300"
             >
               {t('titleSection.drawer.complete')}
             </div>
@@ -413,7 +417,7 @@ export function TitleDrawer({
 
         <footer
           className={clsx(
-            'flex shrink-0 flex-wrap items-center gap-2 border-t border-gray-200 px-5 py-3',
+            'flex shrink-0 flex-wrap items-center gap-2 border-t border-(--palette-line) px-5 py-3',
             readOnly ? 'justify-end' : 'justify-between',
           )}
         >

@@ -17,6 +17,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@/test/test-utils';
 import Button from './Button';
 import Icon from './Icon';
+import { FormLayoutProvider } from './form/FormLayoutProvider';
 
 describe('Button', () => {
   // ============================================
@@ -81,8 +82,9 @@ describe('Button', () => {
     it('should apply primary variant styles by default', () => {
       render(<Button>Primary</Button>);
 
+      // primary-700, not the brand teal: white on primary-600 is 3.7:1 (DESIGN.md 17.11).
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-primary');
+      expect(button).toHaveClass('bg-primary-700', 'hover:bg-primary-800');
     });
 
     // ------------------------------------------
@@ -102,7 +104,8 @@ describe('Button', () => {
       render(<Button variant="danger">Delete</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-danger');
+      // danger-600, not the brand red: white on danger (#EF4444) is 3.8:1.
+      expect(button).toHaveClass('bg-danger-600');
     });
 
     // ------------------------------------------
@@ -112,7 +115,7 @@ describe('Button', () => {
       render(<Button variant="outline">Cancel</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('border');
+      expect(button).toHaveClass('border', 'text-(--palette-ink)');
     });
 
     // ------------------------------------------
@@ -122,7 +125,8 @@ describe('Button', () => {
       render(<Button variant="ghost">Ghost</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('hover:bg-gray-100');
+      // A palette token, so the hover and the text keep their contrast in dark mode.
+      expect(button).toHaveClass('hover:bg-(--palette-surface-3)', 'text-(--palette-ink)');
     });
 
     // ------------------------------------------
@@ -132,7 +136,40 @@ describe('Button', () => {
       render(<Button variant="success">Success</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-success');
+      expect(button).toHaveClass('bg-green-700');
+    });
+
+    it('should apply dangerOutline variant styles', () => {
+      render(<Button variant="dangerOutline">Delete</Button>);
+
+      const button = screen.getByRole('button');
+      expect(button).toHaveClass(
+        'border-(--palette-req-line)',
+        'text-(--palette-req)',
+        'hover:bg-(--palette-req-wash)',
+      );
+    });
+
+    // The outline border is the control edge, shared with inputs (17.10).
+    it('should draw the outline border in the control-edge colour inside a Compact form', () => {
+      render(
+        <FormLayoutProvider layout="compact">
+          <Button variant="outline">Cancel</Button>
+        </FormLayoutProvider>,
+      );
+
+      expect(screen.getByRole('button')).toHaveClass('border-(--palette-input-edge)');
+    });
+
+    // Cancel / Save draft are ghost buttons: borderless in both layouts (the mock's `.bt.gh`).
+    it.each(['standard', 'compact'] as const)('should draw ghost borderless in %s', layout => {
+      render(
+        <FormLayoutProvider layout={layout}>
+          <Button variant="ghost">Cancel</Button>
+        </FormLayoutProvider>,
+      );
+
+      expect(screen.getByRole('button')).toHaveClass('border-transparent');
     });
   });
 
@@ -143,11 +180,13 @@ describe('Button', () => {
     // ------------------------------------------
     // Scenario 11: Medium size (default)
     // ------------------------------------------
+    // Heights are explicit, never derived from padding, so a Thai label cannot change them (17.12).
     it('should apply medium size styles by default', () => {
       render(<Button>Medium</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('px-4', 'py-2');
+      expect(button).toHaveClass('px-4', 'h-[2.4286rem]');
+      expect(button).not.toHaveClass('py-2');
     });
 
     // ------------------------------------------
@@ -157,7 +196,7 @@ describe('Button', () => {
       render(<Button size="xs">XS</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('px-2', 'py-1');
+      expect(button).toHaveClass('px-2', 'h-[1.7143rem]');
     });
 
     // ------------------------------------------
@@ -167,7 +206,22 @@ describe('Button', () => {
       render(<Button size="sm">Small</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('px-3', 'py-1.5');
+      expect(button).toHaveClass('px-3', 'h-[2.1429rem]');
+    });
+
+    it('should take the Compact heights inside a Compact form', () => {
+      render(
+        <FormLayoutProvider layout="compact">
+          <Button>Medium</Button>
+          <Button size="sm">Small</Button>
+        </FormLayoutProvider>,
+      );
+
+      expect(screen.getByRole('button', { name: 'Medium' })).toHaveClass(
+        'h-[2.1429rem]',
+        'rounded-ctl-c',
+      );
+      expect(screen.getByRole('button', { name: 'Small' })).toHaveClass('h-chip-c');
     });
 
     // ------------------------------------------
@@ -260,7 +314,19 @@ describe('Button', () => {
       render(<Button disabled>Disabled</Button>);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('disabled:opacity-50', 'disabled:cursor-not-allowed');
+      // A grey fill with ink-2 text, not opacity-50 (which drops the label below 4.5:1 in dark).
+      expect(button).toHaveClass(
+        'disabled:bg-(--palette-surface-3)',
+        'disabled:text-(--palette-ink-2)',
+        'disabled:cursor-not-allowed',
+      );
+      expect(button).not.toHaveClass('disabled:opacity-50');
+    });
+
+    it('should keep its colours while loading', () => {
+      render(<Button isLoading>Saving</Button>);
+
+      expect(screen.getByRole('button')).not.toHaveClass('disabled:bg-(--palette-surface-3)');
     });
   });
 
@@ -424,7 +490,7 @@ describe('Button', () => {
       // Should have both custom and base classes
       expect(button).toHaveClass('my-custom');
       expect(button).toHaveClass('inline-flex');
-      expect(button).toHaveClass('rounded-md');
+      expect(button).toHaveClass('rounded-ctl');
     });
   });
 });

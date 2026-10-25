@@ -5,11 +5,11 @@ import Icon from '@shared/components/Icon';
 import type { SearchAppraisal } from '@shared/types/search';
 
 const statusStyles: Record<string, string> = {
-  pending: 'bg-yellow-50 text-yellow-700',
-  approved: 'bg-green-50 text-green-700',
-  rejected: 'bg-red-50 text-red-700',
-  active: 'bg-blue-50 text-blue-700',
-  completed: 'bg-gray-100 text-gray-600',
+  pending: 'bg-(--palette-warn-wash) text-yellow-700 dark:text-yellow-300',
+  approved: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300',
+  rejected: 'bg-(--palette-req-wash) text-(--palette-req)',
+  active: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  completed: 'bg-(--palette-surface-3) text-(--palette-gray-600)',
 };
 
 interface Props {
@@ -37,7 +37,8 @@ export default function SearchResultItem({
   const isRequestOnly = !item.appraisalNumber;
   const title = item.appraisalNumber ?? item.requestNumber ?? '—';
   const statusStyle = item.status
-    ? (statusStyles[item.status.toLowerCase()] ?? 'bg-gray-100 text-gray-600')
+    ? (statusStyles[item.status.toLowerCase()] ??
+      'bg-(--palette-surface-3) text-(--palette-gray-600)')
     : null;
 
   const badges = item.matchedOn.filter(m => m.field !== suppressField).slice(0, 3);
@@ -68,13 +69,13 @@ export default function SearchResultItem({
       <div
         className={clsx(
           'flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center mt-0.5',
-          isRequestOnly ? 'bg-gray-100' : 'bg-blue-50',
+          isRequestOnly ? 'bg-(--palette-surface-3)' : 'bg-blue-50 dark:bg-blue-500/10',
         )}
       >
         <Icon
           name={isRequestOnly ? 'pen-to-square' : 'file-lines'}
           style="solid"
-          className={clsx('size-4', isRequestOnly ? 'text-gray-500' : 'text-blue-500')}
+          className={clsx('size-4', isRequestOnly ? 'text-(--palette-gray-500)' : 'text-blue-500')}
         />
       </div>
 
@@ -91,7 +92,7 @@ export default function SearchResultItem({
             </span>
           )}
           {isRequestOnly && (
-            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500 shrink-0">
+            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-500) shrink-0">
               {t('search.noAppraisalNumber')}
             </span>
           )}
@@ -108,7 +109,7 @@ export default function SearchResultItem({
                 key={`${m.field}-${m.value}`}
                 className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-base-300 bg-gray-50 dark:bg-base-300 text-xs text-gray-600 dark:text-gray-300"
               >
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                <span className="text-xs font-semibold uppercase tracking-wide text-(--palette-gray-400)">
                   {t(`search.fields.${m.field}` as never, { defaultValue: m.field })}
                 </span>
                 <span className="truncate max-w-[14rem]">{m.value}</span>

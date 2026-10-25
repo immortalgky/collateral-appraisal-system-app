@@ -12,9 +12,18 @@ interface TopBreachesBannerProps {
 }
 
 const SECTION_ICON: Record<TopBreachSectionId, { icon: string; tone: string }> = {
-  'pending-internal': { icon: 'briefcase', tone: 'text-indigo-600 bg-indigo-50' },
-  'pending-external': { icon: 'building', tone: 'text-amber-600 bg-amber-50' },
-  'pending-followup': { icon: 'clipboard-list', tone: 'text-purple-600 bg-purple-50' },
+  'pending-internal': {
+    icon: 'briefcase',
+    tone: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10',
+  },
+  'pending-external': {
+    icon: 'building',
+    tone: 'text-amber-600 dark:text-amber-400 bg-(--palette-warn-wash)',
+  },
+  'pending-followup': {
+    icon: 'clipboard-list',
+    tone: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10',
+  },
 };
 
 function TopBreachesBanner({ visibleOlaSections, onChipClick }: TopBreachesBannerProps) {
@@ -28,11 +37,13 @@ function TopBreachesBanner({ visibleOlaSections, onChipClick }: TopBreachesBanne
   if (rows.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-3 px-4 py-2 rounded-lg border border-red-200 bg-red-50/40">
-      <span className="inline-flex items-center justify-center size-7 rounded-md bg-red-100 text-red-600 shrink-0">
+    <div className="flex items-center gap-3 px-4 py-2 rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash)/40">
+      <span className="inline-flex items-center justify-center size-7 rounded-md bg-red-100 dark:bg-red-500/20 text-(--palette-danger) shrink-0">
         <Icon style="solid" name="triangle-exclamation" className="size-3.5" />
       </span>
-      <span className="text-xs font-semibold text-red-700 shrink-0">{t('topBreaches.title')}</span>
+      <span className="text-xs font-semibold text-(--palette-req) shrink-0">
+        {t('topBreaches.title')}
+      </span>
       <div className="flex flex-wrap gap-1.5 min-w-0">
         {rows.map((row, idx) => {
           const tone = SECTION_ICON[row.sectionId];
@@ -42,21 +53,25 @@ function TopBreachesBanner({ visibleOlaSections, onChipClick }: TopBreachesBanne
               key={`${row.sectionId}:${row.appraisalId ?? row.appraisalNumber ?? ''}:${idx}`}
               type="button"
               onClick={() => onChipClick(row)}
-              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-white border border-red-200 rounded-full hover:border-red-300 hover:shadow-sm transition-all"
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium bg-(--palette-surface) border border-(--palette-req-line) rounded-full hover:border-red-300 dark:hover:border-red-500/40 hover:shadow-sm transition-all"
             >
               <span
                 className={[
                   'inline-flex items-center justify-center size-4 rounded',
-                  tone?.tone ?? 'text-gray-500 bg-gray-100',
+                  tone?.tone ?? 'text-(--palette-gray-500) bg-(--palette-surface-3)',
                 ].join(' ')}
               >
                 <Icon style="solid" name={tone?.icon ?? 'circle'} className="size-2.5" />
               </span>
-              <span className="text-primary font-semibold">{row.appraisalNumber ?? '—'}</span>
+              <span className="text-(--palette-primary-text) font-semibold">
+                {row.appraisalNumber ?? '—'}
+              </span>
               {row.customerName && (
-                <span className="text-gray-500 max-w-[120px] truncate">{row.customerName}</span>
+                <span className="text-(--palette-gray-500) max-w-[120px] truncate">
+                  {row.customerName}
+                </span>
               )}
-              <span className="text-red-600 tabular-nums">
+              <span className="text-(--palette-danger) tabular-nums">
                 {t('topBreaches.hoursLate', { hours })}
               </span>
             </button>

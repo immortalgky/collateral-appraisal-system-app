@@ -52,15 +52,16 @@ interface RowAction {
 }
 
 const ACTION_TONE: Record<ActionTone, string> = {
-  blue: 'text-blue-600 hover:bg-blue-50',
-  amber: 'text-amber-600 hover:bg-amber-50',
-  green: 'text-emerald-600 hover:bg-emerald-50',
-  violet: 'text-violet-600 hover:bg-violet-50',
-  red: 'text-red-600 hover:bg-red-50',
-  gray: 'text-gray-700 hover:bg-gray-50',
+  blue: 'text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10',
+  amber: 'text-amber-600 dark:text-amber-400 hover:bg-(--palette-warn-wash)',
+  green: 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10',
+  violet: 'text-violet-600 dark:text-violet-400 hover:bg-violet-50 dark:hover:bg-violet-500/10',
+  red: 'text-(--palette-danger) hover:bg-(--palette-req-wash)',
+  gray: 'text-(--palette-ink) hover:bg-(--palette-surface-2)',
 };
 
-const MENU_PANEL_CLASS = 'bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[168px]';
+const MENU_PANEL_CLASS =
+  'bg-(--palette-surface) border border-(--palette-line) rounded-xl shadow-xl py-1 min-w-[168px]';
 
 interface ActionMenuItemsProps {
   actions: RowAction[];
@@ -80,7 +81,7 @@ const ActionMenuItems = ({ actions, onClose }: ActionMenuItemsProps) => (
         }}
         className={`w-full flex items-center gap-2.5 px-3 py-2 text-sm font-medium text-left transition-colors ${
           ACTION_TONE[action.tone ?? 'gray']
-        }${action.tone === 'red' && i > 0 ? ' mt-1 border-t border-gray-100 pt-2.5' : ''}`}
+        }${action.tone === 'red' && i > 0 ? ' mt-1 border-t border-(--palette-line-soft) pt-2.5' : ''}`}
       >
         <Icon name={action.icon} style="solid" className="size-3.5 shrink-0" />
         {action.label}
@@ -107,7 +108,7 @@ const RowActionsMenu = ({ actions }: RowActionsMenuProps) => {
           e.stopPropagation();
           setOpen(prev => !prev);
         }}
-        className="p-1.5 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+        className="p-1.5 rounded-md hover:bg-(--palette-surface-3) text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
         aria-label={t('aria.rowActions')}
       >
         <Icon name="ellipsis-vertical" style="solid" className="size-4" />
@@ -224,25 +225,25 @@ const MeetingRow = ({
         e.preventDefault();
         setCtxMenu({ x: e.clientX, y: e.clientY });
       }}
-      className="border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
+      className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) cursor-pointer"
     >
       <td className="px-4 py-3">
         <MeetingNoBadge meetingNo={meeting.meetingNo} />
       </td>
-      <td className="px-4 py-3 text-gray-900 font-medium">{meeting.title}</td>
+      <td className="px-4 py-3 text-(--palette-ink) font-medium">{meeting.title}</td>
       <td className="px-4 py-3">
         <MeetingStatusBadge status={meeting.status} />
       </td>
-      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+      <td className="px-4 py-3 text-(--palette-gray-600) whitespace-nowrap">
         {formatDateTime(meeting.startAt)} - {formatDateTime(meeting.endAt)}
       </td>
-      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+      <td className="px-4 py-3 text-(--palette-gray-600) whitespace-nowrap">
         {formatDateTime(meeting.cutOffAt)}
       </td>
-      <td className="px-4 py-3 text-right text-gray-600">{meeting.itemCount}</td>
-      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+      <td className="px-4 py-3 text-right text-(--palette-gray-600)">{meeting.itemCount}</td>
+      <td className="px-4 py-3 text-(--palette-gray-600) whitespace-nowrap">
         <div>{formatDateTime(meeting.updatedAt)}</div>
-        <div className="text-xs text-gray-400">
+        <div className="text-xs text-(--palette-gray-400)">
           {meeting.updatedBy ? `${t('columns.by')} ${meeting.updatedBy}` : '—'}
         </div>
       </td>
@@ -369,12 +370,12 @@ const MeetingListPage = () => {
 
   const SortIcon = ({ field }: { field: SortField }) =>
     sortField !== field ? (
-      <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />
+      <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />
     ) : (
       <Icon
         style="solid"
         name={sortDir === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
+        className="size-2.5 text-(--palette-primary-text)"
       />
     );
 
@@ -435,12 +436,14 @@ const MeetingListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.meetings.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('page.meetings.title')}
+            </h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.meetings.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.meetings.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={() => navigate('/meetings/queue')}>
@@ -457,7 +460,7 @@ const MeetingListPage = () => {
       </div>
 
       {/* Tabs */}
-      <div className="shrink-0 flex items-center gap-1 border-b border-gray-200">
+      <div className="shrink-0 flex items-center gap-1 border-b border-(--palette-line)">
         {[
           { key: 'active' as const, labelKey: 'tabs.active' as const },
           { key: 'history' as const, labelKey: 'tabs.history' as const },
@@ -470,8 +473,8 @@ const MeetingListPage = () => {
               onClick={() => handleTabChange(key)}
               className={`px-3 py-1.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
                 isActive
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
+                  ? 'border-primary text-(--palette-primary-text)'
+                  : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)'
               }`}
             >
               {t(labelKey)}
@@ -489,7 +492,7 @@ const MeetingListPage = () => {
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
           />
-          <p className="mt-1 text-xs text-gray-400">{t('filters.searchHint')}</p>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">{t('filters.searchHint')}</p>
         </div>
         <div className="w-44">
           <Dropdown
@@ -504,13 +507,13 @@ const MeetingListPage = () => {
           />
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">{t('filters.from')}</span>
+          <span className="text-sm font-medium text-(--palette-ink)">{t('filters.from')}</span>
           <div className="w-40">
             <DateInput value={fromDate ?? null} onChange={val => setFromDate(val ?? undefined)} />
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">{t('filters.to')}</span>
+          <span className="text-sm font-medium text-(--palette-ink)">{t('filters.to')}</span>
           <div className="w-40">
             <DateInput value={toDate ?? null} onChange={val => setToDate(val ?? undefined)} />
           </div>
@@ -524,15 +527,17 @@ const MeetingListPage = () => {
       </div>
 
       {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10">
+              <tr className="border-b border-(--palette-line)">
                 <th
                   onClick={() => handleSort('meetingNo')}
-                  className={`text-xs text-left font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-700 transition-colors ${
-                    sortField === 'meetingNo' ? 'text-primary' : 'text-gray-600'
+                  className={`text-xs text-left font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-(--palette-ink) transition-colors ${
+                    sortField === 'meetingNo'
+                      ? 'text-(--palette-primary-text)'
+                      : 'text-(--palette-gray-600)'
                   }`}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -540,16 +545,18 @@ const MeetingListPage = () => {
                     <SortIcon field="meetingNo" />
                   </span>
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.title')}
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.status')}
                 </th>
                 <th
                   onClick={() => handleSort('startAt')}
-                  className={`text-xs text-left font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-700 transition-colors ${
-                    sortField === 'startAt' ? 'text-primary' : 'text-gray-600'
+                  className={`text-xs text-left font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-(--palette-ink) transition-colors ${
+                    sortField === 'startAt'
+                      ? 'text-(--palette-primary-text)'
+                      : 'text-(--palette-gray-600)'
                   }`}
                 >
                   <span className="inline-flex items-center gap-1">
@@ -557,13 +564,15 @@ const MeetingListPage = () => {
                     <SortIcon field="startAt" />
                   </span>
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5 whitespace-nowrap">
                   {t('columns.cutOff')}
                 </th>
                 <th
                   onClick={() => handleSort('itemCount')}
-                  className={`text-xs text-right font-semibold px-4 py-2.5 select-none cursor-pointer hover:text-gray-700 transition-colors ${
-                    sortField === 'itemCount' ? 'text-primary' : 'text-gray-600'
+                  className={`text-xs text-right font-semibold px-4 py-2.5 select-none cursor-pointer hover:text-(--palette-ink) transition-colors ${
+                    sortField === 'itemCount'
+                      ? 'text-(--palette-primary-text)'
+                      : 'text-(--palette-gray-600)'
                   }`}
                 >
                   <span className="inline-flex items-center gap-1 justify-end">
@@ -571,7 +580,7 @@ const MeetingListPage = () => {
                     <SortIcon field="itemCount" />
                   </span>
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5 whitespace-nowrap">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5 whitespace-nowrap">
                   {t('columns.lastUpdated')}
                 </th>
                 <th className="text-xs w-10 px-3 py-2.5 font-semibold" />
@@ -580,7 +589,7 @@ const MeetingListPage = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={8} className="px-4 py-8 text-center text-(--palette-gray-400)">
                     <Icon
                       name="spinner"
                       style="solid"
@@ -600,7 +609,7 @@ const MeetingListPage = () => {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={8} className="px-4 py-12 text-center text-(--palette-gray-500)">
                     {t('empty.noMeetings')}
                   </td>
                 </tr>
@@ -624,7 +633,7 @@ const MeetingListPage = () => {
           </table>
         </div>
         {totalCount > 0 && (
-          <div className="shrink-0 border-t border-gray-200">
+          <div className="shrink-0 border-t border-(--palette-line)">
             <Pagination
               currentPage={pageNumber}
               totalPages={totalPages}

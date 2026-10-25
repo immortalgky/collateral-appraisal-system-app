@@ -1,7 +1,8 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react';
+import { type ReactNode, forwardRef, useImperativeHandle, useRef } from 'react';
 import EntityPhotoSection, {
   type EntityPhotoSectionRef,
 } from '@features/appraisal/components/EntityPhotoSection';
+import type { PhotoSectionView } from '@features/appraisal/components/PropertyPhotoSection';
 import {
   useAddProjectModelImage,
   useRemoveProjectModelImage,
@@ -24,12 +25,14 @@ interface ProjectModelPhotoSectionProps {
     description?: string | null;
     isThumbnail: boolean;
   }>;
+  /** Draws the photos instead of the default strip, e.g. as the cover tile of the Condo identity band. */
+  renderGallery?: (view: PhotoSectionView) => ReactNode;
 }
 
 const ProjectModelPhotoSection = forwardRef<
   ProjectModelPhotoSectionRef,
   ProjectModelPhotoSectionProps
->(({ appraisalId, entityId, images }, ref) => {
+>(({ appraisalId, entityId, images, renderGallery }, ref) => {
   const innerRef = useRef<EntityPhotoSectionRef>(null);
 
   useImperativeHandle(ref, () => ({
@@ -48,6 +51,7 @@ const ProjectModelPhotoSection = forwardRef<
       useRemoveImage={useRemoveProjectModelImage}
       useSetThumbnail={useSetProjectModelImageThumbnail}
       useUnsetThumbnail={useUnsetProjectModelImageThumbnail}
+      renderGallery={renderGallery}
     />
   );
 });

@@ -195,7 +195,7 @@ describe('TitleTable details and area columns', () => {
     );
     const [filled, empty] = cellAt(3);
     expect(filled).toHaveTextContent('ระวาง 1234 || 1232-3 · เลขที่ดิน 123 · หน้าสำรวจ 123');
-    expect(filled.querySelector('.rounded-md, .bg-gray-100')).toBeNull();
+    expect(filled.querySelector('.rounded-md, .bg-\\(--palette-surface-3\\)')).toBeNull();
     expect(within(filled).getByTitle(/ระวาง 1234 \|\| 1232-3 · เลขที่ดิน 123/)).toBeInTheDocument();
     // nothing to say: a dash
     expect(empty).toHaveTextContent('—');

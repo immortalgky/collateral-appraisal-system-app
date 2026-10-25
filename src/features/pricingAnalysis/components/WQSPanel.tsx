@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { makeWQSDto, WQSDto, type WQSFormType } from '../schemas/wqsForm';
+import { WQSDto, type WQSFormType } from '../schemas/wqsForm';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { mapWQSFormToSubmitSchema } from '../domain/mapWQSFormToSubmitSchema';
@@ -26,6 +26,8 @@ import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedC
 import { useGetComparativeAnalysisTemplateById } from '@features/templateManagement/api/comparativeTemplate';
 import { adaptTemplateFromApi } from '@features/pricingAnalysis/adapters/adaptTemplateFromApi';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
+import { useTemplateMissingFields } from '../hooks/useTemplateMissingFields';
 import { Button, Icon } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MethodTopBarPortal } from './MethodTopBarPortal';
@@ -88,6 +90,7 @@ export function WQSPanel({
   onCancelCalculationMethod,
 }: WQSPanelProps) {
   const { t } = useTranslation('pricingAnalysis');
+  const missingFields = useTemplateMissingFields();
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'WQS_COST';
   const property: Record<string, unknown> | undefined = isCostApproach
@@ -98,7 +101,7 @@ export function WQSPanel({
 
   const methods = useForm<WQSFormType>({
     mode: 'onSubmit',
-    resolver: zodResolver(makeWQSDto(t)),
+    resolver: zodResolver(WQSDto),
   });
 
   const {
@@ -414,7 +417,7 @@ export function WQSPanel({
   }, [isDirty, onCalculationMethodDirty]);
 
   return (
-    <FormProvider methods={methods} schema={WQSDto}>
+    <FormProvider methods={methods} schema={WQSDto} fields={missingFields}>
       <MethodTopBarPortal slot="chip">
         {/* Template chip — replaces the old PricingAnalysisTemplateSelector card; same
             fields/handlers, now a popover anchored to the top bar beside the method name. */}
@@ -437,7 +440,9 @@ export function WQSPanel({
                   (ปัดเศษ)"), distinct from the shared finalValue.indicatedValue label
                   still used by the summary tab's own row and by every other method's
                   top bar. */}
-              <span className="text-[10.5px] text-gray-400">{t('wqs.topBarValueLabel')}</span>
+              <span className="text-[10.5px] text-(--palette-gray-400)">
+                {t('wqs.topBarValueLabel')}
+              </span>
               {/* `fmt()` — 2 decimals, same as every other method's top bar (SAG, DC, BC, MC,
                   LH, PR, DCF all call it here).
 
@@ -450,13 +455,13 @@ export function WQSPanel({
                   and it also puts WQS back in step with its siblings rather than making it the
                   exception. The ฿ suffix stays: that part is still WQS-only and nobody asked
                   for it to change. */}
-              <span className="text-[15px] font-semibold text-primary tabular-nums">
+              <span className="text-[15px] font-semibold text-(--palette-primary-text) tabular-nums">
                 {fmt(Number(indicatedValue) || 0)} ฿
               </span>
             </div>
             {!isReadOnly && (
               <>
-                <span className="w-px h-5 bg-gray-200 shrink-0" />
+                <span className="w-px h-5 bg-(--palette-line) shrink-0" />
                 <Button
                   variant="ghost"
                   type="button"
@@ -474,11 +479,12 @@ export function WQSPanel({
                     disabled={saveMutation.isPending}
                     title={t('footer.reset')}
                     aria-label={t('footer.reset')}
-                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger) shrink-0"
                   >
                     <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
                   </Button>
                 )}
+                <MissingFieldsChip placement="down" />
                 <Button
                   type="submit"
                   form={formId}

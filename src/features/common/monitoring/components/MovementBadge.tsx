@@ -4,20 +4,17 @@ interface MovementBadgeProps {
   value: string | null;
 }
 
-const MOVEMENT_STYLES: Record<
-  string,
-  { color: string; icon: string; label: string }
-> = {
-  F: { color: 'text-emerald-700', icon: 'arrow-right',       label: 'Forward'  },
-  B: { color: 'text-amber-700',   icon: 'arrow-rotate-left', label: 'Returned' },
-  S: { color: 'text-gray-600',    icon: 'minus',             label: 'Stalled'  },
+const MOVEMENT_STYLES: Record<string, { color: string; icon: string; label: string }> = {
+  F: { color: 'text-emerald-700 dark:text-emerald-300', icon: 'arrow-right', label: 'Forward' },
+  B: { color: 'text-(--palette-warn)', icon: 'arrow-rotate-left', label: 'Returned' },
+  S: { color: 'text-(--palette-gray-600)', icon: 'minus', label: 'Stalled' },
 };
 
 function MovementBadge({ value }: MovementBadgeProps) {
-  if (!value) return <span className="text-gray-400">—</span>;
+  if (!value) return <span className="text-(--palette-gray-400)">—</span>;
 
   const config = MOVEMENT_STYLES[value];
-  if (!config) return <span className="text-gray-400">—</span>;
+  if (!config) return <span className="text-(--palette-gray-400)">—</span>;
 
   return (
     <span
@@ -39,9 +36,6 @@ export default MovementBadge;
  */
 export function MovementBadgeFromTaskDto({ value }: { value: string | null }) {
   const normalized =
-    value === 'Forward' ? 'F'
-    : value === 'Backward' ? 'B'
-    : value === 'Static' ? 'S'
-    : value; // pass through single-letter values unchanged
+    value === 'Forward' ? 'F' : value === 'Backward' ? 'B' : value === 'Static' ? 'S' : value; // pass through single-letter values unchanged
   return <MovementBadge value={normalized} />;
 }

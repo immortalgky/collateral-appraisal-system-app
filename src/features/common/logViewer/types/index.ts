@@ -77,10 +77,10 @@ export interface LogSummary {
 }
 
 export const logLevelBadgeClass: Record<LogLevel, string> = {
-  Information: 'bg-blue-50 text-blue-700',
-  Warning: 'bg-amber-50 text-amber-700',
-  Error: 'bg-red-50 text-red-700',
-  Fatal: 'bg-red-100 text-red-800',
+  Information: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  Warning: 'bg-(--palette-warn-wash) text-(--palette-warn)',
+  Error: 'bg-(--palette-req-wash) text-(--palette-req)',
+  Fatal: 'bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-300',
 };
 
 /** Bar colours for the histogram — mirrors the approved mock's --info-bar/--warn-bar/--err-bar. */
@@ -116,5 +116,5 @@ export function levelLookup<T>(
 
 /** The one neutral badge/dot style for an unknown level — defined once so LogTable,
  * LogDetailDrawer, and TopProblemsPanel all fall back to the exact same look. */
-export const NEUTRAL_BADGE_CLASS = 'bg-gray-50 text-gray-600';
+export const NEUTRAL_BADGE_CLASS = 'bg-(--palette-surface-2) text-(--palette-gray-600)';
 export const NEUTRAL_DOT_COLOR = '#9ca3af';

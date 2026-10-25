@@ -27,7 +27,11 @@ const IntInvoiceDetailPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon style="solid" name="spinner" className="size-6 text-primary animate-spin" />
+        <Icon
+          style="solid"
+          name="spinner"
+          className="size-6 text-(--palette-primary-text) animate-spin"
+        />
       </div>
     );
   }
@@ -36,8 +40,8 @@ const IntInvoiceDetailPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.loadFailed')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -70,17 +74,17 @@ const IntInvoiceDetailPage = () => {
   // Pending / Paid: read-only view.
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
+      <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">
+            <p className="text-xs text-(--palette-gray-500) font-medium uppercase tracking-wide mb-1">
               {t('detail.totalAmount')}
             </p>
-            <p className="text-3xl font-bold text-gray-900 tabular-nums">
+            <p className="text-3xl font-bold text-(--palette-ink) tabular-nums">
               {formatCurrency(invoice.totalAmount)}
             </p>
             {invoice.submittedAt && (
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-(--palette-gray-400) mt-1">
                 {t('detail.submittedAt')}:{' '}
                 {formatLocaleDateTime(invoice.submittedAt, i18n.language)}
               </p>
@@ -89,7 +93,7 @@ const IntInvoiceDetailPage = () => {
           <div className="flex flex-col items-end gap-1.5">
             <InvoiceStatusBadge status={invoice.status} viewContext="internal" />
             {invoice.companyName && (
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-(--palette-gray-500)">
                 {localizeCompanyName(invoice.companyName, invoice.companyNameLocal)}
               </p>
             )}
@@ -98,23 +102,25 @@ const IntInvoiceDetailPage = () => {
       </div>
 
       {/* Bank account info */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">{t('internal.bankInfo')}</h4>
+      <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+        <h4 className="text-sm font-semibold text-(--palette-ink) mb-3">
+          {t('internal.bankInfo')}
+        </h4>
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <p className="text-xs text-gray-500">{t('internal.accountNo')}</p>
-            <p className="font-medium text-gray-900">{invoice.bankAccountNo ?? '—'}</p>
+            <p className="text-xs text-(--palette-gray-500)">{t('internal.accountNo')}</p>
+            <p className="font-medium text-(--palette-ink)">{invoice.bankAccountNo ?? '—'}</p>
           </div>
           <div>
-            <p className="text-xs text-gray-500">{t('internal.accountName')}</p>
-            <p className="font-medium text-gray-900">{invoice.bankAccountName ?? '—'}</p>
+            <p className="text-xs text-(--palette-gray-500)">{t('internal.accountName')}</p>
+            <p className="font-medium text-(--palette-ink)">{invoice.bankAccountName ?? '—'}</p>
           </div>
         </div>
       </div>
 
       {/* Line Items */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">
+      <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+        <h4 className="text-sm font-semibold text-(--palette-ink) mb-3">
           {t('detail.lineItems')} ({invoice.items.length})
         </h4>
         <InvoiceItemsTable items={invoice.items} showCostCenter hideLastPayment />
@@ -122,37 +128,37 @@ const IntInvoiceDetailPage = () => {
 
       {/* Notes */}
       {invoice.notes && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('detail.notes')}</h4>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">{invoice.notes}</p>
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+          <h4 className="text-sm font-semibold text-(--palette-ink) mb-2">{t('detail.notes')}</h4>
+          <p className="text-sm text-(--palette-gray-600) whitespace-pre-wrap">{invoice.notes}</p>
         </div>
       )}
 
       {/* Paid — read-only payment details */}
       {invoice.status === 'Paid' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+          <h4 className="text-sm font-semibold text-(--palette-ink) mb-3 flex items-center gap-2">
             <Icon style="solid" name="circle-check" className="size-4 text-emerald-500" />
             {t('detail.paymentDetails')}
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
             <div>
-              <p className="text-xs text-gray-500">{t('internal.paymentOrderNo')}</p>
-              <p className="font-medium text-gray-900">{invoice.paymentOrderNo ?? '—'}</p>
+              <p className="text-xs text-(--palette-gray-500)">{t('internal.paymentOrderNo')}</p>
+              <p className="font-medium text-(--palette-ink)">{invoice.paymentOrderNo ?? '—'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">{t('internal.paidDate')}</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-xs text-(--palette-gray-500)">{t('internal.paidDate')}</p>
+              <p className="font-medium text-(--palette-ink)">
                 {formatLocaleDate(invoice.paidDate, i18n.language)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">{t('detail.approvedBy')}</p>
-              <p className="font-medium text-gray-900">{invoice.approvedBy ?? '—'}</p>
+              <p className="text-xs text-(--palette-gray-500)">{t('detail.approvedBy')}</p>
+              <p className="font-medium text-(--palette-ink)">{invoice.approvedBy ?? '—'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">{t('detail.approvedAt')}</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-xs text-(--palette-gray-500)">{t('detail.approvedAt')}</p>
+              <p className="font-medium text-(--palette-ink)">
                 {formatLocaleDateTime(invoice.approvedAt, i18n.language)}
               </p>
             </div>

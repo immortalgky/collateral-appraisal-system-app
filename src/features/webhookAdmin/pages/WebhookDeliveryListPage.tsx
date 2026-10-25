@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
@@ -25,8 +26,8 @@ const TABLE_SKELETON_COLUMNS = [
 ];
 
 const statusBadgeClass: Record<WebhookDeliveryStatus, string> = {
-  Pending: 'bg-amber-50 text-amber-700',
-  Delivered: 'bg-emerald-50 text-emerald-700',
+  Pending: 'bg-(--palette-warn-wash) text-(--palette-warn)',
+  Delivered: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
   Failed: 'bg-danger/10 text-danger',
 };
 
@@ -99,7 +100,7 @@ const WebhookDeliveryListPage = () => {
         iconColor="blue"
       />
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
           {/* Event Type */}
@@ -107,49 +108,48 @@ const WebhookDeliveryListPage = () => {
             <Icon
               name="magnifying-glass"
               style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
             />
             <input
               type="text"
               value={eventTypeInput}
               onChange={e => setEventTypeInput(e.target.value)}
               placeholder={t('filters.eventTypePlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
           {/* Status */}
-          <select
+          <NativeSelect
             value={status}
             onChange={e => setStatus(e.target.value as WebhookDeliveryStatus | '')}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
           >
             {statusOptions.map(opt => (
               <option key={opt.value} value={opt.value}>
                 {opt.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
           {/* From date */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500">{t('filters.from')}</span>
+            <span className="text-xs text-(--palette-gray-500)">{t('filters.from')}</span>
             <input
               type="date"
               value={fromDate}
               onChange={e => setFromDate(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
           {/* To date */}
           <div className="flex items-center gap-1.5">
-            <span className="text-xs text-gray-500">{t('filters.to')}</span>
+            <span className="text-xs text-(--palette-gray-500)">{t('filters.to')}</span>
             <input
               type="date"
               value={toDate}
               onChange={e => setToDate(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
@@ -163,7 +163,7 @@ const WebhookDeliveryListPage = () => {
                 setFromDate('');
                 setToDate('');
               }}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
             >
               {t('filters.clear')}
             </button>
@@ -174,29 +174,29 @@ const WebhookDeliveryListPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-table">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.created')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.eventType')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.system')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.status')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.attempts')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.lastStatusCode')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.lastError')}
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('columns.actions')}
                 </th>
               </tr>
@@ -212,7 +212,7 @@ const WebhookDeliveryListPage = () => {
                 </tr>
               ) : deliveries.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-gray-400 text-sm">
+                  <td colSpan={8} className="text-center py-12 text-(--palette-gray-400) text-sm">
                     <Icon name="plug" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
                     <p>{t('emptyState')}</p>
                   </td>
@@ -221,13 +221,15 @@ const WebhookDeliveryListPage = () => {
                 deliveries.map(delivery => (
                   <tr
                     key={delivery.id}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
                   >
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-(--palette-gray-600) whitespace-nowrap">
                       {new Date(delivery.createdAt).toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-900">{delivery.eventType}</td>
-                    <td className="px-4 py-3 text-gray-600">{delivery.systemCode}</td>
+                    <td className="px-4 py-3 font-medium text-(--palette-ink)">
+                      {delivery.eventType}
+                    </td>
+                    <td className="px-4 py-3 text-(--palette-gray-600)">{delivery.systemCode}</td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass[delivery.status]}`}
@@ -235,11 +237,13 @@ const WebhookDeliveryListPage = () => {
                         {delivery.status}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 tabular-nums">
+                    <td className="px-4 py-3 text-(--palette-gray-600) tabular-nums">
                       {delivery.attemptCount}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 tabular-nums">
-                      {delivery.lastStatusCode ?? <span className="text-gray-300">—</span>}
+                    <td className="px-4 py-3 text-(--palette-gray-600) tabular-nums">
+                      {delivery.lastStatusCode ?? (
+                        <span className="text-(--palette-gray-300)">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 max-w-xs">
                       {delivery.lastError ? (
@@ -250,7 +254,7 @@ const WebhookDeliveryListPage = () => {
                           {delivery.lastError}
                         </span>
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-(--palette-gray-300)">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -259,7 +263,7 @@ const WebhookDeliveryListPage = () => {
                         <button
                           type="button"
                           onClick={() => setSelectedDelivery(delivery)}
-                          className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
                           title={t('actions.view')}
                         >
                           <Icon name="eye" style="regular" className="size-4" />
@@ -270,7 +274,7 @@ const WebhookDeliveryListPage = () => {
                           <button
                             type="button"
                             onClick={() => setRetryTarget(delivery)}
-                            className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            className="p-1.5 text-(--palette-gray-400) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--palette-warn-wash) rounded-lg transition-colors"
                             title={t('actions.retry')}
                           >
                             <Icon name="rotate-right" style="regular" className="size-4" />

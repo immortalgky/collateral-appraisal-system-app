@@ -145,10 +145,10 @@ const CollateralList = ({ assets }: CollateralListProps) => {
       {groups.map(group => (
         <li
           key={group.propertyType || 'unspecified'}
-          className="flex items-center justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200"
+          className="flex items-center justify-between gap-4 rounded-lg bg-(--palette-surface-2) px-3 py-2.5 ring-1 ring-(--palette-line)"
         >
           <div className="flex min-w-0 items-center gap-2.5">
-            <span className="grid h-7 w-7 flex-none place-items-center rounded-md bg-white text-amber-600 ring-1 ring-gray-200">
+            <span className="grid h-7 w-7 flex-none place-items-center rounded-md bg-(--palette-surface) text-amber-600 dark:text-amber-400 ring-1 ring-(--palette-line)">
               {/* getPropertyIcon, not typeToIconName. The latter is only the Font Awesome
                   FALLBACK — land, building, land-and-building and condo are drawn from this
                   project's own sprite (`/icons/property.svg`) precisely because Font Awesome had
@@ -162,7 +162,7 @@ const CollateralList = ({ assets }: CollateralListProps) => {
               />
             </span>
             <div className="min-w-0">
-              <span className="block truncate text-sm font-medium text-gray-900">
+              <span className="block truncate text-sm font-medium text-(--palette-ink)">
                 <ParameterDisplay
                   group="PropertyType"
                   code={group.propertyType}
@@ -180,7 +180,7 @@ const CollateralList = ({ assets }: CollateralListProps) => {
                 group.condos.length > 0 ||
                 group.area ||
                 group.where) && (
-                <p className="truncate text-xs text-gray-500">
+                <p className="truncate text-xs text-(--palette-gray-500)">
                   {group.buildings.map((b, i) => (
                     /* Index in the key on purpose: two identical buildings are two entries here,
                        so the description is not unique and must not be the identity. */
@@ -197,7 +197,10 @@ const CollateralList = ({ assets }: CollateralListProps) => {
                     </span>
                   ))}
                   {group.buildingsOverflow > 0 && (
-                    <span className="font-medium text-gray-400"> +{group.buildingsOverflow}</span>
+                    <span className="font-medium text-(--palette-gray-400)">
+                      {' '}
+                      +{group.buildingsOverflow}
+                    </span>
                   )}
                   {group.machines.map((name, i) => (
                     <span key={`${name}-${i}`}>
@@ -206,14 +209,20 @@ const CollateralList = ({ assets }: CollateralListProps) => {
                     </span>
                   ))}
                   {group.machinesOverflow > 0 && (
-                    <span className="font-medium text-gray-400"> +{group.machinesOverflow}</span>
+                    <span className="font-medium text-(--palette-gray-400)">
+                      {' '}
+                      +{group.machinesOverflow}
+                    </span>
                   )}
 
                   {/* Identical to the scene callout by design: two different descriptions of one
                       unit on one screen is worse than either of them alone. */}
                   {group.condos.join(', ')}
                   {group.condosOverflow > 0 && (
-                    <span className="font-medium text-gray-400"> +{group.condosOverflow}</span>
+                    <span className="font-medium text-(--palette-gray-400)">
+                      {' '}
+                      +{group.condosOverflow}
+                    </span>
                   )}
 
                   {group.area && (
@@ -251,7 +260,7 @@ const CollateralList = ({ assets }: CollateralListProps) => {
               )}
             </div>
           </div>
-          <span className="flex-none rounded-full bg-white px-2.5 py-1 text-xs font-semibold tabular-nums text-gray-600 ring-1 ring-gray-200">
+          <span className="flex-none rounded-full bg-(--palette-surface) px-2.5 py-1 text-xs font-semibold tabular-nums text-(--palette-gray-600) ring-1 ring-(--palette-line)">
             {t('activityTracking.sections.itemsCount', { count: group.count })}
           </span>
         </li>

@@ -1,4 +1,4 @@
-import { type FormField, FormFields } from '@/shared/components/form';
+import { type FormField, FormFields, FormSection, FormSheet } from '@/shared/components/form';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -43,40 +43,12 @@ type PriceKind = 'sale' | 'offer';
 
 const isSet = (v: unknown) => v != null && v !== '';
 
-interface SectionRowProps {
-  /** Anchor for the header's section bar. */
-  id: string;
-  title: string;
-  icon: string;
-  /** A quiet line under the title, e.g. how many factors the template has. */
-  subtitle?: ReactNode;
-  isLast?: boolean;
-  children: ReactNode;
-}
-
-/** Title on the left, fields on the right, a rule between sections — as the property forms lay out. */
-const SectionRow = ({ id, title, icon, subtitle, isLast = false, children }: SectionRowProps) => (
-  <>
-    <div id={id} className="cas-section-head col-span-full xl:col-span-1 pt-1">
-      <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-          <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-        </div>
-        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
-      </div>
-      {subtitle && <p className="mt-1 pl-9 text-xs text-gray-400">{subtitle}</p>}
-    </div>
-    <div className="col-span-full min-w-0 xl:col-span-4">{children}</div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-full xl:col-span-5 my-2" />}
-  </>
-);
-
 const FactorsSkeleton = () => (
   <div className="flex flex-col gap-4">
     {[1, 2, 3, 4].map(i => (
       <div key={i} className="flex flex-col gap-1.5">
-        <div className="h-3.5 w-32 animate-pulse rounded bg-gray-200" />
-        <div className="h-9 w-full animate-pulse rounded-lg bg-gray-100" />
+        <div className="h-3.5 w-32 animate-pulse rounded bg-(--palette-line)" />
+        <div className="h-9 w-full animate-pulse rounded-lg bg-(--palette-surface-3)" />
       </div>
     ))}
   </div>
@@ -118,7 +90,8 @@ const MarketComparableForm = () => {
   const { data: template, isLoading: getMarketLoading } = useGetMarketComparableTemplateById(
     selectedTemplate?.id,
   );
-  const factors = template?.template.factors ?? [];
+  const templateFactors = template?.template.factors;
+  const factors = useMemo(() => templateFactors ?? [], [templateFactors]);
 
   // Watch market comparable data to determine edit mode
   const factorData = useWatch({
@@ -352,91 +325,87 @@ const MarketComparableForm = () => {
   if (isLoading || getMarketLoading) factorsBody = <FactorsSkeleton />;
   else if (factors.length > 0)
     factorsBody = (
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-12 gap-x-[1.1429rem] gap-y-[0.7143rem]">
         <FormFields fields={factorFields} />
       </div>
     );
-  else factorsBody = <p className="text-sm text-gray-400">{t('marketEditor.factors.empty')}</p>;
+  else
+    factorsBody = (
+      <p className="text-sm text-(--palette-gray-400)">{t('marketEditor.factors.empty')}</p>
+    );
 
   return (
     <>
-      <div className="cas-section-grid grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow
+      <FormSheet>
+        <FormSection
           id={COMPARABLE_SECTIONS.source}
           title={t('marketEditor.sections.source')}
           icon="circle-info"
         >
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={sourceFields} />
-          </div>
-        </SectionRow>
+          <FormFields fields={sourceFields} />
+        </FormSection>
 
-        <SectionRow
+        <FormSection
           id={COMPARABLE_SECTIONS.price}
           title={t('marketEditor.sections.price')}
           icon="money-bill"
         >
           {!isReadOnly && (
-            <SegmentedControl
-              className="mb-3 w-fit"
-              options={priceKindOptions}
-              value={priceKind}
-              onChange={choosePriceKind}
-            />
+            <div className="col-span-12">
+              <SegmentedControl
+                className="w-fit"
+                options={priceKindOptions}
+                value={priceKind}
+                onChange={choosePriceKind}
+              />
+            </div>
           )}
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={priceFields} />
-          </div>
-        </SectionRow>
+          <FormFields fields={priceFields} />
+        </FormSection>
 
-        <SectionRow
+        <FormSection
           id={COMPARABLE_SECTIONS.location}
           title={t('marketEditor.sections.location')}
           icon="location-dot"
         >
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={locationFields} />
-          </div>
+          <FormFields fields={locationFields} />
           {point ? (
             nearest != null && (
-              <p className="mt-3 text-xs text-gray-500">
+              <p className="col-span-12 text-xs text-(--palette-ink-2)">
                 {t('marketEditor.location.nearest', { d: f.distance(nearest) })}
               </p>
             )
           ) : (
-            <p className="mt-3 flex items-center gap-1.5 text-xs text-amber-700">
+            <p className="col-span-12 flex items-center gap-1.5 text-xs text-(--palette-warn)">
               <Icon name="location-dot" style="solid" className="text-[10px]" />
               {t('marketEditor.location.noCoords')}
             </p>
           )}
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow
+        <FormSection
           id={COMPARABLE_SECTIONS.factors}
           title={t('marketEditor.sections.factors')}
           icon="sliders"
-          subtitle={
+          hint={
             factors.length > 0 ? t('marketEditor.factors.count', { n: factors.length }) : undefined
           }
         >
           {/* The template decides which factors there are, so it sits right above them. */}
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={templateFields} />
+          <FormFields fields={templateFields} />
+          <div className="col-span-12 border-t border-(--palette-line-soft) pt-[0.7143rem]">
+            {factorsBody}
           </div>
-          <div className="mt-4 border-t border-gray-100 pt-4">{factorsBody}</div>
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow
+        <FormSection
           id={COMPARABLE_SECTIONS.remark}
           title={t('marketEditor.sections.remark')}
           icon="note-sticky"
-          isLast
         >
-          <div className="grid grid-cols-12 gap-4">
-            <FormFields fields={remark} />
-          </div>
-        </SectionRow>
-      </div>
+          <FormFields fields={remark} />
+        </FormSection>
+      </FormSheet>
 
       <MapLocationPicker
         isOpen={pickerOpen}
@@ -464,7 +433,7 @@ const buildFormField = (
       return [
         {
           type: 'dropdown',
-          name: `factorData.[${index}].value`,
+          name: `factorData.${index}.value`,
           label,
           wrapperClassName: 'col-span-12',
           group: fac.parameterGroup,
@@ -473,10 +442,10 @@ const buildFormField = (
         {
           type: 'text-input',
           label: otherLabel,
-          name: `factorData.[${index}].otherRemarks`,
+          name: `factorData.${index}.otherRemarks`,
           wrapperClassName: 'col-span-12',
-          showWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
-          requiredWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
+          showWhen: { field: `factorData.${index}.value`, is: ['99'], operator: 'in' },
+          requiredWhen: { field: `factorData.${index}.value`, is: ['99'], operator: 'in' },
           maxLength: 100,
         },
       ];
@@ -486,7 +455,7 @@ const buildFormField = (
         {
           type: 'radio-group',
           label,
-          name: `factorData.[${index}].value`,
+          name: `factorData.${index}.value`,
           orientation: 'horizontal',
           group: fac.parameterGroup,
           wrapperClassName: 'col-span-12',
@@ -495,10 +464,10 @@ const buildFormField = (
         {
           type: 'text-input',
           label: otherLabel,
-          name: `factorData.[${index}].otherRemarks`,
+          name: `factorData.${index}.otherRemarks`,
           wrapperClassName: 'col-span-12',
-          showWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
-          requiredWhen: { field: `factorData.[${index}].value`, is: ['99'], operator: 'in' },
+          showWhen: { field: `factorData.${index}.value`, is: ['99'], operator: 'in' },
+          requiredWhen: { field: `factorData.${index}.value`, is: ['99'], operator: 'in' },
           maxLength: 100,
         },
       ];
@@ -508,7 +477,7 @@ const buildFormField = (
         {
           type: 'checkbox-group',
           label,
-          name: `factorData.[${index}].value`,
+          name: `factorData.${index}.value`,
           orientation: 'horizontal',
           group: fac.parameterGroup,
           wrapperClassName: 'col-span-12',
@@ -517,10 +486,10 @@ const buildFormField = (
         {
           type: 'text-input',
           label: otherLabel,
-          name: `factorData.[${index}].otherRemarks`,
+          name: `factorData.${index}.otherRemarks`,
           wrapperClassName: 'col-span-12',
-          showWhen: { field: `factorData.[${index}].value`, is: '99', operator: 'contains' },
-          requiredWhen: { field: `factorData.[${index}].value`, is: '99', operator: 'contains' },
+          showWhen: { field: `factorData.${index}.value`, is: '99', operator: 'contains' },
+          requiredWhen: { field: `factorData.${index}.value`, is: '99', operator: 'contains' },
           maxLength: 100,
         },
       ];
@@ -530,7 +499,7 @@ const buildFormField = (
         {
           type: 'checkbox',
           label,
-          name: `factorData.[${index}].value`,
+          name: `factorData.${index}.value`,
           wrapperClassName: 'col-span-12',
         },
       ];
@@ -539,7 +508,7 @@ const buildFormField = (
       return [
         {
           type: 'number-input',
-          name: `factorData.[${index}].value`,
+          name: `factorData.${index}.value`,
           label,
           wrapperClassName: 'col-span-12',
           required: isRequired,
@@ -552,7 +521,7 @@ const buildFormField = (
       return [
         {
           type: 'text-input',
-          name: `factorData.[${index}].value`,
+          name: `factorData.${index}.value`,
           label,
           wrapperClassName: 'col-span-12',
           required: isRequired,

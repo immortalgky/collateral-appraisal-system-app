@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '@/shared/components';
+import { useRegisterMissingReveal } from '@/shared/components/form/missing/missingFieldsContext';
 import { RHFInputCell } from './table/RHFInputCell';
 import type { ListBoxItem } from './table/TDropdown';
 
@@ -41,6 +42,14 @@ export function TemplatePopover({
 }: TemplatePopoverProps) {
   const { t } = useTranslation('pricingAnalysis');
   const [isOpen, setIsOpen] = useState(false);
+  // The missing-fields chip lists the fields that live in the panel below. It is closed when a Save
+  // fails, so "go to field" opens it first, and until then the trigger stands for both fields.
+  const ownPaths = onSelectCollateralType
+    ? ['collateralType', templateFieldName]
+    : [templateFieldName];
+  useRegisterMissingReveal(path => {
+    if (ownPaths.includes(path)) setIsOpen(true);
+  });
   // Wraps the trigger button. The panel itself is portalled to <body> (see below), so it is
   // NOT inside this ref any more — hence the explicit trigger guard in the pointer handler.
   const containerRef = useRef<HTMLDivElement>(null);
@@ -106,12 +115,17 @@ export function TemplatePopover({
     <div ref={containerRef} className="relative shrink-0">
       <button
         type="button"
+        data-field-aliases={ownPaths.join(' ')}
         onClick={() => setIsOpen(o => !o)}
-        className="flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-gray-200 bg-white text-xs text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-colors max-w-[220px]"
+        className="flex items-center gap-1.5 h-7 px-2.5 rounded-md border border-(--palette-line) bg-(--palette-surface) text-xs text-(--palette-ink) hover:border-(--palette-line-strong) hover:bg-(--palette-surface-2) transition-colors max-w-[220px]"
       >
-        <span className="text-gray-400 shrink-0">{t('template.template')}</span>
+        <span className="text-(--palette-gray-400) shrink-0">{t('template.template')}</span>
         <span className="truncate">{valueLabel || '—'}</span>
-        <Icon name="chevron-down" style="solid" className="size-2.5 text-gray-400 shrink-0" />
+        <Icon
+          name="chevron-down"
+          style="solid"
+          className="size-2.5 text-(--palette-gray-400) shrink-0"
+        />
       </button>
       {/* Portalled to <body> — the same treatment AddMethodPopover and CreateReferencePopover
           already use, though at a lower z-index than theirs (see the className below for why).
@@ -153,7 +167,7 @@ export function TemplatePopover({
             // 40 is the one value that satisfies both constraints: above every sticky table
             // header (z-30, the thing that was covering this panel), below the dropdown lists
             // and below the z-50 dialogs, so a modal still sits over an open popover.
-            className="z-40 overflow-y-auto rounded-lg border border-gray-200 bg-white p-3 shadow-lg flex flex-col gap-2"
+            className="z-40 overflow-y-auto rounded-lg border border-(--palette-line) bg-(--palette-surface) p-3 shadow-lg flex flex-col gap-2"
           >
             {onSelectCollateralType && (
               <RHFInputCell

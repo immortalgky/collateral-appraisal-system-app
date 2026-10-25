@@ -247,6 +247,9 @@ export const useUploadReappraisalUnits = () => {
       queryClient.invalidateQueries({
         queryKey: projectUnitPriceKeys.all(variables.appraisalId),
       });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.source(variables.appraisalId),
+      });
       // The model list grows when an added or renamed unit names one the project has not seen.
       queryClient.invalidateQueries({
         queryKey: projectModelKeys.all(variables.appraisalId),

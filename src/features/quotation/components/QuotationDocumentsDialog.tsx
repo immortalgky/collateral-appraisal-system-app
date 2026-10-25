@@ -155,7 +155,9 @@ const QuotationDocumentsDialog = ({
       <div className="flex flex-col gap-4">
         {/* Generate / upload actions */}
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-gray-600">{t('documents.generate')}:</span>
+          <span className="text-sm font-medium text-(--palette-gray-600)">
+            {t('documents.generate')}:
+          </span>
           <Button
             size="sm"
             variant="outline"
@@ -179,8 +181,8 @@ const QuotationDocumentsDialog = ({
                   className={clsx(
                     'inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors',
                     isDragging
-                      ? 'border-primary bg-primary/5 text-primary'
-                      : 'border-gray-300 text-gray-700 hover:bg-gray-50',
+                      ? 'border-primary bg-primary/5 text-(--palette-primary-text)'
+                      : 'border-(--palette-line-strong) text-(--palette-ink) hover:bg-(--palette-surface-2)',
                     isBusy ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                   )}
                 >
@@ -196,26 +198,28 @@ const QuotationDocumentsDialog = ({
           </div>
         </div>
 
-        {selectable && <p className="-mt-1 text-sm text-gray-500">{t('documents.pickerHint')}</p>}
+        {selectable && (
+          <p className="-mt-1 text-sm text-(--palette-gray-500)">{t('documents.pickerHint')}</p>
+        )}
 
         {/* Document list */}
-        <div className="overflow-hidden rounded-xl border border-gray-200">
+        <div className="overflow-hidden rounded-xl border border-(--palette-line)">
           {isLoading ? (
-            <div className="flex items-center justify-center py-12 text-gray-400">
+            <div className="flex items-center justify-center py-12 text-(--palette-gray-400)">
               <Icon name="spinner" style="solid" className="mr-2 size-5 animate-spin" />
               <span className="text-sm">{t('documents.loading')}</span>
             </div>
           ) : documents.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 py-14 text-center">
-              <div className="flex size-12 items-center justify-center rounded-full bg-gray-100">
-                <Icon name="file" style="regular" className="size-5 text-gray-400" />
+              <div className="flex size-12 items-center justify-center rounded-full bg-(--palette-surface-3)">
+                <Icon name="file" style="regular" className="size-5 text-(--palette-gray-400)" />
               </div>
-              <span className="text-sm text-gray-500">{t('documents.empty')}</span>
+              <span className="text-sm text-(--palette-gray-500)">{t('documents.empty')}</span>
             </div>
           ) : (
             <table className="w-full text-sm">
-              <thead className="border-b border-gray-200 bg-gray-50/70">
-                <tr className="text-xs tracking-wide text-gray-500">
+              <thead className="border-b border-(--palette-line) bg-(--palette-surface-2)/70">
+                <tr className="text-xs tracking-wide text-(--palette-gray-500)">
                   {selectable && <th className="text-xs w-10 py-2.5 pl-4 font-semibold" />}
                   <th className="text-xs px-4 py-2.5 text-left font-semibold">
                     {t('documents.colFileName')}
@@ -234,7 +238,7 @@ const QuotationDocumentsDialog = ({
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {sortedDocuments.map(doc => {
                   const icon = fileTypeIcon(doc.fileName);
                   const isChecked = checked.has(doc.documentId);
@@ -243,7 +247,7 @@ const QuotationDocumentsDialog = ({
                       key={doc.id}
                       className={clsx(
                         'transition-colors',
-                        selectable && isChecked ? 'bg-primary/5' : 'hover:bg-gray-50',
+                        selectable && isChecked ? 'bg-primary/5' : 'hover:bg-(--palette-surface-2)',
                       )}
                     >
                       {selectable && (
@@ -252,7 +256,7 @@ const QuotationDocumentsDialog = ({
                             type="checkbox"
                             checked={isChecked}
                             onChange={() => toggle(doc.documentId)}
-                            className="size-4 rounded border-gray-300 text-primary focus:ring-primary/40"
+                            className="size-4 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/40"
                             aria-label={`Select ${doc.fileName}`}
                           />
                         </td>
@@ -264,25 +268,27 @@ const QuotationDocumentsDialog = ({
                             style="solid"
                             className={clsx('size-5 shrink-0', icon.className)}
                           />
-                          <span className="block max-w-[220px] truncate font-medium text-gray-800">
+                          <span className="block max-w-[220px] truncate font-medium text-(--palette-ink)">
                             {doc.fileName}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-center text-gray-600">{doc.documentType}</td>
+                      <td className="px-4 py-3 text-center text-(--palette-gray-600)">
+                        {doc.documentType}
+                      </td>
                       <td className="px-4 py-3 text-center">
                         <span
                           className={clsx(
                             'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
                             doc.source === 'Generated'
-                              ? 'bg-sky-100 text-sky-700'
-                              : 'bg-emerald-100 text-emerald-700',
+                              ? 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300'
+                              : 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
                           )}
                         >
                           {doc.source}
                         </span>
                       </td>
-                      <td className="whitespace-nowrap px-4 py-3 text-gray-500">
+                      <td className="whitespace-nowrap px-4 py-3 text-(--palette-gray-500)">
                         {formatCreated(doc.createdAt)}
                       </td>
                       <td className="px-4 py-3">
@@ -292,7 +298,7 @@ const QuotationDocumentsDialog = ({
                             onClick={() =>
                               viewDocument(doc.documentId, doc.fileSizeBytes, doc.fileName)
                             }
-                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-primary"
+                            className="rounded-md p-1.5 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-primary-text)"
                             title={t('documents.view')}
                           >
                             <Icon name="eye" style="solid" className="size-3.5" />
@@ -300,7 +306,7 @@ const QuotationDocumentsDialog = ({
                           <button
                             type="button"
                             onClick={() => handleDownload(doc)}
-                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-primary"
+                            className="rounded-md p-1.5 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-primary-text)"
                             title={t('documents.download')}
                           >
                             <Icon name="download" style="solid" className="size-3.5" />
@@ -309,7 +315,7 @@ const QuotationDocumentsDialog = ({
                             type="button"
                             onClick={() => handleRemove(doc)}
                             disabled={removeDocument.isPending}
-                            className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                            className="rounded-md p-1.5 text-(--palette-gray-400) transition-colors hover:bg-(--palette-req-wash) hover:text-(--palette-danger) disabled:opacity-40"
                             title={t('documents.remove')}
                           >
                             <Icon name="trash" style="solid" className="size-3.5" />
@@ -325,9 +331,9 @@ const QuotationDocumentsDialog = ({
         </div>
 
         {/* Footer */}
-        <div className="-mx-6 -mb-4 mt-1 flex items-center justify-between border-t border-gray-100 bg-gray-50/50 px-6 py-4">
+        <div className="-mx-6 -mb-4 mt-1 flex items-center justify-between border-t border-(--palette-line-soft) bg-(--palette-surface-2)/50 px-6 py-4">
           {selectable ? (
-            <span className="text-xs font-medium text-gray-400">
+            <span className="text-xs font-medium text-(--palette-gray-400)">
               {t('documents.pickerSelected', { count: checked.size })}
             </span>
           ) : (

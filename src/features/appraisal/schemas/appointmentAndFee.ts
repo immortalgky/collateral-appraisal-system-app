@@ -1,22 +1,17 @@
 import { z } from 'zod';
-import type { TFunction } from 'i18next';
+import { vmsg } from '@/shared/components/form/validationMessage';
+
+// Messages are tokens (translated where the error is shown), so one static schema serves every language.
+const msg = (key: string) => vmsg(`appraisal:validation.${key}`);
 
 /**
  * Fee item schema
  */
-export const makeFeeItemSchema = (t: TFunction<'appraisal'>) =>
-  z.object({
-    id: z.string(),
-    type: z.enum(['01', '02', '99']),
-    description: z.string().min(1, t('validation.descriptionRequired')),
-    amount: z.number().min(0, t('validation.amountNonNegative')),
-  });
-
 export const FeeItemSchema = z.object({
   id: z.string(),
   type: z.enum(['01', '02', '99']),
-  description: z.string().min(1, 'Description is required'),
-  amount: z.number().min(0, 'Amount must be non-negative'),
+  description: z.string().min(1, msg('descriptionRequired')),
+  amount: z.number().min(0, msg('amountNonNegative')),
 });
 
 /**
@@ -24,8 +19,8 @@ export const FeeItemSchema = z.object({
  */
 export const PaymentRecordSchema = z.object({
   id: z.string(),
-  paymentDate: z.string().min(1, 'Payment date is required'),
-  amount: z.number().min(0, 'Amount must be non-negative'),
+  paymentDate: z.string().min(1, msg('paymentDateRequired')),
+  amount: z.number().min(0, msg('amountNonNegative')),
 });
 
 /**
@@ -42,13 +37,10 @@ export const AppointmentSchema = z.object({
  * Fee section schema
  */
 export const FeeSchema = z.object({
-  feeType: z.string().min(1, 'Fee type is required').nullable(),
+  feeType: z.string().min(1, msg('feeTypeRequired')).nullable(),
   items: z.array(FeeItemSchema),
-  bankAbsorbAmount: z.number().min(0, 'Bank absorb amount must be non-negative'),
-  constructionInspectionFee: z
-    .number()
-    .min(0, 'Construction inspection fee must be non-negative')
-    .nullable(),
+  bankAbsorbAmount: z.number().min(0, msg('bankAbsorbNonNegative')),
+  constructionInspectionFee: z.number().min(0, msg('ciFeeNonNegative')).nullable(),
 });
 
 /**
@@ -80,49 +72,27 @@ export const appointmentAndFeeFormDefaults = {
 /**
  * Schema for reschedule modal
  */
-export const makeRescheduleFormSchema = (t: TFunction<'appraisal'>) =>
-  z.object({
-    dateTime: z.string().min(1, t('validation.dateTimeRequired')),
-    location: z.string().min(1, t('validation.locationRequired')),
-    reason: z.string().optional(),
-    contactPerson: z.string().min(1, t('validation.contactPersonRequired')),
-    contactPhone: z.string().min(1, t('validation.contactPhoneRequired')),
-  });
-
 export const RescheduleFormSchema = z.object({
-  dateTime: z.string().min(1, 'Date and time is required'),
-  location: z.string().min(1, 'Location is required'),
+  dateTime: z.string().min(1, msg('dateTimeRequired')),
+  location: z.string().min(1, msg('locationRequired')),
   reason: z.string().optional(),
-  contactPerson: z.string().min(1, 'Contact person name is required'),
-  contactPhone: z.string().min(1, 'Contact phone no is required'),
+  contactPerson: z.string().min(1, msg('contactPersonRequired')),
+  contactPhone: z.string().min(1, msg('contactPhoneRequired')),
 });
 
 /**
  * Schema for add fee modal
  */
-export const makeAddFeeFormSchema = (t: TFunction<'appraisal'>) =>
-  z.object({
-    type: z.enum(['01', '02', '99']),
-    description: z.string().min(1, t('validation.descriptionRequired')),
-    amount: z.number().min(0, t('validation.amountNonNegative')),
-  });
-
 export const AddFeeFormSchema = z.object({
   type: z.enum(['01', '02', '99']),
-  description: z.string().min(1, 'Description is required'),
-  amount: z.number().min(0, 'Amount must be non-negative'),
+  description: z.string().min(1, msg('descriptionRequired')),
+  amount: z.number().min(0, msg('amountNonNegative')),
 });
 
 /**
  * Schema for add payment modal
  */
-export const makeAddPaymentFormSchema = (t: TFunction<'appraisal'>) =>
-  z.object({
-    paymentDate: z.string().min(1, t('validation.paymentDateRequired')),
-    amount: z.number().min(0.01, t('validation.amountPositive')),
-  });
-
 export const AddPaymentFormSchema = z.object({
-  paymentDate: z.string().min(1, 'Payment date is required'),
-  amount: z.number().min(0.01, 'Amount must be greater than 0'),
+  paymentDate: z.string().min(1, msg('paymentDateRequired')),
+  amount: z.number().min(0.01, msg('amountPositive')),
 });

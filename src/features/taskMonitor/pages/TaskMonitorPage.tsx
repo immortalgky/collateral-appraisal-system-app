@@ -60,14 +60,18 @@ function TaskMonitorPage() {
       {/* ── Page header ── */}
       <div className="shrink-0 mb-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-base font-semibold text-gray-900">{t('nav:taskMonitor.title')}</h2>
+          <h2 className="text-base font-semibold text-(--palette-ink)">
+            {t('nav:taskMonitor.title')}
+          </h2>
           {!isLoading && totalCount > 0 && (
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full tabular-nums">
               {totalCount}
             </span>
           )}
         </div>
-        <p className="text-xs text-gray-500 mt-0.5">{t('nav:taskMonitor.description')}</p>
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">
+          {t('nav:taskMonitor.description')}
+        </p>
       </div>
 
       {/* ── Search bar ── */}
@@ -76,14 +80,14 @@ function TaskMonitorPage() {
           <Icon
             style="solid"
             name="magnifying-glass"
-            className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400)"
           />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('filters.peopleSearchPlaceholder')}
-            className="w-full pl-9 pr-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
+            className="w-full pl-9 pr-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40"
           />
         </div>
       </div>
@@ -91,19 +95,21 @@ function TaskMonitorPage() {
       {/* ── Error state ── */}
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-3">
-          <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+          <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-800">{t('errors.loadPeopleFailed')}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+            <p className="text-sm font-medium text-(--palette-ink)">
+              {t('errors.loadPeopleFailed')}
+            </p>
+            <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
           </div>
         </div>
       )}
 
       {/* ── Table ── */}
       {!isError && (
-        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           <PeopleMonitorTable
             people={people}
             isLoading={isLoading}

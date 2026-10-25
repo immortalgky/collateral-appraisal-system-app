@@ -1,9 +1,8 @@
-import clsx from 'clsx';
 import Toggle from './Toggle';
 import { useController, useFormContext } from 'react-hook-form';
-import { useParametersByGroup } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
-import { type ReactNode, useMemo } from 'react';
+import type { ReactNode } from 'react';
+import { useBooleanToggleOptions } from './toggleOptions';
 
 type FormBooleanToggleProps = FormBooleanToggleBaseProps &
   AtLeastOne<{ group: string; options: [string, string] }>;
@@ -35,13 +34,7 @@ const FormBooleanToggle = ({
     fieldState: { error },
   } = useController({ name, control });
 
-  const params = useParametersByGroup(group ?? '');
-  const resolvedOptions = useMemo<[string, string]>(() => {
-    if (options) return options;
-    const first = params[0]?.description ?? '';
-    const second = params[1]?.description ?? '';
-    return [first, second];
-  }, [options, params]);
+  const resolvedOptions = useBooleanToggleOptions(name, group, options);
 
   return (
     <Toggle
@@ -50,8 +43,7 @@ const FormBooleanToggle = ({
       options={resolvedOptions}
       size={size}
       disabled={disabled}
-      // Marker for formLayoutCompact.css: a yes/no toggle gets two colours, a string toggle does not.
-      className={clsx('cas-toggle-bool', className)}
+      className={className}
       error={error?.message?.toString()}
       checked={field.value}
       onChange={field.onChange}

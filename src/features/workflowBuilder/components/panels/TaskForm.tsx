@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeTaskFormSchema, type TaskFormValues } from '../../schemas';
+import { taskFormSchema, type TaskFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { TaskProperties } from '../../types';
 import { AssignmentStrategy } from '../../types';
@@ -54,7 +55,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
     control,
     formState: { errors },
   } = useForm<TaskFormValues>({
-    resolver: zodResolver(makeTaskFormSchema(t)),
+    resolver: zodResolver(taskFormSchema),
     defaultValues: buildDefaults(data, props),
   });
 
@@ -122,9 +123,11 @@ export function TaskForm({ nodeId }: TaskFormProps) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -280,7 +283,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             appendDecision({ key: '', value: '' });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
-          className="btn btn-ghost btn-xs text-primary"
+          className="btn btn-ghost btn-xs text-(--palette-primary-text)"
         >
           {t('forms.buttons.addDecision')}
         </button>
@@ -379,7 +382,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
-          className="btn btn-ghost btn-xs text-primary"
+          className="btn btn-ghost btn-xs text-(--palette-primary-text)"
         >
           {t('forms.buttons.addAction')}
         </button>
@@ -479,7 +482,7 @@ export function TaskForm({ nodeId }: TaskFormProps) {
             appendMapping({ key: '', value: '' });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
-          className="btn btn-ghost btn-xs text-primary"
+          className="btn btn-ghost btn-xs text-(--palette-primary-text)"
         >
           {t('forms.buttons.addMapping')}
         </button>

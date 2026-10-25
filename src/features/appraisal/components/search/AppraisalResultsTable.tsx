@@ -112,9 +112,13 @@ function AppraisalResultsTable({
   // highlight too, and stays put under the pointer while another row is loading (no row hover then).
   const pinBody = (isLoadingRow: boolean, isAnyLoading: boolean) =>
     `sticky z-10 ${
-      isLoadingRow ? 'bg-primary-50' : isAnyLoading ? 'bg-white' : 'bg-white group-hover:bg-gray-50'
+      isLoadingRow
+        ? 'bg-(--palette-accent-wash)'
+        : isAnyLoading
+          ? 'bg-(--palette-surface)'
+          : 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2)'
     }`;
-  const pinHead = 'sticky z-30 bg-gray-50';
+  const pinHead = 'sticky z-30 bg-(--palette-surface-2)';
   // No edge at rest: the pinned column sits flush against its neighbour like any other column.
   // The drop shadow appears only once columns are actually sliding under the pinned ones — at rest
   // nothing is underneath, and a shadow there would suggest otherwise. A shadow, not a border: a
@@ -264,7 +268,9 @@ function AppraisalResultsTable({
   };
 
   const subLine = (text: string | null | undefined) =>
-    !compact && text ? <div className="truncate text-xs text-gray-400">{text}</div> : null;
+    !compact && text ? (
+      <div className="truncate text-xs text-(--palette-gray-400)">{text}</div>
+    ) : null;
 
   const slaCell = (item: AppraisalDto) => {
     const closed = isClosed(item);
@@ -278,14 +284,14 @@ function AppraisalResultsTable({
       new Date(item.slaDueDate).getTime() < Date.now();
     const level = overdue ? 'Breached' : item.slaStatus;
     const tone = closed
-      ? 'text-gray-400'
+      ? 'text-(--palette-gray-400)'
       : level === 'Breached'
-        ? 'text-red-600'
+        ? 'text-(--palette-danger)'
         : level === 'AtRisk'
-          ? 'text-amber-600'
+          ? 'text-amber-600 dark:text-amber-400'
           : level === 'OnTrack'
-            ? 'text-green-600'
-            : 'text-gray-400';
+            ? 'text-green-600 dark:text-green-400'
+            : 'text-(--palette-gray-400)';
     const icon = closed
       ? item.status === 'Completed'
         ? 'circle-check'
@@ -329,7 +335,7 @@ function AppraisalResultsTable({
           role="img"
           aria-label={t('list.unassigned')}
           title={t('list.unassigned')}
-          className="text-gray-400"
+          className="text-(--palette-gray-400)"
         >
           —
         </span>
@@ -338,7 +344,11 @@ function AppraisalResultsTable({
     if (company) {
       return (
         <span className="inline-flex max-w-full items-center gap-1.5">
-          <Icon style="solid" name="building" className="size-3 shrink-0 text-gray-400" />
+          <Icon
+            style="solid"
+            name="building"
+            className="size-3 shrink-0 text-(--palette-gray-400)"
+          />
           <span className="truncate">{company}</span>
         </span>
       );
@@ -382,11 +392,11 @@ function AppraisalResultsTable({
           ))}
         </colgroup>
       )}
-      <thead className="sticky top-0 z-20 bg-gray-50">
-        <tr className="border-b border-gray-200">
+      <thead className="sticky top-0 z-20 bg-(--palette-surface-2)">
+        <tr className="border-b border-(--palette-line)">
           {showRowNumber && (
             <th
-              className={`text-xs text-center font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap w-12 ${pinned ? pinHead : ''}`}
+              className={`text-xs text-center font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap w-12 ${pinned ? pinHead : ''}`}
               style={pinned ? { left: 0 } : undefined}
             >
               #
@@ -401,10 +411,10 @@ function AppraisalResultsTable({
                 <Icon
                   style="solid"
                   name={sortDir === 'asc' ? 'sort-up' : 'sort-down'}
-                  className="size-2.5 text-primary"
+                  className="size-2.5 text-(--palette-primary-text)"
                 />
               ) : (
-                <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />
+                <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />
               );
             const single = col.sortable && !col.headSorts;
             return (
@@ -422,8 +432,8 @@ function AppraisalResultsTable({
                   layout ? 'relative overflow-hidden text-ellipsis' : ''
                 } ${
                   single
-                    ? `cursor-pointer select-none ${isOn(sortField) ? 'text-primary' : 'text-gray-600 hover:text-primary'}`
-                    : 'text-gray-600'
+                    ? `cursor-pointer select-none ${isOn(sortField) ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-600) hover:text-(--palette-primary-text)'}`
+                    : 'text-(--palette-gray-600)'
                 } ${pinned && colIndex === 0 ? `${pinHead} ${pinEdge}` : ''}`}
                 style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
               >
@@ -432,12 +442,14 @@ function AppraisalResultsTable({
                   <span className="inline-flex items-center gap-1">
                     {col.headSorts.map((h, i) => (
                       <Fragment key={h.key}>
-                        {i > 0 && <span className="text-gray-300">/</span>}
+                        {i > 0 && <span className="text-(--palette-gray-300)">/</span>}
                         <button
                           type="button"
                           onClick={() => onSort(h.key)}
                           className={`inline-flex cursor-pointer select-none items-center gap-1 font-semibold ${
-                            isOn(h.key) ? 'text-primary' : 'hover:text-primary'
+                            isOn(h.key)
+                              ? 'text-(--palette-primary-text)'
+                              : 'hover:text-(--palette-primary-text)'
                           }`}
                         >
                           {h.label}
@@ -513,9 +525,13 @@ function AppraisalResultsTable({
         <div className="flex flex-1 items-center justify-center overflow-y-auto p-8">
           {emptyState ?? (
             <div className="flex flex-col items-center gap-2">
-              <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-              <p className="text-gray-500 font-medium">{t('list.empty')}</p>
-              <p className="text-xs text-gray-400">{t('list.emptyHint')}</p>
+              <Icon
+                style="regular"
+                name="folder-open"
+                className="size-10 text-(--palette-gray-300)"
+              />
+              <p className="text-(--palette-gray-500) font-medium">{t('list.empty')}</p>
+              <p className="text-xs text-(--palette-gray-400)">{t('list.emptyHint')}</p>
             </div>
           )}
         </div>
@@ -547,7 +563,7 @@ function AppraisalResultsTable({
         style={layout ? { width: tableWidth } : undefined}
       >
         {tableHead}
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {isLoading ? (
             <TableRowSkeleton
               columns={[
@@ -582,15 +598,15 @@ function AppraisalResultsTable({
                       : 'focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary'
                   } ${
                     isLoadingRow
-                      ? 'bg-primary-50 cursor-wait'
+                      ? 'bg-(--palette-accent-wash) cursor-wait'
                       : isAnyLoading
                         ? 'cursor-wait opacity-60'
-                        : 'hover:bg-gray-50 cursor-pointer'
+                        : 'hover:bg-(--palette-surface-2) cursor-pointer'
                   }`}
                 >
                   {showRowNumber && (
                     <td
-                      className={`${cellPad} text-center text-gray-400 text-table ${pinned ? pinBody(isLoadingRow, isAnyLoading) : ''}`}
+                      className={`${cellPad} text-center text-(--palette-gray-400) text-table ${pinned ? pinBody(isLoadingRow, isAnyLoading) : ''}`}
                       style={pinned ? { left: 0 } : undefined}
                     >
                       {pageNumber * pageSize + index + 1}
@@ -599,19 +615,19 @@ function AppraisalResultsTable({
                   {columns.map((col, colIndex) => (
                     <td
                       key={col.key}
-                      className={`${cellPad} text-gray-600 text-table ${
+                      className={`${cellPad} text-(--palette-gray-600) text-table ${
                         layout ? 'overflow-hidden text-ellipsis whitespace-nowrap' : ''
                       } ${pinned && colIndex === 0 ? `${pinBody(isLoadingRow, isAnyLoading)} ${pinEdge}` : ''}`}
                       style={pinned && colIndex === 0 ? { left: pinnedLeft } : undefined}
                     >
                       {col.render ? (
                         col.key === 'appraisalCustomer' ? (
-                          <span className="font-medium text-primary inline-flex items-center gap-1.5">
+                          <span className="font-medium text-(--palette-primary-text) inline-flex items-center gap-1.5">
                             {isLoadingRow && (
                               <Icon
                                 name="spinner"
                                 style="solid"
-                                className="size-3 animate-spin text-primary shrink-0"
+                                className="size-3 animate-spin text-(--palette-primary-text) shrink-0"
                               />
                             )}
                             {col.render(item)}
@@ -638,12 +654,12 @@ function AppraisalResultsTable({
                         // Only High is marked. Normal is most rows, and a badge on every one of them
                         // hid the few that matter.
                         item.priority === 'High' ? (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-600">
+                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-(--palette-danger)">
                             <Icon style="solid" name="flag" className="size-3" />
                             {t('list.priority.High')}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-(--palette-gray-400)">
                             {t(`list.priority.${item.priority}`, { defaultValue: item.priority })}
                           </span>
                         )
@@ -656,14 +672,14 @@ function AppraisalResultsTable({
                       ) : col.key === 'appointmentDateTime' &&
                         item.appointmentDateTime &&
                         isToday(new Date(item.appointmentDateTime)) ? (
-                        <span className="font-semibold text-primary">
+                        <span className="font-semibold text-(--palette-primary-text)">
                           {t('list.today')}{' '}
                           {formatDate(new Date(item.appointmentDateTime), 'HH:mm')}
                         </span>
                       ) : col.key === 'bankingSegment' && item.bankingSegment ? (
                         // One neutral badge: the segment is a label, not a state, and a colour per
                         // code competed with the colours that do mean something (status, SLA).
-                        <span className="inline-flex max-w-full items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+                        <span className="inline-flex max-w-full items-center rounded-md bg-(--palette-surface-3) px-2 py-0.5 text-xs font-medium text-(--palette-gray-600)">
                           <span className="truncate">{getCellValue(item, 'bankingSegment')}</span>
                         </span>
                       ) : col.key === 'appraisalCustomer' ? (
@@ -675,12 +691,12 @@ function AppraisalResultsTable({
                             compact ? 'items-baseline gap-2' : 'flex-col'
                           }`}
                         >
-                          <span className="inline-flex shrink-0 items-center gap-1.5 font-medium text-primary">
+                          <span className="inline-flex shrink-0 items-center gap-1.5 font-medium text-(--palette-primary-text)">
                             {isLoadingRow && (
                               <Icon
                                 name="spinner"
                                 style="solid"
-                                className="size-3 animate-spin text-primary shrink-0"
+                                className="size-3 animate-spin text-(--palette-primary-text) shrink-0"
                               />
                             )}
                             {item.appraisalNumber || '-'}
@@ -691,7 +707,7 @@ function AppraisalResultsTable({
                                 role="img"
                                 title={t('list.priorityHigh')}
                                 aria-label={t('list.priorityHigh')}
-                                className="inline-flex shrink-0 text-red-600"
+                                className="inline-flex shrink-0 text-(--palette-danger)"
                               >
                                 <Icon style="solid" name="flag" className="size-3" />
                               </span>
@@ -699,7 +715,7 @@ function AppraisalResultsTable({
                           </span>
                           <span className="inline-flex min-w-0 max-w-full items-center gap-1.5">
                             <span
-                              className="truncate font-medium text-gray-800"
+                              className="truncate font-medium text-(--palette-ink)"
                               title={item.customerName || undefined}
                             >
                               {item.customerName || '-'}
@@ -707,7 +723,7 @@ function AppraisalResultsTable({
                             {item.customerCount > 1 && (
                               <span
                                 title={t('list.moreCustomers', { count: item.customerCount - 1 })}
-                                className="shrink-0 rounded bg-gray-100 px-1 py-0.5 text-[10px] font-medium text-gray-500"
+                                className="shrink-0 rounded bg-(--palette-surface-3) px-1 py-0.5 text-[10px] font-medium text-(--palette-gray-500)"
                               >
                                 +{item.customerCount - 1}
                               </span>

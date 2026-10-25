@@ -11,7 +11,7 @@ export function showNotificationToast(notification: Notification) {
   const config = notificationTypeConfig[notification.type] ?? {
     icon: 'bell',
     iconStyle: 'regular' as const,
-    color: 'text-gray-500 bg-gray-100',
+    color: 'text-(--palette-gray-500) bg-(--palette-surface-3)',
   };
 
   toast.custom(
@@ -20,7 +20,7 @@ export function showNotificationToast(notification: Notification) {
         role="button"
         tabIndex={0}
         style={{ pointerEvents: 'auto' }}
-        className={`flex items-start gap-3 w-[380px] max-w-[90vw] text-left rounded-2xl border border-gray-100 bg-white px-4 py-3.5 shadow-xl ring-1 ring-black/5 cursor-pointer ${
+        className={`flex items-start gap-3 w-[380px] max-w-[90vw] text-left rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) px-4 py-3.5 shadow-xl ring-1 ring-black/5 cursor-pointer ${
           t.visible ? 'animate-enter' : 'animate-leave'
         }`}
         onClick={() => toast.remove(t.id)}
@@ -37,9 +37,13 @@ export function showNotificationToast(notification: Notification) {
           <Icon name={config.icon} style={config.iconStyle} className="size-4" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-gray-900">{notification.title}</p>
-          <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">{notification.message}</p>
-          <p className="text-[11px] text-gray-400 mt-1">{timeAgo(notification.createdAt, tr)}</p>
+          <p className="text-sm font-semibold text-(--palette-ink)">{notification.title}</p>
+          <p className="text-xs text-(--palette-gray-600) mt-0.5 line-clamp-2">
+            {notification.message}
+          </p>
+          <p className="text-[11px] text-(--palette-gray-400) mt-1">
+            {timeAgo(notification.createdAt, tr)}
+          </p>
         </div>
       </div>
     ),

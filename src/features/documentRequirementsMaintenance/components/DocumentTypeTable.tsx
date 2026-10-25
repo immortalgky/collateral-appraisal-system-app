@@ -39,20 +39,26 @@ const CarryForwardPill = ({ dt }: { dt: DocumentTypeDto }) => {
   const locked = carryForwardLockKind(dt);
   if (locked === 'target')
     return (
-      <span className={`${pill} bg-violet-50 text-violet-700`}>
+      <span
+        className={`${pill} bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300`}
+      >
         {t('carryForward.admin.lockedTarget')}
       </span>
     );
   if (locked === 'source')
     return (
-      <span className={`${pill} bg-gray-100 text-gray-600`}>
+      <span className={`${pill} bg-(--palette-surface-3) text-(--palette-gray-600)`}>
         {t('carryForward.admin.lockedSource')}
       </span>
     );
   return dt.carryForwardByDefault ? (
-    <span className={`${pill} bg-green-50 text-green-700`}>{t('carryForward.admin.use')}</span>
+    <span className={`${pill} bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300`}>
+      {t('carryForward.admin.use')}
+    </span>
   ) : (
-    <span className={`${pill} bg-amber-50 text-amber-700`}>{t('carryForward.admin.dontUse')}</span>
+    <span className={`${pill} bg-(--palette-warn-wash) text-(--palette-warn)`}>
+      {t('carryForward.admin.dontUse')}
+    </span>
   );
 };
 
@@ -69,12 +75,16 @@ const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
 
   return (
     <tr ref={setNodeRef} style={style} className={dt.isActive ? '' : 'opacity-50'}>
-      <td className="px-2 py-3 text-center cursor-grab text-gray-400" {...attributes} {...listeners}>
+      <td
+        className="px-2 py-3 text-center cursor-grab text-(--palette-gray-400)"
+        {...attributes}
+        {...listeners}
+      >
         <Icon name="grip-vertical" style="solid" className="size-4" />
       </td>
-      <td className="px-4 py-3 font-medium text-gray-900">{dt.code}</td>
-      <td className="px-4 py-3 text-gray-700">{dt.name}</td>
-      <td className="px-4 py-3 text-gray-500">{dt.category}</td>
+      <td className="px-4 py-3 font-medium text-(--palette-ink)">{dt.code}</td>
+      <td className="px-4 py-3 text-(--palette-ink)">{dt.name}</td>
+      <td className="px-4 py-3 text-(--palette-gray-500)">{dt.category}</td>
       <td className="px-4 py-3">
         <CarryForwardPill dt={dt} />
       </td>
@@ -83,14 +93,14 @@ const SortableRow = ({ dt, onEdit, onDelete }: RowProps) => {
         <div className="flex justify-end gap-2">
           <button
             onClick={() => onEdit(dt)}
-            className="text-gray-400 hover:text-gray-700"
+            className="text-(--palette-gray-400) hover:text-(--palette-ink)"
             aria-label="Edit"
           >
             <Icon name="pen" style="regular" className="size-3.5" />
           </button>
           <button
             onClick={() => onDelete(dt)}
-            className="text-gray-400 hover:text-danger"
+            className="text-(--palette-gray-400) hover:text-danger"
             aria-label="Delete"
           >
             <Icon name="trash" style="regular" className="size-3.5" />
@@ -132,17 +142,17 @@ export default function DocumentTypeTable({
   };
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading…</div>;
+    return <div className="p-8 text-center text-(--palette-gray-500)">Loading…</div>;
   }
 
   if (order.length === 0) {
-    return <div className="p-8 text-center text-gray-500">No document types.</div>;
+    return <div className="p-8 text-center text-(--palette-gray-500)">No document types.</div>;
   }
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-      <table className="min-w-full divide-y divide-gray-200 text-table">
-        <thead className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
+      <table className="min-w-full divide-y divide-(--palette-line) text-table">
+        <thead className="bg-(--palette-surface-2) text-left text-xs font-medium text-(--palette-gray-500) uppercase">
           <tr>
             <th className="text-xs px-2 py-3 w-10 font-semibold" />
             <th className="text-xs px-4 py-3 font-semibold">Code</th>
@@ -153,7 +163,7 @@ export default function DocumentTypeTable({
             <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           <SortableContext items={order.map(d => d.id)} strategy={verticalListSortingStrategy}>
             {order.map(dt => (
               <SortableRow key={dt.id} dt={dt} onEdit={onEdit} onDelete={onDelete} />

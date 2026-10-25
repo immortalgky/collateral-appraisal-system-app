@@ -5,28 +5,28 @@ import type { MonitoringSummary, SlaBucket } from '../api/types';
 
 const BUCKET_CONFIG = {
   total: {
-    border: 'border-l-gray-300',
-    activeBackground: 'bg-gray-50',
-    activeText: 'text-gray-900',
-    defaultText: 'text-gray-900',
+    border: 'border-l-(--palette-line-strong)',
+    activeBackground: 'bg-(--palette-surface-2)',
+    activeText: 'text-(--palette-ink)',
+    defaultText: 'text-(--palette-ink)',
   },
   breached: {
     border: 'border-l-red-500',
-    activeBackground: 'bg-red-50',
-    activeText: 'text-red-600',
-    defaultText: 'text-gray-900',
+    activeBackground: 'bg-(--palette-req-wash)',
+    activeText: 'text-(--palette-danger)',
+    defaultText: 'text-(--palette-ink)',
   },
   atRisk: {
     border: 'border-l-amber-500',
-    activeBackground: 'bg-amber-50',
-    activeText: 'text-amber-600',
-    defaultText: 'text-gray-900',
+    activeBackground: 'bg-(--palette-warn-wash)',
+    activeText: 'text-amber-600 dark:text-amber-400',
+    defaultText: 'text-(--palette-ink)',
   },
   healthy: {
     border: 'border-l-emerald-500',
-    activeBackground: 'bg-emerald-50',
-    activeText: 'text-emerald-600',
-    defaultText: 'text-gray-900',
+    activeBackground: 'bg-emerald-50 dark:bg-emerald-500/10',
+    activeText: 'text-emerald-600 dark:text-emerald-400',
+    defaultText: 'text-(--palette-ink)',
   },
 } as const;
 
@@ -43,9 +43,11 @@ interface ChipProps {
 
 function KpiChip({ label, value, isLoading, bucket, isActive, onClick }: ChipProps) {
   const cfg = BUCKET_CONFIG[bucket];
-  const background = isActive ? cfg.activeBackground : 'bg-white';
-  const textColor = isActive ? cfg.activeText : 'text-gray-600';
-  const borderColor = isActive ? cfg.border.replace('border-l-', 'border-') : 'border-gray-200';
+  const background = isActive ? cfg.activeBackground : 'bg-(--palette-surface)';
+  const textColor = isActive ? cfg.activeText : 'text-(--palette-gray-600)';
+  const borderColor = isActive
+    ? cfg.border.replace('border-l-', 'border-')
+    : 'border-(--palette-line)';
 
   return (
     <button
@@ -57,11 +59,11 @@ function KpiChip({ label, value, isLoading, bucket, isActive, onClick }: ChipPro
         background,
         textColor,
         borderColor,
-        onClick ? 'cursor-pointer hover:bg-gray-50' : 'cursor-default',
+        onClick ? 'cursor-pointer hover:bg-(--palette-surface-2)' : 'cursor-default',
       ].join(' ')}
     >
       {isLoading ? (
-        <span className="bg-gray-200 animate-pulse h-3 w-5 rounded" />
+        <span className="bg-(--palette-line) animate-pulse h-3 w-5 rounded" />
       ) : (
         <span className="tabular-nums font-semibold">{value ?? 0}</span>
       )}
@@ -91,7 +93,11 @@ function HeroKpi({ summary, isLoading, onBucketClick, activeBuckets = [] }: Hero
   const barWidth = total > 0 ? `${(breached / total) * 100}%` : '0%';
 
   const pctColor =
-    pct >= 50 ? 'text-red-600' : pct >= 25 ? 'text-amber-600' : 'text-emerald-600';
+    pct >= 50
+      ? 'text-(--palette-danger)'
+      : pct >= 25
+        ? 'text-amber-600 dark:text-amber-400'
+        : 'text-emerald-600 dark:text-emerald-400';
 
   const handleBreached = onBucketClick ? () => onBucketClick('breached') : undefined;
   const handleAtRisk = onBucketClick ? () => onBucketClick('atRisk') : undefined;
@@ -100,16 +106,14 @@ function HeroKpi({ summary, isLoading, onBucketClick, activeBuckets = [] }: Hero
   return (
     <div className="shrink-0 mb-2 flex items-center gap-3 flex-wrap">
       {isLoading ? (
-        <span className="bg-gray-100 animate-pulse h-5 w-10 rounded" />
+        <span className="bg-(--palette-surface-3) animate-pulse h-5 w-10 rounded" />
       ) : (
-        <span className={`text-xl font-bold tabular-nums leading-none ${pctColor}`}>
-          {pct}%
-        </span>
+        <span className={`text-xl font-bold tabular-nums leading-none ${pctColor}`}>{pct}%</span>
       )}
-      <span className="text-[11px] text-gray-500 leading-none">
+      <span className="text-[11px] text-(--palette-gray-500) leading-none">
         {t('common.kpi.percentBreached')}
       </span>
-      <div className="h-1 w-24 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-1 w-24 bg-(--palette-surface-3) rounded-full overflow-hidden">
         <div
           className="h-full bg-red-500 rounded-full transition-all duration-500"
           style={{ width: barWidth }}

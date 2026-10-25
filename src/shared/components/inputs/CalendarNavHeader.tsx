@@ -36,9 +36,8 @@ export function CalendarNavHeader({
         onClick={onToggle}
         aria-expanded={onToggle ? expanded : undefined}
         className={clsx(
-          'flex items-center gap-1 text-sm font-semibold text-gray-800 rounded px-1 -mx-1 py-0.5',
-          onToggle &&
-            'cursor-pointer hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200',
+          'flex items-center gap-1 text-sm font-semibold text-(--palette-ink) rounded px-1 -mx-1 py-0.5',
+          onToggle && 'cursor-pointer hover:bg-(--palette-surface-3)',
         )}
       >
         <span>{label}</span>
@@ -51,7 +50,10 @@ export function CalendarNavHeader({
             stroke="currentColor"
             strokeWidth={2}
             strokeLinecap="round"
-            className={clsx('text-gray-400 transition-transform', expanded && 'rotate-180')}
+            className={clsx(
+              'text-(--palette-gray-400) transition-transform',
+              expanded && 'rotate-180',
+            )}
           >
             <path d="M6 9l6 6 6-6" />
           </svg>
@@ -62,7 +64,7 @@ export function CalendarNavHeader({
           type="button"
           onClick={onPrev}
           aria-label={prevAriaLabel}
-          className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
         >
           <svg
             width="16"
@@ -80,7 +82,7 @@ export function CalendarNavHeader({
           type="button"
           onClick={onNext}
           aria-label={nextAriaLabel}
-          className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
         >
           <svg
             width="16"

@@ -39,7 +39,7 @@ function SortableTh({
   };
 
   const baseCls =
-    'px-4 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+    'px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
 
   if (!isSortable) {
     return (
@@ -55,8 +55,8 @@ function SortableTh({
       <button
         type="button"
         onClick={handleClick}
-        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors group ${
-          isActive ? 'text-primary' : ''
+        className={`inline-flex items-center gap-1 hover:text-(--palette-ink) transition-colors group ${
+          isActive ? 'text-(--palette-primary-text)' : ''
         }`}
       >
         <span>{label}</span>
@@ -64,7 +64,9 @@ function SortableTh({
           style="solid"
           name={isActive ? (activeSortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
           className={`size-2.5 ${
-            isActive ? 'text-primary' : 'text-gray-300 group-hover:text-gray-500'
+            isActive
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-300) group-hover:text-(--palette-gray-500)'
           }`}
         />
       </button>
@@ -113,20 +115,20 @@ const DEFAULT_STICKY_SHADOW = 'shadow-[1px_0_0_0_rgb(229,231,235)]';
 // Subtle row tint per variant. Healthy stays untinted to keep the table calm.
 // The sticky first cell must match so column 1 doesn't read as a separate stripe.
 const ROW_VARIANT_TINT: Record<string, string> = {
-  breached: 'bg-red-50/40 group-hover:bg-red-50',
-  atRisk: 'bg-amber-50/30 group-hover:bg-amber-50',
-  healthy: 'group-hover:bg-gray-50',
+  breached: 'bg-(--palette-req-wash)/40 group-hover:bg-(--palette-req-wash)',
+  atRisk: 'bg-(--palette-warn-wash)/30 group-hover:bg-(--palette-warn-wash)',
+  healthy: 'group-hover:bg-(--palette-surface-2)',
 };
 // Sticky cell tints MUST be fully opaque — translucent backgrounds (the /40,
 // /30 used on the row body) would let the scrolling column underneath bleed
 // through the sticky column. Match the variant's row tint visually but with
 // solid coverage.
 const STICKY_VARIANT_TINT: Record<string, string> = {
-  breached: 'bg-red-50 group-hover:bg-red-100',
-  atRisk: 'bg-amber-50 group-hover:bg-amber-100',
-  healthy: 'bg-white group-hover:bg-gray-50',
+  breached: 'bg-(--palette-req-wash) group-hover:bg-red-100 dark:group-hover:bg-red-500/20',
+  atRisk: 'bg-(--palette-warn-wash) group-hover:bg-amber-100 dark:group-hover:bg-amber-500/20',
+  healthy: 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2)',
 };
-const DEFAULT_STICKY_TINT = 'bg-white group-hover:bg-gray-50';
+const DEFAULT_STICKY_TINT = 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2)';
 
 function MonitoringDataTable<T>({
   columns,
@@ -148,7 +150,7 @@ function MonitoringDataTable<T>({
     <div className="flex-1 min-h-0 overflow-auto">
       <table className="w-full min-w-max text-table">
         <thead className="sticky top-0 z-20">
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
             {columns.map((col, colIdx) => (
               <SortableTh
                 key={col.key}
@@ -166,22 +168,26 @@ function MonitoringDataTable<T>({
               />
             ))}
             {/* Actions column */}
-            <th className="text-xs px-4 py-3 bg-gray-50 font-semibold" />
+            <th className="text-xs px-4 py-3 bg-(--palette-surface-2) font-semibold" />
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {isLoading ? (
             <TableRowSkeleton columns={skeletonCols} rows={8} />
           ) : isEmpty ? (
             <tr>
               <td colSpan={columns.length + 1} className="py-16">
                 <div className="flex flex-col items-center justify-center gap-3">
-                  <div className="size-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                    <Icon style="regular" name="inbox" className="size-6 text-gray-300" />
+                  <div className="size-14 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                    <Icon
+                      style="regular"
+                      name="inbox"
+                      className="size-6 text-(--palette-gray-300)"
+                    />
                   </div>
                   <div className="text-center">
-                    <p className="text-sm font-semibold text-gray-700">{emptyLabel}</p>
-                    <p className="text-xs text-gray-400 mt-1">{emptyDescription}</p>
+                    <p className="text-sm font-semibold text-(--palette-ink)">{emptyLabel}</p>
+                    <p className="text-xs text-(--palette-gray-400) mt-1">{emptyDescription}</p>
                   </div>
                 </div>
               </td>
@@ -190,7 +196,9 @@ function MonitoringDataTable<T>({
             rows.map(row => {
               const variant = getRowVariant?.(row);
               const stickyShadow = variant ? ROW_VARIANT_SHADOW[variant] : DEFAULT_STICKY_SHADOW;
-              const rowTint = variant ? ROW_VARIANT_TINT[variant] : 'hover:bg-gray-50';
+              const rowTint = variant
+                ? ROW_VARIANT_TINT[variant]
+                : 'hover:bg-(--palette-surface-2)';
               const stickyTint = variant ? STICKY_VARIANT_TINT[variant] : DEFAULT_STICKY_TINT;
               return (
                 <tr key={getRowKey(row)} className={['group transition-colors', rowTint].join(' ')}>
@@ -223,7 +231,7 @@ function MonitoringDataTable<T>({
                       type="button"
                       onClick={() => onView(row)}
                       aria-label="View"
-                      className="p-1 rounded-md hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors opacity-0 group-hover:opacity-100"
+                      className="p-1 rounded-md hover:bg-(--palette-surface-3) text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors opacity-0 group-hover:opacity-100"
                     >
                       <Icon style="solid" name="arrow-up-right-from-square" className="size-3.5" />
                     </button>

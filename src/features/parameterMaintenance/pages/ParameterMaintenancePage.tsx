@@ -49,7 +49,7 @@ const ParameterMaintenancePage = () => {
         }
       />
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
         <ParameterGroupTable
           parameters={allParameters}
           basePath={BASE_PATH}

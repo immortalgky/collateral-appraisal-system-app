@@ -8,16 +8,13 @@ import { useBackfillHostCollateralId } from '../api/hooks';
 export default function BackfillHostCollateralIdPage() {
   const [confirmBackfill, setConfirmBackfill] = useState(false);
 
-  const { mutate: backfillHostCollateralId, isPending: isStarting } =
-    useBackfillHostCollateralId();
+  const { mutate: backfillHostCollateralId, isPending: isStarting } = useBackfillHostCollateralId();
 
   const handleStartBackfill = () => {
     backfillHostCollateralId(undefined, {
       onSuccess: data => {
         toast.success(
-          data.jobId
-            ? `Host ID backfill started — job ${data.jobId}`
-            : 'Host ID backfill started',
+          data.jobId ? `Host ID backfill started — job ${data.jobId}` : 'Host ID backfill started',
         );
         setConfirmBackfill(false);
       },
@@ -33,10 +30,12 @@ export default function BackfillHostCollateralIdPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Host Collateral ID Backfill</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Copies the AS400 Host Collateral ID already recorded on appraisal source data onto
-            the matching collateral master — one per appraisal. Safe to re-run.
+          <h3 className="text-base font-semibold text-(--palette-ink)">
+            Host Collateral ID Backfill
+          </h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
+            Copies the AS400 Host Collateral ID already recorded on appraisal source data onto the
+            matching collateral master — one per appraisal. Safe to re-run.
           </p>
         </div>
         <Button size="sm" onClick={() => setConfirmBackfill(true)} isLoading={isStarting}>
@@ -45,10 +44,10 @@ export default function BackfillHostCollateralIdPage() {
         </Button>
       </div>
 
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 flex flex-col items-center justify-center gap-2 py-16">
-        <Icon style="regular" name="circle-info" className="size-10 text-gray-300" />
-        <p className="text-gray-500 font-medium">Fire-and-forget backfill job</p>
-        <p className="text-xs text-gray-400 max-w-md text-center">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) flex flex-col items-center justify-center gap-2 py-16">
+        <Icon style="regular" name="circle-info" className="size-10 text-(--palette-gray-300)" />
+        <p className="text-(--palette-gray-500) font-medium">Fire-and-forget backfill job</p>
+        <p className="text-xs text-(--palette-gray-400) max-w-md text-center">
           This job runs server-side; there is no live progress view. Check the server logs to
           confirm the outcome after triggering.
         </p>

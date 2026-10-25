@@ -7,6 +7,7 @@ import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import { formatLocaleDateTime } from '@shared/utils/dateUtils';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import toast from 'react-hot-toast';
 import { useGetBackfillReport, useStartBackfill, useReplayBackfill } from '../api/hooks';
 import type { BackfillStatus } from '../api/types';
@@ -20,10 +21,22 @@ const STATUS_OPTIONS: { value: BackfillStatus | ''; label: string }[] = [
 
 function StatusBadge({ status }: { status: BackfillStatus }) {
   const cfg = {
-    Processed: { bg: 'bg-green-50 text-green-700 ring-green-200', icon: 'check' },
-    SkippedMissingKey: { bg: 'bg-amber-50 text-amber-700 ring-amber-200', icon: 'exclamation' },
-    Error: { bg: 'bg-red-50 text-red-700 ring-red-200', icon: 'triangle-exclamation' },
-  }[status] ?? { bg: 'bg-gray-50 text-gray-600 ring-gray-200', icon: 'circle-question' };
+    Processed: {
+      bg: 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 ring-green-200 dark:ring-green-500/30',
+      icon: 'check',
+    },
+    SkippedMissingKey: {
+      bg: 'bg-(--palette-warn-wash) text-(--palette-warn) ring-amber-200 dark:ring-amber-500/30',
+      icon: 'exclamation',
+    },
+    Error: {
+      bg: 'bg-(--palette-req-wash) text-(--palette-req) ring-(--palette-req-line)',
+      icon: 'triangle-exclamation',
+    },
+  }[status] ?? {
+    bg: 'bg-(--palette-surface-2) text-(--palette-gray-600) ring-(--palette-line)',
+    icon: 'circle-question',
+  };
 
   return (
     <span
@@ -96,8 +109,8 @@ export default function BackfillReportPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Backfill Report</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h3 className="text-base font-semibold text-(--palette-ink)">Backfill Report</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             One-shot backfill of historical completed appraisals into the collateral master registry
           </p>
         </div>
@@ -109,45 +122,45 @@ export default function BackfillReportPage() {
 
       {/* Filters */}
       <div className="shrink-0 flex gap-3">
-        <select
+        <NativeSelect
           value={status}
           onChange={e => {
             setStatus(e.target.value as BackfillStatus | '');
             setPage(0);
           }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 min-w-44"
+          className="min-w-44"
         >
           {STATUS_OPTIONS.map(opt => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {isError && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-red-50 rounded-lg text-sm text-red-700">
+        <div className="flex items-center gap-2 px-4 py-3 bg-(--palette-req-wash) rounded-lg text-sm text-(--palette-req)">
           <Icon name="triangle-exclamation" style="solid" className="size-4" />
           Failed to load backfill report
         </div>
       )}
 
       {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Appraisal ID
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Status
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Message
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Run At
                 </th>
                 <th className="text-xs w-20 px-4 py-2.5 font-semibold" />
@@ -155,7 +168,7 @@ export default function BackfillReportPage() {
             </thead>
             <tbody
               className={clsx(
-                'divide-y divide-gray-100',
+                'divide-y divide-(--palette-line-soft)',
                 isRefetching && 'opacity-50 pointer-events-none',
               )}
             >
@@ -174,9 +187,15 @@ export default function BackfillReportPage() {
                 <tr>
                   <td colSpan={5} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">No backfill records found</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">
+                        No backfill records found
+                      </p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {status
                           ? 'Try a different status filter'
                           : 'Run backfill to start processing historical appraisals'}
@@ -186,17 +205,17 @@ export default function BackfillReportPage() {
                 </tr>
               ) : (
                 items.map(item => (
-                  <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-700">
+                  <tr key={item.id} className="hover:bg-(--palette-surface-2) transition-colors">
+                    <td className="px-4 py-2.5 font-mono text-xs text-(--palette-ink)">
                       {item.appraisalId}
                     </td>
                     <td className="px-4 py-2.5">
                       <StatusBadge status={item.status} />
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-500 max-w-xs truncate">
+                    <td className="px-4 py-2.5 text-xs text-(--palette-gray-500) max-w-xs truncate">
                       {item.message ?? '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-xs text-(--palette-gray-600) whitespace-nowrap">
                       {formatLocaleDateTime(item.runAt, i18n.language)}
                     </td>
                     <td className="px-4 py-2.5">
@@ -205,7 +224,7 @@ export default function BackfillReportPage() {
                           type="button"
                           onClick={() => handleReplay(item.appraisalId)}
                           disabled={isReplaying && replayId === item.appraisalId}
-                          className="px-2 py-1 text-xs text-primary border border-primary/30 rounded hover:bg-primary/10 transition-colors disabled:opacity-50"
+                          className="px-2 py-1 text-xs text-(--palette-primary-text) border border-primary/30 rounded hover:bg-primary/10 transition-colors disabled:opacity-50"
                         >
                           {isReplaying && replayId === item.appraisalId ? (
                             <Icon name="spinner" style="solid" className="size-3 animate-spin" />

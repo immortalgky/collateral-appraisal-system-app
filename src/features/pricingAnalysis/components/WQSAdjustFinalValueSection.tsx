@@ -350,7 +350,9 @@ export const AdjustFinalValueSection = ({
         if (delta === 0) {
           return (
             <>
-              <span className="text-[10.5px] text-gray-400">{t(hintKey, { value: fmt(raw) })}</span>
+              <span className="text-[10.5px] text-(--palette-gray-400)">
+                {t(hintKey, { value: fmt(raw) })}
+              </span>
               {formulaHint}
             </>
           );
@@ -359,8 +361,8 @@ export const AdjustFinalValueSection = ({
         // restores the exact value above and clears the override by writing over it.
         const sign = delta > 0 ? '+' : '−';
         return (
-          <span className="text-[10.5px] text-gray-400 inline-flex items-center gap-1 flex-wrap justify-end">
-            <span className="font-semibold text-[#b45309]">
+          <span className="text-[10.5px] text-(--palette-gray-400) inline-flex items-center gap-1 flex-wrap justify-end">
+            <span className="font-semibold text-(--palette-warn)">
               {t('comparativeAnalysis.editedLabel')}
             </span>
             {t('comparativeAnalysis.differsFromComputed', {
@@ -369,7 +371,7 @@ export const AdjustFinalValueSection = ({
             <span>·</span>
             <button
               type="button"
-              className="text-primary hover:underline"
+              className="text-(--palette-primary-text) hover:underline"
               onClick={() => setValue(editableFieldPath, computed, { shouldDirty: true })}
             >
               {t('comparativeAnalysis.useComputedValue')}
@@ -385,7 +387,9 @@ export const AdjustFinalValueSection = ({
       fieldName={fieldPath}
       inputType="display"
       accessor={({ value }) => (
-        <span className="font-semibold text-gray-800 tabular-nums">{fmt(Number(value) || 0)}</span>
+        <span className="font-semibold text-(--palette-ink) tabular-nums">
+          {fmt(Number(value) || 0)}
+        </span>
       )}
     />
   );
@@ -405,17 +409,19 @@ export const AdjustFinalValueSection = ({
   // in the grid's own `1fr` column (see `kvRow` below), which sizes it instead.
   const indicatedValueLabel = (suffix?: string) => (
     <span className="flex flex-col">
-      <span className="text-[14px] font-semibold text-[#0f766e]">
+      <span className="text-[14px] font-semibold text-(--palette-accent-ink)">
         {/* mock:1589/1595 — the mock's own lump-sum branch has no "=" on this label;
             only the per-unit branch does, where the terms of the equation (rate × area)
             are on screen above it. In lump-sum mode this row is a rounding of the single
             Final Value row above it, not a sum of displayed terms. */}
-        {isUnitPrice && <span className="mr-1 text-gray-400">=</span>}
+        {isUnitPrice && <span className="mr-1 text-(--palette-gray-400)">=</span>}
         {t('wqs.summary.indicatedValueLabel')}
-        {suffix && <span className="ml-1 text-xs font-normal text-gray-500">{suffix}</span>}
+        {suffix && (
+          <span className="ml-1 text-xs font-normal text-(--palette-gray-500)">{suffix}</span>
+        )}
       </span>
       {t('wqs.summary.indicatedValueSubLabel') && (
-        <span className="text-[10.5px] text-gray-400">
+        <span className="text-[10.5px] text-(--palette-gray-400)">
           {t('wqs.summary.indicatedValueSubLabel')}
         </span>
       )}
@@ -426,7 +432,7 @@ export const AdjustFinalValueSection = ({
   // same shape/placement as roundingHint above. mock:1530/1559 — "= ราคาต่อหน่วย ×
   // เนื้อที่", "= ที่ดิน + ค่าอาคาร".
   const mutedSubLine = (text: string) => (
-    <span className="text-[10.5px] text-[#8a96a0]">{text}</span>
+    <span className="text-[10.5px] text-(--palette-ink-3)">{text}</span>
   );
 
   // mock:1610 — the checkbox sits INSIDE the label cell, before its text, not in the
@@ -515,8 +521,8 @@ export const AdjustFinalValueSection = ({
           replaces the earlier "no rounded corners" ruling, which was about the
           scoring *tables*, not these summary cards — the user has now asked for
           radius here specifically. */}
-      <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-        <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+      <div className="min-w-0 border border-(--palette-line) rounded-[10px] overflow-hidden">
+        <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-(--palette-ink) bg-(--palette-surface-2) border-b border-(--palette-line)">
           {t('wqs.summary.adjustFinalValueTitle')}
         </h4>
         {/* No horizontal padding here any more — each `.kv` row (kvRow below) brings
@@ -534,7 +540,7 @@ export const AdjustFinalValueSection = ({
               not `text-xs`: root font-size here is 13px, so every rem-based utility
               renders at 0.8125x and `text-xs` came out 9.75px, a full 2.75px under the
               mock and visibly smaller than the 12.5px label it sits beside. */}
-              <span className="text-gray-400 text-[10.5px]">
+              <span className="text-(--palette-gray-400) text-[10.5px]">
                 ({t('wqs.summary.priceUnitHint')})
               </span>
             </>,
@@ -546,7 +552,9 @@ export const AdjustFinalValueSection = ({
             // Hexes rather than Tailwind colour names because v4's palette is OKLCH.
             <span
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                isUnitPrice ? 'bg-[#f0fdf4] text-[#15803d]' : 'bg-gray-100 text-gray-600'
+                isUnitPrice
+                  ? 'bg-[#f0fdf4] text-[#15803d]'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-600)'
               }`}
             >
               {unitChipLabel}
@@ -616,7 +624,7 @@ export const AdjustFinalValueSection = ({
               )}
               {kvRow(
                 <>
-                  <span className="mr-1 text-gray-400">×</span>
+                  <span className="mr-1 text-(--palette-gray-400)">×</span>
                   {areaRowLabel}
                 </>,
                 valueDisplay(unitAreaPath),
@@ -673,7 +681,7 @@ export const AdjustFinalValueSection = ({
               )}
               {kvRow(
                 <>
-                  <span className="mr-1 text-gray-400">×</span>
+                  <span className="mr-1 text-(--palette-gray-400)">×</span>
                   {areaRowLabel}
                 </>,
                 valueDisplay(unitAreaPath),
@@ -706,7 +714,7 @@ export const AdjustFinalValueSection = ({
                   // palette (bold text + tinted border + tinted fill, all non-default
                   // colours) has nothing in common with dense's own transparent-border
                   // treatment to reuse, so it's fully specified here instead.
-                  inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                   onUserChange={
                     // For unit 03 (machinery) the rounded appraisal price IS the user's
                     // adjusted final value — sync them so finalValueAdjusted persists too.
@@ -740,7 +748,7 @@ export const AdjustFinalValueSection = ({
                   }}
                   // Green — mock:587-589's `.kv .final .in`, same reasoning as the other
                   // two green inputs below.
-                  inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                   onUserChange={
                     // For unit 03 (total price comparables) the rounded appraisal price
                     // IS the user's adjusted final value — sync them on input.
@@ -770,7 +778,7 @@ export const AdjustFinalValueSection = ({
               // is where it belongs now that the checkbox has vacated that cell — it used to
               // be the row's `hint` only because the value cell was occupied. Same string,
               // same row, same meaning: unticked, the indicated value is land-only.
-              <span className="text-[10.5px] text-[#8a96a0]">
+              <span className="text-[10.5px] text-(--palette-ink-3)">
                 {t('wqs.summary.includeBuildingCostOff')}
               </span>,
             )}
@@ -835,7 +843,7 @@ export const AdjustFinalValueSection = ({
               {isUnitPrice &&
                 kvRow(
                   <>
-                    <span className="mr-1 text-gray-400">×</span>
+                    <span className="mr-1 text-(--palette-gray-400)">×</span>
                     {areaRowLabel}
                   </>,
                   valueDisplay(unitAreaPath),
@@ -845,8 +853,8 @@ export const AdjustFinalValueSection = ({
               included, distinct from the "ราคาที่ดิน" (Land Price per unit) row that used
               to sit above it; was reusing that row's key by mistake. */}
               {kvRow(
-                <span className="font-semibold text-gray-800">
-                  <span className="mr-1 text-gray-400">=</span>
+                <span className="font-semibold text-(--palette-ink)">
+                  <span className="mr-1 text-(--palette-gray-400)">=</span>
                   {t('wqs.summary.landValueLabel')}
                 </span>,
                 <RHFInputCell
@@ -915,7 +923,7 @@ export const AdjustFinalValueSection = ({
                   }}
                   // Green — mock:587-589's `.kv .final .in`, same reasoning as the other
                   // two green inputs above.
-                  inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                 />,
                 t('wqs.summary.baht'),
                 editedBadge(

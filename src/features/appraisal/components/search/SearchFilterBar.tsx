@@ -62,7 +62,7 @@ function SearchFilterBar({ filters, values, onChange, onClear }: SearchFilterBar
                 type="button"
                 onClick={() => onChange(filter.key, '')}
                 title={multiValues.map(labelFor).join(', ')}
-                className="w-full inline-flex items-center justify-between gap-1 px-3 py-2 text-sm text-left bg-primary-50 border border-primary-200 rounded-lg hover:bg-primary-100"
+                className="w-full inline-flex items-center justify-between gap-1 px-3 py-2 text-sm text-left bg-(--palette-accent-wash) border border-(--palette-accent-line) rounded-lg hover:bg-primary-100 dark:hover:bg-primary-500/20"
               >
                 <span className="truncate">
                   {t('appraisal:list.filters.multiSelected', {
@@ -70,7 +70,11 @@ function SearchFilterBar({ filters, values, onChange, onClear }: SearchFilterBar
                     label: filter.label,
                   })}
                 </span>
-                <Icon style="solid" name="xmark" className="size-3 shrink-0 text-gray-500" />
+                <Icon
+                  style="solid"
+                  name="xmark"
+                  className="size-3 shrink-0 text-(--palette-gray-500)"
+                />
               </button>
             </div>
           );
@@ -172,7 +176,7 @@ function SearchFilterBar({ filters, values, onChange, onClear }: SearchFilterBar
       {hasActiveFilters && (
         <button
           onClick={onClear}
-          className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+          className="text-sm text-(--palette-gray-500) hover:text-(--palette-ink) flex items-center gap-1"
         >
           <Icon style="solid" name="xmark" className="size-3" />
           {t('appraisal:list.filters.clearFilters')}

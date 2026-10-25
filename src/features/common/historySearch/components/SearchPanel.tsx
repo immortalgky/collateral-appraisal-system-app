@@ -6,6 +6,7 @@ import MultiSelectDropdown from '@shared/components/inputs/MultiSelectDropdown';
 import ProvinceAutocomplete from '@shared/components/inputs/ProvinceAutocomplete';
 import Autocomplete from '@shared/components/inputs/Autocomplete';
 import { useAddressStore } from '@/shared/store';
+import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import Dropdown from '@shared/components/inputs/Dropdown';
@@ -68,18 +69,23 @@ const COLLATERAL_TYPE_OPTIONS = [
 
 // INPUT_DISABLED_CLS is still used by the coming-soon field
 const INPUT_DISABLED_CLS =
-  'w-full border border-gray-200 rounded-md px-2 py-1.5 text-sm bg-gray-50 text-gray-400 cursor-not-allowed';
+  'w-full border border-(--palette-line) rounded-md px-2 py-1.5 text-sm bg-(--palette-surface-2) text-(--palette-gray-400) cursor-not-allowed';
 
 // Section heading style
 const GROUP_HEADING_CLS =
-  'text-[10px] font-semibold text-blue-700 uppercase tracking-wider border-b border-blue-100 pb-1 mb-3';
+  'text-[10px] font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wider border-b border-blue-100 dark:border-blue-500/20 pb-1 mb-3';
 
 // Shared label style — still used for the coming-soon field label and the
 // building-type / province / district / sub-district labels whose components
 // don't accept a `label` prop.
-const LABEL_CLS = 'block text-xs font-medium text-gray-700 mb-1';
+const LABEL_CLS = 'block text-xs font-medium text-(--palette-ink) mb-1';
 
-export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPending = false }: SearchPanelProps) {
+export function SearchPanel({
+  defaultValues,
+  onSearch,
+  autoSearch = false,
+  isPending = false,
+}: SearchPanelProps) {
   const { t } = useTranslation('historySearch');
 
   const { handleSubmit, reset, getValues, control, watch, setValue } =
@@ -148,7 +154,7 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
       }, 0);
       return () => clearTimeout(id);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoSearch]);
 
   // When parent updates defaultValues (e.g. map click sets lat/lon), re-apply
@@ -156,7 +162,7 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
     if (defaultValues) {
       reset({ ...FORM_DEFAULTS, ...defaultValues });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(defaultValues)]);
 
   const onSubmit: SubmitHandler<HistorySearchFormValues> = values => {
@@ -189,13 +195,12 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col h-full overflow-y-auto bg-white"
+      className="flex flex-col h-full overflow-y-auto bg-(--palette-surface)"
       data-testid="search-panel"
     >
       {/* ── Two-column body ─────────────────────────────────────────────── */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
         <div className="grid grid-cols-2 gap-x-6 gap-y-0 items-start">
-
           {/* ══ LEFT COLUMN — Appraisal Request & Identification ══════════ */}
           <div className="flex flex-col gap-3">
             <p className={GROUP_HEADING_CLS}>{t('searchPanel.groupAppraisalId')}</p>
@@ -219,7 +224,7 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
             <div>
               <label className={`${LABEL_CLS} flex items-center gap-1.5`}>
                 {t('searchPanel.oldAppraisalReportNo')}
-                <span className="inline-flex items-center rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] font-medium text-amber-700">
+                <span className="inline-flex items-center rounded-full bg-amber-100 dark:bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-medium text-(--palette-warn)">
                   {t('searchPanel.oldAppraisalReportNoComingSoon')}
                 </span>
               </label>
@@ -258,7 +263,7 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                   // Empty string finds no option → placeholder ("All") shows.
                   value={field.value}
                   // Placeholder ("All") maps back to the empty-string filter value.
-                  onChange={(v) => field.onChange(v ?? '')}
+                  onChange={v => field.onChange(v ?? '')}
                   placeholder={t('searchPanel.collateralTypeOptions.all')}
                   showValuePrefix={false}
                 />
@@ -310,7 +315,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                   <NumberInput
                     label={t('searchPanel.valueFrom')}
                     value={field.value === '' || field.value == null ? null : Number(field.value)}
-                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onChange={e =>
+                      field.onChange(e.target.value == null ? '' : String(e.target.value))
+                    }
                     onBlur={field.onBlur}
                     decimalPlaces={2}
                     thousandSeparator
@@ -325,7 +332,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                   <NumberInput
                     label={t('searchPanel.valueTo')}
                     value={field.value === '' || field.value == null ? null : Number(field.value)}
-                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onChange={e =>
+                      field.onChange(e.target.value == null ? '' : String(e.target.value))
+                    }
                     onBlur={field.onBlur}
                     decimalPlaces={2}
                     thousandSeparator
@@ -344,7 +353,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                   <NumberInput
                     label={t('searchPanel.landAreaFromSqWa')}
                     value={field.value === '' || field.value == null ? null : Number(field.value)}
-                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onChange={e =>
+                      field.onChange(e.target.value == null ? '' : String(e.target.value))
+                    }
                     onBlur={field.onBlur}
                     decimalPlaces={2}
                     thousandSeparator
@@ -359,7 +370,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                   <NumberInput
                     label={t('searchPanel.landAreaToSqWa')}
                     value={field.value === '' || field.value == null ? null : Number(field.value)}
-                    onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                    onChange={e =>
+                      field.onChange(e.target.value == null ? '' : String(e.target.value))
+                    }
                     onBlur={field.onBlur}
                     decimalPlaces={2}
                     thousandSeparator
@@ -417,7 +430,7 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                   value={field.value}
                   // Period is required — ignore the placeholder row (null) so the
                   // value can never be cleared to an invalid state.
-                  onChange={(v) => field.onChange(v ?? field.value)}
+                  onChange={v => field.onChange(v ?? field.value)}
                   placeholder=""
                   showValuePrefix={false}
                 />
@@ -437,7 +450,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                 <NumberInput
                   label={t('searchPanel.centerLat')}
                   value={field.value === '' || field.value == null ? null : field.value}
-                  onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                  onChange={e =>
+                    field.onChange(e.target.value == null ? '' : String(e.target.value))
+                  }
                   onBlur={field.onBlur}
                   thousandSeparator={false}
                   allowNegative
@@ -455,7 +470,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                 <NumberInput
                   label={t('searchPanel.centerLon')}
                   value={field.value === '' || field.value == null ? null : field.value}
-                  onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                  onChange={e =>
+                    field.onChange(e.target.value == null ? '' : String(e.target.value))
+                  }
                   onBlur={field.onBlur}
                   thousandSeparator={false}
                   allowNegative
@@ -473,7 +490,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
                 <NumberInput
                   label={t('searchPanel.radiusKm')}
                   value={field.value === '' || field.value == null ? null : Number(field.value)}
-                  onChange={e => field.onChange(e.target.value == null ? '' : String(e.target.value))}
+                  onChange={e =>
+                    field.onChange(e.target.value == null ? '' : String(e.target.value))
+                  }
                   onBlur={field.onBlur}
                   thousandSeparator={false}
                   decimalPlaces={1}
@@ -488,7 +507,9 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
             />
 
             {/* Click-on-map hint */}
-            <p className="text-[10px] text-gray-400 -mt-1">{t('searchPanel.clickMapHint')}</p>
+            <p className="text-[10px] text-(--palette-gray-400) -mt-1">
+              {t('searchPanel.clickMapHint')}
+            </p>
 
             {/* Province → District → Sub-district cascade. Each level is optional,
                 so users can filter by province only, province+district, or all three. */}
@@ -537,27 +558,13 @@ export function SearchPanel({ defaultValues, onSearch, autoSearch = false, isPen
       </div>
 
       {/* ── Footer actions ───────────────────────────────────────────────── */}
-      <div className="shrink-0 flex gap-2 px-4 py-3 border-t border-gray-100">
-        <button
-          type="button"
-          onClick={handleClear}
-          className="flex-1 border border-gray-300 rounded-md py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
-        >
+      <div className="shrink-0 flex gap-2 px-4 py-3 border-t border-(--palette-line-soft)">
+        <Button variant="outline" onClick={handleClear} className="flex-1">
           {t('searchPanel.clear')}
-        </button>
-        <button
-          type="submit"
-          disabled={isPending}
-          className="flex-1 bg-blue-600 text-white rounded-md py-1.5 text-sm font-medium hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-1.5"
-        >
-          {isPending ? (
-            <svg className="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-          ) : null}
+        </Button>
+        <Button type="submit" isLoading={isPending} className="flex-1">
           {t('searchPanel.search')}
-        </button>
+        </Button>
       </div>
     </form>
   );

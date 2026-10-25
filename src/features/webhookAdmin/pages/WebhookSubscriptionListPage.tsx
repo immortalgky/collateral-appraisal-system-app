@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
@@ -37,9 +38,11 @@ const SecretStatus = ({ subscription: sub }: { subscription: WebhookSubscription
   if (!(bearer ? sub.hasClientSecret : sub.hasSecretKey))
     return <span className="text-danger">{t('subscriptions.form.secretNotSet')}</span>;
   return (bearer ? sub.clientSecretEncrypted : sub.secretKeyEncrypted) ? (
-    <span className="text-emerald-700">{t('subscriptions.form.secretSet')}</span>
+    <span className="text-emerald-700 dark:text-emerald-300">
+      {t('subscriptions.form.secretSet')}
+    </span>
   ) : (
-    <span className="text-amber-700">{t('subscriptions.form.secretPlaintext')}</span>
+    <span className="text-(--palette-warn)">{t('subscriptions.form.secretPlaintext')}</span>
   );
 };
 
@@ -113,33 +116,32 @@ const WebhookSubscriptionListPage = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
           <div className="relative min-w-48">
             <Icon
               name="magnifying-glass"
               style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
             />
             <input
               type="text"
               value={systemCodeInput}
               onChange={e => setSystemCodeInput(e.target.value)}
               placeholder={t('subscriptions.filters.systemCodePlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
 
-          <select
+          <NativeSelect
             value={activeFilter}
             onChange={e => setActiveFilter(e.target.value as ActiveFilter)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
           >
             <option value="">{t('subscriptions.filters.statusAll')}</option>
             <option value="true">{t('subscriptions.filters.statusActive')}</option>
             <option value="false">{t('subscriptions.filters.statusInactive')}</option>
-          </select>
+          </NativeSelect>
 
           {(systemCodeInput || activeFilter) && (
             <button
@@ -148,7 +150,7 @@ const WebhookSubscriptionListPage = () => {
                 setSystemCodeInput('');
                 setActiveFilter('');
               }}
-              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
             >
               {t('subscriptions.filters.clear')}
             </button>
@@ -159,29 +161,29 @@ const WebhookSubscriptionListPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-table">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.systemCode')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.eventType')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.callbackUrl')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.authType')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.active')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.secret')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.lastDelivery')}
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('subscriptions.columns.actions')}
                 </th>
               </tr>
@@ -201,7 +203,7 @@ const WebhookSubscriptionListPage = () => {
                 </tr>
               ) : subscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-gray-400 text-sm">
+                  <td colSpan={8} className="text-center py-12 text-(--palette-gray-400) text-sm">
                     <Icon name="plug" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
                     <p>{t('subscriptions.emptyState')}</p>
                   </td>
@@ -210,46 +212,48 @@ const WebhookSubscriptionListPage = () => {
                 subscriptions.map(sub => (
                   <tr
                     key={sub.id}
-                    className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
                   >
-                    <td className="px-4 py-3 font-medium text-gray-900">{sub.systemCode}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">
+                    <td className="px-4 py-3 font-medium text-(--palette-ink)">{sub.systemCode}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-(--palette-gray-600)">
                       {sub.eventType ?? (
-                        <span className="font-sans text-gray-400">
+                        <span className="font-sans text-(--palette-gray-400)">
                           {t('subscriptions.catchAll')}
                         </span>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 max-w-xs">
+                    <td className="px-4 py-3 text-(--palette-gray-600) max-w-xs">
                       <span className="block truncate" title={sub.callbackUrl}>
-                        <span className="font-mono text-xs text-gray-400 mr-1.5">
+                        <span className="font-mono text-xs text-(--palette-gray-400) mr-1.5">
                           {sub.httpMethod}
                         </span>
                         {sub.callbackUrl}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-xs text-(--palette-gray-600) whitespace-nowrap">
                       {t(`subscriptions.authTypeShort.${sub.authType}`)}
                     </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           sub.isActive
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-gray-100 text-gray-500'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                         }`}
                       >
-                        {sub.isActive ? t('subscriptions.active.yes') : t('subscriptions.active.no')}
+                        {sub.isActive
+                          ? t('subscriptions.active.yes')
+                          : t('subscriptions.active.no')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs whitespace-nowrap">
                       <SecretStatus subscription={sub} />
                     </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-(--palette-gray-600) whitespace-nowrap">
                       {sub.lastDeliveryAt ? (
                         new Date(sub.lastDeliveryAt).toLocaleString()
                       ) : (
-                        <span className="text-gray-300">—</span>
+                        <span className="text-(--palette-gray-300)">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -257,7 +261,7 @@ const WebhookSubscriptionListPage = () => {
                         <button
                           type="button"
                           onClick={() => openEdit(sub)}
-                          className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
                           title={t('subscriptions.actions.edit')}
                         >
                           <Icon name="pen" style="regular" className="size-4" />
@@ -269,7 +273,7 @@ const WebhookSubscriptionListPage = () => {
                             toggleMutation.mutate({ id: sub.id, isActive: !sub.isActive })
                           }
                           disabled={toggleMutation.isPending}
-                          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--palette-warn-wash) rounded-lg transition-colors"
                           title={
                             sub.isActive
                               ? t('subscriptions.actions.deactivate')
@@ -286,7 +290,7 @@ const WebhookSubscriptionListPage = () => {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(sub)}
-                          className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
                           title={t('subscriptions.actions.delete')}
                         >
                           <Icon name="trash" style="regular" className="size-4" />

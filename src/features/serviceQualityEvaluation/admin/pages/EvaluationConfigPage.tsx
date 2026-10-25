@@ -16,10 +16,10 @@ type Segment = (typeof SEGMENTS)[number];
 // ─── Inline input classes ─────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none';
 
 const textareaClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none resize-none';
 
 // ─── Single criteria row editor ───────────────────────────────────────────────
 
@@ -111,33 +111,37 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
   };
 
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-(--palette-line) rounded-lg overflow-hidden">
       {/* Row header */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-gray-50">
+      <div className="flex items-center gap-3 px-4 py-3 bg-(--palette-surface-2)">
         <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-white text-xs font-semibold flex items-center justify-center">
           {config.criteriaSlot}
         </span>
-        <span className="flex-1 text-sm font-medium text-gray-800">
+        <span className="flex-1 text-sm font-medium text-(--palette-ink)">
           {labelEn || config.labelEn}
-          {labelTh && <span className="ml-2 text-gray-400 font-normal">{labelTh}</span>}
+          {labelTh && <span className="ml-2 text-(--palette-gray-400) font-normal">{labelTh}</span>}
         </span>
         <button
           type="button"
           onClick={() => setExpanded(prev => !prev)}
-          className="text-gray-400 hover:text-gray-600 p-1 rounded"
+          className="text-(--palette-gray-400) hover:text-(--palette-gray-600) p-1 rounded"
           aria-label={expanded ? 'Collapse' : 'Expand'}
         >
-          <Icon name={expanded ? 'chevron-up' : 'chevron-down'} style="solid" className="size-3.5" />
+          <Icon
+            name={expanded ? 'chevron-up' : 'chevron-down'}
+            style="solid"
+            className="size-3.5"
+          />
         </button>
       </div>
 
       {/* Editor body */}
       {expanded && (
-        <div className="px-4 py-4 space-y-4 bg-white">
+        <div className="px-4 py-4 space-y-4 bg-(--palette-surface)">
           {/* Labels */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
                 {t('evaluationConfig:fields.labelEn')}
               </label>
               <input
@@ -148,7 +152,7 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
                 {t('evaluationConfig:fields.labelTh')}
               </label>
               <input
@@ -163,7 +167,7 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
           {/* Weight + MaxScore */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
                 {t('evaluationConfig:fields.weight')}
               </label>
               <input
@@ -177,7 +181,7 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">
+              <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
                 {t('evaluationConfig:fields.maxScore')}
               </label>
               <input
@@ -194,13 +198,13 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
           {/* Delivery thresholds */}
           {isDelivery && (
             <div>
-              <p className="text-xs font-medium text-gray-600 mb-2">
+              <p className="text-xs font-medium text-(--palette-gray-600) mb-2">
                 {t('evaluationConfig:fields.deliveryThresholds')}
               </p>
               <div className="grid grid-cols-4 gap-3">
                 {(['5', '4', '3', '2'] as const).map(r => (
                   <div key={r}>
-                    <label className="block text-xs text-gray-500 mb-1">
+                    <label className="block text-xs text-(--palette-gray-500) mb-1">
                       {t('evaluationConfig:fields.thresholdRating', { rating: r })}
                     </label>
                     <input
@@ -214,7 +218,7 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
                   </div>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-(--palette-gray-400) mt-1">
                 {t('evaluationConfig:fields.thresholdHint')}
               </p>
             </div>
@@ -222,18 +226,21 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
 
           {/* Guidance per rating level */}
           <div>
-            <p className="text-xs font-medium text-gray-600 mb-2">
+            <p className="text-xs font-medium text-(--palette-gray-600) mb-2">
               {t('evaluationConfig:fields.guidance')}
             </p>
             <div className="space-y-3">
               {RATING_VALUES.map(rv => (
-                <div key={rv} className="border border-gray-100 rounded-md p-3 space-y-2">
-                  <p className="text-xs font-medium text-gray-500">
+                <div
+                  key={rv}
+                  className="border border-(--palette-line-soft) rounded-md p-3 space-y-2"
+                >
+                  <p className="text-xs font-medium text-(--palette-gray-500)">
                     {t('evaluationConfig:fields.ratingLevel', { level: rv })}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">EN</label>
+                      <label className="block text-xs text-(--palette-gray-400) mb-1">EN</label>
                       <textarea
                         rows={2}
                         value={guidance[String(rv)]?.en ?? ''}
@@ -242,7 +249,7 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">TH</label>
+                      <label className="block text-xs text-(--palette-gray-400) mb-1">TH</label>
                       <textarea
                         rows={2}
                         value={guidance[String(rv)]?.th ?? ''}
@@ -258,12 +265,7 @@ function CriteriaRowEditor({ config }: CriteriaRowEditorProps) {
 
           {/* Save button */}
           <div className="flex justify-end pt-1">
-            <Button
-              size="sm"
-              type="button"
-              onClick={handleSave}
-              isLoading={updateConfig.isPending}
-            >
+            <Button size="sm" type="button" onClick={handleSave} isLoading={updateConfig.isPending}>
               {t('common:actions.save')}
             </Button>
           </div>
@@ -285,18 +287,16 @@ function EvaluationConfigPage() {
   const weightsSum = configs ? configs.reduce((sum, c) => sum + c.weight, 0) : null;
   const weightsSumOk = weightsSum != null && Math.abs(weightsSum - 1.0) < 0.001;
 
-  const sortedConfigs = configs
-    ? [...configs].sort((a, b) => a.displayOrder - b.displayOrder)
-    : [];
+  const sortedConfigs = configs ? [...configs].sort((a, b) => a.displayOrder - b.displayOrder) : [];
 
   return (
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div>
-        <h3 className="text-base font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
           {t('evaluationConfig:page.title')}
         </h3>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">
           {t('evaluationConfig:page.subtitle')}
         </p>
       </div>
@@ -311,7 +311,7 @@ function EvaluationConfigPage() {
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
               segment === seg
                 ? 'bg-primary text-white border-primary'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line-strong) hover:border-(--palette-line-strong)'
             }`}
           >
             {seg}
@@ -324,8 +324,8 @@ function EvaluationConfigPage() {
         <div
           className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md w-fit ${
             weightsSumOk
-              ? 'bg-emerald-50 text-emerald-700'
-              : 'bg-amber-50 text-amber-700'
+              ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+              : 'bg-(--palette-warn-wash) text-(--palette-warn)'
           }`}
         >
           <Icon
@@ -335,9 +335,7 @@ function EvaluationConfigPage() {
           />
           {t('evaluationConfig:weightsSum', { sum: weightsSum.toFixed(2) })}
           {!weightsSumOk && (
-            <span className="ml-1 font-medium">
-              {t('evaluationConfig:weightsSumWarning')}
-            </span>
+            <span className="ml-1 font-medium">{t('evaluationConfig:weightsSumWarning')}</span>
           )}
         </div>
       )}
@@ -345,10 +343,14 @@ function EvaluationConfigPage() {
       {/* Config list */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+          />
         </div>
       ) : sortedConfigs.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 px-4 py-8 text-center text-sm text-gray-400 italic">
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) px-4 py-8 text-center text-sm text-(--palette-gray-400) italic">
           {t('evaluationConfig:noConfigs')}
         </div>
       ) : (

@@ -7,7 +7,16 @@ import {
 import { forwardRef, useMemo, type ReactNode, type SelectHTMLAttributes } from 'react';
 import clsx from 'clsx';
 import { useFormReadOnly } from '@/shared/components/form';
+import { useFormLayout } from '@/shared/components/form/formLayoutContext';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { Icon } from '@/shared/components';
+import {
+  controlFrame,
+  controlPad,
+  controlSkin,
+  ERROR_TEXT,
+  REQUIRED_MARK,
+} from '@/shared/components/inputs/controlStyles';
 import type { AtLeastOne } from '@/shared/types';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 
@@ -21,13 +30,21 @@ interface DropdownBaseProps extends SelectHTMLAttributes<HTMLSelectElement> {
   showValue?: boolean;
   error?: string;
   /**
-   * Opt-in compact sizing (smaller padding) for dense table cells — e.g. the
-   * pricing-analysis scoring grids. Defaults to false so every existing caller renders
-   * byte-identically; only pass `dense` from a context that actually needs a short row.
+   * A table cell trigger (DESIGN.md 17.7): 28px in a Compact form, the plain Standard control in a
+   * Standard one. Use it in the form table kit instead of `dense`.
+   */
+  cell?: boolean;
+  /**
+   * The pricing-analysis grids' 21px trigger (their own mock), outside the form system. Not for
+   * forms: a form table cell uses `cell`.
    */
   dense?: boolean;
   /** False drops the blank "please select" entry, for fields that must always hold a value. */
   allowEmpty?: boolean;
+  /** Missing-fields chip: the form path, and the label to name it by (see `RHFInputCell`). */
+  'data-field'?: string;
+  'data-grid-cell'?: string;
+  'data-field-label'?: string;
 }
 
 interface ListBoxProps {
@@ -40,6 +57,7 @@ interface ListBoxProps {
   showValue?: boolean;
   error?: string;
   dense?: boolean;
+  cell?: boolean;
 }
 
 interface ListBoxOptionProps {
@@ -69,7 +87,11 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       disabled,
       showValue = true,
       dense = false,
+      cell = false,
       allowEmpty = true,
+      'data-field': dataField,
+      'data-grid-cell': dataGridCell,
+      'data-field-label': dataFieldLabel,
       ...props
     },
     ref,
@@ -103,11 +125,16 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     };
 
     return (
-      <div className={clsx('w-full', props.className)}>
+      <div
+        className={clsx('w-full', props.className)}
+        data-field={dataField}
+        data-grid-cell={dataGridCell}
+        data-field-label={dataFieldLabel}
+      >
         {label && (
-          <div className="block text-xs font-medium text-gray-700 mb-1">
+          <div className="block text-xs font-medium text-(--palette-ink) mb-1">
             {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+            {required && <span className={REQUIRED_MARK}>*</span>}
           </div>
         )}
         <ListBox
@@ -120,6 +147,7 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
           showValue={showValue}
           error={error}
           dense={dense}
+          cell={cell}
         >
           {dropdownOptions.map(option => (
             <ListBoxOption key={option.id ?? option.value} value={option}>
@@ -127,54 +155,70 @@ const TDropdown = forwardRef<HTMLButtonElement, DropdownProps>(
             </ListBoxOption>
           ))}
         </ListBox>
-        {error && <div className="mt-1 text-xs text-danger">{error}</div>}
+        {error && (
+          <div className={clsx('mt-1', ERROR_TEXT)}>
+            <ValidationText message={error} label={label} />
+          </div>
+        )}
       </div>
     );
   },
 );
 
 const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
-  ({ placeholder, selected, children, disabled, showValue, error, dense, ...props }, ref) => {
+  ({ placeholder, selected, children, disabled, showValue, error, dense, cell, ...props }, ref) => {
+    const layout = useFormLayout();
     return (
       <HeadlessListBox disabled={disabled} by="value" {...props}>
         <div className="relative">
           <HeadlessListboxButton
             ref={ref}
             className={clsx(
-              'relative w-full border text-left transition-colors duration-200 pr-9 focus:outline-none focus:ring-2',
-              // Dense follows the mock's `select.in` exactly (pricing-analysis-compact-mock.html:
-              // 192-198): 21px tall, 4px radius, 12px text, quiet #f6f9f9 fill with a transparent
-              // border at rest — border only on hover/focus. `ring-2` stays defined above so an
-              // error state still gets a visible ring; the non-error dense case neutralises it
-              // with `focus:ring-transparent` instead of dropping the width utility (dropping it
-              // would leave error's `focus:ring-danger/20` with no width to render against).
-              // `block` is load-bearing, not cosmetic: a <button> is inline-block, so it
-              // sits in a line box and the strut's descender space is added under it.
-              // Inside a 26px scoring-grid cell that made the whole row 28px (21px button
-              // + ~7px of baseline gap) while every row without a select stayed at 26.
-              // As a block box it takes its own 21px and nothing else. Dense only —
-              // non-dense callers keep the inline-block flow they render with today.
+              'relative w-full text-left',
               dense
-                ? 'block h-[21px] rounded-[4px] text-[12px] leading-none'
-                : 'rounded-lg text-xs',
-              disabled
-                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : dense
-                  ? 'bg-[#f6f9f9] hover:border-[#cbd5d3]'
-                  : 'bg-white hover:border-gray-300',
-              error
-                ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
-                : dense
-                  ? 'border-transparent focus:ring-transparent focus:border-[#0d9488] focus:bg-white'
-                  : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
+                ? clsx(
+                    // Dense follows the mock's `select.in` exactly (pricing-analysis-compact-mock.html:
+                    // 192-198): 21px tall, 4px radius, 12px text, quiet #f6f9f9 fill with a
+                    // transparent border at rest — border only on hover/focus. `ring-2` stays defined
+                    // so an error state still gets a visible ring; the non-error case neutralises it
+                    // with `focus:ring-transparent` instead of dropping the width utility.
+                    // `block` is load-bearing, not cosmetic: a <button> is inline-block, so it
+                    // sits in a line box and the strut's descender space is added under it.
+                    // Inside a 26px scoring-grid cell that made the whole row 28px (21px button
+                    // + ~7px of baseline gap) while every row without a select stayed at 26.
+                    // As a block box it takes its own 21px and nothing else.
+                    'block h-[21px] rounded-[4px] border text-[12px] leading-none pr-9 transition-colors duration-200 focus:outline-none focus:ring-2',
+                    disabled
+                      ? 'bg-(--palette-surface-2) text-(--palette-gray-500) cursor-not-allowed'
+                      : 'bg-(--palette-surface-2) hover:border-(--palette-line-strong)',
+                    error
+                      ? 'border-danger text-danger-900 dark:text-(--palette-danger) focus:ring-danger/20 focus:border-danger'
+                      : 'border-transparent text-(--palette-ink) focus:ring-transparent focus:border-primary-600 focus:bg-(--form-input-bg)',
+                  )
+                : // The form-system box (17.3): the same trigger as `inputs/Dropdown`.
+                  clsx(
+                    'flex items-center leading-normal',
+                    controlFrame(layout, cell),
+                    controlPad(layout, cell, 'l'),
+                    'pr-[2.2857rem]',
+                    controlSkin({ error: !!error, disabled, trigger: true }),
+                  ),
             )}
           >
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-              <Icon style="regular" name="chevron-down" className="size-3.5" />
-            </div>
-            <div
+            <span
               className={clsx(
-                dense ? 'px-1.5 py-0.5 truncate leading-none' : 'px-3 py-2 truncate',
+                'absolute inset-y-0 flex items-center pointer-events-none',
+                dense
+                  ? 'right-0 pr-3 text-(--palette-gray-400)'
+                  : 'right-[0.7857rem] text-base text-(--palette-ink-2)',
+              )}
+            >
+              <Icon style="regular" name="chevron-down" />
+            </span>
+            <span
+              className={clsx(
+                'min-w-0 truncate',
+                dense && 'block px-1.5 py-0.5 leading-none',
                 selected?.colorClass,
               )}
             >
@@ -185,13 +229,13 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
                   `${selected.label}`
                 )
               ) : (
-                <span className="text-gray-400">{placeholder}</span>
+                <span className="text-(--palette-gray-400)">{placeholder}</span>
               )}
-            </div>
+            </span>
           </HeadlessListboxButton>
           <HeadlessListboxOptions
             anchor="bottom"
-            className="w-(--button-width) mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 max-h-80 overflow-y-auto"
+            className="w-(--button-width) mt-1 bg-(--palette-surface) text-(--palette-ink) rounded-lg border border-(--palette-line) shadow-lg py-1 z-50 max-h-80 overflow-y-auto"
           >
             {children}
           </HeadlessListboxOptions>
@@ -208,15 +252,16 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
     <HeadlessListboxOption
       value={value}
       className={clsx(
-        'group flex gap-2 px-3 py-2 text-xs cursor-pointer transition-colors',
-        'data-focus:bg-gray-100 data-focus:text-gray-900',
-        'data-selected:bg-gray-100 data-selected:text-gray-900 data-selected:font-medium',
+        'group flex gap-2 px-3 py-2 text-sm leading-normal cursor-pointer transition-colors',
+        'data-focus:bg-(--palette-surface-3)',
+        'data-selected:bg-(--palette-accent-wash) data-selected:font-medium',
+        'data-selected:data-focus:bg-(--palette-accent-line)',
       )}
       {...props}
     >
       {({ selected }) => (
         <div className="flex items-center gap-2 w-full">
-          {selected && <Icon style="solid" name="check" className="size-3.5 text-gray-600" />}
+          {selected && <Icon style="solid" name="check" className="text-(--palette-gray-600)" />}
           <span className={clsx('truncate', selected ? '' : 'ml-5')}>{children}</span>
         </div>
       )}

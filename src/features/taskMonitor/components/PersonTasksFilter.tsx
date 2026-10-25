@@ -63,7 +63,7 @@ function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
   };
 
   const inputClass =
-    'w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40';
+    'w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40';
 
   const isFiltered = hasAnyFilter(value);
 
@@ -71,14 +71,17 @@ function PersonTasksFilter({ value, onChange }: PersonTasksFilterProps) {
     <div className="flex flex-wrap items-end gap-3">
       {/* Combined search: Appraisal Number / Customer Name (server-side LIKE on both) */}
       <div className="flex-1 min-w-[220px]">
-        <label htmlFor="filter-search" className="block text-[11px] font-medium text-gray-500 mb-1">
+        <label
+          htmlFor="filter-search"
+          className="block text-[11px] font-medium text-(--palette-gray-500) mb-1"
+        >
           {t('filters.searchLabel')}
         </label>
         <div className="relative">
           <Icon
             style="solid"
             name="magnifying-glass"
-            className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
+            className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400)"
           />
           <input
             id="filter-search"

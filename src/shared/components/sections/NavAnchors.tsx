@@ -31,24 +31,24 @@ const ANCHOR_ICON_TINT: Record<string, string> = {
   images: 'text-indigo-500',
   camera: 'text-indigo-500',
   'helmet-safety': 'text-amber-500',
-  'mountain-sun': 'text-amber-600',
-  building: 'text-sky-600',
-  buildings: 'text-sky-600',
+  'mountain-sun': 'text-amber-600 dark:text-amber-400',
+  building: 'text-sky-600 dark:text-sky-400',
+  buildings: 'text-sky-600 dark:text-sky-400',
   'file-contract': 'text-purple-500',
   'calendar-days': 'text-teal-500',
   clock: 'text-teal-500',
-  'layer-group': 'text-cyan-600',
-  'chart-line': 'text-emerald-600',
-  'magnifying-glass-chart': 'text-emerald-600',
-  'circle-check': 'text-green-600',
+  'layer-group': 'text-cyan-600 dark:text-cyan-400',
+  'chart-line': 'text-emerald-600 dark:text-emerald-400',
+  'magnifying-glass-chart': 'text-emerald-600 dark:text-emerald-400',
+  'circle-check': 'text-green-600 dark:text-green-400',
   gavel: 'text-rose-500',
   user: 'text-blue-500',
-  'user-tie': 'text-blue-600',
+  'user-tie': 'text-blue-600 dark:text-blue-400',
   tags: 'text-pink-500',
   tag: 'text-pink-500',
   rotate: 'text-orange-500',
   'hand-pointer': 'text-violet-500',
-  'map-location-dot': 'text-amber-600',
+  'map-location-dot': 'text-amber-600 dark:text-amber-400',
 };
 
 const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsProps) => {
@@ -154,7 +154,9 @@ const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsPro
       <nav
         className={clsx(
           'flex gap-0.5',
-          isCompact ? 'bg-gray-100/80 p-0.5 rounded-lg' : 'bg-gray-50/80 p-0.5 rounded-lg border border-gray-100',
+          isCompact
+            ? 'bg-(--palette-surface-3) p-0.5 rounded-lg'
+            : 'bg-(--palette-surface-2) p-0.5 rounded-lg border border-(--palette-line-soft)',
         )}
       >
         {anchors.map(anchor => {
@@ -169,8 +171,8 @@ const NavAnchors = ({ anchors, containerId, variant = 'default' }: NavAnchorsPro
                 'relative z-10 flex items-center gap-1.5 rounded-md font-medium transition-all duration-200 cursor-pointer',
                 isCompact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs',
                 isActive
-                  ? 'text-primary-700 bg-white shadow-sm ring-1 ring-primary-200'
-                  : 'text-gray-500 hover:text-primary-600 hover:bg-white/60',
+                  ? 'text-(--palette-accent-ink) bg-(--palette-surface) shadow-sm ring-1 ring-(--palette-accent-line)'
+                  : 'text-(--palette-gray-500) hover:text-(--palette-primary-text) hover:bg-(--palette-surface)/60',
               )}
             >
               {anchor.icon && (

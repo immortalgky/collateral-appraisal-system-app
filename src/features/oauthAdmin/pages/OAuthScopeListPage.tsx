@@ -12,7 +12,12 @@ import OAuthScopeFormModal from '../components/OAuthScopeFormModal';
 import type { OAuthScope } from '../types';
 
 const PAGE_SIZE = 50;
-const SKELETON_COLUMNS = [{ width: 'w-32' }, { width: 'w-40' }, { width: 'w-64' }, { width: 'w-24' }];
+const SKELETON_COLUMNS = [
+  { width: 'w-32' },
+  { width: 'w-40' },
+  { width: 'w-64' },
+  { width: 'w-24' },
+];
 
 const OAuthScopeListPage = () => {
   const { t } = useTranslation('oauthAdmin');
@@ -75,27 +80,27 @@ const OAuthScopeListPage = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
         <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
           <div className="relative min-w-64">
             <Icon
               name="magnifying-glass"
               style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
             />
             <input
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder={t('scopes.filters.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
           {searchInput && (
             <button
               type="button"
               onClick={() => setSearchInput('')}
-              className="text-xs text-gray-400 hover:text-gray-600"
+              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600)"
             >
               {t('scopes.filters.clear')}
             </button>
@@ -105,17 +110,17 @@ const OAuthScopeListPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-table">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('scopes.columns.name')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('scopes.columns.displayName')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('scopes.columns.description')}
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('scopes.columns.actions')}
                 </th>
               </tr>
@@ -126,22 +131,35 @@ const OAuthScopeListPage = () => {
               ) : isError ? (
                 <tr>
                   <td colSpan={4} className="py-4">
-                    <DataErrorState variant="inline" title={t('scopes.loadFailed')} onRetry={refetch} />
+                    <DataErrorState
+                      variant="inline"
+                      title={t('scopes.loadFailed')}
+                      onRetry={refetch}
+                    />
                   </td>
                 </tr>
               ) : scopes.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-12 text-gray-400 text-sm">
-                    <Icon name="shield-halved" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
+                  <td colSpan={4} className="text-center py-12 text-(--palette-gray-400) text-sm">
+                    <Icon
+                      name="shield-halved"
+                      style="regular"
+                      className="size-8 mx-auto mb-2 opacity-40"
+                    />
                     <p>{t('scopes.emptyState')}</p>
                   </td>
                 </tr>
               ) : (
                 scopes.map(scope => (
-                  <tr key={scope.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-900">{scope.name}</td>
-                    <td className="px-4 py-3 text-gray-700">{scope.displayName || '—'}</td>
-                    <td className="px-4 py-3 text-gray-500 max-w-md">
+                  <tr
+                    key={scope.id}
+                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
+                  >
+                    <td className="px-4 py-3 font-mono text-xs text-(--palette-ink)">
+                      {scope.name}
+                    </td>
+                    <td className="px-4 py-3 text-(--palette-ink)">{scope.displayName || '—'}</td>
+                    <td className="px-4 py-3 text-(--palette-gray-500) max-w-md">
                       <span className="block truncate" title={scope.description ?? ''}>
                         {scope.description || '—'}
                       </span>
@@ -151,7 +169,7 @@ const OAuthScopeListPage = () => {
                         <button
                           type="button"
                           onClick={() => openEdit(scope)}
-                          className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
                           title={t('scopes.actions.edit')}
                         >
                           <Icon name="pen" style="regular" className="size-4" />
@@ -159,7 +177,7 @@ const OAuthScopeListPage = () => {
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(scope)}
-                          className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
                           title={t('scopes.actions.delete')}
                         >
                           <Icon name="trash" style="regular" className="size-4" />
@@ -185,7 +203,11 @@ const OAuthScopeListPage = () => {
         )}
       </div>
 
-      <OAuthScopeFormModal isOpen={showForm} onClose={() => setShowForm(false)} scope={editTarget} />
+      <OAuthScopeFormModal
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        scope={editTarget}
+      />
 
       <ConfirmDialog
         isOpen={!!deleteTarget}

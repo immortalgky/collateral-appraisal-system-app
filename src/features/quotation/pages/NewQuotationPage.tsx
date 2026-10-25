@@ -6,6 +6,8 @@ import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { addHours, formatISO } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
+import { vmsg } from '@/shared/components/form/validationMessage';
 
 import Button from '@/shared/components/Button';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -32,9 +34,9 @@ import { buildSegmentSet, getMissingSegments } from '../utils/segmentCoverage';
 // ─── Zod Schema ───────────────────────────────────────────────────────────────
 
 const newQuotationSchema = z.object({
-  cutOffTime: z.string().min(1, 'Cut off time is required'),
-  appraisalIds: z.array(z.string()).min(1, 'Select at least one appraisal'),
-  invitedCompanyIds: z.array(z.string()).min(1, 'Invite at least one company'),
+  cutOffTime: z.string().min(1, vmsg('quotation:validation.cutOffRequired')),
+  appraisalIds: z.array(z.string()).min(1, vmsg('quotation:validation.selectAppraisal')),
+  invitedCompanyIds: z.array(z.string()).min(1, vmsg('quotation:validation.inviteCompany')),
 });
 
 type NewQuotationFormValues = z.infer<typeof newQuotationSchema>;
@@ -119,7 +121,7 @@ function CompanyPicker({
   return (
     <div className="flex flex-col gap-2">
       {excludedCompanyId && (
-        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+        <div className="flex items-center gap-2 px-3 py-2 bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 rounded-lg text-xs text-(--palette-warn)">
           <span>{t('shared.priorCompanyExcluded')}</span>
         </div>
       )}
@@ -127,7 +129,7 @@ function CompanyPicker({
       {/* Every company shows until an appraisal is picked — explain why, rather than looking unfiltered.
           Picked appraisals that simply have no segment keep the list unfiltered too, but need no hint. */}
       {selectedAppraisals.length === 0 && (
-        <p className="text-xs text-gray-400">{t('segment.noneSelectedHint')}</p>
+        <p className="text-xs text-(--palette-gray-400)">{t('segment.noneSelectedHint')}</p>
       )}
 
       {/* Selected chips */}
@@ -136,7 +138,7 @@ function CompanyPicker({
           {selected.map(c => (
             <div
               key={c.id}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-xs font-medium"
             >
               <Icon name="building" style="solid" className="size-3" />
               <span>{localizeCompanyName(c.companyName, c.companyNameLocal)}</span>
@@ -144,7 +146,7 @@ function CompanyPicker({
               <button
                 type="button"
                 onClick={() => onToggle(c)}
-                className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                className="p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-500/30 transition-colors"
                 aria-label={t('aria.removeCompany', {
                   company: localizeCompanyName(c.companyName, c.companyNameLocal),
                 })}
@@ -157,12 +159,12 @@ function CompanyPicker({
       )}
 
       {/* Search + list */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="relative p-2 border-b border-gray-100">
+      <div className="border border-(--palette-line) rounded-lg overflow-hidden">
+        <div className="relative p-2 border-b border-(--palette-line-soft)">
           <Icon
             name="magnifying-glass"
             style="solid"
-            className="absolute left-4 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400)"
           />
           <input
             type="text"
@@ -178,7 +180,7 @@ function CompanyPicker({
             const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } =
               getSelectAllState(filtered, covering, selected, query);
             return (
-              <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+              <div className="px-3 py-1.5 bg-(--palette-surface-2) border-b border-(--palette-line-soft) flex items-center gap-2">
                 <input
                   type="checkbox"
                   checked={allChecked}
@@ -193,10 +195,10 @@ function CompanyPicker({
                   className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
                   aria-label={t('aria.selectAllVisibleCompanies')}
                 />
-                <span className="text-xs text-gray-600">
+                <span className="text-xs text-(--palette-gray-600)">
                   {allVisibleSelected ? t('picker.clearAll') : t('picker.selectAll')}
                   {query.trim() && (
-                    <span className="text-gray-400">
+                    <span className="text-(--palette-gray-400)">
                       {' '}
                       {t('picker.matchingCount', { count: filtered.length })}
                     </span>
@@ -207,16 +209,16 @@ function CompanyPicker({
           })()}
         <div className="max-h-96 overflow-y-auto">
           {isLoading ? (
-            <div className="flex items-center justify-center py-6 gap-2 text-gray-400">
+            <div className="flex items-center justify-center py-6 gap-2 text-(--palette-gray-400)">
               <Icon name="spinner" style="solid" className="size-4 animate-spin" />
               <span className="text-xs">{t('shared.searchCompanyName')}</span>
             </div>
           ) : filtered.length === 0 ? (
-            <p className="text-xs text-gray-400 text-center py-4">
+            <p className="text-xs text-(--palette-gray-400) text-center py-4">
               {noCoverage ? t('segment.noCoveringCompany') : t('empty.noCompaniesInvited')}
             </p>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-(--palette-line-soft)">
               {filtered.map(c => {
                 const isSelected = selectedIds.has(c.id);
                 return (
@@ -225,22 +227,30 @@ function CompanyPicker({
                     type="button"
                     onClick={() => onToggle(c)}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors ${
-                      isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50'
+                      isSelected
+                        ? 'bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
+                        : 'hover:bg-(--palette-surface-2)'
                     }`}
                   >
                     <div
                       className={`size-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                        isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white'
+                        isSelected
+                          ? 'bg-purple-500 border-purple-500'
+                          : 'border-(--palette-line-strong) bg-(--palette-surface)'
                       }`}
                     >
                       {isSelected && (
                         <Icon name="check" style="solid" className="size-2.5 text-white" />
                       )}
                     </div>
-                    <div className="size-7 rounded bg-purple-100 flex items-center justify-center shrink-0">
-                      <Icon name="building" style="solid" className="size-3.5 text-purple-600" />
+                    <div className="size-7 rounded bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0">
+                      <Icon
+                        name="building"
+                        style="solid"
+                        className="size-3.5 text-purple-600 dark:text-purple-400"
+                      />
                     </div>
-                    <span className="text-sm text-gray-900 flex-1 truncate">
+                    <span className="text-sm text-(--palette-ink) flex-1 truncate">
                       {localizeCompanyName(c.companyName, c.companyNameLocal)}
                     </span>
                     <SegmentChips segments={c.loanTypes} />
@@ -252,7 +262,11 @@ function CompanyPicker({
         </div>
       </div>
 
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && (
+        <p className="text-xs text-danger">
+          <ValidationText message={error} />
+        </p>
+      )}
     </div>
   );
 }
@@ -416,34 +430,36 @@ function NewQuotationPage() {
         <button
           type="button"
           onClick={() => navigate('/quotations')}
-          className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
+          className="p-1.5 rounded-lg hover:bg-(--palette-surface-3) transition-colors text-(--palette-gray-500)"
           aria-label={t('buttons.back')}
         >
           <Icon name="arrow-left" style="solid" className="size-4" />
         </button>
         <div>
-          <h2 className="text-base font-semibold text-gray-900">{t('page.newTitle')}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.newSubtitle')}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">{t('page.newTitle')}</h2>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.newSubtitle')}</p>
         </div>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
         {/* Appraisals */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) p-4 flex flex-col gap-3">
           <div>
-            <div className="text-sm font-medium text-gray-800">
+            <div className="text-sm font-medium text-(--palette-ink)">
               {t('fields.appraisalsToInclude')} <span className="text-danger">*</span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{t('fields.appraisalsToIncludeHint')}</p>
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">
+              {t('fields.appraisalsToIncludeHint')}
+            </p>
           </div>
           {/* Compact summary list (always visible) */}
           {selectedAppraisals.length > 0 && (
-            <div className="rounded-lg border border-gray-200 overflow-hidden">
+            <div className="rounded-lg border border-(--palette-line) overflow-hidden">
               <SetMaxDaysBar
                 appraisals={selectedAppraisals}
                 onUpdateMaxDays={handleUpdateMaxDays}
               />
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-(--palette-line-soft)">
                 {selectedAppraisals.map(a => (
                   <SelectedAppraisalRow
                     key={a.id}
@@ -467,17 +483,21 @@ function NewQuotationPage() {
           </Button>
 
           {errors.appraisalIds?.message && (
-            <p className="text-xs text-danger">{errors.appraisalIds.message}</p>
+            <p className="text-xs text-danger">
+              <ValidationText message={errors.appraisalIds.message} />
+            </p>
           )}
         </div>
 
         {/* Companies */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col gap-3">
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) p-4 flex flex-col gap-3">
           <div>
-            <div className="text-sm font-medium text-gray-800">
+            <div className="text-sm font-medium text-(--palette-ink)">
               {t('fields.invitedCompanies')} <span className="text-danger">*</span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{t('fields.invitedCompaniesHint')}</p>
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">
+              {t('fields.invitedCompaniesHint')}
+            </p>
           </div>
           <CompanyPicker
             selected={selectedCompanies}
@@ -489,7 +509,7 @@ function NewQuotationPage() {
         </div>
 
         {/* Cut Off Time */}
-        <div className="bg-white rounded-xl border border-gray-200 p-4">
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) p-4">
           <Controller
             name="cutOffTime"
             control={control}
@@ -544,7 +564,7 @@ function NewQuotationPage() {
             hideSelectedPanel
             fixedFilters={{ status: 'Pending' }}
           />
-          <div className="flex justify-end pt-2 border-t border-gray-100">
+          <div className="flex justify-end pt-2 border-t border-(--palette-line-soft)">
             <Button onClick={() => setShowPicker(false)}>
               <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.done')}

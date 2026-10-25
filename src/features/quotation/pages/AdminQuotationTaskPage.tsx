@@ -29,7 +29,11 @@ const AdminQuotationTaskPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -42,9 +46,7 @@ const AdminQuotationTaskPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
-        <p className="text-sm text-gray-600">
-          {t('errors.noAppraisalLinked')}
-        </p>
+        <p className="text-sm text-(--palette-gray-600)">{t('errors.noAppraisalLinked')}</p>
       </div>
     );
   }

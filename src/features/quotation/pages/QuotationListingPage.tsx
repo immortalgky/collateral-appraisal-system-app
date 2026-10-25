@@ -48,7 +48,7 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
           e.stopPropagation();
           setOpen(prev => !prev);
         }}
-        className="p-1.5 rounded-md hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+        className="p-1.5 rounded-md hover:bg-(--palette-surface-3) text-(--palette-gray-500) hover:text-(--palette-ink) transition-colors"
         aria-label={t('aria.rowActions')}
       >
         <Icon name="ellipsis-vertical" style="solid" className="size-4" />
@@ -63,7 +63,7 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
               setOpen(false);
             }}
           />
-          <div className="absolute right-0 top-full mt-1 z-30 bg-white border border-gray-200 rounded-xl shadow-xl py-1 min-w-[160px]">
+          <div className="absolute right-0 top-full mt-1 z-30 bg-(--palette-surface) border border-(--palette-line) rounded-xl shadow-xl py-1 min-w-[160px]">
             {canDelete ? (
               <button
                 type="button"
@@ -72,13 +72,13 @@ const RowActionsMenu = ({ canDelete, onDelete }: RowActionsMenuProps) => {
                   setOpen(false);
                   onDelete();
                 }}
-                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left text-red-600 hover:bg-red-50 transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left text-(--palette-danger) hover:bg-(--palette-req-wash) transition-colors"
               >
                 <Icon name="trash" style="solid" className="size-3.5 shrink-0" />
                 {t('common:actions.delete')}
               </button>
             ) : (
-              <div className="px-3 py-2 text-xs text-gray-400 italic">
+              <div className="px-3 py-2 text-xs text-(--palette-gray-400) italic">
                 {t('empty.noQuotationsHint')}
               </div>
             )}
@@ -185,8 +185,8 @@ function QuotationListingPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.failedToLoad')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.failedToLoad')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -197,12 +197,12 @@ function QuotationListingPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" onClick={() => navigate('/quotations/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
@@ -214,7 +214,9 @@ function QuotationListingPage() {
       <div className="shrink-0 flex items-end gap-3 pb-1 flex-wrap">
         {/* Search — one bar: "search by" selector + input */}
         <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">{t('filters.searchBy')}</label>
+          <label className="block text-xs font-medium text-(--palette-ink)">
+            {t('filters.searchBy')}
+          </label>
           <SearchByInput
             options={searchFieldOptions}
             field={searchField}
@@ -228,7 +230,9 @@ function QuotationListingPage() {
 
         {/* Status Filter — multi-select */}
         <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">{t('columns.status')}</label>
+          <label className="block text-xs font-medium text-(--palette-ink)">
+            {t('columns.status')}
+          </label>
           <MultiSelectDropdown
             options={statusOptions}
             value={statuses}
@@ -261,7 +265,9 @@ function QuotationListingPage() {
 
         {/* Company */}
         <div className="w-52 flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">{t('filters.company')}</label>
+          <label className="block text-xs font-medium text-(--palette-ink)">
+            {t('filters.company')}
+          </label>
           <CompanyAutocomplete
             value={companyFilter}
             onChange={setCompanyFilter}
@@ -279,11 +285,11 @@ function QuotationListingPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
                 <SortableTh
                   label={t('columns.quotationNumber')}
                   sortKey="QuotationNumber"
@@ -335,7 +341,7 @@ function QuotationListingPage() {
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`divide-y divide-(--palette-line-soft) ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -355,9 +361,15 @@ function QuotationListingPage() {
                 <tr>
                   <td colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">{t('empty.noQuotations')}</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">
+                        {t('empty.noQuotations')}
+                      </p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {hasFilters
                           ? t('empty.noQuotationsFilterHint')
                           : t('empty.noQuotationsHint')}
@@ -372,20 +384,22 @@ function QuotationListingPage() {
                     <tr
                       key={item.id}
                       onClick={() => navigate(`/quotations/${item.id}`)}
-                      className="hover:bg-gray-50 even:bg-gray-50/50 transition-colors cursor-pointer"
+                      className="hover:bg-(--palette-surface-2) even:bg-(--palette-surface-2)/50 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-2.5">
-                        <span className="font-medium text-primary">{item.quotationNumber}</span>
+                        <span className="font-medium text-(--palette-primary-text)">
+                          {item.quotationNumber}
+                        </span>
                       </td>
                       <td
-                        className="px-4 py-2.5 text-gray-600 max-w-[16rem]"
+                        className="px-4 py-2.5 text-(--palette-gray-600) max-w-[16rem]"
                         title={item.customerNames ?? undefined}
                       >
                         <span className="inline-block max-w-full truncate align-bottom">
                           {item.customerName ?? '—'}
                         </span>
                         {item.customerCount > 1 && (
-                          <span className="ml-1 text-xs text-gray-400">
+                          <span className="ml-1 text-xs text-(--palette-gray-400)">
                             +{item.customerCount - 1}
                           </span>
                         )}
@@ -393,16 +407,16 @@ function QuotationListingPage() {
                       <td className="px-4 py-2.5">
                         <QuotationStatusBadge status={item.status} />
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                         {formatLocaleDateTime(item.cutOffTime, i18n.language)}
                       </td>
-                      <td className="px-4 py-2.5 text-center text-gray-600 tabular-nums">
+                      <td className="px-4 py-2.5 text-center text-(--palette-gray-600) tabular-nums">
                         {item.totalAppraisals}
                       </td>
-                      <td className="px-4 py-2.5 text-center text-gray-600 tabular-nums">
+                      <td className="px-4 py-2.5 text-center text-(--palette-gray-600) tabular-nums">
                         {item.totalQuotationsReceived}/{item.totalCompaniesInvited}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                         {formatLocaleDateTime(item.requestDate, i18n.language)}
                       </td>
                       <td className="px-4 py-2.5 text-right" onClick={e => e.stopPropagation()}>
@@ -419,7 +433,11 @@ function QuotationListingPage() {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>

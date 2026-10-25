@@ -19,12 +19,14 @@ export function ComparisonTable({ pins, onClose }: ComparisonTableProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
-        <h3 className="text-base font-semibold text-gray-800">{t('comparisonTable.title')}</h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line) shrink-0">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
+          {t('comparisonTable.title')}
+        </h3>
         <button
           type="button"
           onClick={onClose}
-          className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded"
+          className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors p-1 rounded"
           aria-label={t('comparisonTable.close')}
         >
           <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -34,38 +36,56 @@ export function ComparisonTable({ pins, onClose }: ComparisonTableProps) {
       </div>
 
       {/* TODO notice */}
-      <div className="mx-4 mt-3 px-3 py-2 bg-amber-50 border border-amber-200 rounded-md">
-        <p className="text-xs text-amber-700">{t('comparisonTable.todoMultiSelect')}</p>
+      <div className="mx-4 mt-3 px-3 py-2 bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 rounded-md">
+        <p className="text-xs text-(--palette-warn)">{t('comparisonTable.todoMultiSelect')}</p>
       </div>
 
       {/* Table */}
       <div className="flex-1 overflow-auto p-4">
         <table className="w-full text-sm border-collapse">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600 border border-gray-200">{t('comparisonTable.surveyName')}</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600 border border-gray-200">{t('comparisonTable.propertyType')}</th>
-              <th className="text-left px-3 py-2 text-xs font-semibold text-gray-600 border border-gray-200">{t('comparisonTable.infoDateTime')}</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-gray-600 border border-gray-200">{t('comparisonTable.offerPrice')}</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-gray-600 border border-gray-200">{t('comparisonTable.salePrice')}</th>
-              <th className="text-right px-3 py-2 text-xs font-semibold text-gray-600 border border-gray-200">{t('comparisonTable.distanceKm')}</th>
+            <tr className="bg-(--palette-surface-2)">
+              <th className="text-left px-3 py-2 text-xs font-semibold text-(--palette-gray-600) border border-(--palette-line)">
+                {t('comparisonTable.surveyName')}
+              </th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-(--palette-gray-600) border border-(--palette-line)">
+                {t('comparisonTable.propertyType')}
+              </th>
+              <th className="text-left px-3 py-2 text-xs font-semibold text-(--palette-gray-600) border border-(--palette-line)">
+                {t('comparisonTable.infoDateTime')}
+              </th>
+              <th className="text-right px-3 py-2 text-xs font-semibold text-(--palette-gray-600) border border-(--palette-line)">
+                {t('comparisonTable.offerPrice')}
+              </th>
+              <th className="text-right px-3 py-2 text-xs font-semibold text-(--palette-gray-600) border border-(--palette-line)">
+                {t('comparisonTable.salePrice')}
+              </th>
+              <th className="text-right px-3 py-2 text-xs font-semibold text-(--palette-gray-600) border border-(--palette-line)">
+                {t('comparisonTable.distanceKm')}
+              </th>
             </tr>
           </thead>
           <tbody>
             {pins.map(pin => (
-              <tr key={pin.marketComparableId} className="hover:bg-gray-50">
-                <td className="px-3 py-2 border border-gray-200 text-gray-800">{pin.surveyName}</td>
-                <td className="px-3 py-2 border border-gray-200 text-gray-600">{pin.propertyType}</td>
-                <td className="px-3 py-2 border border-gray-200 text-gray-600">
-                  {pin.infoDateTime ? new Date(pin.infoDateTime).toLocaleDateString('en-GB') : t('common.na')}
+              <tr key={pin.marketComparableId} className="hover:bg-(--palette-surface-2)">
+                <td className="px-3 py-2 border border-(--palette-line) text-(--palette-gray-600)">
+                  {pin.surveyName}
                 </td>
-                <td className="px-3 py-2 border border-gray-200 text-right tabular-nums text-gray-800">
+                <td className="px-3 py-2 border border-(--palette-line) text-(--palette-ink-2)">
+                  {pin.propertyType}
+                </td>
+                <td className="px-3 py-2 border border-(--palette-line) text-(--palette-ink-2)">
+                  {pin.infoDateTime
+                    ? new Date(pin.infoDateTime).toLocaleDateString('en-GB')
+                    : t('common.na')}
+                </td>
+                <td className="px-3 py-2 border border-(--palette-line) text-right tabular-nums text-(--palette-ink)">
                   {pin.offerPrice != null ? formatNumber(pin.offerPrice, 0) : t('common.na')}
                 </td>
-                <td className="px-3 py-2 border border-gray-200 text-right tabular-nums text-gray-800">
+                <td className="px-3 py-2 border border-(--palette-line) text-right tabular-nums text-(--palette-ink)">
                   {pin.salePrice != null ? formatNumber(pin.salePrice, 0) : t('common.na')}
                 </td>
-                <td className="px-3 py-2 border border-gray-200 text-right tabular-nums text-gray-600">
+                <td className="px-3 py-2 border border-(--palette-line) text-right tabular-nums text-(--palette-gray-600)">
                   {pin.distanceKm != null ? pin.distanceKm.toFixed(2) : '—'}
                 </td>
               </tr>

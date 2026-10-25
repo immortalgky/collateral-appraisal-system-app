@@ -5,10 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { useGetAppointmentApprovalRule, useUpsertAppointmentApprovalRule } from '../api/feeApprovalConfig';
+import { ValidationText } from '@/shared/components/form/ValidationText';
+import {
+  useGetAppointmentApprovalRule,
+  useUpsertAppointmentApprovalRule,
+} from '../api/feeApprovalConfig';
 
 // ---- Schema ----
 
@@ -34,7 +39,7 @@ type RuleFormValues = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 const AppointmentApprovalRulePage = () => {
   const { t } = useTranslation(['feeApprovalConfig', 'common']);
@@ -101,7 +106,11 @@ const AppointmentApprovalRulePage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -109,72 +118,84 @@ const AppointmentApprovalRulePage = () => {
   return (
     <div className="flex flex-col gap-4 max-w-2xl">
       <div>
-        <h3 className="text-base font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
           {t('feeApprovalConfig:rulePage.title')}
         </h3>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">
           {t('feeApprovalConfig:rulePage.subtitle')}
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg border border-gray-200 p-4 space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4 space-y-5"
+      >
         {/* Weekend / Holiday */}
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50">
+        <div className="flex items-start gap-3 p-3 rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2)">
           <input
             id="rule-weekend"
             type="checkbox"
             {...register('weekendHolidayEnabled')}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+            className="mt-0.5 h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
           />
           <div>
-            <label htmlFor="rule-weekend" className="text-sm font-medium text-gray-700 cursor-pointer">
+            <label
+              htmlFor="rule-weekend"
+              className="text-sm font-medium text-(--palette-ink) cursor-pointer"
+            >
               {t('feeApprovalConfig:ruleFields.weekendHoliday')}
             </label>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">
               {t('feeApprovalConfig:ruleFields.weekendHolidayHint')}
             </p>
           </div>
         </div>
 
         {/* Weekday */}
-        <div className="flex items-start gap-3 p-3 rounded-lg border border-gray-100 bg-gray-50">
+        <div className="flex items-start gap-3 p-3 rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2)">
           <input
             id="rule-weekday"
             type="checkbox"
             {...register('weekdayEnabled')}
-            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+            className="mt-0.5 h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
           />
           <div>
-            <label htmlFor="rule-weekday" className="text-sm font-medium text-gray-700 cursor-pointer">
+            <label
+              htmlFor="rule-weekday"
+              className="text-sm font-medium text-(--palette-ink) cursor-pointer"
+            >
               {t('feeApprovalConfig:ruleFields.weekday')}
             </label>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">
               {t('feeApprovalConfig:ruleFields.weekdayHint')}
             </p>
           </div>
         </div>
 
         {/* Lead Time */}
-        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50 space-y-3">
+        <div className="p-3 rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2) space-y-3">
           <div className="flex items-start gap-3">
             <input
               id="rule-leadtime"
               type="checkbox"
               {...register('leadTimeEnabled')}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+              className="mt-0.5 h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
             />
             <div>
-              <label htmlFor="rule-leadtime" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label
+                htmlFor="rule-leadtime"
+                className="text-sm font-medium text-(--palette-ink) cursor-pointer"
+              >
                 {t('feeApprovalConfig:ruleFields.leadTime')}
               </label>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-(--palette-gray-500) mt-0.5">
                 {t('feeApprovalConfig:ruleFields.leadTimeHint')}
               </p>
             </div>
           </div>
           {leadTimeEnabled && (
             <div className="ml-7">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-(--palette-ink) mb-1">
                 {t('feeApprovalConfig:ruleFields.leadTimeDays')}
               </label>
               <input
@@ -185,33 +206,38 @@ const AppointmentApprovalRulePage = () => {
                 placeholder="e.g. 3"
               />
               {errors.leadTimeDays && (
-                <p className="mt-1 text-xs text-red-600">{errors.leadTimeDays.message}</p>
+                <p className="mt-1 text-xs text-(--palette-danger)">
+                  <ValidationText message={errors.leadTimeDays.message} />
+                </p>
               )}
             </div>
           )}
         </div>
 
         {/* Reschedule Count */}
-        <div className="p-3 rounded-lg border border-gray-100 bg-gray-50 space-y-3">
+        <div className="p-3 rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2) space-y-3">
           <div className="flex items-start gap-3">
             <input
               id="rule-reschedule"
               type="checkbox"
               {...register('rescheduleEnabled')}
-              className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+              className="mt-0.5 h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
             />
             <div>
-              <label htmlFor="rule-reschedule" className="text-sm font-medium text-gray-700 cursor-pointer">
+              <label
+                htmlFor="rule-reschedule"
+                className="text-sm font-medium text-(--palette-ink) cursor-pointer"
+              >
                 {t('feeApprovalConfig:ruleFields.reschedule')}
               </label>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-(--palette-gray-500) mt-0.5">
                 {t('feeApprovalConfig:ruleFields.rescheduleHint')}
               </p>
             </div>
           </div>
           {rescheduleEnabled && (
             <div className="ml-7">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
+              <label className="block text-xs font-medium text-(--palette-ink) mb-1">
                 {t('feeApprovalConfig:ruleFields.rescheduleThreshold')}
               </label>
               <input
@@ -222,7 +248,9 @@ const AppointmentApprovalRulePage = () => {
                 placeholder="e.g. 2"
               />
               {errors.rescheduleThreshold && (
-                <p className="mt-1 text-xs text-red-600">{errors.rescheduleThreshold.message}</p>
+                <p className="mt-1 text-xs text-(--palette-danger)">
+                  <ValidationText message={errors.rescheduleThreshold.message} />
+                </p>
               )}
             </div>
           )}
@@ -230,14 +258,14 @@ const AppointmentApprovalRulePage = () => {
 
         {/* Applies To */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('feeApprovalConfig:fields.appliesTo')}
           </label>
-          <select {...register('appliesTo')} className={`${inputClass} max-w-xs`}>
+          <NativeSelect {...register('appliesTo')} className="w-full max-w-xs">
             <option value="Ext">Ext</option>
             <option value="Int">Int</option>
             <option value="Both">Both</option>
-          </select>
+          </NativeSelect>
         </div>
 
         <div className="flex justify-end pt-2">

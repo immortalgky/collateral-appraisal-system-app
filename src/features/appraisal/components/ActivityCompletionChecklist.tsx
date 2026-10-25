@@ -35,8 +35,12 @@ const ActivityCompletionChecklist = ({
     if (!pending) return null;
 
     return (
-      <div className="flex items-center justify-center gap-2 rounded-xl border border-gray-100 bg-gray-50 py-5 text-sm text-gray-500">
-        <Icon name="spinner" style="solid" className="size-4 shrink-0 animate-spin text-primary" />
+      <div className="flex items-center justify-center gap-2 rounded-xl border border-(--palette-line-soft) bg-(--palette-surface-2) py-5 text-sm text-(--palette-gray-500)">
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-4 shrink-0 animate-spin text-(--palette-primary-text)"
+        />
         <span>
           {liveUnavailable
             ? t('completionChecklist.submittingNoLive')
@@ -49,13 +53,13 @@ const ActivityCompletionChecklist = ({
   const settled = steps.filter(s => s.status !== 'pending' && s.status !== 'running').length;
 
   return (
-    <div className="rounded-xl border border-gray-100 bg-gray-50 p-2 text-left">
+    <div className="rounded-xl border border-(--palette-line-soft) bg-(--palette-surface-2) p-2 text-left">
       {/* Header: label + progress count */}
       <div className="flex items-center justify-between px-2 pb-1.5 pt-1">
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+        <span className="text-[11px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
           {t('completionChecklist.title')}
         </span>
-        <span className="text-[11px] font-medium tabular-nums text-gray-400">
+        <span className="text-[11px] font-medium tabular-nums text-(--palette-gray-400)">
           {settled}/{steps.length}
         </span>
       </div>
@@ -75,16 +79,28 @@ const ActivityCompletionChecklist = ({
             >
               <span className="flex size-5 shrink-0 items-center justify-center">
                 {(step.status === 'pending' || (isRunning && !pending)) && (
-                  <span className="size-3.5 rounded-full border-2 border-gray-300" />
+                  <span className="size-3.5 rounded-full border-2 border-(--palette-line-strong)" />
                 )}
                 {showSpin && (
-                  <Icon name="spinner" style="solid" className="size-4 animate-spin text-primary" />
+                  <Icon
+                    name="spinner"
+                    style="solid"
+                    className="size-4 animate-spin text-(--palette-primary-text)"
+                  />
                 )}
                 {step.status === 'passed' && (
-                  <Icon name="circle-check" style="solid" className="size-[18px] text-emerald-500" />
+                  <Icon
+                    name="circle-check"
+                    style="solid"
+                    className="size-[18px] text-emerald-500"
+                  />
                 )}
                 {step.status === 'skipped' && (
-                  <Icon name="circle-minus" style="solid" className="size-[18px] text-gray-300" />
+                  <Icon
+                    name="circle-minus"
+                    style="solid"
+                    className="size-[18px] text-(--palette-gray-300)"
+                  />
                 )}
                 {step.status === 'failed' && (
                   <Icon name="circle-xmark" style="solid" className="size-[18px] text-danger" />
@@ -93,13 +109,13 @@ const ActivityCompletionChecklist = ({
               <span
                 className={`text-sm leading-tight ${
                   step.status === 'pending' || (isRunning && !pending)
-                    ? 'text-gray-400'
+                    ? 'text-(--palette-gray-400)'
                     : showSpin
-                      ? 'font-medium text-gray-800'
+                      ? 'font-medium text-(--palette-ink)'
                       : step.status === 'passed'
-                        ? 'text-gray-500'
+                        ? 'text-(--palette-gray-500)'
                         : step.status === 'skipped'
-                          ? 'italic text-gray-400'
+                          ? 'italic text-(--palette-gray-400)'
                           : 'font-medium text-danger'
                 }`}
               >
@@ -111,7 +127,7 @@ const ActivityCompletionChecklist = ({
       </ul>
 
       {overall === 'done' && (
-        <div className="mt-1 flex items-center gap-1.5 px-2 pb-1 pt-1.5 text-xs font-medium text-emerald-600">
+        <div className="mt-1 flex items-center gap-1.5 px-2 pb-1 pt-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
           <Icon name="circle-check" style="solid" className="size-3.5 shrink-0" />
           <span>{t('completionChecklist.allPassed')}</span>
         </div>

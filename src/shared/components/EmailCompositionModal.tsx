@@ -5,6 +5,7 @@ import clsx from 'clsx';
 import Modal from './Modal';
 import Button from './Button';
 import Icon from './Icon';
+import { ValidationText } from './form/ValidationText';
 import { emailFormSchema, type EmailFormValues } from '@/shared/schemas/email';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import MeetingDocumentsDialog from '@/features/meeting/components/MeetingDocumentsDialog';
@@ -45,9 +46,9 @@ interface EmailCompositionModalProps {
 }
 
 const fieldClass =
-  'w-full rounded-lg border border-gray-200 bg-gray-50/60 px-3.5 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-colors focus:border-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-primary/20';
+  'w-full rounded-lg border border-(--palette-input-edge) bg-(--form-input-bg) px-3.5 py-2.5 text-sm text-(--palette-ink) placeholder:text-(--palette-gray-400) transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20';
 const labelClass =
-  'mb-1.5 block text-xs font-semibold uppercase tracking-wider text-gray-500';
+  'mb-1.5 block text-xs font-semibold uppercase tracking-wider text-(--palette-gray-500)';
 
 const EmailCompositionModal = ({
   isOpen,
@@ -148,13 +149,19 @@ const EmailCompositionModal = ({
 
   const handlePickerConfirm = (picked: PickedDocument[]) => {
     setPickedDocs(picked);
-    setValue('attachments', picked.map(p => p.id));
+    setValue(
+      'attachments',
+      picked.map(p => p.id),
+    );
   };
 
   const handleRemovePickedAttachment = (id: string) => {
     const next = pickedDocs.filter(d => d.id !== id);
     setPickedDocs(next);
-    setValue('attachments', next.map(d => d.id));
+    setValue(
+      'attachments',
+      next.map(d => d.id),
+    );
   };
 
   const handleUploadAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -195,7 +202,7 @@ const EmailCompositionModal = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={title} size="xl">
       <form
-        onSubmit={(e) => {
+        onSubmit={e => {
           e.stopPropagation(); // don't let the portaled modal submit bubble to a page <form>
           handleSubmit(submit)(e);
         }}
@@ -208,7 +215,9 @@ const EmailCompositionModal = ({
             <label className={labelClass}>From</label>
             <input {...register('from')} type="text" className={fieldClass} />
             {errors.from && (
-              <p className="mt-1 text-xs text-red-500">{errors.from.message}</p>
+              <p className="mt-1 text-xs text-red-500">
+                <ValidationText message={errors.from.message} />
+              </p>
             )}
           </div>
         )}
@@ -222,7 +231,11 @@ const EmailCompositionModal = ({
             placeholder="name@lhbank.com"
             className={fieldClass}
           />
-          {errors.to && <p className="mt-1 text-xs text-red-500">{errors.to.message}</p>}
+          {errors.to && (
+            <p className="mt-1 text-xs text-red-500">
+              <ValidationText message={errors.to.message} />
+            </p>
+          )}
         </div>
 
         {/* Cc */}
@@ -230,7 +243,11 @@ const EmailCompositionModal = ({
           <div>
             <label className={labelClass}>Cc</label>
             <input {...register('cc')} type="text" className={fieldClass} />
-            {errors.cc && <p className="mt-1 text-xs text-red-500">{errors.cc.message}</p>}
+            {errors.cc && (
+              <p className="mt-1 text-xs text-red-500">
+                <ValidationText message={errors.cc.message} />
+              </p>
+            )}
           </div>
         )}
 
@@ -239,7 +256,11 @@ const EmailCompositionModal = ({
           <div>
             <label className={labelClass}>Bcc</label>
             <input {...register('bcc')} type="text" className={fieldClass} />
-            {errors.bcc && <p className="mt-1 text-xs text-red-500">{errors.bcc.message}</p>}
+            {errors.bcc && (
+              <p className="mt-1 text-xs text-red-500">
+                <ValidationText message={errors.bcc.message} />
+              </p>
+            )}
           </div>
         )}
 
@@ -248,7 +269,9 @@ const EmailCompositionModal = ({
           <label className={labelClass}>{subjectLabel}</label>
           <input {...register('subject')} type="text" className={fieldClass} />
           {errors.subject && (
-            <p className="mt-1 text-xs text-red-500">{errors.subject.message}</p>
+            <p className="mt-1 text-xs text-red-500">
+              <ValidationText message={errors.subject.message} />
+            </p>
           )}
         </div>
 
@@ -267,7 +290,7 @@ const EmailCompositionModal = ({
                       return (
                         <span
                           key={doc.id}
-                          className="group inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 shadow-sm transition hover:border-gray-300"
+                          className="group inline-flex items-center gap-2 rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 py-1.5 text-sm text-(--palette-ink) shadow-sm transition hover:border-(--palette-line-strong)"
                         >
                           <button
                             type="button"
@@ -275,18 +298,24 @@ const EmailCompositionModal = ({
                             title={`View ${doc.name}`}
                             className="inline-flex items-center gap-2"
                           >
-                            <Icon name={icon.name} style="solid" className={clsx('size-4', icon.className)} />
-                            <span className="font-medium group-hover:text-primary">{doc.name}</span>
+                            <Icon
+                              name={icon.name}
+                              style="solid"
+                              className={clsx('size-4', icon.className)}
+                            />
+                            <span className="font-medium group-hover:text-(--palette-primary-text)">
+                              {doc.name}
+                            </span>
                             <Icon
                               name="up-right-from-square"
                               style="solid"
-                              className="size-3 text-gray-400 opacity-0 transition group-hover:opacity-100 group-hover:text-primary"
+                              className="size-3 text-(--palette-gray-400) opacity-0 transition group-hover:opacity-100 group-hover:text-(--palette-primary-text)"
                             />
                           </button>
                           <button
                             type="button"
                             onClick={() => handleRemovePickedAttachment(doc.id)}
-                            className="ml-0.5 text-gray-400 transition hover:text-red-500"
+                            className="ml-0.5 text-(--palette-gray-400) transition hover:text-red-500"
                             aria-label={`Remove ${doc.name}`}
                           >
                             <Icon name="xmark" style="solid" className="size-3" />
@@ -303,8 +332,8 @@ const EmailCompositionModal = ({
                     className={clsx(
                       'inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed px-3 py-1.5 text-sm font-medium transition',
                       attachmentError
-                        ? 'border-red-400 text-red-600 hover:border-red-500'
-                        : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary',
+                        ? 'border-red-400 text-(--palette-danger) hover:border-red-500'
+                        : 'border-(--palette-line-strong) text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text)',
                     )}
                   >
                     <Icon name="paperclip" style="solid" className="size-3.5" />
@@ -321,10 +350,10 @@ const EmailCompositionModal = ({
                         <span
                           className={clsx(
                             'inline-flex w-fit items-center gap-1.5 rounded-lg border border-dashed px-3 py-1.5 text-sm font-medium transition',
-                            isDragging && 'border-primary text-primary',
+                            isDragging && 'border-primary text-(--palette-primary-text)',
                             attachmentError
-                              ? 'border-red-400 text-red-600 hover:border-red-500'
-                              : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary',
+                              ? 'border-red-400 text-(--palette-danger) hover:border-red-500'
+                              : 'border-(--palette-line-strong) text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text)',
                           )}
                         >
                           {uploadingAttachment ? (
@@ -344,17 +373,17 @@ const EmailCompositionModal = ({
               </div>
             ) : (
               /* ── Free-text chip mode (original behavior) ── */
-              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2 transition-colors focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20">
+              <div className="flex flex-wrap items-center gap-2 rounded-lg border border-(--palette-input-edge) bg-(--form-input-bg) px-3 py-2 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20">
                 {attachments.map((chip: string, i: number) => (
                   <span
                     key={i}
-                    className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-sm font-medium text-primary"
+                    className="inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2.5 py-1 text-sm font-medium text-(--palette-primary-text)"
                   >
                     {chip}
                     <button
                       type="button"
                       onClick={() => handleRemoveAttachment(i)}
-                      className="text-primary/60 transition hover:text-primary"
+                      className="text-(--palette-primary-text)/60 transition hover:text-(--palette-primary-text)"
                       aria-label={`Remove ${chip}`}
                     >
                       <Icon name="xmark" style="solid" className="size-3" />
@@ -390,11 +419,15 @@ const EmailCompositionModal = ({
               className={clsx(fieldClass, 'min-h-40 resize-y leading-relaxed')}
             />
           )}
-          {errors.content && <p className="mt-1 text-xs text-red-500">{errors.content.message}</p>}
+          {errors.content && (
+            <p className="mt-1 text-xs text-red-500">
+              <ValidationText message={errors.content.message} />
+            </p>
+          )}
         </div>
 
         {/* Footer — full-bleed bar (counteracts the Modal's px-6 py-4 padding) */}
-        <div className="-mx-6 -mb-4 mt-1 flex items-center justify-end gap-3 border-t border-gray-100 bg-gray-50/50 px-6 py-4">
+        <div className="-mx-6 -mb-4 mt-1 flex items-center justify-end gap-3 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-6 py-4">
           <Button type="button" variant="ghost" onClick={handleClose} disabled={isPending}>
             Cancel
           </Button>
@@ -404,9 +437,7 @@ const EmailCompositionModal = ({
             disabled={isPending}
             isLoading={isPending}
             leftIcon={
-              !isPending ? (
-                <Icon name="paper-plane" style="solid" className="size-4" />
-              ) : undefined
+              !isPending ? <Icon name="paper-plane" style="solid" className="size-4" /> : undefined
             }
           >
             Send

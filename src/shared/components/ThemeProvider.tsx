@@ -10,16 +10,10 @@ import { DENSITY_SCALE } from '@shared/components/densityConstants';
 export default function ThemeProvider(): null {
   const theme = useUIStore(s => s.theme);
   const density = useUIStore(s => s.density);
-  const formLayout = useUIStore(s => s.formLayout);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
   }, [theme]);
-
-  useEffect(() => {
-    // The skin sheets key on this attribute alone (formLayoutCompact.css, formLayoutStandard.css).
-    document.documentElement.setAttribute('data-form-layout', formLayout);
-  }, [formLayout]);
 
   // Layout effect: zustand rehydrates persisted state synchronously, so writing the
   // scale before paint avoids a visible resize on load.

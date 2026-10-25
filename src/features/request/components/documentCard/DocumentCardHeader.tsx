@@ -27,21 +27,21 @@ const DocumentCardHeader = ({
   const complete = kpis.requiredDone === kpis.required;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-gray-100 px-5 py-4">
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-(--palette-line-soft) px-5 py-4">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 shadow-sm">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-(--palette-accent-wash) shadow-sm">
           <Icon name={icon} style="solid" className="size-4 text-teal-500" />
         </div>
-        <h3 className={clsx('font-semibold text-gray-800', headingClassName)}>
+        <h3 className={clsx('font-semibold text-(--palette-ink)', headingClassName)}>
           {title ?? t('forms.attachDocument')}
         </h3>
       </div>
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-gray-600">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-(--palette-gray-600)">
         {kpis.required > 0 && (
           <span
             className={clsx(
               'inline-flex items-center gap-1.5',
-              complete ? 'text-green-700' : 'text-amber-700',
+              complete ? 'text-green-700 dark:text-green-300' : 'text-(--palette-warn)',
             )}
           >
             <Icon
@@ -56,12 +56,12 @@ const DocumentCardHeader = ({
           </span>
         )}
         <span>
-          {t('docCard.kpi.files')} <b className="tabular-nums text-gray-900">{kpis.files}</b>
+          {t('docCard.kpi.files')} <b className="tabular-nums text-(--palette-ink)">{kpis.files}</b>
         </span>
         {kpis.followUps > 0 && (
           <span>
             {t('docCard.kpi.followUps')}{' '}
-            <b className="tabular-nums text-gray-900">{kpis.followUps}</b>
+            <b className="tabular-nums text-(--palette-ink)">{kpis.followUps}</b>
           </span>
         )}
         {children}

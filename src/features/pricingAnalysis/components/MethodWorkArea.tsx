@@ -39,7 +39,7 @@ export function MethodWorkArea({
       {showRail && (
         <aside
           className={clsx(
-            'shrink-0 border-r border-gray-200 overflow-y-auto px-3 py-2 pb-4',
+            'shrink-0 border-r border-(--palette-line) overflow-y-auto px-3 py-2 pb-4',
             compact ? 'w-[224px]' : 'w-[268px]',
           )}
         >
@@ -78,8 +78,8 @@ export function MethodToolbarToggle({
       className={clsx(
         'h-6 px-2.5 text-[11.5px] font-medium rounded-md border transition-colors whitespace-nowrap',
         pressed
-          ? 'bg-primary/10 border-primary/40 text-primary'
-          : 'border-gray-200 text-gray-600 hover:bg-gray-50',
+          ? 'bg-primary/10 border-primary/40 text-(--palette-primary-text)'
+          : 'border-(--palette-line) text-(--palette-gray-600) hover:bg-(--palette-surface-2)',
       )}
     >
       {label}
@@ -90,7 +90,7 @@ export function MethodToolbarToggle({
 /** mock:278 `.sideL h5` — a rail section header. */
 export function MethodRailSectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h5 className="mt-2.5 mb-0.5 text-[10.5px] text-gray-400 tracking-wide font-semibold first:mt-0">
+    <h5 className="mt-2.5 mb-0.5 text-[10.5px] text-(--palette-gray-400) tracking-wide font-semibold first:mt-0">
       {children}
     </h5>
   );
@@ -125,20 +125,26 @@ export function MethodRailLeaseHeader({
       <MethodRailSectionTitle>{t('methodTabs.leaseHeader.sectionTitle')}</MethodRailSectionTitle>
       <div className="grid grid-cols-3 gap-1.5 text-[11.5px] mb-1.5">
         <div>
-          <div className="text-[10px] text-[#8a96a0]">{t('methodTabs.leaseHeader.appraisalDate')}</div>
-          <div className="font-medium text-gray-700 tabular-nums">
+          <div className="text-[10px] text-(--palette-ink-3)">
+            {t('methodTabs.leaseHeader.appraisalDate')}
+          </div>
+          <div className="font-medium text-(--palette-ink) tabular-nums">
             {appraisalDate ? formatDateBE(appraisalDate) : '-'}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-[#8a96a0]">{t('methodTabs.leaseHeader.leaseStart')}</div>
-          <div className="font-medium text-gray-700 tabular-nums">
+          <div className="text-[10px] text-(--palette-ink-3)">
+            {t('methodTabs.leaseHeader.leaseStart')}
+          </div>
+          <div className="font-medium text-(--palette-ink) tabular-nums">
             {leaseStartDate ? formatDateBE(leaseStartDate) : '-'}
           </div>
         </div>
         <div>
-          <div className="text-[10px] text-[#8a96a0]">{t('methodTabs.leaseHeader.leaseEnd')}</div>
-          <div className="font-medium text-gray-700 tabular-nums">
+          <div className="text-[10px] text-(--palette-ink-3)">
+            {t('methodTabs.leaseHeader.leaseEnd')}
+          </div>
+          <div className="font-medium text-(--palette-ink) tabular-nums">
             {leaseEndDate ? formatDateBE(leaseEndDate) : '-'}
           </div>
         </div>
@@ -151,7 +157,7 @@ export function MethodRailLeaseHeader({
       <button
         type="button"
         onClick={onViewRentalInfo}
-        className="mt-2 mb-1 h-6 px-2.5 self-start text-[11px] font-medium rounded-md border border-gray-200 text-gray-600 hover:bg-gray-50 w-fit"
+        className="mt-2 mb-1 h-6 px-2.5 self-start text-[11px] font-medium rounded-md border border-(--palette-line) text-(--palette-gray-600) hover:bg-(--palette-surface-2) w-fit"
       >
         {t('methodTabs.leaseHeader.viewRentalInfo')}
       </button>
@@ -182,7 +188,7 @@ export function MethodRailField({
   const compact = useContext(RailCompactCtx);
   const labelEl = (
     // mock `.fld label` — 12px, ink-2 (text-xs is 9.75px at this repo's 13px root).
-    <label className="text-[12px] text-[#55636f]">
+    <label className="text-[12px] text-(--palette-ink-2)">
       {label}
       {required && <span className="text-red-400"> *</span>}
     </label>
@@ -190,10 +196,15 @@ export function MethodRailField({
   if (compact) {
     // Compact (DCF): a fixed 24px unit column so every control starts at the same x.
     return (
-      <div className="grid grid-cols-[1fr_64px_24px] items-center gap-1.5 min-h-[28px]">
+      <div
+        data-label-row=""
+        className="grid grid-cols-[1fr_64px_24px] items-center gap-1.5 min-h-[28px]"
+      >
         {labelEl}
         <div className="flex items-center gap-1 justify-end min-w-0">{children}</div>
-        {unit && <span className="text-[10px] text-[#8a96a0] whitespace-nowrap">{unit}</span>}
+        {unit && (
+          <span className="text-[10px] text-(--palette-ink-3) whitespace-nowrap">{unit}</span>
+        )}
       </div>
     );
   }
@@ -201,13 +212,18 @@ export function MethodRailField({
     // mock `.fld` = 1fr | 128px, and the 128px cell is `.fc` = control + unit, the unit
     // always present with min-width 38px (empty or not) — so every control ends at the same
     // x and the units line up. A third `auto` column let each row's unit width move its input.
-    <div className="grid grid-cols-[1fr_128px] items-center gap-[6px] min-h-[28px]">
+    <div
+      data-label-row=""
+      className="grid grid-cols-[1fr_128px] items-center gap-[6px] min-h-[28px]"
+    >
       {labelEl}
       <div className="flex items-center gap-[4px] min-w-0">
         <div className="flex flex-1 items-center justify-end min-w-0 text-[12px] [&_span.tabular-nums]:text-[12px] [&_span.tabular-nums]:font-normal">
           {children}
         </div>
-        <span className="min-w-[38px] text-[10px] text-[#8a96a0] whitespace-nowrap">{unit}</span>
+        <span className="min-w-[38px] text-[10px] text-(--palette-ink-3) whitespace-nowrap">
+          {unit}
+        </span>
       </div>
     </div>
   );
@@ -231,7 +247,7 @@ function formatDateBE(dateStr: string): string {
 export function MethodRailPeriodHeader() {
   const { t } = useTranslation('pricingAnalysis');
   return (
-    <div className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 text-[10.5px] text-gray-400">
+    <div className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 text-[10.5px] text-(--palette-gray-400)">
       <span>{t('methodTabs.periodCols.from')}</span>
       <span>{t('methodTabs.periodCols.to')}</span>
       <span>{t('methodTabs.periodCols.rate')}</span>
@@ -246,7 +262,7 @@ export function MethodRailAddRow({ label, onClick }: { label: string; onClick: (
     <button
       type="button"
       onClick={onClick}
-      className="w-full px-[8px] py-[1px] text-[11px] leading-[18px] text-primary rounded-[6px] border border-dashed border-primary hover:bg-primary/10"
+      className="w-full px-[8px] py-[1px] text-[11px] leading-[18px] text-(--palette-primary-text) rounded-[6px] border border-dashed border-primary hover:bg-primary/10"
     >
       + {label}
     </button>
@@ -267,7 +283,10 @@ export function MethodRailSeg<T extends string>({
   disabled?: boolean;
 }) {
   return (
-    <div className="inline-flex self-start gap-[2px] p-[2px] mt-[2px] mb-[6px] rounded-[8px] bg-[#edf1f1]" role="group">
+    <div
+      className="inline-flex self-start gap-[2px] p-[2px] mt-[2px] mb-[6px] rounded-[8px] bg-(--palette-surface-3)"
+      role="group"
+    >
       {options.map(o => (
         <button
           key={o.value}
@@ -278,8 +297,8 @@ export function MethodRailSeg<T extends string>({
           className={clsx(
             'px-[10px] py-[2px] rounded-[6px] text-[11.5px] whitespace-nowrap',
             o.value === value
-              ? 'bg-white text-[#0f766e] font-medium shadow-[0_1px_2px_rgba(16,24,32,0.05),0_1px_3px_rgba(16,24,32,0.04)]'
-              : 'text-[#55636f]',
+              ? 'bg-(--palette-surface) text-(--palette-accent-ink) font-medium shadow-[0_1px_2px_rgba(16,24,32,0.05),0_1px_3px_rgba(16,24,32,0.04)]'
+              : 'text-(--palette-ink-2)',
           )}
         >
           {o.label}

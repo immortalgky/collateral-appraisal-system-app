@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
 /**
  * Zod schema for internal staff
@@ -94,17 +94,13 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       },
     );
 
-// Static export for backwards compatibility and type inference
-export const assignmentFormSchema = makeAssignmentFormSchema(
-  ((key: string) => key) as unknown as TFunction<'appraisal'>,
-);
+// Built once with the token `t`: the messages are translated where they are shown, so this one
+// schema serves every language.
+export const assignmentFormSchema = makeAssignmentFormSchema(tokenT('appraisal'));
 
 export type AssignmentFormType = z.infer<typeof assignmentFormSchema>;
 
-export const useAssignmentFormSchema = () => {
-  const { t } = useTranslation('appraisal');
-  return makeAssignmentFormSchema(t);
-};
+export const useAssignmentFormSchema = () => assignmentFormSchema;
 
 /**
  * Default values for the assignment form

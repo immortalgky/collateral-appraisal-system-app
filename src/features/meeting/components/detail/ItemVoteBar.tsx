@@ -49,7 +49,7 @@ const VOTE_ICON_CLASS: Record<string, string> = {
   route_back: 'text-amber-500',
 };
 
-const FALLBACK_ICON_CLASS = 'text-gray-400';
+const FALLBACK_ICON_CLASS = 'text-(--palette-gray-400)';
 
 /**
  * One committee member.
@@ -66,7 +66,7 @@ const VoterIcon = ({ vote }: { vote: ItemVoteDto | undefined }) => (
     style={vote ? 'solid' : 'regular'}
     className={clsx(
       'size-3 shrink-0',
-      vote ? (VOTE_ICON_CLASS[vote.vote] ?? FALLBACK_ICON_CLASS) : 'text-gray-300',
+      vote ? (VOTE_ICON_CLASS[vote.vote] ?? FALLBACK_ICON_CLASS) : 'text-(--palette-gray-300)',
     )}
   />
 );
@@ -179,11 +179,11 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
             ref={refs.setFloating}
             style={floatingStyles}
             {...getFloatingProps()}
-            className="z-50 min-w-[240px] max-w-xs rounded-lg border border-gray-200 bg-white shadow-lg"
+            className="z-50 min-w-[240px] max-w-xs rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg"
           >
-            <div className="flex items-baseline justify-between gap-3 border-b border-gray-100 px-3 py-2">
-              <p className="text-xs font-semibold text-gray-700">{t('votes.title')}</p>
-              <p className="text-[10px] tabular-nums text-gray-400">{summary}</p>
+            <div className="flex items-baseline justify-between gap-3 border-b border-(--palette-line-soft) px-3 py-2">
+              <p className="text-xs font-semibold text-(--palette-ink)">{t('votes.title')}</p>
+              <p className="text-[10px] tabular-nums text-(--palette-gray-400)">{summary}</p>
             </div>
 
             <ul className="max-h-64 overflow-auto py-1">
@@ -193,8 +193,10 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
                     <VoterIcon vote={slot.vote} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-gray-800">{slot.name}</p>
-                    {slot.role && <p className="text-[10px] text-gray-400">{slot.role}</p>}
+                    <p className="truncate text-xs font-medium text-(--palette-ink)">{slot.name}</p>
+                    {slot.role && (
+                      <p className="text-[10px] text-(--palette-gray-400)">{slot.role}</p>
+                    )}
                   </div>
                   <div className="shrink-0 text-right">
                     {slot.vote ? (
@@ -207,12 +209,14 @@ const ItemVoteBar = ({ item, members }: ItemVoteBarProps) => {
                         >
                           {labelFor(slot.vote.vote)}
                         </p>
-                        <p className="text-[10px] text-gray-400">
+                        <p className="text-[10px] text-(--palette-gray-400)">
                           {formatDateTime(slot.vote.votedAt)}
                         </p>
                       </>
                     ) : (
-                      <p className="text-[11px] text-gray-400 italic">{t('votes.notVoted')}</p>
+                      <p className="text-[11px] text-(--palette-gray-400) italic">
+                        {t('votes.notVoted')}
+                      </p>
                     )}
                   </div>
                 </li>

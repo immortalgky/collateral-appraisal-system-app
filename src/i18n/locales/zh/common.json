@@ -32,7 +32,25 @@
     "apply": "应用",
     "openCalendar": "打开日历",
     "clear": "清除",
-    "clearAll": "全部清除"
+    "clearAll": "全部清除",
+    "duplicate": "复制"
+  },
+  "toggle": {
+    "No": "否",
+    "Yes": "是",
+    "Correct": "正确",
+    "Incorrect": "不正确",
+    "In Correct": "不正确",
+    "Consistent": "一致",
+    "Inconsistent": "不一致",
+    "Can": "能",
+    "Can not": "不能",
+    "Appraise": "评估",
+    "Not Appraised": "不评估",
+    "isResidential": {
+      "Can": "是",
+      "Can not": "否"
+    }
   },
   "select": {
     "placeholder": "请选择",
@@ -47,6 +65,11 @@
   "range": {
     "from": "从",
     "to": "至"
+  },
+  "sectionToc": {
+    "title": "本页内容",
+    "complete": "已完整",
+    "missing": "缺 {{count}}"
   },
   "status": {
     "loading": "加载中...",
@@ -112,10 +135,52 @@
     "stay": "留下",
     "leave": "离开"
   },
+  "missing": {
+    "chip": "缺 {{count}} 项",
+    "popoverTitle_one": "{{count}} 个部分共缺 {{missing}} 项",
+    "popoverTitle_other": "{{count}} 个部分共缺 {{missing}} 项",
+    "listLabel": "缺少的字段",
+    "goTo": "前往字段",
+    "complete": "已完整",
+    "fieldMissing": "缺",
+    "rowField": "{{label}} 第 {{n}} 项",
+    "otherSection": "其他"
+  },
   "validation": {
     "required": "此字段为必填项",
+    "required_labeled": "请填写{{label}}",
     "invalidEmail": "邮箱地址无效",
-    "invalidNumber": "数字无效"
+    "invalidNumber": "数字无效",
+    "invalidFormat": "格式不正确",
+    "invalidValue": "值无效",
+    "invalidDate": "日期无效",
+    "minLength": "至少 {{min}} 个字符",
+    "minLength_labeled": "{{label}}至少 {{min}} 个字符",
+    "maxLength": "最多 {{max}} 个字符",
+    "maxLength_labeled": "{{label}}最多 {{max}} 个字符",
+    "minValue": "不能小于 {{min}}",
+    "minValue_labeled": "{{label}}不能小于 {{min}}",
+    "maxValue": "不能大于 {{max}}",
+    "maxValue_labeled": "{{label}}不能大于 {{max}}",
+    "greaterThan": "必须大于 {{min}}",
+    "lessThan": "必须小于 {{max}}",
+    "minItems": "至少需要 {{min}} 项",
+    "minItems_labeled": "{{label}}至少需要 {{min}} 项",
+    "maxItems": "最多允许 {{max}} 项",
+    "maxItems_labeled": "{{label}}最多允许 {{max}} 项",
+    "maxDecimals": "最多 {{max}} 位小数",
+    "wholeNumber": "必须为整数",
+    "maxIntegerDigits": "小数点前最多 {{max}} 位",
+    "dateHoliday": "不能选择节假日（{{name}}）",
+    "datePast": "不能选择过去的日期",
+    "dateFuture": "不能选择未来的日期",
+    "dateToday": "不能选择今天",
+    "dateBeforeMin": "不能选择早于最早允许日期的日期",
+    "dateTooFarPast": "不能选择早于 {{days}} 天前的日期",
+    "dateTooSoon": "必须选择至少 {{days}} 天之后的日期",
+    "maxBelowMin": "最大值不能小于最小值",
+    "invalidEmailList": "必须是有效的邮箱地址（多个地址用 , 或 ; 分隔）",
+    "recipientRequired": "至少需要一位收件人（To、Cc 或 Bcc）"
   },
   "hint": {
     "scrollWithArrowKeys": "使用方向键滚动表格"
@@ -179,6 +244,12 @@
     "itemRange": "{{start}}-{{end}}，共 {{total}}",
     "noResults": "无结果",
     "pageSize": "每页条数"
+  },
+  "table": {
+    "totalItems_one": "合计 · {{count}} 项",
+    "totalItems_other": "合计 · {{count}} 项",
+    "moveRowUp": "上移第 {{n}} 行",
+    "moveRowDown": "下移第 {{n}} 行"
   },
   "reportJob": {
     "generating": "正在生成报告…",

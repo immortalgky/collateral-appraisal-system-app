@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next';
 import { DCFForm, type DCFFormType } from '../../schemas/dcfForm';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
+import { useTemplateMissingFields } from '../../hooks/useTemplateMissingFields';
 import { DiscountedCashFlowTable } from '@/features/pricingAnalysis/components/dcf/DiscountedCashFlowTable';
 import clsx from 'clsx';
 import { Button, Icon } from '@/shared/components';
@@ -86,6 +88,7 @@ export function DiscountedCashFlowPanel({
 }: DiscountedCashFlowPanelProps) {
   const isReadOnly = usePageReadOnly();
   const { t } = useTranslation('pricingAnalysis');
+  const missingFields = useTemplateMissingFields('templateCode');
   const methods = useForm<DCFFormType>({
     mode: 'onSubmit',
     resolver: zodResolver(DCFForm),
@@ -495,7 +498,7 @@ export function DiscountedCashFlowPanel({
   })();
 
   return (
-    <FormProvider methods={methods} schema={DCFForm}>
+    <FormProvider methods={methods} schema={DCFForm} fields={missingFields}>
       <MethodTopBarPortal slot="chip">
         <TemplatePopover
           valueLabel={templateLabel}
@@ -508,14 +511,16 @@ export function DiscountedCashFlowPanel({
       </MethodTopBarPortal>
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-          <span className="text-sm font-semibold text-primary tabular-nums">
+          <span className="text-[10px] text-(--palette-gray-400)">
+            {t('finalValue.indicatedValue')}
+          </span>
+          <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
             {fmt(watchedAppraisalPriceRounded ?? watchedAppraisalPrice ?? 0)}
           </span>
         </div>
         {!isReadOnly && (
           <>
-            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <span className="w-px h-5 bg-(--palette-line) shrink-0" />
             <Button
               variant="ghost"
               type="button"
@@ -533,11 +538,12 @@ export function DiscountedCashFlowPanel({
                 disabled={isSubmitting}
                 title={t('footer.reset')}
                 aria-label={t('footer.reset')}
-                className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+                className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger) shrink-0"
               >
                 <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
               </Button>
             )}
+            <MissingFieldsChip placement="down" />
             <Button
               type="submit"
               form={formId}
@@ -571,7 +577,7 @@ export function DiscountedCashFlowPanel({
         className="flex flex-col h-full min-h-0 gap-4"
       >
         {incomeAnalysisQuery.isLoading && (
-          <div className="py-6 text-sm text-gray-500">{t('empty.noData')}</div>
+          <div className="py-6 text-sm text-(--palette-gray-500)">{t('empty.noData')}</div>
         )}
 
         {!isLoading && isGenerated && (
@@ -749,13 +755,13 @@ export function DiscountedCashFlowPanel({
                                 label={t('methodTabs.dcf.railRoom.adrFirstYear')}
                                 unit={t('methodTabs.dcf.railRoom.baht')}
                               >
-                                <span className="text-xs font-medium text-gray-700 tabular-nums">
+                                <span className="text-xs font-medium text-(--palette-ink) tabular-nums">
                                   {fmt(roomAssumption.adrFirstYear)}
                                 </span>
                               </MethodRailField>
                             </>
                           )}
-                          <p className="mt-2 text-[11px] text-gray-400">
+                          <p className="mt-2 text-[11px] text-(--palette-gray-400)">
                             {t('methodTabs.dcf.rail.note')}
                           </p>
                         </>
@@ -781,7 +787,9 @@ export function DiscountedCashFlowPanel({
                           ensureIncomeAnalysisId={ensureIncomeAnalysisId}
                         />
                       </div>
-                      {saveError && <p className="text-sm text-red-600 px-1">{saveError}</p>}
+                      {saveError && (
+                        <p className="text-sm text-(--palette-danger) px-1">{saveError}</p>
+                      )}
                     </MethodWorkArea>
                   </DenseProvider>
                 ),
@@ -826,7 +834,7 @@ export function DiscountedCashFlowPanel({
         )}
 
         {previewMutation.isPending && (
-          <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-700 shadow-md">
+          <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex items-center gap-1.5 rounded-full border border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 px-3 py-1.5 text-xs font-medium text-blue-700 dark:text-blue-300 shadow-md">
             <span className="size-3 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
             Calculating…
           </div>

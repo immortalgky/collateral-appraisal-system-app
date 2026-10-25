@@ -63,25 +63,25 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
           <Icon
             name="magnifying-glass"
             style="regular"
-            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
           />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search by group name..."
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
-        <span className="text-xs text-gray-400 shrink-0">{groups.length} group(s)</span>
+        <span className="text-xs text-(--palette-gray-400) shrink-0">{groups.length} group(s)</span>
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-(--palette-gray-500)">
           <Icon
             name="rectangle-list"
             style="regular"
-            className="size-8 mx-auto mb-2 text-gray-300"
+            className="size-8 mx-auto mb-2 text-(--palette-gray-300)"
           />
           <p className="text-sm">No parameter groups found</p>
         </div>
@@ -90,16 +90,16 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
           <table className="table w-full text-table">
             <thead>
               <tr className="bg-primary/10">
-                <th className="text-primary text-xs font-semibold py-3 px-4 text-left first:rounded-tl-lg">
+                <th className="text-(--palette-primary-text) text-xs font-semibold py-3 px-4 text-left first:rounded-tl-lg">
                   Group
                 </th>
-                <th className="text-primary text-xs font-semibold py-3 px-4 text-center w-32">
+                <th className="text-(--palette-primary-text) text-xs font-semibold py-3 px-4 text-center w-32">
                   Total
                 </th>
-                <th className="text-primary text-xs font-semibold py-3 px-4 text-center w-32">
+                <th className="text-(--palette-primary-text) text-xs font-semibold py-3 px-4 text-center w-32">
                   Active
                 </th>
-                <th className="text-primary text-xs font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24">
+                <th className="text-(--palette-primary-text) text-xs font-semibold py-3 px-4 text-center last:rounded-tr-lg w-24">
                   Actions
                 </th>
               </tr>
@@ -108,34 +108,42 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
               {filtered.map(row => (
                 <tr
                   key={row.group}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors cursor-pointer"
                   onClick={() => navigate(`${basePath}/${encodeURIComponent(row.group)}`)}
                 >
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-2">
                       <div className="size-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
-                        <Icon name="layer-group" style="solid" className="size-3.5 text-primary" />
+                        <Icon
+                          name="layer-group"
+                          style="solid"
+                          className="size-3.5 text-(--palette-primary-text)"
+                        />
                       </div>
-                      <span className="text-table font-medium text-gray-800">{row.group}</span>
+                      <span className="text-table font-medium text-(--palette-ink)">
+                        {row.group}
+                      </span>
                     </div>
                   </td>
                   <td className="py-3 px-4 text-center">
-                    <span className="text-table text-gray-600">{row.totalCount}</span>
+                    <span className="text-table text-(--palette-gray-600)">{row.totalCount}</span>
                   </td>
                   <td className="py-3 px-4 text-center">
                     <span
                       className={clsx(
                         'inline-flex items-center gap-1 text-table',
                         row.activeCount === row.totalCount
-                          ? 'text-emerald-600'
+                          ? 'text-emerald-600 dark:text-emerald-400'
                           : row.activeCount === 0
-                            ? 'text-gray-400'
-                            : 'text-amber-600',
+                            ? 'text-(--palette-gray-400)'
+                            : 'text-amber-600 dark:text-amber-400',
                       )}
                     >
                       {row.activeCount}
                       {row.activeCount < row.totalCount && (
-                        <span className="text-xs text-gray-400">/ {row.totalCount}</span>
+                        <span className="text-xs text-(--palette-gray-400)">
+                          / {row.totalCount}
+                        </span>
                       )}
                     </span>
                   </td>
@@ -143,7 +151,7 @@ const ParameterGroupTable = ({ parameters, basePath, isLoading }: ParameterGroup
                     <button
                       type="button"
                       onClick={() => navigate(`${basePath}/${encodeURIComponent(row.group)}`)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary border border-primary/30 rounded-md hover:bg-primary/5 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-(--palette-primary-text) border border-primary/30 rounded-md hover:bg-primary/5 transition-colors"
                     >
                       <Icon name="list" style="regular" className="size-3" />
                       View

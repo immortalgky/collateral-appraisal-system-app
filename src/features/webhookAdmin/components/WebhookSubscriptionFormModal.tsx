@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import toast from 'react-hot-toast';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
@@ -24,8 +25,8 @@ interface Props {
 }
 
 const inputClass =
-  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
-const labelClass = 'block text-sm font-medium text-gray-700 mb-1';
+  'w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
+const labelClass = 'block text-sm font-medium text-(--palette-ink) mb-1';
 
 interface SecretInputProps {
   label: string;
@@ -110,14 +111,14 @@ const SecretInput = ({
     <div>
       <label className={labelClass}>{label}</label>
       {stored && !replacing ? (
-        <div className="rounded-lg border border-gray-200 px-3 py-2 space-y-2">
+        <div className="rounded-lg border border-(--palette-line) px-3 py-2 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm text-gray-500">
+            <span className="text-sm text-(--palette-gray-500)">
               {revealed === null ? (
                 <>
                   <span className="font-mono mr-2">••••••••</span>
                   {storedPlaintext ? (
-                    <span className="text-amber-700">
+                    <span className="text-(--palette-warn)">
                       {t('subscriptions.form.secretPlaintext')}
                     </span>
                   ) : (
@@ -125,7 +126,9 @@ const SecretInput = ({
                   )}
                 </>
               ) : (
-                <span className="font-mono text-gray-900 break-all select-all">{revealed}</span>
+                <span className="font-mono text-(--palette-ink) break-all select-all">
+                  {revealed}
+                </span>
               )}
             </span>
             <div className="flex shrink-0 items-center gap-3">
@@ -135,7 +138,7 @@ const SecretInput = ({
                     type="button"
                     onClick={handleReveal}
                     disabled={revealMutation.isPending}
-                    className="text-xs text-primary hover:underline disabled:opacity-50"
+                    className="text-xs text-(--palette-primary-text) hover:underline disabled:opacity-50"
                   >
                     {t('subscriptions.form.reveal')}
                   </button>
@@ -144,14 +147,14 @@ const SecretInput = ({
                     <button
                       type="button"
                       onClick={handleCopy}
-                      className="text-xs text-primary hover:underline"
+                      className="text-xs text-(--palette-primary-text) hover:underline"
                     >
                       {t('subscriptions.form.copy')}
                     </button>
                     <button
                       type="button"
                       onClick={hide}
-                      className="text-xs text-gray-500 hover:underline"
+                      className="text-xs text-(--palette-gray-500) hover:underline"
                     >
                       {t('subscriptions.form.hide')}
                     </button>
@@ -163,19 +166,21 @@ const SecretInput = ({
                   hide();
                   onReplace();
                 }}
-                className="text-xs text-primary hover:underline"
+                className="text-xs text-(--palette-primary-text) hover:underline"
               >
                 {t('subscriptions.form.replaceSecret')}
               </button>
             </div>
           </div>
           {canReveal && (
-            <p className="text-xs text-gray-400">{t('subscriptions.form.revealAudited')}</p>
+            <p className="text-xs text-(--palette-gray-400)">
+              {t('subscriptions.form.revealAudited')}
+            </p>
           )}
         </div>
       ) : (
         <>
-          {reenterNote && <p className="mb-1 text-xs text-amber-700">{reenterNote}</p>}
+          {reenterNote && <p className="mb-1 text-xs text-(--palette-warn)">{reenterNote}</p>}
           <input
             type="password"
             autoComplete="new-password"
@@ -188,14 +193,14 @@ const SecretInput = ({
             <button
               type="button"
               onClick={onKeep}
-              className="mt-1 text-xs text-gray-500 hover:underline"
+              className="mt-1 text-xs text-(--palette-gray-500) hover:underline"
             >
               {t('subscriptions.form.keepSecret')}
             </button>
           )}
         </>
       )}
-      <p className="mt-1 text-xs text-gray-400">{hint}</p>
+      <p className="mt-1 text-xs text-(--palette-gray-400)">{hint}</p>
     </div>
   );
 };
@@ -313,7 +318,7 @@ const WebhookSubscriptionFormModal = ({ isOpen, onClose, subscription }: Props) 
               disabled={isEdit}
               onChange={e => setSystemCode(e.target.value)}
               placeholder={t('subscriptions.form.systemCodePlaceholder')}
-              className={`${inputClass} ${isEdit ? 'bg-gray-50 text-gray-500' : ''}`}
+              className={`${inputClass} ${isEdit ? 'bg-(--palette-surface-2) text-(--palette-gray-500)' : ''}`}
             />
           </div>
           <div>
@@ -326,11 +331,11 @@ const WebhookSubscriptionFormModal = ({ isOpen, onClose, subscription }: Props) 
               placeholder={
                 isEdit ? t('subscriptions.catchAll') : t('subscriptions.form.eventTypePlaceholder')
               }
-              className={`${inputClass} font-mono ${isEdit ? 'bg-gray-50 text-gray-500' : ''}`}
+              className={`${inputClass} font-mono ${isEdit ? 'bg-(--palette-surface-2) text-(--palette-gray-500)' : ''}`}
             />
           </div>
         </div>
-        <p className="-mt-2 text-xs text-gray-400">
+        <p className="-mt-2 text-xs text-(--palette-gray-400)">
           {isEdit
             ? t('subscriptions.form.systemCodeLocked')
             : t('subscriptions.form.eventTypeHint')}
@@ -350,28 +355,28 @@ const WebhookSubscriptionFormModal = ({ isOpen, onClose, subscription }: Props) 
           </div>
           <div>
             <label className={labelClass}>{t('subscriptions.form.httpMethod')}</label>
-            <select
+            <NativeSelect
               value={httpMethod}
               onChange={e => setHttpMethod(e.target.value as WebhookHttpMethod)}
-              className={inputClass}
+              className="w-full"
             >
               <option value="POST">POST</option>
               <option value="PUT">PUT</option>
-            </select>
+            </NativeSelect>
           </div>
         </div>
 
         {/* Auth type */}
         <div>
           <label className={labelClass}>{t('subscriptions.form.authType')}</label>
-          <select
+          <NativeSelect
             value={authType}
             onChange={e => setAuthType(e.target.value as WebhookAuthType)}
-            className={inputClass}
+            className="w-full"
           >
             <option value="HMAC">{t('subscriptions.form.authTypes.HMAC')}</option>
             <option value="TokenBearer">{t('subscriptions.form.authTypes.TokenBearer')}</option>
-          </select>
+          </NativeSelect>
         </div>
 
         {isTokenBearer ? (
@@ -452,7 +457,7 @@ const WebhookSubscriptionFormModal = ({ isOpen, onClose, subscription }: Props) 
         )}
       </div>
 
-      <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+      <div className="flex justify-end gap-2 px-6 py-4 border-t border-(--palette-line)">
         <Button variant="secondary" onClick={onClose} disabled={isPending}>
           {t('subscriptions.form.cancel')}
         </Button>

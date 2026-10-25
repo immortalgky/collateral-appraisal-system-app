@@ -23,18 +23,18 @@ export default function NotificationPage() {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold text-gray-900">{t('title')}</h3>
-              <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              <h3 className="text-base font-semibold text-(--palette-ink)">{t('title')}</h3>
+              <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
                 {notifications.length}
               </span>
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">{t('subtitle')}</p>
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('subtitle')}</p>
           </div>
           {unreadCount > 0 && (
             <button
               type="button"
               onClick={() => markAllAsRead(username)}
-              className="text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+              className="text-sm font-medium text-(--palette-primary-text) hover:text-(--palette-primary-text)/80 transition-colors"
             >
               {t('markAllRead')}
             </button>

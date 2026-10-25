@@ -22,54 +22,56 @@ const BlockPriceSummaryTable = ({
   const { t } = useTranslation('appraisal');
 
   return (
-    <div className="overflow-x-auto border border-gray-200 rounded-sm">
+    <div className="overflow-x-auto border border-(--palette-line) rounded-sm">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+            <th className="px-3 py-2 text-left text-xs font-semibold text-(--palette-gray-600)">
               {t('blockPriceSummaryTable.columns.model')}
             </th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+            <th className="px-3 py-2 text-right text-xs font-semibold text-(--palette-gray-600)">
               {t('blockPriceSummaryTable.columns.unitCount')}
             </th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+            <th className="px-3 py-2 text-right text-xs font-semibold text-(--palette-gray-600)">
               {t('blockPriceSummaryTable.columns.totalAppraisalPrice')}
             </th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+            <th className="px-3 py-2 text-right text-xs font-semibold text-(--palette-gray-600)">
               {t('blockPriceSummaryTable.columns.forceSellingPrice')}
             </th>
-            <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600">
+            <th className="px-3 py-2 text-right text-xs font-semibold text-(--palette-gray-600)">
               {t('blockPriceSummaryTable.columns.buildingInsurance')}
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {rows.map(row => (
-            <tr key={row.projectModelId} className="hover:bg-gray-50">
-              <td className="px-3 py-2 font-medium text-gray-900">{row.modelName ?? '-'}</td>
-              <td className="px-3 py-2 text-right text-gray-700">{row.unitCount}</td>
-              <td className="px-3 py-2 text-right text-gray-700">
+            <tr key={row.projectModelId} className="hover:bg-(--palette-surface-2)">
+              <td className="px-3 py-2 font-medium text-(--palette-ink)">{row.modelName ?? '-'}</td>
+              <td className="px-3 py-2 text-right text-(--palette-ink)">{row.unitCount}</td>
+              <td className="px-3 py-2 text-right text-(--palette-ink)">
                 {formatNumber(row.totalAppraisalPrice, 2)}
               </td>
-              <td className="px-3 py-2 text-right text-gray-700">
+              <td className="px-3 py-2 text-right text-(--palette-ink)">
                 {formatNumber(row.forceSellingPrice, 2)}
               </td>
-              <td className="px-3 py-2 text-right text-gray-700">
+              <td className="px-3 py-2 text-right text-(--palette-ink)">
                 {formatNumber(row.buildingInsurance, 2)}
               </td>
             </tr>
           ))}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-50 border-t border-gray-200 font-semibold">
-            <td className="px-3 py-2 text-gray-900" colSpan={2}>
+          <tr className="bg-(--palette-surface-2) border-t border-(--palette-line) font-semibold">
+            <td className="px-3 py-2 text-(--palette-ink)" colSpan={2}>
               {t('blockPriceSummaryTable.footer.project')}
             </td>
-            <td className="px-3 py-2 text-right text-gray-900">{formatNumber(projectTotal, 2)}</td>
-            <td className="px-3 py-2 text-right text-gray-900">
+            <td className="px-3 py-2 text-right text-(--palette-ink)">
+              {formatNumber(projectTotal, 2)}
+            </td>
+            <td className="px-3 py-2 text-right text-(--palette-ink)">
               {formatNumber(forceSellingPrice, 2)}
             </td>
-            <td className="px-3 py-2 text-right text-gray-900">
+            <td className="px-3 py-2 text-right text-(--palette-ink)">
               {formatNumber(buildingInsurance, 2)}
             </td>
           </tr>

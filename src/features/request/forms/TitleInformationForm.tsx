@@ -535,7 +535,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
           {t('titleSection.sort.done')}
           <button
             type="button"
-            className="font-medium text-primary underline underline-offset-2"
+            className="font-medium text-(--palette-primary-text) underline underline-offset-2"
             onClick={() => {
               // Stays up when nothing was undone (uploads running), so it can be tried again.
               if (undoSort(token)) toast.dismiss(toastInstance.id);
@@ -738,7 +738,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
                   variant="ghost"
                   size="sm"
                   // A plain text button like the sort one beside it: no icon, no fill at rest, a soft hover.
-                  className="bg-transparent! hover:bg-gray-100!"
+                  className="bg-transparent!"
                   onClick={() => setImportOpen(true)}
                 >
                   {t('titleImport.button')}
@@ -751,11 +751,17 @@ const TitleInformationForm = memo(function TitleInformationForm({
           <PriorAppraisalSummary />
           {titles.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 px-5 py-10 text-center">
-              <div className="flex size-14 items-center justify-center rounded-full bg-gray-100">
-                <Icon style="regular" name="file-lines" className="text-2xl text-gray-400" />
+              <div className="flex size-14 items-center justify-center rounded-full bg-(--palette-surface-3)">
+                <Icon
+                  style="regular"
+                  name="file-lines"
+                  className="text-2xl text-(--palette-gray-400)"
+                />
               </div>
-              <h3 className="m-0 text-base font-semibold text-gray-900">{t('empty.noTitles')}</h3>
-              <p className="m-0 text-sm text-gray-500">
+              <h3 className="m-0 text-base font-semibold text-(--palette-ink)">
+                {t('empty.noTitles')}
+              </h3>
+              <p className="m-0 text-sm text-(--palette-gray-500)">
                 {isReadOnly ? t('empty.noTitlesReadOnly') : t('titleSection.empty.hint')}
               </p>
               {!isReadOnly && <TitleAddMenu onAdd={addTitle} allowed={allowed} anchor="bottom" />}
@@ -816,7 +822,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
                     />
                   )}
                   {shown === 0 && (
-                    <p className="m-0 px-5 py-8 text-center text-sm text-gray-500">
+                    <p className="m-0 px-5 py-8 text-center text-sm text-(--palette-gray-500)">
                       {t('titleSection.filter.none')}
                     </p>
                   )}
@@ -875,7 +881,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
             variant="primary"
           >
             <div className="flex flex-col gap-3">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-(--palette-gray-600)">
                 {t('titleOptions.duplicateMessage', {
                   type:
                     duplicate === null
@@ -896,7 +902,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
                 min={1}
                 max={MAX_DUPLICATE_COPIES}
               />
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-(--palette-gray-400)">
                 {t('titleOptions.duplicateHint', { max: MAX_DUPLICATE_COPIES })}
               </p>
             </div>
@@ -912,7 +918,7 @@ const TitleInformationForm = memo(function TitleInformationForm({
             variant="primary"
           >
             <div className="flex flex-col gap-3">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-(--palette-gray-600)">
                 {t('titleSection.move.message', {
                   n: moveDialog ? rankInGroup(titles, moveDialog.index) : 0,
                   total: moveDialog ? groupSize(titles, moveDialog.index) : 0,

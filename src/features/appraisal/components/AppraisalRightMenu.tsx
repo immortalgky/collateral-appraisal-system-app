@@ -143,15 +143,15 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
     return (
       <div className="flex flex-col h-full p-4">
         <div className="animate-pulse space-y-4">
-          <div className="h-10 bg-gray-100 rounded-lg" />
+          <div className="h-10 bg-(--palette-surface-3) rounded-lg" />
           <div className="space-y-3">
-            <div className="h-4 bg-gray-100 rounded w-20" />
-            <div className="h-8 bg-gray-100 rounded" />
+            <div className="h-4 bg-(--palette-surface-3) rounded w-20" />
+            <div className="h-8 bg-(--palette-surface-3) rounded" />
           </div>
           <div className="space-y-3">
-            <div className="h-4 bg-gray-100 rounded w-20" />
-            <div className="h-6 bg-gray-100 rounded" />
-            <div className="h-6 bg-gray-100 rounded" />
+            <div className="h-4 bg-(--palette-surface-3) rounded w-20" />
+            <div className="h-6 bg-(--palette-surface-3) rounded" />
+            <div className="h-6 bg-(--palette-surface-3) rounded" />
           </div>
         </div>
       </div>
@@ -161,13 +161,13 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
       {/* Header */}
-      <div className="shrink-0 flex items-center justify-between p-4 border-b border-gray-100">
-        <h3 className="text-sm font-semibold text-gray-900">Application Details</h3>
+      <div className="shrink-0 flex items-center justify-between p-4 border-b border-(--palette-line-soft)">
+        <h3 className="text-sm font-semibold text-(--palette-ink)">Application Details</h3>
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) transition-colors"
           >
             <Icon style="solid" name="xmark" className="size-4" />
           </button>
@@ -176,15 +176,15 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
 
       {/* Tabs */}
       <div className="shrink-0 px-4 pt-4">
-        <div className="flex gap-1 p-1 bg-gray-100 rounded-lg">
+        <div className="flex gap-1 p-1 bg-(--palette-surface-3) rounded-lg">
           <button
             type="button"
             onClick={() => setActiveTab('overview')}
             className={clsx(
               'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all',
               activeTab === 'overview'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700',
+                ? 'bg-(--palette-surface) text-(--palette-ink) shadow-sm'
+                : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
             )}
           >
             Overview
@@ -195,13 +195,13 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
             className={clsx(
               'flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all relative',
               activeTab === 'comments'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700',
+                ? 'bg-(--palette-surface) text-(--palette-ink) shadow-sm'
+                : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
             )}
           >
             Comments
             {comments.length > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-500 text-white rounded-full">
+              <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-600 text-white rounded-full">
                 {comments.length}
               </span>
             )}
@@ -232,15 +232,15 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                     >
                       {i % 2 !== 0 && (
                         <div className="flex items-start gap-2 max-w-[80%]">
-                          <div className="w-6 h-6 rounded-full bg-gray-200 shrink-0 animate-pulse" />
+                          <div className="w-6 h-6 rounded-full bg-(--palette-line) shrink-0 animate-pulse" />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <div className="h-3 w-16 bg-gray-200 rounded animate-pulse" />
-                              <div className="h-3 w-10 bg-gray-200 rounded animate-pulse" />
+                              <div className="h-3 w-16 bg-(--palette-line) rounded animate-pulse" />
+                              <div className="h-3 w-10 bg-(--palette-line) rounded animate-pulse" />
                             </div>
-                            <div className="bg-gray-100 rounded-2xl rounded-tl-sm px-3 py-2 animate-pulse">
-                              <div className="h-3 w-full bg-gray-200 rounded" />
-                              <div className="h-3 w-2/3 bg-gray-200 rounded mt-1" />
+                            <div className="bg-(--palette-surface-3) rounded-2xl rounded-tl-sm px-3 py-2 animate-pulse">
+                              <div className="h-3 w-full bg-(--palette-line) rounded" />
+                              <div className="h-3 w-2/3 bg-(--palette-line) rounded mt-1" />
                             </div>
                           </div>
                         </div>
@@ -251,7 +251,7 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                             <div className="h-3 w-full bg-primary/30 rounded" />
                             <div className="h-3 w-1/2 bg-primary/30 rounded mt-1" />
                           </div>
-                          <div className="h-3 w-10 bg-gray-200 rounded mt-1 ml-auto animate-pulse" />
+                          <div className="h-3 w-10 bg-(--palette-line) rounded mt-1 ml-auto animate-pulse" />
                         </div>
                       )}
                     </div>
@@ -259,11 +259,15 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                 </div>
               ) : comments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center py-8">
-                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center mb-3">
-                    <Icon style="regular" name="comments" className="size-5 text-gray-400" />
+                  <div className="w-10 h-10 rounded-full bg-(--palette-surface-3) flex items-center justify-center mb-3">
+                    <Icon
+                      style="regular"
+                      name="comments"
+                      className="size-5 text-(--palette-gray-400)"
+                    />
                   </div>
-                  <p className="text-sm text-gray-500">No comments yet</p>
-                  <p className="text-xs text-gray-400 mt-1">Add a comment below</p>
+                  <p className="text-sm text-(--palette-gray-500)">No comments yet</p>
+                  <p className="text-xs text-(--palette-gray-400) mt-1">Add a comment below</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -285,14 +289,14 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                                 <textarea
                                   value={editText}
                                   onChange={e => setEditText(e.target.value)}
-                                  className="w-full px-3 py-2 text-xs border border-primary/30 rounded-2xl rounded-tr-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
+                                  className="w-full px-3 py-2 text-xs bg-(--form-input-bg) text-(--palette-ink) border border-primary/30 rounded-2xl rounded-tr-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
                                   rows={2}
                                 />
                                 <div className="flex gap-1.5 justify-end">
                                   <button
                                     type="button"
                                     onClick={handleCancelEdit}
-                                    className="px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
+                                    className="px-2 py-1 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-3) rounded transition-colors"
                                   >
                                     Cancel
                                   </button>
@@ -322,7 +326,7 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                                     <button
                                       type="button"
                                       onClick={() => handleEditClick(comment.id, comment.comment)}
-                                      className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-primary hover:bg-primary-50 transition-all"
+                                      className="w-5 h-5 flex items-center justify-center rounded text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-(--palette-accent-wash) transition-all"
                                       title="Edit"
                                     >
                                       <Icon style="regular" name="pen" className="size-2.5" />
@@ -330,7 +334,7 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                                     <button
                                       type="button"
                                       onClick={() => setDeleteConfirmId(comment.id)}
-                                      className="w-5 h-5 flex items-center justify-center rounded text-gray-400 hover:text-danger-500 hover:bg-danger-50 transition-all"
+                                      className="w-5 h-5 flex items-center justify-center rounded text-(--palette-gray-400) hover:text-danger-500 hover:bg-danger-50 transition-all"
                                       title="Delete"
                                     >
                                       <Icon style="solid" name="xmark" className="size-3" />
@@ -339,7 +343,7 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                                 )}
                               </div>
                             )}
-                            <p className="text-[10px] text-gray-400 mt-0.5 text-right">
+                            <p className="text-[10px] text-(--palette-gray-400) mt-0.5 text-right">
                               {timeDisplay}
                             </p>
                           </div>
@@ -351,15 +355,19 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-0.5">
-                                <span className="text-xs font-medium text-gray-900">
+                                <span className="text-xs font-medium text-(--palette-ink)">
                                   {comment.commentedByName}
                                 </span>
-                                <span className="text-[10px] text-gray-400">{timeDisplay}</span>
+                                <span className="text-[10px] text-(--palette-gray-400)">
+                                  {timeDisplay}
+                                </span>
                               </div>
-                              <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
+                              <div className="bg-(--palette-surface-3) text-(--palette-ink) rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
                                 <p className="text-xs break-words break-all">{comment.comment}</p>
                                 {comment.lastModifiedAt && (
-                                  <span className="text-[10px] text-gray-400 italic">(edited)</span>
+                                  <span className="text-[10px] text-(--palette-gray-400) italic">
+                                    (edited)
+                                  </span>
                                 )}
                               </div>
                             </div>
@@ -374,7 +382,7 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
 
             {/* Comment input - fixed at bottom */}
             {!commentsReadOnly && (
-              <div className="shrink-0 p-4 border-t border-gray-100">
+              <div className="shrink-0 p-4 border-t border-(--palette-line-soft)">
                 <div className="flex gap-2">
                   <input
                     type="text"
@@ -383,7 +391,7 @@ const AppraisalRightMenu = ({ onClose, initialTab = 'overview' }: AppraisalRight
                     onKeyDown={handleKeyPress}
                     placeholder="Add a comment..."
                     disabled={!requestId || addCommentMutation.isPending}
-                    className="flex-1 px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:bg-gray-50 disabled:cursor-not-allowed"
+                    className="flex-1 px-3 py-2 text-xs bg-(--form-input-bg) text-(--palette-ink) placeholder:text-(--palette-ink-2) border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary disabled:bg-(--palette-surface-2) disabled:cursor-not-allowed"
                   />
                   <button
                     type="button"
@@ -641,14 +649,14 @@ const AppraisalOverview = ({ showMap = true }: { showMap?: boolean }) => {
                     const { label, color } = getFeePaymentStatusDisplay(feeSummary.paymentStatus);
                     const colorClass =
                       color === 'success'
-                        ? 'text-success'
+                        ? 'text-emerald-700 dark:text-emerald-300'
                         : color === 'warning'
-                          ? 'text-warning'
+                          ? 'text-(--palette-warn)'
                           : color === 'danger'
-                            ? 'text-danger'
+                            ? 'text-(--palette-danger)'
                             : color === 'info'
-                              ? 'text-blue-700'
-                              : 'text-gray-500';
+                              ? 'text-blue-700 dark:text-blue-300'
+                              : 'text-(--palette-gray-500)';
                     return <span className={`text-sm font-medium ${colorClass}`}>{label}</span>;
                   })()
                 : 'Not set'
@@ -694,7 +702,7 @@ const AppraisalOverview = ({ showMap = true }: { showMap?: boolean }) => {
 };
 
 const stripButton =
-  'w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-base-200 transition-colors';
+  'w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) transition-colors';
 
 interface StripPeekProps {
   label: string;
@@ -733,7 +741,7 @@ const StripPeek = ({ label, title, onOpen, icon, chat, children }: StripPeekProp
         className={clsx(
           stripButton,
           'relative',
-          show && 'text-gray-600 bg-gray-50 dark:bg-base-200',
+          show && 'text-(--palette-gray-600) bg-(--palette-surface-3)',
         )}
         aria-label={label}
         aria-expanded={show}
@@ -741,13 +749,13 @@ const StripPeek = ({ label, title, onOpen, icon, chat, children }: StripPeekProp
         {icon}
       </button>
       {show && (
-        <div className="absolute right-full top-0 mr-1 z-40 w-72 max-h-[calc(100vh-12rem)] flex flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-base-300 bg-white dark:bg-base-100 shadow-xl">
-          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-base-300">
-            <h3 className="text-sm font-semibold text-gray-900">{title}</h3>
+        <div className="absolute right-full top-0 mr-1 z-40 w-72 max-h-[calc(100vh-12rem)] flex flex-col overflow-hidden rounded-xl border border-(--palette-line) bg-(--palette-surface) shadow-xl">
+          <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
+            <h3 className="text-sm font-semibold text-(--palette-ink)">{title}</h3>
             <button
               type="button"
               onClick={onOpen}
-              className="text-xs font-medium text-primary hover:underline"
+              className="text-xs font-medium text-(--palette-primary-text) hover:underline"
             >
               Open panel
             </button>
@@ -773,7 +781,7 @@ const CommentsPeek = ({
   const currentUser = useAuthStore(state => state.user);
 
   if (comments.length === 0) {
-    return <p className="text-xs text-gray-400 text-center py-4">No comments yet</p>;
+    return <p className="text-xs text-(--palette-gray-400) text-center py-4">No comments yet</p>;
   }
   return (
     <div className="space-y-3">
@@ -788,7 +796,9 @@ const CommentsPeek = ({
                   <span className="text-[10px] text-white/70 italic">(edited)</span>
                 )}
               </div>
-              <p className="text-[10px] text-gray-400 mt-0.5 text-right">{timeDisplay}</p>
+              <p className="text-[10px] text-(--palette-gray-400) mt-0.5 text-right">
+                {timeDisplay}
+              </p>
             </div>
           </div>
         ) : (
@@ -798,13 +808,15 @@ const CommentsPeek = ({
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-0.5">
-                <span className="text-xs font-medium text-gray-900">{c.commentedByName}</span>
-                <span className="text-[10px] text-gray-400">{timeDisplay}</span>
+                <span className="text-xs font-medium text-(--palette-ink)">
+                  {c.commentedByName}
+                </span>
+                <span className="text-[10px] text-(--palette-gray-400)">{timeDisplay}</span>
               </div>
-              <div className="bg-gray-100 text-gray-800 rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
+              <div className="bg-(--palette-surface-3) text-(--palette-ink) rounded-2xl rounded-tl-sm px-3 py-2 min-w-0 overflow-hidden">
                 <p className="text-xs break-words break-all">{c.comment}</p>
                 {c.lastModifiedAt && (
-                  <span className="text-[10px] text-gray-400 italic">(edited)</span>
+                  <span className="text-[10px] text-(--palette-gray-400) italic">(edited)</span>
                 )}
               </div>
             </div>
@@ -835,14 +847,14 @@ export const AppraisalRightPanel = () => {
 
   if (isOpen) {
     return (
-      <aside className="hidden lg:flex w-72 h-full shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden">
+      <aside className="hidden lg:flex w-72 h-full shrink-0 border-l border-(--palette-line-soft) bg-(--palette-surface) flex-col overflow-hidden">
         <AppraisalRightMenu initialTab={initialTab} onClose={() => setOpen(false)} />
       </aside>
     );
   }
 
   return (
-    <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-3 pt-3 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
+    <div className="hidden lg:flex w-10 shrink-0 flex-col items-center gap-3 pt-3 border-l border-(--palette-line-soft) bg-(--palette-surface)">
       <button
         type="button"
         onClick={() => open('overview')}
@@ -868,7 +880,7 @@ export const AppraisalRightPanel = () => {
           <>
             <Icon style="regular" name="comment" className="size-4" />
             {commentCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-500 text-white rounded-full">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] flex items-center justify-center px-1 text-[10px] font-semibold bg-red-600 text-white rounded-full">
                 {commentCount > 99 ? '99+' : commentCount}
               </span>
             )}

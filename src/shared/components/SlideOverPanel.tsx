@@ -2,6 +2,7 @@ import { Dialog, DialogBackdrop, DialogPanel, Transition } from '@headlessui/rea
 import { type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from './Icon';
+import { FormLayoutProvider } from './form/FormLayoutProvider';
 import { NO_OUTLINE } from '@/shared/hooks/usePointerMode';
 import clsx from 'clsx';
 
@@ -71,19 +72,23 @@ const SlideOverPanel = ({
                 'data-closed:translate-x-full',
               )}
             >
-              <div className="flex h-full flex-col bg-white shadow-xl">
+              <div className="flex h-full flex-col bg-(--palette-surface) shadow-xl">
                 {/* Header */}
-                <div className="flex items-start justify-between px-6 py-4 border-b border-gray-200">
+                <div className="flex items-start justify-between px-6 py-4 border-b border-(--palette-line)">
                   <div className="min-w-0">
-                    <h2 className="text-lg font-semibold break-words text-gray-900">{title}</h2>
-                    {subtitle && <p className="mt-0.5 text-sm text-gray-500">{subtitle}</p>}
+                    <h2 className="text-lg font-semibold break-words text-(--palette-ink)">
+                      {title}
+                    </h2>
+                    {subtitle && (
+                      <p className="mt-0.5 text-sm text-(--palette-gray-500)">{subtitle}</p>
+                    )}
                   </div>
                   {headerActions && (
                     <div className="ml-auto flex shrink-0 items-center pl-3">{headerActions}</div>
                   )}
                   <button
                     onClick={onClose}
-                    className="ml-3 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="ml-3 text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
                     aria-label={t('actions.closePanel')}
                   >
                     <Icon name="xmark" style="regular" className="w-5 h-5" />
@@ -91,10 +96,14 @@ const SlideOverPanel = ({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
+                <div className="flex-1 overflow-y-auto px-6 py-4">
+                  <FormLayoutProvider layout="standard">{children}</FormLayoutProvider>
+                </div>
 
                 {footer && (
-                  <div className="border-t border-gray-200 bg-white px-6 py-3">{footer}</div>
+                  <div className="border-t border-(--palette-line) bg-(--palette-surface) px-6 py-3">
+                    {footer}
+                  </div>
                 )}
               </div>
             </DialogPanel>

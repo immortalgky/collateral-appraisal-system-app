@@ -89,8 +89,8 @@ function LockBubble({
 
   const isBlue = color === 'blue';
   const pillCls = isBlue
-    ? 'bg-blue-100 ring-1 ring-blue-300'
-    : 'bg-amber-100 ring-1 ring-amber-300';
+    ? 'bg-blue-100 dark:bg-blue-500/20 ring-1 ring-blue-300 dark:ring-blue-500/40'
+    : 'bg-amber-100 dark:bg-amber-500/20 ring-1 ring-amber-300 dark:ring-amber-500/40';
   const dotCls = isBlue ? 'bg-blue-500' : 'bg-amber-500';
   const tooltipCls = isBlue ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white';
   const tailCls = isBlue ? 'bg-blue-600' : 'bg-amber-500';
@@ -354,12 +354,12 @@ function PoolTaskListPage({
 
   const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+      return <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />;
     return (
       <Icon
         style="solid"
         name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
+        className="size-2.5 text-(--palette-primary-text)"
       />
     );
   };
@@ -375,12 +375,12 @@ function PoolTaskListPage({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">Failed to load pool tasks</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">Failed to load pool tasks</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
       </div>
     );
@@ -399,13 +399,13 @@ function PoolTaskListPage({
                 <Icon
                   style="solid"
                   name="spinner"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-primary-text) animate-spin pointer-events-none"
                 />
               ) : (
                 <Icon
                   style="solid"
                   name="magnifying-glass"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
                 />
               )}
               <input
@@ -413,12 +413,12 @@ function PoolTaskListPage({
                 placeholder="Search tasks..."
                 value={internalSearchTerm}
                 onChange={e => setInternalSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+                className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
               />
               {internalSearchTerm && (
                 <button
                   onClick={() => setInternalSearchTerm('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon style="solid" name="xmark" className="size-3.5" />
                 </button>
@@ -430,8 +430,8 @@ function PoolTaskListPage({
               title="Filters"
               className={`flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all ${
                 activeFilterChips.length > 0
-                  ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
+                  : 'border-(--palette-line) text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:text-(--palette-ink)'
               }`}
             >
               <Icon style="solid" name="sliders" className="size-3.5" />
@@ -467,12 +467,13 @@ function PoolTaskListPage({
               {activeFilterChips.map(([key, value]) => (
                 <span
                   key={key}
-                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
                 >
-                  <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+                  <span className="text-(--palette-primary-text)/60">{FILTER_LABELS[key]}:</span>{' '}
+                  {value}
                   <button
                     onClick={() => removeFilter(key)}
-                    className="hover:text-primary/60 ml-0.5"
+                    className="hover:text-(--palette-primary-text)/60 ml-0.5"
                   >
                     <Icon style="solid" name="xmark" className="size-2.5" />
                   </button>
@@ -480,7 +481,7 @@ function PoolTaskListPage({
               ))}
               <button
                 onClick={() => setInternalFilters({})}
-                className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+                className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
               >
                 Clear all
               </button>
@@ -516,7 +517,7 @@ function PoolTaskListPage({
           />
         </div>
       ) : (
-        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           {/* Only the rows scroll. With none, this shrinks to the header, its overflow is clipped
               (nothing to scroll to) and the empty state below gets the rest of the card. */}
           <div className={isEmpty ? 'shrink-0 overflow-hidden' : 'flex-1 min-h-0 overflow-auto'}>
@@ -532,17 +533,17 @@ function PoolTaskListPage({
                 <col style={{ width: ACTIONS_COL_WIDTH }} />
               </colgroup>
               <thead className="sticky top-0 z-20">
-                <tr className="bg-gray-50 border-b border-gray-200">
+                <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                   {visibleColumns.map((key, colIndex) => {
                     const col = columnDefs[key];
                     const isActive = sortField === col.sortField;
                     const base =
-                      'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                      'relative px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
                     const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
                     const thClass = isSticky
-                      ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                      ? `${base} sticky left-0 z-30 cursor-pointer hover:text-(--palette-gray-600) after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)`
                       : col.sortField
-                        ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
+                        ? `${base} cursor-pointer hover:text-(--palette-gray-600) ${isActive ? 'text-(--palette-primary-text)' : ''}`
                         : base;
                     return (
                       <th
@@ -566,10 +567,10 @@ function PoolTaskListPage({
                       </th>
                     );
                   })}
-                  <th className="text-xs w-10 px-4 py-2.5 bg-gray-50 font-semibold" />
+                  <th className="text-xs w-10 px-4 py-2.5 bg-(--palette-surface-2) font-semibold" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {isLoading ? (
                   <TableRowSkeleton
                     columns={visibleColumns.map(() => ({ width: 'w-24' }))}
@@ -587,19 +588,19 @@ function PoolTaskListPage({
                         key={task.id}
                         className={`group cursor-pointer transition-colors ${
                           isLockedBySelf
-                            ? 'bg-blue-50'
+                            ? 'bg-blue-50 dark:bg-blue-500/10'
                             : isLockedByOther
-                              ? 'bg-amber-50'
-                              : `hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
+                              ? 'bg-(--palette-warn-wash)'
+                              : `hover:bg-(--palette-surface-2) ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
                         }`}
                       >
                         {visibleColumns.map(key => {
                           const col = columnDefs[key];
                           const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
                           const tdClass = isSticky
-                            ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                            ? `${isLockedBySelf ? 'bg-blue-50 dark:bg-blue-500/10' : isLockedByOther ? 'bg-(--palette-warn-wash)' : 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2)'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)`
                             : (col.tdClassName ??
-                              'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap');
+                              'px-3 py-1.5 text-(--palette-gray-600) text-xs overflow-hidden whitespace-nowrap');
                           return (
                             <td key={key} className={tdClass}>
                               {key === 'appraisalNumber' ? (
@@ -625,7 +626,7 @@ function PoolTaskListPage({
                                   )}
                                   <button
                                     onClick={() => handleEditInPool(task)}
-                                    className={`font-medium text-primary hover:underline ${isLockedBySelf || isLockedByOther ? 'mt-3' : ''}`}
+                                    className={`font-medium text-(--palette-primary-text) hover:underline ${isLockedBySelf || isLockedByOther ? 'mt-3' : ''}`}
                                   >
                                     {task.appraisalNumber ?? task.requestNumber ?? '-'}
                                   </button>
@@ -646,7 +647,7 @@ function PoolTaskListPage({
                                 e.stopPropagation();
                                 setOpenMenuTaskId(prev => (prev === task.id ? null : task.id));
                               }}
-                              className="inline-flex items-center justify-center size-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="inline-flex items-center justify-center size-7 rounded-lg text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {isActing ? (
                                 <Icon
@@ -662,7 +663,7 @@ function PoolTaskListPage({
                             {openMenuTaskId === task.id && (
                               <div
                                 onClick={e => e.stopPropagation()}
-                                className="absolute right-0 z-50 mt-1 w-36 bg-white rounded-lg border border-gray-200 shadow-lg py-1 text-sm"
+                                className="absolute right-0 z-50 mt-1 w-36 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-lg py-1 text-sm"
                               >
                                 {isLockedByOther ? (
                                   <button
@@ -670,12 +671,12 @@ function PoolTaskListPage({
                                       setOpenMenuTaskId(null);
                                       handleEditInPool(task);
                                     }}
-                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:bg-gray-50 transition-colors"
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-(--palette-gray-500) hover:bg-(--palette-surface-2) transition-colors"
                                   >
                                     <Icon
                                       style="solid"
                                       name="eye"
-                                      className="size-3 text-gray-400"
+                                      className="size-3 text-(--palette-gray-400)"
                                     />
                                     View
                                   </button>
@@ -685,12 +686,12 @@ function PoolTaskListPage({
                                       setOpenMenuTaskId(null);
                                       handleEditInPool(task);
                                     }}
-                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-2) transition-colors"
                                   >
                                     <Icon
                                       style="solid"
                                       name="pencil"
-                                      className="size-3 text-primary"
+                                      className="size-3 text-(--palette-primary-text)"
                                     />
                                     {isLockedBySelf ? 'Continue' : 'Edit'}
                                   </button>
@@ -701,12 +702,12 @@ function PoolTaskListPage({
                                     setOpenMenuTaskId(null);
                                     handleTakeOut(task);
                                   }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
+                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-2) transition-colors"
                                 >
                                   <Icon
                                     style="solid"
                                     name="arrow-right-from-bracket"
-                                    className="size-3 text-gray-500"
+                                    className="size-3 text-(--palette-gray-500)"
                                   />
                                   Take Out
                                 </button>
@@ -733,10 +734,10 @@ function PoolTaskListPage({
                   <InboxZeroArt className="h-24 w-28" />
                 )}
                 <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-700">
+                  <p className="text-sm font-semibold text-(--palette-ink)">
                     {hasFilters ? 'No matching tasks' : 'Pool is empty'}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-(--palette-gray-400) mt-1">
                     {hasFilters
                       ? 'Try adjusting your search or filters.'
                       : 'There are no tasks in the pool right now.'}
@@ -748,7 +749,7 @@ function PoolTaskListPage({
                       setInternalSearchTerm('');
                       setInternalFilters({});
                     }}
-                    className="text-xs text-primary hover:underline font-medium"
+                    className="text-xs text-(--palette-primary-text) hover:underline font-medium"
                   >
                     Clear filters
                   </button>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
@@ -68,20 +69,22 @@ const AddToExistingMeetingModal = ({
       size="sm"
     >
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-(--palette-gray-600)">
           {selectedCount === 1
             ? t('addToExisting.description', { count: selectedCount })
             : t('addToExisting.descriptionPlural', { count: selectedCount })}
         </p>
 
         {openMeetings.length === 0 ? (
-          <p className="text-sm text-gray-500 italic py-2">{t('empty.noOpenMeetings')}</p>
+          <p className="text-sm text-(--palette-gray-500) italic py-2">
+            {t('empty.noOpenMeetings')}
+          </p>
         ) : (
           // TODO: replace with a richer meeting picker when design spec is finalised
-          <select
+          <NativeSelect
             value={pickedId}
             onChange={e => setPickedId(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full"
           >
             <option value="">{t('addToExisting.selectMeeting')}</option>
             {openMeetings.map(m => (
@@ -96,7 +99,7 @@ const AddToExistingMeetingModal = ({
                   : ''}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         )}
 
         <div className="flex justify-end gap-3 pt-2">
@@ -224,12 +227,14 @@ const MeetingQueuePage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.queue.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('page.queue.title')}
+            </h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.queue.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.queue.subtitle')}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="ghost" onClick={() => navigate('/meetings')}>
@@ -265,11 +270,11 @@ const MeetingQueuePage = () => {
       </div>
 
       {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10">
+              <tr className="border-b border-(--palette-line)">
                 <th className="text-xs px-3 py-2.5 text-left font-semibold">
                   <input
                     type="checkbox"
@@ -278,13 +283,13 @@ const MeetingQueuePage = () => {
                     aria-label={t('aria.selectAll')}
                   />
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.appraisalNo')}
                 </th>
-                <th className="text-xs text-right font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-right font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.appraisalValue')}
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   {t('columns.enqueued')}
                 </th>
               </tr>
@@ -292,7 +297,7 @@ const MeetingQueuePage = () => {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-(--palette-gray-400)">
                     <Icon
                       name="spinner"
                       style="solid"
@@ -302,7 +307,7 @@ const MeetingQueuePage = () => {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-4 py-12 text-center text-gray-500">
+                  <td colSpan={4} className="px-4 py-12 text-center text-(--palette-gray-500)">
                     {t('empty.noQueue')}
                   </td>
                 </tr>
@@ -312,8 +317,10 @@ const MeetingQueuePage = () => {
                   return (
                     <tr
                       key={item.id}
-                      className={`border-b border-gray-100 ${
-                        selected.has(item.id) ? 'bg-blue-50' : 'hover:bg-gray-50'
+                      className={`border-b border-(--palette-line-soft) ${
+                        selected.has(item.id)
+                          ? 'bg-blue-50 dark:bg-blue-500/10'
+                          : 'hover:bg-(--palette-surface-2)'
                       }`}
                     >
                       <td className="px-3 py-3">
@@ -324,18 +331,18 @@ const MeetingQueuePage = () => {
                           aria-label={t('aria.selectItem', { label })}
                         />
                       </td>
-                      <td className="px-4 py-3 text-gray-900 font-medium">
+                      <td className="px-4 py-3 text-(--palette-ink) font-medium">
                         <Link
                           to={`/appraisals/${item.appraisalId}/summary`}
-                          className="text-blue-600 hover:underline"
+                          className="text-blue-600 dark:text-blue-400 hover:underline"
                         >
                           {label}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-gray-700 text-right">
+                      <td className="px-4 py-3 text-(--palette-ink) text-right">
                         {formatCurrency(item.appraisalValue)}
                       </td>
-                      <td className="px-4 py-3 text-gray-500">
+                      <td className="px-4 py-3 text-(--palette-gray-500)">
                         {new Date(item.enqueuedAt).toLocaleString('en-GB', {
                           day: '2-digit',
                           month: 'short',
@@ -352,7 +359,7 @@ const MeetingQueuePage = () => {
           </table>
         </div>
         {totalCount > 0 && (
-          <div className="shrink-0 border-t border-gray-200">
+          <div className="shrink-0 border-t border-(--palette-line)">
             <Pagination
               currentPage={pageNumber}
               totalPages={totalPages}

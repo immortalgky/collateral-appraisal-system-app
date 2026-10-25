@@ -61,7 +61,7 @@ const InvitedCompaniesPopover = ({
         {...getReferenceProps()}
         type="button"
         aria-label={t('aria.viewInvitedCompanies')}
-        className="inline-flex items-center text-blue-500 hover:text-blue-600 transition-colors"
+        className="inline-flex items-center text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
       >
         <Icon name="circle-info" style="solid" className="size-3.5" />
       </button>
@@ -73,16 +73,18 @@ const InvitedCompaniesPopover = ({
               ref={refs.setFloating}
               style={floatingStyles}
               {...getFloatingProps()}
-              className="z-50 bg-white rounded-lg border border-gray-200 shadow-lg min-w-[220px] max-w-xs"
+              className="z-50 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-lg min-w-[220px] max-w-xs"
             >
-              <div className="px-3 py-2 border-b border-gray-100">
-                <p className="text-xs font-semibold text-gray-700">{t('invitedCompanies.title')}</p>
-                <p className="text-[10px] text-gray-400">
+              <div className="px-3 py-2 border-b border-(--palette-line-soft)">
+                <p className="text-xs font-semibold text-(--palette-ink)">
+                  {t('invitedCompanies.title')}
+                </p>
+                <p className="text-[10px] text-(--palette-gray-400)">
                   {t('invitedCompanies.totalLabel', { count: totalInvited })}
                 </p>
               </div>
               {companies.length === 0 ? (
-                <p className="px-3 py-3 text-xs text-gray-400 italic">
+                <p className="px-3 py-3 text-xs text-(--palette-gray-400) italic">
                   {t('empty.namesUnavailable')}
                 </p>
               ) : (
@@ -90,9 +92,9 @@ const InvitedCompaniesPopover = ({
                   {companies.map(c => (
                     <li
                       key={c.companyId}
-                      className="px-3 py-1.5 text-xs text-gray-800 flex items-start gap-1.5"
+                      className="px-3 py-1.5 text-xs text-(--palette-ink) flex items-start gap-1.5"
                     >
-                      <span className="text-gray-300 select-none">•</span>
+                      <span className="text-(--palette-gray-300) select-none">•</span>
                       <span
                         className="truncate"
                         title={localizeCompanyName(c.companyName, c.companyNameLocal)}

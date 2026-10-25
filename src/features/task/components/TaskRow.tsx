@@ -17,24 +17,22 @@ function TaskRow({ task }: TaskRowProps) {
 
   return (
     <tr
-      className="group hover:bg-gray-50 cursor-default transition-colors"
+      className="group hover:bg-(--palette-surface-2) cursor-default transition-colors"
       onDoubleClick={() => navigate(`/tasks/${task.id}/opening`)}
     >
-      <td className="px-4 py-3 sticky left-0 bg-white group-hover:bg-gray-50 transition-colors after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100">
+      <td className="px-4 py-3 sticky left-0 bg-(--palette-surface) group-hover:bg-(--palette-surface-2) transition-colors after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-surface-3)">
         {columnDefs.appraisalNumber.render(task)}
       </td>
-      <td className="px-4 py-3 text-gray-600 text-sm">
+      <td className="px-4 py-3 text-(--palette-gray-600) text-sm">
         {columnDefs.customerName.render(task)}
       </td>
-      <td className="px-4 py-3 text-gray-600 text-sm">
+      <td className="px-4 py-3 text-(--palette-gray-600) text-sm">
         {columnDefs.taskType.render(task)}
       </td>
-      <td className="px-4 py-3 text-gray-600 text-sm">
+      <td className="px-4 py-3 text-(--palette-gray-600) text-sm">
         {columnDefs.purpose.render(task)}
       </td>
-      <td className="px-4 py-3">
-        {columnDefs.status.render(task)}
-      </td>
+      <td className="px-4 py-3">{columnDefs.status.render(task)}</td>
     </tr>
   );
 }

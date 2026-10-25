@@ -126,8 +126,13 @@ const SearchUserModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('searchUser.modalTitle')} size="lg" compact>
       <div className="flex flex-col gap-3">
-        <section aria-label={t('searchUser.current')} className="rounded-lg bg-gray-50 px-3 py-2.5">
-          <p className="m-0 mb-1.5 text-xs font-medium text-gray-500">{t('searchUser.current')}</p>
+        <section
+          aria-label={t('searchUser.current')}
+          className="rounded-lg bg-(--palette-surface-2) px-3 py-2.5"
+        >
+          <p className="m-0 mb-1.5 text-xs font-medium text-(--palette-gray-500)">
+            {t('searchUser.current')}
+          </p>
           {initialRequestor?.employeeId ? (
             <div className="flex items-start gap-2.5">
               <Avatar
@@ -135,24 +140,27 @@ const SearchUserModal = ({
                 size="sm"
               />
               <div className="min-w-0 flex-1">
-                <p className="m-0 truncate text-sm font-semibold text-gray-900" title={currentName}>
+                <p
+                  className="m-0 truncate text-sm font-semibold text-(--palette-ink)"
+                  title={currentName}
+                >
                   {currentName}
                 </p>
-                <p className="m-0 break-words text-xs text-gray-500">
+                <p className="m-0 break-words text-xs text-(--palette-gray-500)">
                   {joinParts(initialRequestor.employeeId, initialRequestor.department)}
                 </p>
                 {(initialRequestor.email || initialRequestor.contactNo) && (
-                  <p className="m-0 break-words text-xs text-gray-500">
+                  <p className="m-0 break-words text-xs text-(--palette-gray-500)">
                     {joinParts(initialRequestor.email, initialRequestor.contactNo)}
                   </p>
                 )}
                 {currentPairs.some(([, value]) => value) && (
-                  <p className="m-0 mt-0.5 flex flex-wrap gap-x-3 text-xs text-gray-500">
+                  <p className="m-0 mt-0.5 flex flex-wrap gap-x-3 text-xs text-(--palette-gray-500)">
                     {currentPairs
                       .filter(([, value]) => value)
                       .map(([label, value]) => (
                         <span key={label}>
-                          {label} <span className="text-gray-700">{value}</span>
+                          {label} <span className="text-(--palette-ink)">{value}</span>
                         </span>
                       ))}
                   </p>
@@ -160,7 +168,7 @@ const SearchUserModal = ({
               </div>
             </div>
           ) : (
-            <p className="m-0 text-xs text-gray-500">{t('searchUser.noRequestor')}</p>
+            <p className="m-0 text-xs text-(--palette-gray-500)">{t('searchUser.noRequestor')}</p>
           )}
         </section>
 
@@ -176,7 +184,7 @@ const SearchUserModal = ({
               <Icon
                 name="magnifying-glass"
                 style="regular"
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-gray-400"
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-(--palette-gray-400)"
               />
               <input
                 type="text"
@@ -189,7 +197,7 @@ const SearchUserModal = ({
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={onSearchKeyDown}
-                className="h-10 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                className="h-10 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
                 autoFocus // eslint-disable-line jsx-a11y/no-autofocus -- a search dialog: typing is the first thing to do
               />
               {query && (
@@ -198,17 +206,17 @@ const SearchUserModal = ({
                   onClick={() => setQuery('')}
                   aria-label={t('searchUser.clearSearch')}
                   title={t('searchUser.clearSearch')}
-                  className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon name="xmark" style="solid" className="text-xs" />
                 </button>
               )}
             </div>
 
-            <div className="flex min-h-4 items-baseline justify-between gap-3 text-xs text-gray-500">
+            <div className="flex min-h-4 items-baseline justify-between gap-3 text-xs text-(--palette-gray-500)">
               <span>{t('searchUser.searchHint')}</span>
               {searching && !pending && !isLoading && !isError && (
-                <span className="shrink-0 font-medium text-gray-700" aria-live="polite">
+                <span className="shrink-0 font-medium text-(--palette-ink)" aria-live="polite">
                   {t('searchUser.found', { n: formatNumber(results.length) })}
                 </span>
               )}
@@ -219,19 +227,19 @@ const SearchUserModal = ({
                 id={listId}
                 role="listbox"
                 aria-label={t('searchUser.modalTitle')}
-                className="max-h-[17rem] overflow-y-auto rounded-lg border border-gray-200"
+                className="max-h-[17rem] overflow-y-auto rounded-lg border border-(--palette-line)"
               >
                 {(pending || isLoading) &&
                   Array.from({ length: SKELETON_ROWS }, (_, i) => (
                     <div
                       key={i}
                       aria-hidden
-                      className="flex items-center gap-2.5 border-b border-gray-100 px-3 py-2 last:border-b-0"
+                      className="flex items-center gap-2.5 border-b border-(--palette-line-soft) px-3 py-2 last:border-b-0"
                     >
-                      <div className="size-7 shrink-0 animate-pulse rounded-full bg-gray-200" />
+                      <div className="size-7 shrink-0 animate-pulse rounded-full bg-(--palette-line)" />
                       <div className="flex-1 space-y-1.5">
-                        <div className="h-3 w-32 animate-pulse rounded bg-gray-200" />
-                        <div className="h-2.5 w-52 animate-pulse rounded bg-gray-100" />
+                        <div className="h-3 w-32 animate-pulse rounded bg-(--palette-line)" />
+                        <div className="h-2.5 w-52 animate-pulse rounded bg-(--palette-surface-3)" />
                       </div>
                     </div>
                   ))}
@@ -241,7 +249,7 @@ const SearchUserModal = ({
                     role="alert"
                     className="flex flex-col items-center gap-2 px-4 py-8 text-center"
                   >
-                    <p className="m-0 text-sm font-medium text-gray-800">
+                    <p className="m-0 text-sm font-medium text-(--palette-ink)">
                       {t('searchUser.errorTitle')}
                     </p>
                     <Button variant="outline" size="sm" onClick={() => void refetch()}>
@@ -252,10 +260,12 @@ const SearchUserModal = ({
 
                 {!pending && !isLoading && !isError && results.length === 0 && (
                   <div className="flex flex-col items-center gap-1 px-4 py-8 text-center">
-                    <p className="m-0 text-sm font-medium text-gray-800">
+                    <p className="m-0 text-sm font-medium text-(--palette-ink)">
                       {t('searchUser.emptyTitle')}
                     </p>
-                    <p className="m-0 text-xs text-gray-500">{t('searchUser.emptyHint')}</p>
+                    <p className="m-0 text-xs text-(--palette-gray-500)">
+                      {t('searchUser.emptyHint')}
+                    </p>
                   </div>
                 )}
 
@@ -277,23 +287,26 @@ const SearchUserModal = ({
                         onClick={() => setSelectedId(user.employeeId)}
                         onDoubleClick={() => confirm(user)}
                         className={clsx(
-                          'flex cursor-pointer items-center gap-2.5 border-b border-gray-100 px-3 py-2 last:border-b-0',
-                          isSelected ? 'bg-primary/5' : 'hover:bg-gray-50',
+                          'flex cursor-pointer items-center gap-2.5 border-b border-(--palette-line-soft) px-3 py-2 last:border-b-0',
+                          isSelected ? 'bg-primary/5' : 'hover:bg-(--palette-surface-2)',
                         )}
                       >
                         <Avatar name={avatarName(user)} size="sm" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1.5">
-                            <span className="truncate text-sm font-medium text-gray-900">
+                            <span className="truncate text-sm font-medium text-(--palette-ink)">
                               {displayName(user)}
                             </span>
                             {isCurrent(user) && (
-                              <span className="shrink-0 rounded-full bg-primary/10 px-1.5 text-xs font-medium text-primary">
+                              <span className="shrink-0 rounded-full bg-primary/10 px-1.5 text-xs font-medium text-(--palette-primary-text)">
                                 {t('searchUser.currentBadge')}
                               </span>
                             )}
                           </div>
-                          <span className="block truncate text-xs text-gray-500" title={detail}>
+                          <span
+                            className="block truncate text-xs text-(--palette-gray-500)"
+                            title={detail}
+                          >
                             {detail}
                           </span>
                         </div>
@@ -301,7 +314,7 @@ const SearchUserModal = ({
                           <Icon
                             name="check"
                             style="solid"
-                            className="shrink-0 text-sm text-primary"
+                            className="shrink-0 text-sm text-(--palette-primary-text)"
                           />
                         )}
                       </div>
@@ -311,7 +324,7 @@ const SearchUserModal = ({
             )}
 
             <div className="flex items-center justify-between gap-3 pt-1">
-              <p className="m-0 text-xs text-gray-500">{t('searchUser.footerHint')}</p>
+              <p className="m-0 text-xs text-(--palette-gray-500)">{t('searchUser.footerHint')}</p>
               <div className="flex shrink-0 gap-2">
                 <Button variant="outline" onClick={onClose}>
                   {t('common:actions.cancel')}

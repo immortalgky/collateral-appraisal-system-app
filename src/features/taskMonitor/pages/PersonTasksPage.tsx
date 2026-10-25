@@ -102,11 +102,11 @@ function PersonTasksPage() {
       <div className="shrink-0 mb-3 flex items-center gap-3">
         <Avatar name={displayName} size="md" />
         <div>
-          <h2 className="text-base font-semibold text-gray-900">{displayName}</h2>
-          <p className="text-xs text-gray-500 font-mono">{username}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">{displayName}</h2>
+          <p className="text-xs text-(--palette-gray-500) font-mono">{username}</p>
         </div>
         {!isLoading && totalCount > 0 && (
-          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
+          <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full tabular-nums">
             {totalCount}
           </span>
         )}
@@ -120,19 +120,21 @@ function PersonTasksPage() {
       {/* ── Error state ── */}
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-3">
-          <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+          <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-gray-800">{t('errors.loadTasksFailed')}</p>
-            <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+            <p className="text-sm font-medium text-(--palette-ink)">
+              {t('errors.loadTasksFailed')}
+            </p>
+            <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
           </div>
         </div>
       )}
 
       {/* ── Table ── */}
       {!isError && (
-        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           <TaskMonitorTable
             tasks={tasks}
             isLoading={isLoading}

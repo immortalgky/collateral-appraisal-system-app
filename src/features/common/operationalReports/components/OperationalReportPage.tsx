@@ -99,15 +99,29 @@ function SortableTh({
 
   const handleClick = () => {
     if (!isSortable || !sortKey || !onSortChange) return;
-    if (!isActive) { onSortChange(sortKey, 'asc'); return; }
-    if (activeSortDir === 'asc') { onSortChange(sortKey, 'desc'); return; }
+    if (!isActive) {
+      onSortChange(sortKey, 'asc');
+      return;
+    }
+    if (activeSortDir === 'asc') {
+      onSortChange(sortKey, 'desc');
+      return;
+    }
     onSortChange(undefined, undefined);
   };
 
-  const baseCls = 'px-4 py-3 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+  const baseCls =
+    'px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
 
   if (!isSortable) {
-    return <th className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()} title={fullLabel}>{label}</th>;
+    return (
+      <th
+        className={`text-xs ${baseCls} ${className ?? ''} font-semibold`.trim()}
+        title={fullLabel}
+      >
+        {label}
+      </th>
+    );
   }
 
   return (
@@ -119,13 +133,13 @@ function SortableTh({
       <button
         type="button"
         onClick={handleClick}
-        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors group ${isActive ? 'text-primary' : ''}`}
+        className={`inline-flex items-center gap-1 hover:text-(--palette-ink) transition-colors group ${isActive ? 'text-(--palette-primary-text)' : ''}`}
       >
         <span>{label}</span>
         <Icon
           style="solid"
           name={isActive ? (activeSortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
-          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300 group-hover:text-gray-500'}`}
+          className={`size-2.5 ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300) group-hover:text-(--palette-gray-500)'}`}
         />
       </button>
     </th>
@@ -150,7 +164,9 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
   // ── Filter state ─────────────────────────────────────────────────────────────
   // `filterValues` updates on every keystroke so the inputs stay responsive, but the
   // query/export read the debounced copy — typing no longer fires a request per keystroke.
-  const [filterValues, setFilterValues] = useState<BaseReportFilter>(() => defaultFilterValues(filters, skipDateDefault));
+  const [filterValues, setFilterValues] = useState<BaseReportFilter>(() =>
+    defaultFilterValues(filters, skipDateDefault),
+  );
   const debouncedFilterValues = useDebounce(filterValues, 400);
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(defaultPageSize);
@@ -215,21 +231,21 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
       {/* Error state */}
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-3">
-          <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+          <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
-          <p className="text-sm font-medium text-gray-800">Failed to load report</p>
-          <p className="text-xs text-gray-400">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">Failed to load report</p>
+          <p className="text-xs text-(--palette-gray-400)">{(error as Error)?.message}</p>
         </div>
       )}
 
       {/* Table */}
       {!isError && (
-        <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           <div className="flex-1 min-h-0 overflow-auto">
             <table className="w-full min-w-max text-sm">
               <thead className="sticky top-0 z-20">
-                <tr className="bg-gray-50 border-b border-gray-200">
+                <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                   {columns.map((col, idx) => (
                     <SortableTh
                       key={col.key}
@@ -249,22 +265,23 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {isLoading ? (
-                  <TableRowSkeleton
-                    columns={columns.map(() => ({ width: 'w-24' }))}
-                    rows={8}
-                  />
+                  <TableRowSkeleton columns={columns.map(() => ({ width: 'w-24' }))} rows={8} />
                 ) : rows.length === 0 ? (
                   <tr>
                     <td colSpan={columns.length} className="py-16">
                       <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="size-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                          <Icon style="regular" name="inbox" className="size-6 text-gray-300" />
+                        <div className="size-14 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                          <Icon
+                            style="regular"
+                            name="inbox"
+                            className="size-6 text-(--palette-gray-300)"
+                          />
                         </div>
                         <div className="text-center">
-                          <p className="text-sm font-semibold text-gray-700">No records</p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-sm font-semibold text-(--palette-ink)">No records</p>
+                          <p className="text-xs text-(--palette-gray-400) mt-1">
                             No items match the current filters.
                           </p>
                         </div>
@@ -273,7 +290,7 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                   </tr>
                 ) : (
                   rows.map((row, rowIdx) => (
-                    <tr key={rowIdx} className="hover:bg-gray-50 transition-colors">
+                    <tr key={rowIdx} className="hover:bg-(--palette-surface-2) transition-colors">
                       {columns.map((col, colIdx) => {
                         const raw = (row as Record<string, unknown>)[col.field];
                         const formatted = formatCellValue(raw, col.type);
@@ -285,11 +302,11 @@ function OperationalReportPage({ config }: OperationalReportPageProps) {
                           <td
                             key={col.key}
                             className={[
-                              'px-3 py-1.5 text-xs text-gray-700',
+                              'px-3 py-1.5 text-xs text-(--palette-ink)',
                               col.className ?? '',
                               isRight ? 'text-right tabular-nums' : '',
                               colIdx === 0
-                                ? 'sticky left-0 bg-white shadow-[1px_0_0_0_rgb(229,231,235)] font-medium text-gray-800'
+                                ? 'sticky left-0 bg-(--palette-surface) shadow-[1px_0_0_0_rgb(229,231,235)] font-medium text-(--palette-ink)'
                                 : '',
                             ]
                               .join(' ')

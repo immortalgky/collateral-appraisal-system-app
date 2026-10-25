@@ -1,12 +1,20 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { useForm, type Resolver } from 'react-hook-form';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import clsx from 'clsx';
-import { FormProvider, FormFields, type FormField } from '@shared/components/form';
+import { z } from 'zod';
+import {
+  FormProvider,
+  FormFields,
+  FormSection,
+  FormSheet,
+  UserFormLayoutProvider,
+  useFormLayout,
+  type FormField,
+} from '@shared/components/form';
 import Icon from '@/shared/components/Icon';
-import Section from '@/shared/components/sections/Section';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
@@ -17,7 +25,7 @@ import { useGetAppraisalById } from '@/features/appraisal/api/appraisal';
 import { useGetRequestById } from '@features/request/api/requests';
 import { useGetAppraisalDocuments } from '@/features/appraisal/api/appraisalDocuments';
 import { getPropertyIcon } from '@/features/appraisal/utils/propertyTypeConfig';
-import { EditorIdentityCard } from '@/features/appraisal/components/EditorIdentityCard';
+import { EditorHeader } from '@/features/appraisal/components/EditorHeader';
 import { PropertyTypeChip } from '@/features/appraisal/components/PropertyTypeChip';
 import { usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
 import DataErrorState from '@/shared/components/DataErrorState';
@@ -36,6 +44,7 @@ import {
 import { getPropertyTypeForm } from '../configs/propertyTypeForms';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { diffFormValues, type DiffEntry } from '../utils/formDiff';
+import { withReason } from '../utils/withReason';
 import { withStoredBuildingValues } from '@/features/appraisal/utils/buildingStoredValues';
 import CorrectionConfirmDialog from '../components/CorrectionConfirmDialog';
 import CorrectionHistoryPanel, { HistoryFilterChips } from '../components/CorrectionHistoryPanel';
@@ -168,7 +177,11 @@ function PropertyRail({
   if (isLoading) {
     body = (
       <div className="flex items-center justify-center py-8">
-        <Icon name="spinner" style="solid" className="size-5 text-primary animate-spin" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-5 text-(--palette-primary-text) animate-spin"
+        />
       </div>
     );
   } else if (isError) {
@@ -176,7 +189,9 @@ function PropertyRail({
       <DataErrorState variant="inline" title={t('detail.propertiesLoadFailed')} onRetry={onRetry} />
     );
   } else if (propertyCount === 0) {
-    body = <p className="text-sm text-gray-500 px-2 py-2">{t('detail.noProperties')}</p>;
+    body = (
+      <p className="text-sm text-(--palette-gray-500) px-2 py-2">{t('detail.noProperties')}</p>
+    );
   } else {
     body = propertyGroups
       .filter(g => g.properties.length > 0)
@@ -270,6 +285,24 @@ function DocumentsRailEntry({
 const hasEdit = (node: unknown): boolean =>
   node === true || (typeof node === 'object' && node !== null && Object.values(node).some(hasEdit));
 
+/**
+ * The editor's scroller, as the property pages have it: `#form-scroll-container` is what the
+ * form-error scroll and the tab bar look for, and `--form-scroll-offset` is the pinned tab row's
+ * height, which `FormSection` scrolls under. Inside the layout provider so it reads the layout.
+ */
+function EditorScroller({ children }: { children: ReactNode }) {
+  const compact = useFormLayout() === 'compact';
+  return (
+    <div
+      id="form-scroll-container"
+      style={{ '--form-scroll-offset': compact ? '2.4286rem' : '2.5714rem' } as CSSProperties}
+      className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
+    >
+      {children}
+    </div>
+  );
+}
+
 function PropertyCorrectionEditor({
   appraisalId,
   property,
@@ -303,6 +336,10 @@ function PropertyCorrectionEditor({
   } | null>(null);
 
   const config = getPropertyTypeForm(typeCode);
+  const schema = useMemo(
+    () => withReason(config?.schema ?? z.object({}), t('detail.reasonRequired')),
+    [config, t],
+  );
   // Always refetch on open: the save overwrites the whole record, so seeding it from a cached copy
   // would silently revert anything another admin corrected in the meantime.
   const {
@@ -341,7 +378,7 @@ function PropertyCorrectionEditor({
     // schema object directly and never hit this; here the cast is what lets one registry serve
     // them all.
     resolver: config
-      ? (zodResolver(config.schema as never) as Resolver<Record<string, unknown>>)
+      ? (zodResolver(schema as never) as Resolver<Record<string, unknown>>)
       : undefined,
   });
   const {
@@ -382,7 +419,9 @@ function PropertyCorrectionEditor({
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2">
         <Icon style="solid" name="triangle-exclamation" className="size-8 text-amber-500" />
-        <p className="text-gray-600">{t('detail.unsupportedType', { type: typeCode })}</p>
+        <p className="text-(--palette-gray-600)">
+          {t('detail.unsupportedType', { type: typeCode })}
+        </p>
       </div>
     );
   }
@@ -393,21 +432,21 @@ function PropertyCorrectionEditor({
   if (isLoading || !defaults) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="size-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
-  // The resolver only gates the save; nothing reads its output. It runs the property's own
-  // schema, and a zod object drops every key it does not declare (`reason` among them). The update
-  // is a full overwrite, so a dropped key is wiped. Everything is therefore read from the form, as
-  // the property page's draft save does.
+  // The resolver only gates the save (the reason included); nothing reads its output. It runs the
+  // property's own schema, and a zod object drops every key it does not declare. The update is a
+  // full overwrite, so a dropped key is wiped. Everything is therefore read from the form, as the
+  // property page's draft save does.
   const onSubmit = () => {
     const reason = String(getValues('reason') ?? '').trim();
-    if (!reason) {
-      methods.setError('reason', { type: 'required', message: t('detail.reasonRequired') });
-      return;
-    }
 
     // A payload with nothing different from the record is not worth a round trip — the server
     // refuses it too (NO_CHANGES).
@@ -476,97 +515,80 @@ function PropertyCorrectionEditor({
   };
 
   return (
-    <FormProvider methods={methods} schema={config.schema}>
-      {/* `cas-form-grid` on the form and `form-scroll-container` on its scroller, exactly as the
-          property pages have them: the shared form styles (the sheet look, the pinned section
-          headers under the tab bar) are keyed on both. */}
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="cas-form-grid cas-dc-editor flex-1 min-h-0 flex flex-col"
-      >
-        <div
-          id="form-scroll-container"
-          className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-        >
-          {/* The property page's own identity card, so the pane opens the way that page does. It
-              sits flush with the pane's top and sides (`.cas-dc-editor` in formLayoutSkin.css): no
-              gutter on the scroller, so the sticky tab bar below reaches the pane's top edge once
-              this has scrolled away. */}
-          <div ref={headRef} className="cas-dc-head">
-            <EditorIdentityCard
-              top={<PropertyTypeChip code={typeCode} className="cas-id-badge" />}
+    <UserFormLayoutProvider>
+      <FormProvider methods={methods} schema={schema}>
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+          <EditorScroller>
+            {/* The property page's own header (DESIGN.md 17.8), without its photos and tabs. */}
+            <EditorHeader
+              anchorRef={headRef}
+              badge={<PropertyTypeChip code={typeCode} size="md" />}
               title={property.propertyName || t('detail.unnamedProperty')}
               titleMuted={!property.propertyName}
-            >
-              {editCount !== undefined && (
-                <p className="cas-id-facts text-[13px] text-gray-600">
-                  {editCount > 0 ? t('edits.count', { count: editCount }) : t('edits.none')}
-                </p>
-              )}
-            </EditorIdentityCard>
+              facts={
+                editCount !== undefined && (
+                  <span>
+                    {editCount > 0 ? t('edits.count', { count: editCount }) : t('edits.none')}
+                  </span>
+                )
+              }
+            />
 
-            {latestEdit && (
-              <LatestCorrectionCard correction={latestEdit} onViewAll={onOpenHistory} />
-            )}
-          </div>
+            {/* The property page's own tab bar and panels. Its bar is a direct child of the scroll
+              container (it is `sticky`), so the body is rendered here and not inside a wrapper.
+              The latest correction leads the panels; the reason is the last section below them, so
+              it is there on whichever tab is open. */}
+            {config.render({
+              propertyId,
+              ciMode,
+              onSelectProperty,
+              scrollAnchorRef: headRef,
+              lead: latestEdit && (
+                <LatestCorrectionCard correction={latestEdit} onViewAll={onOpenHistory} />
+              ),
+              trail: (
+                <FormSheet>
+                  <FormSection title={t('detail.reasonTitle')} icon="comment">
+                    <FormFields fields={[reasonField]} />
+                  </FormSection>
+                </FormSheet>
+              ),
+            })}
+          </EditorScroller>
 
-          {/* The property page's own tab bar and panels. Its bar is a direct child of the scroll
-              container (it is `sticky`), so the body is rendered here and not inside a wrapper. */}
-          {config.render({ propertyId, ciMode, onSelectProperty, scrollAnchorRef: headRef })}
-
-          {/* Dressed as one more section of the form rather than a card bolted underneath:
-              same `cas-section-head` band as every block above, so the reason reads as the last
-              thing you fill in, not a separate dialog. Below the panels, so it is there on
-              whichever tab is open. */}
-          <Section>
-            <div className="cas-section-grid cas-sheet">
-              <div className="cas-section-head mb-2 flex items-center gap-2">
-                <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-primary-50">
-                  <Icon style="solid" name="comment" className="size-3.5 text-primary-600" />
-                </div>
-                <span className="text-sm font-medium leading-tight text-gray-700">
-                  {t('detail.reasonTitle')}
-                </span>
-              </div>
-              <div className="grid grid-cols-12 gap-4">
-                <FormFields fields={[reasonField]} />
-              </div>
-            </div>
-          </Section>
-        </div>
-
-        <ActionBar>
-          {/* Discard on the far left, Save on the far right, as the property pages have them:
+          <ActionBar>
+            {/* Discard on the far left, Save on the far right, as the property pages have them:
               Discard throws away every edit, so it does not sit beside the button it undoes. */}
-          <ActionBar.Left>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => reset(baseline.current ?? defaults)}
-              disabled={!hasDirtyFields || isPending}
-            >
-              {t('detail.discard')}
-            </Button>
-          </ActionBar.Left>
-          <ActionBar.Right>
-            <Button type="submit" disabled={!hasDirtyFields || isPending}>
-              {t('detail.submit')}
-            </Button>
-          </ActionBar.Right>
-        </ActionBar>
-      </form>
+            <ActionBar.Left>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => reset(baseline.current ?? defaults)}
+                disabled={!hasDirtyFields || isPending}
+              >
+                {t('detail.discard')}
+              </Button>
+            </ActionBar.Left>
+            <ActionBar.Right>
+              <Button type="submit" disabled={!hasDirtyFields || isPending}>
+                {t('detail.submit')}
+              </Button>
+            </ActionBar.Right>
+          </ActionBar>
+        </form>
 
-      <CorrectionConfirmDialog
-        isOpen={pendingSubmit !== null}
-        onClose={() => setPendingSubmit(null)}
-        onConfirm={handleConfirm}
-        diff={pendingSubmit?.diff ?? []}
-        reason={pendingSubmit?.reason ?? ''}
-        isLoading={isPending}
-      />
+        <CorrectionConfirmDialog
+          isOpen={pendingSubmit !== null}
+          onClose={() => setPendingSubmit(null)}
+          onConfirm={handleConfirm}
+          diff={pendingSubmit?.diff ?? []}
+          reason={pendingSubmit?.reason ?? ''}
+          isLoading={isPending}
+        />
 
-      <UnsavedChangesDialog blocker={blocker} />
-    </FormProvider>
+        <UnsavedChangesDialog blocker={blocker} />
+      </FormProvider>
+    </UserFormLayoutProvider>
   );
 }
 
@@ -701,7 +723,7 @@ const AppraisalDataCorrectionDetailPage = () => {
               />
             ) : (
               !isLoading && (
-                <div className="flex items-center justify-center h-64 text-gray-500">
+                <div className="flex items-center justify-center h-64 text-(--palette-gray-500)">
                   {t('detail.selectProperty')}
                 </div>
               )

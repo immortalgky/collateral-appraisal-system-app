@@ -178,8 +178,8 @@ describe('FilterChipBar add-filter hand-off', () => {
     // "Status" with its chevron, not "Status: All" in the filled style
     const chip = chipButton('Status');
     expect(chip).toHaveTextContent(/^Status$/);
-    expect(chip.closest('span')?.className).toContain('bg-white');
-    expect(chip.closest('span')?.className).not.toContain('bg-gray-100');
+    expect(chip.closest('span')?.className).toContain('bg-(--palette-surface)');
+    expect(chip.closest('span')?.className).not.toContain('bg-(--palette-surface-3)');
     expect(values()).toEqual({});
   });
 

@@ -12,12 +12,21 @@ interface AccentClasses {
 }
 
 const ACCENT: Record<SectionAccent, AccentClasses> = {
-  emerald: { iconBg: 'bg-emerald-50', iconText: 'text-emerald-600' },
-  indigo: { iconBg: 'bg-indigo-50', iconText: 'text-indigo-600' },
-  amber: { iconBg: 'bg-amber-50', iconText: 'text-amber-600' },
-  purple: { iconBg: 'bg-purple-50', iconText: 'text-purple-600' },
-  yellow: { iconBg: 'bg-yellow-50', iconText: 'text-yellow-500' },
-  cyan: { iconBg: 'bg-cyan-50', iconText: 'text-cyan-600' },
+  emerald: {
+    iconBg: 'bg-emerald-50 dark:bg-emerald-500/10',
+    iconText: 'text-emerald-600 dark:text-emerald-400',
+  },
+  indigo: {
+    iconBg: 'bg-indigo-50 dark:bg-indigo-500/10',
+    iconText: 'text-indigo-600 dark:text-indigo-400',
+  },
+  amber: { iconBg: 'bg-(--palette-warn-wash)', iconText: 'text-amber-600 dark:text-amber-400' },
+  purple: {
+    iconBg: 'bg-purple-50 dark:bg-purple-500/10',
+    iconText: 'text-purple-600 dark:text-purple-400',
+  },
+  yellow: { iconBg: 'bg-(--palette-warn-wash)', iconText: 'text-yellow-500' },
+  cyan: { iconBg: 'bg-cyan-50 dark:bg-cyan-500/10', iconText: 'text-cyan-600 dark:text-cyan-400' },
 };
 
 interface MonitoringSectionCardProps {
@@ -51,7 +60,7 @@ function MiniSlaBar({
   return (
     <span className="ml-auto flex items-center gap-2 shrink-0">
       <span
-        className="flex h-1.5 w-16 overflow-hidden rounded-full bg-gray-100"
+        className="flex h-1.5 w-16 overflow-hidden rounded-full bg-(--palette-surface-3)"
         aria-label={`${breachPct}% breached — ${breached} breached, ${atRisk} at risk, ${healthy} healthy`}
       >
         {breached > 0 && <span className="h-full bg-red-500" style={{ width: pct(breached) }} />}
@@ -62,10 +71,10 @@ function MiniSlaBar({
         className={[
           'text-[11px] font-medium tabular-nums',
           breachPct >= 50
-            ? 'text-red-600'
+            ? 'text-(--palette-danger)'
             : breachPct >= 25
-              ? 'text-amber-600'
-              : 'text-emerald-600',
+              ? 'text-amber-600 dark:text-amber-400'
+              : 'text-emerald-600 dark:text-emerald-400',
         ].join(' ')}
       >
         {breachPct}%
@@ -95,14 +104,14 @@ function MonitoringSectionCard({
   const showMiniBar = !expanded && breached + atRisk + healthy > 0;
 
   return (
-    <section className="bg-white rounded-lg border border-gray-200 shadow-sm">
+    <section className="bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm">
       <button
         type="button"
         onClick={() => onToggle(id)}
         aria-expanded={expanded}
         aria-controls={bodyId}
         className={[
-          'w-full flex items-center gap-2 px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors rounded-t-lg',
+          'w-full flex items-center gap-2 px-4 py-3 text-left bg-(--palette-surface-2) hover:bg-(--palette-surface-3) transition-colors rounded-t-lg',
           expanded ? '' : 'rounded-b-lg',
         ].join(' ')}
       >
@@ -110,7 +119,7 @@ function MonitoringSectionCard({
           style="solid"
           name="chevron-down"
           className={[
-            'size-3 text-gray-500 transition-transform shrink-0',
+            'size-3 text-(--palette-gray-500) transition-transform shrink-0',
             expanded ? '' : '-rotate-90',
           ].join(' ')}
         />
@@ -122,9 +131,9 @@ function MonitoringSectionCard({
         >
           <Icon style="solid" name={icon} className={['size-3.5', cfg.iconText].join(' ')} />
         </span>
-        <span className="text-sm font-semibold text-gray-700">{title}</span>
+        <span className="text-sm font-semibold text-(--palette-ink)">{title}</span>
         {count !== undefined && (
-          <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-white text-gray-600 border border-gray-200 rounded-full tabular-nums leading-none">
+          <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-(--palette-surface) text-(--palette-gray-600) border border-(--palette-line) rounded-full tabular-nums leading-none">
             {count}
           </span>
         )}
@@ -134,7 +143,11 @@ function MonitoringSectionCard({
         {showMiniBar && <MiniSlaBar breached={breached} atRisk={atRisk} healthy={healthy} />}
       </button>
 
-      <div id={bodyId} hidden={!expanded} className="px-4 pt-3 pb-4 border-t border-gray-200">
+      <div
+        id={bodyId}
+        hidden={!expanded}
+        className="px-4 pt-3 pb-4 border-t border-(--palette-line)"
+      >
         {hasOpenedRef.current && children}
       </div>
     </section>

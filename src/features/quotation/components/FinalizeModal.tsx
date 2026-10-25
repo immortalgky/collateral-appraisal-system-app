@@ -284,12 +284,19 @@ const FinalizeModal = ({
 
   const followupCell = (appraisalId: string) => {
     const row = readiness.get(appraisalId);
-    if (row?.predictedOutcome !== 'Ready') return <span className="text-gray-400">—</span>;
+    if (row?.predictedOutcome !== 'Ready')
+      return <span className="text-(--palette-gray-400)">—</span>;
     if (row.isPma)
-      return <span className="text-xs text-gray-500">{t('finalize.autoAssign.pmaKeyer')}</span>;
+      return (
+        <span className="text-xs text-(--palette-gray-500)">
+          {t('finalize.autoAssign.pmaKeyer')}
+        </span>
+      );
     if (!manual)
       return (
-        <span className="text-xs text-gray-500">{t('finalize.autoAssign.roundRobinHint')}</span>
+        <span className="text-xs text-(--palette-gray-500)">
+          {t('finalize.autoAssign.roundRobinHint')}
+        </span>
       );
     const query = staffQueryOf.get(appraisalId);
     if (query?.isError)
@@ -299,7 +306,7 @@ const FinalizeModal = ({
           <button
             type="button"
             onClick={() => query.refetch()}
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-(--palette-primary-text) hover:underline"
           >
             {t('finalize.autoAssign.retry')}
           </button>
@@ -341,13 +348,13 @@ const FinalizeModal = ({
       size={dialogSize}
     >
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <div className="p-3 bg-green-50 rounded-lg border border-green-100 flex items-start gap-2">
+        <div className="p-3 bg-green-50 dark:bg-green-500/10 rounded-lg border border-green-100 dark:border-green-500/20 flex items-start gap-2">
           <Icon
             name="circle-check"
             style="solid"
             className="size-4 text-green-500 shrink-0 mt-0.5"
           />
-          <div className="text-sm text-green-700">
+          <div className="text-sm text-green-700 dark:text-green-300">
             <p>
               <BoldTrans
                 i18nKey={assigning ? 'finalize.awardBodyAssigning' : 'finalize.awardBody'}
@@ -358,7 +365,7 @@ const FinalizeModal = ({
         </div>
 
         {allowAutoAssign && (
-          <div className="rounded-lg border border-gray-200 p-3 flex flex-col gap-3">
+          <div className="rounded-lg border border-(--palette-line) p-3 flex flex-col gap-3">
             <Switch
               checked={assigning || blockedByPreview}
               onChange={setWantsAssign}
@@ -368,25 +375,29 @@ const FinalizeModal = ({
               description={t('finalize.autoAssign.description')}
             />
             {isPreviewFetching && (
-              <p className="text-xs text-gray-500">{t('finalize.autoAssign.checking')}</p>
+              <p className="text-xs text-(--palette-gray-500)">
+                {t('finalize.autoAssign.checking')}
+              </p>
             )}
             {previewUnavailable && (
-              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-amber-700">
+              <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-(--palette-warn)">
                 <span>{t('finalize.autoAssign.previewFailed')}</span>
                 <button
                   type="button"
                   onClick={() => refetchPreview()}
-                  className="font-medium text-primary hover:underline"
+                  className="font-medium text-(--palette-primary-text) hover:underline"
                 >
                   {t('finalize.autoAssign.retry')}
                 </button>
               </p>
             )}
             {preview && !preview.standalone && (
-              <p className="text-xs text-amber-700">{t('finalize.autoAssign.notStandalone')}</p>
+              <p className="text-xs text-(--palette-warn)">
+                {t('finalize.autoAssign.notStandalone')}
+              </p>
             )}
             {preview?.standalone && !preview.externalAssignmentEnabled && (
-              <p className="text-xs text-amber-700">{t('finalize.autoAssign.notEnabled')}</p>
+              <p className="text-xs text-(--palette-warn)">{t('finalize.autoAssign.notEnabled')}</p>
             )}
 
             {assigning && (
@@ -430,34 +441,34 @@ const FinalizeModal = ({
           </div>
         )}
 
-        <div className="rounded-lg border border-gray-200 overflow-x-auto">
+        <div className="rounded-lg border border-(--palette-line) overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">
+              <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                <th className="px-3 py-2 text-left text-xs font-semibold text-(--palette-gray-600)">
                   {t('finalize.appraisal')}
                 </th>
                 {assigning && (
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-(--palette-gray-600)">
                     {t('finalize.autoAssign.readiness')}
                   </th>
                 )}
-                <th className="px-3 py-2 text-right text-xs font-semibold text-gray-600 whitespace-nowrap">
+                <th className="px-3 py-2 text-right text-xs font-semibold text-(--palette-gray-600) whitespace-nowrap">
                   {t('finalize.feeNet')}
                 </th>
                 {assigning && (
-                  <th className="px-3 py-2 text-left text-xs font-semibold text-gray-600">
+                  <th className="px-3 py-2 text-left text-xs font-semibold text-(--palette-gray-600)">
                     {t('finalize.autoAssign.followup')}
                   </th>
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {sortedItems.length === 0 && extraRows.length === 0 ? (
                 <tr>
                   <td
                     colSpan={assigning ? 4 : 2}
-                    className="px-3 py-3 text-center text-sm text-gray-500"
+                    className="px-3 py-3 text-center text-sm text-(--palette-gray-500)"
                   >
                     {t('finalize.noItems')}
                   </td>
@@ -480,7 +491,7 @@ const FinalizeModal = ({
                   const outcome = row ? outcomeLabel(row) : null;
                   return (
                     <tr key={key}>
-                      <td className="px-3 py-2 text-sm text-gray-700">
+                      <td className="px-3 py-2 text-sm text-(--palette-ink)">
                         {appraisalLabelFor(appraisalId)}
                       </td>
                       {assigning && (
@@ -496,17 +507,19 @@ const FinalizeModal = ({
                                 {outcome.status}
                               </Badge>
                               {outcome.reason && (
-                                <p className="mt-0.5 text-xs text-gray-500">{outcome.reason}</p>
+                                <p className="mt-0.5 text-xs text-(--palette-gray-500)">
+                                  {outcome.reason}
+                                </p>
                               )}
                             </div>
                           )}
                         </td>
                       )}
-                      <td className="px-3 py-2 text-right text-sm text-gray-900 tabular-nums whitespace-nowrap">
+                      <td className="px-3 py-2 text-right text-sm text-(--palette-ink) tabular-nums whitespace-nowrap">
                         {fee != null ? (
                           formatCurrency(fee)
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-(--palette-gray-400)">—</span>
                         )}
                       </td>
                       {assigning && (
@@ -519,14 +532,14 @@ const FinalizeModal = ({
             </tbody>
             {sortedItems.length > 1 && (
               <tfoot>
-                <tr className="bg-gray-50 border-t border-gray-200">
+                <tr className="bg-(--palette-surface-2) border-t border-(--palette-line)">
                   <td
                     colSpan={assigning ? 2 : 1}
-                    className="px-3 py-2 text-sm font-medium text-gray-700"
+                    className="px-3 py-2 text-sm font-medium text-(--palette-ink)"
                   >
                     {t('finalize.total')}
                   </td>
-                  <td className="px-3 py-2 text-right text-sm font-semibold text-gray-900 tabular-nums whitespace-nowrap">
+                  <td className="px-3 py-2 text-right text-sm font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap">
                     {formatCurrency(grandTotal)}
                   </td>
                   {assigning && <td />}
@@ -539,7 +552,7 @@ const FinalizeModal = ({
         {assigning && parkedRows.length > 0 && (
           <div
             role="status"
-            className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-gray-700"
+            className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-1.5 text-xs text-(--palette-ink)"
           >
             <Icon
               name="triangle-exclamation"
@@ -557,20 +570,20 @@ const FinalizeModal = ({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('fields.notes')}{' '}
-            <span className="text-xs text-gray-400">{t('fields.notesOptional')}</span>
+            <span className="text-xs text-(--palette-gray-400)">{t('fields.notesOptional')}</span>
           </label>
           <textarea
             {...register('reason')}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none resize-none"
+            className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none resize-none"
             placeholder={t('placeholders.notes')}
           />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-          <div className="flex flex-col gap-0.5 text-xs text-gray-500">
+          <div className="flex flex-col gap-0.5 text-xs text-(--palette-gray-500)">
             {missingStaff ? (
               <span>{t('finalize.autoAssign.manualIncomplete')}</span>
             ) : (

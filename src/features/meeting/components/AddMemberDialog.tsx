@@ -2,9 +2,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { type MemberFormValues, useMemberFormSchema } from '../schemas/meeting';
 import { useAddMeetingMember, useGetMeetingDetail } from '../api/meetings';
 import { DEFAULT_MEMBER_POSITION } from '../constants';
@@ -19,9 +21,6 @@ interface AddMemberDialogProps {
   onClose: () => void;
   meetingId: string;
 }
-
-const sharedInputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) => {
   const { t } = useTranslation('meeting');
@@ -117,15 +116,15 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
         <div>
           <label
             htmlFor="member-user-select"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
           >
             {t('fields.user')} <span className="text-red-500">*</span>
           </label>
-          <select
+          <NativeSelect
             id="member-user-select"
             onChange={handleUserSelect}
             disabled={isLoadingUsers}
-            className={sharedInputClass}
+            className="w-full"
             defaultValue=""
           >
             <option value="" disabled>
@@ -142,30 +141,41 @@ const AddMemberDialog = ({ isOpen, onClose, meetingId }: AddMemberDialogProps) =
                   : user.username}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {/* Hidden fields drive form validation for userId and memberName */}
           <input type="hidden" {...register('userId')} />
           <input type="hidden" {...register('memberName')} />
-          {errors.userId && <p className="mt-1 text-xs text-red-600">{errors.userId.message}</p>}
+          {errors.userId && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.userId.message} />
+            </p>
+          )}
           {errors.memberName && (
-            <p className="mt-1 text-xs text-red-600">{errors.memberName.message}</p>
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.memberName.message} />
+            </p>
           )}
         </div>
 
         {/* Position */}
         <div>
-          <label htmlFor="member-position" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="member-position"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('columns.position')} <span className="text-red-500">*</span>
           </label>
-          <select id="member-position" {...register('position')} className={sharedInputClass}>
+          <NativeSelect id="member-position" {...register('position')} className="w-full">
             {selectablePositions.map(pos => (
               <option key={pos} value={pos}>
                 {positionLabel(pos)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {errors.position && (
-            <p className="mt-1 text-xs text-red-600">{errors.position.message}</p>
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.position.message} />
+            </p>
           )}
         </div>
 

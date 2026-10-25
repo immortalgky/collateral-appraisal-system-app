@@ -109,7 +109,7 @@ describe('AppraisalResultsTable', () => {
   it('draws the business group as one neutral badge', () => {
     render_('createdAt', 'desc');
     const badge = screen.getByText('RETAIL').closest('span.rounded-md');
-    expect(badge?.className).toContain('bg-gray-100');
+    expect(badge?.className).toContain('bg-(--palette-surface-3)');
   });
 
   it('flags a high-priority job beside its number, with the tooltip and label, and nothing for normal', () => {
@@ -117,7 +117,7 @@ describe('AppraisalResultsTable', () => {
     const cell = screen.getByText('69105467').closest('td')!;
     const flag = within(cell).getByRole('img', { name: i18n.t('appraisal:list.priorityHigh') });
     expect(flag.getAttribute('title')).toBe(i18n.t('appraisal:list.priorityHigh'));
-    expect(flag.className).toContain('text-red-600');
+    expect(flag.className).toContain('text-(--palette-danger)');
   });
 
   it('shows no flag for a normal-priority job', () => {
@@ -162,7 +162,7 @@ describe('AppraisalResultsTable', () => {
     const dash = screen.getByRole('img', { name: i18n.t('appraisal:list.unassigned') });
     expect(dash).toHaveTextContent('—');
     expect(dash.getAttribute('title')).toBe(i18n.t('appraisal:list.unassigned'));
-    expect(dash.className).toContain('text-gray-400');
+    expect(dash.className).toContain('text-(--palette-gray-400)');
     expect(dash.querySelector('svg')).toBeNull();
     // the words are not printed in the cell
     expect(screen.queryByText(i18n.t('appraisal:list.unassigned'))).toBeNull();
@@ -177,7 +177,7 @@ describe('AppraisalResultsTable', () => {
       ['assignee'],
     );
     const icon = screen.getByText('Thai Valuation Co.').previousElementSibling;
-    expect(icon?.getAttribute('class')).toContain('text-gray-400');
+    expect(icon?.getAttribute('class')).toContain('text-(--palette-gray-400)');
     expect(icon?.getAttribute('class')).not.toContain('indigo');
   });
 });

@@ -46,7 +46,7 @@ const CollateralSelectModal = ({
     <div className="fixed inset-0 z-50" onClick={onCancel}>
       <ul
         ref={ref}
-        className="absolute min-w-max rounded-xl bg-white shadow-lg border border-neutral-3 p-2"
+        className="absolute min-w-max rounded-xl bg-(--palette-surface) shadow-lg border border-neutral-3 p-2"
         style={style}
         onClick={e => e.stopPropagation()}
       >

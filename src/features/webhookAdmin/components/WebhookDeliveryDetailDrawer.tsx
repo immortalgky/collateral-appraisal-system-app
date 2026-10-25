@@ -14,9 +14,11 @@ interface WebhookDeliveryDetailDrawerProps {
 
 const LabelValue = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="flex flex-col gap-0.5">
-    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-    <span className="text-sm text-gray-900">
-      {value ?? <span className="text-gray-300">—</span>}
+    <span className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide">
+      {label}
+    </span>
+    <span className="text-sm text-(--palette-ink)">
+      {value ?? <span className="text-(--palette-gray-300)">—</span>}
     </span>
   </div>
 );
@@ -64,12 +66,16 @@ const WebhookDeliveryDetailDrawer = ({ delivery, onClose }: WebhookDeliveryDetai
           <div className="grid grid-cols-2 gap-4">
             <LabelValue
               label={t('columns.id')}
-              value={<code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">{data.id}</code>}
+              value={
+                <code className="text-xs bg-(--palette-surface-3) px-1.5 py-0.5 rounded">
+                  {data.id}
+                </code>
+              }
             />
             <LabelValue
               label={t('columns.subscriptionId')}
               value={
-                <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">
+                <code className="text-xs bg-(--palette-surface-3) px-1.5 py-0.5 rounded">
                   {data.subscriptionId}
                 </code>
               }
@@ -96,7 +102,7 @@ const WebhookDeliveryDetailDrawer = ({ delivery, onClose }: WebhookDeliveryDetai
 
           {data.lastError && (
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide mb-1">
                 {t('columns.lastError')}
               </p>
               <p className="text-sm text-danger bg-danger/5 rounded-lg px-3 py-2">
@@ -108,13 +114,13 @@ const WebhookDeliveryDetailDrawer = ({ delivery, onClose }: WebhookDeliveryDetai
           {/* Payload */}
           <div>
             <div className="flex items-center justify-between mb-1">
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+              <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide">
                 {t('drawer.payload')}
               </p>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary transition-colors"
+                className="flex items-center gap-1.5 text-xs text-(--palette-gray-500) hover:text-(--palette-primary-text) transition-colors"
               >
                 <Icon
                   name={copied ? 'circle-check' : 'copy'}
@@ -125,7 +131,9 @@ const WebhookDeliveryDetailDrawer = ({ delivery, onClose }: WebhookDeliveryDetai
               </button>
             </div>
             <pre className="text-xs bg-gray-950 text-gray-100 rounded-xl p-4 overflow-x-auto overflow-y-auto max-h-96 leading-relaxed">
-              {prettyPayload ?? <span className="text-gray-500">{t('drawer.noPayload')}</span>}
+              {prettyPayload ?? (
+                <span className="text-(--palette-gray-500)">{t('drawer.noPayload')}</span>
+              )}
             </pre>
           </div>
         </div>

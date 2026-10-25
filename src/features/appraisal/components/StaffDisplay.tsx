@@ -14,8 +14,10 @@ const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps
     <div
       className={clsx(
         'flex items-center gap-3 p-3 rounded-lg border',
-        variant === 'emerald' && 'bg-emerald-50 border-emerald-200',
-        variant === 'purple' && 'bg-purple-50 border-purple-200',
+        variant === 'emerald' &&
+          'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30',
+        variant === 'purple' &&
+          'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30',
       )}
     >
       {/* Avatar */}
@@ -24,19 +26,20 @@ const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps
       {/* Staff Info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{staff.name}</span>
-          <span className="text-xs text-gray-500">({staff.employeeId})</span>
+          <span className="text-sm font-medium text-(--palette-ink)">{staff.name}</span>
+          <span className="text-xs text-(--palette-gray-500)">({staff.employeeId})</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">{staff.department}</span>
+          <span className="text-xs text-(--palette-gray-500)">{staff.department}</span>
           <span
             className={clsx(
               'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium',
-              staff.currentWorkload <= 2 && 'bg-green-50 text-green-700',
+              staff.currentWorkload <= 2 &&
+                'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300',
               staff.currentWorkload > 2 &&
                 staff.currentWorkload <= 4 &&
-                'bg-amber-50 text-amber-700',
-              staff.currentWorkload > 4 && 'bg-red-50 text-red-700',
+                'bg-(--palette-warn-wash) text-(--palette-warn)',
+              staff.currentWorkload > 4 && 'bg-(--palette-req-wash) text-(--palette-req)',
             )}
           >
             {staff.currentWorkload} tasks
@@ -49,7 +52,7 @@ const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps
         <button
           type="button"
           onClick={onClear}
-          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          className="p-1.5 rounded-md text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) transition-colors"
           title="Clear selection"
         >
           <Icon name="xmark" style="solid" className="w-4 h-4" />

@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import type { ProjectUnitPrice } from '../types';
 import {
+  applyLocationMethod,
   buildDisplayedUnitPrices,
+  condoLocationContribution,
   differsFromStored,
+  lbLocationContribution,
+  locationContribution,
   type ModelPricing,
 } from './recomputeUnitPrice';
 
@@ -169,10 +173,157 @@ describe('buildDisplayedUnitPrices', () => {
     expect(Object.is(row.landIncreaseDecreaseAmount, 0)).toBe(true);
   });
 
+  describe('L (appraised as land only): no model to read', () => {
+    const land = (over: Partial<ProjectUnitPrice> = {}) =>
+      unit({ projectModelId: undefined, usableArea: undefined, landArea: 100, ...over });
+    const rate = { landIncreaseDecreaseRate: 12_000, forceSalePercentage: 80 };
+
+    it('prices a unit as land area x the land rate, with no standard price and no fire cover', () => {
+      const [row] = buildDisplayedUnitPrices([land()], rate, 'L', new Map());
+      expect(row.standardPrice).toBe(0);
+      expect(row.landAreaDifference).toBe(100);
+      expect(row.landIncreaseDecreaseAmount).toBe(1_200_000);
+      expect(row.totalAppraisalValue).toBe(1_200_000);
+      expect(row.totalAppraisalValueRounded).toBe(1_200_000);
+      expect(row.forceSellingPrice).toBe(960_000);
+      expect(row.coverageAmount).toBeUndefined();
+    });
+
+    it('adds the location amount per Sq.Wa of land, or flat as a lump sum', () => {
+      const flagged = land({ isCorner: true });
+      const perSqWa = { ...rate, locationMethod: 'AdjustPriceSqm', cornerAdjustment: 5_000 };
+      const [row] = buildDisplayedUnitPrices([flagged], perSqWa, 'L', new Map());
+      expect(row.adjustPriceLocation).toBe(5_000);
+      expect(row.totalAppraisalValueRounded).toBe(1_700_000); // 1,200,000 + 5,000 x 100
+      expect(row.forceSellingPrice).toBe(1_360_000);
+
+      const [flat] = buildDisplayedUnitPrices(
+        [flagged],
+        { ...perSqWa, locationMethod: 'Lumpsum' },
+        'L',
+        new Map(),
+      );
+      expect(flat.totalAppraisalValueRounded).toBe(1_210_000); // 1,200,000 + 5,000 -> nearest 10,000
+    });
+
+    it('the percentage method adds nothing: there is no standard price to take it of', () => {
+      const [row] = buildDisplayedUnitPrices(
+        [land({ isCorner: true })],
+        { ...rate, locationMethod: 'AdjustPricePercentage', cornerAdjustment: 5 },
+        'L',
+        new Map(),
+      );
+      expect(row.totalAppraisalValueRounded).toBe(1_200_000);
+    });
+
+    it('a blank rate or no land area prices at 0 (never NaN or -0)', () => {
+      const [blank] = buildDisplayedUnitPrices([land()], {}, 'L', new Map());
+      expect(blank.totalAppraisalValueRounded).toBe(0);
+      expect(Object.is(blank.landIncreaseDecreaseAmount, 0)).toBe(true);
+      expect(blank.forceSellingPrice).toBe(0);
+      const noLandUnit = land({ landArea: undefined });
+      const [noLand] = buildDisplayedUnitPrices([noLandUnit], rate, 'L', new Map());
+      expect(noLand.totalAppraisalValueRounded).toBe(0);
+    });
+  });
+
   it('leaves sold units in the list', () => {
     const rows = buildDisplayedUnitPrices([unit({ isSold: true })], {}, 'U', models);
     expect(rows).toHaveLength(1);
     expect(rows[0].isSold).toBe(true);
+  });
+});
+
+describe('location contribution (the hint beside the raw flag total)', () => {
+  it('per sq.m.: raw x area (200 x 47.5 = 9,500)', () => {
+    expect(applyLocationMethod(200, 'AdjustPriceSqm', 0, 47.5)).toBe(9_500);
+  });
+
+  it('percentage: standard total x raw / 100 (3,000,000 x 2% = 60,000)', () => {
+    expect(applyLocationMethod(2, 'AdjustPricePercentage', 3_000_000, 47.5)).toBe(60_000);
+  });
+
+  it('lump sum: the raw amount as it is, not multiplied by area', () => {
+    expect(applyLocationMethod(200, 'Lumpsum', 3_000_000, 47.5)).toBe(200);
+  });
+
+  it('condoLocationContribution takes the unit its standard total (rate x area) and area', () => {
+    const row = unit({ usableArea: 47.5, standardPrice: 60_000, adjustPriceLocation: 200 });
+    expect(condoLocationContribution(row, 'AdjustPriceSqm')).toBe(9_500);
+    expect(condoLocationContribution(row, 'Lumpsum')).toBe(200);
+    // standard total 60,000 x 47.5 = 2,850,000; 2% of it
+    expect(
+      condoLocationContribution({ ...row, adjustPriceLocation: 2 }, 'AdjustPricePercentage'),
+    ).toBe(57_000);
+    expect(
+      condoLocationContribution({ ...row, adjustPriceLocation: undefined }, 'AdjustPriceSqm'),
+    ).toBe(0);
+  });
+
+  it('lbLocationContribution multiplies by land area and takes the percentage of the standard price as it is', () => {
+    const row = unit({
+      landArea: 50,
+      usableArea: 120,
+      standardPrice: 4_850_000,
+      adjustPriceLocation: 200,
+    });
+    expect(lbLocationContribution(row, 'AdjustPriceSqm')).toBe(10_000); // 200 x 50 Sq.Wa
+    expect(lbLocationContribution(row, 'Lumpsum')).toBe(200);
+    expect(
+      lbLocationContribution({ ...row, adjustPriceLocation: 2 }, 'AdjustPricePercentage'),
+    ).toBe(
+      97_000, // 2% of 4,850,000: not x usable area
+    );
+    // L: no model, no standard price, so a percentage adds nothing.
+    expect(
+      lbLocationContribution(
+        { ...row, standardPrice: undefined, adjustPriceLocation: 2 },
+        'AdjustPricePercentage',
+      ),
+    ).toBe(0);
+  });
+
+  it('locationContribution follows the type: usable area for condo, land area for LB and L', () => {
+    const row = unit({
+      landArea: 50,
+      usableArea: 47.5,
+      standardPrice: 60_000,
+      adjustPriceLocation: 200,
+    });
+    expect(locationContribution(row, 'AdjustPriceSqm', 'U')).toBe(9_500);
+    expect(locationContribution(row, 'AdjustPriceSqm', 'LB')).toBe(10_000);
+    expect(locationContribution(row, 'AdjustPriceSqm', 'L')).toBe(10_000);
+  });
+
+  it('LB agrees with the recompute: the same contribution lands in the appraisal value', () => {
+    const lookup = new Map<string, ModelPricing>([
+      ['m1', { standardPrice: 4_850_000, standardLandArea: 50 }],
+    ]);
+    const [priced] = buildDisplayedUnitPrices(
+      [unit({ landArea: 52, isCorner: true })],
+      { locationMethod: 'AdjustPriceSqm', cornerAdjustment: 200, landIncreaseDecreaseRate: 1_000 },
+      'LB',
+      lookup,
+    );
+    // 4,850,000 + (52 - 50) x 1,000 + 200 x 52
+    expect(priced.totalAppraisalValue).toBe(
+      4_850_000 + 2_000 + lbLocationContribution(priced, 'AdjustPriceSqm'),
+    );
+    expect(lbLocationContribution(priced, 'AdjustPriceSqm')).toBe(10_400);
+  });
+
+  it('agrees with the recompute: the same contribution lands in the appraisal value', () => {
+    const [priced] = buildDisplayedUnitPrices(
+      [unit({ usableArea: 47.5, isCorner: true })],
+      { locationMethod: 'AdjustPriceSqm', cornerAdjustment: 200 },
+      'U',
+      models,
+    );
+    // 85,000 x 47.5 = 4,037,500 + 9,500
+    expect(priced.adjustPriceLocation).toBe(200);
+    expect(priced.totalAppraisalValue).toBe(
+      4_037_500 + condoLocationContribution(priced, 'AdjustPriceSqm'),
+    );
   });
 });
 

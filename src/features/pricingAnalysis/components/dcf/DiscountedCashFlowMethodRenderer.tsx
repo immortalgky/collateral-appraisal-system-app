@@ -50,9 +50,9 @@ export function DiscountedCashFlowMethodRenderer({
     // rows deviate from the table's 12px base.
     baseStyles: {
       rowHeader:
-        'pl-[36px] pr-[8px] py-0 h-[26px] text-[11px] leading-[25px] text-gray-500 border-b border-gray-300 max-w-[490px] whitespace-nowrap overflow-hidden text-ellipsis [&_*]:whitespace-nowrap [&_span]:text-[11px]',
+        'pl-[36px] pr-[8px] py-0 h-[26px] text-[11px] leading-[25px] text-(--palette-gray-500) border-b border-(--palette-line-strong) max-w-[490px] whitespace-nowrap overflow-hidden text-ellipsis [&_*]:whitespace-nowrap [&_span]:text-[11px]',
       rowBody:
-        'px-[8px] py-0 h-[26px] text-[11px] leading-[25px] text-right text-gray-500 border-b border-gray-300',
+        'px-[8px] py-0 h-[26px] text-[11px] leading-[25px] text-right text-(--palette-gray-500) border-b border-(--palette-line-strong)',
     },
   };
 

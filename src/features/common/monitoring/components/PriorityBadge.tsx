@@ -3,17 +3,20 @@ interface PriorityBadgeProps {
 }
 
 const PRIORITY_STYLES: Record<string, string> = {
-  High: 'bg-red-50 text-red-700 border-red-200',
-  Medium: 'bg-amber-50 text-amber-700 border-amber-200',
-  Low: 'bg-gray-50 text-gray-700 border-gray-200',
-  Critical: 'bg-rose-50 text-rose-700 border-rose-200',
+  High: 'bg-(--palette-req-wash) text-(--palette-req) border-(--palette-req-line)',
+  Medium:
+    'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30',
+  Low: 'bg-(--palette-surface-2) text-(--palette-ink) border-(--palette-line)',
+  Critical:
+    'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
 };
 
 function PriorityBadge({ value }: PriorityBadgeProps) {
-  if (!value) return <span className="text-gray-400 text-xs">—</span>;
+  if (!value) return <span className="text-(--palette-gray-400) text-xs">—</span>;
 
   const cls =
-    PRIORITY_STYLES[value] ?? 'bg-gray-50 text-gray-700 border-gray-200';
+    PRIORITY_STYLES[value] ??
+    'bg-(--palette-surface-2) text-(--palette-ink) border-(--palette-line)';
 
   return (
     <span

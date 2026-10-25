@@ -253,7 +253,11 @@ const QuotationSelectionPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -262,7 +266,7 @@ const QuotationSelectionPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
-        <p className="text-sm text-gray-600">{t('errors.unableToLoadQuotation')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('errors.unableToLoadQuotation')}</p>
         <Button variant="outline" size="sm" onClick={() => navigate(taskListUrl())}>
           {t('buttons.backToTasks')}
         </Button>
@@ -387,21 +391,21 @@ const QuotationSelectionPage = () => {
       {/* Lean header — compact title with status + cut-off below, metrics + cancel on the right */}
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-primary truncate leading-tight">
+          <div className="text-sm font-semibold text-(--palette-primary-text) truncate leading-tight">
             {quotation.quotationNumber}
           </div>
           <div className="flex items-center gap-2 mt-1">
             <QuotationStatusBadge status={quotation.status} />
-            <span className="inline-flex items-center gap-1 text-[11px] text-gray-500">
-              <Icon name="clock" style="solid" className="size-2.5 text-gray-400" />
+            <span className="inline-flex items-center gap-1 text-[11px] text-(--palette-gray-500)">
+              <Icon name="clock" style="solid" className="size-2.5 text-(--palette-gray-400)" />
               <span>{t('shared.cutOff')}</span>
-              <span className="font-medium text-gray-700">{cutOffTimeDisplay}</span>
+              <span className="font-medium text-(--palette-ink)">{cutOffTimeDisplay}</span>
             </span>
             {hoursLeft !== null && (
               <span
                 className={clsx(
                   'inline-flex items-center text-[11px] font-medium',
-                  hoursLeft < 24 ? 'text-red-600' : 'text-amber-600',
+                  hoursLeft < 24 ? 'text-(--palette-danger)' : 'text-amber-600 dark:text-amber-400',
                 )}
               >
                 · {t('shared.hoursRemaining', { n: hoursLeft })}
@@ -416,27 +420,27 @@ const QuotationSelectionPage = () => {
               type="button"
               onClick={() => setIsCancelConfirmOpen(true)}
               disabled={isCancelPending}
-              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed mr-2"
+              className="inline-flex items-center gap-1 text-xs text-(--palette-danger) hover:text-(--palette-req) underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed mr-2"
             >
               <Icon name="ban" style="solid" className="size-3" />
               {t('shared.cancelQuotation')}
             </button>
           )}
-          <span className="inline-flex items-center gap-1.5 bg-blue-50 border border-blue-100 rounded-md px-2.5 py-1 text-xs">
+          <span className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-md px-2.5 py-1 text-xs">
             <span className="text-blue-400 font-medium">{t('shared.appraisals')}</span>
-            <span className="font-semibold text-blue-700 tabular-nums">
+            <span className="font-semibold text-blue-700 dark:text-blue-300 tabular-nums">
               {quotation.totalAppraisals}
             </span>
           </span>
-          <span className="inline-flex items-center gap-1.5 bg-teal-50 border border-teal-100 rounded-md px-2.5 py-1 text-xs">
+          <span className="inline-flex items-center gap-1.5 bg-(--palette-accent-wash) border border-teal-100 dark:border-teal-500/20 rounded-md px-2.5 py-1 text-xs">
             <span className="text-teal-400 font-medium">{t('shared.invited')}</span>
-            <span className="font-semibold text-teal-700 tabular-nums">
+            <span className="font-semibold text-(--palette-accent-ink) tabular-nums">
               {quotation.totalCompaniesInvited}
             </span>
           </span>
-          <span className="inline-flex items-center gap-1.5 bg-violet-50 border border-violet-100 rounded-md px-2.5 py-1 text-xs">
+          <span className="inline-flex items-center gap-1.5 bg-violet-50 dark:bg-violet-500/10 border border-violet-100 dark:border-violet-500/20 rounded-md px-2.5 py-1 text-xs">
             <span className="text-violet-400 font-medium">{t('shared.responses')}</span>
-            <span className="font-semibold text-violet-700 tabular-nums">
+            <span className="font-semibold text-violet-700 dark:text-violet-300 tabular-nums">
               {quotation.totalQuotationsReceived}
               <span className="text-violet-400 font-normal">
                 /{quotation.totalCompaniesInvited}
@@ -448,9 +452,13 @@ const QuotationSelectionPage = () => {
 
       {/* ─── Draft action bar (status === 'Draft' only) ──────────────────────── */}
       {isDraft && (
-        <div className="flex items-center gap-3 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-          <Icon name="pen-to-square" style="solid" className="size-4 text-amber-600 shrink-0" />
-          <p className="text-sm text-amber-700 flex-1">{t('draft.draftBannerText')}</p>
+        <div className="flex items-center gap-3 p-3 bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 rounded-xl">
+          <Icon
+            name="pen-to-square"
+            style="solid"
+            className="size-4 text-amber-600 dark:text-amber-400 shrink-0"
+          />
+          <p className="text-sm text-(--palette-warn) flex-1">{t('draft.draftBannerText')}</p>
           <div className="flex items-center gap-2 shrink-0">
             <Button variant="outline" size="sm" onClick={() => setIsEditDraftOpen(true)}>
               <Icon name="pen-to-square" style="solid" className="size-3.5 mr-1.5" />
@@ -481,7 +489,7 @@ const QuotationSelectionPage = () => {
       {isDraft && (
         <SegmentGapsAlert
           gaps={segmentGaps}
-          className="p-3 border border-amber-200 rounded-xl text-sm"
+          className="p-3 border border-amber-200 dark:border-amber-500/30 rounded-xl text-sm"
         />
       )}
 
@@ -497,21 +505,23 @@ const QuotationSelectionPage = () => {
 
       {/* Instructions (RM pick phase only) */}
       {isRmPickPhase && !isAlreadyPicked && (
-        <div className="p-3 bg-purple-50 rounded-lg border border-purple-100 flex items-start gap-2">
+        <div className="p-3 bg-purple-50 dark:bg-purple-500/10 rounded-lg border border-purple-100 dark:border-purple-500/20 flex items-start gap-2">
           <Icon
             name="circle-info"
             style="solid"
             className="size-4 text-purple-500 shrink-0 mt-0.5"
           />
-          <p className="text-sm text-purple-700">{t('selectWinner.rmPickInstruction')}</p>
+          <p className="text-sm text-purple-700 dark:text-purple-300">
+            {t('selectWinner.rmPickInstruction')}
+          </p>
         </div>
       )}
 
       {/* ─── Section 2a: Sent — invited companies + responses table ─────────── */}
       {showSentPanel && (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200">
-            <h2 className="text-base font-semibold text-gray-700">
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) overflow-hidden">
+          <div className="px-4 py-3 bg-(--palette-surface-2) border-b border-(--palette-line)">
+            <h2 className="text-base font-semibold text-(--palette-ink)">
               {t('shared.companyResponses')} ({quotation.invitedCompanies?.length ?? 0})
             </h2>
           </div>
@@ -520,31 +530,31 @@ const QuotationSelectionPage = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.company')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalFeeAmount')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalDiscount')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalNetAmount')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalEstimateManday')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.submittedAt')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.status')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-(--palette-line-soft)">
                   {sortCompanyResponses(
                     (quotation.invitedCompanies ?? []).map(inv => ({
                       inv,
@@ -578,29 +588,32 @@ const QuotationSelectionPage = () => {
                       ? Math.max(...validEstimatedDays)
                       : undefined;
                     return (
-                      <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={inv.companyId}
+                        className="hover:bg-(--palette-surface-2) transition-colors"
+                      >
                         <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-(--palette-ink)">
                             {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
+                          <span className="text-sm text-(--palette-ink) tabular-nums">
                             {hasItems ? formatCurrency(totalFeeAmount) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
+                          <span className="text-sm text-(--palette-ink) tabular-nums">
                             {hasItems ? formatCurrency(totalDiscount) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                          <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                             {cq ? formatCurrency(cq.totalQuotedPrice) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-(--palette-gray-600)">
                             {minEstimateManday !== undefined && maxEstimateManday !== undefined
                               ? minEstimateManday === maxEstimateManday
                                 ? minEstimateManday
@@ -609,7 +622,7 @@ const QuotationSelectionPage = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-(--palette-gray-600)">
                             {cq ? formatDateTimeShort(cq.submittedAt) : '—'}
                           </span>
                         </td>
@@ -617,7 +630,7 @@ const QuotationSelectionPage = () => {
                           {cq ? (
                             <QuotationStatusBadge status={cq.status} />
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600)">
                               {t('invitedCompanies.pending')}
                             </span>
                           )}
@@ -646,19 +659,23 @@ const QuotationSelectionPage = () => {
 
       {/* ─── Section 2d: Finalized summary ────────────────────────────────────── */}
       {showFinalizedSummary && (
-        <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-200">
-            <div className="size-8 rounded-lg bg-green-200 flex items-center justify-center">
-              <Icon name="circle-check" style="solid" className="size-4 text-green-700" />
+        <div className="bg-(--palette-surface) rounded-xl border border-green-200 dark:border-green-500/30 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-500/10 border-b border-green-200 dark:border-green-500/30">
+            <div className="size-8 rounded-lg bg-green-200 dark:bg-green-500/30 flex items-center justify-center">
+              <Icon
+                name="circle-check"
+                style="solid"
+                className="size-4 text-green-700 dark:text-green-300"
+              />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {quotation.quotationNumber}
               </span>
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
-          <div className="px-4 py-3 text-sm text-gray-600">
+          <div className="px-4 py-3 text-sm text-(--palette-gray-600)">
             <p>
               <BoldTrans
                 i18nKey="shared.quotationAwarded"
@@ -670,7 +687,7 @@ const QuotationSelectionPage = () => {
                       )
                     : '—',
                 }}
-                strongClassName="text-gray-900"
+                strongClassName="text-(--palette-ink)"
               />
             </p>
             {(() => {
@@ -680,7 +697,9 @@ const QuotationSelectionPage = () => {
               return (
                 <p className="mt-1">
                   {t('shared.finalPrice')}{' '}
-                  <strong className="text-green-700">{formatCurrency(finalPrice)}</strong>
+                  <strong className="text-green-700 dark:text-green-300">
+                    {formatCurrency(finalPrice)}
+                  </strong>
                 </p>
               );
             })()}
@@ -695,27 +714,29 @@ const QuotationSelectionPage = () => {
 
       {/* ─── Section 2e: Cancelled summary ────────────────────────────────────── */}
       {showCancelledSummary && (
-        <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border-b border-red-200">
-            <div className="size-8 rounded-lg bg-red-200 flex items-center justify-center">
-              <Icon name="ban" style="solid" className="size-4 text-red-700" />
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-req-line) overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 bg-(--palette-req-wash) border-b border-(--palette-req-line)">
+            <div className="size-8 rounded-lg bg-red-200 dark:bg-red-500/30 flex items-center justify-center">
+              <Icon name="ban" style="solid" className="size-4 text-(--palette-req)" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {quotation.quotationNumber}
               </span>
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
-          <div className="px-4 py-3 text-sm text-gray-500">{t('shared.quotationCancelled')}</div>
+          <div className="px-4 py-3 text-sm text-(--palette-gray-500)">
+            {t('shared.quotationCancelled')}
+          </div>
         </div>
       )}
 
       {/* ─── Section 2b: RM shortlisted bids table (PendingRmSelection / WinnerTentative) */}
       {isRmPickPhase && (
-        <div className="rounded-xl border border-gray-200 overflow-hidden">
-          <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between gap-3">
-            <h2 className="text-base font-semibold text-gray-700">
+        <div className="rounded-xl border border-(--palette-line) overflow-hidden">
+          <div className="px-4 py-3 bg-(--palette-surface-2) border-b border-(--palette-line) flex items-center justify-between gap-3">
+            <h2 className="text-base font-semibold text-(--palette-ink)">
               {t('draft.shortlistSubmissions')} ({shortlisted.length})
             </h2>
             {showWinnerActions && isIntAdmin && (
@@ -725,7 +746,7 @@ const QuotationSelectionPage = () => {
                   variant="outline"
                   onClick={() => setIsRejectOpen(true)}
                   disabled={!tentativeWinner}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  className="text-(--palette-danger) border-red-300 dark:border-red-500/40 hover:bg-(--palette-req-wash)"
                 >
                   <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
                   {t('buttons.rejectWinner')}
@@ -762,12 +783,16 @@ const QuotationSelectionPage = () => {
           </div>
 
           {quotation?.rmRequestsNegotiation && (
-            <div className="m-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 flex items-start gap-3">
-              <div className="size-7 rounded-lg bg-amber-200 flex items-center justify-center shrink-0 mt-0.5">
-                <Icon name="comment-dots" style="solid" className="size-3.5 text-amber-700" />
+            <div className="m-4 rounded-xl border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-4 py-3 flex items-start gap-3">
+              <div className="size-7 rounded-lg bg-amber-200 dark:bg-amber-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                <Icon
+                  name="comment-dots"
+                  style="solid"
+                  className="size-3.5 text-(--palette-warn)"
+                />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-amber-900">
+                <p className="text-sm font-semibold text-amber-900 dark:text-amber-200">
                   {t('negotiation.rmRequestsNegotiation')}{' '}
                   <strong>
                     {tentativeWinner &&
@@ -778,7 +803,7 @@ const QuotationSelectionPage = () => {
                   </strong>
                 </p>
                 {quotation.rmNegotiationNote && (
-                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xl text-amber-800 italic">
+                  <blockquote className="mt-1.5 pl-3 border-l-2 border-amber-400 text-xl text-amber-800 dark:text-amber-300 italic">
                     {quotation.rmNegotiationNote}
                   </blockquote>
                 )}
@@ -788,45 +813,47 @@ const QuotationSelectionPage = () => {
 
           {shortlisted.length === 0 ? (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-gray-500">{t('empty.noShortlistedSubmissions')}</p>
+              <p className="text-sm text-(--palette-gray-500)">
+                {t('empty.noShortlistedSubmissions')}
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.company')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalFeeAmount')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalDiscount')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalNetAmount')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalEstimateManday')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.submittedAt')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.status')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.detail')}
                     </th>
                     {!isRmReadOnly && (
-                      <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                         {t('columns.action')}
                       </th>
                     )}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-(--palette-line-soft)">
                   {shortlisted.map(cq => {
                     const isWinner = quotation.tentativeWinnerQuotationId === cq.id;
                     const items = cq.items ?? [];
@@ -860,12 +887,14 @@ const QuotationSelectionPage = () => {
                         key={cq.id}
                         className={clsx(
                           'transition-colors',
-                          isWinner ? 'bg-indigo-50' : 'hover:bg-gray-50',
+                          isWinner
+                            ? 'bg-indigo-50 dark:bg-indigo-500/10'
+                            : 'hover:bg-(--palette-surface-2)',
                         )}
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900">
+                            <span className="text-sm font-medium text-(--palette-ink)">
                               {localizeCompanyName(cq.companyName, cq.companyNameLocal)}
                             </span>
                             {isWinner && (
@@ -874,22 +903,22 @@ const QuotationSelectionPage = () => {
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
+                          <span className="text-sm text-(--palette-ink) tabular-nums">
                             {hasItems ? formatCurrency(totalFeeAmount) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
+                          <span className="text-sm text-(--palette-ink) tabular-nums">
                             {hasItems ? formatCurrency(totalDiscount) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                          <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                             {formatCurrency(cq.totalQuotedPrice)}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-(--palette-gray-600)">
                             {minEstimateManday !== undefined && maxEstimateManday !== undefined
                               ? minEstimateManday === maxEstimateManday
                                 ? minEstimateManday
@@ -898,7 +927,7 @@ const QuotationSelectionPage = () => {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-600">{submittedAt}</span>
+                          <span className="text-sm text-(--palette-gray-600)">{submittedAt}</span>
                         </td>
                         <td className="px-4 py-3 text-center">
                           <QuotationStatusBadge status={cq.status} />
@@ -910,7 +939,7 @@ const QuotationSelectionPage = () => {
                               company: localizeCompanyName(cq.companyName, cq.companyNameLocal),
                             })}
                             onClick={() => setViewingCqId(cq.id)}
-                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                            className="p-1 rounded hover:bg-(--palette-surface-3) transition-colors"
                           >
                             <Icon
                               name="file-lines"
@@ -954,9 +983,9 @@ const QuotationSelectionPage = () => {
         size="sm"
       >
         <div className="flex flex-col gap-4">
-          <div className="p-3 bg-indigo-50 rounded-lg border border-indigo-100 flex items-start gap-2">
+          <div className="p-3 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg border border-indigo-100 dark:border-indigo-500/20 flex items-start gap-2">
             <Icon name="crown" style="solid" className="size-4 text-indigo-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-indigo-700">
+            <p className="text-sm text-indigo-700 dark:text-indigo-300">
               <BoldTrans
                 i18nKey="selectWinner.bodyRich"
                 values={{
@@ -969,7 +998,7 @@ const QuotationSelectionPage = () => {
           </div>
 
           {/* Request negotiation toggle */}
-          <div className="flex flex-col gap-2 pt-1 border-t border-gray-100">
+          <div className="flex flex-col gap-2 pt-1 border-t border-(--palette-line-soft)">
             <label className="flex items-center gap-2.5 cursor-pointer group">
               <input
                 type="checkbox"
@@ -981,27 +1010,31 @@ const QuotationSelectionPage = () => {
                 className="size-4 accent-primary rounded"
               />
               <div>
-                <span className="text-sm font-medium text-gray-700 group-hover:text-primary">
+                <span className="text-sm font-medium text-(--palette-ink) group-hover:text-(--palette-primary-text)">
                   {t('selectWinner.requestNegotiation')}
                 </span>
-                <p className="text-xs text-gray-400">{t('selectWinner.requestNegotiationHint')}</p>
+                <p className="text-xs text-(--palette-gray-400)">
+                  {t('selectWinner.requestNegotiationHint')}
+                </p>
               </div>
             </label>
 
             {requestNegotiation && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-(--palette-ink) mb-1">
                   {t('selectWinner.noteLabel')}{' '}
-                  <span className="text-xs text-gray-400">{t('selectWinner.noteMax')}</span>
+                  <span className="text-xs text-(--palette-gray-400)">
+                    {t('selectWinner.noteMax')}
+                  </span>
                 </label>
                 <textarea
                   value={negotiationNote}
                   onChange={e => setNegotiationNote(e.target.value.slice(0, 500))}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+                  className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
                   placeholder={t('selectWinner.notePlaceholder')}
                 />
-                <p className="text-xs text-gray-400 text-right mt-0.5">
+                <p className="text-xs text-(--palette-gray-400) text-right mt-0.5">
                   {negotiationNote.length}/500
                 </p>
               </div>
@@ -1041,13 +1074,13 @@ const QuotationSelectionPage = () => {
         size="sm"
       >
         <div className="flex flex-col gap-4">
-          <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
+          <div className="p-3 bg-(--palette-req-wash) rounded-lg border border-red-100 dark:border-red-500/20 flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p className="text-sm text-red-700">
+            <p className="text-sm text-(--palette-req)">
               <BoldTrans
                 i18nKey="cancel.standaloneBody"
                 values={{ number: quotation.quotationNumber }}
@@ -1055,9 +1088,12 @@ const QuotationSelectionPage = () => {
             </p>
           </div>
           <div>
-            <label htmlFor="standalone-cancel-reason" className="block text-sm text-gray-600 mb-1">
+            <label
+              htmlFor="standalone-cancel-reason"
+              className="block text-sm text-(--palette-gray-600) mb-1"
+            >
               {t('fields.reasonOptional')}{' '}
-              <span className="text-gray-400">{t('fields.notesOptional')}</span>
+              <span className="text-(--palette-gray-400)">{t('fields.notesOptional')}</span>
             </label>
             <textarea
               id="standalone-cancel-reason"
@@ -1066,9 +1102,11 @@ const QuotationSelectionPage = () => {
               value={cancelReason}
               onChange={e => setCancelReason(e.target.value)}
               placeholder={t('placeholders.cancelReason')}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+              className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             />
-            <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
+            <p className="mt-1 text-[11px] text-(--palette-gray-400) text-right">
+              {cancelReason.length}/500
+            </p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={closeCancelConfirm} disabled={isCancelPending}>
@@ -1176,13 +1214,13 @@ const QuotationSelectionPage = () => {
         size="sm"
       >
         <div className="flex flex-col gap-4">
-          <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
+          <div className="p-3 bg-(--palette-req-wash) rounded-lg border border-red-100 dark:border-red-500/20 flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p className="text-sm text-red-700">
+            <p className="text-sm text-(--palette-req)">
               <BoldTrans
                 i18nKey="cancel.draftBody"
                 values={{ number: quotation.quotationNumber }}

@@ -112,12 +112,14 @@ export const ManualCostBreakdown = ({
         compact ? 'mt-1.5 text-[11px]' : 'mt-2 text-xs',
       )}
     >
-      <span className={clsx('font-medium text-gray-700', compact ? 'text-[11px]' : 'text-xs')}>
+      <span
+        className={clsx('font-medium text-(--palette-ink)', compact ? 'text-[11px]' : 'text-xs')}
+      >
         {t('manualCost.landRate')}
       </span>
 
       {isReadOnly ? (
-        <span className="font-semibold text-gray-800">{formatMoney(savedRate ?? 0)}</span>
+        <span className="font-semibold text-(--palette-ink)">{formatMoney(savedRate ?? 0)}</span>
       ) : (
         // Same three props as the method row's own value input directly above this one
         // (PricingAnalysisMethodBoardRow) — `dense`, `fullWidth={false}`, `w-32` — so the two
@@ -143,7 +145,7 @@ export const ManualCostBreakdown = ({
         />
       )}
 
-      <span className="text-gray-500">
+      <span className="text-(--palette-gray-500)">
         ×{' '}
         {landArea.toLocaleString('en-US', {
           minimumFractionDigits: 2,
@@ -152,13 +154,13 @@ export const ManualCostBreakdown = ({
         {t('manualCost.sqWaUnit')}
       </span>
 
-      <span className="text-gray-400">=</span>
+      <span className="text-(--palette-gray-400)">=</span>
 
-      <span className="text-gray-500">
+      <span className="text-(--palette-gray-500)">
         {/* Reuses the board's own role label, so this word and the role chip on the row above can
             never drift apart. */}
         {t('board.role.Land')}{' '}
-        <b className="font-semibold text-gray-800">
+        <b className="font-semibold text-(--palette-ink)">
           {/* No forced decimals: the figure is a product, and the image this follows shows a whole
               number as a whole number. A rate with satang still shows its own precision rather
               than being silently rounded into the sentence. */}

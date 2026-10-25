@@ -498,6 +498,7 @@
       "percentPerYearTooltip": "Weighted avg depreciation rate/year",
       "totalPercentHeader": "Tot%",
       "totalPercentTooltip": "Total depreciation %",
+      "depreciationTotalWithPercent": "Depreciation (Total {{percent}}%)",
       "methodHeader": "Method",
       "methodTooltip": "Method: Period or Gross",
       "methodGross": "Gross",

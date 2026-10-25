@@ -26,7 +26,11 @@ const HypothesisBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-4">
-        <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-4 h-4 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -35,13 +39,19 @@ const HypothesisBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
     return (
       <div className="flex items-center gap-2 py-2">
         <Icon name="circle-exclamation" style="solid" className="w-4 h-4 text-red-400" />
-        <p className="text-xs text-red-600">Failed to load hypothesis analysis details.</p>
+        <p className="text-xs text-(--palette-danger)">
+          Failed to load hypothesis analysis details.
+        </p>
       </div>
     );
   }
 
   if (!data || !data.hypothesisAnalysisId || !data.variant) {
-    return <p className="text-xs text-gray-400 py-2">No hypothesis analysis generated yet.</p>;
+    return (
+      <p className="text-xs text-(--palette-gray-400) py-2">
+        No hypothesis analysis generated yet.
+      </p>
+    );
   }
 
   if (data.variant === 'LandBuilding') {
@@ -68,7 +78,7 @@ const HypothesisBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Pro
     );
   }
 
-  return <p className="text-xs text-gray-400 py-2">Unknown hypothesis variant.</p>;
+  return <p className="text-xs text-(--palette-gray-400) py-2">Unknown hypothesis variant.</p>;
 };
 
 // ─── Land & Building view ─────────────────────────────────────────────────────
@@ -90,52 +100,62 @@ const LandBuildingView = ({
     {/* Unit details table */}
     {rows.length > 0 && (
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Unit Details</p>
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">
+          Unit Details
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs whitespace-nowrap">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">#</th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+              <tr className="bg-(--palette-surface-3)">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
+                  #
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                   Plan No
                 </th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                   House No
                 </th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">Model</th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
+                  Model
+                </th>
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-ink-2)">
                   Location
                 </th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                   Floor
                 </th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                   Land (Sq.Wa)
                 </th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                   Usable (Sq.M)
                 </th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                   Selling Price
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {rows.map(r => (
                 <tr key={r.sequenceNumber}>
-                  <td className="px-2 py-1 text-right text-gray-600">{r.sequenceNumber}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.planNo ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.houseNo ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.modelName ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.location ?? '-'}</td>
-                  <td className="px-2 py-1 text-right text-gray-600">{r.floorNo ?? '-'}</td>
-                  <td className="px-2 py-1 text-right text-gray-600">
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
+                    {r.sequenceNumber}
+                  </td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.planNo ?? '-'}</td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.houseNo ?? '-'}</td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.modelName ?? '-'}</td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.location ?? '-'}</td>
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
+                    {r.floorNo ?? '-'}
+                  </td>
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                     {r.landAreaSqWa != null ? formatNumber(r.landAreaSqWa, 2) : '-'}
                   </td>
-                  <td className="px-2 py-1 text-right text-gray-600">
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                     {r.usableAreaSqM != null ? formatNumber(r.usableAreaSqM, 2) : '-'}
                   </td>
-                  <td className="px-2 py-1 text-right font-medium text-gray-800">
+                  <td className="px-2 py-1 text-right font-medium text-(--palette-ink)">
                     {r.sellingPrice != null ? formatNumber(r.sellingPrice, 2) : '-'}
                   </td>
                 </tr>
@@ -151,7 +171,9 @@ const LandBuildingView = ({
     {summary && <LandBuildingSummaryBlock summary={summary} indicatedValue={indicatedValue} />}
 
     {remark && (
-      <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{remark}</p>
+      <p className="text-xs text-(--palette-gray-500) italic border-l-2 border-(--palette-line) pl-2">
+        {remark}
+      </p>
     )}
   </div>
 );
@@ -175,48 +197,56 @@ const CondominiumView = ({
     {/* Unit details table */}
     {rows.length > 0 && (
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Unit Details</p>
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">
+          Unit Details
+        </p>
         <div className="overflow-x-auto">
           <table className="w-full text-xs whitespace-nowrap">
             <thead>
-              <tr className="bg-gray-100">
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">#</th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+              <tr className="bg-(--palette-surface-3)">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
+                  #
+                </th>
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-ink-2)">
                   Floor
                 </th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                   Building
                 </th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                   Apt No
                 </th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                   Apartment
                 </th>
-                <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                   Model Type
                 </th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                   Usable (Sq.M)
                 </th>
-                <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                   Selling Price
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {rows.map(r => (
                 <tr key={r.sequenceNumber}>
-                  <td className="px-2 py-1 text-right text-gray-600">{r.sequenceNumber}</td>
-                  <td className="px-2 py-1 text-right text-gray-600">{r.floorNo ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.building ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.aptNo ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.apartment ?? '-'}</td>
-                  <td className="px-2 py-1 text-gray-600">{r.modelType ?? '-'}</td>
-                  <td className="px-2 py-1 text-right text-gray-600">
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
+                    {r.sequenceNumber}
+                  </td>
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
+                    {r.floorNo ?? '-'}
+                  </td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.building ?? '-'}</td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.aptNo ?? '-'}</td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.apartment ?? '-'}</td>
+                  <td className="px-2 py-1 text-(--palette-gray-600)">{r.modelType ?? '-'}</td>
+                  <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                     {r.usableAreaSqM != null ? formatNumber(r.usableAreaSqM, 2) : '-'}
                   </td>
-                  <td className="px-2 py-1 text-right font-medium text-gray-800">
+                  <td className="px-2 py-1 text-right font-medium text-(--palette-ink)">
                     {r.sellingPrice != null ? formatNumber(r.sellingPrice, 2) : '-'}
                   </td>
                 </tr>
@@ -232,7 +262,9 @@ const CondominiumView = ({
     {summary && <CondominiumSummaryBlock summary={summary} indicatedValue={indicatedValue} />}
 
     {remark && (
-      <p className="text-xs text-gray-500 italic border-l-2 border-gray-200 pl-2">{remark}</p>
+      <p className="text-xs text-(--palette-gray-500) italic border-l-2 border-(--palette-line) pl-2">
+        {remark}
+      </p>
     )}
   </div>
 );
@@ -243,56 +275,56 @@ const CostItemsTable = ({ items }: { items: CostItemDto[] }) => {
   if (items.length === 0) return null;
   return (
     <div>
-      <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Cost Items</p>
+      <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">Cost Items</p>
       <div className="overflow-x-auto">
         <table className="w-full text-xs whitespace-nowrap">
           <thead>
-            <tr className="bg-gray-100">
-              <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+            <tr className="bg-(--palette-surface-3)">
+              <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                 Category
               </th>
-              <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+              <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                 Description
               </th>
-              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                 Area (Sq.M)
               </th>
-              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                 Price/Sq.M
               </th>
-              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                 Annual Depr %
               </th>
-              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                 Total Depr %
               </th>
-              <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+              <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                 Value After Depr
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {items.map(item => (
               <tr key={item.id}>
-                <td className="px-2 py-1 text-gray-600">{item.category}</td>
-                <td className="px-2 py-1 text-gray-600">{item.description}</td>
-                <td className="px-2 py-1 text-right text-gray-600">
+                <td className="px-2 py-1 text-(--palette-gray-600)">{item.category}</td>
+                <td className="px-2 py-1 text-(--palette-gray-600)">{item.description}</td>
+                <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                   {item.area != null ? formatNumber(item.area, 2) : '-'}
                 </td>
-                <td className="px-2 py-1 text-right text-gray-600">
+                <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                   {item.pricePerSqM != null ? formatNumber(item.pricePerSqM, 2) : '-'}
                 </td>
-                <td className="px-2 py-1 text-right text-gray-600">
+                <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                   {item.annualDepreciationPercent != null
                     ? `${formatNumber(item.annualDepreciationPercent, 2)}%`
                     : '-'}
                 </td>
-                <td className="px-2 py-1 text-right text-gray-600">
+                <td className="px-2 py-1 text-right text-(--palette-gray-600)">
                   {item.totalDepreciationPercent != null
                     ? `${formatNumber(item.totalDepreciationPercent, 2)}%`
                     : '-'}
                 </td>
-                <td className="px-2 py-1 text-right font-medium text-gray-800">
+                <td className="px-2 py-1 text-right font-medium text-(--palette-ink)">
                   {item.valueAfterDepreciation != null
                     ? formatNumber(item.valueAfterDepreciation, 2)
                     : '-'}
@@ -315,8 +347,8 @@ const LandBuildingSummaryBlock = ({
   summary: LandBuildingSummaryDto;
   indicatedValue: number | null;
 }) => (
-  <div className="space-y-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Summary</p>
+  <div className="space-y-1 px-3 py-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line)">
+    <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">Summary</p>
     <DlRow label="Total Units" value={summary.totalUnits} decimals={0} />
     <DlRow label="Total Land Area (Sq.Wa)" value={summary.totalArea} />
     <DlRow label="Total Selling Price" value={summary.totalRevenue} />
@@ -341,8 +373,8 @@ const CondominiumSummaryBlock = ({
   summary: CondominiumSummaryDto;
   indicatedValue: number | null;
 }) => (
-  <div className="space-y-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-    <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Summary</p>
+  <div className="space-y-1 px-3 py-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line)">
+    <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">Summary</p>
     <DlRow label="Total Building Area (Sq.M)" value={summary.totalBuildingArea} />
     <DlRow label="Total Project Selling Price" value={summary.totalProjectSellingPrice} />
     <DlRow label="Total Hard Cost" value={summary.totalHardCost} />
@@ -373,12 +405,12 @@ const DlRow = ({
   highlight?: boolean;
 }) => (
   <div className="flex items-center justify-between gap-2">
-    <span className="text-xs text-gray-500">{label}</span>
+    <span className="text-xs text-(--palette-gray-500)">{label}</span>
     <span
       className={
         highlight
-          ? 'text-sm font-bold text-teal-700'
-          : 'text-xs font-medium text-gray-800 text-right'
+          ? 'text-sm font-bold text-(--palette-accent-ink)'
+          : 'text-xs font-medium text-(--palette-ink) text-right'
       }
     >
       {value != null ? formatNumber(value, decimals) : '-'}
