@@ -46,29 +46,14 @@ interface ActivityTaskTableProps {
   description: string;
 }
 
-const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
-  appraisalNumber: 'Appraisal No.',
-  customerName: 'Customer',
-  status: 'Request Status',
-  pendingTaskStatus: 'Task Status',
-  slaStatus: 'SLA',
-  assigneeUserId: 'Assignee',
-  activityId: 'Task Type',
-  purpose: 'Purpose',
-  channel: 'Channel',
-  dateType: 'Date Type',
-  dateFrom: 'From',
-  dateTo: 'To',
-};
-
 const groupByOptions: { value: GroupByField; label: string }[] = [
   { value: 'status', label: 'Task Status' },
   { value: 'purpose', label: 'Purpose' },
   { value: 'priority', label: 'Priority' },
 ];
 
-// Pool tab's view/grouping preference — same storage keys PoolTaskListPage falls
-// back to when rendered standalone (uncontrolled), so the two never drift.
+// Pool tab's view/grouping preference — the same storage keys the task list page (TaskListingPage)
+// uses, so the two never drift.
 const POOL_VIEW_STORAGE_KEY = 'task-view-pool';
 const POOL_GROUPBY_STORAGE_KEY = 'task-groupby-pool';
 const POOL_GROUP_BY_VALUES: GroupByField[] = ['status', 'purpose', 'priority'];
@@ -107,6 +92,7 @@ const defaultTdClass = 'px-3 py-1.5 text-gray-600 text-xs';
 export function ActivityTaskTable({ activityId, title, description }: ActivityTaskTableProps) {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
+  const { t: tTask } = useTranslation('task');
   const {
     activeTab,
     setActiveTab,
@@ -213,6 +199,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
   const {
     data,
     isLoading: isListLoading,
+    isPlaceholderData,
     isError,
     error,
   } = useGetTasks({
@@ -235,7 +222,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     }
   }, [isListLoading]);
 
-  const isLoading = isListLoading || !minLoadingDone;
+  // A page change keeps the last page as a placeholder; this table shows its skeleton instead
+  const isLoading = isListLoading || isPlaceholderData || !minLoadingDone;
 
   const paginatedResult: TaskListResponse | undefined = data;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
@@ -613,7 +601,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                   key={key}
                   className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
                 >
-                  <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+                  <span className="text-primary/60">{tTask(`filterChips.${key}`)}:</span> {value}
                   <button
                     onClick={() =>
                       setPoolFilters(prev => {
@@ -660,7 +648,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                   key={key}
                   className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
                 >
-                  <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+                  <span className="text-primary/60">{tTask(`filterChips.${key}`)}:</span> {value}
                   <button
                     onClick={() => removeFilter(key)}
                     className="hover:text-primary/60 ml-0.5"

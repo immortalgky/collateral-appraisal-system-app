@@ -31,11 +31,12 @@ import {
   useAppointmentLetter,
 } from '../hooks/useAppointmentLetter';
 import { useTitleEditorOpen } from '../store/titleEditorStore';
+import { runLimited } from '@shared/utils/runLimited';
 import { MAX_UPLOAD_BYTES, useUploadDocument, useViewDocument } from '../api';
 import {
   placeInFlight,
   revertInFlight,
-  runLimited,
+  UPLOAD_CONCURRENCY,
   splitUploadable,
   startInFlight,
 } from '../utils/uploadFiles';
@@ -793,7 +794,7 @@ const DocumentCard: React.FunctionComponent<
         quiet: valid.length > 1,
       }),
     );
-    const results = await runLimited(tasks);
+    const results = await runLimited(tasks, UPLOAD_CONCURRENCY);
     // A single file says so itself; several say it once
     const done = results.filter(Boolean).length;
     if (valid.length > 1 && done > 0) toast.success(t('toasts.uploadSuccess', { n: done }));

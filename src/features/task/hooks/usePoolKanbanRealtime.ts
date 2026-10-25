@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useQueryClient, type Query } from '@tanstack/react-query';
-import { useAuthStore } from '@features/auth/store';
+import { usePoolGroups } from './usePoolGroups';
 import { useWorkflowHub, type PoolTaskUpdateEvent } from './useWorkflowHub';
 import type { Task } from '../types';
 
@@ -37,7 +37,7 @@ const isPoolGroupCountsQuery = (query: Query) =>
  */
 export function usePoolKanbanRealtime() {
   const queryClient = useQueryClient();
-  const userRoles = useAuthStore(s => s.user?.roles ?? []);
+  const poolGroups = usePoolGroups();
 
   const handlePoolTaskUpdate = useCallback(
     (event: PoolTaskUpdateEvent) => {
@@ -83,5 +83,5 @@ export function usePoolKanbanRealtime() {
     [queryClient],
   );
 
-  useWorkflowHub({ poolGroups: userRoles, onPoolTaskUpdate: handlePoolTaskUpdate });
+  useWorkflowHub({ poolGroups, onPoolTaskUpdate: handlePoolTaskUpdate });
 }

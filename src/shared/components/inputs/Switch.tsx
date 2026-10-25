@@ -6,6 +6,8 @@ interface SwitchProps {
   defaultChecked?: boolean;
   onChange?: (checked: boolean) => void;
   label?: string;
+  /** Accessible name when there is no visible `label` (a switch in a table row). */
+  ariaLabel?: string;
   description?: string;
   error?: string;
   disabled?: boolean;
@@ -13,8 +15,8 @@ interface SwitchProps {
   size?: 'sm' | 'md' | 'lg';
   labelPosition?: 'left' | 'right';
   name?: string;
-  /** 'default' = neutral grey; 'status' = red when off, green when on */
-  variant?: 'default' | 'status';
+  /** 'default' = neutral grey; 'status' = red when off, green when on; 'primary' = grey when off, brand teal when on */
+  variant?: 'default' | 'status' | 'primary';
 }
 
 const Switch = ({
@@ -22,6 +24,7 @@ const Switch = ({
   defaultChecked,
   onChange,
   label,
+  ariaLabel,
   description,
   error,
   disabled = false,
@@ -64,11 +67,13 @@ const Switch = ({
           ? 'cursor-not-allowed bg-gray-200'
           : variant === 'status'
             ? 'bg-red-500 data-checked:bg-green-600'
-            : 'bg-gray-300 data-checked:bg-gray-700',
+            : variant === 'primary'
+              ? 'bg-gray-300 data-checked:bg-primary'
+              : 'bg-gray-300 data-checked:bg-gray-700',
         error && 'ring-2 ring-danger',
       )}
     >
-      <span className="sr-only">{label || 'Toggle'}</span>
+      <span className="sr-only">{label || ariaLabel || 'Toggle'}</span>
       <span
         className={clsx(
           'pointer-events-none inline-block transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
-import SectionHeader from '@shared/components/sections/SectionHeader';
 import Pagination from '@shared/components/Pagination';
 import { useHasPermission } from '@shared/hooks/useHasPermission';
 import { useMenuLabel } from '@shared/hooks/useMenuLabel';
@@ -363,16 +362,12 @@ const FailedMessagesPage = () => {
   return (
     // While the fixed BulkActionBar is up (it can wrap to several rows on a narrow screen), leave
     // room under the pager so it never covers it.
-    <div
-      className={`px-4 sm:px-6 lg:px-8 pt-8 flex flex-col gap-4 ${canManage && selectionCount > 0 ? 'pb-32' : 'pb-8'}`}
-    >
+    <div className={`flex flex-col gap-4 ${canManage && selectionCount > 0 ? 'pb-32' : ''}`}>
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <SectionHeader
-          title={menuLabel ?? t('page.title')}
-          subtitle={t('page.subtitle')}
-          icon="triangle-exclamation"
-          iconColor="rose"
-        />
+        <div className="min-w-64 flex-1">
+          <h2 className="text-base font-semibold text-gray-900">{menuLabel ?? t('page.title')}</h2>
+          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+        </div>
         <div className="flex items-center gap-2 text-[12px] text-gray-500">
           <span>{t('page.refreshed', { time: formatClock(summaryQuery.data?.serverTime) })}</span>
           {summaryQuery.data && summaryQuery.isError && (

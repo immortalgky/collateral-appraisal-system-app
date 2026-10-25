@@ -65,5 +65,5 @@ dist-ssr
 **/.impeccable/live/*.png
 # impeccable-ignore-end
 
-# Impeccable design mocks (local only)
-.impeccable/mocks/
+# The whole .impeccable/ folder (surface briefs, mocks, critique output) stays out of the repo
+.impeccable/

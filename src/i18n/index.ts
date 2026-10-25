@@ -44,6 +44,7 @@ import enAddressMaster from './locales/en/addressMaster.json';
 import enAppraisalDataCorrection from './locales/en/appraisalDataCorrection.json';
 import enHangfire from './locales/en/hangfire.json';
 import enFailedMessages from './locales/en/failedMessages.json';
+import enTask from './locales/en/task.json';
 
 // Thai and Chinese are otherwise lazy (see `lazyBackend` below); `common` is the
 // one namespace bundled inline for them. See the note on `resources` for why.
@@ -97,6 +98,7 @@ export const resources = {
     appraisalDataCorrection: enAppraisalDataCorrection,
     hangfire: enHangfire,
     failedMessages: enFailedMessages,
+    task: enTask,
   },
   // th/zh deliberately bundle ONLY `common`. i18next's setResolvedLanguage() picks
   // the first language in the resolve hierarchy that already has *some* translation
@@ -145,9 +147,10 @@ export const localeLoaders = import.meta.glob<{ default: Record<string, unknown>
   '!./locales/zh/common.json',
 ]);
 
-const lazyBackend = resourcesToBackend((language: string, namespace: string) =>
-  localeLoaders[`./locales/${language}/${namespace}.json`]?.() ??
-  Promise.reject(new Error(`No bundled locale for ${language}/${namespace}`))
+const lazyBackend = resourcesToBackend(
+  (language: string, namespace: string) =>
+    localeLoaders[`./locales/${language}/${namespace}.json`]?.() ??
+    Promise.reject(new Error(`No bundled locale for ${language}/${namespace}`)),
 );
 
 const resolveParameterLang = (lng: string): string => {

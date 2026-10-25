@@ -176,6 +176,9 @@ Dots are `size-2 rounded-full` with a `title` naming the state.
 
 - 🔒 New page/section headers use `SectionHeader` / `FormCard`. Do not build a custom header row; save space by
   putting actions in `rightIcon`, not by restyling the title.
+- Admin / monitoring list pages (Application Log, Failed Messages, Webhook deliveries and subscriptions, Job
+  schedules) use a plain header instead: `h2 text-base font-semibold text-gray-900` over
+  `p text-xs text-gray-500 mt-0.5`, no icon tile and no page padding of their own (user decision 2026-10-25).
 - A card whose table runs to its bottom edge drops the bottom radius, top stays round:
   `FormCard className="rounded-b-none!"` with `noPadding` (`TitleInformationForm.tsx`), or a plain
   `section` with `rounded-t-2xl rounded-b-none`. Remove the last table's own bottom border so the card edge is
