@@ -45,7 +45,7 @@ describe('PreviousCompanyBanner hint', () => {
     render(<PreviousCompanyBanner previousCompany={previous()} isSelected isPreselected />);
 
     expect(hint()).toBeNull();
-    expect(screen.getByRole('status')).not.toHaveClass('bg-amber-50');
+    expect(screen.getByRole('status')).not.toHaveClass('bg-(--palette-warn-wash)');
   });
 
   it('warns, in amber, when the company is not offered for this segment', () => {
@@ -54,7 +54,7 @@ describe('PreviousCompanyBanner hint', () => {
     );
 
     expect(screen.getByText('administration.previousCompany.hintNotEligible')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveClass('bg-amber-50');
+    expect(screen.getByRole('status')).toHaveClass('bg-(--palette-warn-wash)');
   });
 
   it('warns, in amber, when the MOU is not active, whatever else is true', () => {
@@ -69,7 +69,7 @@ describe('PreviousCompanyBanner hint', () => {
 
     expect(screen.getByText('administration.previousCompany.hintMouInactive')).toBeInTheDocument();
     expect(screen.queryByText('administration.previousCompany.hintSelected')).toBeNull();
-    expect(screen.getByRole('status')).toHaveClass('bg-amber-50');
+    expect(screen.getByRole('status')).toHaveClass('bg-(--palette-warn-wash)');
   });
 
   it.each([
@@ -90,6 +90,6 @@ describe('PreviousCompanyBanner hint', () => {
     expect(screen.getByText('administration.previousCompany.title')).toBeInTheDocument();
     expect(screen.getByText(/administration\.previousCompany\.book/)).toBeInTheDocument();
     expect(hint()).toBeNull();
-    expect(screen.getByRole('status')).not.toHaveClass('bg-amber-50');
+    expect(screen.getByRole('status')).not.toHaveClass('bg-(--palette-warn-wash)');
   });
 });

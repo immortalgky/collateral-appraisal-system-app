@@ -42,6 +42,33 @@
   name: 'dark';
   prefersdark: false;
   color-scheme: dark;
+  /* The dark surface ramp lives here, not in theme.css: daisyUI emits its own [data-theme=dark]
+     --color-base-* in @layer base, which outranks theme.css (layer(theme)), so values set there
+     never applied. Slate, layered: card #1c2129 / table head #20262f / hairline #2c3138; the page
+     behind the cards is --app-canvas (theme.css). */
+  --color-base-100: #1c2129;
+  --color-base-200: #20262f;
+  --color-base-300: #2c3138;
+  --color-base-content: #e5e7eb;
+  /* The built-in daisyUI dark theme is also emitted (themes: dark above) and brings its own
+     indigo primary and friends, so every colour the app relies on is restated here, with the
+     same values as @theme in styles/theme.css. */
+  --color-primary: #0d9488;
+  --color-primary-content: #ffffff;
+  --color-secondary: #94a3b8;
+  --color-secondary-content: #0f172a;
+  --color-accent: #d97706;
+  --color-accent-content: #ffffff;
+  --color-neutral: #e5e7eb;
+  --color-neutral-content: #111827;
+  --color-info: #3b82f6;
+  --color-info-content: #1e3a5f;
+  --color-success: #22c55e;
+  --color-success-content: #ffffff;
+  --color-warning: #f59e0b;
+  --color-warning-content: #422006;
+  --color-error: #ef4444;
+  --color-error-content: #450a0a;
 }
 
 /* Workflow edge dash animation */
@@ -395,14 +422,31 @@ html {
   line-height: var(--cas-leading);
 }
 
+/* The canvas follows the theme (data-theme=dark swaps --color-base-*), so nothing behind the layouts
+   (overscroll, a page that renders no layout) stays white in dark. */
 body {
   margin: 0;
+  background-color: var(--app-canvas);
+  color: var(--color-base-content);
 }
 
-/* Focus styles for better accessibility */
+/* Focus styles for better accessibility: the one teal focus colour (--focus-edge, theme.css; teal
+   #0f766e light / #14b8a6 dark), shared with the text controls' border + ring (DESIGN.md 6). */
 :focus-visible {
-  outline: 2px solid #3b82f6;
+  outline: 2px solid var(--focus-edge);
   outline-offset: 2px;
+}
+
+/* Selected text and the text caret follow the palette, not the browser's blue. */
+::selection {
+  background: var(--palette-accent-line);
+  color: var(--palette-ink);
+}
+input,
+textarea,
+select,
+.ProseMirror {
+  caret-color: var(--focus-edge);
 }
 /* Text-entry controls draw their own focus state — the shared inputs a primary ring and border, and
    a text box always shows its caret — so the blue outline above only doubled up around them as a
@@ -454,3 +498,23 @@ button:focus-visible {
 }
 
 /* Color driven by data-theme, not OS preference — OS media query removed */
+
+/* A KPI tile whose figure a recalculation just changed (CondoProjectHeader) */
+@keyframes kpi-flash {
+  from {
+    background-color: var(--palette-accent-wash);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+[data-flash] {
+  animation: kpi-flash 1.2s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-flash] {
+    animation: none;
+  }
+}

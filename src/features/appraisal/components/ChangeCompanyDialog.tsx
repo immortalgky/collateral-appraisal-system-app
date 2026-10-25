@@ -40,11 +40,11 @@ function CompanyCard({
     <div
       className={
         tone === 'purple'
-          ? 'rounded-lg border border-purple-200 bg-purple-50 px-3 py-2'
-          : 'rounded-lg border border-gray-200 bg-white px-3 py-2'
+          ? 'rounded-lg border border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 px-3 py-2'
+          : 'rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 py-2'
       }
     >
-      <div className="text-xs text-gray-500">{label}</div>
+      <div className="text-xs text-(--palette-gray-500)">{label}</div>
       {children}
     </div>
   );
@@ -71,7 +71,7 @@ export default function ChangeCompanyDialog({
     feeError ? (
       <span className="text-danger">{t('feePreview.loadFailed')}</span>
     ) : (
-      <span className="text-gray-400">{t('feePreview.loading')}</span>
+      <span className="text-(--palette-gray-400)">{t('feePreview.loading')}</span>
     )
   ) : adminAmount != null ? (
     t('administration.changeCompany.feeAdmin', { amount: formatNumber(adminAmount, 2) })
@@ -86,22 +86,22 @@ export default function ChangeCompanyDialog({
     <Dialog open={!!newCompany} onClose={onCancel} className="relative z-[60]">
       <DialogBackdrop className="fixed inset-0 bg-black/40" />
       <div className="fixed inset-0 flex items-center justify-center overflow-y-auto p-4">
-        <DialogPanel className="w-full max-w-[520px] rounded-2xl bg-white shadow-xl">
+        <DialogPanel className="w-full max-w-[520px] rounded-2xl bg-(--palette-surface) shadow-xl">
           <div className="px-6 pt-5 pb-4">
-            <DialogTitle as="h3" className="text-lg font-semibold text-gray-900">
+            <DialogTitle as="h3" className="text-lg font-semibold text-(--palette-ink)">
               {t('administration.changeCompany.title')}
             </DialogTitle>
-            <Description className="mt-1 text-xs text-pretty text-gray-500">
+            <Description className="mt-1 text-xs text-pretty text-(--palette-gray-500)">
               {t('administration.changeCompany.description')}
             </Description>
 
             {/* Side by side; stacked on a narrow screen. */}
             <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               <CompanyCard label={t('administration.changeCompany.previous')} tone="neutral">
-                <div className="text-sm font-semibold text-gray-900">
+                <div className="text-sm font-semibold text-(--palette-ink)">
                   {localizeCompanyName(previousCompany.companyName, previousCompanyNameLocal)}
                 </div>
-                <div className="text-xs text-gray-500">
+                <div className="text-xs text-(--palette-gray-500)">
                   {t('administration.previousCompany.book', {
                     appraisalNumber: previousCompany.appraisalNumber,
                   })}
@@ -117,7 +117,7 @@ export default function ChangeCompanyDialog({
               </CompanyCard>
               {newCompany && (
                 <CompanyCard label={t('administration.changeCompany.selected')} tone="purple">
-                  <div className="text-sm font-semibold text-gray-900">
+                  <div className="text-sm font-semibold text-(--palette-ink)">
                     {localizeCompanyName(newCompany.companyName, newCompany.companyNameLocal)}
                   </div>
                 </CompanyCard>
@@ -125,14 +125,14 @@ export default function ChangeCompanyDialog({
             </div>
 
             {(newCompany ? fee : null) && (
-              <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-gray-100 pt-3 text-xs text-gray-600">
+              <div className="mt-4 flex items-baseline justify-between gap-4 border-t border-(--palette-line-soft) pt-3 text-xs text-(--palette-gray-600)">
                 <span className="shrink-0">{t('administration.changeCompany.fee')}</span>
                 <span className="text-right">{fee}</span>
               </div>
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-6 py-3">
+          <div className="flex items-center justify-between gap-3 border-t border-(--palette-line-soft) px-6 py-3">
             <Button type="button" variant="outline" onClick={onKeepPrevious}>
               {t('administration.changeCompany.keepPrevious')}
             </Button>

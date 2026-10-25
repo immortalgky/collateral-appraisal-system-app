@@ -22,14 +22,14 @@ import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
 // ── Helpers ────────────────────────────────────────────────────────────────
 
 const AVATAR_COLORS = [
-  'bg-blue-100 text-blue-700',
-  'bg-emerald-100 text-emerald-700',
-  'bg-violet-100 text-violet-700',
-  'bg-amber-100 text-amber-700',
-  'bg-rose-100 text-rose-700',
-  'bg-cyan-100 text-cyan-700',
-  'bg-orange-100 text-orange-700',
-  'bg-indigo-100 text-indigo-700',
+  'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300',
+  'bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300',
+  'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)',
+  'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300',
+  'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-300',
+  'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
+  'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
 ];
 
 export function avatarColor(name: string): string {
@@ -49,7 +49,7 @@ export function initials(name: string): string {
 
 /** An empty value is an em dash, grey (DESIGN.md section 10). */
 export function Dash() {
-  return <span className="text-gray-400">—</span>;
+  return <span className="text-(--palette-gray-400)">—</span>;
 }
 
 export function PersonCell({ name: raw }: { name: string | null | undefined }) {
@@ -63,7 +63,7 @@ export function PersonCell({ name: raw }: { name: string | null | undefined }) {
       >
         {initials(name)}
       </span>
-      <span className="truncate text-gray-700">{name}</span>
+      <span className="truncate text-(--palette-ink)">{name}</span>
     </div>
   );
 }
@@ -85,8 +85,12 @@ function AppraiserCell({
   if (!appraiser) return <Dash />;
   return (
     <div className="flex items-center gap-2 min-w-0">
-      <Icon style="regular" name="building" className="size-3.5 text-gray-400 flex-shrink-0" />
-      <span className="truncate text-gray-700">
+      <Icon
+        style="regular"
+        name="building"
+        className="size-3.5 text-(--palette-gray-400) flex-shrink-0"
+      />
+      <span className="truncate text-(--palette-ink)">
         {localizeCompanyName(appraiser, companyNameLocal)}
       </span>
     </div>
@@ -106,7 +110,7 @@ function DueDateCell({
   // SLA budget before a due date is computed.
   const durationChip =
     slaDurationHours != null ? (
-      <span className="text-xs text-gray-400 mt-0.5">{slaDurationHours}h</span>
+      <span className="text-xs text-(--palette-gray-400) mt-0.5">{slaDurationHours}h</span>
     ) : null;
 
   if (!dateString) {
@@ -127,21 +131,21 @@ function DueDateCell({
     let dateLine: ReactNode;
     if (bucket === 'breached')
       dateLine = (
-        <span className="inline-flex items-center gap-1 text-red-600 font-medium">
+        <span className="inline-flex items-center gap-1 text-(--palette-danger) font-medium">
           <Icon style="solid" name="circle-exclamation" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
     else if (bucket === 'atRisk')
       dateLine = (
-        <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
+        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
           <Icon style="solid" name="clock" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
     else if (bucket === 'healthy')
       dateLine = (
-        <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
+        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
           <Icon style="solid" name="circle-check" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
@@ -173,7 +177,7 @@ function LockStateCell({ task }: { task: Task }) {
   return (
     <div className="min-w-0">
       {free ? (
-        <span className="flex items-center gap-1.5 font-medium text-green-700">
+        <span className="flex items-center gap-1.5 font-medium text-green-700 dark:text-green-300">
           <span className="inline-block size-2 shrink-0 rounded-full bg-green-600" />
           {t('pool.state.free')}
         </span>
@@ -181,7 +185,7 @@ function LockStateCell({ task }: { task: Task }) {
         <span
           className={clsx(
             'flex items-center gap-1.5 font-medium',
-            self ? 'text-blue-600' : 'text-amber-600',
+            self ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400',
           )}
         >
           <Icon style="solid" name="lock" className="shrink-0 text-xs" />
@@ -191,7 +195,7 @@ function LockStateCell({ task }: { task: Task }) {
         </span>
       )}
       {ago && (
-        <span className="block truncate text-xs text-gray-400">
+        <span className="block truncate text-xs text-(--palette-gray-400)">
           {t(free ? 'pool.state.waiting' : 'pool.state.lockedAgo', { ago })}
         </span>
       )}
@@ -207,18 +211,18 @@ function HoursCell({
   type: 'elapsed' | 'remaining';
 }) {
   if (hours == null) return <Dash />;
-  let cls = 'text-gray-600';
+  let cls = 'text-(--palette-gray-600)';
   let label = `${hours}h`;
   if (type === 'remaining') {
     if (hours < 0) {
-      cls = 'text-red-600 font-medium';
+      cls = 'text-(--palette-danger) font-medium';
       label = `${Math.abs(hours)}h late`;
-    } else if (hours <= 24) cls = 'text-amber-600 font-medium';
-    else cls = 'text-emerald-600';
+    } else if (hours <= 24) cls = 'text-amber-600 dark:text-amber-400 font-medium';
+    else cls = 'text-emerald-600 dark:text-emerald-400';
   } else {
-    if (hours > 72) cls = 'text-red-600 font-medium';
-    else if (hours > 24) cls = 'text-amber-600 font-medium';
-    else cls = 'text-emerald-600';
+    if (hours > 72) cls = 'text-(--palette-danger) font-medium';
+    else if (hours > 24) cls = 'text-amber-600 dark:text-amber-400 font-medium';
+    else cls = 'text-emerald-600 dark:text-emerald-400';
   }
   return <span className={cls}>{label}</span>;
 }
@@ -254,7 +258,7 @@ export type ColumnDef = {
   label: string;
   /** Backend sort field name. Omit to make the column non-sortable. */
   sortField?: string;
-  /** td className override. Defaults to 'px-3 py-1.5 text-gray-600 text-table' when not set. */
+  /** td className override. Defaults to 'px-3 py-1.5 text-(--palette-gray-600) text-table' when not set. */
   tdClassName?: string;
   /** Default column width in px AT THE 14px ROOT. Falls back to DEFAULT_COLUMN_WIDTH when not set. */
   width?: number;
@@ -281,7 +285,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
         <Link
           to={`/tasks/${task.id}/opening`}
           onClick={e => e.stopPropagation()}
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-(--palette-primary-text) hover:underline"
         >
           {display ?? <Dash />}
         </Link>
@@ -301,7 +305,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
       <Link
         to={`/tasks/${task.id}/opening`}
         onClick={e => e.stopPropagation()}
-        className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+        className="font-medium text-(--palette-primary-text) hover:underline inline-flex items-center gap-1.5"
       >
         {task.requestNumber ?? <Dash />}
       </Link>

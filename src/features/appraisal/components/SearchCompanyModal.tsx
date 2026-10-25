@@ -81,19 +81,19 @@ const SearchCompanyModal = ({
         />
 
         {/* Results List */}
-        <div className="overflow-hidden rounded-lg border border-gray-200">
+        <div className="overflow-hidden rounded-lg border border-(--palette-line)">
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-500">
+              <div className="px-4 py-8 text-center text-sm text-(--palette-gray-500)">
                 <Icon name="spinner" style="solid" className="mx-auto mb-2 animate-spin text-xl" />
                 {t('administration.modal.company.loading')}
               </div>
             ) : companyList.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-500">
+              <div className="px-4 py-8 text-center text-sm text-(--palette-gray-500)">
                 {t('administration.modal.company.empty')}
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-(--palette-line-soft)">
                 {companyList.map(company => {
                   const notAssignable = company.isAssignable === false;
                   const isSelected = selectedCompany?.id === company.id;
@@ -107,15 +107,15 @@ const SearchCompanyModal = ({
                       className={clsx(
                         'flex w-full items-start gap-3 px-4 py-3 text-left transition-colors',
                         notAssignable
-                          ? 'cursor-not-allowed bg-gray-50 opacity-60'
+                          ? 'cursor-not-allowed bg-(--palette-surface-2) opacity-60'
                           : isSelected
-                            ? 'bg-primary-50'
-                            : 'hover:bg-primary-50/60',
+                            ? 'bg-(--palette-accent-wash)'
+                            : 'hover:bg-primary-50/60 dark:hover:bg-primary-500/20',
                       )}
                     >
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-(--palette-ink)">
                             {localizeCompanyName(company.companyName, company.companyNameLocal)}
                           </span>
                           {company.id === previousCompany?.id && (
@@ -125,7 +125,7 @@ const SearchCompanyModal = ({
                           )}
                         </div>
                         {/* Only what exists: no empty parentheses, stars or icons. */}
-                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500">
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-(--palette-gray-500)">
                           {company.registrationNo && (
                             <span>
                               {t('administration.modal.company.registrationNo', {
@@ -158,7 +158,7 @@ const SearchCompanyModal = ({
                           <Icon
                             name="circle-check"
                             style="solid"
-                            className="shrink-0 text-lg text-primary-600"
+                            className="shrink-0 text-lg text-(--palette-primary-text)"
                           />
                         )}
                       </div>

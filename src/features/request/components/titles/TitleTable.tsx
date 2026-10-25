@@ -54,7 +54,7 @@ const POSITION_KEYS = {
 // (z-[1]), the totals row (z-[2]), the header cells (z-10) and the header's pinned corner (z-20). Each
 // layer names its own z and background, so none of them relies on class order.
 const TH_BASE =
-  'sticky top-0 border-b border-gray-200 bg-gray-50 px-2 py-2 text-left text-xs font-semibold text-gray-600';
+  'sticky top-0 border-b border-(--palette-line) bg-(--palette-surface-2) px-2 py-2 text-left text-xs font-semibold text-(--palette-gray-600)';
 const TH = clsx(TH_BASE, 'z-10');
 const TH_CORNER = clsx(TH_BASE, 'right-0 z-20');
 /**
@@ -62,7 +62,7 @@ const TH_CORNER = clsx(TH_BASE, 'right-0 z-20');
  * narrow card), so the row menu is never scrolled out of reach. The cell takes its row's colour.
  */
 const STICKY_END = 'sticky right-0 z-[1] bg-inherit';
-const TD = 'border-b border-gray-100 px-2 py-1 align-middle';
+const TD = 'border-b border-(--palette-line-soft) px-2 py-1 align-middle';
 /**
  * The status column holds a nowrap Badge (sm, 12px): "Missing 12", the longest label in the three
  * languages, is 84px at the 14px root. With the tighter 0.25rem side padding that needs 91px, so
@@ -200,8 +200,8 @@ const DetailLine = ({ parts }: { parts: DetailPart[] }) => {
       {parts.map((part, i) => (
         <span key={i}>
           {i > 0 && ' · '}
-          {labelOf(part) && <span className="text-gray-500">{labelOf(part)} </span>}
-          <span className="text-gray-900">{part.value}</span>
+          {labelOf(part) && <span className="text-(--palette-gray-500)">{labelOf(part)} </span>}
+          <span className="text-(--palette-ink)">{part.value}</span>
         </span>
       ))}
     </span>
@@ -211,7 +211,7 @@ const DetailLine = ({ parts }: { parts: DetailPart[] }) => {
 // One line: a long value is cut with an ellipsis, all of it in the tooltip when it is plain text.
 const Sub = ({ children }: { children: ReactNode }) => (
   <span
-    className="block truncate text-xs text-gray-500"
+    className="block truncate text-xs text-(--palette-gray-500)"
     title={typeof children === 'string' ? children : undefined}
   >
     {children}
@@ -228,7 +228,7 @@ const TypeName = ({ code }: { code: string }) => {
   );
 };
 
-const Dash = () => <span className="text-gray-400">—</span>;
+const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 
 const has = (value: unknown) => value != null && String(value).trim() !== '';
 
@@ -270,7 +270,7 @@ function RowMenu({
 >) {
   const { t } = useTranslation(['request', 'common']);
   const item =
-    'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100 data-disabled:cursor-default data-disabled:text-gray-300';
+    'flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-(--palette-ink) data-focus:bg-(--palette-surface-3) data-disabled:cursor-default data-disabled:text-(--palette-gray-300)';
   // The menu is portalled, but React still bubbles its clicks to the row, which would open the editor.
   return (
     <div
@@ -282,25 +282,29 @@ function RowMenu({
         <MenuButton
           aria-label={t('titleSection.row.menu')}
           title={t('titleSection.row.menu')}
-          className="flex size-6 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-2 focus-visible:outline-primary data-open:bg-gray-100"
+          className="flex size-6 items-center justify-center rounded-md text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-ink) focus-visible:outline-2 focus-visible:outline-primary data-open:bg-(--palette-surface-3)"
         >
           <Icon style="solid" name="ellipsis-vertical" className="size-4" />
         </MenuButton>
         <MenuItems
           anchor="bottom end"
-          className="z-50 mt-1 min-w-52 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg focus:outline-none"
+          className="z-50 mt-1 min-w-52 overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface) py-1 shadow-lg focus:outline-none"
         >
           {collapsed && (
             <>
               <MenuItem>
                 <button type="button" className={item} onClick={() => actions.open(index)}>
-                  <Icon style="solid" name="pen" className="size-3.5 text-gray-400" />
+                  <Icon style="solid" name="pen" className="size-3.5 text-(--palette-gray-400)" />
                   {t('common:actions.edit')}
                 </button>
               </MenuItem>
               <MenuItem>
                 <button type="button" className={item} onClick={() => actions.duplicate(index)}>
-                  <Icon style="regular" name="copy" className="size-3.5 text-gray-400" />
+                  <Icon
+                    style="regular"
+                    name="copy"
+                    className="size-3.5 text-(--palette-gray-400)"
+                  />
                   {t('actions.duplicate')}
                 </button>
               </MenuItem>
@@ -314,14 +318,20 @@ function RowMenu({
                   {t('actions.delete')}
                 </button>
               </MenuItem>
-              {canOrder && <div role="separator" className="my-1 border-t border-gray-100" />}
+              {canOrder && (
+                <div role="separator" className="my-1 border-t border-(--palette-line-soft)" />
+              )}
             </>
           )}
           {canOrder && (
             <>
               <MenuItem disabled={orderLocked}>
                 <button type="button" className={item} onClick={() => actions.moveTo(index)}>
-                  <Icon style="solid" name="arrows-up-down" className="size-3.5 text-gray-400" />
+                  <Icon
+                    style="solid"
+                    name="arrows-up-down"
+                    className="size-3.5 text-(--palette-gray-400)"
+                  />
                   {t('titleSection.row.moveTo')}
                 </button>
               </MenuItem>
@@ -331,7 +341,11 @@ function RowMenu({
                   className={item}
                   onClick={() => actions.moveToEdge(index, 'top')}
                 >
-                  <Icon style="solid" name="arrow-up" className="size-3.5 text-gray-400" />
+                  <Icon
+                    style="solid"
+                    name="arrow-up"
+                    className="size-3.5 text-(--palette-gray-400)"
+                  />
                   {t('titleSection.row.moveTop')}
                 </button>
               </MenuItem>
@@ -341,7 +355,11 @@ function RowMenu({
                   className={item}
                   onClick={() => actions.moveToEdge(index, 'bottom')}
                 >
-                  <Icon style="solid" name="arrow-down" className="size-3.5 text-gray-400" />
+                  <Icon
+                    style="solid"
+                    name="arrow-down"
+                    className="size-3.5 text-(--palette-gray-400)"
+                  />
                   {t('titleSection.row.moveBottom')}
                 </button>
               </MenuItem>
@@ -391,7 +409,7 @@ function RowButtons({
     );
   }
   const btn =
-    'flex size-6 items-center justify-center rounded-md text-gray-400 transition-colors focus-visible:outline-2 focus-visible:outline-primary';
+    'flex size-6 items-center justify-center rounded-md text-(--palette-gray-400) transition-colors focus-visible:outline-2 focus-visible:outline-primary';
   return (
     <div className="flex items-center justify-end">
       <button
@@ -400,7 +418,7 @@ function RowButtons({
           event.stopPropagation();
           actions.open(index);
         }}
-        className={clsx(btn, 'hover:bg-primary/10 hover:text-primary')}
+        className={clsx(btn, 'hover:bg-primary/10 hover:text-(--palette-primary-text)')}
         aria-label={t('common:actions.edit')}
         title={t('common:actions.edit')}
       >
@@ -412,7 +430,7 @@ function RowButtons({
           event.stopPropagation();
           actions.duplicate(index);
         }}
-        className={clsx(btn, 'hover:bg-gray-100 hover:text-gray-700')}
+        className={clsx(btn, 'hover:bg-(--palette-surface-3) hover:text-(--palette-ink)')}
         aria-label={t('actions.duplicate')}
         title={t('actions.duplicate')}
       >
@@ -514,9 +532,9 @@ function EstateCells({ title }: { title: RequestTitleDtoType }) {
             text: numbers?.first ? normaliseLandTitleNumbers(title.titleNumber) : '',
             node: numbers?.first ? (
               <span>
-                <span className="text-gray-700">{numbers.first}</span>
+                <span className="text-(--palette-ink)">{numbers.first}</span>
                 {numbers.rest > 0 && (
-                  <span className="ml-1 rounded bg-gray-100 px-1 text-xs text-gray-600">
+                  <span className="ml-1 rounded bg-(--palette-surface-3) px-1 text-xs text-(--palette-gray-600)">
                     +{numbers.rest}
                   </span>
                 )}
@@ -528,7 +546,7 @@ function EstateCells({ title }: { title: RequestTitleDtoType }) {
           {
             key: 'number',
             text: text(title.titleNumber),
-            node: <span className="text-gray-700">{text(title.titleNumber)}</span>,
+            node: <span className="text-(--palette-ink)">{text(title.titleNumber)}</span>,
           },
           {
             key: 'book',
@@ -587,20 +605,26 @@ function EstateCells({ title }: { title: RequestTitleDtoType }) {
         {title.collateralType ? (
           <TypeName code={title.collateralType} />
         ) : (
-          <span className="italic text-gray-400">{t('empty.noCollateralType')}</span>
+          <span className="italic text-(--palette-gray-400)">{t('empty.noCollateralType')}</span>
         )}
       </td>
       <td className={TD}>
         {showDeed ? (
           <>
             <span
-              className={clsx('block truncate font-medium', !deedName && 'text-gray-400')}
+              className={clsx(
+                'block truncate font-medium',
+                !deedName && 'text-(--palette-gray-400)',
+              )}
               title={deedName || undefined}
             >
               {deedName || '—'}
             </span>
             {/* The sub-line (cut with an ellipsis, all of it on hover); a dash when it has no part. */}
-            <span className="block truncate text-xs text-gray-500" title={deedLine || undefined}>
+            <span
+              className="block truncate text-xs text-(--palette-gray-500)"
+              title={deedLine || undefined}
+            >
               {subParts.length ? (
                 subParts.map((part, i) => (
                   <span key={part.key}>
@@ -609,7 +633,7 @@ function EstateCells({ title }: { title: RequestTitleDtoType }) {
                   </span>
                 ))
               ) : (
-                <span className="text-gray-400">—</span>
+                <span className="text-(--palette-gray-400)">—</span>
               )}
             </span>
           </>
@@ -623,7 +647,7 @@ function EstateCells({ title }: { title: RequestTitleDtoType }) {
       <td className={clsx(TD, 'text-right')}>
         {land ? (
           <>
-            <b className="font-semibold text-gray-900">
+            <b className="font-semibold text-(--palette-ink)">
               {t('titleSection.cell.areaRai', { rnw: formatRaiNganWa(totalWa) })}
             </b>
             <Sub>{t('titleSection.cell.areaWa', { wa: formatNumber(totalWa, 2) })}</Sub>
@@ -631,7 +655,7 @@ function EstateCells({ title }: { title: RequestTitleDtoType }) {
         ) : family === 'condo' || family === 'building' ? (
           has(title.usableArea) ? (
             <>
-              <b className="font-semibold text-gray-900">
+              <b className="font-semibold text-(--palette-ink)">
                 {t('titleSection.cell.areaSqm', { area: title.usableArea })}
               </b>
               <Sub>{t('titleSection.cell.usableArea')}</Sub>
@@ -734,7 +758,7 @@ function MovableCells({ title }: { title: RequestTitleDtoType }) {
         <TypeName code={title.collateralType} />
       </td>
       <td className={TD}>
-        <span className="font-medium text-gray-900">{identity}</span>
+        <span className="font-medium text-(--palette-ink)">{identity}</span>
         {sub && <Sub>{sub}</Sub>}
       </td>
       <td className={TD}>
@@ -827,8 +851,8 @@ const TitleRow = memo(
           // Opaque, so the pinned actions cell (which takes the row's colour) hides what scrolls
           // under it: amber-50 at 70% mixed onto white, the colour the translucent tint made.
           incomplete
-            ? 'bg-[color-mix(in_oklab,var(--color-amber-50)_70%,white)] hover:bg-amber-50'
-            : 'bg-white hover:bg-gray-50',
+            ? 'bg-[color-mix(in_oklab,var(--color-amber-50)_70%,white)] hover:bg-(--palette-warn-wash)'
+            : 'bg-(--palette-surface) hover:bg-(--palette-surface-2)',
         )}
       >
         {handle => (
@@ -857,12 +881,12 @@ const TitleRow = memo(
                           : t('titleSection.dnd.handle')
                     }
                     aria-label={t('titleSection.dnd.handle')}
-                    className="absolute left-1.5 top-1/2 flex size-6 -translate-y-1/2 touch-none cursor-grab items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-primary/10 hover:text-primary active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                    className="absolute left-1.5 top-1/2 flex size-6 -translate-y-1/2 touch-none cursor-grab items-center justify-center rounded-md text-(--palette-gray-400) transition-colors hover:bg-primary/10 hover:text-(--palette-primary-text) active:cursor-grabbing disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-(--palette-gray-400)"
                   >
                     <Icon style="solid" name="grip-vertical" className="size-3.5" />
                   </button>
                 )}
-                <span className="tabular-nums text-gray-400">{rank}</span>
+                <span className="tabular-nums text-(--palette-gray-400)">{rank}</span>
               </div>
             </td>
             {cells}
@@ -1030,13 +1054,13 @@ export const TitleTable = memo(function TitleTable({
 
   return (
     <section aria-label={heading}>
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-5 pb-1.5 pt-3 text-sm font-semibold text-gray-600">
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 px-5 pb-1.5 pt-3 text-sm font-semibold text-(--palette-gray-600)">
         {heading}
-        <span className="text-xs font-normal text-gray-400">
+        <span className="text-xs font-normal text-(--palette-gray-400)">
           {t('forms.titleCount', { count: groupRows.length })}
         </span>
       </div>
-      <div className="max-h-[60vh] overflow-auto border-y border-gray-200">
+      <div className="max-h-[60vh] overflow-auto border-y border-(--palette-line)">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
@@ -1128,11 +1152,11 @@ export const TitleTable = memo(function TitleTable({
                 <tr>
                   <td
                     colSpan={4}
-                    className="sticky bottom-0 z-[2] border-t border-gray-200 bg-gray-50 px-2 py-2 font-semibold"
+                    className="sticky bottom-0 z-[2] border-t border-(--palette-line) bg-(--palette-surface-2) px-2 py-2 font-semibold"
                   >
                     {t('titleSection.total.parcels', { count: totals.parcels })}
                   </td>
-                  <td className="sticky bottom-0 z-[2] border-t border-gray-200 bg-gray-50 px-2 py-2 text-right font-semibold">
+                  <td className="sticky bottom-0 z-[2] border-t border-(--palette-line) bg-(--palette-surface-2) px-2 py-2 text-right font-semibold">
                     {t('titleSection.cell.areaRai', { rnw: formatRaiNganWa(totals.totalWa) })}
                     <Sub>
                       {t('titleSection.cell.areaWa', { wa: formatNumber(totals.totalWa, 2) })}
@@ -1140,7 +1164,7 @@ export const TitleTable = memo(function TitleTable({
                   </td>
                   <td
                     colSpan={readOnly ? 3 : 4}
-                    className="sticky bottom-0 z-[2] border-t border-gray-200 bg-gray-50"
+                    className="sticky bottom-0 z-[2] border-t border-(--palette-line) bg-(--palette-surface-2)"
                   />
                 </tr>
               </tfoot>

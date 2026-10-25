@@ -2,9 +2,10 @@ import type { DirectComparison } from '../types/directComparison';
 import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
-// Static type-inference export (uses key-passthrough function — never an object)
-const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
+// The token `t`: messages are translated where they are shown, so the schema is built once.
+const _t = tokenT('pricingAnalysis');
 
 const ComparativeFactors = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -121,7 +122,7 @@ export const makeDirectComparisonDto = (t: TFunction<'pricingAnalysis'>) =>
     })
     .passthrough() as unknown as FormValidator<DirectComparison>;
 
-// Static schema for type inference only — no runtime messages
+// Built once with the token `t`; the panel resolves with it directly.
 export const DirectComparisonDto = makeDirectComparisonDto(_t);
 
 export type DirectComparisonQualitativeSurveyFormType = z.infer<

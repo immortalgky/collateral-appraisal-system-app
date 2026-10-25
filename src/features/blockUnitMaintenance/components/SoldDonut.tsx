@@ -29,7 +29,7 @@ export const SoldDonut = ({ sold, total, soldLabel, size = 180 }: SoldDonutProps
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="#e5e7eb"
+          stroke="var(--palette-surface-3)"
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${visibleLen} ${circumference}`}
@@ -52,11 +52,11 @@ export const SoldDonut = ({ sold, total, soldLabel, size = 180 }: SoldDonutProps
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-xs text-gray-500">{soldLabel}</span>
-        <span className="text-2xl font-semibold text-gray-900 tabular-nums mt-0.5">
+        <span className="text-xs text-(--palette-gray-500)">{soldLabel}</span>
+        <span className="text-2xl font-semibold text-(--palette-ink) tabular-nums mt-0.5">
           {pct.toFixed(1)}%
         </span>
-        <span className="text-xs text-gray-500 tabular-nums mt-0.5">
+        <span className="text-xs text-(--palette-gray-500) tabular-nums mt-0.5">
           {sold} / {total}
         </span>
       </div>

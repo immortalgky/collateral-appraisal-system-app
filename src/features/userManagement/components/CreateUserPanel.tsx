@@ -95,11 +95,11 @@ const isLookupCurrent = (f: FormState, sentUsername: string) =>
   f.authSource === 'LDAP' && f.username.trim().toLowerCase() === sentUsername.toLowerCase();
 
 const ICON_COLORS = {
-  blue: 'bg-blue-50 text-blue-500',
-  rose: 'bg-rose-50 text-rose-500',
-  cyan: 'bg-cyan-50 text-cyan-500',
-  amber: 'bg-amber-50 text-amber-500',
-  violet: 'bg-violet-50 text-violet-500',
+  blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
+  rose: 'bg-rose-50 dark:bg-rose-500/10 text-rose-500',
+  cyan: 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-500',
+  amber: 'bg-(--palette-warn-wash) text-amber-500',
+  violet: 'bg-violet-50 dark:bg-violet-500/10 text-violet-500',
 } as const;
 
 const SectionLabel = ({
@@ -115,7 +115,7 @@ const SectionLabel = ({
     <div className={clsx('flex size-6 items-center justify-center rounded-md', ICON_COLORS[color])}>
       <Icon name={icon} style="solid" className="size-3" />
     </div>
-    <span className="text-sm font-semibold text-gray-800">{children}</span>
+    <span className="text-sm font-semibold text-(--palette-ink)">{children}</span>
   </div>
 );
 
@@ -131,11 +131,11 @@ const Hint = ({
   <div
     id={id}
     className={clsx(
-      'flex items-center rounded-lg bg-gray-50 border border-gray-100 px-3 py-2',
+      'flex items-center rounded-lg bg-(--palette-surface-2) border border-(--palette-line-soft) px-3 py-2',
       className,
     )}
   >
-    <p className="text-xs text-gray-500">{children}</p>
+    <p className="text-xs text-(--palette-gray-500)">{children}</p>
   </div>
 );
 
@@ -306,13 +306,15 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
   return (
     <div className="flex min-h-full flex-col">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-100 bg-white px-6 py-4">
-        <h3 className="text-base font-semibold text-gray-800">{t('dialogs.createUser.title')}</h3>
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-(--palette-line-soft) bg-(--palette-surface) px-6 py-4">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
+          {t('dialogs.createUser.title')}
+        </h3>
         <button
           type="button"
           onClick={onCancel}
           aria-label={t('common:actions.cancel')}
-          className="text-gray-400 transition-colors hover:text-gray-600"
+          className="text-(--palette-gray-400) transition-colors hover:text-(--palette-gray-600)"
         >
           <Icon name="xmark" style="solid" className="size-4" />
         </button>
@@ -325,7 +327,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
           <SectionLabel icon="building" color="blue">
             {t('fields.scope')}
           </SectionLabel>
-          <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+          <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5">
             {(['Bank', 'Company'] as Scope[]).map(s => (
               <button
                 key={s}
@@ -334,7 +336,9 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                 onClick={() => setScope(s)}
                 className={clsx(
                   'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
-                  form.scope === s ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-700',
+                  form.scope === s
+                    ? 'bg-primary text-white'
+                    : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
                 )}
               >
                 {s === 'Bank' ? t('tabs.bank') : t('tabs.company')}
@@ -348,7 +352,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
           <SectionLabel icon="shield-halved" color="rose">
             {t('fields.authSource', 'Authentication')}
           </SectionLabel>
-          <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+          <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5">
             {(
               [
                 ['Local', t('fields.authSourceLocal', 'Local password')],
@@ -367,8 +371,8 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                   onClick={() => setAuthSource(src)}
                   className={clsx(
                     'px-4 py-1.5 text-sm font-medium rounded-md transition-colors',
-                    active ? 'bg-primary text-white' : 'text-gray-500',
-                    !active && !locked && 'hover:text-gray-700',
+                    active ? 'bg-primary text-white' : 'text-(--palette-gray-500)',
+                    !active && !locked && 'hover:text-(--palette-ink)',
                     locked && 'opacity-40 cursor-not-allowed',
                   )}
                 >
@@ -389,12 +393,12 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
           <SectionLabel icon="circle-user" color="cyan">
             {t('sections.account', 'Account')}
           </SectionLabel>
-          <label className="mb-4 flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+          <label className="mb-4 flex items-start gap-2 text-sm text-(--palette-ink) cursor-pointer">
             <input
               type="checkbox"
               checked={form.isTemporaryAccess}
               onChange={e => setTemporaryAccess(e.target.checked)}
-              className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary/30"
+              className="mt-0.5 size-4 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/30"
             />
             {t('fields.isTemporaryAccess')}
           </label>
@@ -539,7 +543,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
           <SectionLabel icon="user-shield" color="violet">
             {t('sections.access', 'Access')}
           </SectionLabel>
-          <div className="flex gap-1 border-b border-gray-100 mb-3">
+          <div className="flex gap-1 border-b border-(--palette-line-soft) mb-3">
             {ACCESS_TABS.map(tab => (
               <button
                 key={tab.key}
@@ -548,14 +552,14 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
                 className={clsx(
                   '-mb-px px-3 py-2 text-sm font-medium border-b-2 transition-colors',
                   accessTab === tab.key
-                    ? 'text-primary border-primary'
-                    : 'text-gray-500 border-transparent hover:text-gray-700',
+                    ? 'text-(--palette-primary-text) border-primary'
+                    : 'text-(--palette-gray-500) border-transparent hover:text-(--palette-ink)',
                 )}
               >
                 {tab.label}
                 {tab.required && <span className="text-red-500 ml-0.5">*</span>}
                 {tab.count > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-primary">
+                  <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-primary/10 text-(--palette-primary-text)">
                     {tab.count}
                   </span>
                 )}
@@ -632,7 +636,7 @@ const CreateUserPanel = ({ onCreated, onCancel }: CreateUserPanelProps) => {
       </div>
 
       {/* Footer */}
-      <div className="sticky bottom-0 flex justify-end gap-2 border-t border-gray-100 bg-white px-6 py-4">
+      <div className="sticky bottom-0 flex justify-end gap-2 border-t border-(--palette-line-soft) bg-(--palette-surface) px-6 py-4">
         <Button variant="ghost" size="sm" onClick={onCancel}>
           {t('common:actions.cancel')}
         </Button>

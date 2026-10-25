@@ -37,14 +37,14 @@ export const GroupActionsMenu = ({
   return (
     <Menu as="div" className={clsx('relative shrink-0', className)}>
       <MenuButton
-        className="flex items-center rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        className="flex items-center rounded p-1 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
         title={t('properties.groupActions')}
       >
         <Icon name="ellipsis-vertical" className={iconClassName} style="solid" />
       </MenuButton>
       <MenuItems
         anchor={{ to: 'bottom end', gap: 4 }}
-        className="z-50 w-44 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+        className="z-50 w-44 rounded-md bg-(--palette-surface) py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
       >
         <MenuItem>
           {({ focus }) => (
@@ -52,11 +52,11 @@ export const GroupActionsMenu = ({
               type="button"
               onClick={onRename}
               className={clsx(
-                'flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700',
-                focus && 'bg-gray-50',
+                'flex w-full items-center gap-2 px-3 py-2 text-sm text-(--palette-ink)',
+                focus && 'bg-(--palette-surface-2)',
               )}
             >
-              <Icon name="pencil" className="text-xs text-gray-400" />
+              <Icon name="pencil" className="text-xs text-(--palette-gray-400)" />
               {labels?.rename ?? t('properties.renameGroup')}
             </button>
           )}
@@ -69,8 +69,10 @@ export const GroupActionsMenu = ({
               disabled={isDeleting}
               className={clsx(
                 'flex w-full items-center gap-2 px-3 py-2 text-sm',
-                isDeleting ? 'cursor-not-allowed text-gray-400' : 'text-red-600',
-                focus && !isDeleting && 'bg-red-50',
+                isDeleting
+                  ? 'cursor-not-allowed text-(--palette-gray-400)'
+                  : 'text-(--palette-danger)',
+                focus && !isDeleting && 'bg-(--palette-req-wash)',
               )}
             >
               <Icon

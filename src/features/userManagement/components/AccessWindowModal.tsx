@@ -114,11 +114,13 @@ const AccessWindowModal = ({
     >
       <div className="flex flex-col gap-4 p-6">
         {isExtend && (
-          <p className="text-xs text-gray-500">{t('accessWindow.extendPasswordUnchanged')}</p>
+          <p className="text-xs text-(--palette-gray-500)">
+            {t('accessWindow.extendPasswordUnchanged')}
+          </p>
         )}
 
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-2">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-2">
             {t('accessWindow.durationLabel')}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -139,7 +141,7 @@ const AccessWindowModal = ({
                     'px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors',
                     choice === minutes
                       ? 'bg-primary text-white border-primary'
-                      : 'border-gray-200 text-gray-600 hover:bg-gray-50',
+                      : 'border-(--palette-line) text-(--palette-gray-600) hover:bg-(--palette-surface-2)',
                     disabled && 'opacity-40 cursor-not-allowed hover:bg-transparent',
                   )}
                 >
@@ -154,7 +156,7 @@ const AccessWindowModal = ({
                 'px-3 py-1.5 text-sm font-medium rounded-lg border transition-colors',
                 choice === 'custom'
                   ? 'bg-primary text-white border-primary'
-                  : 'border-gray-200 text-gray-600 hover:bg-gray-50',
+                  : 'border-(--palette-line) text-(--palette-gray-600) hover:bg-(--palette-surface-2)',
               )}
             >
               {t('accessWindow.customChip')}
@@ -164,7 +166,7 @@ const AccessWindowModal = ({
 
         {choice === 'custom' && (
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-(--palette-ink) mb-1">
               {t('accessWindow.customEndLabel')}
             </label>
             <input
@@ -173,24 +175,24 @@ const AccessWindowModal = ({
               min={isExtend ? formatDate(baseline, 'yyyy-MM-ddTHH:mm') : nowLocal}
               max={capEndLocal}
               onChange={e => setCustomEnd(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
         )}
 
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-(--palette-gray-400)">
           {t('accessWindow.capNote', { hours: maxAccessWindowHours })}
         </p>
 
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1">
             {t('accessWindow.reasonLabel')} <span className="text-danger">*</span>
           </label>
           <textarea
             value={reason}
             onChange={e => setReason(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             placeholder={t('accessWindow.reasonPlaceholder')}
           />
         </div>

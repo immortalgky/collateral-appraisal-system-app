@@ -10,11 +10,20 @@ import { formatCurrency } from '@/shared/utils/formatUtils';
 import AssignmentSlip, { type AssignmentSlipProps } from './AssignmentSlip';
 
 const CHIP: Record<AssignmentSlipProps['result']['tone'], { box: string; icon?: string }> = {
-  ok: { box: 'border-green-200 bg-green-50 text-green-700', icon: 'check' },
+  ok: {
+    box: 'border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300',
+    icon: 'check',
+  },
   // Unmet checks nobody has touched yet: no alarm, no icon.
-  neutral: { box: 'border-gray-200 bg-gray-50 text-gray-600' },
-  warn: { box: 'border-amber-200 bg-amber-50 text-amber-700', icon: 'exclamation' },
-  error: { box: 'border-red-200 bg-red-50 text-red-700', icon: 'exclamation' },
+  neutral: { box: 'border-(--palette-line) bg-(--palette-surface-2) text-(--palette-gray-600)' },
+  warn: {
+    box: 'border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) text-(--palette-warn)',
+    icon: 'exclamation',
+  },
+  error: {
+    box: 'border-(--palette-req-line) bg-(--palette-req-wash) text-(--palette-req)',
+    icon: 'exclamation',
+  },
 };
 
 /**
@@ -48,13 +57,13 @@ export default function AssignmentSlipBar(props: AssignmentSlipProps) {
 
   return (
     <>
-      <div className="sticky bottom-0 z-10 shrink-0 border-t border-gray-200 bg-white px-5 py-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
+      <div className="sticky bottom-0 z-10 shrink-0 border-t border-(--palette-line) bg-(--palette-surface) px-5 py-2.5 shadow-[0_-4px_12px_rgba(0,0,0,0.06)]">
         {!readOnly && result.blockReason && (
           <p
             id={reasonId}
             className={clsx(
               'mb-1 text-xs',
-              result.blockTone === 'error' ? 'text-red-700' : 'text-gray-500',
+              result.blockTone === 'error' ? 'text-(--palette-req)' : 'text-(--palette-gray-500)',
             )}
           >
             {t(result.blockReason, result.blockParams)}
@@ -68,23 +77,27 @@ export default function AssignmentSlipBar(props: AssignmentSlipProps) {
             className="flex min-w-0 items-center gap-3 rounded-md text-left"
           >
             <span className="sr-only">{t('administration.slip.bar.open')}</span>
-            <Icon name="chevron-up" style="solid" className="shrink-0 text-base text-gray-500" />
+            <Icon
+              name="chevron-up"
+              style="solid"
+              className="shrink-0 text-base text-(--palette-gray-500)"
+            />
             <span className="flex min-w-0 flex-col">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-(--palette-gray-500)">
                 {total !== null
                   ? t('administration.slip.fee.total')
                   : t('administration.slip.segment.fee')}
               </span>
               {total !== null ? (
-                <span className="text-xl font-bold text-gray-800 tabular-nums">
+                <span className="text-xl font-bold text-(--palette-ink) tabular-nums">
                   {formatCurrency(total)}
                 </span>
               ) : feeStatus === 'pending' ? (
-                <span className="text-sm font-medium text-gray-500">
+                <span className="text-sm font-medium text-(--palette-gray-500)">
                   {t('feePreview.pending.title')}
                 </span>
               ) : (
-                <span className="text-xl font-bold text-gray-400">—</span>
+                <span className="text-xl font-bold text-(--palette-gray-400)">—</span>
               )}
             </span>
             {readOnly ? (
@@ -136,15 +149,18 @@ export default function AssignmentSlipBar(props: AssignmentSlipProps) {
           <DialogPanel
             transition
             style={NO_OUTLINE}
-            className="fixed inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-white shadow-2xl transition duration-200 ease-out data-closed:translate-y-full"
+            className="fixed inset-x-0 bottom-0 max-h-[85vh] overflow-y-auto rounded-t-2xl bg-(--palette-surface) shadow-2xl transition duration-200 ease-out data-closed:translate-y-full"
           >
             <div className="relative pt-2">
-              <div className="mx-auto h-1 w-9 rounded-full bg-gray-300" aria-hidden="true" />
+              <div
+                className="mx-auto h-1 w-9 rounded-full bg-gray-300 dark:bg-gray-600"
+                aria-hidden="true"
+              />
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label={t('common:actions.closePanel')}
-                className="absolute top-1 right-3 flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="absolute top-1 right-3 flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
               >
                 <Icon name="xmark" style="regular" className="text-base" />
               </button>

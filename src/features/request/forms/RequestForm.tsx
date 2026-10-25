@@ -77,10 +77,10 @@ const RequestForm = () => {
           <FormFields fields={limitFields} />
           {NO_FACILITY_PURPOSES.includes(purpose) && (
             <div className="col-span-3">
-              <span className="mb-1 block text-xs font-medium text-gray-700">
+              <span className="mb-1 block text-xs font-medium text-(--palette-ink)">
                 {t('requestForm.limitLabel')}
               </span>
-              <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">
+              <div className="rounded-lg bg-(--palette-surface-2) px-3 py-2 text-xs text-(--palette-gray-500)">
                 {t('requestForm.noLimit')}
               </div>
             </div>

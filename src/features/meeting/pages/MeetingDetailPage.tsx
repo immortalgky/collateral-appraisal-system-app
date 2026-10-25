@@ -138,9 +138,9 @@ const MeetingDetailPage = () => {
       {/* Status banners — only the exceptional states still need words. `InProgress` is now
           conveyed by the live badge and the focus panel, so it no longer needs a banner. */}
       {mode === 'minutes' && (
-        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3">
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-3">
           <Icon name="circle-check" style="solid" className="h-5 w-5 shrink-0 text-emerald-500" />
-          <p className="text-sm font-medium text-emerald-700">
+          <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300">
             {meeting.endedAt
               ? t('banners.endedAt', { date: formatDateTime(meeting.endedAt) })
               : t('banners.ended')}
@@ -148,26 +148,26 @@ const MeetingDetailPage = () => {
         </div>
       )}
       {status === 'RoutedBack' && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+        <div className="flex items-center gap-2 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-4 py-3">
           <Icon
             name="arrow-rotate-left"
             style="solid"
             className="h-5 w-5 shrink-0 text-amber-500"
           />
-          <p className="text-sm font-medium text-amber-700">{t('banners.routedBack')}</p>
+          <p className="text-sm font-medium text-(--palette-warn)">{t('banners.routedBack')}</p>
         </div>
       )}
       {mode === 'archived' && (
-        <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+        <div className="flex items-start gap-2 rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) px-4 py-3">
           <Icon
             name="circle-xmark"
             style="solid"
             className="mt-0.5 h-5 w-5 shrink-0 text-red-500"
           />
           <div>
-            <p className="text-sm font-medium text-red-700">{t('banners.cancelled')}</p>
+            <p className="text-sm font-medium text-(--palette-req)">{t('banners.cancelled')}</p>
             {meeting.cancelReason && (
-              <p className="mt-0.5 text-xs text-red-600">
+              <p className="mt-0.5 text-xs text-(--palette-danger)">
                 {t('banners.cancelReason', { reason: meeting.cancelReason })}
               </p>
             )}

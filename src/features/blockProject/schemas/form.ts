@@ -1,6 +1,6 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
 import { z } from 'zod';
-import type { TFunction } from 'i18next';
+import { vmsg } from '@/shared/components/form/validationMessage';
 import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 import { isValidPartialDate } from '../utils/partialDate';
@@ -59,20 +59,11 @@ const condoProjectInfoAllFields = [
   ...condoFacilityFields,
 ];
 
-/** Reject invalid partial-date inputs (rule shared between Condo + LB). */
-const makeValidatePartialSaleLaunchDate =
-  (t: TFunction<'blockProject'>) =>
-  (data: { projectSaleLaunchDate?: string | null }, ctx: z.RefinementCtx) => {
-    if (!isValidPartialDate(data.projectSaleLaunchDate)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.invalidPartialDate'),
-        path: ['projectSaleLaunchDate'],
-      });
-    }
-  };
-
-/** Static fallback (used outside React — e.g. resolver pre-mount) */
+/**
+ * Reject invalid partial-date inputs (rule shared between Condo + LB). The message is a token
+ * (shared/components/form/validationMessage.ts): translated where the error is shown, so this one
+ * schema serves every language.
+ */
 const validatePartialSaleLaunchDate = (
   data: { projectSaleLaunchDate?: string | null },
   ctx: z.RefinementCtx,
@@ -80,7 +71,7 @@ const validatePartialSaleLaunchDate = (
   if (!isValidPartialDate(data.projectSaleLaunchDate)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Use YYYY, YYYY-MM, or YYYY-MM-DD',
+      message: vmsg('blockProject:validation.invalidPartialDate'),
       path: ['projectSaleLaunchDate'],
     });
   }
@@ -180,19 +171,8 @@ export const lbProjectInfoFormDefaults: LbProjectInfoFormType = {
   remark: null,
 };
 
-/**
- * Factory: returns the correct project-info schema based on projectType discriminator.
- * Optionally accepts a TFunction so validation messages are translated.
- */
-export function projectInfoForm(projectType: ProjectType, t?: TFunction<'blockProject'>) {
-  if (t) {
-    const validate = makeValidatePartialSaleLaunchDate(t);
-    const condoSchema = buildFormSchema(condoProjectInfoAllFields, projectInfoBase).superRefine(
-      validate,
-    );
-    const lbSchema = buildFormSchema(lbProjectInfoAllFields, projectInfoBase).superRefine(validate);
-    return isCondo(projectType) ? condoSchema : lbSchema;
-  }
+/** Returns the correct project-info schema based on projectType discriminator. */
+export function projectInfoForm(projectType: ProjectType) {
   return isCondo(projectType) ? condoProjectInfoForm : lbProjectInfoForm;
 }
 
@@ -228,27 +208,11 @@ export const condoModelForm = _condoModelFormBase.superRefine((data, ctx) => {
   if (!data.projectTowerId) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: 'Tower is required for Condo projects',
+      message: vmsg('blockProject:validation.towerRequired'),
       path: ['projectTowerId'],
     });
   }
 });
-
-/**
- * Factory that builds a translated condoModelForm.
- * Use this inside components so validation messages respect the active locale.
- */
-export function makeCondoModelForm(t: TFunction<'blockProject'>) {
-  return _condoModelFormBase.superRefine((data, ctx) => {
-    if (!data.projectTowerId) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: t('validation.towerRequired'),
-        path: ['projectTowerId'],
-      });
-    }
-  });
-}
 export type CondoModelFormType = z.infer<typeof condoModelForm>;
 
 export const condoModelFormDefaults: CondoModelFormType = {
@@ -404,12 +368,8 @@ export const lbModelFormDefaults = {
   depreciationDetails: [],
 } satisfies Partial<LbModelFormType>;
 
-/**
- * Factory: returns the correct model schema based on projectType.
- * Optionally accepts a TFunction so validation messages are translated.
- */
-export function projectModelForm(projectType: ProjectType, t?: TFunction<'blockProject'>) {
-  if (t && isCondo(projectType)) return makeCondoModelForm(t);
+/** Returns the correct model schema based on projectType. */
+export function projectModelForm(projectType: ProjectType) {
   return isCondo(projectType) ? condoModelForm : lbModelForm;
 }
 

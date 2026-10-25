@@ -28,10 +28,10 @@ function AppraisalEmptyState({ isFiltered, actions = [] }: AppraisalEmptyStatePr
   return (
     <div className="mx-auto flex max-w-md flex-col items-center gap-1">
       {isFiltered ? <NoResultsArt className="h-28 w-32" /> : <InboxZeroArt className="h-28 w-32" />}
-      <p className="font-medium text-gray-600">
+      <p className="font-medium text-(--palette-gray-600)">
         {isFiltered ? t('list.empty') : t('list.emptyAll')}
       </p>
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-(--palette-gray-400)">
         {isFiltered ? t('list.emptyHint') : t('list.emptyAllHint')}
       </p>
       {isFiltered && actions.length > 0 && (
@@ -41,7 +41,7 @@ function AppraisalEmptyState({ isFiltered, actions = [] }: AppraisalEmptyStatePr
               key={a.key}
               type="button"
               onClick={a.onClick}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:border-primary hover:text-primary"
+              className="rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 py-1.5 text-xs font-medium text-(--palette-ink) hover:border-primary hover:text-(--palette-primary-text)"
             >
               {a.label}
             </button>
@@ -49,8 +49,8 @@ function AppraisalEmptyState({ isFiltered, actions = [] }: AppraisalEmptyStatePr
         </div>
       )}
       {isFiltered && (
-        <div className="mt-4 w-full rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <p className="mb-2 text-left text-xs font-medium text-gray-700">
+        <div className="mt-4 w-full rounded-xl border border-(--palette-line) bg-(--palette-surface-2) p-4">
+          <p className="mb-2 text-left text-xs font-medium text-(--palette-ink)">
             {t('list.searchTips.title')}
           </p>
           <SearchTips minLength={MIN_SEARCH_LENGTH} />

@@ -13,8 +13,7 @@ interface BlockReappraisalFilterBarProps {
  * "2020-04-03T00:00:00+07:00"). Keep only the calendar date (yyyy-MM-dd) so the
  * backend's date comparison can't shift by a day across timezones.
  */
-const toDateOnly = (v: string | null): string | undefined =>
-  v ? v.slice(0, 10) : undefined;
+const toDateOnly = (v: string | null): string | undefined => (v ? v.slice(0, 10) : undefined);
 
 /**
  * Inline filter bar shown above the due-list table. Each change applies
@@ -23,8 +22,7 @@ const toDateOnly = (v: string | null): string | undefined =>
 export function BlockReappraisalFilterBar({ values, onChange }: BlockReappraisalFilterBarProps) {
   const { t } = useTranslation(['blockReappraisal', 'common']);
 
-  const patch = (next: Partial<BlockReappraisalFilterValues>) =>
-    onChange({ ...values, ...next });
+  const patch = (next: Partial<BlockReappraisalFilterValues>) => onChange({ ...values, ...next });
 
   const hasActiveFilter = Object.values(values).some(v => v != null && v !== '');
 
@@ -34,7 +32,7 @@ export function BlockReappraisalFilterBar({ values, onChange }: BlockReappraisal
         <div className="flex justify-end mb-1.5">
           <button
             onClick={() => onChange({})}
-            className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+            className="flex items-center gap-1 text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
           >
             <Icon style="solid" name="xmark" className="size-2.5" />
             {t('filter.clear')}
@@ -53,7 +51,7 @@ export function BlockReappraisalFilterBar({ values, onChange }: BlockReappraisal
 
         {/* Last Appraised Date — inclusive From / To range */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1">
             {t('filter.fields.lastAppraisedDate')}
           </label>
           <div className="flex items-center gap-1.5">
@@ -64,7 +62,7 @@ export function BlockReappraisalFilterBar({ values, onChange }: BlockReappraisal
                 onChange={v => patch({ lastAppraisedDateFrom: toDateOnly(v) })}
               />
             </div>
-            <span className="text-gray-300">–</span>
+            <span className="text-(--palette-gray-300)">–</span>
             <div className="flex-1 min-w-0">
               <DateInput
                 placeholder={t('filter.placeholders.dateTo')}
@@ -77,7 +75,7 @@ export function BlockReappraisalFilterBar({ values, onChange }: BlockReappraisal
 
         {/* Remaining Day — Min / Max range */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1">
             {t('filter.fields.remainingDay')}
           </label>
           <div className="flex items-center gap-1.5">
@@ -90,7 +88,7 @@ export function BlockReappraisalFilterBar({ values, onChange }: BlockReappraisal
                 onChange={e => patch({ remainingDayMin: e.target.value ?? undefined })}
               />
             </div>
-            <span className="text-gray-300">–</span>
+            <span className="text-(--palette-gray-300)">–</span>
             <div className="flex-1 min-w-0">
               <NumberInput
                 placeholder={t('filter.placeholders.max')}

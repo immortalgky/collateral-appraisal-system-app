@@ -5,7 +5,7 @@ import StarRating from './StarRating';
 /** Stars drawn: the icons are sprite <use> refs, so count the star icons by their colour class. */
 const stars = (container: HTMLElement) => ({
   lit: container.querySelectorAll('.text-amber-400').length,
-  empty: container.querySelectorAll('.text-gray-300').length,
+  empty: container.querySelectorAll('[class*="text-(--palette-gray-300)"]').length,
 });
 
 describe('StarRating', () => {

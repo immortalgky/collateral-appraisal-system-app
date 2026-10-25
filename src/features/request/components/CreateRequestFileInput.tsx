@@ -349,8 +349,8 @@ const CreateRequestFileInput = ({ getOrCreateSession, ref }: CreateRequestFileIn
               className={clsx(
                 'flex flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-lg border-[1.5px] border-dashed px-3 py-2 text-sm transition-colors',
                 isDragging
-                  ? 'border-primary bg-primary/5 text-primary'
-                  : 'border-gray-300 text-gray-500 hover:border-gray-400',
+                  ? 'border-primary bg-primary/5 text-(--palette-primary-text)'
+                  : 'border-(--palette-line-strong) text-(--palette-gray-500) hover:border-(--palette-line-strong)',
               )}
             >
               {isDragging ? (
@@ -358,7 +358,7 @@ const CreateRequestFileInput = ({ getOrCreateSession, ref }: CreateRequestFileIn
               ) : (
                 <>
                   {t('docCard.drop.text')}
-                  <span className="rounded-md border border-gray-300 bg-white px-3 py-1 text-gray-700">
+                  <span className="rounded-md border border-(--palette-line-strong) bg-(--palette-surface) px-3 py-1 text-(--palette-ink)">
                     {t('docCard.drop.choose')}
                   </span>
                   {t('docCard.drop.hint')} ·{' '}
@@ -372,20 +372,20 @@ const CreateRequestFileInput = ({ getOrCreateSession, ref }: CreateRequestFileIn
 
       {/* Validation errors */}
       {validationErrors.length > 0 && (
-        <div className="mx-3.5 mb-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mx-3.5 mb-2 p-3 bg-(--palette-req-wash) border border-(--palette-req-line) rounded-lg">
           <div className="flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
               style="solid"
-              className="w-5 h-5 text-red-600 mt-0.5"
+              className="w-5 h-5 text-(--palette-danger) mt-0.5"
             />
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-red-800 mb-2">
+              <h4 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-2">
                 {t('documents.validationErrorsTitle')}
               </h4>
               <ul className="list-disc list-inside space-y-1">
                 {validationErrors.map((error, index) => (
-                  <li key={index} className="text-sm text-red-700">
+                  <li key={index} className="text-sm text-(--palette-req)">
                     {error}
                   </li>
                 ))}
@@ -407,15 +407,15 @@ const CreateRequestFileInput = ({ getOrCreateSession, ref }: CreateRequestFileIn
 
       {/* Inline upload progress */}
       {isUploading && (
-        <div className="mx-3.5 mb-2 p-3 bg-white border border-gray-200 rounded-lg shadow-sm">
+        <div className="mx-3.5 mb-2 p-3 bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <LoadingSpinner size="sm" variant="default" />
-              <span className="text-sm font-medium text-gray-700">
+              <span className="text-sm font-medium text-(--palette-ink)">
                 {t('documents.uploadingDocuments')}
               </span>
             </div>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-(--palette-gray-500)">
               {t('documents.uploadComplete', {
                 done: uploadProgress.filter(p => p.status === 'success').length,
                 total: uploadProgress.length,
@@ -428,29 +428,41 @@ const CreateRequestFileInput = ({ getOrCreateSession, ref }: CreateRequestFileIn
                 key={index}
                 className={clsx(
                   'flex items-center gap-3 p-2 rounded-lg text-sm',
-                  progress.status === 'success' && 'bg-green-50',
-                  progress.status === 'error' && 'bg-red-50',
-                  progress.status === 'uploading' && 'bg-blue-50',
-                  progress.status === 'pending' && 'bg-gray-50',
+                  progress.status === 'success' && 'bg-green-50 dark:bg-green-500/10',
+                  progress.status === 'error' && 'bg-(--palette-req-wash)',
+                  progress.status === 'uploading' && 'bg-blue-50 dark:bg-blue-500/10',
+                  progress.status === 'pending' && 'bg-(--palette-surface-2)',
                 )}
               >
                 {progress.status === 'pending' && (
-                  <Icon name="clock" style="regular" className="w-4 h-4 text-gray-400" />
+                  <Icon
+                    name="clock"
+                    style="regular"
+                    className="w-4 h-4 text-(--palette-gray-400)"
+                  />
                 )}
                 {progress.status === 'uploading' && <LoadingSpinner size="sm" variant="default" />}
                 {progress.status === 'success' && (
-                  <Icon name="circle-check" style="solid" className="w-4 h-4 text-green-600" />
+                  <Icon
+                    name="circle-check"
+                    style="solid"
+                    className="w-4 h-4 text-green-600 dark:text-green-400"
+                  />
                 )}
                 {progress.status === 'error' && (
-                  <Icon name="circle-xmark" style="solid" className="w-4 h-4 text-red-600" />
+                  <Icon
+                    name="circle-xmark"
+                    style="solid"
+                    className="w-4 h-4 text-(--palette-danger)"
+                  />
                 )}
                 <span
                   className={clsx(
                     'flex-1 truncate',
-                    progress.status === 'success' && 'text-green-700',
-                    progress.status === 'error' && 'text-red-700',
-                    progress.status === 'uploading' && 'text-blue-700',
-                    progress.status === 'pending' && 'text-gray-600',
+                    progress.status === 'success' && 'text-green-700 dark:text-green-300',
+                    progress.status === 'error' && 'text-(--palette-req)',
+                    progress.status === 'uploading' && 'text-blue-700 dark:text-blue-300',
+                    progress.status === 'pending' && 'text-(--palette-gray-600)',
                   )}
                 >
                   {progress.fileName}

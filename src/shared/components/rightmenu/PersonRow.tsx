@@ -12,31 +12,25 @@ interface PersonRowProps {
   trailing?: ReactNode;
 }
 
-const PersonRow = ({
-  label,
-  name,
-  avatar,
-  isMe,
-  onClick,
-  editable,
-  trailing,
-}: PersonRowProps) => {
+const PersonRow = ({ label, name, avatar, isMe, onClick, editable, trailing }: PersonRowProps) => {
   const content = (
     <>
       <Avatar src={avatar} name={name !== 'Not set' ? name : '?'} size="sm" />
       <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-gray-900 truncate">
+        <div className="text-xs font-medium text-(--palette-ink) truncate">
           {name}
-          {isMe && <span className="ml-1 text-xs text-primary-600 font-normal">(Me)</span>}
+          {isMe && (
+            <span className="ml-1 text-xs text-(--palette-primary-text) font-normal">(Me)</span>
+          )}
         </div>
-        <div className="text-xs text-gray-500">{label}</div>
+        <div className="text-xs text-(--palette-gray-500)">{label}</div>
       </div>
-      {trailing && <div className="text-xs text-gray-500 shrink-0">{trailing}</div>}
+      {trailing && <div className="text-xs text-(--palette-gray-500) shrink-0">{trailing}</div>}
       {editable && (
         <Icon
           name="pen"
           style="regular"
-          className="w-3.5 h-3.5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="w-3.5 h-3.5 text-(--palette-gray-400) opacity-0 group-hover:opacity-100 transition-opacity"
         />
       )}
     </>
@@ -47,14 +41,18 @@ const PersonRow = ({
       <button
         type="button"
         onClick={onClick}
-        className="group w-full flex items-center gap-2 p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+        className="group w-full flex items-center gap-2 p-2 bg-(--palette-surface-2) rounded-lg hover:bg-(--palette-surface-3) transition-colors text-left"
       >
         {content}
       </button>
     );
   }
 
-  return <div className="group flex items-center gap-2 p-2 bg-gray-50 rounded-lg">{content}</div>;
+  return (
+    <div className="group flex items-center gap-2 p-2 bg-(--palette-surface-2) rounded-lg">
+      {content}
+    </div>
+  );
 };
 
 export default PersonRow;

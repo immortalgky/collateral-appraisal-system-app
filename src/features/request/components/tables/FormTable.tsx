@@ -19,6 +19,7 @@ import {
   useWatch,
 } from 'react-hook-form';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { evaluateConditions } from '@/shared/components/form/conditions';
 import type { FieldCondition } from '@/shared/components/form/types';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
@@ -164,7 +165,7 @@ export const AddRowButton = ({ onClick, label }: { onClick: () => void; label: s
   <button
     type="button"
     onClick={onClick}
-    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
+    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-(--palette-primary-text) bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
   >
     <Icon style="solid" name="plus" className="size-3" /> {label}
   </button>
@@ -197,7 +198,7 @@ const TotalCell = ({
 
   if (isReadOnly || !totalFieldName) {
     return (
-      <span className="text-sm font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)] text-right block">
+      <span className="text-sm font-semibold text-(--palette-ink) text-right block">
         {fmtNum(totalFieldName ? value : calculatedTotal)}
       </span>
     );
@@ -211,7 +212,7 @@ const TotalCell = ({
             value={value}
             onChange={e => onSetValue(e.target.value)}
             decimalPlaces={2}
-            className="!bg-amber-50 !border-amber-300 font-semibold"
+            className="!bg-(--palette-warn-wash) !border-amber-300 dark:!border-amber-500/40 font-semibold"
           />
           <span className="absolute -top-2 -right-2 w-4 h-4 flex items-center justify-center rounded-full bg-amber-500 text-white text-[10px]">
             <Icon style="solid" name="pen" className="size-2" />
@@ -221,7 +222,7 @@ const TotalCell = ({
           size={7}
           onClick={onReset}
           icon="rotate-left"
-          className="bg-primary/10 text-primary hover:bg-primary/20"
+          className="bg-primary/10 text-(--palette-primary-text) hover:bg-primary/20"
           title={t('table.resetToCalculated')}
         />
       </div>
@@ -229,7 +230,7 @@ const TotalCell = ({
   }
   return (
     <div className="flex items-center gap-2">
-      <span className="flex-1 text-sm font-semibold text-gray-900 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)] text-right block px-3">
+      <span className="flex-1 text-sm font-semibold text-(--palette-ink) text-right block px-3">
         {fmtNum(value)}
       </span>
       {allowOverride && (
@@ -237,7 +238,7 @@ const TotalCell = ({
           size={7}
           onClick={onOverride}
           icon="pen"
-          className="bg-primary/10 text-primary hover:bg-primary/20"
+          className="bg-primary/10 text-(--palette-primary-text) hover:bg-primary/20"
           title={t('table.overrideTotal')}
         />
       )}
@@ -445,7 +446,11 @@ const TableCell = ({
   return (
     <div data-field={`${name}.${index}.${column.name}`}>
       {input()}
-      {error && <div className="mt-1 text-sm text-danger">{error?.message}</div>}
+      {error?.message && (
+        <div className="mt-1 text-sm text-danger">
+          <ValidationText message={error.message} label={column.label} />
+        </div>
+      )}
     </div>
   );
 };
@@ -572,10 +577,10 @@ const FormTable = ({
       <div data-field={name} className="@container">
         {isEmpty ? (
           <div className="flex flex-col items-center gap-1.5 py-4">
-            <div className="flex size-9 items-center justify-center rounded-full bg-gray-100">
-              <Icon style="regular" name="inbox" className="size-4 text-gray-400" />
+            <div className="flex size-9 items-center justify-center rounded-full bg-(--palette-surface-3)">
+              <Icon style="regular" name="inbox" className="size-4 text-(--palette-gray-400)" />
             </div>
-            <p className="text-xs text-gray-500">{t('table.noData')}</p>
+            <p className="text-xs text-(--palette-gray-500)">{t('table.noData')}</p>
             {!isReadOnly && <AddRowButton onClick={handleAddRow} label={t('table.addFirstItem')} />}
           </div>
         ) : (
@@ -583,7 +588,7 @@ const FormTable = ({
             <div
               className={clsx(
                 rowClass,
-                'pb-[0.2857rem] text-xs font-semibold text-gray-600 @max-[45.7143rem]:hidden',
+                'pb-[0.2857rem] text-xs font-semibold text-(--palette-gray-600) @max-[45.7143rem]:hidden',
               )}
             >
               <span>#</span>
@@ -601,12 +606,12 @@ const FormTable = ({
                   key={fields[originalIndex]?.id ?? originalIndex}
                   className={clsx(
                     rowClass,
-                    'py-[0.2143rem] @max-[45.7143rem]:border-b @max-[45.7143rem]:border-gray-100 @max-[45.7143rem]:py-2',
+                    'py-[0.2143rem] @max-[45.7143rem]:border-b @max-[45.7143rem]:border-(--palette-line-soft) @max-[45.7143rem]:py-2',
                   )}
                 >
                   <span
                     className={clsx(
-                      'grid size-[1.7143rem] place-items-center rounded-full bg-gray-100 text-xs font-medium text-gray-600',
+                      'grid size-[1.7143rem] place-items-center rounded-full bg-(--palette-surface-3) text-xs font-medium text-(--palette-gray-600)',
                       PLAIN_ROW_ACTION,
                     )}
                   >
@@ -617,7 +622,7 @@ const FormTable = ({
                       key={col.name}
                       className={clsx('min-w-0', ri > 0 && '@max-[45.7143rem]:col-start-2')}
                     >
-                      <span className="mb-1 hidden text-xs text-gray-500 @max-[45.7143rem]:block">
+                      <span className="mb-1 hidden text-xs text-(--palette-gray-500) @max-[45.7143rem]:block">
                         {col.label}
                       </span>
                       {isReadOnly ? (
@@ -652,7 +657,7 @@ const FormTable = ({
                         onConfirm={() => deleteRow(originalIndex)}
                         rowNumber={displayPos + 1}
                         disabled={seeding && rowCount === 1 && isBlankRow(row, columns)}
-                        className="flex size-[1.7143rem] items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-danger-50 hover:text-danger-600 disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-gray-400"
+                        className="flex size-[1.7143rem] items-center justify-center rounded-md text-(--palette-gray-400) transition-colors hover:bg-danger/10 hover:text-danger-600 dark:hover:text-(--palette-danger) disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-(--palette-gray-400)"
                       >
                         <Icon style="solid" name="trash" className="size-3.5" />
                       </ConfirmDeleteButton>
@@ -662,10 +667,10 @@ const FormTable = ({
               );
             })}
             {hasSumRow && (
-              <div className="mt-[0.5714rem] flex items-center gap-3.5 rounded-b-lg border-t-2 border-gray-200 bg-gray-50 px-3 py-2 text-sm font-semibold text-gray-700 tabular-nums">
+              <div className="mt-[0.5714rem] flex items-center gap-3.5 rounded-b-lg border-t-2 border-(--palette-line) bg-(--palette-surface-2) px-3 py-2 text-sm font-semibold text-(--palette-ink) tabular-nums">
                 <span className="mr-auto">{totalLabel ?? t('table.total')}</span>
                 {isOverridden && (
-                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                  <span className="rounded bg-amber-100 dark:bg-amber-500/20 px-1.5 py-0.5 text-xs font-medium text-(--palette-warn)">
                     {t('table.override')}
                   </span>
                 )}
@@ -710,33 +715,37 @@ const FormTable = ({
               <th
                 key={i}
                 style={colStyle(col)}
-                className={`text-primary text-xs font-semibold py-2 px-3 ${'align' in col && col.align ? `text-${col.align}` : 'text-left'} first:rounded-tl-lg ${isReadOnly && i === columns.length - 1 ? 'rounded-tr-lg' : ''}`}
+                className={`text-(--palette-primary-text) text-xs font-semibold py-2 px-3 ${'align' in col && col.align ? `text-${col.align}` : 'text-left'} first:rounded-tl-lg ${isReadOnly && i === columns.length - 1 ? 'rounded-tr-lg' : ''}`}
               >
                 {col.label}
               </th>
             ))}
             {!isReadOnly && (
               <th
-                className="text-primary text-xs font-semibold py-2 px-3 text-right rounded-tr-lg"
+                className="text-(--palette-primary-text) text-xs font-semibold py-2 px-3 text-right rounded-tr-lg"
                 style={{ width: '60px' }}
               ></th>
             )}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {isEmpty ? (
             <tr>
               <td colSpan={colSpan} className="py-4 text-center">
                 <div className="flex flex-col items-center gap-1.5">
-                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-                    <Icon style="regular" name="inbox" className="size-4 text-gray-400" />
+                  <div className="w-9 h-9 rounded-full bg-(--palette-surface-3) flex items-center justify-center">
+                    <Icon
+                      style="regular"
+                      name="inbox"
+                      className="size-4 text-(--palette-gray-400)"
+                    />
                   </div>
-                  <p className="text-xs text-gray-500">{t('table.noData')}</p>
+                  <p className="text-xs text-(--palette-gray-500)">{t('table.noData')}</p>
                   {!isReadOnly && (
                     <button
                       type="button"
                       onClick={handleAddRow}
-                      className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
+                      className="mt-1 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-(--palette-primary-text) bg-primary/10 rounded-md hover:bg-primary/20 transition-colors"
                     >
                       <Icon style="solid" name="plus" className="size-3" />{' '}
                       {t('table.addFirstItem')}
@@ -751,7 +760,7 @@ const FormTable = ({
               return (
                 <tr
                   key={fields[originalIndex]?.id ?? originalIndex}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="hover:bg-(--palette-surface-2) transition-colors"
                 >
                   {columns.map((col, ci) =>
                     isRegular(col) ? (
@@ -801,7 +810,7 @@ const FormTable = ({
                       </td>
                     ) : (
                       <td key={ci} className="py-1.5 px-3" style={{ width: '60px' }}>
-                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-xs font-medium text-gray-600">
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-(--palette-surface-3) text-xs font-medium text-(--palette-gray-600)">
                           {displayPos + 1}
                         </span>
                       </td>
@@ -815,7 +824,7 @@ const FormTable = ({
                           rowNumber={displayPos + 1}
                           // The seeded row comes back the moment it goes, so there is nothing to delete
                           disabled={seeding && rowCount === 1 && isBlankRow(field, columns)}
-                          className="cas-row-btn flex h-7 w-7 items-center justify-center rounded-md bg-danger-50 text-danger-600 transition-colors hover:bg-danger-100"
+                          className="flex h-7 w-7 items-center justify-center rounded-md bg-(--palette-req-wash) text-(--palette-danger) transition-colors hover:bg-danger-100 dark:hover:bg-danger-500/20"
                         >
                           <Icon style="solid" name="trash" className="size-3.5" />
                         </ConfirmDeleteButton>
@@ -829,7 +838,7 @@ const FormTable = ({
         </tbody>
         {hasSumRow && (
           <tfoot>
-            <tr className="bg-gray-50 border-t-2 border-gray-200">
+            <tr className="bg-(--palette-surface-2) border-t-2 border-(--palette-line)">
               {(() => {
                 let labelRendered = false;
                 return columns.map((col, i) => {
@@ -862,12 +871,12 @@ const FormTable = ({
                     return (
                       <td
                         key={i}
-                        className="py-3 px-4 text-sm font-semibold text-gray-600 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-2)]"
+                        className="py-3 px-4 text-sm font-semibold text-(--palette-gray-600)"
                       >
                         <div className="flex items-center gap-2">
                           {t('table.total')}
                           {isOverridden && (
-                            <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 text-amber-700 rounded font-medium">
+                            <span className="text-[10px] px-1.5 py-0.5 bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn) rounded font-medium">
                               {t('table.override')}
                             </span>
                           )}
@@ -884,11 +893,11 @@ const FormTable = ({
         )}
       </table>
       {!isEmpty && !isReadOnly && !hideAddButton && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-(--palette-line-soft)">
           <button
             type="button"
             onClick={handleAddRow}
-            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-primary bg-gray-50 hover:bg-primary/10 transition-colors rounded-b-lg"
+            className="w-full flex items-center justify-center gap-1.5 py-2 text-xs font-medium text-(--palette-primary-text) bg-(--palette-surface-2) hover:bg-primary/10 transition-colors rounded-b-lg"
           >
             <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
               <Icon style="solid" name="plus" className="size-2.5 text-white" />

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import type { FormField } from '@/shared/components/form';
 import { evaluateConditions } from '@/shared/components/form/conditions';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 
 /** Left to right: the common papers first, the catch-alls last. */
@@ -68,9 +69,9 @@ export function DeedTypePills({ index, field, dependents = [], codes }: DeedType
 
   return (
     <div data-field={path} className="grid gap-1.5">
-      <div className="text-xs font-medium text-gray-700">
+      <div className="text-xs font-medium text-(--palette-ink)">
         {t('fields.titleType')}
-        {required && !readOnly && <span className="ml-0.5 text-danger">*</span>}
+        {required && !readOnly && <span className="ml-0.5 text-(--palette-req)">*</span>}
       </div>
       <div role="group" aria-label={t('fields.titleType')} className="flex flex-wrap gap-1.5">
         {offered.map(code => {
@@ -85,8 +86,8 @@ export function DeedTypePills({ index, field, dependents = [], codes }: DeedType
               className={clsx(
                 'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors disabled:cursor-default',
                 active
-                  ? 'border-primary bg-primary font-medium text-white'
-                  : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:hover:bg-white',
+                  ? 'border-primary-700 bg-primary-700 font-medium text-white'
+                  : 'border-(--palette-line-strong) bg-(--form-input-bg) text-(--palette-ink) hover:bg-(--palette-surface-2) disabled:text-(--palette-gray-400) disabled:hover:bg-(--form-input-bg)',
               )}
             >
               <i
@@ -98,7 +99,11 @@ export function DeedTypePills({ index, field, dependents = [], codes }: DeedType
           );
         })}
       </div>
-      {error && <div className="text-xs text-danger">{error}</div>}
+      {error && (
+        <div className="text-xs text-danger">
+          <ValidationText message={error} />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ResponsiveContainer,
@@ -127,8 +128,8 @@ function SummaryTooltip({ active, payload }: SummaryTooltipProps) {
   const pct = row.visible > 0 ? Math.round((row.barCompleted / row.visible) * 100) : 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white shadow-sm px-3 py-2 text-xs min-w-[168px]">
-      <p className="font-semibold text-gray-800 mb-1.5">{row.name}</p>
+    <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-sm px-3 py-2 text-xs min-w-[168px]">
+      <p className="font-semibold text-(--palette-ink) mb-1.5">{row.name}</p>
       <div className="space-y-1">
         {segments.map(s => (
           <div key={s.label} className="flex items-center gap-2">
@@ -136,17 +137,21 @@ function SummaryTooltip({ active, payload }: SummaryTooltipProps) {
               className="inline-block w-2 h-2 rounded-full"
               style={{ backgroundColor: s.color }}
             />
-            <span className="text-gray-600">{s.label}</span>
-            <span className="ml-auto font-medium text-gray-800 tabular-nums">{s.value}</span>
+            <span className="text-(--palette-gray-600)">{s.label}</span>
+            <span className="ml-auto font-medium text-(--palette-ink) tabular-nums">{s.value}</span>
           </div>
         ))}
       </div>
-      <div className="mt-1.5 pt-1.5 border-t border-gray-100 flex items-center gap-2">
-        <span className="text-gray-600">{t('externalSummary.chart.assigned')}</span>
-        <span className="ml-auto font-semibold text-gray-800 tabular-nums">{row.visible}</span>
+      <div className="mt-1.5 pt-1.5 border-t border-(--palette-line-soft) flex items-center gap-2">
+        <span className="text-(--palette-gray-600)">{t('externalSummary.chart.assigned')}</span>
+        <span className="ml-auto font-semibold text-(--palette-ink) tabular-nums">
+          {row.visible}
+        </span>
       </div>
       {row.barCompleted > 0 && (
-        <p className="text-gray-400 mt-0.5">{t('externalSummary.chart.delivered', { pct })}</p>
+        <p className="text-(--palette-gray-400) mt-0.5">
+          {t('externalSummary.chart.delivered', { pct })}
+        </p>
       )}
     </div>
   );
@@ -303,11 +308,11 @@ function ExternalTaskSummaryWidget() {
 
   return (
     <WidgetWrapper id={WIDGET_ID}>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line-soft)">
           <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold text-gray-800">
+              <h3 className="text-base font-semibold text-(--palette-ink)">
                 {t('externalSummary.title')}
               </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
@@ -316,12 +321,12 @@ function ExternalTaskSummaryWidget() {
           </div>
           <div className="flex items-center gap-2">
             {namedRows.length > 0 && (
-              <select
+              <NativeSelect
                 value={settings.companyId ?? ''}
                 onChange={e =>
                   updateSettings(WIDGET_ID, { companyId: e.target.value || undefined })
                 }
-                className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 max-w-[160px]"
+                className="max-w-[160px]"
                 aria-label={t('externalSummary.aria.filterByCompany')}
               >
                 <option value="">{t('externalSummary.allCompanies')}</option>
@@ -330,42 +335,46 @@ function ExternalTaskSummaryWidget() {
                     {r.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             )}
             <div ref={menuRef} className="relative">
               <button
                 type="button"
                 onClick={() => setMenuOpen(o => !o)}
                 aria-label={t('externalSummary.aria.menu')}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
               >
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg py-1 text-sm">
                   {updatedLabel && (
-                    <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                    <p className="px-3 py-1.5 text-xs text-(--palette-gray-400) border-b border-(--palette-line-soft)">
                       {t('updatedAgo', { n: updatedLabel })}
                     </p>
                   )}
                   <button
                     type="button"
                     onClick={handleRefresh}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                   >
                     <Icon
                       name="arrow-rotate-right"
                       style="solid"
-                      className="size-3 text-gray-400"
+                      className="size-3 text-(--palette-gray-400)"
                     />
                     {t('externalSummary.menu.refresh')}
                   </button>
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                   >
-                    <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
+                    <Icon
+                      name="rotate-left"
+                      style="solid"
+                      className="size-3 text-(--palette-gray-400)"
+                    />
                     {t('externalSummary.menu.reset')}
                   </button>
                 </div>
@@ -384,14 +393,14 @@ function ExternalTaskSummaryWidget() {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <div className="py-12 text-center text-sm text-gray-400">
+            <div className="py-12 text-center text-sm text-(--palette-gray-400)">
               {t('externalSummary.noData')}
               {settings.companyId && (
                 <>
                   {' · '}
                   <button
                     type="button"
-                    className="text-blue-600 hover:text-blue-700"
+                    className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                     onClick={() => updateSettings(WIDGET_ID, { companyId: undefined })}
                   >
                     {t('externalSummary.clearCompanyFilter')}
@@ -401,7 +410,9 @@ function ExternalTaskSummaryWidget() {
             </div>
           ) : (
             <>
-              <p className="text-xs text-gray-400 mb-2">{t('externalSummary.clickBarHint')}</p>
+              <p className="text-xs text-(--palette-gray-400) mb-2">
+                {t('externalSummary.clickBarHint')}
+              </p>
               <ResponsiveContainer width="100%" height={chartHeight}>
                 <BarChart
                   data={rows}
@@ -409,10 +420,10 @@ function ExternalTaskSummaryWidget() {
                   margin={{ top: 4, right: 40, left: 0, bottom: 0 }}
                   barCategoryGap={8}
                 >
-                  <CartesianGrid horizontal={false} stroke="#f3f4f6" />
+                  <CartesianGrid horizontal={false} stroke="var(--palette-line)" />
                   <XAxis
                     type="number"
-                    tick={{ fontSize: 11, fill: '#9ca3af' }}
+                    tick={{ fontSize: 11, fill: 'var(--palette-ink-3)' }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -420,7 +431,7 @@ function ExternalTaskSummaryWidget() {
                     type="category"
                     dataKey="name"
                     width={118}
-                    tick={{ fontSize: 12, fill: '#4b5563' }}
+                    tick={{ fontSize: 12, fill: 'var(--palette-ink-2)' }}
                     axisLine={false}
                     tickLine={false}
                   />
@@ -489,7 +500,7 @@ function ExternalTaskSummaryWidget() {
                     <LabelList
                       dataKey="visible"
                       position="right"
-                      style={{ fontSize: 11, fill: '#6b7280', fontWeight: 600 }}
+                      style={{ fontSize: 11, fill: 'var(--palette-ink-2)', fontWeight: 600 }}
                     />
                   </Bar>
                 </BarChart>
@@ -516,7 +527,13 @@ function ExternalTaskSummaryWidget() {
                           boxShadow: `inset 0 0 0 2px ${s.color}`,
                         }}
                       />
-                      <span className={isHidden ? 'text-gray-400 line-through' : 'text-gray-600'}>
+                      <span
+                        className={
+                          isHidden
+                            ? 'text-(--palette-gray-400) line-through'
+                            : 'text-(--palette-gray-600)'
+                        }
+                      >
                         {t(s.labelKey)}
                       </span>
                     </button>

@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
-// Static type-inference stand-in (key-passthrough — never an object)
-const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
+// The token `t`: messages are translated where they are shown, so the schema is built once.
+const _t = tokenT('pricingAnalysis');
 
 // ─── Cost item row schema (shared by both variants) ───────────────────────────
 
@@ -74,32 +75,32 @@ export const makeHypothesisCostItemSchema = (t: TFunction<'pricingAnalysis'>) =>
      */
     kind: HypothesisCostItemKindEnum,
     description: z.string().min(1, t('validation.descriptionRequired')),
-  displaySequence: z.number().int().nonnegative(),
-  amount: z.number().nonnegative(),
-  rateAmount: z.number().optional().nullable(),
-  quantity: z.number().optional().nullable(),
-  ratePercent: z.number().optional().nullable(),
-  modelName: z.string().optional().nullable(),
-  /** FSD field B01: Building area (Sq.M). CostOfBuilding only. Non-negative. */
-  area: z.number().nonnegative().optional().nullable(),
-  /** FSD field B02: Price per square metre before depreciation (Baht/Sq.M). CostOfBuilding only. Non-negative. */
-  pricePerSqM: z.number().nonnegative().optional().nullable(),
-  /** FSD field B04: Building age in years. CostOfBuilding only. Non-negative integer. */
-  year: z.number().int().nonnegative().optional().nullable(),
-  /** FSD field B05: Annual depreciation rate (%). CostOfBuilding only. 0–100. */
-  annualDepreciationPercent: z.number().min(0).max(100).optional().nullable(),
-  /** FSD fields B03/B06/B07/B08: Server-computed values returned from preview/save. Read-only on FE. */
-  priceBeforeDepreciation: z.number().optional().nullable(),
-  totalDepreciationPercent: z.number().optional().nullable(),
-  depreciationAmount: z.number().optional().nullable(),
-  valueAfterDepreciation: z.number().optional().nullable(),
-  /** FSD: row is part of the Building (true) or Non-Building/Building Area Detail (false). CostOfBuilding only. */
-  isBuilding: z.boolean(),
-  /** Depreciation calc mode. 'Gross' uses B04×B05; 'Period' uses periods sum. CostOfBuilding only. */
-  depreciationMethod: z.enum(['Gross', 'Period']),
-  /** Period sub-rows. Empty array unless method is Period. */
-  depreciationPeriods: z.array(HypothesisDepreciationPeriodSchema),
-});
+    displaySequence: z.number().int().nonnegative(),
+    amount: z.number().nonnegative(),
+    rateAmount: z.number().optional().nullable(),
+    quantity: z.number().optional().nullable(),
+    ratePercent: z.number().optional().nullable(),
+    modelName: z.string().optional().nullable(),
+    /** FSD field B01: Building area (Sq.M). CostOfBuilding only. Non-negative. */
+    area: z.number().nonnegative().optional().nullable(),
+    /** FSD field B02: Price per square metre before depreciation (Baht/Sq.M). CostOfBuilding only. Non-negative. */
+    pricePerSqM: z.number().nonnegative().optional().nullable(),
+    /** FSD field B04: Building age in years. CostOfBuilding only. Non-negative integer. */
+    year: z.number().int().nonnegative().optional().nullable(),
+    /** FSD field B05: Annual depreciation rate (%). CostOfBuilding only. 0–100. */
+    annualDepreciationPercent: z.number().min(0).max(100).optional().nullable(),
+    /** FSD fields B03/B06/B07/B08: Server-computed values returned from preview/save. Read-only on FE. */
+    priceBeforeDepreciation: z.number().optional().nullable(),
+    totalDepreciationPercent: z.number().optional().nullable(),
+    depreciationAmount: z.number().optional().nullable(),
+    valueAfterDepreciation: z.number().optional().nullable(),
+    /** FSD: row is part of the Building (true) or Non-Building/Building Area Detail (false). CostOfBuilding only. */
+    isBuilding: z.boolean(),
+    /** Depreciation calc mode. 'Gross' uses B04×B05; 'Period' uses periods sum. CostOfBuilding only. */
+    depreciationMethod: z.enum(['Gross', 'Period']),
+    /** Period sub-rows. Empty array unless method is Period. */
+    depreciationPeriods: z.array(HypothesisDepreciationPeriodSchema),
+  });
 
 // Static schema for type inference only
 export const HypothesisCostItemSchema = makeHypothesisCostItemSchema(_t);

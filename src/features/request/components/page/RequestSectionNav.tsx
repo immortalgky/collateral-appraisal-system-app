@@ -8,7 +8,7 @@ import {
   sectionTotal,
   type MissingSection,
 } from '../../hooks/useRequestMissingFields';
-import { useMissingFields } from './MissingFieldsProvider';
+import { useRequestMissing } from './MissingFieldsProvider';
 
 const SCROLL_CONTAINER_ID = 'form-scroll-container';
 // Below the sticky bar (about 3rem) and the cards' scroll margin, so a card the nav just scrolled to counts as reached.
@@ -22,7 +22,7 @@ const READING_LINE_PX = 80;
 const RequestSectionNav = () => {
   const { t } = useTranslation('request');
   const readOnly = usePageReadOnly();
-  const { summary } = useMissingFields();
+  const summary = useRequestMissing();
   const [current, setCurrent] = useState<MissingSection>('s1');
 
   // Scroll spy: the card being read is the last one whose top has passed a line just under the
@@ -91,7 +91,7 @@ const RequestSectionNav = () => {
   return (
     <nav
       aria-label={t('page.nav.label')}
-      className="sticky top-0 z-30 flex items-center gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-gray-50/90 p-1 backdrop-blur-sm"
+      className="sticky top-0 z-30 flex items-center gap-1 overflow-x-auto rounded-xl border border-(--palette-line) bg-(--palette-surface-2)/90 p-1 backdrop-blur-sm"
     >
       {MISSING_SECTIONS.map(section => {
         const missing = summary ? sectionTotal(summary, section) : 0;
@@ -113,8 +113,8 @@ const RequestSectionNav = () => {
             className={clsx(
               'inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg border px-2.5 py-1.5 text-sm',
               active
-                ? 'border-primary bg-white font-semibold text-gray-800 shadow-sm'
-                : 'border-transparent text-gray-600 hover:bg-gray-100',
+                ? 'border-primary bg-(--palette-surface) font-semibold text-(--palette-ink) shadow-sm'
+                : 'border-transparent text-(--palette-gray-600) hover:bg-(--palette-surface-3)',
             )}
           >
             {!readOnly && summary && (
@@ -128,9 +128,9 @@ const RequestSectionNav = () => {
               <span
                 className={clsx(
                   'text-xs font-normal',
-                  meta.tone === 'warn' && 'font-semibold text-amber-700',
-                  meta.tone === 'ok' && 'text-green-700',
-                  meta.tone === 'plain' && 'text-gray-500',
+                  meta.tone === 'warn' && 'font-semibold text-(--palette-warn)',
+                  meta.tone === 'ok' && 'text-green-700 dark:text-green-300',
+                  meta.tone === 'plain' && 'text-(--palette-gray-500)',
                 )}
               >
                 {meta.text}

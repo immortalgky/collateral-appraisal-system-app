@@ -85,9 +85,9 @@ function Pagination({
   const endItem = Math.min((currentPage + 1) * pageSize, totalCount);
 
   return (
-    <div className="shrink-0 border-t border-gray-200 px-4 py-2 flex items-center justify-between bg-gray-50 text-sm">
+    <div className="shrink-0 border-t border-(--palette-line) px-4 py-2 flex items-center justify-between bg-(--palette-surface-2) text-sm">
       {/* Left side: Item count and page size */}
-      <div className="flex items-center gap-3 text-gray-600">
+      <div className="flex items-center gap-3 text-(--palette-gray-600)">
         {showItemCount && (
           <span>
             {totalCount > 0
@@ -125,7 +125,7 @@ function Pagination({
           type="button"
           onClick={() => onPageChange(0)}
           disabled={currentPage === 0}
-          className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
+          className="px-2 py-1 rounded hover:bg-(--palette-line) disabled:opacity-40 disabled:cursor-not-allowed text-(--palette-gray-600)"
           title={t('pagination.first')}
         >
           <Icon style="solid" name="angles-left" className="size-3.5" />
@@ -136,7 +136,7 @@ function Pagination({
           type="button"
           onClick={() => onPageChange(Math.max(0, currentPage - 1))}
           disabled={currentPage === 0}
-          className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
+          className="px-2 py-1 rounded hover:bg-(--palette-line) disabled:opacity-40 disabled:cursor-not-allowed text-(--palette-gray-600)"
           title={t('pagination.previous')}
         >
           <Icon style="solid" name="chevron-left" className="size-3.5" />
@@ -145,7 +145,7 @@ function Pagination({
         {/* Page numbers */}
         {getPageNumbers().map((page, idx) =>
           page === 'ellipsis' ? (
-            <span key={`ellipsis-${idx}`} className="px-2 text-gray-400">
+            <span key={`ellipsis-${idx}`} className="px-2 text-(--palette-gray-400)">
               ...
             </span>
           ) : (
@@ -154,7 +154,9 @@ function Pagination({
               type="button"
               onClick={() => onPageChange(page)}
               className={`min-w-[32px] h-8 px-2 rounded text-sm font-medium transition-colors ${
-                page === currentPage ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-200'
+                page === currentPage
+                  ? 'bg-primary-700 text-white'
+                  : 'text-(--palette-gray-600) hover:bg-(--palette-line)'
               }`}
             >
               {page + 1}
@@ -167,7 +169,7 @@ function Pagination({
           type="button"
           onClick={() => onPageChange(Math.min(safeTotal - 1, currentPage + 1))}
           disabled={currentPage >= safeTotal - 1}
-          className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
+          className="px-2 py-1 rounded hover:bg-(--palette-line) disabled:opacity-40 disabled:cursor-not-allowed text-(--palette-gray-600)"
           title={t('pagination.next')}
         >
           <Icon style="solid" name="chevron-right" className="size-3.5" />
@@ -178,7 +180,7 @@ function Pagination({
           type="button"
           onClick={() => onPageChange(safeTotal - 1)}
           disabled={currentPage >= safeTotal - 1}
-          className="px-2 py-1 rounded hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed text-gray-600"
+          className="px-2 py-1 rounded hover:bg-(--palette-line) disabled:opacity-40 disabled:cursor-not-allowed text-(--palette-gray-600)"
           title={t('pagination.last')}
         >
           <Icon style="solid" name="angles-right" className="size-3.5" />

@@ -31,17 +31,17 @@ function NoteRow({
 
   return (
     <div
-      className="flex items-start gap-3 px-5 py-4 hover:bg-gray-50 transition-colors group"
+      className="flex items-start gap-3 px-5 py-4 hover:bg-(--palette-surface-2) transition-colors group"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
-      <div className="p-2 rounded-full bg-amber-50 shrink-0 mt-0.5">
+      <div className="p-2 rounded-full bg-(--palette-warn-wash) shrink-0 mt-0.5">
         <Icon name="note-sticky" style="solid" className="size-4 text-amber-500" />
       </div>
 
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <p className="text-sm text-gray-800 line-clamp-2 break-words">{note.content}</p>
-        <span className="text-xs text-gray-400">{relativeTime}</span>
+        <p className="text-sm text-(--palette-ink) line-clamp-2 break-words">{note.content}</p>
+        <span className="text-xs text-(--palette-gray-400)">{relativeTime}</span>
       </div>
 
       {/* Hover actions */}
@@ -54,7 +54,7 @@ function NoteRow({
           type="button"
           onClick={() => onEdit(note)}
           aria-label={t('notes.aria.editNote')}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-blue-50 hover:text-blue-500 transition-colors"
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-500 transition-colors"
         >
           <Icon name="pen" style="solid" className="size-3.5" />
         </button>
@@ -62,7 +62,7 @@ function NoteRow({
           type="button"
           onClick={() => onDelete(note)}
           aria-label={t('notes.aria.deleteNote')}
-          className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors"
+          className="w-7 h-7 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-req-wash) hover:text-red-500 transition-colors"
         >
           <Icon name="trash" style="solid" className="size-3.5" />
         </button>
@@ -73,7 +73,7 @@ function NoteRow({
 
 function NotesSkeleton() {
   return (
-    <div className="divide-y divide-gray-100">
+    <div className="divide-y divide-(--palette-line-soft)">
       {Array.from({ length: 3 }).map((_, i) => (
         <div key={i} className="flex items-start gap-3 px-5 py-4">
           <Skeleton variant="circular" className="size-8 shrink-0" />
@@ -121,14 +121,14 @@ function NotesWidget() {
 
   return (
     <WidgetWrapper id="notes">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 shrink-0">
-          <h3 className="text-base font-semibold text-gray-800">{t('notes.title')}</h3>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-(--palette-line-soft) shrink-0">
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('notes.title')}</h3>
           <button
             type="button"
             onClick={handleOpenNew}
-            className="text-sm font-medium text-blue-500 hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+            className="text-sm font-medium text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors"
           >
             <Icon name="plus" style="solid" className="size-3.5" />
             {t('notes.addNew')}
@@ -136,7 +136,7 @@ function NotesWidget() {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+        <div className="flex-1 overflow-y-auto divide-y divide-(--palette-line-soft)">
           {isLoading ? (
             <NotesSkeleton />
           ) : notes.length > 0 ? (
@@ -150,14 +150,18 @@ function NotesWidget() {
             ))
           ) : (
             <div className="px-5 py-8 text-center">
-              <div className="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-                <Icon name="note-sticky" style="regular" className="size-5 text-gray-400" />
+              <div className="mx-auto w-12 h-12 bg-(--palette-surface-3) rounded-full flex items-center justify-center mb-3">
+                <Icon
+                  name="note-sticky"
+                  style="regular"
+                  className="size-5 text-(--palette-gray-400)"
+                />
               </div>
-              <p className="text-sm text-gray-500 mb-3">{t('notes.emptyMessage')}</p>
+              <p className="text-sm text-(--palette-gray-500) mb-3">{t('notes.emptyMessage')}</p>
               <button
                 type="button"
                 onClick={handleOpenNew}
-                className="text-sm font-medium text-blue-500 hover:text-blue-600 transition-colors"
+                className="text-sm font-medium text-blue-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
                 {t('notes.addNew')}
               </button>

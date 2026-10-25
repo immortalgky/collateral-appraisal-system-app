@@ -162,10 +162,10 @@ describe('FeeInformationSection', () => {
         await screen.findByPlaceholderText('fee.addFeeModal.descriptionLabel'),
         'Travel',
       );
-      expect(screen.queryByText('validation.amountPositive')).not.toBeInTheDocument();
+      expect(screen.queryByText('appraisal:validation.amountPositive')).not.toBeInTheDocument();
       await user.click(screen.getByRole('button', { name: 'common:actions.add', hidden: true }));
 
-      expect(await screen.findByText('validation.amountPositive')).toBeInTheDocument();
+      expect(await screen.findByText('appraisal:validation.amountPositive')).toBeInTheDocument();
       expect(onAddFeeItem).not.toHaveBeenCalled();
     });
 

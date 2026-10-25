@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import { useRef, useState } from 'react';
 import { render, screen } from '@/test/test-utils';
 import userEvent from '@testing-library/user-event';
+import { vmsg } from '../form/validationMessage';
 import { useDateSegmentInput } from './useDateSegmentInput';
 
 function Harness({
@@ -192,7 +193,7 @@ describe('segmented date-time input', () => {
     // which would move an appointment by a day with nothing on screen saying so.
     await user.keyboard('060920262900');
     expect(value()).toBe('null');
-    expect(error()).toBe('Invalid date');
+    expect(error()).toBe(vmsg('invalidDate'));
   });
 
   it('takes a legal time', async () => {
@@ -230,7 +231,7 @@ describe('segmented date input', () => {
 
     await user.keyboard('05092');
     await user.tab();
-    expect(error()).toBe('Invalid date');
+    expect(error()).toBe(vmsg('invalidDate'));
   });
 
   it('raises a lone 0 to the first of the month when the caret leaves', async () => {

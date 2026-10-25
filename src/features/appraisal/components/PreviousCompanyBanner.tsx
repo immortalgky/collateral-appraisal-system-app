@@ -70,8 +70,8 @@ export default function PreviousCompanyBanner({
       className={clsx(
         'flex flex-wrap items-center gap-x-2 gap-y-0.5 rounded-lg border px-3 py-1.5 text-xs',
         warn
-          ? 'border-amber-200 bg-amber-50 text-amber-800'
-          : 'border-primary-200 bg-primary-50 text-primary-700',
+          ? 'border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300'
+          : 'border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) text-(--palette-accent-ink)',
       )}
     >
       <span className="font-semibold">
@@ -79,7 +79,7 @@ export default function PreviousCompanyBanner({
           company: localizeCompanyName(previousCompany.companyName, companyNameLocal),
         })}
       </span>
-      <span className="text-gray-500">{detail}</span>
+      <span className="text-(--palette-gray-500)">{detail}</span>
       {hint && <span className="basis-full">{hint}</span>}
     </div>
   );

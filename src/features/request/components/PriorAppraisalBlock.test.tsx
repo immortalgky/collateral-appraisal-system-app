@@ -409,6 +409,6 @@ describe('PriorAppraisalBlock construction chain', () => {
   it('has no alert when nothing was refused', () => {
     show({ chain: chainOf() });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveClass('border-primary-200');
+    expect(screen.getByRole('status')).toHaveClass('border-(--palette-accent-line)');
   });
 });

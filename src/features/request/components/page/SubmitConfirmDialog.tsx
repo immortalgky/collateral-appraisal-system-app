@@ -29,16 +29,16 @@ const SubmitConfirmDialog = ({ counts, onClose, onConfirm }: SubmitConfirmDialog
       cancelText={t('common:actions.cancel')}
       variant="primary"
     >
-      <p className="mb-3 text-sm text-gray-500">{t('page.submit.message')}</p>
+      <p className="mb-3 text-sm text-(--palette-gray-500)">{t('page.submit.message')}</p>
       <dl className="mb-3 grid grid-cols-4 gap-2">
         {cells?.map(([n, label]) => (
-          <div key={label} className="rounded-lg bg-gray-50 px-2 py-2">
-            <dd className="text-base font-semibold text-gray-800">{n}</dd>
-            <dt className="text-xs text-gray-500">{label}</dt>
+          <div key={label} className="rounded-lg bg-(--palette-surface-2) px-2 py-2">
+            <dd className="text-base font-semibold text-(--palette-ink)">{n}</dd>
+            <dt className="text-xs text-(--palette-gray-500)">{label}</dt>
           </div>
         ))}
       </dl>
-      <p className="flex items-start gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-left text-xs text-amber-700">
+      <p className="flex items-start gap-1.5 rounded-lg bg-(--palette-warn-wash) px-3 py-2 text-left text-xs text-(--palette-warn)">
         <Icon style="solid" name="circle-info" className="mt-0.5 size-3! shrink-0" />
         {t('page.submit.warning')}
       </p>

@@ -162,7 +162,7 @@ describe('AssignmentSlip (draft)', () => {
       screen.queryByRole('img', { name: 'administration.slip.checks.status.error' }),
     ).not.toBeInTheDocument();
     expect(screen.getByText('administration.slip.reason.companyMissing')).toHaveClass(
-      'text-gray-500',
+      'text-(--palette-gray-500)',
     );
     expect(
       screen.getByRole('button', { name: /administration\.slip\.checks\.fixAria/ }),

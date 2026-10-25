@@ -126,7 +126,9 @@ describe('AssignmentFeeCard', () => {
     );
     renderCard();
 
-    expect(await screen.findByText('feePreview.source.NoneFromPrior')).toHaveClass('bg-amber-50');
+    expect(await screen.findByText('feePreview.source.NoneFromPrior')).toHaveClass(
+      'bg-(--palette-warn-wash)',
+    );
     expect(screen.queryByText('feePreview.source.None')).not.toBeInTheDocument();
     const row = screen.getByText('feePreview.type.01').closest('tr')!;
     expect(row).toHaveTextContent('—');

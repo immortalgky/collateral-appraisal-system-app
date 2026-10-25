@@ -17,12 +17,32 @@ import Icon from '@/shared/components/Icon';
 export type SectionTone = 'land' | 'building' | 'condo' | 'lease' | 'machinery' | 'generated';
 
 const TONE: Record<SectionTone, { bg: string; fg: string; icon: string }> = {
-  land: { bg: 'bg-amber-100', fg: 'text-amber-600', icon: 'mountain-sun' },
-  building: { bg: 'bg-blue-100', fg: 'text-blue-600', icon: 'building' },
-  condo: { bg: 'bg-violet-100', fg: 'text-violet-600', icon: 'building' },
-  lease: { bg: 'bg-purple-100', fg: 'text-purple-600', icon: 'file-contract' },
-  machinery: { bg: 'bg-amber-100', fg: 'text-amber-600', icon: 'mountain-sun' },
-  generated: { bg: 'bg-slate-100', fg: 'text-slate-600', icon: 'car' },
+  land: {
+    bg: 'bg-amber-100 dark:bg-amber-500/20',
+    fg: 'text-amber-600 dark:text-amber-400',
+    icon: 'mountain-sun',
+  },
+  building: {
+    bg: 'bg-blue-100 dark:bg-blue-500/20',
+    fg: 'text-blue-600 dark:text-blue-400',
+    icon: 'building',
+  },
+  condo: {
+    bg: 'bg-violet-100 dark:bg-violet-500/20',
+    fg: 'text-violet-600 dark:text-violet-400',
+    icon: 'building',
+  },
+  lease: {
+    bg: 'bg-purple-100 dark:bg-purple-500/20',
+    fg: 'text-purple-600 dark:text-purple-400',
+    icon: 'file-contract',
+  },
+  machinery: {
+    bg: 'bg-amber-100 dark:bg-amber-500/20',
+    fg: 'text-amber-600 dark:text-amber-400',
+    icon: 'mountain-sun',
+  },
+  generated: { bg: 'bg-(--palette-surface-3)', fg: 'text-(--palette-ink-2)', icon: 'car' },
 };
 
 const FormSectionHeader = ({ tone, titleKey }: { tone: SectionTone; titleKey: string }) => {
@@ -36,9 +56,9 @@ const FormSectionHeader = ({ tone, titleKey }: { tone: SectionTone; titleKey: st
         <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center`}>
           <Icon name={icon} style="solid" className={`w-5 h-5 ${fg}`} />
         </div>
-        <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <h2 className="text-lg font-semibold text-(--palette-ink)">{title}</h2>
       </div>
-      <div className="h-px bg-gray-200" />
+      <div className="h-px bg-(--palette-line)" />
     </div>
   );
 };

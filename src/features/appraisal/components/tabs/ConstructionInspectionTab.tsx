@@ -361,9 +361,9 @@ export function ConstructionInspectionTab({
   };
 
   return (
-    // No top rule: the tab is only shown beside the Building tab, so the editor's tab bar is always
-    // right above and its baseline is this edge — as with the Building form's sheet.
-    <div className="bg-white border border-t-0 border-[#e3e9e8] text-[#1f2937]">
+    // A full rule: the property's photo card sits above this one, not the tab bar, so nothing else
+    // draws its top edge.
+    <div className="bg-(--palette-surface) border border-(--palette-line) text-(--palette-ink)">
       {/* Toolbar: method, building, round, and the figures that answer "where are we" */}
       <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[6px] min-h-[46px] px-[10px] py-[6px] border-b border-[color:var(--palette-line)]">
         <div
@@ -537,7 +537,7 @@ export function ConstructionInspectionTab({
                     ? 'bg-[#f0fdf4] text-[#15803d]'
                     : split === 'short'
                       ? 'bg-[color:var(--palette-warn-wash)] text-[color:var(--palette-warn)]'
-                      : 'bg-[#fef2f2] text-[#dc2626]',
+                      : 'bg-[#fef2f2] text-(--palette-danger)',
                 )}
               >
                 {split === 'ok'
@@ -690,7 +690,7 @@ function PropertyMenu({
                 onClick={() => onPick(item)}
                 className={`flex items-center gap-2.5 w-full text-left px-3 py-2 text-sm data-[focus]:bg-gray-50 dark:data-[focus]:bg-[color:var(--palette-surface-3)] ${
                   current
-                    ? 'bg-primary/5 text-primary'
+                    ? 'bg-primary/5 text-(--palette-primary-text)'
                     : 'text-gray-700 dark:text-[color:var(--palette-ink)]'
                 }`}
               >
@@ -706,7 +706,7 @@ function PropertyMenu({
                   <Icon
                     name="check"
                     style="solid"
-                    className="size-3 text-primary ml-auto flex-shrink-0"
+                    className="size-3 text-(--palette-primary-text) ml-auto flex-shrink-0"
                   />
                 )}
               </button>

@@ -41,78 +41,83 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
   badgeStyle?: BadgeStyle;
 }
 
-/** Base color tokens for each semantic color */
+/**
+ * Base color tokens for each semantic color. Light keeps the -50 chip with -700 text; in dark the
+ * chip is a tint of its own colour with -300 text (the -600/-700 text fails 4.5:1 on the dark
+ * ground), so a badge reads on both grounds.
+ */
 const colorTokens = {
   amber: {
     solid: 'bg-amber-500 text-white',
-    soft: 'bg-amber-50 text-amber-700',
-    outline: 'border border-amber-500 text-amber-600 bg-transparent',
-    minimal: 'text-amber-600',
-    ghost: 'bg-amber-500/10 text-amber-600',
+    soft: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+    outline: 'border border-amber-500 text-amber-600 dark:text-amber-300 bg-transparent',
+    minimal: 'text-amber-600 dark:text-amber-300',
+    ghost: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
     dot: 'bg-amber-500',
   },
   blue: {
     solid: 'bg-blue-500 text-white',
-    soft: 'bg-blue-50 text-blue-700',
-    outline: 'border border-blue-500 text-blue-600 bg-transparent',
-    minimal: 'text-blue-600',
-    ghost: 'bg-blue-500/10 text-blue-600',
+    soft: 'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-300',
+    outline: 'border border-blue-500 text-blue-600 dark:text-blue-300 bg-transparent',
+    minimal: 'text-blue-600 dark:text-blue-300',
+    ghost: 'bg-blue-500/10 text-blue-600 dark:text-blue-300',
     dot: 'bg-blue-500',
   },
   cyan: {
     solid: 'bg-cyan-500 text-white',
-    soft: 'bg-cyan-50 text-cyan-700',
-    outline: 'border border-cyan-500 text-cyan-600 bg-transparent',
-    minimal: 'text-cyan-600',
-    ghost: 'bg-cyan-500/10 text-cyan-600',
+    soft: 'bg-cyan-50 text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300',
+    outline: 'border border-cyan-500 text-cyan-600 dark:text-cyan-300 bg-transparent',
+    minimal: 'text-cyan-600 dark:text-cyan-300',
+    ghost: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-300',
     dot: 'bg-cyan-500',
   },
   emerald: {
     solid: 'bg-emerald-500 text-white',
-    soft: 'bg-emerald-50 text-emerald-700',
-    outline: 'border border-emerald-500 text-emerald-600 bg-transparent',
-    minimal: 'text-emerald-600',
-    ghost: 'bg-emerald-500/10 text-emerald-600',
+    soft: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
+    outline: 'border border-emerald-500 text-emerald-600 dark:text-emerald-300 bg-transparent',
+    minimal: 'text-emerald-600 dark:text-emerald-300',
+    ghost: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300',
     dot: 'bg-emerald-500',
   },
   gray: {
     solid: 'bg-gray-500 text-white',
-    soft: 'bg-gray-100 text-gray-600',
-    outline: 'border border-gray-400 text-gray-600 bg-transparent',
-    minimal: 'text-gray-600',
-    ghost: 'bg-gray-500/10 text-gray-600',
+    soft: 'bg-gray-100 text-gray-600 dark:bg-(--palette-surface-3) dark:text-(--palette-ink-2)',
+    outline:
+      'border border-gray-400 text-gray-600 dark:border-(--palette-line-strong) dark:text-(--palette-ink-2) bg-transparent',
+    minimal: 'text-gray-600 dark:text-(--palette-ink-2)',
+    ghost: 'bg-gray-500/10 text-gray-600 dark:text-(--palette-ink-2)',
     dot: 'bg-gray-400',
   },
   red: {
     solid: 'bg-red-500 text-white',
-    soft: 'bg-red-50 text-red-700',
-    outline: 'border border-red-500 text-red-600 bg-transparent',
-    minimal: 'text-red-600',
-    ghost: 'bg-red-500/10 text-red-600',
+    soft: 'bg-red-50 text-red-700 dark:bg-red-500/15 dark:text-red-300',
+    outline: 'border border-red-500 text-red-600 dark:text-red-300 bg-transparent',
+    minimal: 'text-red-600 dark:text-red-300',
+    ghost: 'bg-red-500/10 text-red-600 dark:text-red-300',
     dot: 'bg-red-500',
   },
   green: {
     solid: 'bg-green-500 text-white',
-    soft: 'bg-green-50 text-green-700',
-    outline: 'border border-green-500 text-green-600 bg-transparent',
-    minimal: 'text-green-600',
-    ghost: 'bg-green-500/10 text-green-600',
+    soft: 'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-300',
+    outline: 'border border-green-500 text-green-600 dark:text-green-300 bg-transparent',
+    minimal: 'text-green-600 dark:text-green-300',
+    ghost: 'bg-green-500/10 text-green-600 dark:text-green-300',
     dot: 'bg-green-500',
   },
   purple: {
     solid: 'bg-purple-500 text-white',
-    soft: 'bg-purple-50 text-purple-700',
-    outline: 'border border-purple-500 text-purple-600 bg-transparent',
-    minimal: 'text-purple-600',
-    ghost: 'bg-purple-500/10 text-purple-600',
+    soft: 'bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-300',
+    outline: 'border border-purple-500 text-purple-600 dark:text-purple-300 bg-transparent',
+    minimal: 'text-purple-600 dark:text-purple-300',
+    ghost: 'bg-purple-500/10 text-purple-600 dark:text-purple-300',
     dot: 'bg-purple-500',
   },
   teal: {
     solid: 'bg-teal-500 text-white',
-    soft: 'bg-teal-50 text-teal-700',
-    outline: 'border border-teal-500 text-teal-600 bg-transparent',
-    minimal: 'text-teal-600',
-    ghost: 'bg-teal-500/10 text-teal-600',
+    soft: 'bg-teal-50 text-teal-700 dark:bg-teal-500/15 dark:text-teal-300',
+    outline: 'border border-teal-500 text-teal-600 dark:text-teal-300 bg-transparent',
+    minimal: 'text-teal-600 dark:text-teal-300',
+    ghost: 'bg-teal-500/10 text-teal-600 dark:text-teal-300',
     dot: 'bg-teal-500',
   },
 };
@@ -248,7 +253,8 @@ const Badge = ({
   // 'tag' has no entry in colorTokens by design (see the BadgeStyle doc comment): the
   // label always gets a fixed neutral colour, never the tone's, only the dot below
   // (colors.dot, independent of badgeStyle) carries the tone colour.
-  const styleClasses = badgeStyle === 'tag' ? 'text-gray-600' : colors[badgeStyle];
+  const styleClasses =
+    badgeStyle === 'tag' ? 'text-gray-600 dark:text-(--palette-ink-2)' : colors[badgeStyle];
   const dotColor = colors.dot;
 
   // For minimal style, don't show background

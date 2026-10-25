@@ -33,7 +33,7 @@ const TABLE_SKELETON_COLUMNS = [
   { width: 'w-6' },
 ];
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-gray-600';
+const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-(--palette-gray-600)';
 
 // Hangfire job states we have a word for; any other state is shown as it comes, with a grey dot.
 const STATE_LABEL_KEYS = {
@@ -186,12 +186,12 @@ const JobSchedulesPage = () => {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-64 flex-1">
-          <h2 className="text-base font-semibold text-gray-900">{t('page.title')}</h2>
-          <p className="mt-0.5 text-xs text-gray-500">{t('page.subtitle')}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h2>
+          <p className="mt-0.5 text-xs text-(--palette-gray-500)">{t('page.subtitle')}</p>
         </div>
         <Link
           to="/admin/hangfire"
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-(--palette-line-strong) px-3 py-1.5 text-xs font-medium text-(--palette-ink) hover:bg-(--palette-surface-2)"
         >
           {t('page.hangfireLink')}
           <Icon name="arrow-up-right-from-square" style="regular" className="text-xs" />
@@ -201,14 +201,16 @@ const JobSchedulesPage = () => {
       {runInfoUnavailable && (
         <div
           role="status"
-          className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-gray-700"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-(--palette-warn-wash) px-3 py-1.5 text-xs text-(--palette-ink)"
         >
-          <span className="font-semibold text-amber-700">{t('page.runInfoUnavailable')}</span>
+          <span className="font-semibold text-amber-700 dark:text-amber-300">
+            {t('page.runInfoUnavailable')}
+          </span>
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 px-4 py-2.5">
+      <div className="overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line-soft) px-4 py-2.5">
           <CountTabs tabs={tabs} value={tab} onChange={setTab} label={t('tabs.label')} />
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <div className="w-60">
@@ -236,8 +238,8 @@ const JobSchedulesPage = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[56rem] text-table">
-            <thead className="bg-gray-50">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="border-b border-(--palette-line)">
                 <th className={thClass}>{t('table.job')}</th>
                 <th className={`${thClass} w-60`}>{t('table.schedule')}</th>
                 <th className={`${thClass} w-52`}>{t('table.lastRun')}</th>
@@ -266,7 +268,10 @@ const JobSchedulesPage = () => {
             ) : visible.length === 0 ? (
               <tbody>
                 <tr>
-                  <td colSpan={COLUMN_COUNT} className="py-12 text-center text-sm text-gray-400">
+                  <td
+                    colSpan={COLUMN_COUNT}
+                    className="py-12 text-center text-sm text-(--palette-gray-400)"
+                  >
                     {jobs.length === 0
                       ? t('page.empty')
                       : tab === 'failed' && runInfoUnavailable
@@ -277,15 +282,15 @@ const JobSchedulesPage = () => {
               </tbody>
             ) : (
               groups.map(([name, rows]) => (
-                <tbody key={name} className="divide-y divide-gray-100">
-                  <tr className="border-b border-gray-100">
+                <tbody key={name} className="divide-y divide-(--palette-line-soft)">
+                  <tr className="border-b border-(--palette-line-soft)">
                     <th
                       colSpan={COLUMN_COUNT}
                       scope="colgroup"
-                      className="px-4 pt-3.5 pb-1.5 text-left text-sm font-semibold text-gray-600"
+                      className="px-4 pt-3.5 pb-1.5 text-left text-sm font-semibold text-(--palette-gray-600)"
                     >
                       {name}
-                      <span className="ml-2 text-xs font-normal text-gray-400">
+                      <span className="ml-2 text-xs font-normal text-(--palette-gray-400)">
                         {t('table.jobCount', { count: rows.length })}
                       </span>
                     </th>
@@ -308,17 +313,17 @@ const JobSchedulesPage = () => {
                             editing
                               ? 'border-b border-primary-100 bg-primary-50'
                               : job.isEnabled
-                                ? 'hover:bg-gray-50'
-                                : 'bg-gray-50/60',
+                                ? 'hover:bg-(--palette-surface-2)'
+                                : 'bg-(--palette-surface-2)/60',
                           )}
                         >
                           <td className="max-w-0 px-4 py-2.5">
-                            <div className="font-mono text-xs font-medium text-gray-900">
+                            <div className="font-mono text-xs font-medium text-(--palette-ink)">
                               {job.jobId}
                             </div>
                             {job.description && (
                               <div
-                                className="truncate text-xs text-gray-500"
+                                className="truncate text-xs text-(--palette-gray-500)"
                                 title={job.description}
                               >
                                 {job.description}
@@ -335,7 +340,7 @@ const JobSchedulesPage = () => {
                               )}
                               {job.isOverridden && (
                                 <span
-                                  className="ml-1.5 rounded bg-blue-50 px-1.5 text-xs font-medium text-blue-700"
+                                  className="ml-1.5 rounded bg-blue-50 dark:bg-blue-500/10 px-1.5 text-xs font-medium text-blue-700 dark:text-blue-300"
                                   title={t('table.defaultWas', { cron: job.defaultCron })}
                                 >
                                   {t('table.overridden')}
@@ -343,7 +348,7 @@ const JobSchedulesPage = () => {
                               )}
                             </div>
                             {reading && (
-                              <div className="font-mono text-xs text-gray-500">
+                              <div className="font-mono text-xs text-(--palette-gray-500)">
                                 {job.effectiveCron}
                                 {zone}
                               </div>
@@ -351,7 +356,7 @@ const JobSchedulesPage = () => {
                           </td>
                           <td className="px-4 py-2.5">
                             {dashTitle ? (
-                              <span className="text-gray-400" title={dashTitle}>
+                              <span className="text-(--palette-gray-400)" title={dashTitle}>
                                 —
                               </span>
                             ) : (
@@ -362,7 +367,7 @@ const JobSchedulesPage = () => {
                                     : '—'}
                                 </div>
                                 <div
-                                  className="whitespace-nowrap text-xs text-gray-500"
+                                  className="whitespace-nowrap text-xs text-(--palette-gray-500)"
                                   title={run.title}
                                 >
                                   {run.dot && (
@@ -380,9 +385,14 @@ const JobSchedulesPage = () => {
                           </td>
                           <td className="px-4 py-2.5">
                             {!job.isEnabled ? (
-                              <span className="text-gray-400">{t('table.disabled')}</span>
+                              <span className="text-(--palette-gray-400)">
+                                {t('table.disabled')}
+                              </span>
                             ) : !job.runInfoAvailable ? (
-                              <span className="text-gray-400" title={t('lastRun.unavailable')}>
+                              <span
+                                className="text-(--palette-gray-400)"
+                                title={t('lastRun.unavailable')}
+                              >
                                 —
                               </span>
                             ) : job.nextExecution ? (
@@ -390,13 +400,16 @@ const JobSchedulesPage = () => {
                                 <div className="whitespace-nowrap tabular-nums">
                                   {formatJobTime(job.nextExecution, now, t, i18n.language)}
                                 </div>
-                                <div className="whitespace-nowrap text-xs text-gray-500">
+                                <div className="whitespace-nowrap text-xs text-(--palette-gray-500)">
                                   {formatTimeUntil(job.nextExecution, now, t)}
                                 </div>
                               </>
                             ) : (
                               // Hangfire was read, and it has no next run for this enabled job.
-                              <span className="text-gray-400" title={t('table.noNextRun')}>
+                              <span
+                                className="text-(--palette-gray-400)"
+                                title={t('table.noNextRun')}
+                              >
                                 —
                               </span>
                             )}
@@ -411,8 +424,10 @@ const JobSchedulesPage = () => {
                               aria-label={t('actions.edit')}
                               title={t('actions.edit')}
                               className={clsx(
-                                'inline-flex size-7 items-center justify-center rounded-md hover:bg-primary/10 hover:text-primary',
-                                editing ? 'bg-primary/10 text-primary' : 'text-gray-400',
+                                'inline-flex size-7 items-center justify-center rounded-md hover:bg-primary/10 hover:text-(--palette-primary-text)',
+                                editing
+                                  ? 'bg-primary/10 text-(--palette-primary-text)'
+                                  : 'text-(--palette-gray-400)',
                               )}
                             >
                               <Icon name="pen" style="regular" className="text-sm" />

@@ -7,6 +7,7 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import DateInput from '@shared/components/inputs/DateInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
+import { vmsg } from '@/shared/components/form/validationMessage';
 import { AddPaymentFormSchema } from '../schemas/appointmentAndFee';
 
 type AddPaymentFormData = z.infer<typeof AddPaymentFormSchema>;
@@ -67,7 +68,10 @@ export default function AddPaymentModal({
 
   const handleFormSubmit = (data: AddPaymentFormData) => {
     if (maxAmount !== undefined && data.amount > maxAmount) {
-      setError('amount', { type: 'manual', message: `Amount cannot exceed ${maxAmount}` });
+      setError('amount', {
+        type: 'manual',
+        message: vmsg('appraisal:validation.amountExceeds', { max: maxAmount }),
+      });
       return;
     }
 
@@ -110,7 +114,7 @@ export default function AddPaymentModal({
         />
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={handleClose}>
             {t('common:actions.cancel')}
           </Button>

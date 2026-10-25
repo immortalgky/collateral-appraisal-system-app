@@ -40,13 +40,13 @@ interface ViewStyle {
 const viewStyles: Record<string, ViewStyle> = {
   'my-assignments': {
     icon: 'user',
-    color: 'text-primary',
+    color: 'text-(--palette-primary-text)',
     active: 'bg-primary border-primary text-white',
     hover: 'hover:border-primary',
   },
   'my-requests': {
     icon: 'file-signature',
-    color: 'text-cyan-600',
+    color: 'text-cyan-600 dark:text-cyan-400',
     active: 'bg-cyan-600 border-cyan-600 text-white',
     hover: 'hover:border-cyan-500',
   },
@@ -64,9 +64,9 @@ const viewStyles: Record<string, ViewStyle> = {
   },
   unassigned: {
     icon: 'inbox',
-    color: 'text-gray-400',
+    color: 'text-(--palette-gray-400)',
     active: 'bg-gray-500 border-gray-500 text-white',
-    hover: 'hover:border-gray-400',
+    hover: 'hover:border-(--palette-line-strong)',
   },
   'high-priority-active': {
     icon: 'bolt',
@@ -88,7 +88,7 @@ const viewStyles: Record<string, ViewStyle> = {
   },
   'my-company-queue': {
     icon: 'briefcase',
-    color: 'text-teal-600',
+    color: 'text-(--palette-accent-ink)',
     active: 'bg-teal-600 border-teal-600 text-white',
     hover: 'hover:border-teal-500',
   },
@@ -96,7 +96,7 @@ const viewStyles: Record<string, ViewStyle> = {
 
 const DEFAULT_VIEW_STYLE: ViewStyle = {
   icon: 'filter',
-  color: 'text-gray-400',
+  color: 'text-(--palette-gray-400)',
   active: 'bg-primary border-primary text-white',
   hover: 'hover:border-primary',
 };
@@ -204,7 +204,9 @@ function SmartViewBar({
         // A folded chip stays laid out at its natural width (w-max) so it can be measured, but is
         // invisible: out of sight, of the tab order and of the accessibility tree.
         className={`${chipClass} ${
-          isActive ? style.active : `bg-white text-gray-600 border-gray-200 ${style.hover}`
+          isActive
+            ? style.active
+            : `bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line) ${style.hover}`
         } ${hidden ? 'invisible absolute left-0 top-0 w-max' : 'shrink-0'}`}
       >
         {/* Inherit white when active; carry the view's own colour otherwise. */}
@@ -220,7 +222,7 @@ function SmartViewBar({
       onPointerDownCapture={onPointerDownCapture}
       className="relative flex flex-wrap items-center gap-2"
     >
-      <span ref={labelEl} className="text-xs text-gray-500 shrink-0">
+      <span ref={labelEl} className="text-xs text-(--palette-gray-500) shrink-0">
         {t('list.quickViews')}
       </span>
       {/* Client-side, not a server view: it is the absence of one, so the backend has nothing to
@@ -232,7 +234,7 @@ function SmartViewBar({
         className={`${chipClass} shrink-0 ${
           isAllActive
             ? 'bg-[#1877F2] border-[#1877F2] text-white'
-            : 'bg-white text-gray-600 border-gray-200 hover:border-[#1877F2]'
+            : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line) hover:border-[#1877F2]'
         }`}
       >
         <Icon
@@ -260,8 +262,8 @@ function SmartViewBar({
                 })}
                 className={`${chipClass} ${pointerMode ? '' : KEYBOARD_RING} ${
                   open
-                    ? 'bg-gray-100 text-gray-800 border-gray-300'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+                    ? 'bg-(--palette-surface-3) text-(--palette-ink) border-(--palette-line-strong)'
+                    : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line) hover:border-(--palette-line-strong)'
                 }`}
               >
                 {t('list.filters.more', { count: hiddenViews.length })}
@@ -271,7 +273,7 @@ function SmartViewBar({
                 anchor="bottom start"
                 // The panel takes the focus when it opens; the global outline would box it in blue.
                 style={NO_OUTLINE}
-                className="z-50 mt-1.5 w-72 overflow-hidden rounded-xl border border-gray-200 bg-white py-1 shadow-lg focus:outline-none"
+                className="z-50 mt-1.5 w-72 overflow-hidden rounded-xl border border-(--palette-line) bg-(--palette-surface) py-1 shadow-lg focus:outline-none"
               >
                 {hiddenViews.map(view => {
                   const style = viewStyles[view.key] ?? DEFAULT_VIEW_STYLE;
@@ -282,7 +284,7 @@ function SmartViewBar({
                         type="button"
                         onClick={() => onSelect(view)}
                         aria-current={isActive ? 'true' : undefined}
-                        className="flex w-full items-start gap-2.5 px-3 py-2 text-left data-focus:bg-gray-100"
+                        className="flex w-full items-start gap-2.5 px-3 py-2 text-left data-focus:bg-(--palette-surface-3)"
                       >
                         <Icon
                           style="solid"
@@ -291,17 +293,19 @@ function SmartViewBar({
                         />
                         <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-sm ${isActive ? 'font-medium text-gray-900' : 'text-gray-700'}`}
+                            className={`block text-sm ${isActive ? 'font-medium text-(--palette-ink)' : 'text-(--palette-ink)'}`}
                           >
                             {viewLabel(view)}
                           </span>
-                          <span className="block text-xs text-gray-500">{viewTitle(view)}</span>
+                          <span className="block text-xs text-(--palette-gray-500)">
+                            {viewTitle(view)}
+                          </span>
                         </span>
                         {isActive && (
                           <Icon
                             style="solid"
                             name="check"
-                            className="mt-0.5 size-3.5 shrink-0 text-gray-600"
+                            className="mt-0.5 size-3.5 shrink-0 text-(--palette-gray-600)"
                           />
                         )}
                       </button>

@@ -67,19 +67,19 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
         />
 
         {/* Results List */}
-        <div className="overflow-hidden rounded-lg border border-gray-200">
+        <div className="overflow-hidden rounded-lg border border-(--palette-line)">
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-500">
+              <div className="px-4 py-8 text-center text-sm text-(--palette-gray-500)">
                 <Icon name="spinner" style="solid" className="mx-auto mb-2 animate-spin text-xl" />
                 {t('administration.modal.staff.loading')}
               </div>
             ) : staffList.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm text-gray-500">
+              <div className="px-4 py-8 text-center text-sm text-(--palette-gray-500)">
                 {t('administration.modal.staff.empty')}
               </div>
             ) : (
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-(--palette-line-soft)">
                 {staffList.map(staff => {
                   const isSelected = selectedStaff?.id === staff.id;
                   // Only what exists: no empty code or department.
@@ -99,12 +99,18 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
                       onClick={() => setSelectedStaff(staff)}
                       className={clsx(
                         'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
-                        isSelected ? 'bg-primary-50' : 'hover:bg-primary-50/60',
+                        isSelected
+                          ? 'bg-(--palette-accent-wash)'
+                          : 'hover:bg-primary-50/60 dark:hover:bg-primary-500/20',
                       )}
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="text-sm font-semibold text-gray-900">{staff.name}</div>
-                        {detail && <div className="mt-0.5 text-xs text-gray-500">{detail}</div>}
+                        <div className="text-sm font-semibold text-(--palette-ink)">
+                          {staff.name}
+                        </div>
+                        {detail && (
+                          <div className="mt-0.5 text-xs text-(--palette-gray-500)">{detail}</div>
+                        )}
                       </div>
 
                       <div className="flex shrink-0 items-center gap-2">
@@ -119,7 +125,7 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
                           <Icon
                             name="circle-check"
                             style="solid"
-                            className="shrink-0 text-lg text-primary-600"
+                            className="shrink-0 text-lg text-(--palette-primary-text)"
                           />
                         )}
                       </div>

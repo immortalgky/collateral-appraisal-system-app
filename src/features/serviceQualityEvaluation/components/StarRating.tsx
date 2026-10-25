@@ -40,7 +40,14 @@ function StarRating({ score: rawScore, size = 'size-3.5' }: StarRatingProps) {
             />
           );
         }
-        return <Icon key={i} name="star" style="regular" className={`${size} text-gray-300`} />;
+        return (
+          <Icon
+            key={i}
+            name="star"
+            style="regular"
+            className={`${size} text-(--palette-gray-300)`}
+          />
+        );
       })}
     </span>
   );

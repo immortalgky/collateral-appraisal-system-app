@@ -41,7 +41,7 @@ function extractParseErrors(error: unknown): ParseRowError[] | null {
 }
 
 const BTN =
-  'h-[24px] px-[9px] text-[12px] rounded-[6px] border border-gray-200 bg-white text-gray-700 hover:border-primary hover:text-primary inline-flex items-center gap-[5px] whitespace-nowrap disabled:opacity-50';
+  'h-[24px] px-[9px] text-[12px] rounded-[6px] border border-(--palette-line) bg-(--palette-surface) text-(--palette-ink) hover:border-primary hover:text-(--palette-primary-text) inline-flex items-center gap-[5px] whitespace-nowrap disabled:opacity-50';
 
 /**
  * Returns the toolbar controls + inline parse errors, and a `pickFile`/`dropFile` pair the
@@ -101,8 +101,9 @@ export function useUnitUpload({
   const sorted = [...uploads].sort(
     (a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
   );
-  const th = 'px-[8px] py-0 h-[26px] font-medium text-gray-500 border-b border-gray-200';
-  const td = 'px-[8px] py-0 h-[26px] border-b border-gray-100';
+  const th =
+    'px-[8px] py-0 h-[26px] font-medium text-(--palette-gray-500) border-b border-(--palette-line)';
+  const td = 'px-[8px] py-0 h-[26px] border-b border-(--palette-line-soft)';
 
   const toolbar = (
     <div className="relative flex items-center gap-[6px]">
@@ -142,9 +143,9 @@ export function useUnitUpload({
         }}
       />
       {historyOpen && uploads.length > 0 && (
-        <div className="absolute right-0 top-[28px] z-[20] bg-white border border-gray-200 rounded-[8px] shadow-lg min-w-[520px]">
+        <div className="absolute right-0 top-[28px] z-[20] bg-(--palette-surface) border border-(--palette-line) rounded-[8px] shadow-lg min-w-[520px]">
           <table className="w-full text-[12px] leading-[25px]">
-            <thead className="bg-gray-50">
+            <thead className="bg-(--palette-surface-2)">
               <tr>
                 <th className={`${th} text-center w-[36px]`}>{t('upload.noCol')}</th>
                 <th className={`${th} text-left`}>{t('upload.fileCol')}</th>
@@ -156,10 +157,12 @@ export function useUnitUpload({
             </thead>
             <tbody>
               {sorted.map((u, index) => (
-                <tr key={u.id} className={u.isActive ? 'bg-green-50' : ''}>
-                  <td className={`${td} text-center tabular-nums text-gray-500`}>{index + 1}</td>
-                  <td className={`${td} font-medium text-gray-700`}>{u.fileName}</td>
-                  <td className={`${td} text-gray-500 whitespace-nowrap`}>
+                <tr key={u.id} className={u.isActive ? 'bg-green-50 dark:bg-green-500/10' : ''}>
+                  <td className={`${td} text-center tabular-nums text-(--palette-gray-500)`}>
+                    {index + 1}
+                  </td>
+                  <td className={`${td} font-medium text-(--palette-ink)`}>{u.fileName}</td>
+                  <td className={`${td} text-(--palette-gray-500) whitespace-nowrap`}>
                     {new Date(u.uploadedAt).toLocaleString(undefined, {
                       year: 'numeric',
                       month: '2-digit',
@@ -173,7 +176,9 @@ export function useUnitUpload({
                   <td className={`${td} text-center`}>
                     <span
                       className={`inline-flex px-[6px] rounded-full text-[10px] font-medium leading-[16px] ${
-                        u.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                        u.isActive
+                          ? 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                       }`}
                     >
                       {u.isActive ? t('upload.statusPresent') : t('upload.statusHistoric')}
@@ -185,7 +190,7 @@ export function useUnitUpload({
                         type="button"
                         onClick={() => handleDeleteUpload(u.id)}
                         disabled={deleteMutation.isPending}
-                        className="text-gray-400 hover:text-red-500"
+                        className="text-(--palette-gray-400) hover:text-red-500"
                         aria-label={t('hypothesis.units.deleteUpload')}
                       >
                         <Icon name="trash" style="regular" className="size-[12px]" />
@@ -202,24 +207,30 @@ export function useUnitUpload({
   );
 
   const errors = parseErrors && parseErrors.length > 0 && (
-    <div className="rounded-[8px] border border-red-200 overflow-hidden mb-[8px]">
-      <div className="bg-red-50 px-[10px] h-[26px] border-b border-red-200 flex items-center gap-[6px]">
-        <Icon name="triangle-exclamation" style="solid" className="size-[12px] text-red-600" />
-        <span className="text-[12px] font-semibold text-red-700">{t('upload.parseErrors')}</span>
+    <div className="rounded-[8px] border border-(--palette-req-line) overflow-hidden mb-[8px]">
+      <div className="bg-(--palette-req-wash) px-[10px] h-[26px] border-b border-(--palette-req-line) flex items-center gap-[6px]">
+        <Icon
+          name="triangle-exclamation"
+          style="solid"
+          className="size-[12px] text-(--palette-danger)"
+        />
+        <span className="text-[12px] font-semibold text-(--palette-req)">
+          {t('upload.parseErrors')}
+        </span>
       </div>
       <table className="w-full text-[12px] leading-[25px]">
         <thead>
-          <tr className="bg-red-50">
-            <th className="text-left px-[8px] font-medium text-red-600">
+          <tr className="bg-(--palette-req-wash)">
+            <th className="text-left px-[8px] font-medium text-(--palette-danger)">
               {t('upload.parseErrorRow')}
             </th>
-            <th className="text-left px-[8px] font-medium text-red-600">
+            <th className="text-left px-[8px] font-medium text-(--palette-danger)">
               {t('upload.parseErrorField')}
             </th>
-            <th className="text-left px-[8px] font-medium text-red-600">
+            <th className="text-left px-[8px] font-medium text-(--palette-danger)">
               {t('upload.parseErrorValue')}
             </th>
-            <th className="text-left px-[8px] font-medium text-red-600">
+            <th className="text-left px-[8px] font-medium text-(--palette-danger)">
               {t('upload.parseErrorReason')}
             </th>
           </tr>
@@ -227,10 +238,12 @@ export function useUnitUpload({
         <tbody>
           {parseErrors.map((e, i) => (
             <tr key={i} className="border-t border-red-50">
-              <td className="px-[8px] h-[26px] tabular-nums text-red-700 font-medium">{e.row}</td>
-              <td className="px-[8px] h-[26px] text-red-700">{e.field}</td>
+              <td className="px-[8px] h-[26px] tabular-nums text-(--palette-req) font-medium">
+                {e.row}
+              </td>
+              <td className="px-[8px] h-[26px] text-(--palette-req)">{e.field}</td>
               <td className="px-[8px] h-[26px] text-red-500 font-mono">{e.value || '(empty)'}</td>
-              <td className="px-[8px] h-[26px] text-red-600">{e.reason}</td>
+              <td className="px-[8px] h-[26px] text-(--palette-danger)">{e.reason}</td>
             </tr>
           ))}
         </tbody>
@@ -278,12 +291,18 @@ export function UnitUploadEmpty({
         if (f) onDrop(f);
       }}
       className={`w-full border-2 border-dashed rounded-[8px] py-[28px] flex flex-col items-center gap-[6px] ${
-        over ? 'border-primary bg-primary/5' : 'border-gray-300 hover:border-primary/50'
+        over
+          ? 'border-primary bg-primary/5'
+          : 'border-(--palette-line-strong) hover:border-primary/50'
       }`}
     >
-      <Icon name="file-excel" style="regular" className="size-[22px] text-gray-400" />
-      <span className="text-[12.5px] font-medium text-gray-700">{t('hypothesis.units.empty')}</span>
-      <span className="text-[11px] text-gray-400">{t('hypothesis.units.emptyHint')}</span>
+      <Icon name="file-excel" style="regular" className="size-[22px] text-(--palette-gray-400)" />
+      <span className="text-[12.5px] font-medium text-(--palette-ink)">
+        {t('hypothesis.units.empty')}
+      </span>
+      <span className="text-[11px] text-(--palette-gray-400)">
+        {t('hypothesis.units.emptyHint')}
+      </span>
     </button>
   );
 }

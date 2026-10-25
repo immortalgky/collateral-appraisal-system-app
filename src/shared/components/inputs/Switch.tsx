@@ -1,5 +1,7 @@
 import { Switch as HeadlessSwitch, Field, Label, Description } from '@headlessui/react';
 import clsx from 'clsx';
+import { ValidationText } from '../form/ValidationText';
+import { ERROR_TEXT } from './controlStyles';
 
 interface SwitchProps {
   checked?: boolean;
@@ -61,15 +63,15 @@ const Switch = ({
       name={name}
       className={clsx(
         'group relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2',
+        // Focus is the global outline (DESIGN.md section 6).
         trackSizeStyles[size],
         disabled
-          ? 'cursor-not-allowed bg-gray-200'
+          ? 'cursor-not-allowed bg-gray-200 dark:bg-gray-700'
           : variant === 'status'
             ? 'bg-red-500 data-checked:bg-green-600'
             : variant === 'primary'
-              ? 'bg-gray-300 data-checked:bg-primary'
-              : 'bg-gray-300 data-checked:bg-gray-700',
+              ? 'bg-gray-300 dark:bg-gray-600 data-checked:bg-primary'
+              : 'bg-gray-300 dark:bg-gray-600 data-checked:bg-primary-700',
         error && 'ring-2 ring-danger',
       )}
     >
@@ -102,20 +104,24 @@ const Switch = ({
           {label && (
             <Label
               className={clsx(
-                'text-sm font-medium cursor-pointer select-none',
-                disabled ? 'text-neutral-4' : 'text-neutral-6',
+                'text-sm font-medium leading-normal cursor-pointer select-none',
+                disabled ? 'text-(--palette-ink-2)' : 'text-(--palette-ink)',
               )}
             >
               {label}
             </Label>
           )}
           {description && (
-            <Description className="text-sm text-neutral-4">{description}</Description>
+            <Description className="text-xs text-(--palette-ink-2)">{description}</Description>
           )}
         </div>
       </div>
 
-      {error && <p className="mt-1 text-sm text-danger">{error}</p>}
+      {error && (
+        <p className={clsx('mt-1', ERROR_TEXT)}>
+          <ValidationText message={error} label={label} />
+        </p>
+      )}
     </Field>
   );
 };

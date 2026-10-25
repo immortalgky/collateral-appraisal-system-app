@@ -34,8 +34,8 @@ const OWNER_AND_NOTES = ['ownerName', 'notes'] as const;
 const NOTES_ONLY = ['notes'] as const;
 
 const Heading = ({ children, aside }: { children: React.ReactNode; aside?: React.ReactNode }) => (
-  <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-1.5">
-    <h3 className="m-0 text-sm font-semibold text-gray-800">{children}</h3>
+  <div className="flex flex-wrap items-center gap-2 border-b border-(--palette-line-soft) pb-1.5">
+    <h3 className="m-0 text-sm font-semibold text-(--palette-ink)">{children}</h3>
     {aside && <div className="ml-auto">{aside}</div>}
   </div>
 );
@@ -119,7 +119,11 @@ export function TitleDeedBlock({ index, family }: { index: number; family: Title
         {shown === 'deed' ? (
           <>
             {/* The paper's wording is in the appraisal namespace, which loads on first use. */}
-            <Suspense fallback={<div className="h-[48rem] animate-pulse rounded bg-gray-100" />}>
+            <Suspense
+              fallback={
+                <div className="h-[48rem] animate-pulse rounded bg-(--palette-line-soft)" />
+              }
+            >
               <div className="grid justify-items-center">
                 <TitleDeedSheet
                   fields={landFields}
@@ -136,7 +140,7 @@ export function TitleDeedBlock({ index, family }: { index: number; family: Title
                 />
               </div>
             </Suspense>
-            <p className="m-0 text-center text-xs text-gray-500">
+            <p className="m-0 text-center text-xs text-(--palette-gray-500)">
               {t('titleSection.drawer.paperNote')}
             </p>
           </>
@@ -148,7 +152,9 @@ export function TitleDeedBlock({ index, family }: { index: number; family: Title
               // The land page's own form view (document / position / area groups, the total under
               // the area), reading this title's row; its wording is in the appraisal namespace.
               <Suspense
-                fallback={<div className="col-span-6 h-64 animate-pulse rounded bg-gray-100" />}
+                fallback={
+                  <div className="col-span-6 h-64 animate-pulse rounded bg-(--palette-line-soft)" />
+                }
               >
                 <div className="col-span-6">
                   <TitleFormView

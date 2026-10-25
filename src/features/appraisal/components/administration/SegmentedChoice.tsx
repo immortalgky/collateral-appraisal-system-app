@@ -37,12 +37,14 @@ interface SegmentedChoiceProps<V extends string> {
 const TONE = {
   teal: {
     on: 'bg-primary text-white shadow-md shadow-primary/25',
-    callout: 'border-primary-200 bg-primary-50 text-primary-700',
+    callout:
+      'border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) text-(--palette-accent-ink)',
     dot: 'bg-primary',
   },
   purple: {
     on: 'bg-purple-600 text-white shadow-md shadow-purple-600/25',
-    callout: 'border-purple-200 bg-purple-50 text-purple-800',
+    callout:
+      'border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 text-purple-800 dark:text-purple-300',
     dot: 'bg-purple-600',
   },
 } as const;
@@ -101,8 +103,8 @@ export default function SegmentedChoice<V extends string>({
                 checked
                   ? styles.on
                   : option.disabled
-                    ? 'text-gray-300 line-through decoration-gray-200'
-                    : 'text-gray-600 hover:text-gray-800',
+                    ? 'text-(--palette-gray-300) line-through decoration-gray-200'
+                    : 'text-(--palette-gray-600) hover:text-(--palette-ink)',
               )}
             >
               {option.icon && (
@@ -134,7 +136,7 @@ export default function SegmentedChoice<V extends string>({
             {description}
           </p>
         ) : (
-          <p id={descriptionId} className="mt-1.5 text-xs text-gray-500">
+          <p id={descriptionId} className="mt-1.5 text-xs text-(--palette-gray-500)">
             {description}
           </p>
         ))}

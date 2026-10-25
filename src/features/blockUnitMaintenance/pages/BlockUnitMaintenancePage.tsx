@@ -53,8 +53,8 @@ const SortableTh = ({
   return (
     <th
       onClick={() => onSort(field)}
-      className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap select-none cursor-pointer hover:text-gray-700 ${alignCls} ${className} ${
-        isActive ? 'text-primary' : 'text-gray-500'
+      className={`px-4 py-2.5 text-xs font-semibold whitespace-nowrap select-none cursor-pointer hover:text-(--palette-ink) ${alignCls} ${className} ${
+        isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-500)'
       }`}
     >
       <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
@@ -62,7 +62,7 @@ const SortableTh = ({
         <Icon
           style="solid"
           name={iconName}
-          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300'}`}
+          className={`size-2.5 ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)'}`}
         />
       </div>
     </th>
@@ -133,8 +133,8 @@ const BlockUnitMaintenancePage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.loadFailed')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -145,12 +145,12 @@ const BlockUnitMaintenancePage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('list.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('list.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('list.subtitle')}</p>
         </div>
       </div>
 
@@ -209,7 +209,7 @@ const BlockUnitMaintenancePage = () => {
       </div>
 
       {/* Table card */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table">
             <colgroup>
@@ -220,8 +220,8 @@ const BlockUnitMaintenancePage = () => {
               <col className="w-64" />
               <col className="w-44" />
             </colgroup>
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
                 <SortableTh
                   field="appraisalReportNo"
                   sortBy={sortBy}
@@ -239,7 +239,7 @@ const BlockUnitMaintenancePage = () => {
                 >
                   {t('list.col.projectName')}
                 </SortableTh>
-                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-500) text-left whitespace-nowrap">
                   {t('list.col.projectType')}
                 </th>
                 <SortableTh field="developer" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
@@ -254,7 +254,7 @@ const BlockUnitMaintenancePage = () => {
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`divide-y divide-(--palette-line-soft) ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -272,9 +272,13 @@ const BlockUnitMaintenancePage = () => {
                 <tr>
                   <td colSpan={TOTAL_COLS} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">{t('list.empty')}</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">{t('list.empty')}</p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {hasActiveFilters ? t('list.tryFilters') : t('list.emptyHint')}
                       </p>
                     </div>
@@ -288,28 +292,28 @@ const BlockUnitMaintenancePage = () => {
                   return (
                     <tr
                       key={item.collateralMasterId}
-                      className="hover:bg-gray-50 cursor-pointer transition-colors"
+                      className="hover:bg-(--palette-surface-2) cursor-pointer transition-colors"
                       onClick={() =>
                         navigate(`/standalone/block-unit-maintenance/${item.collateralMasterId}`)
                       }
                     >
                       <td className="px-4 py-2.5">
-                        <span className="font-medium text-primary text-xs">
+                        <span className="font-medium text-(--palette-primary-text) text-xs">
                           {item.appraisalReportNo ?? '—'}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700 truncate">
+                      <td className="px-4 py-2.5 text-(--palette-ink) truncate">
                         {item.projectName ?? '—'}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-(--palette-ink) whitespace-nowrap">
                         {projectTypeDescMap.get(item.projectType) ?? item.projectType}
                       </td>
-                      <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                         {item.developer ?? '—'}
                       </td>
                       <td className="px-4 py-2.5">
                         <div className="flex items-center gap-2">
-                          <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden">
+                          <div className="w-20 h-1.5 rounded-full bg-(--palette-surface-3) overflow-hidden">
                             <div
                               className="h-full bg-gradient-to-r from-violet-400 to-indigo-500 transition-[width]"
                               style={{ width: `${pct}%` }}
@@ -319,17 +323,17 @@ const BlockUnitMaintenancePage = () => {
                               aria-valuemax={100}
                             />
                           </div>
-                          <span className="text-[11px] tabular-nums text-gray-600 whitespace-nowrap">
+                          <span className="text-[11px] tabular-nums text-(--palette-gray-600) whitespace-nowrap">
                             {sold} / {total}
-                            <span className="text-gray-400 ml-1">({pct}%)</span>
+                            <span className="text-(--palette-gray-400) ml-1">({pct}%)</span>
                           </span>
                         </div>
                       </td>
                       <td className="px-4 py-2.5 whitespace-nowrap">
-                        <div className="text-xs text-gray-600">
+                        <div className="text-xs text-(--palette-gray-600)">
                           {formatLocaleDateTime(item.updatedOn, i18n.language)}
                         </div>
-                        <div className="text-[11px] text-gray-400 truncate">
+                        <div className="text-[11px] text-(--palette-gray-400) truncate">
                           {item.updatedBy ? `${t('list.col.by')} ${item.updatedBy}` : '—'}
                         </div>
                       </td>
@@ -341,14 +345,18 @@ const BlockUnitMaintenancePage = () => {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>
 
         {/* Pagination */}
         {totalCount > 0 && (
-          <div className="shrink-0 border-t border-gray-200">
+          <div className="shrink-0 border-t border-(--palette-line)">
             <Pagination
               currentPage={pageNumber}
               totalPages={totalPages}

@@ -1,6 +1,7 @@
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
 import { type ReactNode } from 'react';
 import Icon from './Icon';
+import { FormLayoutProvider } from './form/FormLayoutProvider';
 import clsx from 'clsx';
 
 interface ModalProps {
@@ -50,7 +51,7 @@ const Modal: React.FunctionComponent<ModalProps> = ({
             transition
             className={clsx(
               sizeClasses[size],
-              'w-full bg-white rounded-lg shadow-xl overflow-visible',
+              'w-full bg-(--palette-surface) rounded-lg shadow-xl overflow-visible',
               'transition-all duration-300 ease-out',
               'data-closed:opacity-0 data-closed:scale-95',
             )}
@@ -58,19 +59,22 @@ const Modal: React.FunctionComponent<ModalProps> = ({
             {/* Header */}
             <div
               className={clsx(
-                'flex items-center justify-between border-b border-gray-200',
+                'flex items-center justify-between border-b border-(--palette-line)',
                 compact ? 'px-5 py-3' : 'px-6 py-4',
               )}
             >
               <h2
-                className={clsx('font-semibold text-gray-900', compact ? 'text-base' : 'text-xl')}
+                className={clsx(
+                  'font-semibold text-(--palette-ink)',
+                  compact ? 'text-base' : 'text-xl',
+                )}
               >
                 {title}
               </h2>
               {showCloseButton && (
                 <button
                   onClick={onClose}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
                   aria-label="Close modal"
                 >
                   <Icon name="xmark" style="regular" className="w-5 h-5" />
@@ -84,12 +88,13 @@ const Modal: React.FunctionComponent<ModalProps> = ({
               this modal would also submit an enclosing page <form>. It must be a plain div, not
               DialogPanel: HeadlessUI skips merged on* handlers once preventDefault was called
               (react-hook-form's handleSubmit calls it), so a handler on the panel never runs.
+              The layout provider crosses the portal: a dialog opened from a Compact sheet is still Standard.
             */}
             <div
               onSubmit={e => e.stopPropagation()}
               className={clsx('overflow-visible', compact ? 'px-5 py-4' : 'px-6 py-4')}
             >
-              {children}
+              <FormLayoutProvider layout="standard">{children}</FormLayoutProvider>
             </div>
           </DialogPanel>
         </div>

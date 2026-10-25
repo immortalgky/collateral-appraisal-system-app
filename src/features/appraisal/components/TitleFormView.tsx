@@ -94,7 +94,7 @@ function Section({
 }) {
   return (
     <section className="grid gap-2" aria-label={showTitle ? undefined : title}>
-      {showTitle && <h3 className="text-base font-semibold text-gray-900">{title}</h3>}
+      {showTitle && <h3 className="text-base font-semibold text-(--palette-ink)">{title}</h3>}
       {children}
     </section>
   );
@@ -127,10 +127,10 @@ function AreaInput({
     <div className="grid grid-cols-12 items-end gap-3.5">
       <FormFields fields={fields} namePrefix={scope?.name} index={scope?.index} />
       <div className="col-span-12 text-right leading-tight tabular-nums sm:col-span-6">
-        <div className="text-base font-semibold text-gray-900">
+        <div className="text-base font-semibold text-(--palette-ink)">
           {t('titleEntry.area.total', { wa: money(totalWa) })}
         </div>
-        <div className="text-xs text-gray-500">
+        <div className="text-xs text-(--palette-gray-500)">
           {t('titleEntry.area.asRai', { rnw: toRaiNganWa(totalWa) })}
         </div>
       </div>

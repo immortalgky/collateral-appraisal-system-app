@@ -21,14 +21,14 @@ const CompanyDisplay = ({ company, onClear, onChange, badge }: CompanyDisplayPro
   const localizeCompanyName = useLocalizedCompanyName();
 
   return (
-    <div className="flex items-start justify-between gap-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2.5">
+    <div className="flex items-start justify-between gap-3 rounded-lg border border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 px-3 py-2.5">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="text-sm font-semibold text-gray-800">
+          <span className="text-sm font-semibold text-(--palette-ink)">
             {localizeCompanyName(company.companyName, company.companyNameLocal)}
           </span>
           {company.registrationNo && (
-            <span className="text-xs text-gray-500">({company.registrationNo})</span>
+            <span className="text-xs text-(--palette-gray-500)">({company.registrationNo})</span>
           )}
           {badge && (
             <Badge tone="purple" dot={false} className="whitespace-nowrap">
@@ -36,7 +36,7 @@ const CompanyDisplay = ({ company, onClear, onChange, badge }: CompanyDisplayPro
             </Badge>
           )}
         </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-gray-500">
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-(--palette-gray-500)">
           {company.rating > 0 && (
             <span className="flex items-center gap-1">
               <StarRating score={company.rating} />

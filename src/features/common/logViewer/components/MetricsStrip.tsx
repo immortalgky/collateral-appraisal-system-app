@@ -73,13 +73,13 @@ const MetricsStrip = ({
   if (!systemMetrics || !hasAnyMetricData(machines)) return null;
 
   return (
-    <div className="flex flex-col gap-2 pt-2 mt-1 border-t border-dashed border-gray-200">
+    <div className="flex flex-col gap-2 pt-2 mt-1 border-t border-dashed border-(--palette-line)">
       <div className="flex items-center justify-between gap-2">
         <button
           type="button"
           onClick={() => setExpanded(e => !e)}
           aria-expanded={expanded}
-          className="flex items-center gap-1.5 text-xs font-semibold text-primary self-start"
+          className="flex items-center gap-1.5 text-xs font-semibold text-(--palette-primary-text) self-start"
         >
           <Icon
             name={expanded ? 'chevron-down' : 'chevron-up'}
@@ -91,7 +91,7 @@ const MetricsStrip = ({
         <button
           type="button"
           onClick={onViewHealth}
-          className="inline-flex items-center gap-1.5 rounded-full px-3 h-7 text-xs font-medium bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 hover:border-rose-300 transition-colors"
+          className="inline-flex items-center gap-1.5 rounded-full px-3 h-7 text-xs font-medium bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20 hover:border-rose-300 dark:hover:border-rose-500/40 transition-colors"
         >
           <Icon name="heart-pulse" style="solid" className="size-3" />
           {t('metrics.viewHealth')}
@@ -101,7 +101,7 @@ const MetricsStrip = ({
 
       {expanded && (
         <>
-          <div className="flex items-center gap-4 text-xs text-gray-500 flex-wrap">
+          <div className="flex items-center gap-4 text-xs text-(--palette-gray-500) flex-wrap">
             {machineNames.map((name, index) => (
               <span key={name} className="flex items-center gap-1.5">
                 <span
@@ -112,7 +112,7 @@ const MetricsStrip = ({
               </span>
             ))}
             <span className="flex items-center gap-1.5">
-              <span className="w-3 border-t border-dashed border-gray-400" />
+              <span className="w-3 border-t border-dashed border-(--palette-line-strong)" />
               {t('metrics.legendRestart')}
             </span>
             <span className="flex items-center gap-1.5">
@@ -127,7 +127,7 @@ const MetricsStrip = ({
               const restartMarkers = dedupeRestartMarkers(rows, systemMetrics.restarts);
               return (
                 <div key={metric.key} className="flex flex-col gap-1 min-w-0">
-                  <span className="text-[11px] text-gray-500">
+                  <span className="text-[11px] text-(--palette-gray-500)">
                     {t(`metrics.${metric.key}Label`)}
                   </span>
                   <MetricLineChart

@@ -124,7 +124,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
         <img
           src={imageUrl}
           alt={fileName}
-          className="w-12 h-12 object-cover rounded border border-gray-200"
+          className="w-12 h-12 object-cover rounded border border-(--palette-line)"
           onLoad={() => URL.revokeObjectURL(imageUrl)}
         />
       );
@@ -136,7 +136,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
     if (['png', 'jpg', 'jpeg', 'gif'].includes(extension || '')) {
       return <Icon name="file-image" style="solid" className="w-10 h-10 text-blue-500" />;
     }
-    return <Icon name="file" style="solid" className="w-10 h-10 text-gray-500" />;
+    return <Icon name="file" style="solid" className="w-10 h-10 text-(--palette-gray-500)" />;
   };
 
   return (
@@ -148,42 +148,42 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
       showCloseButton={false}
     >
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">{t('fileAssignment.description')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('fileAssignment.description')}</p>
 
         {/* File list table */}
-        <div className="max-h-96 overflow-y-auto border border-gray-200 rounded-lg">
+        <div className="max-h-96 overflow-y-auto border border-(--palette-line) rounded-lg">
           <table className="w-full">
-            <thead className="bg-gray-50 sticky top-0">
+            <thead className="bg-(--palette-surface-2) sticky top-0">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-ink) uppercase">
                   {t('fileAssignment.columnFile')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-ink) uppercase">
                   {t('fileAssignment.columnEntity')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-ink) uppercase">
                   {t('fileAssignment.columnDocumentType')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase">
+                <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-ink) uppercase">
                   {t('fileAssignment.columnNotes')}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-(--palette-line)">
               {uploadedFiles.map(file => {
                 const assignment = assignments[file.documentId];
                 const availableTypes = getAvailableDocumentTypes();
 
                 return (
-                  <tr key={file.documentId} className="hover:bg-gray-50">
+                  <tr key={file.documentId} className="hover:bg-(--palette-surface-2)">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         {getFilePreview(file.fileName, file.file)}
                         <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-medium text-gray-900 truncate">
+                          <span className="text-sm font-medium text-(--palette-ink) truncate">
                             {file.fileName}
                           </span>
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-(--palette-gray-500)">
                             {formatFileSize(file.file.size)}
                           </span>
                         </div>
@@ -243,7 +243,7 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
                         value={assignment?.comment || ''}
                         onChange={e => updateAssignment(file.documentId, 'comment', e.target.value)}
                         placeholder={t('fileAssignment.notesPlaceholder')}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-2 py-1 text-sm border border-(--palette-line-strong) rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </td>
                   </tr>
@@ -255,9 +255,15 @@ const FileAssignmentModal: React.FunctionComponent<FileAssignmentModalProps> = (
 
         {/* Warning if not all assigned */}
         {!allAssigned && (
-          <div className="flex items-center gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <Icon name="triangle-exclamation" style="solid" className="w-5 h-5 text-yellow-600" />
-            <span className="text-sm text-yellow-800">{t('fileAssignment.warningSelectAll')}</span>
+          <div className="flex items-center gap-2 p-3 bg-(--palette-warn-wash) border border-yellow-200 dark:border-yellow-500/30 rounded-lg">
+            <Icon
+              name="triangle-exclamation"
+              style="solid"
+              className="w-5 h-5 text-yellow-600 dark:text-yellow-400"
+            />
+            <span className="text-sm text-yellow-800 dark:text-yellow-300">
+              {t('fileAssignment.warningSelectAll')}
+            </span>
           </div>
         )}
 

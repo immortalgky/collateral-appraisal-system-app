@@ -16,6 +16,7 @@ import toast from 'react-hot-toast';
 
 import Icon from '@/shared/components/Icon';
 import Textarea from '@/shared/components/inputs/Textarea';
+import { translateValidationMessage } from '@/shared/components/form/validationMessage';
 import FormCard from '@/shared/components/sections/FormCard';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
@@ -846,9 +847,12 @@ const AdministrationPage = () => {
   // A schema failure that the slip's checklist does not mirror would otherwise make Assign do
   // nothing. The attempt reveals every error (submitCount), and the first invalid field is named.
   const onInvalid = (errors: FieldErrors<AssignmentFormType>) => {
+    // The schema's messages are tokens (translated where shown), so resolve it for the toast.
     const first = Object.values(errors)[0]?.message;
     toast.error(
-      typeof first === 'string' && first ? first : t('administration.toasts.selectAssignee'),
+      typeof first === 'string' && first
+        ? translateValidationMessage(t, first)
+        : t('administration.toasts.selectAssignee'),
     );
   };
   const submit = handleSubmit(onSubmit, onInvalid);
@@ -856,7 +860,11 @@ const AdministrationPage = () => {
   if (awaitingSeed) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="animate-spin text-3xl text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="animate-spin text-3xl text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -1036,7 +1044,9 @@ const AdministrationPage = () => {
         />
       ) : (
         // Read-only and nothing stored: say so, rather than leave an empty slot.
-        isReadOnly && <p className="text-sm text-gray-500">{t('administration.noData')}</p>
+        isReadOnly && (
+          <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
+        )
       )}
       <FieldError>{o.error}</FieldError>
     </>
@@ -1097,7 +1107,7 @@ const AdministrationPage = () => {
                   action={
                     <a
                       href="#quotation-section"
-                      className="flex items-center gap-1 font-medium whitespace-nowrap underline underline-offset-2 hover:text-amber-900"
+                      className="flex items-center gap-1 font-medium whitespace-nowrap underline underline-offset-2 hover:text-amber-900 dark:hover:text-amber-200"
                     >
                       {t('administration.openQuotation')}
                       <Icon name="arrow-down" style="solid" />
@@ -1167,12 +1177,12 @@ const AdministrationPage = () => {
                   />
                   <FieldError>{typeError}</FieldError>
                   {isInternalDisabled && (
-                    <p className="mt-2 text-xs text-amber-700">
+                    <p className="mt-2 text-xs text-(--palette-warn)">
                       {t('administration.assignmentType.internalDisabledHint')}
                     </p>
                   )}
                   {!canAssignCompanyInSystem && (
-                    <p className="mt-2 text-xs text-amber-700">
+                    <p className="mt-2 text-xs text-(--palette-warn)">
                       {t('administration.assignmentType.externalDisabledHint')}
                     </p>
                   )}
@@ -1193,7 +1203,7 @@ const AdministrationPage = () => {
                   </FieldLabel>
                   {isReadOnly ? (
                     // Read-only: the chosen method as text, not a greyed-out toggle.
-                    <p className="mb-2 text-sm text-gray-800">
+                    <p className="mb-2 text-sm text-(--palette-ink)">
                       {t(
                         assignmentMethod === 'roundrobin'
                           ? 'administration.assignmentDetails.roundrobin'
@@ -1327,7 +1337,9 @@ const AdministrationPage = () => {
                         />
                       ) : (
                         isReadOnly && (
-                          <p className="text-sm text-gray-500">{t('administration.noData')}</p>
+                          <p className="text-sm text-(--palette-gray-500)">
+                            {t('administration.noData')}
+                          </p>
                         )
                       )}
                       <FieldError>{assigneeError}</FieldError>
@@ -1433,11 +1445,13 @@ const AdministrationPage = () => {
                   {isReadOnly ? (
                     // Read-only: the stored remark as text (an empty box would read as "type here").
                     currentAssignment?.remark?.trim() ? (
-                      <p className="text-sm break-words whitespace-pre-wrap text-gray-800">
+                      <p className="text-sm break-words whitespace-pre-wrap text-(--palette-ink)">
                         {currentAssignment.remark}
                       </p>
                     ) : (
-                      <p className="text-sm text-gray-500">{t('administration.remark.empty')}</p>
+                      <p className="text-sm text-(--palette-gray-500)">
+                        {t('administration.remark.empty')}
+                      </p>
                     )
                   ) : (
                     <Controller

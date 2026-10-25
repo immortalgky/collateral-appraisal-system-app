@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
+import { FOCUS } from './controlStyles';
 import { KEYBOARD_RING_PLAIN, usePointerMode } from '@/shared/hooks/usePointerMode';
 
 export interface SearchByOption {
@@ -83,8 +84,8 @@ function SearchByInput({
   return (
     <div
       className={clsx(
-        'flex items-center rounded-lg border border-gray-200 bg-white transition-colors',
-        'focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400',
+        'flex items-center rounded-lg border border-(--palette-input-edge) bg-(--palette-surface) transition-colors',
+        FOCUS.within,
         className,
       )}
       onPointerDownCapture={onPointerDownCapture}
@@ -104,7 +105,7 @@ function SearchByInput({
           style={{ outline: 'none' }}
           className={clsx(
             'ml-1.5 flex h-7 shrink-0 items-center gap-1.5 rounded-lg px-2 text-xs font-medium whitespace-nowrap transition-all',
-            selected?.pillClass ?? 'bg-gray-100 text-gray-500',
+            selected?.pillClass ?? 'bg-(--palette-surface-3) text-(--palette-gray-500)',
             !pointerMode && KEYBOARD_RING_PLAIN,
           )}
         >
@@ -116,20 +117,28 @@ function SearchByInput({
         <Menu as="div" className="relative shrink-0">
           <MenuButton
             style={{ outline: 'none' }}
-            className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-gray-700 whitespace-nowrap hover:bg-gray-50"
+            className="flex items-center gap-1.5 rounded-l-lg px-3 py-2 text-sm text-(--palette-ink) whitespace-nowrap hover:bg-(--palette-surface-2)"
           >
             {selected?.icon && (
-              <Icon style="solid" name={selected.icon} className="size-3.5 text-gray-500" />
+              <Icon
+                style="solid"
+                name={selected.icon}
+                className="size-3.5 text-(--palette-gray-500)"
+              />
             )}
             {selected?.label ?? ''}
-            <Icon style="regular" name="chevron-down" className="size-3 text-gray-400" />
+            <Icon
+              style="regular"
+              name="chevron-down"
+              className="size-3 text-(--palette-gray-400)"
+            />
           </MenuButton>
           <MenuItems
             // The menu takes the focus when it opens; the global unlayered :focus-visible outline
             // would box the whole panel in blue, and `focus:outline-none` cannot beat it.
             style={{ outline: 'none' }}
             anchor="bottom start"
-            className="mt-1 min-w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg z-50 focus:outline-none"
+            className="mt-1 min-w-44 rounded-lg border border-(--palette-line) bg-(--palette-surface) py-1 shadow-lg z-50 focus:outline-none"
           >
             {options.map(o => {
               const isSelected = o.value === field;
@@ -138,22 +147,32 @@ function SearchByInput({
                   <button
                     type="button"
                     onClick={() => onFieldChange(o.value)}
-                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors data-focus:bg-gray-100"
+                    className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors data-focus:bg-(--palette-surface-3)"
                   >
                     {o.icon && (
                       <Icon
                         style="solid"
                         name={o.icon}
-                        className={clsx('size-3.5', isSelected ? 'text-gray-700' : 'text-gray-400')}
+                        className={clsx(
+                          'size-3.5',
+                          isSelected ? 'text-(--palette-ink)' : 'text-(--palette-gray-400)',
+                        )}
                       />
                     )}
                     <span
-                      className={clsx('flex-1 truncate', isSelected && 'font-medium text-gray-900')}
+                      className={clsx(
+                        'flex-1 truncate',
+                        isSelected && 'font-medium text-(--palette-ink)',
+                      )}
                     >
                       {o.label}
                     </span>
                     {isSelected && (
-                      <Icon style="solid" name="check" className="size-3.5 text-gray-600" />
+                      <Icon
+                        style="solid"
+                        name="check"
+                        className="size-3.5 text-(--palette-gray-600)"
+                      />
                     )}
                   </button>
                 </MenuItem>
@@ -163,7 +182,7 @@ function SearchByInput({
         </Menu>
       )}
 
-      {!pill && <div className="h-5 w-px shrink-0 bg-gray-200" />}
+      {!pill && <div className="h-5 w-px shrink-0 bg-(--palette-line)" />}
 
       {/* Search input */}
       <div className={clsx('flex flex-1 items-center', pill ? 'pl-2 pr-3' : 'px-3')}>
@@ -171,7 +190,7 @@ function SearchByInput({
           <Icon
             name="magnifying-glass"
             style="regular"
-            className="pointer-events-none mr-2 size-4 shrink-0 text-gray-400"
+            className="pointer-events-none mr-2 size-4 shrink-0 text-(--palette-gray-400)"
           />
         )}
         <input
@@ -183,7 +202,7 @@ function SearchByInput({
           // Inline outline:none — the global `:focus-visible` rule (src/index.css) is unlayered
           // and beats Tailwind's layered outline utilities; an inline style outranks it.
           style={{ outline: 'none' }}
-          className="w-full min-w-0 bg-transparent py-2 text-sm placeholder:text-gray-400"
+          className="w-full min-w-0 bg-transparent py-2 text-sm placeholder:text-(--palette-gray-400)"
         />
         {endAdornment && <div className="ml-2 flex shrink-0 items-center">{endAdornment}</div>}
       </div>

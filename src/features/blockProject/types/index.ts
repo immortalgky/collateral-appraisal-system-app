@@ -6,11 +6,16 @@ export type ProjectType = 'U' | 'LB' | 'L';
 export const isCondo = (t: ProjectType): boolean => t === 'U';
 
 /**
- * True when the project is Land and Building (LB) or Land and Building
- * (Construction) (L). Both share the same domain logic in v1.
- * // TODO(Land): revisit each call site if Land-specific branches are needed.
+ * True for the two non-condo types, LB (Land and Building) and L (Land and Building (Construction)).
+ * They share the village route and the land-based pricing; use `hasStructures` where L must differ.
  */
 export const isLandAndBuildingLike = (t: ProjectType): boolean => t === 'LB' || t === 'L';
+
+/**
+ * True when the project holds buildings (U or LB), as BE `ProjectType.HasStructures()`. L (Land and
+ * Building (Construction)) is appraised as land only: no models, no buildings.
+ */
+export const hasStructures = (t: ProjectType): boolean => t === 'U' || t === 'LB';
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 
@@ -272,6 +277,9 @@ export interface ProjectUnit {
   towerName?: string;
   condoRegistrationNumber?: string;
   roomNumber?: string;
+  /** Condo: the tower / model this unit belongs to. null on units not matched to one yet. */
+  projectTowerId?: string | null;
+  projectModelId?: string | null;
   // LandAndBuilding-only
   plotNumber?: string;
   houseNumber?: string;
@@ -363,6 +371,10 @@ export interface UnitPriceSourceInfo {
   importedBy: string | null;
   /** Units that currently hold a price, whichever way it got there. */
   pricedUnitCount: number;
+  /** Sum of the rounded appraisal values. null when no unit is priced (never 0). */
+  totalAppraisalValueRounded?: number | null;
+  /** Sum of the force-selling prices. Same null rule. */
+  totalForceSellingPrice?: number | null;
 }
 
 export type UnitPriceImportErrorCode =
@@ -382,7 +394,7 @@ export interface UnitPriceImportTotals<T = number> {
 
 export interface UnitPriceImportPreview {
   fileName: string;
-  projectType: 'Condo' | 'LandAndBuilding';
+  projectType: 'Condo' | 'LandAndBuilding' | 'Land';
   rowCount: number;
   matchedCount: number;
   matchedByPrimaryKey: number;

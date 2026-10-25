@@ -39,12 +39,7 @@ export const POSITION_OPTIONS = [
  * Used as the fallback when that parameter group has not been seeded yet, so the dropdown is never
  * empty; the group itself is the source of truth at runtime.
  */
-export const SELECTABLE_POSITIONS = [
-  'Chairman',
-  'Director',
-  'Secretary',
-  'UW',
-] as const;
+export const SELECTABLE_POSITIONS = ['Chairman', 'Director', 'Secretary', 'UW'] as const;
 
 /** The general-parameter group backing the position dropdowns. */
 export const MEETING_POSITION_PARAMETER_GROUP = 'MeetingPosition';
@@ -238,29 +233,29 @@ export const VOTE_FALLBACK_COLOR = '#9ca3af';
  */
 export const SOFT_TONES = {
   emerald:
-    'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-emerald-400',
-  red: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200 hover:bg-red-100 focus-visible:ring-2 focus-visible:ring-red-400',
+    'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-200 dark:ring-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 focus-visible:ring-2 focus-visible:ring-emerald-400',
+  red: 'bg-(--palette-req-wash) text-(--palette-req) ring-1 ring-inset ring-(--palette-req-line) hover:bg-red-100 dark:hover:bg-red-500/20 focus-visible:ring-2 focus-visible:ring-red-400',
   amber:
-    'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200 hover:bg-amber-100 focus-visible:ring-2 focus-visible:ring-amber-400',
+    'bg-(--palette-warn-wash) text-(--palette-warn) ring-1 ring-inset ring-amber-200 dark:ring-amber-500/30 hover:bg-amber-100 dark:hover:bg-amber-500/20 focus-visible:ring-2 focus-visible:ring-amber-400',
   primary:
-    'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/40',
-  info: 'bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-200 hover:bg-blue-100 focus-visible:ring-2 focus-visible:ring-blue-400',
+    'bg-primary/10 text-(--palette-primary-text) ring-1 ring-inset ring-primary/20 hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary/40',
+  info: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-200 dark:ring-blue-500/30 hover:bg-blue-100 dark:hover:bg-blue-500/20 focus-visible:ring-2 focus-visible:ring-blue-400',
   slate:
-    'bg-slate-50 text-slate-700 ring-1 ring-inset ring-slate-200 hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-slate-400',
+    'bg-(--palette-surface-2) text-(--palette-ink) ring-1 ring-inset ring-(--palette-line) hover:bg-(--palette-surface-3) focus-visible:ring-2 focus-visible:ring-(--palette-line-strong)',
   /**
    * Quiet white-background action. For toolbar buttons that are always available regardless of
    * status (Documents, Resend Invitation) — a filled tint gives them more weight than they earn
    * beside the status's primary action. Colour is carried by the icon instead of the fill.
    */
   white:
-    'bg-white text-gray-700 ring-1 ring-inset ring-gray-200 hover:bg-gray-50 hover:ring-gray-300 focus-visible:ring-2 focus-visible:ring-gray-400',
+    'bg-(--palette-surface) text-(--palette-ink) ring-1 ring-inset ring-(--palette-line) hover:bg-(--palette-surface-2) hover:ring-(--palette-line-strong) focus-visible:ring-2 focus-visible:ring-(--palette-line-strong)',
   /**
    * Destructive toolbar actions: soft at rest so Cancel doesn't shout beside the primary action,
    * filling solid on hover to confirm its weight at the moment of commitment. Distinct from
    * `red`, which stays soft — a table row's Route Back shouldn't flare red on mouse-over.
    */
   danger:
-    'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200 hover:bg-red-600 hover:text-white hover:ring-red-600 focus-visible:ring-2 focus-visible:ring-red-400',
+    'bg-(--palette-req-wash) text-(--palette-req) ring-1 ring-inset ring-(--palette-req-line) hover:bg-red-600 hover:text-white hover:ring-red-600 focus-visible:ring-2 focus-visible:ring-red-400',
 } as const;
 
 export type SoftTone = keyof typeof SOFT_TONES;

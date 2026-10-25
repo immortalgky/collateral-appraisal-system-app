@@ -30,15 +30,17 @@ interface SummarySectionTableProps {
 function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySectionTableProps) {
   const { t } = useTranslation('pricingAnalysis');
   const rowHover = 'hover:bg-secondary/10';
-  const rowStk = clsx(STK_CLASS, 'bg-white', rowHover);
-  const rowStk2 = clsx(STK2_CLASS, 'bg-white', rowHover);
-  const rowYear = clsx(YEAR_CELL_CLASS, 'bg-white text-gray-700', rowHover);
+  const rowStk = clsx(STK_CLASS, 'bg-(--palette-surface)', rowHover);
+  const rowStk2 = clsx(STK2_CLASS, 'bg-(--palette-surface)', rowHover);
+  const rowYear = clsx(YEAR_CELL_CLASS, 'bg-(--palette-surface) text-(--palette-ink)', rowHover);
 
   return (
     <>
       {/* last section */}
       <tr>
-        <td className={rowStk} title={t('dcf.summaryDCF.contractRentalFee')}>{t('dcf.summaryDCF.contractRentalFee')}</td>
+        <td className={rowStk} title={t('dcf.summaryDCF.contractRentalFee')}>
+          {t('dcf.summaryDCF.contractRentalFee')}
+        </td>
         <td className={rowStk2} />
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
           <td key={idx} className={rowYear}>
@@ -51,8 +53,10 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
         ))}
       </tr>
       <tr>
-        <td className={rowStk} title={t('dcf.summaryDCF.noiGrossRevenue')}>{t('dcf.summaryDCF.noiGrossRevenue')}</td>
-        <td className={clsx(STK2_CLASS_FLEX, 'bg-white', rowHover)}>
+        <td className={rowStk} title={t('dcf.summaryDCF.noiGrossRevenue')}>
+          {t('dcf.summaryDCF.noiGrossRevenue')}
+        </td>
+        <td className={clsx(STK2_CLASS_FLEX, 'bg-(--palette-surface)', rowHover)}>
           <div className="flex flex-row gap-1 items-center">
             <div className="w-14">
               <RHFInputCell
@@ -67,7 +71,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
                 }}
               />
             </div>
-            <span className="text-[11px] text-gray-500">%</span>
+            <span className="text-[11px] text-(--palette-gray-500)">%</span>
           </div>
         </td>
         <td className={rowYear}>
@@ -82,10 +86,21 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
         ))}
       </tr>
       <tr>
-        <td className={clsx(STK_CLASS, 'bg-gray-100 font-bold border-t border-gray-400')} title={t('dcf.summaryDCF.finalValue')}>
+        <td
+          className={clsx(
+            STK_CLASS,
+            'bg-(--palette-surface-3) font-bold border-t border-(--palette-line-strong)',
+          )}
+          title={t('dcf.summaryDCF.finalValue')}
+        >
           {t('dcf.summaryDCF.finalValue')}
         </td>
-        <td className={clsx(STK2_CLASS, 'bg-gray-100 font-bold border-t border-gray-400')}>
+        <td
+          className={clsx(
+            STK2_CLASS,
+            'bg-(--palette-surface-3) font-bold border-t border-(--palette-line-strong)',
+          )}
+        >
           <RHFInputCell
             fieldName={`${name}.presentValue`}
             inputType="display"
@@ -94,7 +109,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
         </td>
         <td
           colSpan={totalNumberOfYears}
-          className="px-[8px] py-0 h-[26px] text-[12px] leading-[25px] bg-gray-100 border-t border-gray-400"
+          className="px-[8px] py-0 h-[26px] text-[12px] leading-[25px] bg-(--palette-surface-3) border-t border-(--palette-line-strong)"
         />
       </tr>
     </>

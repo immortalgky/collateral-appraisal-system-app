@@ -27,15 +27,16 @@ interface WebhookDeliveryDetailDrawerProps {
 }
 
 const bandClass: Record<WebhookDeliveryStatus, string> = {
-  Failed: 'border-red-200 bg-red-50 text-red-900',
-  Pending: 'border-amber-200 bg-amber-50 text-amber-900',
-  Delivered: 'border-green-200 bg-green-50 text-green-900',
+  Failed: 'border-red-200 dark:border-red-500/30 bg-(--palette-req-wash) text-red-900',
+  Pending: 'border-amber-200 bg-(--palette-warn-wash) text-amber-900',
+  Delivered:
+    'border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 text-green-900',
 };
 
 const Row = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="grid grid-cols-[8rem_minmax(0,1fr)] gap-x-3 text-sm">
-    <dt className="pt-px text-xs text-gray-500">{label}</dt>
-    <dd className="min-w-0 break-words text-gray-800">{children}</dd>
+    <dt className="pt-px text-xs text-(--palette-gray-500)">{label}</dt>
+    <dd className="min-w-0 break-words text-(--palette-ink)">{children}</dd>
   </div>
 );
 
@@ -58,7 +59,7 @@ const CopyButton = ({ value, label }: { value: string; label: string }) => {
       onClick={() => copy(value)}
       aria-label={label}
       title={label}
-      className="ml-1 inline-flex size-6 items-center justify-center rounded-md align-middle text-gray-400 hover:bg-gray-100 hover:text-gray-700"
+      className="ml-1 inline-flex size-6 items-center justify-center rounded-md align-middle text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
     >
       <Icon name="copy" style="regular" className="text-sm" />
     </button>
@@ -146,7 +147,10 @@ const WebhookDeliveryDetailDrawer = ({
             )}
           >
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <Badge tone={deliveryStatusTone[status]} className="whitespace-nowrap bg-white!">
+              <Badge
+                tone={deliveryStatusTone[status]}
+                className="whitespace-nowrap bg-(--palette-surface)!"
+              >
                 {t(`status.${status}`)}
               </Badge>
               <span>{bandText}</span>
@@ -169,7 +173,9 @@ const WebhookDeliveryDetailDrawer = ({
             <PanelSection title={t('drawer.sections.destination')}>
               <dl className="flex flex-col gap-1.5">
                 <Row label={t('drawer.callbackUrl')}>
-                  <span className="font-mono text-xs text-gray-500">{data.httpMethod}</span>{' '}
+                  <span className="font-mono text-xs text-(--palette-gray-500)">
+                    {data.httpMethod}
+                  </span>{' '}
                   <span className="font-mono text-xs">{data.callbackUrl}</span>
                 </Row>
                 <Row label={t('drawer.auth')}>
@@ -182,7 +188,7 @@ const WebhookDeliveryDetailDrawer = ({
                       {' · '}
                       <Link
                         to="/admin/webhook-subscriptions"
-                        className="text-primary hover:underline"
+                        className="text-(--palette-primary-text) hover:underline"
                       >
                         {t('drawer.openSubscription')}
                       </Link>
@@ -225,16 +231,16 @@ const WebhookDeliveryDetailDrawer = ({
                     <button
                       type="button"
                       onClick={() => copy(payload)}
-                      className="inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-gray-900"
+                      className="inline-flex items-center gap-1.5 text-xs text-(--palette-gray-600) hover:text-(--palette-ink)"
                     >
                       <Icon name="copy" style="regular" className="text-xs" />
                       {t('drawer.copy')}
                     </button>
                   </div>
-                  <pre className="max-h-96 overflow-auto whitespace-pre rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-3 font-mono text-xs leading-relaxed text-gray-700">
+                  <pre className="max-h-96 overflow-auto whitespace-pre rounded-lg border border-(--palette-line) bg-(--palette-surface-2) px-3.5 py-3 font-mono text-xs leading-relaxed text-(--palette-ink)">
                     {tokenizeJson(payload).map((tok, i) =>
                       tok.key ? (
-                        <span key={i} className="text-teal-700">
+                        <span key={i} className="text-teal-700 dark:text-teal-300">
                           {tok.text}
                         </span>
                       ) : (
@@ -244,7 +250,7 @@ const WebhookDeliveryDetailDrawer = ({
                   </pre>
                 </>
               ) : (
-                <p className="text-sm text-gray-400">{t('drawer.noPayload')}</p>
+                <p className="text-sm text-(--palette-gray-400)">{t('drawer.noPayload')}</p>
               )}
             </PanelSection>
           </>

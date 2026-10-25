@@ -132,12 +132,12 @@ const DocumentPreviewPane = ({
   // width) made the column wider than the drawer instead of the image shrinking to fit it.
   const shell = drawer
     ? 'grid grid-cols-[minmax(0,1fr)] gap-3'
-    : 'sticky top-3 self-start overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm';
+    : 'sticky top-3 self-start overflow-hidden rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm';
 
   if (!doc) {
     return (
       <aside aria-label={t('docCard.pane.label')} className={shell}>
-        <div className="grid aspect-[4/3] place-items-center bg-gray-50 px-4 text-center text-sm text-gray-500">
+        <div className="grid aspect-[4/3] place-items-center bg-(--palette-surface-2) px-4 text-center text-sm text-(--palette-gray-500)">
           {t('docCard.pane.empty')}
         </div>
       </aside>
@@ -156,7 +156,7 @@ const DocumentPreviewPane = ({
     <aside aria-label={t('docCard.pane.label')} className={shell}>
       <div
         className={clsx(
-          'relative grid aspect-[4/3] min-w-0 place-items-center border-gray-200 bg-gray-50 p-3 text-center text-sm text-gray-500',
+          'relative grid aspect-[4/3] min-w-0 place-items-center border-(--palette-line) bg-(--palette-surface-2) p-3 text-center text-sm text-(--palette-gray-500)',
           drawer ? 'rounded-lg border' : 'border-b',
         )}
       >
@@ -177,7 +177,7 @@ const DocumentPreviewPane = ({
             type="button"
             onClick={onClose}
             aria-label={t('docCard.pane.close')}
-            className="absolute top-1.5 right-1.5 cursor-pointer rounded-full p-1 text-gray-500 hover:bg-gray-200"
+            className="absolute top-1.5 right-1.5 cursor-pointer rounded-full p-1 text-(--palette-gray-500) hover:bg-(--palette-line)"
           >
             <Icon name="xmark" style="solid" className="size-3" />
           </button>
@@ -189,38 +189,38 @@ const DocumentPreviewPane = ({
           <h4 className="text-base font-semibold [overflow-wrap:anywhere]">{doc.fileName}</h4>
         )}
         <dl className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-1 text-sm">
-          <dt className="text-gray-500">{t('docCard.pane.fileType')}</dt>
-          <dd className="text-gray-600 [overflow-wrap:anywhere]">
+          <dt className="text-(--palette-gray-500)">{t('docCard.pane.fileType')}</dt>
+          <dd className="text-(--palette-gray-600) [overflow-wrap:anywhere]">
             {documentType} · {typeName}
           </dd>
-          <dt className="text-gray-500">{t('docCard.pane.location')}</dt>
-          <dd className="text-gray-600 [overflow-wrap:anywhere]">{location}</dd>
+          <dt className="text-(--palette-gray-500)">{t('docCard.pane.location')}</dt>
+          <dd className="text-(--palette-gray-600) [overflow-wrap:anywhere]">{location}</dd>
           {size != null && (
             <>
-              <dt className="text-gray-500">{t('docCard.pane.size')}</dt>
-              <dd className="text-gray-600 tabular-nums">{formatFileSize(size)}</dd>
+              <dt className="text-(--palette-gray-500)">{t('docCard.pane.size')}</dt>
+              <dd className="text-(--palette-gray-600) tabular-nums">{formatFileSize(size)}</dd>
             </>
           )}
-          <dt className="text-gray-500">{t('docCard.pane.uploaded')}</dt>
-          <dd className="text-gray-600 [overflow-wrap:anywhere]">
+          <dt className="text-(--palette-gray-500)">{t('docCard.pane.uploaded')}</dt>
+          <dd className="text-(--palette-gray-600) [overflow-wrap:anywhere]">
             {formatDateTime(doc.uploadedAt)}
             {(doc.uploadedByName || doc.uploadedBy) && ` · ${doc.uploadedByName || doc.uploadedBy}`}
           </dd>
           {showSource && (
             <>
-              <dt className="text-gray-500">{t('docCard.pane.source')}</dt>
-              <dd className="text-gray-600">{source}</dd>
+              <dt className="text-(--palette-gray-500)">{t('docCard.pane.source')}</dt>
+              <dd className="text-(--palette-gray-600)">{source}</dd>
             </>
           )}
         </dl>
         {showNotes && (
-          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1 text-sm text-gray-600">
+          <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-1 text-sm text-(--palette-gray-600)">
             {t('docCard.pane.notes')}
             {editable && onSaveNotes ? (
               // Remounted per file, so a half-typed note never lands on another file.
               <NotesEditor key={docKey ?? doc.fileName} doc={doc} onSave={onSaveNotes} />
             ) : (
-              <span className="whitespace-pre-wrap text-gray-500">
+              <span className="whitespace-pre-wrap text-(--palette-gray-500)">
                 {doc.notes?.trim() || t('docCard.pane.noNotes')}
               </span>
             )}
@@ -253,7 +253,9 @@ const DocumentPreviewPane = ({
                   size="sm"
                   variant="outline"
                   onClick={() => onDelete(doc)}
-                  className={dontUse ? 'text-violet-700' : 'text-red-600'}
+                  className={
+                    dontUse ? 'text-violet-700 dark:text-violet-300' : 'text-(--palette-danger)'
+                  }
                 >
                   {dontUse ? t('docCard.pane.dontUse') : t('docCard.pane.delete')}
                 </Button>

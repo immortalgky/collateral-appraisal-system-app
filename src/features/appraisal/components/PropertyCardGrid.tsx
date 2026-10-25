@@ -112,12 +112,12 @@ const GridCard = ({ property, groupId, onContextMenu }: GridCardProps) => {
       {...(!readOnly ? attributes : {})}
       {...(!readOnly ? listeners : {})}
       className={clsx(
-        'relative border border-gray-200 rounded-lg overflow-hidden bg-white transition-all',
-        'hover:border-gray-300 hover:shadow-md',
+        'relative border border-(--palette-line) rounded-lg overflow-hidden bg-(--palette-surface) transition-all',
+        'hover:border-(--palette-line-strong) hover:shadow-md',
         readOnly ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
       )}
     >
-      <div className="relative w-full h-[4.4rem] bg-gray-100">
+      <div className="relative w-full h-[4.4rem] bg-(--palette-surface-3)">
         {property.image ? (
           <>
             <img
@@ -131,7 +131,7 @@ const GridCard = ({ property, groupId, onContextMenu }: GridCardProps) => {
           </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
-            <Icon name="image" className="text-gray-400 text-xl" />
+            <Icon name="image" className="text-(--palette-gray-400) text-xl" />
           </div>
         )}
         {property.photos && property.photos.length > 0 && (
@@ -143,14 +143,17 @@ const GridCard = ({ property, groupId, onContextMenu }: GridCardProps) => {
       </div>
 
       <div className="px-2.5 py-2">
-        <h4 className="text-xs font-semibold text-gray-900 truncate" title={property.address}>
+        <h4
+          className="text-xs font-semibold text-(--palette-ink) truncate"
+          title={property.address}
+        >
           {property.address}
         </h4>
-        <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500 mt-0.5">
+        <span className="inline-flex items-center gap-1.5 text-[11px] text-(--palette-gray-500) mt-0.5">
           <i className={clsx('w-1.5 h-1.5 rounded-full', getTypeDotColor(property.type))} />
           <ParameterDisplay group="PropertyType" code={property.type} fallback={property.type} />
         </span>
-        <p className="text-[11px] text-gray-500 truncate mt-0.5">
+        <p className="text-[11px] text-(--palette-gray-500) truncate mt-0.5">
           {metaFor(property, t('properties.machineryChips.unregistered'))}
         </p>
         {exceptions.length > 0 && <div className="flex flex-wrap gap-1 mt-1.5">{exceptions}</div>}
@@ -195,7 +198,7 @@ export const PropertyCardGrid = ({ group, onContextMenu }: PropertyCardGridProps
         <PropertyTypeDropdown
           groupId={group.id}
           className="block"
-          buttonClassName="w-full h-full min-h-[7rem] justify-center rounded-lg border border-dashed border-gray-300 px-3 py-2 text-xs text-gray-400 hover:border-gray-400 hover:bg-gray-50 hover:text-gray-700"
+          buttonClassName="w-full h-full min-h-[7rem] justify-center rounded-lg border border-dashed border-(--palette-line-strong) px-3 py-2 text-xs text-(--palette-gray-400) hover:border-(--palette-line-strong) hover:bg-(--palette-surface-2) hover:text-(--palette-ink)"
         />
       )}
     </div>

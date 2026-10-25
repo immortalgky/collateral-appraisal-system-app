@@ -24,7 +24,6 @@ import CommentsDrawer from '../components/page/CommentsDrawer';
 import RequestHeaderStrip from '../components/page/RequestHeaderStrip';
 import RequestPageSkeleton from '../components/page/RequestPageSkeleton';
 import RequestSectionNav from '../components/page/RequestSectionNav';
-import MissingFieldsChip from '../components/page/MissingFieldsChip';
 import MoreActionsMenu from '../components/page/MoreActionsMenu';
 import UploadBusyGate from '../components/page/UploadBusyGate';
 import SubmitConfirmDialog from '../components/page/SubmitConfirmDialog';
@@ -1217,10 +1216,10 @@ function RequestPage() {
           name={is404 ? 'file-circle-question' : 'triangle-exclamation'}
           className="size-16 text-red-500"
         />
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-(--palette-ink)">
           {is404 ? t('page.requestNotFound') : t('page.failedToLoad')}
         </h2>
-        <p className="text-gray-500">
+        <p className="text-(--palette-gray-500)">
           {is404 ? t('page.requestNotFoundDesc') : (error as Error)?.message || 'Unknown error'}
         </p>
         <Button onClick={() => navigate('/requests')}>
@@ -1234,7 +1233,7 @@ function RequestPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Main Content Area */}
-      <FormProvider methods={methods} schema={createRequestForm} showErrorAlert={false}>
+      <FormProvider methods={methods} schema={createRequestForm} missingSummary={false}>
         <MissingFieldsProvider schema={createRequestForm} handleRef={missingFieldsRef}>
           <RequiredDocumentsInitializer />
           <form
@@ -1362,7 +1361,7 @@ function RequestPage() {
                     </div>
                   </ActionBar.Left>
                   <ActionBar.Right>
-                    <MissingFieldsChip />
+                    {/* The missing-fields chip comes first, from ActionBar.Right itself */}
                     <UploadBusyGate>
                       {busy => (
                         <>

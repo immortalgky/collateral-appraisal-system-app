@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import { useCreateClient, useGetClient, useUpdateClient } from '../api/oauthClients';
@@ -16,7 +17,7 @@ interface Props {
 }
 
 const inputClass =
-  'w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
+  'w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary';
 
 // Mirrors the server bounds in ClientPermissionMapper. Access and identity tokens are bearer
 // credentials that cannot be revoked before they expire, so they are capped far shorter than the
@@ -199,7 +200,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         <div>
           <label
             htmlFor="client-display-name"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
           >
             {t('clients.form.displayName')}
           </label>
@@ -213,7 +214,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.clientId')}
           </label>
           <input
@@ -221,25 +222,27 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
             value={clientId}
             disabled={isEdit}
             onChange={e => setClientId(e.target.value)}
-            className={`${inputClass} ${isEdit ? 'bg-gray-50 text-gray-500' : ''}`}
+            className={`${inputClass} ${isEdit ? 'bg-(--palette-surface-2) text-(--palette-gray-500)' : ''}`}
           />
           {!isEdit && (
-            <p className="mt-1 text-xs text-gray-400">{t('clients.form.clientIdHint')}</p>
+            <p className="mt-1 text-xs text-(--palette-gray-400)">
+              {t('clients.form.clientIdHint')}
+            </p>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.clientType')}
           </label>
           {isEdit ? (
-            <div className={`${inputClass} bg-gray-50 text-gray-500`}>
+            <div className={`${inputClass} bg-(--palette-surface-2) text-(--palette-gray-500)`}>
               {t(`clients.type.${clientType}` as const)}
             </div>
           ) : (
             <div className="flex gap-4">
               {(['confidential', 'public'] as ClientType[]).map(type => (
-                <label key={type} className="flex items-center gap-2 text-sm text-gray-700">
+                <label key={type} className="flex items-center gap-2 text-sm text-(--palette-ink)">
                   <input
                     type="radio"
                     name="clientType"
@@ -252,7 +255,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
             </div>
           )}
           {!isEdit && (
-            <p className="mt-1 text-xs text-gray-400">
+            <p className="mt-1 text-xs text-(--palette-gray-400)">
               {clientType === 'public'
                 ? t('clients.form.clientTypePublicHint')
                 : t('clients.form.clientTypeConfidentialHint')}
@@ -261,12 +264,12 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.grantTypes')}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {GRANT_TYPES.map(grant => (
-              <label key={grant} className="flex items-center gap-2 text-sm text-gray-700">
+              <label key={grant} className="flex items-center gap-2 text-sm text-(--palette-ink)">
                 <input
                   type="checkbox"
                   checked={grantTypes.includes(grant)}
@@ -279,7 +282,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.scopes')}
           </label>
           <input
@@ -289,11 +292,11 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
             placeholder="profile email appraisal.read"
             className={`${inputClass} font-mono`}
           />
-          <p className="mt-1 text-xs text-gray-400">{t('clients.form.scopesHint')}</p>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">{t('clients.form.scopesHint')}</p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.redirectUris')}
           </label>
           <textarea
@@ -303,11 +306,13 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
             placeholder="https://app.example.com/callback"
             className={`${inputClass} font-mono`}
           />
-          <p className="mt-1 text-xs text-gray-400">{t('clients.form.redirectUrisHint')}</p>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">
+            {t('clients.form.redirectUrisHint')}
+          </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.postLogoutRedirectUris')}
           </label>
           <textarea
@@ -318,11 +323,13 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
           />
         </div>
 
-        <div className="pt-2 border-t border-gray-100">
-          <p className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="pt-2 border-t border-(--palette-line-soft)">
+          <p className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('clients.form.tokenLifetimes')}
           </p>
-          <p className="mb-2 text-xs text-gray-400">{t('clients.form.tokenLifetimesHint')}</p>
+          <p className="mb-2 text-xs text-(--palette-gray-400)">
+            {t('clients.form.tokenLifetimesHint')}
+          </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {(
@@ -353,7 +360,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
               <div key={kind}>
                 <label
                   htmlFor={`token-lifetime-${kind}`}
-                  className="block text-xs text-gray-500 mb-1"
+                  className="block text-xs text-(--palette-gray-500) mb-1"
                 >
                   {t(`clients.form.tokenLifetime.${kind}` as const)}
                 </label>
@@ -373,7 +380,10 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
                   aria-describedby={isValid ? undefined : `token-lifetime-${kind}-error`}
                 />
                 {!isValid && (
-                  <p id={`token-lifetime-${kind}-error`} className="mt-1 text-xs text-red-600">
+                  <p
+                    id={`token-lifetime-${kind}-error`}
+                    className="mt-1 text-xs text-(--palette-danger)"
+                  >
                     {t('clients.form.tokenLifetimeInvalid', { max })}
                   </p>
                 )}
@@ -383,15 +393,15 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         </div>
 
         {showUploadSessionLifetime && (
-          <div className="pt-2 border-t border-gray-100">
+          <div className="pt-2 border-t border-(--palette-line-soft)">
             <label
               id="upload-session-lifetime-label"
               htmlFor="upload-session-lifetime"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-(--palette-ink) mb-1"
             >
               {t('clients.form.uploadSessionLifetime')}
             </label>
-            <p id="upload-session-lifetime-hint" className="mb-2 text-xs text-gray-400">
+            <p id="upload-session-lifetime-hint" className="mb-2 text-xs text-(--palette-gray-400)">
               {t('clients.form.uploadSessionLifetimeHint')}
             </p>
             <div className="flex gap-2">
@@ -417,21 +427,24 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
                 <span id="upload-session-lifetime-unit-label" className="sr-only">
                   {t('clients.form.uploadSessionLifetimeUnit.label')}
                 </span>
-                <select
+                <NativeSelect
                   // Name is "<field label> <unit label>", e.g. "Upload session lifetime Unit", so
                   // the select is distinguishable from the number input.
                   aria-labelledby="upload-session-lifetime-label upload-session-lifetime-unit-label"
                   value={uploadSessionUnit}
                   onChange={e => setUploadSessionUnit(e.target.value as UploadSessionUnit)}
-                  className={`${inputClass} bg-white`}
+                  className="w-full"
                 >
                   <option value="hours">{t('clients.form.uploadSessionLifetimeUnit.hours')}</option>
                   <option value="days">{t('clients.form.uploadSessionLifetimeUnit.days')}</option>
-                </select>
+                </NativeSelect>
               </div>
             </div>
             {!isUploadLifetimeValid && (
-              <p id="upload-session-lifetime-error" className="mt-1 text-xs text-red-600">
+              <p
+                id="upload-session-lifetime-error"
+                className="mt-1 text-xs text-(--palette-danger)"
+              >
                 {t('clients.form.uploadSessionLifetimeInvalid', {
                   max: uploadMaxInUnit,
                   unit: t(
@@ -444,7 +457,7 @@ const OAuthClientFormModal = ({ isOpen, onClose, editId, onCreated }: Props) => 
         )}
       </div>
 
-      <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+      <div className="flex justify-end gap-2 px-6 py-4 border-t border-(--palette-line)">
         <Button variant="secondary" onClick={onClose} disabled={isPending}>
           {t('clients.form.cancel')}
         </Button>

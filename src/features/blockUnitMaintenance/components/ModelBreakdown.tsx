@@ -9,7 +9,7 @@ interface ModelBreakdownProps {
   emptyLabel: string;
   /** Pre-translated suffix shown after each count (e.g. "units"). */
   unitSuffix: string;
-  /** Optional heading text color class (e.g. "text-violet-700"). Defaults to gray-900. */
+  /** Optional heading text color class (e.g. "text-violet-700 dark:text-violet-300"). Defaults to gray-900. */
   accentClass?: string;
   /** Optional leading dot background class (e.g. "bg-violet-500"). Hidden when omitted. */
   dotClass?: string;
@@ -31,24 +31,26 @@ export const ModelBreakdown = ({
   return (
     <div>
       <h4
-        className={`text-sm font-semibold mb-2 flex items-center gap-1.5 ${accentClass ?? 'text-gray-900'}`}
+        className={`text-sm font-semibold mb-2 flex items-center gap-1.5 ${accentClass ?? 'text-(--palette-ink)'}`}
       >
         {dotClass && <span className={`size-2 rounded-full ${dotClass}`} />}
         {heading}
       </h4>
-      <div className="border-t border-gray-200">
+      <div className="border-t border-(--palette-line)">
         {stats.length === 0 ? (
-          <div className="py-3 text-xs text-gray-400">{emptyLabel}</div>
+          <div className="py-3 text-xs text-(--palette-gray-400)">{emptyLabel}</div>
         ) : (
           stats.map(s => (
             <div
               key={s.modelName}
-              className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+              className="flex items-center justify-between py-2 border-b border-(--palette-line-soft) last:border-0"
             >
-              <span className="text-sm text-gray-700">{s.modelName}</span>
+              <span className="text-sm text-(--palette-ink)">{s.modelName}</span>
               <div className="flex items-center gap-2 text-sm tabular-nums">
-                <span className="text-gray-700 font-medium">{s.count.toLocaleString('th-TH')}</span>
-                <span className="text-xs text-gray-400 w-8 text-right">
+                <span className="text-(--palette-ink) font-medium">
+                  {s.count.toLocaleString('th-TH')}
+                </span>
+                <span className="text-xs text-(--palette-gray-400) w-8 text-right">
                   {unitSuffix}
                 </span>
               </div>

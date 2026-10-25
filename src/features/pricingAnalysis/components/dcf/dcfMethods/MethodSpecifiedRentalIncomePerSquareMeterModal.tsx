@@ -3,6 +3,7 @@ import { RHFInputCell } from '../../table/RHFInputCell';
 import { useDerivedFields, type DerivedFieldRule } from '../../../adapters/useDerivedFieldArray';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useFieldArray, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { ScrollableTableContainer } from '../../ScrollableTableContainer';
 import { sumArray, toDecimal, toNumber, type NumberishRow } from '../../../domain/calculation';
@@ -138,34 +139,38 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
           <span>{t('dcf.common.sqMeter')}</span>
         </div>
       </div>
-      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
-      <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
+      {rowsError && (
+        <p className="text-xs text-(--palette-danger)">
+          <ValidationText message={rowsError} />
+        </p>
+      )}
+      <div className="border border-(--palette-line-strong) rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer maxHeight={'274px'} className="flex-1 min-h-0">
           <table className={'table table-sm'}>
             <thead>
               <tr>
-                <th className="px-1.5 py-1.5 bg-gray-100">
+                <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                   {t('dcf.methods.rentalIncomePerSquareMeter.areaDescription')}
                 </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
+                <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                   <div className="flex flex-col gap-1.5">
                     <span>{t('dcf.methods.rentalIncomePerSquareMeter.rentalPrice')}</span>
                     <span>{t('dcf.methods.rentalIncomePerSquareMeter.unitPerSqmMonth')}</span>
                   </div>
                 </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
+                <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                   <div className="flex flex-col gap-1.5">
                     <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalSaleableArea')}</span>
                     <span>{t('dcf.methods.rentalIncomePerSquareMeter.sqM')}</span>
                   </div>
                 </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
+                <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                   <div className="flex flex-col gap-1.5">
                     <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalRentalIncome')}</span>
                     <span>{t('dcf.common.bahtPerMonth')}</span>
                   </div>
                 </th>
-                <th className="px-1.5 py-1.5 bg-gray-100">
+                <th className="px-1.5 py-1.5 bg-(--palette-surface-3)">
                   <div className="flex flex-col gap-1.5">
                     <span>{t('dcf.methods.rentalIncomePerSquareMeter.totalRentalIncome')}</span>
                     <span>{t('dcf.common.bahtPerYear')}</span>
@@ -177,7 +182,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
               {fields.map((r, index) => {
                 return (
                   <tr key={r.id}>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                    <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                       <div className="flex flex-row gap-1.5 items-center">
                         <RHFInputCell
                           fieldName={`${name}.areaDetail.${index}.description`}
@@ -189,7 +194,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                           <button
                             type="button"
                             onClick={() => handleOnRemove(index)}
-                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-(--palette-gray-300) hover:text-(--palette-danger) hover:bg-(--palette-req-wash) transition-colors opacity-100"
                             title={t('dcf.common.delete')}
                           >
                             <Icon style="solid" name="trash" className="size-1" />
@@ -197,7 +202,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         )}
                       </div>
                     </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                    <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                       <RHFInputCell
                         fieldName={`${name}.areaDetail.${index}.rentalPrice`}
                         inputType="number"
@@ -205,7 +210,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         number={{ decimalPlaces: 2, maxIntegerDigits: 15, allowNegative: false }}
                       />
                     </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                    <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                       <RHFInputCell
                         fieldName={`${name}.areaDetail.${index}.saleableArea`}
                         inputType="number"
@@ -213,7 +218,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         number={{ decimalPlaces: 2, maxIntegerDigits: 11, allowNegative: false }}
                       />
                     </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                    <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                       <div className="flex justify-end items-center text-right">
                         <RHFInputCell
                           fieldName={`${name}.areaDetail.${index}.totalRentalIncomePerMonth`}
@@ -224,7 +229,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                         />
                       </div>
                     </td>
-                    <td className="px-1.5 py-1.5 border-b border-gray-300">
+                    <td className="px-1.5 py-1.5 border-b border-(--palette-line-strong)">
                       <div className="flex justify-end items-center text-right">
                         <RHFInputCell
                           fieldName={`${name}.areaDetail.${index}.totalRentalIncomePerYear`}
@@ -244,7 +249,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     <button
                       type="button"
                       onClick={() => handleOnAdd()}
-                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-(--palette-primary-text) hover:bg-primary/10"
                     >
                       {t('dcf.common.addRoom')}
                     </button>
@@ -255,8 +260,8 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                 </tr>
               )}
               <tr>
-                <td className="sticky bottom-0 px-1.5 bg-white"></td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
+                <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)"></td>
+                <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumRentalPrice`}
@@ -267,7 +272,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     />
                   </div>
                 </td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
+                <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumSaleableArea`}
@@ -278,7 +283,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     />
                   </div>
                 </td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
+                <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumTotalRentalIncomePerMonth`}
@@ -289,7 +294,7 @@ export function MethodSpecifiedRentalIncomePerSquareMeterModal({
                     />
                   </div>
                 </td>
-                <td className="sticky bottom-0 px-1.5 bg-white">
+                <td className="sticky bottom-0 px-1.5 bg-(--palette-surface)">
                   <div className="text-right">
                     <RHFInputCell
                       fieldName={`${name}.sumTotalRentalIncomePerYear`}

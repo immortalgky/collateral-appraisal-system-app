@@ -49,7 +49,10 @@ function LockMark({ task, self }: { task: PoolTask; self: boolean }) {
       role="img"
       aria-label={label}
       title={label}
-      className={clsx('inline-flex shrink-0', self ? 'text-blue-600' : 'text-amber-600')}
+      className={clsx(
+        'inline-flex shrink-0',
+        self ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400',
+      )}
     >
       <Icon style="solid" name="lock" className="text-xs" />
     </span>
@@ -294,7 +297,7 @@ function PoolTaskListPage({
           className={
             bare
               ? 'flex min-h-0 min-w-0 flex-1 flex-col'
-              : 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm'
+              : 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-sm'
           }
         >
           {isError ? (
@@ -331,7 +334,7 @@ function PoolTaskListPage({
                           e.stopPropagation();
                           handleEditInPool(task as PoolTask);
                         }}
-                        className="truncate font-medium text-primary hover:underline"
+                        className="truncate font-medium text-(--palette-primary-text) hover:underline"
                       >
                         {task.appraisalNumber}
                       </button>

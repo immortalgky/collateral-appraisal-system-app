@@ -62,9 +62,11 @@ function DroppableArea({
       {children}
       {isEmpty && isEditMode && (
         <div
-          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${isOver ? 'border-blue-400 bg-blue-50' : 'border-gray-200'}`}
+          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors ${isOver ? 'border-blue-400 bg-blue-50 dark:bg-blue-500/10' : 'border-(--palette-line)'}`}
         >
-          <p className={`text-sm ${isOver ? 'text-blue-500' : 'text-gray-400'}`}>{label}</p>
+          <p className={`text-sm ${isOver ? 'text-blue-500' : 'text-(--palette-gray-400)'}`}>
+            {label}
+          </p>
         </div>
       )}
     </div>
@@ -198,15 +200,15 @@ function HomePage() {
       {/* Welcome header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
-          <div className="bg-amber-50 p-3 rounded-2xl">
+          <div className="bg-(--palette-warn-wash) p-3 rounded-2xl">
             <Icon name="hand-wave" style="solid" className="size-7 text-amber-500" />
           </div>
           <div>
-            <h1 className="text-2xl font-semibold text-gray-800">
+            <h1 className="text-2xl font-semibold text-(--palette-ink)">
               {t('page.welcome')}
               {user?.name ? `, ${user.username.toLowerCase() == 'p5229' ? '💙️' : user?.name}` : ''}
             </h1>
-            <p className="text-sm text-gray-500 mt-0.5">{formattedDate}</p>
+            <p className="text-sm text-(--palette-gray-500) mt-0.5">{formattedDate}</p>
           </div>
         </div>
 
@@ -216,7 +218,7 @@ function HomePage() {
             <button
               type="button"
               onClick={() => setShowAddModal(true)}
-              className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 text-blue-500 hover:bg-blue-100 transition-colors"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
             >
               <Icon name="plus" style="solid" className="size-5" />
             </button>
@@ -227,7 +229,7 @@ function HomePage() {
             className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
               isEditMode
                 ? 'bg-blue-500 text-white shadow-sm hover:bg-blue-600'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                : 'bg-(--palette-surface-3) text-(--palette-ink) hover:bg-(--palette-line)'
             }`}
           >
             {isEditMode ? t('page.editDone') : t('page.editStart')}
@@ -294,8 +296,8 @@ function HomePage() {
           <DragOverlay>
             {activeWidget ? (
               <div className="opacity-80 rotate-2 scale-105">
-                <div className="bg-white rounded-2xl shadow-2xl p-4 border-2 border-blue-400">
-                  <p className="text-sm font-medium text-gray-600 text-center">
+                <div className="bg-(--palette-surface) rounded-2xl shadow-2xl p-4 border-2 border-blue-400">
+                  <p className="text-sm font-medium text-(--palette-gray-600) text-center">
                     {activeWidget.type
                       .split('-')
                       .map(w => w.charAt(0).toUpperCase() + w.slice(1))
@@ -308,19 +310,23 @@ function HomePage() {
         </DndContext>
       ) : (
         /* Empty state */
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12 text-center">
-          <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <Icon name="grid-2" style="regular" className="size-7 text-gray-400" />
+        <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) p-12 text-center">
+          <div className="mx-auto w-16 h-16 bg-(--palette-surface-3) rounded-full flex items-center justify-center mb-4">
+            <Icon name="grid-2" style="regular" className="size-7 text-(--palette-gray-400)" />
           </div>
-          <p className="text-gray-500 font-medium">{t('empty.noWidgets')}</p>
-          <p className="text-gray-400 text-sm mt-1">{t('empty.noWidgetsHint')}</p>
+          <p className="text-(--palette-gray-500) font-medium">{t('empty.noWidgets')}</p>
+          <p className="text-(--palette-gray-400) text-sm mt-1">{t('empty.noWidgetsHint')}</p>
         </div>
       )}
 
       {/* Edit mode hint */}
       {isEditMode && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 z-40">
-          <Icon name="arrows-up-down-left-right" style="solid" className="size-4 text-gray-400" />
+          <Icon
+            name="arrows-up-down-left-right"
+            style="solid"
+            className="size-4 text-(--palette-gray-400)"
+          />
           <span className="text-sm">{t('page.dragHint')}</span>
         </div>
       )}

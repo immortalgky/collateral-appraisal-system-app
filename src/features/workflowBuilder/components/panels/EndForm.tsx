@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeEndFormSchema, type EndFormValues } from '../../schemas';
+import { endFormSchema, type EndFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { EndProperties } from '../../types';
 
@@ -26,7 +27,7 @@ export function EndForm({ nodeId }: EndFormProps) {
     reset,
     formState: { errors },
   } = useForm<EndFormValues>({
-    resolver: zodResolver(makeEndFormSchema(t)),
+    resolver: zodResolver(endFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -70,9 +71,11 @@ export function EndForm({ nodeId }: EndFormProps) {
           placeholder={t('forms.placeholders.workflowEnd')}
         />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 

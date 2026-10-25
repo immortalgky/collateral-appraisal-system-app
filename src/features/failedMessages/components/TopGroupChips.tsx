@@ -45,7 +45,7 @@ const TopGroupChips = ({
 
   return (
     <div className="flex flex-wrap gap-2 items-center">
-      <span className="text-[12px] text-gray-500 mr-0.5">{t('topGroups.label')}</span>
+      <span className="text-[12px] text-(--palette-gray-500) mr-0.5">{t('topGroups.label')}</span>
       {topGroups.map(group => {
         const pressed = isTopGroupActive(group, filters);
         const isSkipped = group.exceptionType === SKIPPED_EXCEPTION_TYPE;
@@ -59,7 +59,7 @@ const TopGroupChips = ({
             className={clsx(
               'inline-flex items-center gap-1.5 rounded-full border px-[11px] py-1 text-[12px] shadow-sm transition-colors',
               pressed
-                ? 'border-primary bg-primary/10 text-primary'
+                ? 'border-primary bg-primary/10 text-(--palette-primary-text)'
                 : 'border-base-300 bg-base-100 hover:border-primary/40',
             )}
           >
@@ -75,7 +75,7 @@ const TopGroupChips = ({
           onClick={() =>
             onToggle({ queue: activeQueue!, exceptionType: activeExceptionType!, count: 0 })
           }
-          className="text-[12px] text-gray-600 hover:text-gray-800 px-2 py-1"
+          className="text-[12px] text-(--palette-gray-600) hover:text-(--palette-ink) px-2 py-1"
         >
           {t('topGroups.clear')}
         </button>

@@ -86,14 +86,14 @@ const PermissionAssignmentModal = ({
           <Icon
             name="magnifying-glass"
             style="regular"
-            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
           />
           <input
             type="text"
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder={t('placeholders.searchPermissionsShort')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
 
@@ -106,13 +106,13 @@ const PermissionAssignmentModal = ({
               return (
                 <span
                   key={id}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary/10 text-(--palette-primary-text) text-xs font-medium"
                 >
                   {label}
                   <button
                     type="button"
                     onClick={() => toggle(id)}
-                    className="hover:text-primary/70 leading-none"
+                    className="hover:text-(--palette-primary-text)/70 leading-none"
                     aria-label={t('aria.removeItem', { name: label })}
                   >
                     <Icon name="xmark" style="solid" className="size-3" />
@@ -123,39 +123,41 @@ const PermissionAssignmentModal = ({
           </div>
         )}
 
-        <div className="text-xs text-gray-400">{selectionLabel}</div>
+        <div className="text-xs text-(--palette-gray-400)">{selectionLabel}</div>
 
         {/* Permission list grouped by module */}
-        <div className="max-h-96 overflow-y-auto border border-gray-100 rounded-lg divide-y divide-gray-50">
+        <div className="max-h-96 overflow-y-auto border border-(--palette-line-soft) rounded-lg divide-y divide-(--palette-line-soft)">
           {isLoading ? (
-            <div className="flex items-center justify-center py-8 text-gray-400 text-sm">
+            <div className="flex items-center justify-center py-8 text-(--palette-gray-400) text-sm">
               <Icon name="spinner" style="solid" className="size-4 animate-spin mr-2" />
               {t('loading.permissions')}
             </div>
           ) : byModule.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-sm">
+            <div className="text-center py-8 text-(--palette-gray-400) text-sm">
               {t('empty.noPermissionsFound')}
             </div>
           ) : (
             byModule.map(([module, perms]) => (
               <div key={module}>
-                <div className="px-3 py-1.5 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide sticky top-0">
+                <div className="px-3 py-1.5 bg-(--palette-surface-2) text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide sticky top-0">
                   {module}
                 </div>
                 {perms.map(p => (
                   <label
                     key={p.id}
-                    className="flex items-start gap-3 px-3 py-2.5 hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="flex items-start gap-3 px-3 py-2.5 hover:bg-(--palette-surface-2) cursor-pointer transition-colors"
                   >
                     <input
                       type="checkbox"
                       checked={selected.has(p.id)}
                       onChange={() => toggle(p.id)}
-                      className="mt-0.5 rounded border-gray-300 text-primary focus:ring-primary/30"
+                      className="mt-0.5 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/30"
                     />
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-gray-800">{p.displayName}</div>
-                      <code className="text-xs text-gray-400">{p.permissionCode}</code>
+                      <div className="text-sm font-medium text-(--palette-ink)">
+                        {p.displayName}
+                      </div>
+                      <code className="text-xs text-(--palette-gray-400)">{p.permissionCode}</code>
                     </div>
                   </label>
                 ))}

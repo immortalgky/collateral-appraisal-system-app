@@ -230,11 +230,11 @@ function ProgressSummaryWidget() {
   };
 
   const renderDelta = (delta: number) => {
-    if (delta === 0) return <span className="text-gray-400 text-xs">→0</span>;
+    if (delta === 0) return <span className="text-(--palette-gray-400) text-xs">→0</span>;
     const up = delta > 0;
     return (
       <span
-        className={`inline-flex items-center gap-0.5 text-xs ${up ? 'text-emerald-600' : 'text-red-500'}`}
+        className={`inline-flex items-center gap-0.5 text-xs ${up ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}
       >
         <Icon name={up ? 'arrow-up' : 'arrow-down'} style="solid" className="size-2.5" />
         {Math.abs(delta)}
@@ -247,12 +247,12 @@ function ProgressSummaryWidget() {
 
   return (
     <WidgetWrapper id={WIDGET_ID}>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line-soft)">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold text-gray-800">
+              <h3 className="text-base font-semibold text-(--palette-ink)">
                 {t('progressSummary.title')}
               </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
@@ -264,7 +264,7 @@ function ProgressSummaryWidget() {
               <button
                 type="button"
                 onClick={() => setFiltersOpen(o => !o)}
-                className="inline-flex items-center gap-1 px-2 h-8 rounded-lg text-sm text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+                className="inline-flex items-center gap-1 px-2 h-8 rounded-lg text-sm text-(--palette-gray-500) hover:bg-(--palette-surface-3) hover:text-(--palette-ink) transition-colors"
                 aria-label={t('progressSummary.aria.filtersBtn')}
               >
                 <Icon name="filter" style="solid" className="size-3.5" />
@@ -276,19 +276,19 @@ function ProgressSummaryWidget() {
                 )}
               </button>
               {filtersOpen && (
-                <div className="absolute right-0 z-20 mt-1 w-72 rounded-lg border border-gray-200 bg-white shadow-lg p-3">
+                <div className="absolute right-0 z-20 mt-1 w-72 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg p-3">
                   <div className="space-y-3">
-                    <label className="flex flex-col gap-1 text-xs text-gray-500">
+                    <label className="flex flex-col gap-1 text-xs text-(--palette-gray-500)">
                       {t('progressSummary.filters.assigneeUsername')}
                       <input
                         type="text"
                         value={assigneeInput}
                         onChange={e => setAssigneeInput(e.target.value)}
                         placeholder={t('progressSummary.filters.assigneePlaceholder')}
-                        className="text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="text-sm border border-(--palette-line) rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
                     </label>
-                    <div className="flex flex-col gap-1 text-xs text-gray-500">
+                    <div className="flex flex-col gap-1 text-xs text-(--palette-gray-500)">
                       {t('progressSummary.filters.bankingSegment')}
                       <SegmentSelect
                         value={bankingInput || undefined}
@@ -296,7 +296,7 @@ function ProgressSummaryWidget() {
                       />
                     </div>
                     <div className="flex items-center justify-between gap-2 pt-1">
-                      <label className="inline-flex items-center gap-2 text-xs text-gray-600">
+                      <label className="inline-flex items-center gap-2 text-xs text-(--palette-gray-600)">
                         <input
                           type="checkbox"
                           checked={settings.compare === true}
@@ -322,26 +322,26 @@ function ProgressSummaryWidget() {
                 type="button"
                 onClick={() => setMenuOpen(o => !o)}
                 aria-label={t('progressSummary.aria.menu')}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
               >
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg py-1 text-sm">
                   {updatedLabel && (
-                    <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                    <p className="px-3 py-1.5 text-xs text-(--palette-gray-400) border-b border-(--palette-line-soft)">
                       {t('updatedAgo', { n: updatedLabel })}
                     </p>
                   )}
                   <button
                     type="button"
                     onClick={handleRefresh}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                   >
                     <Icon
                       name="arrow-rotate-right"
                       style="solid"
-                      className="size-3 text-gray-400"
+                      className="size-3 text-(--palette-gray-400)"
                     />
                     {t('progressSummary.menu.refresh')}
                   </button>
@@ -349,17 +349,25 @@ function ProgressSummaryWidget() {
                     type="button"
                     onClick={handleClearFilters}
                     disabled={!hasActiveFilters}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 disabled:text-gray-300 disabled:hover:bg-transparent flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) disabled:text-(--palette-gray-300) disabled:hover:bg-transparent flex items-center gap-2"
                   >
-                    <Icon name="eraser" style="solid" className="size-3 text-gray-400" />
+                    <Icon
+                      name="eraser"
+                      style="solid"
+                      className="size-3 text-(--palette-gray-400)"
+                    />
                     {t('progressSummary.menu.clearFilters')}
                   </button>
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                   >
-                    <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
+                    <Icon
+                      name="rotate-left"
+                      style="solid"
+                      className="size-3 text-(--palette-gray-400)"
+                    />
                     {t('progressSummary.menu.reset')}
                   </button>
                 </div>
@@ -385,7 +393,7 @@ function ProgressSummaryWidget() {
               {/* Donut */}
               <div className="relative shrink-0 w-[200px] h-[200px]">
                 {rows.visibleTotal === 0 ? (
-                  <div className="absolute inset-0 rounded-full border-[24px] border-gray-100" />
+                  <div className="absolute inset-0 rounded-full border-[24px] border-(--palette-line-soft)" />
                 ) : (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -415,18 +423,20 @@ function ProgressSummaryWidget() {
                   </ResponsiveContainer>
                 )}
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-bold text-gray-800 tabular-nums">
+                  <span className="text-3xl font-bold text-(--palette-ink) tabular-nums">
                     {rows.total.toLocaleString()}
                   </span>
-                  <span className="text-xs text-gray-400">{t('progressSummary.total')}</span>
+                  <span className="text-xs text-(--palette-gray-400)">
+                    {t('progressSummary.total')}
+                  </span>
                   {settings.compare && rows.priorTotal > 0 && (
                     <span
                       className={`text-[11px] mt-0.5 tabular-nums ${
                         totalDelta > 0
-                          ? 'text-emerald-600'
+                          ? 'text-emerald-600 dark:text-emerald-400'
                           : totalDelta < 0
                             ? 'text-red-500'
-                            : 'text-gray-400'
+                            : 'text-(--palette-gray-400)'
                       }`}
                     >
                       {totalDelta > 0 ? '↑' : totalDelta < 0 ? '↓' : '→'}
@@ -445,7 +455,7 @@ function ProgressSummaryWidget() {
                   return (
                     <div
                       key={r.status}
-                      className={`group flex items-center justify-between py-1 rounded cursor-pointer hover:bg-gray-50 ${
+                      className={`group flex items-center justify-between py-1 rounded cursor-pointer hover:bg-(--palette-surface-2) ${
                         r.hidden ? 'opacity-50' : ''
                       }`}
                       role="button"
@@ -494,15 +504,17 @@ function ProgressSummaryWidget() {
                           />
                         </button>
                         <span
-                          className={`text-sm truncate ${r.hidden ? 'text-gray-400 line-through' : 'text-gray-600'}`}
+                          className={`text-sm truncate ${r.hidden ? 'text-(--palette-gray-400) line-through' : 'text-(--palette-gray-600)'}`}
                         >
                           {r.label}
                         </span>
                       </div>
                       <div className="flex items-center gap-3 shrink-0">
                         {settings.compare && renderDelta(r.delta)}
-                        <span className="text-xs text-gray-400 tabular-nums">{r.count}</span>
-                        <span className="text-sm font-medium text-gray-800 tabular-nums w-12 text-right">
+                        <span className="text-xs text-(--palette-gray-400) tabular-nums">
+                          {r.count}
+                        </span>
+                        <span className="text-sm font-medium text-(--palette-ink) tabular-nums w-12 text-right">
                           {pct.toFixed(1)}%
                         </span>
                       </div>
@@ -514,13 +526,13 @@ function ProgressSummaryWidget() {
           )}
 
           {!isLoading && !isError && rows.total === 0 && (
-            <div className="mt-4 text-center text-sm text-gray-400">
+            <div className="mt-4 text-center text-sm text-(--palette-gray-400)">
               {t('progressSummary.noData')}
               {hasActiveFilters && (
                 <button
                   type="button"
                   onClick={handleClearFilters}
-                  className="ml-1 text-blue-600 hover:text-blue-700"
+                  className="ml-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                 >
                   {t('progressSummary.clearFilters')}
                 </button>

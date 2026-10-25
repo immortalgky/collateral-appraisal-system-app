@@ -261,7 +261,7 @@ function TaskLayout() {
 
   if (isLoading) {
     body = (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
         <MobileAppraisalSidebar logo={Logo} loading hideGeneralNav />
         <AppraisalSidebar logo={Logo} loading hideGeneralNav />
         <div
@@ -321,7 +321,7 @@ function TaskLayout() {
     );
   } else {
     body = (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
         <MobileAppraisalSidebar logo={Logo} hideGeneralNav />
         <AppraisalSidebar logo={Logo} hideGeneralNav />
 
@@ -339,11 +339,11 @@ function TaskLayout() {
 
                 {/* Pool task lock banners */}
                 {isLockedByOther && (
-                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-(--palette-warn-wash) border border-(--palette-warn)/30 text-sm text-(--palette-warn)">
                     <Icon
                       style="solid"
                       name="lock"
-                      className="size-4 text-amber-500 flex-shrink-0"
+                      className="size-4 text-(--palette-warn) flex-shrink-0"
                     />
                     <span className="flex-1">
                       This task is currently being edited by <strong>{lockOwner}</strong>. You are
@@ -353,7 +353,7 @@ function TaskLayout() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                        className="border-(--palette-warn)/40 text-(--palette-warn) hover:bg-(--palette-warn)/10"
                         disabled={isAdminUnlocking}
                         onClick={() => adminUnlock(taskId!)}
                       >
@@ -373,7 +373,7 @@ function TaskLayout() {
                 )}
 
                 {isLockOwner && (
-                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800">
+                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200">
                     <Icon
                       style="solid"
                       name="lock"

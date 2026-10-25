@@ -96,9 +96,9 @@ describe('ChangeCompanyDialog: the layout', () => {
     // The confirm action is the primary (teal) button; keeping the previous company is the outline one.
     expect(
       screen.getByRole('button', { name: 'administration.changeCompany.confirm' }),
-    ).toHaveClass('bg-primary');
+    ).toHaveClass('bg-primary-700');
     expect(
       screen.getByRole('button', { name: 'administration.changeCompany.keepPrevious' }),
-    ).not.toHaveClass('bg-primary');
+    ).not.toHaveClass('bg-primary-700');
   });
 });

@@ -160,7 +160,7 @@ export const PricingAnalysisApproachMethodSelector = ({
     <div className="flex flex-col overflow-hidden gap-4 h-full">
       {/* Inline edit view — decides which methods exist on each approach */}
       {isEditing && (
-        <div className="flex flex-col gap-3 p-3 bg-gray-50 rounded-xl border border-gray-200">
+        <div className="flex flex-col gap-3 p-3 bg-(--palette-surface-2) rounded-xl border border-(--palette-line)">
           {state.editDraft?.map(appr => (
             <PricingAnalysisApproachAccordion
               key={appr.id}
@@ -227,9 +227,9 @@ export const PricingAnalysisApproachMethodSelector = ({
                 read as a second, competing panel rather than the tail of this one. Heading and
                 body sit directly on the page instead. */}
             <div className="shrink-0">
-              <h4 className="m-0 py-[8px] text-base font-semibold text-gray-800">
+              <h4 className="m-0 py-[8px] text-base font-semibold text-(--palette-ink)">
                 {t('approaches.documentsCardTitle')}
-                <span className="ml-1 text-[10.5px] font-normal text-gray-400">
+                <span className="ml-1 text-[10.5px] font-normal text-(--palette-gray-400)">
                   {t('approaches.documentsCardSubtitle')}
                 </span>
               </h4>
@@ -247,11 +247,11 @@ export const PricingAnalysisApproachMethodSelector = ({
                         key={doc.id}
                         // max-w caps the outlier: one very long filename would otherwise stretch
                         // its chip across the whole line and undo the point of chipping them.
-                        className="flex items-center gap-1.5 max-w-full min-w-0 px-2.5 py-1 bg-gray-50 rounded-full border border-gray-200 text-[12px]"
+                        className="flex items-center gap-1.5 max-w-full min-w-0 px-2.5 py-1 bg-(--palette-surface-2) rounded-full border border-(--palette-line) text-[12px]"
                       >
                         <button
                           type="button"
-                          className="flex items-center gap-1.5 min-w-0 text-gray-700 truncate hover:text-primary cursor-pointer"
+                          className="flex items-center gap-1.5 min-w-0 text-(--palette-ink) truncate hover:text-(--palette-primary-text) cursor-pointer"
                           disabled={!doc.documentId}
                           onClick={() =>
                             window.open(
@@ -277,7 +277,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                             type="button"
                             disabled={isSummarySaving}
                             className={clsx(
-                              'shrink-0 text-gray-400 hover:text-red-500',
+                              'shrink-0 text-(--palette-gray-400) hover:text-red-500',
                               isSummarySaving ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
                             )}
                             onClick={() => onRequestRemoveDocument(doc.id, doc.fileName)}
@@ -294,7 +294,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                   <>
                     {/* PDF File Uploader */}
                     <div className="flex flex-col gap-2">
-                      <label className="text-sm font-medium text-gray-600">
+                      <label className="text-sm font-medium text-(--palette-gray-600)">
                         {t('approaches.manualUploadPdf')}
                       </label>
                       <input
@@ -313,7 +313,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                         type="button"
                         disabled={isSummarySaving}
                         className={clsx(
-                          'flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-primary rounded-xl bg-gray-50 text-sm text-primary hover:bg-gray-100 hover:border-gray-400 transition-colors',
+                          'flex items-center justify-center gap-2 px-4 py-3 border border-dashed border-primary rounded-xl bg-(--palette-surface-2) text-sm text-(--palette-primary-text) hover:bg-(--palette-surface-3) hover:border-(--palette-line-strong) transition-colors',
                           isSummarySaving ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
                         )}
                         onClick={() => fileInputRef.current?.click()}
@@ -326,11 +326,11 @@ export const PricingAnalysisApproachMethodSelector = ({
                           {pdfFiles.map((file, idx) => (
                             <li
                               key={`${file.name}-${idx}`}
-                              className="flex items-center justify-between px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-sm"
+                              className="flex items-center justify-between px-3 py-2 bg-(--palette-surface-2) rounded-lg border border-(--palette-line) text-sm"
                             >
                               <button
                                 type="button"
-                                className="flex items-center gap-2 text-gray-700 truncate hover:text-primary cursor-pointer"
+                                className="flex items-center gap-2 text-(--palette-ink) truncate hover:text-(--palette-primary-text) cursor-pointer"
                                 onClick={() => {
                                   const url = URL.createObjectURL(file);
                                   window.open(url, '_blank');
@@ -350,7 +350,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                                 type="button"
                                 disabled={isSummarySaving}
                                 className={clsx(
-                                  'text-gray-400 hover:text-red-500',
+                                  'text-(--palette-gray-400) hover:text-red-500',
                                   isSummarySaving
                                     ? 'cursor-not-allowed opacity-60'
                                     : 'cursor-pointer',
@@ -371,7 +371,7 @@ export const PricingAnalysisApproachMethodSelector = ({
                       actually switched to manual entry yet, so the card doesn't nag once
                       it's in active use. */}
                     {!isManualMode && (
-                      <div className="text-[12px] text-gray-400">
+                      <div className="text-[12px] text-(--palette-gray-400)">
                         {t('approaches.noManualMethodYet')}
                       </div>
                     )}

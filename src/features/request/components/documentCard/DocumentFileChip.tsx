@@ -48,8 +48,8 @@ const DocumentFileChip = ({
   return (
     <span
       className={clsx(
-        'inline-flex max-w-[20rem] items-center gap-1 rounded-md border bg-white py-0.5 pr-1 pl-1.5 text-xs',
-        selected ? 'border-primary bg-primary/5' : 'border-gray-200 hover:border-primary',
+        'inline-flex max-w-[20rem] items-center gap-1 rounded-md border bg-(--palette-surface) py-0.5 pr-1 pl-1.5 text-xs',
+        selected ? 'border-primary bg-primary/5' : 'border-(--palette-line) hover:border-primary',
         uploading && 'opacity-60',
       )}
     >
@@ -76,18 +76,20 @@ const DocumentFileChip = ({
           </span>
         )}
         {carriedFrom !== null && (
-          <span className="shrink-0 rounded-full border border-violet-200 bg-violet-50 px-2 py-px text-xs font-medium text-violet-700">
+          <span className="shrink-0 rounded-full border border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 px-2 py-px text-xs font-medium text-violet-700 dark:text-violet-300">
             {t('carryForward.badgeShort')}
           </span>
         )}
         {isFollowUp(doc) && (
-          <span className="shrink-0 rounded-full bg-blue-50 px-2 py-px text-xs font-medium text-blue-700">
+          <span className="shrink-0 rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-px text-xs font-medium text-blue-700 dark:text-blue-300">
             {t('docCard.chip.followUp')}
           </span>
         )}
       </button>
       {uploading ? (
-        <span className="px-1 text-xs text-gray-500">{t('docCard.chip.uploading')}</span>
+        <span className="px-1 text-xs text-(--palette-gray-500)">
+          {t('docCard.chip.uploading')}
+        </span>
       ) : readOnly ? (
         <DocumentActionMenu document={doc} onView={onView} size="sm" />
       ) : (

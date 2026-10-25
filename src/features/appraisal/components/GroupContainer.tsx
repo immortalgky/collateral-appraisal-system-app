@@ -120,7 +120,7 @@ export const GroupContainer = React.memo(
     }, [group.items]);
 
     const emptyState = (
-      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-8 text-(--palette-gray-400)">
         <Icon name="folder-open" className="text-2xl mb-2" />
         <p className="text-xs mb-3">{t('properties.dropHere')}</p>
         {canEdit && <PropertyTypeDropdown groupId={group.id} />}
@@ -128,7 +128,7 @@ export const GroupContainer = React.memo(
     );
 
     return (
-      <div className="border border-gray-200 rounded-xl bg-white overflow-hidden">
+      <div className="border border-(--palette-line) rounded-xl bg-(--palette-surface) overflow-hidden">
         <Disclosure defaultOpen>
           {({ open }) => (
             <>
@@ -164,7 +164,7 @@ export const GroupContainer = React.memo(
                       {viewMode === 'cards' ? (
                         <PropertyCardGrid group={group} onContextMenu={onContextMenu} />
                       ) : (
-                        <div className="divide-y divide-gray-100">
+                        <div className="divide-y divide-(--palette-line-soft)">
                           {segments.map(segment =>
                             segment.kind === 'item' ? (
                               <PropertyCard

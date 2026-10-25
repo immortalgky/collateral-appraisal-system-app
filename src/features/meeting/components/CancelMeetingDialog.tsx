@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { type CancelMeetingFormValues, useCancelMeetingSchema } from '../schemas/meeting';
 import { useCancelMeeting } from '../api/meetings';
 
@@ -61,20 +62,27 @@ const CancelMeetingDialog = ({ isOpen, onClose, meetingId }: CancelMeetingDialog
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.cancelMeeting')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <p className="text-sm text-gray-600">{t('cancelDialog.description')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('cancelDialog.description')}</p>
 
         <div>
-          <label htmlFor="cancel-reason" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cancel-reason"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.reasonRequired')} <span className="text-red-500">*</span>
           </label>
           <textarea
             id="cancel-reason"
             rows={3}
             {...register('reason')}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             placeholder={t('fields.cancelReasonPlaceholder')}
           />
-          {errors.reason && <p className="mt-1 text-xs text-red-600">{errors.reason.message}</p>}
+          {errors.reason && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.reason.message} />
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

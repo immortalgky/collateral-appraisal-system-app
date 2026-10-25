@@ -238,7 +238,7 @@ const ConsumerFailuresTable = ({
                     </div>
                   )}
                   {item.retryAvailableAt && (
-                    <div className="text-[12px] text-sky-600 mt-0.5">
+                    <div className="text-[12px] text-sky-600 dark:text-sky-400 mt-0.5">
                       {retryAvailableAtLabel(t, item.retryAvailableAt)}
                     </div>
                   )}

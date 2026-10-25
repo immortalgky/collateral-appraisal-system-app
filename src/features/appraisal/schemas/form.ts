@@ -1,7 +1,7 @@
 import { buildFormSchema } from '@/shared/components/form/schemaBuilder';
+import { tokenT, vmsg } from '@/shared/components/form/validationMessage';
 import { z } from 'zod';
 import { proportionStatus } from '../utils/constructionMoney';
-import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
 import {
   allBuildingFields,
@@ -69,7 +69,10 @@ const rentalInfoRefinement = (data: any, ctx: z.RefinementCtx) => {
     const path = data.rentalInfo ? ['rentalInfo', 'upFrontEntries'] : ['upFrontEntries'];
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: `Up front entries total (${entriesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })}) does not match Up Front amount (${upFrontTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })})`,
+      message: vmsg('appraisal:validation.upFrontMismatch', {
+        entries: entriesTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+        total: upFrontTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }),
+      }),
       path,
     });
   }
@@ -82,7 +85,10 @@ const rentalInfoRefinement = (data: any, ctx: z.RefinementCtx) => {
           : ['growthPeriodEntries', idx, 'fromYear'];
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `At Year (${entry.fromYear}) exceeds Number of Years (${numberOfYears})`,
+          message: vmsg('appraisal:validation.growthYearExceeds', {
+            year: Number(entry.fromYear),
+            years: numberOfYears,
+          }),
           path,
         });
       }
@@ -244,7 +250,7 @@ const constructionProportionRefinement = (data: any, ctx: z.RefinementCtx) => {
     if (proportionStatus(total) === 'over') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `Total proportion is ${total.toFixed(2)}% — cannot exceed 100%`,
+        message: vmsg('appraisal:validation.proportionOver', { total: total.toFixed(2) }),
         path: ['constructionSubItems'],
       });
     }
@@ -328,10 +334,11 @@ const makeLandAndBuildingPMAFormBase = (t: TFunction<'appraisal'>) =>
     provinceName: z.string().nullable(),
   });
 
-// Static export for type inference
-export const createLandAndBuildingPMAFormBase = makeLandAndBuildingPMAFormBase(
-  ((key: string) => key) as unknown as TFunction<'appraisal'>,
-);
+// The PMA schemas are built with the token `t`: each message is the token of the same
+// `appraisal:validation.*` key, translated where it is shown, so one schema serves every language.
+const pmaTokens = tokenT('appraisal');
+
+export const createLandAndBuildingPMAFormBase = makeLandAndBuildingPMAFormBase(pmaTokens);
 
 const makeCondoPMAFormBase = (t: TFunction<'appraisal'>) =>
   z.object({
@@ -355,10 +362,7 @@ const makeCondoPMAFormBase = (t: TFunction<'appraisal'>) =>
     provinceName: z.string().nullable(),
   });
 
-// Static export for type inference
-export const createCondoPMAFormBase = makeCondoPMAFormBase(
-  ((key: string) => key) as unknown as TFunction<'appraisal'>,
-);
+export const createCondoPMAFormBase = makeCondoPMAFormBase(pmaTokens);
 
 // Rai/Ngan/Sq.Wa are individually optional; the land area is required as a whole — enforced by the
 // computed Total Sq.Wa being > 0 (i.e. at least one of Rai/Ngan/Sq.Wa provided). The error is
@@ -372,7 +376,7 @@ const landAreaTotalRefinement = (
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['totalSquareWa'],
-      message: 'Total Sq.Wa must be greater than 0',
+      message: vmsg('appraisal:validation.totalSquareWaPositive'),
     });
   }
 };
@@ -385,22 +389,18 @@ export const makeLandAndBuildingPMAForm = (t: TFunction<'appraisal'>) =>
 export const makeCondoPMAForm = (t: TFunction<'appraisal'>) =>
   buildFormSchema(allCondoPMAFields, makeCondoPMAFormBase(t));
 
-// Static exports using identity t for type inference only
 export const createLandAndBuildingPMAForm = buildFormSchema(
   allLandAndBuildingPMAFields,
   createLandAndBuildingPMAFormBase,
 );
 export const createCondoPMAForm = buildFormSchema(allCondoPMAFields, createCondoPMAFormBase);
 
-export const useLandAndBuildingPMAFormSchema = () => {
-  const { t } = useTranslation('appraisal');
-  return makeLandAndBuildingPMAForm(t);
-};
+const landAndBuildingPMAForm = makeLandAndBuildingPMAForm(pmaTokens);
+const condoPMAForm = makeCondoPMAForm(pmaTokens);
 
-export const useCondoPMAFormSchema = () => {
-  const { t } = useTranslation('appraisal');
-  return makeCondoPMAForm(t);
-};
+export const useLandAndBuildingPMAFormSchema = () => landAndBuildingPMAForm;
+
+export const useCondoPMAFormSchema = () => condoPMAForm;
 export const createMachineryForm = buildFormSchema(allMachineryFields);
 
 export const factorDataDto = z
@@ -446,28 +446,28 @@ export const createMarketComparableForm = z
     if (!data.surveyName?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Comparable name is required',
+        message: vmsg('required'),
         path: ['surveyName'],
       });
     }
     if (!data.infoDateTime?.trim()) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Infomation DateTime is required',
+        message: vmsg('required'),
         path: ['infoDateTime'],
       });
     }
     if (!data.templateCode) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Template is required',
+        message: vmsg('required'),
         path: ['templateCode'],
       });
     }
     if (!data.propertyType) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Property type is required',
+        message: vmsg('required'),
         path: ['propertyType'],
       });
     }
@@ -478,12 +478,12 @@ export const createMarketComparableForm = z
     if (!hasOfferPrice && !hasSalePrice) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Offer price is required when sale price is not provided',
+        message: vmsg('appraisal:validation.offerPriceRequired'),
         path: ['offerPrice'],
       });
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Sale price is required when offer price is not provided',
+        message: vmsg('appraisal:validation.salePriceRequired'),
         path: ['salePrice'],
       });
     }
@@ -492,7 +492,7 @@ export const createMarketComparableForm = z
     if (hasSalePrice && !data.saleDate) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Sale date is required when sale price is provided',
+        message: vmsg('appraisal:validation.saleDateRequired'),
         path: ['saleDate'],
       });
     }
@@ -505,7 +505,7 @@ export const createMarketComparableForm = z
       if (isEmpty) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: `This factor is required`,
+          message: vmsg('required'),
           path: ['factorData', index, 'value'],
         });
       }

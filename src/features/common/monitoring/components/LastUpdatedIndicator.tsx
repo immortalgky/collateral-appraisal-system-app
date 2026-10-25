@@ -9,7 +9,11 @@ interface LastUpdatedIndicatorProps {
   isRefetching: boolean;
 }
 
-function LastUpdatedIndicator({ dataUpdatedAt, onRefresh, isRefetching }: LastUpdatedIndicatorProps) {
+function LastUpdatedIndicator({
+  dataUpdatedAt,
+  onRefresh,
+  isRefetching,
+}: LastUpdatedIndicatorProps) {
   const { t } = useTranslation('monitoring');
   const [relativeTime, setRelativeTime] = useState('');
   const [isPulsing, setIsPulsing] = useState(false);
@@ -65,7 +69,7 @@ function LastUpdatedIndicator({ dataUpdatedAt, onRefresh, isRefetching }: LastUp
         )}
       </span>
 
-      <span className="text-[11px] text-gray-400">
+      <span className="text-[11px] text-(--palette-gray-400)">
         {t('common.updatedAgo', { value: relativeTime })}
       </span>
       <button
@@ -73,7 +77,7 @@ function LastUpdatedIndicator({ dataUpdatedAt, onRefresh, isRefetching }: LastUp
         onClick={onRefresh}
         disabled={isRefetching}
         aria-label={t('common.refresh')}
-        className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-40"
+        className="p-1 rounded hover:bg-(--palette-surface-3) text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors disabled:opacity-40"
       >
         <Icon
           style="solid"

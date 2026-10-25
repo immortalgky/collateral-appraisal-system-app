@@ -20,7 +20,7 @@ export const ClearButton = ({ onClick }: { onClick: () => void }) => {
     <button
       type="button"
       onClick={onClick}
-      className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+      className="rounded-md p-1.5 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
       title={t('administration.clearSelection')}
       aria-label={t('administration.clearSelection')}
     >
@@ -32,16 +32,18 @@ export const ClearButton = ({ onClick }: { onClick: () => void }) => {
 const StaffDisplay = ({ staff, onClear, onChange }: StaffDisplayProps) => {
   const { t } = useTranslation('appraisal');
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2.5">
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) px-3 py-2.5">
       <div className="flex min-w-0 items-center gap-3">
         <Avatar src={staff.avatar} name={staff.name} size="lg" />
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-x-2">
-            <span className="text-sm font-semibold text-gray-800">{staff.name}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">{staff.name}</span>
             {/* The code the slip uses: the employee id, else the id (always set). */}
-            <span className="text-xs text-gray-500">({staff.employeeId || staff.id})</span>
+            <span className="text-xs text-(--palette-gray-500)">
+              ({staff.employeeId || staff.id})
+            </span>
           </div>
-          <div className="text-xs text-gray-500">{staff.department}</div>
+          <div className="text-xs text-(--palette-gray-500)">{staff.department}</div>
         </div>
       </div>
 
@@ -84,8 +86,8 @@ export const StoredCode = ({
   const { t } = useTranslation('appraisal');
   const label = personLabel(name, code);
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2.5">
-      <span className="min-w-0 truncate text-sm font-semibold text-gray-800" title={label}>
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) px-3 py-2.5">
+      <span className="min-w-0 truncate text-sm font-semibold text-(--palette-ink)" title={label}>
         {label}
       </span>
       <div className="flex shrink-0 items-center gap-2">

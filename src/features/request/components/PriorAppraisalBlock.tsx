@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { formatDate } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { runGuarded } from '@/shared/utils/runGuarded';
@@ -19,7 +20,7 @@ const ID = 'detail.prevAppraisalId';
 const VALUE = 'detail.prevAppraisalValue';
 const DATE = 'detail.prevAppraisalDate';
 
-const linkButton = 'font-medium text-primary hover:underline disabled:opacity-50';
+const linkButton = 'font-medium text-(--palette-primary-text) hover:underline disabled:opacity-50';
 
 /**
  * The prior appraisal of the request, in the "purpose and prior appraisal" group: one strip saying
@@ -61,7 +62,7 @@ export default function PriorAppraisalBlock() {
     return (
       <div
         data-field={NAME}
-        className="col-span-12 flex items-center gap-2 rounded-lg bg-blue-50 px-3 py-2 text-xs text-gray-600"
+        className="col-span-12 flex items-center gap-2 rounded-lg bg-blue-500/10 px-3 py-2 text-xs text-(--palette-gray-600)"
       >
         <Icon name="circle-info" style="solid" className="shrink-0 text-blue-500" />
         {t('requestForm.choosePurposeFirst')}
@@ -116,33 +117,38 @@ export default function PriorAppraisalBlock() {
         <div
           role="status"
           className={clsx(
-            'flex flex-col overflow-hidden rounded-lg border text-xs text-gray-700',
-            blocked ? 'border-danger bg-danger-50' : 'border-primary-200 bg-primary-50/70',
+            'flex flex-col overflow-hidden rounded-lg border text-xs text-(--palette-ink)',
+            blocked
+              ? 'border-danger bg-(--palette-req-wash)'
+              : 'border-(--palette-accent-line) bg-(--palette-accent-wash)',
           )}
         >
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5">
             <Icon
               name={blocked ? 'circle-exclamation' : 'circle-info'}
               style="solid"
-              className={clsx('shrink-0', blocked ? 'text-danger' : 'text-primary')}
+              className={clsx(
+                'shrink-0',
+                blocked ? 'text-danger' : 'text-(--palette-primary-text)',
+              )}
             />
-            <span className="font-medium text-gray-600">{t('copyBanner.label')}</span>
+            <span className="font-medium text-(--palette-gray-600)">{t('copyBanner.label')}</span>
             {canOpen && id ? (
               <Link
                 to={`/appraisals/${id}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 title={t('copyBanner.openTitle')}
-                className="font-semibold text-primary-700 hover:underline"
+                className="font-semibold text-(--palette-accent-ink) hover:underline"
               >
                 {number}
               </Link>
             ) : (
-              <strong className="font-semibold text-gray-900">{number}</strong>
+              <strong className="font-semibold text-(--palette-ink)">{number}</strong>
             )}
             {facts.map(fact => (
-              <span key={String(fact)} className="text-gray-600">
-                <span aria-hidden className="mr-2 text-gray-300">
+              <span key={String(fact)} className="text-(--palette-gray-600)">
+                <span aria-hidden className="mr-2 text-(--palette-gray-300)">
                   ·
                 </span>
                 {fact}
@@ -150,8 +156,8 @@ export default function PriorAppraisalBlock() {
             ))}
             {/* Same rule as the latest-choice dialog: undefined = nothing, null = no data, number = chip. */}
             {ownPct !== undefined && (
-              <span className="text-gray-600">
-                <span aria-hidden className="mr-2 text-gray-300">
+              <span className="text-(--palette-gray-600)">
+                <span aria-hidden className="mr-2 text-(--palette-gray-300)">
                   ·
                 </span>
                 {ownPct === null
@@ -177,7 +183,7 @@ export default function PriorAppraisalBlock() {
                   disabled={copy.disabled}
                   aria-label={t('copyBanner.clearTitle')}
                   title={t('copyBanner.clearTitle')}
-                  className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
+                  className="inline-flex items-center gap-1 text-(--palette-gray-500) hover:text-(--palette-ink) disabled:opacity-50"
                 >
                   <Icon name="xmark" style="solid" />
                   {t('requestForm.prior.clear')}
@@ -186,8 +192,12 @@ export default function PriorAppraisalBlock() {
             )}
           </div>
           {latest && (
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-amber-200 bg-amber-50 px-3 py-1.5 text-amber-900">
-              <Icon name="triangle-exclamation" style="solid" className="shrink-0 text-amber-600" />
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-1.5 text-amber-900 dark:text-amber-200">
+              <Icon
+                name="triangle-exclamation"
+                style="solid"
+                className="shrink-0 text-amber-600 dark:text-amber-400"
+              />
               <span>
                 {t('constructionGuard.notLatest', {
                   latest: latest.appraisalNumber,
@@ -227,18 +237,18 @@ export default function PriorAppraisalBlock() {
   if (locked) {
     return (
       <div data-field={NAME} className="col-span-6">
-        <span className="mb-1 block text-xs font-medium text-gray-700">
+        <span className="mb-1 block text-xs font-medium text-(--palette-ink)">
           {t('fields.prevAppraisalReportNo')}
         </span>
-        <div className="py-2 text-sm text-gray-400">—</div>
+        <div className="py-2 text-sm text-(--palette-gray-400)">—</div>
       </div>
     );
   }
   return (
     <div data-field={NAME} className="col-span-6">
-      <label className="mb-1 block text-xs font-medium text-gray-700">
+      <label className="mb-1 block text-xs font-medium text-(--palette-ink)">
         {t('fields.prevAppraisalReportNo')}
-        <span className="text-danger ml-0.5">*</span>
+        <span className="text-(--palette-req) ml-0.5">*</span>
       </label>
       <button
         type="button"
@@ -246,16 +256,24 @@ export default function PriorAppraisalBlock() {
         disabled={copy.disabled}
         title={t('requestForm.prior.search')}
         className={clsx(
-          'flex w-full items-center gap-2 rounded-lg border bg-white px-3 py-2 text-left text-sm text-gray-400 transition-colors disabled:cursor-not-allowed disabled:bg-gray-50',
-          error ? 'border-danger' : 'border-gray-200 hover:border-gray-300',
+          'flex w-full items-center gap-2 rounded-lg border bg-(--form-input-bg) px-3 py-2 text-left text-sm text-(--palette-gray-400) transition-colors disabled:cursor-not-allowed disabled:bg-(--palette-surface-2)',
+          error
+            ? 'border-danger'
+            : 'border-(--palette-input-edge) hover:border-(--palette-input-edge-hover)',
         )}
       >
         <span>{t('requestForm.prior.search')}</span>
         <Icon name="magnifying-glass" style="regular" className="ml-auto" />
       </button>
-      {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+      {error && (
+        <p className="mt-1 text-xs text-danger">
+          <ValidationText message={error} />
+        </p>
+      )}
       {isCreate && (
-        <p className="mt-1 text-xs text-gray-500">{t('requestForm.prior.createHint')}</p>
+        <p className="mt-1 text-xs text-(--palette-gray-500)">
+          {t('requestForm.prior.createHint')}
+        </p>
       )}
       {modal}
     </div>

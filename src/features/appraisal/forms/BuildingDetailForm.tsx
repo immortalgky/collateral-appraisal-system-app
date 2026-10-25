@@ -1,8 +1,7 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { FormFields, FormSection, FormSheet, type FormField } from '@/shared/components/form';
 import SurfaceTable from '../components/tables/SurfaceTable';
 import { BuildingDetail } from '../components/tables/BuildingDetail';
-import Icon from '@/shared/components/Icon';
-import { useMemo, type ReactNode } from 'react';
+import { useMemo } from 'react';
 import {
   buildingInfoField,
   buildingTypeField,
@@ -34,33 +33,6 @@ interface BuildingDetailFormProps {
   propertyType?: PropertyType;
 }
 
-// SectionRow component for consistent section styling with icons
-interface SectionRowProps {
-  title: string;
-  icon?: string;
-  children: ReactNode;
-  isLast?: boolean;
-}
-
-const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
-  <>
-    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
-      <div className="flex items-center gap-2">
-        {icon && (
-          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-          </div>
-        )}
-        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
-      </div>
-    </div>
-    <div className="col-span-full xl:col-span-4">
-      <div className="grid grid-cols-12 gap-4">{children}</div>
-    </div>
-    {!isLast && <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5" />}
-  </>
-);
-
 // copy owner from land
 const OwnerFromLandTriggerIcon = () => {
   const { getValues, setValue } = useFormContext();
@@ -86,7 +58,7 @@ const OwnerFromLandTriggerIcon = () => {
       onMouseDown={e => e.preventDefault()}
       title={label}
       aria-label={label}
-      className="pointer-events-auto p-1 -m-1 text-gray-400 hover:text-blue-600 transition-colors cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      className="pointer-events-auto p-1 -m-1 text-(--palette-ink-2) hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary-500/50"
     >
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path
@@ -123,54 +95,53 @@ const BuildingDetailForm = ({ prefix, propertyType = 'B' }: BuildingDetailFormPr
 
   return (
     <FieldLabels scope="building">
-      <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
-        <SectionRow title={t('forms.building.groups.identification')} icon="building">
+      <FormSheet>
+        <FormSection title={t('forms.building.groups.identification')} icon="building">
           <FormFields fields={identity} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.ownership')} icon="scale-balanced">
+        <FormSection title={t('forms.building.groups.ownership')} icon="scale-balanced">
           <FormFields fields={legal} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.typeUse')} icon="list">
+        <FormSection title={t('forms.building.groups.typeUse')} icon="list">
           <FormFields fields={typeAndUseFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.condition')} icon="gauge">
+        <FormSection title={t('forms.building.groups.condition')} icon="gauge">
           <FormFields fields={conditionFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.structure')} icon="warehouse">
+        <FormSection title={t('forms.building.groups.structure')} icon="warehouse">
           <FormFields fields={structureFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.finishes')} icon="paint-roller">
+        <FormSection title={t('forms.building.groups.finishes')} icon="paint-roller">
           <FormFields fields={finishesFields} />
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.floors')} icon="layer-group">
-          <FormFields fields={floorFields} />
-          <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} />
-        </SectionRow>
+        <FormSection title={t('forms.building.groups.floors')} icon="layer-group">
+          {/* Alone in its section, so no second title under the section header. */}
+          <SurfaceTable headers={surfaceTableHeader} name={'surfaces'} showTitle={false} />
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.areaCost')} icon="table">
-          <FormFields fields={areaFields} />
+        <FormSection title={t('forms.building.groups.areaCost')} icon="table">
           <div className="col-span-12">
             <BuildingDetail
               name={prefix != null ? `${prefix}.depreciationDetails` : 'depreciationDetails'}
               showCostSummary
             />
           </div>
-        </SectionRow>
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.limitations')} icon="triangle-exclamation">
-          <FormFields fields={encroachmentField} />
-        </SectionRow>
+        <FormSection title={t('forms.building.groups.limitations')} icon="triangle-exclamation">
+          <FormFields fields={limitationFields} />
+        </FormSection>
 
-        <SectionRow title={t('forms.building.groups.remark')} icon="comment" isLast>
+        <FormSection title={t('forms.building.groups.remark')} icon="comment">
           <FormFields fields={remarkBuildingField} />
-        </SectionRow>
-      </div>
+        </FormSection>
+      </FormSheet>
     </FieldLabels>
   );
 };
@@ -199,86 +170,97 @@ const byName = new Map(
     ...constTypeFeild,
     ...utilizationFeild,
     ...buildingArea,
+    ...encroachmentField,
   ].map(field => [field.name, field]),
 );
 
-const pick = (...entries: (string | [name: string, span: string])[]): FormField[] =>
+const pick = (
+  ...entries: (string | [name: string, span: string, narrowSpan?: 3 | 4 | 6 | 12])[]
+): FormField[] =>
   entries.map(entry => {
-    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const [name, span, narrowSpan] = typeof entry === 'string' ? [entry] : entry;
     const field = byName.get(name);
     // Fail loudly: a renamed config field would otherwise just vanish from the form.
     if (!field) throw new Error(`BuildingDetailForm: no field config named "${name}"`);
     if (!span) return field;
     const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
-    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim(), narrowSpan };
   });
 
 const identityFields = pick(
-  'propertyName',
+  // Name, house number and its "none" chips make one row (4 + 4 + 4). Narrow: the name takes a row
+  // and the house number keeps its chips beside it (6 + 6).
+  ['propertyName', 'col-span-4', 12],
   ['houseNumber', 'col-span-4'],
-  ['noHouseNumber', 'col-span-8'],
-  // One full row each, as on the land form.
-  ['buildingNumber', 'col-span-12'],
-  ['modelName', 'col-span-12'],
-  ['builtOnTitleNumber', 'col-span-12'],
+  ['noHouseNumber', 'col-span-4'],
+  ['buildingNumber', 'col-span-4'],
+  ['modelName', 'col-span-4'],
+  ['builtOnTitleNumber', 'col-span-4'],
+  // The building's size at a glance: its age, floors and area close the identity section.
+  ['buildingAge', 'col-span-4'],
+  ['numberOfFloors', 'col-span-4'],
+  ['totalBuildingArea', 'col-span-4'],
 );
 
 const legalFields = pick(
-  ['isOwnerVerifiedBuilding', 'col-span-12'],
-  ['ownerNameBuilding', 'col-span-12'],
+  ['isOwnerVerifiedBuilding', 'col-span-4'],
+  ['ownerNameBuilding', 'col-span-8'],
   'hasObligation',
   'obligationDetails',
-  'isAppraisable',
+  // Required; a row of its own, after the obligation chips and their details.
+  ['isAppraisable', 'col-span-3'],
 );
 
 const typeAndUseFields = pick(
   'buildingType',
   'buildingTypeOther',
-  'constructionType',
+  ['constructionType', 'col-span-4'],
   'constructionTypeOther',
-  'utilizationType',
+  ['utilizationType', 'col-span-8'],
   'utilizationTypeOther',
-  ['isResidential', 'col-span-12'],
-  'residentialRemark',
+  ['isResidential', 'col-span-4'],
+  ['residentialRemark', 'col-span-8'],
 );
 
 const conditionFields = pick(
   'buildingConditionType',
   'buildingConditionTypeOther',
-  ['buildingAge', 'col-span-12'],
-  ['isUnderConstruction', 'col-span-12'],
-  ['constructionLicenseExpirationDate', 'col-span-12'],
-  'buildingMaterialType',
-  'buildingStyleType',
+  // The construction toggle and its licence expiry share a row; narrow: the toggle first, the date under it.
+  ['isUnderConstruction', 'col-span-4', 12],
+  ['constructionLicenseExpirationDate', 'col-span-4'],
+  ['buildingMaterialType', 'col-span-6'],
+  ['buildingStyleType', 'col-span-6'],
   'buildingStyleTypeOther',
   'decorationType',
   'decorationTypeOther',
 );
 
 const structureFields = pick(
-  'constructionStyleType',
-  'structureType',
+  ['constructionStyleType', 'col-span-4'],
+  ['structureType', 'col-span-8'],
   'structureTypeOther',
-  'roofFrameType',
+  ['roofFrameType', 'col-span-6'],
   'roofFrameTypeOther',
-  'roofType',
+  ['roofType', 'col-span-6'],
   'roofTypeOther',
 );
 
 const finishesFields = pick(
-  'ceilingType',
+  ['ceilingType', 'col-span-6'],
   'ceilingTypeOther',
-  'interiorWallType',
+  ['interiorWallType', 'col-span-6'],
   'interiorWallTypeOther',
-  'exteriorWallType',
+  ['exteriorWallType', 'col-span-6'],
   'exteriorWallTypeOther',
-  'fenceType',
+  ['fenceType', 'col-span-6'],
   'fenceTypeOther',
 );
 
-const floorFields = pick(['numberOfFloors', 'col-span-12']);
-
-const areaFields = pick(['totalBuildingArea', 'col-span-12']);
+const limitationFields = pick(
+  ['isEncroachingOthers', 'col-span-4'],
+  ['encroachingOthersArea', 'col-span-4'],
+  'encroachingOthersRemark',
+);
 
 const surfaceTableHeader = [
   {

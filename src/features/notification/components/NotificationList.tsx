@@ -10,7 +10,7 @@ export default function NotificationList() {
   const { notifications, markAsRead } = useNotificationStore();
 
   return (
-    <div className="divide-y divide-gray-100 bg-white rounded-xl ring-1 ring-gray-200">
+    <div className="divide-y divide-(--palette-line-soft) bg-(--palette-surface) rounded-xl ring-1 ring-(--palette-line)">
       {notifications.map(notification => {
         const config = notificationTypeConfig[notification.type];
         return (
@@ -19,8 +19,8 @@ export default function NotificationList() {
             role="button"
             onClick={() => markAsRead(notification.id)}
             className={clsx(
-              'w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-gray-50 transition-colors first:rounded-t-xl last:rounded-b-xl cursor-pointer',
-              !notification.isRead && 'bg-blue-50/30',
+              'w-full flex items-start gap-4 px-5 py-4 text-left hover:bg-(--palette-surface-2) transition-colors first:rounded-t-xl last:rounded-b-xl cursor-pointer',
+              !notification.isRead && 'bg-blue-50/30 dark:bg-blue-500/10',
             )}
           >
             <div
@@ -37,8 +37,8 @@ export default function NotificationList() {
                   className={clsx(
                     'text-sm',
                     !notification.isRead
-                      ? 'font-semibold text-gray-900'
-                      : 'font-medium text-gray-700',
+                      ? 'font-semibold text-(--palette-ink)'
+                      : 'font-medium text-(--palette-ink)',
                   )}
                 >
                   {notification.title}
@@ -47,8 +47,10 @@ export default function NotificationList() {
                   <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
                 )}
               </div>
-              <p className="text-sm text-gray-500 mt-0.5">{notification.message}</p>
-              <p className="text-xs text-gray-400 mt-1.5">{timeAgo(notification.createdAt, t)}</p>
+              <p className="text-sm text-(--palette-gray-500) mt-0.5">{notification.message}</p>
+              <p className="text-xs text-(--palette-gray-400) mt-1.5">
+                {timeAgo(notification.createdAt, t)}
+              </p>
             </div>
           </div>
         );

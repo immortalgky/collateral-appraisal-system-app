@@ -51,7 +51,7 @@ function StatusSegments({ value, counts, onChange }: StatusSegmentsProps) {
     <div
       role="group"
       aria-label={t('filters.statusGroup')}
-      className="inline-flex rounded-full bg-gray-100/80 p-1 text-sm"
+      className="inline-flex rounded-full bg-(--palette-surface-3)/80 p-1 text-sm"
     >
       {options.map(option => {
         const active = option.value === value;
@@ -66,13 +66,16 @@ function StatusSegments({ value, counts, onChange }: StatusSegmentsProps) {
               'flex cursor-pointer items-center gap-1.5 rounded-full px-4 py-[calc(0.25rem+1px)] font-medium whitespace-nowrap transition-colors select-none',
               active
                 ? 'bg-primary text-white shadow-[0_2px_6px_color-mix(in_srgb,var(--color-primary)_25%,transparent)]'
-                : 'text-gray-600 hover:text-gray-800',
+                : 'text-(--palette-gray-600) hover:text-(--palette-ink)',
             )}
           >
             {option.label}
             {count !== undefined && (
               <span
-                className={clsx('text-xs tabular-nums', active ? 'text-white/80' : 'text-gray-400')}
+                className={clsx(
+                  'text-xs tabular-nums',
+                  active ? 'text-white/80' : 'text-(--palette-gray-400)',
+                )}
               >
                 {count}
               </span>
@@ -239,8 +242,8 @@ function RequestListingPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('page.failedToLoad')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('page.failedToLoad')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -251,12 +254,12 @@ function RequestListingPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" onClick={() => navigate('/requests/new')}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
@@ -273,7 +276,7 @@ function RequestListingPage() {
             <button
               type="button"
               onClick={handleClearFilters}
-              className="cursor-pointer text-xs font-medium text-primary hover:underline"
+              className="cursor-pointer text-xs font-medium text-(--palette-primary-text) hover:underline"
             >
               {t('filters.clear')}
             </button>
@@ -303,11 +306,11 @@ function RequestListingPage() {
       {/* Table card: fills the page height, rows scroll inside it under a sticky header and the
           pagination stays pinned at the bottom. The minimum keeps a few rows visible on a short
           screen; below it the page's own scroll container takes over instead of crushing the table. */}
-      <div className="flex min-h-[16rem] flex-1 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white">
+      <div className="flex min-h-[16rem] flex-1 flex-col overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
         <div className="flex min-h-0 flex-1 flex-col overflow-auto">
           <table className="w-full min-w-[52rem] shrink-0 text-table">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
                 <SortableTh
                   label={t('columns.requestNumber')}
                   sortKey="requestNumber"
@@ -323,7 +326,7 @@ function RequestListingPage() {
             </thead>
             <tbody
               className={clsx(
-                'divide-y divide-gray-100',
+                'divide-y divide-(--palette-line-soft)',
                 isRefetching && 'opacity-50 pointer-events-none',
               )}
             >
@@ -350,7 +353,7 @@ function RequestListingPage() {
                       tabIndex={0}
                       onClick={() => request.id && openRequest(request.id)}
                       onKeyDown={e => request.id && handleRowKeyDown(e, request.id)}
-                      className="cursor-pointer transition-colors hover:bg-gray-50 even:bg-gray-50/50 focus-visible:bg-primary/5! focus-visible:outline-none! focus-visible:[&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary)]"
+                      className="cursor-pointer transition-colors hover:bg-(--palette-surface-2) even:bg-(--palette-surface-2)/50 focus-visible:bg-primary/5! focus-visible:outline-none! focus-visible:[&>td:first-child]:shadow-[inset_3px_0_0_var(--color-primary)]"
                     >
                       <td className="px-4 py-2.5 whitespace-nowrap">
                         <span className="inline-flex items-center gap-2">
@@ -358,12 +361,12 @@ function RequestListingPage() {
                             <Link
                               to={`/requests/${request.id}`}
                               onClick={e => e.stopPropagation()}
-                              className="font-medium text-primary hover:underline"
+                              className="font-medium text-(--palette-primary-text) hover:underline"
                             >
                               {request.requestNumber}
                             </Link>
                           ) : (
-                            <span className="text-gray-400">—</span>
+                            <span className="text-(--palette-gray-400)">—</span>
                           )}
                           {request.priority?.toLowerCase() === 'high' && (
                             <Badge tone="yellow" className="whitespace-nowrap">
@@ -375,17 +378,20 @@ function RequestListingPage() {
                       <td className="px-4 py-2.5">
                         {request.customerName ? (
                           <div className="flex max-w-[16rem] flex-col">
-                            <span className="truncate text-gray-800" title={request.customerName}>
+                            <span
+                              className="truncate text-(--palette-ink)"
+                              title={request.customerName}
+                            >
                               {request.customerName}
                             </span>
                             {request.contactNumber && (
-                              <span className="truncate text-xs text-gray-500">
+                              <span className="truncate text-xs text-(--palette-gray-500)">
                                 {request.contactNumber}
                               </span>
                             )}
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-(--palette-gray-400)">—</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5">
@@ -397,13 +403,13 @@ function RequestListingPage() {
                             : '—'}
                         </Badge>
                       </td>
-                      <td className="px-4 py-2.5 text-gray-700">
+                      <td className="px-4 py-2.5 text-(--palette-ink)">
                         {purpose ? (
                           <div className="max-w-[16rem] truncate" title={purpose}>
                             {purpose}
                           </div>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-(--palette-gray-400)">—</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5">
@@ -412,10 +418,10 @@ function RequestListingPage() {
                             <ParameterDisplay group="CHANNEL" code={request.channel} />
                           </Badge>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-(--palette-gray-400)">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-2.5 text-xs whitespace-nowrap text-gray-500">
+                      <td className="px-4 py-2.5 text-xs whitespace-nowrap text-(--palette-gray-500)">
                         {created && request.createdAt ? (
                           <time
                             dateTime={request.createdAt}
@@ -424,7 +430,7 @@ function RequestListingPage() {
                             {created.relative}
                           </time>
                         ) : (
-                          <span className="text-gray-400">—</span>
+                          <span className="text-(--palette-gray-400)">—</span>
                         )}
                       </td>
                       <td className="px-4 py-2.5">
@@ -435,7 +441,7 @@ function RequestListingPage() {
                             <button
                               type="button"
                               onClick={e => request.id && handleDelete(e, request.id)}
-                              className="flex size-6 cursor-pointer items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-danger/10 hover:text-danger"
+                              className="flex size-6 cursor-pointer items-center justify-center rounded-md text-(--palette-gray-400) transition-colors hover:bg-danger/10 hover:text-danger"
                               title={t('actions.delete')}
                               aria-label={t('actions.delete')}
                             >
@@ -452,20 +458,26 @@ function RequestListingPage() {
           </table>
           {!isFirstLoad && requests.length === 0 && (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 px-4 py-12 text-center">
-              <Icon style="regular" name="folder-open" className="text-3xl text-gray-300" />
-              <p className="text-sm font-medium text-gray-700">
+              <Icon
+                style="regular"
+                name="folder-open"
+                className="text-3xl text-(--palette-gray-300)"
+              />
+              <p className="text-sm font-medium text-(--palette-ink)">
                 {hasFilters ? t('empty.noMatch') : t('empty.noRequests')}
               </p>
               {hasFilters ? (
                 <>
-                  <p className="text-xs text-gray-500">{t('empty.noRequestsFiltered')}</p>
+                  <p className="text-xs text-(--palette-gray-500)">
+                    {t('empty.noRequestsFiltered')}
+                  </p>
                   <Button variant="outline" size="sm" onClick={handleClearFilters}>
                     {t('filters.clear')}
                   </Button>
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-gray-500">{t('empty.noRequestsCreate')}</p>
+                  <p className="text-xs text-(--palette-gray-500)">{t('empty.noRequestsCreate')}</p>
                   <Button size="sm" onClick={() => navigate('/requests/new')}>
                     <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
                     {t('page.newRequest')}
@@ -477,7 +489,11 @@ function RequestListingPage() {
           {/* Refetch spinner overlay */}
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>

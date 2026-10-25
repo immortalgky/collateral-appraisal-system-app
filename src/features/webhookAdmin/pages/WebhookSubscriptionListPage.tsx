@@ -32,7 +32,7 @@ const TABLE_SKELETON_COLUMNS = [
   { width: 'w-14' },
 ];
 
-const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-gray-600';
+const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-(--palette-gray-600)';
 
 /** Set + encrypted / set but still plaintext (saved before encryption) / not set. */
 const secretState = (sub: WebhookSubscription): SecretState => {
@@ -121,8 +121,12 @@ const WebhookSubscriptionListPage = () => {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-64 flex-1">
-          <h2 className="text-base font-semibold text-gray-900">{t('subscriptions.page.title')}</h2>
-          <p className="mt-0.5 text-xs text-gray-500">{t('subscriptions.page.subtitle')}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">
+            {t('subscriptions.page.title')}
+          </h2>
+          <p className="mt-0.5 text-xs text-(--palette-gray-500)">
+            {t('subscriptions.page.subtitle')}
+          </p>
         </div>
         <Button
           onClick={() => openPanel(null)}
@@ -135,10 +139,10 @@ const WebhookSubscriptionListPage = () => {
       {plaintextCount > 0 && (
         <div
           role="status"
-          className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-gray-700"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-(--palette-warn-wash) px-3 py-1.5 text-xs text-(--palette-ink)"
         >
           <span>
-            <span className="font-semibold text-amber-700">
+            <span className="font-semibold text-amber-700 dark:text-amber-300">
               {t('subscriptions.banner.count', { count: plaintextCount })}
             </span>{' '}
             {t('subscriptions.banner.text', { count: plaintextCount })}
@@ -146,8 +150,8 @@ const WebhookSubscriptionListPage = () => {
         </div>
       )}
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 px-4 py-2.5">
+      <div className="overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line-soft) px-4 py-2.5">
           <CountTabs
             tabs={tabs}
             value={tab}
@@ -168,8 +172,8 @@ const WebhookSubscriptionListPage = () => {
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[46rem] text-table">
-            <thead className="bg-gray-50">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="border-b border-(--palette-line)">
                 <th className={`${thClass} w-[22%]`}>{t('subscriptions.columns.systemEvent')}</th>
                 <th className={thClass}>{t('subscriptions.columns.destination')}</th>
                 <th className={`${thClass} w-36`}>{t('subscriptions.columns.secret')}</th>
@@ -179,7 +183,7 @@ const WebhookSubscriptionListPage = () => {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
                 <TableRowSkeleton columns={TABLE_SKELETON_COLUMNS} rows={4} />
               ) : isError ? (
@@ -194,7 +198,10 @@ const WebhookSubscriptionListPage = () => {
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={COLUMN_COUNT} className="py-12 text-center text-sm text-gray-400">
+                  <td
+                    colSpan={COLUMN_COUNT}
+                    className="py-12 text-center text-sm text-(--palette-gray-400)"
+                  >
                     <Icon
                       name="plug"
                       style="regular"
@@ -216,24 +223,28 @@ const WebhookSubscriptionListPage = () => {
                     onKeyDown={e => {
                       if (e.key === 'Enter' && e.target === e.currentTarget) openPanel(sub.id);
                     }}
-                    className="cursor-pointer align-top transition-colors even:bg-gray-50/50 hover:bg-gray-50"
+                    className="cursor-pointer align-top transition-colors even:bg-(--palette-surface-2)/50 hover:bg-(--palette-surface-2)"
                   >
                     <td className="px-4 py-2.5">
-                      <div className="font-semibold text-gray-900">{sub.systemCode}</div>
+                      <div className="font-semibold text-(--palette-ink)">{sub.systemCode}</div>
                       {sub.eventType ? (
-                        <div className="font-mono text-xs text-gray-500">{sub.eventType}</div>
+                        <div className="font-mono text-xs text-(--palette-gray-500)">
+                          {sub.eventType}
+                        </div>
                       ) : (
-                        <div className="text-xs text-gray-500">{t('subscriptions.catchAll')}</div>
+                        <div className="text-xs text-(--palette-gray-500)">
+                          {t('subscriptions.catchAll')}
+                        </div>
                       )}
                     </td>
                     <td className="max-w-0 px-4 py-2.5">
                       <div className="truncate" title={`${sub.httpMethod} ${sub.callbackUrl}`}>
-                        <span className="mr-1.5 rounded bg-gray-100 px-1.5 font-mono text-xs font-medium text-gray-600">
+                        <span className="mr-1.5 rounded bg-(--palette-surface-3) px-1.5 font-mono text-xs font-medium text-(--palette-gray-600)">
                           {sub.httpMethod}
                         </span>
                         <span className="font-mono text-xs">{sub.callbackUrl}</span>
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-(--palette-gray-500)">
                         {t(`subscriptions.authLine.${sub.authType}`)}
                       </div>
                     </td>
@@ -259,7 +270,7 @@ const WebhookSubscriptionListPage = () => {
                         }}
                         aria-label={t('subscriptions.actions.edit')}
                         title={t('subscriptions.actions.edit')}
-                        className="inline-flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-primary/10 hover:text-primary"
+                        className="inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-primary/10 hover:text-(--palette-primary-text)"
                       >
                         <Icon name="pen" style="regular" className="text-sm" />
                       </button>
@@ -271,7 +282,7 @@ const WebhookSubscriptionListPage = () => {
                         }}
                         aria-label={t('subscriptions.actions.delete')}
                         title={t('subscriptions.actions.delete')}
-                        className="inline-flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-danger/10 hover:text-danger"
+                        className="inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-danger/10 hover:text-danger"
                       >
                         <Icon name="trash" style="regular" className="text-sm" />
                       </button>

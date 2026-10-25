@@ -1,10 +1,5 @@
 import { Fragment, useMemo, useState } from 'react';
-import {
-  useFieldArray,
-  useWatch,
-  useFormContext,
-  type UseFormGetValues,
-} from 'react-hook-form';
+import { useFieldArray, useWatch, useFormContext, type UseFormGetValues } from 'react-hook-form';
 import { RHFInputCell } from '../../table/RHFInputCell';
 import { roomTypeParameters } from '../../../data/dcfParameters';
 import { Icon } from '@shared/components';
@@ -17,6 +12,7 @@ import { PricingAnalysisSubjectType } from '@/features/pricingAnalysis/api/refer
 import type { MarketComparableDetailType } from '@/features/pricingAnalysis/schemas';
 import type { TemplateDtoType } from '@/shared/schemas/v1';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 
 type SeasonRateInput = {
   seasonId: string;
@@ -206,7 +202,11 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
   return (
     <div className="flex flex-col gap-2">
-      {rowsError && <p className="text-xs text-danger-600">{rowsError}</p>}
+      {rowsError && (
+        <p className="text-xs text-(--palette-danger)">
+          <ValidationText message={rowsError} />
+        </p>
+      )}
       <div className="flex items-center gap-3">
         <div className="w-56">
           <span>{t('dcf.methods.roomIncomeBySeasonalRates.numberOfSeasons')}</span>
@@ -225,19 +225,22 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
         </div>
       </div>
 
-      <div className="overflow-auto flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 rounded-xl p-1.5">
+      <div className="overflow-auto flex-1 min-h-0 min-w-0 bg-(--palette-surface) flex flex-col border border-(--palette-line-strong) rounded-xl p-1.5">
         <ScrollableTableContainer maxHeight={'200px'} className="flex-1 min-h-0">
           <table className="table table-xs min-w-max border-separate border-spacing-0">
             <thead>
               <tr>
-                <th rowSpan={2} className="border-b border-r border-gray-300">
+                <th rowSpan={2} className="border-b border-r border-(--palette-line-strong)">
                   {t('dcf.common.roomType')}
                 </th>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                   <th
                     key={seasonIndex}
                     colSpan={3}
-                    className={clsx('border-b border-gray-300', seasonCount > 1 ? 'border-r' : 0)}
+                    className={clsx(
+                      'border-b border-(--palette-line-strong)',
+                      seasonCount > 1 ? 'border-r' : 0,
+                    )}
                   >
                     <div className="flex flex-col gap-2 p-1.5">
                       <div className="flex flex-row items-center">
@@ -285,18 +288,18 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               <tr>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => (
                   <Fragment key={seasonIndex}>
-                    <th className="border-b border-gray-300 text-right">
+                    <th className="border-b border-(--palette-line-strong) text-right">
                       <div className="flex flex-col">
                         <span>{t('dcf.methods.roomIncomeBySeasonalRates.roomIncomeHeader')}</span>
                         <span>{t('dcf.common.bahtPerRoomPerDay')}</span>
                       </div>
                     </th>
-                    <th className="border-b border-gray-300 text-right">
+                    <th className="border-b border-(--palette-line-strong) text-right">
                       {t('dcf.common.saleableArea')}
                     </th>
                     <th
                       className={clsx(
-                        'border-b border-gray-300 text-right',
+                        'border-b border-(--palette-line-strong) text-right',
                         seasonCount > 1 ? 'border-r' : 0,
                       )}
                     >
@@ -315,7 +318,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                 const roomType = getValues(`${name}.roomDetails.${rowIndex}.roomType`);
                 return (
                   <tr key={field.id}>
-                    <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                    <td className={clsx('border-b border-r border-(--palette-line-strong) p-1')}>
                       <div className="flex gap-1.5 items-center">
                         <RHFInputCell
                           fieldName={`${name}.roomDetails.${rowIndex}.roomType`}
@@ -338,7 +341,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                           <button
                             type="button"
                             onClick={() => remove(rowIndex)}
-                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-gray-300 hover:text-danger-600 hover:bg-danger-50 transition-colors opacity-100"
+                            className="size-5 flex-shrink-0 flex items-center justify-center cursor-pointer rounded text-(--palette-gray-300) hover:text-(--palette-danger) hover:bg-(--palette-req-wash) transition-colors opacity-100"
                             title={t('dcf.common.delete')}
                           >
                             <Icon style="solid" name="trash" className="size-1" />
@@ -354,7 +357,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
                       return (
                         <Fragment key={`${field.id}-${seasonIndex}`}>
-                          <td className="border-b border-gray-300 p-1">
+                          <td className="border-b border-(--palette-line-strong) p-1">
                             {(() => {
                               const roomType = getValues(
                                 `${name}.roomDetails.${rowIndex}.roomType`,
@@ -419,7 +422,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                               );
                             })()}
                           </td>
-                          <td className="border-b border-gray-300 p-1">
+                          <td className="border-b border-(--palette-line-strong) p-1">
                             <RHFInputCell
                               fieldName={`${name}.roomDetails.${rowIndex}.seasons.${seasonIndex}.saleableArea`}
                               inputType="number"
@@ -433,7 +436,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                           </td>
                           <td
                             className={clsx(
-                              'border-b border-gray-300 text-sm text-right',
+                              'border-b border-(--palette-line-strong) text-sm text-right',
                               seasonCount > 1 ? 'border-r' : 0,
                             )}
                           >
@@ -447,11 +450,11 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
               })}
               {!isReadOnly && (
                 <tr>
-                  <td className={clsx('border-b border-r border-gray-300 p-1')}>
+                  <td className={clsx('border-b border-r border-(--palette-line-strong) p-1')}>
                     <button
                       type="button"
                       onClick={() => append(createEmptyRow(seasonCount))}
-                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-primary hover:bg-primary/10"
+                      className="px-3 py-1.5 w-full border border-dashed border-primary rounded-lg cursor-pointer text-(--palette-primary-text) hover:bg-primary/10"
                     >
                       {t('dcf.methods.roomIncomeBySeasonalRates.addRoomType')}
                     </button>
@@ -459,11 +462,11 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                   {Array.from({ length: seasonCount }, (_, seasonIndex) => {
                     return (
                       <Fragment key={`${seasonIndex}`}>
-                        <td className="border-b border-gray-300 p-1"></td>
-                        <td className="border-b border-gray-300 p-1"></td>
+                        <td className="border-b border-(--palette-line-strong) p-1"></td>
+                        <td className="border-b border-(--palette-line-strong) p-1"></td>
                         <td
                           className={clsx(
-                            'border-b border-gray-300 p-1',
+                            'border-b border-(--palette-line-strong) p-1',
                             seasonCount > 1 ? 'border-r' : '',
                           )}
                         ></td>
@@ -476,7 +479,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
             <tfoot>
               <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">
+                <td className="border-b border-r border-(--palette-line-strong) p-1.5">
                   {t('dcf.common.totals')}
                 </td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
@@ -484,13 +487,13 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
 
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td className="border-b border-gray-300 p-1.5 text-right">
+                      <td className="border-b border-(--palette-line-strong) p-1.5"></td>
+                      <td className="border-b border-(--palette-line-strong) p-1.5 text-right">
                         {Number(totals.saleableArea.toFixed(2)).toLocaleString()}
                       </td>
                       <td
                         className={clsx(
-                          'border-b border-gray-300 text-right',
+                          'border-b border-(--palette-line-strong) text-right',
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
@@ -501,7 +504,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                 })}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">
+                <td className="border-b border-r border-(--palette-line-strong) p-1.5">
                   {t('dcf.methods.roomIncomeBySeasonalRates.averageRoomPerDay')}
                 </td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
@@ -509,11 +512,11 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                   const avg = totals.totalRoomIncomePerDay / totals.saleableArea;
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td className="border-b border-(--palette-line-strong) p-1.5"></td>
+                      <td className="border-b border-(--palette-line-strong) p-1.5"></td>
                       <td
                         className={clsx(
-                          'border-b border-gray-300 text-right text-sm',
+                          'border-b border-(--palette-line-strong) text-right text-sm',
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >
@@ -524,7 +527,7 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                 })}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 p-1.5">
+                <td className="border-b border-r border-(--palette-line-strong) p-1.5">
                   {t('dcf.methods.roomIncomeBySeasonalRates.averageRoomPerSeason')}
                 </td>
                 {Array.from({ length: seasonCount }, (_, seasonIndex) => {
@@ -533,11 +536,11 @@ export function MethodSpecifiedRoomIncomeBySeasonalRatesModal({
                   const avgPerSeason = avg * (seasonDetails[seasonIndex]?.numberOfMonths ?? 0) * 30;
                   return (
                     <Fragment key={`totals-${seasonIndex}`}>
-                      <td className="border-b border-gray-300 p-1.5"></td>
-                      <td className="border-b border-gray-300 p-1.5"></td>
+                      <td className="border-b border-(--palette-line-strong) p-1.5"></td>
+                      <td className="border-b border-(--palette-line-strong) p-1.5"></td>
                       <td
                         className={clsx(
-                          'border-b border-gray-300 text-right',
+                          'border-b border-(--palette-line-strong) text-right',
                           seasonCount > 1 ? 'border-r' : 0,
                         )}
                       >

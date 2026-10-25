@@ -32,9 +32,11 @@ interface PinDetailDrawerProps {
 function Row({ label, value, mono }: { label: string; value: ReactNode; mono?: boolean }) {
   return (
     <div className="flex justify-between items-start gap-3 text-sm">
-      <span className="text-gray-500 shrink-0 text-xs">{label}</span>
+      <span className="text-(--palette-gray-500) shrink-0 text-xs">{label}</span>
       <span
-        className={['text-gray-800 text-right break-all', mono ? 'tabular-nums' : ''].join(' ')}
+        className={['text-(--palette-ink) text-right break-all', mono ? 'tabular-nums' : ''].join(
+          ' ',
+        )}
       >
         {value}
       </span>
@@ -68,7 +70,7 @@ function LandTitleRows({ title }: { title: LandTitleInfo }) {
     : null;
 
   return (
-    <div className="flex flex-col gap-2 border-t border-gray-100 pt-2 first:border-t-0 first:pt-0">
+    <div className="flex flex-col gap-2 border-t border-(--palette-line-soft) pt-2 first:border-t-0 first:pt-0">
       {title.titleType && (
         <Row
           label={lt('titleType')}
@@ -110,29 +112,31 @@ function PropertyRow({ item, notSet }: { item: PropertyItem; notSet: string }) {
   const location = item.location && item.location !== '-' ? item.location : '—';
 
   return (
-    <div className="flex gap-2 rounded-lg border border-gray-100 p-2">
+    <div className="flex gap-2 rounded-lg border border-(--palette-line-soft) p-2">
       {item.image ? (
         <img
           src={item.image}
           alt=""
-          className="w-10 h-10 rounded object-cover bg-gray-100 shrink-0"
+          className="w-10 h-10 rounded object-cover bg-(--palette-surface-3) shrink-0"
         />
       ) : (
-        <div className="w-10 h-10 rounded bg-gray-100 flex items-center justify-center shrink-0">
-          <Icon name="image" style="solid" className="w-3.5 h-3.5 text-gray-300" />
+        <div className="w-10 h-10 rounded bg-(--palette-surface-3) flex items-center justify-center shrink-0">
+          <Icon name="image" style="solid" className="w-3.5 h-3.5 text-(--palette-gray-300)" />
         </div>
       )}
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        {name && <span className="text-xs font-medium text-gray-800 break-words">{name}</span>}
+        {name && (
+          <span className="text-xs font-medium text-(--palette-ink) break-words">{name}</span>
+        )}
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center rounded bg-teal-50 px-1.5 py-0.5 text-[11px] font-medium text-teal-700">
+          <span className="inline-flex items-center rounded bg-(--palette-accent-wash) px-1.5 py-0.5 text-[11px] font-medium text-(--palette-accent-ink)">
             <ParameterDisplay group="PropertyType" code={item.type} fallback={item.type} />
           </span>
-          <span className="text-[11px] text-gray-500 tabular-nums">{item.area}</span>
+          <span className="text-[11px] text-(--palette-gray-500) tabular-nums">{item.area}</span>
         </div>
-        <span className="text-xs text-gray-500 break-words">{location}</span>
+        <span className="text-xs text-(--palette-gray-500) break-words">{location}</span>
         <span
-          className={`text-[11px] tabular-nums ${coords ? 'text-gray-500' : 'text-gray-400 italic'}`}
+          className={`text-[11px] tabular-nums ${coords ? 'text-(--palette-gray-500)' : 'text-(--palette-gray-400) italic'}`}
         >
           {coords ?? notSet}
         </span>
@@ -157,13 +161,13 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
     <>
       {/* ── Three prices ────────────────────────────────────────────── */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-1.5">
           {t('pinDetail.appraisal.prices')}
         </p>
         {isLoadingPrices ? (
           <div className="space-y-2">
             {[1, 2, 3].map(i => (
-              <div key={i} className="h-4 rounded bg-gray-200 animate-pulse" />
+              <div key={i} className="h-4 rounded bg-(--palette-line) animate-pulse" />
             ))}
           </div>
         ) : (
@@ -206,7 +210,7 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
           if (allTitles.length === 0) return null;
           return (
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+              <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-1.5">
                 {t('pinDetail.appraisal.landTitleInfo')}
               </p>
               <div className="flex flex-col gap-2">
@@ -220,13 +224,13 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
 
       {/* ── Property groups (per-property rows) ─────────────────────── */}
       <div>
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-1.5">
           {t('pinDetail.appraisal.propertyGroups')}
         </p>
         {isLoadingGroups ? (
           <div className="space-y-2">
             {[1, 2].map(i => (
-              <div key={i} className="h-14 rounded bg-gray-200 animate-pulse" />
+              <div key={i} className="h-14 rounded bg-(--palette-line) animate-pulse" />
             ))}
           </div>
         ) : groups.length > 0 ? (
@@ -234,10 +238,10 @@ function AppraisalExtraSection({ appraisalId }: { appraisalId: string }) {
             {groups.map((g, gi) => (
               <div key={g.id} className="flex flex-col gap-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-medium text-gray-700 truncate">
+                  <span className="text-xs font-medium text-(--palette-ink) truncate">
                     {g.name || `Group ${g.groupNumber ?? gi + 1}`}
                   </span>
-                  <span className="text-[11px] text-gray-400 shrink-0">
+                  <span className="text-[11px] text-(--palette-gray-400) shrink-0">
                     {g.items.length}{' '}
                     {g.items.length === 1
                       ? t('pinDetail.appraisal.property')
@@ -268,7 +272,9 @@ function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
     <div className="p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2 mb-1">
         <img src={buildPinIcon('collateralExisting')} alt="" className="w-4 h-5 shrink-0" />
-        <h4 className="text-sm font-semibold text-gray-800">{t('pinDetail.appraisal.title')}</h4>
+        <h4 className="text-sm font-semibold text-(--palette-ink)">
+          {t('pinDetail.appraisal.title')}
+        </h4>
       </div>
 
       <div className="flex flex-col gap-2">
@@ -310,7 +316,7 @@ function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
           no appraisalId — skip the fetch to avoid querying a non-existent appraisal. */}
       {pin.appraisalId ? (
         <>
-          <div className="border-t border-gray-100 pt-3 flex flex-col gap-3">
+          <div className="border-t border-(--palette-line-soft) pt-3 flex flex-col gap-3">
             <AppraisalExtraSection appraisalId={pin.appraisalId} />
           </div>
 
@@ -321,7 +327,7 @@ function AppraisalDetail({ pin }: { pin: AppraisalPinDto }) {
           {canOpenWorkspace && (
             <Link
               to={`/appraisals/${pin.appraisalId}`}
-              className="mt-2 flex items-center justify-center gap-1.5 w-full bg-orange-50 hover:bg-orange-100 border border-orange-200 text-orange-700 text-sm font-medium py-2 rounded-lg transition-colors"
+              className="mt-2 flex items-center justify-center gap-1.5 w-full bg-orange-50 dark:bg-orange-500/10 hover:bg-orange-100 dark:hover:bg-orange-500/20 border border-orange-200 dark:border-orange-500/30 text-orange-700 dark:text-orange-300 text-sm font-medium py-2 rounded-lg transition-colors"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -366,12 +372,12 @@ function SurveyFactorsSection({ marketComparableId }: { marketComparableId: stri
   if (isLoading) {
     return (
       <div className="mt-1 flex flex-col gap-2">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
           {t('pinDetail.marketComparable.factors')}
         </p>
         <div className="space-y-2">
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-4 rounded bg-gray-200 animate-pulse" />
+            <div key={i} className="h-4 rounded bg-(--palette-line) animate-pulse" />
           ))}
         </div>
       </div>
@@ -382,7 +388,7 @@ function SurveyFactorsSection({ marketComparableId }: { marketComparableId: stri
 
   return (
     <div className="mt-1 flex flex-col gap-2">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+      <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
         {t('pinDetail.marketComparable.factors')}
       </p>
       {factors.map(factor => {
@@ -402,8 +408,8 @@ function SurveyFactorsSection({ marketComparableId }: { marketComparableId: stri
 
         return (
           <div key={factor.factorId} className="flex justify-between items-start gap-3 text-sm">
-            <span className="text-gray-500 shrink-0 text-xs">{label}</span>
-            <div className="text-gray-800 text-right break-all flex flex-col items-end gap-0.5">
+            <span className="text-(--palette-gray-500) shrink-0 text-xs">{label}</span>
+            <div className="text-(--palette-ink) text-right break-all flex flex-col items-end gap-0.5">
               {!hasValue ? (
                 <span>{na}</span>
               ) : isParameterized ? (
@@ -421,7 +427,9 @@ function SurveyFactorsSection({ marketComparableId }: { marketComparableId: stri
                 </span>
               )}
               {factor.otherRemarks && (
-                <span className="text-xs text-gray-400 italic">{factor.otherRemarks}</span>
+                <span className="text-xs text-(--palette-gray-400) italic">
+                  {factor.otherRemarks}
+                </span>
               )}
             </div>
           </div>
@@ -440,7 +448,7 @@ function MarketComparableDetail({ pin }: { pin: MarketComparablePinDto }) {
     <div className="p-4 flex flex-col gap-3">
       <div className="flex items-center gap-2 mb-1">
         <img src={buildPinIcon('mcExisting')} alt="" className="w-4 h-5 shrink-0" />
-        <h4 className="text-sm font-semibold text-gray-800">
+        <h4 className="text-sm font-semibold text-(--palette-ink)">
           {t('pinDetail.marketComparable.title')}
         </h4>
       </div>
@@ -563,20 +571,20 @@ export function PinDetailDrawer({
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl border-l border-gray-200 z-40 flex flex-col"
+        className="absolute right-0 top-0 h-full w-96 bg-(--palette-surface) shadow-2xl border-l border-(--palette-line) z-40 flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-label={t('pinDetail.title')}
         data-testid="pin-detail-drawer"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
-          <h3 className="text-base font-semibold text-gray-800">{t('pinDetail.title')}</h3>
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line) shrink-0">
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('pinDetail.title')}</h3>
           <button
             ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded"
+            className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors p-1 rounded"
             aria-label={t('pinDetail.close')}
           >
             <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -596,7 +604,7 @@ export function PinDetailDrawer({
 
         {/* Footer action — e.g. "Link to this appraisal" in the Find-Existing flow */}
         {actionLabel && onAction && (
-          <div className="shrink-0 border-t border-gray-200 px-4 py-3">
+          <div className="shrink-0 border-t border-(--palette-line) px-4 py-3">
             <button
               type="button"
               onClick={() => onAction(pin)}

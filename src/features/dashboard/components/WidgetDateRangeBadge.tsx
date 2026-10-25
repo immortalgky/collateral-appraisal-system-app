@@ -14,11 +14,13 @@ type WidgetDateRangeBadgeProps = {
  */
 function WidgetDateRangeBadge({ from, to, asOf, label }: WidgetDateRangeBadgeProps) {
   if (label) {
-    return <span className="text-xs text-gray-500">{label}</span>;
+    return <span className="text-xs text-(--palette-gray-500)">{label}</span>;
   }
 
   if (asOf) {
-    return <span className="text-xs text-gray-500">as of {format(asOf, 'MMM d, yyyy')}</span>;
+    return (
+      <span className="text-xs text-(--palette-gray-500)">as of {format(asOf, 'MMM d, yyyy')}</span>
+    );
   }
 
   if (from && to) {
@@ -35,7 +37,7 @@ function WidgetDateRangeBadge({ from, to, asOf, label }: WidgetDateRangeBadgePro
     } else {
       text = `${format(from, 'MMM d, yyyy')} – ${format(to, 'MMM d, yyyy')}`;
     }
-    return <span className="text-xs text-gray-500">{text}</span>;
+    return <span className="text-xs text-(--palette-gray-500)">{text}</span>;
   }
 
   return null;

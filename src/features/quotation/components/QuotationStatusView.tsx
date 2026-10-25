@@ -105,7 +105,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
           type="button"
           onClick={() => setShowCancelConfirm(true)}
           disabled={isCancelling}
-          className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1 text-xs text-(--palette-danger) hover:text-(--palette-req) underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Icon name="ban" style="solid" className="size-3" />
           {t('shared.cancelQuotation')}
@@ -118,20 +118,20 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
         size="sm"
       >
         <div className="flex flex-col gap-4">
-          <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
+          <div className="p-3 bg-(--palette-req-wash) rounded-lg border border-red-100 dark:border-red-500/20 flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
               style="solid"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p className="text-sm text-red-700">
+            <p className="text-sm text-(--palette-req)">
               <BoldTrans i18nKey="cancel.bodyRich" values={{ number: quotation.quotationNumber }} />
             </p>
           </div>
           <div>
-            <label className="block text-sm text-gray-600 mb-1">
+            <label className="block text-sm text-(--palette-gray-600) mb-1">
               {t('fields.reasonOptional')}{' '}
-              <span className="text-gray-400">{t('fields.notesOptional')}</span>
+              <span className="text-(--palette-gray-400)">{t('fields.notesOptional')}</span>
             </label>
             <textarea
               rows={3}
@@ -139,9 +139,11 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
               value={cancelReason}
               onChange={e => setCancelReason(e.target.value)}
               placeholder={t('placeholders.cancelReason')}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+              className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             />
-            <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
+            <p className="mt-1 text-[11px] text-(--palette-gray-400) text-right">
+              {cancelReason.length}/500
+            </p>
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <Button variant="outline" onClick={closeCancelModal} disabled={isCancelling}>
@@ -175,32 +177,36 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
 
     return (
       <div className="flex flex-col gap-2">
-        <div className="bg-white rounded-xl border border-purple-200 overflow-hidden">
+        <div className="bg-(--palette-surface) rounded-xl border border-purple-200 dark:border-purple-500/30 overflow-hidden">
           {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
+          <div className="flex items-center justify-between px-4 py-3 bg-purple-50 dark:bg-purple-500/10 border-b border-purple-200 dark:border-purple-500/30">
             <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-                <Icon name="clock" style="solid" className="size-4 text-purple-700" />
+              <div className="size-8 rounded-lg bg-purple-200 dark:bg-purple-500/30 flex items-center justify-center">
+                <Icon
+                  name="clock"
+                  style="solid"
+                  className="size-4 text-purple-700 dark:text-purple-300"
+                />
               </div>
               <div>
-                <span className="text-sm font-semibold text-gray-900">
+                <span className="text-sm font-semibold text-(--palette-ink)">
                   {quotation.quotationNumber}
                 </span>
                 <QuotationStatusBadge status={status} className="ml-2" />
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs text-gray-500">{t('shared.closes')}</div>
+              <div className="text-xs text-(--palette-gray-500)">{t('shared.closes')}</div>
               <div
                 className={clsx(
                   'text-sm font-medium',
-                  hoursLeft < 24 ? 'text-red-600' : 'text-gray-800',
+                  hoursLeft < 24 ? 'text-(--palette-danger)' : 'text-(--palette-ink)',
                 )}
               >
                 {fmtDateTime(quotation.cutOffTime)}
               </div>
               {hoursLeft < 48 && (
-                <div className="text-xs text-amber-600">
+                <div className="text-xs text-amber-600 dark:text-amber-400">
                   {t('shared.hoursRemaining', { n: hoursLeft })}
                 </div>
               )}
@@ -208,27 +214,29 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
           </div>
 
           {/* Stats */}
-          <div className="px-4 py-3 text-sm text-gray-600 border-b border-gray-100">
+          <div className="px-4 py-3 text-sm text-(--palette-gray-600) border-b border-(--palette-line-soft)">
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <div className="text-xs text-gray-500 flex items-center gap-1">
+                <div className="text-xs text-(--palette-gray-500) flex items-center gap-1">
                   {t('shared.companiesInvited')}
                   <InvitedCompaniesPopover
                     companies={quotation.invitedCompanies ?? []}
                     totalInvited={quotation.totalCompaniesInvited}
                   />
                 </div>
-                <div className="font-medium text-gray-900">{quotation.totalCompaniesInvited}</div>
+                <div className="font-medium text-(--palette-ink)">
+                  {quotation.totalCompaniesInvited}
+                </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500">{t('shared.responses')}</div>
-                <div className="font-medium text-gray-900">
+                <div className="text-xs text-(--palette-gray-500)">{t('shared.responses')}</div>
+                <div className="font-medium text-(--palette-ink)">
                   {quotation.totalQuotationsReceived} / {quotation.totalCompaniesInvited}
                 </div>
               </div>
               <div>
-                <div className="text-xs text-gray-500">{t('shared.appraisals')}</div>
-                <div className="font-medium text-gray-900">{quotation.totalAppraisals}</div>
+                <div className="text-xs text-(--palette-gray-500)">{t('shared.appraisals')}</div>
+                <div className="font-medium text-(--palette-ink)">{quotation.totalAppraisals}</div>
               </div>
             </div>
           </div>
@@ -238,31 +246,31 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.company')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalFeeAmount')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalDiscount')}
                     </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalNetAmount')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.totalEstimateManday')}
                     </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.submittedAt')}
                     </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                       {t('columns.status')}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-(--palette-line-soft)">
                   {invitedCompanies.map(inv => {
                     const cq = companyQuotations.find(q => q.companyId === inv.companyId);
                     const items = cq?.items ?? [];
@@ -270,34 +278,37 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                     const { totalFeeAmount, totalDiscount, totalEstimateManday } =
                       sumQuotationItems(items);
                     return (
-                      <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
+                      <tr
+                        key={inv.companyId}
+                        className="hover:bg-(--palette-surface-2) transition-colors"
+                      >
                         <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">
+                          <div className="text-sm font-medium text-(--palette-ink)">
                             {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
                           </div>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
+                          <span className="text-sm text-(--palette-ink) tabular-nums">
                             {hasItems ? fmtCurrency(totalFeeAmount) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
+                          <span className="text-sm text-(--palette-ink) tabular-nums">
                             {hasItems ? fmtCurrency(totalDiscount) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                          <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                             {cq ? fmtCurrency(cq.totalQuotedPrice) : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-(--palette-gray-600)">
                             {hasItems ? totalEstimateManday : '—'}
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-sm text-gray-600">
+                          <span className="text-sm text-(--palette-gray-600)">
                             {cq ? fmtDateTime(cq.submittedAt) : '—'}
                           </span>
                         </td>
@@ -305,7 +316,7 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                           {cq ? (
                             <QuotationStatusBadge status={cq.status} />
                           ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600)">
                               {t('invitedCompanies.pending')}
                             </span>
                           )}
@@ -328,7 +339,9 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">{quotation.quotationNumber}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {quotation.quotationNumber}
+          </span>
           <QuotationStatusBadge status={status} />
         </div>
         <ShortlistSentPanel quotation={quotation} />
@@ -352,7 +365,9 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
     return (
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-700">{quotation.quotationNumber}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {quotation.quotationNumber}
+          </span>
           <QuotationStatusBadge status={status} />
         </div>
         <NegotiationPanel quotation={quotation} />
@@ -368,17 +383,23 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
     );
     const finalPrice = winner?.currentNegotiatedPrice ?? winner?.totalQuotedPrice;
     return (
-      <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-200">
-          <div className="size-8 rounded-lg bg-green-200 flex items-center justify-center">
-            <Icon name="circle-check" style="solid" className="size-4 text-green-700" />
+      <div className="bg-(--palette-surface) rounded-xl border border-green-200 dark:border-green-500/30 overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-500/10 border-b border-green-200 dark:border-green-500/30">
+          <div className="size-8 rounded-lg bg-green-200 dark:bg-green-500/30 flex items-center justify-center">
+            <Icon
+              name="circle-check"
+              style="solid"
+              className="size-4 text-green-700 dark:text-green-300"
+            />
           </div>
           <div>
-            <span className="text-sm font-semibold text-gray-900">{quotation.quotationNumber}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {quotation.quotationNumber}
+            </span>
             <QuotationStatusBadge status={status} className="ml-2" />
           </div>
         </div>
-        <div className="px-4 py-3 text-sm text-gray-600">
+        <div className="px-4 py-3 text-sm text-(--palette-gray-600)">
           <p>
             <BoldTrans
               i18nKey="shared.quotationAwarded"
@@ -387,16 +408,18 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
                   ? localizeCompanyName(winner.companyName, winner.companyNameLocal)
                   : '—',
               }}
-              strongClassName="text-gray-900"
+              strongClassName="text-(--palette-ink)"
             />
           </p>
           {finalPrice != null && (
             <p className="mt-1">
               {t('shared.finalPrice')}{' '}
-              <strong className="text-green-700">{fmtCurrency(finalPrice)}</strong>
+              <strong className="text-green-700 dark:text-green-300">
+                {fmtCurrency(finalPrice)}
+              </strong>
             </p>
           )}
-          <p className="mt-2 text-xs text-gray-400">{t('shared.assignHint')}</p>
+          <p className="mt-2 text-xs text-(--palette-gray-400)">{t('shared.assignHint')}</p>
         </div>
       </div>
     );
@@ -405,25 +428,25 @@ const QuotationStatusView = ({ quotation }: QuotationStatusViewProps) => {
   // ─── Cancelled ────────────────────────────────────────────────────────────
   if (status === 'Cancelled') {
     return (
-      <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border-b border-red-200">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-req-line) overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 bg-(--palette-req-wash) border-b border-(--palette-req-line)">
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-red-200 flex items-center justify-center">
-              <Icon name="ban" style="solid" className="size-4 text-red-700" />
+            <div className="size-8 rounded-lg bg-red-200 dark:bg-red-500/30 flex items-center justify-center">
+              <Icon name="ban" style="solid" className="size-4 text-(--palette-req)" />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {quotation.quotationNumber}
               </span>
               <QuotationStatusBadge status={status} className="ml-2" />
             </div>
           </div>
         </div>
-        <div className="px-4 py-3 text-sm text-gray-500">
+        <div className="px-4 py-3 text-sm text-(--palette-gray-500)">
           {quotation.cancellationReason ? (
             <>
               {t('shared.cancelledWith')}{' '}
-              <span className="text-gray-700">{quotation.cancellationReason}</span>
+              <span className="text-(--palette-ink)">{quotation.cancellationReason}</span>
             </>
           ) : (
             t('shared.quotationCancelled')
@@ -464,7 +487,9 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-gray-700">{quotation.quotationNumber}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {quotation.quotationNumber}
+            </span>
             <QuotationStatusBadge status={quotation.status} />
           </div>
           {winner && (
@@ -473,7 +498,7 @@ const WinnerTentativeView = ({ quotation, winner, cancelFooter }: WinnerTentativ
                 variant="outline"
                 size="sm"
                 onClick={openReject}
-                className="text-red-600 border-red-300 hover:bg-red-50"
+                className="text-(--palette-danger) border-red-300 dark:border-red-500/40 hover:bg-(--palette-req-wash)"
               >
                 <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
                 {t('buttons.rejectWinner')}

@@ -146,7 +146,7 @@ const QuotationEntryModal = ({
         >
           <div className="flex flex-col gap-4">
             {/* Tab bar */}
-            <div className="flex border-b border-gray-200 -mt-1">
+            <div className="flex border-b border-(--palette-line) -mt-1">
               {tabs.map(tab => (
                 <button
                   key={tab.key}
@@ -158,8 +158,8 @@ const QuotationEntryModal = ({
                   className={clsx(
                     'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
                     activeTab === tab.key
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                      ? 'border-primary text-(--palette-primary-text)'
+                      : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink) hover:border-(--palette-line-strong)',
                   )}
                 >
                   <Icon name={tab.icon} style="solid" className="size-3.5" />
@@ -170,7 +170,9 @@ const QuotationEntryModal = ({
 
             {/* Existing draft picker */}
             <div>
-              <p className="text-sm text-gray-600 mb-3">{tq('entryModal.existingHint')}</p>
+              <p className="text-sm text-(--palette-gray-600) mb-3">
+                {tq('entryModal.existingHint')}
+              </p>
               <ExistingDraftPicker
                 drafts={drafts}
                 isLoading={isDraftsLoading}
@@ -181,13 +183,13 @@ const QuotationEntryModal = ({
 
             {/* Selected draft confirmation */}
             {selectedDraft && (
-              <div className="p-3 rounded-lg bg-purple-50 border border-purple-200 flex items-start gap-2">
+              <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 flex items-start gap-2">
                 <Icon
                   name="circle-check"
                   style="solid"
                   className="size-4 text-purple-500 shrink-0 mt-0.5"
                 />
-                <p className="text-sm text-purple-700">
+                <p className="text-sm text-purple-700 dark:text-purple-300">
                   {/* Same hardening as BoldTrans: values are escaped, then unescaped as text. */}
                   <Trans
                     t={tq}
@@ -209,13 +211,13 @@ const QuotationEntryModal = ({
                 covering company does not help — only removing the non-covering companies or the
                 out-of-segment appraisals does. */}
             {introducesNewSegment && (
-              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200 flex items-start gap-2">
+              <div className="p-3 rounded-lg bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 flex items-start gap-2">
                 <Icon
                   name="triangle-exclamation"
                   style="solid"
                   className="size-4! text-amber-500 shrink-0 mt-0.5"
                 />
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-(--palette-warn)">
                   {t('quotation.existingDraftSegmentWarning', {
                     segment: segmentLabel(bankingSegment!),
                   })}
@@ -300,7 +302,7 @@ const QuotationEntryModal = ({
             onSuccess?.();
           }}
           headerSlot={
-            <div className="flex border-b border-gray-200 -mx-6 px-6 -mt-2 mb-4">
+            <div className="flex border-b border-(--palette-line) -mx-6 px-6 -mt-2 mb-4">
               {tabs.map(tab => (
                 <button
                   key={tab.key}
@@ -312,8 +314,8 @@ const QuotationEntryModal = ({
                   className={clsx(
                     'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors',
                     activeTab === tab.key
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                      ? 'border-primary text-(--palette-primary-text)'
+                      : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink) hover:border-(--palette-line-strong)',
                   )}
                 >
                   <Icon name={tab.icon} style="solid" className="size-3.5" />

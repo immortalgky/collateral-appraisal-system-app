@@ -33,16 +33,16 @@ function KpiCard({
       type="button"
       onClick={onClick}
       aria-label={`${label}: ${count}. Open list.`}
-      className={`${cardBg} rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4 text-left w-full transition hover:shadow-md hover:border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500/40`}
+      className={`${cardBg} rounded-2xl border border-(--palette-line-soft) shadow-sm p-6 flex flex-col gap-4 text-left w-full transition hover:shadow-md hover:border-(--palette-line) focus:outline-none focus:ring-2 focus:ring-blue-500/40`}
     >
       <div className={`${iconBg} w-10 h-10 rounded-xl flex items-center justify-center`}>
         <Icon name={icon} style="solid" className={`size-5 ${iconColor}`} />
       </div>
       <div>
-        <span className="text-4xl font-semibold text-gray-800 tabular-nums">{count}</span>
-        <p className="text-sm font-medium text-gray-500 mt-1">{label}</p>
+        <span className="text-4xl font-semibold text-(--palette-ink) tabular-nums">{count}</span>
+        <p className="text-sm font-medium text-(--palette-gray-500) mt-1">{label}</p>
       </div>
-      <span className="text-[11px] text-blue-600 inline-flex items-center gap-0.5 mt-auto">
+      <span className="text-[11px] text-blue-600 dark:text-blue-400 inline-flex items-center gap-0.5 mt-auto">
         {openListLabel}
         <Icon name="arrow-right" style="solid" className="size-2.5" />
       </span>
@@ -52,7 +52,7 @@ function KpiCard({
 
 function KpiCardSkeleton() {
   return (
-    <div className="bg-gray-50 rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col gap-4">
+    <div className="bg-(--palette-surface-2) rounded-2xl border border-(--palette-line-soft) shadow-sm p-6 flex flex-col gap-4">
       <Skeleton variant="rectangular" width={40} height={40} />
       <div className="flex flex-col gap-2">
         <Skeleton variant="text" width={80} height={40} />
@@ -70,9 +70,11 @@ function QuotationTaskSummaryWidget() {
 
   return (
     <WidgetWrapper id="quotation-task-summary">
-      <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm p-6 h-full">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-base font-semibold text-gray-800">{t('quotationSummary.title')}</h3>
+          <h3 className="text-base font-semibold text-(--palette-ink)">
+            {t('quotationSummary.title')}
+          </h3>
         </div>
 
         {isError ? (
@@ -90,8 +92,8 @@ function QuotationTaskSummaryWidget() {
               count={data?.pendingQuotationCreation ?? 0}
               icon="file-circle-plus"
               iconColor="text-amber-500"
-              iconBg="bg-amber-50"
-              cardBg="bg-white"
+              iconBg="bg-(--palette-warn-wash)"
+              cardBg="bg-(--palette-surface)"
               openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate(`${APPRAISAL_SEARCH_ROUTE}?status=Pending`)}
             />
@@ -100,8 +102,8 @@ function QuotationTaskSummaryWidget() {
               count={data?.waitingCompanySubmission ?? 0}
               icon="paper-plane"
               iconColor="text-blue-500"
-              iconBg="bg-blue-50"
-              cardBg="bg-white"
+              iconBg="bg-blue-50 dark:bg-blue-500/10"
+              cardBg="bg-(--palette-surface)"
               openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/quotations?status=Sent')}
             />
@@ -110,8 +112,8 @@ function QuotationTaskSummaryWidget() {
               count={data?.waitingRmSelection ?? 0}
               icon="user-check"
               iconColor="text-purple-500"
-              iconBg="bg-purple-50"
-              cardBg="bg-white"
+              iconBg="bg-purple-50 dark:bg-purple-500/10"
+              cardBg="bg-(--palette-surface)"
               openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/quotations?status=PendingRmSelection')}
             />
@@ -120,8 +122,8 @@ function QuotationTaskSummaryWidget() {
               count={data?.pendingApprovals ?? 0}
               icon="file-circle-check"
               iconColor="text-amber-500"
-              iconBg="bg-amber-50"
-              cardBg="bg-white"
+              iconBg="bg-(--palette-warn-wash)"
+              cardBg="bg-(--palette-surface)"
               openListLabel={t('quotationSummary.openList')}
               onClick={() => navigate('/tasks?activityId=fee-appointment-approval')}
             />

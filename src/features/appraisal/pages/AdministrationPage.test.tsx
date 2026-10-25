@@ -773,7 +773,7 @@ describe('AdministrationPage: a missing fee base', () => {
     const { user } = render(<AdministrationPage />);
 
     const reason = await within(slipCard()).findByText('administration.slip.reason.feeMissing');
-    expect(reason).toHaveClass('text-gray-500');
+    expect(reason).toHaveClass('text-(--palette-gray-500)');
     expect(slipAssign()).toBeDisabled();
     expect(barAssign()).toBeDisabled();
 
@@ -807,7 +807,7 @@ describe('AdministrationPage: a missing fee base', () => {
     );
 
     expect(within(slipCard()).getByText('administration.slip.reason.feeMissing')).toHaveClass(
-      'text-red-700',
+      'text-(--palette-req)',
     );
     expect(await screen.findByLabelText('feePreview.aria.setBase')).toHaveFocus();
   });
@@ -838,12 +838,12 @@ describe('AdministrationPage: field errors', () => {
     ).not.toBeInTheDocument();
     // company todo, follow-up (round-robin) and fee met
     const count = await within(slipCard()).findByText('2 / 3');
-    expect(count.parentElement).toHaveClass('text-gray-500');
-    expect(count.parentElement).not.toHaveClass('text-red-700');
-    expect(within(bar()).getByText('2 / 3').parentElement).toHaveClass('border-gray-200');
+    expect(count.parentElement).toHaveClass('text-(--palette-gray-500)');
+    expect(count.parentElement).not.toHaveClass('text-(--palette-req)');
+    expect(within(bar()).getByText('2 / 3').parentElement).toHaveClass('border-(--palette-line)');
     // The reason Assign is off is there, but muted
     expect(within(slipCard()).getByText('administration.slip.reason.companyMissing')).toHaveClass(
-      'text-gray-500',
+      'text-(--palette-gray-500)',
     );
   });
 
@@ -859,10 +859,12 @@ describe('AdministrationPage: field errors', () => {
         name: 'administration.slip.checks.status.error',
       }),
     ).toBeVisible();
-    expect(within(slipCard()).getByText('2 / 3').parentElement).toHaveClass('text-red-700');
-    expect(within(bar()).getByText('2 / 3').parentElement).toHaveClass('border-red-200');
+    expect(within(slipCard()).getByText('2 / 3').parentElement).toHaveClass('text-(--palette-req)');
+    expect(within(bar()).getByText('2 / 3').parentElement).toHaveClass(
+      'border-(--palette-req-line)',
+    );
     expect(within(slipCard()).getByText('administration.slip.reason.companyMissing')).toHaveClass(
-      'text-red-700',
+      'text-(--palette-req)',
     );
   });
 
@@ -1505,8 +1507,10 @@ describe('AdministrationPage: why Assign is off, per type', () => {
     ).toBeVisible();
     expect(slipAssign()).toBeDisabled();
     // Two quotation steps still to do: a grey count and a grey bar chip, no amber.
-    expect(within(slipCard()).getByText('1 / 3').parentElement).toHaveClass('text-gray-500');
-    expect(within(bar()).getByText('1 / 3').parentElement).toHaveClass('border-gray-200');
+    expect(within(slipCard()).getByText('1 / 3').parentElement).toHaveClass(
+      'text-(--palette-gray-500)',
+    );
+    expect(within(bar()).getByText('1 / 3').parentElement).toHaveClass('border-(--palette-line)');
   });
 });
 
@@ -1924,7 +1928,7 @@ describe('AdministrationPage: another appraisal on the same page', () => {
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     expect(within(slipCard()).getByText('administration.slip.reason.companyMissing')).toHaveClass(
-      'text-gray-500',
+      'text-(--palette-gray-500)',
     );
   });
 });

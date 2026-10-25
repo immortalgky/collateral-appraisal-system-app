@@ -70,26 +70,29 @@ export interface AssignmentSlipProps {
 }
 
 const MARKER: Record<SlipCheckStatus, { box: string; icon?: string }> = {
-  ok: { box: 'bg-green-100 text-green-600', icon: 'check' },
-  warn: { box: 'bg-amber-100 text-amber-700', icon: 'exclamation' },
-  error: { box: 'bg-red-100 text-red-600', icon: 'xmark' },
-  todo: { box: 'border border-gray-300 bg-white' },
+  ok: {
+    box: 'bg-green-100 dark:bg-green-500/20 text-green-600 dark:text-green-400',
+    icon: 'check',
+  },
+  warn: { box: 'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)', icon: 'exclamation' },
+  error: { box: 'bg-red-100 dark:bg-red-500/20 text-(--palette-danger)', icon: 'xmark' },
+  todo: { box: 'border border-(--palette-line-strong) bg-(--palette-surface)' },
 };
 
 const TONE_TEXT = {
-  ok: 'text-green-700',
-  neutral: 'text-gray-500',
-  warn: 'text-amber-700',
-  error: 'text-red-700',
+  ok: 'text-green-700 dark:text-green-300',
+  neutral: 'text-(--palette-gray-500)',
+  warn: 'text-(--palette-warn)',
+  error: 'text-(--palette-req)',
 } as const;
 
 /** The quotation steps are done on the quotation card; the board gives them no "go fix". */
 const NO_FIX: SlipCheckId[] = ['quotationSent', 'quotationWinner'];
 
-const ROW = 'border-b border-gray-100 px-5 py-2.5';
+const ROW = 'border-b border-(--palette-line-soft) px-5 py-2.5';
 
 function Muted({ children }: { children: ReactNode }) {
-  return <span className="font-normal text-gray-500">{children}</span>;
+  return <span className="font-normal text-(--palette-gray-500)">{children}</span>;
 }
 
 function Row({
@@ -103,8 +106,8 @@ function Row({
 }) {
   return (
     <div className={clsx(ROW, className)}>
-      <dt className="text-xs text-gray-500">{label}</dt>
-      <dd className="text-sm font-medium break-words text-gray-800">{children}</dd>
+      <dt className="text-xs text-(--palette-gray-500)">{label}</dt>
+      <dd className="text-sm font-medium break-words text-(--palette-ink)">{children}</dd>
     </div>
   );
 }
@@ -122,7 +125,12 @@ function CheckItem({ check, onFix }: { check: SlipCheck; onFix: (id: SlipCheckId
       >
         {marker.icon && <Icon name={marker.icon} style="solid" className="text-xs" />}
       </span>
-      <span className={clsx('min-w-0', check.status === 'ok' ? 'text-gray-600' : 'text-gray-800')}>
+      <span
+        className={clsx(
+          'min-w-0',
+          check.status === 'ok' ? 'text-(--palette-gray-600)' : 'text-(--palette-ink)',
+        )}
+      >
         {label}
       </span>
       {check.status !== 'ok' && !NO_FIX.includes(check.id) && (
@@ -130,7 +138,7 @@ function CheckItem({ check, onFix }: { check: SlipCheck; onFix: (id: SlipCheckId
           type="button"
           onClick={() => onFix(check.id)}
           aria-label={t('administration.slip.checks.fixAria', { label })}
-          className="ml-auto shrink-0 text-xs font-medium text-primary hover:underline"
+          className="ml-auto shrink-0 text-xs font-medium text-(--palette-primary-text) hover:underline"
         >
           {t('administration.slip.checks.fix')}
         </button>
@@ -173,14 +181,14 @@ function FeeBlock({ fee, feeStatus }: Pick<AssignmentSlipProps, 'fee' | 'feeStat
     return (
       <>
         <div className="mt-0.5 flex flex-wrap items-baseline gap-x-2">
-          <span className="text-sm font-medium text-gray-500">
+          <span className="text-sm font-medium text-(--palette-gray-500)">
             {t('administration.slip.fee.total')}
           </span>
-          <span className="text-2xl leading-tight font-bold text-gray-800 tabular-nums">
+          <span className="text-2xl leading-tight font-bold text-(--palette-ink) tabular-nums">
             {formatCurrency(fee.total)}
           </span>
         </div>
-        <div className="flex gap-3.5 text-xs text-gray-500 tabular-nums">
+        <div className="flex gap-3.5 text-xs text-(--palette-gray-500) tabular-nums">
           <span>
             {t('administration.slip.fee.beforeVat', { amount: formatCurrency(fee.subtotal) })}
           </span>
@@ -195,9 +203,11 @@ function FeeBlock({ fee, feeStatus }: Pick<AssignmentSlipProps, 'fee' | 'feeStat
   // No amount: a dash, never 0.00.
   return (
     <>
-      <div className="mt-0.5 text-2xl leading-tight font-bold text-gray-400">—</div>
+      <div className="mt-0.5 text-2xl leading-tight font-bold text-(--palette-gray-400)">—</div>
       {feeStatus === 'missing' && (
-        <div className="text-xs font-normal text-gray-500">{t('administration.slip.fee.none')}</div>
+        <div className="text-xs font-normal text-(--palette-gray-500)">
+          {t('administration.slip.fee.none')}
+        </div>
       )}
     </>
   );
@@ -311,7 +321,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
 
       {readOnly ? (
         (assignedAtText || assignedByText) && (
-          <div className="flex flex-col gap-0.5 px-5 py-3 text-xs text-gray-500">
+          <div className="flex flex-col gap-0.5 px-5 py-3 text-xs text-(--palette-gray-500)">
             {assignedAtText && (
               <span>{t('administration.slip.readOnly.assignedAt', { at: assignedAtText })}</span>
             )}
@@ -323,7 +333,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
       ) : (
         <>
           <div className="px-5 pt-2.5 pb-1.5">
-            <div className="mb-0.5 flex items-center justify-between text-xs font-semibold text-gray-600">
+            <div className="mb-0.5 flex items-center justify-between text-xs font-semibold text-(--palette-gray-600)">
               <h4>{t(result.titleKey)}</h4>
               <span className={TONE_TEXT[result.tone]}>
                 <span aria-hidden="true">
@@ -362,7 +372,9 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
                 id={reasonId}
                 className={clsx(
                   'text-center text-xs',
-                  result.blockTone === 'error' ? 'text-red-700' : 'text-gray-500',
+                  result.blockTone === 'error'
+                    ? 'text-(--palette-req)'
+                    : 'text-(--palette-gray-500)',
                 )}
               >
                 {t(result.blockReason, result.blockParams)}
@@ -386,12 +398,12 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
               variant="ghost"
               fullWidth
               onClick={onCancel}
-              className="text-gray-500!"
+              className="text-(--palette-gray-500)!"
             >
               {t('common:actions.cancel')}
             </Button>
             {isDirty && (
-              <p className="flex items-center justify-center gap-1.5 text-center text-xs text-amber-700">
+              <p className="flex items-center justify-center gap-1.5 text-center text-xs text-(--palette-warn)">
                 <span className="size-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
                 {t('administration.unsavedChanges')}
               </p>

@@ -33,9 +33,9 @@ type FeeDialog = {
 };
 
 const actionClass =
-  'text-xs font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline';
+  'text-xs font-medium text-(--palette-primary-text) hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline';
 const secondaryActionClass =
-  'text-xs font-medium text-gray-500 hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline';
+  'text-xs font-medium text-(--palette-gray-500) hover:underline disabled:cursor-not-allowed disabled:opacity-50 disabled:no-underline';
 
 /**
  * Admin-side fee estimate for the assignment being chosen. Items come from fee-preview; the admin's
@@ -188,7 +188,7 @@ export default function AssignmentFeeCard({
     if (params === null) {
       // Nothing to estimate: an editable page asks for a type, a read-only one has no data to show.
       return (
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-(--palette-gray-500)">
           {t(editable ? 'feePreview.selectTypeFirst' : 'administration.noData')}
         </p>
       );
@@ -203,7 +203,11 @@ export default function AssignmentFeeCard({
           role="status"
           aria-label={t('feePreview.loading')}
         >
-          <Icon name="spinner" style="solid" className="animate-spin text-xl text-primary" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="animate-spin text-xl text-(--palette-primary-text)"
+          />
         </div>
       );
     }
@@ -218,9 +222,11 @@ export default function AssignmentFeeCard({
     // Waiting for a winner: say so above the rows (the controls below still work).
     const pendingNotice =
       baseSource.kind === 'QuotationPending' && !base ? (
-        <div className="flex flex-col gap-0.5 rounded-lg bg-gray-50 px-2.5 py-2">
-          <span className="text-sm font-medium text-gray-800">{t('feePreview.pending.title')}</span>
-          <span className="text-xs text-gray-500">
+        <div className="flex flex-col gap-0.5 rounded-lg bg-(--palette-surface-2) px-2.5 py-2">
+          <span className="text-sm font-medium text-(--palette-ink)">
+            {t('feePreview.pending.title')}
+          </span>
+          <span className="text-xs text-(--palette-gray-500)">
             {baseSource.quotationNumber
               ? t('feePreview.pending.hint', { quotationNumber: baseSource.quotationNumber })
               : t('feePreview.pending.hintNoNumber')}
@@ -234,11 +240,11 @@ export default function AssignmentFeeCard({
 
     // Amounts sit right-aligned at the card's right edge, actions in the last column.
     const th =
-      'border-b border-gray-200 bg-gray-50 px-2 py-2 text-left text-xs font-semibold text-gray-600';
-    const td = 'border-b border-gray-100 px-2 py-2 align-middle';
-    const amountTd = clsx(td, 'text-right tabular-nums text-gray-800');
+      'border-b border-(--palette-line) bg-(--palette-surface-2) px-2 py-2 text-left text-xs font-semibold text-(--palette-gray-600)';
+    const td = 'border-b border-(--palette-line-soft) px-2 py-2 align-middle';
+    const amountTd = clsx(td, 'text-right tabular-nums text-(--palette-ink)');
     const actionsTd = clsx(td, 'whitespace-nowrap');
-    const dash = <span className="text-gray-400">—</span>;
+    const dash = <span className="text-(--palette-gray-400)">—</span>;
 
     // Who set the amount: an admin's own figure shows the chip and what the system would have said.
     const sourceCell = (item: FeePreviewItem) =>
@@ -272,7 +278,7 @@ export default function AssignmentFeeCard({
           <tbody>
             {base && (
               <tr>
-                <td className={clsx(td, 'font-medium text-gray-800')}>{typeLabel('01')}</td>
+                <td className={clsx(td, 'font-medium text-(--palette-ink)')}>{typeLabel('01')}</td>
                 <td className={td}>{sourceCell(base)}</td>
                 <td className={amountTd}>{money(base.amount)}</td>
                 <td className={actionsTd}>
@@ -314,7 +320,9 @@ export default function AssignmentFeeCard({
 
             {showUnsetBase && (
               <tr>
-                <td className={clsx(td, 'font-medium text-gray-800')}>{t('feePreview.type.01')}</td>
+                <td className={clsx(td, 'font-medium text-(--palette-ink)')}>
+                  {t('feePreview.type.01')}
+                </td>
                 <td className={td}>{dash}</td>
                 <td className={amountTd}>{dash}</td>
                 <td className={actionsTd}>
@@ -350,9 +358,9 @@ export default function AssignmentFeeCard({
               const isAdmin = item.source === 'Admin';
               return (
                 <tr key={item.id ?? `${item.feeCode}-${index}`}>
-                  <td className={clsx(td, 'text-gray-800')}>
+                  <td className={clsx(td, 'text-(--palette-ink)')}>
                     <span className="font-medium">{item.description}</span>{' '}
-                    <span className="text-gray-500">({typeLabel(item.feeCode)})</span>
+                    <span className="text-(--palette-gray-500)">({typeLabel(item.feeCode)})</span>
                   </td>
                   <td className={td}>{sourceCell(item)}</td>
                   <td className={amountTd}>{money(item.amount)}</td>
@@ -398,7 +406,7 @@ export default function AssignmentFeeCard({
         {editable && (
           <button
             type="button"
-            className="self-start rounded-md bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20 disabled:opacity-50"
+            className="self-start rounded-md bg-primary/10 px-3 py-1.5 text-sm font-medium text-(--palette-primary-text) hover:bg-primary/20 disabled:opacity-50"
             disabled={frozen}
             onClick={() => setDialog({})}
           >
@@ -411,8 +419,8 @@ export default function AssignmentFeeCard({
             className={clsx(
               'rounded-lg px-2.5 py-2 text-xs',
               note.warn
-                ? 'border border-amber-200 bg-amber-50 text-amber-800'
-                : 'bg-gray-50 text-gray-600',
+                ? 'border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300'
+                : 'bg-(--palette-surface-2) text-(--palette-gray-600)',
             )}
           >
             {note.text}

@@ -89,11 +89,11 @@ const splitDateTime = (iso: string | null | undefined, language: string | undefi
   return { date: formatLocaleDate(d, language), time: formatDate(d, 'HH:mm') };
 };
 
-const Dash = () => <span className="text-gray-400">—</span>;
+const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
 
 /** Row of equal stat cells; each cell may carry an info popover next to its label. */
 const StatStrip = ({ children }: { children: ReactNode }) => (
-  <div className="grid grid-cols-3 divide-x divide-gray-100 overflow-hidden rounded-xl border border-gray-100">
+  <div className="grid grid-cols-3 divide-x divide-(--palette-line-soft) overflow-hidden rounded-xl border border-(--palette-line-soft)">
     {children}
   </div>
 );
@@ -109,8 +109,13 @@ const Stat = ({
   children: ReactNode;
 }) => (
   <div className="min-w-0 px-3 py-2">
-    <div className="flex items-center gap-1 text-xs text-gray-500">{label}</div>
-    <div className={clsx('text-sm font-semibold', warn ? 'text-amber-600' : 'text-gray-800')}>
+    <div className="flex items-center gap-1 text-xs text-(--palette-gray-500)">{label}</div>
+    <div
+      className={clsx(
+        'text-sm font-semibold',
+        warn ? 'text-amber-600 dark:text-amber-400' : 'text-(--palette-ink)',
+      )}
+    >
       {children}
     </div>
   </div>
@@ -131,11 +136,11 @@ const ResponsesTable = ({ invitedCompanies, companyQuotations }: ResponsesTableP
   const { t, i18n } = useTranslation(['appraisal', 'quotation']);
   const localizeCompanyName = useLocalizedCompanyName();
   const th =
-    'bg-gray-50 border-b border-gray-200 px-2 py-2 align-bottom text-xs font-semibold text-gray-600';
-  const td = 'border-b border-gray-100 px-2 py-2 align-middle';
+    'bg-(--palette-surface-2) border-b border-(--palette-line) px-2 py-2 align-bottom text-xs font-semibold text-(--palette-gray-600)';
+  const td = 'border-b border-(--palette-line-soft) px-2 py-2 align-middle';
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-(--palette-line)">
       <table className="w-full min-w-[40rem] text-sm tabular-nums">
         <thead>
           <tr>
@@ -166,10 +171,10 @@ const ResponsesTable = ({ invitedCompanies, companyQuotations }: ResponsesTableP
             const companyName = localizeCompanyName(inv.companyName, inv.companyNameLocal);
 
             return (
-              <tr key={inv.companyId} className="hover:bg-gray-50">
+              <tr key={inv.companyId} className="hover:bg-(--palette-surface-2)">
                 <td className={td}>
                   <div
-                    className="max-w-[14rem] truncate font-medium text-gray-800"
+                    className="max-w-[14rem] truncate font-medium text-(--palette-ink)"
                     title={companyName}
                   >
                     {companyName}
@@ -181,7 +186,7 @@ const ResponsesTable = ({ invitedCompanies, companyQuotations }: ResponsesTableP
                 <td className={clsx(td, 'text-right')}>
                   {items.length > 0 ? fmtCurrency(totalDiscount) : <Dash />}
                 </td>
-                <td className={clsx(td, 'text-right font-semibold text-gray-900')}>
+                <td className={clsx(td, 'text-right font-semibold text-(--palette-ink)')}>
                   {hasQuote ? fmtCurrency(cq?.totalQuotedPrice) : <Dash />}
                 </td>
                 <td className={clsx(td, 'text-right')}>
@@ -199,7 +204,7 @@ const ResponsesTable = ({ invitedCompanies, companyQuotations }: ResponsesTableP
                   {submitted ? (
                     <>
                       <div>{submitted.date}</div>
-                      <div className="text-xs text-gray-400">{submitted.time}</div>
+                      <div className="text-xs text-(--palette-gray-400)">{submitted.time}</div>
                     </>
                   ) : (
                     <Dash />
@@ -261,7 +266,7 @@ const ShareDocumentsStep = ({
 
   if (appraisals.length === 0) {
     return (
-      <p className="text-sm text-gray-500 py-4 text-center">
+      <p className="text-sm text-(--palette-gray-500) py-4 text-center">
         {t('quotation.shareDocuments.noAppraisals')}
       </p>
     );
@@ -270,7 +275,7 @@ const ShareDocumentsStep = ({
   return (
     <div className="flex flex-col gap-0">
       {/* Tab bar */}
-      <div className="flex border-b border-gray-200 overflow-x-auto shrink-0">
+      <div className="flex border-b border-(--palette-line) overflow-x-auto shrink-0">
         {appraisals.map((ap, idx) => {
           const apSelection = selections[ap.appraisalId] ?? {};
           const hasNoDocs = noDocsAppraisalIds.has(ap.appraisalId);
@@ -283,12 +288,12 @@ const ShareDocumentsStep = ({
               className={clsx(
                 'flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
                 activeTabIdx === idx
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  ? 'border-primary text-(--palette-primary-text)'
+                  : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink) hover:border-(--palette-line-strong)',
               )}
             >
               {hasNoDocs ? (
-                <Icon name="circle-minus" style="solid" className="text-gray-300" />
+                <Icon name="circle-minus" style="solid" className="text-(--palette-gray-300)" />
               ) : covered ? (
                 <Icon name="circle-check" style="solid" className="text-green-500" />
               ) : (
@@ -346,7 +351,7 @@ const AppraisalDocTab = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-6 px-3 text-xs text-gray-400">
+      <div className="flex items-center gap-2 py-6 px-3 text-xs text-(--palette-gray-400)">
         <Icon name="spinner" style="solid" className="animate-spin" />
         {t('quotation.shareDocuments.loadingDocuments')}
       </div>
@@ -355,7 +360,7 @@ const AppraisalDocTab = ({
 
   if (!appraisal.requestId) {
     return (
-      <div className="px-3 py-4 text-xs text-amber-600 flex items-center gap-1.5">
+      <div className="px-3 py-4 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
         <Icon name="triangle-exclamation" style="solid" className="shrink-0" />
         {t('quotation.shareDocuments.noRequestLinked')}
       </div>
@@ -364,14 +369,14 @@ const AppraisalDocTab = ({
 
   if (!hasAnyUploadedDocs) {
     return (
-      <div className="px-3 py-4 text-xs text-gray-400">
+      <div className="px-3 py-4 text-xs text-(--palette-gray-400)">
         {t('quotation.shareDocuments.noDocuments')}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-0 divide-y divide-gray-100 max-h-80 overflow-y-auto">
+    <div className="flex flex-col gap-0 divide-y divide-(--palette-line-soft) max-h-80 overflow-y-auto">
       {sections.map((section, sIdx) => {
         const level: SharedDocumentSelectionDto['level'] =
           section.titleId == null ? 'RequestLevel' : 'TitleLevel';
@@ -388,7 +393,9 @@ const AppraisalDocTab = ({
         return (
           <div key={sIdx} className="px-3 py-2">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-xs font-medium text-gray-500">{section.sectionLabel}</span>
+              <span className="text-xs font-medium text-(--palette-gray-500)">
+                {section.sectionLabel}
+              </span>
               <label className="flex items-center gap-1.5 cursor-pointer">
                 <input
                   type="checkbox"
@@ -396,7 +403,7 @@ const AppraisalDocTab = ({
                   onChange={e => handleSelectAll(e.target.checked)}
                   className="size-3.5 accent-primary rounded"
                 />
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-(--palette-gray-500)">
                   {t('quotation.shareDocuments.selectAll')}
                 </span>
               </label>
@@ -415,10 +422,10 @@ const AppraisalDocTab = ({
                     }
                     className="size-3.5 accent-primary rounded shrink-0"
                   />
-                  <span className="text-xs text-gray-800 truncate group-hover:text-primary">
+                  <span className="text-xs text-(--palette-ink) truncate group-hover:text-(--palette-primary-text)">
                     {doc.fileName ?? doc.documentId}
                     {doc.documentTypeName && (
-                      <span className="text-gray-400"> ({doc.documentTypeName})</span>
+                      <span className="text-(--palette-gray-400)"> ({doc.documentTypeName})</span>
                     )}
                   </span>
                 </label>
@@ -539,7 +546,7 @@ const EditDraftForm = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-gray-100 p-4 text-sm text-gray-600">
+    <div className="flex flex-col gap-4 rounded-xl border border-(--palette-line-soft) p-4 text-sm text-(--palette-gray-600)">
       {/* Max Appraisal Duration — editable for this appraisal only */}
       <div className="max-w-xs">
         <NumberInput
@@ -557,10 +564,10 @@ const EditDraftForm = ({
 
       {/* Companies Invited — editable multiselect */}
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-medium text-gray-700">
+        <div className="text-xs font-medium text-(--palette-ink)">
           {t('quotation.editDraft.companiesInvited')}
           {segmentSet.length > 0 && (
-            <span className="ml-1.5 text-purple-600 font-normal">
+            <span className="ml-1.5 text-purple-600 dark:text-purple-400 font-normal">
               ({t('quotation.editDraft.eligibleFor')}{' '}
               <strong>{segmentSet.map(segmentLabel).join(', ')}</strong>)
             </span>
@@ -573,7 +580,7 @@ const EditDraftForm = ({
             {Array.from(editCompanyIds).map(id => (
               <div
                 key={id}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-xs"
               >
                 <Icon name="building" style="solid" />
                 <span className="font-medium">{editCompanyNames[id] ?? id.slice(0, 8)}</span>
@@ -584,7 +591,7 @@ const EditDraftForm = ({
                   aria-label={t('quotation:section.removeCompany', {
                     company: editCompanyNames[id] ?? id.slice(0, 8),
                   })}
-                  className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                  className="p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-500/30 transition-colors"
                 >
                   <Icon name="xmark" style="solid" />
                 </button>
@@ -601,14 +608,14 @@ const EditDraftForm = ({
           onChange={e => onEditSearchQueryChange(e.target.value)}
           leftIcon={<Icon name="magnifying-glass" style="regular" className="size-3.5!" />}
         />
-        <div className="max-h-36 overflow-y-auto rounded-lg border border-gray-200">
+        <div className="max-h-36 overflow-y-auto rounded-lg border border-(--palette-line)">
           {isLoadingCompanies ? (
-            <div className="px-4 py-4 text-center text-gray-500">
+            <div className="px-4 py-4 text-center text-(--palette-gray-500)">
               <Icon name="spinner" style="solid" className="animate-spin mx-auto mb-1" />
               <span className="text-xs">{t('common:status.loading')}</span>
             </div>
           ) : filteredCompanies.length === 0 ? (
-            <div className="px-4 py-4 text-center text-gray-500 text-xs">
+            <div className="px-4 py-4 text-center text-(--palette-gray-500) text-xs">
               {isCompaniesError
                 ? t('quotation.editDraft.failedToLoadCompanies')
                 : noCoverage
@@ -616,7 +623,7 @@ const EditDraftForm = ({
                   : t('quotation.editDraft.noCompaniesFound')}
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-(--palette-line-soft)">
               {filteredCompanies.map(company => {
                 const isSelected = editCompanyIds.has(company.id);
                 return (
@@ -626,21 +633,29 @@ const EditDraftForm = ({
                     onClick={() => handleToggleCompany(company)}
                     className={clsx(
                       'w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors',
-                      isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                      isSelected
+                        ? 'bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
+                        : 'hover:bg-(--palette-surface-2)',
                     )}
                   >
                     <div
                       className={clsx(
                         'size-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                        isSelected ? 'bg-purple-500 border-purple-500' : 'border-gray-300 bg-white',
+                        isSelected
+                          ? 'bg-purple-500 border-purple-500'
+                          : 'border-(--palette-line-strong) bg-(--palette-surface)',
                       )}
                     >
                       {isSelected && <Icon name="check" style="solid" className="text-white" />}
                     </div>
-                    <div className="size-6 rounded bg-purple-100 flex items-center justify-center shrink-0">
-                      <Icon name="building" style="solid" className="text-purple-600" />
+                    <div className="size-6 rounded bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0">
+                      <Icon
+                        name="building"
+                        style="solid"
+                        className="text-purple-600 dark:text-purple-400"
+                      />
                     </div>
-                    <span className="flex-1 truncate text-gray-900">
+                    <span className="flex-1 truncate text-(--palette-ink)">
                       {localizeCompanyName(company.companyName, company.companyNameLocal)}
                     </span>
                     <SegmentChips segments={company.loanTypes} />
@@ -717,7 +732,7 @@ interface QuotationSectionProps {
 type SendStep = 'confirm' | 'share-docs';
 
 /** Action row under a card's content: top rule, buttons wrap on a narrow column. */
-const ACTION_ROW = 'flex flex-wrap items-center gap-2 border-t border-gray-100 pt-3';
+const ACTION_ROW = 'flex flex-wrap items-center gap-2 border-t border-(--palette-line-soft) pt-3';
 
 const QuotationSection = ({
   appraisalId,
@@ -945,8 +960,8 @@ const QuotationSection = ({
   if (isLoading) {
     return (
       <FormCard title={t('quotation.sectionTitle')}>
-        <div className="flex items-center gap-2 text-sm text-gray-500">
-          <Icon name="spinner" style="solid" className="animate-spin text-gray-400" />
+        <div className="flex items-center gap-2 text-sm text-(--palette-gray-500)">
+          <Icon name="spinner" style="solid" className="animate-spin text-(--palette-gray-400)" />
           {t('quotation.loading')}
         </div>
       </FormCard>
@@ -958,9 +973,9 @@ const QuotationSection = ({
     return (
       <FormCard title={t('quotation.sectionTitle')}>
         <div className="flex flex-col items-start gap-3">
-          <div className="w-full rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2">
-            <p className="text-sm font-medium text-gray-800">{t('quotation.noQuotation')}</p>
-            <p className="text-xs text-gray-500">{t('quotation.noQuotationHint')}</p>
+          <div className="w-full rounded-lg border border-dashed border-(--palette-line-strong) bg-(--palette-surface-2) px-3 py-2">
+            <p className="text-sm font-medium text-(--palette-ink)">{t('quotation.noQuotation')}</p>
+            <p className="text-xs text-(--palette-gray-500)">{t('quotation.noQuotationHint')}</p>
           </div>
           {!readOnly && (
             <Button
@@ -986,7 +1001,9 @@ const QuotationSection = ({
         <span
           className={clsx(
             'text-sm font-semibold',
-            canOpenQuotation ? 'text-primary group-hover:underline' : 'text-gray-700',
+            canOpenQuotation
+              ? 'text-(--palette-primary-text) group-hover:underline'
+              : 'text-(--palette-ink)',
           )}
         >
           {activeQuotation.quotationNumber}
@@ -1004,7 +1021,9 @@ const QuotationSection = ({
 
   /** Detail not available (request failed): header stays, body says why. */
   const renderDetailMissing = () =>
-    renderFrame(<p className="text-xs text-gray-500">{t('quotation.loadDetailFailed')}</p>);
+    renderFrame(
+      <p className="text-xs text-(--palette-gray-500)">{t('quotation.loadDetailFailed')}</p>,
+    );
 
   /** Cancel Quotation link + modal — used in every non-terminal, non-Draft branch.
       Draft auto-cancels via last-appraisal-removal so it gets the Remove link instead;
@@ -1035,13 +1054,13 @@ const QuotationSection = ({
       size="sm"
     >
       <div className="flex flex-col gap-4">
-        <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
+        <div className="p-3 bg-(--palette-req-wash) rounded-lg border border-red-100 dark:border-red-500/20 flex items-start gap-2">
           <Icon
             name="triangle-exclamation"
             style="solid"
             className="text-red-500 shrink-0 mt-0.5"
           />
-          <p className="text-sm text-red-700">
+          <p className="text-sm text-(--palette-req)">
             {t('quotation.cancelConfirmMessage', {
               quotationNumber: activeQuotation.quotationNumber,
             })}
@@ -1093,10 +1112,10 @@ const QuotationSection = ({
     // Under 48h the strip turns amber, under 24h red; the countdown text only shows under 48h.
     const stripTone =
       hoursLeft < 24
-        ? 'border-red-200 bg-red-50 text-red-800'
+        ? 'border-(--palette-req-line) bg-(--palette-req-wash) text-red-800 dark:text-red-300'
         : hoursLeft < 48
-          ? 'border-amber-200 bg-amber-50 text-amber-800'
-          : 'border-blue-200 bg-blue-50 text-blue-800';
+          ? 'border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300'
+          : 'border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-300';
 
     return (
       <>
@@ -1360,7 +1379,7 @@ const QuotationSection = ({
               />
             ) : (
               <>
-                <p className="text-xs text-gray-500">{t('quotation.draftHint')}</p>
+                <p className="text-xs text-(--palette-gray-500)">{t('quotation.draftHint')}</p>
 
                 <StatStrip>
                   <Stat
@@ -1401,7 +1420,7 @@ const QuotationSection = ({
 
                 {(draftDetail?.bankingSegment?.length ?? 0) > 0 && (
                   <div>
-                    <div className="mb-1 text-xs text-gray-500">
+                    <div className="mb-1 text-xs text-(--palette-gray-500)">
                       {t('quotation:segment.segmentSet')}
                     </div>
                     <SegmentChips segments={draftDetail?.bankingSegment} />
@@ -1414,15 +1433,17 @@ const QuotationSection = ({
                 {!readOnly && canEdit && (
                   <SegmentGapsAlert
                     gaps={segmentGaps}
-                    className="rounded-lg border border-amber-200 px-3 py-2 text-xs"
+                    className="rounded-lg border border-amber-200 dark:border-amber-500/30 px-3 py-2 text-xs"
                   />
                 )}
 
                 {/* Request Details — Special Requirements (request-wide). Per-appraisal
                     Max Appraisal Duration lives in the Appraisals ⓘ popover above. */}
                 <div>
-                  <div className="text-xs text-gray-500">{t('quotation.specialRequirements')}</div>
-                  <div className="whitespace-pre-wrap text-sm text-gray-800">
+                  <div className="text-xs text-(--palette-gray-500)">
+                    {t('quotation.specialRequirements')}
+                  </div>
+                  <div className="whitespace-pre-wrap text-sm text-(--palette-ink)">
                     {draftDetail?.specialRequirements?.trim() || t('quotation.notSet')}
                   </div>
                 </div>
@@ -1545,7 +1566,9 @@ const QuotationSection = ({
           size="md"
         >
           <div className="flex flex-col gap-3">
-            <p className="text-xs text-gray-500">{t('quotation.shareDocuments.step')}</p>
+            <p className="text-xs text-(--palette-gray-500)">
+              {t('quotation.shareDocuments.step')}
+            </p>
 
             <ShareDocumentsStep
               appraisals={draftAppraisals}
@@ -1556,13 +1579,13 @@ const QuotationSection = ({
             />
 
             {!allAppraisalsCovered && draftAppraisals.length > 0 && (
-              <div className="flex items-center gap-1.5 rounded-lg border border-amber-100 bg-amber-50 p-2">
+              <div className="flex items-center gap-1.5 rounded-lg border border-amber-100 dark:border-amber-500/20 bg-(--palette-warn-wash) p-2">
                 <Icon
                   name="triangle-exclamation"
                   style="solid"
                   className="shrink-0 text-amber-500"
                 />
-                <p className="text-xs text-amber-700">
+                <p className="text-xs text-(--palette-warn)">
                   {t('quotation.shareDocuments.coverageWarning')}
                 </p>
               </div>
@@ -1664,7 +1687,7 @@ const QuotationSection = ({
                 >
                   {t('quotation.openNegotiation')}
                 </Button>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-(--palette-gray-500)">
                   {t('quotation:negotiation.roundsCount', {
                     used: roundsUsed,
                     max: MAX_NEGOTIATION_ROUNDS,
@@ -1674,7 +1697,7 @@ const QuotationSection = ({
                   variant="outline"
                   size="sm"
                   onClick={openReject}
-                  className="ml-auto text-danger! border-red-300! hover:bg-red-50!"
+                  className="ml-auto text-danger! border-red-300! hover:bg-(--palette-req-wash)!"
                   leftIcon={<Icon name="xmark" style="solid" />}
                 >
                   {t('quotation.rejectWinner')}
@@ -1763,7 +1786,7 @@ const QuotationSection = ({
       newest && newest.id !== activeQuotation.id && newest.status === 'Cancelled' ? newest : null;
     return renderFrame(
       <>
-        <div className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800">
+        <div className="rounded-lg border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 px-3 py-2 text-sm text-green-800 dark:text-green-300">
           <p className="font-semibold">
             {t('quotation.finalizedWith', {
               company: winner
@@ -1777,10 +1800,12 @@ const QuotationSection = ({
               <strong className="text-base tabular-nums">{formatCurrency(finalPrice)}</strong>
             </p>
           )}
-          <p className="mt-1 text-xs text-green-700">{t('quotation.finalizedHint')}</p>
+          <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+            {t('quotation.finalizedHint')}
+          </p>
         </div>
         {newerCancelled && (
-          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs text-(--palette-gray-500)">
             <span>
               {t('quotation:section.latestCancelled', { number: newerCancelled.quotationNumber })}
             </span>
@@ -1804,7 +1829,7 @@ const QuotationSection = ({
   if (status === 'Cancelled') {
     return renderFrame(
       <>
-        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">
+        <div className="rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) px-3 py-2 text-sm text-red-800 dark:text-red-300">
           <p>{t('quotation.cancelledHint')}</p>
           {quotationDetail?.cancellationReason && (
             <p className="mt-1 text-xs">
@@ -1831,7 +1856,7 @@ const QuotationSection = ({
   return renderFrame(
     readOnly ? (
       // Nothing to act on: say what the quotation's status is rather than draw an empty body.
-      <p className="text-sm text-gray-500">{status || t('administration.noData')}</p>
+      <p className="text-sm text-(--palette-gray-500)">{status || t('administration.noData')}</p>
     ) : (
       <div>
         <Button

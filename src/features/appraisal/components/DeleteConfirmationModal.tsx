@@ -32,11 +32,11 @@ export const DeleteConfirmationModal = ({
     <Modal isOpen={isOpen} onClose={onClose} title={resolvedTitle} size="sm">
       <div className="space-y-4">
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-            <Icon name="exclamation-triangle" className="text-red-600 text-xl" />
+          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
+            <Icon name="exclamation-triangle" className="text-(--palette-danger) text-xl" />
           </div>
           <div className="flex-1">
-            <p className="text-sm text-gray-600">{resolvedMessage}</p>
+            <p className="text-sm text-(--palette-gray-600)">{resolvedMessage}</p>
           </div>
         </div>
 

@@ -314,7 +314,7 @@ function TaskListingPage() {
 
         <section
           aria-label={t('task:page.listLabel')}
-          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm"
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm"
         >
           <TaskListToolbar
             searchTerm={curSearch}

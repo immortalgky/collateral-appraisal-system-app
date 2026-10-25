@@ -97,17 +97,17 @@ describe('SearchAppraisalModal', () => {
       const { last, customer, date, customerHead, dateHead } = await setup();
       expect(last()).toEqual(['appraisalDate', 'desc']);
       expect(dateHead).toHaveAttribute('aria-sort', 'descending');
-      expect(date).toHaveClass('text-primary');
+      expect(date).toHaveClass('text-(--palette-primary-text)');
       expect(customerHead).toHaveAttribute('aria-sort', 'none');
-      expect(customer).not.toHaveClass('text-primary');
+      expect(customer).not.toHaveClass('text-(--palette-primary-text)');
     });
 
     it('keeps the sorted header green on hover; only an unsorted one goes grey', async () => {
       const { customer, date } = await setup();
-      expect(date).toHaveClass('hover:text-primary-700');
-      expect(date).not.toHaveClass('hover:text-gray-900');
-      expect(customer).toHaveClass('hover:text-gray-900');
-      expect(customer).not.toHaveClass('hover:text-primary-700');
+      expect(date).toHaveClass('hover:text-(--palette-accent-ink)');
+      expect(date).not.toHaveClass('hover:text-(--palette-ink)');
+      expect(customer).toHaveClass('hover:text-(--palette-ink)');
+      expect(customer).not.toHaveClass('hover:text-(--palette-accent-ink)');
     });
 
     it('takes another column through ascending, descending and off, back to the date default', async () => {
@@ -115,7 +115,7 @@ describe('SearchAppraisalModal', () => {
       await user.click(customer);
       await waitFor(() => expect(last()).toEqual(['CustomerName', 'asc']));
       expect(customerHead).toHaveAttribute('aria-sort', 'ascending');
-      expect(customer).toHaveClass('text-primary');
+      expect(customer).toHaveClass('text-(--palette-primary-text)');
       expect(dateHead).toHaveAttribute('aria-sort', 'none');
       await user.click(customer);
       await waitFor(() => expect(last()).toEqual(['CustomerName', 'desc']));

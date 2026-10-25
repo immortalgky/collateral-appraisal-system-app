@@ -6,7 +6,7 @@ import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
-import { type AddFeeFormData, useAddFeeFormSchema } from '../schemas/appointmentAndFee';
+import { type AddFeeFormData, AddFeeFormSchema } from '../schemas/appointmentAndFee';
 import type { FeeItem } from '../types/appointmentAndFee';
 
 interface AddFeeModalProps {
@@ -30,7 +30,6 @@ export default function AddFeeModal({
   readOnly = false,
 }: AddFeeModalProps) {
   const { t } = useTranslation(['appraisal', 'common']);
-  const feeSchema = useAddFeeFormSchema();
   const {
     register,
     handleSubmit,
@@ -39,7 +38,7 @@ export default function AddFeeModal({
     control,
     setValue,
   } = useForm<AddFeeFormData>({
-    resolver: zodResolver(feeSchema),
+    resolver: zodResolver(AddFeeFormSchema),
     defaultValues: {
       type: defaultValues?.type || '99',
       description: defaultValues?.description || '',
@@ -110,7 +109,7 @@ export default function AddFeeModal({
         />
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
             {t('common:actions.cancel')}
           </Button>

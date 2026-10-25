@@ -156,7 +156,7 @@ export const DocumentChecklistTab = ({ embedded = false }: { embedded?: boolean 
         {/* Open followup banner — full interactive view (table + cancel controls). */}
         {taskId && <OpenFollowupBanner raisingTaskId={taskId} />}
 
-        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-gray-200">
+        <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2 border-b border-(--palette-line)">
           <div
             role="tablist"
             aria-label={t('valuationDocuments.checklist.tablistLabel')}
@@ -176,8 +176,8 @@ export const DocumentChecklistTab = ({ embedded = false }: { embedded?: boolean 
                 className={clsx(
                   '-mb-px inline-flex cursor-pointer items-center gap-2 border-b-2 px-3.5 py-2 text-sm font-medium',
                   tab === key
-                    ? 'border-primary font-semibold text-primary'
-                    : 'border-transparent text-gray-600 hover:text-gray-900',
+                    ? 'border-primary font-semibold text-(--palette-primary-text)'
+                    : 'border-transparent text-(--palette-gray-600) hover:text-(--palette-ink)',
                 )}
               >
                 {labels[key]}
@@ -185,7 +185,9 @@ export const DocumentChecklistTab = ({ embedded = false }: { embedded?: boolean 
                   <span
                     className={clsx(
                       'rounded-full px-2 py-px text-xs font-semibold',
-                      counts[key].warn ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-600',
+                      counts[key].warn
+                        ? 'bg-(--palette-warn-wash) text-(--palette-warn)'
+                        : 'bg-(--palette-surface-3) text-(--palette-gray-600)',
                     )}
                   >
                     {counts[key].text}
@@ -218,7 +220,7 @@ export const DocumentChecklistTab = ({ embedded = false }: { embedded?: boolean 
                     title={t('valuationDocuments.sections.machineryBookSection1')}
                     defaultOpen
                   >
-                    <section className="rounded-t-2xl rounded-b-none border border-gray-100 bg-white p-6 shadow-sm">
+                    <section className="rounded-t-2xl rounded-b-none border border-(--palette-line-soft) bg-(--palette-surface) p-6 shadow-sm">
                       <MachineryBookSection1Tab />
                     </section>
                   </CollapsibleSection>

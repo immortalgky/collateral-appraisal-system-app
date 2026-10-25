@@ -145,7 +145,10 @@ export function ScrollableTableContainer({
     // grouping like the mock's DCF/Leasehold year chips), so the column we scroll to and
     // the column we flash are always the same `th` — nothing extra to resolve.
     const prefersReducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
-    el.scrollTo({ left: th.offsetLeft - stickyWidth, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    el.scrollTo({
+      left: th.offsetLeft - stickyWidth,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
     if (prefersReducedMotion) return;
     // `animate-nav-flash` — theme.css token dedicated to this "jump to column" flash,
     // deliberately separate from `animate-flash-highlight` (PropertiesTab.tsx's
@@ -184,7 +187,7 @@ export function ScrollableTableContainer({
         type="button"
         onClick={() => goToColumn((visibleColumnIndices[0] ?? 0) - 1)}
         disabled={(visibleColumnIndices[0] ?? 0) === 0}
-        className="size-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none"
+        className="size-5 flex items-center justify-center rounded text-(--palette-gray-400) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) disabled:opacity-30 disabled:pointer-events-none"
         aria-label={t('pricingAnalysis:aria.scrollLeft')}
       >
         <Icon name="chevron-left" className="size-3" />
@@ -201,8 +204,8 @@ export function ScrollableTableContainer({
               className={clsx(
                 'min-w-5 h-5 px-1 rounded text-[11px] font-medium transition-colors',
                 visibleColumnIndices.some(i => i >= from && i <= to)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600',
+                  ? 'bg-primary/10 text-(--palette-primary-text)'
+                  : 'text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)',
               )}
             >
               {from === to ? from + 1 : `${from + 1}–${to + 1}`}
@@ -214,13 +217,13 @@ export function ScrollableTableContainer({
         type="button"
         onClick={() => goToColumn((visibleColumnIndices.at(-1) ?? 0) + 1)}
         disabled={(visibleColumnIndices.at(-1) ?? 0) >= navColumnCount - 1}
-        className="size-5 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none"
+        className="size-5 flex items-center justify-center rounded text-(--palette-gray-400) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) disabled:opacity-30 disabled:pointer-events-none"
         aria-label={t('pricingAnalysis:aria.scrollRight')}
       >
         <Icon name="chevron-right" className="size-3" />
       </button>
       {visibleColumnIndices.length > 0 && (
-        <span className="text-[11px] text-gray-400 whitespace-nowrap ml-1">
+        <span className="text-[11px] text-(--palette-gray-400) whitespace-nowrap ml-1">
           {t('nav.visibleRange', {
             from: (visibleColumnIndices[0] ?? 0) + 1,
             to: (visibleColumnIndices.at(-1) ?? 0) + 1,
@@ -254,7 +257,6 @@ export function ScrollableTableContainer({
         `}</style>
       )}
 
-
       <div
         ref={scrollRef}
         tabIndex={0}
@@ -279,7 +281,6 @@ export function ScrollableTableContainer({
       >
         {children}
       </div>
-
     </div>
   );
 }

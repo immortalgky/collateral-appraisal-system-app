@@ -61,9 +61,10 @@ export function Tag({ tone, children }: { tone: Tone; children: ReactNode }) {
 }
 
 const CALLOUT_CLASSES: Record<'amber' | 'red' | 'sky', string> = {
-  amber: 'bg-amber-50 border-amber-200 text-amber-800',
-  red: 'bg-red-50 border-red-200 text-red-700',
-  sky: 'bg-sky-50 border-sky-200 text-sky-700',
+  amber:
+    'bg-(--palette-warn-wash) border-amber-200 dark:border-amber-500/30 text-amber-800 dark:text-amber-300',
+  red: 'bg-(--palette-req-wash) border-(--palette-req-line) text-(--palette-req)',
+  sky: 'bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-500/30 text-sky-700 dark:text-sky-300',
 };
 
 /**
@@ -110,11 +111,11 @@ export function RefCell({
 }) {
   const shortId = !number && refId ? refId.slice(0, 8) : undefined;
   const displayText = number ?? shortId;
-  if (!displayText) return <span className="text-gray-400">—</span>;
+  if (!displayText) return <span className="text-(--palette-gray-400)">—</span>;
   const fullIdTitle = shortId ? refId : undefined;
   return (
     <span className="whitespace-nowrap">
-      {label && <span className="text-[12px] text-gray-400 mr-1">{label}</span>}
+      {label && <span className="text-[12px] text-(--palette-gray-400) mr-1">{label}</span>}
       {href ? (
         <a
           href={href}
@@ -122,7 +123,7 @@ export function RefCell({
           rel="noopener noreferrer"
           title={fullIdTitle}
           onClick={e => e.stopPropagation()}
-          className="font-medium text-primary hover:underline"
+          className="font-medium text-(--palette-primary-text) hover:underline"
         >
           {displayText}
         </a>
@@ -148,7 +149,7 @@ export function CodeBlock({
   return (
     <pre
       className={clsx(
-        'overflow-y-auto text-[12px] font-mono rounded-lg border border-gray-200 bg-gray-50 p-3 max-h-96',
+        'overflow-y-auto text-[12px] font-mono rounded-lg border border-(--palette-line) bg-(--palette-surface-2) p-3 max-h-96',
         wrap ? 'whitespace-pre-wrap break-words' : 'overflow-x-auto whitespace-pre',
         className,
       )}
@@ -162,12 +163,14 @@ export function CodeBlock({
 export function HeadersTable({ headers }: { headers?: Record<string, string> }) {
   if (!headers || Object.keys(headers).length === 0) return null;
   return (
-    <div className="overflow-x-auto rounded-lg border border-gray-200">
+    <div className="overflow-x-auto rounded-lg border border-(--palette-line)">
       <table className="w-full text-[13px]">
         <tbody>
           {Object.entries(headers).map(([key, value]) => (
-            <tr key={key} className="border-b border-gray-100 last:border-b-0">
-              <td className="px-2.5 py-1.5 font-mono text-gray-400 whitespace-nowrap">{key}</td>
+            <tr key={key} className="border-b border-(--palette-line-soft) last:border-b-0">
+              <td className="px-2.5 py-1.5 font-mono text-(--palette-gray-400) whitespace-nowrap">
+                {key}
+              </td>
               <td className="px-2.5 py-1.5 font-mono break-all">{value}</td>
             </tr>
           ))}
@@ -195,7 +198,7 @@ export function Th({ children, className }: { children?: ReactNode; className?: 
 /** Small uppercase heading drawers use above each section (overview, history, etc). */
 export function SectionTitle({ children }: { children: ReactNode }) {
   return (
-    <h3 className="text-[11px] uppercase tracking-wide text-gray-400 font-semibold mb-2">
+    <h3 className="text-[11px] uppercase tracking-wide text-(--palette-gray-400) font-semibold mb-2">
       {children}
     </h3>
   );
@@ -214,7 +217,7 @@ export function KeyValueList({ items }: { items: { label: string; value: ReactNo
 function KeyValueRow({ label, value }: { label: string; value: ReactNode }) {
   return (
     <>
-      <dt className="text-gray-400">{label}</dt>
+      <dt className="text-(--palette-gray-400)">{label}</dt>
       <dd className="m-0 break-words mb-1.5 min-[521px]:mb-0">{value}</dd>
     </>
   );
@@ -247,7 +250,7 @@ export function Timeline({ items }: { items: TimelineItem[] }) {
           />
           <div>
             <div>{item.content}</div>
-            {item.time && <div className="text-[12px] text-gray-400">{item.time}</div>}
+            {item.time && <div className="text-[12px] text-(--palette-gray-400)">{item.time}</div>}
           </div>
         </li>
       ))}

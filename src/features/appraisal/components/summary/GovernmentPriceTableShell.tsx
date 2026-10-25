@@ -58,12 +58,14 @@ const GovernmentPriceTableShell = <T,>({
   );
 
   return (
-    <div className="border border-gray-200 rounded-sm">
+    <div className="border border-(--palette-line) rounded-sm">
       {/* Header (fixed) */}
       <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
         <ColGroup />
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">{headerCells}</tr>
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+            {headerCells}
+          </tr>
         </thead>
       </table>
 
@@ -71,7 +73,7 @@ const GovernmentPriceTableShell = <T,>({
       <div className={isExpanded ? 'overflow-y-auto max-h-64' : ''}>
         <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
           <ColGroup />
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {visibleRows.map((row, idx) => renderRow(row, idx))}
           </tbody>
         </table>
@@ -79,10 +81,10 @@ const GovernmentPriceTableShell = <T,>({
 
       {/* Show more / Show less (pinned before footer) */}
       {isExceedRows && (
-        <div className="border-t border-gray-100 px-3 py-2 text-center">
+        <div className="border-t border-(--palette-line-soft) px-3 py-2 text-center">
           <button
             type="button"
-            className="text-primary-600 hover:underline cursor-pointer text-sm"
+            className="text-(--palette-primary-text) hover:underline cursor-pointer text-sm"
             onClick={() => setIsExpanded(prev => !prev)}
           >
             {isExpanded ? showLessLabel : showMoreLabel(rows.length - MAX_INITIAL_ROWS)}
@@ -95,7 +97,9 @@ const GovernmentPriceTableShell = <T,>({
         <table className="w-full text-sm" style={{ tableLayout: 'fixed' }}>
           <ColGroup />
           <tfoot>
-            <tr className="bg-gray-100 border-t-2 border-gray-400">{footerCells}</tr>
+            <tr className="bg-(--palette-surface-3) border-t-2 border-(--palette-line-strong)">
+              {footerCells}
+            </tr>
           </tfoot>
         </table>
       )}

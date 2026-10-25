@@ -65,7 +65,7 @@ interface FilterChipBarProps {
 }
 
 const PANEL_CLASS =
-  'z-50 mt-1.5 rounded-xl border border-gray-200 bg-white p-3 shadow-lg max-h-none! overflow-visible!';
+  'z-50 mt-1.5 rounded-xl border border-(--palette-line) bg-(--palette-surface) p-3 shadow-lg max-h-none! overflow-visible!';
 
 /** Clearing a range means clearing the two keys it writes, not its own. */
 const clearField = (field: FilterField, onRemove: (key: string) => void) => {
@@ -189,7 +189,7 @@ function FilterChip({
   // have no control of their own — they get a chip that says what is filtered and can be removed.
   const chipBody = (
     <>
-      <span className="font-medium text-gray-400">{field.label}:</span>
+      <span className="font-medium text-(--palette-gray-400)">{field.label}:</span>
       <span className="truncate max-w-52">{summary}</span>
     </>
   );
@@ -200,7 +200,7 @@ function FilterChip({
       onClick={() => clearField(field, onRemove)}
       aria-label={t('appraisal:list.removeFilter') + ': ' + field.label}
       style={NO_OUTLINE}
-      className={`rounded p-0.5 opacity-60 hover:bg-gray-200 hover:opacity-100 ${
+      className={`rounded p-0.5 opacity-60 hover:bg-(--palette-line) hover:opacity-100 ${
         showRing ? KEYBOARD_RING_PLAIN : ''
       }`}
     >
@@ -210,7 +210,7 @@ function FilterChip({
 
   if (field.hidden && !unset) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) bg-(--palette-surface-3) px-2.5 py-1 text-xs text-(--palette-ink)">
         {chipBody}
         {remove}
       </span>
@@ -222,10 +222,10 @@ function FilterChip({
       {({ open }) => (
         <>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-200 py-1 text-xs transition-colors hover:border-gray-300 ${
+            className={`inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) py-1 text-xs transition-colors hover:border-(--palette-line-strong) ${
               unset
-                ? 'bg-white px-2.5 text-gray-600 hover:text-gray-800'
-                : 'bg-gray-100 pl-2.5 pr-1 text-gray-700'
+                ? 'bg-(--palette-surface) px-2.5 text-(--palette-gray-600) hover:text-(--palette-ink)'
+                : 'bg-(--palette-surface-3) pl-2.5 pr-1 text-(--palette-ink)'
             }`}
           >
             <PopoverButton
@@ -287,14 +287,17 @@ function OverflowRow({
   // A key a quick view set has no control to open: the row only says what it is and can clear it.
   const label = set ? `${field.label}: ${summary}` : field.label;
   return (
-    <div data-field-key={field.key} className="flex items-center rounded-lg hover:bg-gray-50">
+    <div
+      data-field-key={field.key}
+      className="flex items-center rounded-lg hover:bg-(--palette-surface-2)"
+    >
       <button
         type="button"
         data-overflow-row
         disabled={field.hidden}
         onClick={onOpen}
         style={NO_OUTLINE}
-        className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-left text-sm text-gray-700 disabled:cursor-default ${ring}`}
+        className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-left text-sm text-(--palette-ink) disabled:cursor-default ${ring}`}
       >
         {label}
       </button>
@@ -305,7 +308,7 @@ function OverflowRow({
           onClick={onClear}
           aria-label={t('appraisal:list.removeFilter') + ': ' + field.label}
           style={NO_OUTLINE}
-          className={`mr-1 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 ${ring}`}
+          className={`mr-1 rounded p-1 text-(--palette-gray-400) hover:bg-(--palette-line) hover:text-(--palette-ink) ${ring}`}
         >
           <Icon style="solid" name="xmark" className="size-3" />
         </button>
@@ -631,12 +634,12 @@ function FilterChipBar({
                   count: hiddenFields.length,
                   label: t('appraisal:list.filters.more', { count: hiddenFields.length }),
                 })}
-                className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1 text-xs transition-colors hover:border-gray-300 ${
+                className={`inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) px-2.5 py-1 text-xs transition-colors hover:border-(--palette-line-strong) ${
                   pointerMode ? '' : KEYBOARD_RING
                 } ${
                   hiddenActive
-                    ? 'border-gray-300 bg-gray-100 font-medium text-gray-700'
-                    : 'bg-white text-gray-600 hover:text-gray-800'
+                    ? 'border-(--palette-line-strong) bg-(--palette-surface-3) font-medium text-(--palette-ink)'
+                    : 'bg-(--palette-surface) text-(--palette-gray-600) hover:text-(--palette-ink)'
                 }`}
               >
                 {/* singleLine: a hidden chip with a value says so, so filters never hide unseen */}
@@ -709,7 +712,7 @@ function FilterChipBar({
             <PopoverButton
               ref={addButtonRef}
               style={NO_OUTLINE}
-              className={`inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-xs text-gray-600 transition-colors hover:border-primary hover:text-primary ${
+              className={`inline-flex items-center gap-1.5 rounded-lg border border-dashed border-(--palette-line-strong) px-2.5 py-1 text-xs text-(--palette-gray-600) transition-colors hover:border-primary hover:text-(--palette-primary-text) ${
                 pointerMode ? '' : KEYBOARD_RING
               }`}
             >
@@ -724,7 +727,7 @@ function FilterChipBar({
                     if (fields.length === 0) return null;
                     return (
                       <div key={group}>
-                        <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                           {t(`appraisal:list.filters.groups.${group}`)}
                         </p>
                         {fields.map(field => (
@@ -738,7 +741,7 @@ function FilterChipBar({
                               setForcedKey(field.key);
                               close();
                             }}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2)"
                           >
                             {field.label}
                           </button>
@@ -757,7 +760,7 @@ function FilterChipBar({
             type="button"
             onClick={onClear}
             style={NO_OUTLINE}
-            className={`rounded text-xs text-gray-500 underline hover:text-gray-700 ${
+            className={`rounded text-xs text-(--palette-gray-500) underline hover:text-(--palette-ink) ${
               pointerMode ? '' : KEYBOARD_RING_PLAIN
             }`}
           >
