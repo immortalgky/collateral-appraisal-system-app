@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
+import { useSearchFieldLabel } from '@/shared/hooks/useCodeLabels';
 import SearchResultItem from './SearchResultItem';
 import { groupKey } from '@shared/utils/searchGrouping';
 import type { MatchKind, SearchAppraisal, SearchGroup } from '@shared/types/search';
@@ -72,6 +73,7 @@ export default function SearchResults({
   onRetry,
 }: Props) {
   const { t } = useTranslation('nav');
+  const fieldLabel = useSearchFieldLabel();
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -250,9 +252,7 @@ export default function SearchResults({
                 className="size-3 text-(--palette-gray-400) shrink-0"
               />
               <span className="text-xs font-semibold uppercase tracking-wide text-(--palette-gray-400) shrink-0">
-                {t(`search.fields.${group.matchField}` as never, {
-                  defaultValue: group.matchField,
-                })}
+                {fieldLabel(group.matchField)}
               </span>
               <span className="text-sm font-medium text-gray-900 dark:text-base-content truncate">
                 {group.matchLabel}

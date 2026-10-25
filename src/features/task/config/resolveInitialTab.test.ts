@@ -21,6 +21,17 @@ describe('resolveInitialTab', () => {
   it('empty filter params are not drill-downs', () => {
     expect(run('activityId=&search=', 'pool')).toBe('pool');
   });
+  it("a link with only one tab's Task Type opens that tab, over the stored one", () => {
+    expect(run('poolActivityId=int-appraisal-execution', 'personal')).toBe('pool');
+    expect(run('myActivityId=int-appraisal-execution', 'pool')).toBe('personal');
+    // with a search too: still the tab the Task Type belongs to
+    expect(run('poolActivityId=x&search=abc')).toBe('pool');
+    // both, or an empty one: no clue, so the usual order
+    expect(run('myActivityId=x&poolActivityId=y', 'pool')).toBe('pool');
+    expect(run('poolActivityId=', 'personal')).toBe('personal');
+    // and an explicit tab still wins
+    expect(run('tab=personal&poolActivityId=x')).toBe('personal');
+  });
   it('uses the stored tab', () => {
     expect(run('', 'pool')).toBe('pool');
   });

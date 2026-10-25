@@ -8,6 +8,7 @@ import type { TaskDateType, TaskFilterParams } from '../types';
 import { ACTIVITY_IDS, getActivityConfig } from '../config/activityConfig';
 import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 import { useParameterOptions } from '@shared/utils/parameterUtils';
+import { toLegacyRange } from '../hooks/useTaskListUrlState';
 
 const REQUEST_STATUS_OPTIONS = APPRAISAL_STATUS_FILTER_OPTIONS;
 
@@ -66,7 +67,8 @@ interface TaskFilterDialogProps {
 }
 
 export function TaskFilterDialog({ open, initialValues, onApply, onClose }: TaskFilterDialogProps) {
-  const [values, setValues] = useState<TaskFilterParams>(initialValues);
+  // The dialog has one date range (type + from + to); the filters hold three, so it shows the first set
+  const [values, setValues] = useState<TaskFilterParams>(() => toLegacyRange(initialValues));
   const PURPOSE_TYPE_OPTIONS = useParameterOptions('AppraisalPurpose')
     .filter(o => !!o.isActive)
     .map(o => ({
@@ -79,7 +81,7 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
   }));
 
   useEffect(() => {
-    if (open) setValues(initialValues);
+    if (open) setValues(toLegacyRange(initialValues));
   }, [open, initialValues]);
 
   const handleClear = () => setValues({});

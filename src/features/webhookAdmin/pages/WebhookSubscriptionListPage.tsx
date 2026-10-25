@@ -1,199 +1,194 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import NativeSelect from '@/shared/components/inputs/NativeSelect';
-import SectionHeader from '@shared/components/sections/SectionHeader';
-import Icon from '@shared/components/Icon';
+import Badge from '@shared/components/Badge';
 import Button from '@shared/components/Button';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
-import { TableRowSkeleton } from '@shared/components/Skeleton';
-import Pagination from '@shared/components/Pagination';
+import CountTabs from '@shared/components/CountTabs';
 import DataErrorState from '@shared/components/DataErrorState';
+import Icon from '@shared/components/Icon';
+import Input from '@shared/components/Input';
+import Switch from '@shared/components/inputs/Switch';
+import { TableRowSkeleton } from '@shared/components/Skeleton';
 import {
+  useDeleteWebhookSubscription,
   useGetWebhookSubscriptions,
   useToggleWebhookSubscription,
-  useDeleteWebhookSubscription,
 } from '../api/webhookSubscriptions';
-import WebhookSubscriptionFormModal from '../components/WebhookSubscriptionFormModal';
+import WebhookSubscriptionPanel from '../components/WebhookSubscriptionPanel';
 import type { WebhookSubscription } from '../types';
 
-const PAGE_SIZE = 20;
+// A handful of rows at most (one per system / event): one unpaged fetch feeds the counts, the tabs and the search.
+const FETCH_ALL = { pageNumber: 1, pageSize: 200 };
+const COLUMN_COUNT = 5;
+
+type ActiveTab = 'all' | 'active' | 'inactive';
+type SecretState = 'encrypted' | 'plaintext' | 'notSet';
 
 const TABLE_SKELETON_COLUMNS = [
   { width: 'w-24' },
-  { width: 'w-32' },
-  { width: 'w-64' },
+  { width: 'w-72' },
   { width: 'w-20' },
-  { width: 'w-16' },
-  { width: 'w-20' },
-  { width: 'w-32' },
-  { width: 'w-24' },
+  { width: 'w-9' },
+  { width: 'w-14' },
 ];
 
-type ActiveFilter = '' | 'true' | 'false';
+const thClass = 'px-4 py-2.5 text-left text-xs font-semibold text-(--palette-gray-600)';
 
 /** Set + encrypted / set but still plaintext (saved before encryption) / not set. */
-const SecretStatus = ({ subscription: sub }: { subscription: WebhookSubscription }) => {
-  const { t } = useTranslation('webhookAdmin');
+const secretState = (sub: WebhookSubscription): SecretState => {
   const bearer = sub.authType === 'TokenBearer';
-  if (!(bearer ? sub.hasClientSecret : sub.hasSecretKey))
-    return <span className="text-danger">{t('subscriptions.form.secretNotSet')}</span>;
-  return (bearer ? sub.clientSecretEncrypted : sub.secretKeyEncrypted) ? (
-    <span className="text-emerald-700 dark:text-emerald-300">
-      {t('subscriptions.form.secretSet')}
-    </span>
-  ) : (
-    <span className="text-(--palette-warn)">{t('subscriptions.form.secretPlaintext')}</span>
+  if (!(bearer ? sub.hasClientSecret : sub.hasSecretKey)) return 'notSet';
+  return (bearer ? sub.clientSecretEncrypted : sub.secretKeyEncrypted) ? 'encrypted' : 'plaintext';
+};
+
+const SecretBadge = ({ state }: { state: SecretState }) => {
+  const { t } = useTranslation('webhookAdmin');
+  const tone = { encrypted: 'green', plaintext: 'yellow', notSet: 'red' } as const;
+  const title = {
+    encrypted: t('subscriptions.form.secretSet'),
+    plaintext: t('subscriptions.secretTitle.plaintext'),
+    notSet: t('subscriptions.form.secretNotSet'),
+  };
+  return (
+    <Badge tone={tone[state]} className="whitespace-nowrap" title={title[state]}>
+      {t(`subscriptions.secretBadge.${state}`)}
+    </Badge>
   );
 };
 
 const WebhookSubscriptionListPage = () => {
   const { t } = useTranslation('webhookAdmin');
 
-  const [systemCodeInput, setSystemCodeInput] = useState('');
-  const [debouncedSystemCode, setDebouncedSystemCode] = useState('');
-  const [activeFilter, setActiveFilter] = useState<ActiveFilter>('');
-  const [pageIndex, setPageIndex] = useState(0);
-
-  const [formTarget, setFormTarget] = useState<WebhookSubscription | null>(null);
-  const [showForm, setShowForm] = useState(false);
+  const [tab, setTab] = useState<ActiveTab>('all');
+  const [search, setSearch] = useState('');
+  // The panel edits the live row (looked up by id), so a toggle or a refetch shows through it.
+  // Closing keeps the id and the last row, so the panel does not turn into the create form while it slides out.
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [panelId, setPanelId] = useState<string | null>(null);
+  const [lastEdited, setLastEdited] = useState<WebhookSubscription | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<WebhookSubscription | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSystemCode(systemCodeInput);
-      setPageIndex(0);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [systemCodeInput]);
-
-  useEffect(() => {
-    setPageIndex(0);
-  }, [activeFilter]);
-
-  const { data, isLoading, isError, refetch } = useGetWebhookSubscriptions({
-    pageNumber: pageIndex + 1,
-    pageSize: PAGE_SIZE,
-    systemCode: debouncedSystemCode || undefined,
-    isActive: activeFilter === '' ? undefined : activeFilter === 'true',
-  });
-
+  const { data, isLoading, isError, refetch } = useGetWebhookSubscriptions(FETCH_ALL);
   const toggleMutation = useToggleWebhookSubscription();
   const deleteMutation = useDeleteWebhookSubscription();
 
-  const subscriptions = data?.items ?? [];
-  const totalCount = data?.count ?? 0;
-
-  const openCreate = () => {
-    setFormTarget(null);
-    setShowForm(true);
+  const all = data?.items ?? [];
+  const activeCount = all.filter(s => s.isActive).length;
+  const term = search.trim().toLowerCase();
+  const rows = all.filter(
+    s =>
+      (tab === 'all' || s.isActive === (tab === 'active')) &&
+      (!term ||
+        s.systemCode.toLowerCase().includes(term) ||
+        (s.eventType ?? '').toLowerCase().includes(term)),
+  );
+  const plaintextCount = all.filter(s => secretState(s) === 'plaintext').length;
+  const live = panelId ? (all.find(s => s.id === panelId) ?? null) : null;
+  if (live && live !== lastEdited) setLastEdited(live);
+  const editing = panelId ? (live ?? lastEdited) : null;
+  const openPanel = (id: string | null) => {
+    setPanelId(id);
+    setPanelOpen(true);
   };
 
-  const openEdit = (subscription: WebhookSubscription) => {
-    setFormTarget(subscription);
-    setShowForm(true);
-  };
+  const tabs = [
+    { value: 'all', label: t('subscriptions.tabs.all'), count: data ? all.length : undefined },
+    {
+      value: 'active',
+      label: t('subscriptions.tabs.active'),
+      count: data ? activeCount : undefined,
+    },
+    {
+      value: 'inactive',
+      label: t('subscriptions.tabs.inactive'),
+      count: data ? all.length - activeCount : undefined,
+    },
+  ] as const;
 
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
-    deleteMutation.mutate(deleteTarget.id, {
-      onSuccess: () => setDeleteTarget(null),
-      onError: () => setDeleteTarget(null),
+    const target = deleteTarget;
+    deleteMutation.mutate(target.id, {
+      onSuccess: () => {
+        // Deleted from inside its own panel: close it with the row.
+        if (panelId === target.id) setPanelOpen(false);
+      },
+      onSettled: () => setDeleteTarget(null),
     });
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-start justify-between">
-        <SectionHeader
-          title={t('subscriptions.page.title')}
-          subtitle={t('subscriptions.page.subtitle')}
-          icon="satellite-dish"
-          iconColor="blue"
-        />
-        <Button onClick={openCreate}>
-          <Icon name="plus" style="regular" className="size-4 mr-1.5" />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-64 flex-1">
+          <h2 className="text-base font-semibold text-(--palette-ink)">
+            {t('subscriptions.page.title')}
+          </h2>
+          <p className="mt-0.5 text-xs text-(--palette-gray-500)">
+            {t('subscriptions.page.subtitle')}
+          </p>
+        </div>
+        <Button
+          onClick={() => openPanel(null)}
+          leftIcon={<Icon name="plus" style="regular" className="text-sm" />}
+        >
           {t('subscriptions.actions.add')}
         </Button>
       </div>
 
-      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
-          <div className="relative min-w-48">
-            <Icon
-              name="magnifying-glass"
-              style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
-            />
-            <input
+      {plaintextCount > 0 && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-(--palette-warn-wash) px-3 py-1.5 text-xs text-(--palette-ink)"
+        >
+          <span>
+            <span className="font-semibold text-amber-700 dark:text-amber-300">
+              {t('subscriptions.banner.count', { count: plaintextCount })}
+            </span>{' '}
+            {t('subscriptions.banner.text', { count: plaintextCount })}
+          </span>
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line-soft) px-4 py-2.5">
+          <CountTabs
+            tabs={tabs}
+            value={tab}
+            onChange={setTab}
+            label={t('subscriptions.tabs.label')}
+          />
+          <div className="ml-auto w-60">
+            <Input
               type="text"
-              value={systemCodeInput}
-              onChange={e => setSystemCodeInput(e.target.value)}
-              placeholder={t('subscriptions.filters.systemCodePlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder={t('subscriptions.filters.searchPlaceholder')}
+              aria-label={t('subscriptions.filters.searchPlaceholder')}
+              leftIcon={<Icon name="magnifying-glass" style="regular" className="text-sm" />}
             />
           </div>
-
-          <NativeSelect
-            value={activeFilter}
-            onChange={e => setActiveFilter(e.target.value as ActiveFilter)}
-          >
-            <option value="">{t('subscriptions.filters.statusAll')}</option>
-            <option value="true">{t('subscriptions.filters.statusActive')}</option>
-            <option value="false">{t('subscriptions.filters.statusInactive')}</option>
-          </NativeSelect>
-
-          {(systemCodeInput || activeFilter) && (
-            <button
-              type="button"
-              onClick={() => {
-                setSystemCodeInput('');
-                setActiveFilter('');
-              }}
-              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
-            >
-              {t('subscriptions.filters.clear')}
-            </button>
-          )}
         </div>
 
-        {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full text-table">
-            <thead>
-              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.systemCode')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.eventType')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.callbackUrl')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.authType')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.active')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.secret')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.lastDelivery')}
-                </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('subscriptions.columns.actions')}
+          <table className="w-full min-w-[46rem] text-table">
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="border-b border-(--palette-line)">
+                <th className={`${thClass} w-[22%]`}>{t('subscriptions.columns.systemEvent')}</th>
+                <th className={thClass}>{t('subscriptions.columns.destination')}</th>
+                <th className={`${thClass} w-36`}>{t('subscriptions.columns.secret')}</th>
+                <th className={`${thClass} w-20`}>{t('subscriptions.columns.active')}</th>
+                <th className="w-20 px-4 py-2.5">
+                  <span className="sr-only">{t('subscriptions.columns.actions')}</span>
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
-                <TableRowSkeleton columns={TABLE_SKELETON_COLUMNS} rows={5} />
+                <TableRowSkeleton columns={TABLE_SKELETON_COLUMNS} rows={4} />
               ) : isError ? (
                 <tr>
-                  <td colSpan={8} className="py-4">
+                  <td colSpan={COLUMN_COUNT} className="py-4">
                     <DataErrorState
                       variant="inline"
                       title={t('subscriptions.loadFailed')}
@@ -201,101 +196,96 @@ const WebhookSubscriptionListPage = () => {
                     />
                   </td>
                 </tr>
-              ) : subscriptions.length === 0 ? (
+              ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-12 text-(--palette-gray-400) text-sm">
-                    <Icon name="plug" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
-                    <p>{t('subscriptions.emptyState')}</p>
+                  <td
+                    colSpan={COLUMN_COUNT}
+                    className="py-12 text-center text-sm text-(--palette-gray-400)"
+                  >
+                    <Icon
+                      name="plug"
+                      style="regular"
+                      className="mx-auto mb-2 text-3xl opacity-40"
+                    />
+                    <p>
+                      {all.length === 0
+                        ? t('subscriptions.emptyState')
+                        : t('subscriptions.emptyFiltered')}
+                    </p>
                   </td>
                 </tr>
               ) : (
-                subscriptions.map(sub => (
+                rows.map(sub => (
                   <tr
                     key={sub.id}
-                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
+                    tabIndex={0}
+                    onClick={() => openPanel(sub.id)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && e.target === e.currentTarget) openPanel(sub.id);
+                    }}
+                    className="cursor-pointer align-top transition-colors even:bg-(--palette-surface-2)/50 hover:bg-(--palette-surface-2)"
                   >
-                    <td className="px-4 py-3 font-medium text-(--palette-ink)">{sub.systemCode}</td>
-                    <td className="px-4 py-3 font-mono text-xs text-(--palette-gray-600)">
-                      {sub.eventType ?? (
-                        <span className="font-sans text-(--palette-gray-400)">
+                    <td className="px-4 py-2.5">
+                      <div className="font-semibold text-(--palette-ink)">{sub.systemCode}</div>
+                      {sub.eventType ? (
+                        <div className="font-mono text-xs text-(--palette-gray-500)">
+                          {sub.eventType}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-(--palette-gray-500)">
                           {t('subscriptions.catchAll')}
-                        </span>
+                        </div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-(--palette-gray-600) max-w-xs">
-                      <span className="block truncate" title={sub.callbackUrl}>
-                        <span className="font-mono text-xs text-(--palette-gray-400) mr-1.5">
+                    <td className="max-w-0 px-4 py-2.5">
+                      <div className="truncate" title={`${sub.httpMethod} ${sub.callbackUrl}`}>
+                        <span className="mr-1.5 rounded bg-(--palette-surface-3) px-1.5 font-mono text-xs font-medium text-(--palette-gray-600)">
                           {sub.httpMethod}
                         </span>
-                        {sub.callbackUrl}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-(--palette-gray-600) whitespace-nowrap">
-                      {t(`subscriptions.authTypeShort.${sub.authType}`)}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          sub.isActive
-                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                            : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
-                        }`}
-                      >
-                        {sub.isActive
-                          ? t('subscriptions.active.yes')
-                          : t('subscriptions.active.no')}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs whitespace-nowrap">
-                      <SecretStatus subscription={sub} />
-                    </td>
-                    <td className="px-4 py-3 text-(--palette-gray-600) whitespace-nowrap">
-                      {sub.lastDeliveryAt ? (
-                        new Date(sub.lastDeliveryAt).toLocaleString()
-                      ) : (
-                        <span className="text-(--palette-gray-300)">—</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <button
-                          type="button"
-                          onClick={() => openEdit(sub)}
-                          className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
-                          title={t('subscriptions.actions.edit')}
-                        >
-                          <Icon name="pen" style="regular" className="size-4" />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            toggleMutation.mutate({ id: sub.id, isActive: !sub.isActive })
-                          }
-                          disabled={toggleMutation.isPending}
-                          className="p-1.5 text-(--palette-gray-400) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--palette-warn-wash) rounded-lg transition-colors"
-                          title={
-                            sub.isActive
-                              ? t('subscriptions.actions.deactivate')
-                              : t('subscriptions.actions.activate')
-                          }
-                        >
-                          <Icon
-                            name={sub.isActive ? 'toggle-on' : 'toggle-off'}
-                            style="regular"
-                            className="size-4"
-                          />
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(sub)}
-                          className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
-                          title={t('subscriptions.actions.delete')}
-                        >
-                          <Icon name="trash" style="regular" className="size-4" />
-                        </button>
+                        <span className="font-mono text-xs">{sub.callbackUrl}</span>
                       </div>
+                      <div className="text-xs text-(--palette-gray-500)">
+                        {t(`subscriptions.authLine.${sub.authType}`)}
+                      </div>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <SecretBadge state={secretState(sub)} />
+                    </td>
+                    <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
+                      <Switch
+                        variant="primary"
+                        size="sm"
+                        ariaLabel={t('subscriptions.actions.toggle', { name: sub.systemCode })}
+                        checked={sub.isActive}
+                        disabled={toggleMutation.isPending}
+                        onChange={isActive => toggleMutation.mutate({ id: sub.id, isActive })}
+                      />
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-1.5 text-right">
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          openPanel(sub.id);
+                        }}
+                        aria-label={t('subscriptions.actions.edit')}
+                        title={t('subscriptions.actions.edit')}
+                        className="inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-primary/10 hover:text-(--palette-primary-text)"
+                      >
+                        <Icon name="pen" style="regular" className="text-sm" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          setDeleteTarget(sub);
+                        }}
+                        aria-label={t('subscriptions.actions.delete')}
+                        title={t('subscriptions.actions.delete')}
+                        className="inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-danger/10 hover:text-danger"
+                      >
+                        <Icon name="trash" style="regular" className="text-sm" />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -303,23 +293,13 @@ const WebhookSubscriptionListPage = () => {
             </tbody>
           </table>
         </div>
-
-        {!isLoading && totalCount > 0 && (
-          <Pagination
-            currentPage={pageIndex}
-            totalPages={Math.ceil(totalCount / PAGE_SIZE)}
-            totalCount={totalCount}
-            pageSize={PAGE_SIZE}
-            onPageChange={setPageIndex}
-            showPageSizeSelector={false}
-          />
-        )}
       </div>
 
-      <WebhookSubscriptionFormModal
-        isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        subscription={formTarget}
+      <WebhookSubscriptionPanel
+        isOpen={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        subscription={editing}
+        onRequestDelete={setDeleteTarget}
       />
 
       <ConfirmDialog

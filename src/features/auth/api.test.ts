@@ -21,6 +21,37 @@ describe('fetchCurrentUser', () => {
     });
   });
 
+  it('keeps the names of the groups from /auth/me, and none when it sends none', async () => {
+    server.use(
+      me({
+        groups: [
+          { groupId: 'g1', groupName: 'IntAdmin', scope: 'Bank' },
+          { groupId: 'g2', groupName: 'IntAppraisal', scope: 'Bank' },
+        ],
+      }),
+    );
+    await fetchCurrentUser();
+    expect(useAuthStore.getState().user?.groups).toEqual(['IntAdmin', 'IntAppraisal']);
+    expect(useAuthStore.getState().user?.teams).toEqual([]);
+
+    useAuthStore.setState({ user: null, isAuthenticated: false });
+    server.use(me());
+    await fetchCurrentUser();
+    expect(useAuthStore.getState().user?.groups).toEqual([]);
+  });
+
+  it('keeps the ids of the teams from /auth/me', async () => {
+    server.use(
+      me({
+        teams: [
+          { teamId: '9f1c2d3e-0000-4000-8000-000000000001', teamName: 'North', scope: 'Bank' },
+        ],
+      }),
+    );
+    await fetchCurrentUser();
+    expect(useAuthStore.getState().user?.teams).toEqual(['9f1c2d3e-0000-4000-8000-000000000001']);
+  });
+
   it('keeps the same user object when nothing changed, so subscribers do not re-render', async () => {
     server.use(me());
     await fetchCurrentUser();

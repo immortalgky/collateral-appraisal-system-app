@@ -1365,6 +1365,8 @@ function AppraisalListPage() {
             isStale={isFetching && !showSkeleton}
             density={density}
             pinnedColumn={columnConfig.pinnedColumn}
+            searchTerm={debouncedSearch}
+            searchField={searchField}
             emptyState={
               <AppraisalEmptyState
                 isFiltered={Boolean(debouncedSearch) || Object.keys(activeFilters).length > 0}

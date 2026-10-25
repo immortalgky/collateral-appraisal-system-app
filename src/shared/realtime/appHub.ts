@@ -98,7 +98,7 @@ let _status: AppHubStatus = 'disconnected';
  * they attach mid-reconnect. */
 let _hasEverConnected = false;
 
-/** Generic groups the client has joined (e.g. 'pool-ROLE_A'). */
+/** Generic groups the client has joined (e.g. 'pool-IntAdmin', a group name). */
 const _activeGroups = new Set<string>();
 
 /** Per-event subscriber sets — fans out to multiple consumers. */
@@ -214,6 +214,23 @@ function getOrCreateSubscriberSet(event: string): Set<(payload: unknown) => void
   return set;
 }
 
+/**
+ * Join every group the page asked for. A group asked for while the connection was not up is only
+ * recorded (see joinGroup), so each connection that comes up, first start, restart or automatic
+ * reconnect, has to replay them. Joining twice is harmless: the server's AddToGroup is idempotent.
+ */
+async function rejoinGroups(conn: HubConnection): Promise<void> {
+  await Promise.all(
+    [..._activeGroups].map(async group => {
+      try {
+        await conn.invoke('JoinGroup', group);
+      } catch (err) {
+        console.warn('[AppHub] Failed to re-join group:', group, err);
+      }
+    }),
+  );
+}
+
 function attachConnectionHandlers(conn: HubConnection): void {
   // Fresh connection — re-register handlers for every known event.
   _boundEvents.clear();
@@ -228,21 +245,18 @@ function attachConnectionHandlers(conn: HubConnection): void {
     setStatus('reconnecting');
   });
 
-  // After reconnect: re-join all tracked generic groups, then signal connected.
+  // After reconnect: re-join all tracked generic groups (rejoinGroups), then signal connected.
   // The user-level group (user-{username}) is auto-joined by the server, so we
   // only need to restore the explicit pool/generic groups here.
   // Status flips to 'connected' last so subscribers (e.g. the notification hook)
   // re-fetch only once groups are restored — catching up anything missed while
   // disconnected (SignalR does not buffer server→client messages).
   conn.onreconnected(async () => {
-    for (const group of _activeGroups) {
-      try {
-        await conn.invoke('JoinGroup', group);
-      } catch (err) {
-        console.warn('[AppHub] Failed to re-join group after reconnect:', group, err);
-      }
+    await rejoinGroups(conn);
+    // Not if the connection went down while the groups were being joined
+    if (_connection === conn && conn.state === HubConnectionState.Connected) {
+      setStatus('connected');
     }
-    setStatus('connected');
   });
 
   // Permanent close (retry policy exhausted — shouldn't happen with the
@@ -337,9 +351,15 @@ export async function start(_username: string): Promise<void> {
   }
 
   const promise = connectWithFallback()
-    .then(() => {
+    .then(async () => {
       console.log('[AppHub] Connected');
-      setStatus('connected');
+      // Groups asked for before the socket was up (a page that mounted first) are joined now
+      const conn = _connection;
+      if (conn) await rejoinGroups(conn);
+      // Not if the connection closed during the replay: the close already said 'disconnected'
+      if (conn && _connection === conn && conn.state === HubConnectionState.Connected) {
+        setStatus('connected');
+      }
     })
     .catch(err => {
       console.warn('[AppHub] Connection failed:', err);

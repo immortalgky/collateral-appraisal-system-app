@@ -33,6 +33,7 @@ import Button from '@shared/components/Button';
 import { AppraisalRightPanel } from '@features/appraisal/components/AppraisalRightMenu';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
 import { userNavigation } from '@shared/config/userNavigation';
+import { isSameUser } from '@features/task/utils/isSameUser';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -153,8 +154,8 @@ function TaskLayout() {
   // Pool task lock awareness
   const isPoolTask = taskData?.assignedType === '2';
   const lockOwner = taskData?.workingBy ?? null;
-  const isLockOwner = isPoolTask && !!lockOwner && lockOwner === currentUsername;
-  const isLockedByOther = isPoolTask && !!lockOwner && lockOwner !== currentUsername;
+  const isLockOwner = isPoolTask && isSameUser(lockOwner, currentUsername);
+  const isLockedByOther = isPoolTask && !!lockOwner && !isLockOwner;
   const isAdmin = currentUser?.permissions?.includes('TASK_LOCK_MANAGE') ?? false;
 
   // Heartbeat — only active when this user holds the lock
@@ -171,8 +172,8 @@ function TaskLayout() {
     onPoolTaskUpdate: useCallback(
       (event: PoolTaskUpdateEvent) => {
         if (event.taskId !== taskId) return;
-        if (event.type === 'PoolTaskClaimed') {
-          // Task has been permanently claimed by another user — refetch to get updated state
+        if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
+          // Task has been permanently claimed by another user or completed — refetch to get updated state
           queryClient.invalidateQueries({ queryKey: ['task', taskId] });
           return;
         }

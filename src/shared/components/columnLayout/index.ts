@@ -10,6 +10,8 @@ export { ColumnVisibilityDropdown } from './ColumnVisibilityDropdown';
 export { neutralToolButtonClass } from './toolButton';
 export { fillColumnWidths, storedWidthForShown } from './fillWidths';
 export { useColumnAutoFit } from './useColumnAutoFit';
+export { useElementWidth } from './useElementWidth';
+export { useFilledColumns } from './useFilledColumns';
 export { useColumnVisibility } from './useColumnVisibility';
 export { useColumnWidths } from './useColumnWidths';
 export { useRowNumberColumn } from './useRowNumberColumn';

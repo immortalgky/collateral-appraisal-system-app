@@ -8,6 +8,7 @@ import {
 import axios from '@shared/api/axiosInstance';
 import { downloadBlob } from '@shared/api/blobTransfer';
 import { saveBlob } from '@/shared/utils/saveBlob';
+import type { SearchMatch } from '@/shared/types/search';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -127,6 +128,12 @@ export interface AppraisalDto {
   externalAppraiserName: string | null;
   elapsedHours: number | null;
   remainingHours: number | null;
+  /**
+   * Why the row answers the all-fields `search`: every field that matched, best rank first. The
+   * search reaches columns the list never shows (a previous appraisal number, a title deed), so
+   * without it a row can be in the result for no visible reason. Null without `search`.
+   */
+  matchedOn?: SearchMatch[] | null;
 }
 
 export interface AppraisalSearchResponse {

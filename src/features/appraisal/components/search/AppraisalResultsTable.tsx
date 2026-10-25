@@ -1,10 +1,12 @@
-import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { AppraisalDto } from '../../api/appraisalSearch';
+import type { SearchMatch } from '@/shared/types/search';
 import type { AppraisalColumnDef } from './tabConfigs';
 import Avatar from '@/shared/components/Avatar';
 import Badge from '@/shared/components/Badge';
 import Icon from '@/shared/components/Icon';
+import Highlight from '@/shared/components/search/Highlight';
 import { TableRowSkeleton } from '@/shared/components/Skeleton';
 import { formatDate, isToday } from '@/shared/utils/dateUtils';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
@@ -12,13 +14,10 @@ import {
   useAppraisalTypeLabel,
   useProvinceName,
   usePropertyTypeLabels,
+  useSearchFieldLabel,
 } from '@/shared/hooks/useCodeLabels';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
-import {
-  ColumnResizeHandle,
-  fillColumnWidths,
-  storedWidthForShown,
-} from '@/shared/components/columnLayout';
+import { ColumnResizeHandle, useFilledColumns } from '@/shared/components/columnLayout';
 import { usePointerMode } from '@/shared/hooks/usePointerMode';
 import type { ColumnTableLayout } from '@/shared/components/columnLayout';
 
@@ -70,6 +69,14 @@ interface AppraisalResultsTableProps {
    * layout forces it to index 0, so it is always the first data column when shown.
    */
   pinnedColumn?: string;
+  /**
+   * The term the rows were searched by, marked in the number, customer, province and requestor
+   * cells the search matched on. Rows that carry `matchedOn` (the all-fields search) also say
+   * which field matched when no cell shows it.
+   */
+  searchTerm?: string;
+  /** The field a single-field search looked at; 'all' (the default) reads `matchedOn` instead. */
+  searchField?: string;
 }
 
 function AppraisalResultsTable({
@@ -88,6 +95,8 @@ function AppraisalResultsTable({
   emptyState,
   density = 'comfortable',
   pinnedColumn,
+  searchTerm,
+  searchField = 'all',
 }: AppraisalResultsTableProps) {
   const compact = density === 'compact';
   // A row gets the focus back when its drawer closes; that is a keyboard ring only after the
@@ -97,6 +106,7 @@ function AppraisalResultsTable({
   // line height cannot come down, Thai tone marks need the full 1.5 (see DESIGN.md section 4).
   const cellPad = 'px-3 py-1.5';
   const { t } = useTranslation('appraisal');
+  const fieldLabel = useSearchFieldLabel();
   const internalTableRef = useRef<HTMLTableElement>(null);
   const tableRef = layout?.tableRef ?? internalTableRef;
   // Row numbers stay on unless a layout explicitly turns them off, so the no-layout callers are
@@ -130,71 +140,14 @@ function AppraisalResultsTable({
   const propertyTypeLabels = usePropertyTypeLabels();
   const appraisalTypeLabel = useAppraisalTypeLabel();
 
-  const totalWidth = useMemo(
-    () =>
-      layout
-        ? columns.reduce((sum, c) => sum + (layout.widths[c.key] ?? 0), 0) +
-          (showRowNumber ? ROW_NUMBER_WIDTH : 0)
-        : undefined,
-    [layout, columns, showRowNumber],
-  );
-
-  // The width of the scroll container, so a table with few columns can reach its edge. A callback
-  // ref in state (not a ref object): the container is swapped between the rows and the empty state,
-  // and the observer has to follow whichever one is mounted.
-  const [container, setContainer] = useState<HTMLDivElement | null>(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  useEffect(() => {
-    if (!container) return;
-    const read = () => setContainerWidth(container.clientWidth);
-    read();
-    const ro = new ResizeObserver(read);
-    ro.observe(container);
-    return () => ro.disconnect();
-  }, [container]);
-
-  // When the columns do not reach the container, every column grows by its share of the gap (the
-  // user's widths are the minimum); when they pass it, null — and the container scrolls sideways.
-  const filled = useMemo(
-    () =>
-      layout
-        ? fillColumnWidths(
-            columns.map(c => c.key),
-            layout.widths,
-            containerWidth,
-            showRowNumber ? ROW_NUMBER_WIDTH : 0,
-          )
-        : null,
-    [layout, columns, containerWidth, showRowNumber],
-  );
-  const widthOf = (key: string) => filled?.[key] ?? layout?.widths[key];
-  // Auto-fit reads the widest cell's scrollWidth, which for a cell the fill has stretched is the
-  // stretched width, not its content. So it measures with the columns at their stored widths (the
-  // table as it is without the fill) and puts the stretched ones back before anything is painted.
-  const measureAtStoredWidths = (measure: () => number | null) => (): number | null => {
-    const table = tableRef.current;
-    if (!layout || !filled || !table) return measure();
-    const cols = Array.from(table.querySelectorAll('col'));
-    const saved = cols.map(c => c.style.width);
-    const savedTable = table.style.width;
-    const stored = [
-      ...(showRowNumber ? [ROW_NUMBER_WIDTH] : []),
-      ...columns.map(c => layout.widths[c.key]),
-    ];
-    cols.forEach((c, i) => {
-      c.style.width = `${stored[i] ?? 0}px`;
-    });
-    table.style.width = `${totalWidth ?? 0}px`;
-    try {
-      return measure();
-    } finally {
-      cols.forEach((c, i) => {
-        c.style.width = saved[i];
-      });
-      table.style.width = savedTable;
-    }
-  };
-  const tableWidth = totalWidth === undefined ? undefined : Math.max(totalWidth, containerWidth);
+  // Widths: the scroll box's width, columns grown to its edge, and the drag / auto-fit conversions
+  const columnKeys = useMemo(() => columns.map(c => c.key), [columns]);
+  const { setContainer, widthOf, tableWidth, storedFor, measureAtStoredWidths } = useFilledColumns({
+    keys: columnKeys,
+    widths: layout?.widths,
+    leading: showRowNumber ? [ROW_NUMBER_WIDTH] : [],
+    tableRef,
+  });
 
   const bankingSegments = useParametersByGroup('BankingSegment');
   const segmentCodeToLabel = useMemo(
@@ -236,6 +189,75 @@ function AppraisalResultsTable({
       return localizeCompanyName(val as string, item.companyNameLocal);
     }
     return String(val);
+  };
+
+  const visibleColumns = new Set(columns.map(c => c.key));
+
+  /**
+   * Whether a cell on screen already shows this match, marked: the number and customer always do,
+   * the province and requestor only when their column is on.
+   */
+  const shownInCell = (item: AppraisalDto, m: SearchMatch) => {
+    switch (m.field) {
+      case 'appraisalNumber':
+        return true;
+      case 'customerName':
+        return m.value === item.customerName;
+      case 'province':
+      case 'dopaProvince':
+        return visibleColumns.has('province') && m.value === getCellValue(item, 'province');
+      case 'requestorName':
+        return visibleColumns.has('requestor') && m.value.trim() === item.requestorName?.trim();
+      default:
+        return false;
+    }
+  };
+
+  /**
+   * The term to mark in a cell showing `fields`, or nothing when the search did not look there:
+   * the all-fields search says what matched (and only a match the cell shows counts, not another
+   * customer's), a single-field search looked at that field only.
+   */
+  const termFor = (item: AppraisalDto, ...fields: string[]) =>
+    (
+      item.matchedOn
+        ? item.matchedOn.some(m => fields.includes(m.field) && shownInCell(item, m))
+        : fields.includes(searchField)
+    )
+      ? searchTerm
+      : undefined;
+
+  /**
+   * Under the number and customer: which field the search matched when no cell shows it — a
+   * previous appraisal number, a title deed, a customer other than the one displayed. The best
+   * match is named, the rest are counted and listed in the tooltip. Compact density drops it, as
+   * it drops every second line.
+   */
+  const matchedOnLine = (item: AppraisalDto) => {
+    if (compact) return null;
+    // The deed and DOPA address arms usually agree, and both read "Province".
+    const seen = new Set<string>();
+    const hidden = (item.matchedOn ?? []).filter(m => {
+      const key = `${fieldLabel(m.field)}: ${m.value}`;
+      if (shownInCell(item, m) || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    if (hidden.length === 0) return null;
+    return (
+      <span
+        className="block max-w-full truncate text-xs font-normal text-gray-500"
+        title={hidden.map(m => `${fieldLabel(m.field)}: ${m.value}`).join('\n')}
+      >
+        {t('list.matchedOn')} {fieldLabel(hidden[0].field)}:{' '}
+        <Highlight text={hidden[0].value} term={searchTerm} />
+        {hidden.length > 1 && (
+          <span className="ml-1 rounded bg-gray-100 px-1 py-0.5 text-xs font-medium">
+            +{hidden.length - 1}
+          </span>
+        )}
+      </span>
+    );
   };
 
   /** Statuses where the clock has stopped, so a countdown would be fiction. */
@@ -358,7 +380,11 @@ function AppraisalResultsTable({
   };
 
   /** A person cell: initials, the name, and the user code under it — or the code alone. */
-  const personCell = (name: string | null | undefined, code: string | null | undefined) => {
+  const personCell = (
+    name: string | null | undefined,
+    code: string | null | undefined,
+    term?: string,
+  ) => {
     const n = name?.trim() || null;
     const shown = n ?? code;
     if (!shown) return '—';
@@ -366,7 +392,9 @@ function AppraisalResultsTable({
       <span className="flex max-w-full items-center gap-2">
         <Avatar name={shown} size="xs" className="size-6!" />
         <span className="min-w-0">
-          <span className="block truncate">{shown}</span>
+          <span className="block truncate">
+            <Highlight text={shown} term={term} />
+          </span>
           {n && code && subLine(code)}
         </span>
       </span>
@@ -469,22 +497,7 @@ function AppraisalResultsTable({
                 {layout && (
                   <ColumnResizeHandle
                     width={widthOf(col.key) ?? layout.widths[col.key]}
-                    // A drag target is a width ON SCREEN; the stored one is a minimum that the fill
-                    // scales up. Stored as-is it would render wider than the cursor — and the narrower
-                    // the user pulls, the further it would overshoot.
-                    onResize={px =>
-                      layout.setWidth(
-                        col.key,
-                        storedWidthForShown(
-                          columns.map(c => c.key),
-                          layout.widths,
-                          col.key,
-                          px,
-                          containerWidth,
-                          showRowNumber ? ROW_NUMBER_WIDTH : 0,
-                        ),
-                      )
-                    }
+                    onResize={px => layout.setWidth(col.key, storedFor(col.key, px))}
                     // What auto-fit measures is content, so it is stored as it is.
                     onAutoFit={px => layout.setWidth(col.key, px)}
                     getAutoFitWidth={measureAtStoredWidths(
@@ -668,7 +681,11 @@ function AppraisalResultsTable({
                       ) : col.key === 'assignee' ? (
                         assigneeCell(item)
                       ) : col.key === 'requestor' ? (
-                        personCell(item.requestorName, item.requestorCode)
+                        personCell(
+                          item.requestorName,
+                          item.requestorCode,
+                          termFor(item, 'requestorName'),
+                        )
                       ) : col.key === 'appointmentDateTime' &&
                         item.appointmentDateTime &&
                         isToday(new Date(item.appointmentDateTime)) ? (
@@ -699,7 +716,11 @@ function AppraisalResultsTable({
                                 className="size-3 animate-spin text-(--palette-primary-text) shrink-0"
                               />
                             )}
-                            {item.appraisalNumber || '-'}
+                            <Highlight
+                              text={item.appraisalNumber}
+                              term={termFor(item, 'appraisalNumber')}
+                              appraisalNumber
+                            />
                             {item.priority === 'High' && (
                               // Only High is marked (Normal is most rows). The Priority column is
                               // off by default, so this flag is how a high-priority job shows.
@@ -718,7 +739,10 @@ function AppraisalResultsTable({
                               className="truncate font-medium text-(--palette-ink)"
                               title={item.customerName || undefined}
                             >
-                              {item.customerName || '-'}
+                              <Highlight
+                                text={item.customerName}
+                                term={termFor(item, 'customerName')}
+                              />
                             </span>
                             {item.customerCount > 1 && (
                               <span
@@ -729,6 +753,7 @@ function AppraisalResultsTable({
                               </span>
                             )}
                           </span>
+                          {matchedOnLine(item)}
                         </span>
                       ) : col.key === 'propertyTypes' ? (
                         // A long list (several types joined) is cut by the cell: the title has it all.
@@ -751,6 +776,11 @@ function AppraisalResultsTable({
                               }),
                           )}
                         </>
+                      ) : col.key === 'province' ? (
+                        <Highlight
+                          text={getCellValue(item, 'province')}
+                          term={termFor(item, 'province', 'dopaProvince')}
+                        />
                       ) : (
                         getCellValue(item, col.key)
                       )}

@@ -1,6 +1,10 @@
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
-import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
+import {
+  useProvinceName,
+  usePropertyTypeLabels,
+  useSearchFieldLabel,
+} from '@/shared/hooks/useCodeLabels';
 import Icon from '@shared/components/Icon';
 import type { SearchAppraisal } from '@shared/types/search';
 
@@ -32,6 +36,7 @@ export default function SearchResultItem({
   const { t } = useTranslation('nav');
   const provinceName = useProvinceName();
   const propertyTypeLabels = usePropertyTypeLabels();
+  const fieldLabel = useSearchFieldLabel();
 
   // No appraisal number yet means the request has not been turned into an appraisal.
   const isRequestOnly = !item.appraisalNumber;
@@ -110,7 +115,7 @@ export default function SearchResultItem({
                 className="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded border border-gray-200 dark:border-base-300 bg-gray-50 dark:bg-base-300 text-xs text-gray-600 dark:text-gray-300"
               >
                 <span className="text-xs font-semibold uppercase tracking-wide text-(--palette-gray-400)">
-                  {t(`search.fields.${m.field}` as never, { defaultValue: m.field })}
+                  {fieldLabel(m.field)}
                 </span>
                 <span className="truncate max-w-[14rem]">{m.value}</span>
               </span>

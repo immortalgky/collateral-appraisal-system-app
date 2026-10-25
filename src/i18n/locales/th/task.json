@@ -1,0 +1,180 @@
+{
+  "page": {
+    "title": "งานทั้งหมด",
+    "subtitleMy": "งานที่มอบหมายให้คุณ",
+    "subtitlePool": "งานของทีมที่รอคนรับ",
+    "tabsLabel": "มุมมองงาน",
+    "tabMy": "งานของฉัน",
+    "tabPool": "Pool",
+    "listLabel": "รายการงาน"
+  },
+  "search": {
+    "placeholder": "ค้นหาเลขที่ประเมิน หรือชื่อลูกค้า…"
+  },
+  "filters": {
+    "taskType": "ประเภทงาน",
+    "status": "สถานะคำขอ",
+    "purpose": "วัตถุประสงค์",
+    "channel": "ช่องทาง",
+    "slaStatus": "สถานะ SLA",
+    "appointment": "วันนัดหมาย",
+    "assigned": "วันมอบหมาย",
+    "requested": "วันที่ขอ",
+    "appraisalNumber": "เลขที่ประเมิน",
+    "customerName": "ชื่อลูกค้า",
+    "taskStatus": "สถานะงาน",
+    "assignee": "ผู้รับผิดชอบ"
+  },
+  "filterChips": {
+    "appraisalNumber": "เลขที่ประเมิน",
+    "customerName": "ลูกค้า",
+    "status": "สถานะคำขอ",
+    "pendingTaskStatus": "สถานะงาน",
+    "slaStatus": "SLA",
+    "assigneeUserId": "ผู้รับผิดชอบ",
+    "activityId": "ประเภทงาน",
+    "purpose": "วัตถุประสงค์",
+    "channel": "ช่องทาง",
+    "dateType": "ประเภทวันที่",
+    "dateFrom": "ตั้งแต่",
+    "dateTo": "ถึง",
+    "assignedFrom": "มอบหมายตั้งแต่",
+    "assignedTo": "มอบหมายถึง",
+    "appointmentFrom": "นัดหมายตั้งแต่",
+    "appointmentTo": "นัดหมายถึง",
+    "requestedFrom": "ขอตั้งแต่",
+    "requestedTo": "ขอถึง"
+  },
+  "sla": {
+    "Breached": "เกินกำหนด",
+    "AtRisk": "เสี่ยงเกินกำหนด",
+    "OnTime": "ตรงเวลา",
+    "NoSla": "ไม่มี SLA"
+  },
+  "activity": {
+    "appraisal-initiation-check": "ตรวจสอบการเริ่มงานประเมิน",
+    "appraisal-initiation": "เริ่มงานประเมิน",
+    "appraisal-assignment": "มอบหมายงานประเมิน",
+    "fee-appointment-approval": "อนุมัติค่าธรรมเนียมและนัดหมาย",
+    "ext-appraisal-assignment": "มอบหมายงานประเมินภายนอก",
+    "ext-appraisal-execution": "ดำเนินการประเมินภายนอก",
+    "ext-appraisal-check": "ตรวจสอบการประเมินภายนอก",
+    "ext-appraisal-verification": "ยืนยันผลการประเมินภายนอก",
+    "appraisal-book-verification": "ตรวจสอบเล่มประเมิน",
+    "int-appraisal-execution": "ดำเนินการประเมินภายใน",
+    "int-offline-book-keyin": "คีย์เล่มประเมินนอกระบบ",
+    "int-appraisal-check": "ตรวจสอบการประเมินภายใน",
+    "int-appraisal-verification": "ยืนยันผลการประเมินภายใน",
+    "int-pma-input": "บันทึกข้อมูลทรัพย์สิน PMA",
+    "pending-approval": "รออนุมัติ",
+    "provide-additional-documents": "จัดส่งเอกสารเพิ่มเติม",
+    "admin-review-submissions": "ตรวจใบเสนอราคาที่ส่งมา",
+    "rm-pick-winner": "เลือกผู้ชนะใบเสนอราคา",
+    "admin-finalize": "สรุปผลใบเสนอราคา",
+    "ext-collect-submissions": "ส่งใบเสนอราคา",
+    "ext-respond-negotiation": "ตอบกลับการต่อรองราคา"
+  },
+  "panel": {
+    "title": "ตัวกรอง",
+    "toggle": "แถบตัวกรอง",
+    "hide": "ปิดแถบตัวกรอง",
+    "showTitle": "แสดงแถบตัวกรองด้านซ้าย",
+    "hideTitle": "ซ่อนแถบตัวกรอง ใช้ chip แทน",
+    "summary": "กำลังกรอง:",
+    "selectedCount_one": "เลือก {{count}} รายการ",
+    "selectedCount_other": "เลือก {{count}} รายการ",
+    "inUse": "ใช้อยู่",
+    "noOptions": "ยังไม่มีตัวเลือกให้เลือก",
+    "showAll": "แสดงทั้งหมด ({{count}})",
+    "showFewer": "แสดงเฉพาะที่มีงาน"
+  },
+  "view": {
+    "label": "รูปแบบการแสดงผล",
+    "table": "ตาราง",
+    "board": "บอร์ด",
+    "groupBy": "จัดกลุ่มตาม",
+    "groupByOptions": {
+      "status": "สถานะงาน",
+      "purpose": "วัตถุประสงค์",
+      "priority": "ความสำคัญ",
+      "activity": "ประเภทงาน",
+      "slaStatus": "ความเร่งด่วน SLA"
+    }
+  },
+  "columns": {
+    "appraisalNumber": "เลขที่ประเมิน",
+    "lockState": "การรับงาน",
+    "requestNumber": "เลขที่คำขอ",
+    "channel": "ช่องทาง",
+    "customerName": "ชื่อลูกค้า",
+    "taskType": "ประเภทงาน",
+    "purpose": "วัตถุประสงค์",
+    "propertyType": "ประเภททรัพย์สิน",
+    "status": "สถานะ",
+    "appointmentDateTime": "วันนัดหมาย",
+    "requestedAt": "วันที่ขอ",
+    "requestedBy": "ผู้ขอ",
+    "reportReceivedAt": "วันที่รับรายงาน",
+    "requestReceivedDate": "วันที่รับคำขอ",
+    "internalFollowupStaff": "เจ้าหน้าที่ติดตามภายใน",
+    "appraiser": "ผู้ประเมิน",
+    "assignedDate": "วันที่มอบหมาย",
+    "movement": "ความเคลื่อนไหว",
+    "dueAt": "กำหนด SLA",
+    "elapsedHours": "ชั่วโมงที่ใช้ไป",
+    "remainingHours": "ชั่วโมงที่เหลือ",
+    "slaStatus": "สถานะ SLA",
+    "priority": "ความสำคัญ"
+  },
+  "table": {
+    "actions": "การทำงาน",
+    "pinned": "คอลัมน์ที่ปักไว้"
+  },
+  "row": {
+    "open": "เปิดงาน",
+    "copyNumber": "คัดลอกเลขที่ประเมิน",
+    "copied": "คัดลอกเลขที่ประเมินแล้ว",
+    "copyFailed": "คัดลอกเลขที่ประเมินไม่สำเร็จ"
+  },
+  "legend": {
+    "slaBreached": "เกิน SLA",
+    "slaAtRisk": "เสี่ยงเกิน SLA"
+  },
+  "empty": {
+    "filteredTitle": "ไม่พบงานที่ตรงกับตัวกรอง",
+    "filteredHint": "ลองเอาตัวกรองบางตัวออก หรือเปลี่ยนคำค้นหา",
+    "clear": "ล้างตัวกรองทั้งหมด",
+    "myTitle": "ไม่มีงานค้าง",
+    "myHint": "ขณะนี้คุณไม่มีงานที่ได้รับมอบหมาย",
+    "poolTitle": "Pool ว่าง",
+    "poolHint": "ขณะนี้ไม่มีงานใน Pool"
+  },
+  "errors": {
+    "loadFailed": "โหลดรายการงานไม่สำเร็จ"
+  },
+  "pool": {
+    "loadFailed": "โหลดงานใน Pool ไม่สำเร็จ",
+    "view": "ดูอย่างเดียว",
+    "edit": "เริ่มทำ",
+    "continue": "ทำต่อ",
+    "takeOut": "รับเป็นงานของฉัน",
+    "lockedByYou": "คุณกำลังแก้ไข",
+    "lockedByName": "ล็อกโดย {{name}}",
+    "lockedLessThanMinute": "ไม่ถึง 1 นาทีที่แล้ว",
+    "lockedMinutesAgo_one": "{{count}} นาทีที่แล้ว",
+    "lockedMinutesAgo_other": "{{count}} นาทีที่แล้ว",
+    "state": {
+      "free": "ว่าง",
+      "byYou": "คุณกำลังทำ",
+      "byName": "{{name}} กำลังทำ",
+      "waiting": "เข้า Pool {{ago}}",
+      "lockedAgo": "ล็อก {{ago}}"
+    },
+    "toasts": {
+      "lockedBy": "{{name}} กำลังแก้ไขงานนี้อยู่",
+      "lockFailed": "ล็อกงานไม่สำเร็จ กรุณาลองอีกครั้ง",
+      "claimed": "ย้ายงานไปยังงานของคุณแล้ว",
+      "claimFailed": "รับงานไม่สำเร็จ กรุณาลองอีกครั้ง"
+    }
+  }
+}

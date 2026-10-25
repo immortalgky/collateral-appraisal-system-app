@@ -18,6 +18,7 @@ import {
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { isSameUser } from '../utils/isSameUser';
 
 interface PoolTaskKanbanCardProps {
   task: PoolTask;
@@ -185,17 +186,17 @@ export const PoolTaskKanbanCard = ({ task, onClick }: PoolTaskKanbanCardProps) =
     return () => document.removeEventListener('click', handleClickOutside);
   }, [menuOpen]);
 
-  const isLockedBySelf = task.workingBy === currentUsername;
-  const isLockedByOther = !!task.workingBy && task.workingBy !== currentUsername;
+  const isLockedBySelf = isSameUser(task.workingBy, currentUsername);
+  const isLockedByOther = !!task.workingBy && !isLockedBySelf;
 
   // Mirrors PoolTaskListPage.handleEditInPool exactly: locked-by-other → view the
   // appraisal read-only; locked-by-self → resume editing; unlocked → lock then open.
   const handleEditInPool = () => {
-    if (task.workingBy && task.workingBy !== currentUsername) {
+    if (isLockedByOther) {
       if (task.appraisalId) navigate(`/appraisals/${task.appraisalId}`);
       return;
     }
-    if (task.workingBy === currentUsername) {
+    if (isLockedBySelf) {
       navigate(`/tasks/${task.id}/opening`);
       return;
     }

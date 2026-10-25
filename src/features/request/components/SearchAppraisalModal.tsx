@@ -7,6 +7,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Highlight from '@/shared/components/search/Highlight';
 import Pagination from '@/shared/components/Pagination';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { DateRangeInput } from '@/shared/components/inputs';
@@ -14,6 +15,7 @@ import { formatDate } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAddressStore } from '@/shared/store';
+import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 import { useAppraisalSearch } from '@/features/appraisal/api/appraisalSearch';
 import type { AppraisalDto } from '@/features/appraisal/api/appraisalSearch';
 import {
@@ -28,8 +30,6 @@ interface SearchAppraisalModalProps {
   onSelect: (template: PriorAppraisal) => void;
 }
 
-/** The API matches nothing for a term shorter than this (AppraisalSearchPredicate.MinTermLength). */
-const MIN_TERM = 3;
 const PAGE_SIZES = [10, 25, 50];
 const SKELETON_ROWS = 6;
 
@@ -47,24 +47,6 @@ const COLUMNS =
   'grid items-center gap-x-4 grid-cols-[7.5rem_minmax(0,2fr)_minmax(0,1.2fr)_8.5rem_8.5rem] ' +
   '@min-[62rem]:grid-cols-[7.5rem_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8.5rem_8.5rem]';
 const APPRAISER_CELL = 'hidden @min-[62rem]:block';
-
-/** The matched part of the term in bold-tinted text. A leading * only asks for a substring match. */
-const Highlight = ({ text, term }: { text: string | null | undefined; term: string }) => {
-  if (!text) return <>—</>;
-  const needle = term.trim().replace(/^\*/, '').toLowerCase();
-  if (needle.length < MIN_TERM) return <>{text}</>;
-  const at = text.toLowerCase().indexOf(needle);
-  if (at < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, at)}
-      <mark className="rounded-sm bg-amber-100 dark:bg-amber-500/20 px-px text-inherit">
-        {text.slice(at, at + needle.length)}
-      </mark>
-      {text.slice(at + needle.length)}
-    </>
-  );
-};
 
 type SortState = { by: SortKey; dir: 'asc' | 'desc' } | null;
 type ShownSort = NonNullable<SortState>;
@@ -147,8 +129,10 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
   const debouncedSearch = useDebounce(searchQuery.trim(), 350);
   // A term that is too short is not sent: the API would answer with nothing at all
   const termTooShort =
-    searchQuery.trim().length > 0 && searchQuery.trim().replace(/^\*/, '').length < MIN_TERM;
-  const term = debouncedSearch.replace(/^\*/, '').length >= MIN_TERM ? debouncedSearch : '';
+    searchQuery.trim().length > 0 &&
+    searchQuery.trim().replace(/^\*/, '').length < MIN_SEARCH_LENGTH;
+  const term =
+    debouncedSearch.replace(/^\*/, '').length >= MIN_SEARCH_LENGTH ? debouncedSearch : '';
 
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
@@ -367,7 +351,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         <div className="flex min-h-4 items-baseline justify-between gap-3 text-xs text-(--palette-gray-500)">
           <span className={termTooShort ? 'text-(--palette-warn)' : undefined}>
             {termTooShort
-              ? t('searchAppraisal.minChars', { n: MIN_TERM })
+              ? t('searchAppraisal.minChars', { n: MIN_SEARCH_LENGTH })
               : t('searchAppraisal.searchHint')}
           </span>
           {skeleton ? (
@@ -548,7 +532,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                   >
                     <div className="min-w-0">
                       <span className="block truncate font-semibold text-(--palette-primary-text)">
-                        <Highlight text={item.appraisalNumber} term={searchQuery} />
+                        <Highlight text={item.appraisalNumber} term={searchQuery} appraisalNumber />
                       </span>
                     </div>
                     <div className="min-w-0">

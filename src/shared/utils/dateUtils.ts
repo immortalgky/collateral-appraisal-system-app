@@ -142,3 +142,28 @@ export function getRelativeTimeString(date: Date | string | number, locale = 'en
 
   return rtf.format(0, 'minute');
 }
+
+/**
+ * Compact date-time for dense lists: "29 ก.ย. 18:29" (day, short month, 24h time). The year is
+ * left out in the current year and shown otherwise (Buddhist in Thai, like the rest of the app).
+ * Server DateTimes are application-local, so they are read as local time — never converted.
+ */
+export function formatShortDateTime(
+  value: Date | string | number | null | undefined,
+  language: string | undefined,
+  options: { seconds?: boolean } = {},
+): string {
+  if (value === null || value === undefined) return '—';
+  const d = typeof value === 'object' ? value : new Date(value);
+  if (isNaN(d.getTime())) return '—';
+
+  return d.toLocaleString(language?.startsWith('th') ? 'th-TH-u-ca-buddhist' : 'en-GB', {
+    day: 'numeric',
+    month: 'short',
+    ...(d.getFullYear() === new Date().getFullYear() ? {} : { year: 'numeric' }),
+    hour: '2-digit',
+    minute: '2-digit',
+    ...(options.seconds ? { second: '2-digit' } : {}),
+    hourCycle: 'h23',
+  });
+}

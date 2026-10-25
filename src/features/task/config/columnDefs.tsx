@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import type { Task } from '../types';
 import Badge from '@/shared/components/Badge';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
@@ -12,6 +14,9 @@ import {
 import { MovementBadgeFromTaskDto } from '@features/common/monitoring/components/MovementBadge';
 import { DateCell } from '@features/common/monitoring/components/DateCell';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
+import { useRelativeTime } from '@shared/hooks/useFormatters';
+import { useAuthStore } from '@features/auth/store';
+import { isSameUser } from '../utils/isSameUser';
 import type { ColumnLayoutConfig } from '@/shared/components/columnLayout';
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -33,7 +38,7 @@ export function avatarColor(name: string): string {
   return AVATAR_COLORS[hash % AVATAR_COLORS.length];
 }
 
-function initials(name: string): string {
+export function initials(name: string): string {
   return name
     .split(/\s+/)
     .map(n => n[0] ?? '')
@@ -42,16 +47,23 @@ function initials(name: string): string {
     .toUpperCase();
 }
 
-function PersonCell({ name }: { name: string | null | undefined }) {
-  if (!name) return <>-</>;
+/** An empty value is an em dash, grey (DESIGN.md section 10). */
+export function Dash() {
+  return <span className="text-(--palette-gray-400)">—</span>;
+}
+
+export function PersonCell({ name: raw }: { name: string | null | undefined }) {
+  // Blank is as empty as null: a name of spaces made an avatar with no letter in it
+  const name = raw?.trim();
+  if (!name) return <Dash />;
   return (
     <div className="flex items-center gap-2 min-w-0">
       <span
-        className={`inline-flex items-center justify-center size-6 rounded-full text-xs font-bold flex-shrink-0 ${avatarColor(name)}`}
+        className={`inline-flex items-center justify-center size-7 rounded-full text-xs font-bold flex-shrink-0 ${avatarColor(name)}`}
       >
         {initials(name)}
       </span>
-      <span className="truncate text-sm text-(--palette-ink)">{name}</span>
+      <span className="truncate text-(--palette-ink)">{name}</span>
     </div>
   );
 }
@@ -70,7 +82,7 @@ function AppraiserCell({
   companyNameLocal: string | null;
 }) {
   const localizeCompanyName = useLocalizedCompanyName();
-  if (!appraiser) return <>-</>;
+  if (!appraiser) return <Dash />;
   return (
     <div className="flex items-center gap-2 min-w-0">
       <Icon
@@ -78,7 +90,7 @@ function AppraiserCell({
         name="building"
         className="size-3.5 text-(--palette-gray-400) flex-shrink-0"
       />
-      <span className="truncate text-sm text-(--palette-ink)">
+      <span className="truncate text-(--palette-ink)">
         {localizeCompanyName(appraiser, companyNameLocal)}
       </span>
     </div>
@@ -102,10 +114,10 @@ function DueDateCell({
     ) : null;
 
   if (!dateString) {
-    if (!durationChip) return <>-</>;
+    if (!durationChip) return <Dash />;
     return (
       <div className="flex flex-col">
-        <span>-</span>
+        <Dash />
         {durationChip}
       </div>
     );
@@ -119,21 +131,21 @@ function DueDateCell({
     let dateLine: ReactNode;
     if (bucket === 'breached')
       dateLine = (
-        <span className="inline-flex items-center gap-1 text-(--palette-danger) font-medium text-sm">
+        <span className="inline-flex items-center gap-1 text-(--palette-danger) font-medium">
           <Icon style="solid" name="circle-exclamation" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
     else if (bucket === 'atRisk')
       dateLine = (
-        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium text-sm">
+        <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
           <Icon style="solid" name="clock" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
       );
     else if (bucket === 'healthy')
       dateLine = (
-        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium text-sm">
+        <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
           <Icon style="solid" name="circle-check" className="size-3 flex-shrink-0" />
           {formatted}
         </span>
@@ -152,6 +164,45 @@ function DueDateCell({
   }
 }
 
+/** Pool only: who holds the task (free, you, or someone else) and since when. */
+function LockStateCell({ task }: { task: Task }) {
+  const { t } = useTranslation('task');
+  const currentUsername = useAuthStore(s => s.user?.username);
+  const relativeTime = useRelativeTime();
+  const free = !task.workingBy;
+  const self = isSameUser(task.workingBy, currentUsername);
+  // A free task waits since it was assigned to the Pool; a locked one since it was locked
+  const since = free ? task.assignedDate : task.lockedAt;
+  const ago = since ? relativeTime(since).relative : null;
+  return (
+    <div className="min-w-0">
+      {free ? (
+        <span className="flex items-center gap-1.5 font-medium text-green-700 dark:text-green-300">
+          <span className="inline-block size-2 shrink-0 rounded-full bg-green-600" />
+          {t('pool.state.free')}
+        </span>
+      ) : (
+        <span
+          className={clsx(
+            'flex items-center gap-1.5 font-medium',
+            self ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400',
+          )}
+        >
+          <Icon style="solid" name="lock" className="shrink-0 text-xs" />
+          <span className="truncate">
+            {self ? t('pool.state.byYou') : t('pool.state.byName', { name: task.workingBy })}
+          </span>
+        </span>
+      )}
+      {ago && (
+        <span className="block truncate text-xs text-(--palette-gray-400)">
+          {t(free ? 'pool.state.waiting' : 'pool.state.lockedAgo', { ago })}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function HoursCell({
   hours,
   type,
@@ -159,7 +210,7 @@ function HoursCell({
   hours: number | null | undefined;
   type: 'elapsed' | 'remaining';
 }) {
-  if (hours == null) return <>-</>;
+  if (hours == null) return <Dash />;
   let cls = 'text-(--palette-gray-600)';
   let label = `${hours}h`;
   if (type === 'remaining') {
@@ -173,13 +224,14 @@ function HoursCell({
     else if (hours > 24) cls = 'text-amber-600 dark:text-amber-400 font-medium';
     else cls = 'text-emerald-600 dark:text-emerald-400';
   }
-  return <span className={`text-sm ${cls}`}>{label}</span>;
+  return <span className={cls}>{label}</span>;
 }
 
 // ── Column definitions ─────────────────────────────────────────────────────
 
 export type ColumnKey =
   | 'appraisalNumber'
+  | 'lockState'
   | 'requestNumber'
   | 'channel'
   | 'customerName'
@@ -208,7 +260,7 @@ export type ColumnDef = {
   sortField?: string;
   /** td className override. Defaults to 'px-3 py-1.5 text-(--palette-gray-600) text-table' when not set. */
   tdClassName?: string;
-  /** Default column width in px. Falls back to DEFAULT_COLUMN_WIDTH when not set. */
+  /** Default column width in px AT THE 14px ROOT. Falls back to DEFAULT_COLUMN_WIDTH when not set. */
   width?: number;
   render: (task: Task) => ReactNode;
 };
@@ -226,7 +278,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   appraisalNumber: {
     label: 'Appraisal Number',
     sortField: 'appraisalNumber',
-    width: 130,
+    width: 190,
     render: task => {
       const display = task.appraisalNumber;
       return (
@@ -235,22 +287,27 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
           onClick={e => e.stopPropagation()}
           className="font-medium text-(--palette-primary-text) hover:underline"
         >
-          {display ?? '-'}
+          {display ?? <Dash />}
         </Link>
       );
     },
   },
+  lockState: {
+    label: 'Pickup',
+    width: 200,
+    render: task => <LockStateCell task={task} />,
+  },
   requestNumber: {
     label: 'Request Number',
     sortField: 'requestNumber',
-    width: 130,
+    width: 160,
     render: task => (
       <Link
         to={`/tasks/${task.id}/opening`}
         onClick={e => e.stopPropagation()}
         className="font-medium text-(--palette-primary-text) hover:underline inline-flex items-center gap-1.5"
       >
-        {task.requestNumber ?? '-'}
+        {task.requestNumber ?? <Dash />}
       </Link>
     ),
   },
@@ -258,37 +315,44 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
     label: 'Channel',
     sortField: 'channel',
     width: 120,
-    render: task => <ParameterDisplay group="Channel" code={task.channel} />,
+    render: task =>
+      task.channel ? <ParameterDisplay group="Channel" code={task.channel} /> : <Dash />,
   },
   customerName: {
     label: 'Customer Name',
     sortField: 'customerName',
-    width: 170,
-    render: task => task.customerName ?? '-',
+    width: 200,
+    render: task => <PersonCell name={task.customerName} />,
   },
   taskType: {
     label: 'Task Type',
     sortField: 'taskType',
     // "Internal Appraisal Execution" is the longest task name; narrower cuts it mid-word
     width: 240,
-    render: task => task.taskDescription || task.taskType || '-',
+    render: task => task.taskDescription || task.taskType || <Dash />,
   },
   purpose: {
     label: 'Purpose',
     sortField: 'purpose',
     width: 200,
-    render: task => <ParameterDisplay group="AppraisalPurpose" code={task.purpose} />,
+    render: task =>
+      task.purpose ? <ParameterDisplay group="AppraisalPurpose" code={task.purpose} /> : <Dash />,
   },
   propertyType: {
     label: 'Property Type',
     sortField: 'propertyType',
     width: 150,
-    render: task => <ParameterDisplay group="PropertyType" code={task.propertyType} />,
+    render: task =>
+      task.propertyType ? (
+        <ParameterDisplay group="PropertyType" code={task.propertyType} />
+      ) : (
+        <Dash />
+      ),
   },
   status: {
     label: 'Status',
     tdClassName: 'px-3 py-1.5',
-    width: 120,
+    width: 150,
     render: task => <Badge type="status" value={task.status} size="sm" />,
   },
   appointmentDateTime: {
@@ -306,7 +370,7 @@ export const columnDefs: Record<ColumnKey, ColumnDef> = {
   requestedBy: {
     label: 'Requested By',
     width: 150,
-    render: task => <PersonCell name={task.requestedByName ?? task.requestedBy} />,
+    render: task => <PersonCell name={task.requestedByName || task.requestedBy} />,
   },
   reportReceivedAt: {
     label: 'Report Received Date',
@@ -454,6 +518,32 @@ const DEFAULT_CONFIG: ActivityColumnConfig = {
   defaultWidths: DEFAULT_WIDTHS,
 };
 
+/**
+ * The task list page's (My and Pool) layout: pinnable columns, with the customer name off by
+ * default because it already sits under the appraisal number in the first column.
+ */
+const LIST_CONFIG: ActivityColumnConfig = {
+  ...DEFAULT_CONFIG,
+  pinnable: true,
+  defaultHidden: ['customerName'],
+};
+
+/** The Pool tab's layout: the same, with who holds the task right after the appraisal number. */
+const POOL_LIST_CONFIG: ActivityColumnConfig = {
+  ...LIST_CONFIG,
+  columns: [DEFAULT_COLUMNS[0], 'lockState', ...DEFAULT_COLUMNS.slice(1)],
+};
+
+/**
+ * Version of the saved column order, visibility and pins of the task list (`task-columns-all` and
+ * `task-columns-pool`). Bump (any new random code) whenever a change to the default columns should
+ * reset everyone's saved layout: every toggle in the column picker saves the whole order, so without
+ * a new key the new defaults would never reach anyone who has touched it.
+ * Only order/visibility/pins use it. Widths keep the plain keys, so a width the user dragged to
+ * survives a reset.
+ */
+export const TASK_COLUMN_LAYOUT_VERSION = 'b27e41d9';
+
 const INITIATION_CONFIG: ActivityColumnConfig = {
   columns: [...DEFAULT_COLUMNS.filter(c => c !== 'appraisalNumber')],
   pinnedColumn: 'requestNumber',
@@ -469,4 +559,4 @@ export function getActivityColumnConfig(activityId: string): ActivityColumnConfi
   return ACTIVITY_COLUMN_CONFIG[activityId] ?? DEFAULT_CONFIG;
 }
 
-export { DEFAULT_CONFIG, DEFAULT_COLUMNS };
+export { DEFAULT_CONFIG, DEFAULT_COLUMNS, LIST_CONFIG, POOL_LIST_CONFIG };

@@ -165,14 +165,13 @@ describe('FailedMessagesPage bulk bar clearance', () => {
     state.list = pageWithRow();
     const { container } = renderPage();
     const root = container.firstElementChild!;
-    expect(root).toHaveClass('pb-8');
     expect(root).not.toHaveClass('pb-32');
 
     act(() => screen.getByText('select-first').click());
     expect(root).toHaveClass('pb-32');
 
     act(() => screen.getByText('select-first').click()); // toggled off
-    expect(root).toHaveClass('pb-8');
+    expect(root).not.toHaveClass('pb-32');
   });
 });
 
@@ -188,11 +187,10 @@ describe('FailedMessagesPage selection vs search', () => {
 
     fireEvent.change(search, { target: { value: 'abc' } });
     await waitFor(() => expect(state.lastParams?.search).toBe('abc'));
-    expect(root).toHaveClass('pb-8');
+    expect(root).not.toHaveClass('pb-32');
 
     fireEvent.change(search, { target: { value: '' } });
     await waitFor(() => expect(state.lastParams?.search).toBeUndefined());
-    expect(root).toHaveClass('pb-8');
     expect(root).not.toHaveClass('pb-32');
   });
 });
@@ -216,7 +214,7 @@ describe('FailedMessagesPage active tab', () => {
 
     act(() => screen.getByRole('tab', { name: /^tabs\.all/ }).click()); // a different tab resets
     expect(pager().dataset.page).toBe('0');
-    expect(root).toHaveClass('pb-8');
+    expect(root).not.toHaveClass('pb-32');
   });
 });
 

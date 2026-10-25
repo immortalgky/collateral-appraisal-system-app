@@ -30,6 +30,10 @@ interface SectionHeaderProps extends HTMLAttributes<HTMLDivElement> {
    * data-dense panes, `px-4 py-2.5` (DESIGN.md section 8).
    */
   size?: 'md' | 'sm';
+  /** Default variant: beside the title on its line, e.g. a count. */
+  titleAddon?: React.ReactNode;
+  /** Default variant: after the title block, still on the left, e.g. a view switch. */
+  afterTitle?: React.ReactNode;
 }
 
 const iconColorStyles: Record<IconColor, { bg: string; text: string }> = {
@@ -57,6 +61,8 @@ const SectionHeader = ({
   required,
   headingClassName = 'text-base',
   size = 'md',
+  titleAddon,
+  afterTitle,
 }: SectionHeaderProps) => {
   const colorStyle = iconColorStyles[iconColor];
   // A read page draws no required mark (DESIGN.md 17.3).
@@ -96,6 +102,13 @@ const SectionHeader = ({
     );
   }
 
+  const heading = (
+    <h3 className={clsx('font-semibold text-(--palette-ink)', icon ? 'text-base' : 'text-sm')}>
+      {title}
+      {showRequired && <span className="text-(--palette-req) ml-0.5">*</span>}
+    </h3>
+  );
+
   return (
     <div className={clsx('mb-3', className)}>
       <div className="flex items-center justify-between">
@@ -110,14 +123,17 @@ const SectionHeader = ({
           <div>
             {/* A section inside a card (no icon) sits one step under the card's own 15px heading;
                 with an icon it is a page header and takes the card heading's size. */}
-            <h3
-              className={clsx('font-semibold text-(--palette-ink)', icon ? 'text-base' : 'text-sm')}
-            >
-              {title}
-              {showRequired && <span className="text-(--palette-req) ml-0.5">*</span>}
-            </h3>
+            {titleAddon ? (
+              <div className="flex items-center gap-2">
+                {heading}
+                {titleAddon}
+              </div>
+            ) : (
+              heading
+            )}
             {subtitle && <p className="text-xs text-(--palette-gray-500) mt-0.5">{subtitle}</p>}
           </div>
+          {afterTitle}
         </div>
         {rightIcon && rightIcon}
       </div>

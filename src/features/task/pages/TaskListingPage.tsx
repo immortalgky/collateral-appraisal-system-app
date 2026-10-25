@@ -1,60 +1,45 @@
-import { InboxZeroArt, NoResultsArt } from '@/shared/components/illustrations';
-import {
-  ColumnResizeHandle,
-  ColumnVisibilityDropdown,
-  useColumnAutoFit,
-  useColumnVisibility,
-  useColumnWidths,
-} from '@/shared/components/columnLayout';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import NativeSelect from '@/shared/components/inputs/NativeSelect';
-import { useGetTaskCounts, useGetTasks } from '../api';
+import toast from 'react-hot-toast';
 import {
-  bucketForSlaStatus,
-  getRowVariantClasses,
-} from '@features/common/monitoring/components/SlaCells';
-import type { GroupByField, Task, TaskFilterParams, TaskListResponse } from '../types';
-import PoolTaskListPage from './PoolTaskListPage';
-import Icon from '@/shared/components/Icon';
+  ColumnVisibilityDropdown,
+  useColumnVisibility,
+  useColumnWidths,
+  useElementWidth,
+} from '@/shared/components/columnLayout';
 import Pagination from '@/shared/components/Pagination';
-import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
-import { TaskFilterDialog } from '../components/TaskFilterDialog';
-import { columnDefs, COLUMN_LABELS, DEFAULT_CONFIG } from '../config/columnDefs';
-import { FavoritesRow } from '@features/menuFavorites';
+import { hasValue } from '@/features/appraisal/components/search/filterOptions';
+import { useGetTaskCounts, useGetTasks, useTaskGroupCounts } from '../api';
+import type { GroupByField, Task, TaskFilterParams } from '../types';
+import { LIST_CONFIG, POOL_LIST_CONFIG, TASK_COLUMN_LAYOUT_VERSION } from '../config/columnDefs';
+import { useTaskListPaging } from '../hooks/useTaskListPaging';
 import { useTaskListUrlState } from '../hooks/useTaskListUrlState';
+import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
+import { TaskEmptyState } from '../components/list/TaskEmptyState';
+import { TaskFilterPanel } from '../components/list/TaskFilterPanel';
+import { TaskFilterSummary } from '../components/list/TaskFilterSummary';
+import { TaskLegend } from '../components/list/TaskLegend';
+import { TaskListHeader } from '../components/list/TaskListHeader';
+import { TaskListToolbar, type ViewMode } from '../components/list/TaskListToolbar';
+import { TaskLoadError } from '../components/list/TaskLoadError';
+import { TaskTable, type TaskRowMenuItem } from '../components/list/TaskTable';
+import {
+  FILTER_PANEL_MIN_WIDTH,
+  GROUP_BY_VALUES,
+  makeTaskFilters,
+  PINNED_TASK_FILTERS,
+} from '../components/list/taskFilters';
+import { useScaledWidths } from '../components/list/useRootFontScale';
+import { useTaskColumnLabels } from '../components/list/useTaskColumnLabels';
+import PoolTaskListPage from './PoolTaskListPage';
 
-interface ContextMenuState {
-  visible: boolean;
-  x: number;
-  y: number;
-  taskId: string | null;
-}
-
-type SortDirection = 'asc' | 'desc';
-type ViewMode = 'grid' | 'list';
-
-const groupByOptions: { value: GroupByField; label: string }[] = [
-  { value: 'status', label: 'Task Status' },
-  { value: 'purpose', label: 'Purpose' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'activity', label: 'Activity' },
-  { value: 'slaStatus', label: 'SLA Urgency' },
-];
-
-// Pool tab's view/grouping preference — same storage keys PoolTaskListPage falls
-// back to when rendered standalone (uncontrolled), so the two never drift.
+// The Pool tab's view and grouping are remembered under these keys. (My's are not.)
 const POOL_VIEW_STORAGE_KEY = 'task-view-pool';
 const POOL_GROUPBY_STORAGE_KEY = 'task-groupby-pool';
-const POOL_GROUP_BY_VALUES: GroupByField[] = [
-  'status',
-  'purpose',
-  'priority',
-  'activity',
-  'slaStatus',
-];
+
+/** Whether the user closed the filter panel (so the chips are used even where it would fit). */
+const PANEL_HIDDEN_STORAGE_KEY = 'task-filter-panel-hidden';
 
 function readStoredPoolViewMode(): ViewMode {
   try {
@@ -68,30 +53,23 @@ function readStoredPoolViewMode(): ViewMode {
 function readStoredPoolGroupBy(): GroupByField {
   try {
     const v = localStorage.getItem(POOL_GROUPBY_STORAGE_KEY);
-    return v && (POOL_GROUP_BY_VALUES as string[]).includes(v) ? (v as GroupByField) : 'status';
+    return v && (GROUP_BY_VALUES as string[]).includes(v) ? (v as GroupByField) : 'status';
   } catch {
     return 'status';
   }
 }
 
-const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
-  appraisalNumber: 'Appraisal No.',
-  customerName: 'Customer',
-  status: 'Request Status',
-  pendingTaskStatus: 'Task Status',
-  slaStatus: 'SLA',
-  assigneeUserId: 'Assignee',
-  activityId: 'Task Type',
-  purpose: 'Purpose',
-  channel: 'Channel',
-  dateType: 'Date Type',
-  dateFrom: 'From',
-  dateTo: 'To',
-};
+function readStoredPanelHidden(): boolean {
+  try {
+    return localStorage.getItem(PANEL_HIDDEN_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function TaskListingPage() {
   const navigate = useNavigate();
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['task', 'appraisal', 'common']);
 
   const {
     activeTab,
@@ -107,45 +85,28 @@ function TaskListingPage() {
     poolFilters,
     setPoolFilters,
   } = useTaskListUrlState();
+  const isPool = activeTab === 'pool';
 
-  const {
-    visibleColumns,
-    orderedColumns,
-    hidden,
-    alwaysVisible,
-    toggleColumn,
-    reorderColumns,
-    resetToDefault,
-  } = useColumnVisibility('task-columns-all', DEFAULT_CONFIG);
+  // ── Column layout: each tab keeps its own ────────────────────────────────────
+  // Order, visibility and pins are versioned (see TASK_COLUMN_LAYOUT_VERSION); widths are not.
+  const columnLabels = useTaskColumnLabels();
+  const widthConfig = useScaledWidths(LIST_CONFIG);
+  const poolWidthConfig = useScaledWidths(POOL_LIST_CONFIG);
+  const myCols = useColumnVisibility(`task-columns-all@${TASK_COLUMN_LAYOUT_VERSION}`, LIST_CONFIG);
+  const myWidths = useColumnWidths('task-columns-all', widthConfig);
+  const poolCols = useColumnVisibility(
+    `task-columns-pool@${TASK_COLUMN_LAYOUT_VERSION}`,
+    POOL_LIST_CONFIG,
+  );
+  const poolWidths = useColumnWidths('task-columns-pool', poolWidthConfig);
+  const cols = isPool ? poolCols : myCols;
+  const colWidths = isPool ? poolWidths : myWidths;
 
-  const {
-    widths: colWidths,
-    setWidth: setColWidth,
-    resetWidths,
-  } = useColumnWidths('task-columns-all', DEFAULT_CONFIG);
-
-  // Pool tab column layout — its own key so it persists independently of My Task, but
-  // the dropdown renders inline in the pool toolbar (parity with the personal tab).
-  const poolCols = useColumnVisibility('task-columns-pool', DEFAULT_CONFIG);
-  const poolWidths = useColumnWidths('task-columns-pool', DEFAULT_CONFIG);
-
-  const tableRef = useRef<HTMLTableElement>(null);
-
-  const ACTIONS_COL_WIDTH = 32; // w-8 = 2rem = 32px
-
-  const totalTableWidth =
-    visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH;
-
-  const getAutoFitWidth = useColumnAutoFit(tableRef);
-
-  const [poolFilterDialogOpen, setPoolFilterDialogOpen] = useState(false);
-  const poolFilterChips = Object.entries(poolFilters).filter(([, v]) => !!v) as [
-    keyof TaskFilterParams,
-    string,
-  ][];
-
+  // ── View ─────────────────────────────────────────────────────────────────────
   const [poolViewMode, setPoolViewModeState] = useState<ViewMode>(readStoredPoolViewMode);
   const [poolGroupBy, setPoolGroupByState] = useState<GroupByField>(readStoredPoolGroupBy);
+  const [myViewMode, setMyViewMode] = useState<ViewMode>('list');
+  const [myGroupBy, setMyGroupBy] = useState<GroupByField>('status');
 
   const setPoolViewMode = (mode: ViewMode) => {
     setPoolViewModeState(mode);
@@ -163,751 +124,282 @@ function TaskListingPage() {
       // ignore quota / unavailable-storage errors — in-memory state still updates
     }
   };
+  const viewMode = isPool ? poolViewMode : myViewMode;
+  const groupBy = isPool ? poolGroupBy : myGroupBy;
 
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
-  const [groupBy, setGroupBy] = useState<GroupByField>('status');
-  const [pageNumber, setPageNumber] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-  const isSearchPending = searchTerm !== debouncedSearch;
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
-    visible: false,
-    x: 0,
-    y: 0,
-    taskId: null,
-  });
-  const contextMenuRef = useRef<HTMLDivElement>(null);
+  // ── Filters: one set of controls over whichever tab is shown ─────────────────
+  const curSearch = isPool ? poolSearch : searchTerm;
+  const setCurSearch = isPool ? setPoolSearch : setSearchTerm;
+  const curFilters = isPool ? poolFilters : filters;
+  const setCurFilters = isPool ? setPoolFilters : setFilters;
+  const values = curFilters as Record<string, string>;
 
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (contextMenuRef.current && !contextMenuRef.current.contains(e.target as Node)) {
-        setContextMenu(prev => ({ ...prev, visible: false }));
-      }
-    };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, []);
+  const allFields = useMemo(() => makeTaskFilters(t), [t]);
+  const inputFields = useMemo(() => allFields.filter(f => !f.hidden), [allFields]);
+  const activeFields = allFields.filter(f => hasValue(values, f));
+  const hasFilters = activeFields.length > 0 || !!curSearch;
 
-  useEffect(() => {
-    setPageNumber(0);
-  }, [sortField, sortDirection, debouncedSearch, filters]);
-
-  const listRequestParams = {
-    pageNumber,
-    pageSize,
-    search: debouncedSearch || undefined,
-    sortBy: sortField ?? undefined,
-    sortDir: sortDirection,
-    ...filters,
+  const handleFilterChange = useCallback(
+    (key: string, value: string) => setCurFilters(prev => ({ ...prev, [key]: value })),
+    [setCurFilters],
+  );
+  const handleFilterRemove = useCallback(
+    (key: string) =>
+      setCurFilters(prev => {
+        const next = { ...prev };
+        delete next[key as keyof TaskFilterParams];
+        return next;
+      }),
+    [setCurFilters],
+  );
+  const handleClearAll = () => {
+    setCurFilters({});
+    setCurSearch('');
   };
+
+  // ── The filter panel, where the content area has the room for it ─────────────
+  // The content area, not the screen: the app's own menu takes 200-360px, or a 4rem rail.
+  const [setRootRef, contentWidth] = useElementWidth<HTMLDivElement>();
+  const canDock = contentWidth >= FILTER_PANEL_MIN_WIDTH;
+  const [panelHidden, setPanelHidden] = useState(readStoredPanelHidden);
+  const panelOpen = canDock && !panelHidden;
+  const togglePanel = () => {
+    const next = !panelHidden;
+    setPanelHidden(next);
+    try {
+      localStorage.setItem(PANEL_HIDDEN_STORAGE_KEY, next ? '1' : '0');
+    } catch {
+      // ignore quota / unavailable-storage errors — in-memory state still updates
+    }
+  };
+
+  // ── My list: queried only while it is the one on show ────────────────────────
+  const paging = useTaskListPaging(debouncedSearch, filters);
+  const myListShown = !isPool && myViewMode === 'list';
+  const isSearchPending = searchTerm !== debouncedSearch;
 
   const {
     data: listData,
     isLoading: isListLoading,
-    isError: isListError,
-    error: listError,
-  } = useGetTasks(listRequestParams);
+    isPlaceholderData,
+    isError,
+    error,
+  } = useGetTasks(
+    { search: debouncedSearch || undefined, ...paging.queryParams, ...filters },
+    { enabled: myListShown },
+  );
+  const listTasks = (listData?.items ?? []) as Task[];
 
-  // The board owns its own (per-column) loading state now — this min-loading
-  // smoothing only applies to the list/table view.
-  const [minLoadingDone, setMinLoadingDone] = useState(true);
-  useEffect(() => {
-    if (isListLoading) {
-      setMinLoadingDone(false);
-      setTimeout(() => setMinLoadingDone(true), 400);
-    }
-  }, [isListLoading]);
-
-  const isLoading = isListLoading || !minLoadingDone;
-  const isError = isListError;
-  const error = listError;
-
-  const paginatedResult: TaskListResponse | undefined = listData;
-  const listTasks = (paginatedResult?.items ?? []) as Task[];
-
-  const totalCount = paginatedResult?.count ?? 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const isListEmpty = !isLoading && listTasks.length === 0;
-
+  // ── Counts ───────────────────────────────────────────────────────────────────
   const [poolTotalCount, setPoolTotalCount] = useState<number | null>(null);
-
+  const [poolLoading, setPoolLoading] = useState(false);
   const { data: taskCounts } = useGetTaskCounts();
   const poolBaseline = poolFilters.activityId
-    ? (taskCounts?.get(poolFilters.activityId)?.poolCount ?? 0)
+    ? poolFilters.activityId
+        .split(',')
+        .reduce((sum, id) => sum + (taskCounts?.get(id)?.poolCount ?? 0), 0)
     : taskCounts
       ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.poolCount, 0)
       : 0;
-  const poolBadge = activeTab === 'pool' && poolTotalCount != null ? poolTotalCount : poolBaseline;
+  // On the Pool tab's table: its own total, hidden until it is known (like My's). Anywhere else
+  // (the board, or the other tab) the per-activity counts.
+  const poolBadge = isPool && poolViewMode === 'list' ? poolTotalCount : poolBaseline;
+  // With My not queried (Pool tab, or the board), its total is the unfiltered one the counts give
+  const myBadge = myListShown
+    ? (listData?.count ?? null)
+    : taskCounts
+      ? Array.from(taskCounts.values()).reduce((sum, v) => sum + v.myCount, 0)
+      : null;
 
-  const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
-    keyof TaskFilterParams,
-    string,
-  ][];
-  const hasFilters = !!searchTerm || activeFilterChips.length > 0;
+  // Tasks per task type, for the panel: under the search and the other filters (not the task type
+  // filter itself, or choosing one would zero the rest), so the numbers agree with the table.
+  // Not on a drill-down to another user's tasks: the counts are the signed-in user's, so the panel
+  // lists the task types with no numbers there.
+  const showsOthersTasks = !isPool && !!curFilters.assigneeUserId;
+  const { data: typeCounts } = useTaskGroupCounts(
+    'activity',
+    {
+      ...curFilters,
+      activityId: undefined,
+      search: (isPool ? debouncedPoolSearch : debouncedSearch) || undefined,
+    },
+    isPool ? 'pool' : 'me',
+    { enabled: panelOpen && !showsOthersTasks },
+  );
+  const taskTypeCounts = useMemo(
+    () => (typeCounts ? new Map(typeCounts.map(c => [c.value, c.count])) : null),
+    [typeCounts],
+  );
 
-  const removeFilter = (key: keyof TaskFilterParams) => {
-    setFilters(prev => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
-
+  // ── Rows ─────────────────────────────────────────────────────────────────────
   /**
    * Route a task row click.
    * v5: All task types — including quotation tasks — go through the standard
    * /tasks/:taskId/opening gate. TaskIndexRedirect handles the per-activityId redirect.
    */
-  const handleTaskClick = (task: Task) => {
-    navigate(`/tasks/${task.id}/opening`);
-  };
+  const handleTaskOpen = (task: Task) => navigate(`/tasks/${task.id}/opening`);
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      if (sortDirection === 'asc') {
-        setSortDirection('desc');
-      } else {
-        setSortField(null);
-        setSortDirection('asc');
-      }
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
-
-  const SortIcon = ({ field }: { field: string }) => {
-    if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />;
-    return (
-      <Icon
-        style="solid"
-        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-(--palette-primary-text)"
-      />
+  const copyNumber = (number: string) => {
+    // navigator.clipboard is missing outside secure contexts (plain http)
+    const copied =
+      navigator.clipboard?.writeText(number) ?? Promise.reject(new Error('no clipboard'));
+    copied.then(
+      () => toast.success(t('task:row.copied')),
+      () => toast.error(t('task:row.copyFailed')),
     );
   };
+  const myMenuItems = (task: Task): TaskRowMenuItem[] => [
+    {
+      key: 'open',
+      label: t('task:row.open'),
+      icon: 'arrow-up-right-from-square',
+      onSelect: () => handleTaskOpen(task),
+    },
+    // Nothing to copy until the appraisal has its number
+    ...(task.appraisalNumber
+      ? [
+          {
+            key: 'copy',
+            label: t('task:row.copyNumber'),
+            icon: 'copy',
+            onSelect: () => copyNumber(task.appraisalNumber!),
+          },
+        ]
+      : []),
+  ];
 
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
-          <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-(--palette-ink)">Failed to load tasks</p>
-          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
-        </div>
-      </div>
-    );
-  }
+  const columnsControl = (
+    <ColumnVisibilityDropdown
+      neutralButton
+      checkboxes
+      orderedColumns={cols.orderedColumns}
+      hidden={cols.hidden}
+      alwaysVisible={cols.alwaysVisible}
+      pinned={cols.pinnedColumns}
+      onTogglePin={cols.togglePin}
+      labels={columnLabels}
+      hiddenBeyondDefault={cols.hiddenBeyondDefault}
+      onToggle={cols.toggleColumn}
+      onReorder={cols.reorderColumns}
+      canReset={cols.isCustomized || colWidths.hasCustomWidths}
+      onReset={() => {
+        cols.resetToDefault();
+        colWidths.resetWidths();
+      }}
+    />
+  );
 
   return (
-    <div className="flex flex-col h-full min-h-0 min-w-0">
-      {/* ── Page header + quick access (single row to save vertical space) ── */}
-      <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
-        <div className="shrink-0">
-          <div className="flex items-center gap-3">
-            <h2 className="text-base font-semibold text-(--palette-ink)">All Tasks</h2>
-            {activeTab === 'personal' && !isListLoading && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full tabular-nums">
-                {totalCount}
-              </span>
-            )}
-            {activeTab === 'pool' && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full tabular-nums">
-                {poolBadge}
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-(--palette-gray-500) mt-0.5">
-            Manage and track your assigned appraisal tasks
-          </p>
-        </div>
+    <div ref={setRootRef} className="flex h-full min-h-0 min-w-0 flex-col gap-4">
+      <TaskListHeader
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        total={isPool ? poolBadge : myBadge}
+        myCount={myBadge}
+        poolCount={poolBadge}
+      />
 
-        {/* Quick access — right aligned, label on top, horizontally scrollable */}
-        <div className="flex flex-col min-w-0">
-          <p className="text-xs font-semibold text-(--palette-gray-400) uppercase tracking-wider mb-1 text-right">
-            {t('favorites.row.sectionTitle')}
-          </p>
-          <div className="min-w-0">
-            <FavoritesRow />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Toolbar: tabs + controls ── */}
-      <div className="shrink-0 flex items-end gap-2 border-b border-(--palette-line) mb-3">
-        {/* My / Pool underline tabs */}
-        <button
-          onClick={() => setActiveTab('personal')}
-          className={`relative flex items-center gap-1 px-1 pb-2 text-xs font-medium transition-colors ${
-            activeTab === 'personal'
-              ? 'text-(--palette-primary-text)'
-              : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
-          }`}
-        >
-          <Icon style="solid" name="user" className="size-3" />
-          My
-          {!isListLoading && (
-            <span
-              className={`px-1 py-0.5 rounded text-xs font-semibold tabular-nums ${
-                activeTab === 'personal'
-                  ? 'bg-primary/10 text-(--palette-primary-text)'
-                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
-              }`}
-            >
-              {totalCount}
-            </span>
-          )}
-          {activeTab === 'personal' && (
-            <span className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary rounded-t-full" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('pool')}
-          className={`relative flex items-center gap-1 px-1 pb-2 ml-3 text-xs font-medium transition-colors ${
-            activeTab === 'pool'
-              ? 'text-(--palette-primary-text)'
-              : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
-          }`}
-        >
-          <Icon style="solid" name="users" className="size-3" />
-          Pool
-          <span
-            className={`px-1 py-0.5 rounded text-xs font-semibold tabular-nums ${
-              activeTab === 'pool'
-                ? 'bg-primary/10 text-(--palette-primary-text)'
-                : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
-            }`}
-          >
-            {poolBadge}
-          </span>
-          {activeTab === 'pool' && (
-            <span className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-primary rounded-t-full" />
-          )}
-        </button>
-
-        {/* Spacer — always pushes controls to the right */}
-        <div className="flex-1" />
-
-        {/* Pool-tab controls — right-aligned */}
-        {activeTab === 'pool' && (
-          <>
-            <div className="relative w-56 mb-2">
-              <Icon
-                style="solid"
-                name="magnifying-glass"
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
-              />
-              <input
-                type="text"
-                placeholder="Search tasks..."
-                value={poolSearch}
-                onChange={e => setPoolSearch(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
-              />
-              {poolSearch && (
-                <button
-                  onClick={() => setPoolSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
-                >
-                  <Icon style="solid" name="xmark" className="size-3.5" />
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => setPoolFilterDialogOpen(true)}
-              className={`mb-2 flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all ${
-                poolFilterChips.length > 0
-                  ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
-                  : 'border-(--palette-line) text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:text-(--palette-ink)'
-              }`}
-            >
-              <Icon style="solid" name="sliders" className="size-3.5" />
-              Filters
-              {poolFilterChips.length > 0 && (
-                <span className="inline-flex items-center justify-center size-4 rounded-full bg-primary text-white text-[10px] font-semibold">
-                  {poolFilterChips.length}
-                </span>
-              )}
-            </button>
-
-            {/* Columns (list only) */}
-            {poolViewMode === 'list' && (
-              <div className="mb-2 self-stretch">
-                <ColumnVisibilityDropdown
-                  labels={COLUMN_LABELS}
-                  orderedColumns={poolCols.orderedColumns}
-                  hidden={poolCols.hidden}
-                  alwaysVisible={poolCols.alwaysVisible}
-                  onToggle={poolCols.toggleColumn}
-                  onReorder={poolCols.reorderColumns}
-                  onReset={() => {
-                    poolCols.resetToDefault();
-                    poolWidths.resetWidths();
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Group by (board only) */}
-            {poolViewMode === 'grid' && (
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-xs text-(--palette-gray-400)">Group by</span>
-                <NativeSelect
-                  value={poolGroupBy}
-                  onChange={e => setPoolGroupBy(e.target.value as GroupByField)}
-                >
-                  {groupByOptions.map(o => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-            )}
-
-            {/* View toggle */}
-            <div className="mb-2 flex items-center bg-(--palette-surface-3) rounded-lg p-0.5 gap-0.5">
-              <button
-                onClick={() => setPoolViewMode('list')}
-                title="List view"
-                className={`flex items-center justify-center size-8 rounded-md transition-all ${
-                  poolViewMode === 'list'
-                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
-                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
-                }`}
-              >
-                <Icon style="solid" name="list" className="size-3.5" />
-              </button>
-              <button
-                onClick={() => setPoolViewMode('grid')}
-                title="Board view"
-                className={`flex items-center justify-center size-8 rounded-md transition-all ${
-                  poolViewMode === 'grid'
-                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
-                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
-                }`}
-              >
-                <Icon style="solid" name="grid-2" className="size-3.5" />
-              </button>
-            </div>
-          </>
+      <div className="flex min-h-0 flex-1 gap-4">
+        {panelOpen && (
+          <TaskFilterPanel
+            fields={inputFields}
+            values={values}
+            onChange={handleFilterChange}
+            onRemove={handleFilterRemove}
+            onClear={handleClearAll}
+            onClose={togglePanel}
+            taskTypeCounts={taskTypeCounts}
+          />
         )}
 
-        {/* Personal-tab controls — right-aligned */}
-        {activeTab === 'personal' && (
-          <>
-            {/* Search */}
-            <div className="relative w-56 mb-2">
-              {!isSearchPending && isListLoading && !!debouncedSearch ? (
-                <Icon
-                  style="solid"
-                  name="spinner"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-primary-text) animate-spin pointer-events-none"
-                />
-              ) : (
-                <Icon
-                  style="solid"
-                  name="magnifying-glass"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
-                />
-              )}
-              <input
-                type="text"
-                placeholder="Search tasks..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
-              />
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
-                >
-                  <Icon style="solid" name="xmark" className="size-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Filter */}
-            <button
-              onClick={() => setFilterDialogOpen(true)}
-              title="Filters"
-              className={`mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all ${
-                activeFilterChips.length > 0
-                  ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
-                  : 'border-(--palette-line) text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:text-(--palette-ink)'
-              }`}
-            >
-              <Icon style="solid" name="sliders" className="size-3.5" />
-              Filters
-              {activeFilterChips.length > 0 && (
-                <span className="inline-flex items-center justify-center size-4 rounded-full bg-primary text-white text-[10px] font-semibold">
-                  {activeFilterChips.length}
-                </span>
-              )}
-            </button>
-
-            {/* Columns (list only) */}
-            {viewMode === 'list' && (
-              <div className="mb-2 self-stretch">
-                <ColumnVisibilityDropdown
-                  labels={COLUMN_LABELS}
-                  orderedColumns={orderedColumns}
-                  hidden={hidden}
-                  alwaysVisible={alwaysVisible}
-                  onToggle={toggleColumn}
-                  onReorder={reorderColumns}
-                  onReset={() => {
-                    resetToDefault();
-                    resetWidths();
-                  }}
-                />
-              </div>
-            )}
-
-            {/* Group by (board only) */}
-            {viewMode === 'grid' && (
-              <div className="mb-2 flex items-center gap-2">
-                <span className="text-xs text-(--palette-gray-400)">Group by</span>
-                <NativeSelect
-                  value={groupBy}
-                  onChange={e => setGroupBy(e.target.value as GroupByField)}
-                >
-                  {groupByOptions.map(o => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </div>
-            )}
-
-            {/* View toggle */}
-            <div className="mb-2 flex items-center bg-(--palette-surface-3) rounded-lg p-0.5 gap-0.5">
-              <button
-                onClick={() => setViewMode('list')}
-                title="List view"
-                className={`flex items-center justify-center size-8 rounded-md transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
-                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
-                }`}
-              >
-                <Icon style="solid" name="list" className="size-3.5" />
-              </button>
-              <button
-                onClick={() => setViewMode('grid')}
-                title="Board view"
-                className={`flex items-center justify-center size-8 rounded-md transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
-                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
-                }`}
-              >
-                <Icon style="solid" name="grid-2" className="size-3.5" />
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {/* ── Pool tab ── */}
-      {activeTab === 'pool' && (
-        <>
-          <TaskFilterDialog
-            open={poolFilterDialogOpen}
-            initialValues={poolFilters}
-            onApply={v => setPoolFilters(v)}
-            onClose={() => setPoolFilterDialogOpen(false)}
+        <section
+          aria-label={t('task:page.listLabel')}
+          className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm"
+        >
+          <TaskListToolbar
+            searchTerm={curSearch}
+            onSearchChange={setCurSearch}
+            isSearching={
+              isPool
+                ? poolSearch !== debouncedPoolSearch || (poolLoading && !!debouncedPoolSearch)
+                : myListShown && (isSearchPending || (isListLoading && !!debouncedSearch))
+            }
+            fields={allFields}
+            values={values}
+            onFilterChange={handleFilterChange}
+            onFilterRemove={handleFilterRemove}
+            onFilterClear={handleClearAll}
+            pinnedFilters={PINNED_TASK_FILTERS[activeTab]}
+            showChips={!panelOpen}
+            canDock={canDock}
+            panelOpen={panelOpen}
+            onTogglePanel={togglePanel}
+            activeFilterCount={activeFields.length}
+            viewMode={viewMode}
+            onViewModeChange={isPool ? setPoolViewMode : setMyViewMode}
+            groupBy={groupBy}
+            onGroupByChange={isPool ? setPoolGroupBy : setMyGroupBy}
+            columnsControl={columnsControl}
           />
-          {poolFilterChips.length > 0 && (
-            <div className="shrink-0 flex items-center gap-1.5 flex-wrap mb-3">
-              {poolFilterChips.map(([key, value]) => (
-                <span
-                  key={key}
-                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
-                >
-                  <span className="text-(--palette-primary-text)/60">{FILTER_LABELS[key]}:</span>{' '}
-                  {value}
-                  <button
-                    onClick={() =>
-                      setPoolFilters(prev => {
-                        const n = { ...prev };
-                        delete n[key];
-                        return n;
-                      })
-                    }
-                    className="hover:text-(--palette-primary-text)/60 ml-0.5"
-                  >
-                    <Icon style="solid" name="xmark" className="size-2.5" />
-                  </button>
-                </span>
-              ))}
-              <button
-                onClick={() => setPoolFilters({})}
-                className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-          <PoolTaskListPage
-            externalSearch={debouncedPoolSearch}
-            externalFilters={poolFilters}
-            onCountChange={setPoolTotalCount}
-            visibleColumns={poolCols.visibleColumns}
-            colWidths={poolWidths.widths}
-            onColWidthChange={poolWidths.setWidth}
-            viewMode={poolViewMode}
-            groupBy={poolGroupBy}
-          />
-        </>
-      )}
 
-      {/* ── Personal tab ── */}
-      {activeTab === 'personal' && (
-        <>
-          {/* Active filter chips */}
-          {activeFilterChips.length > 0 && (
-            <div className="shrink-0 flex items-center gap-1.5 flex-wrap mb-3">
-              {activeFilterChips.map(([key, value]) => (
-                <span
-                  key={key}
-                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
-                >
-                  <span className="text-(--palette-primary-text)/60">{FILTER_LABELS[key]}:</span>{' '}
-                  {value}
-                  <button
-                    onClick={() => removeFilter(key)}
-                    className="hover:text-(--palette-primary-text)/60 ml-0.5"
-                  >
-                    <Icon style="solid" name="xmark" className="size-2.5" />
-                  </button>
-                </span>
-              ))}
-              <button
-                onClick={() => setFilters({})}
-                className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
-              >
-                Clear all
-              </button>
-            </div>
+          {panelOpen && activeFields.length > 0 && (
+            <TaskFilterSummary
+              fields={activeFields}
+              values={values}
+              onRemove={handleFilterRemove}
+              onClear={handleClearAll}
+            />
           )}
 
-          <TaskFilterDialog
-            open={filterDialogOpen}
-            initialValues={filters}
-            onApply={v => setFilters(v)}
-            onClose={() => setFilterDialogOpen(false)}
-          />
-
-          {/* Content */}
-          {viewMode === 'list' ? (
-            <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
-              <div
-                className={`min-h-0 ${isListEmpty ? 'overflow-hidden' : 'flex-1 overflow-auto'}`}
-              >
-                <table
-                  ref={tableRef}
-                  className="table-fixed text-table"
-                  style={{ width: totalTableWidth }}
-                >
-                  <colgroup>
-                    {visibleColumns.map(key => (
-                      <col key={key} style={{ width: colWidths[key] }} />
-                    ))}
-                    <col style={{ width: ACTIONS_COL_WIDTH }} />
-                  </colgroup>
-                  <thead className="sticky top-0 z-20">
-                    <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
-                      {visibleColumns.map((key, colIndex) => {
-                        const col = columnDefs[key];
-                        const isActive = sortField === col.sortField;
-                        const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
-                        const base =
-                          'relative px-4 py-2.5 text-left text-xs font-semibold text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
-                        const thClass = isSticky
-                          ? `${base} sticky left-0 z-30 cursor-pointer hover:text-(--palette-gray-600) after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)`
-                          : col.sortField
-                            ? `${base} cursor-pointer hover:text-(--palette-gray-600) ${isActive ? 'text-(--palette-primary-text)' : ''}`
-                            : base;
-                        return (
-                          <th
-                            key={key}
-                            onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
-                            className={thClass}
-                          >
-                            {col.sortField ? (
-                              <div className="flex items-center gap-1">
-                                {col.label}
-                                <SortIcon field={col.sortField} />
-                              </div>
-                            ) : (
-                              col.label
-                            )}
-                            <ColumnResizeHandle
-                              width={colWidths[key]}
-                              onResize={px => setColWidth(key, px)}
-                              getAutoFitWidth={getAutoFitWidth(key, colIndex)}
-                            />
-                          </th>
-                        );
-                      })}
-                      <th className="text-xs px-4 py-2.5 w-8 bg-(--palette-surface-2) font-semibold" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-(--palette-line-soft)">
-                    {isLoading ? (
-                      <TableRowSkeleton
-                        columns={visibleColumns.map(() => ({ width: 'w-24' }))}
-                        rows={8}
-                      />
-                    ) : (
-                      listTasks.map(task => (
-                        <tr
-                          key={task.id}
-                          onDoubleClick={() => handleTaskClick(task)}
-                          onContextMenu={e => {
-                            e.preventDefault();
-                            setContextMenu({
-                              visible: true,
-                              x: e.clientX,
-                              y: e.clientY,
-                              taskId: task.id,
-                            });
-                          }}
-                          className={`group cursor-pointer transition-colors hover:bg-(--palette-surface-2) ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
-                        >
-                          {visibleColumns.map(key => {
-                            const col = columnDefs[key];
-                            const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
-                            return (
-                              <td
-                                key={key}
-                                className={
-                                  isSticky
-                                    ? 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2) transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-surface-3)'
-                                    : (col.tdClassName ??
-                                      'px-3 py-1.5 text-(--palette-gray-600) text-table overflow-hidden whitespace-nowrap')
-                                }
-                                onClick={isSticky ? e => e.stopPropagation() : undefined}
-                              >
-                                {col.render(task)}
-                              </td>
-                            );
-                          })}
-                          <td className="px-3 py-1.5 w-8">
-                            <Icon
-                              style="solid"
-                              name="arrow-right"
-                              className="size-3 text-gray-200 group-hover:text-(--palette-primary-text)/40 transition-colors"
-                            />
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {isListEmpty && (
-                <div className="flex-1 min-h-0 flex items-center justify-center p-12">
-                  <div className="flex flex-col items-center gap-4">
-                    {hasFilters ? (
-                      <NoResultsArt className="h-24 w-28" />
-                    ) : (
-                      <InboxZeroArt className="h-24 w-28" />
-                    )}
-                    <div className="text-center">
-                      <p className="text-sm font-semibold text-(--palette-ink)">
-                        {hasFilters ? 'No matching tasks' : 'All clear'}
-                      </p>
-                      <p className="text-xs text-(--palette-gray-400) mt-1">
-                        {hasFilters
-                          ? 'Try adjusting your search or filters.'
-                          : 'You have no tasks assigned right now.'}
-                      </p>
-                    </div>
-                    {hasFilters && (
-                      <button
-                        onClick={() => {
-                          setSearchTerm('');
-                          setFilters({});
-                        }}
-                        className="text-xs text-(--palette-primary-text) hover:underline font-medium"
-                      >
-                        Clear filters
-                      </button>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              <Pagination
-                currentPage={pageNumber}
-                totalPages={totalPages}
-                totalCount={totalCount}
-                pageSize={pageSize}
-                onPageChange={setPageNumber}
-                onPageSizeChange={size => {
-                  setPageSize(size);
-                  setPageNumber(0);
-                }}
-              />
-            </div>
-          ) : (
-            <div className="flex-1 min-h-0">
+          {isPool ? (
+            <PoolTaskListPage
+              bare
+              externalSearch={debouncedPoolSearch}
+              externalFilters={poolFilters}
+              onClearFilters={handleClearAll}
+              onCountChange={setPoolTotalCount}
+              onLoadingChange={setPoolLoading}
+              visibleColumns={poolCols.visibleColumns}
+              pinnedColumns={poolCols.pinnedColumns}
+              colWidths={poolWidths.widths}
+              onColWidthChange={poolWidths.setWidth}
+              viewMode={poolViewMode}
+              groupBy={poolGroupBy}
+            />
+          ) : myViewMode === 'grid' ? (
+            <div className="min-h-0 flex-1 p-4">
               <TaskKanbanBoard
-                groupBy={groupBy}
+                groupBy={myGroupBy}
                 baseFilters={{ search: debouncedSearch || undefined, ...filters }}
               />
             </div>
+          ) : isError ? (
+            // Only the table is lost: the header, the switch and the Pool tab keep working
+            <TaskLoadError
+              title={t('task:errors.loadFailed')}
+              message={(error as Error)?.message}
+            />
+          ) : (
+            <>
+              <TaskTable
+                tasks={listTasks}
+                isLoading={isListLoading}
+                isStale={isPlaceholderData}
+                skeletonRows={Math.min(paging.queryParams.pageSize, 8)}
+                visibleColumns={myCols.visibleColumns}
+                pinnedColumns={myCols.pinnedColumns}
+                widths={myWidths.widths}
+                onWidthChange={myWidths.setWidth}
+                {...paging.sortProps}
+                onOpen={handleTaskOpen}
+                menuItems={myMenuItems}
+                emptyState={<TaskEmptyState hasFilters={hasFilters} onClear={handleClearAll} />}
+              />
+              <Pagination {...paging.paginationProps(listData?.count)} leftSlot={<TaskLegend />} />
+            </>
           )}
-
-          {/* Context menu */}
-          {contextMenu.visible && (
-            <div
-              ref={contextMenuRef}
-              className="fixed bg-(--palette-surface) rounded-xl shadow-xl border border-(--palette-line-soft) py-1 z-50 min-w-[160px]"
-              style={{ top: contextMenu.y, left: contextMenu.x }}
-            >
-              <button
-                onClick={() => {
-                  const task = listTasks.find(t => t.id === contextMenu.taskId);
-                  if (task) handleTaskClick(task);
-                  setContextMenu(p => ({ ...p, visible: false }));
-                }}
-                className="w-full px-3 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2.5 rounded-lg mx-1"
-                style={{ width: 'calc(100% - 8px)' }}
-              >
-                <Icon
-                  style="regular"
-                  name="arrow-up-right-from-square"
-                  className="size-3.5 text-(--palette-gray-400)"
-                />
-                Open task
-              </button>
-              <button
-                onClick={() => {
-                  const task = listTasks.find(t => t.id === contextMenu.taskId);
-                  if (task?.appraisalNumber) navigator.clipboard.writeText(task.appraisalNumber);
-                  setContextMenu(p => ({ ...p, visible: false }));
-                }}
-                className="w-full px-3 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2.5 rounded-lg mx-1"
-                style={{ width: 'calc(100% - 8px)' }}
-              >
-                <Icon style="regular" name="copy" className="size-3.5 text-(--palette-gray-400)" />
-                Copy report no.
-              </button>
-            </div>
-          )}
-        </>
-      )}
+        </section>
+      </div>
     </div>
   );
 }

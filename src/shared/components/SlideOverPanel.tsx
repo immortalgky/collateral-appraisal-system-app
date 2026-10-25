@@ -9,8 +9,8 @@ import clsx from 'clsx';
 interface SlideOverPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
-  subtitle?: string;
+  title: ReactNode;
+  subtitle?: ReactNode;
   width?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
   children: ReactNode;
   /** Pinned under the scrolling content — for actions that must stay reachable on long forms. */

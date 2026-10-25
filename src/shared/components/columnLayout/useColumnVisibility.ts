@@ -16,6 +16,9 @@ import type { ColumnLayoutConfig } from './types';
 const columnLayoutSchema = z.object({
   hidden: z.array(z.string()),
   order: z.array(z.string()),
+  // Only written by a screen that opts in with `pinnable`. Optional, so every layout saved before
+  // pins existed still parses.
+  pinned: z.array(z.string()).optional(),
 });
 
 type PersistedState = z.infer<typeof columnLayoutSchema>;
@@ -25,7 +28,7 @@ type PersistedState = z.infer<typeof columnLayoutSchema>;
 function normalizeState<K extends string>(
   raw: PersistedState | null,
   config: ColumnLayoutConfig<K>,
-): { hidden: Set<K>; order: K[] } {
+): { hidden: Set<K>; order: K[]; pinned: K[] } {
   const alwaysVisible = new Set<K>([config.pinnedColumn, ...(config.alwaysVisible ?? [])]);
 
   // Nothing stored: start from the screen's defaults. Once anything IS stored the user has spoken,
@@ -52,7 +55,19 @@ function normalizeState<K extends string>(
   const sticky = config.pinnedColumn;
   const ordered = [sticky, ...order.filter(k => k !== sticky)];
 
-  return { hidden: new Set(validHidden), order: ordered };
+  // Pins: only for a screen that opted in. Nothing stored (or stored before pins existed) means the
+  // pinned column is the one pin, so the screen looks as it did.
+  const pinned = config.pinnable
+    ? [
+        ...new Set(
+          (effective.pinned ?? [config.pinnedColumn]).filter((k): k is K =>
+            (config.columns as readonly string[]).includes(k),
+          ),
+        ),
+      ]
+    : [];
+
+  return { hidden: new Set(validHidden), order: ordered, pinned };
 }
 
 /**
@@ -111,14 +126,26 @@ export function useColumnVisibility<K extends string>(
     [storageKey],
   );
 
-  const { hidden, order } = useMemo(() => normalizeState(raw, config), [raw, config]);
+  const { hidden, order, pinned } = useMemo(() => normalizeState(raw, config), [raw, config]);
 
   const alwaysVisible = useMemo(
     () => new Set<K>([config.pinnedColumn, ...(config.alwaysVisible ?? [])]),
     [config.pinnedColumn, config.alwaysVisible],
   );
 
-  const visibleColumns = useMemo(() => order.filter(k => !hidden.has(k)), [order, hidden]);
+  // Pinned columns lead, in pin order; the rest follow in the user's order.
+  const visibleColumns = useMemo(() => {
+    const shown = order.filter(k => !hidden.has(k));
+    if (pinned.length === 0) return shown;
+    return [...pinned.filter(k => !hidden.has(k)), ...shown.filter(k => !pinned.includes(k))];
+  }, [order, hidden, pinned]);
+
+  // A screen that never opted in keeps writing the two-key shape it always did.
+  const save = useCallback(
+    (next: { hidden: string[]; order: string[]; pinned?: string[] }) =>
+      setRaw(config.pinnable ? { pinned, ...next } : { hidden: next.hidden, order: next.order }),
+    [config.pinnable, pinned, setRaw],
+  );
 
   const toggleColumn = useCallback(
     (key: K) => {
@@ -129,28 +156,55 @@ export function useColumnVisibility<K extends string>(
       } else {
         nextHidden.add(key);
       }
-      setRaw({ hidden: [...nextHidden], order });
+      save({ hidden: [...nextHidden], order });
     },
-    [alwaysVisible, hidden, order, setRaw],
+    [alwaysVisible, hidden, order, save],
   );
 
   const reorderColumns = useCallback(
     (activeId: K, overId: K) => {
       if (activeId === overId) return;
+      // Pinned columns are reordered among themselves (pin order); dragging across the two groups
+      // would change what is pinned, which only the pin button does.
+      const activePinned = pinned.includes(activeId);
+      if (activePinned !== pinned.includes(overId)) return;
+      if (activePinned) {
+        save({
+          hidden: [...hidden],
+          order,
+          pinned: arrayMove(pinned, pinned.indexOf(activeId), pinned.indexOf(overId)),
+        });
+        return;
+      }
       const oldIndex = order.indexOf(activeId);
       const newIndex = order.indexOf(overId);
       if (oldIndex === -1 || newIndex === -1) return;
-      const nextOrder = arrayMove(order, oldIndex, newIndex);
-      setRaw({ hidden: [...hidden], order: nextOrder });
+      save({ hidden: [...hidden], order: arrayMove(order, oldIndex, newIndex) });
     },
-    [hidden, order, setRaw],
+    [hidden, order, pinned, save],
+  );
+
+  const togglePin = useCallback(
+    (key: K) => {
+      if (!config.pinnable) return;
+      save({
+        hidden: [...hidden],
+        order,
+        pinned: pinned.includes(key) ? pinned.filter(k => k !== key) : [...pinned, key],
+      });
+    },
+    [config.pinnable, hidden, order, pinned, save],
   );
 
   const resetToDefault = useCallback(() => {
     // Restores defaultHidden, not an empty set: on a screen that starts with columns off, clearing
     // it outright produces a table no default user has ever seen — the opposite of "put it back".
-    setRaw({ hidden: [...(config.defaultHidden ?? [])], order: [...config.columns] });
-  }, [config.columns, config.defaultHidden, setRaw]);
+    setRaw({
+      hidden: [...(config.defaultHidden ?? [])],
+      order: [...config.columns],
+      ...(config.pinnable && { pinned: [config.pinnedColumn] }),
+    });
+  }, [config.columns, config.defaultHidden, config.pinnable, config.pinnedColumn, setRaw]);
 
   /**
    * Columns the user has hidden BEYOND this screen's defaults — what a "you have hidden N" badge
@@ -174,7 +228,10 @@ export function useColumnVisibility<K extends string>(
      */
     isCustomized: raw !== null,
     alwaysVisible,
+    /** Pinned columns in pin order (empty unless the config is `pinnable`). */
+    pinnedColumns: pinned,
     toggleColumn,
+    togglePin,
     reorderColumns,
     resetToDefault,
   };
