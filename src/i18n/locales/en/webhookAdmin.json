@@ -1,37 +1,88 @@
 {
   "page": {
     "title": "Webhook Deliveries",
-    "subtitle": "Monitor and retry outbound webhook delivery attempts"
+    "subtitle": "Monitor and retry outbound webhook deliveries",
+    "subscriptionsLink": "Webhook Subscriptions"
+  },
+  "tabs": {
+    "label": "Status",
+    "all": "All"
   },
   "columns": {
-    "id": "ID",
-    "subscriptionId": "Subscription ID",
-    "created": "Created",
-    "eventType": "Event Type",
+    "created": "Time",
+    "eventType": "Event",
     "system": "System",
     "status": "Status",
-    "attempts": "Attempts",
-    "lastStatusCode": "HTTP Status",
-    "lastError": "Last Error",
-    "deliveredAt": "Delivered At",
-    "actions": "Actions"
+    "lastResult": "Last result",
+    "attempts": "Tries"
   },
   "status": {
     "Pending": "Pending",
     "Delivered": "Delivered",
     "Failed": "Failed"
   },
+  "select": {
+    "all": "Select every failed row on this page",
+    "row": "Select row"
+  },
   "filters": {
-    "eventTypePlaceholder": "Filter by event type...",
-    "statusLabel": "Status",
-    "allStatuses": "All statuses",
+    "searchPlaceholder": "Search event or delivery ID",
+    "searchLabel": "Search",
+    "allSystems": "All systems",
+    "systemLabel": "System",
+    "timeLabel": "Time range",
+    "clear": "Clear event filter",
     "from": "From",
     "to": "To",
-    "clear": "Clear filters"
+    "time": {
+      "all": "Any time",
+      "24h": "24 hours",
+      "7d": "7 days",
+      "30d": "30 days",
+      "90d": "90 days",
+      "custom": "Custom range"
+    }
+  },
+  "pendingBanner": {
+    "count_one": "{{count}} waiting to send",
+    "count_other": "{{count}} waiting to send",
+    "since": "since {{since}} ({{days}})",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "never_one": "{{count}} never tried",
+    "never_other": "{{count}} never tried",
+    "view": "View pending"
+  },
+  "failure": {
+    "httpAll_one": "The one failed delivery got HTTP {{status}} from {{system}}",
+    "httpAll_other": "All {{count}} got HTTP {{status}} from {{system}}",
+    "httpSome_one": "{{count}} got HTTP {{status}} from {{system}}",
+    "httpSome_other": "{{count}} got HTTP {{status}} from {{system}}",
+    "noResponseAll_one": "The one failed delivery never reached {{system}} (no HTTP response)",
+    "noResponseAll_other": "All {{count}} never reached {{system}} (no HTTP response)",
+    "noResponseSome_one": "{{count}} never reached {{system}} (no HTTP response)",
+    "noResponseSome_other": "{{count}} never reached {{system}} (no HTTP response)",
+    "destination": "Destination",
+    "checkSubscription": "Check the {{system}} subscription"
   },
   "actions": {
     "view": "View details",
-    "retry": "Retry delivery"
+    "retry": "Retry"
+  },
+  "bulk": {
+    "selected_one": "{{count}} selected",
+    "selected_other": "{{count}} selected",
+    "retry_one": "Retry {{count}}",
+    "retry_other": "Retry {{count}}",
+    "clear": "Clear selection",
+    "confirmMessage_one": "The same payload of {{count}} delivery will be sent to its current callback URL. Do you want to continue?",
+    "confirmMessage_other": "The same payloads of {{count}} deliveries will be sent to their current callback URLs, 3 at a time. Do you want to continue?",
+    "successToast_one": "{{count}} delivery queued for retry",
+    "successToast_other": "{{count}} deliveries queued for retry",
+    "partialToast_one": "{{count}} queued for retry, {{failed}} could not be retried",
+    "partialToast_other": "{{count}} queued for retry, {{failed}} could not be retried",
+    "failedToast_one": "Could not retry {{count}} delivery",
+    "failedToast_other": "Could not retry {{count}} deliveries"
   },
   "retry": {
     "confirmTitle": "Resend Webhook Delivery",
@@ -42,10 +93,29 @@
     "errorToast": "Failed to retry webhook delivery"
   },
   "drawer": {
-    "title": "Delivery Details",
+    "createdAt": "created {{time}}",
+    "close": "Close",
+    "attempts_one": "Tried {{count}} time",
+    "attempts_other": "Tried {{count}} times",
+    "neverAttempted": "Never tried",
+    "respondedWith": "last response",
+    "deliveredAt": "Delivered {{time}}",
+    "sections": {
+      "destination": "Destination",
+      "reference": "References"
+    },
+    "callbackUrl": "Callback URL",
+    "auth": "Authentication",
+    "subscription": "Subscription",
+    "openSubscription": "Open subscription",
+    "deliveryId": "Delivery ID",
+    "eventId": "Event ID",
+    "appraisalNumber": "Appraisal no.",
     "payload": "Payload",
     "copy": "Copy",
-    "copied": "Copied!",
+    "copied": "Copied",
+    "copyFailed": "Could not copy — select the value and copy it manually.",
+    "copyField": "Copy {{field}}",
     "noPayload": "No payload"
   },
   "emptyState": "No webhook deliveries found",
@@ -55,75 +125,109 @@
       "title": "Webhook Subscriptions",
       "subtitle": "Configure the external systems that receive outbound webhook events"
     },
-    "columns": {
-      "systemCode": "System Code",
-      "eventType": "Event Type",
-      "callbackUrl": "Callback URL",
-      "authType": "Auth",
+    "tabs": {
+      "label": "Status",
+      "all": "All",
       "active": "Active",
-      "secret": "Secret",
-      "lastDelivery": "Last Delivery",
-      "actions": "Actions"
+      "inactive": "Inactive"
     },
     "filters": {
-      "systemCodePlaceholder": "Filter by system code...",
-      "statusAll": "All",
-      "statusActive": "Active only",
-      "statusInactive": "Inactive only",
-      "clear": "Clear filters"
+      "searchPlaceholder": "Search system code"
+    },
+    "banner": {
+      "count_one": "{{count}} subscription",
+      "count_other": "{{count}} subscriptions",
+      "text_one": "still stores the secret unencrypted (saved before encryption was on) — edit and re-enter the secret to encrypt it",
+      "text_other": "still store the secret unencrypted (saved before encryption was on) — edit and re-enter the secret to encrypt it"
+    },
+    "columns": {
+      "systemEvent": "System / event",
+      "destination": "Destination",
+      "secret": "Secret",
+      "active": "Active",
+      "actions": "Actions"
+    },
+    "authLine": {
+      "HMAC": "HMAC-SHA256",
+      "TokenBearer": "Bearer token (OAuth client credentials)"
+    },
+    "authTypeShort": {
+      "HMAC": "HMAC",
+      "TokenBearer": "Bearer token"
+    },
+    "secretBadge": {
+      "encrypted": "Encrypted",
+      "plaintext": "Not encrypted",
+      "notSet": "Not set"
+    },
+    "secretTitle": {
+      "plaintext": "Set, but not encrypted — edit and re-enter the secret"
     },
     "actions": {
       "add": "Add Subscription",
       "edit": "Edit",
-      "activate": "Activate",
-      "deactivate": "Deactivate",
-      "delete": "Delete"
-    },
-    "active": {
-      "yes": "Active",
-      "no": "Inactive"
+      "delete": "Delete",
+      "toggle": "Active: {{name}}"
     },
     "form": {
       "createTitle": "Add Webhook Subscription",
-      "editTitle": "Edit Webhook Subscription",
+      "createSubtitle": "Register a new receiving system for appraisal events",
+      "active": "Active",
+      "sections": {
+        "systemEvent": "System and event",
+        "destination": "Destination",
+        "auth": "Authentication"
+      },
       "systemCode": "System Code",
       "systemCodePlaceholder": "e.g. LOS, CLS",
-      "systemCodeLocked": "System code and event type cannot be changed after creation.",
-      "callbackUrl": "Callback URL",
-      "secretKey": "Signing Secret",
-      "secretKeyPlaceholder": "Shared HMAC secret from the receiving system",
-      "secretKeyHint": "Shared HMAC-SHA256 secret used to sign outbound payloads. Coordinated with the receiving system.",
-      "replaceSecret": "Replace secret",
-      "keepSecret": "Keep the current secret",
-      "cancel": "Cancel",
-      "create": "Create",
-      "save": "Save",
+      "eventScope": "Events to receive",
+      "scopeAll": "Every event of this system",
+      "scopeAllDesc": "Receives all events except those with their own single-event subscription",
+      "scopeSingle": "A single event only",
+      "scopeSingleDesc": "Goes to a separate destination for that event",
       "eventType": "Event Type",
-      "eventTypePlaceholder": "e.g. APPRAISAL_PMA_UPDATED",
-      "eventTypeHint": "Leave empty to receive every event for this system (catch-all). Cannot be changed after creation.",
+      "eventTypePlaceholder_one": "Choose an event ({{count}} type)",
+      "eventTypePlaceholder_other": "Choose an event ({{count}} types)",
+      "conflict": "A subscription for {{pair}} already exists",
+      "createLockedHint": "System code and event cannot be changed after creation",
+      "editLockedHint": "Used to match events to a destination. Cannot be changed after creation — create a new subscription instead.",
+      "callbackUrl": "Callback URL",
+      "callbackUrlPlaceholder": "https://example.com/webhooks/cas",
+      "callbackUrlHint": "After changing the URL the secret must be entered again — the stored one is never sent to a new destination",
       "httpMethod": "HTTP Method",
-      "authType": "Authentication",
+      "authType": "Authentication method",
       "authTypes": {
         "HMAC": "HMAC signature",
-        "TokenBearer": "Bearer token (token endpoint)"
+        "TokenBearer": "Bearer token"
       },
       "tokenEndpoint": "Token Endpoint",
+      "tokenEndpointPlaceholder": "https://example.com/api/auth/token",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "clientSecretPlaceholder": "Client secret issued by the receiving system",
-      "clientSecretHint": "Sent with the Client ID to the token endpoint to obtain a bearer token.",
-      "secretSet": "Set (stored encrypted)",
-      "secretNotSet": "Not set",
-      "secretPlaintext": "Set, NOT encrypted — re-enter it",
+      "clientSecretHint": "Sent with the Client ID to the token endpoint to obtain a bearer token before every delivery",
+      "secretKey": "Signing Secret",
+      "secretKeyPlaceholder": "HMAC secret agreed with the receiving system",
+      "secretKeyHint": "HMAC-SHA256 secret shared with the receiving system to sign outbound payloads",
+      "secretPlaintextNote": "This secret was saved before encryption was turned on. Press \"Replace secret\" and enter the same or a new value to store it encrypted.",
       "clientSecretReenter": "The callback URL, token endpoint or client ID changed — re-enter the client secret.",
       "secretKeyReenter": "The callback URL changed — re-enter the signing secret.",
+      "secretSet": "Set (stored encrypted)",
+      "secretNotSet": "Not set",
+      "replaceSecret": "Replace secret",
+      "keepSecret": "Keep the current secret",
       "reveal": "Reveal",
       "hide": "Hide",
       "copy": "Copy",
       "copied": "Copied to clipboard",
       "copyFailed": "Could not copy — select the value and copy it manually.",
       "revealAudited": "Every reveal is recorded (who, when, from which IP).",
-      "revealFailed": "Failed to reveal the secret"
+      "revealFailed": "Failed to reveal the secret",
+      "delete": "Delete subscription",
+      "createNote": "Active as soon as it is created",
+      "cancel": "Cancel",
+      "create": "Create",
+      "save": "Save"
     },
     "delete": {
       "confirmTitle": "Delete Subscription",
@@ -143,11 +247,8 @@
       "deleteFailed": "Failed to delete subscription"
     },
     "emptyState": "No webhook subscriptions configured",
+    "emptyFiltered": "No subscriptions match the filters",
     "loadFailed": "Failed to load webhook subscriptions",
-    "catchAll": "All events",
-    "authTypeShort": {
-      "HMAC": "HMAC",
-      "TokenBearer": "Bearer token"
-    }
+    "catchAll": "All events"
   }
 }

@@ -24,7 +24,7 @@ import {
 } from '../utils/queryTokens';
 import { bucketWindow, formatTimeRange } from '../utils/formatBucketWindow';
 import { unionMachineNames } from '../utils/machineColors';
-import { copyToClipboard } from '../utils/clipboard';
+import { copyToClipboard } from '@shared/utils/clipboard';
 import {
   clampToNow,
   isPresetHours,
