@@ -7,8 +7,10 @@ import { usePoolKanbanRealtime } from './usePoolKanbanRealtime';
 import type { PoolTaskUpdateEvent } from './useWorkflowHub';
 
 let onUpdate: (event: PoolTaskUpdateEvent) => void;
+const useWorkflowHub = vi.hoisted(() => vi.fn());
 vi.mock('./useWorkflowHub', () => ({
   useWorkflowHub: (opts: { onPoolTaskUpdate: typeof onUpdate }) => {
+    useWorkflowHub(opts);
     onUpdate = opts.onPoolTaskUpdate;
   },
 }));
@@ -38,8 +40,23 @@ const setup = () => {
 describe('usePoolKanbanRealtime', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // A signed-in user, as on the real (authenticated-only) page; roles stays a stable reference.
-    useAuthStore.setState({ user: { roles: ['r'] } as never });
+    useAuthStore.setState({
+      user: {
+        username: 'me',
+        roles: ['Admin'],
+        groups: ['IntAdmin'],
+        teams: ['9f1c2d3e-0000-4000-8000-000000000001'],
+      } as never,
+    });
+  });
+
+  it("listens to the pool channels of the user's groups, not of the roles", () => {
+    setup();
+    expect(useWorkflowHub).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        poolGroups: ['IntAdmin', 'IntAdmin:Team_9f1c2d3e-0000-4000-8000-000000000001'],
+      }),
+    );
   });
 
   it.each(['PoolTaskClaimed', 'PoolTaskCompleted'] as const)(
