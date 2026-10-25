@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import Avatar from '@/shared/components/Avatar';
+import Badge from '@/shared/components/Badge';
+import Input from '@/shared/components/Input';
 import type { InternalStaff } from '../types/administration';
+import { workloadTone } from '../utils/workloadTone';
 
 interface SearchStaffModalProps {
   isOpen: boolean;
@@ -15,6 +18,7 @@ interface SearchStaffModalProps {
 }
 
 const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchStaffModalProps) => {
+  const { t } = useTranslation(['appraisal', 'common']);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStaff, setSelectedStaff] = useState<InternalStaff | null>(null);
 
@@ -46,89 +50,82 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Select Staff Member" size="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      title={t('administration.modal.staff.title')}
+      size="lg"
+    >
       <div className="flex flex-col gap-4">
-        {/* Search Input */}
-        <div className="relative">
-          <Icon
-            name="magnifying-glass"
-            style="regular"
-            className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder="Search by name, email, or employee ID..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none"
-          />
-        </div>
+        <Input
+          type="text"
+          placeholder={t('administration.modal.staff.search')}
+          aria-label={t('administration.modal.staff.search')}
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          leftIcon={<Icon name="magnifying-glass" style="regular" className="text-sm" />}
+        />
 
         {/* Results List */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-gray-200">
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
-              <div className="px-4 py-8 text-center text-gray-500">
-                <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin mx-auto mb-2" />
-                Loading staff...
+              <div className="px-4 py-8 text-center text-sm text-gray-500">
+                <Icon name="spinner" style="solid" className="mx-auto mb-2 animate-spin text-xl" />
+                {t('administration.modal.staff.loading')}
               </div>
             ) : staffList.length === 0 ? (
-              <div className="px-4 py-8 text-center text-gray-500">
-                No staff found matching your search.
+              <div className="px-4 py-8 text-center text-sm text-gray-500">
+                {t('administration.modal.staff.empty')}
               </div>
             ) : (
               <div className="divide-y divide-gray-100">
-                {staffList.map(staff => (
-                  <button
-                    key={staff.id}
-                    type="button"
-                    onClick={() => setSelectedStaff(staff)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      selectedStaff?.id === staff.id
-                        ? 'bg-primary-50 hover:bg-primary-100'
-                        : 'hover:bg-gray-50'
-                    }`}
-                  >
-                    {/* Avatar */}
-                    <Avatar src={staff.avatar} name={staff.name} size="lg" />
-
-                    {/* Staff Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900 truncate">
-                          {staff.name}
-                        </span>
-                        <span className="text-xs text-gray-400">({staff.employeeId})</span>
+                {staffList.map(staff => {
+                  const isSelected = selectedStaff?.id === staff.id;
+                  // Only what exists: no empty code or department.
+                  const detail = [
+                    staff.employeeId
+                      ? t('administration.modal.staff.code', { code: staff.employeeId })
+                      : null,
+                    staff.department || null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ');
+                  return (
+                    <button
+                      key={staff.id}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => setSelectedStaff(staff)}
+                      className={clsx(
+                        'flex w-full items-center gap-3 px-4 py-3 text-left transition-colors',
+                        isSelected ? 'bg-primary-50' : 'hover:bg-primary-50/60',
+                      )}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="text-sm font-semibold text-gray-900">{staff.name}</div>
+                        {detail && <div className="mt-0.5 text-xs text-gray-500">{detail}</div>}
                       </div>
-                      <div className="text-xs text-gray-500 truncate">{staff.department}</div>
-                    </div>
 
-                    {/* Workload Badge */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={clsx(
-                          'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-                          staff.currentWorkload <= 2 && 'bg-green-50 text-green-700',
-                          staff.currentWorkload > 2 &&
-                            staff.currentWorkload <= 4 &&
-                            'bg-amber-50 text-amber-700',
-                          staff.currentWorkload > 4 && 'bg-red-50 text-red-700',
+                      <div className="flex shrink-0 items-center gap-2">
+                        <Badge
+                          tone={workloadTone(staff.currentWorkload)}
+                          dot={false}
+                          className="whitespace-nowrap"
+                        >
+                          {t('administration.workload', { count: staff.currentWorkload })}
+                        </Badge>
+                        {isSelected && (
+                          <Icon
+                            name="circle-check"
+                            style="solid"
+                            className="shrink-0 text-lg text-primary-600"
+                          />
                         )}
-                      >
-                        {staff.currentWorkload} tasks
-                      </span>
-                    </div>
-
-                    {/* Selected Indicator */}
-                    {selectedStaff?.id === staff.id && (
-                      <Icon
-                        name="circle-check"
-                        style="solid"
-                        className="w-5 h-5 text-primary-600"
-                      />
-                    )}
-                  </button>
-                ))}
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -137,11 +134,11 @@ const SearchStaffModal = ({ isOpen, onClose, onSelect, eligibleStaff }: SearchSt
         {/* Footer */}
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" onClick={handleClose}>
-            Cancel
+            {t('common:actions.cancel')}
           </Button>
           <Button onClick={handleSelect} disabled={!selectedStaff}>
-            <Icon name="check" style="solid" className="w-4 h-4 mr-2" />
-            Select
+            <Icon name="check" style="solid" className="mr-2" />
+            {t('administration.modal.select')}
           </Button>
         </div>
       </div>

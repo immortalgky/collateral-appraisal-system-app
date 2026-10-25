@@ -243,10 +243,15 @@ export default function AppointmentAndFeePage() {
     feeDescription: string;
     feeAmount: number;
   }) => {
-    if (!currentFee) return;
+    // No fee id: never send it (a falsy feeId would post to the admin-stage create endpoint).
+    // false tells the modal nothing was saved, so it stays open and no "added" toast is shown.
+    if (!currentFee?.id) {
+      toast.error(t('fee.toasts.feeAddFailed'));
+      return false;
+    }
     await addFeeItem.mutateAsync({
       appraisalId,
-      feeId: currentFee.id ?? '',
+      feeId: currentFee.id,
       ...data,
     });
   };

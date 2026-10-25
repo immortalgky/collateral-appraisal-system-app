@@ -46,6 +46,7 @@ const REASON_KEYS = {
   noAssignment: 'finalize.autoAssign.reason.noAssignment',
   notPending: 'finalize.autoAssign.reason.notPending',
   unpriced: 'finalize.autoAssign.reason.unpriced',
+  feeBaseMissing: 'finalize.autoAssign.reason.feeBaseMissing',
   constructionInspection: 'finalize.autoAssign.reason.constructionInspection',
   taskHeld: 'finalize.autoAssign.reason.taskHeld',
   taskHeldUnknown: 'finalize.autoAssign.reason.taskHeldUnknown',

@@ -35,3 +35,28 @@ export function pickActiveQuotation<T extends PickableQuotation>(quotations: T[]
     .filter(q => q.status === 'Finalized')
     .sort((a, b) => finalizedAt(b) - finalizedAt(a) || b.id.localeCompare(a.id))[0];
 }
+
+/**
+ * The most recently requested quotation, by its requestDate whatever order the list comes in (an
+ * unparsable date counts as oldest; a tie keeps the earlier row). Undefined for an empty list.
+ */
+export function newestQuotation<T extends PickableQuotation>(quotations: T[]): T | undefined {
+  const requestedAt = (q: T) => {
+    const ms = new Date(q.requestDate).getTime();
+    return Number.isNaN(ms) ? 0 : ms;
+  };
+  return quotations.reduce<T | undefined>(
+    (newest, q) => (!newest || requestedAt(q) > requestedAt(newest) ? q : newest),
+    undefined,
+  );
+}
+
+/**
+ * Which quotation to SHOW for an appraisal: the open (non-terminal) one that locks the appraisal,
+ * else the latest Finalized (an older winner stays usable after a newer quotation was cancelled),
+ * else the newest by request date (Cancelled-only). Undefined only for an empty list. Callers that
+ * must offer "new quotation" compare against `newestQuotation`.
+ */
+export function pickShownQuotation<T extends PickableQuotation>(quotations: T[]): T | undefined {
+  return pickActiveQuotation(quotations) ?? newestQuotation(quotations);
+}

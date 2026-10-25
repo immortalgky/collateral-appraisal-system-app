@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Fee item schema
@@ -102,16 +104,21 @@ export const RescheduleFormSchema = z.object({
  */
 export const makeAddFeeFormSchema = (t: TFunction<'appraisal'>) =>
   z.object({
-    type: z.enum(['01', '02', '99']),
+    // Any code: an item being edited keeps the code it has (the server accepts an unchanged
+    // legacy one), while a new item is always created as "Other" (99) by the modal.
+    type: z.string().min(1),
     description: z.string().min(1, t('validation.descriptionRequired')),
-    amount: z.number().min(0, t('validation.amountNonNegative')),
+    // The server rejects a fee item of 0 or less, so the form does too.
+    amount: z.number().positive(t('validation.amountPositive')),
   });
 
-export const AddFeeFormSchema = z.object({
-  type: z.enum(['01', '02', '99']),
-  description: z.string().min(1, 'Description is required'),
-  amount: z.number().min(0, 'Amount must be non-negative'),
-});
+export type AddFeeFormData = z.infer<ReturnType<typeof makeAddFeeFormSchema>>;
+
+/** The add fee schema with its messages in the current language (for zodResolver). */
+export const useAddFeeFormSchema = () => {
+  const { t } = useTranslation('appraisal');
+  return useMemo(() => makeAddFeeFormSchema(t), [t]);
+};
 
 /**
  * Schema for add payment modal

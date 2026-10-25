@@ -28,6 +28,7 @@ import InvitedCompaniesTable from '../components/InvitedCompaniesTable';
 import QuotationTrackingLog from '../components/QuotationTrackingLog';
 import FinalizeModal from '../components/FinalizeModal';
 import AssignmentResultSummary from '../components/AssignmentResultSummary';
+import { MAX_NEGOTIATION_ROUNDS } from '../constants';
 import { isStandaloneQuotation } from '../utils/isStandaloneQuotation';
 import NegotiationModal from '../components/NegotiationModal';
 import RejectTentativeModal from '../components/RejectTentativeModal';
@@ -734,9 +735,12 @@ const QuotationSelectionPage = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => setIsNegotiationOpen(true)}
-                  disabled={!tentativeWinner || (tentativeWinner.negotiationRounds ?? 0) >= 3}
+                  disabled={
+                    !tentativeWinner ||
+                    (tentativeWinner.negotiationRounds ?? 0) >= MAX_NEGOTIATION_ROUNDS
+                  }
                   title={
-                    (tentativeWinner?.negotiationRounds ?? 0) >= 3
+                    (tentativeWinner?.negotiationRounds ?? 0) >= MAX_NEGOTIATION_ROUNDS
                       ? t('negotiation.maxRoundsReached')
                       : undefined
                   }

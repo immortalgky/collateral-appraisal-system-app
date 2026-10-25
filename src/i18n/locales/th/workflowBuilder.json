@@ -255,13 +255,13 @@
     },
     "strategies": {
       "startedBy": "ผู้เริ่มต้น",
-      "roundRobin": "วนเวียน",
+      "roundRobin": "จ่ายงานตามคิว (Round-robin)",
       "previousOwner": "เจ้าของก่อนหน้า",
       "pool": "กลุ่ม",
       "variableAssignee": "ผู้รับมอบหมายตัวแปร"
     },
     "selectionMethods": {
-      "roundrobin": "วนเวียน",
+      "roundrobin": "จ่ายงานตามคิว (Round-robin)",
       "manual": "ด้วยตนเอง"
     },
     "forkTypes": {

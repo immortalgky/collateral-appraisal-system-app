@@ -76,7 +76,7 @@ describe('Modal', () => {
         <Modal {...defaultProps}>
           <p>First paragraph</p>
           <p>Second paragraph</p>
-        </Modal>
+        </Modal>,
       );
 
       expect(screen.getByText('First paragraph')).toBeInTheDocument();
@@ -94,9 +94,7 @@ describe('Modal', () => {
     it('should render close button by default', () => {
       render(<Modal {...defaultProps} />);
 
-      expect(
-        screen.getByRole('button', { name: /close modal/i })
-      ).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /close modal/i })).toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -105,9 +103,7 @@ describe('Modal', () => {
     it('should hide close button when showCloseButton is false', () => {
       render(<Modal {...defaultProps} showCloseButton={false} />);
 
-      expect(
-        screen.queryByRole('button', { name: /close modal/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /close modal/i })).not.toBeInTheDocument();
     });
 
     // ------------------------------------------
@@ -268,11 +264,34 @@ describe('Modal', () => {
             <input type="text" placeholder="Name" />
             <button type="submit">Save</button>
           </form>
-        </Modal>
+        </Modal>,
       );
 
       expect(screen.getByPlaceholderText('Name')).toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Save' })).toBeInTheDocument();
+    });
+
+    // ------------------------------------------
+    // Regression: a form inside the modal must not submit an enclosing page <form>
+    // (React bubbles synthetic submit through the Dialog portal).
+    // ------------------------------------------
+    it('should not bubble a submit from a form inside the modal to an outer form', async () => {
+      const outer = vi.fn((e: React.FormEvent) => e.preventDefault());
+      const inner = vi.fn((e: React.FormEvent) => e.preventDefault());
+      const { user } = render(
+        <form onSubmit={outer}>
+          <Modal {...defaultProps}>
+            <form onSubmit={inner}>
+              <button type="submit">Save</button>
+            </form>
+          </Modal>
+        </form>,
+      );
+
+      await user.click(screen.getByRole('button', { name: 'Save' }));
+
+      expect(inner).toHaveBeenCalledTimes(1);
+      expect(outer).not.toHaveBeenCalled();
     });
 
     // ------------------------------------------
@@ -286,7 +305,7 @@ describe('Modal', () => {
             <button>Cancel</button>
             <button>Delete</button>
           </div>
-        </Modal>
+        </Modal>,
       );
 
       expect(screen.getByText(/are you sure/i)).toBeInTheDocument();

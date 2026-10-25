@@ -306,6 +306,7 @@ describe('FinalizeModal auto-assign', () => {
 
   it.each([
     ['unpriced', 'no price from the winner'],
+    ['feeBaseMissing', 'No base fee (01) — set the fee before assigning'],
     ['constructionInspection', 'construction inspection'],
     ['taskHeld', 'task held by Somchai'],
     ['winnerUnavailable', 'winning company not available'],
