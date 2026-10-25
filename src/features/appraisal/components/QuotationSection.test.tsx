@@ -117,6 +117,8 @@ const user = (username: string): User => ({
   position: '',
   department: '',
   roles: [],
+  groups: [],
+  teams: [],
   permissions: [],
 });
 
