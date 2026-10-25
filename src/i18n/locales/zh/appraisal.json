@@ -205,6 +205,7 @@
     "emptyAllHint": "有新的估价单时会显示在这里",
     "moreCustomers_one": "该申请还有 {{count}} 位客户",
     "moreCustomers_other": "该申请还有 {{count}} 位客户",
+    "matchedOn": "匹配",
     "unassigned": "未分配",
     "today": "今天",
     "internal": "内部",

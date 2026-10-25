@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { ComponentProps } from 'react';
 import i18n from '@/i18n';
 import { render, screen, within } from '@/test/test-utils';
 import { fireEvent } from '@testing-library/react';
@@ -376,5 +377,210 @@ describe('AppraisalResultsTable resizing while filled', () => {
     const { handle } = setup();
     fireEvent.doubleClick(handle);
     expect(setWidth).toHaveBeenLastCalledWith('appraisalCustomer', 310);
+  });
+});
+
+// ── Why a row answers the search ───────────────────────────────────────────────────────────────
+
+describe('AppraisalResultsTable search matches', () => {
+  const setup = (
+    row: Partial<AppraisalDto>,
+    searchTerm: string,
+    props: Partial<ComponentProps<typeof AppraisalResultsTable>> = {},
+  ) =>
+    render(
+      <AppraisalResultsTable
+        columns={pick('appraisalCustomer', 'province', 'requestor')}
+        items={[{ ...item, ...row } as AppraisalDto]}
+        isLoading={false}
+        sortBy="createdAt"
+        sortDir="desc"
+        onSort={vi.fn()}
+        onRowClick={vi.fn()}
+        searchTerm={searchTerm}
+        {...props}
+      />,
+    );
+  const matchedLabel = () => i18n.t('appraisal:list.matchedOn');
+  const fieldLabel = (f: string) => i18n.t(`nav:search.fields.${f}` as never) as string;
+
+  it('marks the part of the appraisal number the term matched', () => {
+    setup({ matchedOn: [{ field: 'appraisalNumber', value: '69105467' }] }, '05467');
+    const mark = screen.getByText('05467');
+    expect(mark.tagName).toBe('MARK');
+    expect(mark.closest('td')).toHaveTextContent('69105467');
+  });
+
+  it('says which hidden field matched, with the value marked, and counts the rest', () => {
+    setup(
+      {
+        appraisalNumber: '69105524',
+        matchedOn: [
+          { field: 'prevAppraisalNumber', value: '69105522' },
+          { field: 'loanApplicationNumber', value: '69105522-LT' },
+        ],
+      },
+      '69105522',
+    );
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line).toHaveTextContent(`${fieldLabel('prevAppraisalNumber')}: 69105522`);
+    expect(within(line as HTMLElement).getAllByText('69105522')[0].tagName).toBe('MARK');
+    expect(within(line as HTMLElement).getByText('+1')).toBeTruthy();
+    // the tooltip lists every match, so "+1" is not a dead end
+    expect(line.getAttribute('title')).toContain(
+      `${fieldLabel('loanApplicationNumber')}: 69105522-LT`,
+    );
+  });
+
+  it('adds no line when the match is already on screen and marked', () => {
+    setup(
+      {
+        matchedOn: [
+          { field: 'appraisalNumber', value: '69105467' },
+          { field: 'customerName', value: 'Somchai Wongprasert' },
+        ],
+      },
+      'Somchai',
+    );
+    expect(screen.getByText('Somchai').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+
+  it('still names a customer who is not the one displayed', () => {
+    setup({ matchedOn: [{ field: 'customerName', value: 'Malee Srisuk' }] }, 'Malee');
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line).toHaveTextContent(`${fieldLabel('customerName')}: Malee Srisuk`);
+  });
+
+  it('names a province match only when the province column is off', () => {
+    const row = { province: 'นนทบุรี', matchedOn: [{ field: 'province', value: 'นนทบุรี' }] };
+    const { unmount } = setup(row, 'นนทบุรี');
+    expect(screen.getByText('นนทบุรี').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+    unmount();
+
+    setup(row, 'นนทบุรี', { columns: pick('appraisalCustomer') });
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line).toHaveTextContent(`${fieldLabel('province')}: นนทบุรี`);
+  });
+
+  it('marks the term but adds no line for a single-field search, which sends no matches', () => {
+    setup({ matchedOn: null }, '69105', { searchField: 'appraisalNumber' });
+    expect(screen.getByText('69105').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+
+  it('marks only the field a single-field search looked at', () => {
+    setup({ matchedOn: null, customerName: 'Somchai 69105' }, '69105', {
+      searchField: 'customerName',
+    });
+    const marks = screen.getAllByText('69105');
+    expect(marks).toHaveLength(1);
+    expect(marks[0].closest('[title]')).toHaveAttribute('title', 'Somchai 69105');
+  });
+
+  it('does not mark a cell the all-fields search did not match on', () => {
+    setup(
+      {
+        appraisalNumber: '69105522',
+        matchedOn: [{ field: 'prevAppraisalNumber', value: '691055' }],
+      },
+      '691055',
+    );
+    const marks = screen.getAllByText('691055');
+    expect(marks).toHaveLength(1);
+    expect(marks[0].closest('[title]')!.textContent).toContain(matchedLabel());
+  });
+
+  it('names a deed and DOPA province once, and not at all beside the province column', () => {
+    const row = {
+      province: 'นนทบุรี',
+      matchedOn: [
+        { field: 'dopaProvince', value: 'นนทบุรี' },
+        { field: 'province', value: 'นนทบุรี' },
+      ],
+    };
+    const { unmount } = setup(row, 'นนทบุรี');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+    unmount();
+
+    setup(row, 'นนทบุรี', { columns: pick('appraisalCustomer') });
+    const line = screen.getByText(matchedLabel(), { exact: false }).closest('[title]')!;
+    expect(line.getAttribute('title')).toBe(`${fieldLabel('province')}: นนทบุรี`);
+    expect(within(line as HTMLElement).queryByText('+1')).toBeNull();
+  });
+
+  it('marks a requestor match in the requestor cell instead of naming it', () => {
+    setup(
+      {
+        requestorName: 'Malee Srisuk',
+        matchedOn: [{ field: 'requestorName', value: 'Malee Srisuk' }],
+      },
+      'Malee',
+    );
+    expect(screen.getByText('Malee').tagName).toBe('MARK');
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+
+  it('does not mark the displayed customer when another customer matched', () => {
+    setup({ matchedOn: [{ field: 'customerName', value: 'Somsak Boonmee' }] }, 'Som');
+    // the line names the customer who matched; the displayed one is left unmarked
+    expect(screen.getAllByText('Som')).toHaveLength(1);
+    expect(screen.getByText('Som').closest('[title]')!.textContent).toContain(matchedLabel());
+  });
+
+  it('marks a number searched in Thai digits', () => {
+    setup({ matchedOn: [{ field: 'appraisalNumber', value: '69105467' }] }, '๐๕๔๖๗');
+    expect(screen.getByText('05467').tagName).toBe('MARK');
+  });
+
+  it('marks a value stored in Thai digits when the term is typed in Thai digits', () => {
+    setup({ matchedOn: [{ field: 'titleNumber', value: 'โฉนด ๑๒๓๔' }] }, '๑๒๓๔');
+    expect(screen.getByText('๑๒๓๔').tagName).toBe('MARK');
+  });
+
+  it('does not mark Thai digits for a term typed in 0-9, which the server never folds', () => {
+    const { container } = setup({ matchedOn: null, customerName: 'หจก. ๑๒๓ ก่อสร้าง' }, '123', {
+      searchField: 'customerName',
+    });
+    expect(container.querySelector('mark')).toBeNull();
+  });
+
+  it('reads Thai digits as 0-9 for the appraisal number only, as the server does', () => {
+    const { container } = setup({ matchedOn: null, customerName: 'บริษัท 123 จำกัด' }, '๑๒๓', {
+      searchField: 'customerName',
+    });
+    expect(container.querySelector('mark')).toBeNull();
+  });
+
+  it('reads Thai digits as 0-9 in a number only when the whole term is digits', () => {
+    const { container } = setup(
+      { matchedOn: [{ field: 'appraisalNumber', value: '69123456' }], appraisalNumber: '69123456' },
+      '๑๒๓*',
+    );
+    expect(container.querySelector('mark')).toBeNull();
+  });
+
+  it('treats a requestor stored with surrounding spaces as shown', () => {
+    setup(
+      {
+        requestorName: 'Malee Srisuk ',
+        matchedOn: [{ field: 'requestorName', value: 'Malee Srisuk ' }],
+      },
+      'Malee',
+    );
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
+  });
+
+  it('marks the longest run between wildcards', () => {
+    setup({ matchedOn: [{ field: 'customerName', value: 'Somchai Wongprasert' }] }, '*wong*');
+    expect(screen.getByText('Wong').tagName).toBe('MARK');
+  });
+
+  it('drops the line in compact density, like every second line', () => {
+    setup({ matchedOn: [{ field: 'prevAppraisalNumber', value: '69105522' }] }, '69105522', {
+      density: 'compact',
+    });
+    expect(screen.queryByText(matchedLabel(), { exact: false })).toBeNull();
   });
 });
