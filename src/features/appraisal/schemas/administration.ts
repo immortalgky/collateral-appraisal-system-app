@@ -35,6 +35,9 @@ export const ASSIGNMENT_TYPES = ['internal', 'external', 'external-offline'] as 
 export const ASSIGNMENT_METHODS = ['manual', 'roundrobin', 'quotation'] as const;
 export const FOLLOWUP_STAFF_METHODS = ['manual', 'roundrobin'] as const;
 
+/** The remark's length limit: the schema, the textarea's maxLength and the slip's check share it. */
+export const ASSIGNMENT_REMARKS_MAX = 4000;
+
 /**
  * Assignment form validation schema factory
  */
@@ -58,26 +61,39 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       followupStaffId: z.string().nullable(),
       selectedFollowupStaff: internalStaffSchema.nullable(),
       followupStaffMethod: z.enum(FOLLOWUP_STAFF_METHODS),
-      remarks: z.string().max(4000, t('validation.remarksMaxLength')),
+      remarks: z
+        .string()
+        .max(
+          ASSIGNMENT_REMARKS_MAX,
+          t('validation.remarksMaxLength', { max: ASSIGNMENT_REMARKS_MAX }),
+        ),
     })
     .refine(
       data => {
-        // For manual selection, require either staffId or companyId based on type.
-        // Off-system external picks no COMPANY here (the keyer records it later from the book),
-        // but it does pick the internal appraiser who keys it in — so it requires staffId, exactly
-        // like the internal path.
-        if (data.assignmentMethod === 'manual') {
-          if (data.assignmentType === 'internal' || data.assignmentType === 'external-offline') {
-            return data.staffId !== null && data.staffId.length > 0;
-          }
-          return data.companyId !== null && data.companyId.length > 0;
-        }
-        // Round-robin and quotation don't require upfront selection
-        return true;
+        // Manual internal needs staffId. Off-system external picks no COMPANY here (the keyer
+        // records it later from the book), but it does pick the internal appraiser who keys it
+        // in — so it requires staffId, exactly like the internal path.
+        const needsStaff =
+          data.assignmentMethod === 'manual' &&
+          (data.assignmentType === 'internal' || data.assignmentType === 'external-offline');
+        return !needsStaff || (data.staffId !== null && data.staffId.length > 0);
       },
       {
         message: t('validation.selectAssignee'),
-        path: ['staffId'], // Will show on staffId field
+        path: ['staffId'],
+      },
+    )
+    .refine(
+      data => {
+        // Manual external needs companyId. It has its own path so the error lands under the
+        // company picker (it used to share staffId's, which that picker never shows).
+        const needsCompany =
+          data.assignmentMethod === 'manual' && data.assignmentType === 'external';
+        return !needsCompany || (data.companyId !== null && data.companyId.length > 0);
+      },
+      {
+        message: t('validation.selectCompany'),
+        path: ['companyId'],
       },
     )
     .refine(

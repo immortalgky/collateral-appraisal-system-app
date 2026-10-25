@@ -64,3 +64,6 @@ dist-ssr
 **/.impeccable/live/deferred-svelte-component-accepts.json
 **/.impeccable/live/*.png
 # impeccable-ignore-end
+
+# Impeccable design mocks (local only)
+.impeccable/mocks/

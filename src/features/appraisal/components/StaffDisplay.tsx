@@ -1,60 +1,101 @@
-import clsx from 'clsx';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import Avatar from '@/shared/components/Avatar';
+import Badge from '@/shared/components/Badge';
+import Button from '@/shared/components/Button';
 import type { InternalStaff } from '../types/administration';
+import { personLabel } from '../utils/personLabel';
+import { workloadTone } from '../utils/workloadTone';
 
 interface StaffDisplayProps {
   staff: InternalStaff;
   onClear?: () => void;
-  variant?: 'emerald' | 'purple';
+  /** Shows a "Change" button that reopens the picker; the selection stays until another is chosen. */
+  onChange?: () => void;
 }
 
-const StaffDisplay = ({ staff, onClear, variant = 'emerald' }: StaffDisplayProps) => {
+export const ClearButton = ({ onClick }: { onClick: () => void }) => {
+  const { t } = useTranslation('appraisal');
   return (
-    <div
-      className={clsx(
-        'flex items-center gap-3 p-3 rounded-lg border',
-        variant === 'emerald' && 'bg-emerald-50 border-emerald-200',
-        variant === 'purple' && 'bg-purple-50 border-purple-200',
-      )}
+    <button
+      type="button"
+      onClick={onClick}
+      className="rounded-md p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+      title={t('administration.clearSelection')}
+      aria-label={t('administration.clearSelection')}
     >
-      {/* Avatar */}
-      <Avatar src={staff.avatar} name={staff.name} size="lg" />
+      <Icon name="xmark" style="solid" className="text-base" />
+    </button>
+  );
+};
 
-      {/* Staff Info */}
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-900">{staff.name}</span>
-          <span className="text-xs text-gray-500">({staff.employeeId})</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">{staff.department}</span>
-          <span
-            className={clsx(
-              'inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium',
-              staff.currentWorkload <= 2 && 'bg-green-50 text-green-700',
-              staff.currentWorkload > 2 &&
-                staff.currentWorkload <= 4 &&
-                'bg-amber-50 text-amber-700',
-              staff.currentWorkload > 4 && 'bg-red-50 text-red-700',
-            )}
-          >
-            {staff.currentWorkload} tasks
-          </span>
+const StaffDisplay = ({ staff, onClear, onChange }: StaffDisplayProps) => {
+  const { t } = useTranslation('appraisal');
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2.5">
+      <div className="flex min-w-0 items-center gap-3">
+        <Avatar src={staff.avatar} name={staff.name} size="lg" />
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-x-2">
+            <span className="text-sm font-semibold text-gray-800">{staff.name}</span>
+            {/* The code the slip uses: the employee id, else the id (always set). */}
+            <span className="text-xs text-gray-500">({staff.employeeId || staff.id})</span>
+          </div>
+          <div className="text-xs text-gray-500">{staff.department}</div>
         </div>
       </div>
 
-      {/* Clear Button */}
-      {onClear && (
-        <button
-          type="button"
-          onClick={onClear}
-          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-          title="Clear selection"
-        >
-          <Icon name="xmark" style="solid" className="w-4 h-4" />
-        </button>
-      )}
+      <div className="flex shrink-0 items-center gap-2">
+        <Badge tone={workloadTone(staff.currentWorkload)} dot={false} className="whitespace-nowrap">
+          {t('administration.workload', { count: staff.currentWorkload })}
+        </Badge>
+        {onChange && (
+          <Button type="button" variant="outline" size="xs" onClick={onChange}>
+            {t('administration.changeStaff')}
+          </Button>
+        )}
+        {onClear && <ClearButton onClick={onClear} />}
+      </div>
+    </div>
+  );
+};
+
+/**
+ * The stored id or code of a staff member (or company) whose record could not be looked up (the
+ * staff lookup misses usernames and people outside the eligible pool). It is the assignment's own
+ * value, so it is shown rather than pretending nothing was chosen.
+ */
+export const StoredCode = ({
+  code,
+  name,
+  changeLabel,
+  onChange,
+  onClear,
+}: {
+  code: string;
+  /** Their name when the assignment record carries it: shown as "Name (code)". */
+  name?: string | null;
+  /** The text of the Change button; "Change" (staff) when left out. */
+  changeLabel?: string;
+  onChange?: () => void;
+  /** Empties the field, so an unresolvable code can still be removed. */
+  onClear?: () => void;
+}) => {
+  const { t } = useTranslation('appraisal');
+  const label = personLabel(name, code);
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-3 py-2.5">
+      <span className="min-w-0 truncate text-sm font-semibold text-gray-800" title={label}>
+        {label}
+      </span>
+      <div className="flex shrink-0 items-center gap-2">
+        {onChange && (
+          <Button type="button" variant="outline" size="xs" onClick={onChange}>
+            {changeLabel ?? t('administration.changeStaff')}
+          </Button>
+        )}
+        {onClear && <ClearButton onClick={onClear} />}
+      </div>
     </div>
   );
 };

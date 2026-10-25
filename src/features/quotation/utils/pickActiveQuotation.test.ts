@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickActiveQuotation } from './pickActiveQuotation';
+import { newestQuotation, pickActiveQuotation, pickShownQuotation } from './pickActiveQuotation';
 
 const q = (id: string, status: string, requestDate: string, selectedAt?: string | null) => ({
   id,
@@ -54,5 +54,58 @@ describe('pickActiveQuotation', () => {
         q('0002', 'Finalized', '2026-01-01', '2026-01-01'),
       ])?.id,
     ).toBe('0002');
+  });
+});
+
+describe('newestQuotation', () => {
+  it('is undefined for an empty list and the latest requestDate otherwise, in any order', () => {
+    expect(newestQuotation([])).toBeUndefined();
+    expect(
+      newestQuotation([
+        q('a', 'Finalized', '2026-01-01'),
+        q('b', 'Cancelled', '2026-03-01'),
+        q('c', 'Cancelled', '2026-02-01'),
+      ])?.id,
+    ).toBe('b');
+  });
+});
+
+describe('pickShownQuotation', () => {
+  it('returns undefined for an empty list', () => {
+    expect(pickShownQuotation([])).toBeUndefined();
+  });
+
+  it('prefers the first open quotation over a newer terminal one', () => {
+    const picked = pickShownQuotation([
+      q('cancelled', 'Cancelled', '2026-04-01'),
+      q('open', 'Sent', '2026-01-01'),
+      q('open2', 'Draft', '2025-01-01'),
+    ]);
+    expect(picked?.id).toBe('open');
+  });
+
+  it('keeps the latest Finalized one over a newer Cancelled row when nothing is open', () => {
+    const picked = pickShownQuotation([
+      q('cancelled', 'Cancelled', '2026-04-01'),
+      q('fin', 'Finalized', '2026-01-01', '2026-01-05'),
+    ]);
+    expect(picked?.id).toBe('fin');
+  });
+
+  it('picks the newest by date, not by position, when there is only Cancelled', () => {
+    const picked = pickShownQuotation([
+      q('older', 'Cancelled', '2026-01-01'),
+      q('newest', 'Cancelled', '2026-04-01'),
+      q('middle', 'Cancelled', '2026-02-01'),
+    ]);
+    expect(picked?.id).toBe('newest');
+  });
+
+  it('falls back to the newest row when there is only Cancelled', () => {
+    const picked = pickShownQuotation([
+      q('newest', 'Cancelled', '2026-04-01'),
+      q('older', 'Cancelled', '2026-01-01'),
+    ]);
+    expect(picked?.id).toBe('newest');
   });
 });
