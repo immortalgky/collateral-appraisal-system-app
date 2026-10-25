@@ -15,14 +15,55 @@ export interface WebhookDeliveryListItem {
 
 export interface WebhookDeliveryDetail extends WebhookDeliveryListItem {
   payload: string;
+  /** Of the delivery's subscription. */
+  callbackUrl: string;
+  httpMethod: WebhookHttpMethod;
+  authType: WebhookAuthType;
+  /** Null = the subscription is a catch-all for its system. */
+  subscriptionEventType: string | null;
 }
 
 export interface WebhookDeliveryFilters {
   status?: WebhookDeliveryStatus | '';
   subscriptionId?: string;
+  /** Exact match (the failure-by-event chips). */
   eventType?: string;
+  /** Exact match on the subscription's system code. */
+  systemCode?: string;
+  /** Event type contains it, or the delivery id equals it. */
+  search?: string;
   fromDate?: string;
   toDate?: string;
+}
+
+/** The list filters without the status, which the summary counts per tab. */
+export type WebhookDeliverySummaryParams = Omit<
+  WebhookDeliveryFilters,
+  'status' | 'subscriptionId'
+>;
+
+export interface WebhookDeliverySummary {
+  total: number;
+  pending: number;
+  delivered: number;
+  failed: number;
+  /** Null when nothing is pending. */
+  oldestPending: {
+    /** Null in the corner case where rows are pending but none has a CreatedAt. */
+    createdAt: string | null;
+    /** Pending rows that were never attempted. */
+    neverAttemptedCount: number;
+    bySystem: { systemCode: string; count: number }[];
+  } | null;
+  failedByEventType: { eventType: string; count: number }[];
+  /** Top 3 by count. */
+  failedByCause: {
+    systemCode: string;
+    lastStatusCode: number | null;
+    httpMethod: WebhookHttpMethod;
+    callbackUrl: string;
+    count: number;
+  }[];
 }
 
 export interface WebhookDeliveryListResult {

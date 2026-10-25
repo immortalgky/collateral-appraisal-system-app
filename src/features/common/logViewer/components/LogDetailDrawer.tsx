@@ -23,7 +23,7 @@ import {
   parseHttpLogMessage,
 } from '../utils/parseHttpLogMessage';
 import { aroundRange, toApiDateTime } from '../utils/range';
-import { copyToClipboard } from '../utils/clipboard';
+import { copyToClipboard } from '@shared/utils/clipboard';
 import { canFilterExactMatch } from '../utils/queryTokens';
 
 interface LogDetailDrawerProps {

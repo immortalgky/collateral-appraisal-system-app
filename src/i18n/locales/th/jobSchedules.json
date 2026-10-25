@@ -1,38 +1,94 @@
 {
   "page": {
     "title": "งานตามกำหนดเวลา",
-    "subtitle": "กำหนดเวลา (cron) เขตเวลา และสถานะเปิด/ปิดของงานเบื้องหลังทั้งหมด การเปลี่ยนแปลงมีผลทันทีโดยไม่ต้องรีสตาร์ทระบบ",
-    "empty": "ไม่มีงานตามกำหนดเวลาที่ลงทะเบียนไว้"
+    "subtitle": "กำหนดเวลา เขตเวลา และการเปิด/ปิดงานเบื้องหลังทุกโมดูล — บันทึกแล้วมีผลทันที ไม่ต้องรีสตาร์ท",
+    "empty": "ไม่มีงานตามกำหนดเวลาที่ลงทะเบียนไว้",
+    "emptyFiltered": "ไม่พบงานที่ตรงกับตัวกรอง",
+    "failedUnknown": "อ่านข้อมูลจาก Hangfire ไม่ได้ จึงไม่ทราบว่างานไหนล้มเหลว",
+    "loadFailed": "โหลดงานตามกำหนดเวลาไม่สำเร็จ",
+    "runInfoUnavailable": "อ่านข้อมูลรอบล่าสุด/รอบถัดไปจาก Hangfire ไม่ได้ในขณะนี้ — กำหนดเวลายังแก้ไขได้ตามปกติ",
+    "hangfireLink": "ประวัติการรันใน Hangfire"
   },
-  "actions": {
-    "edit": "แก้ไข"
+  "tabs": {
+    "label": "กรองงาน",
+    "all": "ทั้งหมด",
+    "overridden": "ปรับจากค่าเริ่มต้น",
+    "disabled": "ปิดอยู่",
+    "failed": "รอบล่าสุดล้มเหลว"
+  },
+  "filters": {
+    "searchPlaceholder": "ค้นหางาน",
+    "allModules": "ทุกโมดูล",
+    "moduleLabel": "โมดูล"
   },
   "table": {
     "job": "งาน",
-    "schedule": "กำหนดเวลา",
-    "timeZone": "เขตเวลา",
-    "status": "สถานะ",
-    "overridden": "กำหนดเอง",
-    "appDefault": "ค่าเริ่มต้นของระบบ"
+    "schedule": "รอบเวลา",
+    "lastRun": "รันล่าสุด",
+    "nextRun": "ครั้งถัดไป",
+    "overridden": "ปรับแล้ว",
+    "defaultWas": "ค่าเริ่มต้น {{cron}}",
+    "disabled": "ปิดอยู่",
+    "noNextRun": "Hangfire ไม่มีรอบถัดไปสำหรับงานนี้",
+    "jobCount_one": "{{count}} งาน",
+    "jobCount_other": "{{count}} งาน"
   },
-  "status": {
-    "enabled": "เปิดใช้งาน",
-    "disabled": "ปิดใช้งาน"
+  "actions": {
+    "edit": "แก้ไขกำหนดเวลา",
+    "resetDefault": "คืนค่าเริ่มต้น"
+  },
+  "lastRun": {
+    "never": "ยังไม่เคยรัน",
+    "disabledHint": "ปิดอยู่ — ไม่มีข้อมูลรอบล่าสุดจาก Hangfire",
+    "unavailable": "อ่านข้อมูลจาก Hangfire ไม่ได้",
+    "succeeded": "สำเร็จ",
+    "succeededIn": "สำเร็จ · {{s}} วิ",
+    "failed": "ล้มเหลว",
+    "processing": "กำลังทำงาน",
+    "scheduled": "ตั้งเวลาไว้",
+    "enqueued": "รอคิว",
+    "awaiting": "รอเงื่อนไข",
+    "deleted": "ถูกลบ",
+    "expired": "ไม่มีผลในประวัติ",
+    "expiredHint": "Hangfire เก็บผลงานที่สำเร็จไว้ 1 วัน รอบนี้หมดอายุไปแล้ว"
+  },
+  "time": {
+    "today": "วันนี้ {{time}}",
+    "tomorrow": "พรุ่งนี้ {{time}}",
+    "inMinutes_one": "อีก {{count}} นาที",
+    "inMinutes_other": "อีก {{count}} นาที",
+    "inHours_one": "อีก {{count}} ชั่วโมง",
+    "inHours_other": "อีก {{count}} ชั่วโมง",
+    "inDays_one": "อีก {{count}} วัน",
+    "inDays_other": "อีก {{count}} วัน",
+    "due": "ถึงกำหนดแล้ว"
+  },
+  "cron": {
+    "hourly": "ทุกชั่วโมง (นาทีที่ {{minute}})",
+    "daily": "ทุกวัน {{time}}",
+    "monthly": "ทุกเดือน วันที่ {{day}} เวลา {{time}}",
+    "weekly": "ทุกสัปดาห์ {{weekday}} {{time}}",
+    "weekday": {
+      "sun": "วันอาทิตย์",
+      "mon": "วันจันทร์",
+      "tue": "วันอังคาร",
+      "wed": "วันพุธ",
+      "thu": "วันพฤหัสบดี",
+      "fri": "วันศุกร์",
+      "sat": "วันเสาร์"
+    }
   },
   "fields": {
-    "jobId": "รหัสงาน",
     "cronExpression": "นิพจน์ cron",
     "timeZoneId": "เขตเวลา",
-    "timeZonePlaceholder": "ค่าเริ่มต้นของระบบ ({{timeZone}})",
+    "timeZoneDefault": "ค่าเริ่มต้นของระบบ",
+    "timeZoneDefaultWith": "ค่าเริ่มต้นของระบบ ({{timeZone}})",
     "isEnabled": "เปิดใช้งาน"
   },
   "hints": {
-    "default": "ค่าเริ่มต้นในโค้ด:",
-    "timeZone": "เว้นว่างเพื่อใช้เขตเวลาของระบบ",
-    "isEnabled": "เมื่อปิดใช้งาน ระบบจะถอดงานออกจากตัวจัดกำหนดการและจะไม่ทำงาน"
-  },
-  "modal": {
-    "title": "แก้ไขกำหนดเวลางาน"
+    "reads": "อ่านว่า:",
+    "default": "ค่าเริ่มต้นในโค้ด",
+    "isEnabled": "ปิดแล้วงานจะถูกถอดออกจากตัวจัดกำหนดการ"
   },
   "validation": {
     "cronRequired": "กรุณาระบุนิพจน์ cron",
