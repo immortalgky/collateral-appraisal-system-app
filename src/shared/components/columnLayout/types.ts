@@ -32,6 +32,13 @@ export interface ColumnLayoutConfig<K extends string = string> {
    * deliberate decision to show one of these.
    */
   defaultHidden?: readonly K[];
+  /**
+   * Opt-in: the user can pin columns. Pinned columns lead the table in pin order and are meant to
+   * stay put while it scrolls sideways (the table does that: `pinnedColumns` is the hook's answer,
+   * this only stores and orders them). With no stored layout, `pinnedColumn` is the one pin.
+   * Omitted, the layout and what is stored are exactly as before.
+   */
+  pinnable?: boolean;
   /** Per-column default width in px. Missing keys fall back to DEFAULT_COLUMN_WIDTH. */
   defaultWidths?: Partial<Record<K, number>>;
 }

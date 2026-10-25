@@ -88,7 +88,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     activityId: 'int-appraisal-check',
     title: 'Internal Appraisal Check',
     description: 'Tasks for reviewing internal appraisal work for accuracy and completeness',
-    icon: 'magnifying-glass-check',
+    icon: 'file-magnifying-glass',
     allowedRoles: ['Admin', 'IntAdmin', 'IntAppraisalChecker'],
   },
   'int-appraisal-verification': {
@@ -109,7 +109,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     activityId: 'pending-approval',
     title: 'Pending Approval',
     description: 'Tasks awaiting final approval from appraisal committee',
-    icon: 'hourglass-half',
+    icon: 'hourglass-clock',
     allowedRoles: ['Admin', 'IntAdmin', 'AppraisalCommittee'],
   },
   'provide-additional-documents': {
@@ -137,7 +137,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     activityId: 'admin-finalize',
     title: 'Finalize Quotation',
     description: 'Tasks for finalizing quotation, opening negotiation, or cancelling',
-    icon: 'check-circle',
+    icon: 'circle-check',
     allowedRoles: [],
   },
   'ext-collect-submissions': {
@@ -151,7 +151,7 @@ const ACTIVITY_CONFIG_MAP: Record<string, ActivityConfig> = {
     activityId: 'ext-respond-negotiation',
     title: 'Response to Negotiation',
     description: 'Tasks for external users to respond to negotiation requests',
-    icon: 'chat-bubble-left-right',
+    icon: 'comments',
     allowedRoles: [],
   },
 };

@@ -1,35 +1,45 @@
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
+import { keepPreviousPage } from '@shared/utils/keepPreviousPage';
 import type {
   GetPoolTasksParams,
   GetTasksParams,
   GroupByField,
   PoolTaskListResponse,
   Task,
-  TaskDateType,
+  TaskDateRanges,
   TaskListResponse,
 } from './types';
 
-/** Maps a (dateType, dateFrom, dateTo) tuple onto the backend's Pascal-cased query params. */
-function toDateQueryParams(dateType: TaskDateType | undefined, from?: string, to?: string) {
-  if (!from && !to) return {};
-  const pairs: Record<TaskDateType, [string, string]> = {
-    assigned: ['DateFrom', 'DateTo'],
-    appointment: ['AppointmentDateFrom', 'AppointmentDateTo'],
-    requested: ['RequestedAtFrom', 'RequestedAtTo'],
-  };
-  const [fromKey, toKey] = pairs[dateType ?? 'assigned'];
-  return {
-    ...(from && { [fromKey]: from }),
-    ...(to && { [toKey]: to }),
-  };
-}
+const RANGE_QUERY_PARAMS: [keyof TaskDateRanges, string][] = [
+  ['assignedFrom', 'DateFrom'],
+  ['assignedTo', 'DateTo'],
+  ['appointmentFrom', 'AppointmentDateFrom'],
+  ['appointmentTo', 'AppointmentDateTo'],
+  ['requestedFrom', 'RequestedAtFrom'],
+  ['requestedTo', 'RequestedAtTo'],
+];
+
+/** The date ranges that are set, as they are keyed in a query key. */
+const pickRanges = (p: TaskDateRanges): TaskDateRanges =>
+  Object.fromEntries(RANGE_QUERY_PARAMS.filter(([k]) => p[k]).map(([k]) => [k, p[k]]));
+
+/** The three independent ranges onto the backend's Pascal-cased query params. */
+const toRangeQueryParams = (p: TaskDateRanges) =>
+  Object.fromEntries(RANGE_QUERY_PARAMS.filter(([k]) => p[k]).map(([k, q]) => [q, p[k]]));
+
+/**
+ * What may differ between a query and the last one for the last result to be kept as the
+ * placeholder: another page or sort of the same list (same endpoint, filters, search, assignee).
+ * Anything else is another list and loads from the skeleton.
+ */
+const PAGING_KEYS = ['pageNumber', 'pageSize', 'sortBy', 'sortDir'] as const;
 
 /**
  * Hook for fetching a paginated list of tasks for the current user
  * GET /tasks/me
  */
-export const useGetTasks = (params: GetTasksParams = {}) => {
+export const useGetTasks = (params: GetTasksParams = {}, options: { enabled?: boolean } = {}) => {
   const {
     pageNumber = 0,
     pageSize = 10,
@@ -47,10 +57,8 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
     assigneeUserId,
     purpose,
     channel,
-    dateType,
-    dateFrom,
-    dateTo,
   } = params;
+  const ranges = pickRanges(params);
 
   // When drilldown targets another user, switch to the all-tasks endpoint.
   // `/tasks/me` is hardcoded to the current user, `/tasks` accepts `AssigneeUserId`.
@@ -75,11 +83,9 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
       ...(assigneeUserId && { assigneeUserId }),
       ...(purpose && { purpose }),
       ...(channel && { channel }),
-      ...(dateType && { dateType }),
-      ...(dateFrom && { dateFrom }),
-      ...(dateTo && { dateTo }),
+      ...ranges,
     },
-  ];
+  ] as const;
 
   return useQuery({
     queryKey,
@@ -104,7 +110,7 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
           ...(assigneeUserId && { AssigneeUserId: assigneeUserId }),
           ...(purpose && { Purpose: purpose }),
           ...(channel && { Channel: channel }),
-          ...toDateQueryParams(dateType, dateFrom, dateTo),
+          ...toRangeQueryParams(ranges),
         },
       });
 
@@ -112,6 +118,8 @@ export const useGetTasks = (params: GetTasksParams = {}) => {
       return data.result ?? data;
     },
     staleTime: 30 * 1000,
+    enabled: options.enabled,
+    placeholderData: keepPreviousPage(queryKey[1], 1, { ignored: PAGING_KEYS }),
   });
 };
 
@@ -121,8 +129,7 @@ export const KANBAN_PAGE_SIZE = 15;
 /** Mutually-exclusive task lifecycle bucket, used by the 'status' Kanban column. */
 export type TaskStatusBucket = 'NotStarted' | 'InProgress' | 'Overdue';
 
-export interface KanbanColumnParams
-  extends Omit<GetTasksParams, 'pageNumber' | 'pageSize'> {
+export interface KanbanColumnParams extends Omit<GetTasksParams, 'pageNumber' | 'pageSize'> {
   purpose?: string;
   taskType?: string;
   taskStatusBucket?: TaskStatusBucket;
@@ -162,10 +169,8 @@ export const useKanbanColumnTasks = (
     taskStatusBucket,
     sortBy,
     sortDir,
-    dateType,
-    dateFrom,
-    dateTo,
   } = params;
+  const ranges = pickRanges(params);
 
   const endpoint = scope === 'pool' ? '/tasks/pool' : '/tasks/me';
 
@@ -188,9 +193,7 @@ export const useKanbanColumnTasks = (
       ...(taskStatusBucket && { taskStatusBucket }),
       ...(sortBy && { sortBy }),
       ...(sortDir && { sortDir }),
-      ...(dateType && { dateType }),
-      ...(dateFrom && { dateFrom }),
-      ...(dateTo && { dateTo }),
+      ...ranges,
     },
   ];
 
@@ -216,7 +219,7 @@ export const useKanbanColumnTasks = (
           ...(taskStatusBucket && { TaskStatusBucket: taskStatusBucket }),
           ...(sortBy && { SortBy: sortBy }),
           ...(sortDir && { SortDir: sortDir }),
-          ...toDateQueryParams(dateType, dateFrom, dateTo),
+          ...toRangeQueryParams(ranges),
         },
       });
 
@@ -248,6 +251,7 @@ export const useTaskGroupCounts = (
   groupBy: GroupByField,
   baseFilters: Record<string, unknown> = {},
   scope: KanbanScope = 'me',
+  options: { enabled?: boolean } = {},
 ) => {
   const {
     search,
@@ -260,10 +264,9 @@ export const useTaskGroupCounts = (
     pendingTaskStatus,
     slaStatus,
     purpose,
-    dateType,
-    dateFrom,
-    dateTo,
+    channel,
   } = baseFilters as unknown as KanbanColumnParams;
+  const ranges = pickRanges(baseFilters as TaskDateRanges);
 
   const endpoint = scope === 'pool' ? '/tasks/pool/group-counts' : '/tasks/me/group-counts';
 
@@ -283,12 +286,14 @@ export const useTaskGroupCounts = (
           ...(pendingTaskStatus && { TaskStatus: pendingTaskStatus }),
           ...(slaStatus && { SlaStatus: slaStatus }),
           ...(purpose && { Purpose: purpose }),
-          ...toDateQueryParams(dateType, dateFrom, dateTo),
+          ...(channel && { Channel: channel }),
+          ...toRangeQueryParams(ranges),
         },
       });
       return data.result ?? [];
     },
     staleTime: 30 * 1000,
+    enabled: options.enabled,
   });
 };
 
@@ -296,7 +301,10 @@ export const useTaskGroupCounts = (
  * Hook for fetching a paginated list of pool (group-assigned) tasks
  * GET /tasks/pool
  */
-export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
+export const useGetPoolTasks = (
+  params: GetPoolTasksParams = {},
+  options: { enabled?: boolean } = {},
+) => {
   const {
     pageNumber = 0,
     pageSize = 25,
@@ -305,14 +313,14 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
     sortDir,
     appraisalNumber,
     customerName,
+    pendingTaskStatus,
     status,
     purpose,
     channel,
-    dateType,
-    dateFrom,
-    dateTo,
+    slaStatus,
     activityId,
   } = params;
+  const ranges = pickRanges(params);
 
   const queryKey = [
     'pool-tasks',
@@ -324,15 +332,15 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
       ...(sortDir && { sortDir }),
       ...(appraisalNumber && { appraisalNumber }),
       ...(customerName && { customerName }),
+      ...(pendingTaskStatus && { pendingTaskStatus }),
       ...(status && { status }),
       ...(purpose && { purpose }),
       ...(channel && { channel }),
-      ...(dateType && { dateType }),
-      ...(dateFrom && { dateFrom }),
-      ...(dateTo && { dateTo }),
+      ...(slaStatus && { slaStatus }),
+      ...ranges,
       ...(activityId && { activityId }),
     },
-  ];
+  ] as const;
 
   return useQuery({
     queryKey,
@@ -346,16 +354,21 @@ export const useGetPoolTasks = (params: GetPoolTasksParams = {}) => {
           ...(sortDir && { SortDir: sortDir }),
           ...(appraisalNumber && { AppraisalNumber: appraisalNumber }),
           ...(customerName && { CustomerName: customerName }),
+          // The backend's `taskStatus` maps to the PendingTaskStatus column, as on the My list
+          ...(pendingTaskStatus && { TaskStatus: pendingTaskStatus }),
           ...(status && { Status: status }),
           ...(purpose && { Purpose: purpose }),
           ...(channel && { Channel: channel }),
-          ...toDateQueryParams(dateType, dateFrom, dateTo),
+          ...(slaStatus && { SlaStatus: slaStatus }),
+          ...toRangeQueryParams(ranges),
           ...(activityId && { ActivityId: activityId }),
         },
       });
       return data.result ?? data;
     },
     staleTime: 30 * 1000,
+    enabled: options.enabled,
+    placeholderData: keepPreviousPage(queryKey[1], 1, { ignored: PAGING_KEYS }),
   });
 };
 
