@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { hasConstructionData } from '../components/construction/constructionGrid';
-import { mapConstructionInspectionResponseToForm } from './mappers';
+import {
+  mapBuildingFormDataToApiPayload,
+  mapConstructionInspectionResponseToForm,
+} from './mappers';
 
 // The server now fills the Summary* columns in both modes (the computed summary of the inspection).
 const computed = {
@@ -68,5 +71,53 @@ describe('mapConstructionInspectionResponseToForm: Summary* columns', () => {
     const form = mapConstructionInspectionResponseToForm(null);
     expect(form.constructionEnterDetail).toBe(true);
     expect(hasConstructionData(form)).toBe(false);
+  });
+});
+
+describe('current value override', () => {
+  it('loads the stored value as the override only when the server says it was typed', () => {
+    const typed = mapConstructionInspectionResponseToForm({
+      isFullDetail: true,
+      workDetails: [],
+      isCurrentValueOverridden: true,
+      summaryCurrentValue: 726_899,
+    });
+    expect(typed.constructionSummary.currentValueOverride).toBe(726_899);
+
+    const computedOnly = mapConstructionInspectionResponseToForm({
+      isFullDetail: true,
+      workDetails: [],
+      isCurrentValueOverridden: false,
+      summaryCurrentValue: 726_900,
+    });
+    expect(computedOnly.constructionSummary.currentValueOverride).toBeNull();
+  });
+
+  const payload = (buildingCostValue: number, currentValueOverride: number | null) =>
+    mapBuildingFormDataToApiPayload({
+      isUnderConstruction: true,
+      constructionEnterDetail: false,
+      constructionSubItems: [],
+      constructionSummary: { currentValueOverride },
+      buildingCostValue,
+      depreciationDetails: [],
+    } as never).constructionInspection;
+
+  it('sends the typed value, or null when not overridden', () => {
+    expect(payload(1_000_000, 726_899).currentValueOverride).toBe(726_899);
+    expect(payload(1_000_000, null).currentValueOverride).toBeNull();
+  });
+
+  it('sends null without a value base, whatever the form still holds', () => {
+    expect(payload(0, 726_899).currentValueOverride).toBeNull();
+  });
+});
+
+describe('hasConstructionData: the typed current value', () => {
+  it('counts as data, so switching method or clearing the inspection warns', () => {
+    expect(hasConstructionData({ constructionSummary: { currentValueOverride: 0 } })).toBe(true);
+    expect(hasConstructionData({ constructionSummary: { currentValueOverride: null } })).toBe(
+      false,
+    );
   });
 });
