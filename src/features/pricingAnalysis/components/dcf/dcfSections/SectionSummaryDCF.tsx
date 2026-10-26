@@ -34,13 +34,16 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
   // mock tableDCF(): band('dcfval', 'มูลค่าปัจจุบัน') wraps Terminal → PV; collapsible.
   const [pvOpen, setPvOpen] = useState(true);
   // Plain row (mock's row(), cls='') — stk label + empty/muted stk2 + per-year values.
-  const rowStk = clsx(STK_CLASS, 'bg-white');
-  const rowStk2 = clsx(STK2_CLASS, 'bg-white text-gray-400');
-  const rowYear = clsx(YEAR_CELL_CLASS, 'bg-white text-gray-700');
+  const rowStk = clsx(STK_CLASS, 'bg-(--palette-surface)');
+  const rowStk2 = clsx(STK2_CLASS, 'bg-(--palette-surface) text-(--palette-gray-400)');
+  const rowYear = clsx(YEAR_CELL_CLASS, 'bg-(--palette-surface) text-(--palette-ink)');
   // 'tot' row (mock: font-weight 600, bg var(--surface-2)).
-  const totStk = clsx(STK_CLASS, 'bg-gray-50 font-semibold');
-  const totStk2 = clsx(STK2_CLASS, 'bg-gray-50');
-  const totYear = clsx(YEAR_CELL_CLASS, 'bg-gray-50 font-semibold text-gray-700');
+  const totStk = clsx(STK_CLASS, 'bg-(--palette-surface-2) font-semibold');
+  const totStk2 = clsx(STK2_CLASS, 'bg-(--palette-surface-2)');
+  const totYear = clsx(
+    YEAR_CELL_CLASS,
+    'bg-(--palette-surface-2) font-semibold text-(--palette-ink)',
+  );
 
   return (
     <>
@@ -65,7 +68,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
           {t('dcf.summaryDCF.noiGrossRevenue')}
         </td>
         {/* mock's `as` param on this row is "EBITDA" — a muted marker in stk2, not a value. */}
-        <td className={clsx(totStk2, 'text-[11px] text-gray-400')}>EBITDA</td>
+        <td className={clsx(totStk2, 'text-[11px] text-(--palette-gray-400)')}>EBITDA</td>
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
           <td key={idx} className={totYear}>
             <div className="text-right">
@@ -81,14 +84,23 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
       {/* mock's dtl2 (muted, 11px) — the NOI ratio sub-line under NOI. */}
       <tr>
         <td
-          className={clsx(STK_CLASS, 'bg-white text-[11px] text-gray-400')}
+          className={clsx(
+            STK_CLASS,
+            'bg-(--palette-surface) text-[11px] text-(--palette-gray-400)',
+          )}
           title={t('dcf.summaryDCF.noiGrossRevenueRatio')}
         >
           {t('dcf.summaryDCF.noiGrossRevenueRatio')}
         </td>
-        <td className={clsx(STK2_CLASS, 'bg-white')} />
+        <td className={clsx(STK2_CLASS, 'bg-(--palette-surface)')} />
         {Array.from({ length: totalNumberOfYears }, (_, idx) => (
-          <td key={idx} className={clsx(YEAR_CELL_CLASS, 'bg-white text-[11px] text-gray-400')}>
+          <td
+            key={idx}
+            className={clsx(
+              YEAR_CELL_CLASS,
+              'bg-(--palette-surface) text-[11px] text-(--palette-gray-400)',
+            )}
+          >
             <div className="text-right">
               <RHFInputCell
                 fieldName={`${name}.grossRevenueProportional.${idx}`}
@@ -113,7 +125,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
             </td>
             {/* mock puts the cap-rate control in stk2 (`<span class="fc">cap {input}%</span>`),
             not sharing the label cell with a justify-between flex row. */}
-            <td className={clsx(STK2_CLASS_FLEX, 'bg-white')}>
+            <td className={clsx(STK2_CLASS_FLEX, 'bg-(--palette-surface)')}>
               <div className="flex flex-row gap-1 items-center">
                 <div className="w-14">
                   <RHFInputCell
@@ -128,7 +140,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
                     }}
                   />
                 </div>
-                <span className="text-[11px] text-gray-500">%</span>
+                <span className="text-[11px] text-(--palette-gray-500)">%</span>
               </div>
             </td>
             {Array.from({ length: totalNumberOfYears }, (_, idx) => {
@@ -170,7 +182,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
             <td className={rowStk} title={t('dcf.summaryDCF.discountRate')}>
               {t('dcf.summaryDCF.discountRate')}
             </td>
-            <td className={clsx(STK2_CLASS_FLEX, 'bg-white')}>
+            <td className={clsx(STK2_CLASS_FLEX, 'bg-(--palette-surface)')}>
               <div className="flex flex-row gap-1 items-center">
                 <div className="w-14">
                   <RHFInputCell
@@ -185,7 +197,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
                     }}
                   />
                 </div>
-                <span className="text-[11px] text-gray-500">%</span>
+                <span className="text-[11px] text-(--palette-gray-500)">%</span>
               </div>
             </td>
             {Array.from({ length: totalNumberOfYears }, (_, idx) => (
@@ -223,12 +235,20 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
           it from the row above. stk2 holds the value itself (not empty/muted) here. */}
       <tr>
         <td
-          className={clsx(STK_CLASS, 'bg-gray-100 font-bold border-t border-gray-400')}
+          className={clsx(
+            STK_CLASS,
+            'bg-(--palette-surface-3) font-bold border-t border-(--palette-line-strong)',
+          )}
           title={t('dcf.summaryDCF.finalValue')}
         >
           {t('dcf.summaryDCF.finalValue')}
         </td>
-        <td className={clsx(STK2_CLASS, 'bg-gray-100 font-bold border-t border-gray-400')}>
+        <td
+          className={clsx(
+            STK2_CLASS,
+            'bg-(--palette-surface-3) font-bold border-t border-(--palette-line-strong)',
+          )}
+        >
           <RHFInputCell
             fieldName={'finalValue'}
             inputType="display"
@@ -237,7 +257,7 @@ function SummarySectionTable({ name, totalNumberOfYears, isReadOnly }: SummarySe
         </td>
         <td
           colSpan={totalNumberOfYears}
-          className="px-[8px] py-0 h-[26px] text-[12px] leading-[25px] bg-gray-100 border-t border-gray-400 text-gray-400"
+          className="px-[8px] py-0 h-[26px] text-[12px] leading-[25px] bg-(--palette-surface-3) border-t border-(--palette-line-strong) text-(--palette-gray-400)"
         />
       </tr>
     </>

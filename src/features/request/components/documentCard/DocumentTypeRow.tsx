@@ -90,14 +90,14 @@ const DocumentTypeRow = ({
           : undefined
       }
       className={clsx(
-        'grid min-h-10 items-center gap-x-3 border-t border-gray-100 px-4 py-2 hover:bg-gray-50',
+        'grid min-h-10 items-center gap-x-3 border-t border-(--palette-line-soft) px-4 py-2 hover:bg-(--palette-surface-2)',
         dragOver && 'bg-primary/5 ring-1 ring-primary/40 ring-inset',
         // The chips keep at least 140px; in a narrow list (below 560px, measured on the list, not
         // the window) the files drop to a second line under the name instead.
         hasCheckbox
           ? 'grid-cols-[20px_12px_minmax(160px,260px)_minmax(140px,1fr)_auto] @max-[560px]:grid-cols-[20px_12px_minmax(0,1fr)_auto]'
           : 'grid-cols-[12px_minmax(160px,260px)_minmax(140px,1fr)_auto] @max-[560px]:grid-cols-[12px_minmax(0,1fr)_auto]',
-        missing && 'bg-amber-50 hover:bg-amber-50',
+        missing && 'bg-(--palette-warn-wash) hover:bg-(--palette-warn-wash)',
       )}
     >
       {hasCheckbox && (
@@ -126,12 +126,12 @@ const DocumentTypeRow = ({
             {name}
           </span>
           {row.required && (
-            <span className="text-red-600" title={t('docCard.kpi.required')}>
+            <span className="text-(--palette-danger)" title={t('docCard.kpi.required')}>
               *
             </span>
           )}
         </span>
-        <small className="block text-xs font-normal text-gray-500">
+        <small className="block text-xs font-normal text-(--palette-gray-500)">
           {row.documentType}
           {missing
             ? ` · ${t('docCard.row.noFile')}`
@@ -152,7 +152,7 @@ const DocumentTypeRow = ({
           <button
             type="button"
             onClick={onToggleExpanded}
-            className="cursor-pointer rounded-full border border-dashed border-gray-300 px-2.5 py-0.5 text-sm text-gray-600 hover:border-primary hover:text-primary"
+            className="cursor-pointer rounded-full border border-dashed border-(--palette-line-strong) px-2.5 py-0.5 text-sm text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text)"
           >
             {t('docCard.row.more', { n: files.length - CHIPS_WHEN_FOLDED })}
           </button>
@@ -161,13 +161,13 @@ const DocumentTypeRow = ({
           <button
             type="button"
             onClick={onToggleExpanded}
-            className="cursor-pointer text-sm text-gray-500 underline underline-offset-2"
+            className="cursor-pointer text-sm text-(--palette-gray-500) underline underline-offset-2"
           >
             {t('docCard.row.fewer')}
           </button>
         )}
         {files.length === 0 && missing && showMissingHint && (
-          <span className="text-sm text-gray-500">{t('docCard.row.mustAttach')}</span>
+          <span className="text-sm text-(--palette-gray-500)">{t('docCard.row.mustAttach')}</span>
         )}
       </span>
       <span
@@ -181,9 +181,9 @@ const DocumentTypeRow = ({
           <span
             role="group"
             aria-label={t('docCard.row.layout')}
-            className="inline-flex items-center gap-1 rounded-md border border-gray-200 bg-white px-1.5 py-0.5"
+            className="inline-flex items-center gap-1 rounded-md border border-(--palette-line) bg-(--palette-surface) px-1.5 py-0.5"
           >
-            <span className="text-xs text-gray-500">{t('docCard.row.layout')}</span>
+            <span className="text-xs text-(--palette-gray-500)">{t('docCard.row.layout')}</span>
             {[1, 2, 3].map(columns => (
               <button
                 key={columns}
@@ -193,7 +193,9 @@ const DocumentTypeRow = ({
                 onClick={() => onLayoutChange(columns)}
                 className={clsx(
                   'size-6 cursor-pointer rounded text-sm font-medium',
-                  layout === columns ? 'bg-primary text-white' : 'text-gray-500 hover:bg-gray-100',
+                  layout === columns
+                    ? 'bg-primary text-white'
+                    : 'text-(--palette-gray-500) hover:bg-(--palette-surface-3)',
                 )}
               >
                 {columns}
@@ -212,8 +214,8 @@ const DocumentTypeRow = ({
               // the variant's own 50% fade would leave the tint showing.
               className={
                 generateDisabledReason
-                  ? 'bg-gray-100! text-gray-400! opacity-100!'
-                  : 'bg-primary/10! text-primary! hover:bg-primary/15!'
+                  ? 'bg-(--palette-surface-3)! text-(--palette-gray-400)! opacity-100!'
+                  : 'bg-primary/10! text-(--palette-primary-text)! hover:bg-primary/15!'
               }
               leftIcon={<Icon style="solid" name="wand-magic-sparkles" className="text-xs" />}
               onClick={onGenerate}

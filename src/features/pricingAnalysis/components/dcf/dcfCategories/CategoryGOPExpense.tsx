@@ -12,11 +12,13 @@ export function CategoryGOPExpense({ category, totalNumberOfYears }: CategoryGOP
   // catrow shape, since GOP has no assumptions of its own to chevron open. Bold +
   // tinted background matches `.g tr.tot td { font-weight: 600; background: var(--surface-2) }`.
   return (
-    <tr className="bg-gray-50">
-      <td className={clsx(STK_CLASS, 'font-semibold bg-gray-50')}>{category?.categoryName ?? ''}</td>
-      <td className={clsx(STK2_CLASS, 'bg-gray-50')} />
+    <tr className="bg-(--palette-surface-2)">
+      <td className={clsx(STK_CLASS, 'font-semibold bg-(--palette-surface-2)')}>
+        {category?.categoryName ?? ''}
+      </td>
+      <td className={clsx(STK2_CLASS, 'bg-(--palette-surface-2)')} />
       {Array.from({ length: totalNumberOfYears }, (_, index) => (
-        <td key={index} className={clsx(YEAR_CELL_CLASS, 'font-semibold bg-gray-50')}>
+        <td key={index} className={clsx(YEAR_CELL_CLASS, 'font-semibold bg-(--palette-surface-2)')}>
           <span>
             {category.totalCategoryValues?.[index]
               ? category.totalCategoryValues?.[index].toLocaleString()

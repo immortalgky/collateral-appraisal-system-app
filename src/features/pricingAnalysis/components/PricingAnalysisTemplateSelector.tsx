@@ -36,13 +36,13 @@ export function PricingAnalysisTemplateSelector({
   return (
     <div className="flex flex-col gap-4 mt-4">
       <div className="flex items-center gap-2.5">
-        <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-primary">
+        <div className="flex items-center justify-center size-8 rounded-lg bg-primary/10 text-(--palette-primary-text)">
           <Icon name={icon} className="size-4" />
         </div>
-        <h2 className="text-lg font-semibold text-gray-900">{methodName}</h2>
+        <h2 className="text-lg font-semibold text-(--palette-ink)">{methodName}</h2>
       </div>
-      <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-gray-50/50 p-4">
-        <div className="flex h-full items-center text-sm font-medium text-gray-600 shrink-0">
+      <div className="flex items-center gap-4 rounded-lg border border-(--palette-line) bg-(--palette-surface-2)/50 p-4">
+        <div className="flex h-full items-center text-sm font-medium text-(--palette-gray-600) shrink-0">
           {t('template.sectionTitle')}
         </div>
         <div className="flex-1 min-w-0">

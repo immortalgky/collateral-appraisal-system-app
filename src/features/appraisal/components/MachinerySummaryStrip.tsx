@@ -54,7 +54,9 @@ export const MachinerySummaryStrip = ({
     <div
       className={clsx(
         'grid grid-cols-[2.25rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl border px-3 py-2.5',
-        needsWork ? 'border-amber-200 bg-amber-50/70' : 'border-gray-100 bg-gray-50/80',
+        needsWork
+          ? 'border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash)/70'
+          : 'border-(--palette-line-soft) bg-(--palette-surface-2)/80',
       )}
     >
       <span className="flex size-9 items-center justify-center rounded-lg bg-amber-700/10 text-amber-700">
@@ -63,37 +65,37 @@ export const MachinerySummaryStrip = ({
 
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <h4 className="text-[13px] font-semibold text-gray-900">
+          <h4 className="text-[13px] font-semibold text-(--palette-ink)">
             {t('properties.machinerySummary.title')}
           </h4>
           <MachinerySummaryStatusPill status={status} />
         </div>
 
         {status === 'none' && (
-          <p className="mt-0.5 text-xs text-gray-600">
+          <p className="mt-0.5 text-xs text-(--palette-gray-600)">
             {t('properties.machinerySummary.hint.none', { n: machineCount })}
           </p>
         )}
         {status === 'done' && doneCounts.length > 0 && (
-          <div className="mt-0.5 flex flex-wrap gap-x-3.5 gap-y-0.5 text-xs text-gray-600">
+          <div className="mt-0.5 flex flex-wrap gap-x-3.5 gap-y-0.5 text-xs text-(--palette-gray-600)">
             {doneCounts.map(c => (
               <span key={c.name}>
                 {t(`properties.machinerySummary.counts.${c.name}`)}{' '}
-                <b className="font-semibold tabular-nums text-gray-900">{c.value}</b>
+                <b className="font-semibold tabular-nums text-(--palette-ink)">{c.value}</b>
               </span>
             ))}
           </div>
         )}
         {status === 'drift' && (
           <>
-            <div className="mt-0.5 flex flex-wrap gap-x-3.5 gap-y-0.5 text-xs font-medium text-amber-800">
+            <div className="mt-0.5 flex flex-wrap gap-x-3.5 gap-y-0.5 text-xs font-medium text-amber-800 dark:text-amber-300">
               {state.mismatches.map(m => (
                 <span key={m.name} className="tabular-nums">
                   {t(`properties.machinerySummary.counts.${m.name}`)} {m.saved} → {m.derived}
                 </span>
               ))}
             </div>
-            <p className="mt-0.5 text-[11px] text-gray-500">
+            <p className="mt-0.5 text-[11px] text-(--palette-gray-500)">
               {t('properties.machinerySummary.hint.drift')}
             </p>
           </>
@@ -107,7 +109,7 @@ export const MachinerySummaryStrip = ({
           'inline-flex items-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
           primary
             ? 'bg-primary text-white hover:bg-primary-700'
-            : 'border border-primary/40 bg-white text-primary-700 hover:bg-primary-50',
+            : 'border border-primary/40 bg-(--palette-surface) text-(--palette-accent-ink) hover:bg-(--palette-accent-wash)',
         )}
       >
         {actionLabel}

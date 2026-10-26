@@ -6,11 +6,11 @@ interface Props {
   rows: ConstructionBuildingRow[];
 }
 
-const thLeftClass = 'px-3 py-2.5 text-left text-xs font-semibold text-gray-600';
-const tdLeftClass = 'px-3 py-2 text-left text-gray-700';
+const thLeftClass = 'px-3 py-2.5 text-left text-xs font-semibold text-(--palette-gray-600)';
+const tdLeftClass = 'px-3 py-2 text-left text-(--palette-ink)';
 const thSeqClass =
-  'w-20 whitespace-nowrap px-3 py-2.5 text-center text-xs font-semibold text-gray-600';
-const tdSeqClass = 'w-20 px-3 py-2 text-center text-gray-700 tabular-nums';
+  'w-20 whitespace-nowrap px-3 py-2.5 text-center text-xs font-semibold text-(--palette-gray-600)';
+const tdSeqClass = 'w-20 px-3 py-2 text-center text-(--palette-ink) tabular-nums';
 
 /**
  * The three column groups carry the same semantics the milestone table above renders as
@@ -19,19 +19,19 @@ const tdSeqClass = 'w-20 px-3 py-2 text-center text-gray-700 tabular-nums';
  */
 const GROUPS = {
   previous: {
-    th: 'bg-blue-50 text-blue-700',
-    td: 'text-gray-700',
+    th: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+    td: 'text-(--palette-ink)',
     tdBg: '',
   },
   increased: {
-    th: 'bg-amber-50 text-amber-700',
-    td: 'text-amber-700 font-medium',
+    th: 'bg-(--palette-warn-wash) text-(--palette-warn)',
+    td: 'text-(--palette-warn) font-medium',
     tdBg: '',
   },
   current: {
-    th: 'bg-teal-50 text-teal-800',
-    td: 'text-teal-800 font-semibold',
-    tdBg: 'bg-teal-50/60',
+    th: 'bg-(--palette-accent-wash) text-teal-800 dark:text-teal-300',
+    td: 'text-teal-800 dark:text-teal-300 font-semibold',
+    tdBg: 'bg-(--palette-accent-wash)/60',
   },
 } as const;
 
@@ -88,10 +88,10 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
   const increasedPct = currentPct - previousPct;
 
   return (
-    <div className="overflow-x-auto rounded border border-gray-200">
+    <div className="overflow-x-auto rounded border border-(--palette-line)">
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
             <th rowSpan={2} className={thSeqClass}>
               {t('constructionBuildingDetailTable.columns.seqNo')}
             </th>
@@ -114,7 +114,7 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
               {t('constructionBuildingDetailTable.columns.currentProgress')}
             </th>
           </tr>
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
             <th className={groupThPctClass('previous')}>
               {t('constructionBuildingDetailTable.columns.percent')}
             </th>
@@ -135,7 +135,7 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {rows.map((row, idx) => {
             const rowIncreasedValue = row.currentValue - row.previousValue;
             const rowIncreasedPct = row.currentProgressPct - row.previousProgressPct;
@@ -162,7 +162,7 @@ const ConstructionBuildingDetailTable = ({ rows }: Props) => {
           })}
         </tbody>
         <tfoot>
-          <tr className="bg-gray-50 font-semibold border-t border-gray-200">
+          <tr className="bg-(--palette-surface-2) font-semibold border-t border-(--palette-line)">
             <td colSpan={4} className={tdLeftClass}>
               {t('constructionBuildingDetailTable.summaryRow')}
             </td>

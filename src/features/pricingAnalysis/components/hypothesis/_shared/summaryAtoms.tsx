@@ -33,7 +33,7 @@ export function IsCalculatingProvider({
 
 function CalcPlaceholder() {
   return (
-    <span className="inline-block h-[12px] w-[64px] rounded bg-gray-200 animate-pulse align-middle" />
+    <span className="inline-block h-[12px] w-[64px] rounded bg-(--palette-line) animate-pulse align-middle" />
   );
 }
 
@@ -51,7 +51,8 @@ export const pct = (x?: number | null) =>
 // ─── Table shell ──────────────────────────────────────────────────────────────
 
 const RatioContext = createContext(false);
-const TD = 'px-[8px] py-0 h-[26px] leading-[25px] border-b border-[#eef2f2] align-middle';
+const TD =
+  'px-[8px] py-0 h-[26px] leading-[25px] border-b border-(--palette-line-soft) align-middle';
 
 /**
  * `table-layout: fixed` + a colgroup: in auto layout a cell's max-width is ignored, and the
@@ -60,7 +61,7 @@ const TD = 'px-[8px] py-0 h-[26px] leading-[25px] border-b border-[#eef2f2] alig
 export function LedgerTable({ ratio = false, children }: { ratio?: boolean; children: ReactNode }) {
   const { t } = useTranslation('pricingAnalysis');
   const th =
-    'px-[8px] py-0 h-[27px] font-semibold text-gray-600 bg-gray-50 border-b border-gray-200';
+    'px-[8px] py-0 h-[27px] font-semibold text-(--palette-gray-600) bg-(--palette-surface-2) border-b border-(--palette-line)';
   return (
     <RatioContext.Provider value={ratio}>
       <table className="w-full table-fixed border-collapse text-[12px]">
@@ -103,7 +104,7 @@ export function LedgerBand({
       <tr id={`hyp-sec-${id}`} className="scroll-mt-[27px]">
         <td
           colSpan={ratio ? 5 : 4}
-          className="px-[8px] py-0 h-[26px] leading-[25px] bg-[#edf1f1] font-semibold text-gray-700 cursor-pointer select-none border-b border-[#e3e9e8]"
+          className="px-[8px] py-0 h-[26px] leading-[25px] bg-(--palette-surface-3) font-semibold text-(--palette-ink) cursor-pointer select-none border-b border-(--palette-line)"
           onClick={() => setOpen(o => !o)}
         >
           <span
@@ -149,16 +150,27 @@ export function LedgerRow({
   const hasRatio = useContext(RatioContext);
   const bg =
     tone === 'tot'
-      ? 'bg-gray-50 font-semibold'
+      ? 'bg-(--palette-surface-2) font-semibold'
       : tone === 'final'
-        ? 'bg-[#f0fdfa] font-bold text-[#0f766e]'
+        ? 'bg-(--palette-accent-wash) font-bold text-(--palette-accent-ink)'
         : tone === 'user'
-          ? 'bg-amber-50/40'
+          ? 'bg-(--palette-warn-wash)/40'
           : '';
   return (
     <tr className={bg}>
-      <td className={clsx(TD, 'truncate', sub ? 'pl-[22px] text-gray-600' : 'text-gray-800')}>
-        <span className={clsx('inline-flex items-center gap-[2px]', warn && 'text-rose-600')}>
+      <td
+        className={clsx(
+          TD,
+          'truncate',
+          sub ? 'pl-[22px] text-(--palette-gray-600)' : 'text-(--palette-ink)',
+        )}
+      >
+        <span
+          className={clsx(
+            'inline-flex items-center gap-[2px]',
+            warn && 'text-rose-600 dark:text-rose-400',
+          )}
+        >
           {label}
           {tip && <FieldTooltip text={tip} />}
         </span>
@@ -168,10 +180,12 @@ export function LedgerRow({
       <td className={clsx(TD, 'text-right tabular-nums whitespace-nowrap')}>
         {total}
         {total !== undefined && totalUnit && (
-          <span className="text-[11px] text-gray-400 ml-[4px]">{totalUnit}</span>
+          <span className="text-[11px] text-(--palette-gray-400) ml-[4px]">{totalUnit}</span>
         )}
       </td>
-      {hasRatio && <td className={clsx(TD, 'text-right tabular-nums text-gray-500')}>{ratio}</td>}
+      {hasRatio && (
+        <td className={clsx(TD, 'text-right tabular-nums text-(--palette-gray-500)')}>{ratio}</td>
+      )}
     </tr>
   );
 }
@@ -179,9 +193,13 @@ export function LedgerRow({
 // ─── Cell helpers ─────────────────────────────────────────────────────────────
 
 const Unit = ({ children }: { children?: ReactNode }) =>
-  children ? <span className="text-[10.5px] text-gray-400 ml-[4px]">{children}</span> : null;
+  children ? (
+    <span className="text-[10.5px] text-(--palette-gray-400) ml-[4px]">{children}</span>
+  ) : null;
 const Note = ({ children }: { children?: ReactNode }) =>
-  children ? <span className="text-[10.5px] text-gray-400 ml-[6px]">{children}</span> : null;
+  children ? (
+    <span className="text-[10.5px] text-(--palette-gray-400) ml-[6px]">{children}</span>
+  ) : null;
 
 /** Rate cell with an editable number: `[input] unit  note`. */
 export function RateInput({
@@ -223,7 +241,12 @@ export function RateValue({
 }) {
   return (
     <span className="inline-flex items-center">
-      <b className={clsx('tabular-nums font-semibold', danger ? 'text-rose-600' : 'text-gray-800')}>
+      <b
+        className={clsx(
+          'tabular-nums font-semibold',
+          danger ? 'text-rose-600 dark:text-rose-400' : 'text-(--palette-ink)',
+        )}
+      >
         {value}
       </b>
       <Unit>{unit}</Unit>
@@ -237,7 +260,7 @@ export function Qty({ value, unit, int }: { value?: number | null; unit?: string
   if (value === null || value === undefined) return null;
   return (
     <span className="inline-flex items-center tabular-nums">
-      <span className="text-gray-400 mr-[4px]">×</span>
+      <span className="text-(--palette-gray-400) mr-[4px]">×</span>
       <Num value={value} int={int} />
       <Unit>{unit}</Unit>
     </span>
@@ -250,7 +273,10 @@ export function LedgerRemarkRow({ control, name }: { control: unknown; name: str
   const ratio = useContext(RatioContext);
   return (
     <tr>
-      <td colSpan={ratio ? 5 : 4} className="px-[8px] py-[4px] border-b border-[#eef2f2]">
+      <td
+        colSpan={ratio ? 5 : 4}
+        className="px-[8px] py-[4px] border-b border-(--palette-line-soft)"
+      >
         <Controller
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           control={control as any}
@@ -262,7 +288,7 @@ export function LedgerRemarkRow({ control, name }: { control: unknown; name: str
               rows={2}
               aria-label="Remark"
               placeholder={t('hypothesis.ledger.remarkPlaceholder')}
-              className="w-full text-[12px] border border-gray-200 rounded-[6px] px-[8px] py-[4px] resize-y focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-gray-400"
+              className="w-full text-[12px] border border-(--palette-line) rounded-[6px] px-[8px] py-[4px] resize-y focus:outline-none focus:ring-1 focus:ring-primary/30 placeholder:text-(--palette-gray-400)"
             />
           )}
         />
@@ -276,11 +302,14 @@ export function LedgerAddRow({ label, onClick }: { label: string; onClick: () =>
   const ratio = useContext(RatioContext);
   return (
     <tr>
-      <td colSpan={ratio ? 5 : 4} className="px-[8px] py-[3px] border-b border-[#eef2f2]">
+      <td
+        colSpan={ratio ? 5 : 4}
+        className="px-[8px] py-[3px] border-b border-(--palette-line-soft)"
+      >
         <button
           type="button"
           onClick={onClick}
-          className="border border-dashed border-primary text-primary text-[11px] rounded-[6px] px-[8px] leading-[18px] hover:bg-primary/5"
+          className="border border-dashed border-primary text-(--palette-primary-text) text-[11px] rounded-[6px] px-[8px] leading-[18px] hover:bg-primary/5"
         >
           + {label}
         </button>
@@ -316,11 +345,13 @@ export function LedgerUserRow({
             onClick={onRemove}
             title={t('hypothesis.ledger.remove')}
             aria-label={t('hypothesis.ledger.remove')}
-            className="size-[20px] inline-flex items-center justify-center text-rose-500 hover:text-rose-700"
+            className="size-[20px] inline-flex items-center justify-center text-rose-500 hover:text-rose-700 dark:hover:text-rose-300"
           >
             <Icon name="trash-can" style="regular" className="size-[12px]" />
           </button>
-          <span className="text-[11px] text-gray-400">{t('hypothesis.ledger.enteredAmount')}</span>
+          <span className="text-[11px] text-(--palette-gray-400)">
+            {t('hypothesis.ledger.enteredAmount')}
+          </span>
         </span>
       }
       total={<span className="inline-block w-[130px]">{amountInput}</span>}
@@ -358,16 +389,18 @@ export function LedgerIndicatedValueRow({
       label={
         <>
           {t('hypothesis.ledger.indicatedValue')}
-          <span className="text-[10.5px] font-normal text-gray-500 ml-[6px]">
+          <span className="text-[10.5px] font-normal text-(--palette-gray-500) ml-[6px]">
             {t('hypothesis.ledger.totalAssetValue')}
           </span>
         </>
       }
       rate={
-        <span className="text-[10.5px] font-normal text-gray-500">
+        <span className="text-[10.5px] font-normal text-(--palette-gray-500)">
           {edited ? (
             <>
-              <span className="font-semibold text-[#b45309]">{t('hypothesis.ledger.edited')}</span>{' '}
+              <span className="font-semibold text-(--palette-warn)">
+                {t('hypothesis.ledger.edited')}
+              </span>{' '}
               {t('hypothesis.ledger.differs', {
                 value: `${delta >= 0 ? '+' : '−'}${fmt(Math.abs(delta))}`,
               })}
@@ -376,7 +409,7 @@ export function LedgerIndicatedValueRow({
                   {' · '}
                   <button
                     type="button"
-                    className="text-primary hover:underline"
+                    className="text-(--palette-primary-text) hover:underline"
                     onClick={() => field.onChange(null)}
                   >
                     {t('hypothesis.ledger.useCalculated')}
@@ -398,7 +431,7 @@ export function LedgerIndicatedValueRow({
             disabled={disabled}
             dense
             aria-label={t('hypothesis.ledger.indicatedValue')}
-            className="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold!"
+            className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold!"
           />
         </span>
       }
@@ -418,7 +451,7 @@ export function LedgerJumpBar({ sections }: { sections: { id: string; short: str
           onClick={() =>
             document.getElementById(`hyp-sec-${s.id}`)?.scrollIntoView({ block: 'start' })
           }
-          className="text-[11px] h-[22px] px-[7px] rounded-[6px] border border-gray-200 bg-white text-gray-600 hover:border-primary hover:text-primary whitespace-nowrap"
+          className="text-[11px] h-[22px] px-[7px] rounded-[6px] border border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text) whitespace-nowrap"
         >
           {s.short}
         </button>
@@ -438,7 +471,7 @@ export function LedgerWithChart({ chart, children }: { chart?: ReactNode; childr
     >
       <div className="min-w-0">{children}</div>
       {chart && (
-        <aside className="sticky top-0 border-l border-gray-200 px-[14px] pt-[10px] pb-[16px] bg-white flex flex-col gap-[12px]">
+        <aside className="sticky top-0 border-l border-(--palette-line) px-[14px] pt-[10px] pb-[16px] bg-(--palette-surface) flex flex-col gap-[12px]">
           {chart}
         </aside>
       )}

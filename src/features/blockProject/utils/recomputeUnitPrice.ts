@@ -31,7 +31,7 @@ const num = (v: number | null | undefined): number =>
   typeof v === 'number' && !Number.isNaN(v) ? v : 0;
 
 /** Mirror of Project.cs:ApplyLocationMethod. */
-const applyLocationMethod = (
+export const applyLocationMethod = (
   rawAdjustment: number,
   method: string | null | undefined,
   standardPriceTotal: number,
@@ -49,6 +49,50 @@ const applyLocationMethod = (
       return rawAdjustment;
   }
 };
+
+/**
+ * Condo: what the unit's stored raw flag total (`adjustPriceLocation`) adds to its value under the
+ * given location method; the same step `recomputeCondo` takes, on the same standard price total.
+ */
+export const condoLocationContribution = (
+  unit: ProjectUnitPrice,
+  method: string | null | undefined,
+): number => {
+  const usableArea = num(unit.usableArea);
+  return applyLocationMethod(
+    num(unit.adjustPriceLocation),
+    method,
+    snap(num(unit.standardPrice) * usableArea),
+    usableArea,
+  );
+};
+
+/**
+ * LB / L: the same step for a land-and-building unit, as `recomputeLB` takes it: the multiplier is
+ * the land area (Sq.Wa) and the percentage base is the standard price as it is (a total, not a
+ * rate). A unit with no model (always the case for L) has a standard price of 0, so a percentage
+ * method gives 0 there.
+ */
+export const lbLocationContribution = (
+  unit: ProjectUnitPrice,
+  method: string | null | undefined,
+): number =>
+  applyLocationMethod(
+    num(unit.adjustPriceLocation),
+    method,
+    num(unit.standardPrice),
+    num(unit.landArea),
+  );
+
+/** The contribution of the unit's stored raw flag total, whichever the project type. */
+export const locationContribution = (
+  unit: ProjectUnitPrice,
+  method: string | null | undefined,
+  projectType: ProjectType,
+): number =>
+  isCondo(projectType)
+    ? condoLocationContribution(unit, method)
+    : lbLocationContribution(unit, method);
 
 const roundToNearest10000 = (value: number): number => roundAwayFromZero(value, 10000);
 const roundToNearest1000 = (value: number): number => roundAwayFromZero(value, 1000);

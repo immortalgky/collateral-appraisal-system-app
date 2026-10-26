@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { pct, TH } from './constructionGrid';
+import { pct } from './constructionGrid';
 
 /** Presentational cells shared by the detail grid and the summary form. */
 
@@ -21,16 +21,16 @@ export function Change({
 }) {
   const d = Math.round((to - from) * 100) / 100;
   const unknown = (to === 0 && from > 0) || incomplete;
-  if (unknown && !final) return <span className="text-[color:var(--palette-ink-3)]">—</span>;
+  if (unknown && !final) return <span className="text-(--palette-ink-3)">—</span>;
   return (
     <span
       className={clsx(
         'font-medium',
         unknown || d === 0
-          ? 'text-[color:var(--palette-ink-3)]'
+          ? 'text-(--palette-ink-3)'
           : d > 0
             ? 'text-[#15803d]'
-            : 'text-[#dc2626]',
+            : 'text-(--palette-danger)',
       )}
     >
       {d > 0 ? '+' : d < 0 ? '−' : ''}
@@ -39,22 +39,12 @@ export function Change({
   );
 }
 
-/** A right-aligned column header with its unit on a second line; shared with the summary form. */
-export function HeaderCell({
-  label,
-  unit,
-  className,
-}: {
-  label: string;
-  unit: string;
-  className?: string;
-}) {
+/** A column header's label with its unit on a second line; shared with the summary form. */
+export function HeadLabel({ label, unit }: { label: string; unit: string }) {
   return (
-    <th className={clsx(TH, 'text-right', className)}>
+    <>
       {label}
-      <span className="block text-[0.75rem] text-[color:var(--palette-ink-3)] font-normal leading-[0.9231rem]">
-        {unit}
-      </span>
-    </th>
+      <span className="block text-xs font-normal leading-tight text-(--palette-ink-3)">{unit}</span>
+    </>
   );
 }

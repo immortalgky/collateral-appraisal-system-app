@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Icon from '@/shared/components/Icon';
 import { getDocumentTypeName, useGetDocumentTypes } from '@/features/request/api/documentTypes';
 import { useGetRequestById } from '@/features/request/api/requests';
@@ -131,17 +132,23 @@ export function UploadLineItemDialog({
 
   return createPortal(
     <div className="modal modal-open z-[70]" role="dialog" aria-modal="true">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-lg">
+      <div className="modal-box bg-(--palette-surface) rounded-2xl shadow-xl max-w-lg">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center">
-              <Icon name="upload" style="solid" className="size-5 text-blue-600" />
+            <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+              <Icon
+                name="upload"
+                style="solid"
+                className="size-5 text-blue-600 dark:text-blue-400"
+              />
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-900">{t('uploadDialog.title')}</h3>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <h3 className="text-base font-semibold text-(--palette-ink)">
+                {t('uploadDialog.title')}
+              </h3>
+              <p className="text-xs text-(--palette-gray-500) mt-0.5">
                 {t('uploadDialog.fulfilling')}{' '}
-                <span className="font-medium text-gray-700">{documentTypeLabel}</span>
+                <span className="font-medium text-(--palette-ink)">{documentTypeLabel}</span>
               </p>
             </div>
           </div>
@@ -150,7 +157,7 @@ export function UploadLineItemDialog({
             onClick={onClose}
             disabled={uploading}
             aria-label={t('aria.closeDialog')}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-40"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) transition-colors disabled:opacity-40"
           >
             <Icon name="xmark" style="solid" className="size-4" />
           </button>
@@ -169,16 +176,16 @@ export function UploadLineItemDialog({
 
         {/* Target picker */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1.5">
             {t('uploadDialog.attachToLabel')}
           </label>
           {titlesLoading ? (
-            <div className="flex items-center gap-2 text-sm text-gray-400 py-2">
+            <div className="flex items-center gap-2 text-sm text-(--palette-gray-400) py-2">
               <Icon name="spinner" style="solid" className="size-4 animate-spin" />
               {t('uploadDialog.loadingTitles')}
             </div>
           ) : (
-            <select
+            <NativeSelect
               value={target.kind === 'request' ? '__request__' : target.titleId}
               onChange={e => {
                 const val = e.target.value;
@@ -194,7 +201,7 @@ export function UploadLineItemDialog({
                 }
               }}
               disabled={uploading}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
+              className="w-full"
             >
               <option value="__request__">{t('uploadDialog.applicationLevel')}</option>
               {titles.map((ti: any, idx: number) => {
@@ -210,13 +217,13 @@ export function UploadLineItemDialog({
                   </option>
                 );
               })}
-            </select>
+            </NativeSelect>
           )}
         </div>
 
         {/* File input */}
         <div className="mb-4">
-          <label className="block text-xs font-medium text-gray-700 mb-1.5">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1.5">
             {t('uploadDialog.fileLabel')}
           </label>
           <input
@@ -224,16 +231,17 @@ export function UploadLineItemDialog({
             type="file"
             onChange={e => setFile(e.target.files?.[0] ?? null)}
             disabled={uploading}
-            className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 file:cursor-pointer"
+            className="block w-full text-sm text-(--palette-ink) file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-(--palette-primary-text) hover:file:bg-primary/20 file:cursor-pointer"
           />
           {file && (
-            <p className="mt-2 text-xs text-gray-500 truncate">
-              {t('uploadDialog.selectedFile')} <span className="text-gray-700">{file.name}</span>
+            <p className="mt-2 text-xs text-(--palette-gray-500) truncate">
+              {t('uploadDialog.selectedFile')}{' '}
+              <span className="text-(--palette-ink)">{file.name}</span>
             </p>
           )}
         </div>
 
-        <div className="text-xs text-gray-500 mb-4 p-3 rounded-lg bg-gray-50 border border-gray-100">
+        <div className="text-xs text-(--palette-gray-500) mb-4 p-3 rounded-lg bg-(--palette-surface-2) border border-(--palette-line-soft)">
           {t('uploadDialog.deferredNotePre')}{' '}
           <span className="font-semibold">{t('uploadDialog.deferredNoteNot')}</span>{' '}
           {t('uploadDialog.deferredNotePost')}{' '}
@@ -242,12 +250,12 @@ export function UploadLineItemDialog({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 pt-3 border-t border-gray-100">
+        <div className="flex items-center justify-end gap-3 pt-3 border-t border-(--palette-line-soft)">
           <button
             type="button"
             onClick={onClose}
             disabled={uploading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm font-medium text-(--palette-ink) bg-(--palette-surface-3) hover:bg-(--palette-line) rounded-xl transition-colors disabled:opacity-50"
           >
             {t('common:actions.cancel')}
           </button>

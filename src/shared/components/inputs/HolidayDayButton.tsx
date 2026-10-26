@@ -33,7 +33,7 @@ export function createHolidayDayButton(holidayMap: Map<string, string>) {
         className={clsx(
           buttonProps.className,
           // Selected wins: the accent fill already carries the meaning, and red on it is unreadable.
-          holidayName && !modifiers.selected && 'text-rose-600 font-semibold',
+          holidayName && !modifiers.selected && 'text-rose-600 dark:text-rose-400 font-semibold',
         )}
       />
     );

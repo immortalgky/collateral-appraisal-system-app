@@ -108,11 +108,15 @@ function DepreciationFlow() {
   const depreciationPct = totalBefore > 0 ? (totalPriceDepreciation / totalBefore) * 100 : 0;
 
   return (
-    <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[13px] tabular-nums text-gray-400">
-      Before <b className="font-medium text-gray-900">{money(totalBefore)}</b>− Depreciation
-      <b className="font-medium text-orange-700">{money(totalPriceDepreciation)}</b>(
-      {depreciationPct.toFixed(1)}%) =
-      <span className="text-base font-bold text-primary-700">{money(priceAfterDepreciation)}</span>
+    <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-[13px] tabular-nums text-(--palette-gray-400)">
+      Before <b className="font-medium text-(--palette-ink)">{money(totalBefore)}</b>− Depreciation
+      <b className="font-medium text-orange-700 dark:text-orange-300">
+        {money(totalPriceDepreciation)}
+      </b>
+      ({depreciationPct.toFixed(1)}%) =
+      <span className="text-base font-bold text-(--palette-accent-ink)">
+        {money(priceAfterDepreciation)}
+      </span>
     </div>
   );
 }
@@ -221,7 +225,7 @@ function BuildingDetailPopUpModal({
                   className={
                     confirmDelete
                       ? 'border-red-600 bg-red-600 text-white hover:bg-red-700'
-                      : 'text-red-600 border-red-200 hover:bg-red-50'
+                      : 'text-(--palette-danger) border-(--palette-req-line) hover:bg-(--palette-req-wash)'
                   }
                 >
                   <Icon style="solid" name="trash" className="size-3.5 mr-1" />
@@ -254,13 +258,13 @@ function BuildingDetailPopUpModal({
             handleSubmit(onSubmit)(e);
           }}
           onKeyDown={handleKeyDown}
-          className="flex flex-col divide-y divide-gray-200"
+          className="flex flex-col divide-y divide-(--palette-line)"
         >
           <section className="flex flex-col gap-4 pb-5">
             <div
               role="radiogroup"
               aria-label="Item type"
-              className="grid grid-cols-2 gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1"
+              className="grid grid-cols-2 gap-1 rounded-lg border border-(--palette-line) bg-(--palette-surface-2) p-1"
             >
               {[
                 {
@@ -288,13 +292,13 @@ function BuildingDetailPopUpModal({
                     className={clsx(
                       'grid grid-cols-[auto_1fr] items-center gap-x-2 rounded-md px-3 py-2 text-left text-sm font-medium',
                       selected
-                        ? 'bg-white text-gray-900 shadow-sm'
-                        : 'text-gray-500 hover:text-gray-700',
+                        ? 'bg-(--palette-surface) text-(--palette-ink) shadow-sm'
+                        : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
                     )}
                   >
                     <span className={clsx('size-2 rounded-sm', option.swatch)} />
                     {option.label}
-                    <span className="col-start-2 text-xs font-normal text-gray-400">
+                    <span className="col-start-2 text-xs font-normal text-(--palette-gray-400)">
                       {option.hint}
                     </span>
                   </button>
@@ -315,14 +319,14 @@ function BuildingDetailPopUpModal({
                 {...register('area', { valueAsNumber: true })}
                 value={areaValue ?? ''}
                 label="Area"
-                rightIcon={<span className="text-xs text-gray-400">sq.m.</span>}
+                rightIcon={<span className="text-xs text-(--palette-gray-400)">sq.m.</span>}
                 maxIntegerDigits={6}
               />
               <NumberInput
                 {...register('year', { valueAsNumber: true })}
                 value={buildingYear}
                 label="Building age"
-                rightIcon={<span className="text-xs text-gray-400">yrs</span>}
+                rightIcon={<span className="text-xs text-(--palette-gray-400)">yrs</span>}
                 maxIntegerDigits={3}
                 decimalPlaces={0}
               />
@@ -330,21 +334,23 @@ function BuildingDetailPopUpModal({
           </section>
 
           <section className="flex flex-col gap-3 py-5">
-            <h3 className="text-base font-semibold text-gray-800">Replacement cost new</h3>
+            <h3 className="text-base font-semibold text-(--palette-ink)">Replacement cost new</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-end">
               <NumberInput
                 {...register('pricePerSqMBeforeDepreciation', { valueAsNumber: true })}
                 value={pricePerSqMValue ?? ''}
                 label="Price per Sq.m"
-                rightIcon={<span className="text-xs text-gray-400">฿/m²</span>}
+                rightIcon={<span className="text-xs text-(--palette-gray-400)">฿/m²</span>}
                 maxIntegerDigits={15}
               />
-              <div className="flex flex-col items-end rounded-lg bg-gray-50 px-3 py-2 tabular-nums">
-                <span className="self-start text-xs font-medium text-gray-500">Total RCN</span>
-                <span className="text-lg font-semibold text-gray-900">
+              <div className="flex flex-col items-end rounded-lg bg-(--palette-surface-2) px-3 py-2 tabular-nums">
+                <span className="self-start text-xs font-medium text-(--palette-ink-2)">
+                  Total RCN
+                </span>
+                <span className="text-lg font-semibold text-(--palette-ink)">
                   {money(toNum(areaValue) * toNum(pricePerSqMValue))}
                 </span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-(--palette-gray-400)">
                   {money(toNum(areaValue))} m² × {money(toNum(pricePerSqMValue))} ฿/m²
                 </span>
               </div>
@@ -417,7 +423,7 @@ function DepreciationSection({
   return (
     <section className="flex flex-col gap-3 pt-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-base font-semibold text-gray-800">Depreciation</h3>
+        <h3 className="text-base font-semibold text-(--palette-ink)">Depreciation</h3>
         <FormStringToggle
           options={[
             { name: 'Gross', label: 'Gross' },
@@ -426,14 +432,14 @@ function DepreciationSection({
           name="depreciationMethod"
         />
       </div>
-      <p className="-mt-1 text-xs text-gray-500">
+      <p className="-mt-1 text-xs text-(--palette-gray-500)">
         {isGross
           ? 'One rate applied to every year of the building age.'
           : 'Different rates for different age bands.'}
       </p>
 
       {buildingYear <= 0 && rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2.5 text-sm text-gray-600">
+        <div className="rounded-lg border border-dashed border-(--palette-line-strong) bg-(--palette-surface-2) px-3 py-2.5 text-sm text-(--palette-gray-600)">
           Enter the building age first — depreciation runs from year 1 to that age.
         </div>
       ) : isGross ? (
@@ -446,17 +452,19 @@ function DepreciationSection({
                 <NumberInput
                   {...field}
                   label="Rate per year"
-                  rightIcon={<span className="text-xs text-gray-400">%/yr</span>}
+                  rightIcon={<span className="text-xs text-(--palette-gray-400)">%/yr</span>}
                   maxIntegerDigits={3}
                 />
               )}
             />
-            <div className="flex flex-col items-end rounded-lg bg-gray-50 px-3 py-2 tabular-nums">
-              <span className="self-start text-xs font-medium text-gray-500">
+            <div className="flex flex-col items-end rounded-lg bg-(--palette-surface-2) px-3 py-2 tabular-nums">
+              <span className="self-start text-xs font-medium text-(--palette-gray-500)">
                 Total depreciation
               </span>
-              <span className="text-lg font-semibold text-gray-900">{totalPct.toFixed(2)}%</span>
-              <span className="text-xs text-gray-400">
+              <span className="text-lg font-semibold text-(--palette-ink)">
+                {totalPct.toFixed(2)}%
+              </span>
+              <span className="text-xs text-(--palette-gray-400)">
                 Year {toNum(rows[0]?.atYear)}–{toNum(rows[0]?.toYear)} ×{' '}
                 {toNum(rows[0]?.depreciationPerYear).toFixed(2)}%/yr
               </span>
@@ -469,7 +477,7 @@ function DepreciationSection({
           <YearRuler rows={rows} buildingYear={buildingYear} />
           <div className="overflow-x-auto">
             <div className="min-w-[520px] text-[13px] tabular-nums">
-              <div className="grid grid-cols-[80px_80px_1fr_72px_1fr_32px] gap-2 border-b border-gray-200 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              <div className="grid grid-cols-[80px_80px_1fr_72px_1fr_32px] gap-2 border-b border-(--palette-line) pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
                 <span>At Year</span>
                 <span>To Year</span>
                 <span className="text-right">Rate / yr</span>
@@ -482,7 +490,7 @@ function DepreciationSection({
                 const rowErrors = errors[i] ?? [];
                 const invalid = rowErrors.length > 0;
                 return (
-                  <div key={field.id} className="border-b border-gray-100 py-1.5">
+                  <div key={field.id} className="border-b border-(--palette-line-soft) py-1.5">
                     <div className="grid grid-cols-[80px_80px_1fr_72px_1fr_32px] items-center gap-2">
                       {(['atYear', 'toYear'] as const).map(key => (
                         <Controller
@@ -507,14 +515,14 @@ function DepreciationSection({
                             {...f}
                             maxIntegerDigits={3}
                             className="text-right"
-                            rightIcon={<span className="text-xs text-gray-400">%</span>}
+                            rightIcon={<span className="text-xs text-(--palette-gray-400)">%</span>}
                           />
                         )}
                       />
                       <span className="text-right">
                         {toNum(row.totalDepreciationPct).toFixed(1)}%
                       </span>
-                      <span className="text-right text-orange-700">
+                      <span className="text-right text-orange-700 dark:text-orange-300">
                         {toNum(row.priceDepreciation).toLocaleString()}
                       </span>
                       {!readOnly && (
@@ -522,7 +530,7 @@ function DepreciationSection({
                           type="button"
                           onClick={() => remove(i)}
                           aria-label={`Remove period ${i + 1}`}
-                          className="flex size-7 items-center justify-center rounded-md text-gray-400 hover:bg-red-50 hover:text-red-600"
+                          className="flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-(--palette-req-wash) hover:text-(--palette-danger)"
                         >
                           <Icon style="solid" name="trash" className="size-3" />
                         </button>
@@ -537,7 +545,7 @@ function DepreciationSection({
                 <div className="grid grid-cols-[80px_80px_1fr_72px_1fr_32px] gap-2 py-2 font-semibold">
                   <span className="col-span-3">Total</span>
                   <span className="text-right">{totalPct.toFixed(1)}%</span>
-                  <span className="text-right text-orange-700">
+                  <span className="text-right text-orange-700 dark:text-orange-300">
                     ฿{totalAmount.toLocaleString()}
                   </span>
                   <span />
@@ -550,11 +558,11 @@ function DepreciationSection({
               type="button"
               onClick={addPeriod}
               disabled={!canAdd}
-              className="w-full rounded-lg border border-dashed border-gray-300 py-2 text-sm text-gray-600 hover:border-primary-500 hover:bg-primary-50 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-gray-300 disabled:hover:bg-transparent disabled:hover:text-gray-600"
+              className="w-full rounded-lg border border-dashed border-(--palette-line-strong) py-2 text-sm text-(--palette-gray-600) hover:border-primary-500 hover:bg-(--palette-accent-wash) hover:text-(--palette-accent-ink) disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:border-(--palette-line-strong) disabled:hover:bg-transparent disabled:hover:text-(--palette-gray-600)"
             >
               + Add period
               {canAdd && (
-                <span className="text-gray-400">
+                <span className="text-(--palette-gray-400)">
                   {' '}
                   from year {rows.length > 0 ? lastToYear + 1 : 1}
                 </span>
@@ -572,7 +580,7 @@ function RowErrors({ errors }: { errors: string[] }) {
   return (
     <div className="col-span-full mt-1 flex flex-col gap-0.5">
       {errors.map(err => (
-        <p key={err} className="flex items-start gap-1.5 text-xs text-red-600">
+        <p key={err} className="flex items-start gap-1.5 text-xs text-(--palette-danger)">
           <Icon
             name="circle-exclamation"
             style="solid"
@@ -615,7 +623,7 @@ function YearRuler({ rows, buildingYear }: { rows: any[]; buildingYear: number }
             className={clsx(
               'flex min-w-0 basis-0 items-center truncate px-2 text-[11px] font-semibold',
               s.rate === undefined
-                ? 'bg-[repeating-linear-gradient(135deg,#f3f4f6_0_6px,#e5e7eb_6px_8px)] text-gray-400'
+                ? 'bg-[repeating-linear-gradient(135deg,#f3f4f6_0_6px,#e5e7eb_6px_8px)] text-(--palette-gray-400)'
                 : band++ % 2 === 0
                   ? 'bg-orange-700 text-white'
                   : 'bg-orange-500 text-white',
@@ -625,12 +633,12 @@ function YearRuler({ rows, buildingYear }: { rows: any[]; buildingYear: number }
           </div>
         ))}
       </div>
-      <div className="flex justify-between text-[11px] text-gray-400">
+      <div className="flex justify-between text-[11px] text-(--palette-gray-400)">
         <span>Year 1</span>
         <span>Year {buildingYear}</span>
       </div>
       {uncovered.length > 0 && rows.length > 0 && (
-        <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
+        <p className="rounded-md bg-(--palette-warn-wash) px-3 py-2 text-xs text-amber-800 dark:text-amber-300">
           No depreciation yet for {uncovered.map(label).join(', ')}.
         </p>
       )}

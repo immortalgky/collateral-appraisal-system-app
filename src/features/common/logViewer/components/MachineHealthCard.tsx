@@ -25,14 +25,14 @@ const STATUS_ICON: Record<MetricLevel, string> = {
   bad: 'circle-xmark',
 };
 const STATUS_CLASS: Record<MetricLevel, string> = {
-  ok: 'text-green-700 bg-green-50',
-  warn: 'text-amber-700 bg-amber-50',
-  bad: 'text-red-700 bg-red-50',
+  ok: 'text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-500/10',
+  warn: 'text-(--palette-warn) bg-(--palette-warn-wash)',
+  bad: 'text-(--palette-req) bg-(--palette-req-wash)',
 };
 const KPI_BORDER_CLASS: Record<MetricLevel, string> = {
-  ok: 'border-gray-200',
-  warn: 'border-amber-300',
-  bad: 'border-red-300',
+  ok: 'border-(--palette-line)',
+  warn: 'border-amber-300 dark:border-amber-500/40',
+  bad: 'border-red-300 dark:border-red-500/40',
 };
 
 /** Icon + label, never colour alone — the pill also carries the status in text. */
@@ -58,15 +58,15 @@ const Kpi = ({ label, value, level }: { label: string; value: string; level: Met
       KPI_BORDER_CLASS[level],
     )}
   >
-    <span className="text-[11px] text-gray-500 truncate">{label}</span>
-    <span className="text-base font-semibold tabular-nums text-gray-900">{value}</span>
+    <span className="text-[11px] text-(--palette-gray-500) truncate">{label}</span>
+    <span className="text-base font-semibold tabular-nums text-(--palette-ink)">{value}</span>
     {level !== 'ok' && <StatusPill level={level} />}
   </div>
 );
 
 const Stat = ({ label, value }: { label: string; value: ReactNode }) => (
   <div className="flex justify-between gap-2">
-    <dt className="text-gray-500">{label}</dt>
+    <dt className="text-(--palette-gray-500)">{label}</dt>
     <dd className="font-medium tabular-nums">{value}</dd>
   </div>
 );
@@ -86,14 +86,14 @@ const MachineHealthCard = ({ metric, color }: MachineHealthCardProps) => {
   const isStale = now.getTime() - new Date(metric.timeStamp).getTime() > 3 * 60_000;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
+    <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+          <h3 className="flex items-center gap-2 text-base font-semibold text-(--palette-ink)">
             <span className="size-2.5 rounded-sm shrink-0" style={{ background: color }} />
             {metric.machineName}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             {t('health.startedAt', {
               time: format(new Date(metric.processStartedAt), 'd/M HH:mm'),
             })}
@@ -103,7 +103,7 @@ const MachineHealthCard = ({ metric, color }: MachineHealthCardProps) => {
               : t('health.uptimeHours', { hours: uptime.hours, minutes: uptime.minutes })}
           </p>
           {isStale && (
-            <p className="text-xs text-amber-600 mt-1">
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
               {t('health.staleWarning', { time: format(new Date(metric.timeStamp), 'HH:mm:ss') })}
             </p>
           )}
@@ -135,7 +135,7 @@ const MachineHealthCard = ({ metric, color }: MachineHealthCardProps) => {
         />
       </div>
 
-      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs border-t border-dashed border-gray-200 pt-2">
+      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-1 text-xs border-t border-dashed border-(--palette-line) pt-2">
         <Stat label={t('health.extra.workingSet')} value={formatMb(metric.workingSetMb)} />
         <Stat label={t('health.extra.gcHeap')} value={formatMb(metric.gcHeapMb)} />
         <Stat label={t('health.extra.gen2')} value={formatRate(metric.gen2PerHour)} />

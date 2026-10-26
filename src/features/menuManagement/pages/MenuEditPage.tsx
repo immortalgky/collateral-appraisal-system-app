@@ -87,7 +87,7 @@ export default function MenuEditPage() {
   if (!isNew && isLoadingItem) {
     return (
       <div className="flex items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-(--palette-line) border-t-primary" />
       </div>
     );
   }
@@ -98,12 +98,12 @@ export default function MenuEditPage() {
       <div className="flex items-center gap-3">
         <Link
           to="/admin/menus"
-          className="flex items-center justify-center w-8 h-8 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-center w-8 h-8 rounded-lg border border-(--palette-line) hover:bg-(--palette-surface-2) transition-colors"
         >
-          <Icon name="arrow-left" style="solid" className="size-4 text-gray-600" />
+          <Icon name="arrow-left" style="solid" className="size-4 text-(--palette-gray-600)" />
         </Link>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             {isNew
               ? t('editPage.titleNew')
               : t('editPage.titleEdit', {
@@ -111,12 +111,14 @@ export default function MenuEditPage() {
                 })}
           </h3>
           {!isNew && existing?.isSystem && (
-            <p className="text-xs text-amber-600 mt-0.5">{t('editPage.systemWarning')}</p>
+            <p className="text-xs text-amber-600 dark:text-amber-400 mt-0.5">
+              {t('editPage.systemWarning')}
+            </p>
           )}
         </div>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) p-6">
         <MenuItemForm
           initial={existing ?? null}
           parentOptions={parentOptions}

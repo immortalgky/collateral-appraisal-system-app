@@ -78,11 +78,11 @@ const HolderCard = ({
 
   if (closedReason) {
     return (
-      <div className="border-l-2 border-gray-200 pl-3">
-        <p className="text-[11px] uppercase tracking-[0.09em] text-gray-400">
+      <div className="border-l-2 border-(--palette-line) pl-3">
+        <p className="text-[11px] uppercase tracking-[0.09em] text-(--palette-gray-400)">
           {t('activityTracking.brief.holder.statusLabel')}
         </p>
-        <p className="mt-1 text-sm text-gray-600">{closedReason}</p>
+        <p className="mt-1 text-sm text-(--palette-gray-600)">{closedReason}</p>
       </div>
     );
   }
@@ -174,13 +174,13 @@ const HolderCard = ({
 
   return (
     <div className="border-l-2 border-primary pl-3">
-      <p className="text-[11px] uppercase tracking-[0.09em] text-gray-400">
+      <p className="text-[11px] uppercase tracking-[0.09em] text-(--palette-gray-400)">
         {t('activityTracking.brief.holder.currentLabel')}
       </p>
 
       {who ? (
         <div className="mt-1.5 flex items-center gap-2.5">
-          <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
+          <span className="grid h-8 w-8 flex-none place-items-center rounded-full bg-primary/10 text-[11px] font-bold text-(--palette-primary-text)">
             {isOrg ? (
               <Icon
                 name={isMeeting ? 'gavel' : isPool ? 'users' : 'building'}
@@ -192,37 +192,39 @@ const HolderCard = ({
             )}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-gray-900" title={whoTitle}>
+            <p className="truncate text-sm font-semibold text-(--palette-ink)" title={whoTitle}>
               {who}
-              {login && <span className="font-normal text-gray-400"> ({login})</span>}
+              {login && <span className="font-normal text-(--palette-gray-400)"> ({login})</span>}
             </p>
             {subtitle && (
-              <p className="truncate text-xs text-gray-500" title={subtitle}>
+              <p className="truncate text-xs text-(--palette-gray-500)" title={subtitle}>
                 {subtitle}
               </p>
             )}
           </div>
         </div>
       ) : (
-        <p className="mt-1.5 text-sm text-gray-400">
+        <p className="mt-1.5 text-sm text-(--palette-gray-400)">
           {pending ? '—' : t('activityTracking.brief.holder.unassigned')}
         </p>
       )}
 
       {stepLabel && (
-        <p className="mt-2 text-xs text-gray-600">
-          <span className="text-gray-400">{t('activityTracking.brief.holder.step')}</span>{' '}
+        <p className="mt-2 text-xs text-(--palette-gray-600)">
+          <span className="text-(--palette-gray-400)">
+            {t('activityTracking.brief.holder.step')}
+          </span>{' '}
           {stepLabel}
         </p>
       )}
       {holder?.heldSince && (
-        <p className="text-xs text-gray-400">{heldSinceText(t, holder.heldSince)}</p>
+        <p className="text-xs text-(--palette-gray-400)">{heldSinceText(t, holder.heldSince)}</p>
       )}
 
       {/* A committee step fans out to several reviewers at once. Naming only the latest without
           saying so would read as "one person is sitting on this", which is not what happened. */}
       {!!holder && holder.pendingCount > 1 && (
-        <p className="mt-1 text-xs text-gray-500">
+        <p className="mt-1 text-xs text-(--palette-gray-500)">
           {t('activityTracking.brief.holder.committeeReviewers', { count: holder.pendingCount })}
         </p>
       )}
@@ -234,17 +236,25 @@ const HolderCard = ({
               number — a tap that dials the wrong place is worse than no tap. Email stays a link:
               mailto has no such ambiguity. */}
           {phone && (
-            <span className="inline-flex items-center gap-1.5 text-xs text-gray-600">
-              <Icon name="phone" style="solid" className="h-3 w-3 flex-none text-gray-400" />
+            <span className="inline-flex items-center gap-1.5 text-xs text-(--palette-gray-600)">
+              <Icon
+                name="phone"
+                style="solid"
+                className="h-3 w-3 flex-none text-(--palette-gray-400)"
+              />
               <span className="truncate">{phone}</span>
             </span>
           )}
           {email && (
             <a
               href={`mailto:${email}`}
-              className="inline-flex items-center gap-1.5 text-xs text-gray-600 hover:text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs text-(--palette-gray-600) hover:text-(--palette-primary-text) hover:underline"
             >
-              <Icon name="envelope" style="solid" className="h-3 w-3 flex-none text-gray-400" />
+              <Icon
+                name="envelope"
+                style="solid"
+                className="h-3 w-3 flex-none text-(--palette-gray-400)"
+              />
               <span className="truncate">{email}</span>
             </a>
           )}
@@ -255,9 +265,13 @@ const HolderCard = ({
               href={teamsChatUrl(holder.email)}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-primary hover:underline"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-(--palette-gray-600) hover:text-(--palette-primary-text) hover:underline"
             >
-              <Icon name="comments" style="solid" className="h-3 w-3 flex-none text-gray-400" />
+              <Icon
+                name="comments"
+                style="solid"
+                className="h-3 w-3 flex-none text-(--palette-gray-400)"
+              />
               <span>{t('activityTracking.brief.holder.teamsChat')}</span>
             </a>
           )}

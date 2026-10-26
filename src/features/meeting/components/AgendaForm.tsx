@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 import Button from '@/shared/components/Button';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { type UpdateAgendaFormValues, useUpdateAgendaSchema } from '../schemas/meeting';
 import { useUpdateMeetingAgenda } from '../api/meetings';
 
@@ -65,7 +66,7 @@ const AgendaForm = ({
       <div>
         <label
           htmlFor="agenda-certifyMinutes"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-(--palette-ink) mb-1"
         >
           {certifyLabel}
         </label>
@@ -74,18 +75,20 @@ const AgendaForm = ({
           rows={3}
           {...register('agendaCertifyMinutes')}
           disabled={!editable}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-500)"
           placeholder={t('fields.agendaCertifyMinutesPlaceholder')}
         />
         {errors.agendaCertifyMinutes && (
-          <p className="mt-1 text-xs text-red-600">{errors.agendaCertifyMinutes.message}</p>
+          <p className="mt-1 text-xs text-(--palette-danger)">
+            <ValidationText message={errors.agendaCertifyMinutes.message} />
+          </p>
         )}
       </div>
 
       <div>
         <label
           htmlFor="agenda-chairmanInformed"
-          className="block text-sm font-medium text-gray-700 mb-1"
+          className="block text-sm font-medium text-(--palette-ink) mb-1"
         >
           {t('fields.agendaChairmanInformed')}
         </label>
@@ -94,16 +97,21 @@ const AgendaForm = ({
           rows={3}
           {...register('agendaChairmanInformed')}
           disabled={!editable}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-500)"
           placeholder={t('fields.agendaChairmanInformedPlaceholder')}
         />
         {errors.agendaChairmanInformed && (
-          <p className="mt-1 text-xs text-red-600">{errors.agendaChairmanInformed.message}</p>
+          <p className="mt-1 text-xs text-(--palette-danger)">
+            <ValidationText message={errors.agendaChairmanInformed.message} />
+          </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="agenda-others" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="agenda-others"
+          className="block text-sm font-medium text-(--palette-ink) mb-1"
+        >
           {t('fields.agendaOthers')}
         </label>
         <textarea
@@ -111,11 +119,13 @@ const AgendaForm = ({
           rows={3}
           {...register('agendaOthers')}
           disabled={!editable}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+          className="w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-500)"
           placeholder={t('fields.agendaOthersPlaceholder')}
         />
         {errors.agendaOthers && (
-          <p className="mt-1 text-xs text-red-600">{errors.agendaOthers.message}</p>
+          <p className="mt-1 text-xs text-(--palette-danger)">
+            <ValidationText message={errors.agendaOthers.message} />
+          </p>
         )}
       </div>
 

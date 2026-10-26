@@ -1,4 +1,5 @@
 import CheckboxGroup, { type CheckboxOption } from './CheckboxGroup';
+import type { OtherSpec } from './OtherText';
 import type { AtLeastOne } from '@/shared/types';
 
 type GroupOrOptions = AtLeastOne<{ group: string; options: CheckboxOption[] }>;
@@ -15,6 +16,7 @@ interface FormCheckboxGroupBaseProps {
   orientation?: 'horizontal' | 'vertical';
   /** Visual variant for checkbox group */
   variant?: 'tag' | 'chip' | 'button';
+  other?: OtherSpec;
 }
 
 /**
@@ -29,6 +31,7 @@ const FormCheckboxGroup = ({
   wrap,
   size,
   variant,
+  other,
   ...groupOrOptions
 }: FormCheckboxGroupProps) => {
   return (
@@ -40,6 +43,7 @@ const FormCheckboxGroup = ({
       wrap={wrap}
       size={size}
       variant={variant}
+      other={other}
       {...groupOrOptions}
     />
   );

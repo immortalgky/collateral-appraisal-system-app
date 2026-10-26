@@ -136,13 +136,7 @@ function useRowComputedValues(rowIndex: number) {
   };
 }
 
-function MachineryRow({
-  rowIndex,
-  isReadOnly,
-}: {
-  rowIndex: number;
-  isReadOnly: boolean;
-}) {
+function MachineryRow({ rowIndex, isReadOnly }: { rowIndex: number; isReadOnly: boolean }) {
   const { getValues } = useFormContext();
   const { t } = useTranslation('pricingAnalysis');
   const {
@@ -164,7 +158,8 @@ function MachineryRow({
   const machine: MachineryItem = getValues(`machineryCosts.${rowIndex}.machine`) ?? {};
   const inputDisabled = isRowLocked || isReadOnly;
 
-  const tdBase = 'px-[8px] py-0 h-[26px] border-b border-r border-gray-300 whitespace-nowrap';
+  const tdBase =
+    'px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong) whitespace-nowrap';
   // N/n/R/C/P/F/E deliberately carry no width. mock:1857's th2() emits a plain
   // `class="c two"`, and mock:147-148's `.g .w1` is the WQS grid's sticky-column rule
   // (position/left/padding — no width in it at all), so the 56px these cells used to
@@ -185,7 +180,7 @@ function MachineryRow({
   // (`group-data-[scrolled=true]`), same mechanism as ComparativeFactorTable.tsx — not
   // a border, and not the older `.pa-sticky-edge` global-CSS route.
   const stickyName =
-    'sticky left-0 z-10 bg-white w-[190px] min-w-[190px] max-w-[190px] overflow-hidden text-ellipsis ' +
+    'sticky left-0 z-10 bg-(--palette-surface) w-[190px] min-w-[190px] max-w-[190px] overflow-hidden text-ellipsis ' +
     'shadow-[1px_0_0_#e3e9e8] transition-shadow duration-150 group-data-[scrolled=true]:shadow-[1px_0_0_#e3e9e8,6px_0_8px_-4px_rgba(16,24,32,0.22)]';
 
   return (
@@ -195,7 +190,9 @@ function MachineryRow({
       <td className={clsx(tdBase, stickyName)} title={machine.machineName ?? '-'}>
         {rowIndex + 1}. {machine.machineName}
       </td>
-      <td className={clsx(tdBase, 'text-center bg-white')}>{machine.quantity ?? 0}</td>
+      <td className={clsx(tdBase, 'text-center bg-(--palette-surface)')}>
+        {machine.quantity ?? 0}
+      </td>
       <td className={clsx(tdBase, 'min-w-[70px]')}>{machine.registrationNumber}</td>
       {/* "Country of Manufacturer" holds a Country parameter code (TH, JP, …). Print the code
           alongside its description so the cell still matches what the form stores while reading
@@ -207,7 +204,9 @@ function MachineryRow({
         <span
           className={clsx(
             'px-2 py-0.5 rounded-full text-xs font-medium',
-            isDisabled ? 'bg-gray-100 text-gray-500' : 'bg-emerald-50 text-emerald-700',
+            isDisabled
+              ? 'bg-(--palette-surface-3) text-(--palette-gray-500)'
+              : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
           )}
         >
           <ParameterDisplay group="ConditionUse" code={machine.conditionUse} />
@@ -219,7 +218,7 @@ function MachineryRow({
             table is the one place a hardcoded string would have gone unnoticed, since every other
             label in it is an English literal. */}
         {isRowLocked && !isDisabled && (
-          <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+          <span className="mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-medium bg-(--palette-warn-wash) text-(--palette-warn)">
             {t('costMachine.notPriceCertified')}
           </span>
         )}
@@ -233,7 +232,7 @@ function MachineryRow({
           supersedes it. Creating a reference for a machine that has none is deferred to a later
           phase, so this cell is plain input only. Do not put the button back; it takes the dead
           right padding it used to need with it. */}
-      <td className="px-[8px] py-0 h-[26px] border-b border-r border-gray-300">
+      <td className="px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong)">
         <RHFInputCell
           fieldName={costMachinePath.rcn(rowIndex)}
           inputType="number"
@@ -242,7 +241,7 @@ function MachineryRow({
         />
       </td>
 
-      <td className="px-[8px] py-0 h-[26px] border-b border-r border-gray-300">
+      <td className="px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong)">
         <RHFInputCell
           fieldName={costMachinePath.lifeSpan(rowIndex)}
           inputType="number"
@@ -252,7 +251,7 @@ function MachineryRow({
         />
       </td>
 
-      <td className={clsx(tdBase, 'text-right font-medium text-gray-700')}>
+      <td className={clsx(tdBase, 'text-right font-medium text-(--palette-ink)')}>
         {durationInUse}
       </td>
 
@@ -260,13 +259,13 @@ function MachineryRow({
         className={clsx(
           tdBase,
           'text-right font-medium',
-          isResidualBelowMin ? 'text-red-500' : 'text-gray-700',
+          isResidualBelowMin ? 'text-red-500' : 'text-(--palette-ink)',
         )}
       >
         {residualLifeSpan}
       </td>
 
-      <td className="px-[8px] py-0 h-[26px] border-b border-r border-gray-300">
+      <td className="px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong)">
         <RHFInputCell
           fieldName={costMachinePath.conditionFactor(rowIndex)}
           inputType="number"
@@ -276,11 +275,11 @@ function MachineryRow({
         />
       </td>
 
-      <td className={clsx(tdBase, 'text-right font-medium text-gray-700')}>
+      <td className={clsx(tdBase, 'text-right font-medium text-(--palette-ink)')}>
         {physicalDeterioration.toLocaleString(undefined, { maximumFractionDigits: 2 })}
       </td>
 
-      <td className="px-[8px] py-0 h-[26px] border-b border-r border-gray-300">
+      <td className="px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong)">
         <RHFInputCell
           fieldName={costMachinePath.functionalObsolescence(rowIndex)}
           inputType="number"
@@ -290,7 +289,7 @@ function MachineryRow({
         />
       </td>
 
-      <td className="px-[8px] py-0 h-[26px] border-b border-r border-gray-300">
+      <td className="px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong)">
         <RHFInputCell
           fieldName={costMachinePath.economicObsolescence(rowIndex)}
           inputType="number"
@@ -300,7 +299,7 @@ function MachineryRow({
         />
       </td>
 
-      <td className={clsx(tdBase, 'text-right font-semibold text-gray-800')}>
+      <td className={clsx(tdBase, 'text-right font-semibold text-(--palette-ink)')}>
         {fmv.toLocaleString(undefined, { maximumFractionDigits: 2 })}
       </td>
 
@@ -308,14 +307,16 @@ function MachineryRow({
         <span
           className={clsx(
             'inline-flex items-center justify-center size-6 rounded-full text-xs font-bold',
-            marketDemand === 'Y' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500',
+            marketDemand === 'Y'
+              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300'
+              : 'bg-(--palette-surface-3) text-(--palette-gray-500)',
           )}
         >
           {marketDemand}
         </span>
       </td>
 
-      <td className="px-[8px] py-0 h-[26px] border-b border-r border-gray-300">
+      <td className="px-[8px] py-0 h-[26px] border-b border-r border-(--palette-line-strong)">
         {/* Deliberately NOT locked with the rest of the row. The lock says "this machine is not
             being valued", which is a statement about money, not about whether anyone may write
             down why. An appraiser still needs to record what they found on a machine they are not
@@ -331,7 +332,7 @@ function MachineryRow({
 // doesn't override it, which silently doubles the row height; the leading on <thead> and
 // on the <table> carries the vertical rhythm instead.
 const th =
-  'bg-gray-50 border-b border-r border-gray-300 text-[12px] font-medium text-gray-700 px-[8px] py-0 whitespace-nowrap';
+  'bg-(--palette-surface-2) border-b border-r border-(--palette-line-strong) text-[12px] font-medium text-(--palette-ink) px-[8px] py-0 whitespace-nowrap';
 const thCenter = clsx(th, 'text-center');
 // mock:268 `.g th.two` — a header cell that carries a sub-label drops to 14px leading with
 // 4px above and below, so the pair measures 4 + 14 + 12 + 4 = 34px. Without it the first
@@ -342,7 +343,7 @@ const thTwo = 'leading-[14px] py-[4px]';
 // 400, in --ink-3. Spelled as a hex because Tailwind v4's palette is OKLCH, so no colour
 // name lands on the mock's value. Being a block is also what replaces the <br> that used
 // to split these labels.
-const thSub = 'block text-[10px] leading-[12px] font-normal text-[#8a96a0]';
+const thSub = 'block text-[10px] leading-[12px] font-normal text-(--palette-ink-3)';
 // N/n/R/C/P/F/E declare no width, here or in the body — the mock sizes them to content
 // (see the note in MachineryRow). A 56px cap here clipped "Duration in Use" and "Residual
 // Life" across the next column's border, so do not reintroduce one. These sub-labels are
@@ -352,7 +353,7 @@ const thSub = 'block text-[10px] leading-[12px] font-normal text-[#8a96a0]';
 // Header twin of MachineryRow's `stickyName` — same 190px/ellipsis/shadow shape, kept in
 // sync with that copy rather than shared to avoid a cross-component import for one string.
 const stickyName =
-  'sticky left-0 z-10 bg-gray-50 w-[190px] min-w-[190px] max-w-[190px] overflow-hidden text-ellipsis ' +
+  'sticky left-0 z-10 bg-(--palette-surface-2) w-[190px] min-w-[190px] max-w-[190px] overflow-hidden text-ellipsis ' +
   'shadow-[1px_0_0_#e3e9e8] transition-shadow duration-150 group-data-[scrolled=true]:shadow-[1px_0_0_#e3e9e8,6px_0_8px_-4px_rgba(16,24,32,0.22)]';
 
 /**
@@ -366,7 +367,7 @@ const stickyName =
  */
 function MachineryTableHead({ rcnAction }: { rcnAction?: ReactNode }) {
   return (
-    <thead className="bg-neutral-50 leading-[26px]">
+    <thead className="bg-(--palette-surface-2) leading-[26px]">
       <tr>
         {/* Machinery Name (with the row number folded in, mock:1869) and Qty sit beside
             "Machinery Information" rather than inside it — mock:1859. */}
@@ -501,7 +502,7 @@ export function CostMachineSection({
       <button
         type="button"
         onClick={() => setIsBulkOpen(true)}
-        className="mt-[3px] ml-auto flex items-center gap-[3px] rounded-[5px] border border-[#99f6e4] bg-[#f0fdfa] px-[6px] py-0 text-[10px] leading-[16px] font-medium text-[#0f766e] transition-colors hover:border-[#5eead4] hover:bg-[#ccfbf1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+        className="mt-[3px] ml-auto flex items-center gap-[3px] rounded-[5px] border border-(--palette-accent-line) bg-(--palette-accent-wash) px-[6px] py-0 text-[10px] leading-[16px] font-medium text-(--palette-accent-ink) transition-colors hover:border-[#5eead4] hover:bg-[#ccfbf1] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         title={t('marketRef.bulk.headerButton')}
       >
         <Icon name="link" style="solid" className="size-[10px]" />
@@ -523,7 +524,7 @@ export function CostMachineSection({
     return (
       // No rounded corners — matches the mock's calc-tab tables (measured 0px, both
       // wrapper and table).
-      <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 overflow-hidden">
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) flex flex-col border border-(--palette-line-strong) overflow-hidden">
         <ScrollableTableContainer className="flex-1 min-h-0" edgeShadow>
           <table className="table min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums rounded-none">
             <MachineryTableHead />
@@ -531,7 +532,10 @@ export function CostMachineSection({
               {Array.from({ length: 3 }).map((_, i) => (
                 <tr key={i} className="animate-pulse">
                   {Array.from({ length: 17 }).map((_, j) => (
-                    <td key={j} className="border-b border-r border-gray-300 px-[8px] py-0 h-[26px]">
+                    <td
+                      key={j}
+                      className="border-b border-r border-(--palette-line-strong) px-[8px] py-0 h-[26px]"
+                    >
                       <Skeleton className="h-4 w-full" />
                     </td>
                   ))}
@@ -546,55 +550,55 @@ export function CostMachineSection({
 
   return (
     <DenseProvider value={true}>
-    {/* No rounded corners — matches the mock's calc-tab tables (measured 0px, both
+      {/* No rounded corners — matches the mock's calc-tab tables (measured 0px, both
         wrapper and table). */}
-    <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-300 overflow-hidden">
-      <ScrollableTableContainer className="flex-1 min-h-0" edgeShadow>
-        <table className="table min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums rounded-none">
-          <MachineryTableHead rcnAction={bulkButton} />
-          <tbody className="divide-y divide-gray-100">
-            {fields.map((_field, rowIndex) => (
-              <MachineryRow key={_field.id} rowIndex={rowIndex} isReadOnly={isReadOnly} />
-            ))}
-            {fields.length === 0 && (
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) flex flex-col border border-(--palette-line-strong) overflow-hidden">
+        <ScrollableTableContainer className="flex-1 min-h-0" edgeShadow>
+          <table className="table min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums rounded-none">
+            <MachineryTableHead rcnAction={bulkButton} />
+            <tbody className="divide-y divide-(--palette-line-soft)">
+              {fields.map((_field, rowIndex) => (
+                <MachineryRow key={_field.id} rowIndex={rowIndex} isReadOnly={isReadOnly} />
+              ))}
+              {fields.length === 0 && (
+                <tr>
+                  <td colSpan={17} className="py-10 text-center text-sm text-(--palette-ink-2)">
+                    No data.
+                  </td>
+                </tr>
+              )}
               <tr>
-                <td colSpan={17} className="py-10 text-center text-sm text-gray-400">
-                  No data.
+                <td colSpan={1} className={clsx(thCenter, stickyName)}>
+                  Total
                 </td>
-              </tr>
-            )}
-            <tr>
-              <td colSpan={1} className={clsx(thCenter, stickyName)}>
-                Total
-              </td>
-              {/* No min-width: the header above dropped its own (mock:1859 has none on
+                {/* No min-width: the header above dropped its own (mock:1859 has none on
                   Qty), and leaving 8rem here would have pinned the column at 104px anyway
                   and made that removal inert. */}
-              <td colSpan={1} className={thCenter}>
-                {totalQuantity.toLocaleString()}
-              </td>
-              <td colSpan={4} className={clsx(thCenter, 'min-w-32')}></td>
-              <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
-                {totalRcn.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-              </td>
-              <td colSpan={7} className={clsx(thCenter, 'min-w-32')}></td>
-              <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
-                {totalFmv.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-              </td>
-              <td colSpan={2} className={clsx(thCenter, 'min-w-32')}></td>
-            </tr>
-          </tbody>
-        </table>
-      </ScrollableTableContainer>
-      {bulkButton && (
-        <BulkRcnReferenceDialog
-          isOpen={isBulkOpen}
-          onClose={() => setIsBulkOpen(false)}
-          rows={bulkRows}
-          onApply={handleBulkApply}
-        />
-      )}
-    </div>
+                <td colSpan={1} className={thCenter}>
+                  {totalQuantity.toLocaleString()}
+                </td>
+                <td colSpan={4} className={clsx(thCenter, 'min-w-32')}></td>
+                <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
+                  {totalRcn.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </td>
+                <td colSpan={7} className={clsx(thCenter, 'min-w-32')}></td>
+                <td colSpan={1} className={clsx(thCenter, 'min-w-32')}>
+                  {totalFmv.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </td>
+                <td colSpan={2} className={clsx(thCenter, 'min-w-32')}></td>
+              </tr>
+            </tbody>
+          </table>
+        </ScrollableTableContainer>
+        {bulkButton && (
+          <BulkRcnReferenceDialog
+            isOpen={isBulkOpen}
+            onClose={() => setIsBulkOpen(false)}
+            rows={bulkRows}
+            onApply={handleBulkApply}
+          />
+        )}
+      </div>
     </DenseProvider>
   );
 }

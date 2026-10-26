@@ -67,16 +67,16 @@ const ProjectSummary = ({ project }: ProjectSummaryProps) => {
   ].filter(Boolean);
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-lg bg-gray-50 px-3 py-2.5 ring-1 ring-gray-200">
+    <div className="flex items-center justify-between gap-4 rounded-lg bg-(--palette-surface-2) px-3 py-2.5 ring-1 ring-(--palette-line)">
       <div className="flex min-w-0 items-center gap-2.5">
-        <span className="grid h-7 w-7 flex-none place-items-center rounded-md bg-white text-amber-600 ring-1 ring-gray-200">
+        <span className="grid h-7 w-7 flex-none place-items-center rounded-md bg-(--palette-surface) text-amber-600 dark:text-amber-400 ring-1 ring-(--palette-line)">
           <Icon name={icon.name} style={icon.style} className="h-3.5 w-3.5" />
         </span>
         <div className="min-w-0">
-          <span className="block truncate text-sm font-medium text-gray-900">
+          <span className="block truncate text-sm font-medium text-(--palette-ink)">
             {project.projectName || t('activityTracking.brief.collateral.project')}
             {project.projectType && (
-              <span className="ml-2 text-xs font-normal text-gray-500">
+              <span className="ml-2 text-xs font-normal text-(--palette-gray-500)">
                 <ParameterDisplay
                   group="PropertyType"
                   code={project.projectType}
@@ -86,7 +86,7 @@ const ProjectSummary = ({ project }: ProjectSummaryProps) => {
             )}
           </span>
           {facts.length > 0 && (
-            <p className="truncate text-xs text-gray-500">{facts.join(' · ')}</p>
+            <p className="truncate text-xs text-(--palette-gray-500)">{facts.join(' · ')}</p>
           )}
         </div>
       </div>
@@ -97,7 +97,7 @@ const ProjectSummary = ({ project }: ProjectSummaryProps) => {
           "ยูนิต" is condominium language. A housing estate is counted in หลัง,
           and the row was saying "3 ยูนิต" beside a fact line reading "3 หลัง". */}
       {!!(project.unitForSaleCount ?? project.unitCount) && (
-        <span className="flex-none rounded-full bg-white px-2.5 py-1 text-xs font-semibold tabular-nums text-gray-600 ring-1 ring-gray-200">
+        <span className="flex-none rounded-full bg-(--palette-surface) px-2.5 py-1 text-xs font-semibold tabular-nums text-(--palette-gray-600) ring-1 ring-(--palette-line)">
           {t(
             project.towerCount > 0
               ? 'activityTracking.brief.collateral.unitsOrHouses_unit'

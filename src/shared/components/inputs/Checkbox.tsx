@@ -3,6 +3,8 @@ import clsx from 'clsx';
 import type { ReactNode } from 'react';
 import Icon from '../Icon';
 import { useFormReadOnly } from '../form/context';
+import { ValidationText } from '../form/ValidationText';
+import { ERROR_TEXT } from './controlStyles';
 
 interface CheckboxProps {
   checked?: boolean;
@@ -65,9 +67,9 @@ const Checkbox = ({
           className={clsx(
             'group relative flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-200',
             isDisabled
-              ? 'cursor-not-allowed bg-gray-50 border-gray-200'
-              : 'cursor-pointer border-gray-200 hover:border-gray-400 hover:bg-gray-50/50',
-            'data-checked:border-primary data-checked:bg-primary/5',
+              ? 'cursor-not-allowed bg-(--palette-surface-2) border-(--palette-line)'
+              : 'cursor-pointer border-(--palette-line) hover:border-(--palette-input-edge-hover) hover:bg-(--palette-surface-2)',
+            'data-checked:border-primary data-checked:bg-(--palette-accent-wash)',
             error && 'border-danger',
           )}
         >
@@ -77,9 +79,9 @@ const Checkbox = ({
               'flex items-center justify-center rounded-md border-2 transition-all duration-200 shrink-0',
               sizeStyles[size],
               isDisabled
-                ? 'bg-gray-100 border-gray-300'
-                : 'border-gray-300 group-hover:border-primary/40',
-              'group-data-checked:bg-primary group-data-checked:border-primary',
+                ? 'bg-(--palette-surface-3) border-(--palette-line-strong)'
+                : 'border-(--palette-input-edge-hover) group-hover:border-primary-600',
+              'group-data-checked:bg-primary-700 group-data-checked:border-primary-700',
             )}
           >
             <Icon
@@ -99,21 +101,27 @@ const Checkbox = ({
                 <Label
                   className={clsx(
                     'text-sm font-medium select-none',
-                    isDisabled ? 'text-gray-400' : 'text-gray-700',
+                    isDisabled ? 'text-(--palette-gray-400)' : 'text-(--palette-ink)',
                   )}
                 >
                   {label}
                 </Label>
               )}
               {description && (
-                <Description className="text-xs text-gray-500 mt-0.5">{description}</Description>
+                <Description className="text-xs text-(--palette-gray-500) mt-0.5">
+                  {description}
+                </Description>
               )}
               {children}
             </div>
           )}
         </HeadlessCheckbox>
 
-        {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+        {error && (
+          <p className={clsx('mt-1', ERROR_TEXT)}>
+            <ValidationText message={error} label={label} />
+          </p>
+        )}
       </Field>
     );
   }
@@ -128,21 +136,22 @@ const Checkbox = ({
         disabled={isDisabled}
         name={name}
         value={value}
-        className={clsx(
-          'group flex items-center gap-2.5',
-          !isDisabled && 'cursor-pointer',
-        )}
+        className={clsx('group flex items-center gap-2.5', !isDisabled && 'cursor-pointer')}
       >
         <span
           className={clsx(
             'flex items-center justify-center rounded-md border-2 transition-all duration-150 shrink-0',
             sizeStyles[size],
+            // Focus is the global outline on the row (section 6); the box only shows state.
+            error
+              ? 'border-danger'
+              : isDisabled
+                ? 'border-(--palette-line)'
+                : 'border-(--palette-input-edge-hover) group-hover:border-primary-600',
+            isDisabled ? 'bg-(--palette-surface-2)' : 'bg-(--form-input-bg)',
             isDisabled
-              ? 'bg-gray-100 border-gray-300'
-              : 'border-gray-300 group-hover:border-primary/40',
-            'group-data-checked:bg-primary group-data-checked:border-primary',
-            'group-focus:ring-2 group-focus:ring-primary/20 group-focus:ring-offset-1',
-            error && 'border-danger',
+              ? 'group-data-checked:bg-gray-500 group-data-checked:border-gray-500'
+              : 'group-data-checked:bg-primary-700 group-data-checked:border-primary-700',
           )}
         >
           <Icon
@@ -161,22 +170,28 @@ const Checkbox = ({
             {label && (
               <span
                 className={clsx(
-                  'text-sm font-medium select-none leading-tight',
-                  isDisabled ? 'text-gray-400' : 'text-gray-700 group-hover:text-gray-900',
+                  'text-sm font-medium select-none leading-normal',
+                  isDisabled ? 'text-(--palette-gray-400)' : 'text-(--palette-ink)',
                 )}
               >
                 {label}
               </span>
             )}
             {description && (
-              <Description className="text-xs text-gray-500 mt-0.5">{description}</Description>
+              <Description className="text-xs text-(--palette-gray-500) mt-0.5">
+                {description}
+              </Description>
             )}
             {children}
           </div>
         )}
       </HeadlessCheckbox>
 
-      {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+      {error && (
+        <p className={clsx('mt-1', ERROR_TEXT)}>
+          <ValidationText message={error} label={label} />
+        </p>
+      )}
     </Field>
   );
 };

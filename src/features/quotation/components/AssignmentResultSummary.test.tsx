@@ -531,6 +531,40 @@ describe('AssignmentResultSummary', () => {
       ).not.toBeInTheDocument();
     });
 
+    it('shows the missing base fee reason by code, in English and Thai', async () => {
+      const failed = (
+        <Summary
+          appraisals={[
+            appraisal('a1', {
+              autoAssignResult: 'Failed',
+              autoAssignReasonCode: 'feeBaseMissing',
+              autoAssignMessage: 'Fee base is missing',
+            }),
+          ]}
+          winnerItems={winnerItems}
+        />
+      );
+      const { unmount } = render(failed);
+      expect(
+        within(rowFor('N-a1')).getByText('No base fee (01) — set the fee before assigning'),
+      ).toBeInTheDocument();
+      expect(within(rowFor('N-a1')).queryByText('Fee base is missing')).not.toBeInTheDocument();
+      unmount();
+
+      await i18n.loadNamespaces('quotation');
+      await i18n.changeLanguage('th');
+      try {
+        render(failed);
+        expect(
+          within(rowFor('N-a1')).getByText(
+            'ไม่มีค่าประเมิน (01) — ต้องกำหนดยอดค่าธรรมเนียมก่อนมอบหมาย',
+          ),
+        ).toBeInTheDocument();
+      } finally {
+        await i18n.changeLanguage('en');
+      }
+    });
+
     it('reads in Thai in a Thai UI', async () => {
       // Same order as TitleTable.deedColumn.test: register the namespace, then switch, so the
       // Thai bundle is loaded before render and nothing suspends.

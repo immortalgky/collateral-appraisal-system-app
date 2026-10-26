@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import Icon from '@/shared/components/Icon';
 import { useGetDocumentTypes, getDocumentTypeName } from '@/features/request/api/documentTypes';
 import { useAuthStore } from '@/features/auth/store';
@@ -13,7 +14,7 @@ import { useGetFollowupById } from '../hooks/useGetFollowupById';
 import { useCancelFollowup } from '../hooks/useCancelFollowup';
 import { useCancelLineItem } from '../hooks/useCancelLineItem';
 import { LineItemStatusBadge } from './LineItemStatusBadge';
-import { makeCancelWithReasonSchema, type CancelWithReasonFormValues } from '../schemas/followup';
+import { cancelWithReasonSchema, type CancelWithReasonFormValues } from '../schemas/followup';
 
 const formatRaisedAt = (d: string) => {
   try {
@@ -53,7 +54,7 @@ function CancelReasonModal({
     reset,
     formState: { errors },
   } = useForm<CancelWithReasonFormValues>({
-    resolver: zodResolver(makeCancelWithReasonSchema(t)),
+    resolver: zodResolver(cancelWithReasonSchema),
   });
 
   const handleClose = () => {
@@ -65,13 +66,13 @@ function CancelReasonModal({
 
   return createPortal(
     <div className="modal modal-open z-[70]" role="dialog" aria-modal="true">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-sm">
+      <div className="modal-box bg-(--palette-surface) rounded-2xl shadow-xl max-w-sm">
         <div className="flex flex-col">
-          <div className="w-14 h-14 rounded-full bg-amber-50 flex items-center justify-center mb-4 mx-auto">
+          <div className="w-14 h-14 rounded-full bg-(--palette-warn-wash) flex items-center justify-center mb-4 mx-auto">
             <Icon name="circle-exclamation" style="solid" className="size-7 text-amber-500" />
           </div>
-          <h3 className="font-semibold text-base text-gray-900 mb-1 text-center">{title}</h3>
-          <p className="text-sm text-gray-500 mb-4 text-center">
+          <h3 className="font-semibold text-base text-(--palette-ink) mb-1 text-center">{title}</h3>
+          <p className="text-sm text-(--palette-gray-500) mb-4 text-center">
             {t('cancelReasonModal.cancelReasonSubtitle')}
           </p>
           <form onSubmit={handleSubmit(values => onConfirm(values.reason))} noValidate>
@@ -80,16 +81,20 @@ function CancelReasonModal({
                 {...register('reason')}
                 rows={3}
                 placeholder={t('cancelReasonModal.reasonPlaceholder')}
-                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
+                className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none resize-none"
               />
-              {errors.reason && <p className="text-xs text-danger mt-1">{errors.reason.message}</p>}
+              {errors.reason && (
+                <p className="text-xs text-danger mt-1">
+                  <ValidationText message={errors.reason.message} />
+                </p>
+              )}
             </div>
             <div className="flex gap-3">
               <button
                 type="button"
                 onClick={handleClose}
                 disabled={isPending}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) font-medium rounded-xl transition-colors disabled:opacity-50"
               >
                 {t('common:actions.back')}
               </button>
@@ -145,7 +150,7 @@ function FollowupDetail({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-2 text-sm text-gray-400">
+      <div className="flex items-center gap-2 py-2 text-sm text-(--palette-gray-400)">
         <Icon name="spinner" style="solid" className="size-4 animate-spin" />
         {t('banner.loadingDetails')}
       </div>
@@ -183,7 +188,7 @@ function FollowupDetail({
   return (
     <div>
       {(showMeta || isRaisingUser) && (
-        <div className="mb-1 flex items-center justify-between gap-3 text-xs text-gray-500">
+        <div className="mb-1 flex items-center justify-between gap-3 text-xs text-(--palette-gray-500)">
           <span>
             {showMeta &&
               t('banner.byAt', { name: raisedByLabel, at: formatRaisedAt(followup.raisedAt) })}
@@ -209,12 +214,12 @@ function FollowupDetail({
             className="grid grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5"
           >
             <span className="min-w-0 truncate">
-              <b className="font-semibold text-gray-800">
+              <b className="font-semibold text-(--palette-ink)">
                 {getDocumentTypeName(documentTypes, item.documentType)}
               </b>{' '}
-              <span className="text-xs text-gray-400">{item.documentType}</span>
+              <span className="text-xs text-(--palette-gray-400)">{item.documentType}</span>
             </span>
-            <span className="min-w-0 text-gray-600">
+            <span className="min-w-0 text-(--palette-gray-600)">
               <span className="line-clamp-2">{item.notes}</span>
               {(item.status === 'Declined' || item.status === 'Cancelled') && item.reason && (
                 <span className="block text-danger">
@@ -229,7 +234,7 @@ function FollowupDetail({
                 <button
                   type="button"
                   onClick={() => setCancelLineItemTarget(item.id)}
-                  className="text-primary hover:underline"
+                  className="text-(--palette-primary-text) hover:underline"
                   title={t('aria.cancelLineItem')}
                 >
                   {t('banner.cancelItem')}
@@ -289,9 +294,11 @@ export function OpenFollowupBanner({ raisingTaskId, compact = false }: OpenFollo
   return (
     <div
       role="status"
-      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs text-gray-700"
+      className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-1.5 text-xs text-(--palette-ink)"
     >
-      <b className="font-semibold text-amber-700">{t('banner.count', { n: totalPending })}</b>
+      <b className="font-semibold text-(--palette-warn)">
+        {t('banner.count', { n: totalPending })}
+      </b>
       <span>
         {t('banner.waiting')}
         {only && ` · ${t('banner.byAt', { name: onlyBy, at: formatRaisedAt(only.raisedAt) })}`}
@@ -300,14 +307,14 @@ export function OpenFollowupBanner({ raisingTaskId, compact = false }: OpenFollo
         type="button"
         onClick={() => setExpanded(p => !p)}
         aria-expanded={expanded}
-        className="font-medium text-primary hover:underline"
+        className="font-medium text-(--palette-primary-text) hover:underline"
       >
         {expanded ? t('banner.hide') : t('banner.show')}
       </button>
 
       {/* Expandable details */}
       {expanded && (
-        <div className="grid w-full gap-3 border-t border-amber-200 pt-1.5">
+        <div className="grid w-full gap-3 border-t border-amber-200 dark:border-amber-500/30 pt-1.5">
           {openFollowups.map(f => (
             <FollowupDetail
               key={f.id}

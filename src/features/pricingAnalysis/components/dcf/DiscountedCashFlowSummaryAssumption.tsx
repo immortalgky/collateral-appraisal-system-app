@@ -8,7 +8,11 @@ import { DiscountedCashFlowModalRenderer } from './DiscountedCashFlowMethodModal
 import { MethodSpecifiedRoomIncomePerDaySummary } from './dcfMethods/MethodSpecifiedRoomIncomePerDaySummary';
 import { assumptionParams, methodParams } from '../../data/dcfParameters';
 import { mapDCFMethodCodeToSystemType } from '../../domain/mapDCFMethodCodeToSystemType';
-import { dcfAssumptionLabel, dcfCategoryLabel, dcfSectionLabel } from '../../domain/dcf/dcfNameLabel';
+import {
+  dcfAssumptionLabel,
+  dcfCategoryLabel,
+  dcfSectionLabel,
+} from '../../domain/dcf/dcfNameLabel';
 import { DisplayOnlyProvider } from '../table/RHFInputCell';
 
 interface DiscountedCashFlowSummaryAssumptionProps {
@@ -34,7 +38,7 @@ export function ViewAssumptionSummaryButton({ onClick }: ViewAssumptionSummaryBu
         e.preventDefault();
         onClick();
       }}
-      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-gray-200 bg-white hover:bg-gray-50 hover:border-gray-300 text-xs font-medium text-gray-700 transition-colors cursor-pointer shadow-sm"
+      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-(--palette-line) bg-(--palette-surface) hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) text-xs font-medium text-(--palette-ink) transition-colors cursor-pointer shadow-sm"
     >
       <Icon name="list-check" style="regular" className="size-3" />
       {t('dcf.viewSummary')}
@@ -153,7 +157,7 @@ export function DiscountedCashFlowSummaryAssumption({
                     >
                       {t('dcf.summaryModal.sectionLabel')}
                     </div>
-                    <div className="text-base font-semibold text-gray-900 truncate">
+                    <div className="text-base font-semibold text-(--palette-ink) truncate">
                       {dcfSectionLabel(t, section.sectionType, section.sectionName)}
                     </div>
                   </div>
@@ -171,7 +175,7 @@ export function DiscountedCashFlowSummaryAssumption({
                   </span>
                 </header>
 
-                <div className="flex flex-col divide-y divide-gray-100 min-w-0 bg-white">
+                <div className="flex flex-col divide-y divide-(--palette-line-soft) min-w-0 bg-(--palette-surface)">
                   {renderableCategories.map((category: DCFCategory) => {
                     const categoryIdx = (section.categories ?? []).indexOf(category);
                     return (
@@ -181,7 +185,7 @@ export function DiscountedCashFlowSummaryAssumption({
                             className={clsx('inline-block w-1 h-4 rounded', theme.accent)}
                             aria-hidden
                           />
-                          <span className="text-sm font-semibold text-gray-900">
+                          <span className="text-sm font-semibold text-(--palette-ink)">
                             {dcfCategoryLabel(t, category.categoryName, category.categoryName)}
                           </span>
                           <span
@@ -228,10 +232,10 @@ export function DiscountedCashFlowSummaryAssumption({
                               return (
                                 <div
                                   key={assumption.clientId ?? assumptionIdx}
-                                  className="rounded-lg border border-gray-200 bg-gray-50/40 hover:bg-gray-50 transition-colors min-w-0"
+                                  className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2)/40 hover:bg-(--palette-surface-2) transition-colors min-w-0"
                                 >
-                                  <div className="flex flex-row items-center justify-between gap-3 px-3 py-2 border-b border-gray-200 bg-white rounded-t-lg">
-                                    <span className="text-sm font-semibold text-gray-800 truncate">
+                                  <div className="flex flex-row items-center justify-between gap-3 px-3 py-2 border-b border-(--palette-line) bg-(--palette-surface) rounded-t-lg">
+                                    <span className="text-sm font-semibold text-(--palette-ink) truncate">
                                       {displayName}
                                     </span>
                                     {methodLabel && (

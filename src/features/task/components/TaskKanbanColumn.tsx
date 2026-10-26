@@ -91,7 +91,7 @@ export const TaskKanbanColumn = ({
   return (
     <div className="flex flex-col flex-1 min-w-[320px] h-full">
       {/* Column Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-2 py-2 mb-3 bg-gray-50 rounded-lg">
+      <div className="sticky top-0 z-10 flex items-center justify-between gap-2 px-2 py-2 mb-3 bg-(--palette-surface-2) rounded-lg">
         <button
           onClick={() => setCollapsed(c => !c)}
           className="flex items-center gap-2 min-w-0 text-left"
@@ -100,14 +100,18 @@ export const TaskKanbanColumn = ({
           <Icon
             style="solid"
             name={collapsed ? 'chevron-right' : 'chevron-down'}
-            className="size-2.5 text-gray-400 flex-shrink-0"
+            className="size-2.5 text-(--palette-gray-400) flex-shrink-0"
           />
           <span className={`size-2.5 rounded-full flex-shrink-0 ${dotColors[color]}`} />
           {icon && (
-            <Icon style="solid" name={icon} className="size-3.5 text-gray-500 flex-shrink-0" />
+            <Icon
+              style="solid"
+              name={icon}
+              className="size-3.5 text-(--palette-gray-500) flex-shrink-0"
+            />
           )}
-          <h3 className="font-medium text-gray-900 truncate">{title}</h3>
-          <span className="text-sm text-gray-500 flex-shrink-0">{total}</span>
+          <h3 className="font-medium text-(--palette-ink) truncate">{title}</h3>
+          <span className="text-sm text-(--palette-gray-500) flex-shrink-0">{total}</span>
         </button>
 
         {!collapsed && (
@@ -128,7 +132,7 @@ export const TaskKanbanColumn = ({
               <button
                 onClick={() => setSortDir(d => (d === 'asc' ? 'desc' : 'asc'))}
                 title={sortDir === 'asc' ? 'Ascending' : 'Descending'}
-                className="p-1 rounded border border-gray-200 bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                className="p-1 rounded border border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-500) hover:text-(--palette-ink) hover:bg-(--palette-surface-2)"
               >
                 <Icon
                   style="solid"
@@ -151,7 +155,7 @@ export const TaskKanbanColumn = ({
               <CardSkeleton />
             </>
           ) : total === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+            <div className="flex flex-col items-center justify-center py-8 text-(--palette-gray-400)">
               <Icon style="regular" name="inbox" className="size-8 mb-2" />
               <p className="text-sm">No tasks</p>
             </div>
@@ -166,7 +170,7 @@ export const TaskKanbanColumn = ({
               )}
               <div ref={sentinelRef} className="h-4" aria-hidden />
               {query.isFetchingNextPage && (
-                <div className="flex items-center justify-center gap-1.5 py-3 text-gray-400">
+                <div className="flex items-center justify-center gap-1.5 py-3 text-(--palette-gray-400)">
                   <Icon style="solid" name="spinner" className="size-3 animate-spin" />
                   <span className="text-xs">Loading more…</span>
                 </div>

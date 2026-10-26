@@ -9,6 +9,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import { FavoritesRow } from '@features/menuFavorites';
 import {
   bucketForSlaStatus,
@@ -46,29 +47,14 @@ interface ActivityTaskTableProps {
   description: string;
 }
 
-const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
-  appraisalNumber: 'Appraisal No.',
-  customerName: 'Customer',
-  status: 'Request Status',
-  pendingTaskStatus: 'Task Status',
-  slaStatus: 'SLA',
-  assigneeUserId: 'Assignee',
-  activityId: 'Task Type',
-  purpose: 'Purpose',
-  channel: 'Channel',
-  dateType: 'Date Type',
-  dateFrom: 'From',
-  dateTo: 'To',
-};
-
 const groupByOptions: { value: GroupByField; label: string }[] = [
   { value: 'status', label: 'Task Status' },
   { value: 'purpose', label: 'Purpose' },
   { value: 'priority', label: 'Priority' },
 ];
 
-// Pool tab's view/grouping preference — same storage keys PoolTaskListPage falls
-// back to when rendered standalone (uncontrolled), so the two never drift.
+// Pool tab's view/grouping preference — the same storage keys the task list page (TaskListingPage)
+// uses, so the two never drift.
 const POOL_VIEW_STORAGE_KEY = 'task-view-pool';
 const POOL_GROUPBY_STORAGE_KEY = 'task-groupby-pool';
 const POOL_GROUP_BY_VALUES: GroupByField[] = ['status', 'purpose', 'priority'];
@@ -93,20 +79,21 @@ function readStoredPoolGroupBy(): GroupByField {
 
 // Solid backgrounds on every sticky cell — prevents scrolling content from bleeding through
 const stickyThBase =
-  'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50 sticky left-0 z-30 cursor-pointer hover:text-gray-700 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200';
+  'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2) sticky left-0 z-30 cursor-pointer hover:text-(--palette-ink) after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)';
 const sortableThBase =
-  'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50 cursor-pointer hover:text-gray-600';
+  'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2) cursor-pointer hover:text-(--palette-gray-600)';
 const plainThBase =
-  'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+  'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
 
-// bg-white (solid) at rest, bg-gray-50 (solid) on hover — never transparent
+// bg-(--palette-surface) (solid) at rest, bg-(--palette-surface-2) (solid) on hover — never transparent
 const stickyTdClass =
-  'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200';
-const defaultTdClass = 'px-3 py-1.5 text-gray-600 text-xs';
+  'bg-(--palette-surface) group-hover:bg-(--palette-surface-2) transition-colors sticky left-0 z-10 px-3 py-1.5 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)';
+const defaultTdClass = 'px-3 py-1.5 text-(--palette-gray-600) text-xs';
 
 export function ActivityTaskTable({ activityId, title, description }: ActivityTaskTableProps) {
   const navigate = useNavigate();
   const { t } = useTranslation('common');
+  const { t: tTask } = useTranslation('task');
   const {
     activeTab,
     setActiveTab,
@@ -213,6 +200,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
   const {
     data,
     isLoading: isListLoading,
+    isPlaceholderData,
     isError,
     error,
   } = useGetTasks({
@@ -235,7 +223,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
     }
   }, [isListLoading]);
 
-  const isLoading = isListLoading || !minLoadingDone;
+  // A page change keeps the last page as a placeholder; this table shows its skeleton instead
+  const isLoading = isListLoading || isPlaceholderData || !minLoadingDone;
 
   const paginatedResult: TaskListResponse | undefined = data;
   const listTasks = (paginatedResult?.items ?? []) as Task[];
@@ -277,12 +266,12 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
   const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+      return <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />;
     return (
       <Icon
         style="solid"
         name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
+        className="size-2.5 text-(--palette-primary-text)"
       />
     );
   };
@@ -290,12 +279,12 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">Failed to load tasks</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">Failed to load tasks</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
       </div>
     );
@@ -306,13 +295,13 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
       {/* Header + quick access (single row to save vertical space) */}
       <div className="shrink-0 mb-3 flex items-center justify-between gap-12">
         <div className="shrink-0">
-          <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-          <p className="text-xs text-gray-500 mt-0.5">{description}</p>
+          <h3 className="text-base font-semibold text-(--palette-ink)">{title}</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{description}</p>
         </div>
 
         {/* Quick access — right aligned, label on top, horizontally scrollable */}
         <div className="flex flex-col min-w-0">
-          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-1 text-right">
+          <p className="text-[10px] font-semibold text-(--palette-gray-400) uppercase tracking-wider mb-1 text-right">
             {t('favorites.row.sectionTitle')}
           </p>
           <div className="min-w-0">
@@ -322,12 +311,14 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
       </div>
 
       {/* Toolbar: tabs on left, controls on right */}
-      <div className="shrink-0 flex items-end gap-2 border-b border-gray-200 mb-3">
+      <div className="shrink-0 flex items-end gap-2 border-b border-(--palette-line) mb-3">
         {/* My / Pool underline tabs */}
         <button
           onClick={() => setActiveTab('personal')}
           className={`relative flex items-center gap-1 px-1 pb-2 text-xs font-medium transition-colors ${
-            activeTab === 'personal' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'personal'
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
           }`}
         >
           <Icon style="solid" name="user" className="size-3" />
@@ -336,8 +327,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
                 activeTab === 'personal'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-primary/10 text-(--palette-primary-text)'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
               }`}
             >
               {totalCount}
@@ -350,7 +341,9 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
         <button
           onClick={() => setActiveTab('pool')}
           className={`relative flex items-center gap-1 px-1 pb-2 ml-3 text-xs font-medium transition-colors ${
-            activeTab === 'pool' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'pool'
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
           }`}
         >
           <Icon style="solid" name="users" className="size-3" />
@@ -358,7 +351,9 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
           {poolTotalCount > 0 && (
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
-                activeTab === 'pool' ? 'bg-primary/10 text-primary' : 'bg-gray-100 text-gray-500'
+                activeTab === 'pool'
+                  ? 'bg-primary/10 text-(--palette-primary-text)'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
               }`}
             >
               {poolTotalCount}
@@ -379,19 +374,19 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               <Icon
                 style="solid"
                 name="magnifying-glass"
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
               />
               <input
                 type="text"
                 placeholder="Search tasks..."
                 value={poolSearch}
                 onChange={e => setPoolSearch(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+                className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
               />
               {poolSearch && (
                 <button
                   onClick={() => setPoolSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon style="solid" name="xmark" className="size-3.5" />
                 </button>
@@ -401,8 +396,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               onClick={() => setPoolFilterDialogOpen(true)}
               className={`mb-2 flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all ${
                 poolFilterChips.length > 0
-                  ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
+                  : 'border-(--palette-line) text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:text-(--palette-ink)'
               }`}
             >
               <Icon style="solid" name="sliders" className="size-3.5" />
@@ -435,30 +430,29 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             {/* Group by (board only) */}
             {poolViewMode === 'grid' && (
               <div className="mb-2 flex items-center gap-2">
-                <span className="text-xs text-gray-400">Group by</span>
-                <select
+                <span className="text-xs text-(--palette-gray-400)">Group by</span>
+                <NativeSelect
                   value={poolGroupBy}
                   onChange={e => setPoolGroupBy(e.target.value as GroupByField)}
-                  className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
                 >
                   {groupByOptions.map(o => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             )}
 
             {/* View toggle */}
-            <div className="mb-2 flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+            <div className="mb-2 flex items-center bg-(--palette-surface-3) rounded-lg p-0.5 gap-0.5">
               <button
                 onClick={() => setPoolViewMode('list')}
                 title="List view"
                 className={`flex items-center justify-center size-8 rounded-md transition-all ${
                   poolViewMode === 'list'
-                    ? 'bg-white shadow-sm text-primary'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
+                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
                 }`}
               >
                 <Icon style="solid" name="list" className="size-3.5" />
@@ -468,8 +462,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                 title="Board view"
                 className={`flex items-center justify-center size-8 rounded-md transition-all ${
                   poolViewMode === 'grid'
-                    ? 'bg-white shadow-sm text-primary'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
+                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
                 }`}
               >
                 <Icon style="solid" name="grid-2" className="size-3.5" />
@@ -487,13 +481,13 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                 <Icon
                   style="solid"
                   name="spinner"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-primary-text) animate-spin pointer-events-none"
                 />
               ) : (
                 <Icon
                   style="solid"
                   name="magnifying-glass"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
                 />
               )}
               <input
@@ -501,12 +495,12 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                 placeholder="Search tasks..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+                className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
               />
               {searchTerm && (
                 <button
                   onClick={() => setSearchTerm('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon style="solid" name="xmark" className="size-3.5" />
                 </button>
@@ -519,8 +513,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               title="Filters"
               className={`mb-2 flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all ${
                 activeFilterChips.length > 0
-                  ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
+                  : 'border-(--palette-line) text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:text-(--palette-ink)'
               }`}
             >
               <Icon style="solid" name="sliders" className="size-3.5" />
@@ -553,30 +547,29 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
             {/* Group by (board only) */}
             {viewMode === 'grid' && (
               <div className="mb-2 flex items-center gap-2">
-                <span className="text-xs text-gray-400">Group by</span>
-                <select
+                <span className="text-xs text-(--palette-gray-400)">Group by</span>
+                <NativeSelect
                   value={groupBy}
                   onChange={e => setGroupBy(e.target.value as GroupByField)}
-                  className="px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:ring-1 focus:ring-primary focus:border-primary outline-none bg-white"
                 >
                   {groupByOptions.map(o => (
                     <option key={o.value} value={o.value}>
                       {o.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
             )}
 
             {/* View toggle */}
-            <div className="mb-2 flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+            <div className="mb-2 flex items-center bg-(--palette-surface-3) rounded-lg p-0.5 gap-0.5">
               <button
                 onClick={() => setViewMode('list')}
                 title="List view"
                 className={`flex items-center justify-center size-8 rounded-md transition-all ${
                   viewMode === 'list'
-                    ? 'bg-white shadow-sm text-primary'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
+                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
                 }`}
               >
                 <Icon style="solid" name="list" className="size-3.5" />
@@ -586,8 +579,8 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                 title="Board view"
                 className={`flex items-center justify-center size-8 rounded-md transition-all ${
                   viewMode === 'grid'
-                    ? 'bg-white shadow-sm text-primary'
-                    : 'text-gray-400 hover:text-gray-600'
+                    ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
+                    : 'text-(--palette-gray-400) hover:text-(--palette-gray-600)'
                 }`}
               >
                 <Icon style="solid" name="grid-2" className="size-3.5" />
@@ -611,9 +604,12 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               {poolFilterChips.map(([key, value]) => (
                 <span
                   key={key}
-                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
                 >
-                  <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+                  <span className="text-(--palette-primary-text)/60">
+                    {tTask(`filterChips.${key}`)}:
+                  </span>{' '}
+                  {value}
                   <button
                     onClick={() =>
                       setPoolFilters(prev => {
@@ -622,7 +618,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                         return n;
                       })
                     }
-                    className="hover:text-primary/60 ml-0.5"
+                    className="hover:text-(--palette-primary-text)/60 ml-0.5"
                   >
                     <Icon style="solid" name="xmark" className="size-2.5" />
                   </button>
@@ -630,7 +626,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               ))}
               <button
                 onClick={() => setPoolFilters({})}
-                className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+                className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
               >
                 Clear all
               </button>
@@ -658,12 +654,15 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               {activeFilterChips.map(([key, value]) => (
                 <span
                   key={key}
-                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
                 >
-                  <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
+                  <span className="text-(--palette-primary-text)/60">
+                    {tTask(`filterChips.${key}`)}:
+                  </span>{' '}
+                  {value}
                   <button
                     onClick={() => removeFilter(key)}
-                    className="hover:text-primary/60 ml-0.5"
+                    className="hover:text-(--palette-primary-text)/60 ml-0.5"
                   >
                     <Icon style="solid" name="xmark" className="size-2.5" />
                   </button>
@@ -671,7 +670,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
               ))}
               <button
                 onClick={() => setFilters({})}
-                className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+                className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
               >
                 Clear all
               </button>
@@ -687,7 +686,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
 
           {/* Content */}
           {viewMode === 'list' ? (
-            <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+            <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
               {/* Only the rows scroll. With none, this shrinks to the header, its overflow is
                   clipped (nothing to scroll to, so a scrollbar would just be noise) and the empty
                   state below gets the rest of the card. */}
@@ -706,7 +705,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                     <col style={{ width: ACTIONS_COL_WIDTH }} />
                   </colgroup>
                   <thead className="sticky top-0 z-20">
-                    <tr className="bg-gray-50 border-b border-gray-200">
+                    <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                       {visibleColumns.map((key, colIndex) => {
                         const col = columnDefs[key];
                         const isActive = sortField === col.sortField;
@@ -714,7 +713,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                         const thClass = isSticky
                           ? `relative ${stickyThBase}`
                           : col.sortField
-                            ? `relative ${sortableThBase} ${isActive ? 'text-primary' : ''}`
+                            ? `relative ${sortableThBase} ${isActive ? 'text-(--palette-primary-text)' : ''}`
                             : `relative ${plainThBase}`;
                         return (
                           <th
@@ -738,10 +737,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                           </th>
                         );
                       })}
-                      <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
+                      <th className="text-xs px-4 py-2.5 w-8 bg-(--palette-surface-2) font-semibold" />
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-(--palette-line-soft)">
                     {isLoading ? (
                       <TableRowSkeleton
                         columns={visibleColumns.map(() => ({ width: 'w-24' }))}
@@ -761,7 +760,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                               taskId: task.id,
                             });
                           }}
-                          className={`group cursor-pointer transition-colors hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
+                          className={`group cursor-pointer transition-colors hover:bg-(--palette-surface-2) ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`}
                         >
                           {visibleColumns.map(key => {
                             const col = columnDefs[key];
@@ -785,7 +784,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                             <Icon
                               style="solid"
                               name="arrow-right"
-                              className="size-3 text-gray-200 group-hover:text-primary/40 transition-colors"
+                              className="size-3 text-gray-200 group-hover:text-(--palette-primary-text)/40 transition-colors"
                             />
                           </td>
                         </tr>
@@ -807,10 +806,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                       <InboxZeroArt className="h-24 w-28" />
                     )}
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-gray-700">
+                      <p className="text-sm font-semibold text-(--palette-ink)">
                         {hasFilters ? 'No matching tasks' : 'All clear'}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-(--palette-gray-400) mt-1">
                         {hasFilters
                           ? 'Try adjusting your search or filters.'
                           : 'No tasks assigned in this activity.'}
@@ -822,7 +821,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                           setSearchTerm('');
                           setFilters({});
                         }}
-                        className="text-xs text-primary hover:underline font-medium"
+                        className="text-xs text-(--palette-primary-text) hover:underline font-medium"
                       >
                         Clear filters
                       </button>
@@ -856,7 +855,7 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
           {contextMenu.visible && (
             <div
               ref={contextMenuRef}
-              className="fixed bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 min-w-[160px]"
+              className="fixed bg-(--palette-surface) rounded-xl shadow-xl border border-(--palette-line-soft) py-1 z-50 min-w-[160px]"
               style={{ top: contextMenu.y, left: contextMenu.x }}
             >
               <button
@@ -864,13 +863,13 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                   navigate(`/tasks/${contextMenu.taskId}/opening`);
                   setContextMenu(p => ({ ...p, visible: false }));
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+                className="w-full px-3 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2.5 rounded-lg mx-1"
                 style={{ width: 'calc(100% - 8px)' }}
               >
                 <Icon
                   style="regular"
                   name="arrow-up-right-from-square"
-                  className="size-3.5 text-gray-400"
+                  className="size-3.5 text-(--palette-gray-400)"
                 />
                 Open task
               </button>
@@ -880,10 +879,10 @@ export function ActivityTaskTable({ activityId, title, description }: ActivityTa
                   if (task?.appraisalNumber) navigator.clipboard.writeText(task.appraisalNumber);
                   setContextMenu(p => ({ ...p, visible: false }));
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+                className="w-full px-3 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2.5 rounded-lg mx-1"
                 style={{ width: 'calc(100% - 8px)' }}
               >
-                <Icon style="regular" name="copy" className="size-3.5 text-gray-400" />
+                <Icon style="regular" name="copy" className="size-3.5 text-(--palette-gray-400)" />
                 Copy report no.
               </button>
             </div>

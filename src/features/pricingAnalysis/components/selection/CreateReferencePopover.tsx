@@ -383,7 +383,7 @@ export function CreateReferencePopover({
     ? Math.max(8, Math.min(anchorRect.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 8))
     : 0;
   const selectClass =
-    'h-[30px] w-full rounded-[7px] border border-gray-300 bg-white px-1.5 text-[12px] text-gray-700 disabled:bg-gray-50 disabled:text-gray-400';
+    'h-[30px] w-full rounded-[7px] border border-(--palette-line-strong) bg-(--palette-surface) px-1.5 text-[12px] text-(--palette-ink) disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-400)';
 
   return (
     <>
@@ -402,17 +402,17 @@ export function CreateReferencePopover({
               : { bottom: window.innerHeight - (anchorRect?.top ?? 0) + 4 }),
             visibility: anchorRect ? 'visible' : 'hidden',
           }}
-          className="z-[100] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg flex flex-col outline-none text-left"
+          className="z-[100] overflow-y-auto rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg flex flex-col outline-none text-left"
         >
           {/* mock:3258 `.addh` */}
-          <div className="px-3 py-2 text-[12px] font-semibold text-gray-800 border-b border-gray-100 shrink-0">
+          <div className="px-3 py-2 text-[12px] font-semibold text-(--palette-ink) border-b border-(--palette-line-soft) shrink-0">
             {t('groupReferences.create.title')}
           </div>
 
           <div className="flex flex-col gap-2 p-3 overflow-y-auto">
             {/* mock:3260 — "ใช้สำหรับ" */}
             <label className="grid gap-1">
-              <span className="text-[11.5px] text-gray-500">
+              <span className="text-[11.5px] text-(--palette-gray-500)">
                 {t('groupReferences.create.kindLabel')}
               </span>
               <select
@@ -433,7 +433,7 @@ export function CreateReferencePopover({
                 property picker there would imply a choice that does not exist. */}
             {selectedKind?.id === 'machinery' && (
               <label className="grid gap-1">
-                <span className="text-[11.5px] text-gray-500">
+                <span className="text-[11.5px] text-(--palette-gray-500)">
                   {t('groupReferences.create.subjectLabel')}
                 </span>
                 <select
@@ -454,7 +454,7 @@ export function CreateReferencePopover({
                 method over — offering a choice that would be ignored is worse than not offering
                 one. */}
             <label className="grid gap-1">
-              <span className="text-[11.5px] text-gray-500">
+              <span className="text-[11.5px] text-(--palette-gray-500)">
                 {t('groupReferences.create.methodLabel')}
               </span>
               <select
@@ -477,7 +477,7 @@ export function CreateReferencePopover({
                 option is "new (empty)" offers no choice and just reads as something broken. */}
             {selectedKind?.cloneable && cloneSources.length > 0 && (
               <label className="grid gap-1">
-                <span className="text-[11.5px] text-gray-500">
+                <span className="text-[11.5px] text-(--palette-gray-500)">
                   {t('groupReferences.create.fromLabel')}
                 </span>
                 <select
@@ -499,16 +499,16 @@ export function CreateReferencePopover({
               </label>
             )}
 
-            <p className="m-0 text-[11px] leading-[1.45] text-gray-500">
+            <p className="m-0 text-[11px] leading-[1.45] text-(--palette-gray-500)">
               {t('groupReferences.create.note')}
             </p>
           </div>
 
           {/* mock:3265 `.addf` */}
-          <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-gray-100 shrink-0">
+          <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-(--palette-line-soft) shrink-0">
             <button
               type="button"
-              className="px-3 py-1.5 rounded-lg text-[12px] text-gray-600 hover:bg-gray-50 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-[12px] text-(--palette-gray-600) hover:bg-(--palette-surface-2) cursor-pointer"
               onClick={onClose}
             >
               {t('addMethodPopover.cancel')}

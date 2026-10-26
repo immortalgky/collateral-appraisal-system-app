@@ -6,10 +6,20 @@ import {
   Description,
 } from '@headlessui/react';
 import clsx from 'clsx';
-import type { ReactNode } from 'react';
+import { Fragment, useState, type ReactNode } from 'react';
 import Icon from '../Icon';
 import { useParameterAsRadioOptions } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import {
+  chipClass,
+  chipGroupGap,
+  chipTogglePad,
+  ERROR_TEXT,
+  NO_GLOBAL_OUTLINE,
+} from './controlStyles';
+import { OtherInput, OtherNote, type OtherSpec } from './OtherText';
 
 export interface RadioOption {
   value: string;
@@ -35,6 +45,8 @@ interface RadioGroupBaseProps {
   required?: boolean;
   /** Visual variant for radio buttons */
   variant?: 'default' | 'card' | 'button';
+  /** The "อื่นๆ" companion field, typed inside its chip while that option is selected. */
+  other?: OtherSpec;
 }
 
 export type RadioGroupProps = RadioGroupBaseProps &
@@ -55,7 +67,15 @@ const RadioGroup = ({
   orientation = 'vertical',
   name,
   variant = 'default',
+  other,
 }: RadioGroupProps) => {
+  const layout = useFormLayout();
+  // Set when the appraiser picks the "other" chip, so its input takes focus; not on a loaded value.
+  const [focusOther, setFocusOther] = useState(false);
+  const handleChange = (next: string) => {
+    setFocusOther(next === other?.is);
+    onChange?.(next);
+  };
   const parameterOptions = useParameterAsRadioOptions(group ?? '');
   const resolvedOptions = options ?? parameterOptions;
   const sizeStyles = {
@@ -70,181 +90,96 @@ const RadioGroup = ({
     lg: 'h-2.5 w-2.5',
   };
 
-  // Default rendering: pill group (used for both 'button' and 'default' variants)
+  // Radio pill (DESIGN.md 17.5), the one look of 'button' and 'default'. Only 'card' differs.
   if (variant !== 'card') {
     return (
       <Field className={clsx('flex flex-col', className)}>
         {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-2">
             {label && (
-              <Label data-field-label className="block text-xs font-medium text-gray-700">
-                {label}
-              </Label>
+              <Label className="block text-xs font-medium text-(--palette-ink)">{label}</Label>
             )}
             {labelAddon}
           </div>
         ) : (
           label && (
-            <Label data-field-label className="block text-xs font-medium text-gray-700 mb-2">
-              {label}
-            </Label>
+            <Label className="block text-xs font-medium text-(--palette-ink) mb-2">{label}</Label>
           )
         )}
 
         <HeadlessRadioGroup
           value={value}
           defaultValue={defaultValue}
-          onChange={onChange}
+          onChange={handleChange}
           disabled={disabled}
           name={name}
-          className={clsx('inline-flex flex-wrap gap-2', disabled && 'opacity-60')}
+          className={clsx('flex flex-wrap', chipGroupGap(layout))}
         >
           {resolvedOptions.map(option => {
             const isChecked = value === option.value;
-            return (
+            const isDisabled = !!(option.disabled || disabled);
+            const withInput = !!other && isChecked && option.value === other.is;
+            const radio = (
               <HeadlessRadio
-                key={option.value}
                 value={option.value}
-                disabled={option.disabled || disabled}
+                disabled={isDisabled}
+                title={option.label}
                 onClick={() => {
                   if (isChecked) onChange?.('');
                 }}
-                className={clsx(
-                  'group relative inline-flex items-center justify-center h-8 px-4 text-sm font-medium rounded-full border-0',
-                  'transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]',
-                  'cursor-pointer data-disabled:cursor-not-allowed',
-                  isChecked
-                    ? 'bg-primary text-white shadow-sm shadow-primary/25'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-800',
-                  'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1',
-                )}
+                className={
+                  withInput
+                    ? clsx(
+                        'inline-flex min-w-0 shrink-0 items-center self-stretch rounded-l-full leading-normal',
+                        NO_GLOBAL_OUTLINE,
+                        chipTogglePad(layout),
+                        isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
+                      )
+                    : chipClass(layout, isChecked, isDisabled)
+                }
               >
-                <span className="flex items-center gap-2">
-                  {option.icon && <Icon style="solid" name={option.icon} className="size-4" />}
+                {option.icon && (
+                  <Icon style="solid" name={option.icon} className="mr-[0.4286rem] shrink-0" />
+                )}
+                <span className="min-w-0 truncate">
                   {option.label}
+                  {withInput && ':'}
                 </span>
               </HeadlessRadio>
+            );
+            if (!withInput) return <Fragment key={option.value}>{radio}</Fragment>;
+            return (
+              <span key={option.value} className={chipClass(layout, true, isDisabled, true)}>
+                {radio}
+                <OtherInput spec={other} disabled={isDisabled} focusOnMount={focusOther} />
+              </span>
             );
           })}
         </HeadlessRadioGroup>
 
-        {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+        {other && value === other.is && <OtherNote spec={other} />}
+        {error && (
+          <Description className={clsx('mt-1', ERROR_TEXT)}>
+            <ValidationText message={error} label={label} />
+          </Description>
+        )}
       </Field>
     );
   }
 
   // Card variant - renders as selectable cards
-  if (variant === 'card') {
-    return (
-      <Field className={clsx('flex flex-col', className)}>
-        {labelAddon ? (
-          <div className="flex items-center gap-1.5 mb-2">
-            {label && (
-              <Label data-field-label className="block text-xs font-medium text-gray-700">
-                {label}
-              </Label>
-            )}
-            {labelAddon}
-          </div>
-        ) : (
-          label && (
-            <Label data-field-label className="block text-xs font-medium text-gray-700 mb-2">
-              {label}
-            </Label>
-          )
-        )}
-
-        <HeadlessRadioGroup
-          value={value}
-          defaultValue={defaultValue}
-          onChange={onChange}
-          disabled={disabled}
-          name={name}
-          className={clsx(
-            'flex gap-3',
-            orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
-          )}
-        >
-          {resolvedOptions.map(option => (
-            <HeadlessRadio
-              key={option.value}
-              value={option.value}
-              disabled={option.disabled || disabled}
-              onClick={() => {
-                if (value === option.value) onChange?.('');
-              }}
-              className={clsx(
-                'group relative flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-200',
-                'cursor-pointer data-disabled:cursor-not-allowed',
-                'border-gray-200 hover:border-primary/40 hover:bg-primary/5',
-                'data-checked:border-primary data-checked:bg-primary/10',
-                'data-disabled:bg-gray-50 data-disabled:border-gray-200',
-                'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-1',
-                error && 'border-danger',
-              )}
-            >
-              {/* Radio indicator */}
-              <span
-                className={clsx(
-                  'flex items-center justify-center rounded-full border-2 transition-all duration-200 shrink-0',
-                  sizeStyles[size],
-                  'border-gray-300 group-hover:border-primary/60',
-                  'group-data-checked:border-primary',
-                  'group-data-disabled:bg-gray-100 group-data-disabled:border-gray-300',
-                )}
-              >
-                <span
-                  className={clsx(
-                    'rounded-full bg-primary opacity-0 transition-all duration-200',
-                    'group-data-checked:opacity-100',
-                    dotSizeStyles[size],
-                  )}
-                />
-              </span>
-
-              {/* Label content */}
-              <div className="flex flex-col min-w-0">
-                <Label
-                  className={clsx(
-                    'text-sm font-medium select-none',
-                    'group-data-disabled:text-gray-400',
-                    !(option.disabled || disabled) && 'text-gray-700',
-                  )}
-                >
-                  {option.label}
-                </Label>
-                {option.description && (
-                  <Description className="text-xs text-gray-500 mt-0.5">
-                    {option.description}
-                  </Description>
-                )}
-              </div>
-            </HeadlessRadio>
-          ))}
-        </HeadlessRadioGroup>
-
-        {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
-      </Field>
-    );
-  }
-
-  // Default variant
   return (
     <Field className={clsx('flex flex-col', className)}>
       {labelAddon ? (
         <div className="flex items-center gap-1.5 mb-2">
           {label && (
-            <Label data-field-label className="block text-xs font-medium text-gray-700">
-              {label}
-            </Label>
+            <Label className="block text-xs font-medium text-(--palette-ink)">{label}</Label>
           )}
           {labelAddon}
         </div>
       ) : (
         label && (
-          <Label data-field-label className="block text-xs font-medium text-gray-700 mb-2">
-            {label}
-          </Label>
+          <Label className="block text-xs font-medium text-(--palette-ink) mb-2">{label}</Label>
         )
       )}
 
@@ -255,7 +190,7 @@ const RadioGroup = ({
         disabled={disabled}
         name={name}
         className={clsx(
-          'flex gap-4',
+          'flex gap-3',
           orientation === 'vertical' ? 'flex-col' : 'flex-row flex-wrap',
         )}
       >
@@ -267,40 +202,47 @@ const RadioGroup = ({
             onClick={() => {
               if (value === option.value) onChange?.('');
             }}
-            className="group flex items-center gap-2.5 cursor-pointer data-disabled:cursor-not-allowed focus:outline-none"
+            className={clsx(
+              'group relative flex items-center gap-3 px-4 py-3 rounded-lg border-2 transition-all duration-200',
+              'cursor-pointer data-disabled:cursor-not-allowed',
+              'border-(--palette-line) hover:border-primary/40 hover:bg-(--palette-surface-2)',
+              'data-checked:border-primary data-checked:bg-(--palette-accent-wash)',
+              'data-disabled:bg-(--palette-surface-2) data-disabled:border-(--palette-line)',
+              error && 'border-danger',
+            )}
           >
+            {/* Radio indicator */}
             <span
               className={clsx(
-                'flex items-center justify-center rounded-full border-2 transition-all duration-200',
+                'flex items-center justify-center rounded-full border-2 transition-all duration-200 shrink-0',
                 sizeStyles[size],
-                'border-gray-300 group-hover:border-primary/60',
+                'border-(--palette-input-edge-hover) group-hover:border-primary/60',
                 'group-data-checked:border-primary',
-                'group-data-disabled:bg-gray-100 group-data-disabled:border-gray-300',
-                'group-focus:ring-2 group-focus:ring-primary/20 group-focus:ring-offset-1',
-                error && 'border-danger',
+                'group-data-disabled:bg-(--palette-surface-3) group-data-disabled:border-(--palette-line-strong)',
               )}
             >
               <span
                 className={clsx(
-                  'rounded-full bg-primary opacity-0 transition-all duration-200 scale-0',
-                  'group-data-checked:opacity-100 group-data-checked:scale-100',
+                  'rounded-full bg-primary opacity-0 transition-all duration-200',
+                  'group-data-checked:opacity-100',
                   dotSizeStyles[size],
                 )}
               />
             </span>
 
-            <div className="flex flex-col">
+            {/* Label content */}
+            <div className="flex flex-col min-w-0">
               <Label
                 className={clsx(
-                  'text-sm font-medium cursor-pointer select-none leading-tight',
-                  'group-data-disabled:text-gray-400',
-                  !(option.disabled || disabled) && 'text-gray-700 group-hover:text-gray-900',
+                  'text-sm font-medium select-none',
+                  'group-data-disabled:text-(--palette-gray-400)',
+                  !(option.disabled || disabled) && 'text-(--palette-ink)',
                 )}
               >
                 {option.label}
               </Label>
               {option.description && (
-                <Description className="text-xs text-gray-500 mt-0.5">
+                <Description className="text-xs text-(--palette-gray-500) mt-0.5">
                   {option.description}
                 </Description>
               )}
@@ -309,7 +251,11 @@ const RadioGroup = ({
         ))}
       </HeadlessRadioGroup>
 
-      {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+      {error && (
+        <Description className={clsx('mt-1', ERROR_TEXT)}>
+          <ValidationText message={error} label={label} />
+        </Description>
+      )}
     </Field>
   );
 };
@@ -359,7 +305,7 @@ export const Radio = ({
         className={clsx(
           'flex items-center justify-center rounded-full border-2 transition-all duration-200 mt-0.5',
           sizeStyles[size],
-          'border-gray-300 group-hover:border-primary/60 group-data-disabled:bg-gray-100 group-data-disabled:border-gray-300',
+          'border-(--palette-input-edge-hover) group-hover:border-primary/60 group-data-disabled:bg-(--palette-surface-3) group-data-disabled:border-(--palette-line-strong)',
           'group-data-checked:border-primary',
         )}
       >
@@ -378,15 +324,15 @@ export const Radio = ({
             <Label
               className={clsx(
                 'text-sm font-medium cursor-pointer select-none',
-                'group-data-disabled:text-gray-400',
-                !disabled && 'text-gray-700',
+                'group-data-disabled:text-(--palette-gray-400)',
+                !disabled && 'text-(--palette-ink)',
               )}
             >
               {label}
             </Label>
           )}
           {description && (
-            <Description className="text-sm text-gray-500">{description}</Description>
+            <Description className="text-sm text-(--palette-gray-500)">{description}</Description>
           )}
           {children}
         </div>

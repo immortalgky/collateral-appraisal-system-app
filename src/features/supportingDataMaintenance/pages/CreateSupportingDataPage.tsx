@@ -131,7 +131,11 @@ export function CreateSupportingDataPage() {
   if (isLoading || (hasSupportingId && !supportingData)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -168,12 +172,16 @@ export function CreateSupportingDataPage() {
               {/* Photos Section */}
               <Section id="photos" anchor className="min-w-0 overflow-hidden">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-lg bg-indigo-100 flex items-center justify-center">
-                    <Icon name="images" style="solid" className="w-5 h-5 text-indigo-600" />
+                  <div className="w-9 h-9 rounded-lg bg-indigo-100 dark:bg-indigo-500/20 flex items-center justify-center">
+                    <Icon
+                      name="images"
+                      style="solid"
+                      className="w-5 h-5 text-indigo-600 dark:text-indigo-400"
+                    />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">{t('nav.photos')}</h2>
+                  <h2 className="text-lg font-semibold text-(--palette-ink)">{t('nav.photos')}</h2>
                 </div>
-                <div className="h-px bg-gray-200 mb-4" />
+                <div className="h-px bg-(--palette-line) mb-4" />
                 <SupportingDataDetailPhotoSection
                   ref={photoSectionRef}
                   supportingId={supportingId!}
@@ -186,18 +194,18 @@ export function CreateSupportingDataPage() {
               {/* Supporting Data Detail Header */}
               <Section id="supporting-data-detail-section" anchor>
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
                     <Icon
                       name="file-circle-info"
                       style="solid"
-                      className="w-5 h-5 text-amber-600"
+                      className="w-5 h-5 text-amber-600 dark:text-amber-400"
                     />
                   </div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-(--palette-ink)">
                     {t('formSections.supportingDataDetailHeader')}
                   </h2>
                 </div>
-                <div className="h-px bg-gray-200" />
+                <div className="h-px bg-(--palette-line)" />
               </Section>
 
               {/* Supporting Data Form */}

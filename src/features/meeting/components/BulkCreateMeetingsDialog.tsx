@@ -152,7 +152,7 @@ const BulkCreateMeetingsDialog = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.bulkCreateMeetings')} size="2xl">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">{t('bulkCreateDialog.description')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('bulkCreateDialog.description')}</p>
 
         {/* Quick-select helpers */}
         <div className="flex flex-wrap items-center gap-3">
@@ -160,9 +160,11 @@ const BulkCreateMeetingsDialog = ({
             <Icon name="calendar-days" style="solid" className="size-3.5 mr-1.5" />
             {t('bulkCreateDialog.today')}
           </Button>
-          <span className="h-5 w-px bg-gray-200" aria-hidden />
+          <span className="h-5 w-px bg-(--palette-line)" aria-hidden />
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">{t('bulkCreateDialog.everyWeekday')}</span>
+            <span className="text-xs text-(--palette-gray-500)">
+              {t('bulkCreateDialog.everyWeekday')}
+            </span>
             <div className="flex items-center gap-1.5">
               {weekdayButtons.map(w => (
                 <button
@@ -170,7 +172,7 @@ const BulkCreateMeetingsDialog = ({
                   type="button"
                   onClick={() => addMatchingDays(d => d.getDay() === w.day)}
                   title={t('bulkCreateDialog.everyDayTooltip', { day: w.label })}
-                  className="inline-flex items-center justify-center size-9 rounded-full border border-gray-300 text-xs font-medium text-gray-600 hover:border-primary hover:text-primary hover:bg-primary/5 transition-colors"
+                  className="inline-flex items-center justify-center size-9 rounded-full border border-(--palette-line-strong) text-xs font-medium text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text) hover:bg-primary/5 transition-colors"
                 >
                   {w.label}
                 </button>
@@ -181,7 +183,7 @@ const BulkCreateMeetingsDialog = ({
 
         {/* Date picker */}
         <div
-          className="flex justify-center border border-gray-200 rounded-lg p-4"
+          className="flex justify-center border border-(--palette-line) rounded-lg p-4"
           style={
             {
               '--rdp-day-width': '140px',
@@ -227,7 +229,7 @@ const BulkCreateMeetingsDialog = ({
                       <span
                         className={clsx(
                           'text-sm',
-                          selected ? 'font-semibold text-primary' : 'font-medium',
+                          selected ? 'font-semibold text-(--palette-primary-text)' : 'font-medium',
                         )}
                       >
                         {children}
@@ -239,8 +241,8 @@ const BulkCreateMeetingsDialog = ({
                               key={no}
                               className={`whitespace-nowrap text-center text-[11px] font-semibold px-1 py-0.5 rounded ${
                                 modifiers.disabled
-                                  ? 'bg-amber-100 text-amber-800'
-                                  : 'bg-amber-50 text-amber-700'
+                                  ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300'
+                                  : 'bg-(--palette-warn-wash) text-(--palette-warn)'
                               }`}
                               title={no}
                             >
@@ -249,7 +251,7 @@ const BulkCreateMeetingsDialog = ({
                           ))}
                           {overflow > 0 && (
                             <span
-                              className="text-[10px] text-amber-700"
+                              className="text-[10px] text-(--palette-warn)"
                               title={meetingNos.slice(2).join(', ')}
                             >
                               {t('bulkCreateDialog.overflow', { n: overflow })}
@@ -266,17 +268,17 @@ const BulkCreateMeetingsDialog = ({
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-(--palette-gray-500)">
           <span className="inline-flex items-center gap-1.5">
             <span className="size-2.5 rounded bg-primary" />
             {t('bulkCreateDialog.legendSelected')}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded bg-amber-100 border border-amber-300" />
+            <span className="size-2.5 rounded bg-amber-100 dark:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40" />
             {t('bulkCreateDialog.legendHasMeeting')}
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="size-2.5 rounded bg-gray-100 border border-gray-300" />
+            <span className="size-2.5 rounded bg-(--palette-surface-3) border border-(--palette-line-strong)" />
             {t('bulkCreateDialog.legendPast')}
           </span>
         </div>
@@ -289,16 +291,20 @@ const BulkCreateMeetingsDialog = ({
               .map(d => (
                 <span
                   key={d.toISOString()}
-                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums bg-primary/10 text-primary ring-1 ring-inset ring-primary/20 shadow-sm"
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold tabular-nums bg-primary/10 text-(--palette-primary-text) ring-1 ring-inset ring-primary/20 shadow-sm"
                 >
-                  <Icon name="calendar-days" style="solid" className="size-3 text-primary" />
+                  <Icon
+                    name="calendar-days"
+                    style="solid"
+                    className="size-3 text-(--palette-primary-text)"
+                  />
                   {formatDate(d)}
                   <button
                     type="button"
                     onClick={() =>
                       setSelectedDates(prev => prev.filter(x => x.getTime() !== d.getTime()))
                     }
-                    className="hover:text-primary/70 focus:outline-none"
+                    className="hover:text-(--palette-primary-text)/70 focus:outline-none"
                     aria-label={t('aria.removeDate', { date: formatDate(d) })}
                   >
                     ×
@@ -309,7 +315,7 @@ const BulkCreateMeetingsDialog = ({
         )}
 
         <div className="flex items-center justify-between gap-3 pt-2">
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-(--palette-gray-500)">
             <span>
               {selectedDates.length === 1
                 ? t('bulkCreateDialog.willCreate', { n: selectedDates.length })
@@ -319,7 +325,7 @@ const BulkCreateMeetingsDialog = ({
               <button
                 type="button"
                 onClick={() => setSelectedDates([])}
-                className="text-primary hover:underline focus:outline-none"
+                className="text-(--palette-primary-text) hover:underline focus:outline-none"
               >
                 {t('buttons.clear')}
               </button>

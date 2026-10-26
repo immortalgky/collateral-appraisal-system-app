@@ -104,10 +104,14 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
             <div
               {...attributes}
               {...listeners}
-              className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 cursor-grab active:cursor-grabbing bg-white border border-gray-200 rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5"
+              className="absolute -top-3 left-1/2 -translate-x-1/2 z-10 cursor-grab active:cursor-grabbing bg-(--palette-surface) border border-(--palette-line) rounded-lg px-3 py-1.5 shadow-sm hover:shadow-md transition-shadow flex items-center gap-1.5"
             >
-              <Icon name="grip-dots-vertical" style="solid" className="size-3.5 text-gray-400" />
-              <span className="text-xs font-medium text-gray-500">
+              <Icon
+                name="grip-dots-vertical"
+                style="solid"
+                className="size-3.5 text-(--palette-gray-400)"
+              />
+              <span className="text-xs font-medium text-(--palette-gray-500)">
                 {t(`widgetConfigs.${configKey}.title`)}
               </span>
             </div>
@@ -123,7 +127,7 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
 
             {/* Size selector - only show for main widgets with multiple size options */}
             {!isSidebar && sizeOptions.length > 1 && (
-              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 bg-white border border-gray-200 rounded-lg px-2 py-1 shadow-sm flex items-center gap-1">
+              <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 z-10 bg-(--palette-surface) border border-(--palette-line) rounded-lg px-2 py-1 shadow-sm flex items-center gap-1">
                 {sizeOptions.map(size => (
                   <button
                     key={size}
@@ -132,7 +136,7 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
                     className={`px-2 py-0.5 text-xs font-medium rounded transition-colors ${
                       widget.cols === size
                         ? 'bg-blue-500 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                        : 'bg-(--palette-surface-3) text-(--palette-gray-600) hover:bg-(--palette-line)'
                     }`}
                   >
                     {getSizeLabel(size)}
@@ -142,7 +146,7 @@ function DraggableWidget({ widget, children, isSidebar = false }: DraggableWidge
             )}
 
             {/* Visual indicator overlay */}
-            <div className="absolute inset-0 border-2 border-dashed border-blue-300 rounded-2xl pointer-events-none" />
+            <div className="absolute inset-0 border-2 border-dashed border-blue-300 dark:border-blue-500/40 rounded-2xl pointer-events-none" />
           </>
         )}
 

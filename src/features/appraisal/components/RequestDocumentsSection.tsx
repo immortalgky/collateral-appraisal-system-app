@@ -63,7 +63,7 @@ export const RequestDocumentsSection = () => {
       <div className="flex items-center justify-center py-20">
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-gray-500">{t('common.loading')}</p>
+          <p className="text-sm text-(--palette-gray-500)">{t('common.loading')}</p>
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ export const RequestDocumentsSection = () => {
         if (doc.documentId) viewDocument(doc.documentId, doc.fileSizeBytes, doc.fileName);
       }}
       headerExtra={
-        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600">
+        <span className="rounded-full bg-(--palette-surface-3) px-2 py-0.5 text-xs font-medium text-(--palette-gray-600)">
           {t('valuationDocuments.checklist.readOnlyTag')}
         </span>
       }

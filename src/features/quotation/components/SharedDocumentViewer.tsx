@@ -105,17 +105,19 @@ const SharedDocumentViewer = ({
 
       <div className="fixed inset-0 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-4">
-          <DialogPanel className="w-full max-w-4xl bg-white rounded-lg shadow-xl overflow-hidden flex flex-col">
+          <DialogPanel className="w-full max-w-4xl bg-(--palette-surface) rounded-lg shadow-xl overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3 border-b border-gray-200 shrink-0">
+            <div className="flex items-center justify-between px-5 py-3 border-b border-(--palette-line) shrink-0">
               <div className="flex items-center gap-2 min-w-0">
                 <Icon name="file" style="solid" className="size-4 text-blue-500 shrink-0" />
-                <span className="text-sm font-medium text-gray-800 truncate">{fileName}</span>
+                <span className="text-sm font-medium text-(--palette-ink) truncate">
+                  {fileName}
+                </span>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100 shrink-0 ml-3"
+                className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors rounded-md hover:bg-(--palette-surface-3) shrink-0 ml-3"
                 aria-label={t('aria.closeViewer')}
               >
                 <Icon name="xmark" style="regular" className="size-4" />
@@ -123,40 +125,42 @@ const SharedDocumentViewer = ({
             </div>
 
             {/* Body */}
-            <div className="flex-1 min-h-[70vh] flex items-center justify-center bg-gray-50">
+            <div className="flex-1 min-h-[70vh] flex items-center justify-center bg-(--palette-surface-2)">
               {state.status === 'idle' || state.status === 'loading' ? (
-                <div className="flex flex-col items-center gap-2 text-gray-400">
+                <div className="flex flex-col items-center gap-2 text-(--palette-gray-400)">
                   <Icon name="spinner" style="solid" className="size-6 animate-spin" />
                   <span className="text-sm">{t('shared.loadingDocument')}</span>
                 </div>
               ) : state.status === 'forbidden' ? (
                 <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
-                  <div className="size-12 rounded-full bg-red-100 flex items-center justify-center">
+                  <div className="size-12 rounded-full bg-red-100 dark:bg-red-500/20 flex items-center justify-center">
                     <Icon name="lock" style="solid" className="size-5 text-red-500" />
                   </div>
-                  <p className="text-sm text-gray-600">{t('errors.noAccessDocument')}</p>
+                  <p className="text-sm text-(--palette-gray-600)">
+                    {t('errors.noAccessDocument')}
+                  </p>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-(--palette-primary-text) hover:underline"
                   >
                     {t('common:actions.close')}
                   </button>
                 </div>
               ) : state.status === 'error' ? (
                 <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
-                  <div className="size-12 rounded-full bg-amber-100 flex items-center justify-center">
+                  <div className="size-12 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center">
                     <Icon
                       name="triangle-exclamation"
                       style="solid"
                       className="size-5 text-amber-500"
                     />
                   </div>
-                  <p className="text-sm text-gray-600">{state.message}</p>
+                  <p className="text-sm text-(--palette-gray-600)">{state.message}</p>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="text-xs text-primary hover:underline"
+                    className="text-xs text-(--palette-primary-text) hover:underline"
                   >
                     {t('common:actions.close')}
                   </button>

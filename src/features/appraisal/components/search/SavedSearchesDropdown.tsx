@@ -35,12 +35,12 @@ function SavedSearchesDropdown({
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
         aria-haspopup="true"
-        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-(--palette-gray-600) bg-(--palette-surface) border border-(--palette-line) rounded-lg hover:border-(--palette-line-strong) transition-colors"
       >
         <Icon style="solid" name="bookmark" className="size-3 text-amber-500" />
         {t('appraisal:list.saved')}
         {savedSearches.length > 0 && (
-          <span className="bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full text-[10px]">
+          <span className="bg-(--palette-surface-3) text-(--palette-gray-500) px-1.5 py-0.5 rounded-full text-[10px]">
             {savedSearches.length}
           </span>
         )}
@@ -56,7 +56,7 @@ function SavedSearchesDropdown({
             }}
           />
           <div
-            className="absolute right-0 top-full mt-1 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-40"
+            className="absolute right-0 top-full mt-1 w-72 bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-lg z-40"
             onKeyDown={e => {
               if (e.key === 'Escape') {
                 setIsOpen(false);
@@ -64,7 +64,7 @@ function SavedSearchesDropdown({
               }
             }}
           >
-            <div className="p-2 border-b border-gray-100">
+            <div className="p-2 border-b border-(--palette-line-soft)">
               {isSaving ? (
                 <div className="flex items-center gap-2">
                   <input
@@ -73,18 +73,18 @@ function SavedSearchesDropdown({
                     onChange={e => setNewName(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handleSave()}
                     placeholder={t('appraisal:list.searchNamePlaceholder')}
-                    className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:ring-1 focus:ring-primary outline-none"
+                    className="flex-1 px-2 py-1 text-xs border border-(--palette-line) rounded focus:ring-1 focus:ring-primary outline-none"
                     autoFocus
                   />
                   <button
                     onClick={handleSave}
-                    className="text-xs text-primary font-medium hover:underline"
+                    className="text-xs text-(--palette-primary-text) font-medium hover:underline"
                   >
                     {t('common:actions.save')}
                   </button>
                   <button
                     onClick={() => setIsSaving(false)}
-                    className="text-xs text-gray-400 hover:text-gray-600"
+                    className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                   >
                     {t('common:actions.cancel')}
                   </button>
@@ -92,7 +92,7 @@ function SavedSearchesDropdown({
               ) : (
                 <button
                   onClick={() => setIsSaving(true)}
-                  className="w-full text-left text-xs text-primary font-medium hover:underline flex items-center gap-1"
+                  className="w-full text-left text-xs text-(--palette-primary-text) font-medium hover:underline flex items-center gap-1"
                 >
                   <Icon style="solid" name="plus" className="size-3" />
                   {t('appraisal:list.saveCurrentSearch')}
@@ -101,22 +101,22 @@ function SavedSearchesDropdown({
             </div>
             <div className="max-h-48 overflow-y-auto">
               {savedSearches.length === 0 ? (
-                <p className="p-3 text-xs text-gray-400 text-center">
+                <p className="p-3 text-xs text-(--palette-gray-400) text-center">
                   {t('appraisal:list.noSavedSearches')}
                 </p>
               ) : (
                 savedSearches.map(s => (
                   <div
                     key={s.id}
-                    className="flex items-center justify-between px-3 py-2 hover:bg-gray-50 group cursor-pointer"
+                    className="flex items-center justify-between px-3 py-2 hover:bg-(--palette-surface-2) group cursor-pointer"
                     onClick={() => {
                       onLoad(s);
                       setIsOpen(false);
                     }}
                   >
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-gray-700 truncate">{s.name}</p>
-                      <p className="text-[10px] text-gray-400">
+                      <p className="text-xs font-medium text-(--palette-ink) truncate">{s.name}</p>
+                      <p className="text-[10px] text-(--palette-gray-400)">
                         {new Date(s.updatedAt).toLocaleDateString()}
                       </p>
                     </div>
@@ -125,7 +125,7 @@ function SavedSearchesDropdown({
                         e.stopPropagation();
                         onDelete(s.id);
                       }}
-                      className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 text-(--palette-gray-400) hover:text-red-500 transition-opacity"
                     >
                       <Icon style="solid" name="trash" className="size-3" />
                     </button>

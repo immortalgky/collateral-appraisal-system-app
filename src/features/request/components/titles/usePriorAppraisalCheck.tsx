@@ -186,21 +186,21 @@ export function usePriorAppraisalCheck(
     >
       {match && title && (
         <div className="grid gap-2 text-sm">
-          <p className="m-0 text-gray-600">
+          <p className="m-0 text-(--palette-gray-600)">
             {t(
               prior
                 ? 'titleSection.priorCheck.message'
                 : 'titleSection.priorCheck.inProgressMessage',
             )}
           </p>
-          <p className="m-0 font-medium text-gray-900">{identityOf(title, t)}</p>
+          <p className="m-0 font-medium text-(--palette-ink)">{identityOf(title, t)}</p>
           {inFlight.length > 0 && (
-            <div className="grid gap-1 rounded-lg border border-red-300 bg-red-50 px-3 py-2">
-              <p className="m-0 font-semibold text-red-700">
+            <div className="grid gap-1 rounded-lg border border-red-300 dark:border-red-500/40 bg-(--palette-req-wash) px-3 py-2">
+              <p className="m-0 font-semibold text-(--palette-req)">
                 {t('titleSection.priorCheck.inProgressHeading')}
               </p>
               {inFlight.map(a => (
-                <p key={a.appraisalId} className="m-0 text-gray-700">
+                <p key={a.appraisalId} className="m-0 text-(--palette-ink)">
                   {t('titleSection.priorCheck.report')}{' '}
                   <span className="font-medium">
                     {a.appraisalNumber ?? t('requestForm.priorSummary.noReportNumber')}
@@ -214,29 +214,29 @@ export function usePriorAppraisalCheck(
             </div>
           )}
           {prior && match.data && (
-            <div className="grid gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+            <div className="grid gap-1 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2">
               {inFlight.length > 0 && (
-                <p className="m-0 font-semibold text-amber-700">
+                <p className="m-0 font-semibold text-(--palette-warn)">
                   {t('titleSection.priorCheck.priorHeading')}
                 </p>
               )}
-              <p className="m-0 text-gray-700">
+              <p className="m-0 text-(--palette-ink)">
                 {t('titleSection.priorCheck.report')}{' '}
                 <span className="font-medium">{prior.number}</span>
               </p>
               {prior.date && (
-                <p className="m-0 text-gray-700">
+                <p className="m-0 text-(--palette-ink)">
                   {t('titleSection.priorCheck.date')} {formatDate(prior.date, 'dd/MM/yyyy')}
                 </p>
               )}
               {/* No value to show for a missing or zero one; whole baht as the prior block writes it */}
               {!!prior.value && (
-                <p className="m-0 text-gray-700">
+                <p className="m-0 text-(--palette-ink)">
                   {t('titleSection.priorCheck.value')}{' '}
                   {formatNumber(prior.value, Number.isInteger(prior.value) ? 0 : 2)}
                 </p>
               )}
-              <p className="m-0 text-gray-700">
+              <p className="m-0 text-(--palette-ink)">
                 {t('titleSection.priorCheck.count', { n: match.data.engagementCount })}
               </p>
             </div>

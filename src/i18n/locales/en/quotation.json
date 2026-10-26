@@ -425,6 +425,7 @@
         "noAssignment": "no assignment",
         "notPending": "assignment not pending",
         "unpriced": "no price from the winner",
+        "feeBaseMissing": "No base fee (01) — set the fee before assigning",
         "constructionInspection": "construction inspection",
         "taskHeld": "task held by {{name}}",
         "taskHeldUnknown": "task is held by another user",
@@ -473,6 +474,7 @@
       "documentFollowupOpen": "An open document follow-up must be cleared first. Then assign it on the Administration page.",
       "winnerUnavailable": "The winning company is not available. Check the company, then assign it on the Administration page.",
       "unpriced": "The winner did not quote a price for this appraisal, so it was not assigned.",
+      "feeBaseMissing": "No base fee (01) — set the fee before assigning",
       "stopped": "Assignment stopped before it finished. Assign it on the Administration page.",
       "unexpectedStop": "Assignment stopped unexpectedly. Assign it on the Administration page.",
       "stateUnreadable": "The workflow state could not be read. Check the appraisal, then assign it on the Administration page.",
@@ -566,7 +568,17 @@
   },
   "email": {
     "draftingTitle": "Drafting email to send to external appraisal company",
-    "subjectLabel": "Subject"
+    "subjectLabel": "Subject",
+    "from": "From",
+    "send": "Send",
+    "cancel": "Cancel",
+    "to": "To",
+    "cc": "Cc",
+    "bcc": "Bcc",
+    "content": "Content",
+    "attachments": "Attachments",
+    "addAttachment": "Add attachment",
+    "attachmentPlaceholder": "Type and press Enter to add"
   },
   "picker": {
     "customerName": "Customer Name",
@@ -669,5 +681,21 @@
   "yesNo": {
     "yes": "Yes",
     "no": "No"
+  },
+  "entryModal": {
+    "tabNew": "Create New",
+    "tabExisting": "Add to Existing Draft",
+    "existingHint": "Select an existing Draft quotation to add this appraisal into. Multiple appraisals can share one bid invitation.",
+    "addedToDraft_one": "Appraisal will be added to <strong>{{quotationNumber}}</strong> ({{count}} existing appraisal)",
+    "addedToDraft_other": "Appraisal will be added to <strong>{{quotationNumber}}</strong> ({{count}} existing appraisals)",
+    "maxDurationHelper": "Maximum duration you allow the appraiser to complete this appraisal. Applies to the appraisal being added.",
+    "adding": "Adding...",
+    "addToDraft": "Add to Draft",
+    "addFailed": "Failed to add appraisal to draft"
+  },
+  "section": {
+    "removeCompany": "Remove {{company}}",
+    "latestCancelled": "Latest quotation {{number}} was cancelled",
+    "dateTimePlaceholder": "dd/mm/yyyy hh:mm"
   }
 }

@@ -126,9 +126,9 @@ export const PropertyStackSection = ({
         <button
           type="button"
           onClick={() => onToggle(type)}
-          className="w-full flex items-center gap-3 px-3 py-2 text-left bg-white hover:bg-gray-50/70 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 text-left bg-(--palette-surface) hover:bg-(--palette-surface-2)/70 transition-colors"
         >
-          <div className="w-[6.6rem] h-[4.1rem] rounded-lg overflow-hidden bg-gray-50 flex-shrink-0">
+          <div className="w-[6.6rem] h-[4.1rem] rounded-lg overflow-hidden bg-(--palette-surface-2) flex-shrink-0">
             {withImages.length > 0 ? (
               <div
                 className={`w-full h-full grid ${
@@ -154,7 +154,7 @@ export const PropertyStackSection = ({
               <div className="w-full h-full flex items-center justify-center">
                 <Icon
                   name={getPropertyIcon(type).name}
-                  className="text-2xl text-gray-400"
+                  className="text-2xl text-(--palette-gray-400)"
                   style={getPropertyIcon(type).style}
                 />
               </div>
@@ -163,14 +163,16 @@ export const PropertyStackSection = ({
 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-(--palette-ink)">
                 <ParameterDisplay group="PropertyType" code={type} fallback={type} />
               </h3>
-              <span className="text-[11px] text-gray-400 tabular-nums">
+              <span className="text-[11px] text-(--palette-gray-400) tabular-nums">
                 {t('properties.itemCount', { n: items.length })}
               </span>
             </div>
-            {summary && <p className="text-[11px] text-gray-500 truncate mt-0.5">{summary}</p>}
+            {summary && (
+              <p className="text-[11px] text-(--palette-gray-500) truncate mt-0.5">{summary}</p>
+            )}
             {(notPriceCertified > 0 || conditionCounts.size > 0) && (
               <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
                 {notPriceCertified > 0 && (
@@ -194,7 +196,11 @@ export const PropertyStackSection = ({
             )}
           </div>
 
-          <Icon name="chevron-down" className="text-gray-400 text-xs shrink-0" style="solid" />
+          <Icon
+            name="chevron-down"
+            className="text-(--palette-gray-400) text-xs shrink-0"
+            style="solid"
+          />
         </button>
         {hiddenCards}
       </div>
@@ -202,18 +208,18 @@ export const PropertyStackSection = ({
   }
 
   return (
-    <div className="bg-gray-50/40">
+    <div className="bg-(--palette-surface-2)/40">
       <div className="flex items-center gap-2 px-3 py-1.5">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400)">
           <ParameterDisplay group="PropertyType" code={type} fallback={type} />
         </span>
-        <span className="text-[11px] text-gray-400 tabular-nums">
+        <span className="text-[11px] text-(--palette-gray-400) tabular-nums">
           {t('properties.itemCount', { n: items.length })}
         </span>
         <button
           type="button"
           onClick={() => onToggle(type)}
-          className="ml-auto inline-flex items-center gap-1 text-[11px] text-gray-400 hover:text-primary transition-colors"
+          className="ml-auto inline-flex items-center gap-1 text-[11px] text-(--palette-gray-400) hover:text-(--palette-primary-text) transition-colors"
         >
           {t('properties.stack.collapse')}
           <Icon name="chevron-up" className="text-[10px]" style="solid" />
@@ -221,10 +227,10 @@ export const PropertyStackSection = ({
       </div>
 
       {/* Column labels, offset by the drag gutter so each sits over its own column. */}
-      <div className="flex items-center border-b border-gray-100 pb-1">
+      <div className="flex items-center border-b border-(--palette-line-soft) pb-1">
         <div className={`${HANDLE_GUTTER} shrink-0`} />
         <div
-          className={`flex-1 min-w-0 pr-3 ${gridClass} text-[10px] font-bold uppercase tracking-wider text-gray-400`}
+          className={`flex-1 min-w-0 pr-3 ${gridClass} text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400)`}
         >
           <span />
           <span className="truncate">
@@ -253,7 +259,7 @@ export const PropertyStackSection = ({
         </div>
       </div>
 
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-(--palette-line-soft)">
         {items.map(item => (
           <PropertyCard
             key={item.id}

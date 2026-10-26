@@ -138,20 +138,20 @@ const MeetingCommandBar = ({
     clock = {
       icon: 'clock',
       text: t('session.startsIn', { time: formatDuration(startMs - now) }),
-      tone: 'text-gray-500',
+      tone: 'text-(--palette-gray-500)',
     };
   } else if (isLive && startMs !== null && startMs <= now) {
     clock = {
       icon: 'circle-play',
       text: t('session.running', { time: formatDuration(now - startMs) }),
-      tone: 'text-amber-600',
+      tone: 'text-amber-600 dark:text-amber-400',
     };
   }
 
   const freshnessSeconds = Math.max(0, Math.round((now - dataUpdatedAt) / 1000));
 
   return (
-    <div className="sticky top-0 z-20 -mx-1 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-white/80 bg-white/95">
+    <div className="sticky top-0 z-20 -mx-1 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-(--palette-surface)/80 bg-(--palette-surface)/95">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate(-1)} type="button">
@@ -161,7 +161,9 @@ const MeetingCommandBar = ({
 
           <div className="flex min-w-0 flex-wrap items-center gap-2.5">
             <MeetingNoBadge meetingNo={meeting.meetingNo} />
-            <h2 className="truncate text-base font-semibold text-gray-900">{meeting.title}</h2>
+            <h2 className="truncate text-base font-semibold text-(--palette-ink)">
+              {meeting.title}
+            </h2>
             <MeetingStatusBadge status={status} />
 
             {clock && (
@@ -173,7 +175,7 @@ const MeetingCommandBar = ({
 
             {isLive && (
               <span
-                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700"
+                className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:text-emerald-300"
                 title={t('session.updatedAgo', {
                   time: freshnessSeconds < 5 ? t('session.justNow') : `${freshnessSeconds}s`,
                 })}
@@ -219,7 +221,7 @@ const MeetingCommandBar = ({
                 icon="paper-plane"
                 label={t('buttons.resendInvitation')}
                 tone="white"
-                iconClassName="text-blue-600"
+                iconClassName="text-blue-600 dark:text-blue-400"
                 onClick={onResendInvitation}
               />
             )}
@@ -228,7 +230,7 @@ const MeetingCommandBar = ({
               icon="folder-open"
               label={t('buttons.documents')}
               tone="white"
-              iconClassName="text-primary"
+              iconClassName="text-(--palette-primary-text)"
               onClick={onDocuments}
             />
 

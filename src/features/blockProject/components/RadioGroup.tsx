@@ -41,7 +41,7 @@ const RadioGroup = ({
             disabled={disabled}
             className="accent-primary"
           />
-          <span className="text-sm text-gray-700">{opt.label}</span>
+          <span className="text-sm text-(--palette-ink)">{opt.label}</span>
         </label>
       ))}
       {showOther && value === 'Other' && (
@@ -51,7 +51,7 @@ const RadioGroup = ({
           onChange={e => onOtherChange?.(e.target.value)}
           placeholder={t('radioGroup.specifyPlaceholder')}
           disabled={disabled}
-          className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-400"
+          className="border border-(--palette-input-edge) bg-(--form-input-bg) text-(--palette-ink) rounded-md px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-(--palette-surface-2) disabled:text-(--palette-ink-2)"
         />
       )}
     </div>

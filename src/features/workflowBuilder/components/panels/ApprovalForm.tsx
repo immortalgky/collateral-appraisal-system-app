@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeApprovalFormSchema, type ApprovalFormValues } from '../../schemas';
+import { approvalFormSchema, type ApprovalFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { ApprovalProperties } from '../../types';
 
@@ -65,7 +66,7 @@ export function ApprovalForm({ nodeId }: Props) {
     watch,
     formState: { errors },
   } = useForm<ApprovalFormValues>({
-    resolver: zodResolver(makeApprovalFormSchema(t)),
+    resolver: zodResolver(approvalFormSchema),
     defaultValues: buildDefaults(data, props),
   });
 
@@ -142,9 +143,11 @@ export function ApprovalForm({ nodeId }: Props) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -241,7 +244,7 @@ export function ApprovalForm({ nodeId }: Props) {
                 appendThreshold({ committeeCode: '', maxValue: '' });
                 setTimeout(() => handleSubmit(onSubmit)(), 0);
               }}
-              className="btn btn-ghost btn-xs text-primary"
+              className="btn btn-ghost btn-xs text-(--palette-primary-text)"
             >
               {t('forms.buttons.addThreshold')}
             </button>
@@ -346,7 +349,7 @@ export function ApprovalForm({ nodeId }: Props) {
             appendVoteMovement({ key: '', value: '' });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
-          className="btn btn-ghost btn-xs text-primary"
+          className="btn btn-ghost btn-xs text-(--palette-primary-text)"
         >
           {t('forms.buttons.addVoteMovement')}
         </button>
@@ -386,7 +389,7 @@ export function ApprovalForm({ nodeId }: Props) {
             appendDecision({ key: '', value: '' });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
-          className="btn btn-ghost btn-xs text-primary"
+          className="btn btn-ghost btn-xs text-(--palette-primary-text)"
         >
           {t('forms.buttons.addDecision')}
         </button>

@@ -54,13 +54,18 @@ export const PropertyRowActionsMenu = ({
           disabled={opts.disabled}
           className={clsx(
             'flex w-full items-center gap-2 px-3 py-2 text-sm',
-            opts.disabled && 'text-gray-400 cursor-not-allowed',
-            !opts.disabled && opts.danger && 'text-red-600',
-            !opts.disabled && !opts.danger && 'text-gray-700',
-            focus && !opts.disabled && (opts.danger ? 'bg-red-50' : 'bg-gray-50'),
+            opts.disabled && 'text-(--palette-gray-400) cursor-not-allowed',
+            !opts.disabled && opts.danger && 'text-(--palette-danger)',
+            !opts.disabled && !opts.danger && 'text-(--palette-ink)',
+            focus &&
+              !opts.disabled &&
+              (opts.danger ? 'bg-(--palette-req-wash)' : 'bg-(--palette-surface-2)'),
           )}
         >
-          <Icon name={icon} className={clsx('text-xs', !opts.danger && 'text-gray-400')} />
+          <Icon
+            name={icon}
+            className={clsx('text-xs', !opts.danger && 'text-(--palette-gray-400)')}
+          />
           {label}
         </button>
       )}
@@ -71,13 +76,13 @@ export const PropertyRowActionsMenu = ({
     <Menu as="div" className={clsx('relative', className)}>
       <MenuButton
         onClick={e => e.stopPropagation()}
-        className="p-1.5 rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+        className="p-1.5 rounded text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
       >
         <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
       </MenuButton>
       <MenuItems
         anchor={{ to: 'bottom end', gap: 4 }}
-        className="z-50 w-36 rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+        className="z-50 w-36 rounded-md bg-(--palette-surface) shadow-lg ring-1 ring-black/5 focus:outline-none"
       >
         <div className="py-1">
           {item(t('properties.contextMenu.edit'), 'pen-to-square', () => onEdit(property, groupId))}
@@ -93,7 +98,7 @@ export const PropertyRowActionsMenu = ({
               disabled: !hasClipboard,
             },
           )}
-          <div className="border-t border-gray-100 my-1" />
+          <div className="border-t border-(--palette-line-soft) my-1" />
           {item(t('properties.contextMenu.delete'), 'trash', () => onDelete(property, groupId), {
             danger: true,
           })}

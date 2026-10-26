@@ -66,16 +66,18 @@ function ReminderWidget() {
 
   return (
     <WidgetWrapper id="reminders">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full flex flex-col">
         {/* Header */}
-        <div className="flex flex-col gap-0.5 px-5 py-4 border-b border-gray-100 shrink-0">
-          <h3 className="text-base font-semibold text-gray-800">
+        <div className="flex flex-col gap-0.5 px-5 py-4 border-b border-(--palette-line-soft) shrink-0">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             {t('reminders.title')}
             {!isLoading && allVisible.length > 0 && (
-              <span className="ml-2 text-sm font-normal text-gray-400">· {allVisible.length}</span>
+              <span className="ml-2 text-sm font-normal text-(--palette-gray-400)">
+                · {allVisible.length}
+              </span>
             )}
           </h3>
-          <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-(--palette-gray-400) flex-wrap">
             <WidgetDateRangeBadge asOf={new Date()} />
             {updatedLabel && (
               <>
@@ -88,7 +90,7 @@ function ReminderWidget() {
 
         {/* Chip filter strip */}
         {!isLoading && allVisible.length > 0 && (
-          <div className="flex items-center gap-1.5 px-5 py-2 border-b border-gray-50 flex-wrap shrink-0">
+          <div className="flex items-center gap-1.5 px-5 py-2 border-b border-(--palette-line-soft) flex-wrap shrink-0">
             {CHIPS.map(chip => (
               <button
                 key={chip.key}
@@ -97,7 +99,7 @@ function ReminderWidget() {
                 className={`px-3 py-1 text-xs font-medium rounded-full border transition-colors ${
                   activeChip === chip.key
                     ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line) hover:bg-(--palette-surface-2)'
                 }`}
               >
                 {chip.label}
@@ -107,7 +109,7 @@ function ReminderWidget() {
         )}
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+        <div className="flex-1 overflow-y-auto divide-y divide-(--palette-line-soft)">
           {isLoading ? (
             <>
               <ReminderRowSkeleton />
@@ -116,10 +118,10 @@ function ReminderWidget() {
             </>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 px-5 gap-2">
-              <div className="p-3 rounded-full bg-green-50">
+              <div className="p-3 rounded-full bg-green-50 dark:bg-green-500/10">
                 <Icon name="check" style="solid" className="size-5 text-green-500" />
               </div>
-              <p className="text-sm text-gray-500 text-center">
+              <p className="text-sm text-(--palette-gray-500) text-center">
                 {allVisible.length === 0
                   ? t('reminders.noneAll')
                   : t('reminders.noneFiltered', {
@@ -136,7 +138,7 @@ function ReminderWidget() {
               return (
                 <div key={item.id} className="flex items-center gap-3 px-5 py-4 group">
                   <div
-                    className={`p-2 rounded-full shrink-0 ${item.overdue ? 'bg-red-50' : 'bg-blue-50'}`}
+                    className={`p-2 rounded-full shrink-0 ${item.overdue ? 'bg-(--palette-req-wash)' : 'bg-blue-50 dark:bg-blue-500/10'}`}
                   >
                     <Icon
                       name="bell"
@@ -147,16 +149,20 @@ function ReminderWidget() {
 
                   <div className="flex flex-col gap-0.5 flex-1 min-w-0">
                     {item.appraisalNumber && (
-                      <span className="text-xs font-semibold text-blue-600">
+                      <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                         {item.appraisalNumber}
                       </span>
                     )}
-                    <span className="text-sm font-medium text-gray-800 truncate">{item.title}</span>
-                    {dueLabel && <span className="text-xs text-gray-400">{dueLabel}</span>}
+                    <span className="text-sm font-medium text-(--palette-ink) truncate">
+                      {item.title}
+                    </span>
+                    {dueLabel && (
+                      <span className="text-xs text-(--palette-gray-400)">{dueLabel}</span>
+                    )}
                   </div>
 
                   {item.overdue && (
-                    <span className="px-2.5 py-1 text-xs font-medium rounded-full shrink-0 bg-red-50 text-red-600">
+                    <span className="px-2.5 py-1 text-xs font-medium rounded-full shrink-0 bg-(--palette-req-wash) text-(--palette-danger)">
                       {t('reminders.overdueLabel')}
                     </span>
                   )}
@@ -166,7 +172,7 @@ function ReminderWidget() {
                     type="button"
                     onClick={() => setDismissed(prev => new Set([...prev, item.id]))}
                     aria-label={t('reminders.aria.dismiss')}
-                    className="w-5 h-5 flex items-center justify-center rounded text-gray-300 hover:text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                    className="w-5 h-5 flex items-center justify-center rounded text-(--palette-gray-300) hover:text-(--palette-gray-500) opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                   >
                     <Icon name="xmark" style="solid" className="size-3" />
                   </button>

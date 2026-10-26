@@ -206,14 +206,14 @@ const CreateQuotationModal = ({
         {/* Selected Companies Display */}
         {selectedCompanies.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
               Selected Companies ({selectedCompanies.length})
             </label>
             <div className="flex flex-wrap gap-2">
               {selectedCompanies.map(company => (
                 <div
                   key={company.id}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-sm"
                 >
                   <Icon name="building" style="solid" className="size-3.5" />
                   <span className="font-medium">
@@ -225,7 +225,7 @@ const CreateQuotationModal = ({
                   <button
                     type="button"
                     onClick={() => handleRemoveCompany(company.id)}
-                    className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                    className="p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-500/30 transition-colors"
                   >
                     <Icon name="xmark" style="solid" className="size-3" />
                   </button>
@@ -237,11 +237,11 @@ const CreateQuotationModal = ({
 
         {/* Company Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
             Select External Companies <span className="text-danger">*</span>
           </label>
           {segmentSet.length > 0 && (
-            <p className="text-xs text-purple-600 mb-1.5 flex items-center gap-1">
+            <p className="text-xs text-purple-600 dark:text-purple-400 mb-1.5 flex items-center gap-1">
               <Icon name="circle-info" style="solid" className="size-3.5" />
               {t('quotation.editDraft.showingEligibleFor', {
                 segment: segmentLabel(segmentSet[0]),
@@ -249,8 +249,8 @@ const CreateQuotationModal = ({
             </p>
           )}
 
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="flex p-2 border-b border-gray-100">
+          <div className="border border-(--palette-line) rounded-lg overflow-hidden">
+            <div className="flex p-2 border-b border-(--palette-line-soft)">
               <button
                 type="button"
                 role="checkbox"
@@ -262,8 +262,8 @@ const CreateQuotationModal = ({
                   'flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   allChecked
-                    ? 'bg-purple-50 enabled:hover:bg-purple-100'
-                    : 'enabled:hover:bg-gray-50',
+                    ? 'bg-purple-50 dark:bg-purple-500/10 enabled:hover:bg-purple-100 dark:enabled:hover:bg-purple-500/20'
+                    : 'enabled:hover:bg-(--palette-surface-2)',
                 )}
               >
                 <div
@@ -271,18 +271,18 @@ const CreateQuotationModal = ({
                     'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
                     allChecked || indeterminate
                       ? 'bg-purple-500 border-purple-500'
-                      : 'border-gray-300 bg-white',
+                      : 'border-(--palette-line-strong) bg-(--palette-surface)',
                   )}
                 >
                   {allChecked && <Icon name="check" style="solid" className="size-3 text-white" />}
-                  {indeterminate && <span className="h-0.5 w-2.5 rounded bg-white" />}
+                  {indeterminate && <span className="h-0.5 w-2.5 rounded bg-(--palette-surface)" />}
                 </div>
               </button>
               <div className="relative w-full">
                 <Icon
                   name="magnifying-glass"
                   style="regular"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--palette-gray-400)"
                 />
                 <input
                   type="text"
@@ -295,7 +295,7 @@ const CreateQuotationModal = ({
             </div>
             <div className="max-h-48 overflow-y-auto">
               {isLoadingCompanies ? (
-                <div className="px-4 py-6 text-center text-gray-500">
+                <div className="px-4 py-6 text-center text-(--palette-gray-500)">
                   <Icon
                     name="spinner"
                     style="solid"
@@ -304,7 +304,7 @@ const CreateQuotationModal = ({
                   <span className="text-xs">Loading...</span>
                 </div>
               ) : companyList.length === 0 ? (
-                <div className="px-4 py-6 text-center text-gray-500 text-sm">
+                <div className="px-4 py-6 text-center text-(--palette-gray-500) text-sm">
                   {isSegmentError
                     ? t('quotation.segmentLoadFailed')
                     : isCompaniesError
@@ -314,7 +314,7 @@ const CreateQuotationModal = ({
                         : t('quotation.editDraft.noCompaniesFound')}
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-(--palette-line-soft)">
                   {companyList.map(company => {
                     const isSelected = isCompanySelected(company.id);
                     return (
@@ -324,7 +324,9 @@ const CreateQuotationModal = ({
                         onClick={() => handleToggleCompany(company)}
                         className={clsx(
                           'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                          isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                          isSelected
+                            ? 'bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
+                            : 'hover:bg-(--palette-surface-2)',
                         )}
                       >
                         <div
@@ -332,18 +334,22 @@ const CreateQuotationModal = ({
                             'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
                             isSelected
                               ? 'bg-purple-500 border-purple-500'
-                              : 'border-gray-300 bg-white',
+                              : 'border-(--palette-line-strong) bg-(--palette-surface)',
                           )}
                         >
                           {isSelected && (
                             <Icon name="check" style="solid" className="size-3 text-white" />
                           )}
                         </div>
-                        <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                          <Icon name="building" style="solid" className="size-4 text-purple-600" />
+                        <div className="size-8 rounded-lg bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0">
+                          <Icon
+                            name="building"
+                            style="solid"
+                            className="size-4 text-purple-600 dark:text-purple-400"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
+                          <div className="text-sm font-medium text-(--palette-ink) truncate">
                             {localizeCompanyName(company.companyName, company.companyNameLocal)}
                           </div>
                         </div>
@@ -386,8 +392,9 @@ const CreateQuotationModal = ({
 
         {/* Remarks */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Special Requirements <span className="text-xs text-gray-400">(optional)</span>
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
+            Special Requirements{' '}
+            <span className="text-xs text-(--palette-gray-400)">(optional)</span>
           </label>
           <textarea
             value={remarks}
@@ -395,20 +402,20 @@ const CreateQuotationModal = ({
             placeholder="Add any special instructions or requirements..."
             rows={3}
             maxLength={500}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
+            className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
           />
-          <p className="text-xs text-gray-400 mt-1 text-right">{remarks.length}/500</p>
+          <p className="text-xs text-(--palette-gray-400) mt-1 text-right">{remarks.length}/500</p>
         </div>
 
         {/* Context warning if required fields are missing */}
         {(!requestId || !workflowInstanceId) && (
-          <div className="bg-amber-50 rounded-lg p-3 flex items-start gap-2">
+          <div className="bg-(--palette-warn-wash) rounded-lg p-3 flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
               style="solid"
               className="size-4 text-amber-500 shrink-0 mt-0.5"
             />
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-(--palette-warn)">
               This quotation must be started from an active admin workflow task. Make sure you have
               opened this page from the task list.
             </p>

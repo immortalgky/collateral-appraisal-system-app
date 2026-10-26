@@ -46,7 +46,7 @@ function SearchTips({ minLength, showCoverage = false, className = '' }: SearchT
 
   return (
     <div className={`flex flex-col gap-3 ${className}`}>
-      <ul className="flex flex-col gap-2 text-xs text-gray-600">
+      <ul className="flex flex-col gap-2 text-xs text-(--palette-gray-600)">
         {tips.map(tip => (
           <li key={tip} className="flex gap-2 text-left">
             <Icon
@@ -60,14 +60,18 @@ function SearchTips({ minLength, showCoverage = false, className = '' }: SearchT
       </ul>
 
       {showCoverage && (
-        <div className="border-t border-gray-100 pt-2.5">
-          <p className="mb-1.5 text-left text-[11px] font-medium text-gray-500">
+        <div className="border-t border-(--palette-line-soft) pt-2.5">
+          <p className="mb-1.5 text-left text-[11px] font-medium text-(--palette-gray-500)">
             {t('list.searchTips.coverageTitle')}
           </p>
-          <ul className="flex flex-col gap-1.5 text-[11px] text-gray-500">
+          <ul className="flex flex-col gap-1.5 text-[11px] text-(--palette-gray-500)">
             {COVERAGE.map(({ key, icon }) => (
               <li key={key} className="flex gap-2 text-left">
-                <Icon style="solid" name={icon} className="mt-0.5 size-3 shrink-0 text-gray-300" />
+                <Icon
+                  style="solid"
+                  name={icon}
+                  className="mt-0.5 size-3 shrink-0 text-(--palette-gray-300)"
+                />
                 <span>{t(`list.searchTips.coverage.${key}`)}</span>
               </li>
             ))}

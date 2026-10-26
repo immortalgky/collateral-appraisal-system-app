@@ -46,15 +46,15 @@ const EndMeetingDialog = ({ isOpen, onClose, meetingId, onSuccess }: EndMeetingD
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.endMeeting')} size="md">
       <div className="space-y-4">
-        <p className="text-sm text-gray-600">{t('endDialog.description')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('endDialog.description')}</p>
 
-        <div className="flex items-start gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+        <div className="flex items-start gap-2 px-3 py-2 bg-(--palette-surface-2) border border-(--palette-line) rounded-lg">
           <Icon
             name="circle-info"
             style="regular"
-            className="w-4 h-4 text-gray-400 shrink-0 mt-0.5"
+            className="w-4 h-4 text-(--palette-gray-400) shrink-0 mt-0.5"
           />
-          <p className="text-xs text-gray-500">{t('endDialog.note')}</p>
+          <p className="text-xs text-(--palette-gray-500)">{t('endDialog.note')}</p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

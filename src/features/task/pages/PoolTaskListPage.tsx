@@ -1,265 +1,171 @@
-import { InboxZeroArt, NoResultsArt } from '@/shared/components/illustrations';
-import {
-  ColumnResizeHandle,
-  ColumnVisibilityDropdown,
-  useColumnAutoFit,
-  useColumnVisibility,
-  useColumnWidths,
-} from '@/shared/components/columnLayout';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
+import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useClaimTask, useGetPoolTasks, useLockTask } from '../api';
-import {
-  bucketForSlaStatus,
-  getRowVariantClasses,
-} from '@features/common/monitoring/components/SlaCells';
+import { usePoolGroups } from '../hooks/usePoolGroups';
+import { useTaskListPaging } from '../hooks/useTaskListPaging';
 import type { GroupByField, PoolTask, TaskFilterParams } from '../types';
 import { useAuthStore } from '@features/auth/store';
+import { isSameUser } from '../utils/isSameUser';
 import type { PoolTaskUpdateEvent } from '../hooks/useWorkflowHub';
 import { useWorkflowHub } from '../hooks/useWorkflowHub';
 import { usePoolKanbanRealtime } from '../hooks/usePoolKanbanRealtime';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
-import { TableRowSkeleton } from '@/shared/components/Skeleton';
-import { columnDefs, COLUMN_LABELS, DEFAULT_CONFIG } from '../config/columnDefs';
+import { DEFAULT_CONFIG, Dash } from '../config/columnDefs';
 import type { ColumnKey } from '../config/columnDefs';
-import { useDebounce } from '@/shared/hooks/useDebounce';
-import { TaskFilterDialog } from '../components/TaskFilterDialog';
 import { TaskKanbanBoard } from '../components/TaskKanbanBoard';
 import { PoolTaskKanbanCard } from '../components/PoolTaskKanbanCard';
+import { TaskEmptyState } from '../components/list/TaskEmptyState';
+import { TaskLegend } from '../components/list/TaskLegend';
+import { TaskLoadError } from '../components/list/TaskLoadError';
+import { TaskTable, type TaskRowMenuItem } from '../components/list/TaskTable';
 
-type SortDirection = 'asc' | 'desc';
 type ViewMode = 'grid' | 'list';
 
-const VIEW_STORAGE_KEY = 'task-view-pool';
-const GROUPBY_STORAGE_KEY = 'task-groupby-pool';
-
-const GROUP_BY_VALUES: GroupByField[] = ['status', 'purpose', 'priority', 'activity', 'slaStatus'];
-
-function readStoredViewMode(): ViewMode {
-  try {
-    const v = localStorage.getItem(VIEW_STORAGE_KEY);
-    return v === 'grid' || v === 'list' ? v : 'list';
-  } catch {
-    return 'list';
-  }
-}
-
-function readStoredGroupBy(): GroupByField {
-  try {
-    const v = localStorage.getItem(GROUPBY_STORAGE_KEY);
-    return v && (GROUP_BY_VALUES as string[]).includes(v) ? (v as GroupByField) : 'status';
-  } catch {
-    return 'status';
-  }
-}
-
-const FILTER_LABELS: Record<keyof TaskFilterParams, string> = {
-  appraisalNumber: 'Appraisal No.',
-  customerName: 'Customer',
-  status: 'Request Status',
-  pendingTaskStatus: 'Task Status',
-  slaStatus: 'SLA',
-  assigneeUserId: 'Assignee',
-  activityId: 'Task Type',
-  purpose: 'Purpose',
-  channel: 'Channel',
-  dateType: 'Date Type',
-  dateFrom: 'From',
-  dateTo: 'To',
-};
-
-function LockBubble({
-  label,
-  color,
-  lockedAt,
-}: {
-  label: string;
-  color: 'blue' | 'amber';
-  lockedAt: string | null;
-}) {
-  const elapsed = lockedAt
-    ? (() => {
-        const mins = Math.floor((Date.now() - new Date(lockedAt).getTime()) / 60000);
-        return mins < 1 ? '< 1 min ago' : `${mins} min ago`;
-      })()
+/**
+ * That the task is locked, as a small lock after its number: blue for you, amber for anyone else.
+ * Who and since when is its title and name. An icon, not a pill: the first cell is narrow and the
+ * number must always be whole.
+ */
+function LockMark({ task, self }: { task: PoolTask; self: boolean }) {
+  const { t } = useTranslation('task');
+  const mins = task.lockedAt
+    ? Math.floor((Date.now() - new Date(task.lockedAt).getTime()) / 60000)
     : null;
-
-  const isBlue = color === 'blue';
-  const pillCls = isBlue
-    ? 'bg-blue-100 ring-1 ring-blue-300'
-    : 'bg-amber-100 ring-1 ring-amber-300';
-  const dotCls = isBlue ? 'bg-blue-500' : 'bg-amber-500';
-  const tooltipCls = isBlue ? 'bg-blue-600 text-white' : 'bg-amber-500 text-white';
-  const tailCls = isBlue ? 'bg-blue-600' : 'bg-amber-500';
-
+  const elapsed =
+    mins === null
+      ? null
+      : mins < 1
+        ? t('pool.lockedLessThanMinute')
+        : t('pool.lockedMinutesAgo', { count: mins });
+  const who = self ? t('pool.lockedByYou') : t('pool.lockedByName', { name: task.workingBy });
+  const label = elapsed ? `${who} · ${elapsed}` : who;
   return (
-    <div className="relative group/lock inline-block shrink-0">
-      {/* Typing indicator — Teams / WhatsApp style */}
-      <div
-        className={`inline-flex items-center gap-[3px] px-2.5 py-2 rounded-2xl shadow-sm cursor-default select-none ${pillCls}`}
-      >
-        {([0, 160, 320] as const).map(delay => (
-          <span
-            key={delay}
-            className={`block size-1.5 rounded-full animate-bounce ${dotCls}`}
-            style={{ animationDelay: `${delay}ms`, animationDuration: '900ms' }}
-          />
-        ))}
-      </div>
-
-      {/* Tooltip — appears on hover */}
-      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 pointer-events-none invisible opacity-0 group-hover/lock:visible group-hover/lock:opacity-100 transition-all duration-150">
-        <div className={`rounded-2xl px-3 py-2 text-xs shadow-xl whitespace-nowrap ${tooltipCls}`}>
-          <p className="font-semibold leading-none">{label}</p>
-          {elapsed && <p className="mt-1 opacity-75 text-[10px]">{elapsed}</p>}
-        </div>
-        {/* Bubble tail — descending circles */}
-        <div className="absolute top-full left-1/2 -translate-x-1/2 flex flex-col items-center gap-0.5 pt-0.5">
-          <div className={`size-2 rounded-full ${tailCls}`} />
-          <div className={`size-1.5 rounded-full ${tailCls} opacity-75`} />
-          <div className={`size-1 rounded-full ${tailCls} opacity-50`} />
-        </div>
-      </div>
-    </div>
+    <span
+      role="img"
+      aria-label={label}
+      title={label}
+      className={clsx(
+        'inline-flex shrink-0',
+        self ? 'text-blue-600 dark:text-blue-400' : 'text-amber-600 dark:text-amber-400',
+      )}
+    >
+      <Icon style="solid" name="lock" className="text-xs" />
+    </span>
   );
 }
 
 interface PoolTaskListPageProps {
   activityId?: string;
-  // When provided by a parent, the toolbar is hidden and these values drive the query
+  /** What to search and filter by: the parent owns the toolbar, this page only lists. */
   externalSearch?: string;
   externalFilters?: TaskFilterParams;
-  onCountChange?: (count: number) => void;
-  // Column layout — supplied by the parent so the columns dropdown can live inline in
-  // the parent toolbar (single shared source). Falls back to internal state when the
-  // page is rendered standalone (uncontrolled).
-  visibleColumns?: ColumnKey[];
-  colWidths?: Record<string, number>;
-  onColWidthChange?: (key: ColumnKey, px: number) => void;
-  // View/grouping — supplied by the parent so the list⇄board toggle and group-by
-  // select can live inline in the parent's shared toolbar (mirrors the personal
-  // tab). Falls back to internal (localStorage-backed) state when standalone.
-  viewMode?: ViewMode;
-  groupBy?: GroupByField;
+  /** "Clear filters" on the empty state. */
+  onClearFilters?: () => void;
+  /** The pool table's first load or new list is on its way (not a kept page). */
+  onLoadingChange?: (loading: boolean) => void;
+  /** The pool's total, or null while it is not known (loading, or the board is showing). */
+  onCountChange?: (count: number | null) => void;
+  // Column layout and view — supplied by the parent, so the columns picker and the list/board
+  // toggle can live in its toolbar.
+  visibleColumns: ColumnKey[];
+  /** Pinned columns, which lead and stay put on a sideways scroll. Default: the appraisal number. */
+  pinnedColumns?: readonly ColumnKey[];
+  colWidths: Record<string, number>;
+  onColWidthChange: (key: ColumnKey, px: number) => void;
+  viewMode: ViewMode;
+  groupBy: GroupByField;
+  /** Drop the card's own frame: the parent draws one around the toolbar and this. */
+  bare?: boolean;
 }
+
+const DEFAULT_PINNED: readonly ColumnKey[] = [DEFAULT_CONFIG.pinnedColumn];
+const NO_FILTERS: TaskFilterParams = {};
 
 function PoolTaskListPage({
   activityId,
-  externalSearch,
-  externalFilters,
+  externalSearch = '',
+  externalFilters = NO_FILTERS,
+  onClearFilters,
   onCountChange,
-  visibleColumns: propVisibleColumns,
-  colWidths: propColWidths,
+  onLoadingChange,
+  visibleColumns,
+  pinnedColumns = DEFAULT_PINNED,
+  colWidths,
   onColWidthChange,
-  viewMode: propViewMode,
-  groupBy: propGroupBy,
+  viewMode,
+  groupBy,
+  bare = false,
 }: PoolTaskListPageProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation('task');
   const currentUsername = useAuthStore(s => s.user?.username);
-  const userRoles = useAuthStore(s => s.user?.roles ?? []);
-  const isControlled = externalSearch !== undefined || externalFilters !== undefined;
+  const poolGroups = usePoolGroups();
 
-  // Standalone fallback only — when embedded, the parent (TaskListingPage /
-  // ActivityTaskTable) owns this state and renders the toggle in its own toolbar,
-  // so there's no in-body control left here to change it. Read once from the
-  // same storage keys the parent writes to, so a later embed pick up wherever
-  // a standalone render left off.
-  const [internalViewMode] = useState<ViewMode>(readStoredViewMode);
-  const [internalGroupBy] = useState<GroupByField>(readStoredGroupBy);
+  const debouncedSearch = externalSearch;
+  const filters = externalFilters;
 
-  const viewMode = propViewMode ?? internalViewMode;
-  const groupBy = propGroupBy ?? internalGroupBy;
+  const paging = useTaskListPaging(debouncedSearch, filters);
 
-  const [pageNumber, setPageNumber] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
-  const [internalSearchTerm, setInternalSearchTerm] = useState('');
-  const internalDebounced = useDebounce(internalSearchTerm, 400);
-  const isSearchPending = internalSearchTerm !== internalDebounced;
-  const [sortField, setSortField] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [internalFilters, setInternalFilters] = useState<TaskFilterParams>({});
-
-  const searchTerm = isControlled ? (externalSearch ?? '') : internalSearchTerm;
-  const debouncedSearch = isControlled ? searchTerm : internalDebounced;
-  const filters = isControlled ? (externalFilters ?? {}) : internalFilters;
-
-  useEffect(() => {
-    setPageNumber(0);
-  }, [sortField, sortDirection, debouncedSearch, filters]);
-
-  const { data, isLoading, isError, error } = useGetPoolTasks({
-    pageNumber,
-    pageSize,
-    search: debouncedSearch || undefined,
-    sortBy: sortField ?? undefined,
-    sortDir: sortDirection,
-    ...(activityId && { activityId }),
-    ...filters,
-  });
+  // The table's query is for the table: not run while the board is showing
+  const { data, isLoading, isPlaceholderData, isError, error } = useGetPoolTasks(
+    {
+      search: debouncedSearch || undefined,
+      ...paging.queryParams,
+      ...(activityId && { activityId }),
+      ...filters,
+    },
+    { enabled: viewMode === 'list' },
+  );
 
   const tasks = data?.items ?? [];
-  /** Nothing to show, and not because we are still fetching — the table lays itself out differently. */
-  const isEmpty = !isLoading && tasks.length === 0;
-  const totalCount = data?.count ?? 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
 
+  // null until the pool answers (and while the board is showing, with no table query), so the
+  // header's count does not flash 0 while it loads
+  const knownCount = viewMode === 'list' && data ? data.count : null;
   useEffect(() => {
-    onCountChange?.(totalCount);
-  }, [totalCount, onCountChange]);
-  const activeFilterChips = Object.entries(filters).filter(([, v]) => !!v) as [
-    keyof TaskFilterParams,
-    string,
-  ][];
-  const hasFilters = !!searchTerm || activeFilterChips.length > 0;
+    onCountChange?.(knownCount);
+  }, [knownCount, onCountChange]);
+  // Layout effect: the parent's spinner follows in the same frame, not one painted frame later.
+  // The cleanup keeps a stale `true` from outliving the Pool tab.
+  useLayoutEffect(() => {
+    onLoadingChange?.(isLoading);
+    return () => onLoadingChange?.(false);
+  }, [isLoading, onLoadingChange]);
+  const hasFilters = !!debouncedSearch || Object.values(filters).some(Boolean);
 
   const { mutate: lockTask, isPending: isLocking } = useLockTask();
   const { mutate: claimTask, isPending: isClaiming } = useClaimTask();
   const pendingTaskIdRef = useRef<string | null>(null);
-  const [openMenuTaskId, setOpenMenuTaskId] = useState<string | null>(null);
-
-  // Column visibility / order (show-hide + drag reorder), persisted per-tab.
-  // Same DEFAULT_CONFIG as My Task so default headers match; own storage key so
-  // customization stays independent. When a parent controls the layout (embedded
-  // in the task listing / activity toolbar), it owns this state and passes the
-  // resolved values in as props — these internal hooks are the standalone fallback.
-  const internalCols = useColumnVisibility('task-columns-pool', DEFAULT_CONFIG);
-  const internalWidths = useColumnWidths('task-columns-pool', DEFAULT_CONFIG);
-
-  const visibleColumns = propVisibleColumns ?? internalCols.visibleColumns;
-  const colWidths = propColWidths ?? internalWidths.widths;
-  const setColWidth = onColWidthChange ?? internalWidths.setWidth;
-  const tableRef = useRef<HTMLTableElement>(null);
-  const ACTIONS_COL_WIDTH = 40; // w-10 = 2.5rem = 40px
-  const totalTableWidth = useMemo(
-    () => visibleColumns.reduce((sum, k) => sum + colWidths[k], 0) + ACTIONS_COL_WIDTH,
-    [visibleColumns, colWidths],
-  );
-  const getAutoFitWidth = useColumnAutoFit(tableRef);
-
-  // Close dropdown on outside click
-  useEffect(() => {
-    if (!openMenuTaskId) return;
-    const close = () => setOpenMenuTaskId(null);
-    document.addEventListener('click', close);
-    return () => document.removeEventListener('click', close);
-  }, [openMenuTaskId]);
+  // Set before mutate, not read from the render: two activations before the next render (a held
+  // Enter, a click and a keydown) must not both pass. isLocking / isClaiming only lag behind.
+  const inFlightRef = useRef(false);
 
   const handleEditInPool = (task: PoolTask) => {
-    if (task.workingBy && task.workingBy !== currentUsername) {
+    // Every row action waits while a lock or claim is in flight. Not only the ones that lock again:
+    // navigating away would unmount this page before the lock's own onSuccess runs (TanStack drops
+    // it), leaving the lock behind with no lockedTaskId to release it, and the user's own
+    // PoolTaskLocked event could turn a second activation into a plain "continue".
+    if (inFlightRef.current) return;
+    if (isLockedByOther(task)) {
       if (task.appraisalId) navigate(`/appraisals/${task.appraisalId}`);
       return;
     }
-    if (task.workingBy === currentUsername) {
+    if (isLockedBySelf(task)) {
       navigate(`/tasks/${task.id}/opening`);
       return;
     }
     pendingTaskIdRef.current = task.id;
+    inFlightRef.current = true;
     lockTask(task.id, {
+      onSettled: () => {
+        inFlightRef.current = false;
+      },
       onSuccess: () => {
         // Pass lockedTaskId so OpeningTaskPage can release the lock if OpenTask fails
         navigate(`/tasks/${task.id}/opening`, { state: { lockedTaskId: task.id } });
@@ -268,9 +174,7 @@ function PoolTaskListPage({
         const message = (err as { response?: { data?: { message?: string } } })?.response?.data
           ?.message;
         toast.error(
-          message
-            ? `Task is currently being edited by ${message}`
-            : 'Could not lock task. Try again.',
+          message ? t('pool.toasts.lockedBy', { name: message }) : t('pool.toasts.lockFailed'),
         );
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
         if (task.appraisalId) navigate(`/appraisals/${task.appraisalId}`);
@@ -279,13 +183,20 @@ function PoolTaskListPage({
   };
 
   const handleTakeOut = (task: PoolTask) => {
+    // The same wait as handleEditInPool, which also keeps pendingTaskIdRef (the row whose menu
+    // shows busy) from being overwritten mid-flight
+    if (inFlightRef.current) return;
     pendingTaskIdRef.current = task.id;
+    inFlightRef.current = true;
     claimTask(task.id, {
+      onSettled: () => {
+        inFlightRef.current = false;
+      },
       onSuccess: () => {
-        toast.success('Task moved to your tasks');
+        toast.success(t('pool.toasts.claimed'));
       },
       onError: () => {
-        toast.error('Could not claim task. Try again.');
+        toast.error(t('pool.toasts.claimFailed'));
       },
     });
   };
@@ -326,7 +237,7 @@ function PoolTaskListPage({
               }
             : old,
         );
-      } else if (event.type === 'PoolTaskClaimed') {
+      } else if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
         queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
         queryClient.invalidateQueries({ queryKey: ['task-counts'] });
       }
@@ -334,170 +245,36 @@ function PoolTaskListPage({
     [queryClient],
   );
 
-  useWorkflowHub({ poolGroups: userRoles, onPoolTaskUpdate: handlePoolTaskUpdate });
+  useWorkflowHub({ poolGroups, onPoolTaskUpdate: handlePoolTaskUpdate });
   // Keeps the pool Kanban board's caches (separate query keys from the table's
   // ['pool-tasks']) in sync — active regardless of which view is currently shown.
   usePoolKanbanRealtime();
 
-  const handleSort = (field: string) => {
-    if (sortField === field) {
-      if (sortDirection === 'asc') setSortDirection('desc');
-      else {
-        setSortField(null);
-        setSortDirection('asc');
-      }
-    } else {
-      setSortField(field);
-      setSortDirection('asc');
-    }
-  };
+  const isLockedBySelf = (task: PoolTask) => isSameUser(task.workingBy, currentUsername);
+  const isLockedByOther = (task: PoolTask) => !!task.workingBy && !isLockedBySelf(task);
 
-  const SortIcon = ({ field }: { field: string }) => {
-    if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
-    return (
-      <Icon
-        style="solid"
-        name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
-      />
-    );
-  };
-
-  const removeFilter = (key: keyof TaskFilterParams) => {
-    setInternalFilters(prev => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
-
-  if (isError) {
-    return (
-      <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
-          <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
-        </div>
-        <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">Failed to load pool tasks</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
-        </div>
-      </div>
-    );
-  }
+  const menuItems = (task: PoolTask): TaskRowMenuItem[] => [
+    isLockedByOther(task)
+      ? { key: 'view', label: t('pool.view'), icon: 'eye', onSelect: () => handleEditInPool(task) }
+      : {
+          key: 'edit',
+          label: isLockedBySelf(task) ? t('pool.continue') : t('pool.edit'),
+          icon: 'play',
+          onSelect: () => handleEditInPool(task),
+        },
+    {
+      key: 'takeOut',
+      label: t('pool.takeOut'),
+      icon: 'arrow-right-from-bracket',
+      onSelect: () => handleTakeOut(task),
+      separatorBefore: true,
+    },
+  ];
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 min-w-0 gap-3">
-      {/* Toolbar — only shown when not controlled by a parent */}
-      {!isControlled && (
-        <>
-          <div className="shrink-0 flex items-center gap-2">
-            <div className="flex-1" />
-
-            <div className="relative w-60">
-              {!isSearchPending && isLoading && !!debouncedSearch ? (
-                <Icon
-                  style="solid"
-                  name="spinner"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin pointer-events-none"
-                />
-              ) : (
-                <Icon
-                  style="solid"
-                  name="magnifying-glass"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
-                />
-              )}
-              <input
-                type="text"
-                placeholder="Search tasks..."
-                value={internalSearchTerm}
-                onChange={e => setInternalSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
-              />
-              {internalSearchTerm && (
-                <button
-                  onClick={() => setInternalSearchTerm('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                >
-                  <Icon style="solid" name="xmark" className="size-3.5" />
-                </button>
-              )}
-            </div>
-
-            <button
-              onClick={() => setFilterDialogOpen(true)}
-              title="Filters"
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all ${
-                activeFilterChips.length > 0
-                  ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                  : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
-            >
-              <Icon style="solid" name="sliders" className="size-3.5" />
-              Filters
-              {activeFilterChips.length > 0 && (
-                <span className="inline-flex items-center justify-center size-4 rounded-full bg-primary text-white text-[10px] font-semibold">
-                  {activeFilterChips.length}
-                </span>
-              )}
-            </button>
-
-            {/* Only render our own column dropdown when the layout is unmanaged. When embedded
-                (TaskListingPage/ActivityTaskTable) the columns are controlled via props and the
-                parent owns the dropdown — rendering it here would duplicate a non-functional one. */}
-            {propVisibleColumns === undefined && (
-              <ColumnVisibilityDropdown
-                labels={COLUMN_LABELS}
-                orderedColumns={internalCols.orderedColumns}
-                hidden={internalCols.hidden}
-                alwaysVisible={internalCols.alwaysVisible}
-                onToggle={internalCols.toggleColumn}
-                onReorder={internalCols.reorderColumns}
-                onReset={() => {
-                  internalCols.resetToDefault();
-                  internalWidths.resetWidths();
-                }}
-              />
-            )}
-          </div>
-
-          {activeFilterChips.length > 0 && (
-            <div className="shrink-0 flex items-center gap-1.5 flex-wrap">
-              {activeFilterChips.map(([key, value]) => (
-                <span
-                  key={key}
-                  className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
-                >
-                  <span className="text-primary/60">{FILTER_LABELS[key]}:</span> {value}
-                  <button
-                    onClick={() => removeFilter(key)}
-                    className="hover:text-primary/60 ml-0.5"
-                  >
-                    <Icon style="solid" name="xmark" className="size-2.5" />
-                  </button>
-                </span>
-              ))}
-              <button
-                onClick={() => setInternalFilters({})}
-                className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
-              >
-                Clear all
-              </button>
-            </div>
-          )}
-
-          <TaskFilterDialog
-            open={filterDialogOpen}
-            initialValues={internalFilters}
-            onApply={v => setInternalFilters(v)}
-            onClose={() => setFilterDialogOpen(false)}
-          />
-        </>
-      )}
-
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
       {viewMode === 'grid' ? (
-        <div className="flex-1 min-h-0">
+        <div className={bare ? 'min-h-0 flex-1 p-4' : 'min-h-0 flex-1'}>
           <TaskKanbanBoard
             scope="pool"
             groupBy={groupBy}
@@ -516,258 +293,67 @@ function PoolTaskListPage({
           />
         </div>
       ) : (
-        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          {/* Only the rows scroll. With none, this shrinks to the header, its overflow is clipped
-              (nothing to scroll to) and the empty state below gets the rest of the card. */}
-          <div className={isEmpty ? 'shrink-0 overflow-hidden' : 'flex-1 min-h-0 overflow-auto'}>
-            <table
-              ref={tableRef}
-              className="table-fixed text-table"
-              style={{ width: totalTableWidth }}
-            >
-              <colgroup>
-                {visibleColumns.map(key => (
-                  <col key={key} style={{ width: colWidths[key] }} />
-                ))}
-                <col style={{ width: ACTIONS_COL_WIDTH }} />
-              </colgroup>
-              <thead className="sticky top-0 z-20">
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  {visibleColumns.map((key, colIndex) => {
-                    const col = columnDefs[key];
-                    const isActive = sortField === col.sortField;
-                    const base =
-                      'relative px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
-                    const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
-                    const thClass = isSticky
-                      ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                      : col.sortField
-                        ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
-                        : base;
-                    return (
-                      <th
-                        key={key}
-                        onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
-                        className={thClass}
+        <div
+          className={
+            bare
+              ? 'flex min-h-0 min-w-0 flex-1 flex-col'
+              : 'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-sm'
+          }
+        >
+          {isError ? (
+            // Only the table is lost: the board and the rest of the page are not
+            <TaskLoadError title={t('pool.loadFailed')} message={(error as Error)?.message} />
+          ) : (
+            <>
+              <TaskTable
+                tasks={tasks}
+                isLoading={isLoading}
+                isStale={isPlaceholderData}
+                skeletonRows={Math.min(paging.queryParams.pageSize, 8)}
+                visibleColumns={visibleColumns}
+                pinnedColumns={pinnedColumns}
+                widths={colWidths}
+                onWidthChange={onColWidthChange}
+                {...paging.sortProps}
+                onOpen={task => handleEditInPool(task as PoolTask)}
+                menuItems={task => menuItems(task as PoolTask)}
+                isBusy={task => (isLocking || isClaiming) && pendingTaskIdRef.current === task.id}
+                rowTone={task =>
+                  isLockedBySelf(task as PoolTask)
+                    ? 'self'
+                    : isLockedByOther(task as PoolTask)
+                      ? 'other'
+                      : null
+                }
+                numberCell={task => (
+                  <>
+                    {task.appraisalNumber ? (
+                      <button
+                        type="button"
+                        onClick={e => {
+                          e.stopPropagation();
+                          handleEditInPool(task as PoolTask);
+                        }}
+                        className="truncate font-medium text-(--palette-primary-text) hover:underline"
                       >
-                        {col.sortField ? (
-                          <div className="flex items-center gap-1">
-                            {col.label}
-                            <SortIcon field={col.sortField} />
-                          </div>
-                        ) : (
-                          col.label
-                        )}
-                        <ColumnResizeHandle
-                          width={colWidths[key]}
-                          onResize={px => setColWidth(key, px)}
-                          getAutoFitWidth={getAutoFitWidth(key, colIndex)}
-                        />
-                      </th>
-                    );
-                  })}
-                  <th className="text-xs w-10 px-4 py-2.5 bg-gray-50 font-semibold" />
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {isLoading ? (
-                  <TableRowSkeleton
-                    columns={visibleColumns.map(() => ({ width: 'w-24' }))}
-                    rows={8}
-                  />
-                ) : (
-                  tasks.map(task => {
-                    const isLockedBySelf = task.workingBy === currentUsername;
-                    const isLockedByOther = !!task.workingBy && task.workingBy !== currentUsername;
-                    const isActing =
-                      (isLocking || isClaiming) && pendingTaskIdRef.current === task.id;
-
-                    return (
-                      <tr
-                        key={task.id}
-                        className={`group cursor-pointer transition-colors ${
-                          isLockedBySelf
-                            ? 'bg-blue-50'
-                            : isLockedByOther
-                              ? 'bg-amber-50'
-                              : `hover:bg-gray-50 ${getRowVariantClasses(bucketForSlaStatus(task.slaStatus))}`
-                        }`}
-                      >
-                        {visibleColumns.map(key => {
-                          const col = columnDefs[key];
-                          const isSticky = key === DEFAULT_CONFIG.pinnedColumn;
-                          const tdClass = isSticky
-                            ? `${isLockedBySelf ? 'bg-blue-50' : isLockedByOther ? 'bg-amber-50' : 'bg-white group-hover:bg-gray-50'} transition-colors sticky left-0 z-10 px-3 py-1.5 overflow-hidden whitespace-nowrap after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
-                            : (col.tdClassName ??
-                              'px-3 py-1.5 text-gray-600 text-xs overflow-hidden whitespace-nowrap');
-                          return (
-                            <td key={key} className={tdClass}>
-                              {key === 'appraisalNumber' ? (
-                                <>
-                                  {/* Lock badge — absolute top-left, straddles the row border */}
-                                  {(isLockedBySelf || isLockedByOther) && (
-                                    <div className="absolute top-0 left-2 -translate-y-1/2 z-20">
-                                      {isLockedBySelf && (
-                                        <LockBubble
-                                          label="You're editing"
-                                          color="blue"
-                                          lockedAt={task.lockedAt}
-                                        />
-                                      )}
-                                      {isLockedByOther && (
-                                        <LockBubble
-                                          label={task.workingBy!}
-                                          color="amber"
-                                          lockedAt={task.lockedAt}
-                                        />
-                                      )}
-                                    </div>
-                                  )}
-                                  <button
-                                    onClick={() => handleEditInPool(task)}
-                                    className={`font-medium text-primary hover:underline ${isLockedBySelf || isLockedByOther ? 'mt-3' : ''}`}
-                                  >
-                                    {task.appraisalNumber ?? task.requestNumber ?? '-'}
-                                  </button>
-                                </>
-                              ) : (
-                                col.render(task)
-                              )}
-                            </td>
-                          );
-                        })}
-
-                        {/* Actions — ellipsis dropdown */}
-                        <td className="px-3 py-1.5">
-                          <div className="relative">
-                            <button
-                              disabled={isActing}
-                              onClick={e => {
-                                e.stopPropagation();
-                                setOpenMenuTaskId(prev => (prev === task.id ? null : task.id));
-                              }}
-                              className="inline-flex items-center justify-center size-7 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isActing ? (
-                                <Icon
-                                  style="solid"
-                                  name="spinner"
-                                  className="size-3.5 animate-spin"
-                                />
-                              ) : (
-                                <Icon style="solid" name="ellipsis-vertical" className="size-3.5" />
-                              )}
-                            </button>
-
-                            {openMenuTaskId === task.id && (
-                              <div
-                                onClick={e => e.stopPropagation()}
-                                className="absolute right-0 z-50 mt-1 w-36 bg-white rounded-lg border border-gray-200 shadow-lg py-1 text-sm"
-                              >
-                                {isLockedByOther ? (
-                                  <button
-                                    onClick={() => {
-                                      setOpenMenuTaskId(null);
-                                      handleEditInPool(task);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-500 hover:bg-gray-50 transition-colors"
-                                  >
-                                    <Icon
-                                      style="solid"
-                                      name="eye"
-                                      className="size-3 text-gray-400"
-                                    />
-                                    View
-                                  </button>
-                                ) : (
-                                  <button
-                                    onClick={() => {
-                                      setOpenMenuTaskId(null);
-                                      handleEditInPool(task);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
-                                  >
-                                    <Icon
-                                      style="solid"
-                                      name="pencil"
-                                      className="size-3 text-primary"
-                                    />
-                                    {isLockedBySelf ? 'Continue' : 'Edit'}
-                                  </button>
-                                )}
-
-                                <button
-                                  onClick={() => {
-                                    setOpenMenuTaskId(null);
-                                    handleTakeOut(task);
-                                  }}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 text-gray-700 hover:bg-gray-50 transition-colors"
-                                >
-                                  <Icon
-                                    style="solid"
-                                    name="arrow-right-from-bracket"
-                                    className="size-3 text-gray-500"
-                                  />
-                                  Take Out
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+                        {task.appraisalNumber}
+                      </button>
+                    ) : (
+                      <Dash />
+                    )}
+                    {(isLockedBySelf(task as PoolTask) || isLockedByOther(task as PoolTask)) && (
+                      <LockMark task={task as PoolTask} self={isLockedBySelf(task as PoolTask)} />
+                    )}
+                  </>
                 )}
-              </tbody>
-            </table>
-          </div>
+                emptyState={
+                  <TaskEmptyState pool hasFilters={hasFilters} onClear={onClearFilters} />
+                }
+              />
 
-          {/* Outside the table on purpose: a cell spanning every column would centre this on
-              the TABLE, which is wider than the screen, leaving it off to the right. */}
-          {isEmpty && (
-            <div className="flex flex-1 min-h-0 items-center justify-center overflow-y-auto p-8">
-              <div className="flex flex-col items-center gap-4">
-                {hasFilters ? (
-                  <NoResultsArt className="h-24 w-28" />
-                ) : (
-                  <InboxZeroArt className="h-24 w-28" />
-                )}
-                <div className="text-center">
-                  <p className="text-sm font-semibold text-gray-700">
-                    {hasFilters ? 'No matching tasks' : 'Pool is empty'}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {hasFilters
-                      ? 'Try adjusting your search or filters.'
-                      : 'There are no tasks in the pool right now.'}
-                  </p>
-                </div>
-                {hasFilters && (
-                  <button
-                    onClick={() => {
-                      setInternalSearchTerm('');
-                      setInternalFilters({});
-                    }}
-                    className="text-xs text-primary hover:underline font-medium"
-                  >
-                    Clear filters
-                  </button>
-                )}
-              </div>
-            </div>
+              <Pagination {...paging.paginationProps(data?.count)} leftSlot={<TaskLegend />} />
+            </>
           )}
-
-          <Pagination
-            currentPage={pageNumber}
-            totalPages={totalPages}
-            totalCount={totalCount}
-            pageSize={pageSize}
-            onPageChange={setPageNumber}
-            onPageSizeChange={size => {
-              setPageSize(size);
-              setPageNumber(0);
-            }}
-          />
         </div>
       )}
     </div>

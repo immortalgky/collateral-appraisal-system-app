@@ -33,11 +33,11 @@ export const ComparableActionsMenu = ({ onOpen, onCopy, onDelete }: ComparableAc
           }}
           className={clsx(
             'flex w-full items-center gap-2 px-3 py-2 text-sm',
-            danger ? 'text-red-600' : 'text-gray-700',
-            focus && (danger ? 'bg-red-50' : 'bg-gray-50'),
+            danger ? 'text-(--palette-danger)' : 'text-(--palette-ink)',
+            focus && (danger ? 'bg-(--palette-req-wash)' : 'bg-(--palette-surface-2)'),
           )}
         >
-          <Icon name={icon} className={clsx('text-xs', !danger && 'text-gray-400')} />
+          <Icon name={icon} className={clsx('text-xs', !danger && 'text-(--palette-gray-400)')} />
           {label}
         </button>
       )}
@@ -50,7 +50,7 @@ export const ComparableActionsMenu = ({ onOpen, onCopy, onDelete }: ComparableAc
         onClick={stop}
         onKeyDown={stop}
         aria-label={t('markets.actions.menu')}
-        className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+        className="rounded p-1.5 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
       >
         <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
       </MenuButton>
@@ -58,11 +58,11 @@ export const ComparableActionsMenu = ({ onOpen, onCopy, onDelete }: ComparableAc
         anchor={{ to: 'bottom end', gap: 4 }}
         onClick={stop}
         onKeyDown={stop}
-        className="z-50 w-40 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+        className="z-50 w-40 rounded-md bg-(--palette-surface) py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
       >
         {item(t('markets.actions.open'), 'pen-to-square', onOpen)}
         {item(t('markets.actions.copy'), 'copy', onCopy)}
-        <div className="my-1 border-t border-gray-100" />
+        <div className="my-1 border-t border-(--palette-line-soft)" />
         {item(t('markets.actions.delete'), 'trash', onDelete, true)}
       </MenuItems>
     </Menu>

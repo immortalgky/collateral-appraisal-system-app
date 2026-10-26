@@ -100,11 +100,11 @@ function CompactMenuItem({
       <Icon
         name={item.icon}
         style={iconStyle}
-        className={clsx('size-3.5', item.iconColor || 'text-gray-500')}
+        className={clsx('size-3.5', item.iconColor || 'text-(--palette-gray-500)')}
       />
       {isReadOnly && (
-        <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-white flex items-center justify-center">
-          <Icon name="lock" style="solid" className="size-1.5 text-gray-400" />
+        <div className="absolute -bottom-0.5 -right-0.5 size-3 rounded-full bg-(--palette-surface) flex items-center justify-center">
+          <Icon name="lock" style="solid" className="size-1.5 text-(--palette-gray-400)" />
         </div>
       )}
     </div>
@@ -115,11 +115,16 @@ function CompactMenuItem({
       to={to}
       className={clsx(
         'group flex items-center gap-2.5 py-2 px-2.5 rounded-lg transition-all duration-200',
-        isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+        isActive ? 'bg-primary/10' : 'hover:bg-(--palette-surface-3)',
       )}
     >
       {iconWithBadge}
-      <span className={clsx('text-xs font-medium', isActive ? 'text-primary' : 'text-gray-700')}>
+      <span
+        className={clsx(
+          'text-xs font-medium',
+          isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-ink)',
+        )}
+      >
         {item.name}
       </span>
     </Link>
@@ -176,8 +181,8 @@ function NavSection({
           className={clsx(
             'flex w-full items-center gap-2.5 py-1.5 px-2.5 mt-1 text-xs font-medium rounded-lg transition-colors',
             hiddenActiveItem
-              ? 'text-primary bg-primary/5'
-              : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50',
+              ? 'text-(--palette-primary-text) bg-primary/5'
+              : 'text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3)',
           )}
         >
           <span className="w-7 flex justify-center shrink-0">
@@ -243,7 +248,7 @@ export function MobileAppraisalSidebar({
             </div>
           </TransitionChild>
 
-          <div className="flex grow flex-col overflow-y-auto bg-white">
+          <div className="flex grow flex-col overflow-y-auto bg-(--palette-surface)">
             {/* Logo Area */}
             <div className="px-3 py-4">
               <BrandLogo logo={logo} onClick={() => setSidebarOpen(false)} />
@@ -264,7 +269,9 @@ export function MobileAppraisalSidebar({
                 ))}
 
               {/* APPLICATION Section */}
-              <div className={clsx('pt-3', !hideGeneralNav && 'border-t border-gray-100')}>
+              <div
+                className={clsx('pt-3', !hideGeneralNav && 'border-t border-(--palette-line-soft)')}
+              >
                 <SidebarSectionTitle
                   icon="folder-open"
                   iconColor="text-emerald-500"
@@ -368,7 +375,7 @@ export default function AppraisalSidebar({
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >
-      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-gray-100 bg-white shadow-sm">
+      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-(--palette-line) bg-(--palette-surface) shadow-sm">
         <div className="flex grow flex-col min-h-0" style={contentStyle}>
           <SidebarHeader logo={logo} expanded={expanded} scope="appraisal" />
 
@@ -393,7 +400,9 @@ export default function AppraisalSidebar({
                 ))}
 
               {/* APPLICATION Section */}
-              <div className={clsx('pt-3', !hideGeneralNav && 'border-t border-gray-100')}>
+              <div
+                className={clsx('pt-3', !hideGeneralNav && 'border-t border-(--palette-line-soft)')}
+              >
                 <SidebarSectionTitle
                   icon="folder-open"
                   iconColor="text-emerald-500"

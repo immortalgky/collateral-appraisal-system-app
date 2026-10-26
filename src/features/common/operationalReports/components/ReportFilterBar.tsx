@@ -92,13 +92,17 @@ const PARAMETER_MULTI_FIELDS: Partial<Record<FilterField, string>> = {
   feeType: 'FeePaymentMethod',
 };
 
-const DATE_FIELDS = new Set<FilterField>(['createdFrom', 'createdTo', 'approvedFrom', 'approvedTo']);
+const DATE_FIELDS = new Set<FilterField>([
+  'createdFrom',
+  'createdTo',
+  'approvedFrom',
+  'approvedTo',
+]);
 
 // Everything else (appraisalNumber, customerName, appraisalCompany, internalStaff, stage) is an
 // open-ended search where the possible values aren't a known list — kept as a text input.
 
-const csvToArray = (v: string | undefined): string[] =>
-  v ? v.split(',').filter(Boolean) : [];
+const csvToArray = (v: string | undefined): string[] => (v ? v.split(',').filter(Boolean) : []);
 
 // DatePickerInput emits a full ISO timestamp with offset (e.g. 2026-07-19T00:00:00+07:00).
 // Report date filters are calendar-date bounds, so trim to yyyy-MM-dd before it reaches the
@@ -188,7 +192,7 @@ function ReportFilterBar({ filters, values, onChange, onReset }: ReportFilterBar
 
           return (
             <div key={field} className="flex flex-col gap-1 min-w-[160px]">
-              <label className="text-xs font-medium text-gray-600">{label}</label>
+              <label className="text-xs font-medium text-(--palette-gray-600)">{label}</label>
               {isMultiOption || isParamMulti ? (
                 <MultiSelectDropdown
                   options={optionsFor(field)}

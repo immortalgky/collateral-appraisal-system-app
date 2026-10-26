@@ -5,8 +5,7 @@ import {
   useFormContext,
   useWatch,
 } from 'react-hook-form';
-import { useContext, useEffect, useMemo, useRef, type CSSProperties } from 'react';
-import clsx from 'clsx';
+import { useContext, useEffect, useId, useMemo, useRef } from 'react';
 import type { z } from 'zod';
 
 import Dropdown from '../inputs/Dropdown';
@@ -27,11 +26,23 @@ import LocationSelector from '../inputs/LocationSelector';
 
 import { FieldLabelContext, useFormReadOnly, useFormSchema } from './context';
 import { constraintsToInputProps, getFieldConstraints } from './utils';
-import { evaluateConditions, extractConditionFields, setNestedValue } from './conditions';
+import {
+  evaluateConditions,
+  extractConditionFields,
+  isFieldConditions,
+  setNestedValue,
+} from './conditions';
 import FieldHelp from './FieldHelp';
+import { FormFieldShell } from './FormFieldShell';
+import { useFormLayout } from './formLayoutContext';
+import { FormSectionBodyContext } from './formSheetContext';
+import { FormReadValue, READ_TYPES } from './FormReadValue';
+import { isChipGroup, rowGroupRoles, type RowGroupRole } from './rowGroups';
 import type { FormField } from './types';
+import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useFilterWatchValues } from '@/shared/hooks/useFilterWatchValues';
 import ParameterSearchInput from '../inputs/ParameterSearchInput';
+import type { OtherSpec } from '../inputs/OtherText';
 
 // =============================================================================
 // Field State Hook
@@ -154,45 +165,75 @@ interface FieldRendererProps {
   schema?: z.ZodObject<any>;
   globalShowCharCount?: boolean;
   globalDisabled?: boolean;
-  /** First field of a row it shares with others, and wide enough to carry a full-row label. */
-  rowLead?: boolean;
+  /** Part of a run of fields that makes one full row (`rowGroupRoles`). */
+  rowGroup?: RowGroupRole;
+  /** A chip group's "other" companion, typed inside its chip. */
+  other?: OtherSpec;
+  /** An "other" companion drawn by its chip group: runs its rules, draws nothing. */
+  folded?: boolean;
+}
+
+/** The form path of a field name under a prefix and an array index. */
+function fullFieldName(name: string, namePrefix: string, index?: number): string {
+  let full = name;
+  if (index !== undefined) full = `${index}.${full}`;
+  if (namePrefix !== undefined && namePrefix.trim() !== '') full = `${namePrefix}.${full}`;
+  return full;
 }
 
 /**
- * Which fields open a row they share with other fields and are wide enough to carry a full-row
- * label, walking the 12-column spans in order. The grid layout gives those fields the same label
- * column as a full-row field, so the left edge lines up down the form (formLayout.css,
- * `data-row-lead`).
- *
- * Wide enough means half the row or more, or a third of it when it has the row to share with just
- * one other field (Check Owner | Owner at 4 + 8). A 4/4/4 or 3/3/6 row is left alone: a 16rem label
- * out of a third of a three-field row leaves almost nothing for the control.
- *
- * Worked out from the configured spans, not from what is currently shown: a field hidden by its
- * condition still counts. In practice the conditional fields are full-row remarks, which start and
- * end on a row boundary either way. A field with no col-span resets the count.
+ * An inline "อื่นๆ" text is longer than this and stays a separate textarea: one line in the chip
+ * would not hold it.
  */
-function findRowLeads(fields: FormField[]): Set<FormField> {
-  const spanOf = (field: FormField | undefined) => {
-    const match = /(?:^|\s)col-span-(\d+)(?=\s|$)/.exec(field?.wrapperClassName ?? '');
-    return match ? Number(match[1]) : null;
-  };
-  const leads = new Set<FormField>();
-  let used = 0;
-  fields.forEach((field, i) => {
-    const span = spanOf(field);
-    if (span === null) {
-      used = 0;
-      return;
-    }
-    if (used + span > 12) used = 0;
-    if (used === 0 && span < 12) {
-      const pairedWithOne = span + (spanOf(fields[i + 1]) ?? 0) === 12;
-      if (span >= 6 || (pairedWithOne && span >= 4)) leads.add(field);
-    }
-    used = (used + span) % 12;
-  });
-  return leads;
+const MAX_INLINE_OTHER = 200;
+
+/**
+ * Pairs each chip group with its "other" companion: a text field in the same list whose only
+ * `showWhen` is the group holding one option value ('99'). The companion keeps rendering its hooks
+ * (clear-on-hide, required) but draws nothing; the chip draws the input.
+ */
+function pairOthers(
+  fields: FormField[],
+  schema: Parameters<typeof getFieldConstraints>[0] | undefined,
+  namePrefix: string,
+  index?: number,
+) {
+  const others = new Map<string, OtherSpec>();
+  const folded = new Set<string>();
+  for (const chip of fields) {
+    if (chip.type !== 'checkbox-group' && chip.type !== 'radio-group') continue;
+    if (chip.type === 'radio-group' && chip.variant === 'card') continue;
+    const operator = chip.type === 'checkbox-group' ? 'contains' : 'equals';
+    const companion = fields.find(f => {
+      const w = f.showWhen;
+      return (
+        (f.type === 'textarea' || f.type === 'text-input') &&
+        !f.hide &&
+        !!w &&
+        typeof w === 'object' &&
+        !isFieldConditions(w) &&
+        w.field === chip.name &&
+        typeof w.is === 'string' &&
+        (w.operator ?? 'equals') === operator &&
+        !folded.has(f.name)
+      );
+    });
+    if (!companion || (companion.type !== 'textarea' && companion.type !== 'text-input')) continue;
+    const name = fullFieldName(companion.name, namePrefix, index);
+    const maxLength =
+      companion.maxLength ?? (schema ? getFieldConstraints(schema, name).maxLength : undefined);
+    if (maxLength === undefined || maxLength > MAX_INLINE_OTHER) continue;
+    const w = companion.showWhen as { is: string };
+    others.set(chip.name, {
+      name,
+      is: w.is,
+      maxLength,
+      label: companion.label,
+      required: !!(companion.required || companion.requiredWhen),
+    });
+    folded.add(companion.name);
+  }
+  return { others, folded };
 }
 
 /**
@@ -203,6 +244,8 @@ function findRowLeads(fields: FormField[]): Set<FormField> {
  * - Automatic validation constraint extraction from Zod schema
  * - Support for nested fields (namePrefix) and array fields (index)
  * - Character count display for text fields
+ * - The field wrapper (DESIGN.md 17.4): label above the control in Standard; in Compact, inside a
+ *   `FormSection`, a label-left pair that sits two to a row on a wide sheet
  *
  * @example
  * ```tsx
@@ -230,12 +273,29 @@ export function FormFields({
   const relabel = useContext(FieldLabelContext);
   const visible = fields.filter(f => !f.hide);
   const shown = relabel ? visible.map(relabel) : visible;
-  const rowLeads = findRowLeads(shown);
+  const { others, folded } = pairOthers(
+    shown,
+    schema as z.ZodObject<any> | undefined,
+    namePrefix,
+    index,
+  );
+  // A folded companion draws nothing, so it takes no part in the row groups.
+  const layout = useFormLayout();
+  const inSectionBody = useContext(FormSectionBodyContext);
+  const standardBody = layout === 'standard' && inSectionBody;
+  const roles = rowGroupRoles(
+    shown.filter(f => !folded.has(f.name)),
+    standardBody,
+  );
+  let drawn = 0;
 
   return (
     <>
       {shown.map(field => (
         <FieldRenderer
+          rowGroup={folded.has(field.name) ? undefined : roles[drawn++]}
+          other={others.get(field.name)}
+          folded={folded.has(field.name)}
           key={field.key ?? field.name}
           control={control}
           field={field}
@@ -244,12 +304,44 @@ export function FormFields({
           schema={schema as z.ZodObject<any> | undefined}
           globalShowCharCount={showCharCount}
           globalDisabled={disabled}
-          rowLead={rowLeads.has(field)}
         />
       ))}
     </>
   );
 }
+
+/** Compact keeps these on a pair of their own: textareas and multi-input rows. */
+const FULL_PAIR_TYPES = new Set<FormField['type']>(['textarea', 'location-selector']);
+
+/** A chip group of at most this many options is short enough to share a Compact row. */
+const SHORT_CHOICE_GROUP = 4;
+
+/**
+ * Types whose label FormFields draws (in `FormFieldShell`). A single control is labelled by
+ * `htmlFor`; a group of controls (chips, toggle, dropdown, the several inputs of an address) is
+ * named by `aria-labelledby` on a wrapper. A checkbox and a switch carry their label inline and keep it.
+ */
+const LABEL_FOR_TYPES = new Set<FormField['type']>([
+  'text-input',
+  'number-input',
+  'date-input',
+  'datetime-input',
+  'textarea',
+  'parameter-search',
+]);
+const LABELLED_BY_TYPES = new Set<FormField['type']>([
+  'boolean-toggle',
+  'string-toggle',
+  'checkbox-group',
+  'radio-group',
+  'location-selector',
+  'appraisal-selector',
+  // Not `aria-label` on the trigger: that would replace its name, which carries the selected value.
+  'dropdown',
+  'select-input',
+]);
+const drawsLabel = (type: FormField['type']) =>
+  LABEL_FOR_TYPES.has(type) || LABELLED_BY_TYPES.has(type);
 
 /**
  * Internal component that renders individual fields
@@ -262,7 +354,9 @@ function FieldRenderer({
   schema,
   globalShowCharCount,
   globalDisabled,
-  rowLead,
+  rowGroup,
+  other,
+  folded,
 }: FieldRendererProps) {
   // Check visibility, disabled, and required state
   const {
@@ -271,22 +365,24 @@ function FieldRenderer({
     isRequired,
   } = useFieldState({ field, namePrefix, index });
   const isDisabled = fieldDisabled || (globalDisabled ?? false);
-  // A read-only page (the form context, not only `globalDisabled`) has nothing to fill in.
-  const formReadOnly = useFormReadOnly();
+  const pageReadOnly = useFormReadOnly();
   const { setValue, getValues } = useFormContext();
+  const uid = useId();
+  const controlId = `${uid}-control`;
+  const labelId = `${uid}-label`;
+
+  // Compact: a short chip group takes half a row, a longer one a row of its own.
+  const choice = field.type === 'radio-group' || field.type === 'checkbox-group' ? field : null;
+  const groupOptions = useParametersByGroup(choice?.group ?? '');
+  const longChoiceGroup =
+    !!choice && (choice.options?.length ?? groupOptions.length) > SHORT_CHOICE_GROUP;
 
   const filterWatchValues = useFilterWatchValues(
     field.type === 'dropdown' ? (field as any).filterOptions : undefined,
   );
 
   // Build a full field name with prefix and index
-  let name = field.name;
-  if (index !== undefined) {
-    name = `${index}.${name}`;
-  }
-  if (namePrefix !== undefined && namePrefix.trim() !== '') {
-    name = `${namePrefix}.${name}`;
-  }
+  const name = fullFieldName(field.name, namePrefix, index);
 
   // Clamp a disabled field to its `disabledValue`. Subscribing to the field's own value
   // (via useWatch) means this also re-fires when the value is re-seeded while already
@@ -426,8 +522,11 @@ function FieldRenderer({
     control,
   });
 
-  // Don't render if field is not visible
-  if (!isVisible) {
+  // The text of a chip group's "other" option, for a read page.
+  const otherText = useWatch({ control, name: other?.name ?? name });
+
+  // Don't render if field is not visible, or if its chip group draws it
+  if (!isVisible || folded) {
     return null;
   }
 
@@ -438,6 +537,8 @@ function FieldRenderer({
   // Exclude wrapperClassName, condition props, and schema-builder-only props from being passed to components
   const {
     wrapperClassName: _w,
+    keepSpan: _ks,
+    narrowSpan: _ns,
     showWhen: _sw,
     hideWhen: _hw,
     disableWhen: _dw,
@@ -458,8 +559,15 @@ function FieldRenderer({
     ...passedField
   } = field;
 
-  // The "?" beside the label. Rendered next to the label rather than inside it, so the button is
-  // not swallowed by the label's click target.
+  // The wrapper draws the label (and the "?" beside it), so no input below gets `label` or
+  // `labelAddon`; a checkbox or switch keeps its inline label.
+  // A read page draws a checkbox's or switch's label too: the value beside it is just its state.
+  const read = pageReadOnly && READ_TYPES.has(passedField.type);
+  const labelText =
+    drawsLabel(passedField.type) ||
+    (read && (passedField.type === 'checkbox' || passedField.type === 'switch'))
+      ? field.label
+      : undefined;
   const labelAddon = field.help ? (
     <FieldHelp config={field.help} namePrefix={namePrefix} index={index} />
   ) : undefined;
@@ -483,7 +591,8 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...textProps}
-            labelAddon={labelAddon}
+            id={controlId}
+            label={undefined}
             inputMask={inputMask}
             error={error?.message}
           />
@@ -504,7 +613,8 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...numberProps}
-            labelAddon={labelAddon}
+            id={controlId}
+            label={undefined}
             error={error?.message}
           />
         );
@@ -521,7 +631,8 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...dateProps}
-            labelAddon={labelAddon}
+            id={controlId}
+            label={undefined}
             error={error?.message}
           />
         );
@@ -538,6 +649,8 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...dateTimeProps}
+            id={controlId}
+            label={undefined}
             error={error?.message}
           />
         );
@@ -549,7 +662,13 @@ function FieldRenderer({
           disabled: isDisabled,
         };
         return (
-          <SelectInput {...fieldProps} {...passedField} {...selectProps} error={error?.message} />
+          <SelectInput
+            {...fieldProps}
+            {...passedField}
+            {...selectProps}
+            label={undefined}
+            error={error?.message}
+          />
         );
       }
 
@@ -563,7 +682,7 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...dropdownProps}
-            labelAddon={labelAddon}
+            label={undefined}
             error={error?.message}
             filterWatchValues={filterWatchValues}
           />
@@ -577,14 +696,21 @@ function FieldRenderer({
             {...boolToggleRest}
             name={name}
             disabled={isDisabled}
-            labelAddon={labelAddon}
+            label={undefined}
           />
         );
       }
 
       case 'string-toggle': {
         const { type: _st, name: _sn, key: _sk, ...strToggleRest } = passedField;
-        return <FormStringToggle {...strToggleRest} name={name} disabled={isDisabled} />;
+        return (
+          <FormStringToggle
+            {...strToggleRest}
+            name={name}
+            disabled={isDisabled}
+            label={undefined}
+          />
+        );
       }
 
       case 'textarea': {
@@ -601,7 +727,8 @@ function FieldRenderer({
             {...fieldProps}
             {...passedField}
             {...textareaProps}
-            labelAddon={labelAddon}
+            id={controlId}
+            label={undefined}
             error={error?.message}
           />
         );
@@ -624,7 +751,6 @@ function FieldRenderer({
           type: _cgt,
           name: _cgn,
           key: _cgk,
-          label: cgLabel,
           className: cgClass,
           wrap: cgWrap,
           size: cgSize,
@@ -635,13 +761,14 @@ function FieldRenderer({
         return (
           <FormCheckboxGroup
             name={name}
-            label={cgLabel}
             disabled={isDisabled}
             className={cgClass}
             wrap={cgWrap}
             size={cgSize}
             variant={cgVariant}
+            other={other}
             {...cgGroupOrOptions}
+            label={undefined}
           />
         );
       }
@@ -651,7 +778,6 @@ function FieldRenderer({
           type: _rgt,
           name: _rgn,
           key: _rgk,
-          label: rgLabel,
           className: rgClass,
           size: rgSize,
           orientation: rgOri,
@@ -661,14 +787,14 @@ function FieldRenderer({
         return (
           <FormRadioGroup
             name={name}
-            label={rgLabel}
-            labelAddon={labelAddon}
             disabled={isDisabled}
             className={rgClass}
             size={rgSize}
             orientation={rgOri}
             variant={rgVariant}
+            other={other}
             {...rgGroupOrOptions}
+            label={undefined}
           />
         );
       }
@@ -690,7 +816,6 @@ function FieldRenderer({
         return (
           <AppraisalSelector
             name={name}
-            label={passedField.label}
             placeholder={fieldPlaceholder}
             idField={passedField.idField}
             valueField={passedField.valueField}
@@ -727,7 +852,6 @@ function FieldRenderer({
         return (
           <LocationSelector
             name={name}
-            label={passedField.label}
             placeholder={fieldPlaceholder}
             districtField={prefixFieldPath(passedField.districtField) ?? ''}
             districtNameField={prefixFieldPath(passedField.districtNameField)}
@@ -749,8 +873,7 @@ function FieldRenderer({
             {...fieldProps}
             group={(passedField as any).group ?? ''}
             options={(passedField as any).options}
-            label={passedField.label}
-            labelAddon={labelAddon}
+            id={controlId}
             {...{ required: isRequired, disabled: isDisabled }}
             error={error?.message}
           />
@@ -762,75 +885,38 @@ function FieldRenderer({
     }
   };
 
-  // How wide the control may grow, from what the field already declares: a house number capped to
-  // its own few characters instead of a grey bar half the page wide. Published as a custom property
-  // and applied by the grid layout only (formLayout.css); every other layout ignores it.
-  const controlWidth = controlMaxWidth(passedField, schemaProps.maxLength);
-
-  // Wrap the field component with the wrapper div.
+  // A read page shows label and value, not disabled controls (DESIGN.md 17.3). A field that is only
+  // disabled on an editable page keeps its control.
   // data-field is how scrollToField locates this field: a [name=...] selector cannot be used
   // because Dropdown never forwards `name` to the DOM.
   return (
-    <div
-      data-field={name}
-      // Marks a field switched off by its own rule — disableWhen/enableWhen/disabled — so the grid
-      // layout can show it as inactive. Deliberately not set for `globalDisabled`: a read-only page
-      // disables every field, and tinting all of them would just look like a broken form.
-      data-field-disabled={fieldDisabled || undefined}
-      // Required and still blank: the grid layout tints the row until a value lands. Not on a page
-      // nobody can edit, where the tint would read as errors that cannot be fixed.
-      data-field-required={(isRequired && !isDisabled && !formReadOnly) || undefined}
-      data-field-empty={
-        isBlank(watchedValue) ||
-        // The schema counts 0 as missing for a required number unless the field allows it, so the
-        // tint does too.
-        (passedField.type === 'number-input' && !passedField.allowZero && watchedValue === 0) ||
-        undefined
-      }
-      data-row-lead={rowLead || undefined}
-      className={clsx(field.wrapperClassName)}
-      style={controlWidth ? ({ '--cas-ctrl-w': controlWidth } as CSSProperties) : undefined}
+    <FormFieldShell
+      name={name}
+      label={labelText}
+      labelFor={!read && LABEL_FOR_TYPES.has(passedField.type) ? controlId : undefined}
+      labelId={!read && LABELLED_BY_TYPES.has(passedField.type) ? labelId : undefined}
+      required={isRequired}
+      addon={labelAddon}
+      wrapperClassName={field.wrapperClassName}
+      full={FULL_PAIR_TYPES.has(passedField.type) || longChoiceGroup}
+      rowGroup={rowGroup}
+      chips={isChipGroup(field)}
+      narrowSpan={field.narrowSpan}
+      read={read}
     >
-      {renderFieldComponent()}
-    </div>
+      {read ? (
+        <FormReadValue
+          field={field}
+          name={name}
+          value={fieldProps.value}
+          required={isRequired}
+          other={other && { is: other.is, text: otherText }}
+        />
+      ) : (
+        renderFieldComponent()
+      )}
+    </FormFieldShell>
   );
-}
-
-const isBlank = (v: unknown) =>
-  v == null || (typeof v === 'string' && !v.trim()) || (Array.isArray(v) && v.length === 0);
-
-/**
- * The cap for a field's control, in rem, or undefined to leave it filling its cell.
- *
- * Read off what the field already declares — a text field's `maxLength` (its own or the schema's),
- * a number's digits — so a new field gets a sensible width without anyone setting one. Long text,
- * textareas, dropdowns, choice controls and anything with its own search/pick UI keep the full
- * cell: they hold sentences, or a control whose width is its own business.
- */
-function controlMaxWidth(field: FormField, schemaMaxLength?: number): string | undefined {
-  switch (field.type) {
-    case 'number-input': {
-      // Decimals default to NumberInput's own 2: a field that leaves them unset still shows "0.00".
-      const digits = (field.maxIntegerDigits ?? 12) + (field.decimalPlaces ?? 2);
-      // ~0.6rem a digit at the form's size, plus room for separators. An icon or unit inside the box
-      // takes its own room off the right (`NumberInput` reserves 3rem for an icon, 2.5rem for a
-      // suffix, 2.25rem on the left), so it is added: the map pin of Latitude / Longitude cut
-      // "-100.501765" short in a 7.9rem box.
-      const room = (field.rightIcon ? 3 : field.suffix ? 2.5 : 0) + (field.leftIcon ? 2.25 : 0);
-      return `${Math.min(Math.max(digits * 0.6 + 2.5 + room, 6), 16)}rem`;
-    }
-    case 'date-input':
-    case 'datetime-input':
-      return '13rem';
-    case 'text-input': {
-      const max = field.maxLength ?? schemaMaxLength;
-      if (max == null || max > 60) return undefined;
-      const room = (field.rightIcon ? 2.5 : 0) + (field.leftIcon ? 2.25 : 0);
-      return `${Math.min(Math.max(max * 0.55 + 2 + room, 7), 26)}rem`;
-    }
-    default:
-      return undefined;
-  }
 }
 
 // Re-export types for convenience

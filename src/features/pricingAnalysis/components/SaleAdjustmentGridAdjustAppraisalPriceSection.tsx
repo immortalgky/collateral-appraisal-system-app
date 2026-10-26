@@ -321,15 +321,17 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
         if (delta === 0) {
           return (
             <>
-              <span className="text-[10.5px] text-gray-400">{t(hintKey, { value: fmt(raw) })}</span>
+              <span className="text-[10.5px] text-(--palette-gray-400)">
+                {t(hintKey, { value: fmt(raw) })}
+              </span>
               {formulaHint}
             </>
           );
         }
         const sign = delta > 0 ? '+' : '−';
         return (
-          <span className="text-[10.5px] text-gray-400 inline-flex items-center gap-1 flex-wrap justify-end">
-            <span className="font-semibold text-[#b45309]">
+          <span className="text-[10.5px] text-(--palette-gray-400) inline-flex items-center gap-1 flex-wrap justify-end">
+            <span className="font-semibold text-(--palette-warn)">
               {t('comparativeAnalysis.editedLabel')}
             </span>
             {t('comparativeAnalysis.differsFromComputed', {
@@ -338,7 +340,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
             <span>·</span>
             <button
               type="button"
-              className="text-primary hover:underline"
+              className="text-(--palette-primary-text) hover:underline"
               onClick={() => setValue(editableFieldPath, computed, { shouldDirty: true })}
             >
               {t('comparativeAnalysis.useComputedValue')}
@@ -354,7 +356,9 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
       fieldName={fieldPath}
       inputType="display"
       accessor={({ value }) => (
-        <span className="font-semibold text-gray-800 tabular-nums">{fmt(Number(value) || 0)}</span>
+        <span className="font-semibold text-(--palette-ink) tabular-nums">
+          {fmt(Number(value) || 0)}
+        </span>
       )}
     />
   );
@@ -363,7 +367,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
   // shape and placement as the rounding hint above. mock:1635 — "= ราคาต่อหน่วย × เนื้อที่",
   // "= ที่ดิน + ค่าอาคาร".
   const mutedSubLine = (text: string) => (
-    <span className="text-[10.5px] text-[#8a96a0]">{text}</span>
+    <span className="text-[10.5px] text-(--palette-ink-3)">{text}</span>
   );
 
   // mock:1595 — "= มูลค่าตามวิธี" in the final-value green over a 10.5px "Indicated Value"
@@ -378,17 +382,19 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
   // "Indicated Value" and a caption repeating it would be noise.
   const indicatedValueLabel = (suffix?: string) => (
     <span className="flex flex-col">
-      <span className="text-[14px] font-semibold text-[#0f766e]">
+      <span className="text-[14px] font-semibold text-(--palette-accent-ink)">
         {/* mock:1589/1595 — the mock's own lump-sum branch has no "=" on this label;
             only the per-unit branch does, where the terms of the equation (rate × area)
             are on screen above it. In lump-sum mode this row is a rounding of the single
             Final Value row above it, not a sum of displayed terms. */}
-        {isUnitPrice && <span className="mr-1 text-gray-400">=</span>}
+        {isUnitPrice && <span className="mr-1 text-(--palette-gray-400)">=</span>}
         {t('finalValue.indicatedValueLabel')}
-        {suffix && <span className="ml-1 text-xs font-normal text-gray-500">{suffix}</span>}
+        {suffix && (
+          <span className="ml-1 text-xs font-normal text-(--palette-gray-500)">{suffix}</span>
+        )}
       </span>
       {t('finalValue.indicatedValueSubLabel') && (
-        <span className="text-[10.5px] text-gray-400">
+        <span className="text-[10.5px] text-(--palette-gray-400)">
           {t('finalValue.indicatedValueSubLabel')}
         </span>
       )}
@@ -400,7 +406,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
   // attribute sitting between two money rows.
   const areaRowLabelNode = (
     <>
-      <span className="mr-1 text-gray-400">×</span>
+      <span className="mr-1 text-(--palette-gray-400)">×</span>
       {areaRowLabel}
     </>
   );
@@ -423,7 +429,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
         label={
           <>
             {finalValueLabel}{' '}
-            <span className="text-gray-400 text-[10.5px]">
+            <span className="text-(--palette-gray-400) text-[10.5px]">
               {t('finalValue.perUnitSuffix', { unit: unitAreaLabel })}
             </span>
           </>
@@ -514,8 +520,8 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
 
   return (
     // Same card shell as WQSAdjustFinalValueSection.tsx — mock:579-580.
-    <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-      <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+    <div className="min-w-0 border border-(--palette-line) rounded-[10px] overflow-hidden">
+      <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-(--palette-ink) bg-(--palette-surface-2) border-b border-(--palette-line)">
         {t('finalValue.title')}
       </h4>
       <div className="flex flex-col text-[12.5px]">
@@ -530,7 +536,9 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
               {/* mock:605 — `.kv .l .en { font-size: 10.5px }`, written as px because the
                   13px root makes `text-xs` render 9.75px. Same fix in
                   WQSAdjustFinalValueSection and DirectComparisonAdjustAppraisalPriceSection. */}
-              <span className="text-gray-400 text-[10.5px]">({t('finalValue.priceUnitHint')})</span>
+              <span className="text-(--palette-gray-400) text-[10.5px]">
+                ({t('finalValue.priceUnitHint')})
+              </span>
             </>
           }
           // mock:1584 — `pill ok` (teal) whenever a per-unit mode is active, `pill mute`
@@ -542,7 +550,9 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
           value={
             <span
               className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                isUnitPrice ? 'bg-[#f0fdf4] text-[#15803d]' : 'bg-gray-100 text-gray-600'
+                isUnitPrice
+                  ? 'bg-[#f0fdf4] text-[#15803d]'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-600)'
               }`}
             >
               {unitChipLabel}
@@ -613,7 +623,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
                   // Green — mock:587-589's `.kv .final .in`, the one input in this card
                   // the mixed-unit-row instruction inherits from WQS's own ruling
                   // ("เขียวใช้เฉพาะผลสุดท้ายของวิธี").
-                  inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                   onUserChange={
                     !isUnitPrice
                       ? (next: any) => {
@@ -647,7 +657,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
                   maxValue: 999_999_999_999_999.0,
                   allowNegative: false,
                 }}
-                inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                 onUserChange={
                   !isUnitPrice
                     ? (next: any) => {
@@ -677,7 +687,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
             // It lives in the VALUE cell, as the mock has it — it was this row's `hint`
             // only because the checkbox used to occupy the value cell.
             value={
-              <span className="text-[10.5px] text-[#8a96a0]">
+              <span className="text-[10.5px] text-(--palette-ink-3)">
                 {t('finalValue.includeBuildingCostOff')}
               </span>
             }
@@ -720,7 +730,9 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
                 manual edit the raw pre-rounding number is no longer displayed. */}
             <KvRow
               label={
-                <span className="font-semibold text-gray-800">{t('finalValue.landValue')}</span>
+                <span className="font-semibold text-(--palette-ink)">
+                  {t('finalValue.landValue')}
+                </span>
               }
               value={
                 <RHFInputCell
@@ -786,7 +798,7 @@ export function SaleAdjustmentGridAdjustAppraisalPriceSection({
                     maxValue: 999_999_999_999_999.0,
                     allowNegative: false,
                   }}
-                  inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                  inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
                 />
               }
               unit={t('finalValue.baht')}

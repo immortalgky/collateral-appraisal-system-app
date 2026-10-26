@@ -7,14 +7,9 @@
  *
  * @example
  * ```tsx
- * import { Form, FormFields, FormProvider, useFormSchema } from '@/shared/components/form';
+ * import { FormFields, FormProvider, useFormSchema } from '@/shared/components/form';
  *
- * // Option 1: All-in-one Form component
- * <Form schema={MySchema} onSubmit={handleSubmit}>
- *   {(methods) => <FormFields fields={fields} showCharCount />}
- * </Form>
- *
- * // Option 2: Wrap existing useForm with FormProvider
+ * // Wrap useForm with FormProvider
  * const methods = useForm({ resolver: zodResolver(MySchema) });
  * <FormProvider methods={methods} schema={MySchema}>
  *   <FormFields fields={fields} />
@@ -23,10 +18,28 @@
  */
 
 // Components
-export { Form } from './Form';
 export { FormProvider } from './FormProvider';
 export { FormFields } from './FormFields';
-export { FormErrorAlert } from './FormErrorAlert';
+export { FormFieldShell } from './FormFieldShell';
+export { FormReadValue } from './FormReadValue';
+
+// Layout: `standard` | `compact`, from the nearest provider (standard by default)
+export { FormLayoutProvider, UserFormLayoutProvider } from './FormLayoutProvider';
+export { useFormLayout, type FormLayoutMode } from './formLayoutContext';
+
+// Sections: FormSheet is the form's root, FormSection one titled block (DESIGN.md 17.6).
+// FormSectionsProvider + useFormSections feed the shell's table of contents.
+export { FormSheet, FormSection } from './FormSheet';
+export { FormSubheading } from './FormSubheading';
+export { FormSectionsProvider } from './FormSectionsProvider';
+export {
+  useFormSections,
+  FormSectionStatusContext,
+  type FormSectionEntry,
+} from './formSheetContext';
+
+// Editable / read-only tables (DESIGN.md 17.7)
+export * from './table';
 
 // Context & Hooks
 export {
@@ -71,18 +84,24 @@ export {
   type FieldConstraints,
 } from './utils';
 
-// Scroll-to-error. Fields are addressed by the `data-field` attribute that FormFields, FormSection
-// and the array tables put on each field/container wrapper. Forms that do not use the shared
-// FormProvider can still opt in by calling useScrollToFirstError(methods) themselves.
+// Scroll-to-field. Fields are addressed by the `data-field` attribute that FormFields, FormSection
+// and the array tables put on each field/container wrapper.
+export { flattenFormErrors, scrollToField, type FlatFormError } from './utils';
+
+// Missing-fields chip (FormProvider runs it for every form; ActionBar.Right shows it)
 export {
-  flattenFormErrors,
-  scrollToField,
-  useScrollToFirstError,
-  type FlatFormError,
-} from './utils';
+  MissingFieldsChip,
+  useFormMissingFields,
+  useRegisterMissingReveal,
+  type MissingFieldsSummary,
+} from './missing';
 
 // Schema Builder
 export { mergeSchemas, buildFormSchema, type MergeSchemaOptions } from './schemaBuilder';
+
+// Validation messages: i18n tokens made in a schema, translated where a control shows them
+export { vmsg } from './validationMessage';
+export { ValidationText } from './ValidationText';
 
 // Condition Evaluation (shared between UI and schema builder)
 export { evaluateCondition, evaluateConditions } from './conditions';

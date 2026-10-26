@@ -33,7 +33,7 @@ const ExistingDraftPicker = ({
 
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-gray-200 overflow-hidden">
+      <div className="rounded-xl border border-(--palette-line) overflow-hidden">
         <table className="w-full">
           <tbody>
             <TableRowSkeleton
@@ -55,41 +55,41 @@ const ExistingDraftPicker = ({
 
   if (drafts.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-10 gap-2 rounded-xl border border-dashed border-gray-200">
-        <Icon name="inbox" style="regular" className="size-8 text-gray-300" />
-        <p className="text-sm text-gray-500">{t('empty.noDraftQuotations')}</p>
-        <p className="text-xs text-gray-400">{t('empty.noDraftHint')}</p>
+      <div className="flex flex-col items-center justify-center py-10 gap-2 rounded-xl border border-dashed border-(--palette-line)">
+        <Icon name="inbox" style="regular" className="size-8 text-(--palette-gray-300)" />
+        <p className="text-sm text-(--palette-gray-500)">{t('empty.noDraftQuotations')}</p>
+        <p className="text-xs text-(--palette-gray-400)">{t('empty.noDraftHint')}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 overflow-hidden">
+    <div className="rounded-xl border border-(--palette-line) overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="bg-gray-50 border-b border-gray-200">
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {t('columns.draftNo')}
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {t('columns.created')}
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {t('columns.appraisals')}
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {t('segment.segmentSet')}
               </th>
-              <th className="px-4 py-2.5 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {t('columns.companies')}
               </th>
-              <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {t('columns.cutOffTime')}
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {drafts.map(draft => {
               const isSelected = selectedId === draft.id;
               return (
@@ -99,8 +99,8 @@ const ExistingDraftPicker = ({
                   className={clsx(
                     'cursor-pointer transition-colors',
                     isSelected
-                      ? 'bg-purple-50 ring-inset ring-2 ring-purple-500'
-                      : 'hover:bg-gray-50',
+                      ? 'bg-purple-50 dark:bg-purple-500/10 ring-inset ring-2 ring-purple-500'
+                      : 'hover:bg-(--palette-surface-2)',
                   )}
                 >
                   <td className="px-4 py-3">
@@ -115,7 +115,9 @@ const ExistingDraftPicker = ({
                       <span
                         className={clsx(
                           'text-sm font-medium',
-                          isSelected ? 'text-purple-700' : 'text-purple-600',
+                          isSelected
+                            ? 'text-purple-700 dark:text-purple-300'
+                            : 'text-purple-600 dark:text-purple-400',
                         )}
                       >
                         {draft.quotationNumber}
@@ -123,11 +125,13 @@ const ExistingDraftPicker = ({
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-600">{formatDate(draft.requestDate)}</span>
+                    <span className="text-sm text-(--palette-gray-600)">
+                      {formatDate(draft.requestDate)}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
                     <div>
-                      <span className="text-sm font-medium text-gray-900">
+                      <span className="text-sm font-medium text-(--palette-ink)">
                         {draft.totalAppraisals}
                       </span>
                       {draft.appraisalNumberPreview.length > 0 && (
@@ -135,13 +139,13 @@ const ExistingDraftPicker = ({
                           {draft.appraisalNumberPreview.slice(0, 5).map(no => (
                             <span
                               key={no}
-                              className="inline-flex items-center px-1.5 py-0.5 bg-primary/5 rounded text-[10px] font-medium text-primary"
+                              className="inline-flex items-center px-1.5 py-0.5 bg-primary/5 rounded text-[10px] font-medium text-(--palette-primary-text)"
                             >
                               {no}
                             </span>
                           ))}
                           {draft.totalAppraisals > 5 && (
-                            <span className="text-[10px] text-gray-400">
+                            <span className="text-[10px] text-(--palette-gray-400)">
                               +{draft.totalAppraisals - 5} more
                             </span>
                           )}
@@ -153,10 +157,12 @@ const ExistingDraftPicker = ({
                     <SegmentChips segments={draft.bankingSegment} />
                   </td>
                   <td className="px-4 py-3 text-center">
-                    <span className="text-sm text-gray-600">{draft.totalCompaniesInvited}</span>
+                    <span className="text-sm text-(--palette-gray-600)">
+                      {draft.totalCompaniesInvited}
+                    </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-sm text-gray-600">
+                    <span className="text-sm text-(--palette-gray-600)">
                       {draft.cutOffTime ? formatDate(draft.cutOffTime) : '—'}
                     </span>
                   </td>

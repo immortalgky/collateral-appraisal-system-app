@@ -108,8 +108,8 @@ export function MarketReferenceButton({
           // two earlier passes kept the "WQS" text pill and widened the field instead —
           // the icon is the affordance now, the tooltip carries the meaning.
           compact
-            ? 'size-[17px] justify-center rounded-[4px] text-[#94a3b8] hover:bg-[#f0fdfa] hover:text-[#0f766e]'
-            : 'gap-1 rounded-lg border border-primary/20 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/5 hover:border-primary/40',
+            ? 'size-[17px] justify-center rounded-[4px] text-[#94a3b8] hover:bg-(--palette-accent-wash) hover:text-(--palette-accent-ink)'
+            : 'gap-1 rounded-lg border border-primary/20 px-2 py-1 text-xs font-medium text-(--palette-primary-text) hover:bg-primary/5 hover:border-primary/40',
           isPending && 'opacity-60 cursor-wait',
           className,
         )}

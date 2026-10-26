@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
-import { useTranslation } from 'react-i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
 /** Coerce null/undefined to 0 for number fields set by RHFInputCell */
 const num = z.coerce.number().default(0);
@@ -51,19 +51,14 @@ export const makeLeaseholdFormSchema = (t: TFunction<'pricingAnalysis'>) => {
     .passthrough();
 };
 
-// Static export (function stand-in, never an object) — for type inference + the
-// schemas/index re-export. The translated schema is used at runtime via the hook.
-export const LeaseholdFormSchema = makeLeaseholdFormSchema(
-  ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>,
-);
+// Built once with the token `t`: messages are translated where they are shown, so the schema does
+// not depend on the language.
+export const LeaseholdFormSchema = makeLeaseholdFormSchema(tokenT('pricingAnalysis'));
 
 export type LeaseholdFormType = z.infer<typeof LeaseholdFormSchema>;
 
-/** Component-side hook: rebuilds the schema with the active translations. */
-export const useLeaseholdFormSchema = () => {
-  const { t } = useTranslation('pricingAnalysis');
-  return makeLeaseholdFormSchema(t);
-};
+/** Kept for the panel's call site. */
+export const useLeaseholdFormSchema = () => LeaseholdFormSchema;
 
 export const leaseholdFormDefaults: LeaseholdFormType = {
   landValuePerSqWa: 0,

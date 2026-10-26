@@ -30,19 +30,39 @@ const FILTERS: HistoryFilter[] = ['all', 'property', 'documents'];
 
 /** Selected chip colour = the entry labels it filters to (property blue, documents violet). */
 const FILTER_STYLE: Record<HistoryFilter, string> = {
-  all: 'bg-primary/10 text-primary ring-primary/30',
-  property: 'bg-blue-50 text-blue-700 ring-blue-200',
-  documents: 'bg-violet-50 text-violet-700 ring-violet-200',
+  all: 'bg-primary/10 text-(--palette-primary-text) ring-primary/30',
+  property:
+    'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 ring-blue-200 dark:ring-blue-500/30',
+  documents:
+    'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 ring-violet-200 dark:ring-violet-500/30',
 };
 
 /** Timeline dot + label colours per kind of entry (same palette as the layout mock). */
 const KIND_STYLE: Record<HistoryEntryKind, { dot: string; pill: string }> = {
-  property: { dot: 'bg-blue-400', pill: 'bg-blue-50 text-blue-700' },
-  regenerate: { dot: 'bg-violet-400', pill: 'bg-violet-50 text-violet-700' },
-  notify: { dot: 'bg-sky-400', pill: 'bg-sky-50 text-sky-700' },
-  attach: { dot: 'bg-emerald-500', pill: 'bg-emerald-50 text-emerald-700' },
-  replace: { dot: 'bg-emerald-500', pill: 'bg-emerald-50 text-emerald-700' },
-  delete: { dot: 'bg-rose-500', pill: 'bg-rose-50 text-rose-700' },
+  property: {
+    dot: 'bg-blue-400',
+    pill: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  },
+  regenerate: {
+    dot: 'bg-violet-400',
+    pill: 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300',
+  },
+  notify: {
+    dot: 'bg-sky-400',
+    pill: 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300',
+  },
+  attach: {
+    dot: 'bg-emerald-500',
+    pill: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  },
+  replace: {
+    dot: 'bg-emerald-500',
+    pill: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  },
+  delete: {
+    dot: 'bg-rose-500',
+    pill: 'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300',
+  },
 };
 
 /** Filter chips — rendered by the page on the drawer's title row, so the state lives there. */
@@ -67,7 +87,7 @@ export const HistoryFilterChips = ({
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
             value === f
               ? clsx('ring-1', FILTER_STYLE[f])
-              : 'bg-gray-100 text-gray-500 hover:bg-gray-200',
+              : 'bg-(--palette-surface-3) text-(--palette-gray-500) hover:bg-(--palette-line)',
           )}
         >
           {t(`history.filter.${f}`)}
@@ -122,7 +142,11 @@ const CorrectionHistoryPanel = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Icon name="spinner" style="solid" className="size-5 text-primary animate-spin" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-5 text-(--palette-primary-text) animate-spin"
+        />
       </div>
     );
   }
@@ -137,8 +161,12 @@ const CorrectionHistoryPanel = ({
   if (!corrections || corrections.length === 0) {
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center">
-        <Icon style="regular" name="clock-rotate-left" className="size-8 text-gray-300" />
-        <p className="text-sm text-gray-500">{t('history.empty')}</p>
+        <Icon
+          style="regular"
+          name="clock-rotate-left"
+          className="size-8 text-(--palette-gray-300)"
+        />
+        <p className="text-sm text-(--palette-gray-500)">{t('history.empty')}</p>
       </div>
     );
   }
@@ -155,12 +183,14 @@ const CorrectionHistoryPanel = ({
   return (
     <div>
       {days.length === 0 && (
-        <p className="py-6 text-center text-sm text-gray-500">{t('history.noneInFilter')}</p>
+        <p className="py-6 text-center text-sm text-(--palette-gray-500)">
+          {t('history.noneInFilter')}
+        </p>
       )}
 
       {days.map(({ day, items }) => (
         <section key={day} className="mb-6">
-          <h3 className="mb-3 text-xs font-semibold text-gray-500">
+          <h3 className="mb-3 text-xs font-semibold text-(--palette-gray-500)">
             {formatLocaleDate(items[0].changedAt, i18n.language)}
           </h3>
           <ol className="space-y-5">
@@ -200,25 +230,25 @@ const CorrectionHistoryPanel = ({
                         <button
                           type="button"
                           onClick={() => onSelectTarget(target)}
-                          className="truncate rounded text-xs font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          className="truncate rounded text-xs font-semibold text-(--palette-primary-text) hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                         >
                           {targetLabel}
                         </button>
                       ) : (
-                        <span className="truncate text-xs font-semibold text-gray-700">
+                        <span className="truncate text-xs font-semibold text-(--palette-ink)">
                           {targetLabel}
                         </span>
                       )}
                     </div>
 
                     {changes.length > 0 && (
-                      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-gray-50 px-3 py-2 text-xs">
+                      <dl className="grid grid-cols-[auto_minmax(0,1fr)] gap-x-3 gap-y-0.5 rounded-md bg-(--palette-surface-2) px-3 py-2 text-xs">
                         {changes.map((change, idx) => (
                           <Fragment key={`${correction.id}-${idx}`}>
-                            <dt className="text-gray-500">
+                            <dt className="text-(--palette-gray-500)">
                               {fieldLabel(change.field, isDocument)}
                             </dt>
-                            <dd className="min-w-0 break-words text-gray-900">
+                            <dd className="min-w-0 break-words text-(--palette-ink)">
                               {isDocument && isActionField(change.field) ? (
                                 // One-off actions, not a value that changed: no struck-through "from".
                                 // The backend writes an English literal for a regeneration; localize it.
@@ -242,12 +272,14 @@ const CorrectionHistoryPanel = ({
                     )}
 
                     {correction.reason && (
-                      <p className="text-xs text-gray-600">
-                        <span className="text-gray-400">{t('history.reasonLabel')}</span>{' '}
+                      <p className="text-xs text-(--palette-gray-600)">
+                        <span className="text-(--palette-gray-400)">
+                          {t('history.reasonLabel')}
+                        </span>{' '}
                         <span className="italic">{correction.reason}</span>
                       </p>
                     )}
-                    <p className="text-[11px] text-gray-400">
+                    <p className="text-[11px] text-(--palette-gray-400)">
                       {formatDate(correction.changedAt, 'HH:mm')} · {correction.changedBy}
                     </p>
                   </div>

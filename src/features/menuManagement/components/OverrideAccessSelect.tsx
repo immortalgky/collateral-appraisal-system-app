@@ -8,19 +8,19 @@ const OPTIONS = [
     value: 'inherit',
     icon: 'circle-check',
     labelKey: 'activityOverrides.access.inherit',
-    activeClass: 'bg-white text-emerald-700 shadow-sm',
+    activeClass: 'bg-(--palette-surface) text-emerald-700 dark:text-emerald-300 shadow-sm',
   },
   {
     value: 'readonly',
     icon: 'lock',
     labelKey: 'activityOverrides.access.readonly',
-    activeClass: 'bg-white text-amber-700 shadow-sm',
+    activeClass: 'bg-(--palette-surface) text-(--palette-warn) shadow-sm',
   },
   {
     value: 'hidden',
     icon: 'eye-slash',
     labelKey: 'activityOverrides.access.hidden',
-    activeClass: 'bg-white text-gray-700 shadow-sm',
+    activeClass: 'bg-(--palette-surface) text-(--palette-ink) shadow-sm',
   },
 ] as const;
 
@@ -41,7 +41,7 @@ export function OverrideAccessSelect({ value, onChange, disabled }: OverrideAcce
     <div
       role="group"
       className={clsx(
-        'inline-flex items-center gap-0.5 rounded-lg bg-gray-100 p-0.5',
+        'inline-flex items-center gap-0.5 rounded-lg bg-(--palette-surface-3) p-0.5',
         disabled && 'opacity-50 pointer-events-none',
       )}
     >
@@ -56,7 +56,7 @@ export function OverrideAccessSelect({ value, onChange, disabled }: OverrideAcce
             onClick={() => onChange(opt.value)}
             className={clsx(
               'flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition-colors',
-              active ? opt.activeClass : 'text-gray-500 hover:text-gray-700',
+              active ? opt.activeClass : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
             )}
           >
             <Icon name={opt.icon} style="solid" className="size-3" />

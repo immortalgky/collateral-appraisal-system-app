@@ -52,8 +52,8 @@ const FilterChips = ({
             className={clsx(
               'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-opacity',
               pressed
-                ? 'border-gray-200 bg-white text-gray-700'
-                : 'border-gray-200 bg-white text-gray-400 opacity-45 line-through',
+                ? 'border-(--palette-line) bg-(--palette-surface) text-(--palette-ink)'
+                : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-400) opacity-45 line-through',
             )}
           >
             <span
@@ -73,7 +73,7 @@ const FilterChips = ({
           type="button"
           onClick={onZoomOut}
           title={zoomOutTooltip}
-          className="inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:border-gray-300"
+          className="inline-flex items-center gap-1.5 rounded-full border border-(--palette-line) bg-(--palette-surface) px-2.5 py-1 text-xs font-medium text-(--palette-gray-600) hover:border-(--palette-line-strong)"
         >
           <Icon name="magnifying-glass-minus" style="regular" className="size-3" />
           {t('search.zoomOut')}
@@ -81,7 +81,7 @@ const FilterChips = ({
       )}
 
       {rangeChipLabel && (
-        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-xs font-mono text-primary">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/20 bg-primary/5 px-2.5 py-1 text-xs font-mono text-(--palette-primary-text)">
           {rangeChipLabel}
           <button
             type="button"
@@ -100,8 +100,8 @@ const FilterChips = ({
           className={clsx(
             'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-mono',
             token.negated
-              ? 'border-gray-300 bg-gray-50 text-gray-500'
-              : 'border-primary/20 bg-primary/5 text-primary',
+              ? 'border-(--palette-line-strong) bg-(--palette-surface-2) text-(--palette-gray-500)'
+              : 'border-primary/20 bg-primary/5 text-(--palette-primary-text)',
           )}
         >
           {token.negated && <span aria-hidden="true">≠</span>}

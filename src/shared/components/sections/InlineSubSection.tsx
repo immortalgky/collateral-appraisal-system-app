@@ -21,7 +21,10 @@ const InlineSubSection = ({
 }: InlineSubSectionProps) => {
   return (
     <section
-      className={clsx(compact ? 'py-3 first:pt-1 last:pb-1' : 'py-4 first:pt-1 last:pb-1', className)}
+      className={clsx(
+        compact ? 'py-3 first:pt-1 last:pb-1' : 'py-4 first:pt-1 last:pb-1',
+        className,
+      )}
     >
       {(title || description) && (
         <div className={compact ? 'mb-2' : 'mb-3'}>
@@ -30,18 +33,16 @@ const InlineSubSection = ({
               <h4
                 className={clsx(
                   compact
-                    ? 'text-xs font-medium text-gray-500'
-                    : 'text-xs font-semibold text-gray-600 tracking-wider uppercase',
+                    ? 'text-xs font-medium text-(--palette-gray-500)'
+                    : 'text-xs font-semibold text-(--palette-gray-600) tracking-wider uppercase',
                 )}
               >
                 {title}
               </h4>
             )}
-            {rightSlot && <span className="text-xs text-gray-400">{rightSlot}</span>}
+            {rightSlot && <span className="text-xs text-(--palette-gray-400)">{rightSlot}</span>}
           </div>
-          {description && (
-            <p className="text-xs text-gray-500 mt-0.5">{description}</p>
-          )}
+          {description && <p className="text-xs text-(--palette-gray-500) mt-0.5">{description}</p>}
         </div>
       )}
       {children}

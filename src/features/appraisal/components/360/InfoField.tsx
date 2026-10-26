@@ -16,9 +16,14 @@ const InfoField = ({ label, value }: InfoFieldProps) => {
 
   return (
     <div className="min-w-0">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-400)">
+        {label}
+      </p>
       <div
-        className={clsx('mt-1 text-sm truncate', isEmpty ? 'text-gray-300' : 'text-gray-900')}
+        className={clsx(
+          'mt-1 text-sm truncate',
+          isEmpty ? 'text-(--palette-gray-300)' : 'text-(--palette-ink)',
+        )}
         title={typeof value === 'string' || typeof value === 'number' ? String(value) : undefined}
       >
         {isEmpty ? '—' : value}

@@ -109,7 +109,7 @@ export function BuildingCostLink({
       <button
         type="button"
         onClick={() => (isDirty ? setIsConfirmOpen(true) : open())}
-        className="text-[10.5px] text-primary hover:underline cursor-pointer"
+        className="text-[10.5px] text-(--palette-primary-text) hover:underline cursor-pointer"
       >
         {t(labelKey)}
       </button>

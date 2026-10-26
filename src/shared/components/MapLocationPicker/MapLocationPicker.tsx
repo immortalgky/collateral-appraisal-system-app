@@ -208,15 +208,17 @@ export function MapLocationPicker({
         {/* Map (or fallback) */}
         {missingKey ? (
           <div
-            className="flex flex-col items-center justify-center bg-gray-50 rounded-md text-center p-6 text-sm text-gray-500"
+            className="flex flex-col items-center justify-center bg-(--palette-surface-2) rounded-md text-center p-6 text-sm text-(--palette-gray-500)"
             style={{ height: 420 }}
           >
             <p className="font-medium">{t('map.noApiKey')}</p>
-            <p className="text-xs text-gray-400 font-mono mt-1">VITE_GOOGLE_MAPS_API_KEY</p>
+            <p className="text-xs text-(--palette-gray-400) font-mono mt-1">
+              VITE_GOOGLE_MAPS_API_KEY
+            </p>
           </div>
         ) : mapsFailed ? (
           <div
-            className="flex flex-col items-center justify-center gap-3 bg-gray-50 rounded-md text-center p-6 text-sm text-gray-500"
+            className="flex flex-col items-center justify-center gap-3 bg-(--palette-surface-2) rounded-md text-center p-6 text-sm text-(--palette-gray-500)"
             style={{ height: 420 }}
           >
             <p className="font-medium">{t('map.loadFailed')}</p>
@@ -234,70 +236,70 @@ export function MapLocationPicker({
           <div className="relative flex-shrink-0 min-h-[420px]" style={{ height: 420 }}>
             <div
               ref={setContainerEl}
-              className="w-full h-full rounded-md overflow-hidden border border-gray-200 bg-gray-100"
+              className="w-full h-full rounded-md overflow-hidden border border-(--palette-line) bg-(--palette-surface-3)"
               data-testid="map-location-picker"
             />
             <div className="absolute bottom-3 right-3 z-10 flex items-center gap-2">
               {mapInstance && <MapTypeToggleButton map={mapInstance} className="p-2 text-sm" />}
               <button
-              type="button"
-              onClick={handleLocateMe}
-              disabled={locating}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium ${MAP_CONTROL_CLASS} disabled:opacity-60 disabled:cursor-not-allowed`}
-              title={t('map.myLocation')}
-            >
-              {locating ? (
-                <svg
-                  aria-hidden="true"
-                  className="w-4 h-4 animate-spin"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
+                type="button"
+                onClick={handleLocateMe}
+                disabled={locating}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium ${MAP_CONTROL_CLASS} disabled:opacity-60 disabled:cursor-not-allowed`}
+                title={t('map.myLocation')}
+              >
+                {locating ? (
+                  <svg
+                    aria-hidden="true"
+                    className="w-4 h-4 animate-spin"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    aria-hidden="true"
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
                     stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-              ) : (
-                <svg
-                  aria-hidden="true"
-                  className="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8a4 4 0 100 8 4 4 0 000-8z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 2v3m0 14v3m10-10h-3M5 12H2"
-                  />
-                </svg>
-              )}
-              {t('map.myLocation')}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8a4 4 0 100 8 4 4 0 000-8z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 2v3m0 14v3m10-10h-3M5 12H2"
+                    />
+                  </svg>
+                )}
+                {t('map.myLocation')}
               </button>
             </div>
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between gap-3 pt-2 border-t border-gray-100">
-          <p className="text-xs text-gray-500 tabular-nums">
+        <div className="flex items-center justify-between gap-3 pt-2 border-t border-(--palette-line-soft)">
+          <p className="text-xs text-(--palette-gray-500) tabular-nums">
             {selected
               ? t('locationPicker.selected', {
                   lat: selected.lat.toFixed(6),
@@ -309,7 +311,7 @@ export function MapLocationPicker({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md hover:bg-gray-50"
+              className="px-4 py-2 text-sm font-medium text-(--palette-ink) border border-(--palette-line-strong) rounded-md hover:bg-(--palette-surface-2)"
             >
               {t('locationPicker.cancel')}
             </button>

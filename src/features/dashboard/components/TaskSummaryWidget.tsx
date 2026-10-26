@@ -78,10 +78,10 @@ function CustomRangePopover({ initialFrom, initialTo, onApply, onClose }: Custom
   return (
     <div
       ref={ref}
-      className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-gray-200 bg-white shadow-xl p-4 flex flex-col gap-3"
+      className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-(--palette-line) bg-(--palette-surface) shadow-xl p-4 flex flex-col gap-3"
     >
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">
+        <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
           {t('period.customFrom')}
         </label>
         <DatePickerInput
@@ -90,7 +90,7 @@ function CustomRangePopover({ initialFrom, initialTo, onApply, onClose }: Custom
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">
+        <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
           {t('period.customTo')}
         </label>
         <DatePickerInput
@@ -102,7 +102,7 @@ function CustomRangePopover({ initialFrom, initialTo, onApply, onClose }: Custom
         type="button"
         disabled={invalid}
         onClick={() => fromDate && toDate && onApply(fromDate, toDate)}
-        className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+        className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-(--palette-surface-3) disabled:text-(--palette-gray-400) transition-colors"
       >
         {t('period.apply')}
       </button>
@@ -152,16 +152,23 @@ function TaskGauge({
       aria-label={
         clickable ? `${label}: ${count} tasks. ${hint ?? 'Open filtered task list.'}` : undefined
       }
-      className={`bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center gap-3 transition ${
+      className={`bg-(--palette-surface) rounded-2xl border border-(--palette-line-soft) shadow-sm p-5 flex flex-col items-center gap-3 transition ${
         clickable
-          ? 'hover:shadow-md hover:border-gray-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40 text-left'
+          ? 'hover:shadow-md hover:border-(--palette-line) cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/40 text-left'
           : ''
       }`}
     >
-      <p className="text-sm font-medium text-gray-600">{label}</p>
+      <p className="text-sm font-medium text-(--palette-gray-600)">{label}</p>
       <div className="relative w-32 h-32">
         <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
-          <circle cx="60" cy="60" r={radius} fill="none" stroke="#f3f4f6" strokeWidth="10" />
+          <circle
+            cx="60"
+            cy="60"
+            r={radius}
+            fill="none"
+            stroke="var(--palette-surface-3)"
+            strokeWidth="10"
+          />
           <circle
             cx="60"
             cy="60"
@@ -179,12 +186,12 @@ function TaskGauge({
           <div className={`p-2 rounded-full ${bgColor} mb-1`}>
             <Icon name={icon} style="solid" className={`size-5 ${iconColor}`} />
           </div>
-          <span className="text-3xl font-semibold text-gray-800 tabular-nums">{count}</span>
-          <span className="text-xs text-gray-400">{tasksLabel}</span>
+          <span className="text-3xl font-semibold text-(--palette-ink) tabular-nums">{count}</span>
+          <span className="text-xs text-(--palette-gray-400)">{tasksLabel}</span>
         </div>
       </div>
       {clickable && (
-        <span className="text-[11px] text-blue-600 inline-flex items-center gap-0.5">
+        <span className="text-[11px] text-blue-600 dark:text-blue-400 inline-flex items-center gap-0.5">
           {openListLabel}
           <Icon name="arrow-right" style="solid" className="size-2.5" />
         </span>
@@ -195,7 +202,7 @@ function TaskGauge({
 
 function GaugeSkeleton() {
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col items-center gap-3">
+    <div className="bg-(--palette-surface) rounded-2xl border border-(--palette-line-soft) shadow-sm p-5 flex flex-col items-center gap-3">
       <Skeleton variant="text" width={80} height={14} />
       <Skeleton variant="circular" width={128} height={128} />
       <Skeleton variant="text" width={60} height={12} />
@@ -283,10 +290,12 @@ function TaskSummaryWidget() {
 
   return (
     <WidgetWrapper id={WIDGET_ID}>
-      <div className="bg-white rounded-2xl shadow-sm p-6 h-full">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm p-6 h-full">
         <div className="flex items-start justify-between mb-6 gap-3 flex-wrap">
           <div className="flex flex-col gap-1">
-            <h3 className="text-base font-semibold text-gray-800">{t('taskSummary.title')}</h3>
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('taskSummary.title')}
+            </h3>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
           </div>
           <div className="flex flex-col items-end gap-1.5">
@@ -302,7 +311,7 @@ function TaskSummaryWidget() {
                     className={`min-w-[1.75rem] px-2.5 py-1 text-xs font-medium rounded-md border transition-all ${
                       active
                         ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                        : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line) hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong)'
                     }`}
                   >
                     {btn.label}
@@ -317,7 +326,7 @@ function TaskSummaryWidget() {
                   className={`px-2.5 py-1 text-xs font-medium rounded-md border inline-flex items-center gap-1.5 transition-all ${
                     period === 'CUSTOM'
                       ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50 hover:border-gray-300'
+                      : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line) hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong)'
                   }`}
                 >
                   <Icon name="calendar" style="regular" className="size-3" />
@@ -334,7 +343,9 @@ function TaskSummaryWidget() {
               </div>
             </div>
             {updatedLabel && (
-              <span className="text-xs text-gray-400">{t('updatedAgo', { n: updatedLabel })}</span>
+              <span className="text-xs text-(--palette-gray-400)">
+                {t('updatedAgo', { n: updatedLabel })}
+              </span>
             )}
           </div>
         </div>
@@ -354,7 +365,7 @@ function TaskSummaryWidget() {
               count={notStarted}
               icon="loader"
               iconColor="text-blue-500"
-              bgColor="bg-blue-50"
+              bgColor="bg-blue-50 dark:bg-blue-500/10"
               strokeColor="#3b82f6"
               percentage={total > 0 ? (notStarted / total) * 100 : 0}
               onClick={() => goToTasks({ pendingTaskStatus: 'Assigned' })}
@@ -367,7 +378,7 @@ function TaskSummaryWidget() {
               count={inProgress}
               icon="hourglass-start"
               iconColor="text-amber-500"
-              bgColor="bg-amber-50"
+              bgColor="bg-(--palette-warn-wash)"
               strokeColor="#f59e0b"
               percentage={total > 0 ? (inProgress / total) * 100 : 0}
               onClick={() => goToTasks({ pendingTaskStatus: 'InProgress' })}
@@ -380,7 +391,7 @@ function TaskSummaryWidget() {
               count={overdue}
               icon="bell"
               iconColor="text-red-500"
-              bgColor="bg-red-50"
+              bgColor="bg-(--palette-req-wash)"
               strokeColor="#ef4444"
               percentage={total > 0 ? (overdue / total) * 100 : 0}
               onClick={() => goToTasks({ slaStatus: 'Breached' })}
@@ -393,7 +404,7 @@ function TaskSummaryWidget() {
               count={completed}
               icon="circle-check"
               iconColor="text-emerald-500"
-              bgColor="bg-emerald-50"
+              bgColor="bg-emerald-50 dark:bg-emerald-500/10"
               strokeColor="#10b981"
               percentage={total > 0 ? (completed / total) * 100 : 0}
               tasksLabel={t('taskSummary.tasks')}

@@ -24,7 +24,7 @@ import {
 } from '../utils/queryTokens';
 import { bucketWindow, formatTimeRange } from '../utils/formatBucketWindow';
 import { unionMachineNames } from '../utils/machineColors';
-import { copyToClipboard } from '../utils/clipboard';
+import { copyToClipboard } from '@shared/utils/clipboard';
 import {
   clampToNow,
   isPresetHours,
@@ -389,8 +389,8 @@ const LogViewerPage = () => {
     <div className="flex flex-col h-full min-h-0 min-w-0">
       {view !== 'health' && (
         <div className="shrink-0 mb-3">
-          <h2 className="text-base font-semibold text-gray-900">{t('page.title')}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <h2 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h2>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
       )}
 
@@ -398,7 +398,7 @@ const LogViewerPage = () => {
         <MachineHealthView onGoToLogs={handleGoToLogsWithRange} onBack={() => setView('logs')} />
       ) : (
         <>
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 flex flex-col gap-3">
+          <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-4 flex flex-col gap-3">
             <LogSearchBar
               inputRef={inputRef}
               draftQuery={draftQuery}

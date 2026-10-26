@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
 import {
-  makeRequestSubmissionActivityFormSchema,
+  requestSubmissionActivityFormSchema,
   type RequestSubmissionActivityFormValues,
 } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
@@ -29,7 +30,7 @@ export function RequestSubmissionActivityForm({ nodeId }: Props) {
     reset,
     formState: { errors },
   } = useForm<RequestSubmissionActivityFormValues>({
-    resolver: zodResolver(makeRequestSubmissionActivityFormSchema(t)),
+    resolver: zodResolver(requestSubmissionActivityFormSchema),
     defaultValues: buildDefaults(data, props),
   });
 
@@ -63,9 +64,11 @@ export function RequestSubmissionActivityForm({ nodeId }: Props) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -92,9 +95,11 @@ export function RequestSubmissionActivityForm({ nodeId }: Props) {
           <option value="Land">{t('forms.propertyTypes.land')}</option>
         </select>
         {errors.propertyType && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.propertyType.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.propertyType.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -106,9 +111,11 @@ export function RequestSubmissionActivityForm({ nodeId }: Props) {
         </label>
         <input {...register('propertyAddress')} className="input input-bordered input-sm w-full" />
         {errors.propertyAddress && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.propertyAddress.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.propertyAddress.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -136,9 +143,11 @@ export function RequestSubmissionActivityForm({ nodeId }: Props) {
           <option value="Sale">{t('forms.purposes.sale')}</option>
         </select>
         {errors.purpose && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.purpose.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.purpose.message} />
+            </span>
+          </div>
         )}
       </div>
 

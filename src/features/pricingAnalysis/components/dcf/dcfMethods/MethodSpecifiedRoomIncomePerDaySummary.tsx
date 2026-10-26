@@ -35,17 +35,17 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-xs">
           <thead>
-            <tr className="bg-gray-50 text-gray-600">
-              <th className="text-left font-medium px-3 py-2 border-b border-gray-200">
+            <tr className="bg-(--palette-surface-2) text-(--palette-gray-600)">
+              <th className="text-left font-medium px-3 py-2 border-b border-(--palette-line)">
                 {t('dcf.common.roomType')}
               </th>
-              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
+              <th className="text-right font-medium px-3 py-2 border-b border-(--palette-line)">
                 {t('dcf.common.roomIncome')}
               </th>
-              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
+              <th className="text-right font-medium px-3 py-2 border-b border-(--palette-line)">
                 {t('dcf.common.saleableArea')}
               </th>
-              <th className="text-right font-medium px-3 py-2 border-b border-gray-200">
+              <th className="text-right font-medium px-3 py-2 border-b border-(--palette-line)">
                 {t('dcf.common.totalRoomIncome')}
               </th>
             </tr>
@@ -55,7 +55,7 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
               <tr>
                 <td
                   colSpan={4}
-                  className="px-3 py-4 text-center text-gray-400 border-b border-gray-100"
+                  className="px-3 py-4 text-center text-(--palette-gray-400) border-b border-(--palette-line-soft)"
                 >
                   {t('dcf.common.noRoomsConfigured')}
                 </td>
@@ -71,17 +71,17 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
                   ? `${typeLabel} — ${room.roomTypeOther}`
                   : typeLabel;
               return (
-                <tr key={idx} className="hover:bg-gray-50/50">
-                  <td className="px-3 py-2 border-b border-gray-100 text-gray-800">
+                <tr key={idx} className="hover:bg-(--palette-surface-2)/50">
+                  <td className="px-3 py-2 border-b border-(--palette-line-soft) text-(--palette-ink)">
                     {displayType}
                   </td>
-                  <td className="px-3 py-2 border-b border-gray-100 text-right text-gray-800 tabular-nums">
+                  <td className="px-3 py-2 border-b border-(--palette-line-soft) text-right text-(--palette-ink) tabular-nums">
                     {formatNumber(room.roomIncome, 2)}
                   </td>
-                  <td className="px-3 py-2 border-b border-gray-100 text-right text-gray-800 tabular-nums">
+                  <td className="px-3 py-2 border-b border-(--palette-line-soft) text-right text-(--palette-ink) tabular-nums">
                     {formatNumber(room.saleableArea, 0)}
                   </td>
-                  <td className="px-3 py-2 border-b border-gray-100 text-right font-medium text-gray-900 tabular-nums">
+                  <td className="px-3 py-2 border-b border-(--palette-line-soft) text-right font-medium text-(--palette-ink) tabular-nums">
                     {formatNumber(room.totalRoomIncome, 2)}
                   </td>
                 </tr>
@@ -90,15 +90,17 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
           </tbody>
           {rooms.length > 0 && (
             <tfoot>
-              <tr className="bg-gray-50 font-semibold text-gray-800">
-                <td className="px-3 py-2 border-t border-gray-200">{t('dcf.common.total')}</td>
-                <td className="px-3 py-2 border-t border-gray-200 text-right tabular-nums">
+              <tr className="bg-(--palette-surface-2) font-semibold text-(--palette-ink)">
+                <td className="px-3 py-2 border-t border-(--palette-line)">
+                  {t('dcf.common.total')}
+                </td>
+                <td className="px-3 py-2 border-t border-(--palette-line) text-right tabular-nums">
                   {formatNumber(detail.sumRoomIncome, 2)}
                 </td>
-                <td className="px-3 py-2 border-t border-gray-200 text-right tabular-nums">
+                <td className="px-3 py-2 border-t border-(--palette-line) text-right tabular-nums">
                   {formatNumber(detail.sumSaleableArea, 0)}
                 </td>
-                <td className="px-3 py-2 border-t border-gray-200 text-right tabular-nums">
+                <td className="px-3 py-2 border-t border-(--palette-line) text-right tabular-nums">
                   {formatNumber(detail.sumTotalRoomIncome, 2)}
                 </td>
               </tr>
@@ -135,9 +137,9 @@ export function MethodSpecifiedRoomIncomePerDaySummary({ name }: { name: string 
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex flex-row gap-2 items-baseline border-b border-gray-100 pb-1">
-      <dt className="text-gray-500 shrink-0">{label}</dt>
-      <dd className="text-gray-800 font-medium text-right ml-auto tabular-nums">{value}</dd>
+    <div className="flex flex-row gap-2 items-baseline border-b border-(--palette-line-soft) pb-1">
+      <dt className="text-(--palette-gray-500) shrink-0">{label}</dt>
+      <dd className="text-(--palette-ink) font-medium text-right ml-auto tabular-nums">{value}</dd>
     </div>
   );
 }

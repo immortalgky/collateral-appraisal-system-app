@@ -162,7 +162,8 @@ describe('ConfirmActionDialog double submit', () => {
     const button = screen.getByText('confirm-button');
 
     fireEvent.click(button);
-    await screen.findByText('confirm.reasonRequired');
+    // The message is a token, translated by ValidationText (the mocked `t` echoes its key)
+    await screen.findByText(/confirm\.reasonRequired/);
     expect(idleMutation.mutate).not.toHaveBeenCalled();
 
     fireEvent.change(screen.getByRole('textbox'), { target: { value: 'duplicate' } });

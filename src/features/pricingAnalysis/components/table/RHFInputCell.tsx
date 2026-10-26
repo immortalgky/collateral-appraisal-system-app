@@ -139,13 +139,23 @@ export const RHFInputCell = ({
     } else {
       rendered = raw == null || raw === '' ? '—' : String(raw);
     }
-    return <span className="text-xs text-gray-800">{rendered}</span>;
+    return <span className="text-xs text-(--palette-ink)">{rendered}</span>;
   }
+
+  // The missing-fields chip finds a cell by `data-field` and names it by `data-field-label`, or,
+  // when the cell has no label of its own, by its row and column (`data-grid-cell`). Set on the
+  // control itself: no wrapper, so the grid layout is untouched.
+  const gridAttrs = (label?: string) => ({
+    'data-field': fieldName,
+    'data-grid-cell': '',
+    'data-field-label': label || undefined,
+  });
 
   if (inputType === 'number') {
     return (
       <NumberInput
         {...field}
+        {...gridAttrs(number?.label)}
         label={number?.label ?? ''}
         value={field.value ?? ''}
         decimalPlaces={number?.decimalPlaces}
@@ -173,8 +183,8 @@ export const RHFInputCell = ({
         // keep exactly what they had.
         className={clsx(
           'w-full focus:scroll-smooth',
-          !dense && 'border border-gray-300 rounded-lg px-1.5 py-0.5 text-xs',
-          disabled && 'opacity-50 cursor-not-allowed bg-gray-100',
+          !dense && 'border border-(--palette-line-strong) rounded-lg px-1.5 py-0.5 text-xs',
+          disabled && 'opacity-50 cursor-not-allowed bg-(--palette-surface-3)',
           inputClassName,
         )}
       />
@@ -185,6 +195,7 @@ export const RHFInputCell = ({
     return (
       <TDropdown
         {...field}
+        {...gridAttrs(dropdown?.label)}
         value={field.value ?? ''}
         onChange={(value: any) => {
           field.onChange(value);
@@ -220,6 +231,7 @@ export const RHFInputCell = ({
     return (
       <TextInput
         {...field}
+        {...gridAttrs(text?.label)}
         value={field.value ?? ''}
         onChange={e => {
           const next = onUserChange ? onUserChange(e as any) : e;

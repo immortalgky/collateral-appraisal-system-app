@@ -365,20 +365,20 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
           {/* Compact appraisal summary + lazy picker */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
               {t('columns.appraisals')} ({activeAppraisalCount})
             </label>
 
             {/* Compact summary list — always visible; picker hides its internal selected panel via hideSelectedPanel */}
             {appraisals.length > 0 && (
-              <div className="rounded-lg border border-gray-200 overflow-hidden mb-2">
+              <div className="rounded-lg border border-(--palette-line) overflow-hidden mb-2">
                 {/* "Set max days for all" bar */}
                 <SetMaxDaysBar
                   appraisals={appraisals}
                   markedForRemovalIds={markedForRemovalIds}
                   onUpdateMaxDays={handleUpdateMaxDays}
                 />
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-(--palette-line-soft)">
                   {appraisals.map(a => (
                     <SelectedAppraisalRow
                       key={a.id}
@@ -407,14 +407,14 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
           {/* Selected companies chips */}
           {selectedCompanies.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
                 {t('fields.selectedCompanies')} ({selectedCompanies.length})
               </label>
               <div className="flex flex-wrap gap-2">
                 {selectedCompanies.map(c => (
                   <div
                     key={c.id}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-sm"
                   >
                     <Icon name="building" style="solid" className="size-3.5" />
                     <span className="font-medium">
@@ -424,7 +424,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                     <button
                       type="button"
                       onClick={() => handleRemoveCompany(c.id)}
-                      className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                      className="p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-500/30 transition-colors"
                       aria-label={t('aria.removeCompany', {
                         company: localizeCompanyName(c.companyName, c.companyNameLocal),
                       })}
@@ -439,16 +439,16 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
 
           {/* Company selection */}
           <div>
-            <div className="block text-sm font-medium text-gray-700 mb-1.5">
+            <div className="block text-sm font-medium text-(--palette-ink) mb-1.5">
               {t('fields.invitedCompanies')} <span className="text-danger">*</span>
             </div>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <div className="p-2 border-b border-gray-100">
+            <div className="border border-(--palette-line) rounded-lg overflow-hidden">
+              <div className="p-2 border-b border-(--palette-line-soft)">
                 <div className="relative">
                   <Icon
                     name="magnifying-glass"
                     style="regular"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-gray-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-(--palette-gray-400)"
                   />
                   <input
                     type="text"
@@ -465,7 +465,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                   const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } =
                     getSelectAllState(filteredCompanies, covering, selectedCompanies, searchQuery);
                   return (
-                    <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2">
+                    <div className="px-3 py-1.5 bg-(--palette-surface-2) border-b border-(--palette-line-soft) flex items-center gap-2">
                       <input
                         type="checkbox"
                         checked={allChecked}
@@ -483,10 +483,10 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                         className="size-3.5 accent-purple-600 rounded shrink-0 cursor-pointer"
                         aria-label={t('aria.selectAllVisibleCompanies')}
                       />
-                      <span className="text-xs text-gray-600">
+                      <span className="text-xs text-(--palette-gray-600)">
                         {allVisibleSelected ? t('picker.clearAll') : t('picker.selectAll')}
                         {searchQuery.trim() && (
-                          <span className="text-gray-400">
+                          <span className="text-(--palette-gray-400)">
                             {' '}
                             {t('picker.matchingCount', { count: filteredCompanies.length })}
                           </span>
@@ -497,12 +497,12 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                 })()}
               <div className="max-h-96 overflow-y-auto">
                 {isLoadingCompanies ? (
-                  <div className="flex items-center justify-center px-4 py-6 gap-2 text-gray-400">
+                  <div className="flex items-center justify-center px-4 py-6 gap-2 text-(--palette-gray-400)">
                     <Icon name="spinner" style="solid" className="size-4 animate-spin" />
                     <span className="text-xs">{t('common:status.loading')}</span>
                   </div>
                 ) : filteredCompanies.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-sm text-gray-500">
+                  <div className="px-4 py-6 text-center text-sm text-(--palette-gray-500)">
                     {isCompaniesError
                       ? t('errors.failedToLoadCompanies')
                       : noCoverage
@@ -510,7 +510,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                         : t('empty.noCompaniesInvited')}
                   </div>
                 ) : (
-                  <div className="divide-y divide-gray-100">
+                  <div className="divide-y divide-(--palette-line-soft)">
                     {filteredCompanies.map(c => {
                       const selected = isCompanySelected(c.id);
                       return (
@@ -520,7 +520,9 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                           onClick={() => handleToggleCompany(c)}
                           className={clsx(
                             'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                            selected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                            selected
+                              ? 'bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
+                              : 'hover:bg-(--palette-surface-2)',
                           )}
                         >
                           <div
@@ -528,21 +530,21 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
                               'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
                               selected
                                 ? 'bg-purple-500 border-purple-500'
-                                : 'border-gray-300 bg-white',
+                                : 'border-(--palette-line-strong) bg-(--palette-surface)',
                             )}
                           >
                             {selected && (
                               <Icon name="check" style="solid" className="size-3 text-white" />
                             )}
                           </div>
-                          <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
+                          <div className="size-8 rounded-lg bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0">
                             <Icon
                               name="building"
                               style="solid"
-                              className="size-4 text-purple-600"
+                              className="size-4 text-purple-600 dark:text-purple-400"
                             />
                           </div>
-                          <span className="text-sm font-medium text-gray-900 truncate flex-1">
+                          <span className="text-sm font-medium text-(--palette-ink) truncate flex-1">
                             {localizeCompanyName(c.companyName, c.companyNameLocal)}
                           </span>
                           <SegmentChips segments={c.loanTypes} />
@@ -598,7 +600,7 @@ const EditDraftQuotationModal = ({ isOpen, onClose, quotation }: EditDraftQuotat
             hideSelectedPanel
             fixedFilters={{ status: 'Pending' }}
           />
-          <div className="flex justify-end pt-2 border-t border-gray-100">
+          <div className="flex justify-end pt-2 border-t border-(--palette-line-soft)">
             <Button onClick={() => setShowPicker(false)}>
               <Icon name="check" style="solid" className="size-3.5 mr-1.5" />
               {t('buttons.done')}

@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeCompanySelectionFormSchema, type CompanySelectionFormValues } from '../../schemas';
+import { companySelectionFormSchema, type CompanySelectionFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { CompanySelectionProperties } from '../../types';
 
@@ -26,7 +27,7 @@ export function CompanySelectionForm({ nodeId }: Props) {
     reset,
     formState: { errors },
   } = useForm<CompanySelectionFormValues>({
-    resolver: zodResolver(makeCompanySelectionFormSchema(t)),
+    resolver: zodResolver(companySelectionFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -70,9 +71,11 @@ export function CompanySelectionForm({ nodeId }: Props) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 

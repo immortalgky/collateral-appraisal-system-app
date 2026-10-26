@@ -29,7 +29,7 @@ const ResizableSidebar = ({ isOpen, onToggle, children, openedWidth }: Resizable
 
 const Main = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="cas-sidebar-main flex-1 min-w-0 px-3 pt-3 pb-6 overflow-y-auto overflow-x-hidden">
+    <div className="flex-1 min-w-0 px-3 pt-3 pb-6 overflow-y-auto overflow-x-hidden">
       {children}
     </div>
   );
@@ -48,7 +48,7 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
   return (
     <div
       className={clsx(
-        'flex flex-col flex-none border-l border-gray-100 transition-all duration-200 sticky top-0 self-start max-h-[calc(100vh-12rem)] overflow-y-auto',
+        'flex flex-col flex-none border-l border-(--palette-line-soft) transition-all duration-200 sticky top-0 self-start max-h-[calc(100vh-12rem)] overflow-y-auto',
         openedWidth,
         'p-4',
       )}
@@ -57,7 +57,7 @@ const Sidebar = ({ children }: { children: ReactNode }) => {
       <button
         type="button"
         onClick={onToggle}
-        className="w-6 h-6 flex items-center justify-center rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all mb-2 shrink-0"
+        className="w-6 h-6 flex items-center justify-center rounded-md text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) transition-all mb-2 shrink-0"
         title={t('actions.closePanel')}
       >
         <Icon style="solid" name="xmark" className="size-3.5" />

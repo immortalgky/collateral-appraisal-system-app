@@ -77,13 +77,13 @@ function StatusChips({
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               active
                 ? 'bg-primary text-white border-primary'
-                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                : 'bg-(--palette-surface) text-(--palette-ink) border-(--palette-line) hover:bg-(--palette-surface-2)'
             }`}
           >
             <span>{c.label}</span>
             <span
               className={`tabular-nums px-1.5 py-px rounded-full text-[10px] ${
-                active ? 'bg-white/20' : 'bg-gray-100 text-gray-600'
+                active ? 'bg-white/20' : 'bg-(--palette-surface-3) text-(--palette-gray-600)'
               }`}
             >
               {counts[c.key]}
@@ -146,19 +146,21 @@ function SortableTh({ label, columnKey, activeKey, dir, onSort, align = 'left' }
   const justifyClass =
     align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
   return (
-    <th className={`text-xs py-2 px-3 text-gray-500 font-semibold whitespace-nowrap ${alignClass}`}>
+    <th
+      className={`text-xs py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap ${alignClass}`}
+    >
       <button
         type="button"
         onClick={() => onSort(columnKey)}
-        className={`inline-flex w-full items-center gap-1 hover:text-gray-700 transition-colors ${justifyClass} ${
-          active ? 'text-gray-700' : ''
+        className={`inline-flex w-full items-center gap-1 hover:text-(--palette-ink) transition-colors ${justifyClass} ${
+          active ? 'text-(--palette-ink)' : ''
         }`}
       >
         <span>{label}</span>
         <Icon
           style="solid"
           name={active ? (dir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
-          className={`size-2.5 ${active ? 'text-primary' : 'text-gray-300'}`}
+          className={`size-2.5 ${active ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)'}`}
         />
       </button>
     </th>
@@ -171,7 +173,7 @@ function EstimateCell({ value }: { value: number | null }) {
   const empty = value == null || value === 0;
   return (
     <td
-      className={`py-1.5 px-3 tabular-nums text-right ${empty ? 'text-gray-300' : 'text-gray-700'}`}
+      className={`py-1.5 px-3 tabular-nums text-right ${empty ? 'text-(--palette-gray-300)' : 'text-(--palette-ink)'}`}
     >
       {empty ? '–' : value.toLocaleString()}
     </td>
@@ -199,10 +201,10 @@ function DueBadge({
   const overdue = days < 0;
   const soon = days >= 0 && days <= 30;
   const tone = overdue
-    ? 'bg-red-50 text-red-700 border-red-100'
+    ? 'bg-(--palette-req-wash) text-(--palette-req) border-red-100 dark:border-red-500/20'
     : soon
-      ? 'bg-amber-50 text-amber-700 border-amber-100'
-      : 'bg-green-50 text-green-700 border-green-100';
+      ? 'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-100 dark:border-amber-500/20'
+      : 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 border-green-100 dark:border-green-500/20';
   const label = overdue
     ? t('detail.dueBadge.overdue', { days: Math.abs(days) })
     : days === 0
@@ -225,8 +227,8 @@ function MiniStat({ dotClass, label, value }: { dotClass: string; label: string;
   return (
     <div className="flex items-center gap-1.5 whitespace-nowrap">
       <span className={`size-2 rounded-full ${dotClass}`} />
-      <span className="text-xs text-gray-500">{label}</span>
-      <span className="text-sm font-semibold text-gray-900 tabular-nums">{value}</span>
+      <span className="text-xs text-(--palette-gray-500)">{label}</span>
+      <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">{value}</span>
     </div>
   );
 }
@@ -251,8 +253,8 @@ function MiniMetric({
         <Icon style="solid" name={icon} className={`size-3.5 ${iconColor}`} />
       </div>
       <div className="flex flex-col leading-tight items-end text-right">
-        <span className="text-[10px] text-gray-400">{label}</span>
-        <span className="text-sm font-semibold text-gray-900 tabular-nums">{value}</span>
+        <span className="text-[10px] text-(--palette-gray-400)">{label}</span>
+        <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">{value}</span>
       </div>
     </div>
   );
@@ -274,38 +276,42 @@ function CreateSuccessModal({ open, result, onClose }: CreateSuccessModalProps) 
     <Modal isOpen={open} onClose={onClose} title={t('detail.successModal.title')} size="sm">
       <div className="space-y-4">
         <div className="flex flex-col items-center gap-3 py-2">
-          <div className="size-12 rounded-full bg-green-50 flex items-center justify-center">
-            <Icon style="solid" name="check" className="size-5 text-green-600" />
+          <div className="size-12 rounded-full bg-green-50 dark:bg-green-500/10 flex items-center justify-center">
+            <Icon
+              style="solid"
+              name="check"
+              className="size-5 text-green-600 dark:text-green-400"
+            />
           </div>
           <div className="text-center">
-            <p className="text-sm font-semibold text-gray-800">
+            <p className="text-sm font-semibold text-(--palette-ink)">
               {t('detail.successModal.heading')}
             </p>
             {result.requestNumber && (
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-(--palette-gray-500) mt-1">
                 {t('detail.successModal.requestNumber')}{' '}
-                <strong className="text-gray-800">{result.requestNumber}</strong>
+                <strong className="text-(--palette-ink)">{result.requestNumber}</strong>
               </p>
             )}
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-(--palette-gray-500)">
               {t('detail.successModal.groupNumber')}{' '}
-              <strong className="text-gray-800">{result.groupNumber}</strong>
+              <strong className="text-(--palette-ink)">{result.groupNumber}</strong>
             </p>
           </div>
         </div>
 
         {result.skipped && (
-          <div className="rounded-md bg-amber-50 border border-amber-200 px-3 py-2.5">
-            <p className="text-xs font-medium text-amber-800">
+          <div className="rounded-md bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 px-3 py-2.5">
+            <p className="text-xs font-medium text-amber-800 dark:text-amber-300">
               {t('detail.successModal.alreadyInProgress')}
             </p>
             {result.skipReason && (
-              <p className="text-xs text-amber-700 mt-0.5">{result.skipReason}</p>
+              <p className="text-xs text-(--palette-warn) mt-0.5">{result.skipReason}</p>
             )}
           </div>
         )}
 
-        <div className="flex justify-end pt-2 border-t border-gray-100">
+        <div className="flex justify-end pt-2 border-t border-(--palette-line-soft)">
           <Button variant="primary" size="sm" onClick={onClose}>
             {t('common:actions.close')}
           </Button>
@@ -330,8 +336,10 @@ function Field({
     <div
       className={`flex flex-col leading-tight ${align === 'right' ? 'items-end text-right' : ''}`}
     >
-      <span className="text-[11px] text-gray-400">{label}</span>
-      <span className="text-sm font-medium text-gray-800 tabular-nums mt-0.5">{value ?? '-'}</span>
+      <span className="text-[11px] text-(--palette-gray-400)">{label}</span>
+      <span className="text-sm font-medium text-(--palette-ink) tabular-nums mt-0.5">
+        {value ?? '-'}
+      </span>
     </div>
   );
 }
@@ -345,8 +353,8 @@ function UnitStatusBadge({ isSold }: { isSold: boolean }) {
       title={isSold ? t('units.soldHint') : t('units.availableHint')}
       className={`inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full border ${
         isSold
-          ? 'bg-violet-50 text-violet-700 border-violet-100'
-          : 'bg-green-50 text-green-700 border-green-100'
+          ? 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-100 dark:border-violet-500/20'
+          : 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 border-green-100 dark:border-green-500/20'
       }`}
     >
       <span className={`size-1.5 rounded-full ${isSold ? 'bg-violet-500' : 'bg-green-500'}`} />
@@ -369,21 +377,21 @@ function CondoUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableProps) {
   const sortProps = { activeKey: sortKey, dir: sortDir, onSort };
   return (
     <table className="w-full min-w-max text-xs">
-      <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+      <thead className="sticky top-0 z-10 bg-(--palette-surface-2) border-b border-(--palette-line)">
         <tr>
-          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             #
           </th>
-          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('units.cols.floor')}
           </th>
-          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('units.cols.towerName')}
           </th>
-          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('units.cols.regNumber')}
           </th>
-          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('units.cols.roomNo')}
           </th>
           <SortableTh label={t('units.cols.modelType')} columnKey="modelType" {...sortProps} />
@@ -405,38 +413,44 @@ function CondoUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableProps) {
             align="right"
             {...sortProps}
           />
-          <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-center py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('units.cols.isSold')}
           </th>
           <SortableTh label={t('units.cols.lastUpdated')} columnKey="updatedAt" {...sortProps} />
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100">
+      <tbody className="divide-y divide-(--palette-line-soft)">
         {units.map(u => (
           <tr
             key={u.sequenceNumber}
-            className={u.isSold ? 'bg-violet-50/40 hover:bg-violet-50' : 'hover:bg-gray-50'}
+            className={
+              u.isSold
+                ? 'bg-violet-50/40 dark:bg-violet-500/10 hover:bg-violet-50 dark:hover:bg-violet-500/10'
+                : 'hover:bg-(--palette-surface-2)'
+            }
           >
-            <td className="py-1.5 px-3 text-gray-500 tabular-nums">{u.sequenceNumber}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.floor ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.towerName ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.condoRegistrationNumber ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.roomNumber ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.modelType ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700 tabular-nums text-right">
+            <td className="py-1.5 px-3 text-(--palette-gray-500) tabular-nums">
+              {u.sequenceNumber}
+            </td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.floor ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.towerName ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.condoRegistrationNumber ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.roomNumber ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.modelType ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink) tabular-nums text-right">
               {formatNumber(u.usableArea)}
             </td>
-            <td className="py-1.5 px-3 text-gray-700 tabular-nums text-right">
+            <td className="py-1.5 px-3 text-(--palette-ink) tabular-nums text-right">
               {formatNumber(u.sellingPrice)}
             </td>
             <EstimateCell value={u.lastAppraisedValue} />
             <td className="py-1.5 px-3 text-center">
               <UnitStatusBadge isSold={u.isSold} />
             </td>
-            <td className="py-1.5 px-3 text-gray-700 whitespace-nowrap leading-tight">
+            <td className="py-1.5 px-3 text-(--palette-ink) whitespace-nowrap leading-tight">
               <div>{formatLocaleDateTime(u.updatedAt, i18n.language)}</div>
               {u.updatedBy && (
-                <div className="text-[10px] text-gray-400">
+                <div className="text-[10px] text-(--palette-gray-400)">
                   {t('units.updatedByLine', { name: u.updatedBy })}
                 </div>
               )}
@@ -455,9 +469,9 @@ function LandBuildingUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableP
   const sortProps = { activeKey: sortKey, dir: sortDir, onSort };
   return (
     <table className="w-full min-w-max text-xs">
-      <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+      <thead className="sticky top-0 z-10 bg-(--palette-surface-2) border-b border-(--palette-line)">
         <tr>
-          <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             #
           </th>
           <SortableTh label={t('units.cols.plotNo')} columnKey="plotNumber" {...sortProps} />
@@ -493,42 +507,48 @@ function LandBuildingUnitsTable({ units, sortKey, sortDir, onSort }: UnitsTableP
             align="right"
             {...sortProps}
           />
-          <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-center py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('units.cols.isSold')}
           </th>
           <SortableTh label={t('units.cols.lastUpdated')} columnKey="updatedAt" {...sortProps} />
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100">
+      <tbody className="divide-y divide-(--palette-line-soft)">
         {units.map(u => (
           <tr
             key={u.sequenceNumber}
-            className={u.isSold ? 'bg-violet-50/40 hover:bg-violet-50' : 'hover:bg-gray-50'}
+            className={
+              u.isSold
+                ? 'bg-violet-50/40 dark:bg-violet-500/10 hover:bg-violet-50 dark:hover:bg-violet-500/10'
+                : 'hover:bg-(--palette-surface-2)'
+            }
           >
-            <td className="py-1.5 px-3 text-gray-500 tabular-nums">{u.sequenceNumber}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.plotNumber ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.houseNumber ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700">{u.modelType ?? '-'}</td>
-            <td className="py-1.5 px-3 text-gray-700 tabular-nums text-center">
+            <td className="py-1.5 px-3 text-(--palette-gray-500) tabular-nums">
+              {u.sequenceNumber}
+            </td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.plotNumber ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.houseNumber ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink)">{u.modelType ?? '-'}</td>
+            <td className="py-1.5 px-3 text-(--palette-ink) tabular-nums text-center">
               {u.numberOfFloors ?? '-'}
             </td>
-            <td className="py-1.5 px-3 text-gray-700 tabular-nums text-right">
+            <td className="py-1.5 px-3 text-(--palette-ink) tabular-nums text-right">
               {formatNumber(u.landArea)}
             </td>
-            <td className="py-1.5 px-3 text-gray-700 tabular-nums text-right">
+            <td className="py-1.5 px-3 text-(--palette-ink) tabular-nums text-right">
               {formatNumber(u.usableArea)}
             </td>
-            <td className="py-1.5 px-3 text-gray-700 tabular-nums text-right">
+            <td className="py-1.5 px-3 text-(--palette-ink) tabular-nums text-right">
               {formatNumber(u.sellingPrice)}
             </td>
             <EstimateCell value={u.lastAppraisedValue} />
             <td className="py-1.5 px-3 text-center">
               <UnitStatusBadge isSold={u.isSold} />
             </td>
-            <td className="py-1.5 px-3 text-gray-700 whitespace-nowrap leading-tight">
+            <td className="py-1.5 px-3 text-(--palette-ink) whitespace-nowrap leading-tight">
               <div>{formatLocaleDateTime(u.updatedAt, i18n.language)}</div>
               {u.updatedBy && (
-                <div className="text-[10px] text-gray-400">
+                <div className="text-[10px] text-(--palette-gray-400)">
                   {t('units.updatedByLine', { name: u.updatedBy })}
                 </div>
               )}
@@ -664,10 +684,10 @@ function BlockReappraisalDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <div className="h-6 w-48 bg-gray-100 rounded animate-pulse" />
+        <div className="h-6 w-48 bg-(--palette-surface-3) rounded animate-pulse" />
         <div className="grid grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+            <div key={i} className="h-8 bg-(--palette-surface-3) rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -678,14 +698,14 @@ function BlockReappraisalDetailPage() {
   if (isError || !detail) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-sm font-medium text-(--palette-ink)">
             {isError ? t('detail.error.loadFailed') : t('detail.error.notFound')}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
         <Button
           variant="outline"
@@ -708,28 +728,28 @@ function BlockReappraisalDetailPage() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate('/standalone/block-reappraisal')}
-            className="flex items-center justify-center size-7 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            className="flex items-center justify-center size-7 rounded-md border border-(--palette-line) text-(--palette-gray-500) hover:bg-(--palette-surface-2) hover:text-(--palette-ink) transition-colors"
           >
             <Icon style="solid" name="arrow-left" className="size-3.5" />
           </button>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-base font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-(--palette-ink)">
               {detail.projectName ?? t('detail.unnamedProject')}
             </h2>
-            <span className="text-gray-300">·</span>
+            <span className="text-(--palette-gray-300)">·</span>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
                 condo
-                  ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                  : 'bg-amber-50 text-amber-700 border border-amber-100'
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20'
+                  : 'bg-(--palette-warn-wash) text-(--palette-warn) border border-amber-100 dark:border-amber-500/20'
               }`}
             >
               {condo ? t('projectType.condo') : t('projectType.landAndBuilding')}
             </span>
             {detail.oldAppraisalNumber && (
               <>
-                <span className="text-gray-300">·</span>
-                <span className="text-xs text-gray-500">
+                <span className="text-(--palette-gray-300)">·</span>
+                <span className="text-xs text-(--palette-gray-500)">
                   {t('detail.oldAppraisalLabel')} {detail.oldAppraisalNumber}
                 </span>
               </>
@@ -760,22 +780,24 @@ function BlockReappraisalDetailPage() {
       </div>
 
       {/* ── Summary strip ── */}
-      <section className="shrink-0 bg-white rounded-lg border border-gray-200 px-4 py-2.5">
+      <section className="shrink-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) px-4 py-2.5">
         <div className="flex items-center gap-x-6 gap-y-2 flex-wrap">
           <Field
             label={t('columns.lastAppraisedDate')}
             value={formatLocaleDate(detail.lastAppraisedDate, i18n.language)}
           />
-          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+          <div className="hidden sm:block h-8 w-px bg-(--palette-line)" />
           {/* Due date + urgency badge */}
           <div className="flex flex-col leading-tight">
-            <span className="text-[11px] text-gray-400">{t('detail.fields.dueDate')}</span>
-            <span className="text-sm font-medium text-gray-800 tabular-nums mt-0.5 flex items-center gap-2">
+            <span className="text-[11px] text-(--palette-gray-400)">
+              {t('detail.fields.dueDate')}
+            </span>
+            <span className="text-sm font-medium text-(--palette-ink) tabular-nums mt-0.5 flex items-center gap-2">
               {formatLocaleDate(detail.dueDate, i18n.language)}
               <DueBadge days={dueDays} t={t} />
             </span>
           </div>
-          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+          <div className="hidden sm:block h-8 w-px bg-(--palette-line)" />
           <Field
             label={t('columns.projectSellingPrice')}
             value={formatNumber(detail.projectSellingPrice)}
@@ -785,27 +807,27 @@ function BlockReappraisalDetailPage() {
       </section>
 
       {/* ── Compact metrics bar (rich overview is collapsible) ── */}
-      <section className="shrink-0 bg-white rounded-lg border border-gray-200">
+      <section className="shrink-0 bg-(--palette-surface) rounded-lg border border-(--palette-line)">
         <div className="flex items-center gap-x-6 gap-y-3 px-4 py-2.5 flex-wrap">
           {/* Sold progress gauge */}
           <div className="flex items-center gap-3 min-w-[220px]">
             <div className="flex flex-col leading-tight">
-              <span className="text-[11px] text-gray-400">
+              <span className="text-[11px] text-(--palette-gray-400)">
                 {t('detail.overview.donutSoldLabel')}
               </span>
-              <span className="text-sm font-semibold text-gray-900 tabular-nums">
+              <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                 {soldPct.toFixed(1)}%
-                <span className="ml-1 text-xs font-normal text-gray-400">
+                <span className="ml-1 text-xs font-normal text-(--palette-gray-400)">
                   ({detail.soldUnits}/{detail.totalUnits})
                 </span>
               </span>
             </div>
-            <div className="flex-1 min-w-[64px] h-1.5 rounded-full bg-gray-100 overflow-hidden">
+            <div className="flex-1 min-w-[64px] h-1.5 rounded-full bg-(--palette-surface-3) overflow-hidden">
               <div className="h-full rounded-full bg-violet-500" style={{ width: `${soldPct}%` }} />
             </div>
           </div>
 
-          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+          <div className="hidden sm:block h-8 w-px bg-(--palette-line)" />
 
           {/* Sold / Available tallies */}
           <div className="flex items-center gap-5">
@@ -821,21 +843,21 @@ function BlockReappraisalDetailPage() {
             />
           </div>
 
-          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+          <div className="hidden sm:block h-8 w-px bg-(--palette-line)" />
 
           {/* Estimate KPIs */}
           <div className="flex items-center gap-6">
             <MiniMetric
               icon="money-bill"
-              iconBg="bg-violet-50"
-              iconColor="text-violet-600"
+              iconBg="bg-violet-50 dark:bg-violet-500/10"
+              iconColor="text-violet-600 dark:text-violet-400"
               label={t('detail.kpi.totalEstimate')}
               value={totalEstimate > 0 ? totalEstimate.toLocaleString() : '–'}
             />
             <MiniMetric
               icon="chart-line"
-              iconBg="bg-indigo-50"
-              iconColor="text-indigo-600"
+              iconBg="bg-indigo-50 dark:bg-indigo-500/10"
+              iconColor="text-indigo-600 dark:text-indigo-400"
               label={t('detail.kpi.avgEstimate')}
               value={avgEstimate > 0 ? avgEstimate.toLocaleString() : '–'}
             />
@@ -844,10 +866,10 @@ function BlockReappraisalDetailPage() {
       </section>
 
       {/* ── Units table (read-only) ── */}
-      <section className="flex-1 min-h-[24rem] bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
-        <div className="shrink-0 px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="text-xs font-semibold text-gray-700">{t('detail.units.title')}</h3>
-          <span className="text-xs text-gray-400 tabular-nums">
+      <section className="flex-1 min-h-[24rem] bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
+        <div className="shrink-0 px-4 py-3 border-b border-(--palette-line-soft) flex items-center justify-between">
+          <h3 className="text-xs font-semibold text-(--palette-ink)">{t('detail.units.title')}</h3>
+          <span className="text-xs text-(--palette-gray-400) tabular-nums">
             {filtersActive ? `${filteredUnits.length} / ${units.length}` : units.length}{' '}
             {t('detail.units.count')}
           </span>
@@ -855,7 +877,7 @@ function BlockReappraisalDetailPage() {
 
         {/* ── Filter bar ── */}
         {units.length > 0 && (
-          <div className="shrink-0 px-4 py-3 border-b border-gray-100 flex items-center gap-3 flex-wrap">
+          <div className="shrink-0 px-4 py-3 border-b border-(--palette-line-soft) flex items-center gap-3 flex-wrap">
             <div className="flex-1 min-w-[240px] max-w-md">
               <Input
                 placeholder={t('detail.filter.searchPlaceholder')}
@@ -871,7 +893,7 @@ function BlockReappraisalDetailPage() {
                 value={minValue}
                 onChange={e => setMinValue(e.target.value)}
               />
-              <span className="text-gray-400">–</span>
+              <span className="text-(--palette-gray-400)">–</span>
               <NumberInput
                 className="w-28"
                 placeholder={t('detail.filter.estimateMax')}
@@ -906,13 +928,21 @@ function BlockReappraisalDetailPage() {
         <div className="flex-1 min-h-0 overflow-auto">
           {units.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2">
-              <Icon style="regular" name="folder-open" className="size-8 text-gray-300" />
-              <p className="text-xs text-gray-400">{t('detail.units.empty')}</p>
+              <Icon
+                style="regular"
+                name="folder-open"
+                className="size-8 text-(--palette-gray-300)"
+              />
+              <p className="text-xs text-(--palette-gray-400)">{t('detail.units.empty')}</p>
             </div>
           ) : filteredUnits.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2">
-              <Icon style="regular" name="magnifying-glass" className="size-8 text-gray-300" />
-              <p className="text-xs text-gray-400">{t('detail.filter.noMatch')}</p>
+              <Icon
+                style="regular"
+                name="magnifying-glass"
+                className="size-8 text-(--palette-gray-300)"
+              />
+              <p className="text-xs text-(--palette-gray-400)">{t('detail.filter.noMatch')}</p>
             </div>
           ) : condo ? (
             <CondoUnitsTable

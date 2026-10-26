@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
@@ -58,8 +59,8 @@ const CustomRangePopover = ({ active, from, to, onApply }: CustomRangePopoverPro
         className={clsx(
           'inline-flex items-center gap-1.5 h-7 rounded-lg border px-3 text-sm outline-none transition-colors',
           active
-            ? 'border-primary/30 bg-primary/5 text-primary font-medium'
-            : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+            ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) font-medium'
+            : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:border-(--palette-line-strong)',
         )}
       >
         <Icon name="sliders" style="regular" className="size-3.5" />
@@ -67,11 +68,11 @@ const CustomRangePopover = ({ active, from, to, onApply }: CustomRangePopoverPro
       </PopoverButton>
       <PopoverPanel
         anchor="bottom start"
-        className="z-50 mt-1.5 w-[min(560px,90vw)] rounded-xl border border-gray-200 bg-white p-4 shadow-lg flex flex-col gap-3"
+        className="z-50 mt-1.5 w-[min(560px,90vw)] rounded-xl border border-(--palette-line) bg-(--palette-surface) p-4 shadow-lg flex flex-col gap-3"
       >
         {({ close }) => (
           <>
-            <div className="flex gap-4 border-b border-gray-100">
+            <div className="flex gap-4 border-b border-(--palette-line-soft)">
               {(['range', 'around'] as Mode[]).map(m => (
                 <button
                   key={m}
@@ -80,8 +81,8 @@ const CustomRangePopover = ({ active, from, to, onApply }: CustomRangePopoverPro
                   className={clsx(
                     'pb-2 text-sm font-medium border-b-2 -mb-px transition-colors',
                     mode === m
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-gray-500 hover:text-gray-700',
+                      ? 'border-primary text-(--palette-primary-text)'
+                      : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)',
                   )}
                 >
                   {t(m === 'range' ? 'range.customModeRange' : 'range.customModeAround')}
@@ -116,20 +117,19 @@ const CustomRangePopover = ({ active, from, to, onApply }: CustomRangePopoverPro
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
+                  <label className="block text-xs font-medium text-(--palette-ink) mb-1">
                     {t('range.plusMinus')}
                   </label>
-                  <select
+                  <NativeSelect
                     value={plusMinus}
                     onChange={e => setPlusMinus(Number(e.target.value))}
-                    className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                   >
                     {AROUND_MINUTES.map(m => (
                       <option key={m} value={m}>
                         {t('range.plusMinusOption', { minutes: m })}
                       </option>
                     ))}
-                  </select>
+                  </NativeSelect>
                 </div>
               </div>
             )}
@@ -142,7 +142,7 @@ const CustomRangePopover = ({ active, from, to, onApply }: CustomRangePopoverPro
               <button
                 type="button"
                 onClick={() => close()}
-                className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 text-gray-600 hover:border-gray-300"
+                className="px-3 py-1.5 text-sm rounded-lg border border-(--palette-line) text-(--palette-gray-600) hover:border-(--palette-line-strong)"
               >
                 {t('range.cancel')}
               </button>

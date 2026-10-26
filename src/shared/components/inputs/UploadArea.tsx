@@ -33,7 +33,7 @@ const UploadArea = ({
             'w-full border-2 border-dashed rounded-2xl p-8 transition-all duration-200 cursor-pointer',
             isDragging
               ? 'border-primary bg-primary/5 scale-[1.02] shadow-lg shadow-primary/10'
-              : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300',
+              : 'border-(--palette-line) hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong)',
             isLoading && 'opacity-50 cursor-not-allowed',
           )}
         >
@@ -46,8 +46,8 @@ const UploadArea = ({
                   className={clsx(
                     'w-14 h-14 rounded-full flex items-center justify-center mb-3 transition-all duration-200',
                     isDragging
-                      ? 'bg-primary/10 text-primary animate-bounce'
-                      : 'bg-gray-100 text-gray-400',
+                      ? 'bg-(--palette-primary-wash) text-(--palette-primary-text) animate-bounce'
+                      : 'bg-(--palette-surface-3) text-(--palette-gray-400)',
                   )}
                 >
                   <Icon style="solid" name="cloud-arrow-up" className="text-2xl" />
@@ -55,14 +55,16 @@ const UploadArea = ({
                 <p
                   className={clsx(
                     'text-sm font-medium mb-1 transition-colors',
-                    isDragging ? 'text-primary' : 'text-gray-600',
+                    isDragging ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-600)',
                   )}
                 >
                   {isDragging ? 'Drop files here' : 'Click to upload'}
                 </p>
-                <p className="text-xs text-gray-400">or drag and drop files</p>
+                <p className="text-xs text-(--palette-gray-400)">or drag and drop files</p>
                 {!isDragging && supportedText && (
-                  <p className="text-xs text-gray-400 mt-2">Supported: {supportedText}</p>
+                  <p className="text-xs text-(--palette-gray-400) mt-2">
+                    Supported: {supportedText}
+                  </p>
                 )}
               </>
             )}

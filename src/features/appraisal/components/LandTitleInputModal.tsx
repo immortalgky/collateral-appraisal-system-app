@@ -1,7 +1,12 @@
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { SegmentedControl } from '@/shared/components/SegmentedControl';
-import { buildFormSchema, type FormField, FormFields } from '@/shared/components/form';
+import {
+  buildFormSchema,
+  type FormField,
+  FormFields,
+  FormLayoutProvider,
+} from '@/shared/components/form';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { createPortal } from 'react-dom';
@@ -48,7 +53,7 @@ interface LandTitleModalProps {
 const createLandTitleForm = buildFormSchema(landtitlesFields);
 
 const NAV_BTN =
-  'flex size-7 items-center justify-center rounded-md border border-gray-200 text-gray-600 transition-colors hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-40';
+  'flex size-7 items-center justify-center rounded-md border border-(--palette-line) text-(--palette-gray-600) transition-colors hover:bg-(--palette-surface-2) disabled:cursor-not-allowed disabled:opacity-40';
 
 const LandTitleModal = ({
   fields,
@@ -202,167 +207,180 @@ const LandTitleModal = ({
   // establishes a containing block, and this dialog sits deep inside the form — under an
   // `overflow-hidden` wrapper and a scroll container. A portal makes that irrelevant instead
   // of leaving the dialog's position at the mercy of its ancestors, and it also lifts the
-  // dialog out of `.cas-form-grid` so the grid layout's field rules never reach inside it.
+  // dialog out of the form's DOM. React context still crosses a portal, so the layout is reset to Standard: this dialog is not a sheet.
   return createPortal(
     <FormProvider {...form}>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-8"
-        role="presentation"
-        onMouseDown={onBackdropMouseDown}
-        onClick={onBackdropClick}
-      >
+      <FormLayoutProvider layout="standard">
         <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Title Detail"
-          className={clsx(
-            'flex max-h-full flex-col rounded-2xl bg-white shadow-2xl',
-            'w-full max-w-[1180px]',
-          )}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-8"
+          role="presentation"
+          onMouseDown={onBackdropMouseDown}
+          onClick={onBackdropClick}
         >
-          <div className="shrink-0 border-b border-gray-200 px-6 py-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* The title number can run to 200 characters: the summary truncates, full text on hover. */}
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-3">
-                  <h2 className="text-lg font-semibold">Title Detail</h2>
-                  {nav && (
-                    <div
-                      role="group"
-                      aria-label={t('titleEntry.nav.group')}
-                      className="flex items-center gap-1"
-                    >
-                      <button
-                        type="button"
-                        onClick={() => goTo(nav.index - 1)}
-                        disabled={nav.index <= 0}
-                        aria-label={t('titleEntry.nav.prev')}
-                        title={t('titleEntry.nav.prev')}
-                        className={NAV_BTN}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Title Detail"
+            className={clsx(
+              'flex max-h-full flex-col rounded-2xl bg-(--palette-surface) shadow-2xl',
+              'w-full max-w-[1180px]',
+            )}
+          >
+            <div className="shrink-0 border-b border-(--palette-line) px-6 py-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* The title number can run to 200 characters: the summary truncates, full text on hover. */}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-lg font-semibold">Title Detail</h2>
+                    {nav && (
+                      <div
+                        role="group"
+                        aria-label={t('titleEntry.nav.group')}
+                        className="flex items-center gap-1"
                       >
-                        <Icon style="solid" name="chevron-left" className="size-3" />
-                      </button>
-                      <span className="min-w-[3.5rem] text-center text-sm tabular-nums text-gray-600">
-                        {t('titleEntry.nav.position', { current: nav.index + 1, total: nav.count })}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => goTo(nav.index + 1)}
-                        disabled={nav.index >= nav.count - 1}
-                        aria-label={t('titleEntry.nav.next')}
-                        title={t('titleEntry.nav.next')}
-                        className={NAV_BTN}
-                      >
-                        <Icon style="solid" name="chevron-right" className="size-3" />
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <p className="truncate text-xs text-gray-500" title={titleNumber || undefined}>
-                  {t('titleEntry.summary', { no: titleNumber || '—', area: toRaiNganWa(totalWa) })}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">
-                    {t('titleEntry.typeLabel')}
-                  </span>
-                  <div className="w-60">
-                    <FormFields fields={titleTypeField} />
+                        <button
+                          type="button"
+                          onClick={() => goTo(nav.index - 1)}
+                          disabled={nav.index <= 0}
+                          aria-label={t('titleEntry.nav.prev')}
+                          title={t('titleEntry.nav.prev')}
+                          className={NAV_BTN}
+                        >
+                          <Icon style="solid" name="chevron-left" className="size-3" />
+                        </button>
+                        <span className="min-w-[3.5rem] text-center text-sm tabular-nums text-(--palette-gray-600)">
+                          {t('titleEntry.nav.position', {
+                            current: nav.index + 1,
+                            total: nav.count,
+                          })}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => goTo(nav.index + 1)}
+                          disabled={nav.index >= nav.count - 1}
+                          aria-label={t('titleEntry.nav.next')}
+                          title={t('titleEntry.nav.next')}
+                          className={NAV_BTN}
+                        >
+                          <Icon style="solid" name="chevron-right" className="size-3" />
+                        </button>
+                      </div>
+                    )}
                   </div>
+                  <p
+                    className="truncate text-xs text-(--palette-ink-2)"
+                    title={titleNumber || undefined}
+                  >
+                    {t('titleEntry.summary', {
+                      no: titleNumber || '—',
+                      area: toRaiNganWa(totalWa),
+                    })}
+                  </p>
                 </div>
-                <SegmentedControl
-                  label={t('titleEntry.viewLabel')}
-                  value={shownView}
-                  onChange={chooseView}
-                  options={[
-                    {
-                      value: 'deed',
-                      label: t('titleEntry.viewDocument'),
-                      icon: 'file-lines',
-                      disabled: !hasDocument,
-                    },
-                    { value: 'form', label: t('titleEntry.viewForm'), icon: 'list-check' },
-                  ]}
-                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
+                      {t('titleEntry.typeLabel')}
+                    </span>
+                    <div className="w-60">
+                      <FormFields fields={titleTypeField} />
+                    </div>
+                  </div>
+                  <SegmentedControl
+                    label={t('titleEntry.viewLabel')}
+                    value={shownView}
+                    onChange={chooseView}
+                    options={[
+                      {
+                        value: 'deed',
+                        label: t('titleEntry.viewDocument'),
+                        icon: 'file-lines',
+                        disabled: !hasDocument,
+                      },
+                      { value: 'form', label: t('titleEntry.viewForm'), icon: 'list-check' },
+                    ]}
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* The side panel keeps the classic stacked labels: a label column does not fit in it. */}
-          <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto overflow-x-hidden bg-gray-50 lg:grid-cols-[minmax(0,1fr)_340px]">
-            {shownView === 'deed' ? (
-              <div className="grid min-w-0 content-start justify-items-center p-6">
-                <TitleDeedSheet
-                  fields={fields}
-                  address={{
-                    subDistrict: subDistrictName,
-                    district: districtName,
-                    province: provinceName,
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="min-w-0 bg-white">
-                <TitleFormView fields={fields} />
-              </div>
-            )}
-            <aside className="grid content-start gap-6 border-t border-gray-200 bg-white p-5 lg:border-l lg:border-t-0">
-              <section className="grid gap-3">
-                <h3 className="flex items-baseline gap-2 text-base font-semibold text-gray-800">
-                  {t('titleEntry.checks.title')}
-                  <span className="text-xs font-normal text-gray-400">
-                    {t('titleEntry.checks.hint')}
-                  </span>
-                </h3>
-                <div className="grid grid-cols-12 gap-3">
-                  <FormFields fields={checkFields} />
+            {/* The side panel keeps the classic stacked labels: a label column does not fit in it. */}
+            <div className="grid min-h-0 flex-1 grid-cols-1 overflow-y-auto overflow-x-hidden bg-(--palette-surface-2) lg:grid-cols-[minmax(0,1fr)_340px]">
+              {shownView === 'deed' ? (
+                <div className="grid min-w-0 content-start justify-items-center p-6">
+                  <TitleDeedSheet
+                    fields={fields}
+                    address={{
+                      subDistrict: subDistrictName,
+                      district: districtName,
+                      province: provinceName,
+                    }}
+                  />
                 </div>
-              </section>
-              <section className="grid gap-3">
-                <h3 className="text-base font-semibold text-gray-800">
-                  {t('titleEntry.price.title')}
-                </h3>
-                <div className="grid grid-cols-12 gap-3">
-                  <FormFields fields={priceFields} />
-                </div>
-                <div className="flex items-baseline justify-between rounded-lg bg-gray-50 px-3 py-2.5">
-                  <span className="text-xs text-gray-500">{t('titleEntry.price.label')}</span>
-                  <div className="text-right tabular-nums">
-                    <div className="text-lg font-semibold text-teal-700">
-                      {money(governmentPrice)}
-                    </div>
-                    <div className="text-[11.5px] text-gray-400">
-                      {t('titleEntry.price.formula', {
-                        wa: money(totalWa),
-                        rate: money(
-                          isMissingFromSurvey ? 0 : Number(watch('governmentPricePerSqWa')) || 0,
-                        ),
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </section>
-              {otherFields.length > 0 && (
-                <div className="grid grid-cols-12 gap-3">
-                  <FormFields fields={otherFields} />
+              ) : (
+                <div className="min-w-0 bg-(--palette-surface)">
+                  <TitleFormView fields={fields} />
                 </div>
               )}
-            </aside>
-          </div>
+              <aside className="grid content-start gap-6 border-t border-(--palette-line) bg-(--palette-surface) p-5 lg:border-l lg:border-t-0">
+                <section className="grid gap-3">
+                  <h3 className="flex items-baseline gap-2 text-base font-semibold text-(--palette-ink)">
+                    {t('titleEntry.checks.title')}
+                    <span className="text-xs font-normal text-(--palette-gray-400)">
+                      {t('titleEntry.checks.hint')}
+                    </span>
+                  </h3>
+                  <div className="grid grid-cols-12 gap-3">
+                    <FormFields fields={checkFields} />
+                  </div>
+                </section>
+                <section className="grid gap-3">
+                  <h3 className="text-base font-semibold text-(--palette-ink)">
+                    {t('titleEntry.price.title')}
+                  </h3>
+                  <div className="grid grid-cols-12 gap-3">
+                    <FormFields fields={priceFields} />
+                  </div>
+                  <div className="flex items-baseline justify-between rounded-lg bg-(--palette-surface-2) px-3 py-2.5">
+                    <span className="text-xs text-(--palette-gray-500)">
+                      {t('titleEntry.price.label')}
+                    </span>
+                    <div className="text-right tabular-nums">
+                      <div className="text-lg font-semibold text-(--palette-accent-ink)">
+                        {money(governmentPrice)}
+                      </div>
+                      <div className="text-[11.5px] text-(--palette-gray-400)">
+                        {t('titleEntry.price.formula', {
+                          wa: money(totalWa),
+                          rate: money(
+                            isMissingFromSurvey ? 0 : Number(watch('governmentPricePerSqWa')) || 0,
+                          ),
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </section>
+                {otherFields.length > 0 && (
+                  <div className="grid grid-cols-12 gap-3">
+                    <FormFields fields={otherFields} />
+                  </div>
+                )}
+              </aside>
+            </div>
 
-          <div className="flex shrink-0 justify-end gap-3 border-t border-gray-200 px-6 py-3">
-            <Button variant="ghost" type="button" onClick={onCancel}>
-              Cancel
-            </Button>
-            {!readOnly && (
-              <Button variant="primary" type="button" onClick={handleSave}>
-                Save
+            <div className="flex shrink-0 justify-end gap-3 border-t border-(--palette-line) px-6 py-3">
+              <Button variant="ghost" type="button" onClick={onCancel}>
+                Cancel
               </Button>
-            )}
+              {!readOnly && (
+                <Button variant="primary" type="button" onClick={handleSave}>
+                  Save
+                </Button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      </FormLayoutProvider>
     </FormProvider>,
     document.body,
   );

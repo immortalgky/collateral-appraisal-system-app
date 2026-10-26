@@ -436,8 +436,8 @@ describe('AppraisalListPage search pill and tool buttons', () => {
     const columns = screen.getByTitle(i18n.t('common:columns.toggleColumns'));
     const density = screen.getByRole('button', { name: L('density.compact') });
     for (const b of [group, columns, density]) {
-      expect(b.className).toContain('border-gray-200');
-      expect(b.className).toContain('bg-white');
+      expect(b.className).toContain('border-(--palette-line)');
+      expect(b.className).toContain('bg-(--palette-surface)');
       expect(b.className).not.toMatch(/violet|indigo/);
       expect(b.style.outlineStyle).toBe('none');
     }
@@ -487,7 +487,7 @@ describe('AppraisalListPage scope tints', () => {
     const names = ['all', 'appraisalNumber', 'customerName', 'requestNumber'].map(f =>
       L(`searchFieldOptions.${f}`),
     );
-    const hue = (name: string) => chip(name).className.match(/bg-(\w+)-\d+/)?.[1];
+    const hue = (name: string) => chip(name).className.match(/bg-(\w+)-\d+/)?.[1] ?? 'gray';
     // at rest only "all" is selected: it is the neutral selected style, the others plain gray
     expect(names.map(hue)).toEqual(['gray', 'gray', 'gray', 'gray']);
     expect(chip(names[1]).className).toBe(chip(names[2]).className);
@@ -511,20 +511,20 @@ describe('AppraisalListPage scope tints', () => {
     await user.click(screen.getByRole('search').querySelector('input')!);
     const name = L('searchFieldOptions.customerName');
     const resting = chip(name).className;
-    expect(resting).toContain('bg-gray-50');
+    expect(resting).toContain('bg-(--palette-surface-2)');
     expect(resting).not.toContain('purple');
     await user.click(chip(name));
     const active = chip(name).className;
     expect(active).toContain('bg-purple-100');
     expect(active).toContain('ring-1');
-    expect(active).not.toContain('bg-gray-50');
+    expect(active).not.toContain('bg-(--palette-surface-2)');
     const pillFor = (scope: string) =>
       screen.getByRole('button', { name: `${L('suggest.scope')}: ${scope}` });
     const pill = pillFor(name);
     expect(pill.className).toContain('bg-purple-100');
     // back to "all": the pill is the neutral gray again
     await user.click(chip(L('searchFieldOptions.all')));
-    expect(pillFor(L('searchFieldOptions.all')).className).toContain('bg-gray-100');
+    expect(pillFor(L('searchFieldOptions.all')).className).toContain('bg-(--palette-surface-3)');
   });
 });
 

@@ -103,7 +103,7 @@ function UploadProgressPanel() {
                 Not aria-hidden either — that would take the readout out of the accessibility tree
                 altogether, leaving no way to ask how far along an upload is. */}
             <div
-              className="bg-primary-100 mt-2 h-2 w-full overflow-hidden rounded-full"
+              className="bg-primary-100 dark:bg-primary-500/20 mt-2 h-2 w-full overflow-hidden rounded-full"
               role="progressbar"
               aria-label={upload.label}
               aria-valuemin={0}

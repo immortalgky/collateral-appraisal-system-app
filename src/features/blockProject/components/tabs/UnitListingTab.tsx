@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
@@ -7,9 +7,8 @@ import { useAppraisalId, useAppraisalContext } from '@/features/appraisal/contex
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
 import Badge from '@/shared/components/Badge';
-import Dropdown from '@/shared/components/inputs/Dropdown';
-import TextInput from '@/shared/components/inputs/TextInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import { formatLocaleDateTime } from '@/shared/utils/dateUtils';
 
 import {
   useGetProjectUnits,
@@ -26,11 +25,16 @@ import {
   MAX_XLSX_UPLOAD_MB,
 } from '../../utils/xlsxUpload';
 import UnitVerificationDialog from '../UnitVerificationDialog';
+import {
+  CondoUnitFilters,
+  CondoUnitImportRow,
+  CondoUnitTable,
+  type SaleFilter,
+} from '../condo/unitsPrice/CondoUnitListingParts';
 import { isCondo } from '../../types';
 import type { ProjectType, ProjectUnit, ProjectUnitUpload } from '../../types';
 import type { AxiosError } from 'axios';
 import type { ApiError } from '@/shared/types/api';
-import Pagination from '@/shared/components/Pagination';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -80,25 +84,27 @@ function UploadHistoryList({
   uploads: ProjectUnitUpload[];
   isLoading: boolean;
 }) {
-  const { t } = useTranslation('blockProject');
+  const { t, i18n } = useTranslation('blockProject');
   const describe = useUploadOutcome();
 
   if (isLoading) {
     return (
       <div className="space-y-2 px-4 py-3">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
+          <div key={i} className="h-8 bg-(--palette-surface-3) rounded animate-pulse" />
         ))}
       </div>
     );
   }
   if (uploads.length === 0)
     return (
-      <p className="text-xs text-gray-400 text-center py-6">{t('unitListing.noUploadHistory')}</p>
+      <p className="text-xs text-(--palette-gray-400) text-center py-6">
+        {t('unitListing.noUploadHistory')}
+      </p>
     );
 
   return (
-    <ul className="divide-y divide-gray-100">
+    <ul className="divide-y divide-(--palette-line-soft)">
       {uploads.map(upload => (
         <li
           key={upload.id}
@@ -108,14 +114,16 @@ function UploadHistoryList({
             <span
               className={clsx(
                 'truncate text-xs',
-                upload.isSystemGenerated ? 'text-gray-500 italic' : 'text-gray-800',
+                upload.isSystemGenerated
+                  ? 'text-(--palette-gray-500) italic'
+                  : 'text-(--palette-ink)',
               )}
               title={upload.fileName}
             >
               {upload.fileName}
             </span>
             {upload.isSystemGenerated && (
-              <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500">
+              <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-(--palette-surface-3) text-(--palette-gray-500)">
                 {t('unitListing.systemBatch')}
               </span>
             )}
@@ -125,312 +133,15 @@ function UploadHistoryList({
               </Badge>
             )}
           </div>
-          <span className="text-xs text-gray-500 whitespace-nowrap">{describe(upload)}</span>
-          <span className="text-xs text-gray-400 whitespace-nowrap tabular-nums">
-            {new Date(upload.uploadedAt).toLocaleString()}
+          <span className="text-xs text-(--palette-gray-500) whitespace-nowrap">
+            {describe(upload)}
+          </span>
+          <span className="text-xs text-(--palette-gray-400) whitespace-nowrap tabular-nums">
+            {formatLocaleDateTime(upload.uploadedAt, i18n.language)}
           </span>
         </li>
       ))}
     </ul>
-  );
-}
-
-// ── Unit Result Table ─────────────────────────────────────────────────────────
-// Column definitions differ by projectType:
-// Condo: Floor / Tower Name / Reg. Number / Room No. / Model Type
-// LB: Plot No. / House No. / No. of Floors / Land Area / Model Name
-
-function UnitResultTable({
-  units,
-  isLoading,
-  projectType,
-  pageNumber,
-  pageSize,
-  totalCount,
-  totalPages,
-  handlePageChange,
-  handlePageSizeChange,
-}: {
-  units: ProjectUnit[];
-  isLoading: boolean;
-  projectType: ProjectType;
-  pageNumber: number;
-  pageSize: number;
-  totalCount: number;
-  totalPages: number;
-  handlePageChange: (pageNumber: number) => void;
-  handlePageSizeChange: (size: number) => void;
-}) {
-  const { t } = useTranslation('blockProject');
-  // Resolved once for the table rather than once per row — the listing now renders every unit of
-  // the project and re-renders on each keystroke in the search box.
-  const soldLabel = t('unitListing.saleStatus.sold');
-  const availableLabel = t('unitListing.saleStatus.available');
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[1, 2, 3, 4, 5].map(i => (
-          <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-  if (units.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-        <Icon name="table-list" className="text-3xl mb-2" />
-        <p className="text-sm">{t('unitListing.noUnits')}</p>
-      </div>
-    );
-  }
-
-  if (isCondo(projectType)) {
-    return (
-      <div className="flex flex-col flex-1 min-h-0">
-        <div className="flex-1 min-h-0 overflow-auto">
-          <table className="w-full text-xs">
-            <thead className="bg-gray-50 sticky top-0 z-10">
-              <tr>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.sqNo')}
-                </th>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                  {t('unitListing.cols.floor')}
-                </th>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.towerName')}
-                </th>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.regNumber')}
-                </th>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.roomNo')}
-                </th>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.saleStatus')}
-                </th>
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.modelType')}
-                </th>
-                <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.usableAreaSqm')}
-                </th>
-                <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitListing.cols.sellingPriceBaht')}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {units.map(unit => (
-                <tr
-                  key={unit.id}
-                  className={clsx(
-                    'border-b border-gray-100 hover:bg-gray-50',
-                    unit.isSold && 'text-gray-400 [&>td]:text-gray-400',
-                  )}
-                >
-                  <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
-                  <td className="py-2 px-3 text-gray-800">{unit.floor ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
-                  <td className="py-2 px-3">
-                    <SaleStatusBadge
-                      isSold={unit.isSold}
-                      label={unit.isSold ? soldLabel : availableLabel}
-                    />
-                  </td>
-                  <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-                  <td className="py-2 px-3 text-gray-800 text-right">
-                    {unit.usableArea?.toLocaleString() ?? '-'}
-                  </td>
-                  <td className="py-2 px-3 text-gray-800 text-right">
-                    {unit.sellingPrice?.toLocaleString() ?? '-'}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Pagination
-          currentPage={pageNumber}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          pageSizeOptions={[5, 10, 25, 50, 75, 100]}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-        />
-      </div>
-    );
-  }
-
-  // LandAndBuilding columns
-  return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="flex-1 min-h-0 overflow-auto">
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr>
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.sqNo')}
-              </th>
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.plotNo')}
-              </th>
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.houseNo')}
-              </th>
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.saleStatus')}
-              </th>
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.modelName')}
-              </th>
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.numFloors')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.landAreaSqWa')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.usableAreaSqm')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitListing.cols.sellingPriceBaht')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {units.map(unit => (
-              <tr
-                key={unit.id}
-                className={clsx(
-                  'border-b border-gray-100 hover:bg-gray-50',
-                  unit.isSold && 'text-gray-400 [&>td]:text-gray-400',
-                )}
-              >
-                <td className="py-2 px-3 text-gray-600">{unit.sequenceNumber}</td>
-                <td className="py-2 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
-                <td className="py-2 px-3">
-                  <SaleStatusBadge
-                    isSold={unit.isSold}
-                    label={unit.isSold ? soldLabel : availableLabel}
-                  />
-                </td>
-                <td className="py-2 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800">{unit.numberOfFloors ?? '-'}</td>
-                <td className="py-2 px-3 text-gray-800 text-right">
-                  {unit.landArea?.toLocaleString() ?? '-'}
-                </td>
-                <td className="py-2 px-3 text-gray-800 text-right">
-                  {unit.usableArea?.toLocaleString() ?? '-'}
-                </td>
-                <td className="py-2 px-3 text-gray-800 text-right">
-                  {unit.sellingPrice?.toLocaleString() ?? '-'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <Pagination
-        currentPage={pageNumber}
-        totalPages={totalPages}
-        totalCount={totalCount}
-        pageSize={pageSize}
-        pageSizeOptions={[50, 75, 100]}
-        onPageChange={handlePageChange}
-        onPageSizeChange={handlePageSizeChange}
-      />
-    </div>
-  );
-}
-
-// ── Sale status ───────────────────────────────────────────────────────────────
-
-/**
- * The listing shows every unit of the project, so each row has to say which side of the line it
- * is on. Without it a re-match upload looks like rows vanishing rather than rows being marked.
- */
-function SaleStatusBadge({ isSold, label }: { isSold: boolean; label: string }) {
-  return (
-    <span
-      className={clsx(
-        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium whitespace-nowrap',
-        isSold ? 'bg-blue-50 text-blue-700' : 'bg-amber-50 text-amber-700',
-      )}
-    >
-      <span
-        className={clsx('size-1.5 rounded-full shrink-0', isSold ? 'bg-blue-500' : 'bg-amber-500')}
-      />
-      {label}
-    </span>
-  );
-}
-
-// ── Stat strip ────────────────────────────────────────────────────────────────
-
-function Stat({ label, value, dotColor }: { label: string; value: string; dotColor?: string }) {
-  return (
-    <div className="flex-1 min-w-[7rem] bg-white px-4 py-3 flex flex-col gap-0.5">
-      <span className="text-xs text-gray-500 flex items-center gap-1.5 whitespace-nowrap">
-        {dotColor && <span className={clsx('size-2 rounded-full shrink-0', dotColor)} />}
-        {label}
-      </span>
-      <span className="text-xl font-bold text-gray-900 tabular-nums tracking-tight">{value}</span>
-    </div>
-  );
-}
-
-/**
- * The counts used to sit under the table, so the shape of the project was only knowable after
- * scrolling past every row of it. They lead the screen now, and "total" is stated once — the
- * card header used to repeat it.
- */
-function StatStrip({
-  units,
-  totalCount,
-  remainingCount,
-  projectType,
-}: {
-  units: ProjectUnit[];
-  totalCount: number;
-  remainingCount: number;
-  projectType: ProjectType;
-}) {
-  const { t } = useTranslation('blockProject');
-  const towers = new Set(units.map(u => u.towerName).filter(Boolean)).size;
-  // A Model's identity is (Tower, ModelName) for Condo but ModelName alone for
-  // LandAndBuilding/Land — see CONTEXT.md "Model identity". The compound key gets both right in
-  // one pass; LB/Land units all carry a null towerName, so it degenerates to a plain distinct
-  // count for them.
-  const models = isCondo(projectType)
-    ? new Set(
-        units.filter(u => u.modelType).map(u => JSON.stringify([u.towerName ?? '', u.modelType])),
-      ).size
-    : new Set(units.map(u => u.modelType).filter(Boolean)).size;
-
-  return (
-    <div className="flex flex-wrap gap-px bg-gray-200 rounded-xl overflow-hidden border border-gray-200">
-      <Stat label={t('unitListing.summary.totalUnits')} value={totalCount.toLocaleString()} />
-      <Stat
-        label={t('unitListing.summary.remainingUnits')}
-        value={remainingCount.toLocaleString()}
-        dotColor="bg-amber-500"
-      />
-      <Stat
-        label={t('unitListing.summary.soldUnits')}
-        value={(totalCount - remainingCount).toLocaleString()}
-        dotColor="bg-blue-500"
-      />
-      {isCondo(projectType) && (
-        <Stat label={t('unitListing.summary.towers')} value={towers.toLocaleString()} />
-      )}
-      <Stat label={t('unitListing.summary.models')} value={models.toLocaleString()} />
-    </div>
   );
 }
 
@@ -441,8 +152,9 @@ interface UnitListingTabProps {
 }
 
 /**
- * Merged UnitListing tab for Condo and LandAndBuilding.
- * Column definitions branch on projectType; upload & history are identical.
+ * The unit listing of every project type: Condo (tower and room), Land and Building (plot and
+ * house) and Land and Building (Construction) (L, plot only), on the same import row, filters and table. The column set and
+ * the filters follow `projectType`; upload and history are identical.
  *
  * Divergences from originals:
  * - Accepts .xlsx only, up to 5 MB, like the backend (ProjectExcelUpload).
@@ -456,10 +168,13 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
   const [pageNumber, setPageNumber] = useState(0);
   const [pageSize, setPageSize] = useState(50);
-  const [saleFilter, setSaleFilter] = useState<'all' | 'available' | 'sold'>('all');
+  const [saleFilter, setSaleFilter] = useState<SaleFilter>('all');
   const [towerFilter, setTowerFilter] = useState('');
   const [modelFilter, setModelFilter] = useState('');
+  const [floorFilter, setFloorFilter] = useState('');
   const [query, setQuery] = useState('');
+  const condo = isCondo(projectType);
+  const village = projectType === 'LB';
 
   const {
     data: unitsData,
@@ -497,8 +212,6 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
 
   const units = unitsData?.units ?? [];
   const uploads = uploadsData ?? [];
-  const totalCount = unitsData?.totalCount ?? units.length;
-  const remainingCount = unitsData?.remainingCount ?? units.filter(u => !u.isSold).length;
 
   useEffect(() => {
     setPageNumber(prev => {
@@ -516,16 +229,22 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
     setPageNumber(0);
   };
 
-  const handleSaleFilterChange = (key: 'all' | 'available' | 'sold') => {
+  const handleSaleFilterChange = (key: SaleFilter) => {
     setSaleFilter(key);
     setPageNumber(0);
   };
 
   const handleTowerFilterChange = (v: string) => {
     setTowerFilter(v);
-    // Model options are about to be re-scoped to the new tower — a model chosen under the old
-    // tower (or "all towers") may no longer be valid.
+    // Model and floor options are about to be re-scoped to the new tower — a model or floor
+    // chosen under the old tower (or "all towers") may no longer be valid.
     setModelFilter('');
+    setFloorFilter('');
+    setPageNumber(0);
+  };
+
+  const handleFloorFilterChange = (v: string) => {
+    setFloorFilter(v);
     setPageNumber(0);
   };
 
@@ -646,211 +365,165 @@ export default function UnitListingTab({ projectType }: UnitListingTabProps) {
   const latestUpload = uploads[0];
   const describeUpload = useUploadOutcome();
 
-  const towerOptions = isCondo(projectType)
+  const towerOptions = condo
     ? Array.from(new Set(units.map(u => u.towerName).filter((v): v is string => Boolean(v)))).sort()
     : [];
 
+  const unitsInTower = towerFilter ? units.filter(u => u.towerName === towerFilter) : units;
   const modelOptions = towerFilter
     ? Array.from(
-        new Set(
-          units
-            .filter(u => u.towerName === towerFilter)
-            .map(u => u.modelType)
-            .filter((v): v is string => Boolean(v)),
-        ),
+        new Set(unitsInTower.map(u => u.modelType).filter((v): v is string => Boolean(v))),
       ).sort()
     : (unitsData?.models ?? []);
+  const floorOptions = condo
+    ? Array.from(
+        new Set(unitsInTower.map(u => u.floor).filter((v): v is number => v != null)),
+      ).sort((a, b) => a - b)
+    : [];
 
   // Trimmed before the emptiness test: a query of only spaces used to survive it, and matching on
   // '' then dropped every unit whose plot, house, room and tower are all null.
   const trimmedQuery = query.trim().toLowerCase();
 
+  // Model, floor and search: the filters that scope both the group chips' counts and the table.
+  // Land and Building counts its model chips within everything but the model, so `skipModel`.
+  const inScope = (u: ProjectUnit, skipModel = false) => {
+    if (!skipModel && modelFilter && u.modelType !== modelFilter) return false;
+    if (floorFilter && String(u.floor) !== floorFilter) return false;
+    if (!trimmedQuery) return true;
+    const fields = condo
+      ? [u.roomNumber, u.towerName, u.condoRegistrationNumber, u.modelType, u.floor?.toString()]
+      : [u.plotNumber, u.houseNumber];
+    return fields.some(v => v?.toLowerCase().includes(trimmedQuery));
+  };
+  const matchesSale = (u: ProjectUnit) =>
+    saleFilter === 'all' || (saleFilter === 'sold') === u.isSold;
+
   // Everything except the sale filter. The status chips count within this so their numbers agree
   // with the table; the table then applies the sale filter on top.
-  const narrowedUnits = units.filter(u => {
-    if (towerFilter && u.towerName !== towerFilter) return false;
-    if (modelFilter && u.modelType !== modelFilter) return false;
-    if (!trimmedQuery) return true;
-    return [u.plotNumber, u.houseNumber, u.roomNumber, u.towerName].some(v =>
-      v?.toLowerCase().includes(trimmedQuery),
-    );
-  });
-
-  const visibleUnits = narrowedUnits.filter(
-    u => saleFilter === 'all' || (saleFilter === 'sold') === u.isSold,
+  const narrowedUnits = units.filter(
+    u => (!towerFilter || u.towerName === towerFilter) && inScope(u),
   );
-  const isFiltered = visibleUnits.length !== units.length;
+
+  const visibleUnits = narrowedUnits.filter(matchesSale);
 
   // Client-side pagination over the filtered result — the table only ever renders this page's
   // slice, regardless of how many units the project has.
   const pagedUnits = visibleUnits.slice(pageNumber * pageSize, pageNumber * pageSize + pageSize);
   const totalPages = Math.ceil(visibleUnits.length / pageSize);
 
+  // Condo tower chips count within every other filter (not the tower one), like the status chips.
+  const towers = towerOptions.map(name => ({
+    name,
+    count: units.filter(u => u.towerName === name && inScope(u) && matchesSale(u)).length,
+  }));
+  // Land and Building model chips, the same way.
+  const models = village
+    ? modelOptions.map(name => ({
+        name,
+        count: units.filter(u => u.modelType === name && inScope(u, true) && matchesSale(u)).length,
+      }))
+    : [];
+  const saleCounts = {
+    all: narrowedUnits.length,
+    available: narrowedUnits.filter(u => !u.isSold).length,
+    sold: narrowedUnits.filter(u => u.isSold).length,
+  };
+
+  // The Button is the one tab stop and keyboard target; it opens the hidden input, which stays out
+  // of the tab order.
+  const uploadInputRef = useRef<HTMLInputElement>(null);
   const uploadInput = (
     <input
+      ref={uploadInputRef}
       type="file"
       accept=".xlsx"
       className="sr-only"
+      aria-label={t(isReappraisal ? 'unitListing.reappraisal.action' : 'unitListing.importUnits')}
+      tabIndex={-1}
       disabled={uploadBlocked}
       onChange={isReappraisal ? handleReappraisalFileChange : handleFileChange}
     />
   );
 
   return (
-    <div className="flex flex-col gap-5 h-full min-h-0 overflow-y-auto">
-      <StatStrip
-        units={units}
-        totalCount={totalCount}
-        remainingCount={remainingCount}
-        projectType={projectType}
+    <div className="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
+      <CondoUnitImportRow
+        readOnly={readOnly}
+        isReappraisal={isReappraisal}
+        uploadBlocked={uploadBlocked}
+        isUploadBusy={isUploadBusy}
+        uploadInput={uploadInput}
+        onChooseFile={() => uploadInputRef.current?.click()}
+        latest={
+          latestUpload && {
+            fileName: latestUpload.fileName,
+            outcome: describeUpload(latestUpload),
+            uploadedAt: latestUpload.uploadedAt,
+          }
+        }
+        uploadCount={uploads.length}
+        historyOpen={historyOpen}
+        onToggleHistory={() => setHistoryOpen(v => !v)}
+        history={<UploadHistoryList uploads={uploads} isLoading={uploadsLoading} />}
       />
 
-      {/* Action bar. The drop zone used to stand ~300px tall for a job done a handful of times per
-          project, pushing the table people actually come here for below the fold. */}
-      <div className="bg-white rounded-xl border border-gray-200">
-        <div className="flex flex-wrap items-center gap-3 px-4 py-3">
-          <label
-            className={clsx(
-              'inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-colors',
-              uploadBlocked
-                ? 'bg-primary/40 text-white cursor-not-allowed'
-                : 'bg-primary text-white hover:bg-primary/90 cursor-pointer',
-            )}
-          >
-            <Icon style="regular" name="file-arrow-up" className="size-4" />
-            {isUploadBusy
-              ? t('unitListing.uploading')
-              : t(isReappraisal ? 'unitListing.reappraisal.action' : 'unitListing.importUnits')}
-            {uploadInput}
-          </label>
-
-          {latestUpload ? (
-            <p className="text-xs text-gray-500 flex flex-wrap items-baseline gap-x-2 gap-y-1 min-w-0">
-              <span>{t('unitListing.lastUpload')}</span>
-              <span className="text-gray-700 font-medium truncate max-w-[16rem]">
-                {latestUpload.fileName}
-              </span>
-              <span>· {describeUpload(latestUpload)}</span>
-              <span className="text-gray-400">
-                · {new Date(latestUpload.uploadedAt).toLocaleString()}
-              </span>
-            </p>
-          ) : (
-            <p className="text-xs text-gray-400">{t('unitListing.noUploadHistory')}</p>
-          )}
-
-          <div className="flex-1" />
-
-          {uploads.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setHistoryOpen(v => !v)}
-              aria-expanded={historyOpen}
-              className="text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors"
-            >
-              {historyOpen
-                ? t('unitListing.hideHistory')
-                : t('unitListing.showHistory', { count: uploads.length })}
-            </button>
-          )}
-        </div>
-
-        <p className="px-4 pb-3 text-xs text-gray-500">
-          {isReappraisal ? t('unitListing.reappraisal.hint') : t('unitListing.importHint')}
-        </p>
-
-        {historyOpen && (
-          <div className="border-t border-gray-100">
-            <UploadHistoryList uploads={uploads} isLoading={uploadsLoading} />
-          </div>
-        )}
-      </div>
-
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col flex-1 min-h-0">
+      {/* The list-page table box (DESIGN.md section 8). */}
+      <div className="flex min-h-[24rem] flex-1 flex-col overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
         {units.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 px-4 py-3 border-b border-gray-100 shrink-0">
-            <div className="inline-flex bg-gray-100 rounded-lg p-0.5 gap-0.5">
-              {(['all', 'available', 'sold'] as const).map(key => (
-                <button
-                  key={key}
-                  type="button"
-                  aria-pressed={saleFilter === key}
-                  onClick={() => handleSaleFilterChange(key)}
-                  className={clsx(
-                    'text-xs px-3 py-1.5 rounded-md transition-colors',
-                    saleFilter === key
-                      ? 'bg-white text-gray-900 font-semibold shadow-sm'
-                      : 'text-gray-600 hover:text-gray-900',
-                  )}
-                >
-                  {t(`unitListing.filter.${key}`)}
-                  <span className="ms-1.5 tabular-nums opacity-60">
-                    {key === 'all'
-                      ? narrowedUnits.length
-                      : key === 'sold'
-                        ? narrowedUnits.filter(u => u.isSold).length
-                        : narrowedUnits.filter(u => !u.isSold).length}
-                  </span>
-                </button>
+          <CondoUnitFilters
+            projectType={projectType}
+            saleFilter={saleFilter}
+            saleCounts={saleCounts}
+            onSaleFilter={handleSaleFilterChange}
+            towers={towers}
+            towerFilter={towerFilter}
+            towerAllCount={units.filter(u => inScope(u) && matchesSale(u)).length}
+            onTowerFilter={handleTowerFilterChange}
+            modelOptions={modelOptions}
+            models={models}
+            modelAllCount={units.filter(u => inScope(u, true) && matchesSale(u)).length}
+            modelFilter={modelFilter}
+            onModelFilter={handleModelFilterChange}
+            floorOptions={floorOptions}
+            floorFilter={floorFilter}
+            onFloorFilter={handleFloorFilterChange}
+            query={query}
+            onQuery={handleQueryChange}
+            shown={visibleUnits.length}
+            total={units.length}
+          />
+        )}
+
+        <div className="flex min-h-0 flex-1 flex-col">
+          {unitsLoading ? (
+            <div className="space-y-2 p-4">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-8 animate-pulse rounded bg-(--palette-surface-3)" />
               ))}
             </div>
-
-            {towerOptions.length > 1 && (
-              <div className="w-44">
-                <Dropdown
-                  options={towerOptions.map(tower => ({ value: tower, label: tower }))}
-                  value={towerFilter}
-                  onChange={v => handleTowerFilterChange(v ?? '')}
-                  placeholder={t('unitListing.filter.allTowers')}
-                  showValuePrefix={false}
-                />
-              </div>
-            )}
-
-            {modelOptions.length > 1 && (
-              <div className="w-44">
-                <Dropdown
-                  options={modelOptions.map(m => ({ value: m, label: m }))}
-                  value={modelFilter}
-                  onChange={v => handleModelFilterChange(v ?? '')}
-                  placeholder={t('unitListing.filter.allModels')}
-                  // The model name IS the value — "Monaco - Monaco" would be noise
-                  showValuePrefix={false}
-                />
-              </div>
-            )}
-
-            <div className="flex-1 min-w-[12rem] max-w-xs">
-              <TextInput
-                value={query}
-                onChange={e => handleQueryChange(e.target.value)}
-                placeholder={t('unitListing.searchPlaceholder')}
-                leftIcon={<Icon style="regular" name="magnifying-glass" className="size-3.5" />}
-              />
+          ) : units.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-10 text-(--palette-ink-2)">
+              <Icon name="table-list" className="mb-2 text-3xl" />
+              <p className="text-sm">{t('unitListing.noUnits')}</p>
             </div>
-
-            {isFiltered && (
-              <span className="text-xs text-gray-400 tabular-nums">
-                {t('unitListing.shownOf', { shown: visibleUnits.length, total: units.length })}
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="flex-1 min-h-0 flex flex-col">
-          {units.length > 0 && visibleUnits.length === 0 ? (
-            <p className="py-10 text-center text-sm text-gray-400">{t('unitListing.noMatch')}</p>
+          ) : visibleUnits.length === 0 ? (
+            <p className="py-10 text-center text-sm text-(--palette-gray-400)">
+              {t('unitListing.noMatch')}
+            </p>
           ) : (
-            <UnitResultTable
-              units={pagedUnits}
-              isLoading={unitsLoading}
+            <CondoUnitTable
               projectType={projectType}
+              units={pagedUnits}
+              filteredCount={visibleUnits.length}
+              totalLand={visibleUnits.reduce((sum, u) => sum + (u.landArea ?? 0), 0)}
+              totalArea={visibleUnits.reduce((sum, u) => sum + (u.usableArea ?? 0), 0)}
+              totalPrice={visibleUnits.reduce((sum, u) => sum + (u.sellingPrice ?? 0), 0)}
               pageNumber={pageNumber}
               pageSize={pageSize}
-              totalCount={visibleUnits.length}
               totalPages={totalPages}
-              handlePageChange={handlePageChange}
-              handlePageSizeChange={handlePageSizeChange}
+              onPageChange={handlePageChange}
+              onPageSizeChange={handlePageSizeChange}
             />
           )}
         </div>

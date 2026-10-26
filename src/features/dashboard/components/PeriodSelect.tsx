@@ -71,22 +71,24 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="inline-flex items-center gap-1 text-sm border border-(--palette-line) rounded-lg px-3 py-1.5 bg-(--palette-surface) text-(--palette-gray-600) hover:bg-(--palette-surface-2) focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <span>{t(`period.${value}`)}</span>
-        <Icon name="chevron-down" style="solid" className="size-3 text-gray-400" />
+        <Icon name="chevron-down" style="solid" className="size-3 text-(--palette-gray-400)" />
       </button>
 
       {open && (
-        <div className="absolute left-0 z-20 mt-1 w-64 rounded-lg border border-gray-200 bg-white shadow-lg p-2">
+        <div className="absolute left-0 z-20 mt-1 w-64 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg p-2">
           <ul className="text-sm">
             {PRESETS.map(p => (
               <li key={p}>
                 <button
                   type="button"
                   onClick={() => handlePreset(p)}
-                  className={`w-full text-left px-2 py-1.5 rounded hover:bg-gray-100 ${
-                    value === p ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  className={`w-full text-left px-2 py-1.5 rounded hover:bg-(--palette-surface-3) ${
+                    value === p
+                      ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                      : 'text-(--palette-ink)'
                   }`}
                 >
                   {t(`period.${p}`)}
@@ -96,9 +98,9 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
           </ul>
 
           {value === 'CUSTOM' && (
-            <div className="mt-2 border-t border-gray-100 pt-2 flex flex-col gap-2">
+            <div className="mt-2 border-t border-(--palette-line-soft) pt-2 flex flex-col gap-2">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
                   {t('period.customFrom')}
                 </label>
                 <DatePickerInput
@@ -107,7 +109,7 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
+                <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
                   {t('period.customTo')}
                 </label>
                 <DatePickerInput
@@ -119,7 +121,7 @@ function PeriodSelect({ value, custom, onChange }: PeriodSelectProps) {
                 type="button"
                 onClick={applyCustom}
                 disabled={!fromStr || !toStr || fromIsoDate(fromStr) > fromIsoDate(toStr)}
-                className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-gray-100 disabled:text-gray-400 transition-colors"
+                className="mt-1 text-sm font-medium rounded-lg bg-blue-600 text-white px-3 py-2 hover:bg-blue-700 disabled:bg-(--palette-surface-3) disabled:text-(--palette-gray-400) transition-colors"
               >
                 {t('period.apply')}
               </button>

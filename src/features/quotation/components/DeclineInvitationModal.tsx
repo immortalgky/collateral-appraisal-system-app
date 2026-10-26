@@ -47,18 +47,18 @@ const DeclineInvitationModal = ({ isOpen, onClose, onConfirm }: DeclineInvitatio
     <Modal isOpen={isOpen} onClose={handleClose} title={t('decline.declineTitle')} size="sm">
       <div className="flex flex-col gap-4">
         {/* Warning banner */}
-        <div className="p-3 rounded-lg border flex items-start gap-2 bg-red-50 border-red-200">
+        <div className="p-3 rounded-lg border flex items-start gap-2 bg-(--palette-req-wash) border-(--palette-req-line)">
           <Icon
             name="triangle-exclamation"
             style="solid"
             className="size-4 shrink-0 mt-0.5 text-red-500"
           />
-          <p className="text-sm text-red-700">{t('decline.declineBody')}</p>
+          <p className="text-sm text-(--palette-req)">{t('decline.declineBody')}</p>
         </div>
 
         {/* Reason */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
             {t('fields.reason')} <span className="text-danger">*</span>
           </label>
           <textarea
@@ -67,9 +67,9 @@ const DeclineInvitationModal = ({ isOpen, onClose, onConfirm }: DeclineInvitatio
             rows={3}
             maxLength={500}
             placeholder={t('placeholders.declineReason')}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none resize-none"
+            className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-red-500/20 focus:border-red-400 outline-none resize-none"
           />
-          <p className="text-xs text-gray-400 mt-1 text-right">{reason.length}/500</p>
+          <p className="text-xs text-(--palette-gray-400) mt-1 text-right">{reason.length}/500</p>
         </div>
 
         {/* Actions */}

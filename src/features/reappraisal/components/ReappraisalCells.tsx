@@ -17,11 +17,11 @@ const URGENCY_DOT: Record<Urgency, string> = {
 export function DueCell({ dueDate }: { dueDate?: string }) {
   const remaining = useRemainingText();
   const due = dueOf(dueDate);
-  if (!due) return <span className="text-gray-300">—</span>;
+  if (!due) return <span className="text-(--palette-gray-300)">—</span>;
   const u = urgencyOf(due.daysLeft);
   return (
     <div className="flex flex-col gap-px whitespace-nowrap">
-      <span className="font-medium text-gray-900 tabular-nums">{formatDay(due.due)}</span>
+      <span className="font-medium text-(--palette-ink) tabular-nums">{formatDay(due.due)}</span>
       <span
         className={clsx(
           'inline-flex items-center gap-1.5 text-[11px] tabular-nums',
@@ -36,15 +36,17 @@ export function DueCell({ dueDate }: { dueDate?: string }) {
 }
 
 const REVIEW_TYPE_STYLE: Record<ReviewTypeCode, string> = {
-  '1': 'bg-emerald-50 text-emerald-700',
-  '2': 'bg-amber-50 text-amber-700',
-  '3': 'bg-red-50 text-red-700',
+  '1': 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  '2': 'bg-(--palette-warn-wash) text-(--palette-warn)',
+  '3': 'bg-(--palette-req-wash) text-(--palette-req)',
 };
 
 export function ReviewTypeChip({ code }: { code?: string }) {
   const { t } = useTranslation('reappraisal');
-  if (!code) return <span className="text-gray-300">—</span>;
-  const style = REVIEW_TYPE_STYLE[code as ReviewTypeCode] ?? 'bg-gray-100 text-gray-600';
+  if (!code) return <span className="text-(--palette-gray-300)">—</span>;
+  const style =
+    REVIEW_TYPE_STYLE[code as ReviewTypeCode] ??
+    'bg-(--palette-surface-3) text-(--palette-gray-600)';
   return (
     <span
       className={clsx(
@@ -65,17 +67,17 @@ export function ProgressCell({ item }: { item: ReappraisalCandidateListItem }) {
   if (item.openAppraisalNumber != null) {
     return (
       <div className="flex flex-col gap-px whitespace-nowrap">
-        <span className="inline-flex items-center gap-1.5 font-medium text-amber-700">
+        <span className="inline-flex items-center gap-1.5 font-medium text-(--palette-warn)">
           <span className="size-1.5 rounded-full bg-amber-500" />
           {t('progress.appraising')}
         </span>
-        <span className="text-[11px] text-gray-500">
+        <span className="text-[11px] text-(--palette-gray-500)">
           →{' '}
           {item.openAppraisalId ? (
             <Link
               to={`/appraisals/${item.openAppraisalId}`}
               onClick={stop}
-              className="text-primary hover:underline"
+              className="text-(--palette-primary-text) hover:underline"
             >
               {item.openAppraisalNumber}
             </Link>
@@ -91,17 +93,17 @@ export function ProgressCell({ item }: { item: ReappraisalCandidateListItem }) {
   if (item.openRequestNumber != null) {
     return (
       <div className="flex flex-col gap-px whitespace-nowrap">
-        <span className="inline-flex items-center gap-1.5 font-medium text-sky-700">
+        <span className="inline-flex items-center gap-1.5 font-medium text-sky-700 dark:text-sky-300">
           <span className="size-1.5 rounded-full bg-sky-400" />
           {t('progress.awaitingSubmit')}
         </span>
-        <span className="text-[11px] text-gray-500">
+        <span className="text-[11px] text-(--palette-gray-500)">
           →{' '}
           {item.openRequestId ? (
             <Link
               to={`/requests/${item.openRequestId}`}
               onClick={stop}
-              className="text-primary hover:underline"
+              className="text-(--palette-primary-text) hover:underline"
             >
               {item.openRequestNumber}
             </Link>
@@ -113,7 +115,7 @@ export function ProgressCell({ item }: { item: ReappraisalCandidateListItem }) {
       </div>
     );
   }
-  return <span className="text-gray-400">{t('progress.ready')}</span>;
+  return <span className="text-(--palette-gray-400)">{t('progress.ready')}</span>;
 }
 
 /** State of the reappraisal a processed book produced. */
@@ -122,10 +124,16 @@ export function NewAppraisalStatusChip({ status }: { status?: string }) {
   if (!status) return null;
   const [key, style] =
     status === 'Completed'
-      ? (['Completed', 'bg-primary/5 text-primary border-primary/20'] as const)
+      ? (['Completed', 'bg-primary/5 text-(--palette-primary-text) border-primary/20'] as const)
       : status === 'Cancelled'
-        ? (['Cancelled', 'bg-red-50 text-red-700 border-red-200'] as const)
-        : (['Appraising', 'bg-amber-50 text-amber-700 border-amber-200'] as const);
+        ? ([
+            'Cancelled',
+            'bg-(--palette-req-wash) text-(--palette-req) border-(--palette-req-line)',
+          ] as const)
+        : ([
+            'Appraising',
+            'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30',
+          ] as const);
   return (
     <span
       className={clsx(
@@ -141,13 +149,14 @@ export function NewAppraisalStatusChip({ status }: { status?: string }) {
 /** Processed tab: the new reappraisal's number (links to it) and its state. */
 export function NewAppraisalCell({ item }: { item: ReappraisalCandidateListItem }) {
   const { t } = useTranslation('reappraisal');
-  if (!item.newAppraisalId) return <span className="text-gray-400">{t('processed.notFound')}</span>;
+  if (!item.newAppraisalId)
+    return <span className="text-(--palette-gray-400)">{t('processed.notFound')}</span>;
   return (
     <div className="flex items-center gap-1.5 whitespace-nowrap">
       <Link
         to={`/appraisals/${item.newAppraisalId}`}
         onClick={stop}
-        className="font-medium text-primary hover:underline tabular-nums"
+        className="font-medium text-(--palette-primary-text) hover:underline tabular-nums"
       >
         {item.newAppraisalNumber}
       </Link>

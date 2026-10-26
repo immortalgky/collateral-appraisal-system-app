@@ -47,13 +47,13 @@ function SupportingDataMaintenanceDetailListPageSkeleton() {
     <div className="flex flex-col gap-4 justify-between min-h-full">
       <div className="flex flex-col gap-4 pr-2">
         {/* Section 1 skeleton — Supporting Data Maintenance (blue) */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+        <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) animate-pulse">
           {/* Card header */}
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-            <div className="size-9 rounded-lg bg-blue-100" />
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-(--palette-line-soft)">
+            <div className="size-9 rounded-lg bg-blue-100 dark:bg-blue-500/20" />
             <div className="flex flex-col gap-2">
-              <div className="h-4 bg-gray-200 rounded w-52" />
-              <div className="h-3 bg-gray-100 rounded w-72" />
+              <div className="h-4 bg-(--palette-surface-3) rounded w-52" />
+              <div className="h-3 bg-(--palette-surface-3) rounded w-72" />
             </div>
           </div>
           {/* Form fields — matches 2 + 2 + 2 + 4 col layout */}
@@ -65,45 +65,45 @@ function SupportingDataMaintenanceDetailListPageSkeleton() {
               { label: 'w-20', input: 'col-span-4' },
             ].map((field, i) => (
               <div key={i} className={`${field.input} flex flex-col gap-1.5`}>
-                <div className={`h-3.5 bg-gray-200 rounded ${field.label}`} />
-                <div className="h-9 bg-gray-100 rounded-lg" />
+                <div className={`h-3.5 bg-(--palette-surface-3) rounded ${field.label}`} />
+                <div className="h-9 bg-(--palette-surface-3) rounded-lg" />
               </div>
             ))}
           </div>
         </div>
 
         {/* Section 2 skeleton — Supporting Data Details (purple) */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 animate-pulse">
+        <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) animate-pulse">
           {/* Card header */}
-          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-(--palette-line-soft)">
             <div className="flex items-center gap-3">
-              <div className="size-9 rounded-lg bg-purple-100" />
-              <div className="h-4 bg-gray-200 rounded w-44" />
+              <div className="size-9 rounded-lg bg-purple-100 dark:bg-purple-500/20" />
+              <div className="h-4 bg-(--palette-surface-3) rounded w-44" />
             </div>
             {/* Placeholder for Import Excel + Add Item buttons */}
             <div className="flex items-center gap-2">
-              <div className="h-8 bg-gray-100 rounded-lg w-28" />
-              <div className="h-8 bg-gray-200 rounded-lg w-24" />
+              <div className="h-8 bg-(--palette-surface-3) rounded-lg w-28" />
+              <div className="h-8 bg-(--palette-surface-3) rounded-lg w-24" />
             </div>
           </div>
           {/* Table skeleton */}
           <div className="p-5">
             <table className="w-full text-table">
               <thead>
-                <tr className="border-b border-gray-100">
+                <tr className="border-b border-(--palette-line-soft)">
                   {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, i) => (
                     <th key={i} className="text-xs px-4 py-2.5 text-left font-semibold">
-                      <div className={`h-4 bg-gray-200 rounded ${w}`} />
+                      <div className={`h-4 bg-(--palette-surface-3) rounded ${w}`} />
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {Array.from({ length: 4 }).map((_, rowIdx) => (
                   <tr key={rowIdx}>
                     {['w-8', 'w-32', 'w-28', 'w-24', 'w-20', 'w-16'].map((w, colIdx) => (
                       <td key={colIdx} className="px-4 py-3">
-                        <div className={`h-4 bg-gray-100 rounded ${w}`} />
+                        <div className={`h-4 bg-(--palette-surface-3) rounded ${w}`} />
                       </td>
                     ))}
                   </tr>
@@ -115,12 +115,12 @@ function SupportingDataMaintenanceDetailListPageSkeleton() {
       </div>
 
       {/* Action bar skeleton */}
-      <div className="shrink-0 sticky bottom-0 z-40 bg-white border-t border-gray-200 px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] animate-pulse">
+      <div className="shrink-0 sticky bottom-0 z-40 bg-(--palette-surface) border-t border-(--palette-line) px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] animate-pulse">
         <div className="flex justify-between items-center">
-          <div className="h-9 bg-gray-200 rounded-lg w-20" />
+          <div className="h-9 bg-(--palette-surface-3) rounded-lg w-20" />
           <div className="flex items-center gap-3">
-            <div className="h-9 bg-gray-100 rounded-lg w-28" />
-            <div className="h-9 bg-gray-200 rounded-lg w-24" />
+            <div className="h-9 bg-(--palette-surface-3) rounded-lg w-28" />
+            <div className="h-9 bg-(--palette-surface-3) rounded-lg w-24" />
           </div>
         </div>
       </div>
@@ -134,10 +134,7 @@ export function SupportingDataMaintenanceDetailListPage() {
   const { t } = useTranslation(['supportingDataMaintenance', 'common']);
 
   // getAPI
-  const {
-    data: supportingData,
-    isLoading,
-  } = useGetSupportingDataById(supportingId);
+  const { data: supportingData, isLoading } = useGetSupportingDataById(supportingId);
 
   /**
    * Disable when
@@ -164,7 +161,11 @@ export function SupportingDataMaintenanceDetailListPage() {
   const companies = useCompanyStore(s => s.companies);
   const localizeCompanyName = useLocalizedCompanyName();
   const companyOptions = useMemo(
-    () => companies.map(c => ({ value: c.id, label: localizeCompanyName(c.companyName, c.companyNameLocal) })),
+    () =>
+      companies.map(c => ({
+        value: c.id,
+        label: localizeCompanyName(c.companyName, c.companyNameLocal),
+      })),
     [companies, localizeCompanyName],
   );
 
@@ -559,7 +560,7 @@ export function SupportingDataMaintenanceDetailListPage() {
                           variant="ghost"
                           onClick={exitBatchMode}
                           disabled={isPending}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-60"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-(--palette-gray-600) border border-(--palette-line-strong) rounded-lg hover:bg-(--palette-surface-3) transition-colors disabled:opacity-60"
                         >
                           <Icon style="solid" name="xmark" className="size-3.5" />
                           {t('actions.clearSelection', { defaultValue: 'Clear Selection' })}
@@ -574,19 +575,19 @@ export function SupportingDataMaintenanceDetailListPage() {
                           variant="ghost"
                           onClick={() => setIsBatchDeleteMode(true)}
                           disabled={isPending}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 bg-red-50 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-60"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-(--palette-danger) border border-(--palette-req-line) bg-(--palette-req-wash) rounded-lg hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-60"
                         >
                           <Icon style="solid" name="trash" className="size-4" />
                           {t('actions.deleteItems', { defaultValue: 'Delete Items' })}
                         </Button>
 
-                        <div className="h-5 w-px bg-gray-200" />
+                        <div className="h-5 w-px bg-(--palette-line)" />
 
                         <Button
                           type="button"
                           onClick={handleOpenFilePicker}
                           disabled={isUploading || isPending}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-(--palette-ink) bg-(--palette-surface-3) rounded-lg hover:bg-(--palette-line) transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           <Icon
                             style="solid"
@@ -615,7 +616,7 @@ export function SupportingDataMaintenanceDetailListPage() {
             <div className="flex flex-col gap-2 w-full">
               {/* Batch mode hint banner */}
               {isBatchDeleteMode && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">
+                <div className="flex items-center gap-2 px-3 py-2 bg-(--palette-req-wash) border border-red-100 dark:border-red-500/20 rounded-lg text-sm text-(--palette-req)">
                   <Icon style="solid" name="circle-info" className="size-4 shrink-0" />
                   <span>
                     {selectedDetailIds.length === 0

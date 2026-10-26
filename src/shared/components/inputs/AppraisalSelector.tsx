@@ -3,7 +3,9 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { runGuarded } from '@/shared/utils/runGuarded';
 import { useFormReadOnly } from '../form/context';
+import { ValidationText } from '../form/ValidationText';
 import Icon from '../Icon';
+import { FOCUS, FOCUS_ERROR, REQUIRED_MARK } from './controlStyles';
 import SearchAppraisalModal from '@/features/request/components/SearchAppraisalModal';
 import { useAppraisalCopyHandler } from '@/features/request/contexts/AppraisalCopyContext';
 import type { PriorAppraisal } from '@/features/appraisal/api/priorAppraisal';
@@ -103,9 +105,9 @@ const AppraisalSelector = ({
   return (
     <div className={className}>
       {label && (
-        <label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-(--palette-ink) mb-1">
           {label}
-          {required && <span className="text-danger ml-0.5">*</span>}
+          {required && <span className={REQUIRED_MARK}>*</span>}
         </label>
       )}
       <div className="relative">
@@ -117,12 +119,12 @@ const AppraisalSelector = ({
           disabled={isDisabled}
           className={`block w-full px-3 py-2 pr-16 border rounded-lg text-sm ${
             error
-              ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500'
-              : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400'
+              ? `border-danger ${FOCUS_ERROR.focus}`
+              : `border-(--palette-input-edge) ${FOCUS.focus}`
           } ${
             isDisabled
-              ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-              : 'cursor-pointer hover:border-gray-300 bg-white focus:ring-2'
+              ? 'bg-(--palette-surface-2) text-(--palette-gray-500) cursor-not-allowed'
+              : 'cursor-pointer hover:border-(--palette-input-edge-hover) bg-(--palette-surface)'
           }`}
           placeholder={isDisabled ? '' : placeholder}
         />
@@ -132,7 +134,7 @@ const AppraisalSelector = ({
           <button
             type="button"
             onClick={handleClear}
-            className="absolute inset-y-0 right-8 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute inset-y-0 right-8 flex items-center text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
             title="Clear selection"
           >
             <Icon name="xmark" style="solid" className="w-4 h-4" />
@@ -144,7 +146,7 @@ const AppraisalSelector = ({
           <button
             type="button"
             onClick={handleOpenModal}
-            className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute inset-y-0 right-0 flex items-center pr-3 text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
             title="Search previous appraisal reports"
           >
             <Icon name="magnifying-glass" style="regular" className="w-4 h-4" />
@@ -153,7 +155,11 @@ const AppraisalSelector = ({
       </div>
 
       {/* Error message */}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p className="mt-1 text-xs text-(--palette-danger)">
+          <ValidationText message={error} label={label} />
+        </p>
+      )}
 
       {/* Modal */}
       <SearchAppraisalModal

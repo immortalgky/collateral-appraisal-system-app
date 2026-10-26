@@ -26,8 +26,8 @@ export const PricingAnalysisApproachCard = ({
         className={clsx(
           'cursor-pointer text-sm rounded-lg border-l-4 border transition-all duration-200',
           hasSelectedMethods
-            ? 'border-l-primary border-primary bg-primary/5 text-primary'
-            : 'border-l-gray-300 border-gray-200 text-gray-500 hover:border-gray-300',
+            ? 'border-l-primary border-primary bg-primary/5 text-(--palette-primary-text)'
+            : 'border-l-(--palette-line-strong) border-(--palette-line) text-(--palette-ink-2) hover:border-(--palette-line-strong)',
         )}
       >
         <div className="flex items-center gap-3 h-12 px-4">

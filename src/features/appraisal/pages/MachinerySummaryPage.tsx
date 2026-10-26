@@ -27,17 +27,18 @@ export default function MachinerySummaryPage() {
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <h2 className="text-base font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-(--palette-ink)">
               {t('propertyInfo.machinerySummary.title')}
             </h2>
             {status && <MachinerySummaryStatusPill status={status} />}
           </div>
-          <p className="truncate text-xs text-gray-500">
+          <p className="truncate text-xs text-(--palette-gray-500)">
             {t('propertyInfo.machinerySummary.subtitle')}
           </p>
         </div>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      {/* The form shell the table kit and FormSection measure (DESIGN.md 17.1). */}
+      <div className="@container/form-shell min-h-0 flex-1 overflow-y-auto">
         <MachinerySummaryTab cancelPath={`${basePath}/property?tab=properties`} />
       </div>
     </div>

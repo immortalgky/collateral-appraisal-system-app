@@ -3,16 +3,19 @@ interface MovementCellProps {
 }
 
 const MOVEMENT_STYLES: Record<string, string> = {
-  Forward: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-  Backward: 'text-red-700 bg-red-50 border-red-200',
-  Stalled: 'text-amber-700 bg-amber-50 border-amber-200',
+  Forward:
+    'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30',
+  Backward: 'text-(--palette-req) bg-(--palette-req-wash) border-(--palette-req-line)',
+  Stalled:
+    'text-(--palette-warn) bg-(--palette-warn-wash) border-amber-200 dark:border-amber-500/30',
 };
 
 function MovementCell({ value }: MovementCellProps) {
-  if (!value) return <span className="text-gray-400 text-xs">—</span>;
+  if (!value) return <span className="text-(--palette-gray-400) text-xs">—</span>;
 
   const cls =
-    MOVEMENT_STYLES[value] ?? 'text-gray-700 bg-gray-50 border-gray-200';
+    MOVEMENT_STYLES[value] ??
+    'text-(--palette-ink) bg-(--palette-surface-2) border-(--palette-line)';
 
   return (
     <span

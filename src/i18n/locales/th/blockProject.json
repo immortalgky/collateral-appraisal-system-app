@@ -1,4 +1,13 @@
 {
+  "actions": {
+    "saveDraft": "บันทึกร่าง",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก"
+  },
+  "units": {
+    "sqm": "ตร.ม.",
+    "sqWa": "ตร.วา"
+  },
   "page": {
     "tabs": {
       "projectInfo": "ข้อมูลโครงการ",
@@ -11,6 +20,84 @@
       "photos": "รูปภาพ",
       "laws": "กฎหมายและข้อบังคับ",
       "projectLand": "ที่ดินโครงการ"
+    }
+  },
+  "condoShell": {
+    "tabsLabel": "ส่วนของโครงการ",
+    "typeBadge": {
+      "U": "คอนโดมิเนียม",
+      "LB": "โครงการหมู่บ้านจัดสรร",
+      "L": "ที่ดินและสิ่งปลูกสร้าง (อยู่ระหว่างก่อสร้าง)"
+    },
+    "readOnly": "อ่านอย่างเดียว",
+    "untitled": "โครงการที่ยังไม่มีชื่อ",
+    "kpi": {
+      "units": "ยูนิตทั้งหมด",
+      "unitsSub": "ขายแล้ว {{n}}",
+      "models": "แบบ",
+      "modelsSub": "รอราคา {{n}}",
+      "towers": "อาคาร",
+      "titles": "เอกสารสิทธิ์",
+      "titlesValue": "{{n}} แปลง",
+      "titlesSub": "{{area}} ไร่",
+      "priced": "ยูนิตที่มีราคา",
+      "value": "มูลค่าประเมินรวม",
+      "force": "ราคาขายบังคับรวม"
+    },
+    "derived": {
+      "fromUnits": "จากรายการยูนิต",
+      "match": "ตรงกัน",
+      "differs": "ไม่ตรง {{diff}}",
+      "use": "ใช้ค่านี้"
+    }
+  },
+  "condoTowersModels": {
+    "towers": {
+      "title": "อาคาร",
+      "summary": "{{towers}} อาคาร · {{units}} ยูนิตในรายการ",
+      "add": "เพิ่มอาคาร",
+      "empty": "ยังไม่มีอาคาร",
+      "emptyHint": "คลิก \"เพิ่มอาคาร\" เพื่อสร้างอาคารแรก",
+      "loadFailed": "โหลดข้อมูลอาคารไม่สำเร็จ",
+      "loadFailedHint": "กรุณาลองรีเฟรชหน้า",
+      "match": "ตรงกัน",
+      "differs": "ไม่ตรง {{diff}}",
+      "cols": {
+        "image": "รูปภาพ",
+        "name": "ชื่ออาคาร",
+        "registration": "เลขทะเบียน",
+        "entered": "จำนวนยูนิต (ที่กรอก)",
+        "counted": "ยูนิตในรายการ (นับได้)",
+        "sold": "ขายแล้ว",
+        "models": "แบบ",
+        "floors": "จำนวนชั้น",
+        "actions": "การดำเนินการ"
+      }
+    },
+    "models": {
+      "title": "แบบ",
+      "summary": "{{models}} แบบ · ตั้งราคามาตรฐานแล้ว {{priced}} · รอการวิเคราะห์ {{pending}}",
+      "filterAll": "ทั้งหมด",
+      "filterPending": "รอการวิเคราะห์",
+      "groupByTower": "จัดกลุ่มตามอาคาร",
+      "groupHead": "อาคาร {{tower}} · {{models}} แบบ · {{units}} ยูนิต",
+      "groupHeadNoTower": "ไม่ระบุอาคาร · {{models}} แบบ · {{units}} ยูนิต",
+      "allPriced": "ทุกแบบมีราคามาตรฐานแล้ว",
+      "pending": "รอการวิเคราะห์",
+      "standardPrice": "฿{{price}} / ตร.ม.",
+      "cols": {
+        "image": "รูปภาพ",
+        "name": "ชื่อแบบ · อาคาร",
+        "units": "ยูนิต",
+        "usableArea": "พื้นที่ใช้สอย (ตร.ม.)",
+        "startingPrice": "ราคาเริ่มต้น (บาท)",
+        "roomLayout": "ประเภทห้อง",
+        "standardPrice": "ราคามาตรฐาน",
+        "actions": "การดำเนินการ"
+      }
+    },
+    "detail": {
+      "photos": "รูปภาพ"
     }
   },
   "projectInfo": {
@@ -161,7 +248,8 @@
       "landTitle": "โฉนดที่ดิน",
       "landDetail": "รายละเอียดที่ดิน"
     },
-    "landInformationHeader": "ข้อมูลที่ดิน"
+    "landInformationHeader": "ข้อมูลที่ดิน",
+    "titlesSummary": "รวม {{n}} แปลง · {{rnw}} ไร่ ({{wa}} ตร.ว.)"
   },
   "pricingAssumption": {
     "sections": {
@@ -210,13 +298,6 @@
       "confirm": "แทนที่",
       "messageWithPrices": "การอัปโหลดไฟล์ใหม่จะแทนที่ข้อมูลยูนิตทั้งหมดที่มีอยู่ และล้างราคาต่อยูนิตทั้งหมด (ทั้งที่คำนวณและที่นำเข้า) ต้องคำนวณหรือนำเข้าราคาใหม่ ไม่สามารถย้อนกลับได้"
     },
-    "summary": {
-      "towers": "อาคาร",
-      "models": "แบบ",
-      "totalUnits": "ยูนิตทั้งหมด",
-      "remainingUnits": "เหลือขาย",
-      "soldUnits": "ขายแล้ว"
-    },
     "cols": {
       "no": "ลำดับ",
       "fileName": "ชื่อไฟล์",
@@ -239,22 +320,20 @@
       "saleStatus": "สถานะ"
     },
     "reappraisal": {
-      "title": "อัปเดตยูนิตจาก Excel ที่แก้ไข (Re-match)",
-      "hint": "อัปโหลด Excel ที่อัปเดตเพื่อ re-match กับยูนิตที่ seed ไว้ แถวที่มีในไฟล์จะคงสถานะยังไม่ขาย แถวที่ขาดหายและยังไม่ขายจะถูกทำเครื่องหมายเป็นขายแล้ว ส่วนค่าที่ต่างจากเดิมและแถวใหม่จะถูกบันทึกก็ต่อเมื่อยืนยันในหน้าตรวจสอบก่อน",
-      "action": "อัปโหลด Excel เพื่อ re-match"
+      "title": "อัปเดตยูนิตจาก Excel ที่แก้ไข (จับคู่ใหม่)",
+      "hint": "อัปโหลด Excel ที่อัปเดตเพื่อจับคู่ใหม่กับยูนิตที่ยกมาจากการประเมินครั้งก่อน แถวที่มีในไฟล์จะคงสถานะยังไม่ขาย แถวที่ขาดหายและยังไม่ขายจะถูกทำเครื่องหมายเป็นขายแล้ว ส่วนค่าที่ต่างจากเดิมและแถวใหม่จะถูกบันทึกก็ต่อเมื่อยืนยันในหน้าตรวจสอบก่อน",
+      "action": "อัปโหลด Excel เพื่อจับคู่ใหม่"
     },
     "aria": {},
     "saleStatus": {
       "sold": "ขายแล้ว",
       "available": "ยังไม่ขาย"
     },
-    "importHint": "อัปโหลด Excel รายการยูนิตของโครงการ ไฟล์นี้จะแทนที่ชุดยูนิตปัจจุบันและราคาที่คำนวณไว้ทั้งหมด",
     "uploading": "กำลังอัปโหลด…",
     "lastUpload": "ล่าสุด",
     "hideHistory": "ซ่อนประวัติ",
     "showHistory": "ประวัติ {{count}} รายการ",
     "systemBatch": "ระบบ",
-    "searchPlaceholder": "ค้นเลขแปลง เลขที่บ้าน หรือเลขห้อง",
     "noMatch": "ไม่พบยูนิตที่ตรงกับเงื่อนไข",
     "shownOf": "แสดง {{shown}} จาก {{total}}",
     "filter": {
@@ -329,36 +408,16 @@
     }
   },
   "modelListing": {
-    "grid": "กริด",
-    "list": "รายการ",
     "addModel": "เพิ่มแบบ",
     "noModels": "ยังไม่มีแบบ",
     "noModelsHint": "คลิก \"เพิ่มแบบ\" เพื่อสร้างแบบแรก",
     "unnamedModel": "แบบไม่มีชื่อ",
     "failedToLoad": "โหลดข้อมูลแบบไม่สำเร็จ",
     "failedToLoadHint": "กรุณาลองรีเฟรชหน้า",
-    "pendingAnalysis": "รอการวิเคราะห์",
     "runPricing": "คำนวณราคา",
     "viewPricing": "ดูราคา",
-    "running": "กำลังคำนวณ…",
-    "usableArea": "พื้นที่ใช้สอย",
-    "startingPrice": "ราคาเริ่มต้น",
-    "roomType": "ประเภทห้อง",
-    "landArea": "เนื้อที่ดิน",
-    "houses": "บ้าน",
     "cols": {
-      "image": "รูปภาพ",
-      "modelName": "ชื่อแบบ",
-      "usableArea": "พื้นที่ใช้สอย",
-      "startingPrice": "ราคาเริ่มต้น",
-      "roomType": "ประเภทห้อง",
-      "landAreaStd": "เนื้อที่ดิน (มาตรฐาน)",
-      "houses": "บ้าน",
-      "standardPrice": "ราคามาตรฐาน"
-    },
-    "confirmDelete": {
-      "title": "ลบแบบ",
-      "confirm": "ลบ"
+      "modelName": "ชื่อแบบ"
     },
     "aria": {
       "deleteModel": "ลบแบบ",
@@ -367,6 +426,10 @@
     }
   },
   "unitPrice": {
+    "actions": {
+      "saveAndRecalculate": "บันทึกและคำนวณราคาใหม่",
+      "saveAndRecalculateHint": "คำนวณราคาทุกยูนิตใหม่จากสมมติฐาน และแทนที่ราคาที่บันทึกไว้"
+    },
     "modelAssumptions": "สมมติฐานแบบ",
     "noModelAssumptions": "ไม่มีสมมติฐานแบบ — กรุณาเพิ่มแบบก่อน",
     "calculatedUnitPrices": "ราคายูนิตที่คำนวณแล้ว",
@@ -423,17 +486,11 @@
     },
     "switchToCalculated": {
       "title": "เปลี่ยนเป็นคำนวณในระบบ?",
-      "message": "ราคาที่นำเข้าจากไฟล์ยังเก็บอยู่จนกว่าจะกด Save (โหมดนี้ไม่มี Save Draft) ซึ่งระบบจะคำนวณราคาใหม่และเขียนทับทุกยูนิต ยอดรวมของใบประเมินจะเปลี่ยนตาม",
+      "message": "ราคาที่นำเข้าจากไฟล์ยังเก็บอยู่จนกว่าจะกดบันทึก (โหมดนี้ไม่มีปุ่มบันทึกร่าง) ซึ่งระบบจะคำนวณราคาใหม่และเขียนทับทุกยูนิต ยอดรวมของใบประเมินจะเปลี่ยนตาม",
       "confirm": "เปลี่ยนโหมด"
     },
     "import": {
-      "cardTitle": "ไฟล์ราคาที่นำเข้า",
-      "hint": "ราคาทุกยูนิตมาจากไฟล์ที่อัปโหลด ระบบแสดงค่าที่บันทึกไว้ตรง ๆ ไม่คำนวณซ้ำ จะแก้ราคา: แก้ใน Excel แล้วอัปโหลดใหม่",
-      "noFile": "ยังไม่มีไฟล์ราคา ดาวน์โหลดแม่แบบ กรอกราคานอกระบบ แล้วอัปโหลดกลับ หรือใช้ไฟล์ price list ที่คณะกรรมการอนุมัติ",
       "emptyPrices": "ยังไม่มีราคา อัปโหลดไฟล์ราคาก่อน ระหว่างนี้ยอดในใบประเมินยังเป็นค่าเดิม",
-      "file": "ไฟล์",
-      "unitsPriced": "ยูนิตที่มีราคา",
-      "totalValue": "มูลค่าประเมินรวม",
       "downloadTemplate": "ดาวน์โหลดแม่แบบ",
       "downloadTemplateTitle": "ยูนิตปัจจุบัน + ราคาล่าสุด",
       "upload": "อัปโหลดไฟล์ราคา",
@@ -504,14 +561,133 @@
         "totalCoverage": "มูลค่าประกันอัคคีภัยรวม",
         "noMatchBanner": "ไฟล์นี้ไม่มียูนิตที่มีราคาและตรงกับโครงการนี้ จึงนำเข้าไม่ได้"
       },
-      "fileUnknown": "ราคาในโครงการมาจากไฟล์ที่นำเข้า แต่ไม่มีรายละเอียดของไฟล์ (เช่น หลังอัปโหลดรายการยูนิตใหม่)",
-      "loadingFigures": "กำลังโหลดตัวเลข"
+      "fileUnknown": "ราคาในโครงการมาจากไฟล์ที่นำเข้า แต่ไม่มีรายละเอียดของไฟล์ (เช่น หลังอัปโหลดรายการยูนิตใหม่)"
     },
     "valuesCalculated": "คำนวณในระบบ",
     "discardChanges": {
       "title": "ทิ้งการแก้ไขที่ยังไม่บันทึก?",
-      "message": "สมมติฐานและ flag ที่แก้ไว้แต่ยังไม่ได้ Save จะถูกทิ้ง และกลับเป็นค่าที่บันทึกไว้ในระบบ",
+      "message": "สมมติฐานและตัวเลือกทำเลที่แก้ไว้แต่ยังไม่ได้บันทึกจะถูกทิ้ง และกลับเป็นค่าที่บันทึกไว้ในระบบ",
       "confirm": "ทิ้งและเปลี่ยนโหมด"
+    }
+  },
+  "lbLists": {
+    "units": {
+      "searchPlaceholder": "ค้นเลขแปลง หรือเลขที่บ้าน"
+    },
+    "models": {
+      "standardPrice": "฿{{price}} / หลัง",
+      "cols": {
+        "units": "ยูนิต (ขายแล้ว)",
+        "standardLandArea": "เนื้อที่ดินมาตรฐาน (ตร.ว.)",
+        "standardPrice": "ราคามาตรฐาน (บาท/หลัง)"
+      }
+    },
+    "modelDetail": {
+      "usedBy": "ใช้โดย {{n}} หลัง",
+      "usedBySold": "ใช้โดย {{n}} หลัง (ขายแล้ว {{sold}})",
+      "standardPrice": "ราคามาตรฐาน ฿{{price}} / หลัง"
+    }
+  },
+  "condoUnitsPrice": {
+    "cols": {
+      "roomNumber": "ห้องชุดเลขที่",
+      "unitNo": "เลขห้อง"
+    },
+    "listing": {
+      "replaceNote": "การอัปโหลดไฟล์ใหม่จะแทนที่ยูนิตทั้งหมดและล้างราคายูนิตทุกรายการ ต้องคำนวณหรือนำเข้าราคาใหม่ · หน้านี้ไม่มีการแก้ไขรายยูนิต",
+      "allFloors": "ทุกชั้น",
+      "searchPlaceholder": "ค้นเลขห้อง อาคาร ห้องชุดเลขที่",
+      "filterHint": "กดเพื่อกรอง · แถวรวมท้ายตารางคำนวณตามตัวกรอง",
+      "totalFiltered_one": "รวม {{n}} ยูนิต (ตามตัวกรอง)",
+      "totalFiltered_other": "รวม {{n}} ยูนิต (ตามตัวกรอง)"
+    },
+    "dense": {
+      "assumptions": "สมมติฐานแบบ {{priced}}/{{total}}",
+      "sourceImported": "นำเข้าจาก Excel",
+      "panelButton": "แผงสมมติฐาน",
+      "template": "แม่แบบ",
+      "expand": "ขยายตาราง",
+      "collapse": "ย่อตาราง",
+      "expandTitle": "ซ่อนหัวโครงการและแท็บ ให้ตารางเต็มจอ",
+      "collapseTitle": "ย่อกลับ (Esc)"
+    },
+    "switch": {
+      "toImportedTitle": "เปลี่ยนไปใช้ราคาที่นำเข้า?",
+      "toImportedMessage_one": "ขณะนี้มี {{n}} ยูนิตที่มีราคา ราคาเดิมยังคงอยู่จนกว่าจะอัปโหลดไฟล์ราคา เมื่ออัปโหลดแล้วราคาของทุกยูนิตจะถูกแทนที่",
+      "toImportedMessage_other": "ขณะนี้มี {{n}} ยูนิตที่มีราคา ราคาเดิมยังคงอยู่จนกว่าจะอัปโหลดไฟล์ราคา เมื่ออัปโหลดแล้วราคาของทุกยูนิตจะถูกแทนที่",
+      "toCalculatedTitle": "กลับไปใช้การคำนวณในระบบ?",
+      "toCalculatedMessage": "ราคาที่เก็บไว้ยังไม่เปลี่ยนจนกว่าจะกดบันทึก ซึ่งจะคำนวณราคาใหม่ทุกยูนิต"
+    },
+    "assumptions": {
+      "panelTitle": "สมมติฐานราคา",
+      "hidePanel": "ซ่อนแผงสมมติฐาน",
+      "showPanel": "แสดงแผงสมมติฐาน",
+      "show": "แสดง",
+      "hide": "ซ่อน",
+      "strip": {
+        "forceSale": "เปอร์เซ็นต์ขายบังคับ",
+        "count_one": "{{count}} ค่าสมมติฐาน",
+        "count_other": "{{count}} ค่าสมมติฐาน",
+        "edited": "แก้",
+        "editedTitle": "มีค่าที่ยังไม่บันทึก"
+      },
+      "units": {
+        "baht": "บาท",
+        "bahtPerSqm": "บาท/ตร.ม.",
+        "percent": "%",
+        "floors": "ชั้น"
+      }
+    },
+    "recalc": {
+      "title": "คำนวณราคาใหม่แล้ว",
+      "titleUnchanged": "คำนวณราคาใหม่แล้ว · ราคาไม่เปลี่ยน",
+      "changedLabel": "ยูนิตที่ราคาเปลี่ยน",
+      "ofTotal": "จาก {{total}}",
+      "valueLabel": "มูลค่าประเมินรวม",
+      "forceLabel": "ราคาขายบังคับรวม",
+      "baht": "บาท",
+      "dismiss": "ปิดสรุปการคำนวณ"
+    },
+    "price": {
+      "saved": "ราคาที่บันทึกไว้",
+      "previewNote": "กำลังดูตัวอย่างจากค่าที่แก้ — มูลค่าประเมินรวมเปลี่ยน {{delta}} บาท เทียบกับที่บันทึก · ช่องที่เปลี่ยนมีพื้นหลังเหลือง · ยังไม่มีการบันทึกจนกว่าจะกดบันทึก",
+      "switchNote": "นี่คือตัวอย่างการคำนวณในระบบ ราคาที่นำเข้าจะถูกแทนที่ทุกยูนิตเมื่อกดบันทึกเท่านั้น",
+      "recalcHint_one": "คำนวณใหม่จะเปลี่ยนราคา {{n}} ยูนิต",
+      "recalcHint_other": "คำนวณใหม่จะเปลี่ยนราคา {{n}} ยูนิต",
+      "noStandardHint_one": "ในนี้ {{n}} ยูนิตเป็นของแบบที่ยังไม่มีราคามาตรฐาน ราคาที่เก็บไว้จะถูกแทนที่ด้วยการคำนวณที่ไม่มีราคามาตรฐาน",
+      "noStandardHint_other": "ในนี้ {{n}} ยูนิตเป็นของแบบที่ยังไม่มีราคามาตรฐาน ราคาที่เก็บไว้จะถูกแทนที่ด้วยการคำนวณที่ไม่มีราคามาตรฐาน",
+      "noStandardNote_one": "{{n}} ยูนิตมีราคาที่เก็บไว้แต่แบบยังไม่มีราคามาตรฐาน จึงแสดงเป็น — ในตัวอย่างนี้และไม่นับรวม และเมื่อกดบันทึก ระบบจะคำนวณใหม่โดยไม่มีราคามาตรฐาน",
+      "noStandardNote_other": "{{n}} ยูนิตมีราคาที่เก็บไว้แต่แบบยังไม่มีราคามาตรฐาน จึงแสดงเป็น — ในตัวอย่างนี้และไม่นับรวม และเมื่อกดบันทึก ระบบจะคำนวณใหม่โดยไม่มีราคามาตรฐาน",
+      "searchPlaceholder": "ค้นเลขห้อง/อาคาร",
+      "pendingStandard": "รอราคามาตรฐาน",
+      "resetToSaved": "กลับไปค่าที่บันทึก",
+      "cols": {
+        "flags": "ที่ตั้ง",
+        "standardPrice": "ราคามาตรฐาน (บาท/ตร.ม.)",
+        "forceSale": "ราคาบังคับขาย",
+        "fireInsurance": "มูลค่าประกันอัคคีภัย"
+      },
+      "bands": {
+        "label": "คอลัมน์",
+        "unit": "ข้อมูลยูนิต",
+        "vars": "ตัวแปรการคำนวณ",
+        "res": "ผลการคำนวณ",
+        "resImported": "ค่าจากไฟล์ที่นำเข้า"
+      }
+    }
+  },
+  "lbPrice": {
+    "searchPlaceholder": "ค้นหาเลขแปลง / บ้านเลขที่",
+    "cols": {
+      "standardPrice": "ราคามาตรฐาน (บาท/หลัง)",
+      "landPrice": "ราคาที่ดิน (บาท)"
+    },
+    "assumptions": {
+      "landRate": "ปรับราคาที่ดิน (เพิ่ม/ลด)",
+      "standardLandPrice": "ราคาที่ดินมาตรฐาน",
+      "units": {
+        "bahtPerSqWa": "บาท/ตร.วา"
+      }
     }
   },
   "changeProjectType": {
@@ -711,6 +887,101 @@
       "landIncreaseDecreaseRate": "อัตราเพิ่ม/ลดที่ดิน (%)"
     }
   },
+  "fieldLabels": {
+    "specifyPlaceholder": "โปรดระบุ...",
+    "projectInfo": {
+      "projectName": "ชื่อโครงการ",
+      "projectDescription": "คำอธิบายโครงการ",
+      "developer": "ผู้พัฒนา",
+      "landAreaRai": "ไร่",
+      "landAreaNgan": "งาน",
+      "landAreaSquareWa": "ตารางวา",
+      "unitForSaleCount": "ยูนิตที่ขาย",
+      "numberOfPhase": "จำนวนเฟส",
+      "isUnderConstruction": "อยู่ระหว่างก่อสร้าง",
+      "constructionProgressPercent": "ความคืบหน้าการก่อสร้าง (%)",
+      "houseNumber": "บ้านเลขที่",
+      "road": "ถนน",
+      "soi": "ซอย",
+      "subDistrict": "ตำบล/แขวง (DOPA)",
+      "districtName": "อำเภอ/เขต (DOPA)",
+      "provinceName": "จังหวัด (DOPA)",
+      "landOffice": "สำนักงานที่ดิน",
+      "latitude": "ละติจูด",
+      "longitude": "ลองจิจูด",
+      "builtOnTitleDeedNumber": "โฉนดที่ดินเลขที่",
+      "licenseExpirationDate": "วันหมดอายุใบอนุญาต",
+      "utilities": "สาธารณูปโภค",
+      "utilitiesOther": "สาธารณูปโภคอื่น ๆ",
+      "facilities": "สิ่งอำนวยความสะดวก",
+      "facilitiesOther": "สิ่งอำนวยความสะดวกอื่น ๆ",
+      "remark": "หมายเหตุ"
+    },
+    "tower": {
+      "towerName": "ชื่ออาคาร",
+      "condoRegistrationNumber": "ทะเบียนอาคารชุดเลขที่",
+      "numberOfUnits": "จำนวนยูนิต",
+      "numberOfFloors": "จำนวนชั้น",
+      "conditionType": "สภาพอาคาร",
+      "hasObligation": "ภาระผูกพัน",
+      "obligationDetails": "รายละเอียดภาระผูกพัน",
+      "documentValidationType": "ผลตรวจสอบเอกสาร",
+      "isLocationCorrect": "ที่ตั้งถูกต้อง",
+      "distance": "ระยะทาง (ม.)",
+      "roadWidth": "ผิวจราจรกว้าง (ม.)",
+      "rightOfWay": "เขตทาง (ม.)",
+      "roadSurfaceType": "ลักษณะผิวจราจร",
+      "roadSurfaceTypeOther": "ผิวจราจรอื่น ๆ",
+      "decorationType": "การตกแต่ง",
+      "decorationTypeOther": "การตกแต่งอื่น ๆ",
+      "buildingAge": "อายุอาคาร (ปี)",
+      "buildingFormType": "รูปแบบอาคารชุด",
+      "constructionMaterialType": "วัสดุก่อสร้าง",
+      "roofType": "ประเภทหลังคา",
+      "roofTypeOther": "ประเภทหลังคาอื่น ๆ",
+      "isExpropriated": "อยู่ในระวางเวนคืน",
+      "isInExpropriationLine": "อยู่ในแนวเวนคืน",
+      "royalDecree": "พระราชกฤษฎีกา",
+      "expropriationRemark": "หมายเหตุระวางเวนคืน",
+      "isForestBoundary": "อยู่ในแนวเขตป่า",
+      "forestBoundaryRemark": "หมายเหตุแนวเขตป่า",
+      "remark": "หมายเหตุ"
+    },
+    "model": {
+      "modelName": "ชื่อแบบ",
+      "modelDescription": "คำอธิบายแบบ",
+      "hasMezzanine": "มีชั้นลอย",
+      "startingPriceMin": "ราคาเริ่มต้นต่ำสุด (บาท)",
+      "startingPriceMax": "ราคาเริ่มต้นสูงสุด (บาท)",
+      "usableAreaMin": "พื้นที่ใช้สอยต่ำสุด (ตร.ม.)",
+      "usableAreaMax": "พื้นที่ใช้สอยสูงสุด (ตร.ม.)",
+      "standardUsableArea": "พื้นที่ใช้สอยมาตรฐาน (ตร.ม.)",
+      "fireInsuranceCode": "เงื่อนไขการประกันอัคคีภัย",
+      "numberOfHouse": "จำนวนหลัง",
+      "landAreaMin": "เนื้อที่ดินต่ำสุด (ตร.วา)",
+      "landAreaMax": "เนื้อที่ดินสูงสุด (ตร.วา)",
+      "standardLandArea": "เนื้อที่ดินมาตรฐาน (ตร.วา)",
+      "constructionStyleRemark": "หมายเหตุ",
+      "remark": "หมายเหตุ"
+    },
+    "projectLand": {
+      "propertyName": "ชื่อทรัพย์สิน",
+      "subDistrict": "ตำบล/แขวง",
+      "districtName": "อำเภอ/เขต",
+      "provinceName": "จังหวัด",
+      "landDescription": "รายละเอียดที่ดิน",
+      "isOwnerVerified": "ตรวจสอบกรรมสิทธิ์",
+      "ownerName": "ผู้ถือกรรมสิทธิ์",
+      "hasObligation": "ภาระผูกพัน",
+      "obligationDetails": "รายละเอียดภาระผูกพัน"
+    },
+    "pricing": {
+      "floorIncrementEveryXFloor": "ทุก X ชั้น",
+      "floorIncrementAmount": "จำนวนเงิน (บาท)",
+      "landIncreaseDecreaseRate": "ปรับเพิ่ม/ลดราคาที่ดิน (บาท/ตร.วา)",
+      "forceSalePercentage": "เปอร์เซ็นต์ขายบังคับ (%)"
+    }
+  },
   "validation": {
     "invalidPartialDate": "กรุณาใช้รูปแบบ ปปปป, ปปปป-ดด, หรือ ปปปป-ดด-วว",
     "towerRequired": "ต้องระบุอาคารสำหรับโครงการคอนโด"
@@ -781,6 +1052,9 @@
     "deleteModelListing": {
       "title": "ลบแบบ",
       "confirm": "ลบ"
+    },
+    "deleteListing": {
+      "message": "คุณแน่ใจหรือไม่ว่าต้องการลบ \"{{name}}\"? ไม่สามารถย้อนกลับได้"
     }
   },
   "errors": {

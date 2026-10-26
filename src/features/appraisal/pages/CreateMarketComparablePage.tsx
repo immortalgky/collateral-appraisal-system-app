@@ -8,8 +8,6 @@ import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ActionBar from '@/shared/components/ActionBar';
@@ -24,7 +22,8 @@ import type {
 } from '@/shared/schemas/v1';
 import type { MarketComparablePhotoSectionRef } from '../components/MarketComparablePhotoSection';
 import { ComparableEditorHeader } from '../components/ComparableEditorHeader';
-import type { EditorTab } from '../components/EditorIdentityCard';
+import { ComparableFormShell } from '../components/ComparableFormShell';
+import type { EditorTab } from '../components/EditorTabBar';
 import {
   useCreateMarketComparable,
   useGetMarketComparableById,
@@ -346,8 +345,6 @@ const CreateMarketComparablePage = () => {
     }
   };
 
-  const { isOpen, onToggle } = useDisclosure();
-
   // Loading state — block render until the source data is available when prefilling
   // (edit OR copy), so the form mounts already populated rather than flashing empty.
   const isLoading =
@@ -355,43 +352,43 @@ const CreateMarketComparablePage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <FormProvider methods={methods} schema={createMarketComparableForm}>
+      {/* renderedOnly: the schema flags both prices when neither is set, but only the one the
+          toggle shows is on screen, and the type is set by the template rather than typed. */}
+      <FormProvider methods={methods} schema={createMarketComparableForm} renderedOnly>
         <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
           {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
+          <ComparableFormShell
+            appraisalId={appraisalId}
+            marketComparableId={marketId ?? undefined}
+            images={marketComparable?.marketComparable.images}
+            photoSectionRef={photoSectionRef}
+            header={
+              <ComparableEditorHeader
+                appraisalId={appraisalId}
+                marketComparableId={marketId ?? undefined}
+                source={marketComparable?.marketComparable}
+                isCopy={!isEditMode && !!copyFromId}
+                typeCode={typeCode}
+                sections={sections}
+              />
+            }
           >
-            <ComparableEditorHeader
-              appraisalId={appraisalId}
-              marketComparableId={marketId ?? undefined}
-              source={marketComparable?.marketComparable}
-              isCopy={!isEditMode && !!copyFromId}
-              typeCode={typeCode}
-              photoSectionRef={photoSectionRef}
-              sections={sections}
-            />
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
-            >
-              <ResizableSidebar.Main>
-                <MarketComparableForm />
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+            <MarketComparableForm />
+          </ComparableFormShell>
 
           {/* Sticky Action Bar */}
-          <ActionBar>
+          <ActionBar keepWhenReadOnly>
             <ActionBar.Left>
               <CancelButton fallbackPath={`${basePath}/property?tab=markets`} />
               {!isReadOnly && (

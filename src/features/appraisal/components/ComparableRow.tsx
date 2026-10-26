@@ -90,9 +90,9 @@ export const ComparableRow = ({
       onClick={onOpen}
       onKeyDown={onKeyDown}
       onContextMenu={onContextMenu}
-      className="grid cursor-pointer grid-cols-[5.75rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3.5 px-3 py-2.5 transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
+      className="grid cursor-pointer grid-cols-[5.75rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3.5 px-3 py-2.5 transition-colors hover:bg-(--palette-surface-2) focus-visible:bg-(--palette-surface-2) focus-visible:outline-none"
     >
-      <div className="relative flex h-[3.9rem] w-[5.75rem] items-center justify-center overflow-hidden rounded-lg bg-gray-100">
+      <div className="relative flex h-[3.9rem] w-[5.75rem] items-center justify-center overflow-hidden rounded-lg bg-(--palette-surface-3)">
         {thumb ? (
           <img
             src={thumb}
@@ -102,25 +102,25 @@ export const ComparableRow = ({
             className="h-full w-full object-cover"
           />
         ) : (
-          <Icon name={icon.name} style={icon.style} className="text-xl text-gray-400" />
+          <Icon name={icon.name} style={icon.style} className="text-xl text-(--palette-gray-400)" />
         )}
-        <span className="absolute left-1.5 top-1.5 flex size-[1.1rem] items-center justify-center rounded-full bg-white text-[10px] font-bold tabular-nums text-gray-700 shadow-sm">
+        <span className="absolute left-1.5 top-1.5 flex size-[1.1rem] items-center justify-center rounded-full bg-(--palette-surface) text-[10px] font-bold tabular-nums text-(--palette-ink) shadow-sm">
           {index + 1}
         </span>
       </div>
 
       <div className="min-w-0">
         <div className="flex min-w-0 items-center gap-2">
-          <h4 className="truncate text-[13px] font-semibold text-gray-900">
+          <h4 className="truncate text-[13px] font-semibold text-(--palette-ink)">
             {c.comparableSurveyName || c.comparableNumber || '-'}
           </h4>
           {type && <PropertyTypeChip code={type} />}
         </div>
         <DotJoin
-          className="mt-0.5 truncate text-[11.5px] text-gray-500"
+          className="mt-0.5 truncate text-[11.5px] text-(--palette-gray-500)"
           parts={[
             c.comparableNumber ? (
-              <span className="tabular-nums text-gray-400">{c.comparableNumber}</span>
+              <span className="tabular-nums text-(--palette-gray-400)">{c.comparableNumber}</span>
             ) : null,
             parsePlotLocation(c.comparablePlotLocation).length > 0 ? (
               <PlotLocationText raw={c.comparablePlotLocation} />
@@ -148,14 +148,14 @@ export const ComparableRow = ({
         {lead ? (
           <>
             <div className="whitespace-nowrap">
-              <span className="text-[15px] font-semibold tabular-nums text-gray-900">
+              <span className="text-[15px] font-semibold tabular-nums text-(--palette-ink)">
                 {f.money(lead.value)}
               </span>{' '}
-              <span className="text-[11px] text-gray-400">
+              <span className="text-[11px] text-(--palette-gray-400)">
                 <PriceUnitLabel unit={lead.unit} />
               </span>
             </div>
-            <div className="text-[11px] tabular-nums text-gray-400">
+            <div className="text-[11px] tabular-nums text-(--palette-gray-400)">
               {lead.isSale && offer != null
                 ? t('markets.price.offer', { price: f.money(offer) })
                 : lead.isSale
@@ -164,7 +164,7 @@ export const ComparableRow = ({
             </div>
           </>
         ) : (
-          <span className="text-xs text-gray-400">—</span>
+          <span className="text-xs text-(--palette-gray-400)">—</span>
         )}
       </div>
 

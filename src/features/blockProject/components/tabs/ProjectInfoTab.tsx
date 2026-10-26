@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
@@ -12,12 +12,14 @@ import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import CancelButton from '@/shared/components/buttons/CancelButton';
+import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
 import type { ApiError } from '@/shared/types/api';
 
 import { useGetProject, useSaveProject } from '../../api/project';
 import { isCondo } from '../../types';
 import type { ProjectType } from '../../types';
 import ProjectInfoForm from '../../forms/ProjectInfoForm';
+import { CondoFrame } from '../condo';
 import ChangeProjectTypeDialog, { type ChildCounts } from '../ChangeProjectTypeDialog';
 import {
   condoProjectInfoFormDefaults,
@@ -34,8 +36,9 @@ interface ProjectInfoTabProps {
 }
 
 /**
- * Merged ProjectInfo tab for both Condo and LandAndBuilding.
- * Uses the correct schema factory based on projectType.
+ * Merged ProjectInfo tab for Condo, LandAndBuilding and Land.
+ * Uses the correct schema factory based on projectType, which BlockProjectPage resolves from the
+ * stored project (so a Land project on the village route loads and saves as 'L').
  */
 export default function ProjectInfoTab({
   projectType,
@@ -57,10 +60,10 @@ export default function ProjectInfoTab({
     setPendingType(null);
   }, [projectType]);
 
-  const schema = projectInfoForm(projectType);
+  const schema = useMemo(() => projectInfoForm(projectType), [projectType]);
   const defaults = isCondo(projectType) ? condoProjectInfoFormDefaults : lbProjectInfoFormDefaults;
 
-  const { data: project, isLoading } = useGetProject(appraisalId ?? '', projectType);
+  const { data: project, isLoading } = useGetProject(appraisalId ?? '');
   const { mutate: saveProject, isPending } = useSaveProject();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,6 +81,16 @@ export default function ProjectInfoTab({
 
   useEffect(() => {
     if (project) {
+      // The names are display-only and normally written by the location selector, which a read page
+      // does not mount. Any source, as the field's resolveFromAnySource does.
+      const address = project.subDistrict
+        ? findAddressBySubDistrictCode(project.subDistrict)
+        : undefined;
+      const locationNames = {
+        subDistrictName: address?.subDistrictName ?? null,
+        districtName: address?.districtName ?? null,
+        provinceName: address?.provinceName ?? null,
+      };
       if (isCondo(projectType)) {
         reset({
           projectName: project.projectName ?? '',
@@ -89,7 +102,7 @@ export default function ProjectInfoTab({
           landAreaSquareWa: project.landAreaSquareWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
-          projectType: '', // placeholder; stamped from the route prop at submit (see line ~144)
+          projectType: '', // placeholder; stamped from the stored type at submit (see onSubmit)
           numberOfPhase: project.numberOfPhase ?? null,
           isUnderConstruction: project.isUnderConstruction ?? null,
           constructionProgressPercent: project.constructionProgressPercent ?? null,
@@ -100,6 +113,7 @@ export default function ProjectInfoTab({
           district: project.district ?? null,
           province: project.province ?? null,
           postcode: project.postcode ?? null,
+          ...locationNames,
           latitude: project.latitude ?? null,
           longitude: project.longitude ?? null,
           builtOnTitleDeedNumber: project.builtOnTitleDeedNumber ?? null,
@@ -120,7 +134,7 @@ export default function ProjectInfoTab({
           landAreaSquareWa: project.landAreaSquareWa ?? null,
           unitForSaleCount: project.unitForSaleCount ?? null,
           landOffice: project.landOffice ?? '',
-          projectType: '', // placeholder; stamped from the route prop at submit (see line ~144)
+          projectType: '', // placeholder; stamped from the stored type at submit (see onSubmit)
           numberOfPhase: project.numberOfPhase ?? null,
           isUnderConstruction: project.isUnderConstruction ?? null,
           constructionProgressPercent: project.constructionProgressPercent ?? null,
@@ -131,6 +145,7 @@ export default function ProjectInfoTab({
           district: project.district ?? null,
           province: project.province ?? null,
           postcode: project.postcode ?? null,
+          ...locationNames,
           latitude: project.latitude ?? null,
           longitude: project.longitude ?? null,
           licenseExpirationDate: project.licenseExpirationDate ?? null,
@@ -171,58 +186,69 @@ export default function ProjectInfoTab({
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <CondoFrame>
+        <div className="flex items-center justify-center h-64">
+          <Icon
+            name="spinner"
+            style="solid"
+            className="w-8 h-8 animate-spin text-(--palette-accent-ink)"
+          />
+        </div>
+      </CondoFrame>
     );
   }
+
+  const infoForm = (
+    <ProjectInfoForm
+      projectType={projectType}
+      pendingType={pendingType}
+      hasExistingProject={hasExistingProject}
+      onProjectTypeChange={setPendingType}
+    />
+  );
+
+  const actionBar = (
+    <ActionBar>
+      <ActionBar.Left>
+        <CancelButton />
+        {!isReadOnly && (
+          <>
+            <ActionBar.Divider />
+            <ActionBar.UnsavedIndicator show={isDirty} />
+          </>
+        )}
+      </ActionBar.Left>
+      {!isReadOnly && (
+        <ActionBar.Right>
+          <Button
+            variant="ghost"
+            type="button"
+            onClick={() => onSubmit(getValues(), true)}
+            isLoading={isPending}
+            disabled={isPending}
+          >
+            {t('actions.saveDraft')}
+          </Button>
+          <Button type="submit" isLoading={isPending} disabled={isPending}>
+            <Icon name="check" style="solid" className="size-4 mr-2" />
+            {t('actions.save')}
+          </Button>
+        </ActionBar.Right>
+      )}
+    </ActionBar>
+  );
 
   return (
     <>
       <FormProvider methods={methods} schema={schema}>
-        <form
+        <CondoFrame
+          as="form"
           onSubmit={handleSubmit(data => onSubmit(data, false))}
-          className="flex flex-col h-full min-h-0"
+          panelId="project-info-section"
+          footer={actionBar}
         >
-          <div className="flex-1 min-h-0 overflow-y-auto pb-4">
-            <ProjectInfoForm
-              projectType={projectType}
-              storedProjectType={project?.projectType}
-              pendingType={pendingType}
-              hasExistingProject={hasExistingProject}
-              onProjectTypeChange={setPendingType}
-            />
-          </div>
-
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
-              {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={isDirty} />
-                </>
-              )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => onSubmit(getValues(), true)}
-                  isLoading={isPending}
-                  disabled={isPending}
-                >
-                  Save Draft
-                </Button>
-                <Button type="submit" isLoading={isPending} disabled={isPending}>
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
-        </form>
+          {infoForm}
+        </CondoFrame>
       </FormProvider>
 
       {appraisalId && isTypeDialogOpen && (

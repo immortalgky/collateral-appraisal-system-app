@@ -1,0 +1,180 @@
+{
+  "page": {
+    "title": "All Tasks",
+    "subtitleMy": "Tasks assigned to you",
+    "subtitlePool": "Team tasks waiting to be picked up",
+    "tabsLabel": "Task view",
+    "tabMy": "My Tasks",
+    "tabPool": "Pool",
+    "listLabel": "Task list"
+  },
+  "search": {
+    "placeholder": "Search number or customer…"
+  },
+  "filters": {
+    "taskType": "Task type",
+    "status": "Request status",
+    "purpose": "Purpose",
+    "channel": "Channel",
+    "slaStatus": "SLA status",
+    "appointment": "Appointment date",
+    "assigned": "Assigned date",
+    "requested": "Requested date",
+    "appraisalNumber": "Appraisal number",
+    "customerName": "Customer name",
+    "taskStatus": "Task status",
+    "assignee": "Assignee"
+  },
+  "filterChips": {
+    "appraisalNumber": "Appraisal No.",
+    "customerName": "Customer",
+    "status": "Request Status",
+    "pendingTaskStatus": "Task Status",
+    "slaStatus": "SLA",
+    "assigneeUserId": "Assignee",
+    "activityId": "Task Type",
+    "purpose": "Purpose",
+    "channel": "Channel",
+    "dateType": "Date Type",
+    "dateFrom": "From",
+    "dateTo": "To",
+    "assignedFrom": "Assigned from",
+    "assignedTo": "Assigned to",
+    "appointmentFrom": "Appointment from",
+    "appointmentTo": "Appointment to",
+    "requestedFrom": "Requested from",
+    "requestedTo": "Requested to"
+  },
+  "sla": {
+    "Breached": "Breached",
+    "AtRisk": "At risk",
+    "OnTime": "On time",
+    "NoSla": "No SLA"
+  },
+  "activity": {
+    "appraisal-initiation-check": "Appraisal Initiation Check",
+    "appraisal-initiation": "Appraisal Initiation",
+    "appraisal-assignment": "Appraisal Assignment",
+    "fee-appointment-approval": "Fee & Appointment Approval",
+    "ext-appraisal-assignment": "External Appraisal Assignment",
+    "ext-appraisal-execution": "External Appraisal Execution",
+    "ext-appraisal-check": "External Appraisal Check",
+    "ext-appraisal-verification": "External Appraisal Verification",
+    "appraisal-book-verification": "Appraisal Book Verification",
+    "int-appraisal-execution": "Internal Appraisal Execution",
+    "int-offline-book-keyin": "Offline Appraisal Book Keyin",
+    "int-appraisal-check": "Internal Appraisal Check",
+    "int-appraisal-verification": "Internal Appraisal Verification",
+    "int-pma-input": "PMA Property Input",
+    "pending-approval": "Pending Approval",
+    "provide-additional-documents": "Provide Additional Documents",
+    "admin-review-submissions": "Review Quotation Submissions",
+    "rm-pick-winner": "Pick Quotation Winner",
+    "admin-finalize": "Finalize Quotation",
+    "ext-collect-submissions": "Submit Quotation",
+    "ext-respond-negotiation": "Response to Negotiation"
+  },
+  "panel": {
+    "title": "Filters",
+    "toggle": "Filter panel",
+    "hide": "Close filter panel",
+    "showTitle": "Show the filter panel on the left",
+    "hideTitle": "Hide the filter panel and use chips",
+    "summary": "Filtering:",
+    "selectedCount_one": "{{count}} selected",
+    "selectedCount_other": "{{count}} selected",
+    "inUse": "In use",
+    "noOptions": "No options to choose from yet",
+    "showAll": "Show all ({{count}})",
+    "showFewer": "Show only types with tasks"
+  },
+  "view": {
+    "label": "Display",
+    "table": "Table",
+    "board": "Board",
+    "groupBy": "Group by",
+    "groupByOptions": {
+      "status": "Task status",
+      "purpose": "Purpose",
+      "priority": "Priority",
+      "activity": "Task type",
+      "slaStatus": "SLA urgency"
+    }
+  },
+  "columns": {
+    "appraisalNumber": "Appraisal Number",
+    "lockState": "Pickup",
+    "requestNumber": "Request Number",
+    "channel": "Channel",
+    "customerName": "Customer Name",
+    "taskType": "Task Type",
+    "purpose": "Purpose",
+    "propertyType": "Property Type",
+    "status": "Status",
+    "appointmentDateTime": "Appointment Date",
+    "requestedAt": "Requested At",
+    "requestedBy": "Requested By",
+    "reportReceivedAt": "Report Received Date",
+    "requestReceivedDate": "Request Received Date",
+    "internalFollowupStaff": "Internal Followup Staff",
+    "appraiser": "Appraiser",
+    "assignedDate": "Assigned Date",
+    "movement": "Movement",
+    "dueAt": "SLA Due",
+    "elapsedHours": "Elapsed (hrs)",
+    "remainingHours": "Remaining (hrs)",
+    "slaStatus": "SLA Status",
+    "priority": "Priority"
+  },
+  "table": {
+    "actions": "Actions",
+    "pinned": "Pinned column"
+  },
+  "row": {
+    "open": "Open task",
+    "copyNumber": "Copy appraisal number",
+    "copied": "Appraisal number copied",
+    "copyFailed": "Could not copy the appraisal number"
+  },
+  "legend": {
+    "slaBreached": "Over SLA",
+    "slaAtRisk": "At risk of SLA"
+  },
+  "empty": {
+    "filteredTitle": "No tasks match the filters",
+    "filteredHint": "Try removing some filters or changing the search",
+    "clear": "Clear all filters",
+    "myTitle": "All clear",
+    "myHint": "You have no tasks assigned right now.",
+    "poolTitle": "Pool is empty",
+    "poolHint": "There are no tasks in the pool right now."
+  },
+  "errors": {
+    "loadFailed": "Failed to load tasks"
+  },
+  "pool": {
+    "loadFailed": "Failed to load pool tasks",
+    "view": "View only",
+    "edit": "Start",
+    "continue": "Continue",
+    "takeOut": "Move to my tasks",
+    "lockedByYou": "You're editing",
+    "lockedByName": "Locked by {{name}}",
+    "lockedLessThanMinute": "< 1 min ago",
+    "lockedMinutesAgo_one": "{{count}} min ago",
+    "lockedMinutesAgo_other": "{{count}} min ago",
+    "state": {
+      "free": "Free",
+      "byYou": "You're working on it",
+      "byName": "{{name}} is working on it",
+      "waiting": "Added to pool {{ago}}",
+      "lockedAgo": "Locked {{ago}}"
+    },
+    "toasts": {
+      "lockedBy": "Task is currently being edited by {{name}}",
+      "lockFailed": "Could not lock the task. Try again.",
+      "claimed": "Task moved to your tasks",
+      "claimFailed": "Could not claim the task. Try again."
+    }
+  }
+}

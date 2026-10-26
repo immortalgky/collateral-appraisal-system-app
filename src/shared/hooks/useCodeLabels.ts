@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 import { useAddressStore } from '@/shared/store';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
@@ -96,5 +97,17 @@ export function useAppraisalTypeLabel(): (type: string | null | undefined) => st
   return useCallback(
     type => (type ? codeToLabel.get(type) || undefined : undefined),
     [codeToLabel],
+  );
+}
+
+/**
+ * Maps the field a search matched on (`prevAppraisalNumber`, `titleNumber`, …) to its label under
+ * `nav:search.fields`. A field the server adds before the locales catch up shows as its raw name.
+ */
+export function useSearchFieldLabel(): (field: string) => string {
+  const { t } = useTranslation('nav');
+  return useCallback(
+    field => t(`search.fields.${field}` as never, { defaultValue: field }) as string,
+    [t],
   );
 }

@@ -1,8 +1,19 @@
+import { useId } from 'react';
 import { useController, useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { NumberInput } from '@/shared/components';
+import { FormFieldShell } from '@/shared/components/form';
 import { useFormReadOnly } from '@/shared/components/form/context';
+import { FormReadValue } from '@/shared/components/form/FormReadValue';
+import type { FormField } from '@/shared/components/form';
 import { useGetFireInsuranceRates } from '@/shared/api/pricingParameters';
+
+const moneyField = (name: string, label: string): FormField => ({
+  type: 'number-input',
+  name,
+  label,
+  decimalPlaces: 2,
+});
 
 const money2 = (v: unknown) => {
   const n = Number(v);
@@ -18,15 +29,16 @@ const money2 = (v: unknown) => {
  * fireInsuranceCode × usableArea, and arrives on the GET. Empty override = use that; a value
  * here is what the appraisal's insurance total sums.
  *
- * Drawn as an ordinary labelled field (a [data-field] wrapper around a labelled NumberInput) so the
- * classic layout puts it under its neighbours and the grid layout gives it the same label | control
- * row. When edited, the note under it offers a way back to the calculated value, as the building
+ * Drawn as an ordinary labelled field (a `FormFieldShell` around a NumberInput) so it lays out like
+ * its neighbours in either layout. When edited, the note under it offers a way back to the calculated value, as the building
  * cost table does.
  */
 export default function CondoInsuranceSummary() {
   const { t } = useTranslation('appraisal');
   const { setValue } = useFormContext();
   const formReadOnly = useFormReadOnly();
+  const priceId = useId();
+  const overrideId = useId();
 
   const computed = useWatch({ name: 'buildingInsurancePrice' });
   const override = useWatch({ name: 'buildingInsurancePriceOverride' });
@@ -59,24 +71,70 @@ export default function CondoInsuranceSummary() {
   // placeholder while React still believed it held the calculated figure.
   const { field } = useController({ name: 'buildingInsurancePriceOverride' });
 
+  // A read page shows both as plain label + value, like the fields around them.
+  if (formReadOnly) {
+    const priceLabel = t('forms.condo.buildingInsurancePrice');
+    const overrideLabel = t('forms.condo.buildingInsurance');
+    return (
+      <>
+        <FormFieldShell
+          name="buildingInsurancePrice"
+          label={priceLabel}
+          wrapperClassName="col-span-4"
+          read
+        >
+          <FormReadValue
+            field={moneyField('buildingInsurancePrice', priceLabel)}
+            name="buildingInsurancePrice"
+            value={computedValue}
+            required={false}
+          />
+        </FormFieldShell>
+        <FormFieldShell
+          name="buildingInsurancePriceOverride"
+          label={overrideLabel}
+          wrapperClassName="col-span-4"
+          read
+        >
+          <FormReadValue
+            field={moneyField('buildingInsurancePriceOverride', overrideLabel)}
+            name="buildingInsurancePriceOverride"
+            value={override ?? computedValue}
+            required={false}
+          />
+        </FormFieldShell>
+      </>
+    );
+  }
+
   return (
     <>
-      <div data-field="buildingInsurancePrice" data-field-disabled className="col-span-6">
+      <FormFieldShell
+        name="buildingInsurancePrice"
+        label={t('forms.condo.buildingInsurancePrice')}
+        labelFor={priceId}
+        wrapperClassName="col-span-4"
+      >
         <NumberInput
-          label={t('forms.condo.buildingInsurancePrice')}
+          id={priceId}
           value={computedValue}
           maxIntegerDigits={16}
           decimalPlaces={2}
           disabled
           helperText={formula}
         />
-      </div>
-      <div data-field="buildingInsurancePriceOverride" className="col-span-12">
+      </FormFieldShell>
+      <FormFieldShell
+        name="buildingInsurancePriceOverride"
+        label={t('forms.condo.buildingInsurance')}
+        labelFor={overrideId}
+        wrapperClassName="col-span-4"
+      >
         <NumberInput
+          id={overrideId}
           name={field.name}
           onBlur={field.onBlur}
           onChange={e => field.onChange(e.target.value)}
-          label={t('forms.condo.buildingInsurance')}
           value={override ?? computedValue}
           maxIntegerDigits={16}
           decimalPlaces={2}
@@ -89,7 +147,7 @@ export default function CondoInsuranceSummary() {
                     {' · '}
                     <button
                       type="button"
-                      className="text-primary-600 underline underline-offset-2"
+                      className="text-(--palette-primary-text) underline underline-offset-2"
                       onClick={() =>
                         setValue('buildingInsurancePriceOverride', null, { shouldDirty: true })
                       }
@@ -104,7 +162,7 @@ export default function CondoInsuranceSummary() {
             )
           }
         />
-      </div>
+      </FormFieldShell>
     </>
   );
 }

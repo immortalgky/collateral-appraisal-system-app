@@ -29,7 +29,7 @@ const StickyHeaderCard = ({
 }: StickyHeaderCardProps) => {
   const { t } = useTranslation('appraisal');
   return (
-    <div className="sticky top-0 z-10 bg-white border border-gray-100 shadow-sm rounded-2xl transition-all duration-200">
+    <div className="sticky top-0 z-10 bg-(--palette-surface) border border-(--palette-line-soft) shadow-sm rounded-2xl transition-all duration-200">
       <div className={clsx('px-6 transition-all duration-200', compact ? 'py-2.5' : 'py-4')}>
         <div className="flex items-center justify-between">
           {/* Left: Customer & appraisal info */}
@@ -43,13 +43,16 @@ const StickyHeaderCard = ({
               <Icon
                 name="user"
                 style="solid"
-                className={clsx('text-white transition-all duration-200', compact ? 'h-4 w-4' : 'h-5 w-5')}
+                className={clsx(
+                  'text-white transition-all duration-200',
+                  compact ? 'h-4 w-4' : 'h-5 w-5',
+                )}
               />
             </div>
             <div>
               <h1
                 className={clsx(
-                  'font-bold text-gray-900 tracking-tight transition-all duration-200',
+                  'font-bold text-(--palette-ink) tracking-tight transition-all duration-200',
                   compact ? 'text-lg' : 'text-xl',
                 )}
               >
@@ -63,13 +66,17 @@ const StickyHeaderCard = ({
                 )}
               >
                 {appraisal?.appraisalNumber && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-100 text-xs font-medium text-gray-600">
-                    <Icon name="hashtag" style="solid" className="w-2.5 h-2.5 text-gray-400" />
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-(--palette-surface-3) text-xs font-medium text-(--palette-gray-600)">
+                    <Icon
+                      name="hashtag"
+                      style="solid"
+                      className="w-2.5 h-2.5 text-(--palette-gray-400)"
+                    />
                     {String(appraisal.appraisalNumber)}
                   </span>
                 )}
                 {contactNumber && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-teal-50 text-xs font-medium text-teal-700">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-(--palette-accent-wash) text-xs font-medium text-(--palette-accent-ink)">
                     <Icon name="phone" style="solid" className="w-2.5 h-2.5" />
                     {contactNumber}
                   </span>
@@ -85,12 +92,12 @@ const StickyHeaderCard = ({
               value={decisionSummary?.totalAppraisalPrice}
               primary
             />
-            <div className="h-10 w-px bg-gray-200" />
+            <div className="h-10 w-px bg-(--palette-line)" />
             <PriceDisplay
               label={t('view360.header.forceSellingPrice')}
               value={decisionSummary?.forceSellingPrice}
             />
-            <div className="h-10 w-px bg-gray-200" />
+            <div className="h-10 w-px bg-(--palette-line)" />
             <PriceDisplay
               label={t('view360.header.buildingInsurance')}
               value={decisionSummary?.buildingInsurance}
@@ -103,7 +110,7 @@ const StickyHeaderCard = ({
       {actions && (
         <div
           className={clsx(
-            'flex justify-end gap-2 border-t border-gray-100 px-3 transition-all duration-200',
+            'flex justify-end gap-2 border-t border-(--palette-line-soft) px-3 transition-all duration-200',
             compact ? 'py-1.5' : 'py-2.5',
           )}
         >
@@ -124,10 +131,14 @@ const PriceDisplay = ({
   primary?: boolean;
 }) => (
   <div className="text-right">
-    <p className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">{label}</p>
+    <p className="text-[11px] font-medium text-(--palette-gray-400) uppercase tracking-wide">
+      {label}
+    </p>
     <p
       className={
-        primary ? 'text-lg font-bold text-teal-700' : 'text-sm font-semibold text-gray-900'
+        primary
+          ? 'text-lg font-bold text-(--palette-accent-ink)'
+          : 'text-sm font-semibold text-(--palette-ink)'
       }
     >
       {value != null ? formatNumber(value, 2) : '-'}

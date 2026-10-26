@@ -1,7 +1,7 @@
 import Icon from '@shared/components/Icon';
 
 interface StarRatingProps {
-  /** 0–5 numeric score. Half-star kicks in at fractional ≥ 0.5. */
+  /** 0–5 numeric score, clamped to that range. Half-star kicks in at fractional ≥ 0.25. */
   score: number;
   /** Tailwind size class for each star. Default: `size-3.5`. */
   size?: string;
@@ -18,7 +18,9 @@ interface StarRatingProps {
  * - Half star: amber-400 solid (star-half-stroke)
  * - Empty star: gray-300 regular
  */
-function StarRating({ score, size = 'size-3.5' }: StarRatingProps) {
+function StarRating({ score: rawScore, size = 'size-3.5' }: StarRatingProps) {
+  // Out-of-range scores (a bad figure from the API) draw as 0 or 5 stars, never more or less.
+  const score = Math.min(5, Math.max(0, rawScore));
   const full = Math.floor(score);
   const frac = score - full;
   const hasHalf = frac >= 0.25;
@@ -38,7 +40,14 @@ function StarRating({ score, size = 'size-3.5' }: StarRatingProps) {
             />
           );
         }
-        return <Icon key={i} name="star" style="regular" className={`${size} text-gray-300`} />;
+        return (
+          <Icon
+            key={i}
+            name="star"
+            style="regular"
+            className={`${size} text-(--palette-gray-300)`}
+          />
+        );
       })}
     </span>
   );
