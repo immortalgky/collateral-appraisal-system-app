@@ -20,9 +20,12 @@ import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
 import { useSegmentLabel } from '../hooks/useSegmentLabel';
 import { SegmentChips } from './SegmentBadges';
+import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
 import { ValidationText } from '@/shared/components/form/ValidationText';
 
 const EMPTY = <span className="text-(--palette-gray-400)">—</span>;
+
+const COLUMN_COUNT = 10;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -501,6 +504,7 @@ export function AppraisalPicker({
 
   const {
     data,
+    isLoading,
     isFetching,
     isError: appraisalsError,
     refetch: refetchAppraisals,
@@ -525,6 +529,9 @@ export function AppraisalPicker({
   // Filter out already-on-quotation rows from results
   const rawItems = data?.items ?? [];
   const items = useMemo(() => rawItems.filter(r => !excludeSet.has(r.id)), [rawItems, excludeSet]);
+  const isSlowRefetch = useDelayedFlag(isFetching && !isLoading, 250);
+  const showSkeleton = isLoading || isSlowRefetch || (isFetching && items.length === 0);
+  const skeletonRows = items.length || PAGE_SIZE;
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -844,7 +851,12 @@ export function AppraisalPicker({
 
       {/* ── Results Table ── */}
       <div className="rounded-lg border border-(--palette-line) overflow-hidden">
-        <div className="overflow-x-auto">
+        <div
+          className={`overflow-x-auto transition-opacity ${
+            isFetching || showSkeleton ? 'opacity-60 pointer-events-none' : ''
+          }`}
+          aria-busy={isFetching}
+        >
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
@@ -889,7 +901,7 @@ export function AppraisalPicker({
             </thead>
             <tbody className="divide-y divide-(--palette-line-soft)">
               {/* Enhancement #6 — Select-all hint */}
-              {allPageSelected && totalCount > PAGE_SIZE && (
+              {!showSkeleton && allPageSelected && totalCount > PAGE_SIZE && (
                 <tr>
                   <td colSpan={10} className="px-3 py-1.5 bg-(--palette-surface-2)">
                     <p className="text-xs text-(--palette-gray-500)">
@@ -898,24 +910,25 @@ export function AppraisalPicker({
                   </td>
                 </tr>
               )}
-              {isFetching && items.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="px-3 py-8 text-center">
-                    <div className="flex items-center justify-center gap-2 text-(--palette-gray-400)">
-                      <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                      <span className="text-xs">{t('common:status.loading')}</span>
-                    </div>
-                  </td>
-                </tr>
+              {showSkeleton ? (
+                Array.from({ length: skeletonRows }, (_, row) => (
+                  <tr key={row} className="animate-pulse">
+                    {Array.from({ length: COLUMN_COUNT }, (_, col) => (
+                      <td key={col} className="px-3 py-2">
+                        <div className="h-5 rounded bg-(--palette-surface-3)" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : appraisalsError ? (
                 <tr>
-                  <td colSpan={10}>
+                  <td colSpan={COLUMN_COUNT}>
                     <DataErrorState variant="inline" onRetry={() => refetchAppraisals()} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="px-3 py-8 text-center">
+                  <td colSpan={COLUMN_COUNT} className="px-3 py-8 text-center">
                     <p className="text-xs text-(--palette-gray-400) italic">
                       {t('empty.noEligibleAppraisals')}
                     </p>
