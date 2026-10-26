@@ -2,89 +2,137 @@
   "clients": {
     "page": {
       "title": "OAuth Client",
-      "subtitle": "ลงทะเบียนและตั้งค่าแอปพลิเคชันที่เชื่อมต่อผ่าน OAuth / OpenID Connect"
+      "subtitle": "แอปและระบบภายนอกที่ขอ token จากระบบประเมินผ่าน OAuth / OpenID Connect"
     },
-    "columns": {
-      "displayName": "ชื่อ",
-      "clientId": "Client ID",
-      "type": "ประเภท",
-      "grantTypes": "Grant Type",
-      "scopes": "Scope",
-      "actions": "จัดการ"
+    "tabs": {
+      "label": "ประเภท Client",
+      "all": "ทั้งหมด"
     },
     "type": {
       "public": "Public",
       "confidential": "Confidential"
     },
-    "badges": {
-      "system": "ระบบ"
+    "columns": {
+      "client": "Client",
+      "type": "ประเภท",
+      "grantTypes": "วิธีขอ token",
+      "scopes": "Scope",
+      "actions": "จัดการ"
     },
+    "badges": {
+      "system": "ระบบ",
+      "systemTitle": "Client หลักของระบบ ลบไม่ได้"
+    },
+    "noScopes": "ไม่มี scope",
+    "noScopesTitle": "ยังไม่ได้ให้ scope ใด ขอ token ได้แต่ไม่มีสิทธิ์เรียก API",
     "filters": {
-      "searchPlaceholder": "ค้นหาจากชื่อหรือ Client ID...",
-      "clear": "ล้าง"
+      "searchPlaceholder": "ค้นหาชื่อหรือ Client ID"
     },
     "actions": {
       "add": "ลงทะเบียน Client",
-      "edit": "แก้ไข",
-      "rotateSecret": "เปลี่ยน secret",
+      "rotateSecret": "หมุน secret",
       "delete": "ลบ"
     },
-    "form": {
-      "createTitle": "ลงทะเบียน OAuth Client",
-      "editTitle": "แก้ไข OAuth Client",
-      "displayName": "ชื่อที่แสดง",
-      "clientId": "Client ID",
-      "clientIdHint": "เว้นว่างไว้เพื่อให้ระบบสร้างให้อัตโนมัติ",
-      "clientType": "ประเภท Client",
-      "clientTypePublicHint": "Client แบบ Public เช่น SPA ใช้ PKCE และไม่มี secret",
-      "clientTypeConfidentialHint": "Client แบบ Confidential จะได้รับ secret ที่ระบบสร้างให้",
-      "grantTypes": "Grant Type",
-      "scopes": "Scope",
-      "scopesHint": "ชื่อ scope คั่นด้วยเว้นวรรคหรือจุลภาค เช่น profile email appraisal.read",
-      "redirectUris": "Redirect URI",
-      "redirectUrisHint": "บรรทัดละหนึ่งรายการ จำเป็นสำหรับ authorization_code",
-      "postLogoutRedirectUris": "Post-Logout Redirect URI",
-      "cancel": "ยกเลิก",
-      "create": "ลงทะเบียน",
-      "save": "บันทึก",
-      "tokenLifetimes": "อายุ Token (นาที)",
-      "tokenLifetimesHint": "เว้นว่างไว้เพื่อใช้ค่าเริ่มต้นของเซิร์ฟเวอร์ (access และ identity 15 นาที, refresh 7 วัน) access และ identity ใส่ได้สูงสุด 1440 นาที (24 ชั่วโมง) ส่วน refresh สูงสุด 43200 นาที (30 วัน) refresh token เป็นแบบต่ออายุเรื่อย ๆ ค่านี้จึงเป็นเวลาที่ปล่อยทิ้งไว้ได้ก่อนต้องเข้าสู่ระบบใหม่",
-      "tokenLifetime": {
-        "access": "Access",
-        "identity": "Identity",
-        "refresh": "Refresh (เวลาที่ไม่ได้ใช้งาน)"
-      },
-      "tokenLifetimeInherit": "ค่าเริ่มต้น",
-      "tokenLifetimeInvalid": "จำนวนเต็ม 1–{{max}}",
-      "uploadSessionLifetime": "อายุ Upload session",
-      "uploadSessionLifetimeHint": "ระยะเวลาที่ upload session ที่ระบบนี้สร้างจะเปิดค้างไว้ได้ เว้นว่างไว้เพื่อใช้ค่าเริ่มต้นของเซิร์ฟเวอร์ ใส่ได้ตั้งแต่ 1 ชั่วโมงถึง 30 วัน",
-      "uploadSessionLifetimeInvalid": "จำนวนเต็ม 1–{{max}} {{unit}}",
-      "uploadSessionLifetimeUnit": {
-        "label": "หน่วย",
-        "hours": "ชั่วโมง",
-        "days": "วัน",
-        "hoursInline": "ชั่วโมง",
-        "daysInline": "วัน"
-      }
+    "footer": {
+      "count_one": "{{count}} รายการ",
+      "count_other": "{{count}} รายการ"
     },
     "grant": {
-      "authorization_code": "Authorization Code",
-      "client_credentials": "Client Credentials",
-      "refresh_token": "Refresh Token"
+      "authorization_code": "Authorization code",
+      "client_credentials": "Client credentials",
+      "refresh_token": "Refresh token"
+    },
+    "drawer": {
+      "editTitle": "OAuth Client",
+      "createTitle": "ลงทะเบียน OAuth Client",
+      "createSubtitle": "เพิ่มแอปหรือระบบภายนอกที่จะขอ token จากระบบประเมิน",
+      "clientIdLabel": "Client ID",
+      "delete": "ลบ Client",
+      "createNote": "ลงทะเบียนแล้วจะแสดง secret ครั้งเดียว",
+      "cancel": "ยกเลิก",
+      "save": "บันทึก",
+      "create": "ลงทะเบียน",
+      "sections": {
+        "general": "ข้อมูลทั่วไป",
+        "secret": "Client secret",
+        "access": "สิทธิ์การเข้าถึง",
+        "redirect": "Redirect URI",
+        "lifetimes": "อายุ Token"
+      },
+      "type": "ประเภท Client",
+      "typeDesc": {
+        "confidential": "ระบบหลังบ้านที่เก็บ secret ได้ปลอดภัย ระบบจะสร้าง secret ให้",
+        "public": "แอปบนเบราว์เซอร์หรือมือถือ ไม่มี secret ต้องใช้ PKCE"
+      },
+      "displayName": "ชื่อที่แสดง",
+      "clientId": "Client ID",
+      "clientIdPlaceholder": "เว้นว่างให้ระบบสร้าง",
+      "copyClientId": "คัดลอก Client ID",
+      "fixedHint": "Client ID และประเภท (Confidential / Public) แก้ไม่ได้หลังลงทะเบียน",
+      "secretSet": "ตั้งค่าแล้ว",
+      "rotate": "หมุน secret",
+      "secretHint": "ระบบแสดง secret ครั้งเดียวตอนสร้างหรือหมุน หมุนแล้ว secret เดิมใช้ไม่ได้ทันที ต้องแจ้งระบบที่ใช้อยู่ให้เปลี่ยนตาม",
+      "grantTypes": "วิธีขอ token (Grant type)",
+      "grantHint": "Authorization code = ผู้ใช้ล็อกอินผ่านหน้า SSO · Client credentials = ระบบเรียกระบบ",
+      "scopes": "Scope",
+      "scopeGroupApp": "Scope ของระบบประเมิน",
+      "scopeGroupStandard": "OpenID มาตรฐาน (ข้อมูลผู้ใช้)",
+      "scopeUnregistered": "{{scope}} ไม่ได้ลงทะเบียนไว้ใน Scope",
+      "noRegisteredScopes": "ยังไม่มี Scope ที่ลงทะเบียน",
+      "scopePickHint": "เลือกจาก Scope ที่ลงทะเบียนไว้ ไม่ต้องพิมพ์ชื่อเอง",
+      "manageScopes": "จัดการ Scope",
+      "redirectHidden": "Redirect URI ซ่อนอยู่ เพราะใช้เฉพาะ Authorization code",
+      "redirectAfterLogin": "หลังล็อกอิน",
+      "redirectAfterLogout": "หลังออกจากระบบ",
+      "redirectUri": "Redirect URI",
+      "postLogoutUri": "Post-logout URI",
+      "redirectHint": "ต้องตรงทุกตัวอักษร · จำเป็นเมื่อใช้ Authorization code",
+      "addUri": "เพิ่ม URI",
+      "removeUri": "ลบ URI {{n}}",
+      "lifetimeDefault": "ใช้ค่าเริ่มต้นของระบบ",
+      "lifetimeHasInvalid": "มีค่าที่ไม่ถูกต้อง",
+      "lifetimeEmpty": "เว้นว่าง = ใช้ค่าเริ่มต้นของระบบ",
+      "lifetimeInherit": "ค่าเริ่มต้นของระบบ",
+      "lifetimeInvalid": "จำนวนเต็ม 1–{{max}}",
+      "lifetimeMax": "สูงสุด {{max}} นาที",
+      "minutes": "นาที",
+      "lifetime": {
+        "access": "Access token",
+        "identity": "Identity token",
+        "refresh": "Refresh token (หมดเมื่อไม่ใช้งาน)",
+        "refreshOff": "ไม่ใช้ เพราะไม่ได้เปิด Refresh token"
+      },
+      "upload": {
+        "label": "อายุ Upload session",
+        "hint": "ระยะที่ upload session ของ client นี้เปิดค้างได้ (1 ชม. – 30 วัน)",
+        "invalid": "จำนวนเต็ม 1–{{max}} {{unit}}",
+        "unit": {
+          "label": "หน่วย",
+          "hours": "ชั่วโมง",
+          "days": "วัน",
+          "hoursInline": "ชั่วโมง",
+          "daysInline": "วัน"
+        }
+      }
     },
     "secret": {
-      "title": "Client Secret",
-      "createdIntro": "ลงทะเบียน Client เรียบร้อย กรุณาคัดลอก secret ตอนนี้ ระบบจะไม่แสดงอีก",
-      "rotatedIntro": "สร้าง secret ใหม่แล้ว กรุณาคัดลอกตอนนี้ ระบบจะไม่แสดงอีก",
+      "title": "Client secret ของ {{name}}",
+      "createdSub": "ลงทะเบียนสำเร็จ",
+      "rotatedSub": "สร้าง secret ใหม่แล้ว",
+      "warning": "คัดลอกเก็บไว้ตอนนี้ ปิดหน้าต่างนี้แล้วจะดู secret นี้อีกไม่ได้ ถ้าหายต้องหมุน secret ใหม่",
       "clientId": "Client ID",
-      "secret": "Client Secret",
+      "secret": "Client secret",
       "copy": "คัดลอก",
       "copied": "คัดลอกแล้ว",
+      "stored": "ฉันเก็บ secret ไว้ในที่ปลอดภัยแล้ว",
       "done": "เสร็จสิ้น",
       "rotateConfirmTitle": "เปลี่ยน Client Secret",
       "rotateConfirmMessage": "secret ปัจจุบันจะใช้ไม่ได้ทันที ระบบที่เชื่อมต่ออยู่ต้องแก้ไขค่าใหม่ ต้องการดำเนินการต่อหรือไม่",
       "rotateConfirmButton": "เปลี่ยน secret"
     },
+    "emptyState": "ไม่พบ OAuth Client",
+    "emptyFiltered": "ไม่พบ Client ที่ตรงกับการค้นหา",
+    "loadFailed": "โหลด OAuth Client ไม่สำเร็จ",
     "delete": {
       "confirmTitle": "ลบ OAuth Client",
       "confirmMessage": "Client นี้และสิทธิ์ที่เคยให้ไว้จะถูกลบ แอปพลิเคชันที่ใช้อยู่จะเข้าสู่ระบบไม่ได้อีก ต้องการดำเนินการต่อหรือไม่",
@@ -99,44 +147,64 @@
       "updateFailed": "แก้ไข Client ไม่สำเร็จ",
       "deleteFailed": "ลบ Client ไม่สำเร็จ",
       "rotateFailed": "เปลี่ยน secret ไม่สำเร็จ"
-    },
-    "emptyState": "ไม่พบ OAuth Client",
-    "loadFailed": "โหลด OAuth Client ไม่สำเร็จ"
+    }
   },
   "scopes": {
     "page": {
       "title": "OAuth Scope",
-      "subtitle": "กำหนดทรัพยากร API ที่ client ขอสิทธิ์ได้"
-    },
-    "columns": {
-      "name": "ชื่อ",
-      "displayName": "ชื่อที่แสดง",
-      "description": "คำอธิบาย",
-      "resources": "ทรัพยากร",
-      "actions": "จัดการ"
-    },
-    "filters": {
-      "searchPlaceholder": "ค้นหา scope...",
-      "clear": "ล้าง"
+      "subtitle": "สิทธิ์ที่ client ขอได้ และ API (resource) ที่แต่ละสิทธิ์เปิดให้"
     },
     "actions": {
       "add": "เพิ่ม Scope",
-      "edit": "แก้ไข",
       "delete": "ลบ"
     },
-    "form": {
+    "filters": {
+      "searchPlaceholder": "ค้นหาชื่อ Scope"
+    },
+    "standardNote": "openid, email, profile, roles เป็น scope มาตรฐานของ OpenID ไม่ต้องลงทะเบียน",
+    "columns": {
+      "scope": "Scope",
+      "description": "คำอธิบาย",
+      "resources": "Resource",
+      "usedBy": "Client ที่ใช้",
+      "actions": "จัดการ"
+    },
+    "unused": "ยังไม่มี",
+    "deleteBlocked": "ลบไม่ได้: ใช้โดย {{clients}}",
+    "footer": {
+      "count_one": "{{count}} รายการ",
+      "count_other": "{{count}} รายการ"
+    },
+    "drawer": {
       "createTitle": "เพิ่ม OAuth Scope",
-      "editTitle": "แก้ไข OAuth Scope",
-      "name": "ชื่อ",
-      "nameHint": "ชื่อ scope ที่ไม่ซ้ำกัน เช่น appraisal.read แก้ไขไม่ได้หลังสร้างแล้ว",
+      "createSubtitle": "ลงทะเบียนสิทธิ์ที่ client ขอได้",
+      "usedByCount_one": "ใช้โดย {{count}} client",
+      "usedByCount_other": "ใช้โดย {{count}} client",
+      "delete": "ลบ Scope",
+      "cancel": "ยกเลิก",
+      "save": "บันทึก",
+      "create": "สร้าง",
+      "sections": {
+        "info": "ข้อมูล Scope",
+        "resources": "Resource ที่เปิดให้",
+        "usedBy": "Client ที่ใช้ Scope นี้"
+      },
+      "name": "ชื่อ Scope",
+      "namePlaceholder": "appraisal.read",
+      "nameFixed": "แก้ไม่ได้หลังสร้าง",
+      "nameHint": "ชื่อที่ไม่ซ้ำกัน เช่น appraisal.read แก้ไม่ได้หลังสร้าง",
       "displayName": "ชื่อที่แสดง",
       "description": "คำอธิบาย",
-      "resources": "ทรัพยากร",
-      "resourcesHint": "ชื่อทรัพยากร API คั่นด้วยเว้นวรรคหรือจุลภาค",
-      "cancel": "ยกเลิก",
-      "create": "สร้าง",
-      "save": "บันทึก"
+      "resources": "Resource (audience)",
+      "resourcesPlaceholder": "พิมพ์แล้วกด Enter",
+      "resourcesHint": "token ที่ได้ scope นี้จะมี audience เป็น resource เหล่านี้",
+      "removeResource": "เอา {{name}} ออก",
+      "noClients": "ยังไม่มี client ใช้ scope นี้",
+      "usedByHint": "เอา scope ออกจาก client ทุกตัวก่อน จึงจะลบได้"
     },
+    "emptyState": "ไม่พบ Scope",
+    "emptyFiltered": "ไม่พบ Scope ที่ตรงกับการค้นหา",
+    "loadFailed": "โหลด Scope ไม่สำเร็จ",
     "delete": {
       "confirmTitle": "ลบ Scope",
       "confirmMessage": "Scope นี้จะถูกลบถาวร client ที่ขอ scope นี้จะถูกปฏิเสธ ต้องการดำเนินการต่อหรือไม่",
@@ -150,41 +218,53 @@
       "createFailed": "สร้าง Scope ไม่สำเร็จ",
       "updateFailed": "แก้ไข Scope ไม่สำเร็จ",
       "deleteFailed": "ลบ Scope ไม่สำเร็จ"
-    },
-    "emptyState": "ไม่พบ Scope",
-    "loadFailed": "โหลด Scope ไม่สำเร็จ"
+    }
   },
   "tokens": {
     "page": {
-      "title": "สิทธิ์และ Token ของ OAuth",
-      "subtitle": "ดูและเพิกถอนสิทธิ์และ token ที่ใช้งานอยู่"
+      "title": "Token และการอนุญาต",
+      "subtitle": "ดูสิทธิ์และ token ที่ออกให้แต่ละ client และเพิกถอนเมื่อสงสัยว่ารั่ว"
     },
     "tabs": {
-      "authorizations": "สิทธิ์ที่อนุญาต",
+      "label": "ประเภทรายการ",
+      "authorizations": "การอนุญาต",
       "tokens": "Token"
     },
     "filters": {
-      "clientId": "Client ID",
-      "clientIdPlaceholder": "กรองตาม Client ID...",
-      "subject": "ผู้ใช้",
-      "subjectPlaceholder": "กรองตามผู้ใช้...",
+      "client": "Client",
+      "allClients": "ทุก Client",
+      "subjectPlaceholder": "ค้นหา Subject ID",
       "status": "สถานะ",
-      "allStatuses": "ทุกสถานะ",
-      "clear": "ล้างตัวกรอง"
+      "allStatuses": "ทั้งหมด"
+    },
+    "status": {
+      "valid": "ใช้งานได้",
+      "revoked": "เพิกถอนแล้ว",
+      "redeemed": "ใช้แล้ว",
+      "inactive": "ไม่ใช้งาน"
     },
     "columns": {
-      "subject": "ผู้ใช้",
-      "clientId": "Client",
+      "subject": "Subject",
+      "client": "Client",
+      "type": "ชนิด",
       "status": "สถานะ",
-      "type": "ประเภท",
+      "created": "ออกเมื่อ",
       "scopes": "Scope",
-      "created": "สร้างเมื่อ",
       "expires": "หมดอายุ",
       "actions": "จัดการ"
     },
     "actions": {
       "revoke": "เพิกถอน"
     },
+    "expiry": {
+      "expired": "หมดอายุแล้ว",
+      "minutes": "อีก {{n}} นาที",
+      "hours": "อีก {{n}} ชม.",
+      "days": "อีก {{n}} วัน"
+    },
+    "emptyAuthorizations": "ไม่พบการอนุญาต",
+    "emptyTokens": "ไม่พบ Token",
+    "loadFailed": "โหลดไม่สำเร็จ",
     "revoke": {
       "confirmTitle": "เพิกถอน",
       "confirmMessageAuthorization": "การเพิกถอนสิทธิ์นี้จะเพิกถอน token ที่เกี่ยวข้องด้วย ต้องการดำเนินการต่อหรือไม่",
@@ -193,9 +273,6 @@
       "cancelButton": "ยกเลิก",
       "successToast": "เพิกถอนแล้ว",
       "errorToast": "เพิกถอนไม่สำเร็จ"
-    },
-    "emptyAuthorizations": "ไม่พบสิทธิ์ที่อนุญาต",
-    "emptyTokens": "ไม่พบ Token",
-    "loadFailed": "โหลดข้อมูลไม่สำเร็จ"
+    }
   }
 }

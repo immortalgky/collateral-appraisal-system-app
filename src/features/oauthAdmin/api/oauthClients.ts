@@ -39,6 +39,12 @@ export const useGetClients = (params: ListParams = {}) => {
   });
 };
 
+// ponytail: a handful of clients exist, and the API only filters by search text. One unpaged fetch
+// feeds the counts, the type tabs, the search, the scope-usage column and the client dropdown.
+// Past 200 clients the tab counts and filters would be wrong; add server-side filters then.
+export const FETCH_ALL_CLIENTS = { pageNumber: 1, pageSize: 200 };
+export const useGetAllClients = () => useGetClients(FETCH_ALL_CLIENTS);
+
 export const useGetClient = (id: string | null) => {
   return useQuery({
     queryKey: oauthClientKeys.detail(id ?? ''),

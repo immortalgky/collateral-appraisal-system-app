@@ -1,90 +1,138 @@
 {
   "clients": {
     "page": {
-      "title": "OAuth Clients",
-      "subtitle": "Register and configure OAuth / OpenID Connect client applications"
+      "title": "OAuth Client",
+      "subtitle": "Apps and external systems that request tokens from the appraisal system via OAuth / OpenID Connect"
     },
-    "columns": {
-      "displayName": "Name",
-      "clientId": "Client ID",
-      "type": "Type",
-      "grantTypes": "Grant Types",
-      "scopes": "Scopes",
-      "actions": "Actions"
+    "tabs": {
+      "label": "Client type",
+      "all": "All"
     },
     "type": {
       "public": "Public",
       "confidential": "Confidential"
     },
-    "badges": {
-      "system": "System"
+    "columns": {
+      "client": "Client",
+      "type": "Type",
+      "grantTypes": "How it gets tokens",
+      "scopes": "Scope",
+      "actions": "Actions"
     },
+    "badges": {
+      "system": "System",
+      "systemTitle": "Core system client, cannot be deleted"
+    },
+    "noScopes": "No scope",
+    "noScopesTitle": "No scope granted: can get a token but cannot call any API",
     "filters": {
-      "searchPlaceholder": "Search by name or client ID...",
-      "clear": "Clear"
+      "searchPlaceholder": "Search name or Client ID"
     },
     "actions": {
       "add": "Register Client",
-      "edit": "Edit",
       "rotateSecret": "Rotate secret",
       "delete": "Delete"
     },
-    "form": {
-      "createTitle": "Register OAuth Client",
-      "editTitle": "Edit OAuth Client",
-      "displayName": "Display Name",
-      "clientId": "Client ID",
-      "clientIdHint": "Leave blank to generate automatically.",
-      "clientType": "Client Type",
-      "clientTypePublicHint": "Public clients (e.g. SPA) use PKCE and have no secret.",
-      "clientTypeConfidentialHint": "Confidential clients receive a generated secret.",
-      "grantTypes": "Grant Types",
-      "scopes": "Scopes",
-      "scopesHint": "Space- or comma-separated scope names (e.g. profile email appraisal.read).",
-      "redirectUris": "Redirect URIs",
-      "redirectUrisHint": "One per line. Required for the authorization_code flow.",
-      "postLogoutRedirectUris": "Post-Logout Redirect URIs",
-      "cancel": "Cancel",
-      "create": "Register",
-      "save": "Save",
-      "tokenLifetimes": "Token lifetimes (minutes)",
-      "tokenLifetimesHint": "Leave a field empty to inherit the server default (access and identity 15 minutes, refresh 7 days). Access and identity accept up to 1440 minutes (24 hours), refresh up to 43200 (30 days). Refresh tokens are rolling, so that one is an idle timeout — how long a session may go unused before the user must sign in again.",
-      "tokenLifetime": {
-        "access": "Access",
-        "identity": "Identity",
-        "refresh": "Refresh (session idle)"
-      },
-      "tokenLifetimeInherit": "Default",
-      "tokenLifetimeInvalid": "Whole number, 1–{{max}}",
-      "uploadSessionLifetime": "Upload session lifetime",
-      "uploadSessionLifetimeHint": "How long an upload session created by this system stays open. Leave empty to use the server default. Accepts 1 hour to 30 days.",
-      "uploadSessionLifetimeInvalid": "Whole number, 1–{{max}} {{unit}}",
-      "uploadSessionLifetimeUnit": {
-        "label": "Unit",
-        "hours": "Hours",
-        "days": "Days",
-        "hoursInline": "hours",
-        "daysInline": "days"
-      }
+    "footer": {
+      "count_one": "{{count}} item",
+      "count_other": "{{count}} items"
     },
     "grant": {
-      "authorization_code": "Authorization Code",
-      "client_credentials": "Client Credentials",
-      "refresh_token": "Refresh Token"
+      "authorization_code": "Authorization code",
+      "client_credentials": "Client credentials",
+      "refresh_token": "Refresh token"
+    },
+    "drawer": {
+      "editTitle": "OAuth Client",
+      "createTitle": "Register OAuth Client",
+      "createSubtitle": "Add an app or external system that will request tokens from the appraisal system",
+      "clientIdLabel": "Client ID",
+      "delete": "Delete Client",
+      "createNote": "The secret is shown once after registering",
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Register",
+      "sections": {
+        "general": "General",
+        "secret": "Client secret",
+        "access": "Access",
+        "redirect": "Redirect URI",
+        "lifetimes": "Token lifetime"
+      },
+      "type": "Client type",
+      "typeDesc": {
+        "confidential": "Back-end system that can keep a secret safe. A secret is generated for it.",
+        "public": "Browser or mobile app. No secret; uses PKCE."
+      },
+      "displayName": "Display name",
+      "clientId": "Client ID",
+      "clientIdPlaceholder": "Leave blank to generate",
+      "copyClientId": "Copy Client ID",
+      "fixedHint": "Client ID and type (Confidential / Public) cannot be changed after registering",
+      "secretSet": "Set",
+      "rotate": "Rotate secret",
+      "secretHint": "The secret is shown once, when created or rotated. Rotating invalidates the old secret immediately; the system using it must be updated.",
+      "grantTypes": "How it gets tokens (Grant type)",
+      "grantHint": "Authorization code = users sign in through SSO · Client credentials = system to system",
+      "scopes": "Scope",
+      "scopeGroupApp": "Appraisal system scopes",
+      "scopeGroupStandard": "Standard OpenID (user info)",
+      "scopeUnregistered": "{{scope}} is not a registered scope",
+      "noRegisteredScopes": "No scopes registered yet",
+      "scopePickHint": "Pick from registered scopes; no typing needed",
+      "manageScopes": "Manage scopes",
+      "redirectHidden": "Redirect URIs are hidden because they only apply to Authorization code",
+      "redirectAfterLogin": "After sign-in",
+      "redirectAfterLogout": "After sign-out",
+      "redirectUri": "Redirect URI",
+      "postLogoutUri": "Post-logout URI",
+      "redirectHint": "Must match exactly · required for Authorization code",
+      "addUri": "Add URI",
+      "removeUri": "Remove URI {{n}}",
+      "lifetimeDefault": "Using system defaults",
+      "lifetimeHasInvalid": "Has an invalid value",
+      "lifetimeEmpty": "Empty = use the system default",
+      "lifetimeInherit": "System default",
+      "lifetimeInvalid": "Whole number, 1–{{max}}",
+      "lifetimeMax": "Up to {{max}} minutes",
+      "minutes": "min",
+      "lifetime": {
+        "access": "Access token",
+        "identity": "Identity token",
+        "refresh": "Refresh token (idle timeout)",
+        "refreshOff": "Not used: Refresh token is off"
+      },
+      "upload": {
+        "label": "Upload session lifetime",
+        "hint": "How long an upload session of this client may stay open (1 hour – 30 days)",
+        "invalid": "Whole number, 1–{{max}} {{unit}}",
+        "unit": {
+          "label": "Unit",
+          "hours": "Hours",
+          "days": "Days",
+          "hoursInline": "hours",
+          "daysInline": "days"
+        }
+      }
     },
     "secret": {
-      "title": "Client Secret",
-      "createdIntro": "The client was registered. Copy the secret now — it will not be shown again.",
-      "rotatedIntro": "A new secret was generated. Copy it now — it will not be shown again.",
+      "title": "Client secret of {{name}}",
+      "createdSub": "Registered",
+      "rotatedSub": "A new secret was generated",
+      "warning": "Copy it now. Once you close this window the secret cannot be shown again; if lost, rotate to get a new one.",
       "clientId": "Client ID",
-      "secret": "Client Secret",
+      "secret": "Client secret",
       "copy": "Copy",
-      "copied": "Copied!",
+      "copied": "Copied",
+      "stored": "I have stored the secret safely",
       "done": "Done",
       "rotateConfirmTitle": "Rotate Client Secret",
       "rotateConfirmMessage": "The current secret will stop working immediately. Any integration using it must be updated. Continue?",
       "rotateConfirmButton": "Rotate"
     },
+    "emptyState": "No OAuth clients found",
+    "emptyFiltered": "No clients match your filters",
+    "loadFailed": "Failed to load OAuth clients",
     "delete": {
       "confirmTitle": "Delete OAuth Client",
       "confirmMessage": "This client and its authorizations will be removed. Applications using it will no longer be able to authenticate. Continue?",
@@ -99,44 +147,64 @@
       "updateFailed": "Failed to update client",
       "deleteFailed": "Failed to delete client",
       "rotateFailed": "Failed to rotate secret"
-    },
-    "emptyState": "No OAuth clients found",
-    "loadFailed": "Failed to load OAuth clients"
+    }
   },
   "scopes": {
     "page": {
-      "title": "OAuth Scopes",
-      "subtitle": "Define the API resources that clients can request"
-    },
-    "columns": {
-      "name": "Name",
-      "displayName": "Display Name",
-      "description": "Description",
-      "resources": "Resources",
-      "actions": "Actions"
-    },
-    "filters": {
-      "searchPlaceholder": "Search scopes...",
-      "clear": "Clear"
+      "title": "OAuth Scope",
+      "subtitle": "Permissions clients can request, and the APIs (resources) each one opens"
     },
     "actions": {
       "add": "Add Scope",
-      "edit": "Edit",
       "delete": "Delete"
     },
-    "form": {
-      "createTitle": "Add OAuth Scope",
-      "editTitle": "Edit OAuth Scope",
-      "name": "Name",
-      "nameHint": "Unique scope identifier (e.g. appraisal.read). Cannot be changed after creation.",
-      "displayName": "Display Name",
-      "description": "Description",
-      "resources": "Resources",
-      "resourcesHint": "Space- or comma-separated API resource identifiers.",
-      "cancel": "Cancel",
-      "create": "Create",
-      "save": "Save"
+    "filters": {
+      "searchPlaceholder": "Search scope name"
     },
+    "standardNote": "openid, email, profile, roles are standard OpenID scopes and need no registration",
+    "columns": {
+      "scope": "Scope",
+      "description": "Description",
+      "resources": "Resource",
+      "usedBy": "Used by clients",
+      "actions": "Actions"
+    },
+    "unused": "None yet",
+    "deleteBlocked": "Cannot delete: used by {{clients}}",
+    "footer": {
+      "count_one": "{{count}} item",
+      "count_other": "{{count}} items"
+    },
+    "drawer": {
+      "createTitle": "Add OAuth Scope",
+      "createSubtitle": "Register a permission that clients can request",
+      "usedByCount_one": "Used by {{count}} client",
+      "usedByCount_other": "Used by {{count}} clients",
+      "delete": "Delete Scope",
+      "cancel": "Cancel",
+      "save": "Save",
+      "create": "Create",
+      "sections": {
+        "info": "Scope details",
+        "resources": "Resources granted",
+        "usedBy": "Clients using this scope"
+      },
+      "name": "Scope name",
+      "namePlaceholder": "appraisal.read",
+      "nameFixed": "Cannot be changed after creation",
+      "nameHint": "Unique identifier, e.g. appraisal.read. Cannot be changed after creation.",
+      "displayName": "Display name",
+      "description": "Description",
+      "resources": "Resource (audience)",
+      "resourcesPlaceholder": "Type and press Enter",
+      "resourcesHint": "Tokens carrying this scope will have these resources as audience",
+      "removeResource": "Remove {{name}}",
+      "noClients": "No client uses this scope yet",
+      "usedByHint": "Remove the scope from every client before it can be deleted"
+    },
+    "emptyState": "No scopes found",
+    "emptyFiltered": "No scopes match your search",
+    "loadFailed": "Failed to load scopes",
     "delete": {
       "confirmTitle": "Delete Scope",
       "confirmMessage": "This scope will be permanently removed. Clients requesting it will be rejected. Continue?",
@@ -150,41 +218,53 @@
       "createFailed": "Failed to create scope",
       "updateFailed": "Failed to update scope",
       "deleteFailed": "Failed to delete scope"
-    },
-    "emptyState": "No scopes found",
-    "loadFailed": "Failed to load scopes"
+    }
   },
   "tokens": {
     "page": {
-      "title": "OAuth Authorizations & Tokens",
-      "subtitle": "View and revoke active grants and tokens"
+      "title": "Tokens and authorizations",
+      "subtitle": "See the permissions and tokens issued to each client, and revoke them if you suspect a leak"
     },
     "tabs": {
+      "label": "Item type",
       "authorizations": "Authorizations",
-      "tokens": "Tokens"
+      "tokens": "Token"
     },
     "filters": {
-      "clientId": "Client ID",
-      "clientIdPlaceholder": "Filter by client ID...",
-      "subject": "Subject",
-      "subjectPlaceholder": "Filter by subject...",
+      "client": "Client",
+      "allClients": "All clients",
+      "subjectPlaceholder": "Search Subject ID",
       "status": "Status",
-      "allStatuses": "All statuses",
-      "clear": "Clear filters"
+      "allStatuses": "All"
+    },
+    "status": {
+      "valid": "Valid",
+      "revoked": "Revoked",
+      "redeemed": "Redeemed",
+      "inactive": "Inactive"
     },
     "columns": {
       "subject": "Subject",
-      "clientId": "Client",
-      "status": "Status",
+      "client": "Client",
       "type": "Type",
-      "scopes": "Scopes",
-      "created": "Created",
+      "status": "Status",
+      "created": "Issued",
+      "scopes": "Scope",
       "expires": "Expires",
       "actions": "Actions"
     },
     "actions": {
       "revoke": "Revoke"
     },
+    "expiry": {
+      "expired": "Expired",
+      "minutes": "in {{n}} min",
+      "hours": "in {{n}} hr",
+      "days": "in {{n}} d"
+    },
+    "emptyAuthorizations": "No authorizations found",
+    "emptyTokens": "No tokens found",
+    "loadFailed": "Failed to load",
     "revoke": {
       "confirmTitle": "Revoke",
       "confirmMessageAuthorization": "Revoking this authorization will also revoke its tokens. Continue?",
@@ -193,9 +273,6 @@
       "cancelButton": "Cancel",
       "successToast": "Revoked",
       "errorToast": "Failed to revoke"
-    },
-    "emptyAuthorizations": "No authorizations found",
-    "emptyTokens": "No tokens found",
-    "loadFailed": "Failed to load"
+    }
   }
 }

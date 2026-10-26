@@ -2,11 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import axios from '@shared/api/axiosInstance';
-import type {
-  CreateScopeRequest,
-  OAuthScopeListResult,
-  UpdateScopeRequest,
-} from '../types';
+import type { CreateScopeRequest, OAuthScopeListResult, UpdateScopeRequest } from '../types';
 
 interface ListParams {
   search?: string;
@@ -19,8 +15,12 @@ export const oauthScopeKeys = {
   list: (params: ListParams) => ['oauth-scopes', 'list', params] as const,
 };
 
-export const useGetScopes = (params: ListParams = {}) => {
+// ponytail: scopes are few; one unpaged fetch feeds the list, its search and the client form's chips.
+export const FETCH_ALL_SCOPES = { pageNumber: 1, pageSize: 200 };
+
+export const useGetScopes = (params: ListParams = {}, enabled = true) => {
   return useQuery({
+    enabled,
     queryKey: oauthScopeKeys.list(params),
     queryFn: async (): Promise<OAuthScopeListResult> => {
       const { data } = await axios.get<OAuthScopeListResult>('/auth/scopes', {

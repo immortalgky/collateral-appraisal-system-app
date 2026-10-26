@@ -1,136 +1,132 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import SectionHeader from '@shared/components/sections/SectionHeader';
-import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
-import { TableRowSkeleton } from '@shared/components/Skeleton';
-import Pagination from '@shared/components/Pagination';
 import DataErrorState from '@shared/components/DataErrorState';
-import { useGetScopes, useDeleteScope } from '../api/oauthScopes';
-import OAuthScopeFormModal from '../components/OAuthScopeFormModal';
+import Icon from '@shared/components/Icon';
+import Input from '@shared/components/Input';
+import { TableRowSkeleton } from '@shared/components/Skeleton';
+import { useGetAllClients } from '../api/oauthClients';
+import { FETCH_ALL_SCOPES, useDeleteScope, useGetScopes } from '../api/oauthScopes';
+import OAuthScopeDrawer from '../components/OAuthScopeDrawer';
+import Tag from '../components/Tag';
 import type { OAuthScope } from '../types';
 
-const PAGE_SIZE = 50;
+const COLUMN_COUNT = 5;
 const SKELETON_COLUMNS = [
   { width: 'w-32' },
-  { width: 'w-40' },
   { width: 'w-64' },
-  { width: 'w-24' },
+  { width: 'w-20' },
+  { width: 'w-20' },
+  { width: 'w-6' },
 ];
+
+const thClass =
+  'px-4 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-(--palette-gray-600)';
 
 const OAuthScopeListPage = () => {
   const { t } = useTranslation('oauthAdmin');
 
-  const [searchInput, setSearchInput] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [pageIndex, setPageIndex] = useState(0);
-
-  const [showForm, setShowForm] = useState(false);
-  const [editTarget, setEditTarget] = useState<OAuthScope | null>(null);
+  const [search, setSearch] = useState('');
+  // Closing keeps the scope, so the drawer does not turn into the create form while it slides out.
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [editing, setEditing] = useState<OAuthScope | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<OAuthScope | null>(null);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      setPageIndex(0);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchInput]);
-
-  const { data, isLoading, isError, refetch } = useGetScopes({
-    search: debouncedSearch || undefined,
-    pageNumber: pageIndex + 1,
-    pageSize: PAGE_SIZE,
-  });
-
+  const { data, isLoading, isError, refetch } = useGetScopes(FETCH_ALL_SCOPES);
+  const clientsQuery = useGetAllClients();
   const deleteMutation = useDeleteScope();
 
-  const scopes = data?.items ?? [];
-  const totalCount = data?.count ?? 0;
+  // Which clients hold each scope. Deleting one that is still held would break those clients, so
+  // the delete button waits for the clients list (`usageKnown`) before it can enable.
+  const usageKnown = clientsQuery.isSuccess;
+  const usedBy = (name: string) =>
+    (clientsQuery.data?.items ?? []).filter(c => c.scopes.includes(name)).map(c => c.displayName);
 
-  const openCreate = () => {
-    setEditTarget(null);
-    setShowForm(true);
+  const all = data?.items ?? [];
+  const term = search.trim().toLowerCase();
+  const rows = all.filter(
+    s =>
+      !term ||
+      s.name.toLowerCase().includes(term) ||
+      (s.displayName ?? '').toLowerCase().includes(term),
+  );
+
+  const openPanel = (scope: OAuthScope | null) => {
+    setEditing(scope);
+    setPanelOpen(true);
   };
-  const openEdit = (scope: OAuthScope) => {
-    setEditTarget(scope);
-    setShowForm(true);
-  };
+
   const handleDeleteConfirm = () => {
     if (!deleteTarget) return;
-    deleteMutation.mutate(deleteTarget.id, {
-      onSuccess: () => setDeleteTarget(null),
-      onError: () => setDeleteTarget(null),
+    const target = deleteTarget;
+    deleteMutation.mutate(target.id, {
+      onSuccess: () => {
+        // Deleted from inside its own drawer: close it with the row.
+        if (editing?.id === target.id) setPanelOpen(false);
+      },
+      onSettled: () => setDeleteTarget(null),
     });
   };
 
   return (
-    <div className="px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex items-start justify-between">
-        <SectionHeader
-          title={t('scopes.page.title')}
-          subtitle={t('scopes.page.subtitle')}
-          icon="shield-halved"
-          iconColor="blue"
-        />
-        <Button onClick={openCreate}>
-          <Icon name="plus" style="regular" className="size-4 mr-1.5" />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="min-w-64 flex-1">
+          <h2 className="text-base font-semibold text-(--palette-ink)">{t('scopes.page.title')}</h2>
+          <p className="mt-0.5 text-xs text-(--palette-gray-500)">{t('scopes.page.subtitle')}</p>
+        </div>
+        <Button
+          onClick={() => openPanel(null)}
+          leftIcon={<Icon name="plus" style="regular" className="text-sm" />}
+        >
           {t('scopes.actions.add')}
         </Button>
       </div>
 
-      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
-        <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
-          <div className="relative min-w-64">
-            <Icon
-              name="magnifying-glass"
-              style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
-            />
-            <input
+      <div className="overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line-soft) px-4 py-2.5">
+          <div className="w-64">
+            <Input
               type="text"
-              value={searchInput}
-              onChange={e => setSearchInput(e.target.value)}
+              value={search}
+              onChange={e => setSearch(e.target.value)}
               placeholder={t('scopes.filters.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              aria-label={t('scopes.filters.searchPlaceholder')}
+              leftIcon={<Icon name="magnifying-glass" style="regular" className="text-sm" />}
             />
           </div>
-          {searchInput && (
-            <button
-              type="button"
-              onClick={() => setSearchInput('')}
-              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600)"
-            >
-              {t('scopes.filters.clear')}
-            </button>
-          )}
+          <span className="ml-auto text-xs text-(--palette-gray-500)">
+            {t('scopes.standardNote')}
+          </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-table">
-            <thead>
-              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('scopes.columns.name')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('scopes.columns.displayName')}
-                </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('scopes.columns.description')}
-                </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
-                  {t('scopes.columns.actions')}
+          <table className="w-full min-w-[56rem] table-fixed text-table">
+            <colgroup>
+              <col className="w-[24%]" />
+              <col />
+              <col className="w-[16%]" />
+              <col className="w-[18%]" />
+              <col className="w-14" />
+            </colgroup>
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="border-b border-(--palette-line)">
+                <th className={thClass}>{t('scopes.columns.scope')}</th>
+                <th className={thClass}>{t('scopes.columns.description')}</th>
+                <th className={thClass}>{t('scopes.columns.resources')}</th>
+                <th className={thClass}>{t('scopes.columns.usedBy')}</th>
+                <th className="px-4 py-2.5">
+                  <span className="sr-only">{t('scopes.columns.actions')}</span>
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
-                <TableRowSkeleton columns={SKELETON_COLUMNS} rows={5} />
+                <TableRowSkeleton columns={SKELETON_COLUMNS} rows={4} />
               ) : isError ? (
                 <tr>
-                  <td colSpan={4} className="py-4">
+                  <td colSpan={COLUMN_COUNT} className="py-4">
                     <DataErrorState
                       variant="inline"
                       title={t('scopes.loadFailed')}
@@ -138,75 +134,113 @@ const OAuthScopeListPage = () => {
                     />
                   </td>
                 </tr>
-              ) : scopes.length === 0 ? (
+              ) : rows.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="text-center py-12 text-(--palette-gray-400) text-sm">
-                    <Icon
-                      name="shield-halved"
-                      style="regular"
-                      className="size-8 mx-auto mb-2 opacity-40"
-                    />
-                    <p>{t('scopes.emptyState')}</p>
+                  <td
+                    colSpan={COLUMN_COUNT}
+                    className="py-12 text-center text-sm text-(--palette-gray-400)"
+                  >
+                    <Icon name="key" style="regular" className="mx-auto mb-2 text-3xl opacity-40" />
+                    <p>{all.length === 0 ? t('scopes.emptyState') : t('scopes.emptyFiltered')}</p>
                   </td>
                 </tr>
               ) : (
-                scopes.map(scope => (
-                  <tr
-                    key={scope.id}
-                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
-                  >
-                    <td className="px-4 py-3 font-mono text-xs text-(--palette-ink)">
-                      {scope.name}
-                    </td>
-                    <td className="px-4 py-3 text-(--palette-ink)">{scope.displayName || '—'}</td>
-                    <td className="px-4 py-3 text-(--palette-gray-500) max-w-md">
-                      <span className="block truncate" title={scope.description ?? ''}>
-                        {scope.description || '—'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      <div className="flex items-center justify-end gap-1">
+                rows.map(scope => {
+                  const users = usedBy(scope.name);
+                  const blocked = !usageKnown || users.length > 0;
+                  const deleteLabel =
+                    users.length > 0
+                      ? t('scopes.deleteBlocked', { clients: users.join(', ') })
+                      : t('scopes.actions.delete');
+                  return (
+                    <tr
+                      key={scope.id}
+                      tabIndex={0}
+                      onClick={() => openPanel(scope)}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && e.target === e.currentTarget) openPanel(scope);
+                      }}
+                      className="cursor-pointer align-top transition-colors even:bg-(--palette-surface-2)/50 hover:bg-(--palette-surface-2)"
+                    >
+                      <td className="px-4 py-2.5">
+                        <div
+                          className="truncate font-mono text-xs font-medium text-(--palette-ink)"
+                          title={scope.name}
+                        >
+                          {scope.name}
+                        </div>
+                        {scope.displayName && (
+                          <div
+                            className="truncate text-xs text-(--palette-gray-500)"
+                            title={scope.displayName}
+                          >
+                            {scope.displayName}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <span className="block truncate" title={scope.description ?? undefined}>
+                          {scope.description || (
+                            <span className="text-(--palette-gray-400)">—</span>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {scope.resources.map(resource => (
+                            <Tag key={resource} mono>
+                              {resource}
+                            </Tag>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-2.5">
+                        <div className="flex flex-wrap gap-1">
+                          {users.map(name => (
+                            <Tag key={name}>{name}</Tag>
+                          ))}
+                          {usageKnown && users.length === 0 && (
+                            <span className="text-(--palette-gray-400)">{t('scopes.unused')}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-1.5 text-right">
                         <button
                           type="button"
-                          onClick={() => openEdit(scope)}
-                          className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
-                          title={t('scopes.actions.edit')}
+                          disabled={blocked}
+                          onClick={e => {
+                            e.stopPropagation();
+                            setDeleteTarget(scope);
+                          }}
+                          aria-label={t('scopes.actions.delete')}
+                          title={deleteLabel}
+                          className="inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-400) enabled:hover:bg-danger/10 enabled:hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
                         >
-                          <Icon name="pen" style="regular" className="size-4" />
+                          <Icon name="trash" style="regular" className="text-sm" />
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => setDeleteTarget(scope)}
-                          className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
-                          title={t('scopes.actions.delete')}
-                        >
-                          <Icon name="trash" style="regular" className="size-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
 
-        {!isLoading && totalCount > 0 && (
-          <Pagination
-            currentPage={pageIndex}
-            totalPages={Math.ceil(totalCount / PAGE_SIZE)}
-            totalCount={totalCount}
-            pageSize={PAGE_SIZE}
-            onPageChange={setPageIndex}
-            showPageSizeSelector={false}
-          />
+        {!isLoading && !isError && (
+          <div className="border-t border-(--palette-line) bg-(--palette-surface-2) px-4 py-2 text-sm text-(--palette-gray-600) tabular-nums">
+            {t('scopes.footer.count', { count: rows.length })}
+          </div>
         )}
       </div>
 
-      <OAuthScopeFormModal
-        isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        scope={editTarget}
+      <OAuthScopeDrawer
+        isOpen={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        scope={editing}
+        usedBy={editing ? usedBy(editing.name) : []}
+        usageKnown={usageKnown}
+        onRequestDelete={setDeleteTarget}
       />
 
       <ConfirmDialog
