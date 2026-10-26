@@ -12,10 +12,14 @@ import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useCanOpenAppraisalWorkspace } from '@features/appraisal/hooks/useCanOpenAppraisalWorkspace';
 import { useGetAppraisalBrief } from '@/features/creditBrief/api/appraisalBrief';
 import DocumentList from '@/features/creditBrief/components/DocumentList';
-import CollateralList from '@/features/creditBrief/components/CollateralList';
-import { totalArea } from '@/features/creditBrief/sceneModel';
-import CollateralScene from '@/features/creditBrief/components/CollateralScene';
-import ProjectSummary from '@/features/creditBrief/components/ProjectSummary';
+import {
+  areaWords,
+  landAreaOf,
+  landPropertiesOf,
+  numberFormat,
+  projectArea,
+} from '@/features/creditBrief/sceneModel';
+import CollateralSceneSwitch from '@/features/creditBrief/components/CollateralSceneSwitch';
 import { teamsChatUrl } from '@/features/creditBrief/teamsChat';
 import ProgressSpine from '@/features/creditBrief/components/ProgressSpine';
 import { phaseLabel } from '@/features/creditBrief/phaseLabels';
@@ -121,7 +125,7 @@ interface ActivityTrackingContentProps {
 }
 
 const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) => {
-  const { t } = useTranslation(['appraisal', 'common']);
+  const { t, i18n } = useTranslation(['appraisal', 'common']);
   const localizeCompanyName = useLocalizedCompanyName();
   const canOpenWorkspace = useCanOpenAppraisalWorkspace();
   const location = useLocation();
@@ -199,29 +203,19 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
   const currentStepLabel = phaseLabel(t, currentStep?.group);
 
   /**
-   * Every square wa on the application, whatever kind of collateral carries it.
-   *
-   * Per-group totals answer "how much land is in THIS group", which is not the
-   * question a credit officer is asking — land arrives under several types at
-   * once (a bare parcel, a parcel with a building on it, a leasehold) and what
-   * matters is the site as a whole. Shown beside the item count so the two
-   * headline facts about the security sit together.
+   * The land of the application: the area of its land and land-and-building properties (a parcel,
+   * or a parcel with a building on it), summed as the hero sums it.
+   * A condo unit or a machine adds no land, and a block appraisal, which has no properties at all,
+   * takes its land from the project. Shown beside the item count so the two headline facts about
+   * the security sit together.
    */
   const applicationArea = useMemo(() => {
-    const fromAssets = totalArea(brief?.assets ?? []);
+    const fromAssets = landAreaOf(landPropertiesOf(brief?.assets ?? []));
     if (fromAssets) return fromAssets;
     // A block appraisal has no assets at all, so its land lives on the project.
     // Without this the header showed no area for an entire class of appraisal.
     const p = brief?.project;
-    return p
-      ? totalArea([
-          {
-            areaRai: p.landAreaRai,
-            areaNgan: p.landAreaNgan,
-            areaSquareWa: p.landAreaSquareWa,
-          } as (typeof brief.assets)[number],
-        ])
-      : null;
+    return p ? projectArea(p) : null;
     // `brief` as a whole: the callback reads two of its fields and the object is
     // replaced wholesale by the query, so narrowing the deps buys nothing.
   }, [brief]);
@@ -750,13 +744,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                   {applicationArea && (
                     <>
                       {' · '}
-                      {t('activityTracking.brief.collateral.totalArea', {
-                        area: [
-                          `${applicationArea.rai} ${t('activityTracking.brief.collateral.rai')}`,
-                          `${applicationArea.ngan} ${t('activityTracking.brief.collateral.ngan')}`,
-                          `${applicationArea.wa} ${t('activityTracking.brief.collateral.wa')}`,
-                        ].join(' '),
-                      })}
+                      {areaWords(t, applicationArea, numberFormat(i18n.language))}
                     </>
                   )}
                 </span>
@@ -766,18 +754,12 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                     brief.project && brief.project.towerCount > 0
                       ? 'activityTracking.brief.collateral.unitsOrHouses_unit'
                       : 'activityTracking.brief.collateral.unitsOrHouses_house',
-                    { count: projectUnits },
+                    { count: projectUnits, n: numberFormat(i18n.language)(projectUnits) },
                   )}
                   {applicationArea && (
                     <>
                       {' · '}
-                      {t('activityTracking.brief.collateral.totalArea', {
-                        area: [
-                          `${applicationArea.rai} ${t('activityTracking.brief.collateral.rai')}`,
-                          `${applicationArea.ngan} ${t('activityTracking.brief.collateral.ngan')}`,
-                          `${applicationArea.wa} ${t('activityTracking.brief.collateral.wa')}`,
-                        ].join(' '),
-                      })}
+                      {areaWords(t, applicationArea, numberFormat(i18n.language))}
                     </>
                   )}
                 </span>
@@ -792,15 +774,15 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                 {t('activityTracking.sections.noCollateral')}
               </p>
             ) : (
-              <>
-                {/* The shape of the site above the itemisation: a reader sees one
-                    parcel with a house on it, or a plant with twenty-eight
-                    machines, before reading a word. Renders nothing when the
-                    application holds only kinds it cannot draw. */}
-                <CollateralScene assets={brief.assets} project={brief.project} />
-                {brief.assets.length > 0 && <CollateralList assets={brief.assets} />}
-                {brief.project && <ProjectSummary project={brief.project} />}
-              </>
+              /* The shape of the site with the property list over it (or under it, where
+                 there is no 3D): a reader sees one parcel with a house on it, or a plant with
+                 twenty-eight machines, before reading a word. */
+              <CollateralSceneSwitch
+                assets={brief.assets}
+                project={brief.project}
+                machines={brief.machines}
+                appraisalId={brief.id}
+              />
             )}
           </Section>
         )}

@@ -30,6 +30,157 @@ export interface BriefAsset {
   condoFloors: number | null;
   /** The floor the unit is on, as stored — nvarchar, and '-' on rows nobody filled in. Parse defensively. */
   condoFloorNumber: string | null;
+
+  // ── descriptive fields the 3D scene draws from. Null when the property has no such detail. ──
+  /** LandShape code. */
+  landShapeType: string | null;
+  /** The appraiser's own words behind LandShape code 99. Absent on an older API. */
+  landShapeTypeOther?: string | null;
+  /** Metres. */
+  roadFrontage: number | null;
+  /** Centimetres. */
+  soilLevel: number | null;
+  /** Landfill code. */
+  landFillType: string | null;
+  /** The appraiser's own words behind Landfill code 99. Absent on an older API. */
+  landFillTypeOther?: string | null;
+  /** LandUse codes. */
+  landUseType: string[];
+  /** The system records no unit for either pond figure. */
+  pondArea: number | null;
+  pondDepth: number | null;
+  /** TRUE = the land is FAR from the electricity line (the FE label is "Far from Electricity"). */
+  farFromElectricity: boolean | null;
+  /** Metres. */
+  electricityDistance: number | null;
+  /** Metres. */
+  accessRoadWidth: number | null;
+  /** RoadSurface code. */
+  roadSurfaceType: string | null;
+  /** Only the directions that carry a text or a number. */
+  boundaries: BriefBoundary[];
+  isLandlocked: boolean | null;
+  isExpropriated: boolean | null;
+  isInExpropriationLine: boolean | null;
+  isEncroached: boolean | null;
+  isForestBoundary: boolean | null;
+  /** Square metres. */
+  totalBuildingArea: number | null;
+  /** Roof MATERIAL codes (multi-select), not a roof form. */
+  roofType: string[];
+  fenceType: string[];
+  isUnderConstruction: boolean | null;
+  /** No house number AND depreciation rows exist AND every row is an improvement: nothing to draw as a building. */
+  isDevelopmentOnly: boolean;
+  /** Development item rows (`BuildingDepreciationDetails` where `IsBuilding = 0`), in row order. */
+  improvements: BriefImprovement[];
+  /** Condo unit usable area, m². */
+  usableArea: number | null;
+  /** Facilities codes. */
+  facilityType: string[];
+  /** LocationView codes. */
+  locationViewType: string[];
+
+  // ── raw fields behind the report's property sentences (see scene3d/summaryText.ts). ──
+  // Zero and blank arrive as null where the report omits them. No appraised price is ever here.
+  /** Every land title of the property, in entry order. `[]` for non-land assets. */
+  landTitles?: BriefLandTitle[];
+  /** The deed address as names (Title masters): what the report's title clause prints. */
+  deedSubDistrictName?: string | null;
+  deedDistrictName?: string | null;
+  deedProvinceName?: string | null;
+  /** The property's location as names (DOPA masters): the report's property location. Can differ from the deed's. */
+  dopaSubDistrictName?: string | null;
+  dopaDistrictName?: string | null;
+  dopaProvinceName?: string | null;
+  /** The building's type label, or the free text behind type '99', else the property's own name. */
+  buildingDisplayName?: string | null;
+  /** Years; null when not entered. */
+  buildingAge?: number | null;
+  /** A Thai label (code '99' resolves to its remark). */
+  buildingCondition?: string | null;
+  /** 0 up to 100 (exclusive) while an inspection says work is under way; null otherwise. */
+  constructionProgressPercent?: number | null;
+  // condo only
+  roomNumber?: string | null;
+  buildingNumber?: string | null;
+  condoName?: string | null;
+  condoRegistrationNumber?: string | null;
+  builtOnTitleNumber?: string | null;
+  condoAreas?: BriefCondoArea[];
+  /** Government rate per square metre, as stored. */
+  governmentPricePerSqm?: number | null;
+  /** The appraiser's ตกสำรวจ flag: the report prints that word instead of the rate. */
+  isMissingFromSurvey?: boolean | null;
+  /** The free text behind code '99' (อื่นๆ) of the matching code list. May hold a raw '-': filter it. */
+  landUseTypeOther?: string | null;
+  /** The free text behind road surface code '99'. */
+  roadSurfaceTypeOther?: string | null;
+  roofTypeOther?: string | null;
+  fenceTypeOther?: string | null;
+  facilityTypeOther?: string | null;
+  locationViewTypeOther?: string | null;
+}
+
+/** One land title (deed). `titleTypeLabel` / `titleNumberPrefix` follow the report's TitleDeedLabel. */
+export interface BriefLandTitle {
+  titleType: string | null;
+  titleTypeLabel: string;
+  titleNumberPrefix: string;
+  titleNumber: string | null;
+  bookNumber: string | null;
+  pageNumber: string | null;
+  landParcelNumber: string | null;
+  surveyNumber: string | null;
+  rawang: string | null;
+  areaRai: number | null;
+  areaNgan: number | null;
+  areaSquareWa: number | null;
+  /** Government rate per square wa, as stored (the report prints a stored 0 too). */
+  governmentPricePerSqWa: number | null;
+  isMissingFromSurvey: boolean;
+}
+
+/** One area component of a condo unit; `description` is the appraiser's own label. */
+export interface BriefCondoArea {
+  description: string | null;
+  size: number;
+}
+
+/** One machine, with the fields the summary report describes it by. */
+export interface BriefMachine {
+  assetId: string;
+  groupNumber: number | null;
+  /** 'registered' | 'notRegistered' | 'notInstalled'. */
+  section: string;
+  machineName: string | null;
+  brand: string | null;
+  model: string | null;
+  registrationNumber: string | null;
+  serialNumber: string | null;
+  yearOfManufacture: number | null;
+  /** A Thai label. */
+  machineCondition: string | null;
+  /** '03' = surveyed but not found. */
+  conditionUse: string | null;
+  /** Null while the appraisal is not released to the caller: not shown, as with the appraised value. */
+  isPriceCertified: boolean | null;
+  registrationStatus: boolean;
+  /** '2' = under procurement. */
+  installationStatus: string | null;
+}
+
+/** What one side of the parcel adjoins. `distance` is the distance TO that neighbour, not the side's length. */
+export interface BriefBoundary {
+  direction: 'north' | 'south' | 'east' | 'west';
+  adjacentArea: string | null;
+  distance: number | null;
+}
+
+/** A free-text development item (fence, guard house, water tank…). No type code exists. */
+export interface BriefImprovement {
+  description: string | null;
+  area: number | null;
 }
 
 /** A person to contact. `department` rides along because IntAdmin is not scoped to one desk. */
@@ -131,6 +282,110 @@ export interface BriefProject {
   unitCount: number;
   /** Storeys of a house on a horizontal project — NOT the floor a condo unit is on. */
   unitStoreys: number | null;
+  /** Condo projects only: real towers, `[]` for a horizontal project. */
+  towers: BriefTower[];
+  /** Units recorded with no tower. Counted in the totals, never drawn as a building. */
+  unassignedUnits: number;
+  unassignedSoldUnits: number;
+
+  // ── horizontal (LB) project: the picture is a village of plots and houses ──
+  isUnderConstruction: boolean | null;
+  /** 0-100; null when none is recorded. */
+  constructionProgressPercent: number | null;
+  /** Facilities codes of the project's common area. */
+  facilities: string[];
+  /** The project parcel's descriptive fields; null when none is recorded. */
+  land: BriefProjectLand | null;
+  /** House models. `[]` for a condo project. */
+  houseModels: BriefHouseModel[];
+  /** Plots with their houses, in sequence order, at most 500 (`unitCount` is how many there are). `[]` for a condo project. */
+  plots: BriefPlot[];
+
+  // ── raw fields behind the report's project description ──
+  houseNumber?: string | null;
+  soi?: string | null;
+  road?: string | null;
+  /** Location as names (the `subDistrict` column is a geocode). */
+  subDistrictName?: string | null;
+  districtName?: string | null;
+  provinceName?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  /** Partial Gregorian date as typed: "YYYY", "YYYY-MM" or "YYYY-MM-DD". */
+  projectSaleLaunchDate?: string | null;
+  /** PublicUtility labels (an unmapped code stays as the code). */
+  utilities?: string[];
+  utilitiesOther?: string | null;
+  /** Facilities as labels; `facilities` holds the codes. */
+  facilityLabels?: string[];
+  facilitiesOther?: string | null;
+}
+
+export interface BriefProjectLand {
+  landShapeType: string | null;
+  /** Metres. */
+  roadFrontage: number | null;
+  accessRoadWidth: number | null;
+  roadSurfaceType: string | null;
+  landUseType: string[];
+  isLandlocked: boolean | null;
+  isExpropriated: boolean | null;
+  isInExpropriationLine: boolean | null;
+  isEncroached: boolean | null;
+  isForestBoundary: boolean | null;
+  landUseTypeOther?: string | null;
+}
+
+export interface BriefHouseModel {
+  id: string;
+  modelName: string | null;
+  /** BuildingType code; null in the dev data. */
+  buildingType: string | null;
+  buildingTypeOther: string | null;
+  numberOfFloors: number | null;
+  /** Square wa. */
+  standardLandArea: number | null;
+  /** Square metres. */
+  standardUsableArea: number | null;
+  roofType: string[];
+  fenceType: string[];
+  units: number | null;
+  soldUnits: number | null;
+  /** Houses of this model; null when not entered. */
+  numberOfHouse?: number | null;
+  /** The building type's Thai label, or the free text behind type '99'. */
+  buildingTypeDisplay?: string | null;
+  /** ProjectModels.UsableAreaMin, null when not entered; the report's model area is `standardUsableArea ?? usableAreaMin`. */
+  usableAreaMin?: number | null;
+  roofTypeOther?: string | null;
+  fenceTypeOther?: string | null;
+}
+
+export interface BriefPlot {
+  plotNumber: string | null;
+  houseNumber: string | null;
+  modelId: string | null;
+  modelType: string | null;
+  numberOfFloors: number | null;
+  /** Square wa. */
+  landArea: number | null;
+  /** Square metres. */
+  usableArea: number | null;
+  isSold: boolean | null;
+}
+
+export interface BriefTower {
+  towerName: string | null;
+  numberOfFloors: number | null;
+  numberOfUnits: number | null;
+  /** Units grouped by floor. `floor: null` collects units recorded with no floor. */
+  floors: BriefTowerFloor[];
+}
+
+export interface BriefTowerFloor {
+  floor: number | null;
+  units: number;
+  soldUnits: number;
 }
 
 export interface AppraisalBrief {
@@ -197,6 +452,8 @@ export interface AppraisalBrief {
   project: BriefProject | null;
 
   assets: BriefAsset[];
+  /** The machines, in the order the report prints them; each is also an entry in `assets`. */
+  machines?: BriefMachine[];
   documents: BriefDocument[];
 }
 
