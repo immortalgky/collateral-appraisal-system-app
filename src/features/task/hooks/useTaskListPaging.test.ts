@@ -9,10 +9,11 @@ const setup = (search = '') =>
   });
 
 describe('useTaskListPaging', () => {
-  it('starts sorted by the due date, ascending', () => {
+  it('starts with no sort field, leaving the order to the backend default', () => {
     const { result } = setup();
-    expect(result.current.queryParams).toMatchObject({ sortBy: 'dueAt', sortDir: 'asc' });
-    expect(result.current.sortProps).toMatchObject({ sortField: 'dueAt', sortDirection: 'asc' });
+    expect(result.current.queryParams.sortBy).toBeUndefined();
+    expect(result.current.queryParams.sortDir).toBe('asc');
+    expect(result.current.sortProps).toMatchObject({ sortField: null, sortDirection: 'asc' });
   });
 
   it('cycles a header through ascending, descending and off, and a new column starts ascending', () => {

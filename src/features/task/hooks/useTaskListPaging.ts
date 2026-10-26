@@ -12,8 +12,8 @@ import type { TaskFilterParams } from '../types';
  */
 export function useTaskListPaging(search: string, filters: TaskFilterParams) {
   const [pageSize, setPageSize] = useState(25);
-  // Most urgent first; the header cycle (ascending, descending, off) can still switch it off
-  const [sortField, setSortField] = useState<string | null>('dueAt');
+  // No sort field = the backend default order (assigned date, oldest first)
+  const [sortField, setSortField] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [picked, setPicked] = useState({ page: 0, search, filters, sortField, sortDirection });
 
