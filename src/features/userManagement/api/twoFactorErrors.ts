@@ -14,20 +14,21 @@ export const STALE_STATE_CODES = [
 
 /**
  * Text for a failed own-2FA call: a translation for each errorCode the API sends, else the
- * server's `detail`, else `fallback`.
+ * server's `detail`, else `fallback`. `invalidCode` replaces the text for a wrong code.
  */
-export const useTwoFactorErrorMessage = () => {
+export const useTwoFactorErrorMessage = (invalidCode?: string) => {
   const { t } = useTranslation(['userManagement']);
-  const byCode: Record<string, string> = {
-    [INVALID_TWO_FACTOR_CODE]: t('twoFactor.errors.invalidCode'),
-    TwoFactorLockedOut: t('twoFactor.errors.lockedOut'),
-    TwoFactorAlreadyEnabled: t('twoFactor.errors.alreadyEnabled'),
-    TwoFactorNotEnabled: t('twoFactor.errors.notEnabled'),
-    TwoFactorRequiredByPolicy: t('twoFactor.errors.requiredByPolicy'),
-    TwoFactorSaveFailed: t('twoFactor.errors.saveFailed'),
-  };
+  // A Map: errorCode comes from the server, and an object lookup would find "constructor".
+  const byCode = new Map([
+    [INVALID_TWO_FACTOR_CODE, invalidCode ?? t('twoFactor.errors.invalidCode')],
+    ['TwoFactorLockedOut', t('twoFactor.errors.lockedOut')],
+    ['TwoFactorAlreadyEnabled', t('twoFactor.errors.alreadyEnabled')],
+    ['TwoFactorNotEnabled', t('twoFactor.errors.notEnabled')],
+    ['TwoFactorRequiredByPolicy', t('twoFactor.errors.requiredByPolicy')],
+    ['TwoFactorSaveFailed', t('twoFactor.errors.saveFailed')],
+  ]);
   return (err: unknown, fallback: string) => {
     const { errorCode, detail } = extractApiError(err as AxiosError);
-    return (errorCode && byCode[errorCode]) || detail || fallback;
+    return (errorCode && byCode.get(errorCode)) || detail || fallback;
   };
 };

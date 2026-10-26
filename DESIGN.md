@@ -388,6 +388,8 @@ property forms and Block pages do not follow this list; they use the `FormTable`
   `DiscountedCashFlowHighestBestUsed`), and the inline month / year pickers of the dashboard calendar and gallery sort.
 - Outside property/Block forms, a few screens still use `FormCard` + `SectionHeader variant="card"` (icon tile,
   `rounded-2xl`). They are not form-system screens; do not copy that look into a property or Block form.
+- The sign-in page (`LoginPage` and `LanguageSwitcher onDark`) uses fixed px and literal colours on purpose, so it
+  matches the server-rendered identity provider pages pixel for pixel (no rem, no theme, 600px breakpoint).
 - Comments in `Button.tsx` and `SectionHeader.tsx` still quote the old 14px / 16px sizes. The classes are
   right; trust the tables above.
 

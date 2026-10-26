@@ -115,9 +115,10 @@ export const useSetupTwoFactor = () => {
 
 /**
  * Own 2FA mutations that move twoFactorEnabled / recoveryCodesLeft. Both /auth/me keys are
- * refreshed on success.
+ * refreshed on success, unless `endsSession`: then the server also ends this session, so a refetch
+ * would 401 and the caller signs out instead.
  */
-const useTwoFactorCodeMutation = <T>(path: string) => {
+const useTwoFactorCodeMutation = <T>(path: string, { endsSession = false } = {}) => {
   const queryClient = useQueryClient();
   const refreshMeOnRefusal = useRefreshMeOnRefusal();
   return useMutation({
@@ -127,6 +128,7 @@ const useTwoFactorCodeMutation = <T>(path: string) => {
       return data;
     },
     onSuccess: () => {
+      if (endsSession) return;
       queryClient.invalidateQueries({ queryKey: ME_KEY });
       queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
@@ -143,6 +145,13 @@ export const useDisableTwoFactor = () => useTwoFactorCodeMutation<void>('disable
 /** Replace all recovery codes; needs a current code. Returns the new ones (shown once). */
 export const useRegenerateRecoveryCodes = () =>
   useTwoFactorCodeMutation<RecoveryCodesResponse>('recovery-codes');
+
+/**
+ * Lost phone: turn 2FA off with a current code or a recovery code. The server ends every session of
+ * the user, this one included: the caller signs out.
+ */
+export const useSetUpNewDevice = () =>
+  useTwoFactorCodeMutation<void>('new-device', { endsSession: true });
 
 /** Admin: reset a user's 2FA (key, recovery codes, sessions) so they must set it up again. */
 export const useResetTwoFactor = () => {

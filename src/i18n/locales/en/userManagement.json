@@ -662,6 +662,15 @@
       "hint": "Enter the current 6-digit code. Your old recovery codes stop working.",
       "submit": "Generate"
     },
+    "newDevice": {
+      "button": "Set up a new device",
+      "title": "Set up a new device",
+      "hint": "Use this if you lost or replaced your phone. Enter the 6-digit code from your app, or a recovery code.",
+      "warning": "This turns two-factor authentication off and signs you out on every device; the old authenticator stops working. Sign in again and scan a new QR code: you are taken to the setup page if your organisation requires it, otherwise set it up again here in Profile.",
+      "codeLabel": "Authenticator code or recovery code",
+      "invalidCode": "That code is not valid. Check the 6-digit code or recovery code and try again.",
+      "submit": "Turn off and sign out"
+    },
     "recovery": {
       "title": "Your recovery codes",
       "warning": "Use these codes to sign in when you cannot access your authenticator app. Each code works once. They are shown only now and cannot be retrieved again. Keep them somewhere safe.",
