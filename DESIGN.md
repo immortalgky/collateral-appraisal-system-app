@@ -626,7 +626,8 @@ kind (`input | derived | text | action`), and its place in card mode. It replace
   "+ เพิ่ม…" (e.g. เพิ่มพื้นที่, เพิ่มเอกสารสิทธิ์), under the table, left-aligned, `mt-[0.7143rem]`; several adds
   (building: อาคาร / ส่วนพัฒนา) sit side by side with `gap-[0.5714rem]`. Compact = a link in the section band
   `actions`: `text-xs font-semibold text-primary-700 hover:underline`, prefixed "+ ", several separated by
-  `gap-[0.7143rem]`. The empty state keeps its own add button (below).
+  `gap-[0.7143rem]`; a table with its own `FormTableHeading` (`FormTableBlock`) puts it at the right end of that
+  heading instead. The empty state keeps its own add button (below).
 - **Row actions** (`FormTableRowActions`, last column, right-aligned, always visible): move up, move down,
   delete (only the ones the table supports). Icon button 2rem (28) Standard / 1.7143rem (24) Compact,
   `rounded-md`, icon 1.0714rem `text-(--palette-ink-2)`; hover `bg-(--palette-surface-3)`, delete hover
