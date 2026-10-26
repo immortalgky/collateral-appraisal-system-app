@@ -201,15 +201,13 @@ describe('TaskListingPage', () => {
     });
   });
 
-  it('first asks for the most urgent first: due date ascending', () => {
+  it('first asks for the backend default order: no sort field, so no column is sorted', () => {
     contentWidth(1100);
     useGetTasks.mockClear();
     render(<TaskListingPage />, { initialEntries: ['/tasks'] });
-    expect(useGetTasks.mock.calls[0][0]).toMatchObject({ sortBy: 'dueAt', sortDir: 'asc' });
-    expect(screen.getByRole('columnheader', { name: /SLA Due/ })).toHaveAttribute(
-      'aria-sort',
-      'ascending',
-    );
+    expect(useGetTasks.mock.calls[0][0]).toMatchObject({ sortDir: 'asc' });
+    expect(useGetTasks.mock.calls[0][0].sortBy).toBeUndefined();
+    expect(screen.getByRole('columnheader', { name: /SLA Due/ })).not.toHaveAttribute('aria-sort');
   });
 
   it('shows the filter panel at 1280px and over, and edits the same filters the query reads', async () => {

@@ -15,7 +15,7 @@ interface TaskListHeaderProps {
 }
 
 /**
- * The page header (SectionHeader: icon tile, title, subtitle) with the count beside the title, the
+ * The page header (SectionHeader: title, subtitle) with the count beside the title, the
  * My / Pool switch beside the text, and the quick-access row at the right.
  */
 export function TaskListHeader({
@@ -28,10 +28,10 @@ export function TaskListHeader({
   const { t } = useTranslation(['task', 'common']);
   return (
     <SectionHeader
-      // the page's own gap spaces it, not the section header's bottom margin
-      className="mb-0! shrink-0"
-      icon="list"
-      iconColor="purple"
+      // the page's own gap spaces it, not the section header's bottom margin. Without an icon
+      // SectionHeader reads as an in-card section (text-sm title, divider line); this is still
+      // the page header, so keep the text-base title and hide the divider from here.
+      className="mb-0! shrink-0 [&_h3]:text-base [&>hr]:hidden"
       title={t('task:page.title')}
       subtitle={t(activeTab === 'pool' ? 'task:page.subtitlePool' : 'task:page.subtitleMy')}
       titleAddon={
