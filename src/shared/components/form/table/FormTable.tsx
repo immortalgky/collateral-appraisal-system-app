@@ -91,9 +91,12 @@ export function FormTableRow(props: ComponentProps<'tr'>) {
 export function FormTableFrame({
   minWidth,
   bleed,
+  className,
   children,
 }: {
   minWidth?: number;
+  /** For the table itself (e.g. `table-fixed` with a `<colgroup>` in the children). */
+  className?: string;
   /** Standard: pad the edge cells 12px instead of relying on a padded parent (rows run full width). */
   bleed?: boolean;
   children: ReactNode;
@@ -103,7 +106,10 @@ export function FormTableFrame({
   const style = minWidth != null ? { minWidth: `${minWidth}rem` } : undefined;
   return (
     <div className="overflow-x-auto">
-      <table className={clsx(s.table, bleed && layout === 'standard' && BLEED)} style={style}>
+      <table
+        className={clsx(s.table, bleed && layout === 'standard' && BLEED, className)}
+        style={style}
+      >
         {children}
       </table>
     </div>

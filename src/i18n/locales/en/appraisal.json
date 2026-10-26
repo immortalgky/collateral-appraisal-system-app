@@ -2416,6 +2416,11 @@
       "currentValue": "Current value",
       "appraisedValue": "Appraised value (whole appraisal)"
     },
+    "override": {
+      "badge": "Edited",
+      "resetTitle": "Reset to the calculated value",
+      "hint": "calculated from {{pct}}% gives {{value}}"
+    },
     "tabs": {
       "items": "Work items"
     },
@@ -2457,10 +2462,11 @@
       "previousValue": "Previous value",
       "currentValue": "Value this round",
       "baht": "(Baht)",
-      "addItem": "+ Add item…",
+      "quickAdd": "Add:",
+      "addOther": "Other (type a name)",
+      "customNamePlaceholder": "Item name",
       "itemCount_one": "{{count}} item",
       "itemCount_other": "{{count}} items",
-      "groupTotal": "Total {{name}}",
       "buildingTotal": "Building total",
       "otherGroup": "Other",
       "workGroupsFailed": "Could not load the list of work items — reload the page to add items",

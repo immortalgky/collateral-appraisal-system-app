@@ -13900,6 +13900,12 @@
             "default": null,
             "nullable": true
           },
+          "currentValueOverride": {
+            "type": "number",
+            "format": "double",
+            "default": null,
+            "nullable": true
+          },
           "remark": {
             "type": "string",
             "default": null,
@@ -13944,6 +13950,7 @@
           "summaryPreviousValue",
           "summaryCurrentProgressPct",
           "summaryCurrentValue",
+          "isCurrentValueOverridden",
           "remark",
           "documentId",
           "documentFileName",
@@ -13990,6 +13997,9 @@
             "type": "number",
             "format": "double",
             "nullable": true
+          },
+          "isCurrentValueOverridden": {
+            "type": "boolean"
           },
           "remark": {
             "type": "string",
