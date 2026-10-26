@@ -5,7 +5,7 @@ import { render, screen, within } from '@/test/test-utils';
 import { FormReadOnlyContext } from '../context';
 import { FormLayoutProvider } from '../FormLayoutProvider';
 import type { FormLayoutMode } from '../formLayoutContext';
-import { FormTable, FormTableRowActions, TableAddSlotProvider } from '.';
+import { FormTable, FormTableBlock, FormTableRowActions, TableAddSlotProvider } from '.';
 import type { FormTableColumn, FormTableProps } from '.';
 
 type Row = { id: number; name: string; qty: number; value: number };
@@ -120,6 +120,53 @@ describe('FormTable', () => {
     expect(
       within(screen.getByTestId('body')).queryByRole('button', { name: /add item/i }),
     ).toBeNull();
+  });
+
+  describe('FormTableBlock', () => {
+    const renderBlock = (layout: FormLayoutMode, title?: string) => {
+      const Harness = () => {
+        const [slot, setSlot] = useState<HTMLElement | null>(null);
+        return (
+          <FormLayoutProvider layout={layout}>
+            <div data-testid="band" ref={setSlot} />
+            <TableAddSlotProvider value={layout === 'compact' ? slot : null}>
+              <FormTableBlock title={title}>
+                <FormTable columns={columns} rows={ROWS} rowKey={r => r.id} add={add} />
+              </FormTableBlock>
+            </TableAddSlotProvider>
+          </FormLayoutProvider>
+        );
+      };
+      return render(<Harness />);
+    };
+
+    it('puts the Compact add link in its own heading, not the band', () => {
+      renderBlock('compact', 'Items');
+      const heading = screen.getByText('Items').parentElement!;
+      expect(within(heading).getByRole('button', { name: /add item/i })).toBeInTheDocument();
+      expect(within(screen.getByTestId('band')).queryByRole('button')).toBeNull();
+    });
+
+    it('keeps the Compact add link in the band without a title', () => {
+      renderBlock('compact');
+      expect(within(screen.getByTestId('band')).getByRole('button')).toHaveTextContent(
+        '+ Add item',
+      );
+    });
+
+    it('keeps the Standard button under the table', () => {
+      renderBlock('standard', 'Items');
+      const button = screen.getByRole('button', { name: 'Add item' });
+      expect(
+        within(screen.getByText('Items')).queryByRole('button', {
+          name: /add item/i,
+        }),
+      ).toBeNull();
+      expect(
+        screen.getByRole('table').compareDocumentPosition(button) &
+          Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
   });
 
   it('keeps the Compact add link inline when there is no band', () => {
