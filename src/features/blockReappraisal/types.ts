@@ -2,6 +2,12 @@ import type { ProjectType } from '@/features/blockProject/types';
 
 // ─── List ──────────────────────────────────────────────────────────────────────
 
+/** List tabs: due (Pending), or marked "reappraisal not required" (Deleted). */
+export type BlockReappraisalListStatus = 'Pending' | 'Deleted';
+
+/** The due row's status: the two list tabs, or Consumed once a request was raised. */
+export type BlockReappraisalStatus = BlockReappraisalListStatus | 'Consumed';
+
 export interface BlockReappraisalDueListItem {
   collateralMasterId: string;
   oldAppraisalNumber: string | null;
@@ -13,6 +19,8 @@ export interface BlockReappraisalDueListItem {
   lastAppraisedDate: string | null;
   dueDate: string;
   remainingDay: number;
+  status: BlockReappraisalListStatus;
+  notRequiredRemark: string | null;
 }
 
 // ─── List query params ─────────────────────────────────────────────────────────
@@ -20,6 +28,8 @@ export interface BlockReappraisalDueListItem {
 export interface BlockReappraisalListParams {
   pageNumber?: number;
   pageSize?: number;
+  /** The tab; the API defaults to Pending. */
+  status?: BlockReappraisalListStatus;
   /** Matches either Project Name or Old Appraisal Report No. */
   search?: string;
   /** ISO date (yyyy-MM-dd) — inclusive lower bound on Last Appraised Date */
@@ -36,9 +46,10 @@ export interface BlockReappraisalListParams {
   sortDir?: 'asc' | 'desc';
 }
 
-export type BlockReappraisalFilterValues = Omit<
+/** The filter dialog's fields. */
+export type BlockReappraisalFilterValues = Pick<
   BlockReappraisalListParams,
-  'pageNumber' | 'pageSize'
+  'lastAppraisedDateFrom' | 'lastAppraisedDateTo' | 'remainingDayMin' | 'remainingDayMax'
 >;
 
 // ─── Detail ────────────────────────────────────────────────────────────────────
@@ -98,6 +109,9 @@ export interface BlockReappraisalDetailResult {
   soldUnits: number;
   lastAppraisedDate: string | null;
   dueDate: string;
+  status: BlockReappraisalStatus | null;
+  /** Why it was marked "reappraisal not required"; set while status is Deleted. */
+  notRequiredRemark: string | null;
   structure: BlockReappraisalStructure;
 }
 
