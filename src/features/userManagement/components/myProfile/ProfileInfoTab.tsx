@@ -19,6 +19,7 @@ const toForm = (me: UserProfile) => ({
   lastName: me.lastName,
   position: me.position ?? '',
   department: me.department ?? '',
+  phoneNumber: me.phoneNumber ?? '',
 });
 
 /**
@@ -43,7 +44,8 @@ const ProfileInfoTab = ({ me, isLdap }: ProfileInfoTabProps) => {
     form.firstName.trim() !== (me.firstName ?? '').trim() ||
     form.lastName.trim() !== (me.lastName ?? '').trim() ||
     form.position.trim() !== (me.position ?? '').trim() ||
-    form.department.trim() !== (me.department ?? '').trim();
+    form.department.trim() !== (me.department ?? '').trim() ||
+    form.phoneNumber.trim() !== (me.phoneNumber ?? '').trim();
 
   // ['me'] refetches on window focus. Without this, an admin editing the same user in
   // another window would leave this form holding the old values, and the next Save
@@ -68,6 +70,7 @@ const ProfileInfoTab = ({ me, isLdap }: ProfileInfoTabProps) => {
         avatarUrl: me.avatarUrl ?? null,
         position: form.position.trim() || null,
         department: form.department.trim() || null,
+        phoneNumber: form.phoneNumber.trim() || null,
       },
       {
         onSuccess: () => toast.success(t('toasts.profileUpdated')),
@@ -92,6 +95,7 @@ const ProfileInfoTab = ({ me, isLdap }: ProfileInfoTabProps) => {
             <ReadOnlyField label={t('fields.lastName')} value={me.lastName} />
             <ReadOnlyField label={t('fields.position')} value={me.position} />
             <ReadOnlyField label={t('fields.department')} value={me.department} />
+            <ReadOnlyField label={t('fields.phone')} value={me.phoneNumber} />
           </div>
         ) : (
           <>
@@ -125,6 +129,13 @@ const ProfileInfoTab = ({ me, isLdap }: ProfileInfoTabProps) => {
                 onChange={e => updateField('department', e.currentTarget.value)}
                 maxLength={100}
                 placeholder={t('placeholders.department')}
+              />
+              <TextInput
+                label={t('fields.phone')}
+                value={form.phoneNumber}
+                onChange={e => updateField('phoneNumber', e.currentTarget.value)}
+                maxLength={40}
+                placeholder={t('placeholders.phone')}
               />
             </div>
             <div className="mt-4 flex justify-end gap-2">
