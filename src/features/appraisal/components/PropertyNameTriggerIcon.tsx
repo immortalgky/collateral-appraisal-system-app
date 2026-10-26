@@ -88,7 +88,7 @@ export function PropertyNameTriggerIcon({ propertyType }: PropertyNameFillTrigge
       onMouseDown={e => e.preventDefault()}
       title={label}
       aria-label={label}
-      className="pointer-events-auto p-1 -m-1 text-gray-400 hover:text-blue-600 transition-colors cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      className="pointer-events-auto p-1 -m-1 text-(--palette-gray-400) hover:text-blue-600 dark:hover:text-blue-400 transition-colors cursor-pointer rounded focus:outline-none focus:ring-2 focus:ring-primary-500/50"
     >
       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path

@@ -209,7 +209,7 @@ const NodeCard = ({ node, now, attentionOnly, maxDepth, onSelect }: NodeCardProp
               ? 'bg-base-300 text-base-content/60'
               : stale
                 ? 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
-                : 'bg-primary/10 text-primary',
+                : 'bg-primary/10 text-(--palette-primary-text)',
           )}
         >
           {hasSnapshot && !stale && (
@@ -361,7 +361,9 @@ const QueueHealthPanel = ({
               onClick={() => setAttentionOnly(true)}
               className={clsx(
                 'px-2.5 py-1 rounded-lg text-[12px]',
-                attentionOnly ? 'bg-base-100 text-primary shadow-sm' : 'text-base-content/60',
+                attentionOnly
+                  ? 'bg-base-100 text-(--palette-primary-text) shadow-sm'
+                  : 'text-base-content/60',
               )}
             >
               {t('queueHealth.toggleAttention')}
@@ -372,7 +374,9 @@ const QueueHealthPanel = ({
               onClick={() => setAttentionOnly(false)}
               className={clsx(
                 'px-2.5 py-1 rounded-lg text-[12px]',
-                !attentionOnly ? 'bg-base-100 text-primary shadow-sm' : 'text-base-content/60',
+                !attentionOnly
+                  ? 'bg-base-100 text-(--palette-primary-text) shadow-sm'
+                  : 'text-base-content/60',
               )}
             >
               {t('queueHealth.toggleAll')}

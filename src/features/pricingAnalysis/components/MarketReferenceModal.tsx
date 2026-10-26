@@ -98,19 +98,19 @@ export function MarketReferenceModal({
         <div className="flex min-h-full items-start justify-center p-4 pt-16">
           <DialogPanel
             transition
-            className="w-full max-w-8xl bg-white rounded-xl shadow-xl overflow-hidden transition-all duration-300 ease-out data-closed:opacity-0 data-closed:scale-95"
+            className="w-full max-w-8xl bg-(--palette-surface) rounded-xl shadow-xl overflow-hidden transition-all duration-300 ease-out data-closed:opacity-0 data-closed:scale-95"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line) bg-(--palette-surface-2)">
               <div className="flex items-center gap-2.5">
-                <div className="flex items-center justify-center size-7 rounded-lg bg-primary/10 text-primary">
+                <div className="flex items-center justify-center size-7 rounded-lg bg-primary/10 text-(--palette-primary-text)">
                   <Icon name="chart-bar" className="size-3.5" />
                 </div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold text-(--palette-ink)">
                   {t('marketRef.modalTitle')}
                 </h2>
                 {anchorRefKey && (
-                  <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-xs font-medium border border-blue-100">
+                  <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 text-xs font-medium border border-blue-100 dark:border-blue-500/20">
                     {anchorRefKey}
                   </span>
                 )}
@@ -118,7 +118,7 @@ export function MarketReferenceModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
                 aria-label="Close"
               >
                 <Icon name="xmark" style="regular" className="size-5" />

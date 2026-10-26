@@ -7,6 +7,7 @@ import { useDebounce } from '@/shared/hooks/useDebounce';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
+import Highlight from '@/shared/components/search/Highlight';
 import Pagination from '@/shared/components/Pagination';
 import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import { DateRangeInput } from '@/shared/components/inputs';
@@ -14,22 +15,28 @@ import { formatDate } from '@/shared/utils/dateUtils';
 import { formatNumber } from '@/shared/utils/formatUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAddressStore } from '@/shared/store';
+import { MIN_SEARCH_LENGTH } from '@shared/api/search';
 import { useAppraisalSearch } from '@/features/appraisal/api/appraisalSearch';
 import type { AppraisalDto } from '@/features/appraisal/api/appraisalSearch';
 import {
+  fetchConstructionChainStatus,
   fetchPriorAppraisal,
   CARRYABLE_STATUS,
+  type ConstructionBlockReason,
+  type ConstructionChainStatus,
   type PriorAppraisal,
 } from '@/features/appraisal/api/priorAppraisal';
+import { CI_PURPOSES } from '../configs/fields';
 
 interface SearchAppraisalModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (template: PriorAppraisal) => void;
+  /** `chain` is read only for a construction-inspection purpose, and then it is never blocked. */
+  onSelect: (template: PriorAppraisal, chain?: ConstructionChainStatus) => void;
+  /** The request's purpose: a construction-inspection one asks the chain status before a pick. */
+  purpose?: string | null;
 }
 
-/** The API matches nothing for a term shorter than this (AppraisalSearchPredicate.MinTermLength). */
-const MIN_TERM = 3;
 const PAGE_SIZES = [10, 25, 50];
 const SKELETON_ROWS = 6;
 
@@ -47,24 +54,6 @@ const COLUMNS =
   'grid items-center gap-x-4 grid-cols-[7.5rem_minmax(0,2fr)_minmax(0,1.2fr)_8.5rem_8.5rem] ' +
   '@min-[62rem]:grid-cols-[7.5rem_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_8.5rem_8.5rem]';
 const APPRAISER_CELL = 'hidden @min-[62rem]:block';
-
-/** The matched part of the term in bold-tinted text. A leading * only asks for a substring match. */
-const Highlight = ({ text, term }: { text: string | null | undefined; term: string }) => {
-  if (!text) return <>—</>;
-  const needle = term.trim().replace(/^\*/, '').toLowerCase();
-  if (needle.length < MIN_TERM) return <>{text}</>;
-  const at = text.toLowerCase().indexOf(needle);
-  if (at < 0) return <>{text}</>;
-  return (
-    <>
-      {text.slice(0, at)}
-      <mark className="rounded-sm bg-amber-100 px-px text-inherit">
-        {text.slice(at, at + needle.length)}
-      </mark>
-      {text.slice(at + needle.length)}
-    </>
-  );
-};
 
 type SortState = { by: SortKey; dir: 'asc' | 'desc' } | null;
 type ShownSort = NonNullable<SortState>;
@@ -101,7 +90,9 @@ const SortHead = ({
         className={clsx(
           'group inline-flex cursor-pointer items-center gap-1 whitespace-nowrap text-left font-semibold',
           // The sorted header stays green on hover (a shade darker); the others darken to grey-900
-          active ? 'text-primary hover:text-primary-700' : 'hover:text-gray-900',
+          active
+            ? 'text-(--palette-primary-text) hover:text-(--palette-accent-ink)'
+            : 'hover:text-(--palette-ink)',
         )}
       >
         {label}
@@ -110,7 +101,9 @@ const SortHead = ({
           name={active ? (sort.dir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
           className={clsx(
             'size-2.5',
-            active ? 'text-primary' : 'text-gray-300 group-hover:text-gray-500',
+            active
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-300) group-hover:text-(--palette-gray-500)',
           )}
         />
       </button>
@@ -119,12 +112,17 @@ const SortHead = ({
 };
 
 const Muted = ({ children, title }: { children: ReactNode; title?: string }) => (
-  <span className="block truncate text-xs text-gray-500" title={title}>
+  <span className="block truncate text-xs text-(--palette-gray-500)" title={title}>
     {children}
   </span>
 );
 
-const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModalProps) => {
+const SearchAppraisalModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  purpose,
+}: SearchAppraisalModalProps) => {
   const { t } = useTranslation(['request', 'common']);
   const localizeCompany = useLocalizedCompanyName();
   const listId = useId();
@@ -143,8 +141,10 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
   const debouncedSearch = useDebounce(searchQuery.trim(), 350);
   // A term that is too short is not sent: the API would answer with nothing at all
   const termTooShort =
-    searchQuery.trim().length > 0 && searchQuery.trim().replace(/^\*/, '').length < MIN_TERM;
-  const term = debouncedSearch.replace(/^\*/, '').length >= MIN_TERM ? debouncedSearch : '';
+    searchQuery.trim().length > 0 &&
+    searchQuery.trim().replace(/^\*/, '').length < MIN_SEARCH_LENGTH;
+  const term =
+    debouncedSearch.replace(/^\*/, '').length >= MIN_SEARCH_LENGTH ? debouncedSearch : '';
 
   const titleAddresses = useAddressStore(s => s.titleAddresses);
   const dopaAddresses = useAddressStore(s => s.dopaAddresses);
@@ -228,6 +228,43 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
     onClose();
   };
 
+  const blockedMessage = (
+    reason: ConstructionBlockReason,
+    chain: ConstructionChainStatus,
+    template: PriorAppraisal,
+  ) => {
+    const { construction } = chain;
+    // A missing round number (the 100% is not an inspection round) or date picks the variant that
+    // leaves that part out, so the text never reads "round " or "(on )"
+    const date = construction.sourceCompletedAt
+      ? formatDate(construction.sourceCompletedAt, 'dd/MM/yyyy')
+      : '';
+    const noRound = construction.sourceInspectionNumber == null;
+    const noDate = !date;
+    // Literal keys, so the typed `t` still checks each against the locale
+    const key =
+      reason !== 'ConstructionComplete'
+        ? reason
+        : noRound
+          ? noDate
+            ? 'ConstructionCompleteNoRoundNoDate'
+            : 'ConstructionCompleteNoRound'
+          : noDate
+            ? 'ConstructionCompleteNoDate'
+            : reason;
+    return t(`constructionGuard.blocked.${key}`, {
+      // The appraisal that holds the 100% may be another one of the chain than the one picked
+      no:
+        reason === 'ConstructionComplete'
+          ? construction.sourceAppraisalNumber
+          : template.appraisalNumber,
+      n: construction.sourceInspectionNumber,
+      date,
+      later: chain.laterInspection?.appraisalNumber,
+      req: chain.openInspectionRequest?.requestNumber,
+    });
+  };
+
   const pick = async (appraisalId: string) => {
     if (isFetchingTemplate) return;
     const token = ++pickToken.current;
@@ -243,7 +280,19 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         setSelectedId(null);
         return;
       }
-      onSelect(template);
+      // A construction inspection follows the chain's latest construction: some appraisals cannot be
+      // its prior (the API refuses them at submit as well; this says so before the maker goes on).
+      let chain: ConstructionChainStatus | undefined;
+      if (CI_PURPOSES.includes(purpose ?? '')) {
+        chain = await fetchConstructionChainStatus(appraisalId);
+        if (!current()) return;
+        if (chain.blockReason) {
+          toast.error(blockedMessage(chain.blockReason, chain, template));
+          setSelectedId(null);
+          return;
+        }
+      }
+      onSelect(template, chain);
       handleClose();
     } catch (err) {
       if (!current()) return;
@@ -313,7 +362,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
             <Icon
               name="magnifying-glass"
               style="regular"
-              className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-gray-400"
+              className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-(--palette-gray-400)"
             />
             <input
               type="text"
@@ -326,7 +375,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               onKeyDown={onSearchKeyDown}
-              className="h-10 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+              className="h-10 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
               autoFocus // eslint-disable-line jsx-a11y/no-autofocus -- a search dialog: typing is the first thing to do
             />
             {searchQuery && (
@@ -335,7 +384,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                 onClick={() => setSearchQuery('')}
                 aria-label={t('searchAppraisal.clearSearch')}
                 title={t('searchAppraisal.clearSearch')}
-                className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 grid size-6 -translate-y-1/2 cursor-pointer place-items-center rounded text-(--palette-gray-400) hover:text-(--palette-gray-600)"
               >
                 <Icon name="xmark" style="solid" className="size-3" />
               </button>
@@ -353,33 +402,33 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
             <button
               type="button"
               onClick={() => setDates({ from: '', to: '' })}
-              className="cursor-pointer text-xs font-medium text-primary hover:underline"
+              className="cursor-pointer text-xs font-medium text-(--palette-primary-text) hover:underline"
             >
               {t('searchAppraisal.clearFilters')}
             </button>
           )}
         </div>
 
-        <div className="flex min-h-4 items-baseline justify-between gap-3 text-xs text-gray-500">
-          <span className={termTooShort ? 'text-amber-700' : undefined}>
+        <div className="flex min-h-4 items-baseline justify-between gap-3 text-xs text-(--palette-gray-500)">
+          <span className={termTooShort ? 'text-(--palette-warn)' : undefined}>
             {termTooShort
-              ? t('searchAppraisal.minChars', { n: MIN_TERM })
+              ? t('searchAppraisal.minChars', { n: MIN_SEARCH_LENGTH })
               : t('searchAppraisal.searchHint')}
           </span>
           {skeleton ? (
-            <span className="shrink-0 text-gray-400" aria-live="polite">
+            <span className="shrink-0 text-(--palette-gray-400)" aria-live="polite">
               {t('searchAppraisal.searching')}
             </span>
           ) : (
             !isError && (
-              <span className="shrink-0 font-medium text-gray-700" aria-live="polite">
+              <span className="shrink-0 font-medium text-(--palette-ink)" aria-live="polite">
                 {t('searchAppraisal.found', { n: formatNumber(total) })}
               </span>
             )
           )}
         </div>
 
-        <div className="@container relative overflow-hidden rounded-lg border border-gray-200">
+        <div className="@container relative overflow-hidden rounded-lg border border-(--palette-line)">
           {dimmed && (
             <progress
               aria-hidden
@@ -390,7 +439,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
             role="row"
             className={clsx(
               COLUMNS,
-              'whitespace-nowrap border-b border-gray-200 bg-gray-50 px-3 py-2 text-xs font-semibold text-gray-600',
+              'whitespace-nowrap border-b border-(--palette-line) bg-(--palette-surface-2) px-3 py-2 text-xs font-semibold text-(--palette-gray-600)',
             )}
           >
             <SortHead
@@ -433,29 +482,35 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
               Array.from({ length: SKELETON_ROWS }, (_, i) => (
                 <div
                   key={i}
-                  className={clsx(COLUMNS, 'border-b border-gray-100 px-3 py-2.5 last:border-b-0')}
+                  className={clsx(
+                    COLUMNS,
+                    'border-b border-(--palette-line-soft) px-3 py-2.5 last:border-b-0',
+                  )}
                   aria-hidden
                 >
                   <div className="space-y-1.5">
-                    <div className="h-3 w-24 animate-pulse rounded bg-gray-200" />
-                    <div className="h-2.5 w-20 animate-pulse rounded bg-gray-100" />
+                    <div className="h-3 w-24 animate-pulse rounded bg-(--palette-line)" />
+                    <div className="h-2.5 w-20 animate-pulse rounded bg-(--palette-surface-3)" />
                   </div>
-                  <div className="h-3 w-32 animate-pulse rounded bg-gray-200" />
+                  <div className="h-3 w-32 animate-pulse rounded bg-(--palette-line)" />
                   <div className="space-y-1.5">
-                    <div className="h-3 w-36 animate-pulse rounded bg-gray-200" />
-                    <div className="h-2.5 w-24 animate-pulse rounded bg-gray-100" />
+                    <div className="h-3 w-36 animate-pulse rounded bg-(--palette-line)" />
+                    <div className="h-2.5 w-24 animate-pulse rounded bg-(--palette-surface-3)" />
                   </div>
                   <div
-                    className={clsx(APPRAISER_CELL, 'h-3 w-20 animate-pulse rounded bg-gray-100')}
+                    className={clsx(
+                      APPRAISER_CELL,
+                      'h-3 w-20 animate-pulse rounded bg-(--palette-surface-3)',
+                    )}
                   />
-                  <div className="ml-auto h-3 w-16 animate-pulse rounded bg-gray-200" />
-                  <div className="mx-auto h-3 w-16 animate-pulse rounded bg-gray-200" />
+                  <div className="ml-auto h-3 w-16 animate-pulse rounded bg-(--palette-line)" />
+                  <div className="mx-auto h-3 w-16 animate-pulse rounded bg-(--palette-line)" />
                 </div>
               ))}
 
             {isError && !skeleton && (
               <div role="alert" className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-                <p className="m-0 text-sm font-medium text-gray-800">
+                <p className="m-0 text-sm font-medium text-(--palette-ink)">
                   {t('searchAppraisal.errorTitle')}
                 </p>
                 <Button variant="outline" size="sm" onClick={() => void refetch()}>
@@ -466,11 +521,15 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
 
             {!skeleton && !isError && items.length === 0 && (
               <div className="flex flex-col items-center gap-1.5 px-4 py-10 text-center">
-                <Icon name="magnifying-glass" style="regular" className="size-5 text-gray-300" />
-                <p className="m-0 text-sm font-medium text-gray-800">
+                <Icon
+                  name="magnifying-glass"
+                  style="regular"
+                  className="size-5 text-(--palette-gray-300)"
+                />
+                <p className="m-0 text-sm font-medium text-(--palette-ink)">
                   {t('searchAppraisal.emptyTitle')}
                 </p>
-                <p className="m-0 max-w-md text-xs text-gray-500">
+                <p className="m-0 max-w-md text-xs text-(--palette-gray-500)">
                   {t('searchAppraisal.emptyHint')}
                 </p>
                 {filtered && (
@@ -479,7 +538,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                       <button
                         type="button"
                         onClick={() => setDates({ from: '', to: '' })}
-                        className="cursor-pointer text-primary hover:underline"
+                        className="cursor-pointer text-(--palette-primary-text) hover:underline"
                       >
                         {t('searchAppraisal.clearFilters')}
                       </button>
@@ -488,7 +547,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                       <button
                         type="button"
                         onClick={() => setSearchQuery('')}
-                        className="cursor-pointer text-primary hover:underline"
+                        className="cursor-pointer text-(--palette-primary-text) hover:underline"
                       >
                         {t('searchAppraisal.clearSearch')}
                       </button>
@@ -526,34 +585,44 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                     onMouseMove={() => i !== active && setActive(i)}
                     className={clsx(
                       COLUMNS,
-                      'cursor-pointer border-b border-gray-100 px-3 py-2 text-table last:border-b-0',
-                      i === active ? 'bg-primary/5' : 'hover:bg-gray-50',
+                      'cursor-pointer border-b border-(--palette-line-soft) px-3 py-2 text-table last:border-b-0',
+                      i === active ? 'bg-primary/5' : 'hover:bg-(--palette-surface-2)',
                       loading && 'opacity-60',
                       isFetchingTemplate && 'cursor-wait',
                     )}
                   >
                     <div className="min-w-0">
-                      <span className="block truncate font-semibold text-primary">
-                        <Highlight text={item.appraisalNumber} term={searchQuery} />
+                      <span className="block truncate font-semibold text-(--palette-primary-text)">
+                        <Highlight text={item.appraisalNumber} term={searchQuery} appraisalNumber />
                       </span>
+                      {/* What kind of appraisal it is: the inspection round, else the purpose */}
+                      {(item.inspectionNumber != null || item.purpose) && (
+                        <Muted>
+                          {item.inspectionNumber != null ? (
+                            t('requestForm.prior.round', { n: item.inspectionNumber })
+                          ) : (
+                            <ParameterDisplay group="AppraisalPurpose" code={item.purpose} />
+                          )}
+                        </Muted>
+                      )}
                     </div>
                     <div className="min-w-0">
                       <span className="flex items-baseline gap-1.5">
                         <span
-                          className="truncate text-gray-900"
+                          className="truncate text-(--palette-ink)"
                           title={item.customerName ?? undefined}
                         >
                           <Highlight text={item.customerName} term={searchQuery} />
                         </span>
                         {item.customerCount > 1 && (
-                          <span className="shrink-0 rounded bg-gray-100 px-1 text-xs text-gray-600">
+                          <span className="shrink-0 rounded bg-(--palette-surface-3) px-1 text-xs text-(--palette-gray-600)">
                             {t('searchAppraisal.moreCustomers', { n: item.customerCount - 1 })}
                           </span>
                         )}
                       </span>
                     </div>
                     <div className="min-w-0">
-                      <span className="block truncate text-gray-900">
+                      <span className="block truncate text-(--palette-ink)">
                         {codes.length > 0
                           ? codes.map((code, k) => (
                               <span key={code}>
@@ -563,7 +632,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                             ))
                           : '—'}
                         {item.propertyCount > 1 && (
-                          <span className="text-gray-500">
+                          <span className="text-(--palette-gray-500)">
                             {' · '}
                             {t('searchAppraisal.propertyCount', { n: item.propertyCount })}
                           </span>
@@ -572,25 +641,29 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
                       <Muted title={place(item)}>{place(item) || '—'}</Muted>
                     </div>
                     <div className={clsx(APPRAISER_CELL, 'min-w-0')}>
-                      <span className="block truncate text-gray-700" title={company ?? undefined}>
+                      <span
+                        className="block truncate text-(--palette-ink)"
+                        title={company ?? undefined}
+                      >
                         {company ?? '—'}
                       </span>
-                      {item.inspectionNumber != null && (
-                        <Muted>{t('searchAppraisal.round', { n: item.inspectionNumber })}</Muted>
-                      )}
                     </div>
                     <div className="text-right tabular-nums">
-                      <span className={value ? 'font-medium text-gray-900' : 'text-gray-400'}>
+                      <span
+                        className={
+                          value ? 'font-medium text-(--palette-ink)' : 'text-(--palette-gray-400)'
+                        }
+                      >
                         {value ?? '—'}
                       </span>
                     </div>
-                    <div className="text-center tabular-nums text-gray-700">
+                    <div className="text-center tabular-nums text-(--palette-ink)">
                       {item.appraisalDate ? formatDate(item.appraisalDate, 'dd/MM/yyyy') : '—'}
                       {loading && (
                         <Icon
                           name="spinner"
                           style="solid"
-                          className="ml-1 inline size-3 animate-spin text-primary"
+                          className="ml-1 inline size-3 animate-spin text-(--palette-primary-text)"
                         />
                       )}
                     </div>
@@ -613,7 +686,7 @@ const SearchAppraisalModal = ({ isOpen, onClose, onSelect }: SearchAppraisalModa
         )}
 
         <div className="flex items-center justify-between gap-3">
-          <p className="m-0 text-xs text-gray-500">{t('searchAppraisal.footerHint')}</p>
+          <p className="m-0 text-xs text-(--palette-gray-500)">{t('searchAppraisal.footerHint')}</p>
           <Button variant="outline" onClick={handleClose}>
             {t('common:actions.cancel')}
           </Button>

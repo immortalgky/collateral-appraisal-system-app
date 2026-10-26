@@ -70,17 +70,17 @@ const formatAmount = (amount: number | null | undefined): string =>
 const ACCENTS = {
   primary: {
     bar: 'bg-gradient-to-b from-teal-400 to-teal-700',
-    text: 'text-teal-700',
+    text: 'text-(--palette-accent-ink)',
     rule: 'from-teal-300/70',
   },
   amber: {
     bar: 'bg-gradient-to-b from-amber-300 to-orange-500',
-    text: 'text-amber-700',
+    text: 'text-(--palette-warn)',
     rule: 'from-amber-300/70',
   },
   slate: {
     bar: 'bg-gradient-to-b from-slate-300 to-slate-500',
-    text: 'text-slate-600',
+    text: 'text-(--palette-ink-2)',
     rule: 'from-slate-300/70',
   },
 } as const;
@@ -238,7 +238,11 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -247,7 +251,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-10 h-10 text-red-400" />
-        <p className="text-sm text-gray-500">{t('common:status.failedToLoad')}</p>
+        <p className="text-sm text-(--palette-gray-500)">{t('common:status.failedToLoad')}</p>
       </div>
     );
   }
@@ -255,8 +259,12 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
   if (!data) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <Icon name="diagram-project" style="regular" className="w-10 h-10 text-gray-300" />
-        <p className="text-sm text-gray-500">{t('activityTracking.empty')}</p>
+        <Icon
+          name="diagram-project"
+          style="regular"
+          className="w-10 h-10 text-(--palette-gray-300)"
+        />
+        <p className="text-sm text-(--palette-gray-500)">{t('activityTracking.empty')}</p>
       </div>
     );
   }
@@ -306,7 +314,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
        detail scrolls, so "where is this and who has it" reads at any scroll position. One column
        below lg, where a sticky rail would eat most of the screen. */
     <div className="grid items-start gap-x-12 gap-y-8 px-1 pb-10 lg:grid-cols-[240px_minmax(0,1fr)]">
-      <aside className="rounded-xl bg-gray-50/70 p-4 lg:sticky lg:top-2">
+      <aside className="rounded-xl bg-(--palette-surface-2)/70 p-4 lg:sticky lg:top-2">
         {/* Who has it, at the top of the rail: the first thing a credit officer opens this panel
             to find out, and the one they act on. The phase list below is the supporting detail. */}
         <HolderCard
@@ -320,7 +328,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
           externalCompany={brief?.externalCompany}
         />
 
-        <h3 className="mt-6 flex items-center gap-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.09em] text-teal-700">
+        <h3 className="mt-6 flex items-center gap-2 pb-2 text-[11px] font-semibold uppercase tracking-[0.09em] text-(--palette-accent-ink)">
           <span className="h-3.5 w-1 rounded-full bg-gradient-to-b from-teal-400 to-teal-700" />
           {t('activityTracking.sections.progress')}
         </h3>
@@ -337,30 +345,30 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
           {/* "Where is it" is only half the question — "when is it due" is the other half, and it
               belongs here next to the rail rather than buried among the request fields. Once the
               work is finished the target stops mattering, so the actual date replaces it. */}
-          <dl className="mt-5 space-y-3 border-t border-gray-100 pt-3">
+          <dl className="mt-5 space-y-3 border-t border-(--palette-line-soft) pt-3">
             {brief?.completedAt ? (
               <div>
-                <dt className="text-[11px] uppercase tracking-wide text-gray-400">
+                <dt className="text-[11px] uppercase tracking-wide text-(--palette-gray-400)">
                   {t('activityTracking.brief.completedOn')}
                 </dt>
-                <dd className="text-sm font-semibold text-gray-900">
+                <dd className="text-sm font-semibold text-(--palette-ink)">
                   {formatDate(brief.completedAt)}
                 </dd>
               </div>
             ) : (
               <div>
-                <dt className="text-[11px] uppercase tracking-wide text-gray-400">
+                <dt className="text-[11px] uppercase tracking-wide text-(--palette-gray-400)">
                   {t('activityTracking.brief.dueDate')}
                   <span title={t('activityTracking.brief.dueDateHint')}>
                     <Icon
                       name="circle-info"
                       style="regular"
-                      className="ml-1 inline h-3 w-3 cursor-help align-[-1px] text-gray-300"
+                      className="ml-1 inline h-3 w-3 cursor-help align-[-1px] text-(--palette-gray-300)"
                     />
                   </span>
                 </dt>
                 <dd
-                  className={`text-sm font-semibold ${isOverdue ? 'text-error' : 'text-gray-900'}`}
+                  className={`text-sm font-semibold ${isOverdue ? 'text-error' : 'text-(--palette-ink)'}`}
                 >
                   {formatDate(brief?.dueDate)}
                   {isOverdue && (
@@ -372,10 +380,10 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
               </div>
             )}
             <div>
-              <dt className="text-[11px] uppercase tracking-wide text-gray-400">
+              <dt className="text-[11px] uppercase tracking-wide text-(--palette-gray-400)">
                 {t('activityTracking.sections.route')}
               </dt>
-              <dd className="text-sm font-medium text-gray-700">{flowType}</dd>
+              <dd className="text-sm font-medium text-(--palette-ink)">{flowType}</dd>
             </div>
           </dl>
 
@@ -383,8 +391,8 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
               right person to ask, or when the work is sitting with a committee. The same contacts
               on every appraisal, so it lives at the foot of the rail rather than in the card. */}
           {!!brief?.appraisalAdmins?.length && (
-            <div className="mt-5 border-t border-gray-100 pt-3">
-              <p className="text-[11px] uppercase tracking-wide text-gray-400">
+            <div className="mt-5 border-t border-(--palette-line-soft) pt-3">
+              <p className="text-[11px] uppercase tracking-wide text-(--palette-gray-400)">
                 {t(`${'activityTracking.brief.holder.appraisalDesk'}`)}
               </p>
               <ul className="mt-1.5 flex flex-col gap-2">
@@ -401,22 +409,27 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                         NULLIF-collapsed, so it is null whenever FirstName and LastName are both
                         blank — the LDAP case HolderCard guards the same way — and the row was
                         rendering as an empty space followed by a grey parenthetical. */}
-                    <p className="truncate text-xs font-medium text-gray-700">
+                    <p className="truncate text-xs font-medium text-(--palette-ink)">
                       {admin.name ?? admin.userName}
                       {admin.name && admin.userName && (
-                        <span className="font-normal text-gray-400"> ({admin.userName})</span>
+                        <span className="font-normal text-(--palette-gray-400)">
+                          {' '}
+                          ({admin.userName})
+                        </span>
                       )}
                     </p>
                     {admin.department && (
-                      <p className="truncate text-[11px] text-gray-400">{admin.department}</p>
+                      <p className="truncate text-[11px] text-(--palette-gray-400)">
+                        {admin.department}
+                      </p>
                     )}
                     <div className="mt-0.5 flex flex-col gap-0.5">
                       {admin.phoneNumber && (
-                        <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
+                        <span className="inline-flex items-center gap-1.5 text-[11px] text-(--palette-gray-500)">
                           <Icon
                             name="phone"
                             style="solid"
-                            className="h-2.5 w-2.5 flex-none text-gray-400"
+                            className="h-2.5 w-2.5 flex-none text-(--palette-gray-400)"
                           />
                           <span className="truncate">{admin.phoneNumber}</span>
                         </span>
@@ -425,12 +438,12 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                         <>
                           <a
                             href={`mailto:${admin.email}`}
-                            className="inline-flex items-center gap-1.5 text-[11px] text-gray-500 hover:text-primary hover:underline"
+                            className="inline-flex items-center gap-1.5 text-[11px] text-(--palette-gray-500) hover:text-(--palette-primary-text) hover:underline"
                           >
                             <Icon
                               name="envelope"
                               style="solid"
-                              className="h-2.5 w-2.5 flex-none text-gray-400"
+                              className="h-2.5 w-2.5 flex-none text-(--palette-gray-400)"
                             />
                             <span className="truncate">{admin.email}</span>
                           </a>
@@ -441,12 +454,12 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                             href={teamsChatUrl(admin.email)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-500 hover:text-primary hover:underline"
+                            className="inline-flex items-center gap-1.5 text-[11px] font-medium text-(--palette-gray-500) hover:text-(--palette-primary-text) hover:underline"
                           >
                             <Icon
                               name="comments"
                               style="solid"
-                              className="h-2.5 w-2.5 flex-none text-gray-400"
+                              className="h-2.5 w-2.5 flex-none text-(--palette-gray-400)"
                             />
                             <span>{t(`${'activityTracking.brief.holder.teamsChat'}`)}</span>
                           </a>
@@ -485,7 +498,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
             <div className="min-w-0">
               {/* Number and status identify the record; the customer names it. */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
-                <span className="font-semibold tabular-nums text-gray-500">
+                <span className="font-semibold tabular-nums text-(--palette-gray-500)">
                   {appraisal?.appraisalNumber || '—'}
                 </span>
                 {/* The brief's status wins. `appraisal` comes from GetAppraisalById, which reads
@@ -501,11 +514,11 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                   </Badge>
                 )}
               </div>
-              <h2 className="mt-1.5 truncate text-[27px] font-bold leading-tight tracking-tight text-gray-900">
+              <h2 className="mt-1.5 truncate text-[27px] font-bold leading-tight tracking-tight text-(--palette-ink)">
                 {customer?.name || '—'}
               </h2>
               {customerCountLabel && (
-                <p className="mt-0.5 text-xs text-gray-500">{customerCountLabel}</p>
+                <p className="mt-0.5 text-xs text-(--palette-gray-500)">{customerCountLabel}</p>
               )}
             </div>
 
@@ -520,7 +533,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                    so a solid button read as the page's primary action when it is really just a
                    way out to another screen. Noticeable through size, the accent colour and the
                    outbound arrow rather than through a rule or a fill. */
-                className="inline-flex flex-none items-center gap-2 text-sm font-semibold text-primary transition hover:text-teal-800 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                className="inline-flex flex-none items-center gap-2 text-sm font-semibold text-(--palette-primary-text) transition hover:text-teal-800 dark:hover:text-teal-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
                 {t('common:actions.viewDetails')}
                 <Icon name="arrow-up-right-from-square" style="solid" className="h-3 w-3" />
@@ -528,7 +541,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
             )}
           </div>
 
-          <div className="mt-4 h-px bg-gradient-to-r from-teal-400/70 via-gray-200 to-transparent" />
+          <div className="mt-4 h-px bg-gradient-to-r from-teal-400/70 via-(--palette-line) to-transparent" />
 
           {/* Three shapes, because the panel has three states and they are not the same question.
 
@@ -549,58 +562,58 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
             (brief.isReleased ? (
               <dl className="mt-4 flex flex-wrap gap-x-14 gap-y-5">
                 <div>
-                  <dt className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                  <dt className="text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                     {t('activityTracking.brief.appraisedValue')}
                   </dt>
                   <dd className="mt-1 flex items-baseline gap-1.5">
                     {/* Same size as the other two. Rank is carried by colour and weight alone —
                       at three figures side by side, a size step as well made the row look
                       unaligned rather than ordered. */}
-                    <span className="text-2xl font-bold leading-none tabular-nums tracking-tight text-primary">
+                    <span className="text-2xl font-bold leading-none tabular-nums tracking-tight text-(--palette-primary-text)">
                       {formatAmount(brief.appraisalValue)}
                     </span>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-(--palette-gray-400)">
                       {t('activityTracking.brief.baht')}
                     </span>
                   </dd>
                 </div>
 
                 <div>
-                  <dt className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                  <dt className="text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                     {t('activityTracking.brief.forcedSaleValue')}
                   </dt>
                   <dd className="mt-1 flex items-baseline gap-1.5">
                     {brief.forcedSaleValue != null ? (
                       <>
-                        <span className="text-2xl font-semibold leading-none tabular-nums tracking-tight text-gray-800">
+                        <span className="text-2xl font-semibold leading-none tabular-nums tracking-tight text-(--palette-ink)">
                           {formatAmount(brief.forcedSaleValue)}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-(--palette-gray-400)">
                           {t('activityTracking.brief.baht')}
                         </span>
                       </>
                     ) : (
-                      <span className="text-sm text-gray-300">—</span>
+                      <span className="text-sm text-(--palette-gray-300)">—</span>
                     )}
                   </dd>
                 </div>
 
                 <div>
-                  <dt className="text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                  <dt className="text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                     {t('activityTracking.brief.insuranceValue')}
                   </dt>
                   <dd className="mt-1 flex items-baseline gap-1.5">
                     {brief.insuranceValue != null ? (
                       <>
-                        <span className="text-2xl font-semibold leading-none tabular-nums tracking-tight text-gray-800">
+                        <span className="text-2xl font-semibold leading-none tabular-nums tracking-tight text-(--palette-ink)">
                           {formatAmount(brief.insuranceValue)}
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-(--palette-gray-400)">
                           {t('activityTracking.brief.baht')}
                         </span>
                       </>
                     ) : (
-                      <span className="text-sm text-gray-300">—</span>
+                      <span className="text-sm text-(--palette-gray-300)">—</span>
                     )}
                   </dd>
                 </div>
@@ -611,13 +624,15 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                   name={isCancelled ? 'ban' : 'lock'}
                   style="solid"
                   className={`mt-0.5 h-4 w-4 flex-none ${
-                    isCancelled ? 'text-gray-400' : 'text-amber-500'
+                    isCancelled ? 'text-(--palette-gray-400)' : 'text-amber-500'
                   }`}
                 />
                 <div className="min-w-0">
                   <b
                     className={`block text-sm font-semibold ${
-                      isCancelled ? 'text-gray-600' : 'text-amber-800'
+                      isCancelled
+                        ? 'text-(--palette-gray-600)'
+                        : 'text-amber-800 dark:text-amber-300'
                     }`}
                   >
                     {t(
@@ -626,7 +641,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                         : 'activityTracking.brief.lockedTitle',
                     )}
                   </b>
-                  <p className="mt-0.5 text-xs text-gray-500">
+                  <p className="mt-0.5 text-xs text-(--palette-gray-500)">
                     {t(
                       isCancelled
                         ? 'activityTracking.brief.cancelledHint'
@@ -646,8 +661,8 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
           <div
             className={`flex items-start gap-2.5 rounded-lg px-3 py-2.5 ring-1 ${
               briefDenied || briefMissing
-                ? 'bg-gray-50 ring-gray-200'
-                : 'bg-amber-50/60 ring-amber-200'
+                ? 'bg-(--palette-surface-2) ring-(--palette-line)'
+                : 'bg-(--palette-warn-wash)/60 ring-amber-200 dark:ring-amber-500/30'
             }`}
           >
             <Icon
@@ -656,11 +671,11 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
               }
               style="solid"
               className={`mt-0.5 h-4 w-4 flex-none ${
-                briefDenied || briefMissing ? 'text-gray-400' : 'text-amber-500'
+                briefDenied || briefMissing ? 'text-(--palette-gray-400)' : 'text-amber-500'
               }`}
             />
             <div className="min-w-0">
-              <b className="block text-sm font-semibold text-gray-800">
+              <b className="block text-sm font-semibold text-(--palette-ink)">
                 {t(
                   briefDenied
                     ? 'activityTracking.brief.noAccessTitle'
@@ -669,7 +684,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                       : 'activityTracking.brief.loadFailedTitle',
                 )}
               </b>
-              <p className="mt-0.5 text-xs text-gray-500">
+              <p className="mt-0.5 text-xs text-(--palette-gray-500)">
                 {t(
                   briefDenied
                     ? 'activityTracking.brief.noAccessHint'
@@ -709,9 +724,11 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
               ] as [string, React.ReactNode][]
             ).map(([label, value]) => (
               <div key={label} className="min-w-0">
-                <dt className="text-[11px] uppercase tracking-wide text-gray-400">{label}</dt>
-                <dd className="mt-0.5 text-sm text-gray-900">
-                  {value || <span className="text-gray-300">—</span>}
+                <dt className="text-[11px] uppercase tracking-wide text-(--palette-gray-400)">
+                  {label}
+                </dt>
+                <dd className="mt-0.5 text-sm text-(--palette-ink)">
+                  {value || <span className="text-(--palette-gray-300)">—</span>}
                 </dd>
               </div>
             ))}
@@ -728,7 +745,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
             accent="amber"
             right={
               brief.assets.length > 0 ? (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-(--palette-gray-400)">
                   {t('activityTracking.sections.itemsCount', { count: brief.assets.length })}
                   {applicationArea && (
                     <>
@@ -744,7 +761,7 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                   )}
                 </span>
               ) : projectUnits ? (
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-(--palette-gray-400)">
                   {t(
                     brief.project && brief.project.towerCount > 0
                       ? 'activityTracking.brief.collateral.unitsOrHouses_unit'
@@ -771,7 +788,9 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
                 project — so the empty state has to consider both, or an entire
                 class of appraisal reads as having no security at all. */}
             {brief.assets.length === 0 && !brief.project ? (
-              <p className="text-sm text-gray-400">{t('activityTracking.sections.noCollateral')}</p>
+              <p className="text-sm text-(--palette-gray-400)">
+                {t('activityTracking.sections.noCollateral')}
+              </p>
             ) : (
               <>
                 {/* The shape of the site above the itemisation: a reader sees one

@@ -2,13 +2,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import {
-  makeOpenNegotiationFormSchema,
-  type OpenNegotiationFormValues,
-} from '../schemas/quotation';
+import { openNegotiationFormSchema, type OpenNegotiationFormValues } from '../schemas/quotation';
 import { useOpenNegotiation } from '../api/quotation';
 
 interface NegotiationModalProps {
@@ -39,7 +37,7 @@ const NegotiationModal = ({
     reset,
     formState: { errors },
   } = useForm<OpenNegotiationFormValues>({
-    resolver: zodResolver(makeOpenNegotiationFormSchema(t)),
+    resolver: zodResolver(openNegotiationFormSchema),
   });
 
   const handleClose = () => {
@@ -70,9 +68,9 @@ const NegotiationModal = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('negotiation.openRoundModal')} size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-        <div className="p-3 bg-orange-50 rounded-lg border border-orange-100 flex items-start gap-2">
+        <div className="p-3 bg-orange-50 dark:bg-orange-500/10 rounded-lg border border-orange-100 dark:border-orange-500/20 flex items-start gap-2">
           <Icon name="handshake" style="solid" className="size-4 text-orange-500 shrink-0 mt-0.5" />
-          <div className="text-sm text-orange-700">
+          <div className="text-sm text-orange-700 dark:text-orange-300">
             <p>
               {t('negotiation.negotiatingWith', {
                 company: companyName,
@@ -85,16 +83,20 @@ const NegotiationModal = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('fields.messageToCompany')} <span className="text-danger">*</span>
           </label>
           <textarea
             {...register('message')}
             rows={4}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+            className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
             placeholder={t('placeholders.negotiationMessage')}
           />
-          {errors.message && <p className="mt-1 text-xs text-danger">{errors.message.message}</p>}
+          {errors.message && (
+            <p className="mt-1 text-xs text-danger">
+              <ValidationText message={errors.message.message} />
+            </p>
+          )}
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

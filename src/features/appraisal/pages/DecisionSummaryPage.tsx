@@ -782,7 +782,7 @@ const DecisionSummaryPage = () => {
 
   const anyVisible = (...keys: SectionKey[]) => keys.some(showSection);
   const EmptyLine = ({ text }: { text: string }) => (
-    <p className="text-sm text-gray-500 py-2">{text}</p>
+    <p className="text-sm text-(--palette-gray-500) py-2">{text}</p>
   );
 
   useEffect(() => {
@@ -1086,7 +1086,11 @@ const DecisionSummaryPage = () => {
   if (appraisalId && isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -1107,7 +1111,7 @@ const DecisionSummaryPage = () => {
                   iconColor="teal"
                   title={t('decisionSummary.sections.valuation')}
                   rightSlot={
-                    <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                    <div className="flex items-center gap-1.5 text-xs text-(--palette-gray-500)">
                       {/* Asset Summary icon */}
                       {!isLoadingAssetSummary && hasAssetSummary && (
                         <>
@@ -1115,12 +1119,12 @@ const DecisionSummaryPage = () => {
                             type="button"
                             onClick={() => setIsAssetSummaryOpen(true)}
                             title={'Asset Summary'}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs cursor-pointer"
+                            className="flex items-center gap-1.5 px-2 py-1 rounded text-(--palette-gray-500) hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors text-xs cursor-pointer"
                           >
                             <Icon name="file-chart-pie" style="solid" className="w-4 h-4" />
                             <span className="hidden sm:inline">Asset Summary</span>
                           </button>
-                          <div className="h-6 w-px bg-gray-200" />
+                          <div className="h-6 w-px bg-(--palette-line)" />
                         </>
                       )}
                       {/* Who appraised it — shown for any case that has an external company, so a
@@ -1138,10 +1142,10 @@ const DecisionSummaryPage = () => {
                         />
                       )}
                       {data?.appraisalDate ? (
-                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                        <div className="flex items-center gap-1.5 text-xs text-(--palette-gray-500)">
                           <span className="text-sm leading-none">🗓️</span>
                           <span>{t('decisionSummary.appraisalDate')}</span>
-                          <span className="font-semibold text-gray-700">
+                          <span className="font-semibold text-(--palette-ink)">
                             {new Date(data.appraisalDate).toLocaleDateString('en-GB', {
                               day: 'numeric',
                               month: 'short',
@@ -1161,20 +1165,20 @@ const DecisionSummaryPage = () => {
                           appraised / force-selling / insurance values on the page. */}
                       <div className="grid grid-cols-3 gap-6">
                         <div className="text-left">
-                          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                          <p className="text-xs uppercase tracking-wider text-(--palette-gray-500) font-semibold">
                             {t('decisionSummary.fields.totalAppraisalPrice')}
                           </p>
-                          <p className="text-xl font-semibold tabular-nums text-teal-700 mt-1">
+                          <p className="text-xl font-semibold tabular-nums text-(--palette-accent-ink) mt-1">
                             {data?.totalAppraisalPrice != null
                               ? formatNumber(data.totalAppraisalPrice, 2)
                               : '-'}
                           </p>
                         </div>
                         <div className="text-center">
-                          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                          <p className="text-xs uppercase tracking-wider text-(--palette-gray-500) font-semibold">
                             {t('decisionSummary.fields.forceSellingPrice')}
                           </p>
-                          <p className="text-xl font-semibold tabular-nums text-amber-700 mt-1">
+                          <p className="text-xl font-semibold tabular-nums text-(--palette-warn) mt-1">
                             {forceSellingPriceDisplay != null
                               ? formatNumber(forceSellingPriceDisplay, 2)
                               : '-'}
@@ -1212,7 +1216,7 @@ const DecisionSummaryPage = () => {
                                       : undefined
                                   }
                                 />
-                                <span className="text-xs text-gray-400">
+                                <span className="text-xs text-(--palette-gray-400)">
                                   {t('decisionSummary.fields.forceSellingPriceHint')}
                                 </span>
                               </div>
@@ -1220,15 +1224,15 @@ const DecisionSummaryPage = () => {
                           )}
                         </div>
                         <div className="text-right">
-                          <p className="text-xs uppercase tracking-wider text-gray-500 font-semibold">
+                          <p className="text-xs uppercase tracking-wider text-(--palette-gray-500) font-semibold">
                             {t('decisionSummary.fields.buildingInsurance')}
                           </p>
-                          <p className="text-xl font-semibold tabular-nums text-gray-700 mt-1">
+                          <p className="text-xl font-semibold tabular-nums text-(--palette-ink) mt-1">
                             {data?.buildingInsurance != null
                               ? formatNumber(data.buildingInsurance, 2)
                               : '-'}
                           </p>
-                          <p className="text-xs text-gray-400 mt-0.5">
+                          <p className="text-xs text-(--palette-gray-400) mt-0.5">
                             {t('decisionSummary.fields.buildingInsuranceHint')}
                           </p>
                         </div>
@@ -1517,7 +1521,7 @@ const DecisionSummaryPage = () => {
           {!isReadOnly && (
             <div
               data-page-actions=""
-              className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+              className="shrink-0 bg-(--palette-surface) border-t border-(--palette-line) px-4 py-3 pr-6 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
             >
               {/* Compact below sm (no dividers, the unsaved label is just its dot, no decision chip)
                   so it fits a phone; the wrap is the last resort, so it never pushes the page sideways. */}
@@ -1526,21 +1530,21 @@ const DecisionSummaryPage = () => {
                   <Button variant="ghost" type="button" onClick={handleCancel}>
                     {t('decisionSummaryPageExtra.cancelButton')}
                   </Button>
-                  <div className="hidden h-6 w-px bg-gray-200 sm:block" />
+                  <div className="hidden h-6 w-px bg-(--palette-line) sm:block" />
                   {/* History Search map icon — opens nearby appraisal/MC map */}
                   <button
                     type="button"
                     onClick={() => setIsHistorySearchOpen(true)}
                     title={t('decisionSummary.historySearchTitle')}
-                    className="flex items-center gap-1.5 px-2 py-1 rounded text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs"
+                    className="flex items-center gap-1.5 px-2 py-1 rounded text-(--palette-gray-500) hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors text-xs"
                   >
                     <Icon name="map-location-dot" style="solid" className="w-4 h-4" />
                     <span className="hidden sm:inline">{t('decisionSummary.historySearch')}</span>
                   </button>
-                  <div className="hidden h-6 w-px bg-gray-200 sm:block" />
+                  <div className="hidden h-6 w-px bg-(--palette-line) sm:block" />
                   {isDirty && (
                     <span
-                      className="flex items-center gap-1.5 text-xs font-medium text-amber-600"
+                      className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400"
                       title={t('decisionSummary.unsavedChanges')}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
@@ -1646,7 +1650,7 @@ const DecisionSummaryPage = () => {
                 resetProgressStore();
               }}
               disabled={completeActivity.isPending}
-              className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {t('decisionSummary.confirmDialog.cancel')}
             </button>
@@ -1687,7 +1691,10 @@ const DecisionSummaryPage = () => {
             <ul className="mt-2 space-y-2">
               {warnings.flatMap((w, wi) =>
                 splitWarningMessage(w.message).map((sentence, si) => (
-                  <li key={`${wi}-${si}`} className="flex items-start gap-2 text-sm text-amber-800">
+                  <li
+                    key={`${wi}-${si}`}
+                    className="flex items-start gap-2 text-sm text-amber-800 dark:text-amber-300"
+                  >
                     <span className="mt-[5px] size-1.5 shrink-0 rounded-full bg-amber-500" />
                     <span>{sentence}</span>
                   </li>
@@ -1715,8 +1722,8 @@ const DecisionSummaryPage = () => {
 /** Read-only number display field — styled to match a disabled NumberInput */
 const ReadOnlyField = ({ label, value }: { label: string; value: number | null | undefined }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-    <div className="block px-3 py-2 border border-gray-200 rounded-lg text-sm text-right bg-gray-50 text-gray-500">
+    <label className="block text-xs font-medium text-(--palette-ink) mb-1">{label}</label>
+    <div className="block px-3 py-2 border border-(--palette-line) rounded-lg text-sm text-right bg-(--palette-surface-2) text-(--palette-gray-500)">
       {value != null ? formatNumber(value, 2) : '-'}
     </div>
   </div>

@@ -416,7 +416,6 @@
     "colDate": "估价日期",
     "moreCustomers": "+{{n}} 位",
     "propertyCount": "{{n}} 项",
-    "round": "第 {{n}} 次",
     "emptyTitle": "没有匹配的已完成评估",
     "emptyHint": "请尝试输入报告编号的一部分或客户名称。只能从已完成的评估复制。",
     "errorTitle": "无法加载列表",
@@ -480,6 +479,34 @@
     "date": "评估于 {{date}}",
     "openTitle": "在新标签页打开此评估",
     "clearTitle": "清除原评估引用"
+  },
+  "constructionGuard": {
+    "blocked": {
+      "ConstructionComplete": "评估 {{no}} 已 100% 建成（第 {{n}} 次检验，{{date}}），无需再检验。",
+      "ConstructionCompleteNoDate": "评估 {{no}} 已 100% 建成（第 {{n}} 次检验），无需再检验。",
+      "ConstructionCompleteNoRound": "评估 {{no}} 已 100% 建成（{{date}}），无需再检验。",
+      "ConstructionCompleteNoRoundNoDate": "评估 {{no}} 已 100% 建成，无需再检验。",
+      "LaterInspectionExists": "评估 {{no}} 已有后续检验（评估 {{later}}），请选择最新的评估。",
+      "OpenInspectionRequest": "此链中的检验申请 {{req}} 尚未关闭，请等待其关闭。"
+    },
+    "rejected": {
+      "ConstructionComplete": "所选原评估已 100% 建成，无需再检验。请选择其他评估或清除原评估。",
+      "LaterInspectionExists": "所选原评估已有后续检验，请改为最新的评估。",
+      "OpenInspectionRequest": "此链中有尚未关闭的检验申请。请选择其他评估或等待该申请关闭。"
+    },
+    "chip": "施工 {{pct}}%",
+    "noData": "此评估无施工进度 %",
+    "notLatest": "不是链中最新的评估：评估 {{latest}}（{{purpose}} · {{date}}）更新。系统将从所选评估复制。",
+    "useLatestInstead": "改用评估 {{latest}}",
+    "dialog": {
+      "title": "所选评估不是链中最新的",
+      "message": "所选评估之后还有更新的评估。系统将从您所选的评估复制房产和施工数据。",
+      "selectedLabel": "所选",
+      "latestLabel": "链中最新",
+      "construction": "施工 {{pct}}%",
+      "useSelected": "使用所选（{{no}}）",
+      "useLatest": "使用最新（{{latest}}）"
+    }
   },
   "carryForward": {
     "badge": "来自原评估 {{number}}",

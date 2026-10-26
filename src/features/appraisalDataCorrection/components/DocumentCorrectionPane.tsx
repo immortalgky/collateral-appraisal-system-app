@@ -67,7 +67,11 @@ const DocumentCorrectionPane = ({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="size-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }

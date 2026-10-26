@@ -43,19 +43,20 @@ const STATUS_META: Record<
   Passed: {
     icon: 'circle-check',
     iconClass: 'text-emerald-500',
-    rowClass: 'bg-emerald-50/60 border-emerald-100',
+    rowClass:
+      'bg-emerald-50/60 dark:bg-emerald-500/10 border-emerald-100 dark:border-emerald-500/20',
     label: 'Passed',
   },
   Failed: {
     icon: 'circle-xmark',
     iconClass: 'text-red-500',
-    rowClass: 'bg-red-50/60 border-red-100',
+    rowClass: 'bg-(--palette-req-wash)/60 border-red-100 dark:border-red-500/20',
     label: 'Failed',
   },
   Skipped: {
     icon: 'circle-minus',
-    iconClass: 'text-gray-300',
-    rowClass: 'bg-gray-50 border-gray-100',
+    iconClass: 'text-(--palette-gray-300)',
+    rowClass: 'bg-(--palette-surface-2) border-(--palette-line-soft)',
     label: 'Not applicable',
   },
 };
@@ -66,13 +67,13 @@ function StepRow({ step }: { step: PricingValidationStep }) {
     <div className={`rounded-lg border px-3 py-2.5 ${meta.rowClass}`}>
       <div className="flex items-center gap-2.5">
         <Icon name={meta.icon} style="solid" className={`text-base ${meta.iconClass}`} />
-        <span className="text-sm font-medium text-gray-800 flex-1">{step.displayName}</span>
-        <span className="text-xs font-medium text-gray-500">{meta.label}</span>
+        <span className="text-sm font-medium text-(--palette-ink) flex-1">{step.displayName}</span>
+        <span className="text-xs font-medium text-(--palette-gray-500)">{meta.label}</span>
       </div>
       {step.messages.length > 0 && (
         <ul className="mt-1.5 ml-7 space-y-0.5">
           {step.messages.map((m, i) => (
-            <li key={i} className="text-xs text-red-600">
+            <li key={i} className="text-xs text-(--palette-danger)">
               {m}
             </li>
           ))}
@@ -84,11 +85,15 @@ function StepRow({ step }: { step: PricingValidationStep }) {
 
 function CheckingRow({ displayName }: { displayName: string }) {
   return (
-    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2.5">
+    <div className="rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2) px-3 py-2.5">
       <div className="flex items-center gap-2.5">
-        <Icon name="spinner" style="solid" className="text-base text-primary animate-spin" />
-        <span className="text-sm font-medium text-gray-600 flex-1">{displayName}</span>
-        <span className="text-xs text-gray-400">Checking…</span>
+        <Icon
+          name="spinner"
+          style="solid"
+          className="text-base text-(--palette-primary-text) animate-spin"
+        />
+        <span className="text-sm font-medium text-(--palette-gray-600) flex-1">{displayName}</span>
+        <span className="text-xs text-(--palette-gray-400)">Checking…</span>
       </div>
     </div>
   );
@@ -147,7 +152,7 @@ export function PricingValidationModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Validating property group" size="md">
       <div className="space-y-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-(--palette-gray-500)">
           {isFetching
             ? 'Checking the group has enough data for pricing analysis…'
             : failed
@@ -163,8 +168,8 @@ export function PricingValidationModal({
         </div>
 
         {isError && (
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3">
-            <p className="text-sm text-red-600">
+          <div className="rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) p-3">
+            <p className="text-sm text-(--palette-danger)">
               Validation could not be completed. Please try again.
             </p>
           </div>

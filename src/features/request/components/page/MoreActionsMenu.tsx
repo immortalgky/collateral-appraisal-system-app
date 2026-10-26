@@ -19,13 +19,13 @@ const MoreActionsMenu = ({ onDuplicate, onDelete, disabled }: MoreActionsMenuPro
       <MenuButton
         title={t('page.actions.more')}
         aria-label={t('page.actions.more')}
-        className="flex size-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700"
+        className="flex size-8 items-center justify-center rounded-lg text-(--palette-gray-500) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
       >
         <Icon style="solid" name="ellipsis" className="size-4!" />
       </MenuButton>
       <MenuItems
         anchor={{ to: 'top start', gap: 8 }}
-        className="z-50 w-44 rounded-lg bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+        className="z-50 w-44 rounded-lg bg-(--palette-surface) py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
       >
         <MenuItem disabled={disabled}>
           {({ focus }) => (
@@ -35,8 +35,8 @@ const MoreActionsMenu = ({ onDuplicate, onDelete, disabled }: MoreActionsMenuPro
               disabled={disabled}
               className={clsx(
                 'flex w-full items-center gap-2 px-3 py-2 text-sm',
-                disabled ? 'cursor-not-allowed text-gray-300' : 'text-gray-700',
-                focus && !disabled && 'bg-gray-50',
+                disabled ? 'cursor-not-allowed text-(--palette-gray-300)' : 'text-(--palette-ink)',
+                focus && !disabled && 'bg-(--palette-surface-2)',
               )}
             >
               <Icon style="regular" name="copy" className="size-3.5!" />
@@ -52,8 +52,10 @@ const MoreActionsMenu = ({ onDuplicate, onDelete, disabled }: MoreActionsMenuPro
               disabled={disabled}
               className={clsx(
                 'flex w-full items-center gap-2 px-3 py-2 text-sm',
-                disabled ? 'cursor-not-allowed text-gray-300' : 'text-red-600',
-                focus && !disabled && 'bg-red-50',
+                disabled
+                  ? 'cursor-not-allowed text-(--palette-gray-300)'
+                  : 'text-(--palette-danger)',
+                focus && !disabled && 'bg-(--palette-req-wash)',
               )}
             >
               <Icon style="regular" name="trash-can" className="size-3.5!" />

@@ -95,7 +95,7 @@ export function MarketComparableDetailModal({
       <div className="max-h-[75vh] overflow-y-auto">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary-600" />
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-(--palette-line) border-t-primary-600" />
           </div>
         ) : (
           <div key={marketComparableId}>

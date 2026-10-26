@@ -79,7 +79,7 @@ const FailedMessageDrawer = ({
           type="button"
           onClick={() => onRequestDiscard(data)}
           disabled={gone}
-          className="rounded-lg border border-red-300 text-red-600 text-[13px] font-medium px-4 py-2 hover:bg-red-50 disabled:opacity-50"
+          className="rounded-lg border border-red-300 dark:border-red-500/40 text-(--palette-danger) text-[13px] font-medium px-4 py-2 hover:bg-(--palette-req-wash) disabled:opacity-50"
         >
           {t('drawer.discard')}
         </button>
@@ -104,22 +104,22 @@ const FailedMessageDrawer = ({
           type="button"
           onClick={() => onRequestDiscard(data)}
           disabled={gone}
-          className="rounded-lg border border-red-300 text-red-600 text-[13px] font-medium px-4 py-2 hover:bg-red-50 disabled:opacity-50"
+          className="rounded-lg border border-red-300 dark:border-red-500/40 text-(--palette-danger) text-[13px] font-medium px-4 py-2 hover:bg-(--palette-req-wash) disabled:opacity-50"
         >
           {t('drawer.discard')}
         </button>
-        <p className="text-[12px] text-gray-400">{t('drawer.discardStuckHint')}</p>
+        <p className="text-[12px] text-(--palette-gray-400)">{t('drawer.discardStuckHint')}</p>
       </div>
     ) : canDiscard(data) ? (
       <div className="flex justify-end">
-        <span className="text-[13px] text-gray-500">{t('drawer.viewOnly')}</span>
+        <span className="text-[13px] text-(--palette-gray-500)">{t('drawer.viewOnly')}</span>
       </div>
     ) : (
       <div className="flex justify-end">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-gray-300 text-[13px] font-medium px-4 py-2"
+          className="rounded-lg border border-(--palette-line-strong) text-[13px] font-medium px-4 py-2"
         >
           {t('drawer.close')}
         </button>
@@ -145,7 +145,7 @@ const FailedMessageDrawer = ({
       ) : isError && !data ? (
         // A 404/403 on the very first fetch never recovers on retry — say so instead of offering it.
         gone ? (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-[12px] text-(--palette-warn)">
             {t('drawer.goneOrForbidden')}
           </div>
         ) : (
@@ -154,7 +154,7 @@ const FailedMessageDrawer = ({
       ) : data ? (
         <>
           {isError && (
-            <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[12px] text-amber-700">
+            <div className="mb-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-[12px] text-(--palette-warn)">
               {gone ? t('drawer.goneOrForbidden') : t('drawer.refreshFailed')}
             </div>
           )}
@@ -251,7 +251,7 @@ const FailedMessageDrawerBody = ({ data, onOpenSibling, language, now }: BodyPro
           <button
             type="button"
             onClick={handleCopyMessageId}
-            className="text-primary text-[12px] hover:underline"
+            className="text-(--palette-primary-text) text-[12px] hover:underline"
           >
             {t('drawer.copy')}
           </button>
@@ -374,10 +374,10 @@ const FailedMessageDrawerBody = ({ data, onOpenSibling, language, now }: BodyPro
       <section>
         <SectionTitle>{t('drawer.siblings')}</SectionTitle>
         {data.siblings.length === 0 ? (
-          <span className="text-[13px] text-gray-400">{t('drawer.noSiblings')}</span>
+          <span className="text-[13px] text-(--palette-gray-400)">{t('drawer.noSiblings')}</span>
         ) : (
           <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            <div className="overflow-x-auto rounded-lg border border-(--palette-line)">
               <table className="w-full text-[13px]">
                 <tbody>
                   {data.siblings.map(sibling => (
@@ -390,7 +390,7 @@ const FailedMessageDrawerBody = ({ data, onOpenSibling, language, now }: BodyPro
                           onOpenSibling(sibling.id);
                         }
                       }}
-                      className="cursor-pointer hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                      className="cursor-pointer hover:bg-(--palette-surface-2) border-b border-(--palette-line-soft) last:border-b-0"
                     >
                       <td className="px-2.5 py-1.5 font-mono">
                         {displayQueueName(sibling.sourceQueue, sibling.kind)}
@@ -408,7 +408,9 @@ const FailedMessageDrawerBody = ({ data, onOpenSibling, language, now }: BodyPro
                 </tbody>
               </table>
             </div>
-            <p className="text-[12px] text-gray-400 mt-1.5">{t('drawer.siblingsNote')}</p>
+            <p className="text-[12px] text-(--palette-gray-400) mt-1.5">
+              {t('drawer.siblingsNote')}
+            </p>
           </>
         )}
       </section>
@@ -421,7 +423,7 @@ const FailedMessageDrawerBody = ({ data, onOpenSibling, language, now }: BodyPro
           </Callout>
           {data.stackTrace && (
             <details className="mt-2">
-              <summary className="text-[12px] text-gray-400 cursor-pointer">
+              <summary className="text-[12px] text-(--palette-gray-400) cursor-pointer">
                 {t('drawer.stackTrace')}
               </summary>
               <CodeBlock className="mt-1.5">{data.stackTrace}</CodeBlock>

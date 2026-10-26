@@ -308,6 +308,7 @@ export const useCompleteActivity = () => {
       queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['workflow-progress'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
+      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
     },
   });
 

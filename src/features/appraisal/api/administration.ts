@@ -6,10 +6,12 @@ import type {
   CurrentAssignment,
   ExternalCompany,
   InternalStaff,
+  PreviousCompany,
   Quotation,
   StartQuotationFromTaskRequest,
 } from '../types/administration';
 import { type AssignmentDefaults, toFormDefaults } from '../utils/assignmentDefaults';
+import { invalidateFeePreviews } from './feePreview';
 
 /**
  * Get a user by ID
@@ -77,18 +79,20 @@ export const useGetAssignment = (appraisalId: string, options?: { staleTime?: nu
   });
 };
 
+type AssignmentDefaultsData = AssignmentDefaults & { previousCompany: PreviousCompany | null };
+
 /**
- * Get the Appraisal Type's pre-selected assignment values
+ * Get the Appraisal Type's pre-selected assignment values, plus the prior inspection's company
  * GET /appraisals/{appraisalId}/assignment-defaults
  */
 export const useGetAssignmentDefaults = (appraisalId: string) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'assignment-defaults'],
-    queryFn: async (): Promise<AssignmentDefaults> => {
+    queryFn: async (): Promise<AssignmentDefaultsData> => {
       const { data } = await axios.get<AssignmentDefaultsResponse>(
         `/appraisals/${appraisalId}/assignment-defaults`,
       );
-      return toFormDefaults(data);
+      return { ...toFormDefaults(data), previousCompany: data.previousCompany ?? null };
     },
     // No `retry` override: the global policy skips 4xx but retries 5xx and network errors, so those
     // keep the page's first seed waiting until the retries are exhausted; it then opens on the
@@ -313,8 +317,10 @@ export const useCreateQuotation = () => {
       const { data } = await axios.post('/quotations/start-from-task', request);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, request) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      // A quotation now exists for the appraisal: its fee preview (the quotation source) is stale.
+      invalidateFeePreviews(queryClient, [request.appraisalId]);
     },
   });
 };

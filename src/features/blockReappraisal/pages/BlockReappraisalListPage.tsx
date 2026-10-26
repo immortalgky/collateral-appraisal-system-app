@@ -160,7 +160,7 @@ const SortableTh = ({
       onClick={() => onSort(field)}
       aria-sort={isActive ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
       className={clsx(
-        'px-4 py-2.5 text-xs font-semibold text-gray-600 whitespace-nowrap select-none cursor-pointer hover:bg-gray-100',
+        'px-4 py-2.5 text-xs font-semibold text-(--palette-gray-600) whitespace-nowrap select-none cursor-pointer hover:bg-gray-100',
         alignCls,
         isActive && 'bg-primary/5',
         className,
@@ -171,7 +171,7 @@ const SortableTh = ({
         <Icon
           style="solid"
           name={isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
-          className={clsx('size-3', isActive ? 'text-primary' : 'text-gray-300')}
+          className={clsx('size-3', isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)')}
         />
       </div>
     </th>
@@ -283,12 +283,12 @@ function BlockReappraisalListPage() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">{t('error.loadFailed')}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('error.loadFailed')}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
       </div>
     );
@@ -311,7 +311,7 @@ function BlockReappraisalListPage() {
             <Icon
               style="regular"
               name="magnifying-glass"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-gray-400 pointer-events-none"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-(--palette-gray-400) pointer-events-none"
             />
             <input
               id="block-reappraisal-search"
@@ -320,7 +320,7 @@ function BlockReappraisalListPage() {
               onChange={e => setSearch(e.target.value)}
               placeholder={t('filter.placeholders.search')}
               aria-label={t('filter.placeholders.search')}
-              className="w-64 max-w-full pl-7 pr-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-64 max-w-full pl-7 pr-2.5 py-1.5 text-sm border border-(--palette-line) rounded-lg bg-(--palette-surface) focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </label>
           <button
@@ -329,8 +329,8 @@ function BlockReappraisalListPage() {
             className={clsx(
               'flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg transition-all',
               activeFilterChips.length > 0
-                ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800',
+                ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
+                : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:border-gray-300 hover:text-(--palette-ink)',
             )}
           >
             <Icon style="solid" name="filter" className="size-3" />
@@ -438,11 +438,11 @@ function BlockReappraisalListPage() {
       />
 
       {/* ── Table ── */}
-      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                 <SortableTh
                   field="oldAppraisalNumber"
                   sortBy={sortField}
@@ -501,7 +501,7 @@ function BlockReappraisalListPage() {
                 <th className="px-4 py-2.5 w-8" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {showSkeleton ? (
                 <TableRowSkeleton
                   columns={Array(columnCount - 1).fill({ width: 'w-24' })}
@@ -511,14 +511,18 @@ function BlockReappraisalListPage() {
                 <tr>
                   <td colSpan={columnCount} className="py-24">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                        <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
+                      <div className="size-16 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                        <Icon
+                          style="regular"
+                          name="inbox"
+                          className="size-7 text-(--palette-gray-300)"
+                        />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-(--palette-ink)">
                           {isFiltered ? t('empty.noMatching') : t(`empty.tab.${status}`)}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-(--palette-gray-400) mt-1">
                           {isFiltered ? t('empty.tryAdjusting') : t(`empty.tabHint.${status}`)}
                         </p>
                       </div>
@@ -526,7 +530,7 @@ function BlockReappraisalListPage() {
                         <button
                           type="button"
                           onClick={clearAll}
-                          className="text-xs text-primary hover:underline font-medium"
+                          className="text-xs text-(--palette-primary-text) hover:underline font-medium"
                         >
                           {t('empty.clearFilters')}
                         </button>
@@ -550,32 +554,32 @@ function BlockReappraisalListPage() {
                           state: { fromList: true },
                         });
                     }}
-                    className="group cursor-pointer transition-colors hover:bg-gray-50"
+                    className="group cursor-pointer transition-colors hover:bg-(--palette-surface-2)"
                   >
-                    <td className="px-4 py-2.5 text-left text-primary font-medium whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-left text-(--palette-primary-text) font-medium whitespace-nowrap">
                       {item.oldAppraisalNumber ?? '-'}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-700">{item.projectName ?? '-'}</td>
-                    <td className="px-4 py-2.5 text-gray-700 tabular-nums text-right whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-ink)">{item.projectName ?? '-'}</td>
+                    <td className="px-4 py-2.5 text-(--palette-ink) tabular-nums text-right whitespace-nowrap">
                       {formatNumber(item.projectSellingPrice)}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-700 tabular-nums text-center whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-ink) tabular-nums text-center whitespace-nowrap">
                       {item.remainingUnits} / {item.totalUnits}
                     </td>
-                    <td className="px-4 py-2.5 text-center text-gray-700 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-center text-(--palette-ink) whitespace-nowrap">
                       {formatLocaleDate(item.lastAppraisedDate, i18n.language)}
                     </td>
                     {!isNotRequired && (
                       <td className="px-4 py-2.5 text-center whitespace-nowrap tabular-nums">
                         {item.remainingDay < 0 ? (
-                          <span className="text-red-600 font-medium">
+                          <span className="text-(--palette-danger) font-medium">
                             {t('remainingDayBadge.overdue')}{' '}
                             {t('remainingDayBadge.daysLeft', {
                               days: Math.abs(item.remainingDay),
                             })}
                           </span>
                         ) : (
-                          <span className="text-gray-700">{item.remainingDay}</span>
+                          <span className="text-(--palette-ink)">{item.remainingDay}</span>
                         )}
                       </td>
                     )}
@@ -589,7 +593,7 @@ function BlockReappraisalListPage() {
                           }}
                           onKeyDown={e => e.stopPropagation()}
                           disabled={restoreMutation.isPending}
-                          className="px-3 py-1 text-xs font-medium border border-gray-200 rounded-lg bg-white text-gray-700 hover:border-primary/40 hover:text-primary whitespace-nowrap disabled:opacity-50"
+                          className="px-3 py-1 text-xs font-medium border border-(--palette-line) rounded-lg bg-(--palette-surface) text-(--palette-ink) hover:border-primary/40 hover:text-(--palette-primary-text) whitespace-nowrap disabled:opacity-50"
                         >
                           {t('actions.restore')}
                         </button>
@@ -599,7 +603,7 @@ function BlockReappraisalListPage() {
                         <Icon
                           style="solid"
                           name="chevron-right"
-                          className="size-3 text-gray-300 group-hover:text-primary transition-colors"
+                          className="size-3 text-(--palette-gray-300) group-hover:text-(--palette-primary-text) transition-colors"
                         />
                       </td>
                     )}

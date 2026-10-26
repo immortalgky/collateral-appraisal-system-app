@@ -1,5 +1,5 @@
-import { FormFields } from '@/shared/components/form';
-import Icon from '@/shared/components/Icon';
+import { FormFields, FormSection, FormSheet } from '@/shared/components/form';
+import { FieldLabels } from '@/features/appraisal/components/FieldLabels';
 import BoundaryFields from '@/features/appraisal/components/BoundaryFields';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useTranslation } from 'react-i18next';
@@ -36,34 +36,8 @@ import { projectLandInfoFields } from '../configs/fields';
  * to diverge.
  */
 
-interface SectionRowProps {
-  title: string;
-  icon?: string;
-  children: React.ReactNode;
-  isLast?: boolean;
-}
-
-const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
-  <>
-    <div className="col-span-1 pt-1">
-      <div className="flex items-center gap-2">
-        {icon && (
-          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-          </div>
-        )}
-        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
-      </div>
-    </div>
-    <div className="col-span-4">
-      <div className="grid grid-cols-12 gap-4">{children}</div>
-    </div>
-    {!isLast && <div className="h-px bg-gray-200 col-span-5 my-2" />}
-  </>
-);
-
 const Card = ({ children }: { children: React.ReactNode }) => (
-  <div className="col-span-12 bg-gray-50 rounded-lg p-3">
+  <div className="col-span-12">
     <div className="grid grid-cols-12 gap-3">{children}</div>
   </div>
 );
@@ -71,90 +45,93 @@ const Card = ({ children }: { children: React.ReactNode }) => (
 const BlockLandDetailForm = () => {
   const { t } = useTranslation('blockProject');
   const readOnly = usePageReadOnly();
+  // Two scopes: the reused appraisal configs take the property editor's wording, then the
+  // block-owned Land Information section refines it, see FieldLabels.
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('landDetail.title')}</h2>
-      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow title={t('landDetail.sections.landInformation')} icon="info-circle">
-          <FormFields fields={projectLandInfoFields} />
-        </SectionRow>
+    <FieldLabels scope="land">
+      <FieldLabels ns="blockProject" scope="projectLand">
+        <FormSheet>
+          <FormSection title={t('landDetail.sections.landInformation')} icon="circle-info">
+            <FormFields fields={projectLandInfoFields} />
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.landLocation')} icon="map-location-dot">
-          <FormFields fields={landLocationField} />
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.landLocation')} icon="map-location-dot">
+            <FormFields fields={landLocationField} />
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.plotLocation')} icon="location-dot">
-          <FormFields fields={plotLocationField} />
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.plotLocation')} icon="location-dot">
+            <FormFields fields={plotLocationField} />
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.landfill')} icon="mountain">
-          <FormFields fields={landFillField} />
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.landfill')} icon="mountain">
+            <FormFields fields={landFillField} />
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.roadSurface')} icon="road">
-          <Card>
-            <FormFields fields={roadField} />
-          </Card>
-          <Card>
-            <FormFields fields={roadSurfaceField} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.roadSurface')} icon="road">
+            <Card>
+              <FormFields fields={roadField} />
+            </Card>
+            <Card>
+              <FormFields fields={roadSurfaceField} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.landAccessUtilities')} icon="bolt">
-          <Card>
-            <FormFields fields={publicUtilityField} />
-          </Card>
-          <Card>
-            <FormFields fields={landUseField} />
-          </Card>
-          <Card>
-            <FormFields fields={landEntranceField} />
-          </Card>
-          <Card>
-            <FormFields fields={transpotationField} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.landAccessUtilities')} icon="bolt">
+            <Card>
+              <FormFields fields={publicUtilityField} />
+            </Card>
+            <Card>
+              <FormFields fields={landUseField} />
+            </Card>
+            <Card>
+              <FormFields fields={landEntranceField} />
+            </Card>
+            <Card>
+              <FormFields fields={transpotationField} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.limitation')} icon="triangle-exclamation">
-          <Card>
-            <FormFields fields={expropriateField} />
-          </Card>
-          <Card>
-            <FormFields fields={encroachedField} />
-          </Card>
-          <Card>
-            <FormFields fields={electricityField} />
-          </Card>
-          <Card>
-            <FormFields fields={landBoundaryField} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.limitation')} icon="triangle-exclamation">
+            <Card>
+              <FormFields fields={expropriateField} />
+            </Card>
+            <Card>
+              <FormFields fields={encroachedField} />
+            </Card>
+            <Card>
+              <FormFields fields={electricityField} />
+            </Card>
+            <Card>
+              <FormFields fields={landBoundaryField} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.assessment')} icon="chart-line">
-          <Card>
-            <FormFields fields={anticipationProsperityField} />
-          </Card>
-          <Card>
-            <FormFields fields={evictionField} />
-          </Card>
-          <Card>
-            <FormFields fields={allocationField} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.assessment')} icon="chart-line">
+            <Card>
+              <FormFields fields={anticipationProsperityField} />
+            </Card>
+            <Card>
+              <FormFields fields={evictionField} />
+            </Card>
+            <Card>
+              <FormFields fields={allocationField} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.sizeAndBoundary')} icon="ruler-combined">
-          <BoundaryFields readOnly={readOnly} />
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.sizeAndBoundary')} icon="ruler-combined">
+            <BoundaryFields readOnly={readOnly} showTitle={false} />
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.otherInformation')} icon="circle-info">
-          <FormFields fields={otherInformationField} />
-        </SectionRow>
+          <FormSection title={t('landDetail.sections.otherInformation')} icon="circle-info">
+            <FormFields fields={otherInformationField} />
+          </FormSection>
 
-        <SectionRow title={t('landDetail.sections.remark')} icon="comment" isLast>
-          <FormFields fields={remarkLandField} />
-        </SectionRow>
-      </div>
-    </div>
+          <FormSection title={t('landDetail.sections.remark')} icon="comment">
+            <FormFields fields={remarkLandField} />
+          </FormSection>
+        </FormSheet>
+      </FieldLabels>
+    </FieldLabels>
   );
 };
 

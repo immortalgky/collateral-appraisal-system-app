@@ -1,5 +1,5 @@
 @theme {
-    /* ========================================
+  /* ========================================
        Typography
        Roboto = Latin, digits, punctuation. Sarabun = Thai.
        Roboto has no Thai subset, so Thai text falls through to Sarabun; the
@@ -9,130 +9,131 @@
        NOTE: the family name is "Roboto Variable" (fontsource's variable build),
        not "Roboto" — a plain "Roboto" here would silently match nothing.
        ======================================== */
-    --font-sans: 'Roboto Variable', 'Sarabun', ui-sans-serif, system-ui, sans-serif,
-        'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+  --font-sans:
+    'Roboto Variable', 'Sarabun', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 
-    /* ========================================
+  /* ========================================
        Base Colors
        ======================================== */
-    --color-base-100: oklch(100% 0 0);
-    --color-base-200: oklch(98% 0 0);
-    --color-base-300: oklch(95% 0 0);
-    --color-base-content: #1f2937;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(98% 0 0);
+  --color-base-300: oklch(95% 0 0);
+  --color-base-content: #1f2937;
 
-    /* ========================================
+  /* ========================================
        Primary - Teal (Trust & Growth)
        Professional banking green
        ======================================== */
-    --color-primary: #0D9488;
-    --color-primary-content: #ffffff;
-    /* Shades for UI states */
-    --color-primary-50: #F0FDFA;
-    --color-primary-100: #CCFBF1;
-    --color-primary-200: #99F6E4;
-    --color-primary-300: #5EEAD4;
-    --color-primary-400: #2DD4BF;
-    --color-primary-500: #14B8A6;
-    --color-primary-600: #0D9488;
-    --color-primary-700: #0F766E;
-    --color-primary-800: #115E59;
-    --color-primary-900: #134E4A;
+  --color-primary: #0d9488;
+  --color-primary-content: #ffffff;
+  /* Shades for UI states */
+  --color-primary-50: #f0fdfa;
+  --color-primary-100: #ccfbf1;
+  --color-primary-200: #99f6e4;
+  --color-primary-300: #5eead4;
+  --color-primary-400: #2dd4bf;
+  --color-primary-500: #14b8a6;
+  --color-primary-600: #0d9488;
+  --color-primary-700: #0f766e;
+  --color-primary-800: #115e59;
+  --color-primary-900: #134e4a;
 
-    /* ========================================
+  /* ========================================
        Secondary - Slate (Professional & Balanced)
        Neutral complement to teal
        ======================================== */
-    --color-secondary: #475569;
-    --color-secondary-content: #ffffff;
-    --color-secondary-50: #F8FAFC;
-    --color-secondary-100: #F1F5F9;
-    --color-secondary-200: #E2E8F0;
-    --color-secondary-300: #CBD5E1;
-    --color-secondary-400: #94A3B8;
-    --color-secondary-500: #64748B;
-    --color-secondary-600: #475569;
-    --color-secondary-700: #334155;
-    --color-secondary-800: #1E293B;
-    --color-secondary-900: #0F172A;
+  --color-secondary: #475569;
+  --color-secondary-content: #ffffff;
+  --color-secondary-50: #f8fafc;
+  --color-secondary-100: #f1f5f9;
+  --color-secondary-200: #e2e8f0;
+  --color-secondary-300: #cbd5e1;
+  --color-secondary-400: #94a3b8;
+  --color-secondary-500: #64748b;
+  --color-secondary-600: #475569;
+  --color-secondary-700: #334155;
+  --color-secondary-800: #1e293b;
+  --color-secondary-900: #0f172a;
 
-    /* ========================================
+  /* ========================================
        Semantic Colors
        ======================================== */
-    /* Accent - Gold (Premium, Wealth) */
-    --color-accent: #D97706;
-    --color-accent-content: #ffffff;
+  /* Accent - Gold (Premium, Wealth) */
+  --color-accent: #d97706;
+  --color-accent-content: #ffffff;
 
-    /* Success - Green */
-    --color-success: #22C55E;
-    --color-success-content: #ffffff;
-    --color-success-50: #F0FDF4;
-    --color-success-100: #DCFCE7;
-    --color-success-500: #22C55E;
-    --color-success-600: #16A34A;
+  /* Success - Green */
+  --color-success: #22c55e;
+  --color-success-content: #ffffff;
+  --color-success-50: #f0fdf4;
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
 
-    /* Warning - Amber */
-    --color-warning: #F59E0B;
-    --color-warning-content: #422006;
+  /* Warning - Amber */
+  --color-warning: #f59e0b;
+  --color-warning-content: #422006;
 
-    /* Info - Blue */
-    --color-info: #3b82f6;
-    --color-info-content: #1e3a5f;
+  /* Info - Blue */
+  --color-info: #3b82f6;
+  --color-info-content: #1e3a5f;
 
-    /* Error/Danger - Red */
-    --color-error: #EF4444;
-    --color-error-content: #450a0a;
-    --color-danger: #EF4444;
-    --color-danger-content: #450a0a;
-    /* Shades for UI states */
-    --color-danger-50: #fef2f2;
-    --color-danger-100: #fee2e2;
-    --color-danger-300: #fca5a5;
-    --color-danger-500: #EF4444;
-    --color-danger-600: #dc2626;
-    --color-danger-900: #7f1d1d;
+  /* Error/Danger - Red */
+  --color-error: #ef4444;
+  --color-error-content: #450a0a;
+  --color-danger: #ef4444;
+  --color-danger-content: #450a0a;
+  /* Shades for UI states */
+  --color-danger-50: #fef2f2;
+  --color-danger-100: #fee2e2;
+  --color-danger-300: #fca5a5;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-900: #7f1d1d;
 
-    /* ========================================
+  /* ========================================
        Neutral
        ======================================== */
-    --color-neutral: #1f2937;
-    --color-neutral-content: #f9fafb;
+  --color-neutral: #1f2937;
+  --color-neutral-content: #f9fafb;
 
-    /* ========================================
+  /* ========================================
        daisyUI Component Settings
        ======================================== */
-    /* Border radius */
-    --radius-selector: 0.5rem;
-    --radius-field: 0.25rem;
-    --radius-box: 0.5rem;
+  /* Border radius */
+  --radius-selector: 0.5rem;
+  --radius-field: 0.25rem;
+  --radius-box: 0.5rem;
 
-    /* Base sizes */
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 1px;
+  /* Base sizes */
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
 
-    /* Effects */
-    --depth: 1;
-    --noise: 0;
+  /* Effects */
+  --depth: 1;
+  --noise: 0;
 
-    /* Animations */
-    --animate-flash-highlight: flash-highlight 1.5s ease-out;
-    /* Pricing Analysis nav-chip "jump to column" flash — deliberately a separate token
+  /* Animations */
+  --animate-flash-highlight: flash-highlight 1.5s ease-out;
+  /* Pricing Analysis nav-chip "jump to column" flash — deliberately a separate token
        from flash-highlight above, not a variant of it: flatter (background only, no
        ring), stronger/darker colour, shorter (0.9s vs 1.5s). Matches the mock's own
        `.flash`/`@keyframes flash` exactly rather than reusing flash-highlight's shape.
        See ScrollableTableContainer.tsx's goToColumn. */
-    --animate-nav-flash: nav-flash 0.9s ease-out;
+  --animate-nav-flash: nav-flash 0.9s ease-out;
 }
 
 @keyframes flash-highlight {
-    0% {
-        box-shadow: 0 0 0 3px var(--color-primary-400);
-        background-color: var(--color-primary-50);
-    }
-    100% {
-        box-shadow: 0 0 0 0 transparent;
-        background-color: transparent;
-    }
+  0% {
+    box-shadow: 0 0 0 3px var(--color-primary-400);
+    background-color: var(--color-primary-50);
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    background-color: transparent;
+  }
 }
 
 /* No `to` keyframe on purpose — do not add one. With only a `from`, the implicit
@@ -148,9 +149,9 @@
    Requires the cell to carry an opaque background of its own — all four
    `th[data-nav-col]` call sites do, and sticky headers here are required to. */
 @keyframes nav-flash {
-    from {
-        background-color: var(--nav-flash-color);
-    }
+  from {
+    background-color: var(--nav-flash-color);
+  }
 }
 
 /* --color-primary-200 (#99F6E4) is the mock's --accent-line in light — same value, no
@@ -159,114 +160,145 @@
    without touching --color-primary-200 itself, which flash-highlight and other primary-
    shade consumers still rely on staying put. */
 :root {
-    --nav-flash-color: var(--color-primary-200);
+  --nav-flash-color: var(--color-primary-200);
 
-    /* The grey / teal palette of the appraisal form skins (formLayoutCompact / Standard / Skin.css)
-       and of the Appraisal Data Correction screen: defined once here, read by `--cas-*` and
-       `--dc-*` below. Global on purpose — the correction screen's components sit outside
-       `.cas-form-grid`. Every token has a dark value in the `[data-theme=dark]` block further down;
-       the skins restate their own dark values per role (derived from the base tokens). */
-    --palette-surface: #ffffff;
-    --palette-surface-2: #f8fafa;
-    --palette-surface-3: #edf1f1;
-    --palette-line: #e3e9e8;
-    --palette-line-soft: #eef2f2;
-    --palette-line-strong: #cbd5d3;
-    --palette-ink: #1f2937;
-    /* Strongest text of the correction screen: `text-gray-900`'s own colour, so moving that screen
-       onto `--dc-ink` changes nothing in light. (`--palette-ink` is the skins' #1f2937, one step
-       lighter.) */
-    --palette-ink-strong: var(--color-gray-900);
-    --palette-ink-2: #55636f;
-    --palette-ink-3: #8a96a0;
-    --palette-input-edge: #e0e7e9;
-    --palette-input-edge-hover: #b7c4c9;
-    --palette-accent: #0d9488;
-    --palette-accent-ink: #0f766e;
-    --palette-accent-wash: #f0fdfa;
-    --palette-accent-line: #99f6e4;
-    --palette-warn: #b45309;
-    --palette-warn-wash: #fffbeb;
-    --palette-danger: #dc2626;
-    --palette-req: #b91c1c;
-    --palette-req-wash: #fff5f4;
-    --palette-req-line: #f3b1aa;
+  /* The grey / teal palette of the form system (DESIGN.md 17) and of the Appraisal Data Correction
+       screen: defined once here, read by the form components (they pick their Standard or Compact
+       geometry from `useFormLayout()`; the colours are shared) and by `--dc-*` below. Every token
+       has a dark value in the `[data-theme=dark]` block further down, so a component that reads
+       them needs no `dark:` variant for neutrals. */
+  --palette-surface: #ffffff;
+  --palette-surface-2: #f8fafa;
+  --palette-surface-3: #edf1f1;
+  --palette-line: #e3e9e8;
+  --palette-line-soft: #eef2f2;
+  --palette-line-strong: #cbd5d3;
+  --palette-ink: #1f2937;
+  /* Strongest text of the correction screen: `text-gray-900`'s own colour, so moving that screen
+       onto `--dc-ink` changes nothing in light. (`--palette-ink`, the form text colour, is #1f2937,
+       one step lighter.) */
+  --palette-ink-strong: var(--color-gray-900);
+  --palette-ink-2: #55636f;
+  --palette-ink-3: #8a96a0;
+  /* The original Tailwind greys of icons and secondary text (user decision 2026-10-25): sites that
+     were `text-gray-300..600` read these, so light looks as it did before the dark migration. Dark
+     collapses them onto ink-2 / ink-3 below. */
+  --palette-gray-300: var(--color-gray-300);
+  --palette-gray-400: var(--color-gray-400);
+  --palette-gray-500: var(--color-gray-500);
+  --palette-gray-600: var(--color-gray-600);
+  /* The original green of text and of the soft highlight (`text-primary`, `bg-primary/10`): light reads
+     the primary scale as before, dark keeps the accent-ink / accent-wash it already uses. */
+  --palette-primary-text: var(--color-primary);
+  --palette-primary-wash: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  /* The edge of a control (input, select, chip, outline button). Light keeps the original soft
+     edge (#e0e7e9, below 3:1 on white) by the user's choice, 2026-10-25. */
+  --palette-input-edge: #e0e7e9;
+  --palette-input-edge-hover: #b7c4c9;
+  /* The one focus style (DESIGN.md 6): a text control swaps its border to --focus-edge and adds a
+     3px --focus-ring; everything else gets the 2px outline in --focus-edge (index.css). */
+  --focus-edge: #0f766e;
+  --focus-ring: rgba(15, 118, 110, 0.25);
+  /* Error twin of the ring above; the error border is --color-danger. */
+  --focus-ring-error: rgba(239, 68, 68, 0.2);
+  --palette-accent: #0d9488;
+  --palette-accent-ink: #0f766e;
+  --palette-accent-wash: #f0fdfa;
+  --palette-accent-line: #99f6e4;
+  --palette-warn: #b45309;
+  --palette-warn-wash: #fffbeb;
+  --palette-danger: #dc2626;
+  --palette-req: #b91c1c;
+  --palette-req-wash: #fff5f4;
+  --palette-req-line: #f3b1aa;
 
-    /* The lift of the Data Correction editor's outer frame (the property editor's frame has no shadow). */
-    --palette-shadow-lift: 0 1px 2px rgba(16, 24, 32, 0.06), 0 4px 12px rgba(16, 24, 32, 0.08);
+  /* Fill of a form control and of an unselected choice chip (DESIGN.md 17.2). */
+  --form-input-bg: var(--color-base-100);
 
-    /* Appraisal Data Correction screen (DocumentCorrectionPane, CorrectionPageHeader, the rail in
+  /* The page behind the cards (the layouts' root and `body`). Same as a card in light; dark makes it
+     one step darker so the cards read as layers. */
+  --app-canvas: var(--color-base-100);
+
+  /* The lift of the Data Correction editor's outer frame (the property editor's frame has no shadow). */
+  --palette-shadow-lift: 0 1px 2px rgba(16, 24, 32, 0.06), 0 4px 12px rgba(16, 24, 32, 0.08);
+
+  /* Appraisal Data Correction screen (DocumentCorrectionPane, CorrectionPageHeader, the rail in
        AppraisalDataCorrectionDetailPage). */
-    --dc-ink: var(--palette-ink-strong);
-    --dc-surface: var(--palette-surface);
-    --dc-surface-2: var(--palette-surface-2);
-    --dc-surface-3: var(--palette-surface-3);
-    --dc-line: var(--palette-line);
-    --dc-line-soft: var(--palette-line-soft);
-    --dc-ink-2: var(--palette-ink-2);
-    --dc-ink-3: var(--palette-ink-3);
-    --dc-accent: var(--palette-accent);
-    --dc-accent-ink: var(--palette-accent-ink);
-    --dc-accent-wash: var(--palette-accent-wash);
-    --dc-accent-line: var(--palette-accent-line);
-    --dc-warn: var(--palette-warn);
-    --dc-warn-wash: var(--palette-warn-wash);
-    --dc-danger: var(--palette-danger);
+  --dc-ink: var(--palette-ink-strong);
+  --dc-surface: var(--palette-surface);
+  --dc-surface-2: var(--palette-surface-2);
+  --dc-surface-3: var(--palette-surface-3);
+  --dc-line: var(--palette-line);
+  --dc-line-soft: var(--palette-line-soft);
+  --dc-ink-2: var(--palette-ink-2);
+  --dc-ink-3: var(--palette-ink-3);
+  --dc-accent: var(--palette-accent);
+  --dc-accent-ink: var(--palette-accent-ink);
+  --dc-accent-wash: var(--palette-accent-wash);
+  --dc-accent-line: var(--palette-accent-line);
+  --dc-warn: var(--palette-warn);
+  --dc-warn-wash: var(--palette-warn-wash);
+  --dc-danger: var(--palette-danger);
 }
 
 /* ========================================
    Dark Theme Token Overrides
    Activated by <html data-theme="dark">
    ======================================== */
-[data-theme=dark] {
-    --color-base-100: oklch(18% 0.005 265);
-    --color-base-200: oklch(22% 0.005 265);
-    --color-base-300: oklch(27% 0.006 265);
-    --color-base-content: #e5e7eb;
+[data-theme='dark'] {
+  /* Slate, layered (hue ~217): canvas #13161c < input #151a21 < card #1c2129 < table head #20262f <
+     section band #242a33 < hairline #2c3138 < frame #383d44 < control edge #6b7380. The card is
+     --color-base-100 and base-200/300/content are set in the daisyUI dark theme block in
+     src/index.css (daisyUI's own @layer base values outrank this layer, so they cannot live here).
+     The page behind the cards is --app-canvas; controls are recessed (--form-input-bg). */
+  --app-canvas: #13161c;
 
-    --color-neutral: #e5e7eb;
-    --color-neutral-content: #111827;
+  /* --color-primary/secondary/neutral/... for dark live in the daisyUI dark block in src/index.css
+     (daisyUI's own dark theme would otherwise win with indigo). */
 
-    --color-secondary: #94a3b8;
-    --color-secondary-content: #0f172a;
+  /* mock's --accent-line under dark (mock:50) */
+  --nav-flash-color: #17544e;
 
-    /* mock's --accent-line under dark (mock:50) */
-    --nav-flash-color: #17544e;
-
-    /* Dark palette: every `--palette-*` has a dark value, so any screen reading them directly is
-       right in dark mode. Surfaces, lines and ink are mixes of `--color-base-100` and
-       `--color-base-content` at the percentages the skins' dark blocks use for the same roles
-       (surface-2 = table head 6%, surface-3 = section head 8%, line 20%, line-soft 15%, ink-2 72%,
-       ink-3 50%), so the correction screen and the form sheet it hosts share one dark ground. The
-       accent, warn and danger values are fixed hex. The skins still restate their own dark values
-       per role, so nothing they render moves. */
-    --palette-ink-strong: #e5e7eb;
-    --palette-shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.4);
-    --palette-ink: var(--color-base-content);
-    --palette-line-strong: color-mix(in srgb, var(--color-base-content) 30%, var(--color-base-100));
-    --palette-input-edge: color-mix(in srgb, var(--color-base-content) 15%, var(--color-base-100));
-    --palette-input-edge-hover: color-mix(
-        in srgb,
-        var(--color-base-content) 30%,
-        var(--color-base-100)
-    );
-    --palette-req: #f87171;
-    --palette-req-wash: color-mix(in srgb, #ef4444 12%, var(--color-base-100));
-    --palette-req-line: color-mix(in srgb, #ef4444 45%, var(--color-base-100));
-    --palette-surface: var(--color-base-100);
-    --palette-surface-2: color-mix(in srgb, var(--color-base-content) 6%, var(--color-base-100));
-    --palette-surface-3: color-mix(in srgb, var(--color-base-content) 8%, var(--color-base-100));
-    --palette-line: color-mix(in srgb, var(--color-base-content) 20%, var(--color-base-100));
-    --palette-line-soft: color-mix(in srgb, var(--color-base-content) 15%, var(--color-base-100));
-    --palette-ink-2: color-mix(in srgb, var(--color-base-content) 72%, transparent);
-    --palette-ink-3: color-mix(in srgb, var(--color-base-content) 50%, var(--color-base-100));
-    --palette-accent: #2dd4bf;
-    --palette-accent-ink: #5eead4;
-    --palette-accent-wash: #10322f;
-    --palette-accent-line: #17544e;
-    --palette-warn: #fcd34d;
-    --palette-warn-wash: #33280d;
-    --palette-danger: #fca5a5;
+  /* Dark palette: every `--palette-*` has a dark value, so any screen reading them directly is
+       right in dark mode. Surfaces, lines and the control edge are fixed slate hex (sampled from
+       the approved reference); ink-2 / ink-3 stay mixes of `--color-base-content` over
+       `--color-base-100` (ink-2 72%, ink-3 58%), so the correction screen and the form sheet it
+       hosts share one dark ground. The accent, warn and danger values are fixed hex. */
+  --palette-ink-strong: #e5e7eb;
+  --palette-shadow-lift: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --palette-ink: var(--color-base-content);
+  --palette-line-strong: #50565f;
+  --palette-input-edge: #6b7380;
+  --palette-input-edge-hover: #8a919d;
+  --focus-edge: #14b8a6;
+  --focus-ring: rgba(20, 184, 166, 0.3);
+  --focus-ring-error: rgba(239, 68, 68, 0.3);
+  --palette-req: #f87171;
+  --palette-req-wash: color-mix(in srgb, #ef4444 12%, var(--color-base-100));
+  --palette-req-line: color-mix(in srgb, #ef4444 45%, var(--color-base-100));
+  --palette-surface: var(--color-base-100);
+  --palette-surface-2: #20262f;
+  --palette-surface-3: #242a33;
+  --palette-line: #383d44;
+  --palette-line-soft: #2c3138;
+  --palette-ink-2: color-mix(in srgb, var(--color-base-content) 72%, transparent);
+  /* 58%, not 50%: 50% on the dark ground is 4.4:1; 58% clears 4.5:1 on the card (5.3:1), the
+     table head (5.1:1) and the section band (5.0:1). */
+  --palette-ink-3: color-mix(in srgb, var(--color-base-content) 58%, var(--color-base-100));
+  --palette-gray-300: var(--palette-ink-3);
+  --palette-gray-400: var(--palette-ink-2);
+  --palette-gray-500: var(--palette-ink-2);
+  --palette-gray-600: var(--palette-ink-2);
+  --palette-primary-text: var(--palette-accent-ink);
+  --palette-primary-wash: var(--palette-accent-wash);
+  --palette-accent: #2dd4bf;
+  --palette-accent-ink: #5eead4;
+  --palette-accent-wash: #173735;
+  --palette-accent-line: #17544e;
+  --palette-warn: #fcd34d;
+  --palette-warn-wash: #33280d;
+  --palette-danger: #fca5a5;
+  --form-input-bg: #151a21;
 }
 
 /* ========================================
@@ -279,21 +311,43 @@
    The sizes stay rem, so the viewport step and the user's density setting still scale them.
    ======================================== */
 @theme {
-    --text-xs: 0.8571rem;
-    --text-sm: 0.9286rem;
-    --text-base: 1.0714rem;
-    --text-lg: 1.1429rem;
-    --text-xl: 1.2857rem;
-    --text-2xl: 1.5714rem;
-    --text-3xl: 2rem;
-    --text-4xl: 2.5714rem;
-    --text-5xl: 3.4286rem;
-    --text-6xl: 4.2857rem;
-    --text-7xl: 5.1429rem;
-    --text-8xl: 6.8571rem;
-    --text-9xl: 9.1429rem;
-    /* Table rows: half a step under the body text (text-sm 13): 12.5px at the 14px root. */
-    --text-table: 0.8929rem;
+  --text-xs: 0.8571rem;
+  --text-sm: 0.9286rem;
+  --text-base: 1.0714rem;
+  --text-lg: 1.1429rem;
+  --text-xl: 1.2857rem;
+  --text-2xl: 1.5714rem;
+  --text-3xl: 2rem;
+  --text-4xl: 2.5714rem;
+  --text-5xl: 3.4286rem;
+  --text-6xl: 4.2857rem;
+  --text-7xl: 5.1429rem;
+  --text-8xl: 6.8571rem;
+  --text-9xl: 9.1429rem;
+  /* Table rows: half a step under the body text (text-sm 13): 12.5px at the 14px root. */
+  --text-table: 0.8929rem;
+}
+
+/* ========================================
+   Form system sizes (DESIGN.md 17.2)
+   Tailwind v4 turns `--spacing-<name>` into every spacing/sizing utility (`h-ctl`, `w-rail`, ...)
+   and `--radius-<name>` into `rounded-<name>`. All rem, so the root step and density still scale
+   them: the px in the comments are at the 14px root.
+   ======================================== */
+@theme {
+  /* Control height: Standard 36 / Compact 32. */
+  --spacing-ctl: 2.5714rem;
+  --spacing-ctl-c: 2.2857rem;
+  /* Choice chip height: Standard 32 / Compact 26. */
+  --spacing-chip: 2.2857rem;
+  --spacing-chip-c: 1.8571rem;
+  /* Right rail width: Standard 248 / Compact 204. */
+  --spacing-rail: 17.7143rem;
+  --spacing-rail-c: 14.5714rem;
+  /* Control and button radius: Standard 8 / Compact 6.5. Section card radius 12. */
+  --radius-ctl: 0.5714rem;
+  --radius-ctl-c: 0.4643rem;
+  --radius-section: 0.8571rem;
 }
 
 /* ========================================
@@ -305,11 +359,11 @@
    One knob: --cas-leading in src/index.css.
    ======================================== */
 @theme inline {
-    --text-xs--line-height: var(--cas-leading);
-    --text-sm--line-height: var(--cas-leading);
-    --text-base--line-height: var(--cas-leading);
-    --text-lg--line-height: var(--cas-leading);
-    --text-xl--line-height: var(--cas-leading);
-    --text-2xl--line-height: var(--cas-leading);
-    --text-table--line-height: var(--cas-leading);
+  --text-xs--line-height: var(--cas-leading);
+  --text-sm--line-height: var(--cas-leading);
+  --text-base--line-height: var(--cas-leading);
+  --text-lg--line-height: var(--cas-leading);
+  --text-xl--line-height: var(--cas-leading);
+  --text-2xl--line-height: var(--cas-leading);
+  --text-table--line-height: var(--cas-leading);
 }

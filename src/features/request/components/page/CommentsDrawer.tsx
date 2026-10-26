@@ -49,15 +49,17 @@ const CommentsDrawer = ({ isOpen, onClose, children }: CommentsDrawerProps) => {
         role="dialog"
         aria-modal="true"
         aria-label={t('rightMenu.tabComments')}
-        className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-white shadow-xl"
+        className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-(--palette-surface) shadow-xl"
       >
-        <header className="flex shrink-0 items-center justify-between border-b border-gray-100 px-4 py-3">
-          <h3 className="text-base font-semibold text-gray-800">{t('rightMenu.tabComments')}</h3>
+        <header className="flex shrink-0 items-center justify-between border-b border-(--palette-line-soft) px-4 py-3">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
+            {t('rightMenu.tabComments')}
+          </h3>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('page.comments.close')}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
           >
             <Icon style="solid" name="xmark" className="size-4!" />
           </button>

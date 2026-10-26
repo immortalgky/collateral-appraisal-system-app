@@ -1,8 +1,7 @@
 import Toggle from './Toggle';
 import { useController, useFormContext } from 'react-hook-form';
-import { useParametersByGroup } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
-import { useMemo } from 'react';
+import { useStringToggleOptions } from './toggleOptions';
 
 type FormStringToggleProps = FormStringToggleBaseProps &
   AtLeastOne<{ group: string; options: [FormStringToggleOption, FormStringToggleOption] }>;
@@ -22,20 +21,23 @@ export type FormStringToggleOption = {
   label: string;
 };
 
-const FormStringToggle = ({ name, label, group, options, size, disabled, className, required }: FormStringToggleProps) => {
+const FormStringToggle = ({
+  name,
+  label,
+  group,
+  options,
+  size,
+  disabled,
+  className,
+  required,
+}: FormStringToggleProps) => {
   const { control } = useFormContext();
   const {
     field,
     fieldState: { error },
   } = useController({ name, control });
 
-  const params = useParametersByGroup(group ?? '');
-  const resolvedOptions = useMemo<[FormStringToggleOption, FormStringToggleOption]>(() => {
-    if (options) return options;
-    const first: FormStringToggleOption = { name: params[0]?.code ?? '', label: params[0]?.description ?? '' };
-    const second: FormStringToggleOption = { name: params[1]?.code ?? '', label: params[1]?.description ?? '' };
-    return [first, second];
-  }, [options, params]);
+  const resolvedOptions = useStringToggleOptions(group, options);
 
   return (
     <Toggle
@@ -47,7 +49,9 @@ const FormStringToggle = ({ name, label, group, options, size, disabled, classNa
       disabled={disabled}
       className={className}
       required={required}
-      onChange={checked => field.onChange(checked ? resolvedOptions[1].name : resolvedOptions[0].name)}
+      onChange={checked =>
+        field.onChange(checked ? resolvedOptions[1].name : resolvedOptions[0].name)
+      }
     />
   );
 };

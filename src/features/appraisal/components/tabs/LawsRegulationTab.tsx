@@ -56,24 +56,26 @@ const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProp
       tabIndex={0}
       onClick={onOpen}
       onKeyDown={onKeyDown}
-      className="grid cursor-pointer grid-cols-[2.25rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 rounded-xl border border-gray-200 bg-white px-3.5 py-3 transition-colors hover:bg-gray-50 focus-visible:bg-gray-50 focus-visible:outline-none"
+      className="grid cursor-pointer grid-cols-[2.25rem_minmax(0,1fr)_auto_1.75rem] items-center gap-3 rounded-xl border border-(--palette-line) bg-(--palette-surface) px-3.5 py-3 transition-colors hover:bg-(--palette-surface-2) focus-visible:bg-(--palette-surface-2) focus-visible:outline-none"
     >
       <span className="flex size-9 items-center justify-center rounded-lg bg-amber-600/10 text-amber-700">
         <Icon name="gavel" style="solid" className="text-sm" />
       </span>
 
       <div className="min-w-0">
-        <h4 className="flex items-baseline gap-2 text-[13.5px] font-semibold text-gray-900">
+        <h4 className="flex items-baseline gap-2 text-[13.5px] font-semibold text-(--palette-ink)">
           <span className="truncate">{label || item.headerCode}</span>
           {/* The code only adds something when the master has a real name to show beside it. */}
           {label && label !== item.headerCode && (
-            <span className="shrink-0 text-[10.5px] font-medium tabular-nums text-gray-400">
+            <span className="shrink-0 text-[10.5px] font-medium tabular-nums text-(--palette-gray-400)">
               {item.headerCode}
             </span>
           )}
         </h4>
         {item.remark && (
-          <p className="mt-0.5 line-clamp-2 text-[12.5px] text-gray-600">{item.remark}</p>
+          <p className="mt-0.5 line-clamp-2 text-[12.5px] text-(--palette-gray-600)">
+            {item.remark}
+          </p>
         )}
       </div>
 
@@ -86,17 +88,17 @@ const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProp
               alt=""
               loading="lazy"
               decoding="async"
-              className="h-10 w-14 rounded-md bg-gray-100 object-cover"
+              className="h-10 w-14 rounded-md bg-(--palette-surface-3) object-cover"
             />
           ))}
           {more > 0 && (
-            <span className="flex size-10 items-center justify-center rounded-md bg-gray-100 text-[11px] font-semibold tabular-nums text-gray-600">
+            <span className="flex size-10 items-center justify-center rounded-md bg-(--palette-surface-3) text-[11px] font-semibold tabular-nums text-(--palette-gray-600)">
               +{more}
             </span>
           )}
         </div>
       ) : (
-        <span className="self-center text-[11px] italic text-gray-400">
+        <span className="self-center text-[11px] italic text-(--palette-gray-400)">
           {t('lawsRegulations.noImages')}
         </span>
       )}
@@ -109,7 +111,7 @@ const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProp
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.stopPropagation()}
             aria-label={t('lawsRegulations.actions.menu')}
-            className="rounded p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+            className="rounded p-1.5 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
           >
             <Icon name="ellipsis-vertical" className="text-sm" style="solid" />
           </MenuButton>
@@ -117,7 +119,7 @@ const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProp
             anchor={{ to: 'bottom end', gap: 4 }}
             onClick={e => e.stopPropagation()}
             onKeyDown={e => e.stopPropagation()}
-            className="z-50 w-36 rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+            className="z-50 w-36 rounded-md bg-(--palette-surface) py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
           >
             <MenuItem>
               {({ focus }) => (
@@ -125,11 +127,11 @@ const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProp
                   type="button"
                   onClick={onOpen}
                   className={clsx(
-                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700',
-                    focus && 'bg-gray-50',
+                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-(--palette-ink)',
+                    focus && 'bg-(--palette-surface-2)',
                   )}
                 >
-                  <Icon name="pencil" className="text-xs text-gray-400" />
+                  <Icon name="pencil" className="text-xs text-(--palette-gray-400)" />
                   {t('lawsRegulations.actions.edit')}
                 </button>
               )}
@@ -140,8 +142,8 @@ const ItemCard = ({ item, thumbnails, readOnly, onOpen, onDelete }: ItemCardProp
                   type="button"
                   onClick={onDelete}
                   className={clsx(
-                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600',
-                    focus && 'bg-red-50',
+                    'flex w-full items-center gap-2 px-3 py-2 text-sm text-(--palette-danger)',
+                    focus && 'bg-(--palette-req-wash)',
                   )}
                 >
                   <Icon name="trash" className="text-xs" />
@@ -230,7 +232,11 @@ export const LawsRegulationTab = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
-        <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-6 h-6 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -250,10 +256,12 @@ export const LawsRegulationTab = () => {
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-3">
         <div className="min-w-0">
-          <h3 className="text-base font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             {t('lawsRegulations.pageTitle')}
           </h3>
-          <p className="text-xs text-gray-500">{t('lawsRegulations.count', { n: items.length })}</p>
+          <p className="text-xs text-(--palette-gray-500)">
+            {t('lawsRegulations.count', { n: items.length })}
+          </p>
         </div>
         {!readOnly && (
           <button
@@ -268,12 +276,16 @@ export const LawsRegulationTab = () => {
       </div>
 
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-12 text-center">
-          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-50">
-            <Icon name="gavel" style="solid" className="text-xl text-gray-300" />
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-(--palette-line) bg-(--palette-surface) py-12 text-center">
+          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-(--palette-surface-2)">
+            <Icon name="gavel" style="solid" className="text-xl text-(--palette-gray-300)" />
           </div>
-          <p className="text-sm font-medium text-gray-600">{t('lawsRegulations.noRecords')}</p>
-          <p className="mt-1 text-xs text-gray-400">{t('lawsRegulations.noRecordsHint')}</p>
+          <p className="text-sm font-medium text-(--palette-gray-600)">
+            {t('lawsRegulations.noRecords')}
+          </p>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">
+            {t('lawsRegulations.noRecordsHint')}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">

@@ -36,7 +36,7 @@ const ListRow = memo(
     <tr
       onClick={() => onClick(image)}
       className={clsx(
-        'hover:bg-gray-50 cursor-pointer transition-colors',
+        'hover:bg-(--palette-surface-2) cursor-pointer transition-colors',
         isSelected && 'bg-primary/5',
       )}
     >
@@ -52,7 +52,7 @@ const ListRow = memo(
               'w-5 h-5 rounded border flex items-center justify-center transition-colors',
               isSelected
                 ? 'bg-primary border-primary text-white'
-                : 'border-gray-300 hover:border-gray-400',
+                : 'border-(--palette-line-strong) hover:border-(--palette-line-strong)',
             )}
           >
             {isSelected && <Icon name="check" style="solid" className="text-xs" />}
@@ -60,7 +60,7 @@ const ListRow = memo(
         </td>
       )}
       <td className="py-3 px-4">
-        <div className="w-12 h-9 rounded overflow-hidden bg-gray-100">
+        <div className="w-12 h-9 rounded overflow-hidden bg-(--palette-surface-3)">
           <img
             src={image.thumbnailSrc}
             alt={image.alt}
@@ -71,29 +71,31 @@ const ListRow = memo(
         </div>
       </td>
       <td className="py-3 px-4">
-        <span className="text-sm text-gray-900 font-medium">{image.fileName || image.alt}</span>
+        <span className="text-sm text-(--palette-ink) font-medium">
+          {image.fileName || image.alt}
+        </span>
       </td>
       {showUsedBadge && (
         <td className="py-3 px-4">
           {image.isInUse ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-300">
               <Icon name="check" className="text-[10px]" />
               In Use
             </span>
           ) : (
-            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600)">
               Not Used
             </span>
           )}
         </td>
       )}
       <td className="py-3 px-4">
-        <span className="text-sm text-gray-600 uppercase">
+        <span className="text-sm text-(--palette-gray-600) uppercase">
           {image.fileExtension || image.mimeType?.split('/')[1] || '-'}
         </span>
       </td>
       <td className="py-3 px-4">
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-(--palette-gray-600)">
           {image.fileSizeBytes != null
             ? image.fileSizeBytes < 1024 * 1024
               ? `${(image.fileSizeBytes / 1024).toFixed(1)} KB`
@@ -102,7 +104,7 @@ const ListRow = memo(
         </span>
       </td>
       <td className="py-3 px-4">
-        <span className="text-sm text-gray-500 truncate max-w-[200px] block">
+        <span className="text-sm text-(--palette-gray-500) truncate max-w-[200px] block">
           {image.description || '-'}
         </span>
       </td>
@@ -114,7 +116,7 @@ const ListRow = memo(
               e.stopPropagation();
               onClick(image);
             }}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+            className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) rounded transition-colors"
             title="View"
           >
             <Icon name="eye" />
@@ -126,7 +128,7 @@ const ListRow = memo(
                 e.stopPropagation();
                 onEdit(image);
               }}
-              className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors"
+              className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) rounded transition-colors"
               title="Edit"
             >
               <Icon name="pen-to-square" />
@@ -139,7 +141,7 @@ const ListRow = memo(
                 e.stopPropagation();
                 onDelete(image);
               }}
-              className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+              className="p-1.5 text-(--palette-gray-400) hover:text-red-500 hover:bg-(--palette-req-wash) rounded transition-colors"
               title="Delete"
             >
               <Icon name="trash" />
@@ -207,12 +209,12 @@ export const PhotoListView = ({
 
   if (images.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-          <Icon name="images" className="text-2xl text-gray-300" />
+      <div className="flex flex-col items-center justify-center py-16 text-(--palette-gray-400) bg-(--palette-surface-2) rounded-xl border-2 border-dashed border-(--palette-line)">
+        <div className="w-16 h-16 rounded-full bg-(--palette-surface-3) flex items-center justify-center mb-4">
+          <Icon name="images" className="text-2xl text-(--palette-gray-300)" />
         </div>
-        <p className="text-sm font-medium text-gray-500">No images in gallery</p>
-        <p className="text-xs text-gray-400 mt-1">Upload images to see them here</p>
+        <p className="text-sm font-medium text-(--palette-gray-500)">No images in gallery</p>
+        <p className="text-xs text-(--palette-gray-400) mt-1">Upload images to see them here</p>
       </div>
     );
   }
@@ -223,7 +225,7 @@ export const PhotoListView = ({
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-200">
+          <tr className="border-b border-(--palette-line)">
             {onSelectionChange && (
               <th className="text-xs py-3 px-2 w-10 font-semibold">
                 <button
@@ -233,39 +235,39 @@ export const PhotoListView = ({
                     'w-5 h-5 rounded border flex items-center justify-center transition-colors',
                     allSelected
                       ? 'bg-primary border-primary text-white'
-                      : 'border-gray-300 hover:border-gray-400',
+                      : 'border-(--palette-line-strong) hover:border-(--palette-line-strong)',
                   )}
                 >
                   {allSelected && <Icon name="check" style="solid" className="text-xs" />}
                 </button>
               </th>
             )}
-            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-16">
+            <th className="py-3 px-4 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider w-16">
               Preview
             </th>
-            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="py-3 px-4 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               Name
             </th>
             {showUsedBadge && (
-              <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+              <th className="py-3 px-4 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider w-32">
                 Status
               </th>
             )}
-            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-20">
+            <th className="py-3 px-4 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider w-20">
               Type
             </th>
-            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
+            <th className="py-3 px-4 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider w-24">
               Size
             </th>
-            <th className="py-3 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="py-3 px-4 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               Description
             </th>
-            <th className="py-3 px-4 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+            <th className="py-3 px-4 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider w-28">
               Actions
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {images.map(image => (
             <ListRow
               key={image.id}

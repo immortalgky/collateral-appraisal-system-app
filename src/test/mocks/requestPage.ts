@@ -4,10 +4,29 @@ import { server } from './server';
 
 /**
  * What the Request page asks for besides the request itself, answered empty: the address masters the
- * pickers load, the document types, the comment list, and the checklist of required documents. A
- * test that needs a different answer puts its own handler in front with server.use.
+ * pickers load, the document types, the comment list, and the checklist of required documents, and
+ * a chain with nothing to say about the prior appraisal (no construction data, nothing blocked).
+ * A test that needs a different answer puts its own handler in front with server.use.
  */
 export const requestPageHandlers = [
+  http.get('*/api/appraisals/:id/construction-chain-status', ({ params }) =>
+    HttpResponse.json({
+      appraisalId: params.id,
+      selected: { status: 'NoData', progressPct: null },
+      construction: {
+        status: 'NoData',
+        progressPct: null,
+        sourceAppraisalId: null,
+        sourceAppraisalNumber: null,
+        sourceInspectionNumber: null,
+        sourceCompletedAt: null,
+      },
+      laterInspection: null,
+      openInspectionRequest: null,
+      latestAppraisal: null,
+      blockReason: null,
+    }),
+  ),
   http.get('*/api/parameters/addresses/title', () => HttpResponse.json([])),
   http.get('*/api/parameters/addresses/dopa', () => HttpResponse.json([])),
   http.get('*/api/document-types', () => HttpResponse.json({ documentTypes: [] })),

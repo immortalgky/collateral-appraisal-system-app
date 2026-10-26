@@ -31,10 +31,10 @@ type ConfirmDeleteButtonProps = ConfirmDeleteName & {
 /**
  * The armed look. It hangs off the idle button's right edge (the spacer below keeps the idle size), so
  * a longer "Delete?" grows leftwards over its neighbour instead of being clipped by a narrow action
- * column or the table's frame. `cas-row-del-armed` / `data-armed` are the hooks for a skin.
+ * column or the table's frame. `data-armed` marks it for a test or a style.
  */
 const ARMED =
-  'cas-row-del-armed absolute right-0 top-1/2 z-10 inline-grid w-[max-content]! h-[1.5385rem] min-w-[1.5385rem] -translate-y-1/2 place-items-center whitespace-nowrap rounded-[4px] bg-[#dc2626] px-[6px] text-[0.8571rem] font-medium leading-none text-white';
+  'absolute right-0 top-1/2 z-10 inline-grid w-[max-content]! h-[1.5385rem] min-w-[1.5385rem] -translate-y-1/2 place-items-center whitespace-nowrap rounded-[4px] bg-[#dc2626] px-[6px] text-[0.8571rem] font-medium leading-none text-white';
 
 /**
  * A row's delete without a dialog: the first click arms the button (it turns into a red "Delete?"
@@ -108,7 +108,7 @@ const ConfirmDeleteButton = ({
         title={isArmed ? t('actions.confirmDeleteLabel') : idleLabel}
         aria-describedby={isArmed ? promptId : undefined}
         data-armed={isArmed ? 'true' : undefined}
-        className={isArmed ? ARMED : clsx('cas-row-del', className)}
+        className={isArmed ? ARMED : className}
       >
         {isArmed
           ? t('actions.confirmDelete')

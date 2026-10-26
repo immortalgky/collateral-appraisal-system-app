@@ -26,9 +26,9 @@ import { useLocalizedCompanyName } from '@shared/utils/companyName';
 
 function DetailRow({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex gap-3 py-1.5 border-b border-gray-50 last:border-0">
-      <span className="text-xs font-medium text-gray-500 w-44 shrink-0">{label}</span>
-      <span className="text-xs text-gray-800 break-all">{value ?? '—'}</span>
+    <div className="flex gap-3 py-1.5 border-b border-(--palette-line-soft) last:border-0">
+      <span className="text-xs font-medium text-(--palette-gray-500) w-44 shrink-0">{label}</span>
+      <span className="text-xs text-(--palette-ink) break-all">{value ?? '—'}</span>
     </div>
   );
 }
@@ -46,7 +46,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.landDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-2">
           Land Identity
         </p>
         <DetailRow label="Land Office Code" value={d.landOfficeCode} />
@@ -57,7 +57,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Title Number" value={d.titleNumber} />
         <DetailRow label="Survey No" value={d.surveyNumber} />
         <DetailRow label="Land Parcel No" value={d.landParcelNumber} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last-known
         </p>
         <DetailRow label="Land Area (sq wa)" value={d.landArea} />
@@ -65,7 +65,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Land Shape" value={d.landShapeType} />
         <DetailRow label="Zone" value={d.landZoneType} />
         <DetailRow label="Urban Planning" value={d.urbanPlanningType} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Construction
         </p>
         <DetailRow
@@ -80,7 +80,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
               : null
           }
         />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
@@ -94,7 +94,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.condoDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-2">
           Condo Identity
         </p>
         <DetailRow label="Land Office Code" value={d.landOfficeCode} />
@@ -106,7 +106,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Province" value={provinceName(d.province) || null} />
         <DetailRow label="District" value={districtName(d.district) || null} />
         <DetailRow label="Sub-district" value={subDistrictName(d.subDistrict) || null} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last-known
         </p>
         <DetailRow label="Usable Area (m²)" value={d.usableArea} />
@@ -114,7 +114,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Building Age" value={d.buildingAge} />
         <DetailRow label="Construction Year" value={d.constructionYear} />
         <DetailRow label="Model Name" value={d.modelName} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
@@ -128,7 +128,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.leaseholdDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-2">
           Leasehold Identity
         </p>
         <DetailRow label="Lease Registration No" value={d.leaseRegistrationNo} />
@@ -139,12 +139,12 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
           label="Lease Term Start"
           value={formatLocaleDate(d.leaseTermStart, i18n.language)}
         />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last-known
         </p>
         <DetailRow label="Lease Term End" value={formatLocaleDate(d.leaseTermEnd, i18n.language)} />
         <DetailRow label="Lease Term (months)" value={d.leaseTermMonths} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
@@ -158,7 +158,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     const d = master.machineDetail;
     return (
       <div className="flex flex-col gap-0.5">
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-2">
           Machine Identity
         </p>
         <DetailRow label="Registration No" value={d.machineRegistrationNo} />
@@ -166,7 +166,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
         <DetailRow label="Brand" value={d.brand} />
         <DetailRow label="Model" value={d.model} />
         <DetailRow label="Manufacturer" value={d.manufacturer} />
-        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4 mb-2">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mt-4 mb-2">
           Last Appraisal
         </p>
         <DetailRow label="Appraisal No" value={d.lastAppraisalNumber} />
@@ -176,7 +176,7 @@ function MasterDetailPanel({ master }: { master: CollateralMasterDto }) {
     );
   }
 
-  return <p className="text-sm text-gray-400">No detail available.</p>;
+  return <p className="text-sm text-(--palette-gray-400)">No detail available.</p>;
 }
 
 // ─── Snapshot modal ───────────────────────────────────────────────────────────
@@ -194,13 +194,13 @@ function SnapshotModal({
 
   return (
     <dialog className="modal modal-open z-[60]">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] flex flex-col">
+      <div className="modal-box bg-(--palette-surface) rounded-2xl shadow-xl max-w-3xl w-full max-h-[80vh] flex flex-col">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">Engagement Snapshot</h3>
+          <h3 className="font-semibold text-(--palette-ink)">Engagement Snapshot</h3>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-(--palette-surface-3) text-(--palette-gray-500)"
           >
             <Icon name="xmark" style="solid" className="size-4" />
           </button>
@@ -208,10 +208,14 @@ function SnapshotModal({
         <div className="flex-1 min-h-0 overflow-y-auto">
           {isLoading ? (
             <div className="flex justify-center py-8">
-              <Icon name="spinner" style="solid" className="size-6 animate-spin text-primary" />
+              <Icon
+                name="spinner"
+                style="solid"
+                className="size-6 animate-spin text-(--palette-primary-text)"
+              />
             </div>
           ) : (
-            <pre className="text-xs text-gray-700 bg-gray-50 rounded-lg p-4 overflow-x-auto whitespace-pre-wrap">
+            <pre className="text-xs text-(--palette-ink) bg-(--palette-surface-2) rounded-lg p-4 overflow-x-auto whitespace-pre-wrap">
               {JSON.stringify(data?.snapshot, null, 2)}
             </pre>
           )}
@@ -258,9 +262,9 @@ function ReasonDialog({
 
   return (
     <dialog className="modal modal-open z-[60]">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-sm">
-        <h3 className="font-semibold text-gray-900 mb-4">{title}</h3>
-        <label className="block text-xs font-medium text-gray-600 mb-1">
+      <div className="modal-box bg-(--palette-surface) rounded-2xl shadow-xl max-w-sm">
+        <h3 className="font-semibold text-(--palette-ink) mb-4">{title}</h3>
+        <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
           Reason <span className="text-danger">*</span>
         </label>
         <textarea
@@ -268,14 +272,14 @@ function ReasonDialog({
           onChange={e => setReason(e.target.value)}
           rows={3}
           placeholder="Required — explain the reason for this action..."
-          className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
+          className="w-full px-3 py-2 text-sm border border-(--palette-line-strong) rounded-lg outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
         />
         <div className="flex gap-3 mt-4">
           <button
             type="button"
             onClick={onClose}
             disabled={isLoading}
-            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) font-medium rounded-xl transition-colors disabled:opacity-50"
           >
             Cancel
           </button>
@@ -343,7 +347,11 @@ export default function CollateralMasterDetailPage() {
   if (isLoading) {
     return (
       <div className="flex justify-center py-16">
-        <Icon name="spinner" style="solid" className="size-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="size-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -352,7 +360,7 @@ export default function CollateralMasterDetailPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Collateral master not found</p>
+        <p className="text-(--palette-gray-600)">Collateral master not found</p>
         <Button onClick={() => navigate('/admin/collateral-masters')}>Back to Catalog</Button>
       </div>
     );
@@ -417,18 +425,18 @@ export default function CollateralMasterDetailPage() {
           <button
             type="button"
             onClick={() => navigate('/admin/collateral-masters')}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-100 text-gray-500"
+            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-(--palette-surface-3) text-(--palette-gray-500)"
           >
             <Icon name="arrow-left" style="solid" className="size-4" />
           </button>
           <div>
-            <h2 className="text-base font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-(--palette-ink)">
               {t('collateralMaster.masterTitle', { type: typeLabel })}
               {master.isDeleted && (
                 <span className="ml-2 text-xs font-normal text-red-500">(deleted)</span>
               )}
             </h2>
-            <p className="text-xs text-gray-400 font-mono mt-0.5">{master.id}</p>
+            <p className="text-xs text-(--palette-gray-400) font-mono mt-0.5">{master.id}</p>
           </div>
         </div>
 
@@ -455,7 +463,7 @@ export default function CollateralMasterDetailPage() {
                   size="sm"
                   variant="outline"
                   onClick={() => setDeleteDialog(true)}
-                  className="text-red-600 border-red-200 hover:bg-red-50"
+                  className="text-(--palette-danger) border-(--palette-req-line) hover:bg-(--palette-req-wash)"
                 >
                   <Icon name="trash" style="solid" className="size-3.5 mr-1.5" />
                   Delete
@@ -469,13 +477,13 @@ export default function CollateralMasterDetailPage() {
       {/* Content grid */}
       <div className="grid grid-cols-3 gap-6">
         {/* Detail panel */}
-        <div className="col-span-2 bg-white rounded-xl border border-gray-200 p-5">
+        <div className="col-span-2 bg-(--palette-surface) rounded-xl border border-(--palette-line) p-5">
           <MasterDetailPanel master={master} />
         </div>
 
         {/* Meta panel */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) p-5">
+          <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-3">
             Master Record
           </p>
           <DetailRow label="Type" value={typeLabel} />
@@ -492,50 +500,58 @@ export default function CollateralMasterDetailPage() {
       </div>
 
       {/* Engagement history */}
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-5 py-3.5 border-b border-gray-100">
-          <h3 className="text-base font-semibold text-gray-900">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) overflow-hidden">
+        <div className="px-5 py-3.5 border-b border-(--palette-line-soft)">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             Engagement History{' '}
-            <span className="text-xs font-normal text-gray-400">({engTotal} total)</span>
+            <span className="text-xs font-normal text-(--palette-gray-400)">
+              ({engTotal} total)
+            </span>
           </h3>
         </div>
 
         {engItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10">
-            <Icon style="regular" name="folder-open" className="size-8 text-gray-300 mb-2" />
-            <p className="text-sm text-gray-400">No engagements yet</p>
+            <Icon
+              style="regular"
+              name="folder-open"
+              className="size-8 text-(--palette-gray-300) mb-2"
+            />
+            <p className="text-sm text-(--palette-gray-400)">No engagements yet</p>
           </div>
         ) : (
           <>
             <table className="w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr className="border-b border-gray-200">
-                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+              <thead className="bg-(--palette-surface-2)">
+                <tr className="border-b border-(--palette-line)">
+                  <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                     Appraisal #
                   </th>
-                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                     Type
                   </th>
-                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                     Company
                   </th>
-                  <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                  <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                     Date
                   </th>
-                  <th className="text-xs text-right font-semibold text-gray-600 px-4 py-2.5">
+                  <th className="text-xs text-right font-semibold text-(--palette-gray-600) px-4 py-2.5">
                     Value
                   </th>
                   <th className="text-xs w-16 px-4 py-2.5 font-semibold" />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {engItems.map(eng => (
-                  <tr key={eng.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-2.5 font-medium text-primary text-xs">
+                  <tr key={eng.id} className="hover:bg-(--palette-surface-2) transition-colors">
+                    <td className="px-4 py-2.5 font-medium text-(--palette-primary-text) text-xs">
                       {eng.appraisalNumber}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-600">{eng.appraisalType}</td>
-                    <td className="px-4 py-2.5 text-xs text-gray-600 max-w-[160px] truncate">
+                    <td className="px-4 py-2.5 text-xs text-(--palette-gray-600)">
+                      {eng.appraisalType}
+                    </td>
+                    <td className="px-4 py-2.5 text-xs text-(--palette-gray-600) max-w-[160px] truncate">
                       {eng.appraisalCompanyName
                         ? localizeCompanyName(
                             eng.appraisalCompanyName,
@@ -543,17 +559,17 @@ export default function CollateralMasterDetailPage() {
                           )
                         : '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-xs text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-xs text-(--palette-gray-600) whitespace-nowrap">
                       {formatLocaleDate(eng.appraisalDate, i18n.language)}
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-xs text-gray-700">
+                    <td className="px-4 py-2.5 text-right tabular-nums text-xs text-(--palette-ink)">
                       {eng.appraisedValue != null ? formatCurrency(eng.appraisedValue) : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       <button
                         type="button"
                         onClick={() => setSnapshotEngagementId(eng.id)}
-                        className="px-2 py-1 text-xs text-primary border border-primary/30 rounded hover:bg-primary/10 transition-colors"
+                        className="px-2 py-1 text-xs text-(--palette-primary-text) border border-primary/30 rounded hover:bg-primary/10 transition-colors"
                         title="View snapshot"
                       >
                         Snapshot

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Icon from '@shared/components/Icon';
 import { useGetRoles, useGetRoleById } from '@/features/userManagement/api/roles';
 import { useGetPermissions } from '@/features/userManagement/api/permissions';
@@ -102,14 +103,14 @@ export default function MenuListPage() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
             {tab !== 'Activities' && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+              <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
                 {total}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             {tab === 'Activities' ? t('page.subtitleActivities') : t('page.subtitle')}
           </p>
         </div>
@@ -125,7 +126,7 @@ export default function MenuListPage() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200">
+      <div className="flex gap-2 border-b border-(--palette-line)">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
@@ -133,8 +134,8 @@ export default function MenuListPage() {
             onClick={() => changeTab(key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
               tab === key
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-(--palette-primary-text)'
+                : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)'
             }`}
           >
             {label}
@@ -149,18 +150,18 @@ export default function MenuListPage() {
         <>
           {isLoading && (
             <div className="flex items-center justify-center py-16">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-(--palette-line) border-t-primary" />
             </div>
           )}
 
           {isError && (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <Icon name="triangle-exclamation" style="solid" className="size-10 text-red-400" />
-              <p className="text-sm text-gray-500">{t('errors.failedToLoad')}</p>
+              <p className="text-sm text-(--palette-gray-500)">{t('errors.failedToLoad')}</p>
               <button
                 type="button"
                 onClick={() => refetch()}
-                className="text-sm text-primary hover:underline"
+                className="text-sm text-(--palette-primary-text) hover:underline"
               >
                 {t('common:actions.retry')}
               </button>
@@ -168,7 +169,7 @@ export default function MenuListPage() {
           )}
 
           {!isLoading && !isError && items && items.length === 0 && (
-            <div className="text-center py-16 text-gray-400 text-sm">
+            <div className="text-center py-16 text-(--palette-gray-400) text-sm">
               {t('empty.noItems', { scope: tab })}
             </div>
           )}
@@ -181,19 +182,18 @@ export default function MenuListPage() {
                   <Icon
                     name="magnifying-glass"
                     style="solid"
-                    className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400)"
                   />
                   <input
                     type="text"
                     value={searchText}
                     onChange={e => setSearchText(e.target.value)}
                     placeholder={t('tree.searchPlaceholder')}
-                    className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="w-full rounded-lg border border-(--palette-line-strong) pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
 
-                <select
-                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                <NativeSelect
                   value={roleId ?? ''}
                   onChange={e => setRoleId(e.target.value || null)}
                   title={t('activityOverrides.previewAsRole')}
@@ -204,32 +204,32 @@ export default function MenuListPage() {
                       {r.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
 
                 <button
                   type="button"
                   onClick={() => setCollapsedIds(new Set())}
-                  className="rounded-md border border-gray-200 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+                  className="rounded-md border border-(--palette-line) px-2 py-1.5 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
                 >
                   {t('tree.expandAll')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setCollapsedIds(new Set(parentIds))}
-                  className="rounded-md border border-gray-200 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+                  className="rounded-md border border-(--palette-line) px-2 py-1.5 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
                 >
                   {t('tree.collapseAll')}
                 </button>
                 <button
                   type="button"
                   onClick={handleExport}
-                  className="flex items-center gap-1.5 rounded-md border border-gray-200 px-2 py-1.5 text-xs text-gray-600 hover:bg-gray-50"
+                  className="flex items-center gap-1.5 rounded-md border border-(--palette-line) px-2 py-1.5 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
                 >
                   <Icon name="download" style="solid" className="size-3" />
                   {t('tree.export')}
                 </button>
 
-                <span className="ml-auto text-xs text-gray-400">
+                <span className="ml-auto text-xs text-(--palette-gray-400)">
                   {t('tree.count', { count: total })}
                 </span>
               </div>

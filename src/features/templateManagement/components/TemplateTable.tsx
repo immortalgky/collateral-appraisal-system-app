@@ -87,7 +87,9 @@ const TemplateTable = ({
           if (sortKey === 'factorCount') {
             cmp = (a.factorCount ?? 0) - (b.factorCount ?? 0);
           } else if (sortKey === 'propertyType') {
-            cmp = propertyTypeLabel(a.propertyType).localeCompare(propertyTypeLabel(b.propertyType));
+            cmp = propertyTypeLabel(a.propertyType).localeCompare(
+              propertyTypeLabel(b.propertyType),
+            );
           } else {
             cmp = a[sortKey].localeCompare(b[sortKey]);
           }
@@ -110,7 +112,7 @@ const TemplateTable = ({
     return (
       <th
         className={clsx(
-          'px-4 py-3 text-xs font-semibold text-gray-500',
+          'px-4 py-3 text-xs font-semibold text-(--palette-gray-500)',
           align === 'center' ? 'text-center' : 'text-left',
           widthClass,
         )}
@@ -120,7 +122,7 @@ const TemplateTable = ({
           type="button"
           onClick={() => handleSort(key)}
           className={clsx(
-            'group inline-flex items-center gap-1 select-none transition-colors hover:text-gray-700',
+            'group inline-flex items-center gap-1 select-none transition-colors hover:text-(--palette-ink)',
             align === 'center' && 'justify-center',
           )}
         >
@@ -130,7 +132,9 @@ const TemplateTable = ({
             name={isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
             className={clsx(
               'size-2.5',
-              isActive ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-500',
+              isActive
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-(--palette-gray-400) group-hover:text-(--palette-gray-500)',
             )}
           />
         </button>
@@ -141,30 +145,35 @@ const TemplateTable = ({
   return (
     <div className={clsx(fillHeight && 'flex flex-col h-full min-h-0')}>
       {templates.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-(--palette-gray-500)">
           <Icon
             name="rectangle-list"
             style="regular"
-            className="size-8 mx-auto mb-2 text-gray-300"
+            className="size-8 mx-auto mb-2 text-(--palette-gray-300)"
           />
           <p className="text-sm">{t('templates.empty')}</p>
         </div>
       ) : (
         <div className={clsx('overflow-x-auto', fillHeight && 'flex-1 min-h-0 overflow-y-auto')}>
           <table className="w-full text-table">
-            <thead className={clsx(fillHeight && 'sticky top-0 z-10 bg-gray-50')}>
-              <tr className="border-b border-gray-100 bg-gray-50">
+            <thead className={clsx(fillHeight && 'sticky top-0 z-10 bg-(--palette-surface-2)')}>
+              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
                 {sortableHeader('templateCode', t('templates.columns.code'), 'left', 'w-36')}
                 {sortableHeader('templateName', t('templates.columns.name'), 'left')}
-                {sortableHeader('propertyType', t('templates.columns.propertyType'), 'left', 'w-72')}
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 text-left">
+                {sortableHeader(
+                  'propertyType',
+                  t('templates.columns.propertyType'),
+                  'left',
+                  'w-72',
+                )}
+                <th className="px-4 py-3 text-xs font-semibold text-(--palette-gray-500) text-left">
                   {t('templates.columns.description')}
                 </th>
                 {sortableHeader('factorCount', t('templates.columns.factors'), 'center', 'w-28')}
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 text-center w-24">
+                <th className="px-4 py-3 text-xs font-semibold text-(--palette-gray-500) text-center w-24">
                   {t('templates.columns.status')}
                 </th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 text-center w-28">
+                <th className="px-4 py-3 text-xs font-semibold text-(--palette-gray-500) text-center w-28">
                   {t('templates.columns.actions')}
                 </th>
               </tr>
@@ -173,27 +182,33 @@ const TemplateTable = ({
               {paged.map(template => (
                 <tr
                   key={template.id}
-                  className="border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors cursor-pointer"
                   onClick={() => navigate(`${basePath}/${template.id}`)}
                 >
                   <td className="py-3 px-4">
-                    <span className="text-table text-gray-800">{template.templateCode}</span>
+                    <span className="text-table text-(--palette-ink)">{template.templateCode}</span>
                   </td>
-                  <td className="py-3 px-4 text-table text-gray-900">{template.templateName}</td>
-                  <td className="py-3 px-4 text-table text-gray-900">
+                  <td className="py-3 px-4 text-table text-(--palette-ink)">
+                    {template.templateName}
+                  </td>
+                  <td className="py-3 px-4 text-table text-(--palette-ink)">
                     {propertyTypeLabels.get(template.propertyType) ?? template.propertyType}
                   </td>
-                  <td className="py-3 px-4 text-table text-gray-500 max-w-xs truncate">
-                    {template.description || <span className="text-gray-300">-</span>}
+                  <td className="py-3 px-4 text-table text-(--palette-gray-500) max-w-xs truncate">
+                    {template.description || <span className="text-(--palette-gray-300)">-</span>}
                   </td>
                   <td className="py-3 px-4 text-center">
                     {template.factorCount != null ? (
-                      <span className="inline-flex items-center gap-1 text-table text-gray-600">
-                        <Icon name="layer-group" style="regular" className="size-3 text-gray-400" />
+                      <span className="inline-flex items-center gap-1 text-table text-(--palette-gray-600)">
+                        <Icon
+                          name="layer-group"
+                          style="regular"
+                          className="size-3 text-(--palette-gray-400)"
+                        />
                         {template.factorCount}
                       </span>
                     ) : (
-                      <span className="text-gray-300">-</span>
+                      <span className="text-(--palette-gray-300)">-</span>
                     )}
                   </td>
                   <td className="py-3 px-4 text-center">
@@ -201,8 +216,8 @@ const TemplateTable = ({
                       className={clsx(
                         'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
                         template.isActive
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-gray-100 text-gray-500',
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)',
                       )}
                     >
                       {template.isActive
@@ -218,7 +233,7 @@ const TemplateTable = ({
                       <button
                         type="button"
                         onClick={() => navigate(`${basePath}/${template.id}`)}
-                        className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                        className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
                         title={t('common:actions.edit')}
                         aria-label={t('common:actions.edit')}
                       >
@@ -229,7 +244,7 @@ const TemplateTable = ({
                           type="button"
                           onClick={() => onToggleStatus(template)}
                           disabled={isTogglingStatus}
-                          className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--palette-warn-wash) rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                           title={
                             template.isActive
                               ? t('common:actions.deactivate')
@@ -253,7 +268,7 @@ const TemplateTable = ({
                           type="button"
                           onClick={() => onDelete(template.id)}
                           disabled={isDeleting}
-                          className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                           title={t('common:actions.delete')}
                           aria-label={t('common:actions.delete')}
                         >

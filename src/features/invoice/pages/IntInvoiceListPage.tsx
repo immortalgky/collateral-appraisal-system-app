@@ -64,15 +64,16 @@ const SortableTh = ({
   children: React.ReactNode;
 }) => {
   const isActive = sortBy === field;
-  const alignCls = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  const alignCls =
+    align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
   const flexAlign =
     align === 'right' ? 'flex-row-reverse' : align === 'center' ? 'justify-center' : '';
   const iconName = isActive ? (sortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
   return (
     <th
       onClick={() => onSort(field)}
-      className={`text-xs font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${alignCls} ${
-        isActive ? 'text-primary' : 'text-gray-600'
+      className={`text-xs font-semibold px-4 py-2.5 whitespace-nowrap select-none cursor-pointer hover:text-(--palette-ink) ${alignCls} ${
+        isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-600)'
       }`}
     >
       <div className={`inline-flex items-center gap-1 ${flexAlign}`}>
@@ -80,7 +81,7 @@ const SortableTh = ({
         <Icon
           style="solid"
           name={iconName}
-          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300'}`}
+          className={`size-2.5 ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)'}`}
         />
       </div>
     </th>
@@ -310,7 +311,9 @@ const IntInvoiceListPage = () => {
   const lockedCompanyName = (() => {
     if (lockedCompanyId === null) return null;
     const match = items.find(i => i.companyId === lockedCompanyId);
-    return match?.companyName ? localizeCompanyName(match.companyName, match.companyNameLocal) : null;
+    return match?.companyName
+      ? localizeCompanyName(match.companyName, match.companyNameLocal)
+      : null;
   })();
 
   // Status options depend on active tab
@@ -323,8 +326,8 @@ const IntInvoiceListPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.loadFailed')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -335,12 +338,12 @@ const IntInvoiceListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('list.title')}</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('internal.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('internal.subtitle')}</p>
         </div>
       </div>
 
@@ -437,7 +440,7 @@ const IntInvoiceListPage = () => {
       </div>
 
       {/* Table card */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table table-fixed">
             <colgroup>
@@ -451,8 +454,8 @@ const IntInvoiceListPage = () => {
               <col className="w-32" />
               <col className="w-16" />
             </colgroup>
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
                 {tab === 'unpaid' && (
                   <th className="text-xs text-left px-4 py-2.5 font-semibold">
                     <input
@@ -463,18 +466,29 @@ const IntInvoiceListPage = () => {
                       }}
                       disabled={!headerTarget}
                       onChange={() => {
-                        if (headerTarget) handleToggleBatch(headerTarget.companyId, headerTarget.ids);
+                        if (headerTarget)
+                          handleToggleBatch(headerTarget.companyId, headerTarget.ids);
                       }}
                       aria-label={t('list.selectAll')}
-                      className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
+                      className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
                     />
                   </th>
                 )}
-                <SortableTh field="invoiceNumber" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                <SortableTh
+                  field="invoiceNumber"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={toggleSort}
+                >
                   {t('list.col.invoiceNumber')}
                 </SortableTh>
                 {!groupByCompany && (
-                  <SortableTh field="companyName" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                  <SortableTh
+                    field="companyName"
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSort={toggleSort}
+                  >
                     {t('list.col.companyName')}
                   </SortableTh>
                 )}
@@ -482,14 +496,31 @@ const IntInvoiceListPage = () => {
                   {t('list.col.sentDate')}
                 </SortableTh>
                 {tab === 'paid' && (
-                  <SortableTh field="paidDate" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                  <SortableTh
+                    field="paidDate"
+                    sortBy={sortBy}
+                    sortDir={sortDir}
+                    onSort={toggleSort}
+                  >
                     {t('list.col.paidDate')}
                   </SortableTh>
                 )}
-                <SortableTh field="totalItems" align="center" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                <SortableTh
+                  field="totalItems"
+                  align="center"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={toggleSort}
+                >
                   {t('list.col.totalItems')}
                 </SortableTh>
-                <SortableTh field="totalAmount" align="right" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
+                <SortableTh
+                  field="totalAmount"
+                  align="right"
+                  sortBy={sortBy}
+                  sortDir={sortDir}
+                  onSort={toggleSort}
+                >
                   {t('list.col.totalAmount')}
                 </SortableTh>
                 <SortableTh field="status" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort}>
@@ -499,7 +530,7 @@ const IntInvoiceListPage = () => {
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`divide-y divide-(--palette-line-soft) ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -520,14 +551,21 @@ const IntInvoiceListPage = () => {
                 <tr>
                   <td
                     colSpan={
-                      (tab === 'unpaid' ? 1 : 0) + (groupByCompany ? 0 : 1) + (tab === 'paid' ? 1 : 0) + 6
+                      (tab === 'unpaid' ? 1 : 0) +
+                      (groupByCompany ? 0 : 1) +
+                      (tab === 'paid' ? 1 : 0) +
+                      6
                     }
                     className="text-center py-16"
                   >
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">{t('list.empty')}</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">{t('list.empty')}</p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {activeFilterCount > 0 ? t('list.tryFilters') : t('list.emptyHint')}
                       </p>
                     </div>
@@ -541,25 +579,19 @@ const IntInvoiceListPage = () => {
                     lockedCompanyId !== null &&
                     item.companyId !== lockedCompanyId;
                   const isFirstInGroup =
-                    groupByCompany &&
-                    (idx === 0 || items[idx - 1].companyId !== item.companyId);
+                    groupByCompany && (idx === 0 || items[idx - 1].companyId !== item.companyId);
                   const isLastInGroup =
                     groupByCompany &&
-                    (idx === items.length - 1 ||
-                      items[idx + 1].companyId !== item.companyId);
-                  const subtotal = isLastInGroup
-                    ? groupSubtotals.get(item.companyId)
-                    : undefined;
+                    (idx === items.length - 1 || items[idx + 1].companyId !== item.companyId);
+                  const subtotal = isLastInGroup ? groupSubtotals.get(item.companyId) : undefined;
                   // Group header spans every column EXCEPT the checkbox column
                   // (which gets its own group select-all checkbox on Unpaid).
-                  const headerNameColSpan =
-                    (tab === 'paid' ? 1 : 0) + 6;
+                  const headerNameColSpan = (tab === 'paid' ? 1 : 0) + 6;
                   const groupBucket = isFirstInGroup
                     ? companyBuckets.get(item.companyId)
                     : undefined;
                   const groupAllSelected =
-                    !!groupBucket &&
-                    groupBucket.ids.every(id => selectedIds.has(id));
+                    !!groupBucket && groupBucket.ids.every(id => selectedIds.has(id));
                   const groupSomeSelected =
                     !!groupBucket &&
                     !groupAllSelected &&
@@ -574,7 +606,7 @@ const IntInvoiceListPage = () => {
                   return (
                     <Fragment key={item.id}>
                       {isFirstInGroup && (
-                        <tr className="bg-gray-50/80 border-t border-gray-200">
+                        <tr className="bg-(--palette-surface-2)/80 border-t border-(--palette-line)">
                           {tab === 'unpaid' && (
                             <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
                               <input
@@ -590,18 +622,18 @@ const IntInvoiceListPage = () => {
                                 }}
                                 onClick={e => e.stopPropagation()}
                                 aria-label={t('list.selectAll')}
-                                className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
+                                className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
                               />
                             </td>
                           )}
                           <td
                             colSpan={headerNameColSpan}
-                            className="px-4 py-2.5 text-xs font-semibold text-gray-700 tracking-tight"
+                            className="px-4 py-2.5 text-xs font-semibold text-(--palette-ink) tracking-tight"
                           >
                             <Icon
                               style="solid"
                               name="building"
-                              className="size-3 text-gray-400 mr-1.5 inline"
+                              className="size-3 text-(--palette-gray-400) mr-1.5 inline"
                             />
                             {item.companyName
                               ? localizeCompanyName(item.companyName, item.companyNameLocal)
@@ -610,7 +642,7 @@ const IntInvoiceListPage = () => {
                         </tr>
                       )}
                       <tr
-                        className={`hover:bg-gray-50 transition-colors ${isSelected ? 'bg-primary/5' : ''} ${isDisabled ? 'opacity-40' : 'cursor-pointer'}`}
+                        className={`hover:bg-(--palette-surface-2) transition-colors ${isSelected ? 'bg-primary/5' : ''} ${isDisabled ? 'opacity-40' : 'cursor-pointer'}`}
                         onClick={() => navigate(`/admin/invoices/${item.id}`)}
                       >
                         {tab === 'unpaid' && (
@@ -629,34 +661,34 @@ const IntInvoiceListPage = () => {
                               disabled={isDisabled}
                               onChange={() => toggleRow(item.id, item.companyId)}
                               onClick={e => e.stopPropagation()}
-                              className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
+                              className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer disabled:cursor-not-allowed"
                             />
                           </td>
                         )}
                         <td className="px-4 py-2.5">
-                          <span className="font-medium text-primary">
+                          <span className="font-medium text-(--palette-primary-text)">
                             {item.invoiceNumber ?? '—'}
                           </span>
                         </td>
                         {!groupByCompany && (
-                          <td className="px-4 py-2.5 text-gray-700">
+                          <td className="px-4 py-2.5 text-(--palette-ink)">
                             {item.companyName
                               ? localizeCompanyName(item.companyName, item.companyNameLocal)
                               : '—'}
                           </td>
                         )}
-                        <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                        <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                           {formatLocaleDate(item.sentDate, i18n.language)}
                         </td>
                         {tab === 'paid' && (
-                          <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                          <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                             {formatLocaleDate(item.paidDate, i18n.language)}
                           </td>
                         )}
-                        <td className="px-4 py-2.5 text-center text-gray-600 tabular-nums">
+                        <td className="px-4 py-2.5 text-center text-(--palette-gray-600) tabular-nums">
                           {item.itemCount}
                         </td>
-                        <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
+                        <td className="px-4 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap">
                           {formatCurrency(item.totalAmount)}
                         </td>
                         <td className="px-4 py-2.5">
@@ -675,18 +707,18 @@ const IntInvoiceListPage = () => {
                         </td>
                       </tr>
                       {subtotal && (
-                        <tr className="bg-gray-50/60 border-t border-gray-100">
+                        <tr className="bg-(--palette-surface-2)/60 border-t border-(--palette-line-soft)">
                           {tab === 'unpaid' && <td />}
                           <td
                             colSpan={tab === 'paid' ? 3 : 2}
-                            className="px-4 py-1.5 text-[11px] font-medium text-gray-500 italic"
+                            className="px-4 py-1.5 text-[11px] font-medium text-(--palette-gray-500) italic"
                           >
                             {t('list.subtotal')}
                           </td>
-                          <td className="px-4 py-1.5 text-center text-xs font-semibold text-gray-700 tabular-nums">
+                          <td className="px-4 py-1.5 text-center text-xs font-semibold text-(--palette-ink) tabular-nums">
                             {subtotal.count}
                           </td>
-                          <td className="px-4 py-1.5 text-right text-xs font-semibold text-gray-900 tabular-nums whitespace-nowrap">
+                          <td className="px-4 py-1.5 text-right text-xs font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap">
                             {formatCurrency(subtotal.total)}
                           </td>
                           <td />
@@ -701,14 +733,18 @@ const IntInvoiceListPage = () => {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>
 
         {/* Pinned grand-total row — sits below the scroll area, aligned to table columns */}
         {items.length > 0 && (
-          <div className="shrink-0 border-t-2 border-gray-300 bg-gray-50">
+          <div className="shrink-0 border-t-2 border-(--palette-line-strong) bg-(--palette-surface-2)">
             <table className="w-full text-table table-fixed">
               <colgroup>
                 {tab === 'unpaid' && <col className="w-10" />}
@@ -725,17 +761,15 @@ const IntInvoiceListPage = () => {
                 <tr>
                   {tab === 'unpaid' && <td />}
                   <td
-                    colSpan={
-                      (groupByCompany ? 0 : 1) + (tab === 'paid' ? 1 : 0) + 2
-                    }
-                    className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                    colSpan={(groupByCompany ? 0 : 1) + (tab === 'paid' ? 1 : 0) + 2}
+                    className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-600) uppercase tracking-wide"
                   >
                     {t('list.grandTotal')}
                   </td>
-                  <td className="px-4 py-2.5 text-center font-semibold text-gray-900 tabular-nums">
+                  <td className="px-4 py-2.5 text-center font-semibold text-(--palette-ink) tabular-nums">
                     {grandItemCount}
                   </td>
-                  <td className="px-4 py-2.5 text-right font-bold text-primary tabular-nums whitespace-nowrap">
+                  <td className="px-4 py-2.5 text-right font-bold text-(--palette-primary-text) tabular-nums whitespace-nowrap">
                     {formatCurrency(grandTotalAmount)}
                   </td>
                   <td />
@@ -748,7 +782,7 @@ const IntInvoiceListPage = () => {
 
         {/* Pagination */}
         {totalCount > 0 && (
-          <div className="shrink-0 border-t border-gray-200">
+          <div className="shrink-0 border-t border-(--palette-line)">
             <Pagination
               currentPage={pageNumber}
               totalPages={totalPages}
@@ -767,18 +801,18 @@ const IntInvoiceListPage = () => {
       {/* Floating bulk action bar — gallery-style sticky bottom dock */}
       {tab === 'unpaid' && selectedIds.size > 0 && (
         <div
-          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-2.5 bg-white border border-gray-200 rounded-full shadow-[0_8px_24px_-4px_rgba(0,0,0,0.15),0_4px_8px_-2px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 fade-in duration-200"
+          className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-2.5 bg-(--palette-surface) border border-(--palette-line) rounded-full shadow-[0_8px_24px_-4px_rgba(0,0,0,0.15),0_4px_8px_-2px_rgba(0,0,0,0.08)] animate-in slide-in-from-bottom-4 fade-in duration-200"
           role="region"
           aria-label={t('internal.markPaidTitle')}
         >
-          <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
-            <span className="text-primary font-semibold">{selectedIds.size}</span>{' '}
+          <span className="text-sm font-medium text-(--palette-ink) whitespace-nowrap">
+            <span className="text-(--palette-primary-text) font-semibold">{selectedIds.size}</span>{' '}
             {t('internal.selected')}
             {lockedCompanyName && (
-              <span className="text-gray-500 font-normal"> · {lockedCompanyName}</span>
+              <span className="text-(--palette-gray-500) font-normal"> · {lockedCompanyName}</span>
             )}
           </span>
-          <span className="h-5 w-px bg-gray-200" />
+          <span className="h-5 w-px bg-(--palette-line)" />
           <Button size="sm" onClick={handleProceedToPayment}>
             <Icon style="solid" name="circle-check" className="size-3.5 mr-1.5" />
             {t('internal.markAsPaid')}

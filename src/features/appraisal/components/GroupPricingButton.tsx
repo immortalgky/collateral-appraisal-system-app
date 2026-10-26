@@ -21,8 +21,9 @@ const pricingStateOf = (group: PropertyGroup): PricingState =>
 
 const STATE_CLASSES: Record<PricingState, string> = {
   valued: 'border-primary bg-primary text-white hover:bg-primary-700',
-  started: 'border-primary/40 bg-white text-primary-700 hover:bg-primary-50',
-  none: 'border-gray-200 bg-gray-50 text-gray-400 hover:border-primary/40 hover:text-primary-700',
+  started:
+    'border-primary/40 bg-(--palette-surface) text-(--palette-accent-ink) hover:bg-(--palette-accent-wash)',
+  none: 'border-(--palette-line) bg-(--palette-surface-2) text-(--palette-gray-400) hover:border-primary/40 hover:text-(--palette-accent-ink)',
 };
 
 interface GroupPricingButtonProps {

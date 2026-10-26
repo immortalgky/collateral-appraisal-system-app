@@ -17,26 +17,26 @@ import { useTranslation } from 'react-i18next';
 import type { QuotationStatus } from '@/features/appraisal/types/administration';
 
 const STATUS_CLASS: Record<string, string> = {
-  Draft: 'bg-gray-100 text-gray-700',
-  Sent: 'bg-blue-100 text-blue-700',
-  UnderAdminReview: 'bg-amber-100 text-amber-700',
-  PendingRmSelection: 'bg-purple-100 text-purple-700',
-  WinnerTentative: 'bg-indigo-100 text-indigo-700',
-  Negotiating: 'bg-orange-100 text-orange-700',
-  Finalized: 'bg-green-100 text-green-700',
-  Cancelled: 'bg-red-100 text-red-700',
+  Draft: 'bg-(--palette-surface-3) text-(--palette-ink)',
+  Sent: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  UnderAdminReview: 'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)',
+  PendingRmSelection: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
+  WinnerTentative: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
+  Negotiating: 'bg-orange-100 dark:bg-orange-500/20 text-orange-700 dark:text-orange-300',
+  Finalized: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300',
+  Cancelled: 'bg-red-100 dark:bg-red-500/20 text-(--palette-req)',
   // Legacy / company-level statuses
-  Submitted: 'bg-blue-100 text-blue-700',
-  Shortlisted: 'bg-indigo-100 text-indigo-700',
-  Tentative: 'bg-amber-100 text-amber-700',
-  Accepted: 'bg-green-100 text-green-700',
-  Rejected: 'bg-red-100 text-red-700',
-  Withdrawn: 'bg-gray-100 text-gray-500',
-  UnderReview: 'bg-amber-100 text-amber-700',
-  Declined: 'bg-red-100 text-red-700',
-  PendingCheckerReview: 'bg-indigo-100 text-indigo-700',
-  Pending: 'bg-amber-100 text-amber-700',
-  Expired: 'bg-gray-100 text-gray-600',
+  Submitted: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+  Shortlisted: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
+  Tentative: 'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)',
+  Accepted: 'bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300',
+  Rejected: 'bg-red-100 dark:bg-red-500/20 text-(--palette-req)',
+  Withdrawn: 'bg-(--palette-surface-3) text-(--palette-gray-500)',
+  UnderReview: 'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)',
+  Declined: 'bg-red-100 dark:bg-red-500/20 text-(--palette-req)',
+  PendingCheckerReview: 'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300',
+  Pending: 'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)',
+  Expired: 'bg-(--palette-surface-3) text-(--palette-gray-600)',
 };
 
 interface QuotationStatusBadgeProps {
@@ -57,7 +57,7 @@ const QuotationStatusBadge = ({ status, className, reason }: QuotationStatusBadg
   const label = t(`status.${status}` as `status.${string}`, { defaultValue: status });
   const chipClassName = clsx(
     'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium',
-    STATUS_CLASS[status] ?? 'bg-gray-100 text-gray-700',
+    STATUS_CLASS[status] ?? 'bg-(--palette-surface-3) text-(--palette-ink)',
     className,
   );
 
@@ -97,12 +97,12 @@ const QuotationStatusBadge = ({ status, className, reason }: QuotationStatusBadg
               ref={refs.setFloating}
               style={floatingStyles}
               {...getFloatingProps()}
-              className="z-50 bg-white rounded-lg border border-gray-200 shadow-lg max-w-xs px-3 py-2"
+              className="z-50 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-lg max-w-xs px-3 py-2"
             >
-              <p className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide mb-0.5">
+              <p className="text-[10px] font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-0.5">
                 {t('fields.reason')}
               </p>
-              <p className="text-xs text-gray-700 whitespace-pre-wrap">{trimmedReason}</p>
+              <p className="text-xs text-(--palette-ink) whitespace-pre-wrap">{trimmedReason}</p>
             </div>
           </FloatingFocusManager>
         </FloatingPortal>

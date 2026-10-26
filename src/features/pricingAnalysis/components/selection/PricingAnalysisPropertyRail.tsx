@@ -30,7 +30,7 @@ const Thumb = ({ item, size }: { item: RailItem; size: string }) => (
   <div
     className={clsx(
       size,
-      'rounded-md bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center',
+      'rounded-md bg-(--palette-surface-3) overflow-hidden shrink-0 flex items-center justify-center',
     )}
   >
     {item.image ? (
@@ -42,7 +42,7 @@ const Thumb = ({ item, size }: { item: RailItem; size: string }) => (
         className="w-full h-full object-cover"
       />
     ) : (
-      <Icon name="image" className="text-gray-300 text-sm" />
+      <Icon name="image" className="text-(--palette-gray-300) text-sm" />
     )}
   </div>
 );
@@ -58,7 +58,10 @@ function PeekStrip({ strip, panel }: { strip: ReactNode; panel: ReactNode }) {
     // The panel is a child of this wrapper, so leaving only counts once the pointer has left both
     // the strip and the panel. It opens beside the strip (left-full), never over it, so the
     // focused strip button stays visible (WCAG 2.4.11).
-    <div className="relative w-[52px] shrink-0 border-r border-gray-200 bg-white" {...hoverProps}>
+    <div
+      className="relative w-[52px] shrink-0 border-r border-(--palette-line) bg-(--palette-surface)"
+      {...hoverProps}
+    >
       {strip}
       {open && panel}
     </div>
@@ -136,13 +139,13 @@ export function PricingAnalysisPropertyRail() {
   const body: ReactNode = !groupDetail ? (
     // mock:3326 shows a full model card here; that card (ModelCardContent) is built for the
     // 50%-wide accordion panel, not a 268px rail, so this is a compact name-only fallback.
-    <p className="text-xs text-gray-700 truncate">
+    <p className="text-xs text-(--palette-ink) truncate">
       {flat?.projectName ? String(flat.projectName) : 'Project'}
       {' › '}
       {flat?.modelName ? String(flat.modelName) : 'Model'}
     </p>
   ) : items.length === 0 ? (
-    <p className="py-3 text-xs text-gray-400">{t('accordion.noProperties')}</p>
+    <p className="py-3 text-xs text-(--palette-gray-400)">{t('accordion.noProperties')}</p>
   ) : (
     items.map(p => {
       // Opens in a new tab, same as BuildingCostTable's property link — leaving this page would
@@ -152,25 +155,27 @@ export function PricingAnalysisPropertyRail() {
         <>
           <Thumb item={p} size="w-10 h-10" />
           <div className="min-w-0">
-            <div className="flex items-center gap-1 text-[12px] font-medium text-gray-900">
+            <div className="flex items-center gap-1 text-[12px] font-medium text-(--palette-ink)">
               <span className="truncate">{p.titleNo || p.address}</span>
               {href && (
                 <Icon
                   name="arrow-up-right-from-square"
-                  className="size-2.5 shrink-0 text-gray-300 group-hover/prop:text-primary"
+                  className="size-2.5 shrink-0 text-(--palette-gray-300) group-hover/prop:text-(--palette-primary-text)"
                 />
               )}
             </div>
-            <div className="mt-0.5 flex items-center gap-1 text-[10.5px] text-gray-400">
+            <div className="mt-0.5 flex items-center gap-1 text-[10.5px] text-(--palette-gray-400)">
               <PropertyTypeChip code={p.type} />
               <span className="truncate">{p.area}</span>
             </div>
-            <div className="mt-0.5 text-[10.5px] text-gray-400 truncate">{p.location}</div>
+            <div className="mt-0.5 text-[10.5px] text-(--palette-gray-400) truncate">
+              {p.location}
+            </div>
           </div>
         </>
       );
       const rowClass =
-        'grid grid-cols-[40px_1fr] gap-2 py-[7px] px-1.5 -mx-1.5 rounded-md border-b border-gray-100 last:border-b-0';
+        'grid grid-cols-[40px_1fr] gap-2 py-[7px] px-1.5 -mx-1.5 rounded-md border-b border-(--palette-line-soft) last:border-b-0';
       return href ? (
         <Link
           key={p.id}
@@ -192,14 +197,15 @@ export function PricingAnalysisPropertyRail() {
 
   const header = (button: ReactNode) => (
     <div className="flex items-center gap-1 mt-2.5 mb-1">
-      <h5 className="flex-1 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-gray-400 truncate">
+      <h5 className="flex-1 text-[10.5px] font-semibold uppercase tracking-[0.04em] text-(--palette-gray-400) truncate">
         {title}
       </h5>
       {button}
     </div>
   );
 
-  const buttonClass = 'size-6 shrink-0 flex items-center justify-center rounded hover:bg-gray-100';
+  const buttonClass =
+    'size-6 shrink-0 flex items-center justify-center rounded hover:bg-(--palette-surface-3)';
 
   // Same pin affordance as the app sidebar (shared/components/SidebarHeader): solid + primary
   // while pinned, regular + tilted grey while not; clicking toggles. The label names the toggle,
@@ -213,7 +219,12 @@ export function PricingAnalysisPropertyRail() {
       title={t('rail.pin')}
       aria-label={t('rail.pin')}
       aria-pressed={pinned}
-      className={clsx(buttonClass, pinned ? 'text-primary' : 'text-gray-400 hover:text-gray-700')}
+      className={clsx(
+        buttonClass,
+        pinned
+          ? 'text-(--palette-primary-text)'
+          : 'text-(--palette-ink-2) hover:text-(--palette-ink)',
+      )}
     >
       <Icon
         style={pinned ? 'solid' : 'regular'}
@@ -225,7 +236,7 @@ export function PricingAnalysisPropertyRail() {
 
   if (!collapsed) {
     return (
-      <aside className="w-[268px] shrink-0 border-r border-gray-200 overflow-y-auto bg-white px-3 pt-1 pb-4">
+      <aside className="w-[268px] shrink-0 border-r border-(--palette-line) overflow-y-auto bg-(--palette-surface) px-3 pt-1 pb-4">
         {header(pinButton(true))}
         {body}
       </aside>
@@ -243,26 +254,28 @@ export function PricingAnalysisPropertyRail() {
             ref={expandButtonRef}
             title={t('rail.expand')}
             aria-label={t('rail.expand')}
-            className={clsx(buttonClass, 'text-gray-400 hover:text-gray-700')}
+            className={clsx(buttonClass, 'text-(--palette-gray-400) hover:text-(--palette-ink)')}
           >
             <Icon name="angles-right" className="size-3" />
           </button>
           {groupDetail && (
             <>
-              <span className="text-[10px] font-semibold text-gray-400">{items.length}</span>
+              <span className="text-[10px] font-semibold text-(--palette-gray-400)">
+                {items.length}
+              </span>
               {/* Capped: past this the strip would scroll with no visible scrollbar and push the
                   label out of view; the panel lists everything. */}
               {items.slice(0, STRIP_THUMBS).map(p => (
                 <Thumb key={p.id} item={p} size="w-9 h-9" />
               ))}
               {items.length > STRIP_THUMBS && (
-                <span className="text-[10px] font-semibold text-gray-400">
+                <span className="text-[10px] font-semibold text-(--palette-gray-400)">
                   +{items.length - STRIP_THUMBS}
                 </span>
               )}
             </>
           )}
-          <span className="mt-1 text-[10.5px] text-gray-400 tracking-[0.02em] [writing-mode:vertical-rl]">
+          <span className="mt-1 text-[10.5px] text-(--palette-gray-400) tracking-[0.02em] [writing-mode:vertical-rl]">
             {groupDetail ? t('rail.label') : t('page.tabs.model')}
           </span>
         </div>
@@ -271,7 +284,7 @@ export function PricingAnalysisPropertyRail() {
         <div
           role="region"
           aria-label={title}
-          className="absolute inset-y-0 left-full z-30 w-[268px] overflow-y-auto bg-white border-r border-gray-200 shadow-[8px_0_24px_-8px_rgba(15,23,42,0.18)] px-3 pt-1 pb-4"
+          className="absolute inset-y-0 left-full z-30 w-[268px] overflow-y-auto bg-(--palette-surface) border-r border-(--palette-line) shadow-[8px_0_24px_-8px_rgba(15,23,42,0.18)] px-3 pt-1 pb-4"
         >
           {header(pinButton(false))}
           {body}

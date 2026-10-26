@@ -157,11 +157,13 @@ function TeamWorkloadWidget() {
 
   return (
     <WidgetWrapper id={WIDGET_ID}>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line-soft)">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3">
-              <h3 className="text-base font-semibold text-gray-800">{t('teamWorkload.title')}</h3>
+              <h3 className="text-base font-semibold text-(--palette-ink)">
+                {t('teamWorkload.title')}
+              </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
             </div>
             <WidgetDateRangeBadge from={range.from} to={range.to} />
@@ -171,31 +173,39 @@ function TeamWorkloadWidget() {
               type="button"
               onClick={() => setMenuOpen(o => !o)}
               aria-label={t('teamWorkload.aria.menu')}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
             >
               <Icon name="ellipsis-vertical" style="solid" className="size-4" />
             </button>
             {menuOpen && (
-              <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+              <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg py-1 text-sm">
                 {updatedLabel && (
-                  <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                  <p className="px-3 py-1.5 text-xs text-(--palette-gray-400) border-b border-(--palette-line-soft)">
                     {t('updatedAgo', { n: updatedLabel })}
                   </p>
                 )}
                 <button
                   type="button"
                   onClick={handleRefresh}
-                  className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                 >
-                  <Icon name="arrow-rotate-right" style="solid" className="size-3 text-gray-400" />
+                  <Icon
+                    name="arrow-rotate-right"
+                    style="solid"
+                    className="size-3 text-(--palette-gray-400)"
+                  />
                   {t('teamWorkload.menu.refresh')}
                 </button>
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                 >
-                  <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
+                  <Icon
+                    name="rotate-left"
+                    style="solid"
+                    className="size-3 text-(--palette-gray-400)"
+                  />
                   {t('teamWorkload.menu.reset')}
                 </button>
               </div>
@@ -208,14 +218,18 @@ function TeamWorkloadWidget() {
             {LEGEND.map(l => (
               <div key={l.key} className="flex items-center gap-1.5">
                 <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: l.color }} />
-                <span className="text-xs text-gray-500">{l.label}</span>
+                <span className="text-xs text-(--palette-gray-500)">{l.label}</span>
               </div>
             ))}
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: OVERDUE_COLOR }} />
-              <span className="text-xs text-gray-500">{t('teamWorkload.legend.overdue')}</span>
+              <span className="text-xs text-(--palette-gray-500)">
+                {t('teamWorkload.legend.overdue')}
+              </span>
             </div>
-            <span className="text-xs text-gray-400 ml-auto">{t('teamWorkload.clickRowHint')}</span>
+            <span className="text-xs text-(--palette-gray-400) ml-auto">
+              {t('teamWorkload.clickRowHint')}
+            </span>
           </div>
 
           {isError ? (
@@ -231,7 +245,7 @@ function TeamWorkloadWidget() {
               ))}
             </div>
           ) : rows.length === 0 ? (
-            <div className="py-12 text-center text-sm text-gray-400">
+            <div className="py-12 text-center text-sm text-(--palette-gray-400)">
               {t('teamWorkload.noData')}
             </div>
           ) : (
@@ -242,10 +256,10 @@ function TeamWorkloadWidget() {
                 margin={{ top: 4, right: 24, left: 8, bottom: 0 }}
                 barCategoryGap={8}
               >
-                <CartesianGrid horizontal={false} stroke="#f3f4f6" />
+                <CartesianGrid horizontal={false} stroke="var(--palette-line)" />
                 <XAxis
                   type="number"
-                  tick={{ fontSize: 11, fill: '#9ca3af' }}
+                  tick={{ fontSize: 11, fill: 'var(--palette-ink-3)' }}
                   axisLine={false}
                   tickLine={false}
                 />
@@ -264,7 +278,14 @@ function TeamWorkloadWidget() {
                     const overdue = overdueByUser.get(payload.value) ?? 0;
                     return (
                       <g transform={`translate(${x},${y})`}>
-                        <text x={-8} y={0} dy={4} textAnchor="end" fontSize={12} fill="#4b5563">
+                        <text
+                          x={-8}
+                          y={0}
+                          dy={4}
+                          textAnchor="end"
+                          fontSize={12}
+                          fill="var(--palette-ink-2)"
+                        >
                           {payload.value}
                         </text>
                         {overdue > 0 && (
@@ -296,10 +317,12 @@ function TeamWorkloadWidget() {
                   }}
                 />
                 <Tooltip
-                  cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                  cursor={{ fill: 'var(--palette-surface-3)', fillOpacity: 0.5 }}
                   contentStyle={{
                     borderRadius: 8,
-                    border: '1px solid #e5e7eb',
+                    border: '1px solid var(--palette-line)',
+                    background: 'var(--palette-surface)',
+                    color: 'var(--palette-ink)',
                     fontSize: 12,
                   }}
                 />

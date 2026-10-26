@@ -86,7 +86,7 @@ const DopaAddressForm = ({ index, isReadOnly, movable = false }: DopaAdressFormP
     addressHasValue(getValues(dopaPath)) ? setConfirming(true) : copyFromSource();
 
   return (
-    <div className="grid content-start gap-3 rounded-xl border border-gray-200 p-3">
+    <div className="grid content-start gap-3 rounded-xl border border-(--palette-line) p-3">
       <div className="flex min-h-7 flex-wrap items-center gap-2">
         <h4 className="m-0 text-sm font-semibold">
           {t(movable ? 'titleAddress.propertyLocationHeader' : 'titleAddress.dopaHeader')}
@@ -108,14 +108,14 @@ const DopaAddressForm = ({ index, isReadOnly, movable = false }: DopaAdressFormP
                     )
                   : undefined
             }
-            className="ml-auto rounded-md px-2 py-1 text-sm text-primary transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+            className="ml-auto rounded-md px-2 py-1 text-sm text-(--palette-primary-text) transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
           >
             {t(movable ? 'titleSection.address.useRequest' : 'titleSection.address.copyFromTitle')}
           </button>
         )}
       </div>
       {movedDistrict && subDistrict === movedDistrict.code && (
-        <p role="status" className="m-0 text-sm text-amber-700">
+        <p role="status" className="m-0 text-sm text-(--palette-warn)">
           {t(
             movable
               ? 'titleSection.address.districtDiffersRequest'
@@ -125,7 +125,7 @@ const DopaAddressForm = ({ index, isReadOnly, movable = false }: DopaAdressFormP
         </p>
       )}
       {missedLocality && !subDistrict && (
-        <p role="status" className="m-0 text-sm text-amber-700">
+        <p role="status" className="m-0 text-sm text-(--palette-warn)">
           {t('titleSection.address.dopaMissing')}
         </p>
       )}

@@ -53,7 +53,7 @@ export const DirectComparisonForm = ({
             <>
               {t('methodTabs.data')}
               {comparativeMarketSurveys.length > 0 && (
-                <span className="ml-1.5 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10.5px] font-medium text-gray-500">
+                <span className="ml-1.5 rounded-full bg-(--palette-surface-3) px-1.5 py-0.5 text-[10.5px] font-medium text-(--palette-gray-500)">
                   {comparativeMarketSurveys.length} {t('comparativeAnalysis.marketCountUnit')}
                 </span>
               )}
@@ -61,12 +61,12 @@ export const DirectComparisonForm = ({
           ),
           tools: hasComparables && (
             <>
-              <label className="flex items-center gap-1.5 text-xs text-gray-600 cursor-pointer select-none">
+              <label className="flex items-center gap-1.5 text-xs text-(--palette-gray-600) cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={hideEmptyRows}
                   onChange={e => setHideEmptyRows(e.target.checked)}
-                  className="size-3.5 rounded border-gray-300 text-primary focus:ring-primary/30"
+                  className="size-3.5 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/30"
                 />
                 {t('comparativeAnalysis.hideEmptyRows')}
               </label>
@@ -74,13 +74,13 @@ export const DirectComparisonForm = ({
                 <button
                   type="button"
                   onClick={() => setIsMarketSelectionOpen(true)}
-                  className="h-6 px-2.5 text-[11.5px] font-medium text-primary border border-primary/40 rounded-md cursor-pointer hover:bg-primary/5 hover:border-primary/60 transition-colors"
+                  className="h-6 px-2.5 text-[11.5px] font-medium text-(--palette-primary-text) border border-primary/40 rounded-md cursor-pointer hover:bg-primary/5 hover:border-primary/60 transition-colors"
                 >
                   {t('comparativeAnalysis.addMarket')}
                 </button>
               )}
               <span
-                className="hidden 2xl:inline text-[10px] text-gray-400 whitespace-nowrap"
+                className="hidden 2xl:inline text-[10px] text-(--palette-gray-400) whitespace-nowrap"
                 title={t('comparativeAnalysis.scrollHint')}
               >
                 {t('comparativeAnalysis.scrollHint')}
@@ -110,7 +110,7 @@ export const DirectComparisonForm = ({
           // Same wheel-scroll affordance as the data tab — mirrors WQSForm.tsx's calc tab.
           tools: hasComparables && (
             <span
-              className="hidden 2xl:inline text-[10px] text-gray-400 whitespace-nowrap"
+              className="hidden 2xl:inline text-[10px] text-(--palette-gray-400) whitespace-nowrap"
               title={t('comparativeAnalysis.scrollHint')}
             >
               {t('comparativeAnalysis.scrollHint')}

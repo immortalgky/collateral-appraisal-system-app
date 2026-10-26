@@ -2,9 +2,10 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
 import {
-  makeInternalFollowupSelectionFormSchema,
+  internalFollowupSelectionFormSchema,
   type InternalFollowupSelectionFormValues,
 } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
@@ -27,7 +28,7 @@ export function InternalFollowupSelectionForm({ nodeId }: Props) {
     reset,
     formState: { errors },
   } = useForm<InternalFollowupSelectionFormValues>({
-    resolver: zodResolver(makeInternalFollowupSelectionFormSchema(t)),
+    resolver: zodResolver(internalFollowupSelectionFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -62,9 +63,11 @@ export function InternalFollowupSelectionForm({ nodeId }: Props) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 

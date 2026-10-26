@@ -38,39 +38,41 @@ const CorrectionConfirmDialog = ({
       <div className="text-left space-y-4">
         <div className="max-h-72 overflow-y-auto space-y-3">
           {groups.length === 0 && (
-            <p className="px-3 py-2 text-sm text-gray-500">{t('confirmDialog.noChanges')}</p>
+            <p className="px-3 py-2 text-sm text-(--palette-gray-500)">
+              {t('confirmDialog.noChanges')}
+            </p>
           )}
           {groups.map(({ group, entries }) => (
             <section key={group}>
-              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+              <h3 className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
                 {group || t('confirmDialog.fieldsHeading')}
               </h3>
-              <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+              <div className="rounded-lg border border-(--palette-line) divide-y divide-(--palette-line-soft)">
                 {entries.map(entry => (
                   <div key={entry.key} className="px-3 py-2 text-xs">
-                    <div className="font-medium text-gray-700 mb-0.5">{entry.label}</div>
+                    <div className="font-medium text-(--palette-ink) mb-0.5">{entry.label}</div>
                     {entry.kind === 'changed' && (
-                      <div className="flex items-center gap-2 text-gray-500">
+                      <div className="flex items-center gap-2 text-(--palette-gray-500)">
                         <span className="line-through">
                           {formatDiffValue(dateOnlyValue(entry.key, entry.from))}
                         </span>
                         <span aria-hidden="true">→</span>
-                        <span className="text-gray-900 font-medium">
+                        <span className="text-(--palette-ink) font-medium">
                           {formatDiffValue(dateOnlyValue(entry.key, entry.to))}
                         </span>
                       </div>
                     )}
                     {entry.kind === 'added' && (
-                      <div className="text-gray-700">
-                        <span className="mr-2 font-semibold text-emerald-700">
+                      <div className="text-(--palette-ink)">
+                        <span className="mr-2 font-semibold text-emerald-700 dark:text-emerald-300">
                           {t('confirmDialog.rowAdded')}
                         </span>
                         {formatDiffValue(dateOnlyValue(entry.key, entry.to))}
                       </div>
                     )}
                     {entry.kind === 'removed' && (
-                      <div className="text-gray-500">
-                        <span className="mr-2 font-semibold text-red-700">
+                      <div className="text-(--palette-gray-500)">
+                        <span className="mr-2 font-semibold text-(--palette-req)">
                           {t('confirmDialog.rowRemoved')}
                         </span>
                         <span className="line-through">
@@ -86,10 +88,10 @@ const CorrectionConfirmDialog = ({
         </div>
 
         <div>
-          <div className="text-xs font-medium text-gray-500 mb-1">
+          <div className="text-xs font-medium text-(--palette-gray-500) mb-1">
             {t('confirmDialog.reasonLabel')}
           </div>
-          <p className="text-sm text-gray-800 whitespace-pre-wrap rounded-lg bg-gray-50 px-3 py-2">
+          <p className="text-sm text-(--palette-ink) whitespace-pre-wrap rounded-lg bg-(--palette-surface-2) px-3 py-2">
             {reason}
           </p>
         </div>

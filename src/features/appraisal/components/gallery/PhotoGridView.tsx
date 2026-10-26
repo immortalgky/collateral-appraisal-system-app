@@ -66,7 +66,7 @@ const GridItem = memo(
         {/* Image Container */}
         <div
           className={clsx(
-            'relative w-full overflow-hidden bg-gray-100',
+            'relative w-full overflow-hidden bg-(--palette-surface-3)',
             compact ? 'aspect-[4/3] rounded-lg' : 'h-[108px] rounded-xl',
           )}
         >
@@ -103,7 +103,7 @@ const GridItem = memo(
                 'absolute top-2 right-2 w-6 h-6 rounded border-2 flex items-center justify-center transition-all shadow-sm',
                 isSelected
                   ? 'bg-primary border-primary text-white'
-                  : 'bg-white border-gray-300 text-transparent hover:border-primary hover:text-primary/50',
+                  : 'bg-(--palette-surface) border-(--palette-line-strong) text-transparent hover:border-primary hover:text-(--palette-primary-text)/50',
               )}
               title={isSelected ? t('gallery.grid.deselect') : t('gallery.grid.select')}
             >
@@ -113,8 +113,8 @@ const GridItem = memo(
 
           {/* Hover Overlay with Actions */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <div className="absolute bottom-2 left-2 w-8 h-8 bg-white/90 rounded-lg flex items-center justify-center shadow-sm">
-              <Icon name="expand" className="text-gray-600" style="solid" />
+            <div className="absolute bottom-2 left-2 w-8 h-8 bg-(--palette-surface)/90 rounded-lg flex items-center justify-center shadow-sm">
+              <Icon name="expand" className="text-(--palette-gray-600)" style="solid" />
             </div>
           </div>
 
@@ -127,7 +127,7 @@ const GridItem = memo(
                   e.stopPropagation();
                   onEdit(image);
                 }}
-                className="w-8 h-8 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center text-gray-600 shadow-sm"
+                className="w-8 h-8 bg-(--palette-surface)/90 hover:bg-(--palette-surface) rounded-lg flex items-center justify-center text-(--palette-gray-600) shadow-sm"
                 title={t('gallery.grid.edit')}
               >
                 <Icon name="pen-to-square" style="solid" />
@@ -140,7 +140,7 @@ const GridItem = memo(
                   e.stopPropagation();
                   onDelete(image);
                 }}
-                className="w-8 h-8 bg-white/90 hover:bg-white rounded-lg flex items-center justify-center text-red-500 shadow-sm"
+                className="w-8 h-8 bg-(--palette-surface)/90 hover:bg-(--palette-surface) rounded-lg flex items-center justify-center text-red-500 shadow-sm"
                 title={t('gallery.grid.delete')}
               >
                 <Icon name="trash" style="solid" />
@@ -156,19 +156,23 @@ const GridItem = memo(
               className={clsx(
                 'text-[11.5px] break-words',
                 captionLines === 1 ? 'truncate' : 'line-clamp-2',
-                image.description ? 'text-gray-700' : 'italic text-gray-400',
+                image.description ? 'text-(--palette-ink)' : 'italic text-(--palette-gray-400)',
               )}
             >
               {image.description || t('gallery.grid.noCaption')}
             </p>
-            {meta && <p className="truncate text-[10.5px] tabular-nums text-gray-400">{meta}</p>}
+            {meta && (
+              <p className="truncate text-[10.5px] tabular-nums text-(--palette-gray-400)">
+                {meta}
+              </p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-0.5">
             {image.fileName && (
               <p className="text-[10px] text-black font-normal truncate">{image.fileName}</p>
             )}
-            <div className="flex items-center gap-2 text-[10px] text-gray-400">
+            <div className="flex items-center gap-2 text-[10px] text-(--palette-gray-400)">
               {image.fileExtension && <span className="uppercase">{image.fileExtension}</span>}
               {image.fileSizeBytes != null && (
                 <>
@@ -184,7 +188,7 @@ const GridItem = memo(
             <p
               className={clsx(
                 'text-xs font-normal line-clamp-2 break-words',
-                image.description ? 'text-gray-500' : 'text-gray-300',
+                image.description ? 'text-(--palette-gray-500)' : 'text-(--palette-gray-300)',
               )}
             >
               {image.description || t('gallery.grid.noCaption')}
@@ -252,11 +256,11 @@ export const PhotoGridView = ({
 
   if (images.length === 0 && !prepend) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
-        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-          <Icon name="images" className="text-2xl text-gray-300" />
+      <div className="flex flex-col items-center justify-center py-16 text-(--palette-gray-400) bg-(--palette-surface-2) rounded-xl border-2 border-dashed border-(--palette-line)">
+        <div className="w-16 h-16 rounded-full bg-(--palette-surface-3) flex items-center justify-center mb-4">
+          <Icon name="images" className="text-2xl text-(--palette-gray-300)" />
         </div>
-        <p className="text-sm font-medium text-gray-500">{t('gallery.grid.empty')}</p>
+        <p className="text-sm font-medium text-(--palette-gray-500)">{t('gallery.grid.empty')}</p>
       </div>
     );
   }
@@ -271,7 +275,9 @@ export const PhotoGridView = ({
             ? 'grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-3'
             : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6',
       )}
-      style={columns != null ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined}
+      style={
+        columns != null ? { gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` } : undefined
+      }
     >
       {prepend}
       {images.map(image => (

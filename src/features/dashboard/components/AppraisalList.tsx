@@ -42,42 +42,42 @@ function AppraisalList() {
 
   return (
     <div className="overflow-x-auto">
-      <table className="min-w-full bg-white shadow-md rounded-lg overflow-hidden">
-        <thead className="bg-gray-100">
+      <table className="min-w-full bg-(--palette-surface) shadow-md rounded-lg overflow-hidden">
+        <thead className="bg-(--palette-surface-3)">
           <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               {t('appraisalList.columns.property')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               {t('appraisalList.columns.type')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               {t('appraisalList.columns.status')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               {t('appraisalList.columns.date')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               {t('appraisalList.columns.value')}
             </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+            <th className="px-6 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
               {t('appraisalList.columns.actions')}
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200">
+        <tbody className="divide-y divide-(--palette-line)">
           {appraisals.map(appraisal => (
-            <tr key={appraisal.id} className="hover:bg-gray-50">
+            <tr key={appraisal.id} className="hover:bg-(--palette-surface-2)">
               <td className="px-6 py-4 whitespace-nowrap">{appraisal.property}</td>
               <td className="px-6 py-4 whitespace-nowrap">{appraisal.type}</td>
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                     appraisal.status === 'Completed'
-                      ? 'bg-green-100 text-green-800'
+                      ? 'bg-green-100 dark:bg-green-500/20 text-green-800 dark:text-green-300'
                       : appraisal.status === 'Pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : 'bg-blue-100 text-blue-800'
+                        ? 'bg-yellow-100 dark:bg-yellow-500/20 text-yellow-800 dark:text-yellow-300'
+                        : 'bg-blue-100 dark:bg-blue-500/20 text-blue-800 dark:text-blue-300'
                   }`}
                 >
                   {appraisal.status}
@@ -86,11 +86,11 @@ function AppraisalList() {
               <td className="px-6 py-4 whitespace-nowrap">{appraisal.date}</td>
               <td className="px-6 py-4 whitespace-nowrap">{appraisal.value}</td>
               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                <button className="text-blue-600 hover:text-blue-900 mr-3">
+                <button className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-200 mr-3">
                   {t('appraisalList.actions.view')}
                 </button>
                 {appraisal.status !== 'Completed' && (
-                  <button className="text-green-600 hover:text-green-900">
+                  <button className="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-200">
                     {t('appraisalList.actions.edit')}
                   </button>
                 )}

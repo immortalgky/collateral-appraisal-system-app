@@ -21,7 +21,11 @@ const ExtInvoiceDetailPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon style="solid" name="spinner" className="size-6 text-primary animate-spin" />
+        <Icon
+          style="solid"
+          name="spinner"
+          className="size-6 text-(--palette-primary-text) animate-spin"
+        />
       </div>
     );
   }
@@ -30,8 +34,8 @@ const ExtInvoiceDetailPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.loadFailed')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -44,19 +48,19 @@ const ExtInvoiceDetailPage = () => {
           <button
             type="button"
             onClick={() => navigate('/ext/invoices')}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
           >
             <Icon style="solid" name="chevron-left" className="size-4" />
           </button>
           <div>
             <div className="flex items-center gap-2.5">
-              <h3 className="text-base font-semibold text-gray-900">
+              <h3 className="text-base font-semibold text-(--palette-ink)">
                 {invoice.invoiceNumber ?? t('detail.draftInvoice')}
               </h3>
               <InvoiceStatusBadge status={invoice.status} viewContext="external" />
             </div>
             {invoice.companyName && (
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-(--palette-gray-500) mt-0.5">
                 {localizeCompanyName(invoice.companyName, invoice.companyNameLocal)}
               </p>
             )}
@@ -65,15 +69,15 @@ const ExtInvoiceDetailPage = () => {
       </div>
 
       {/* Total Amount card */}
-      <div className="bg-white rounded-lg border border-gray-200 p-5">
-        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">
+      <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-5">
+        <p className="text-xs text-(--palette-gray-500) font-medium uppercase tracking-wide mb-1">
           {t('detail.totalAmount')}
         </p>
-        <p className="text-3xl font-bold text-gray-900 tabular-nums">
+        <p className="text-3xl font-bold text-(--palette-ink) tabular-nums">
           {formatCurrency(invoice.totalAmount)}
         </p>
         {invoice.submittedAt && (
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-(--palette-gray-400) mt-1">
             {t('detail.submittedAt')}: {formatLocaleDateTime(invoice.submittedAt, i18n.language)}
           </p>
         )}
@@ -81,40 +85,40 @@ const ExtInvoiceDetailPage = () => {
 
       {/* Status-specific info */}
       {invoice.status === 'Sent' && (
-        <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-100 rounded-lg">
+        <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-lg">
           <Icon style="solid" name="clock" className="size-4 text-blue-500 shrink-0" />
-          <p className="text-sm text-blue-700">{t('detail.sentInfo')}</p>
+          <p className="text-sm text-blue-700 dark:text-blue-300">{t('detail.sentInfo')}</p>
         </div>
       )}
 
       {invoice.status === 'Paid' && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+          <h4 className="text-sm font-semibold text-(--palette-ink) mb-3 flex items-center gap-2">
             <Icon style="solid" name="circle-check" className="size-4 text-emerald-500" />
             {t('detail.paymentDetails')}
           </h4>
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <p className="text-xs text-gray-500">{t('internal.paymentOrderNo')}</p>
-              <p className="font-medium text-gray-900">{invoice.paymentOrderNo ?? '—'}</p>
+              <p className="text-xs text-(--palette-gray-500)">{t('internal.paymentOrderNo')}</p>
+              <p className="font-medium text-(--palette-ink)">{invoice.paymentOrderNo ?? '—'}</p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">{t('internal.paidDate')}</p>
-              <p className="font-medium text-gray-900">
+              <p className="text-xs text-(--palette-gray-500)">{t('internal.paidDate')}</p>
+              <p className="font-medium text-(--palette-ink)">
                 {formatLocaleDate(invoice.paidDate, i18n.language)}
               </p>
             </div>
             <div>
-              <p className="text-xs text-gray-500">{t('detail.approvedBy')}</p>
-              <p className="font-medium text-gray-900">{invoice.approvedBy ?? '—'}</p>
+              <p className="text-xs text-(--palette-gray-500)">{t('detail.approvedBy')}</p>
+              <p className="font-medium text-(--palette-ink)">{invoice.approvedBy ?? '—'}</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Items */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <h4 className="text-sm font-semibold text-gray-900 mb-3">
+      <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+        <h4 className="text-sm font-semibold text-(--palette-ink) mb-3">
           {t('detail.lineItems')} ({invoice.items.length})
         </h4>
         <InvoiceItemsTable items={invoice.items} />
@@ -122,9 +126,9 @@ const ExtInvoiceDetailPage = () => {
 
       {/* Notes */}
       {invoice.notes && (
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-2">{t('detail.notes')}</h4>
-          <p className="text-sm text-gray-600 whitespace-pre-wrap">{invoice.notes}</p>
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+          <h4 className="text-sm font-semibold text-(--palette-ink) mb-2">{t('detail.notes')}</h4>
+          <p className="text-sm text-(--palette-gray-600) whitespace-pre-wrap">{invoice.notes}</p>
         </div>
       )}
     </div>

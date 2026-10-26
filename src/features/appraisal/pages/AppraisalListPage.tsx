@@ -139,29 +139,34 @@ const SEARCH_FIELD_ICONS: Record<SearchField, string> = {
  * box's pill while that scope is selected. Whole class strings, because Tailwind
  * scans source text and cannot see a built-up `bg-${hue}-100`.
  */
-const NEUTRAL_CHIP = 'bg-gray-50 text-gray-600 hover:bg-gray-100';
+const NEUTRAL_CHIP =
+  'bg-(--palette-surface-2) text-(--palette-gray-600) hover:bg-(--palette-surface-3)';
 
 const SEARCH_FIELD_TONES: Record<SearchField, { chip: string; chipActive: string; pill: string }> =
   {
     all: {
       chip: NEUTRAL_CHIP,
-      chipActive: 'bg-gray-200 text-gray-600 ring-1 ring-inset ring-gray-300',
-      pill: 'bg-gray-100 text-gray-500',
+      chipActive:
+        'bg-(--palette-surface-3) text-(--palette-gray-600) ring-1 ring-inset ring-(--palette-line-strong)',
+      pill: 'bg-(--palette-surface-3) text-(--palette-gray-500)',
     },
     appraisalNumber: {
       chip: NEUTRAL_CHIP,
-      chipActive: 'bg-blue-100 text-blue-700 ring-1 ring-inset ring-blue-300',
-      pill: 'bg-blue-100 text-blue-700',
+      chipActive:
+        'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-blue-300 dark:ring-blue-500/40',
+      pill: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
     },
     customerName: {
       chip: NEUTRAL_CHIP,
-      chipActive: 'bg-purple-100 text-purple-700 ring-1 ring-inset ring-purple-300',
-      pill: 'bg-purple-100 text-purple-700',
+      chipActive:
+        'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 ring-1 ring-inset ring-purple-300 dark:ring-purple-500/40',
+      pill: 'bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300',
     },
     requestNumber: {
       chip: NEUTRAL_CHIP,
-      chipActive: 'bg-amber-100 text-amber-800 ring-1 ring-inset ring-amber-300',
-      pill: 'bg-amber-100 text-amber-800',
+      chipActive:
+        'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 ring-1 ring-inset ring-amber-300 dark:ring-amber-500/40',
+      pill: 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300',
     },
   };
 
@@ -928,8 +933,8 @@ function AppraisalListPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">{t('list.title')}</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('list.title')}</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             {totalCount > 0
               ? t('list.countFound', { count: totalCount.toLocaleString() })
               : t('list.browseHint')}
@@ -946,7 +951,7 @@ function AppraisalListPage() {
             <Popover className="relative">
               <PopoverButton
                 disabled={isExporting}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-gray-300 disabled:opacity-50 disabled:cursor-wait outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-(--palette-gray-600) bg-(--palette-surface) border border-(--palette-line) rounded-lg hover:border-(--palette-line-strong) disabled:opacity-50 disabled:cursor-wait outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
                 {/* 'arrow-down-tray' is a heroicons name and renders as nothing against this
                   project's FontAwesome sprite. 'file-export' is what the other Export buttons in
@@ -954,13 +959,13 @@ function AppraisalListPage() {
                 <Icon
                   style="solid"
                   name={isExporting ? 'spinner' : 'file-export'}
-                  className={`size-3 ${isExporting ? 'animate-spin text-primary' : 'text-emerald-600'}`}
+                  className={`size-3 ${isExporting ? 'animate-spin text-(--palette-primary-text)' : 'text-emerald-600 dark:text-emerald-400'}`}
                 />
                 {t('list.export')}
               </PopoverButton>
               <PopoverPanel
                 anchor="bottom end"
-                className="z-40 mt-1 w-36 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden"
+                className="z-40 mt-1 w-36 bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-lg overflow-hidden"
               >
                 {({ close }) => (
                   <>
@@ -969,7 +974,7 @@ function AppraisalListPage() {
                         close();
                         void handleExport('xlsx');
                       }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-(--palette-surface-2)"
                     >
                       {t('list.exportXlsx')}
                     </button>
@@ -978,7 +983,7 @@ function AppraisalListPage() {
                         close();
                         void handleExport('csv');
                       }}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-gray-50"
+                      className="w-full text-left px-3 py-2 text-xs hover:bg-(--palette-surface-2)"
                     >
                       {t('list.exportCsv')}
                     </button>
@@ -1093,7 +1098,11 @@ function AppraisalListPage() {
               }
               endAdornment={
                 isSearchPending ? (
-                  <Icon style="solid" name="spinner" className="size-4 animate-spin text-primary" />
+                  <Icon
+                    style="solid"
+                    name="spinner"
+                    className="size-4 animate-spin text-(--palette-primary-text)"
+                  />
                 ) : searchTerm ? (
                   <button
                     onClick={() => {
@@ -1102,7 +1111,7 @@ function AppraisalListPage() {
                     }}
                     aria-label={t('common:actions.clear')}
                     style={NO_OUTLINE}
-                    className={`rounded text-gray-400 hover:text-gray-600 ${
+                    className={`rounded text-(--palette-gray-400) hover:text-(--palette-gray-600) ${
                       searchPointer ? '' : KEYBOARD_RING_PLAIN
                     }`}
                   >
@@ -1115,7 +1124,7 @@ function AppraisalListPage() {
                   !boxFocused && (
                     <kbd
                       aria-hidden="true"
-                      className="pointer-events-none rounded border border-gray-200 bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-400"
+                      className="pointer-events-none rounded border border-(--palette-line) bg-(--palette-surface-3) px-1.5 py-0.5 text-[10px] font-medium text-(--palette-gray-400)"
                     >
                       /
                     </kbd>
@@ -1205,9 +1214,9 @@ function AppraisalListPage() {
               </MenuButton>
               <MenuItems
                 anchor="bottom end"
-                className="z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-lg focus:outline-none"
+                className="z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-(--palette-line) bg-(--palette-surface) shadow-lg focus:outline-none"
               >
-                <div className="border-b border-gray-100 px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-gray-500">
+                <div className="border-b border-(--palette-line-soft) px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-(--palette-gray-500)">
                   {t('list.groupBy.label')}
                 </div>
                 <div className="py-1">
@@ -1218,15 +1227,19 @@ function AppraisalListPage() {
                         <button
                           type="button"
                           onClick={() => setGroupBy(field)}
-                          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm data-focus:bg-gray-50 ${
-                            on ? 'font-medium text-gray-900' : 'text-gray-700'
+                          className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm data-focus:bg-(--palette-surface-2) ${
+                            on ? 'font-medium text-(--palette-ink)' : 'text-(--palette-ink)'
                           }`}
                         >
                           <span className="flex-1">
                             {field ? columnLabels[field] : t('list.groupBy.none')}
                           </span>
                           {on && (
-                            <Icon style="solid" name="check" className="size-3.5 text-gray-600" />
+                            <Icon
+                              style="solid"
+                              name="check"
+                              className="size-3.5 text-(--palette-gray-600)"
+                            />
                           )}
                         </button>
                       </MenuItem>
@@ -1294,7 +1307,7 @@ function AppraisalListPage() {
           <p
             id="appraisal-search-too-short"
             aria-live="polite"
-            className={suggestOpen ? 'sr-only' : 'text-xs text-amber-600'}
+            className={suggestOpen ? 'sr-only' : 'text-xs text-amber-600 dark:text-amber-400'}
           >
             {t('list.searchTooShort', { count: MIN_SEARCH_LENGTH })}
           </p>
@@ -1306,7 +1319,7 @@ function AppraisalListPage() {
           shrink below the table's own width. With user-set column widths the table is ~2,200px
           wide, which pushed the card past the viewport and put a scrollbar on the page instead of
           inside the table. */}
-      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex">
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex">
         {groupBy && (
           <GroupSidebar
             caption={t('list.groupBy.label')}
@@ -1352,6 +1365,8 @@ function AppraisalListPage() {
             isStale={isFetching && !showSkeleton}
             density={density}
             pinnedColumn={columnConfig.pinnedColumn}
+            searchTerm={debouncedSearch}
+            searchField={searchField}
             emptyState={
               <AppraisalEmptyState
                 isFiltered={Boolean(debouncedSearch) || Object.keys(activeFilters).length > 0}

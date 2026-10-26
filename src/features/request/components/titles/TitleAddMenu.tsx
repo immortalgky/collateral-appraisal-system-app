@@ -17,7 +17,7 @@ export function TitleAddMenu({ onAdd, allowed, anchor = 'bottom end' }: TitleAdd
   const { t } = useTranslation('request');
   const nameOf = useCollateralTypeName();
   const item =
-    'flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-gray-700 data-focus:bg-gray-100';
+    'flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-(--palette-ink) data-focus:bg-(--palette-surface-3)';
 
   return (
     <Menu>
@@ -33,20 +33,23 @@ export function TitleAddMenu({ onAdd, allowed, anchor = 'bottom end' }: TitleAdd
       </MenuButton>
       <MenuItems
         anchor={anchor}
-        className="z-50 mt-1 min-w-64 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-lg focus:outline-none"
+        className="z-50 mt-1 min-w-64 overflow-hidden rounded-lg border border-(--palette-line) bg-(--palette-surface) py-1 shadow-lg focus:outline-none"
       >
         {addableCodes(allowed).map(code => (
           <MenuItem key={code}>
             <button type="button" className={item} onClick={() => onAdd(code)}>
               {nameOf(code)}
-              <small className="ml-auto text-xs text-gray-400">{code}</small>
+              <small className="ml-auto text-xs text-(--palette-gray-400)">{code}</small>
             </button>
           </MenuItem>
         ))}
         <MenuItem>
           <button
             type="button"
-            className={clsx(item, 'border-t border-gray-100 text-gray-500')}
+            className={clsx(
+              item,
+              'border-t border-(--palette-line-soft) text-(--palette-gray-500)',
+            )}
             onClick={() => onAdd('')}
           >
             {t('titleSection.add.chooseLater')}

@@ -1,11 +1,15 @@
 import { Switch as HeadlessSwitch, Field, Label, Description } from '@headlessui/react';
 import clsx from 'clsx';
+import { ValidationText } from '../form/ValidationText';
+import { ERROR_TEXT } from './controlStyles';
 
 interface SwitchProps {
   checked?: boolean;
   defaultChecked?: boolean;
   onChange?: (checked: boolean) => void;
   label?: string;
+  /** Accessible name when there is no visible `label` (a switch in a table row). */
+  ariaLabel?: string;
   description?: string;
   error?: string;
   disabled?: boolean;
@@ -13,8 +17,8 @@ interface SwitchProps {
   size?: 'sm' | 'md' | 'lg';
   labelPosition?: 'left' | 'right';
   name?: string;
-  /** 'default' = neutral grey; 'status' = red when off, green when on */
-  variant?: 'default' | 'status';
+  /** 'default' = neutral grey; 'status' = red when off, green when on; 'primary' = grey when off, brand teal when on */
+  variant?: 'default' | 'status' | 'primary';
 }
 
 const Switch = ({
@@ -22,6 +26,7 @@ const Switch = ({
   defaultChecked,
   onChange,
   label,
+  ariaLabel,
   description,
   error,
   disabled = false,
@@ -58,17 +63,19 @@ const Switch = ({
       name={name}
       className={clsx(
         'group relative inline-flex shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out',
-        'focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300 focus-visible:ring-offset-2',
+        // Focus is the global outline (DESIGN.md section 6).
         trackSizeStyles[size],
         disabled
-          ? 'cursor-not-allowed bg-gray-200'
+          ? 'cursor-not-allowed bg-gray-200 dark:bg-gray-700'
           : variant === 'status'
             ? 'bg-red-500 data-checked:bg-green-600'
-            : 'bg-gray-300 data-checked:bg-gray-700',
+            : variant === 'primary'
+              ? 'bg-gray-300 dark:bg-gray-600 data-checked:bg-primary'
+              : 'bg-gray-300 dark:bg-gray-600 data-checked:bg-primary-700',
         error && 'ring-2 ring-danger',
       )}
     >
-      <span className="sr-only">{label || 'Toggle'}</span>
+      <span className="sr-only">{label || ariaLabel || 'Toggle'}</span>
       <span
         className={clsx(
           'pointer-events-none inline-block transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
@@ -97,20 +104,24 @@ const Switch = ({
           {label && (
             <Label
               className={clsx(
-                'text-sm font-medium cursor-pointer select-none',
-                disabled ? 'text-neutral-4' : 'text-neutral-6',
+                'text-sm font-medium leading-normal cursor-pointer select-none',
+                disabled ? 'text-(--palette-ink-2)' : 'text-(--palette-ink)',
               )}
             >
               {label}
             </Label>
           )}
           {description && (
-            <Description className="text-sm text-neutral-4">{description}</Description>
+            <Description className="text-xs text-(--palette-ink-2)">{description}</Description>
           )}
         </div>
       </div>
 
-      {error && <p className="mt-1 text-sm text-danger">{error}</p>}
+      {error && (
+        <p className={clsx('mt-1', ERROR_TEXT)}>
+          <ValidationText message={error} label={label} />
+        </p>
+      )}
     </Field>
   );
 };

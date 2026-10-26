@@ -140,13 +140,15 @@ function PermChip({
   unknown: boolean;
   label: string;
 }) {
-  if (!code) return <span className="text-gray-300 text-xs">—</span>;
+  if (!code) return <span className="text-(--palette-gray-300) text-xs">—</span>;
   return (
     <span
       title={unknown ? label : code}
       className={clsx(
         'inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-mono text-[11px]',
-        unknown ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-gray-50 text-gray-500',
+        unknown
+          ? 'bg-(--palette-req-wash) text-(--palette-danger) border border-(--palette-req-line)'
+          : 'bg-(--palette-surface-2) text-(--palette-gray-500)',
       )}
     >
       {unknown && <Icon name="triangle-exclamation" style="solid" className="size-2.5" />}
@@ -200,8 +202,8 @@ function SortableRow({
       ref={setNodeRef}
       style={style}
       className={clsx(
-        'border-b border-gray-100 hover:bg-gray-50/70 transition-colors',
-        isDragging && 'bg-blue-50',
+        'border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2)/70 transition-colors',
+        isDragging && 'bg-blue-50 dark:bg-blue-500/10',
         hiddenForRole && 'opacity-40',
       )}
     >
@@ -212,10 +214,10 @@ function SortableRow({
           {...listeners}
           disabled={dndDisabled}
           className={clsx(
-            'text-gray-300',
+            'text-(--palette-gray-300)',
             dndDisabled
               ? 'cursor-not-allowed opacity-40'
-              : 'cursor-grab hover:text-gray-500 active:cursor-grabbing',
+              : 'cursor-grab hover:text-(--palette-gray-500) active:cursor-grabbing',
           )}
           aria-label={t('aria.dragToReorder')}
         >
@@ -231,7 +233,7 @@ function SortableRow({
             <button
               type="button"
               onClick={() => onToggleCollapse(item.id)}
-              className="flex size-4 items-center justify-center text-gray-400 hover:text-gray-600"
+              className="flex size-4 items-center justify-center text-(--palette-gray-400) hover:text-(--palette-gray-600)"
               aria-label={isCollapsed ? t('tree.expand') : t('tree.collapse')}
             >
               <Icon
@@ -250,40 +252,40 @@ function SortableRow({
               className={clsx('size-4', item.iconColor)}
             />
             {lockedForRole && (
-              <div className="absolute -bottom-1 -right-1 flex size-2.5 items-center justify-center rounded-full bg-white">
-                <Icon name="lock" style="solid" className="size-1.5 text-gray-400" />
+              <div className="absolute -bottom-1 -right-1 flex size-2.5 items-center justify-center rounded-full bg-(--palette-surface)">
+                <Icon name="lock" style="solid" className="size-1.5 text-(--palette-gray-400)" />
               </div>
             )}
           </div>
           <span
             title={hiddenForRole ? t('tree.hiddenForRole') : undefined}
             className={clsx(
-              'text-sm font-medium text-gray-800 whitespace-nowrap',
-              hiddenForRole && 'line-through decoration-gray-400 text-gray-400',
+              'text-sm font-medium text-(--palette-ink) whitespace-nowrap',
+              hiddenForRole && 'line-through decoration-gray-400 text-(--palette-gray-400)',
             )}
           >
             {item.labels?.en ?? item.itemKey}
           </span>
           {item.isSystem && (
-            <span className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">
+            <span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-(--palette-warn-wash) px-1.5 py-0.5 rounded">
               {t('table.systemBadge')}
             </span>
           )}
           {missingLangs.length > 0 && missingLangs.length < REQUIRED_LANGS.length && (
             <span
               title={t('tree.missingI18n', { langs: missingLangs.join(', ') })}
-              className="text-[10px] font-semibold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded"
+              className="text-[10px] font-semibold text-amber-600 dark:text-amber-400 bg-(--palette-warn-wash) px-1.5 py-0.5 rounded"
             >
               {t('tree.missingI18nShort', { langs: missingLangs.join('/') })}
             </span>
           )}
         </div>
       </td>
-      <td className="px-4 py-2 text-xs text-gray-500 font-mono whitespace-nowrap">
+      <td className="px-4 py-2 text-xs text-(--palette-gray-500) font-mono whitespace-nowrap">
         {item.itemKey}
       </td>
       <td
-        className="px-4 py-2 text-xs text-gray-400 font-mono max-w-[14rem] truncate"
+        className="px-4 py-2 text-xs text-(--palette-gray-400) font-mono max-w-[14rem] truncate"
         title={item.path ?? ''}
       >
         {item.path ?? '—'}
@@ -311,7 +313,7 @@ function SortableRow({
         <div className="flex items-center gap-2">
           <Link
             to={`/admin/menus/${item.id}`}
-            className="text-xs text-primary hover:underline font-medium"
+            className="text-xs text-(--palette-primary-text) hover:underline font-medium"
           >
             {t('table.actions.edit')}
           </Link>
@@ -500,12 +502,12 @@ export function MenuTreeTable({
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-        <div className="overflow-x-auto rounded-xl border border-gray-100">
-          <p className="px-4 py-2 text-xs text-gray-400">
+        <div className="overflow-x-auto rounded-xl border border-(--palette-line-soft)">
+          <p className="px-4 py-2 text-xs text-(--palette-gray-400)">
             {dndDisabled ? t('tree.noReorderHint') : t('table.dragHint')}
           </p>
           <table className="w-full text-left">
-            <thead className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wider">
+            <thead className="bg-(--palette-surface-2) text-xs text-(--palette-gray-500) uppercase tracking-wider">
               <tr>
                 <th className="text-xs px-4 py-3 w-8 font-semibold" />
                 <SortableTh
@@ -554,7 +556,7 @@ export function MenuTreeTable({
                 />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {sortedVisible.map(flatItem => (
                 <SortableRow
                   key={flatItem.id}
@@ -572,7 +574,10 @@ export function MenuTreeTable({
               ))}
               {sortedVisible.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-400">
+                  <td
+                    colSpan={7}
+                    className="px-4 py-10 text-center text-sm text-(--palette-gray-400)"
+                  >
                     {t('tree.emptyFiltered')}
                   </td>
                 </tr>

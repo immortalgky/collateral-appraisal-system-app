@@ -35,7 +35,13 @@ const fmtCompact = (n: number): string => {
 const fmtFull = (n: number): string =>
   n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const tooltipStyle = { fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' };
+const tooltipStyle = {
+  fontSize: 11,
+  borderRadius: 8,
+  border: '1px solid var(--palette-line)',
+  background: 'var(--palette-surface)',
+  color: 'var(--palette-ink)',
+};
 
 interface ChartRow extends CashflowTimelineDataPoint {
   noiBar: number;
@@ -48,8 +54,10 @@ function CashflowTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   const row = (payload[0]?.payload ?? {}) as ChartRow;
   return (
-    <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
-      <div className="text-gray-500 mb-1">{t('dcf.chart.yearLabel', { year: label })}</div>
+    <div style={tooltipStyle} className="bg-(--palette-surface) px-3 py-2 shadow-md">
+      <div className="text-(--palette-gray-500) mb-1">
+        {t('dcf.chart.yearLabel', { year: label })}
+      </div>
       <div style={{ color: '#22c55e' }}>
         {t('dcf.chart.income')}: {fmtFull(row.income ?? 0)}
       </div>
@@ -94,12 +102,12 @@ export function CashflowTimelineChart({
   const terminalShare = totalPv > 0 ? (terminalPv / totalPv) * 100 : 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 p-3">
+    <div className="rounded-lg border border-(--palette-line) p-3">
       <div className="flex items-center justify-between mb-1">
-        <div className="text-[11px] font-medium text-gray-500">
+        <div className="text-[11px] font-medium text-(--palette-gray-500)">
           {t('dcf.chart.cashflowAndPresentValue')}
         </div>
-        <div className="text-[9px] text-gray-400">
+        <div className="text-[9px] text-(--palette-gray-400)">
           {t('dcf.chart.discountCapLine', {
             discount: (discountRate * 100).toFixed(1),
             cap: (capitalizeRate * 100).toFixed(1),
@@ -110,9 +118,13 @@ export function CashflowTimelineChart({
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={rows} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="year" tick={{ fontSize: 9, fill: '#9ca3af' }} />
-          <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={fmtCompact} width={45} />
-          <Tooltip content={<CashflowTooltip />} cursor={{ fill: '#f3f4f6' }} />
+          <XAxis dataKey="year" tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }} />
+          <YAxis
+            tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }}
+            tickFormatter={fmtCompact}
+            width={45}
+          />
+          <Tooltip content={<CashflowTooltip />} cursor={{ fill: 'var(--palette-surface-3)' }} />
           <Legend wrapperStyle={{ fontSize: 9, paddingTop: 2 }} />
           <Bar
             dataKey="noiBar"
@@ -141,16 +153,20 @@ export function CashflowTimelineChart({
       </ResponsiveContainer>
 
       <div className="mt-2 grid grid-cols-3 gap-3 text-[10px]">
-        <Stat label={t('dcf.chart.npvSumPv')} value={fmtFull(totalPv)} accent="text-sky-600" />
+        <Stat
+          label={t('dcf.chart.npvSumPv')}
+          value={fmtFull(totalPv)}
+          accent="text-sky-600 dark:text-sky-400"
+        />
         <Stat
           label={t('dcf.chart.terminalShare')}
           value={`${terminalShare.toFixed(1)}%`}
-          accent="text-violet-600"
+          accent="text-violet-600 dark:text-violet-400"
         />
         <Stat
           label={t('dcf.chart.discountRate')}
           value={`${(discountRate * 100).toFixed(1)}%`}
-          accent="text-gray-700"
+          accent="text-(--palette-ink)"
         />
       </div>
     </div>
@@ -159,8 +175,8 @@ export function CashflowTimelineChart({
 
 function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="flex flex-col gap-0.5 rounded-md border border-gray-100 bg-gray-50/60 px-2 py-1">
-      <span className="text-gray-500 uppercase tracking-wide">{label}</span>
+    <div className="flex flex-col gap-0.5 rounded-md border border-(--palette-line-soft) bg-(--palette-surface-2)/60 px-2 py-1">
+      <span className="text-(--palette-gray-500) uppercase tracking-wide">{label}</span>
       <span className={`text-xs font-semibold tabular-nums ${accent}`}>{value}</span>
     </div>
   );

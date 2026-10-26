@@ -262,35 +262,35 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
   const rightPane = (
     <div className="flex flex-col gap-3 h-full">
       {/* Invoice paper */}
-      <div className="flex-1 min-h-0 flex flex-col bg-white border border-gray-200 rounded-lg shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08),0_2px_4px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-[0_4px_16px_-4px_rgba(0,0,0,0.08),0_2px_4px_-2px_rgba(0,0,0,0.04)] overflow-hidden">
         {/* Top accent bar */}
         <div className="h-1 bg-primary shrink-0" />
 
         {/* Paper header */}
-        <div className="shrink-0 px-6 pt-5 pb-4 border-b border-dashed border-gray-200">
+        <div className="shrink-0 px-6 pt-5 pb-4 border-b border-dashed border-(--palette-line)">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-[10px] font-bold text-primary tracking-[0.25em] uppercase">
+              <p className="text-[10px] font-bold text-(--palette-primary-text) tracking-[0.25em] uppercase">
                 {t('draft.invoiceLabel')}
               </p>
-              <p className="text-[10px] text-gray-400 mt-0.5">
+              <p className="text-[10px] text-(--palette-gray-400) mt-0.5">
                 {existingInvoice?.submittedAt
                   ? formatLocaleDate(existingInvoice.submittedAt, i18n.language)
                   : '—'}
               </p>
             </div>
             <div className="text-right">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider">
+              <p className="text-[10px] text-(--palette-gray-400) uppercase tracking-wider">
                 {t('draft.itemsLabel')}
               </p>
-              <p className="text-sm font-semibold text-gray-900 tabular-nums">
+              <p className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                 {selectedAssignments.length}
               </p>
             </div>
           </div>
 
           <div className="mt-4">
-            <label className="block text-[10px] font-semibold text-gray-500 mb-1 uppercase tracking-wider">
+            <label className="block text-[10px] font-semibold text-(--palette-gray-500) mb-1 uppercase tracking-wider">
               {t('maintenance.invoiceNumber')}
               <span className="text-red-500 ml-0.5">*</span>
             </label>
@@ -303,7 +303,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
               }}
               maxLength={20}
               placeholder={t('maintenance.invoiceNumberPlaceholder')}
-              className={`w-full bg-transparent text-base font-bold text-gray-900 border-0 border-b pb-1 outline-none placeholder:font-normal placeholder:text-gray-300 ${invoiceNumberError ? 'border-red-400 focus:border-red-500' : 'border-gray-300 focus:border-primary'}`}
+              className={`w-full bg-transparent text-base font-bold text-(--palette-ink) border-0 border-b pb-1 outline-none placeholder:font-normal placeholder:text-(--palette-gray-300) ${invoiceNumberError ? 'border-red-400 focus:border-red-500' : 'border-(--palette-line-strong) focus:border-primary'}`}
             />
             {invoiceNumberError && (
               <p className="text-xs text-red-500 mt-1">{invoiceNumberError}</p>
@@ -316,39 +316,41 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
           {selectedAssignments.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full gap-2 text-center px-6 py-8">
               <Icon style="regular" name="receipt" className="size-10 text-gray-200" />
-              <p className="text-xs text-gray-400">{t('draft.noItemsHint')}</p>
+              <p className="text-xs text-(--palette-gray-400)">{t('draft.noItemsHint')}</p>
             </div>
           ) : (
-            <div className="px-6 py-2 divide-y divide-gray-100">
+            <div className="px-6 py-2 divide-y divide-(--palette-line-soft)">
               {selectedAssignments.map((a, idx) => (
                 <div
                   key={a.assignmentId}
                   className="flex items-start justify-between gap-3 py-2.5 group"
                 >
                   <div className="flex items-start gap-2 min-w-0 flex-1">
-                    <span className="text-[10px] text-gray-400 tabular-nums shrink-0 mt-1 w-4 text-right">
+                    <span className="text-[10px] text-(--palette-gray-400) tabular-nums shrink-0 mt-1 w-4 text-right">
                       {idx + 1}.
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-semibold text-gray-900 truncate">
+                      <p className="text-xs font-semibold text-(--palette-ink) truncate">
                         {a.appraisalNumber ?? '—'}
                       </p>
-                      <p className="text-[11px] text-gray-500 truncate">{a.customerName ?? '—'}</p>
+                      <p className="text-[11px] text-(--palette-gray-500) truncate">
+                        {a.customerName ?? '—'}
+                      </p>
                       {a.submittedDate && (
-                        <p className="text-[10px] text-gray-400 mt-0.5">
+                        <p className="text-[10px] text-(--palette-gray-400) mt-0.5">
                           {formatLocaleDate(a.submittedDate, i18n.language)}
                         </p>
                       )}
                     </div>
                   </div>
                   <div className="flex items-start gap-1 shrink-0">
-                    <span className="text-xs font-semibold text-gray-900 tabular-nums whitespace-nowrap">
+                    <span className="text-xs font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap">
                       {formatCurrency(a.bankAbsorbAmount)}
                     </span>
                     <button
                       type="button"
                       onClick={() => removeFromDraft(a.assignmentId)}
-                      className="opacity-0 group-hover:opacity-100 p-0.5 -mt-0.5 text-gray-300 hover:text-red-500 transition-all"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 -mt-0.5 text-(--palette-gray-300) hover:text-red-500 transition-all"
                       aria-label={t('maintenance.delete')}
                     >
                       <Icon style="solid" name="xmark" className="size-3" />
@@ -361,12 +363,12 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
         </div>
 
         {/* Total */}
-        <div className="shrink-0 px-6 py-4 border-t-2 border-double border-gray-300 bg-gray-50/50">
+        <div className="shrink-0 px-6 py-4 border-t-2 border-double border-(--palette-line-strong) bg-(--palette-surface-2)/50">
           <div className="flex justify-between items-baseline">
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">
+            <span className="text-[10px] font-bold text-(--palette-gray-500) uppercase tracking-[0.2em]">
               {t('maintenance.totalAmount')}
             </span>
-            <span className="text-2xl font-bold text-primary tabular-nums">
+            <span className="text-2xl font-bold text-(--palette-primary-text) tabular-nums">
               {formatCurrency(totalAmount)}
             </span>
           </div>
@@ -374,7 +376,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
 
         {/* Auto-save indicator strip */}
         {isSaving && (
-          <div className="shrink-0 flex items-center justify-center gap-1.5 px-6 py-1.5 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400">
+          <div className="shrink-0 flex items-center justify-center gap-1.5 px-6 py-1.5 bg-(--palette-surface-2) border-t border-(--palette-line-soft) text-[10px] text-(--palette-gray-400)">
             <Icon style="solid" name="spinner" className="size-3 animate-spin" />
             {t('draft.saving')}
           </div>
@@ -420,18 +422,18 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
     <div className="flex flex-col h-full min-h-0 gap-3">
       {/* Page header — breadcrumb (rendered by Layout) handles navigation back */}
       <div className="shrink-0">
-        <h3 className="text-base font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
           {editId ? t('maintenance.editTitle') : t('maintenance.createTitle')}
         </h3>
-        <p className="text-xs text-gray-500 mt-0.5">{t('maintenance.subtitle')}</p>
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('maintenance.subtitle')}</p>
       </div>
 
       {/* Two-pane layout */}
       <div className="flex-1 min-h-0 flex gap-4 relative">
         {/* Left pane — Appraisal book listing */}
-        <div className="flex-1 min-w-0 flex flex-col min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden">
+        <div className="flex-1 min-w-0 flex flex-col min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden">
           {/* Left pane header / search */}
-          <div className="shrink-0 flex items-end gap-3 px-4 py-3 border-b border-gray-100 flex-wrap">
+          <div className="shrink-0 flex items-end gap-3 px-4 py-3 border-b border-(--palette-line-soft) flex-wrap">
             <div className="flex-1 max-w-xs">
               <Input
                 placeholder={t('book.searchPlaceholder')}
@@ -498,8 +500,8 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
           {/* Table */}
           <div className="flex-1 min-h-0 overflow-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-                <tr className="border-b border-gray-200">
+              <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+                <tr className="border-b border-(--palette-line)">
                   <th className="text-xs px-4 py-2.5 w-10 font-semibold">
                     <input
                       type="checkbox"
@@ -509,51 +511,51 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                       }}
                       onChange={toggleSelectAll}
                       disabled={filteredAssignments.length === 0}
-                      className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+                      className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-center font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-center font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     No.
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.appraisalReportNo')}
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     {t('book.col.customerName')}
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.costCenter')}
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     {t('book.col.feePaymentMethod')}
                   </th>
-                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.feeAmount')}
                   </th>
-                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 text-xs">
+                  <th className="text-right font-semibold text-(--palette-gray-600) px-3 py-2.5 text-xs">
                     {t('book.col.vat')}
                   </th>
-                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.totalAmount')}
                   </th>
-                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.payPartialAmount')}
                   </th>
-                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.bankAbsorbAmount')}
                   </th>
-                  <th className="text-right font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-right font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.remainingFee')}
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.lastPaymentDate')}
                   </th>
-                  <th className="text-left font-semibold text-gray-600 px-3 py-2.5 whitespace-nowrap text-xs">
+                  <th className="text-left font-semibold text-(--palette-gray-600) px-3 py-2.5 whitespace-nowrap text-xs">
                     {t('book.col.submittedDate')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {isLoadingAssignments ? (
                   <TableRowSkeleton
                     columns={[
@@ -583,8 +585,12 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                   <tr>
                     <td colSpan={13} className="text-center py-12">
                       <div className="flex flex-col items-center gap-2">
-                        <Icon style="regular" name="folder-open" className="size-8 text-gray-300" />
-                        <p className="text-xs text-gray-500">{t('book.empty')}</p>
+                        <Icon
+                          style="regular"
+                          name="folder-open"
+                          className="size-8 text-(--palette-gray-300)"
+                        />
+                        <p className="text-xs text-(--palette-gray-500)">{t('book.empty')}</p>
                       </div>
                     </td>
                   </tr>
@@ -595,59 +601,59 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
                       <tr
                         key={item.assignmentId}
                         onClick={() => toggleItem(item)}
-                        className={`cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-gray-50 even:bg-gray-50/50'}`}
+                        className={`cursor-pointer transition-colors ${isSelected ? 'bg-primary/5' : 'hover:bg-(--palette-surface-2) even:bg-(--palette-surface-2)/50'}`}
                       >
                         <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleItem(item)}
-                            className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+                            className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer"
                           />
                         </td>
-                        <td className="px-3 py-2.5 text-center text-gray-600 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-center text-(--palette-gray-600) tabular-nums whitespace-nowrap text-xs">
                           {index + 1}
                         </td>
-                        <td className="px-3 py-2.5 font-medium text-primary whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 font-medium text-(--palette-primary-text) whitespace-nowrap text-xs">
                           {item.appraisalNumber ?? '—'}
                         </td>
-                        <td className="px-3 py-2.5 text-gray-700 text-xs">
+                        <td className="px-3 py-2.5 text-(--palette-ink) text-xs">
                           {item.customerName ?? '—'}
                         </td>
-                        <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-(--palette-gray-600) whitespace-nowrap text-xs">
                           {item.costCenter ?? '—'}
                         </td>
                         <td
-                          className="px-3 py-2.5 text-gray-600 text-xs max-w-36 truncate"
+                          className="px-3 py-2.5 text-(--palette-gray-600) text-xs max-w-36 truncate"
                           title={getFeePaymentMethodLabel(item.feePaymentType)}
                         >
                           {getFeePaymentMethodLabel(item.feePaymentType)}
                         </td>
-                        <td className="px-3 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap text-xs">
                           {formatCurrency(item.feeBeforeVAT)}
                         </td>
-                        <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-right text-(--palette-gray-600) tabular-nums whitespace-nowrap text-xs">
                           {formatCurrency(item.vatAmount)}{' '}
-                          <span className="text-gray-400">({item.vatRate}%)</span>
+                          <span className="text-(--palette-gray-400)">({item.vatRate}%)</span>
                         </td>
-                        <td className="px-3 py-2.5 text-right font-medium text-gray-900 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-right font-medium text-(--palette-ink) tabular-nums whitespace-nowrap text-xs">
                           {formatCurrency(item.totalFeeAfterVAT)}
                         </td>
-                        <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-right text-(--palette-gray-600) tabular-nums whitespace-nowrap text-xs">
                           {formatCurrency(item.payPartialAmount)}
                         </td>
-                        <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-right text-(--palette-gray-600) tabular-nums whitespace-nowrap text-xs">
                           {formatCurrency(item.bankAbsorbAmount)}
                         </td>
-                        <td className="px-3 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-right text-(--palette-gray-600) tabular-nums whitespace-nowrap text-xs">
                           {formatCurrency(item.remainingFee)}
                         </td>
-                        <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-(--palette-gray-600) whitespace-nowrap text-xs">
                           {item.lastPaymentDate
                             ? formatLocaleDate(item.lastPaymentDate, i18n.language)
                             : '—'}
                         </td>
-                        <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap text-xs">
+                        <td className="px-3 py-2.5 text-(--palette-gray-600) whitespace-nowrap text-xs">
                           {item.submittedDate
                             ? formatLocaleDate(item.submittedDate, i18n.language)
                             : '—'}
@@ -662,7 +668,7 @@ const ExtCreateInvoicePageInner = ({ editId }: ExtCreateInvoicePageProps) => {
         </div>
 
         {/* Right pane — Desktop (lg+) */}
-        <div className="hidden lg:flex w-[400px] shrink-0 flex-col bg-white rounded-lg border border-gray-200 p-4 overflow-hidden">
+        <div className="hidden lg:flex w-[400px] shrink-0 flex-col bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4 overflow-hidden">
           {rightPane}
         </div>
       </div>

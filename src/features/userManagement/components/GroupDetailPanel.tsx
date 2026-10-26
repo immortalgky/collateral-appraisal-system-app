@@ -59,7 +59,12 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       return;
     }
     updateGroup.mutate(
-      { id: groupId, name: editForm.name, description: editForm.description, scope: editForm.scope },
+      {
+        id: groupId,
+        name: editForm.name,
+        description: editForm.description,
+        scope: editForm.scope,
+      },
       {
         onSuccess: () => {
           toast.success(t('toasts.groupUpdated'));
@@ -147,18 +152,20 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
   return (
     <div className="flex flex-col gap-4 p-6">
       {/* General Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-500/10">
               <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.general')}
+            </span>
           </div>
           <button
             type="button"
             onClick={handleOpenEdit}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
@@ -166,14 +173,16 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
         </div>
         <div className="px-4 py-3 space-y-2">
           <div>
-            <div className="text-xs text-gray-400 mb-0.5">{t('fields.name')}</div>
-            <div className="text-sm font-medium text-gray-900">{group.name}</div>
+            <div className="text-xs text-(--palette-gray-400) mb-0.5">{t('fields.name')}</div>
+            <div className="text-sm font-medium text-(--palette-ink)">{group.name}</div>
           </div>
           <div>
-            <div className="text-xs text-gray-400 mb-0.5">{t('fields.scope')}</div>
+            <div className="text-xs text-(--palette-gray-400) mb-0.5">{t('fields.scope')}</div>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                group.scope === 'Bank' ? 'bg-blue-50 text-blue-700' : 'bg-violet-50 text-violet-700'
+                group.scope === 'Bank'
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                  : 'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300'
               }`}
             >
               {group.scope}
@@ -181,8 +190,10 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
           </div>
           {group.description && (
             <div>
-              <div className="text-xs text-gray-400 mb-0.5">{t('fields.description')}</div>
-              <div className="text-sm text-gray-600 whitespace-pre-line break-words">
+              <div className="text-xs text-(--palette-gray-400) mb-0.5">
+                {t('fields.description')}
+              </div>
+              <div className="text-sm text-(--palette-gray-600) whitespace-pre-line break-words">
                 {group.description}
               </div>
             </div>
@@ -191,42 +202,44 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       </section>
 
       {/* Users Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50 dark:bg-violet-500/10">
               <Icon name="users" style="solid" className="size-3 text-violet-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.users')}</span>
-            <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.users')}
+            </span>
+            <span className="inline-flex items-center justify-center size-5 rounded-full bg-(--palette-surface-3) text-xs font-semibold text-(--palette-gray-600)">
               {group.users.length}
             </span>
           </div>
           <button
             type="button"
             onClick={() => setShowUserModal(true)}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
           </button>
         </div>
-        <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
+        <div className="divide-y divide-(--palette-line-soft) max-h-48 overflow-y-auto">
           {group.users.length === 0 ? (
-            <div className="px-4 py-4 text-sm text-gray-400 text-center">
+            <div className="px-4 py-4 text-sm text-(--palette-gray-400) text-center">
               {t('empty.noUsersAssigned')}
             </div>
           ) : (
             group.users.map(u => (
               <div key={u.userId} className="px-4 py-2.5 flex items-center gap-2">
-                <div className="size-7 rounded-full bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-500 shrink-0">
+                <div className="size-7 rounded-full bg-(--palette-surface-3) flex items-center justify-center text-xs font-semibold text-(--palette-gray-500) shrink-0">
                   {(u.firstName || u.userName || '?')[0]?.toUpperCase()}
                 </div>
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-gray-800 truncate">
+                  <div className="text-sm font-medium text-(--palette-ink) truncate">
                     {`${u.firstName} ${u.lastName}`.trim() || u.userName}
                   </div>
-                  <div className="text-xs text-gray-400 truncate">{u.userName}</div>
+                  <div className="text-xs text-(--palette-gray-400) truncate">{u.userName}</div>
                 </div>
               </div>
             ))
@@ -235,29 +248,31 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       </section>
 
       {/* Monitoring Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-amber-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-(--palette-warn-wash)">
               <Icon name="eye" style="solid" className="size-3 text-amber-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.monitoring')}</span>
-            <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.monitoring')}
+            </span>
+            <span className="inline-flex items-center justify-center size-5 rounded-full bg-(--palette-surface-3) text-xs font-semibold text-(--palette-gray-600)">
               {group.monitoredGroups.length}
             </span>
           </div>
           <button
             type="button"
             onClick={() => setShowMonitoringModal(true)}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
           </button>
         </div>
-        <div className="divide-y divide-gray-50 max-h-48 overflow-y-auto">
+        <div className="divide-y divide-(--palette-line-soft) max-h-48 overflow-y-auto">
           {group.monitoredGroups.length === 0 ? (
-            <div className="px-4 py-4 text-sm text-gray-400 text-center">
+            <div className="px-4 py-4 text-sm text-(--palette-gray-400) text-center">
               {t('empty.noGroupsBeingMonitored')}
             </div>
           ) : (
@@ -266,9 +281,9 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
                 <Icon
                   name="users-rectangle"
                   style="regular"
-                  className="size-4 text-gray-400 shrink-0"
+                  className="size-4 text-(--palette-gray-400) shrink-0"
                 />
-                <span className="text-sm text-gray-800">{mg.groupName}</span>
+                <span className="text-sm text-(--palette-ink)">{mg.groupName}</span>
               </div>
             ))
           )}
@@ -276,15 +291,19 @@ const GroupDetailPanel = ({ groupId, onDeleted }: GroupDetailPanelProps) => {
       </section>
 
       {/* Security Section */}
-      <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
-          <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+      <section className="bg-(--palette-surface) rounded-xl border border-red-100 dark:border-red-500/20 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100 dark:border-red-500/20">
+          <span className="flex size-6 items-center justify-center rounded-md bg-(--palette-req-wash)">
             <Icon name="triangle-exclamation" style="solid" className="size-3 text-danger" />
           </span>
-          <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {t('sections.security')}
+          </span>
         </div>
         <div className="px-4 py-3">
-          <p className="text-xs text-gray-500 mb-3">{t('security.deleteGroupWarning')}</p>
+          <p className="text-xs text-(--palette-gray-500) mb-3">
+            {t('security.deleteGroupWarning')}
+          </p>
           <Button
             variant="danger"
             size="sm"

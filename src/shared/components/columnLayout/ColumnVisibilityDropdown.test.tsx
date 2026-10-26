@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import '@/i18n';
-import { render, screen } from '@/test/test-utils';
+import { render, screen, waitFor } from '@/test/test-utils';
 import { ColumnVisibilityDropdown } from './ColumnVisibilityDropdown';
 
 const labels = { a: 'Alpha', b: 'Beta', c: 'Gamma' };
@@ -94,5 +95,64 @@ describe('ColumnVisibilityDropdown neutral button', () => {
     const btn = screen.getByRole('button', { name: /column/i });
     expect(btn.className).toContain('indigo');
     expect(btn.textContent).toBe('2');
+  });
+});
+
+describe('ColumnVisibilityDropdown pinning', () => {
+  it('splits the list into pinned and other columns, with a pin button each', async () => {
+    const onTogglePin = vi.fn();
+    const { user } = setup({ checkboxes: true, pinned: ['b'], onTogglePin });
+    await open(user);
+    expect(screen.getByText(/Pinned left/i)).toBeTruthy();
+    expect(screen.getByText('Other columns')).toBeTruthy();
+    // the pinned one offers to unpin, the others to pin; the fixed badge gives way to the button
+    expect(screen.getByRole('button', { name: 'Unpin Beta' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(screen.getByRole('button', { name: 'Pin Gamma to the left' }));
+    expect(onTogglePin).toHaveBeenCalledWith('c');
+    expect(screen.queryByText('fixed')).toBeNull();
+  });
+
+  it('keeps the focus on the pin button after the row moves to the other group', async () => {
+    function Harness() {
+      const [pinned, setPinned] = useState<('a' | 'b' | 'c')[]>([]);
+      return (
+        <ColumnVisibilityDropdown<'a' | 'b' | 'c'>
+          orderedColumns={['a', 'b', 'c']}
+          hidden={new Set()}
+          alwaysVisible={new Set(['a'])}
+          labels={labels}
+          onToggle={vi.fn()}
+          onReorder={vi.fn()}
+          onReset={vi.fn()}
+          checkboxes
+          pinned={pinned}
+          onTogglePin={k => setPinned(p => (p.includes(k) ? p.filter(x => x !== k) : [...p, k]))}
+        />
+      );
+    }
+    const { user } = render(<Harness />);
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Pin Gamma to the left' }));
+    // the row is now in the pinned group, a new button: the focus is on it, not on the page
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Unpin Gamma' })).toHaveFocus());
+  });
+
+  it('a click on the pin button does not also toggle visibility', async () => {
+    const onTogglePin = vi.fn();
+    const { user, onToggle } = setup({ checkboxes: true, pinned: [], onTogglePin });
+    await open(user);
+    await user.click(screen.getByRole('button', { name: 'Pin Beta to the left' }));
+    expect(onToggle).not.toHaveBeenCalled();
+  });
+
+  it('draws no pin button or group heading for a caller that does not opt in', async () => {
+    const { user } = setup({ checkboxes: true });
+    await open(user);
+    expect(screen.queryByRole('button', { name: /^Pin / })).toBeNull();
+    expect(screen.queryByText('Other columns')).toBeNull();
+    expect(screen.getByText('fixed')).toBeTruthy();
   });
 });

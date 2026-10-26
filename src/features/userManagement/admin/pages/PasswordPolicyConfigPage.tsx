@@ -25,16 +25,16 @@ const NumberField = ({
   onChange: (v: number) => void;
 }) => (
   <div>
-    <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+    <label className="block text-xs font-medium text-(--palette-ink) mb-1">{label}</label>
     <input
       type="number"
       min={min}
       max={max}
       value={value}
       onChange={e => onChange(Number(e.target.value))}
-      className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+      className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
     />
-    {hint && <p className="mt-1 text-xs text-gray-400">{hint}</p>}
+    {hint && <p className="mt-1 text-xs text-(--palette-gray-400)">{hint}</p>}
   </div>
 );
 
@@ -47,20 +47,20 @@ const CheckboxField = ({
   checked: boolean;
   onChange: (v: boolean) => void;
 }) => (
-  <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+  <label className="flex items-center gap-2 text-sm text-(--palette-ink) cursor-pointer">
     <input
       type="checkbox"
       checked={checked}
       onChange={e => onChange(e.target.checked)}
-      className="size-4 rounded border-gray-300 text-primary focus:ring-primary/30"
+      className="size-4 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/30"
     />
     {label}
   </label>
 );
 
 const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-  <section className="bg-white rounded-lg border border-gray-200 p-4">
-    <h4 className="text-sm font-semibold text-gray-800 mb-3">{title}</h4>
+  <section className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+    <h4 className="text-sm font-semibold text-(--palette-ink) mb-3">{title}</h4>
     {children}
   </section>
 );
@@ -90,7 +90,11 @@ function PasswordPolicyConfigPage() {
   if (isLoading || !draft) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -99,9 +103,15 @@ function PasswordPolicyConfigPage() {
     <div className="flex flex-col gap-4">
       {/* Header */}
       <div>
-        <h3 className="text-base font-semibold text-gray-900">{t('passwordPolicyConfig.title')}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">{t('passwordPolicyConfig.subtitle')}</p>
-        <p className="text-xs text-gray-400 mt-1">{t('passwordPolicyConfig.propagationNote')}</p>
+        <h3 className="text-base font-semibold text-(--palette-ink)">
+          {t('passwordPolicyConfig.title')}
+        </h3>
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">
+          {t('passwordPolicyConfig.subtitle')}
+        </p>
+        <p className="text-xs text-(--palette-gray-400) mt-1">
+          {t('passwordPolicyConfig.propagationNote')}
+        </p>
       </div>
 
       {/* Complexity */}
@@ -188,7 +198,7 @@ function PasswordPolicyConfigPage() {
             onChange={v => set('lockoutMinutes', v)}
           />
         </div>
-        <div className="mt-3 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-amber-50 text-amber-700">
+        <div className="mt-3 inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-(--palette-warn-wash) text-(--palette-warn)">
           <Icon name="triangle-exclamation" style="solid" className="size-3.5" />
           {t('passwordPolicyConfig.lockoutRestartNote')}
         </div>
@@ -208,16 +218,18 @@ function PasswordPolicyConfigPage() {
 
       {/* Blocklist */}
       <Section title={t('passwordPolicyConfig.blocklist')}>
-        <label className="block text-xs font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-(--palette-ink) mb-1">
           {t('passwordPolicyConfig.blocklistLabel')}
         </label>
         <textarea
           value={draft.blocklist}
           onChange={e => set('blocklist', e.target.value)}
           rows={5}
-          className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
         />
-        <p className="mt-1 text-xs text-gray-400">{t('passwordPolicyConfig.blocklistHint')}</p>
+        <p className="mt-1 text-xs text-(--palette-gray-400)">
+          {t('passwordPolicyConfig.blocklistHint')}
+        </p>
       </Section>
 
       <div className="flex justify-end">

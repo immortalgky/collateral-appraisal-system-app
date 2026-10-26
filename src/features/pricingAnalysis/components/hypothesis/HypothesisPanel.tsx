@@ -71,12 +71,14 @@ function VariantPicker({
 
   return (
     <div className="flex flex-col items-center gap-6 py-12">
-      <div className="flex items-center justify-center size-16 rounded-2xl bg-primary/10 text-primary">
+      <div className="flex items-center justify-center size-16 rounded-2xl bg-primary/10 text-(--palette-primary-text)">
         <Icon name="calculator" style="solid" className="size-8" />
       </div>
       <div className="text-center">
-        <h3 className="text-base font-semibold text-gray-900 mb-1">{t('hypothesis.title')}</h3>
-        <p className="text-sm text-gray-500">{t('hypothesis.chooseTemplate')}</p>
+        <h3 className="text-base font-semibold text-(--palette-ink) mb-1">
+          {t('hypothesis.title')}
+        </h3>
+        <p className="text-sm text-(--palette-gray-500)">{t('hypothesis.chooseTemplate')}</p>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-2xl">
         {options.map(opt => (
@@ -85,15 +87,15 @@ function VariantPicker({
             type="button"
             disabled={isGenerating}
             onClick={() => onGenerate(opt.value)}
-            className="flex flex-col items-start gap-1 p-4 rounded-xl border border-gray-200 hover:border-primary hover:bg-primary/5 disabled:opacity-60 transition-colors text-left"
+            className="flex flex-col items-start gap-1 p-4 rounded-xl border border-(--palette-line) hover:border-primary hover:bg-primary/5 disabled:opacity-60 transition-colors text-left"
           >
-            <span className="text-sm font-semibold text-gray-900">{opt.title}</span>
-            <span className="text-xs text-gray-500">{opt.subtitle}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">{opt.title}</span>
+            <span className="text-xs text-(--palette-gray-500)">{opt.subtitle}</span>
           </button>
         ))}
       </div>
       {isGenerating && (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-(--palette-gray-500)">
           <Icon name="spinner" className="size-4 animate-spin" />
           {t('hypothesis.generating')}
         </div>
@@ -250,12 +252,12 @@ function PanelSkeleton() {
   return (
     <div className="flex flex-col gap-4 animate-pulse">
       <div className="flex items-center gap-2.5">
-        <div className="size-8 rounded-lg bg-gray-200" />
-        <div className="bg-gray-200 rounded h-5 w-48" />
+        <div className="size-8 rounded-lg bg-(--palette-surface-3)" />
+        <div className="bg-(--palette-surface-3) rounded h-5 w-48" />
       </div>
-      <div className="rounded-lg border border-gray-200 p-5 space-y-3">
+      <div className="rounded-lg border border-(--palette-line) p-5 space-y-3">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="bg-gray-100 rounded h-10" />
+          <div key={i} className="bg-(--palette-surface-3) rounded h-10" />
         ))}
       </div>
     </div>

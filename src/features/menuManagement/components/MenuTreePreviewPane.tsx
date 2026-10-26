@@ -60,15 +60,15 @@ export function MenuTreePreviewPane({
   }, [items, roleCodes, visibleIds]);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50/60 overflow-hidden">
-      <div className="px-4 py-3 border-b border-gray-200 bg-white">
+    <div className="rounded-xl border border-(--palette-line) bg-(--palette-surface-2)/60 overflow-hidden">
+      <div className="px-4 py-3 border-b border-(--palette-line) bg-(--palette-surface)">
         <div className="flex items-center gap-2">
-          <Icon name="eye" style="solid" className="size-3.5 text-gray-400" />
-          <span className="text-xs font-semibold text-gray-700">
+          <Icon name="eye" style="solid" className="size-3.5 text-(--palette-gray-400)" />
+          <span className="text-xs font-semibold text-(--palette-ink)">
             {t('activityOverrides.preview.title')}
           </span>
         </div>
-        <p className="mt-1 text-[11px] text-gray-500">
+        <p className="mt-1 text-[11px] text-(--palette-gray-500)">
           {roleCodes
             ? t('activityOverrides.preview.asRole', { role: roleName ?? '' })
             : t('activityOverrides.preview.selectRole')}
@@ -77,35 +77,35 @@ export function MenuTreePreviewPane({
 
       <div className="p-2.5 space-y-1">
         {visible.length === 0 && (
-          <p className="px-2 py-6 text-center text-xs text-gray-400">
+          <p className="px-2 py-6 text-center text-xs text-(--palette-gray-400)">
             {t('activityOverrides.preview.empty')}
           </p>
         )}
         {visible.map(({ item, locked, depth }) => (
           <div
             key={item.id}
-            className="flex items-center gap-2.5 rounded-lg bg-white border border-gray-100 px-2.5 py-2"
+            className="flex items-center gap-2.5 rounded-lg bg-(--palette-surface) border border-(--palette-line-soft) px-2.5 py-2"
             style={{ marginLeft: depth * 14 }}
           >
             <div className="relative">
-              <div className="flex size-7 items-center justify-center rounded-lg bg-gray-50">
+              <div className="flex size-7 items-center justify-center rounded-lg bg-(--palette-surface-2)">
                 <Icon
                   name={item.iconName}
                   style={item.iconStyle}
-                  className={clsx('size-3.5', item.iconColor ?? 'text-gray-500')}
+                  className={clsx('size-3.5', item.iconColor ?? 'text-(--palette-gray-500)')}
                 />
               </div>
               {locked && (
-                <div className="absolute -bottom-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-white">
-                  <Icon name="lock" style="solid" className="size-1.5 text-gray-400" />
+                <div className="absolute -bottom-0.5 -right-0.5 flex size-3 items-center justify-center rounded-full bg-(--palette-surface)">
+                  <Icon name="lock" style="solid" className="size-1.5 text-(--palette-gray-400)" />
                 </div>
               )}
             </div>
-            <span className="flex-1 truncate text-sm text-gray-800">
+            <span className="flex-1 truncate text-sm text-(--palette-ink)">
               {item.labels?.en ?? item.itemKey}
             </span>
             {locked && (
-              <span className="text-[10px] font-medium text-amber-600">
+              <span className="text-[10px] font-medium text-amber-600 dark:text-amber-400">
                 {t('activityOverrides.effective.readonly')}
               </span>
             )}

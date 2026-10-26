@@ -141,13 +141,13 @@ export function MarketReferenceList({
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center gap-2 py-8 text-sm text-gray-500">
+      <div className="flex flex-col items-center gap-2 py-8 text-sm text-(--palette-gray-500)">
         <Icon name="triangle-exclamation" className="size-5 text-red-400" />
         <span>{t('marketRef.loadFailed')}</span>
         <button
           type="button"
           onClick={() => refetch()}
-          className="text-xs text-primary hover:underline"
+          className="text-xs text-(--palette-primary-text) hover:underline"
         >
           {t('errors.loadFailed')}
         </button>
@@ -159,7 +159,7 @@ export function MarketReferenceList({
     <div className="flex flex-col gap-3">
       {/* Unmatched warning */}
       {isUnmatched && (
-        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-800">
+        <div className="flex items-start gap-2 px-3 py-2 rounded-lg bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 text-xs text-amber-800 dark:text-amber-300">
           <Icon name="triangle-exclamation" className="size-3.5 shrink-0 mt-0.5 text-amber-500" />
           <span>{t('marketRef.unmatchedRoom')}</span>
         </div>
@@ -171,28 +171,32 @@ export function MarketReferenceList({
           <div className="animate-spin size-5 border-2 border-primary border-t-transparent rounded-full" />
         </div>
       ) : references.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-1.5 py-10 border border-dashed border-gray-200 rounded-xl text-center">
-          <Icon name="chart-bar" className="size-6 text-gray-300" />
-          <p className="text-sm font-medium text-gray-600">{t('marketRef.noReferences')}</p>
-          <p className="text-xs text-gray-400 max-w-xs">{t('marketRef.noReferencesHint')}</p>
+        <div className="flex flex-col items-center justify-center gap-1.5 py-10 border border-dashed border-(--palette-line) rounded-xl text-center">
+          <Icon name="chart-bar" className="size-6 text-(--palette-gray-300)" />
+          <p className="text-sm font-medium text-(--palette-gray-600)">
+            {t('marketRef.noReferences')}
+          </p>
+          <p className="text-xs text-(--palette-gray-400) max-w-xs">
+            {t('marketRef.noReferencesHint')}
+          </p>
         </div>
       ) : (
         <div className="flex flex-col gap-2">
           {references.map((ref, refIdx) => (
             <div
               key={ref.pricingAnalysisId}
-              className="rounded-xl border border-gray-200 bg-white shadow-sm"
+              className="rounded-xl border border-(--palette-line) bg-(--palette-surface) shadow-sm"
             >
               {/* Reference header */}
-              <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-(--palette-line-soft)">
+                <span className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wider">
                   #{refIdx + 1}
                 </span>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => onOpenReference(ref)}
-                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-primary border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors"
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-(--palette-primary-text) border border-primary/20 rounded-lg hover:bg-primary/5 transition-colors"
                   >
                     <Icon name="arrow-up-right-from-square" className="size-3" />
                     {t('marketRef.openReference')}
@@ -201,7 +205,7 @@ export function MarketReferenceList({
                     <button
                       type="button"
                       onClick={() => setDeleteTarget(ref)}
-                      className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 border border-red-200/50 rounded-lg hover:bg-red-50 transition-colors"
+                      className="flex items-center gap-1 px-2 py-1 text-xs text-red-500 border border-(--palette-req-line)/50 rounded-lg hover:bg-(--palette-req-wash) transition-colors"
                       title={t('groupReferences.deleteReference')}
                     >
                       <Icon name="trash" style="solid" className="size-3" />
@@ -212,9 +216,11 @@ export function MarketReferenceList({
 
               {/* Methods */}
               {ref.methods.length === 0 ? (
-                <div className="px-4 py-3 text-xs text-gray-400">{t('marketRef.noValue')}</div>
+                <div className="px-4 py-3 text-xs text-(--palette-gray-400)">
+                  {t('marketRef.noValue')}
+                </div>
               ) : (
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-(--palette-line-soft)">
                   {ref.methods.map(method => (
                     <div
                       key={method.methodId}
@@ -224,19 +230,21 @@ export function MarketReferenceList({
                         <span
                           className={clsx(
                             'inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider',
-                            'bg-blue-50 text-blue-700 border border-blue-100',
+                            'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20',
                           )}
                         >
                           {methodTypeLabel(method.methodType)}
                         </span>
                         <div className="flex flex-col">
-                          <span className="text-xs text-gray-500">
+                          <span className="text-xs text-(--palette-gray-500)">
                             {t('marketRef.valuePerUnit')}
                           </span>
                           <span
                             className={clsx(
                               'text-sm font-semibold tabular-nums',
-                              method.valuePerUnit != null ? 'text-gray-900' : 'text-gray-400',
+                              method.valuePerUnit != null
+                                ? 'text-(--palette-ink)'
+                                : 'text-(--palette-gray-400)',
                             )}
                           >
                             {method.valuePerUnit != null
@@ -271,7 +279,7 @@ export function MarketReferenceList({
           type="button"
           onClick={handleAdd}
           disabled={createMutation.isPending}
-          className="flex items-center justify-center gap-1.5 w-full py-2 text-sm font-medium text-primary border border-dashed border-primary/40 rounded-xl hover:bg-primary/5 hover:border-primary/60 transition-colors disabled:opacity-50"
+          className="flex items-center justify-center gap-1.5 w-full py-2 text-sm font-medium text-(--palette-primary-text) border border-dashed border-primary/40 rounded-xl hover:bg-primary/5 hover:border-primary/60 transition-colors disabled:opacity-50"
         >
           {createMutation.isPending ? (
             <div className="animate-spin size-4 border-2 border-primary border-t-transparent rounded-full" />

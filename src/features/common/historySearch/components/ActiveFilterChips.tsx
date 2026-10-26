@@ -120,26 +120,30 @@ export function ActiveFilterChips({ query, onRemove, onClearAll }: ActiveFilterC
   // Attribute filters.
   for (const f of CHIP_FIELDS) {
     if (isFieldActive(f, query)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      chips.push({ id: f, label: t(FIELD_I18N[f] as any) as string, value: fieldDisplayValue(f, query) });
+      chips.push({
+        id: f,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        label: t(FIELD_I18N[f] as any) as string,
+        value: fieldDisplayValue(f, query),
+      });
     }
   }
 
   if (chips.length === 0) return null;
 
   return (
-    <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-3 py-1.5 border-b border-gray-100 bg-gray-50">
+    <div className="shrink-0 flex flex-wrap items-center gap-1.5 px-3 py-1.5 border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
       {chips.map(chip => (
         <span
           key={chip.id}
-          className="inline-flex items-center gap-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-medium px-2 py-0.5"
+          className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 text-[11px] font-medium px-2 py-0.5"
         >
           <span className="text-blue-400">{chip.label}:</span>
           <span className="truncate max-w-[140px]">{chip.value}</span>
           <button
             type="button"
             onClick={() => onRemove(chip.id)}
-            className="ml-0.5 text-blue-400 hover:text-blue-700 transition-colors"
+            className="ml-0.5 text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
             aria-label={`Remove ${chip.label}`}
           >
             <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
@@ -151,7 +155,7 @@ export function ActiveFilterChips({ query, onRemove, onClearAll }: ActiveFilterC
       <button
         type="button"
         onClick={onClearAll}
-        className="text-[11px] text-gray-400 hover:text-gray-600 underline transition-colors ml-0.5"
+        className="text-[11px] text-(--palette-gray-400) hover:text-(--palette-gray-600) underline transition-colors ml-0.5"
       >
         {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeStartFormSchema, type StartFormValues } from '../../schemas';
+import { startFormSchema, type StartFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 
 interface StartFormProps {
@@ -24,7 +25,7 @@ export function StartForm({ nodeId }: StartFormProps) {
     reset,
     formState: { errors },
   } = useForm<StartFormValues>({
-    resolver: zodResolver(makeStartFormSchema(t)),
+    resolver: zodResolver(startFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -63,9 +64,11 @@ export function StartForm({ nodeId }: StartFormProps) {
           placeholder={t('forms.placeholders.workflowStart')}
         />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 

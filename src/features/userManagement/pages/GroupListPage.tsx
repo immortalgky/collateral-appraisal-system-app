@@ -106,20 +106,22 @@ const GroupListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.groups.title')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('page.groups.title')}
+            </h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {data?.totalCount ?? groups.length}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.groups.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.groups.subtitle')}</p>
         </div>
       </div>
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Left panel — group list */}
-        <div className="w-72 shrink-0 bg-white rounded-xl border border-gray-200 shadow-sm flex flex-col">
+        <div className="w-72 shrink-0 bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm flex flex-col">
           {/* Scope toggle tabs */}
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-(--palette-line-soft)">
             {(['Bank', 'Company'] as ScopeTab[]).map(tab => (
               <button
                 key={tab}
@@ -128,8 +130,8 @@ const GroupListPage = () => {
                 className={clsx(
                   'flex-1 py-2.5 text-sm font-medium transition-colors',
                   activeTab === tab
-                    ? 'text-primary border-b-2 border-primary'
-                    : 'text-gray-500 hover:text-gray-700',
+                    ? 'text-(--palette-primary-text) border-b-2 border-primary'
+                    : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
                 )}
               >
                 {tab === 'Bank' ? t('tabs.bank') : t('tabs.company')}
@@ -143,14 +145,14 @@ const GroupListPage = () => {
               <Icon
                 name="magnifying-glass"
                 style="regular"
-                className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+                className="size-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
               />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={t('placeholders.searchGroups')}
-                className="w-full pl-8 pr-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="w-full pl-8 pr-3 py-1.5 text-xs border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               />
             </div>
             <button
@@ -174,7 +176,7 @@ const GroupListPage = () => {
           </div>
 
           {/* Group list */}
-          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-gray-50">
+          <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-(--palette-line-soft)">
             {isLoading ? (
               <table className="w-full">
                 <tbody>
@@ -182,7 +184,7 @@ const GroupListPage = () => {
                 </tbody>
               </table>
             ) : groups.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-10 text-gray-400 text-xs gap-1">
+              <div className="flex flex-col items-center justify-center py-10 text-(--palette-gray-400) text-xs gap-1">
                 <Icon name="users-rectangle" style="regular" className="size-7 opacity-40" />
                 <span>{t('empty.noGroupsFound')}</span>
               </div>
@@ -196,19 +198,21 @@ const GroupListPage = () => {
                     'w-full text-left px-3 py-2.5 transition-colors',
                     selectedGroupId === group.id
                       ? 'bg-primary/5 border-l-2 border-primary'
-                      : 'hover:bg-gray-50 border-l-2 border-transparent',
+                      : 'hover:bg-(--palette-surface-2) border-l-2 border-transparent',
                   )}
                 >
-                  <div className="text-sm font-medium text-gray-800 truncate">{group.name}</div>
+                  <div className="text-sm font-medium text-(--palette-ink) truncate">
+                    {group.name}
+                  </div>
                   {group.description && (
                     <div
-                      className="text-xs text-gray-400 line-clamp-2 mt-0.5"
+                      className="text-xs text-(--palette-gray-400) line-clamp-2 mt-0.5"
                       title={group.description}
                     >
                       {group.description}
                     </div>
                   )}
-                  <div className="mt-0.5 text-xs text-gray-400">
+                  <div className="mt-0.5 text-xs text-(--palette-gray-400)">
                     {t('counts.members', { count: group.userCount })}
                   </div>
                 </button>
@@ -218,7 +222,7 @@ const GroupListPage = () => {
         </div>
 
         {/* Right panel — group detail */}
-        <div className="flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-y-auto">
+        <div className="flex-1 bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-y-auto">
           {selectedGroupId ? (
             <GroupDetailPanel
               key={selectedGroupId}
@@ -226,7 +230,7 @@ const GroupListPage = () => {
               onDeleted={() => setSelectedGroupId(null)}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-20 text-gray-400 gap-2">
+            <div className="flex flex-col items-center justify-center py-20 text-(--palette-gray-400) gap-2">
               <Icon name="users-rectangle" style="regular" className="size-12 opacity-30" />
               <p className="text-sm">{t('empty.selectGroup')}</p>
             </div>

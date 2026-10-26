@@ -1,5 +1,6 @@
 import { Fragment, useState, useRef, useEffect, useId, useMemo } from 'react';
 import Icon from '@/shared/components/Icon';
+import { FOCUS, FOCUS_ERROR } from './controlStyles';
 
 export interface AutocompleteItem {
   value: string;
@@ -191,17 +192,17 @@ function Autocomplete({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           aria-invalid={invalid}
-          className={`w-full px-3 py-2 text-sm border rounded-lg focus:ring-1 outline-none bg-white pr-7 ${
+          className={`w-full px-3 py-2 text-sm border rounded-lg outline-none bg-(--palette-surface) pr-7 ${
             invalid
-              ? 'border-danger focus:ring-danger focus:border-danger'
-              : 'border-gray-200 focus:ring-primary focus:border-primary'
+              ? `border-danger ${FOCUS_ERROR.focus}`
+              : `border-(--palette-input-edge) ${FOCUS.focus}`
           }`}
         />
         {inputText && (
           <button
             type="button"
             onClick={handleClear}
-            className="absolute right-2 text-gray-400 hover:text-gray-600"
+            className="absolute right-2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
             aria-label="Clear"
           >
             <Icon style="solid" name="xmark" className="size-3" />
@@ -213,10 +214,14 @@ function Autocomplete({
         <ul
           id={listId}
           role="listbox"
-          className={`absolute z-50 mt-1 ${menuClassName} max-h-52 overflow-auto bg-white border border-gray-200 rounded-lg shadow-lg text-sm`}
+          className={`absolute z-50 mt-1 ${menuClassName} max-h-52 overflow-auto bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-lg text-sm`}
         >
           {isLoading && visibleItems.length === 0 ? (
-            <li role="option" aria-selected={false} className="px-3 py-2 text-gray-400 italic">
+            <li
+              role="option"
+              aria-selected={false}
+              className="px-3 py-2 text-(--palette-gray-400) italic"
+            >
               Searching…
             </li>
           ) : (
@@ -227,7 +232,7 @@ function Autocomplete({
                   {showHeader && (
                     <li
                       role="presentation"
-                      className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-gray-400"
+                      className="px-3 pt-2 pb-1 text-xs font-semibold uppercase tracking-wide text-(--palette-gray-400)"
                     >
                       {item.group}
                     </li>
@@ -238,8 +243,8 @@ function Autocomplete({
                       onMouseDown={() => handleSelect(item)}
                       className={`w-full text-left px-3 py-2 truncate ${
                         i === highlightIndex
-                          ? 'bg-primary/10 text-primary'
-                          : 'hover:bg-primary/10 hover:text-primary'
+                          ? 'bg-(--palette-primary-wash) text-(--palette-primary-text)'
+                          : 'hover:bg-(--palette-primary-wash) hover:text-(--palette-primary-text)'
                       }`}
                     >
                       {item.label}

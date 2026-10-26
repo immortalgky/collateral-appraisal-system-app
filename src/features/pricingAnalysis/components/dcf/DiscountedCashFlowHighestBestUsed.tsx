@@ -148,7 +148,9 @@ function IncomeLandRefControl({
       onClick={() => setChosenMode(value)}
       className={clsx(
         'h-[24px] px-[8px] text-[11.5px] rounded-[5px] whitespace-nowrap transition-colors',
-        mode === value ? 'bg-white text-primary font-medium shadow-sm' : 'text-gray-500',
+        mode === value
+          ? 'bg-(--palette-surface) text-(--palette-primary-text) font-medium shadow-sm'
+          : 'text-(--palette-gray-500)',
       )}
     >
       {label}
@@ -162,7 +164,7 @@ function IncomeLandRefControl({
       <KvRow
         label={t('methodTabs.dcf.hbu.priceSource')}
         value={
-          <div className="inline-flex gap-[2px] p-[2px] rounded-[7px] bg-[#edf1f1]">
+          <div className="inline-flex gap-[2px] p-[2px] rounded-[7px] bg-(--palette-surface-3)">
             {segBtn('copy', t('methodTabs.dcf.hbu.sourceCopy'))}
             {segBtn('manual', t('methodTabs.dcf.hbu.sourceManual'))}
           </div>
@@ -174,7 +176,7 @@ function IncomeLandRefControl({
           value={
             <div className="flex items-center justify-end gap-1 min-w-0">
               {costMethods.length === 0 ? (
-                <span className="text-[11px] text-amber-700">
+                <span className="text-[11px] text-(--palette-warn)">
                   {t('incomeLandRef.noCostMethods')}
                 </span>
               ) : (
@@ -182,7 +184,7 @@ function IncomeLandRefControl({
                   value={sourceMethodId}
                   onChange={e => setSourceMethodId(e.target.value)}
                   disabled={isReadOnly || isPending}
-                  className="h-[26px] min-w-0 flex-1 rounded-[6px] border border-gray-200 bg-white px-[6px] text-[12px]"
+                  className="h-[26px] min-w-0 flex-1 rounded-[6px] border border-(--palette-line) bg-(--palette-surface) px-[6px] text-[12px]"
                 >
                   <option value="">{t('methodTabs.dcf.hbu.pickMethod')}</option>
                   {costMethods.map(m => (
@@ -199,7 +201,7 @@ function IncomeLandRefControl({
                   disabled={isPending}
                   className={clsx(
                     smallBtn,
-                    'border border-primary/40 text-primary hover:bg-primary/10',
+                    'border border-primary/40 text-(--palette-primary-text) hover:bg-primary/10',
                   )}
                 >
                   {t('methodTabs.dcf.hbu.openRef')}
@@ -234,7 +236,7 @@ function IncomeLandRefControl({
                   title={t('incomeLandRef.openRef')}
                   className={clsx(
                     smallBtn,
-                    'border border-primary/40 text-primary hover:bg-primary/10',
+                    'border border-primary/40 text-(--palette-primary-text) hover:bg-primary/10',
                   )}
                 >
                   WQS
@@ -308,7 +310,7 @@ function HbuLandPicture({ groupWa, splitWa }: { groupWa: number; splitWa: number
     grid.push(<line key={`b${k}`} x1={c[0]} y1={c[1]} x2={d[0]} y2={d[1]} />);
   }
   return (
-    <div className="px-[12px] py-[8px] border-b border-[#e3e9e8]">
+    <div className="px-[12px] py-[8px] border-b border-(--palette-line)">
       <div className="relative">
         <svg
           viewBox={`0 0 ${VW} ${VH}`}
@@ -383,10 +385,10 @@ function HbuLandPicture({ groupWa, splitWa }: { groupWa: number; splitWa: number
           </g>
         </svg>
         <div className="absolute left-[10px] top-[8px] flex flex-col gap-1 text-[10.5px] leading-tight">
-          <span className="inline-flex items-center gap-1 text-[#0f766e] font-medium">
+          <span className="inline-flex items-center gap-1 text-(--palette-accent-ink) font-medium">
             <span className="size-[7px] rounded-full bg-[#0f766e]" />
             {t('methodTabs.dcf.hbu.pictureUsed')}{' '}
-            <span className="text-gray-500 font-normal">
+            <span className="text-(--palette-gray-500) font-normal">
               {t('methodTabs.dcf.hbu.pictureTotal', {
                 area: toRaiNganWa(Math.max(groupWa - wa, 0)),
               })}
@@ -396,7 +398,7 @@ function HbuLandPicture({ groupWa, splitWa }: { groupWa: number; splitWa: number
             <span className="inline-flex items-center gap-1 text-[#c2410c] font-medium">
               <span className="size-[7px] rounded-full bg-[#ea580c]" />
               {t('methodTabs.dcf.hbu.pictureSplit')}{' '}
-              <span className="text-gray-500 font-normal">
+              <span className="text-(--palette-gray-500) font-normal">
                 {t('methodTabs.dcf.hbu.pictureTotal', { area: toRaiNganWa(wa) })}
               </span>
             </span>
@@ -543,7 +545,9 @@ export function DiscountedCashFlowHighestBestUsed({
       />
     </div>
   );
-  const unit = (text: string) => <span className="text-[11px] text-gray-400">{text}</span>;
+  const unit = (text: string) => (
+    <span className="text-[11px] text-(--palette-gray-400)">{text}</span>
+  );
 
   // mock summaryOther('DCF') — hbuHtml() card beside the kv() value card. One editable
   // value only (HANDOFF §3.3): `finalValueAdjust` is no longer an input; it keeps its
@@ -583,18 +587,18 @@ export function DiscountedCashFlowHighestBestUsed({
                 label={
                   <>
                     {t('methodTabs.dcf.hbu.groupLand')}{' '}
-                    <span className="text-[10.5px] text-gray-400">
+                    <span className="text-[10.5px] text-(--palette-gray-400)">
                       {t('methodTabs.dcf.hbu.groupLandSub')}
                     </span>
                   </>
                 }
                 value={
                   groupLandSqWa > 0 ? (
-                    <span className="font-semibold text-gray-800 tabular-nums">
+                    <span className="font-semibold text-(--palette-ink) tabular-nums">
                       {toRaiNganWa(groupLandSqWa)} · {fmtWa(groupLandSqWa)}
                     </span>
                   ) : (
-                    <span className="text-[11px] text-gray-400">
+                    <span className="text-[11px] text-(--palette-gray-400)">
                       {t('methodTabs.dcf.hbu.noGroupLand')}
                     </span>
                   )
@@ -604,7 +608,7 @@ export function DiscountedCashFlowHighestBestUsed({
               <KvRow
                 hint={
                   splitExceeds ? (
-                    <span className="text-[10.5px] text-red-600">
+                    <span className="text-[10.5px] text-(--palette-danger)">
                       {t('methodTabs.dcf.hbu.splitExceeds', { max: fmtWa(groupLandSqWa) })}
                     </span>
                   ) : undefined
@@ -674,7 +678,7 @@ export function DiscountedCashFlowHighestBestUsed({
           label={
             <>
               {t('methodTabs.dcf.hbu.incomeValue')}{' '}
-              <span className="text-[10.5px] text-gray-400">
+              <span className="text-[10.5px] text-(--palette-gray-400)">
                 {t('methodTabs.dcf.hbu.incomeValueSub')}
               </span>
             </>
@@ -695,9 +699,9 @@ export function DiscountedCashFlowHighestBestUsed({
         )}
         <IndicatedValueRow
           label={
-            <span className="font-semibold text-[#0f766e]">
+            <span className="font-semibold text-(--palette-accent-ink)">
               {t('costMachine.summary.indicatedValueLabel')}{' '}
-              <span className="text-[10.5px] text-gray-400 font-normal">
+              <span className="text-[10.5px] text-(--palette-gray-400) font-normal">
                 {t('finalValue.indicatedValueSubLabel')}
               </span>
             </span>

@@ -6,7 +6,8 @@ import type { AppointmentAndFeeFormSchema } from '../schemas/appointmentAndFee';
  */
 export interface FeeItem {
   id: string;
-  type: '01' | '02' | '99';
+  /** The fee code as stored: normally '01' | '02' | '99', but an old item can carry another. */
+  type: string;
   description: string;
   amount: number;
 }
@@ -63,15 +64,6 @@ export const FEE_TYPE_OPTIONS = [
   { value: 'pay_before_appraise', label: 'Pay before appraise' },
   { value: 'pay_after_appraise', label: 'Pay after appraise' },
   { value: 'customer_paid', label: 'Customer paid' },
-] as const;
-
-/**
- * Fee item type options
- */
-export const FEE_ITEM_TYPE_OPTIONS = [
-  { value: '01', label: 'Appraisal Fee' },
-  { value: '02', label: 'Inspection Fee' },
-  { value: '99', label: 'Other' },
 ] as const;
 
 /**

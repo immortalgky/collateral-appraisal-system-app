@@ -31,11 +31,11 @@ export const ReportPreviewTab = ({ allowGenerate = true }: { allowGenerate?: boo
   };
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-      <div className="px-6 py-4 bg-gradient-to-r from-slate-50 to-gray-50 border-b border-gray-100 flex items-center justify-between gap-3 flex-wrap">
+    <section className="bg-(--palette-surface) rounded-2xl border border-(--palette-line-soft) shadow-sm overflow-hidden flex flex-col">
+      <div className="px-6 py-4 bg-gradient-to-r from-(--palette-surface-2) to-(--palette-surface-2) border-b border-(--palette-line-soft) flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
           <Icon name="file-pdf" className="text-red-500" />
-          <h3 className="text-base font-semibold text-gray-900 truncate">
+          <h3 className="text-base font-semibold text-(--palette-ink) truncate">
             {t('reportPreview.title')}
           </h3>
         </div>
@@ -55,20 +55,24 @@ export const ReportPreviewTab = ({ allowGenerate = true }: { allowGenerate?: boo
         )}
       </div>
 
-      <div className="flex-1 min-h-[70vh] relative bg-gray-100">
+      <div className="flex-1 min-h-[70vh] relative bg-(--palette-surface-3)">
         {status !== 'ready' && (
           <div className="absolute inset-0 flex items-center justify-center">
             {status === 'generating' ? (
-              <div className="flex flex-col items-center gap-3 text-gray-400">
-                <Icon name="spinner" style="solid" className="size-8 animate-spin text-primary" />
+              <div className="flex flex-col items-center gap-3 text-(--palette-gray-400)">
+                <Icon
+                  name="spinner"
+                  style="solid"
+                  className="size-8 animate-spin text-(--palette-primary-text)"
+                />
                 <p className="text-sm">{t('reportPreview.generating')}</p>
               </div>
             ) : status === 'error' ? (
               <div className="flex flex-col items-center gap-3 text-center max-w-sm px-4">
-                <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+                <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
                   <Icon name="triangle-exclamation" style="solid" className="size-5 text-red-500" />
                 </div>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-(--palette-gray-600)">
                   {allowGenerate
                     ? t('reportPreview.renderFailed')
                     : t('reportPreview.previewUnavailable')}
@@ -83,9 +87,13 @@ export const ReportPreviewTab = ({ allowGenerate = true }: { allowGenerate?: boo
               // idle — explicit generate CTA (no auto-generate)
               <div className="flex flex-col items-center gap-4 text-center max-w-sm px-4">
                 <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Icon name="file-pdf" style="solid" className="size-5 text-primary" />
+                  <Icon
+                    name="file-pdf"
+                    style="solid"
+                    className="size-5 text-(--palette-primary-text)"
+                  />
                 </div>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-(--palette-gray-500)">
                   {allowGenerate ? t('reportPreview.idleHint') : t('reportPreview.noPreviewYet')}
                 </p>
                 {allowGenerate && (

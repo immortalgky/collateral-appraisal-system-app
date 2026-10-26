@@ -163,18 +163,19 @@ const ProgressSpine = ({
                   // therefore starts at 10px. left-[11px] put it a pixel right of centre.
                   'absolute bottom-[-4px] left-[10px] top-7 w-1 rounded-full',
                   done && 'bg-primary',
-                  current && 'bg-gradient-to-b from-primary to-gray-200',
-                  !done && !current && 'bg-gray-200',
+                  current && 'bg-gradient-to-b from-primary to-(--palette-surface-3)',
+                  !done && !current && 'bg-(--palette-surface-3)',
                 )}
               />
             )}
             <span
               className={clsx(
-                'absolute left-0 top-0 grid h-6 w-6 place-items-center rounded-full ring-4 ring-white',
+                'absolute left-0 top-0 grid h-6 w-6 place-items-center rounded-full ring-4 ring-(--palette-surface)',
                 done && 'bg-primary text-white',
-                current && 'bg-white ring-primary/20 outline outline-2 outline-primary',
+                current &&
+                  'bg-(--palette-surface) ring-primary/20 outline outline-2 outline-primary',
                 cancelled && 'bg-red-600 text-white',
-                !done && !current && !cancelled && 'bg-gray-200',
+                !done && !current && !cancelled && 'bg-(--palette-surface-3)',
               )}
             >
               {done && <Icon name="check" style="solid" className="h-3 w-3" />}
@@ -188,15 +189,15 @@ const ProgressSpine = ({
             <span
               className={clsx(
                 'block text-sm font-semibold leading-tight',
-                done && 'text-gray-900',
-                current && 'text-primary',
-                cancelled && 'text-red-600',
-                !done && !current && !cancelled && 'text-gray-400',
+                done && 'text-(--palette-ink)',
+                current && 'text-(--palette-primary-text)',
+                cancelled && 'text-(--palette-danger)',
+                !done && !current && !cancelled && 'text-(--palette-gray-400)',
               )}
             >
               {phaseLabel(t, step.group) ?? step.group}
             </span>
-            <span className="mt-0.5 block text-xs text-gray-400">
+            <span className="mt-0.5 block text-xs text-(--palette-gray-400)">
               {/* The STEP's status decides the wording; the date only fills it in.
 
                   A queued task stamps a start date before anyone has touched it, so an unreached
@@ -217,11 +218,13 @@ const ProgressSpine = ({
                       : t('activityTracking.brief.phases.notReached')}
             </span>
             {reached && who && (
-              <span className="mt-1.5 flex items-center gap-1.5 text-xs text-gray-600">
+              <span className="mt-1.5 flex items-center gap-1.5 text-xs text-(--palette-gray-600)">
                 <i
                   className={clsx(
                     'grid h-5 w-5 flex-none place-items-center rounded-full text-[9px] font-bold not-italic',
-                    done ? 'bg-teal-50 text-teal-700' : 'bg-gray-100 text-gray-500',
+                    done
+                      ? 'bg-(--palette-accent-wash) text-(--palette-accent-ink)'
+                      : 'bg-(--palette-surface-3) text-(--palette-gray-500)',
                   )}
                 >
                   {/* A firm or a committee is not a person — initials would read as one. */}
@@ -238,10 +241,10 @@ const ProgressSpine = ({
                 <span className="min-w-0" title={whoTitle}>
                   <span className="block truncate">
                     {who}
-                    {login && <span className="text-gray-400"> ({login})</span>}
+                    {login && <span className="text-(--palette-gray-400)"> ({login})</span>}
                   </span>
                   {sub && (
-                    <span className="block truncate text-gray-400" title={sub}>
+                    <span className="block truncate text-(--palette-gray-400)" title={sub}>
                       {sub}
                     </span>
                   )}

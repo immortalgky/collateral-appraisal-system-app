@@ -1,6 +1,9 @@
 import { type ReactNode, useLayoutEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useFormReadOnly } from '../form/context';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import { ERROR_TEXT, REQUIRED_MARK } from './controlStyles';
 
 interface ToggleProps {
   label?: string;
@@ -9,13 +12,35 @@ interface ToggleProps {
   options: [string, string];
   error?: string;
   required?: boolean;
-  /** Size variant */
+  /**
+   * `md` follows the form layout (DESIGN.md 17.5). `sm` is the 12px toggle of the pricing-analysis
+   * grids, outside the form system.
+   */
   size?: 'sm' | 'md';
   checked?: boolean;
   onChange?: (checked: boolean) => void;
   disabled?: boolean;
   className?: string;
 }
+
+/**
+ * Track padding, option height and side padding per layout. The whole control is 36px in Standard
+ * (28 + 2 × 4), the control height, and 30px in Compact (26 + 2 × 2). The sliding pill is inset by
+ * the same padding so it sits exactly behind the active option.
+ */
+const GEOMETRY = {
+  standard: {
+    track: 'p-[0.2857rem]',
+    pill: 'inset-y-[0.2857rem]',
+    option: 'h-8 px-[1.1429rem]',
+  },
+  compact: {
+    track: 'p-[0.1429rem]',
+    pill: 'inset-y-[0.1429rem]',
+    option: 'h-chip-c px-[0.8571rem]',
+  },
+  small: { track: 'p-1', pill: 'inset-y-1', option: 'py-1 px-3' },
+} as const;
 
 const Toggle = ({
   label,
@@ -31,6 +56,8 @@ const Toggle = ({
 }: ToggleProps) => {
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
+  const layout = useFormLayout();
+  const geometry = GEOMETRY[size === 'sm' ? 'small' : layout];
 
   // Treat undefined/null as false (first option active)
   const activeIndex = checked ? 1 : 0;
@@ -62,21 +89,7 @@ const Toggle = ({
     const observer = new ResizeObserver(measure);
     observer.observe(trackRef.current);
     return () => observer.disconnect();
-  }, [activeIndex, firstOption, secondOption, size]);
-
-  const sizeStyles = {
-    sm: {
-      container: 'p-1 text-xs',
-      option: 'py-1 px-3',
-    },
-    md: {
-      container: 'p-1 text-sm',
-      // The container's p-1 plus this makes the whole control as tall as a text input
-      // (py-2 + 1px border either side): 0.25rem + 1px, in rem so it holds at every root size.
-      // Same text-sm as the input, so text and line height match and so does the height.
-      option: 'py-[calc(0.25rem+1px)] px-4 text-sm',
-    },
-  };
+  }, [activeIndex, firstOption, secondOption, size, layout]);
 
   const handleClick = (index: number) => {
     if (isDisabled) return;
@@ -87,19 +100,16 @@ const Toggle = ({
     <div className={clsx('text-sm', className)}>
       <fieldset>
         {/* The addon goes INSIDE the legend, never in a wrapper around it: <legend> must be a
-            direct child of <fieldset> or assistive technology loses the group's name. The grid
-            form layout also hoists [data-field-label] out of this component with
-            `display: contents`, so an element in between would take the label column and stretch. */}
+            direct child of <fieldset> or assistive technology loses the group's name. */}
         {label && (
           <legend
-            data-field-label
             className={clsx(
-              'text-xs font-medium text-gray-700 mb-1.5',
+              'text-xs font-medium text-(--palette-ink) mb-1.5',
               labelAddon && 'flex items-center gap-1.5',
             )}
           >
             {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+            {required && <span className={REQUIRED_MARK}>*</span>}
             {labelAddon}
           </legend>
         )}
@@ -107,24 +117,26 @@ const Toggle = ({
           ref={trackRef}
           className={clsx(
             'relative inline-flex rounded-full transition-colors duration-200',
-            sizeStyles[size].container,
-            error ? 'border border-danger bg-danger-50' : 'bg-gray-100/80',
-            isDisabled && 'opacity-60',
+            geometry.track,
+            // The error ring is inset so it adds no height: the control stays the control height.
+            error
+              ? 'bg-(--palette-req-wash) ring-1 ring-inset ring-danger'
+              : 'bg-(--palette-surface-3)',
           )}
           role="radiogroup"
           aria-label={label || `Toggle between ${options.join(' and ')}`}
         >
-          {/* Sliding pill: coloured and shadowed here, not on the buttons, so the form-grid skins
-              (formLayoutSkin.css) can recolour it as `[role=radiogroup] > span`. */}
+          {/* Sliding pill: coloured here, not on the buttons, so the options stay transparent and
+              the selected one is whichever the pill sits behind. */}
           {pill && (
             <span
               className={clsx(
-                'absolute inset-y-1 left-0 rounded-full',
+                'absolute left-0 rounded-full',
+                geometry.pill,
                 animate &&
                   'transition-[transform,width] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] motion-reduce:transition-none',
-                error
-                  ? 'bg-danger'
-                  : 'bg-primary shadow-[0_2px_6px_color-mix(in_srgb,var(--color-primary)_25%,transparent)]',
+                // danger-600: white on the brand red is 3.8:1.
+                error ? 'bg-danger-600' : isDisabled ? 'bg-gray-500' : 'bg-primary-700',
               )}
               style={{ width: pill.w, transform: `translateX(${pill.x}px)` }}
               aria-hidden="true"
@@ -145,14 +157,15 @@ const Toggle = ({
                 disabled={isDisabled}
                 onClick={() => handleClick(index)}
                 className={clsx(
-                  'relative z-10 flex items-center justify-center rounded-full select-none font-medium whitespace-nowrap transition-colors duration-200',
-                  sizeStyles[size].option,
+                  'relative z-10 flex items-center justify-center rounded-full select-none font-medium leading-normal whitespace-nowrap transition-colors duration-200',
+                  size === 'sm' ? 'text-xs' : 'text-sm',
+                  geometry.option,
                   isDisabled ? 'cursor-not-allowed' : 'cursor-pointer',
                   isActive
                     ? 'text-white'
                     : isDisabled
-                      ? 'text-gray-400'
-                      : 'text-gray-600 hover:text-gray-700',
+                      ? 'text-(--palette-gray-400)'
+                      : 'text-(--palette-ink)',
                 )}
               >
                 {option}
@@ -160,7 +173,11 @@ const Toggle = ({
             );
           })}
         </div>
-        {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
+        {error && (
+          <p className={clsx('mt-1', ERROR_TEXT)}>
+            <ValidationText message={error} label={label} />
+          </p>
+        )}
       </fieldset>
     </div>
   );

@@ -23,7 +23,7 @@ export const PricingAnalysisMethodCard = ({
     <div
       className={clsx(
         'flex items-center gap-3 w-full px-4 py-3 rounded-lg transition-all duration-200',
-        'bg-primary/5 text-primary',
+        'bg-primary/5 text-(--palette-primary-text)',
       )}
     >
       <Icon name={method.icon} style="solid" className="size-3 shrink-0" />
@@ -31,7 +31,7 @@ export const PricingAnalysisMethodCard = ({
       {!isReadOnly && onDeleteMethod && method.id && (
         <button
           type="button"
-          className="shrink-0 p-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+          className="shrink-0 p-1 rounded hover:bg-(--palette-req-wash) transition-colors cursor-pointer"
           onClick={e => {
             e.stopPropagation();
             onDeleteMethod({ approachType, methodType: method.methodType });
@@ -40,7 +40,7 @@ export const PricingAnalysisMethodCard = ({
           <Icon
             name="trash"
             style="solid"
-            className="size-3.5 text-gray-400 hover:text-red-500 transition-colors"
+            className="size-3.5 text-(--palette-gray-400) hover:text-red-500 transition-colors"
           />
         </button>
       )}

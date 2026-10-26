@@ -123,7 +123,7 @@ export default function ChangeProjectTypeDialog({
       <div className="space-y-5">
         {/* Radio group */}
         <div className="space-y-2">
-          <p className="text-sm font-medium text-gray-700">
+          <p className="text-sm font-medium text-(--palette-ink)">
             {t('changeProjectType.selectNewType')}
           </p>
           <div className="space-y-2">
@@ -136,10 +136,10 @@ export default function ChangeProjectTypeDialog({
                   className={[
                     'flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors',
                     isCurrent
-                      ? 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed'
+                      ? 'bg-(--palette-surface-2) border-(--palette-line) opacity-60 cursor-not-allowed'
                       : isChecked
-                        ? 'bg-blue-50 border-blue-300'
-                        : 'bg-white border-gray-200 hover:border-gray-300',
+                        ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-300 dark:border-blue-500/40'
+                        : 'bg-(--palette-surface) border-(--palette-line) hover:border-(--palette-line-strong)',
                   ].join(' ')}
                 >
                   <input
@@ -151,11 +151,11 @@ export default function ChangeProjectTypeDialog({
                     onChange={() => setSelected(type)}
                     className="accent-blue-600"
                   />
-                  <span className="text-sm font-medium text-gray-800">
+                  <span className="text-sm font-medium text-(--palette-ink)">
                     {projectTypeParams.find(p => p.code === type)?.description ?? type}
                   </span>
                   {isCurrent && (
-                    <span className="ml-auto text-xs text-gray-400 font-normal">
+                    <span className="ml-auto text-xs text-(--palette-gray-400) font-normal">
                       {t('changeProjectType.current')}
                     </span>
                   )}
@@ -167,7 +167,7 @@ export default function ChangeProjectTypeDialog({
 
         {/* Destructive warning */}
         {warningLines.length > 0 && (
-          <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <div className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) p-3">
             <div className="flex items-start gap-2">
               <Icon
                 name="triangle-exclamation"
@@ -175,12 +175,15 @@ export default function ChangeProjectTypeDialog({
                 className="size-4 text-amber-500 shrink-0 mt-0.5"
               />
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-amber-800">
+                <p className="text-xs font-semibold text-amber-800 dark:text-amber-300">
                   {t('changeProjectType.warningTitle')}
                 </p>
                 <ul className="space-y-0.5">
                   {warningLines.map(line => (
-                    <li key={line} className="text-xs text-amber-700 flex items-center gap-1.5">
+                    <li
+                      key={line}
+                      className="text-xs text-(--palette-warn) flex items-center gap-1.5"
+                    >
                       <span className="size-1 rounded-full bg-amber-500 shrink-0" />
                       {line}
                     </li>
@@ -197,7 +200,7 @@ export default function ChangeProjectTypeDialog({
             type="button"
             onClick={handleClose}
             disabled={isPending}
-            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) text-sm font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('changeProjectType.cancel')}
           </button>

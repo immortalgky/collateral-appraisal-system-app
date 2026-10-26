@@ -70,7 +70,11 @@ const OAuthClientListPage = () => {
 
   const handleCreated = (response: CreateClientResponse) => {
     if (response.clientSecret) {
-      setRevealed({ clientId: response.clientId, secret: response.clientSecret, variant: 'created' });
+      setRevealed({
+        clientId: response.clientId,
+        secret: response.clientSecret,
+        variant: 'created',
+      });
     }
   };
 
@@ -79,7 +83,11 @@ const OAuthClientListPage = () => {
     rotateMutation.mutate(rotateTarget.id, {
       onSuccess: response => {
         setRotateTarget(null);
-        setRevealed({ clientId: response.clientId, secret: response.clientSecret, variant: 'rotated' });
+        setRevealed({
+          clientId: response.clientId,
+          secret: response.clientSecret,
+          variant: 'rotated',
+        });
       },
       onError: () => setRotateTarget(null),
     });
@@ -108,27 +116,27 @@ const OAuthClientListPage = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
         <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
           <div className="relative min-w-64">
             <Icon
               name="magnifying-glass"
               style="regular"
-              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
             />
             <input
               type="text"
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
               placeholder={t('clients.filters.searchPlaceholder')}
-              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
           {searchInput && (
             <button
               type="button"
               onClick={() => setSearchInput('')}
-              className="text-xs text-gray-400 hover:text-gray-600"
+              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600)"
             >
               {t('clients.filters.clear')}
             </button>
@@ -138,23 +146,23 @@ const OAuthClientListPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-table">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('clients.columns.displayName')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('clients.columns.clientId')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('clients.columns.type')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('clients.columns.grantTypes')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('clients.columns.scopes')}
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('clients.columns.actions')}
                 </th>
               </tr>
@@ -165,45 +173,54 @@ const OAuthClientListPage = () => {
               ) : isError ? (
                 <tr>
                   <td colSpan={6} className="py-4">
-                    <DataErrorState variant="inline" title={t('clients.loadFailed')} onRetry={refetch} />
+                    <DataErrorState
+                      variant="inline"
+                      title={t('clients.loadFailed')}
+                      onRetry={refetch}
+                    />
                   </td>
                 </tr>
               ) : clients.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-gray-400 text-sm">
+                  <td colSpan={6} className="text-center py-12 text-(--palette-gray-400) text-sm">
                     <Icon name="key" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
                     <p>{t('clients.emptyState')}</p>
                   </td>
                 </tr>
               ) : (
                 clients.map(client => (
-                  <tr key={client.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-medium text-gray-900">
+                  <tr
+                    key={client.id}
+                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
+                  >
+                    <td className="px-4 py-3 font-medium text-(--palette-ink)">
                       <div className="flex items-center gap-2">
                         {client.displayName}
                         {client.isSystem && (
-                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-500 uppercase tracking-wide">
+                          <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-(--palette-surface-3) text-(--palette-gray-500) uppercase tracking-wide">
                             {t('clients.badges.system')}
                           </span>
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">{client.clientId}</td>
+                    <td className="px-4 py-3 text-(--palette-gray-600) font-mono text-xs">
+                      {client.clientId}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           client.clientType === 'confidential'
-                            ? 'bg-indigo-50 text-indigo-700'
-                            : 'bg-sky-50 text-sky-700'
+                            ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300'
+                            : 'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300'
                         }`}
                       >
                         {t(`clients.type.${client.clientType}` as const)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs">
                       {client.grantTypes.join(', ') || '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs max-w-xs">
                       <span className="block truncate" title={client.scopes.join(' ')}>
                         {client.scopes.join(', ') || '—'}
                       </span>
@@ -213,7 +230,7 @@ const OAuthClientListPage = () => {
                         <button
                           type="button"
                           onClick={() => openEdit(client)}
-                          className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-colors"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-(--palette-primary-text) hover:bg-primary/5 rounded-lg transition-colors"
                           title={t('clients.actions.edit')}
                         >
                           <Icon name="pen" style="regular" className="size-4" />
@@ -222,7 +239,7 @@ const OAuthClientListPage = () => {
                           <button
                             type="button"
                             onClick={() => setRotateTarget(client)}
-                            className="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                            className="p-1.5 text-(--palette-gray-400) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--palette-warn-wash) rounded-lg transition-colors"
                             title={t('clients.actions.rotateSecret')}
                           >
                             <Icon name="rotate" style="regular" className="size-4" />
@@ -232,7 +249,7 @@ const OAuthClientListPage = () => {
                           type="button"
                           onClick={() => setDeleteTarget(client)}
                           disabled={client.isSystem}
-                          className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+                          className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors disabled:opacity-30 disabled:hover:bg-transparent disabled:cursor-not-allowed"
                           title={t('clients.actions.delete')}
                         >
                           <Icon name="trash" style="regular" className="size-4" />

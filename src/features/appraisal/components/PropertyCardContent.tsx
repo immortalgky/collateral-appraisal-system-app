@@ -27,7 +27,7 @@ const UnderConstructionChip = ({ property }: { property: PropertyItem }) => {
   if (!property.isUnderConstruction) return null;
   const pct = property.constructionProgressPct;
   return (
-    <span className="ml-1.5 inline-flex items-center rounded-full bg-amber-50 px-1.5 text-[0.6875rem] font-semibold text-amber-700 ring-1 ring-amber-200 tabular-nums">
+    <span className="ml-1.5 inline-flex items-center rounded-full bg-(--palette-warn-wash) px-1.5 text-[0.6875rem] font-semibold text-(--palette-warn) ring-1 ring-amber-200 dark:ring-amber-500/30 tabular-nums">
       {pct != null
         ? t('properties.underConstructionPct', { pct: Math.round(pct) })
         : t('properties.underConstruction')}
@@ -180,7 +180,7 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
       return property.isUnderConstruction ? (
         underConstruction
       ) : (
-        <span className="text-gray-400">—</span>
+        <span className="text-(--palette-gray-400)">—</span>
       );
     return (
       <>
@@ -211,7 +211,7 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
   return property.location && property.location !== '-' ? (
     <>{property.location}</>
   ) : (
-    <span className="italic text-gray-400">{t('properties.notSet')}</span>
+    <span className="italic text-(--palette-gray-400)">{t('properties.notSet')}</span>
   );
 };
 
@@ -225,8 +225,8 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
  * board; the icon carries which kind.
  */
 export const PropertyFlag = ({ icon, children }: { icon: string; children: ReactNode }) => (
-  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[0.66rem] text-gray-500">
-    <Icon name={icon} className="text-[0.55rem] text-gray-400" style="solid" />
+  <span className="inline-flex items-center gap-1 whitespace-nowrap text-[0.66rem] text-(--palette-gray-500)">
+    <Icon name={icon} className="text-[0.55rem] text-(--palette-gray-400)" style="solid" />
     {children}
   </span>
 );
@@ -326,10 +326,10 @@ function MetaLine({ parts, title }: { parts: ReactNode[]; title?: string }) {
   const shown = parts.filter(Boolean);
   if (shown.length === 0) return null;
   return (
-    <p className="text-[11px] text-gray-500 truncate" title={title}>
+    <p className="text-[11px] text-(--palette-gray-500) truncate" title={title}>
       {shown.map((part, i) => (
         <Fragment key={i}>
-          {i > 0 && <span className="mx-1.5 text-gray-400">·</span>}
+          {i > 0 && <span className="mx-1.5 text-(--palette-gray-400)">·</span>}
           {part}
         </Fragment>
       ))}
@@ -372,15 +372,17 @@ function useExceptionChips(property: PropertyItem) {
 function AreaCell({ property, className }: { property: PropertyItem; className?: string }) {
   const { t } = useTranslation('appraisal');
   if (property.areaValue == null) {
-    return <div className={`text-right text-xs text-gray-400 ${className ?? ''}`}>—</div>;
+    return (
+      <div className={`text-right text-xs text-(--palette-gray-400) ${className ?? ''}`}>—</div>
+    );
   }
   const isWa = property.areaUnit === 'wa';
   return (
     <div className={`text-right leading-tight ${className ?? ''}`}>
-      <div className="text-[13px] font-semibold text-gray-900 tabular-nums">
+      <div className="text-[13px] font-semibold text-(--palette-ink) tabular-nums">
         {isWa ? toRaiNganWa(property.areaValue) : formatAreaNumber(property.areaValue)}
       </div>
-      <div className="text-[10px] uppercase tracking-wide text-gray-400">
+      <div className="text-[10px] uppercase tracking-wide text-(--palette-gray-400)">
         {t(isWa ? 'properties.units.raiNganWa' : 'properties.units.sqm')}
       </div>
     </div>
@@ -403,7 +405,7 @@ function Thumbnail({
   const located = hasCoordinates(property);
 
   return (
-    <div className={`relative bg-gray-100 flex-shrink-0 overflow-hidden ${className}`}>
+    <div className={`relative bg-(--palette-surface-3) flex-shrink-0 overflow-hidden ${className}`}>
       {property.image ? (
         <>
           <img
@@ -417,7 +419,7 @@ function Thumbnail({
         </>
       ) : (
         <div className="w-full h-full flex items-center justify-center">
-          <Icon name="image" className="text-gray-400 text-lg" />
+          <Icon name="image" className="text-(--palette-gray-400) text-lg" />
         </div>
       )}
 
@@ -430,17 +432,21 @@ function Thumbnail({
                 e.stopPropagation();
                 onLocationClick();
               }}
-              className="absolute top-1 left-1 p-0.5 bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
+              className="absolute top-1 left-1 p-0.5 bg-(--palette-surface) rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
               title={t('properties.map.pinView')}
             >
               <Icon name="location-dot" className="text-green-500 text-[8px]" style="solid" />
             </button>
           ) : (
             <span
-              className="absolute top-1 left-1 p-0.5 bg-white/80 rounded-full shadow-sm cursor-not-allowed"
+              className="absolute top-1 left-1 p-0.5 bg-(--palette-surface)/80 rounded-full shadow-sm cursor-not-allowed"
               title={t('properties.map.pinNoLocation')}
             >
-              <Icon name="location-dot" className="text-gray-400 text-[8px]" style="solid" />
+              <Icon
+                name="location-dot"
+                className="text-(--palette-gray-400) text-[8px]"
+                style="solid"
+              />
             </span>
           )
         ) : (
@@ -449,7 +455,7 @@ function Thumbnail({
             target="_blank"
             rel="noopener noreferrer"
             onClick={e => e.stopPropagation()}
-            className="absolute top-1 left-1 p-0.5 bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
+            className="absolute top-1 left-1 p-0.5 bg-(--palette-surface) rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
             title={t('properties.openInGoogleMaps')}
           >
             <Icon name="location-dot" className="text-green-500 text-[8px]" style="solid" />
@@ -493,7 +499,7 @@ export function PropertyCardContent({
               {property.registrationNumber}
             </span>
           ) : (
-            <span key="unreg" className="italic text-gray-400">
+            <span key="unreg" className="italic text-(--palette-gray-400)">
               {t('properties.machineryChips.unregistered')}
             </span>
           ),
@@ -525,7 +531,7 @@ export function PropertyCardContent({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 min-w-0">
             <h3
-              className="text-[13px] font-semibold text-gray-900 truncate"
+              className="text-[13px] font-semibold text-(--palette-ink) truncate"
               title={property.address}
             >
               {property.address}
@@ -544,7 +550,11 @@ export function PropertyCardContent({
         <AreaCell property={property} className="shrink-0" />
 
         {showArrow && (
-          <Icon name="chevron-right" className="text-gray-400 text-xs shrink-0" style="solid" />
+          <Icon
+            name="chevron-right"
+            className="text-(--palette-gray-400) text-xs shrink-0"
+            style="solid"
+          />
         )}
       </div>
     );
@@ -563,7 +573,10 @@ export function PropertyCardContent({
         <Thumbnail property={property} className="w-11 h-8 rounded" showOverlays={false} />
 
         <div className="min-w-0">
-          <div className="text-xs font-medium text-gray-900 truncate" title={property.address}>
+          <div
+            className="text-xs font-medium text-(--palette-ink) truncate"
+            title={property.address}
+          >
             {property.address}
           </div>
           {exceptions.length > 0 && <div className="flex gap-1 mt-0.5">{exceptions}</div>}
@@ -571,41 +584,50 @@ export function PropertyCardContent({
 
         {isMachine ? (
           <>
-            <div className="text-[11px] text-gray-500 truncate tabular-nums">
-              {property.registrationNumber || <span className="text-gray-400">—</span>}
+            <div className="text-[11px] text-(--palette-gray-500) truncate tabular-nums">
+              {property.registrationNumber || <span className="text-(--palette-gray-400)">—</span>}
             </div>
-            <div className="text-[11px] text-gray-500 truncate">
+            <div className="text-[11px] text-(--palette-gray-500) truncate">
               {property.registrationStatus
                 ? t('properties.machineryChips.registered')
                 : t('properties.machineryChips.unregistered')}
             </div>
-            <div className="text-[11px] text-gray-500 truncate" title={brandModel(property)}>
-              {brandModel(property) || <span className="text-gray-400">—</span>}
+            <div
+              className="text-[11px] text-(--palette-gray-500) truncate"
+              title={brandModel(property)}
+            >
+              {brandModel(property) || <span className="text-(--palette-gray-400)">—</span>}
             </div>
           </>
         ) : (
           <>
-            <div className="text-[11px] text-gray-500 truncate tabular-nums text-right">
+            <div className="text-[11px] text-(--palette-gray-500) truncate tabular-nums text-right">
               {property.areaValue == null ? (
-                <span className="text-gray-400">—</span>
+                <span className="text-(--palette-gray-400)">—</span>
               ) : property.areaUnit === 'wa' ? (
                 toRaiNganWa(property.areaValue)
               ) : (
                 formatAreaNumber(property.areaValue)
               )}
             </div>
-            <div className="text-[11px] text-gray-500 truncate">
+            <div className="text-[11px] text-(--palette-gray-500) truncate">
               <PlaceValue property={property} />
             </div>
-            <div className="text-[11px] text-gray-500 truncate tabular-nums">
+            <div className="text-[11px] text-(--palette-gray-500) truncate tabular-nums">
               {coords ?? (
-                <span className="italic text-gray-400">{t('properties.coordsNotSet')}</span>
+                <span className="italic text-(--palette-gray-400)">
+                  {t('properties.coordsNotSet')}
+                </span>
               )}
             </div>
           </>
         )}
 
-        <Icon name="chevron-right" className="text-gray-400 text-[10px]" style="solid" />
+        <Icon
+          name="chevron-right"
+          className="text-(--palette-gray-400) text-[10px]"
+          style="solid"
+        />
       </div>
     );
   }
@@ -617,10 +639,10 @@ export function PropertyCardContent({
   return (
     <div
       onClick={onClick}
-      className={`flex flex-1 ${onClick ? 'cursor-pointer hover:bg-gray-50/50' : ''} transition-colors`}
+      className={`flex flex-1 ${onClick ? 'cursor-pointer hover:bg-(--palette-surface-2)/50' : ''} transition-colors`}
     >
       <div
-        className={`relative ${cfg.image} bg-gray-100 flex-shrink-0 ${size === 'xs' ? 'rounded' : ''}`}
+        className={`relative ${cfg.image} bg-(--palette-surface-3) flex-shrink-0 ${size === 'xs' ? 'rounded' : ''}`}
       >
         {property.image ? (
           <>
@@ -639,7 +661,7 @@ export function PropertyCardContent({
           <div className="w-full h-full flex items-center justify-center">
             <Icon
               name="image"
-              className={`text-gray-400 ${size === 'xs' ? 'text-sm' : 'text-2xl'}`}
+              className={`text-(--palette-gray-400) ${size === 'xs' ? 'text-sm' : 'text-2xl'}`}
             />
           </div>
         )}
@@ -652,17 +674,21 @@ export function PropertyCardContent({
                   e.stopPropagation();
                   onLocationClick();
                 }}
-                className="absolute top-2 left-2 p-1 bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
+                className="absolute top-2 left-2 p-1 bg-(--palette-surface) rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
                 title={t('properties.map.pinView')}
               >
                 <Icon name="location-dot" className="text-green-500 text-[10px]" style="solid" />
               </button>
             ) : (
               <span
-                className="absolute top-2 left-2 p-1 bg-white/80 rounded-full shadow-sm cursor-not-allowed"
+                className="absolute top-2 left-2 p-1 bg-(--palette-surface)/80 rounded-full shadow-sm cursor-not-allowed"
                 title={t('properties.map.pinNoLocation')}
               >
-                <Icon name="location-dot" className="text-gray-400 text-[10px]" style="solid" />
+                <Icon
+                  name="location-dot"
+                  className="text-(--palette-gray-400) text-[10px]"
+                  style="solid"
+                />
               </span>
             )
           ) : (
@@ -671,7 +697,7 @@ export function PropertyCardContent({
               target="_blank"
               rel="noopener noreferrer"
               onClick={e => e.stopPropagation()}
-              className="absolute top-2 left-2 p-1 bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
+              className="absolute top-2 left-2 p-1 bg-(--palette-surface) rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
               title={t('properties.openInGoogleMaps')}
             >
               <Icon name="location-dot" className="text-green-500 text-[10px]" style="solid" />
@@ -691,7 +717,7 @@ export function PropertyCardContent({
         {size === 'xs' ? (
           <>
             <h3
-              className={`font-medium text-gray-900 ${cfg.title} min-w-0 flex-1`}
+              className={`font-medium text-(--palette-ink) ${cfg.title} min-w-0 flex-1`}
               title={property.address}
             >
               {property.address}
@@ -703,10 +729,12 @@ export function PropertyCardContent({
                 fallback={property.type}
               />
             </Badge>
-            <div className={`flex items-center gap-1 ${cfg.text} text-gray-500 shrink-0`}>
+            <div
+              className={`flex items-center gap-1 ${cfg.text} text-(--palette-gray-500) shrink-0`}
+            >
               <Icon
                 name="ruler-combined"
-                className={`text-gray-400 ${cfg.iconSize}`}
+                className={`text-(--palette-gray-400) ${cfg.iconSize}`}
                 style="solid"
               />
               <span>{property.area}</span>
@@ -714,7 +742,10 @@ export function PropertyCardContent({
           </>
         ) : (
           <div>
-            <h3 className={`font-medium text-gray-900 ${cfg.title}`} title={property.address}>
+            <h3
+              className={`font-medium text-(--palette-ink) ${cfg.title}`}
+              title={property.address}
+            >
               {property.address}
             </h3>
 
@@ -729,13 +760,21 @@ export function PropertyCardContent({
             {isMachine ? (
               <>
                 {(property.brand || property.model) && (
-                  <div className={`flex items-center gap-1 ${cfg.text} text-gray-500 mt-1`}>
-                    <Icon name="tag" className={`text-gray-400 ${cfg.iconSize}`} style="solid" />
+                  <div
+                    className={`flex items-center gap-1 ${cfg.text} text-(--palette-gray-500) mt-1`}
+                  >
+                    <Icon
+                      name="tag"
+                      className={`text-(--palette-gray-400) ${cfg.iconSize}`}
+                      style="solid"
+                    />
                     <span>{[property.brand, property.model].filter(Boolean).join(' ')}</span>
                   </div>
                 )}
                 {property.registrationNumber && (
-                  <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
+                  <div
+                    className={`flex items-center gap-1 ${cfg.text} text-(--palette-gray-400) mt-0.5`}
+                  >
                     <Icon name="hashtag" className={cfg.iconSize} style="solid" />
                     <span>{property.registrationNumber}</span>
                   </div>
@@ -743,18 +782,22 @@ export function PropertyCardContent({
               </>
             ) : (
               <>
-                <div className={`flex items-center ${cfg.gap} ${cfg.text} text-gray-500 mt-1`}>
+                <div
+                  className={`flex items-center ${cfg.gap} ${cfg.text} text-(--palette-gray-500) mt-1`}
+                >
                   <div className="flex items-center gap-1">
                     <Icon
                       name="ruler-combined"
-                      className={`text-gray-400 ${cfg.iconSize}`}
+                      className={`text-(--palette-gray-400) ${cfg.iconSize}`}
                       style="solid"
                     />
                     <span>{property.area}</span>
                   </div>
                 </div>
 
-                <div className={`flex items-center gap-1 ${cfg.text} text-gray-400 mt-0.5`}>
+                <div
+                  className={`flex items-center gap-1 ${cfg.text} text-(--palette-gray-400) mt-0.5`}
+                >
                   <Icon name="location-dot" className={cfg.iconSize} style="solid" />
                   {property.location && property.location !== '-' ? (
                     <span className="truncate" title={property.location}>
@@ -772,7 +815,7 @@ export function PropertyCardContent({
 
       {showArrow && (
         <div className="flex items-center pr-3">
-          <Icon name="chevron-right" className="text-gray-400 text-sm" style="solid" />
+          <Icon name="chevron-right" className="text-(--palette-gray-400) text-sm" style="solid" />
         </div>
       )}
     </div>

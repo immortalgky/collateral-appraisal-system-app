@@ -32,8 +32,8 @@ function formatPriceRange(min: number | null | undefined, max: number | null | u
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between text-xs">
-      <span className="text-gray-400">{label}</span>
-      <span className="text-gray-700 font-medium">{value}</span>
+      <span className="text-(--palette-gray-400)">{label}</span>
+      <span className="text-(--palette-ink) font-medium">{value}</span>
     </div>
   );
 }
@@ -56,7 +56,7 @@ export function ModelCardContent({
 
   if (resolvedProjectType == null) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+      <div className="flex flex-col items-center justify-center py-8 text-(--palette-gray-400)">
         <span className="text-xs">Loading model data...</span>
       </div>
     );
@@ -79,8 +79,8 @@ export function ModelCardContent({
   const utilization = flat.utilizationType ? String(flat.utilizationType) : '-';
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-      <div className="aspect-video bg-gray-100 flex items-center justify-center overflow-hidden">
+    <div className="bg-(--palette-surface) border border-(--palette-line) rounded-xl overflow-hidden">
+      <div className="aspect-video bg-(--palette-surface-3) flex items-center justify-center overflow-hidden">
         {thumbnailSrc ? (
           <img
             src={thumbnailSrc}
@@ -88,15 +88,15 @@ export function ModelCardContent({
             className="w-full h-full object-cover"
           />
         ) : (
-          <Icon name={icon} style="solid" className="text-gray-300 w-10 h-10" />
+          <Icon name={icon} style="solid" className="text-(--palette-gray-300) w-10 h-10" />
         )}
       </div>
 
       <div className="p-4">
-        <p className="text-sm font-semibold text-gray-900 truncate">
+        <p className="text-sm font-semibold text-(--palette-ink) truncate">
           {flat.modelName ? String(flat.modelName) : 'Unnamed Model'}
         </p>
-        <p className="text-xs text-gray-500 mt-1 line-clamp-2 min-h-[2rem]">-</p>
+        <p className="text-xs text-(--palette-gray-500) mt-1 line-clamp-2 min-h-[2rem]">-</p>
 
         <div className="mt-3 space-y-1">
           <Row label="Usable Area" value={usableArea} />

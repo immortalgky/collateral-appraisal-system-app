@@ -21,7 +21,7 @@ export default function GenerateReappraisalTestPage() {
     generate(
       { count, date: dateParam },
       {
-        onSuccess: (data) => {
+        onSuccess: data => {
           setResult(data);
           toast.success(`Generated ${data.rowCount} rows`);
         },
@@ -37,18 +37,20 @@ export default function GenerateReappraisalTestPage() {
       {/* Header */}
       <div className="shrink-0 flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Generate Reappraisal Test File</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Writes a COLLATREV fixed-width file into the server ingestion inbox for QA testing.
-            The reappraisal ingestion job will consume it on next run.
+          <h3 className="text-base font-semibold text-(--palette-ink)">
+            Generate Reappraisal Test File
+          </h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
+            Writes a COLLATREV fixed-width file into the server ingestion inbox for QA testing. The
+            reappraisal ingestion job will consume it on next run.
           </p>
         </div>
       </div>
 
       {/* Controls */}
-      <div className="shrink-0 flex items-end gap-3 bg-white rounded-lg border border-gray-200 p-4">
+      <div className="shrink-0 flex items-end gap-3 bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-700" htmlFor="gen-count">
+          <label className="text-xs font-medium text-(--palette-ink)" htmlFor="gen-count">
             Row count
           </label>
           <input
@@ -57,34 +59,30 @@ export default function GenerateReappraisalTestPage() {
             min={1}
             max={500}
             value={count}
-            onChange={(e) => {
+            onChange={e => {
               const v = parseInt(e.target.value, 10);
               if (!isNaN(v)) setCount(Math.min(500, Math.max(1, v)));
             }}
-            className="w-28 px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 focus:border-primary"
+            className="w-28 px-3 py-2 text-sm border border-(--palette-line) rounded-lg outline-none bg-(--palette-surface) hover:border-(--palette-line-strong) focus:border-primary"
           />
-          <p className="text-xs text-gray-400">1 – 500 (server also clamps)</p>
+          <p className="text-xs text-(--palette-gray-400)">1 – 500 (server also clamps)</p>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="text-xs font-medium text-gray-700" htmlFor="gen-date">
+          <label className="text-xs font-medium text-(--palette-ink)" htmlFor="gen-date">
             Effective date
           </label>
           <input
             id="gen-date"
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 focus:border-primary"
+            onChange={e => setDate(e.target.value)}
+            className="px-3 py-2 text-sm border border-(--palette-line) rounded-lg outline-none bg-(--palette-surface) hover:border-(--palette-line-strong) focus:border-primary"
           />
-          <p className="text-xs text-gray-400">Leave blank to default to today</p>
+          <p className="text-xs text-(--palette-gray-400)">Leave blank to default to today</p>
         </div>
 
-        <Button
-          size="sm"
-          onClick={handleGenerate}
-          isLoading={isPending}
-        >
+        <Button size="sm" onClick={handleGenerate} isLoading={isPending}>
           <Icon style="solid" name="file-export" className="size-3.5 mr-1.5" />
           Generate
         </Button>
@@ -92,31 +90,37 @@ export default function GenerateReappraisalTestPage() {
 
       {/* Result panel */}
       {result && (
-        <div className="shrink-0 bg-white rounded-lg border border-gray-200 p-4 flex flex-col gap-3">
+        <div className="shrink-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4 flex flex-col gap-3">
           <div className="flex items-center gap-2">
-            <Icon name="circle-check" style="solid" className="size-4 text-green-600" />
-            <span className="text-sm font-semibold text-gray-900">File generated</span>
+            <Icon
+              name="circle-check"
+              style="solid"
+              className="size-4 text-green-600 dark:text-green-400"
+            />
+            <span className="text-sm font-semibold text-(--palette-ink)">File generated</span>
           </div>
 
           <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-            <div className="text-gray-500">Row count</div>
-            <div className="font-medium text-gray-900">{result.rowCount}</div>
+            <div className="text-(--palette-gray-500)">Row count</div>
+            <div className="font-medium text-(--palette-ink)">{result.rowCount}</div>
 
-            <div className="text-gray-500">Server file path</div>
-            <div className="font-mono text-xs text-gray-700 break-all">{result.filePath}</div>
+            <div className="text-(--palette-gray-500)">Server file path</div>
+            <div className="font-mono text-xs text-(--palette-ink) break-all">
+              {result.filePath}
+            </div>
           </div>
 
           <div className="flex flex-col gap-1">
-            <p className="text-xs font-medium text-gray-700">
+            <p className="text-xs font-medium text-(--palette-ink)">
               Survey numbers ({result.surveyNumbers.length})
             </p>
-            <div className="max-h-48 overflow-y-auto border border-gray-100 rounded-lg bg-gray-50 p-2">
+            <div className="max-h-48 overflow-y-auto border border-(--palette-line-soft) rounded-lg bg-(--palette-surface-2) p-2">
               {result.surveyNumbers.length === 0 ? (
-                <p className="text-xs text-gray-400 italic">None</p>
+                <p className="text-xs text-(--palette-gray-400) italic">None</p>
               ) : (
                 <ul className="space-y-0.5">
-                  {result.surveyNumbers.map((sn) => (
-                    <li key={sn} className="font-mono text-xs text-gray-700">
+                  {result.surveyNumbers.map(sn => (
+                    <li key={sn} className="font-mono text-xs text-(--palette-ink)">
                       {sn}
                     </li>
                   ))}

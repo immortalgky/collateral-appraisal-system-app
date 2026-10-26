@@ -11,21 +11,23 @@ How to internationalize a feature. Languages: **en** (source), **th** (productio
 ## Using translations in components
 
 ```ts
-const { t } = useTranslation('myFeature');                 // single namespace
+const { t } = useTranslation('myFeature'); // single namespace
 const { t, i18n } = useTranslation(['myFeature', 'common']); // + shared keys via t('common:...')
 ```
 
 - **Toasts**: `toast.success(t('toasts.saved'))` — the established convention (no wrapper). In **hooks**, call `useTranslation`. In **non-component module functions**, import the instance: `import i18n from '@/i18n'` then `i18n.getFixedT(null, 'myFeature')` or `i18n.t('myFeature:key')`.
 - **Dates**: reuse `formatLocaleDate(value, i18n.language)` / `formatLocaleDateTime` from `@/shared/utils/dateUtils` (Intl-based, locale-aware). Only swap in where a hardcoded English date format string exists; don't rip out working `date-fns` calls.
 - **Interpolation**: `t('panel.count', { count })` / `t('aria.edit', { name })`. To avoid i18next plural machinery for compact strings like "5m ago", use a non-`count` var name (e.g. `{{n}}`).
-- **Validation (Zod)**: convert top-level schemas to a factory and resolve per-render:
+- **Validation (Zod)**: messages are tokens, translated where the error is shown (DESIGN.md 17.8). Keep the factory, but build the schema **once** with the token `t` instead of the live one:
   ```ts
   const makeSchema = (t: TFunction<'myFeature'>) =>
     z.object({ name: z.string().min(1, t('validation.nameRequired')) });
   type FormValues = z.infer<ReturnType<typeof makeSchema>>;
-  // in component: useForm({ resolver: zodResolver(makeSchema(t)) })
+  const schema = makeSchema(tokenT('myFeature')); // from '@/shared/components/form/validationMessage'
+  // in component: useForm({ resolver: zodResolver(schema) })
   ```
-- **Typed-`t` dynamic keys**: the dynamic segment must be a **finite union**, not `string`. Type lookup maps accordingly, e.g. `Record<Code, 'onTrack' | 'atRisk'>` so `` t(`sla.${key}`) `` type-checks.
+  A shared control renders its `error` through `ValidationText`; a hand-built `{errors.x?.message}` must wrap it in `<ValidationText message={…} />`.
+- **Typed-`t` dynamic keys**: the dynamic segment must be a **finite union**, not `string`. Type lookup maps accordingly, e.g. `Record<Code, 'onTrack' | 'atRisk'>` so ``t(`sla.${key}`)`` type-checks.
 
 ## Hidden-literal hotspots (where strings hide)
 

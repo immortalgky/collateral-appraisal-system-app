@@ -21,7 +21,7 @@ export function SortableTh({ label, sortKey, activeKey, dir, onSort, className }
         onClick={() => onSort(sortKey)}
         className={clsx(
           'group inline-flex items-center gap-1.5 transition-colors',
-          active ? 'text-gray-700' : 'hover:text-gray-700',
+          active ? 'text-(--palette-ink)' : 'hover:text-(--palette-ink)',
         )}
       >
         {label}
@@ -30,7 +30,9 @@ export function SortableTh({ label, sortKey, activeKey, dir, onSort, className }
           style="solid"
           className={clsx(
             'size-3',
-            active ? 'text-primary' : 'text-gray-300 group-hover:text-gray-400',
+            active
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-300) group-hover:text-(--palette-gray-400)',
           )}
         />
       </button>

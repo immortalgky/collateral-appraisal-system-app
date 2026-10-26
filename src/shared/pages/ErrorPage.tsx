@@ -12,7 +12,7 @@ function ErrorPage() {
           <div className="flex justify-center mb-6">
             <Icon name="face-sad-tear" style="regular" className="size-24 text-base-300" />
           </div>
-          <p className="text-base font-semibold text-primary">404</p>
+          <p className="text-base font-semibold text-(--palette-primary-text)">404</p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-base-content sm:text-5xl">
             Page not found
           </h1>
@@ -50,11 +50,7 @@ function ErrorPage() {
             {error.data?.message || 'An error occurred while processing your request.'}
           </p>
           <div className="mt-8 flex items-center justify-center gap-x-4">
-            <button
-              type="button"
-              onClick={() => window.history.back()}
-              className="btn btn-primary"
-            >
+            <button type="button" onClick={() => window.history.back()} className="btn btn-primary">
               <Icon name="arrow-left" style="solid" className="size-4" />
               Go back
             </button>

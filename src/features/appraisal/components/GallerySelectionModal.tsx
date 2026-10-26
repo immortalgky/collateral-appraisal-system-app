@@ -123,20 +123,24 @@ export const GallerySelectionModal = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl"
+        className="bg-(--palette-surface) rounded-2xl w-full max-w-7xl h-[90vh] flex flex-col shadow-2xl"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line)">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-              <Icon name="images" style="solid" className="text-xl text-purple-600" />
+            <div className="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center">
+              <Icon
+                name="images"
+                style="solid"
+                className="text-xl text-purple-600 dark:text-purple-400"
+              />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-semibold text-(--palette-ink)">
                 {title ?? t('gallerySelection.title')}
               </h2>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <p className="text-sm text-(--palette-gray-500) mt-0.5">
                 {t('gallerySelection.available', { count: images.length })}
               </p>
             </div>
@@ -145,33 +149,33 @@ export const GallerySelectionModal = ({
             type="button"
             onClick={onClose}
             aria-label={t('gallerySelection.close')}
-            className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-xl transition-colors"
+            className="p-2.5 text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) rounded-xl transition-colors"
           >
             <Icon name="xmark" className="text-xl" />
           </button>
         </div>
 
         {/* Toolbar */}
-        <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+        <div className="px-6 py-4 border-b border-(--palette-line-soft) bg-(--palette-surface-2)/50">
           <div className="flex items-center justify-between gap-4">
             {/* Search */}
             <div className="relative flex-1 max-w-md">
               <Icon
                 name="magnifying-glass"
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
               />
               <input
                 type="text"
                 placeholder={t('gallerySelection.searchPlaceholder')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                className="w-full pl-11 pr-4 py-2.5 bg-(--palette-surface) border border-(--palette-line) rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon name="xmark" className="text-sm" />
                 </button>
@@ -180,7 +184,7 @@ export const GallerySelectionModal = ({
 
             {/* Stats & Select All */}
             <div className="flex items-center gap-4">
-              <div className="text-sm text-gray-500">
+              <div className="text-sm text-(--palette-gray-500)">
                 {t('gallerySelection.showing', {
                   shown: filteredImages.length,
                   total: images.length,
@@ -189,18 +193,18 @@ export const GallerySelectionModal = ({
 
               {multiSelect && filteredImages.length > 0 && (
                 <>
-                  <div className="w-px h-6 bg-gray-200" />
+                  <div className="w-px h-6 bg-(--palette-line)" />
                   <button
                     type="button"
                     onClick={handleSelectAll}
-                    className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+                    className="flex items-center gap-2 text-sm text-(--palette-gray-600) hover:text-(--palette-ink) transition-colors"
                   >
                     <div
                       className={clsx(
                         'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
                         isAllSelected
                           ? 'bg-primary border-primary'
-                          : 'border-gray-300 hover:border-primary',
+                          : 'border-(--palette-line-strong) hover:border-primary',
                       )}
                     >
                       {isAllSelected && <Icon name="check" className="text-xs text-white" />}
@@ -215,13 +219,13 @@ export const GallerySelectionModal = ({
           {/* Selection indicator */}
           {selectedIds.size > 0 && (
             <div className="mt-3 flex items-center gap-2">
-              <div className="px-3 py-1.5 bg-primary/10 text-primary rounded-lg text-sm font-medium">
+              <div className="px-3 py-1.5 bg-primary/10 text-(--palette-primary-text) rounded-lg text-sm font-medium">
                 {t('gallerySelection.selected', { count: selectedIds.size })}
               </div>
               <button
                 type="button"
                 onClick={() => setSelectedIds(new Set())}
-                className="text-sm text-gray-500 hover:text-gray-700"
+                className="text-sm text-(--palette-gray-500) hover:text-(--palette-ink)"
               >
                 {t('gallerySelection.clearSelection')}
               </button>
@@ -232,12 +236,14 @@ export const GallerySelectionModal = ({
         {/* Image Grid */}
         <div className="flex-1 overflow-y-auto p-6">
           {filteredImages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Icon name="images" className="text-3xl text-gray-400" />
+            <div className="flex flex-col items-center justify-center h-full text-(--palette-gray-400)">
+              <div className="w-20 h-20 rounded-full bg-(--palette-surface-3) flex items-center justify-center mb-4">
+                <Icon name="images" className="text-3xl text-(--palette-gray-400)" />
               </div>
-              <p className="text-lg font-medium text-gray-500">{t('gallerySelection.noPhotos')}</p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-lg font-medium text-(--palette-gray-500)">
+                {t('gallerySelection.noPhotos')}
+              </p>
+              <p className="text-sm text-(--palette-gray-400) mt-1">
                 {searchQuery
                   ? t('gallerySelection.tryDifferent')
                   : t('gallerySelection.uploadFirst')}
@@ -255,7 +261,7 @@ export const GallerySelectionModal = ({
                       'group relative aspect-square rounded-xl overflow-hidden cursor-pointer transition-all duration-200',
                       isSelected
                         ? 'ring-3 ring-primary ring-offset-2 scale-[0.98]'
-                        : 'hover:ring-2 hover:ring-gray-300 hover:shadow-lg',
+                        : 'hover:ring-2 hover:ring-(--palette-line-strong) hover:shadow-lg',
                     )}
                   >
                     <img
@@ -278,7 +284,7 @@ export const GallerySelectionModal = ({
                         'absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center transition-all shadow-lg',
                         isSelected
                           ? 'bg-primary text-white scale-100'
-                          : 'bg-white/90 text-gray-400 border border-gray-200 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100',
+                          : 'bg-(--palette-surface)/90 text-(--palette-gray-400) border border-(--palette-line) scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100',
                       )}
                     >
                       {isSelected ? (
@@ -316,8 +322,8 @@ export const GallerySelectionModal = ({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50/50">
-          <div className="text-sm text-gray-500">
+        <div className="flex items-center justify-between px-6 py-4 border-t border-(--palette-line) bg-(--palette-surface-2)/50">
+          <div className="text-sm text-(--palette-gray-500)">
             {selectedIds.size > 0 ? (
               <span>{t('gallerySelection.readyToAdd', { count: selectedIds.size })}</span>
             ) : (

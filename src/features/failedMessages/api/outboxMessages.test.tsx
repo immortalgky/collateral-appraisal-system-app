@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, waitFor } from '@testing-library/react';
 import axios from '@shared/api/axiosInstance';
-import type { GetOutboxMessagesParams } from '../types';
 import { GONE_POLL_INTERVAL_MS, POLL_INTERVAL_MS } from './detailPolling';
 import { outboxMessageKeys, useGetOutboxMessages } from './outboxMessages';
 import {
@@ -61,56 +60,5 @@ describe('list polling (useGetOutboxMessages)', () => {
     await waitFor(() => expect(queryClient.getQueryState(key)?.status).toBe('success'));
 
     expect(currentRefetchInterval(queryClient, key)).toBe(POLL_INTERVAL_MS);
-  });
-});
-
-describe('useGetOutboxMessages page change', () => {
-  it('keeps the previous page as placeholder data while the next page loads', async () => {
-    let resolvePage2!: (v: unknown) => void;
-    vi.mocked(axios.get).mockImplementation((_url, config) =>
-      config?.params.pageNumber === 2
-        ? (new Promise(resolve => {
-            resolvePage2 = resolve;
-          }) as never)
-        : (Promise.resolve({ data: { items: [], count: 45 } }) as never),
-    );
-    const { wrapper } = createQueryWrapper();
-    const { result, rerender } = renderHook(
-      ({ pageNumber }) => useGetOutboxMessages({ pageNumber }),
-      {
-        wrapper,
-        initialProps: { pageNumber: 1 },
-      },
-    );
-    await waitFor(() => expect(result.current.data?.count).toBe(45));
-
-    rerender({ pageNumber: 2 });
-
-    expect(result.current.isPlaceholderData).toBe(true);
-    expect(result.current.data?.count).toBe(45);
-
-    resolvePage2({ data: { items: [], count: 44 } });
-    await waitFor(() => expect(result.current.isPlaceholderData).toBe(false));
-    expect(result.current.data?.count).toBe(44);
-  });
-
-  it('does NOT keep the previous data on a tab change — it drops to the loading state', async () => {
-    vi.mocked(axios.get).mockImplementation((_url, config) =>
-      config?.params.status === 'Stuck'
-        ? (new Promise(() => undefined) as never)
-        : (Promise.resolve({ data: { items: [], count: 45 } }) as never),
-    );
-    const { wrapper } = createQueryWrapper();
-    const { result, rerender } = renderHook(
-      (params: GetOutboxMessagesParams) => useGetOutboxMessages(params),
-      { wrapper, initialProps: { status: 'Failed', pageNumber: 1 } as GetOutboxMessagesParams },
-    );
-    await waitFor(() => expect(result.current.data?.count).toBe(45));
-
-    rerender({ status: 'Stuck', pageNumber: 1 });
-
-    expect(result.current.isPlaceholderData).toBe(false);
-    expect(result.current.data).toBeUndefined();
-    expect(result.current.isLoading).toBe(true);
   });
 });

@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import clsx from 'clsx';
 
-import Icon from '@shared/components/Icon';
 import {
   GalleryTab,
   LawsRegulationTab,
@@ -12,7 +10,7 @@ import {
 } from '@/features/appraisal/components/tabs';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 
-import { isCondo } from '../types';
+import { hasStructures, isCondo } from '../types';
 import type { ProjectType } from '../types';
 import ProjectInfoTab from '../components/tabs/ProjectInfoTab';
 import UnitListingTab from '../components/tabs/UnitListingTab';
@@ -20,6 +18,7 @@ import ProjectLandTab from '../components/tabs/ProjectLandTab';
 import ModelListingTab from '../components/tabs/ModelListingTab';
 import TowerListingTab from '../components/tabs/TowerListingTab';
 import UnitPriceTab from '../components/tabs/UnitPriceTab';
+import { CondoFrame, CondoShellContext } from '../components/condo';
 import { useGetProject } from '../api/project';
 import { useGetProjectModels } from '../api/projectModel';
 import { useGetProjectTowers } from '../api/projectTower';
@@ -63,20 +62,35 @@ interface TabDef {
 // ── Props ─────────────────────────────────────────────────────────────────────
 
 interface BlockProjectPageProps {
+  /** The type the route stands for; only the fallback until the project loads (see below). */
   projectType: ProjectType;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 /**
- * Unified block project page for both Condo and LandAndBuilding project types.
- * Tab list is derived from projectType; content components receive projectType
- * as a prop and branch internally.
+ * Unified block project page for Condo (U), Land and Building (LB) and Land and Building
+ * (Construction) (L, appraised as land only), all in the
+ * one shell. The type that decides tabs and behaviour is the project's stored one, not the route's:
+ * `block-village` serves both LB and L. Tabs receive that effective type as a prop, and anything
+ * deeper reads it from `useBlockProjectType()`.
  */
-export default function BlockProjectPage({ projectType }: BlockProjectPageProps) {
+const EMPTY_GUID = '00000000-0000-0000-0000-000000000000';
+
+export default function BlockProjectPage({ projectType: routeType }: BlockProjectPageProps) {
   const { t } = useTranslation('blockProject');
   const [searchParams, setSearchParams] = useSearchParams();
   const appraisalId = useAppraisalId() ?? '';
+
+  // The stored type is the source of truth; the route's is only the fallback while loading or when
+  // the appraisal has no project yet.
+  const {
+    data: project,
+    isError: isProjectError,
+    refetch: refetchProject,
+  } = useGetProject(appraisalId);
+  const projectType: ProjectType = project?.projectType ?? routeType;
+  const condo = isCondo(projectType);
 
   const CONDO_TABS: TabDef[] = [
     { id: 'project-info', label: t('page.tabs.projectInfo'), icon: 'building-columns' },
@@ -102,7 +116,12 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     { id: 'laws', label: t('page.tabs.laws'), icon: 'gavel' },
   ];
 
-  const tabs = isCondo(projectType) ? CONDO_TABS : LB_TABS;
+  // L is appraised as land only (no models): the LB list without the models (แบบ) tab.
+  const tabs = condo
+    ? CONDO_TABS
+    : hasStructures(projectType)
+      ? LB_TABS
+      : LB_TABS.filter(tab => tab.id !== 'models');
   const validTabIds = tabs.map(tab => tab.id);
 
   const tabParam = searchParams.get('tab') as TabId | null;
@@ -114,32 +133,46 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     if (!tabParam || !validTabIds.includes(tabParam as TabId)) {
       setSearchParams({ tab: 'project-info' }, { replace: true });
     }
-    // validTabIds is derived from `tabs`, which depends only on projectType — stable
+    // validTabIds is derived from `tabs`, which depends only on projectType — stable. projectType
+    // is a dep because it can change once the project loads (L drops the models tab).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tabParam, setSearchParams]);
+  }, [tabParam, projectType, setSearchParams]);
+
+  // Condo "expand table": local UI state, only meaningful on the unit-price tab and dropped when
+  // the user leaves it. Esc restores it unless a dialog or drawer is open (it owns Esc).
+  const [focusOn, setFocusOn] = useState(false);
 
   const handleTabChange = (tabId: TabId) => {
+    setFocusOn(false);
     setSearchParams({ tab: tabId }, { replace: true });
   };
+
+  const focus = focusOn && activeTab === 'unit-price';
+  useEffect(() => {
+    if (!focus) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      if (document.querySelector('dialog, [role="dialog"], [aria-modal="true"]')) return;
+      setFocusOn(false);
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [focus]);
 
   // ── Child count queries for the type-change dialog ────────────────────────
   // TanStack Query deduplicates these with the same keys used inside tab
   // subcomponents, so no extra network requests are made.
   const {
-    data: project,
-    isError: isProjectError,
-    refetch: refetchProject,
-  } = useGetProject(appraisalId, projectType);
-  const {
     data: modelsData,
     isError: isModelsError,
     refetch: refetchModels,
   } = useGetProjectModels(appraisalId);
+  // Towers exist for condo only, project land for LB/L only: each runs just for its own types.
   const {
     data: towersData,
     isError: isTowersError,
     refetch: refetchTowers,
-  } = useGetProjectTowers(appraisalId);
+  } = useGetProjectTowers(appraisalId, condo);
   const {
     data: unitsData,
     isError: isUnitsError,
@@ -150,7 +183,7 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     data: landData,
     isError: isLandError,
     refetch: refetchLand,
-  } = useGetProjectLand(appraisalId);
+  } = useGetProjectLand(appraisalId, !condo);
 
   // Latch: once the project is confirmed to exist, keep this true so transient
   // background refetches (triggered by invalidateQueries after save) don't
@@ -170,7 +203,8 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     towers: towersData?.length ?? 0,
     units: unitsData?.totalCount ?? 0,
     hasLand: landData != null,
-    hasPricing: pricingData != null,
+    // L gets an empty shell (Guid.Empty id) when nothing is saved yet: not a record to reset.
+    hasPricing: pricingData != null && pricingData.id !== EMPTY_GUID,
   };
 
   if (isProjectError) {
@@ -228,39 +262,27 @@ export default function BlockProjectPage({ projectType }: BlockProjectPageProps)
     }
   };
 
+  // One shell for every type (header, tab bar, scroller in the form-layout look). The project-info
+  // tab mounts its own CondoFrame because its fields and ActionBar must share one <form>; every
+  // other tab is wrapped here with `body="fill"`, a bounded box that manages its own scrolling.
   return (
-    <div className="flex flex-col h-full min-h-0">
-      {/* Tab Navigation */}
-      <div className="shrink-0 pb-4">
-        <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100 overflow-x-auto">
-          {tabs.map(tab => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => handleTabChange(tab.id)}
-                className={clsx(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
-                  isActive
-                    ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
-                )}
-              >
-                <Icon
-                  name={tab.icon}
-                  style="solid"
-                  className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
-                />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Tab Content */}
-      <div className="flex-1 min-h-0 overflow-y-auto">{renderTabContent()}</div>
-    </div>
+    <CondoShellContext.Provider
+      value={{
+        projectType,
+        tabs,
+        activeTab,
+        onTabChange: id => handleTabChange(id as TabId),
+        focus,
+        onFocusChange: setFocusOn,
+      }}
+    >
+      {activeTab === 'project-info' ? (
+        renderTabContent()
+      ) : (
+        <CondoFrame body="fill" panelId={`${activeTab}-section`}>
+          {renderTabContent()}
+        </CondoFrame>
+      )}
+    </CondoShellContext.Provider>
   );
 }

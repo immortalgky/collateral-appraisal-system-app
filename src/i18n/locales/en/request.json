@@ -416,7 +416,6 @@
     "colDate": "Appraisal Date",
     "moreCustomers": "+{{n}}",
     "propertyCount": "{{n}} items",
-    "round": "Round {{n}}",
     "emptyTitle": "No completed appraisal matches",
     "emptyHint": "Try a part of the report number, or the customer name. Only completed appraisals can be copied from.",
     "errorTitle": "Could not load the list",
@@ -480,6 +479,34 @@
     "date": "Date {{date}}",
     "openTitle": "Open this appraisal in a new tab",
     "clearTitle": "Clear the prior appraisal reference"
+  },
+  "constructionGuard": {
+    "blocked": {
+      "ConstructionComplete": "Appraisal {{no}} is already 100% built (inspection round {{n}} on {{date}}). No further inspection is needed.",
+      "ConstructionCompleteNoDate": "Appraisal {{no}} is already 100% built (inspection round {{n}}). No further inspection is needed.",
+      "ConstructionCompleteNoRound": "Appraisal {{no}} is already 100% built (on {{date}}). No further inspection is needed.",
+      "ConstructionCompleteNoRoundNoDate": "Appraisal {{no}} is already 100% built. No further inspection is needed.",
+      "LaterInspectionExists": "Appraisal {{no}} already has a later inspection (appraisal {{later}}). Please pick the latest one.",
+      "OpenInspectionRequest": "Inspection request {{req}} in this chain is still open. Wait until it is closed."
+    },
+    "rejected": {
+      "ConstructionComplete": "The selected prior appraisal is already 100% built, so no further inspection is needed. Choose another appraisal or clear the prior appraisal.",
+      "LaterInspectionExists": "The selected prior appraisal already has a later inspection. Change it to the latest appraisal.",
+      "OpenInspectionRequest": "An inspection request in this chain is still open. Choose another appraisal or wait until that request is closed."
+    },
+    "chip": "Construction {{pct}}%",
+    "noData": "No construction % on this appraisal",
+    "notLatest": "Not the latest appraisal in the chain: appraisal {{latest}} ({{purpose}} · {{date}}) is newer. The system copies from the selected appraisal.",
+    "useLatestInstead": "Use appraisal {{latest}} instead",
+    "dialog": {
+      "title": "The selected appraisal is not the latest in the chain",
+      "message": "A newer appraisal exists after the selected one. The system copies the property and construction data from the appraisal you selected.",
+      "selectedLabel": "Selected",
+      "latestLabel": "Latest in chain",
+      "construction": "construction {{pct}}%",
+      "useSelected": "Use the selected ({{no}})",
+      "useLatest": "Use the latest ({{latest}})"
+    }
   },
   "carryForward": {
     "badge": "From previous appraisal {{number}}",

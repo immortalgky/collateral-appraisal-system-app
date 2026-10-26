@@ -5,7 +5,7 @@ import type { QueueSeverity } from '../utils/queueHealth';
 const SEVERITY_TEXT_CLASS: Record<QueueSeverity, string> = {
   crit: 'text-red-500',
   warn: 'text-amber-500',
-  ok: 'text-primary',
+  ok: 'text-(--palette-primary-text)',
 };
 
 interface SparklineProps {

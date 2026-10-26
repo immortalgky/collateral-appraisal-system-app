@@ -206,14 +206,16 @@ export function MarketReferenceMethodPanel({
             <button
               type="button"
               onClick={onBack}
-              className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors self-start"
+              className="flex items-center gap-1.5 text-sm text-(--palette-gray-500) hover:text-(--palette-ink) transition-colors self-start"
             >
               <Icon name="arrow-left" className="size-3.5" />
               {t('marketRef.backToList')}
             </button>
           )}
-          <div className="flex flex-col items-center justify-center gap-3 py-12 border border-dashed border-gray-200 rounded-xl">
-            <span className="text-sm text-gray-500">{t('comparativeAnalysis.noSurveys')}</span>
+          <div className="flex flex-col items-center justify-center gap-3 py-12 border border-dashed border-(--palette-line) rounded-xl">
+            <span className="text-sm text-(--palette-gray-500)">
+              {t('comparativeAnalysis.noSurveys')}
+            </span>
             <div className="flex gap-2">
               {(['WQS_MARKET', 'SAG_MARKET', 'DC_MARKET'] as const).map(mt => (
                 <button
@@ -221,7 +223,7 @@ export function MarketReferenceMethodPanel({
                   type="button"
                   onClick={() => handleAddMethod(mt)}
                   disabled={addMethodMutation.isPending}
-                  className="px-3 py-1.5 text-xs font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors disabled:opacity-50"
+                  className="px-3 py-1.5 text-xs font-medium text-(--palette-primary-text) border border-primary/30 rounded-lg hover:bg-primary/5 transition-colors disabled:opacity-50"
                 >
                   {mt === 'WQS_MARKET' ? 'WQS' : mt === 'SAG_MARKET' ? 'SAG' : 'DC'}
                 </button>
@@ -283,7 +285,7 @@ export function MarketReferenceMethodPanel({
               <button
                 type="button"
                 onClick={onBack}
-                className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                className="flex items-center gap-1.5 text-sm text-(--palette-gray-500) hover:text-(--palette-ink) transition-colors"
               >
                 <Icon name="arrow-left" className="size-3.5" />
                 {t('page.back')}
@@ -300,7 +302,7 @@ export function MarketReferenceMethodPanel({
                       'px-3 py-1 text-xs font-medium rounded-lg transition-colors',
                       m.id === activeMethodId
                         ? 'bg-primary text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200',
+                        : 'bg-(--palette-surface-3) text-(--palette-gray-600) hover:bg-(--palette-line)',
                     )}
                   >
                     {m.methodType}

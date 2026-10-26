@@ -1,21 +1,18 @@
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
 import TextInput from '@shared/components/inputs/TextInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
-import { AddFeeFormSchema } from '../schemas/appointmentAndFee';
+import { type AddFeeFormData, AddFeeFormSchema } from '../schemas/appointmentAndFee';
 import type { FeeItem } from '../types/appointmentAndFee';
-
-type AddFeeFormData = z.infer<typeof AddFeeFormSchema>;
 
 interface AddFeeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Omit<FeeItem, 'id'>) => void;
+  onSubmit: (data: Omit<FeeItem, 'id'>) => void | boolean | Promise<void | boolean>;
   defaultValues?: FeeItem;
   isEditing?: boolean;
   readOnly?: boolean;
@@ -36,9 +33,9 @@ export default function AddFeeModal({
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isSubmitted },
     reset,
-    watch,
+    control,
     setValue,
   } = useForm<AddFeeFormData>({
     resolver: zodResolver(AddFeeFormSchema),
@@ -48,6 +45,7 @@ export default function AddFeeModal({
       amount: defaultValues?.amount || 0,
     },
   });
+  const amount = useWatch({ control, name: 'amount' });
 
   // Reset form when modal opens with new default values
   useEffect(() => {
@@ -65,15 +63,20 @@ export default function AddFeeModal({
     onClose();
   };
 
-  const handleFormSubmit = (data: AddFeeFormData) => {
-    onSubmit(data);
-    handleClose();
+  // The modal stays open, with its input, until the caller's save has finished: isSubmitting
+  // disables Submit meanwhile, so it cannot fire twice, and a close request is ignored. A caller
+  // that returns false says the save failed, and the modal stays open for another try.
+  const handleFormSubmit = async (data: AddFeeFormData) => {
+    const saved = await onSubmit(data);
+    if (saved !== false) handleClose();
   };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={() => {
+        if (!isSubmitting) handleClose();
+      }}
       title={isEditing ? t('fee.addFeeModal.titleEdit') : t('fee.addFeeModal.titleAdd')}
       size="md"
     >
@@ -98,15 +101,16 @@ export default function AddFeeModal({
           maxIntegerDigits={15}
           decimalPlaces={2}
           name="amount"
-          value={watch('amount')}
-          onChange={e => setValue('amount', e.target.value ?? 0)}
+          value={amount}
+          // Not a registered input, so re-check by hand once a submit has shown the error.
+          onChange={e => setValue('amount', e.target.value ?? 0, { shouldValidate: isSubmitted })}
           error={errors.amount?.message}
           disabled={readOnly}
         />
 
         {/* Action Buttons */}
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
-          <Button type="button" variant="ghost" onClick={handleClose}>
+        <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
+          <Button type="button" variant="ghost" onClick={handleClose} disabled={isSubmitting}>
             {t('common:actions.cancel')}
           </Button>
           {!readOnly && (

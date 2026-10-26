@@ -25,7 +25,7 @@ const Field = ({ span, tall, hint }: { span: string; tall?: boolean; hint?: bool
 
 /** An in-card sub-section heading (text-sm semibold, a rule under it). */
 const SubHeading = () => (
-  <div className="flex flex-col gap-2 border-b border-gray-100 pb-2">
+  <div className="flex flex-col gap-2 border-b border-(--palette-line-soft) pb-2">
     <Bar className="h-4 w-32" />
   </div>
 );
@@ -49,8 +49,8 @@ const CardShell = ({
   right?: ReactNode;
   noBody?: boolean;
 }) => (
-  <div className="rounded-2xl border border-gray-100 bg-white shadow-sm">
-    <div className="flex items-center justify-between border-b border-gray-100 px-5 py-4">
+  <div className="rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) shadow-sm">
+    <div className="flex items-center justify-between border-b border-(--palette-line-soft) px-5 py-4">
       <div className="flex items-center gap-3">
         <Bar className="size-9 shrink-0 rounded-xl" />
         <div className="flex flex-col gap-1.5">
@@ -74,7 +74,7 @@ const RequestPageSkeleton = () => {
           <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="flex flex-col gap-4 pb-6">
               {/* Header strip */}
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-gray-100 bg-white px-5 py-2.5 shadow-sm">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) px-5 py-2.5 shadow-sm">
                 <div className="flex items-center gap-3">
                   <Bar className="size-9 shrink-0 rounded-xl" />
                   <Bar className="h-5 w-40" />
@@ -92,7 +92,7 @@ const RequestPageSkeleton = () => {
               </div>
 
               {/* Section nav */}
-              <div className="flex items-center gap-1 rounded-xl border border-gray-200 bg-gray-50/90 p-1">
+              <div className="flex items-center gap-1 rounded-xl border border-(--palette-line) bg-(--palette-surface-2)/90 p-1">
                 {['w-32', 'w-40', 'w-52', 'w-40', 'w-80'].map((w, i) => (
                   <Bar key={i} className={clsx('h-9', w)} />
                 ))}
@@ -192,7 +192,7 @@ const RequestPageSkeleton = () => {
           {!readOnly && (
             <div
               data-page-actions=""
-              className="shrink-0 border-t border-gray-200 bg-white px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
+              className="shrink-0 border-t border-(--palette-line) bg-(--palette-surface) px-6 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

@@ -21,9 +21,7 @@ export const filterTemplates = <T extends TemplateRowLike>(
     if (statusFilter === 'inactive' && tpl.isActive) return false;
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return (
-      tpl.templateCode.toLowerCase().includes(q) || tpl.templateName.toLowerCase().includes(q)
-    );
+    return tpl.templateCode.toLowerCase().includes(q) || tpl.templateName.toLowerCase().includes(q);
   });
 
 interface TemplateListToolbarProps {
@@ -53,7 +51,7 @@ const TemplateListToolbar = ({
         <Icon
           name="magnifying-glass"
           style="regular"
-          className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
         />
         <input
           type="text"
@@ -61,10 +59,10 @@ const TemplateListToolbar = ({
           onChange={e => onSearchChange(e.target.value)}
           placeholder={t('templates.searchPlaceholder')}
           aria-label={t('templates.searchPlaceholder')}
-          className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+          className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
         />
       </div>
-      <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-sm">
+      <div className="flex items-center rounded-lg border border-(--palette-line) overflow-hidden text-sm">
         {(['all', 'active', 'inactive'] as const).map(s => (
           <button
             key={s}
@@ -73,8 +71,8 @@ const TemplateListToolbar = ({
             className={clsx(
               'px-3 py-2 transition-colors',
               statusFilter === s
-                ? 'bg-primary/10 text-primary font-medium'
-                : 'text-gray-500 hover:bg-gray-50',
+                ? 'bg-primary/10 text-(--palette-primary-text) font-medium'
+                : 'text-(--palette-gray-500) hover:bg-(--palette-surface-2)',
             )}
           >
             {filterLabels[s]}

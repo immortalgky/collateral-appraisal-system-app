@@ -39,9 +39,10 @@ const CATEGORY_DOT_CLASS: Record<VisualCategory, string> = {
 };
 
 const CATEGORY_TEXT_CLASS: Record<VisualCategory, string> = {
-  meeting: 'text-blue-700 bg-blue-50 border-blue-100',
-  sla: 'text-red-700 bg-red-50 border-red-100',
-  task: 'text-amber-700 bg-amber-50 border-amber-100',
+  meeting:
+    'text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-500/10 border-blue-100 dark:border-blue-500/20',
+  sla: 'text-(--palette-req) bg-(--palette-req-wash) border-red-100 dark:border-red-500/20',
+  task: 'text-(--palette-warn) bg-(--palette-warn-wash) border-amber-100 dark:border-amber-500/20',
 };
 
 const ALL_TYPES: CalendarItemType[] = ['meeting', 'task_due'];
@@ -114,7 +115,7 @@ function DayView({ date, eventMap, isLoading, noEventsLabel, categoryLabel }: Da
   return (
     <div className="flex-1 overflow-auto">
       <div className="p-4">
-        <p className="text-sm font-semibold text-gray-700 mb-3">
+        <p className="text-sm font-semibold text-(--palette-ink) mb-3">
           {format(date, 'EEEE, MMMM d, yyyy')}
         </p>
         {isLoading ? (
@@ -125,10 +126,14 @@ function DayView({ date, eventMap, isLoading, noEventsLabel, categoryLabel }: Da
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-            <div className="size-12 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
-              <Icon name="calendar-check" style="regular" className="size-5 text-gray-300" />
+            <div className="size-12 rounded-full bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+              <Icon
+                name="calendar-check"
+                style="regular"
+                className="size-5 text-(--palette-gray-300)"
+              />
             </div>
-            <p className="text-sm text-gray-400">{noEventsLabel}</p>
+            <p className="text-sm text-(--palette-gray-400)">{noEventsLabel}</p>
           </div>
         ) : (
           <ul className="space-y-2">
@@ -139,7 +144,7 @@ function DayView({ date, eventMap, isLoading, noEventsLabel, categoryLabel }: Da
                   <button
                     type="button"
                     onClick={() => goToEntity(item.linkEntityType, item.linkEntityId)}
-                    className="w-full flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-gray-200 hover:bg-gray-50 text-left transition-colors"
+                    className="w-full flex items-start gap-3 p-3 rounded-xl border border-(--palette-line-soft) hover:border-(--palette-line) hover:bg-(--palette-surface-2) text-left transition-colors"
                   >
                     <span
                       className={`mt-1.5 size-2.5 rounded-full shrink-0 ${CATEGORY_DOT_CLASS[cat]}`}
@@ -147,17 +152,17 @@ function DayView({ date, eventMap, isLoading, noEventsLabel, categoryLabel }: Da
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         {item.appraisalNumber && (
-                          <span className="text-[11px] font-semibold text-gray-700 bg-gray-100 border border-gray-200 px-1.5 py-0.5 rounded tabular-nums shrink-0">
+                          <span className="text-[11px] font-semibold text-(--palette-ink) bg-(--palette-surface-3) border border-(--palette-line) px-1.5 py-0.5 rounded tabular-nums shrink-0">
                             {item.appraisalNumber}
                           </span>
                         )}
-                        <p className="text-sm text-gray-800 break-words">{item.title}</p>
+                        <p className="text-sm text-(--palette-ink) break-words">{item.title}</p>
                       </div>
-                      <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                      <p className="text-xs text-(--palette-gray-400) mt-0.5 flex items-center gap-1.5">
                         <span>{categoryLabel(cat)}</span>
                         {item.time && (
                           <>
-                            <span className="text-gray-300">·</span>
+                            <span className="text-(--palette-gray-300)">·</span>
                             <span>{item.time.slice(0, 5)}</span>
                           </>
                         )}
@@ -166,7 +171,7 @@ function DayView({ date, eventMap, isLoading, noEventsLabel, categoryLabel }: Da
                     <Icon
                       name="arrow-right"
                       style="solid"
-                      className="size-3 text-gray-300 mt-1.5 shrink-0"
+                      className="size-3 text-(--palette-gray-300) mt-1.5 shrink-0"
                     />
                   </button>
                 </li>
@@ -202,18 +207,18 @@ function WeekView({
 
   return (
     <div className="flex-1 overflow-auto min-h-0">
-      <div className="grid grid-cols-7 border-b border-gray-100 shrink-0">
+      <div className="grid grid-cols-7 border-b border-(--palette-line-soft) shrink-0">
         {days.map((d, di) => (
           <div
             key={dateKeyOf(d)}
-            className={`px-2 py-2 text-center text-xs font-medium border-r last:border-r-0 border-gray-100 ${
-              isSameDay(d, today) ? 'text-blue-600' : 'text-gray-500'
+            className={`px-2 py-2 text-center text-xs font-medium border-r last:border-r-0 border-(--palette-line-soft) ${
+              isSameDay(d, today) ? 'text-blue-600 dark:text-blue-400' : 'text-(--palette-gray-500)'
             }`}
           >
             <div>{dayLabels[di]}</div>
             <div
               className={`mt-0.5 w-6 h-6 mx-auto rounded-full flex items-center justify-center text-sm font-semibold ${
-                isSameDay(d, today) ? 'bg-blue-500 text-white' : 'text-gray-700'
+                isSameDay(d, today) ? 'bg-blue-500 text-white' : 'text-(--palette-ink)'
               }`}
             >
               {format(d, 'd')}
@@ -228,7 +233,7 @@ function WeekView({
           return (
             <div
               key={key}
-              className="border-r last:border-r-0 border-gray-100 p-1 min-h-[120px] flex flex-col gap-0.5"
+              className="border-r last:border-r-0 border-(--palette-line-soft) p-1 min-h-[120px] flex flex-col gap-0.5"
             >
               {isLoading ? (
                 <>
@@ -317,7 +322,7 @@ function MonthView({
     <>
       <div className="grid grid-cols-7 gap-1 mb-2 shrink-0">
         {dayLabels.map((day, i) => (
-          <div key={i} className="text-center text-xs font-medium text-gray-400 py-1">
+          <div key={i} className="text-center text-xs font-medium text-(--palette-gray-400) py-1">
             {day}
           </div>
         ))}
@@ -336,20 +341,26 @@ function MonthView({
               key={idx}
               className={`flex flex-col rounded-lg border min-h-0 overflow-hidden ${
                 isToday
-                  ? 'border-blue-500 bg-blue-50/40'
+                  ? 'border-blue-500 bg-blue-50/40 dark:bg-blue-500/10'
                   : cell.inMonth
-                    ? 'border-gray-100 bg-white hover:border-gray-200'
-                    : 'border-gray-50 bg-gray-50/40'
+                    ? 'border-(--palette-line-soft) bg-(--palette-surface) hover:border-(--palette-line)'
+                    : 'border-(--palette-line-soft) bg-(--palette-surface-2)/40'
               }`}
             >
               <div
                 className={`px-2 pt-1.5 text-xs font-medium flex items-center justify-between ${
-                  isToday ? 'text-blue-700' : cell.inMonth ? 'text-gray-600' : 'text-gray-300'
+                  isToday
+                    ? 'text-blue-700 dark:text-blue-300'
+                    : cell.inMonth
+                      ? 'text-(--palette-gray-600)'
+                      : 'text-(--palette-ink-3)'
                 }`}
               >
                 <span>{format(cell.date, 'd')}</span>
                 {items.length > 0 && cell.inMonth && (
-                  <span className="text-[10px] text-gray-400 tabular-nums">{items.length}</span>
+                  <span className="text-[10px] text-(--palette-gray-400) tabular-nums">
+                    {items.length}
+                  </span>
                 )}
               </div>
               <div className="flex-1 px-1 pb-1 flex flex-col gap-0.5 min-h-0">
@@ -390,7 +401,7 @@ function MonthView({
                     onClick={e =>
                       openDay(cell.date, items, e.currentTarget.getBoundingClientRect())
                     }
-                    className="shrink-0 text-left text-[10px] text-gray-500 px-1 pt-0.5 font-medium hover:text-gray-700"
+                    className="shrink-0 text-left text-[10px] text-(--palette-gray-500) px-1 pt-0.5 font-medium hover:text-(--palette-ink)"
                   >
                     +{hidden} more
                   </button>
@@ -413,18 +424,18 @@ function MonthView({
               role="dialog"
               aria-modal="true"
               aria-labelledby="day-popover-title"
-              className="fixed z-50 w-64 max-h-80 flex flex-col bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden"
+              className="fixed z-50 w-64 max-h-80 flex flex-col bg-(--palette-surface) rounded-xl shadow-xl border border-(--palette-line) overflow-hidden"
               style={{
                 left: Math.max(8, Math.min(dayPopover.rect.left, window.innerWidth - 256 - 8)),
                 top: Math.max(8, Math.min(dayPopover.rect.top, window.innerHeight - 320 - 8)),
               }}
             >
-              <div className="shrink-0 px-3 py-2 border-b border-gray-100 flex items-start justify-between gap-2">
+              <div className="shrink-0 px-3 py-2 border-b border-(--palette-line-soft) flex items-start justify-between gap-2">
                 <div>
-                  <p id="day-popover-title" className="text-xs font-semibold text-gray-800">
+                  <p id="day-popover-title" className="text-xs font-semibold text-(--palette-ink)">
                     {format(dayPopover.date, 'EEEE, d MMM yyyy')}
                   </p>
-                  <p className="text-[11px] text-gray-400">
+                  <p className="text-[11px] text-(--palette-gray-400)">
                     {eventsCountLabel(dayPopover.items.length)}
                   </p>
                 </div>
@@ -432,7 +443,7 @@ function MonthView({
                   type="button"
                   onClick={() => setDayPopover(null)}
                   aria-label={closeLabel}
-                  className="shrink-0 -mr-1 size-6 flex items-center justify-center rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                  className="shrink-0 -mr-1 size-6 flex items-center justify-center rounded hover:bg-(--palette-surface-3) text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon name="xmark" style="solid" className="size-3" />
                 </button>
@@ -448,13 +459,13 @@ function MonthView({
                         setDayPopover(null);
                         goToEntity(item.linkEntityType, item.linkEntityId);
                       }}
-                      className="w-full flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+                      className="w-full flex items-start gap-2 p-2 rounded-lg hover:bg-(--palette-surface-2) text-left transition-colors group"
                     >
                       <span
                         className={`mt-1 size-2 rounded-full shrink-0 ${CATEGORY_DOT_CLASS[cat]}`}
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-800 truncate">
+                        <p className="text-sm text-(--palette-ink) truncate">
                           {item.appraisalNumber && (
                             <span className="font-semibold tabular-nums mr-1">
                               {item.appraisalNumber}
@@ -462,11 +473,11 @@ function MonthView({
                           )}
                           {item.title}
                         </p>
-                        <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                        <p className="text-xs text-(--palette-gray-400) mt-0.5 flex items-center gap-1.5">
                           <span>{categoryLabel(cat)}</span>
                           {item.time && (
                             <>
-                              <span className="text-gray-300">·</span>
+                              <span className="text-(--palette-gray-300)">·</span>
                               <span>{item.time.slice(0, 5)}</span>
                             </>
                           )}
@@ -475,7 +486,7 @@ function MonthView({
                       <Icon
                         name="arrow-right"
                         style="solid"
-                        className="size-3 text-gray-300 mt-1 shrink-0 group-hover:text-gray-500"
+                        className="size-3 text-(--palette-gray-300) mt-1 shrink-0 group-hover:text-(--palette-gray-500)"
                       />
                     </button>
                   );
@@ -517,10 +528,12 @@ function NextSevenDaysPanel({
   const total = withEvents.reduce((sum, d) => sum + d.items.length, 0);
 
   return (
-    <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-      <div className="shrink-0 px-5 pt-5 pb-3 flex items-center justify-between border-b border-gray-50">
-        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-        {!isLoading && <span className="text-xs text-gray-400">{eventsCountLabel(total)}</span>}
+    <aside className="hidden lg:flex flex-col w-80 shrink-0 bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) overflow-hidden">
+      <div className="shrink-0 px-5 pt-5 pb-3 flex items-center justify-between border-b border-(--palette-line-soft)">
+        <h3 className="text-base font-semibold text-(--palette-ink)">{title}</h3>
+        {!isLoading && (
+          <span className="text-xs text-(--palette-gray-400)">{eventsCountLabel(total)}</span>
+        )}
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-3">
         {isLoading ? (
@@ -531,10 +544,14 @@ function NextSevenDaysPanel({
           </div>
         ) : total === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-2 text-center">
-            <div className="size-12 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center">
-              <Icon name="calendar-check" style="regular" className="size-5 text-gray-300" />
+            <div className="size-12 rounded-full bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+              <Icon
+                name="calendar-check"
+                style="regular"
+                className="size-5 text-(--palette-gray-300)"
+              />
             </div>
-            <p className="text-sm text-gray-400">{emptyLabel}</p>
+            <p className="text-sm text-(--palette-gray-400)">{emptyLabel}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -544,11 +561,18 @@ function NextSevenDaysPanel({
               return (
                 <div key={day.date}>
                   <p className="text-[11px] font-semibold uppercase tracking-wide mb-1.5">
-                    <span className={isToday ? 'text-blue-600' : 'text-gray-500'}>
+                    <span
+                      className={
+                        isToday ? 'text-blue-600 dark:text-blue-400' : 'text-(--palette-gray-500)'
+                      }
+                    >
                       {isToday ? todayLabel : format(date, 'EEE, d MMM')}
                     </span>
                     {!isToday && (
-                      <span className="text-gray-300 font-normal"> {format(date, 'yyyy')}</span>
+                      <span className="text-(--palette-gray-300) font-normal">
+                        {' '}
+                        {format(date, 'yyyy')}
+                      </span>
                     )}
                   </p>
                   <ul className="space-y-1">
@@ -559,13 +583,13 @@ function NextSevenDaysPanel({
                           <button
                             type="button"
                             onClick={() => goToEntity(item.linkEntityType, item.linkEntityId)}
-                            className="w-full flex items-start gap-2.5 p-2 rounded-lg hover:bg-gray-50 text-left transition-colors group"
+                            className="w-full flex items-start gap-2.5 p-2 rounded-lg hover:bg-(--palette-surface-2) text-left transition-colors group"
                           >
                             <span
                               className={`mt-1 size-2 rounded-full shrink-0 ${CATEGORY_DOT_CLASS[cat]}`}
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm text-gray-800 truncate">
+                              <p className="text-sm text-(--palette-ink) truncate">
                                 {item.appraisalNumber && (
                                   <span className="font-semibold tabular-nums mr-1">
                                     {item.appraisalNumber}
@@ -573,11 +597,11 @@ function NextSevenDaysPanel({
                                 )}
                                 {item.title}
                               </p>
-                              <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+                              <p className="text-xs text-(--palette-gray-400) mt-0.5 flex items-center gap-1.5">
                                 <span>{categoryLabel(cat)}</span>
                                 {item.time && (
                                   <>
-                                    <span className="text-gray-300">·</span>
+                                    <span className="text-(--palette-gray-300)">·</span>
                                     <span>{item.time.slice(0, 5)}</span>
                                   </>
                                 )}
@@ -586,7 +610,7 @@ function NextSevenDaysPanel({
                             <Icon
                               name="arrow-right"
                               style="solid"
-                              className="size-3 text-gray-300 mt-1 shrink-0 group-hover:text-gray-500"
+                              className="size-3 text-(--palette-gray-300) mt-1 shrink-0 group-hover:text-(--palette-gray-500)"
                             />
                           </button>
                         </li>
@@ -673,14 +697,14 @@ function TeamsDatePicker({
   const selWeekEnd = endOfWeek(selected, { weekStartsOn: 1 });
 
   const arrowBtn =
-    'size-6 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600';
+    'size-6 flex items-center justify-center rounded text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)';
 
   return (
     <div className="flex">
       {showDays && (
-        <div className="w-60 p-3 border-r border-gray-100">
+        <div className="w-60 p-3 border-r border-(--palette-line-soft)">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-gray-800">
+            <span className="text-sm font-semibold text-(--palette-ink)">
               {months[viewMonth]} {viewYear}
             </span>
             <div className="flex items-center gap-0.5">
@@ -704,7 +728,10 @@ function TeamsDatePicker({
           </div>
           <div className="grid grid-cols-7 gap-0.5 mb-1">
             {dayLabels.map((d, i) => (
-              <div key={i} className="text-center text-[11px] font-medium text-gray-400">
+              <div
+                key={i}
+                className="text-center text-[11px] font-medium text-(--palette-gray-400)"
+              >
                 {d.charAt(0)}
               </div>
             ))}
@@ -719,11 +746,13 @@ function TeamsDatePicker({
               let cls: string;
               if (isSel) cls = 'bg-blue-600 text-white font-semibold';
               else if (inWeekBand && isToday) cls = 'bg-blue-600 text-white font-semibold';
-              else if (inWeekBand) cls = 'bg-blue-100 text-blue-700';
+              else if (inWeekBand)
+                cls = 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300';
               else if (isToday)
-                cls = 'ring-1 ring-blue-500 text-blue-600 font-semibold hover:bg-blue-50';
-              else if (inMonth) cls = 'text-gray-700 hover:bg-gray-100';
-              else cls = 'text-gray-300 hover:bg-gray-50';
+                cls =
+                  'ring-1 ring-blue-500 text-blue-600 dark:text-blue-400 font-semibold hover:bg-blue-50 dark:hover:bg-blue-500/10';
+              else if (inMonth) cls = 'text-(--palette-ink) hover:bg-(--palette-surface-3)';
+              else cls = 'text-(--palette-gray-300) hover:bg-(--palette-surface-2)';
 
               return (
                 <button
@@ -745,7 +774,7 @@ function TeamsDatePicker({
           <button
             type="button"
             onClick={openYearGrid}
-            className="text-sm font-semibold text-gray-800 hover:text-blue-600 rounded px-1 -ml-1"
+            className="text-sm font-semibold text-(--palette-ink) hover:text-blue-600 dark:hover:text-blue-400 rounded px-1 -ml-1"
           >
             {yearGridOpen ? `${yearBase}–${yearBase + 11}` : viewYear}
           </button>
@@ -789,7 +818,7 @@ function TeamsDatePicker({
                 className={`h-9 rounded-lg text-sm flex items-center justify-center ${
                   y === viewYear
                     ? 'bg-blue-600 text-white font-semibold'
-                    : 'text-gray-700 hover:bg-gray-100'
+                    : 'text-(--palette-ink) hover:bg-(--palette-surface-3)'
                 }`}
               >
                 {y}
@@ -813,7 +842,7 @@ function TeamsDatePicker({
                   className={`h-9 rounded-lg text-sm flex items-center justify-center ${
                     isViewMonth
                       ? 'bg-blue-600 text-white font-semibold'
-                      : 'text-gray-700 hover:bg-gray-100'
+                      : 'text-(--palette-ink) hover:bg-(--palette-surface-3)'
                   }`}
                 >
                   {m}
@@ -830,7 +859,7 @@ function TeamsDatePicker({
                 mode === 'month' ? new Date(today.getFullYear(), today.getMonth(), 1) : today,
               )
             }
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
           >
             {todayLabel}
           </button>
@@ -998,27 +1027,29 @@ function CalendarPage() {
       {/* Page header */}
       <div className="shrink-0 mb-4 flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
-            <Link to="/" className="hover:text-gray-600">
+          <div className="flex items-center gap-2 text-xs text-(--palette-gray-400) mb-1">
+            <Link to="/" className="hover:text-(--palette-gray-600)">
               {t('calendarPage.breadcrumbDashboard')}
             </Link>
             <Icon name="chevron-right" style="solid" className="size-2.5" />
             <span>{t('calendarPage.breadcrumbCalendar')}</span>
           </div>
-          <h2 className="text-lg font-semibold text-gray-900">{t('calendarPage.title')}</h2>
-          <p className="text-xs text-gray-500 mt-0.5">{t('calendarPage.subtitle')}</p>
+          <h2 className="text-lg font-semibold text-(--palette-ink)">{t('calendarPage.title')}</h2>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('calendarPage.subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
           {/* View mode tabs */}
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white overflow-hidden">
+          <div className="inline-flex rounded-lg border border-(--palette-line) bg-(--palette-surface) overflow-hidden">
             {VIEW_MODES.map(m => (
               <button
                 key={m.key}
                 type="button"
                 onClick={() => updatePrefs({ calendarViewMode: m.key })}
                 className={`px-3 py-1.5 text-sm font-medium transition-colors ${
-                  viewMode === m.key ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+                  viewMode === m.key
+                    ? 'bg-blue-600 text-white'
+                    : 'text-(--palette-gray-600) hover:bg-(--palette-surface-2)'
                 }`}
               >
                 {m.label}
@@ -1030,7 +1061,7 @@ function CalendarPage() {
           <button
             type="button"
             onClick={goToday}
-            className="text-sm px-3 py-1.5 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"
+            className="text-sm px-3 py-1.5 border border-(--palette-line) rounded-lg text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
           >
             {t('calendarPage.today')}
           </button>
@@ -1043,7 +1074,7 @@ function CalendarPage() {
           <button
             type="button"
             onClick={() => stepDate(-1)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
             aria-label={t('calendar.aria.previous')}
           >
             <Icon name="chevron-left" style="solid" className="size-4" />
@@ -1054,14 +1085,18 @@ function CalendarPage() {
             <button
               type="button"
               onClick={() => setDatePickerOpen(o => !o)}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-gray-800 border border-gray-200 rounded-lg px-3 py-1.5 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="inline-flex items-center gap-2 text-sm font-semibold text-(--palette-ink) border border-(--palette-line) rounded-lg px-3 py-1.5 bg-(--palette-surface) hover:bg-(--palette-surface-2) focus:outline-none focus:ring-2 focus:ring-blue-500"
               aria-label={t('calendar.aria.selectDate')}
             >
               {pickerLabel}
-              <Icon name="chevron-down" style="solid" className="size-3 text-gray-400" />
+              <Icon
+                name="chevron-down"
+                style="solid"
+                className="size-3 text-(--palette-gray-400)"
+              />
             </button>
             {datePickerOpen && (
-              <div className="absolute left-0 z-20 mt-1 rounded-lg border border-gray-200 bg-white shadow-xl">
+              <div className="absolute left-0 z-20 mt-1 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-xl">
                 <TeamsDatePicker
                   mode={viewMode}
                   selected={currentDate}
@@ -1085,7 +1120,7 @@ function CalendarPage() {
           <button
             type="button"
             onClick={() => stepDate(1)}
-            className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
             aria-label={t('calendar.aria.next')}
           >
             <Icon name="chevron-right" style="solid" className="size-4" />
@@ -1102,8 +1137,8 @@ function CalendarPage() {
               onClick={() => setTopicOpen(o => !o)}
               className={`inline-flex items-center gap-1.5 text-sm px-3 py-1.5 border rounded-lg transition-colors ${
                 topicFilter.length > 0
-                  ? 'border-blue-300 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
+                  ? 'border-blue-300 dark:border-blue-500/40 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                  : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:bg-(--palette-surface-2)'
               }`}
             >
               <Icon name="filter" style="solid" className="size-3.5" />
@@ -1115,8 +1150,8 @@ function CalendarPage() {
               )}
             </button>
             {topicOpen && (
-              <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white shadow-lg p-2">
-                <p className="text-xs font-semibold text-gray-500 px-1 mb-1">
+              <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg p-2">
+                <p className="text-xs font-semibold text-(--palette-gray-500) px-1 mb-1">
                   {t('calendarPage.topicsLabel')}
                 </p>
                 {ALL_TYPES.map(type => {
@@ -1124,13 +1159,13 @@ function CalendarPage() {
                   return (
                     <label
                       key={type}
-                      className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                      className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-(--palette-surface-2) cursor-pointer text-sm text-(--palette-ink)"
                     >
                       <input
                         type="checkbox"
                         checked={checked}
                         onChange={() => toggleTopic(type)}
-                        className="rounded text-blue-600 focus:ring-blue-500"
+                        className="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                       />
                       {TOPIC_LABELS[type]}
                     </label>
@@ -1143,20 +1178,20 @@ function CalendarPage() {
       </div>
 
       {isError ? (
-        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center gap-2 text-sm p-8">
+        <div className="flex-1 bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) flex flex-col items-center justify-center gap-2 text-sm p-8">
           <Icon name="triangle-exclamation" style="solid" className="size-5 text-red-500" />
-          <p className="text-gray-600">{t('calendarPage.error')}</p>
+          <p className="text-(--palette-gray-600)">{t('calendarPage.error')}</p>
           <button
             type="button"
             onClick={() => refetch()}
-            className="text-blue-600 hover:text-blue-700"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
           >
             {t('widgetError.retry')}
           </button>
         </div>
       ) : (
         <div className="flex-1 min-h-0 flex gap-4">
-          <div className="flex-1 min-h-0 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col">
+          <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) p-5 flex flex-col">
             {viewMode === 'day' && (
               <DayView
                 date={currentDate}
@@ -1193,20 +1228,24 @@ function CalendarPage() {
             <div className="mt-3 flex items-center gap-4 shrink-0 flex-wrap">
               <div className="flex items-center gap-1.5">
                 <span className={`w-2.5 h-2.5 rounded-full ${CATEGORY_DOT_CLASS.meeting}`} />
-                <span className="text-xs text-gray-500">{t('calendar.legend.meeting')}</span>
+                <span className="text-xs text-(--palette-gray-500)">
+                  {t('calendar.legend.meeting')}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center -space-x-1">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${CATEGORY_DOT_CLASS.task} ring-1 ring-white`}
+                    className={`w-2.5 h-2.5 rounded-full ${CATEGORY_DOT_CLASS.task} ring-1 ring-(--palette-surface)`}
                   />
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${CATEGORY_DOT_CLASS.sla} ring-1 ring-white`}
+                    className={`w-2.5 h-2.5 rounded-full ${CATEGORY_DOT_CLASS.sla} ring-1 ring-(--palette-surface)`}
                   />
                 </span>
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-(--palette-gray-500)">
                   {t('calendar.legend.taskDue')}{' '}
-                  <span className="text-gray-400">({t('calendar.legend.slaCritical')})</span>
+                  <span className="text-(--palette-gray-400)">
+                    ({t('calendar.legend.slaCritical')})
+                  </span>
                 </span>
               </div>
             </div>

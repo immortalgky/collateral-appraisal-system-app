@@ -190,15 +190,18 @@ export const MarketsTab = () => {
     return (
       <div className="flex flex-col gap-3 animate-pulse">
         <div className="flex items-center justify-between">
-          <div className="h-8 w-40 rounded bg-gray-100" />
-          <div className="h-8 w-64 rounded bg-gray-100" />
+          <div className="h-8 w-40 rounded bg-(--palette-surface-3)" />
+          <div className="h-8 w-64 rounded bg-(--palette-surface-3)" />
         </div>
-        <div className="h-14 rounded-xl bg-gray-100" />
-        <div className="overflow-hidden rounded-xl border border-gray-100">
+        <div className="h-14 rounded-xl bg-(--palette-surface-3)" />
+        <div className="overflow-hidden rounded-xl border border-(--palette-line-soft)">
           {[1, 2, 3].map(i => (
-            <div key={i} className="flex h-20 items-center gap-4 border-b border-gray-100 px-3">
-              <div className="h-14 w-24 rounded-lg bg-gray-100" />
-              <div className="h-4 w-1/3 rounded bg-gray-100" />
+            <div
+              key={i}
+              className="flex h-20 items-center gap-4 border-b border-(--palette-line-soft) px-3"
+            >
+              <div className="h-14 w-24 rounded-lg bg-(--palette-surface-3)" />
+              <div className="h-4 w-1/3 rounded bg-(--palette-surface-3)" />
             </div>
           ))}
         </div>
@@ -208,10 +211,10 @@ export const MarketsTab = () => {
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+      <div className="flex flex-col items-center justify-center py-16 text-(--palette-gray-500)">
         <Icon name="triangle-exclamation" className="mb-3 text-4xl text-red-400" />
         <p className="text-sm font-medium">{t('markets.loadError')}</p>
-        <p className="mt-1 text-xs text-gray-400">{t('markets.loadErrorHint')}</p>
+        <p className="mt-1 text-xs text-(--palette-gray-400)">{t('markets.loadErrorHint')}</p>
       </div>
     );
   }
@@ -222,11 +225,15 @@ export const MarketsTab = () => {
           appraiser reaches for from anywhere down a long list. Sticky rather than a nested
           scroll box, so it works in every page that hosts this tab — the block pages give it no
           fixed height to scroll inside. */}
-      <div className="sticky top-0 z-10 flex flex-col gap-3 bg-white pb-3">
+      <div className="sticky top-0 z-10 flex flex-col gap-3 bg-(--palette-surface) pb-3">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-gray-900">{t('markets.pageTitle')}</h3>
-            <p className="text-xs text-gray-500">{t('markets.count', { n: comparables.length })}</p>
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('markets.pageTitle')}
+            </h3>
+            <p className="text-xs text-(--palette-gray-500)">
+              {t('markets.count', { n: comparables.length })}
+            </p>
           </div>
           <div className="ml-auto flex items-center gap-2">
             {comparables.length > 0 && (
@@ -245,12 +252,12 @@ export const MarketsTab = () => {
                 <button
                   type="button"
                   onClick={() => setFindExistingOpen(true)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line-strong) bg-(--palette-surface) px-3 py-1.5 text-xs font-medium text-(--palette-ink) transition-colors hover:bg-(--palette-surface-2)"
                 >
                   <Icon
                     name="map-location-dot"
                     style="solid"
-                    className="text-[11px] text-gray-400"
+                    className="text-[11px] text-(--palette-gray-400)"
                   />
                   {t('markets.findOnMap')}
                 </button>
@@ -275,12 +282,14 @@ export const MarketsTab = () => {
       </div>
 
       {comparables.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 bg-white py-12 text-center">
-          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-gray-50">
-            <Icon name="chart-line" className="text-xl text-gray-300" />
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-(--palette-line) bg-(--palette-surface) py-12 text-center">
+          <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-(--palette-surface-2)">
+            <Icon name="chart-line" className="text-xl text-(--palette-gray-300)" />
           </div>
-          <p className="text-sm font-medium text-gray-600">{t('markets.noComparables')}</p>
-          <p className="mt-1 text-xs text-gray-400">{t('markets.noComparablesHint')}</p>
+          <p className="text-sm font-medium text-(--palette-gray-600)">
+            {t('markets.noComparables')}
+          </p>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">{t('markets.noComparablesHint')}</p>
         </div>
       ) : (
         <>
@@ -293,7 +302,7 @@ export const MarketsTab = () => {
               onContextMenu={openContextMenu}
             />
           ) : (
-            <div className="divide-y divide-gray-100 overflow-hidden rounded-xl border border-gray-200 bg-white">
+            <div className="divide-y divide-(--palette-line-soft) overflow-hidden rounded-xl border border-(--palette-line) bg-(--palette-surface)">
               {comparables.map((c, i) => (
                 <ComparableRow
                   key={c.id ?? i}

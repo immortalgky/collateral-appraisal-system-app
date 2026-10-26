@@ -170,7 +170,7 @@ export const MarketSurveySelectionModal = ({
         />
 
         {/* Table + pagination — right panel */}
-        <div className="flex-1 flex flex-col min-w-0 border border-gray-200 rounded-lg overflow-hidden">
+        <div className="flex-1 flex flex-col min-w-0 border border-(--palette-line) rounded-lg overflow-hidden">
           <SurveySelectionTable
             surveys={paginatedSurveys}
             factorColumns={factorColumns}
@@ -202,7 +202,7 @@ export const MarketSurveySelectionModal = ({
       </div>
 
       {/* Footer actions */}
-      <div className="mt-6 flex justify-between gap-2 border-t border-gray-200 pt-4">
+      <div className="mt-6 flex justify-between gap-2 border-t border-(--palette-line) pt-4">
         <div className="flex gap-2">
           <Button variant="ghost" type="button" onClick={handleCancel}>
             {t('surveySelection.cancel')}

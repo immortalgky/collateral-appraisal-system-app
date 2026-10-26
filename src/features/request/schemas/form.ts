@@ -1,6 +1,6 @@
-import i18n from 'i18next';
 import { z } from 'zod';
 import { buildFormSchema } from '@/shared/components/form';
+import { tokenT, vmsg } from '@/shared/components/form/validationMessage';
 import { isBlankRow } from '../components/tables/formTableUtils';
 import { PROPERTY_COLUMNS } from '../configs/tableColumns';
 import { MOVABLE_CODES } from '../data/mapCollateral';
@@ -11,7 +11,6 @@ import {
   titlesFieldConfig,
 } from '../configs/fields';
 import type { TFunction } from 'i18next';
-import { useTranslation } from 'react-i18next';
 
 // =============================================================================
 // Static schema (used at module level — no i18n, labels are for schema builder)
@@ -110,11 +109,11 @@ const AddressDto = z
     moo: z.string().nullable(),
     soi: z.string().nullable(),
     road: z.string().nullable(),
-    subDistrict: z.string().min(1, 'Sub district is required.'),
+    subDistrict: z.string().min(1, vmsg('request:validation.subDistrictRequired')),
     subDistrictName: z.string().nullable(),
-    district: z.string().min(1, 'District is required.'),
+    district: z.string().min(1, vmsg('request:validation.districtRequired')),
     districtName: z.string().nullable(),
-    province: z.string().min(1, 'Province is required.'),
+    province: z.string().min(1, vmsg('request:validation.provinceRequired')),
     provinceName: z.string().nullable(),
     postcode: z.string().nullable(),
   })
@@ -165,11 +164,9 @@ const RequestTitleDtoBase = buildFormSchema(titlesFieldConfig.fields, TitleEleme
       ctx.addIssue({
         code: 'custom',
         path: ['titleNumber'],
-        // Resolved when it runs (this schema is built once, outside any component): the UI language then
-        message: i18n.t('validation.titleNumberTooLong', {
-          ns: 'request',
-          max: LAND_TITLE_NUMBER_MAX,
-        }),
+        // A token: this schema is built once, outside any component, and the language is picked
+        // where the message is shown
+        message: vmsg('request:validation.titleNumberTooLong', { max: LAND_TITLE_NUMBER_MAX }),
       });
   },
 );
@@ -276,19 +273,14 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
   );
 }
 
-// Hook: resolve the form schema per render (re-built when language changes).
+// Built once with the token `t`: each message is `vmsg('request:validation.x')`, translated where
+// it is shown, so one schema serves every language and a message already in the form follows a
+// language switch.
+export const createRequestForm = makeCreateRequestForm(tokenT('request'));
+
 export function useCreateRequestForm() {
-  const { t } = useTranslation('request');
-  return makeCreateRequestForm(t);
+  return createRequestForm;
 }
-
-// Static fallback for components that need a non-reactive schema reference
-// (e.g. RequestTitleDto used in isTitleComplete).
-// The static version uses English error messages — acceptable since it's only
-// used for boolean pass/fail validation, not shown to the user.
-
-const _tStatic = ((key: string) => key) as TFunction<'request'>;
-export const createRequestForm = makeCreateRequestForm(_tStatic);
 
 export type UserDtoType = z.infer<typeof UserDto>;
 export type RequestorDtoType = z.infer<typeof RequestorDto>;

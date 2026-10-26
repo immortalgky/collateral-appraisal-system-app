@@ -5,29 +5,30 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { z } from 'zod';
 import NumberInput from '@shared/components/inputs/NumberInput';
-import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
 import Icon from '@shared/components/Icon';
+import {
+  FormTableCell,
+  FormTableFrame,
+  FormTableHead,
+  FormTableRow,
+  FormTableRowActions,
+  useFormLayout,
+  type FormTableColumn,
+} from '@/shared/components/form';
 import { schemas } from '@shared/schemas/v1';
 import {
   baht,
-  CELL,
-  INPUT_TD,
   isPendingProgress,
   isRegressedProgress,
-  NAME,
   pct,
-  INPUT_BOX,
-  REGRESSED,
   RO,
   sumWork,
-  TD,
-  TH,
   type ComputedItem,
   type RowFigures,
   type WorkTotals,
 } from './constructionGrid';
 import type { proportionStatus } from '../../utils/constructionMoney';
-import { Change, HeaderCell } from './constructionGridCells';
+import { Change, HeadLabel } from './constructionGridCells';
 
 type ConstructionWorkGroupDto = z.infer<typeof schemas.ConstructionWorkGroupDto>;
 type ConstructionWorkItemDto = ConstructionWorkGroupDto['items'][number];
@@ -60,6 +61,11 @@ interface ConstructionDetailTableProps {
 
 const OTHER_GROUP = '__other';
 
+/** Column widths in rem: the frozen work-item name, a figure, the row actions. */
+const NAME_W = 13.7143;
+const FIGURE_W = 7.1429;
+const ACTIONS_W = 3.75;
+
 const CATEGORY_ICONS: Record<string, string> = {
   BuildingStructure: 'cubes',
   Architecture: 'layer-group',
@@ -68,7 +74,8 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 /**
  * The group's "+ Add item" list. A menu rather than a native <select>: a closed select changes value
- * on every arrow key on Windows, and each change would have added an item.
+ * on every arrow key on Windows, and each change would have added an item. The button is drawn like
+ * the kit's small outline add button.
  */
 function AddItemMenu({
   label,
@@ -81,22 +88,30 @@ function AddItemMenu({
   itemLabel: (item: ConstructionWorkItemDto) => string;
   onPick: (item: ConstructionWorkItemDto) => void;
 }) {
+  const standard = useFormLayout() === 'standard';
   return (
     <Menu>
-      <MenuButton className="inline-flex items-center gap-[4px] h-[21px] px-[7px] rounded-[4px] border border-dashed border-[color:var(--palette-accent-line)] bg-[color:var(--palette-surface)] text-sm font-medium text-[color:var(--palette-accent-ink)] hover:border-[#0d9488] focus:outline-none focus:border-[#0d9488]">
+      <MenuButton
+        className={clsx(
+          'inline-flex items-center gap-1.5 border bg-(--palette-surface) px-3 text-xs font-medium text-(--palette-ink) hover:bg-(--palette-surface-2)',
+          standard
+            ? 'h-[2.1429rem] rounded-ctl border-(--palette-line-strong)'
+            : 'h-[1.8571rem] rounded-ctl-c border-(--palette-line-strong)',
+        )}
+      >
         {label}
-        <Icon name="chevron-down" style="solid" className="size-[8px]" />
+        <Icon name="chevron-down" style="solid" className="text-[0.7143rem]" />
       </MenuButton>
       <MenuItems
         anchor={{ to: 'bottom start', gap: 4, padding: 8 }}
-        className="z-50 max-h-[240px] min-w-[190px] overflow-y-auto rounded-[8px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] py-[4px] shadow-xl focus:outline-none"
+        className="z-50 max-h-60 min-w-48 overflow-y-auto rounded-lg border border-(--palette-line) bg-(--palette-surface) py-1 shadow-xl focus:outline-none"
       >
         {items.map(item => (
           <MenuItem key={item.id}>
             <button
               type="button"
               onClick={() => onPick(item)}
-              className="block w-full px-[10px] py-[3px] text-left text-sm leading-[1.5385rem] text-[color:var(--palette-ink)] data-[focus]:bg-[color:var(--palette-accent-wash)]"
+              className="block w-full px-[0.7143rem] py-[0.2143rem] text-left text-sm leading-normal text-(--palette-ink) data-focus:bg-(--palette-accent-wash)"
             >
               {itemLabel(item)}
             </button>
@@ -198,50 +213,74 @@ export function ConstructionDetailTable({
     all[all.indexOf(el) + step]?.focus();
   };
 
-  const header = (label: string, unit: string) => (
-    <HeaderCell key={label} label={label} unit={unit} />
-  );
-  // The one list of visible columns: the header row renders it, and the group band spans it.
-  const headerCells = [
-    <th key="name" className={clsx(TH, NAME, 'text-left z-20')}>
-      {t('constructionInspection.grid.workItem')}
-    </th>,
-    header(t('constructionInspection.grid.proportion'), '(%)'),
+  const figureColumn = (
+    key: string,
+    label: string,
+    unit: string,
+  ): FormTableColumn<ComputedItem> => ({
+    key,
+    align: 'end',
+    width: `${FIGURE_W}rem`,
+    header: <HeadLabel label={label} unit={unit} />,
+  });
+  // The one list of visible columns: the head renders it, and the group band spans it.
+  const columns = [
+    {
+      key: 'name',
+      header: t('constructionInspection.grid.workItem'),
+      width: `${NAME_W}rem`,
+    },
+    figureColumn('proportion', t('constructionInspection.grid.proportion'), '(%)'),
     showCalculated &&
       showMoney &&
-      header(
+      figureColumn(
+        'constructionValue',
         t('constructionInspection.grid.constructionValue'),
         t('constructionInspection.grid.baht'),
       ),
-    showPrevious && header(t('constructionInspection.grid.previousProgress'), '(%)'),
-    header(t('constructionInspection.grid.currentProgress'), '(%)'),
-    showPrevious && header(t('constructionInspection.grid.change'), '(%)'),
+    showPrevious &&
+      figureColumn('previousProgress', t('constructionInspection.grid.previousProgress'), '(%)'),
+    figureColumn('currentProgress', t('constructionInspection.grid.currentProgress'), '(%)'),
+    showPrevious && figureColumn('change', t('constructionInspection.grid.change'), '(%)'),
     showCalculated &&
-      header(
+      figureColumn(
+        'currentShare',
         t('constructionInspection.grid.currentShare'),
         t('constructionInspection.grid.ofBuilding'),
       ),
     showCalculated &&
       showPrevious &&
       showMoney &&
-      header(t('constructionInspection.grid.previousValue'), t('constructionInspection.grid.baht')),
+      figureColumn(
+        'previousValue',
+        t('constructionInspection.grid.previousValue'),
+        t('constructionInspection.grid.baht'),
+      ),
     showMoney &&
-      header(t('constructionInspection.grid.currentValue'), t('constructionInspection.grid.baht')),
-    !readOnly && <th key="actions" className={clsx(TH, 'w-[3.75rem] min-w-[3.75rem]')} />,
-  ].filter(Boolean);
-  const fullSpan = headerCells.length;
+      figureColumn(
+        'currentValue',
+        t('constructionInspection.grid.currentValue'),
+        t('constructionInspection.grid.baht'),
+      ),
+    !readOnly && { key: 'actions', kind: 'action' as const, width: `${ACTIONS_W}rem` },
+  ].filter((c): c is FormTableColumn<ComputedItem> => !!c);
+  const fullSpan = columns.length;
+  const figureCount = fullSpan - 1 - (readOnly ? 0 : 1);
+  const minWidth = NAME_W + FIGURE_W * figureCount + (readOnly ? 0 : ACTIONS_W);
 
   const pctInput = (item: ComputedItem, field: 'proportionPct' | 'currentProgressPct') => {
     const value = item[field];
     const regressedCell = field === 'currentProgressPct' && isRegressed(item);
     if (readOnly)
       return (
-        <td className={clsx(TD, 'text-right', regressedCell && 'text-[#dc2626]')}>{pct(value)}</td>
+        <FormTableCell align="end" className={clsx(regressedCell && 'text-(--palette-danger)')}>
+          {pct(value)}
+        </FormTableCell>
       );
     return (
-      <td className={INPUT_TD}>
+      <FormTableCell kind="input" align="end">
         <NumberInput
-          dense
+          cell
           value={value}
           onChange={e => onUpdateSubItem(item._index, field, e.target.value ?? 0)}
           decimalPlaces={2}
@@ -250,9 +289,9 @@ export function ConstructionDetailTable({
           data-ci-row={item._index}
           onKeyDown={handleKeyDown}
           aria-label={`${itemName(item)} ${field === 'proportionPct' ? t('constructionInspection.grid.proportion') : t('constructionInspection.grid.currentProgress')}`}
-          className={regressedCell ? REGRESSED : INPUT_BOX}
+          invalid={regressedCell}
         />
-      </td>
+      </FormTableCell>
     );
   };
 
@@ -267,29 +306,33 @@ export function ConstructionDetailTable({
     <>
       {cells.proportion}
       {showCalculated && showMoney && (
-        <td className={clsx(TD, 'text-right')}>{baht(f.constructionValue)}</td>
+        <FormTableCell align="end">{baht(f.constructionValue)}</FormTableCell>
       )}
-      {showPrevious && <td className={clsx(TD, 'text-right', RO)}>{pct(f.previousProgress)}</td>}
+      {showPrevious && (
+        <FormTableCell align="end" className={RO}>
+          {pct(f.previousProgress)}
+        </FormTableCell>
+      )}
       {cells.current}
       {showPrevious && (
-        <td className={clsx(TD, 'text-right')}>
+        <FormTableCell align="end">
           <Change
             from={f.previousProgress}
             to={f.currentProgress}
             final={final}
             incomplete={opts.incomplete}
           />
-        </td>
+        </FormTableCell>
       )}
       {showCalculated && (
-        <td className={clsx(TD, 'text-right')}>
-          {opts.shareIsProgress ? '' : pct(f.currentShare)}
-        </td>
+        <FormTableCell align="end">{opts.shareIsProgress ? '' : pct(f.currentShare)}</FormTableCell>
       )}
       {showCalculated && showPrevious && showMoney && (
-        <td className={clsx(TD, 'text-right', RO)}>{baht(f.previousValue)}</td>
+        <FormTableCell align="end" className={RO}>
+          {baht(f.previousValue)}
+        </FormTableCell>
       )}
-      {showMoney && <td className={clsx(TD, 'text-right')}>{baht(f.currentValue)}</td>}
+      {showMoney && <FormTableCell align="end">{baht(f.currentValue)}</FormTableCell>}
     </>
   );
 
@@ -300,182 +343,176 @@ export function ConstructionDetailTable({
     opts: { incomplete: boolean; shareIsProgress?: boolean },
     proportionClass = '',
   ) => (
-    <tr className={rowClass}>
-      <td className={clsx(TD, NAME, 'bg-inherit')}>{label}</td>
+    <FormTableRow className={rowClass}>
+      <FormTableCell frozen="first" className="bg-inherit!">
+        {label}
+      </FormTableCell>
       {figures(
         f,
         {
           proportion: (
-            <td className={clsx(TD, 'text-right', proportionClass)}>{pct(f.proportion)}</td>
+            <FormTableCell align="end" className={proportionClass}>
+              {pct(f.proportion)}
+            </FormTableCell>
           ),
-          current: <td className={clsx(TD, 'text-right')}>{pct(f.currentProgress)}</td>,
+          current: <FormTableCell align="end">{pct(f.currentProgress)}</FormTableCell>,
         },
         opts,
       )}
-      {!readOnly && <td className={TD} />}
-    </tr>
+      {!readOnly && <FormTableCell />}
+    </FormTableRow>
   );
 
   return (
     <div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-sm leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
-          <thead>
-            <tr>{headerCells}</tr>
-          </thead>
-          <tbody>
-            {groups.map(group => {
-              const items =
-                group.id === OTHER_GROUP
-                  ? orphans
-                  : computedSubItems.filter(i => i.constructionWorkGroupId === group.id);
-              if (readOnly && items.length === 0) return null;
-              const taken = new Set(items.map(i => i.constructionWorkItemId));
-              const available = group.items.filter(i => !taken.has(i.id));
-              const isCollapsed = collapsed[group.id] && items.length > 0;
-              const groupTotals = sumWork(items);
-              const groupName = isThai ? group.nameTh : group.nameEn;
+      <FormTableFrame minWidth={minWidth} bleed>
+        <FormTableHead columns={columns} frozen={i => (i === 0 ? 'first' : undefined)} />
+        <tbody>
+          {groups.map(group => {
+            const items =
+              group.id === OTHER_GROUP
+                ? orphans
+                : computedSubItems.filter(i => i.constructionWorkGroupId === group.id);
+            if (readOnly && items.length === 0) return null;
+            const taken = new Set(items.map(i => i.constructionWorkItemId));
+            const available = group.items.filter(i => !taken.has(i.id));
+            const isCollapsed = collapsed[group.id] && items.length > 0;
+            const groupTotals = sumWork(items);
+            const groupName = isThai ? group.nameTh : group.nameEn;
 
-              return (
-                <Fragment key={group.id}>
-                  <tr className="bg-[color:var(--palette-surface-3)] text-[0.8462rem] font-semibold text-[color:var(--palette-ink-2)] leading-[1.7692rem]">
-                    <td className={clsx(CELL, NAME, 'bg-[color:var(--palette-surface-3)] p-0')}>
-                      <button
-                        type="button"
-                        onClick={() => setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }))}
-                        aria-expanded={!isCollapsed}
-                        className="flex items-center gap-[6px] w-full h-full px-[8px] text-left"
-                      >
-                        <Icon
-                          name="chevron-down"
-                          style="solid"
-                          className={clsx(
-                            'size-[9px] transition-transform',
-                            isCollapsed && '-rotate-90',
-                          )}
-                        />
-                        <Icon
-                          name={CATEGORY_ICONS[group.code] || 'folder'}
-                          style="solid"
-                          className="size-[11px] text-[color:var(--palette-ink-3)]"
-                        />
-                        <span className="truncate">{groupName}</span>
-                      </button>
-                    </td>
-                    <td className={TD} colSpan={fullSpan - 1}>
-                      <div className="flex items-center gap-[10px]">
-                        {!readOnly && available.length > 0 && (
-                          <AddItemMenu
-                            label={t('constructionInspection.grid.addItem')}
-                            items={available}
-                            itemLabel={i => (isThai ? i.nameTh : i.nameEn)}
-                            onPick={picked => {
-                              setCollapsed(c => ({ ...c, [group.id]: false }));
-                              setFocusRow(computedSubItems.length);
-                              onAddSubItem(group.id, picked.id, picked.nameEn);
-                            }}
-                          />
+            return (
+              <Fragment key={group.id}>
+                <FormTableRow className="bg-(--palette-surface-3) text-xs font-semibold text-(--palette-ink-2)">
+                  <FormTableCell frozen="first" className="bg-inherit!">
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }))}
+                      aria-expanded={!isCollapsed}
+                      className="flex w-full items-center gap-1.5 text-left"
+                    >
+                      <Icon
+                        name="chevron-down"
+                        style="solid"
+                        className={clsx(
+                          'text-[0.7143rem] transition-transform',
+                          isCollapsed && '-rotate-90',
                         )}
-                        <span className="ml-auto font-normal text-[color:var(--palette-ink-3)]">
-                          {t('constructionInspection.grid.itemCount', { count: items.length })}
-                          {isCollapsed &&
-                            ` · ${pct(groupTotals.currentProgress)}%` +
-                              (showMoney ? ` · ${baht(groupTotals.currentValue)}` : '')}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
+                      />
+                      <Icon
+                        name={CATEGORY_ICONS[group.code] || 'folder'}
+                        style="solid"
+                        className="text-[0.8571rem] text-(--palette-ink-3)"
+                      />
+                      <span className="truncate">{groupName}</span>
+                    </button>
+                  </FormTableCell>
+                  <FormTableCell colSpan={fullSpan - 1}>
+                    <div className="flex items-center gap-2.5">
+                      {!readOnly && available.length > 0 && (
+                        <AddItemMenu
+                          label={t('constructionInspection.grid.addItem')}
+                          items={available}
+                          itemLabel={i => (isThai ? i.nameTh : i.nameEn)}
+                          onPick={picked => {
+                            setCollapsed(c => ({ ...c, [group.id]: false }));
+                            setFocusRow(computedSubItems.length);
+                            onAddSubItem(group.id, picked.id, picked.nameEn);
+                          }}
+                        />
+                      )}
+                      <span className="ml-auto font-normal text-(--palette-ink-3)">
+                        {t('constructionInspection.grid.itemCount', { count: items.length })}
+                        {isCollapsed &&
+                          ` · ${pct(groupTotals.currentProgress)}%` +
+                            (showMoney ? ` · ${baht(groupTotals.currentValue)}` : '')}
+                      </span>
+                    </div>
+                  </FormTableCell>
+                </FormTableRow>
 
-                  {!isCollapsed &&
-                    items.map(item => {
-                      const name = itemName(item);
-                      return (
-                        <tr key={item._key} className="bg-[color:var(--palette-surface)]">
-                          <td className={clsx(TD, NAME, 'bg-[color:var(--palette-surface)]')}>
-                            <span className="block truncate">{name}</span>
-                          </td>
-                          {figures(
-                            {
-                              constructionValue: item.constructionValue,
-                              currentShare: item.currentProportionPct,
-                              previousProgress: item.previousProgressPct,
-                              currentProgress: item.currentProgressPct,
-                              previousValue: item.previousPropertyValue,
-                              currentValue: item.currentPropertyValue,
-                            },
-                            {
-                              proportion: pctInput(item, 'proportionPct'),
-                              current: pctInput(item, 'currentProgressPct'),
-                            },
-                          )}
-                          {!readOnly && (
-                            <td
-                              className={clsx(
-                                CELL,
-                                'w-[3.75rem] min-w-[3.75rem] p-0 text-center align-middle leading-[0]',
-                              )}
-                            >
-                              {/* Two clicks instead of a modal: the first arms the button. */}
-                              <ConfirmDeleteButton
-                                onConfirm={() => onDeleteSubItem(item._index)}
-                                label={t('constructionInspection.grid.remove', { name })}
-                                className="inline-grid h-[20px] w-[20px] place-items-center rounded-[4px] leading-none text-[color:var(--palette-ink-3)] hover:bg-[#fef2f2] hover:text-[#dc2626]"
-                              >
-                                <Icon name="xmark" style="solid" className="size-[11px]" />
-                              </ConfirmDeleteButton>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
+                {!isCollapsed &&
+                  items.map(item => {
+                    const name = itemName(item);
+                    return (
+                      <FormTableRow key={item._key}>
+                        <FormTableCell frozen="first" className="max-w-[13.7143rem] truncate">
+                          <span title={name}>{name}</span>
+                        </FormTableCell>
+                        {figures(
+                          {
+                            constructionValue: item.constructionValue,
+                            currentShare: item.currentProportionPct,
+                            previousProgress: item.previousProgressPct,
+                            currentProgress: item.currentProgressPct,
+                            previousValue: item.previousPropertyValue,
+                            currentValue: item.currentPropertyValue,
+                          },
+                          {
+                            proportion: pctInput(item, 'proportionPct'),
+                            current: pctInput(item, 'currentProgressPct'),
+                          },
+                        )}
+                        {!readOnly && (
+                          <FormTableCell kind="action">
+                            {/* Two clicks instead of a modal: the first arms the button. */}
+                            <FormTableRowActions
+                              position={item._index}
+                              count={computedSubItems.length}
+                              onDelete={() => onDeleteSubItem(item._index)}
+                              deleteLabel={t('constructionInspection.grid.remove', { name })}
+                            />
+                          </FormTableCell>
+                        )}
+                      </FormTableRow>
+                    );
+                  })}
 
-                  {!isCollapsed &&
-                    items.length > 0 &&
-                    totalRow(
-                      t('constructionInspection.grid.groupTotal', { name: groupName }),
-                      groupTotals,
-                      'bg-[color:var(--palette-surface-2)] font-semibold',
-                      { incomplete: items.some(isPending) },
-                    )}
-                </Fragment>
-              );
-            })}
+                {!isCollapsed &&
+                  items.length > 0 &&
+                  totalRow(
+                    t('constructionInspection.grid.groupTotal', { name: groupName }),
+                    groupTotals,
+                    'bg-(--palette-surface-2) font-semibold',
+                    { incomplete: items.some(isPending) },
+                  )}
+              </Fragment>
+            );
+          })}
 
-            {/* Progress here is the share of the whole building (Σ proportion × progress / 100) — the
-                toolbar's figure and the server's. The group rows keep their own weighted progress;
-                the two readings agree once the split reaches 100%. */}
-            {computedSubItems.length > 0 &&
-              totalRow(
-                t('constructionInspection.grid.buildingTotal'),
-                {
-                  ...total,
-                  previousProgress: total.previousShare,
-                  currentProgress: total.currentShare,
-                },
-                'bg-[color:var(--palette-accent-wash)] font-bold text-[color:var(--palette-accent-ink)] [&>td]:border-t [&>td]:border-t-[color:var(--palette-line-strong)]',
-                { incomplete: pending.length > 0, shareIsProgress: true },
-                split === 'over'
-                  ? 'text-[#dc2626]'
-                  : split === 'short'
-                    ? 'text-[color:var(--palette-warn)]'
-                    : '',
-              )}
-          </tbody>
-        </table>
-      </div>
+          {/* Progress here is the share of the whole building (Σ proportion × progress / 100) — the
+              toolbar's figure and the server's. The group rows keep their own weighted progress;
+              the two readings agree once the split reaches 100%. */}
+          {computedSubItems.length > 0 &&
+            totalRow(
+              t('constructionInspection.grid.buildingTotal'),
+              {
+                ...total,
+                previousProgress: total.previousShare,
+                currentProgress: total.currentShare,
+              },
+              'bg-(--palette-accent-wash) font-bold text-(--palette-accent-ink) [&>td]:border-t [&>td]:border-t-(--palette-line-strong)',
+              { incomplete: pending.length > 0, shareIsProgress: true },
+              split === 'over'
+                ? 'text-(--palette-danger)'
+                : split === 'short'
+                  ? 'text-(--palette-warn)'
+                  : '',
+            )}
+        </tbody>
+      </FormTableFrame>
 
       {workGroupsLoading && computedSubItems.length > 0 && (
-        <div className="px-[12px] py-[6px] text-[0.8571rem] text-[color:var(--palette-ink-3)] border-t border-t-[color:var(--palette-line)]">
+        <div className="border-t border-t-(--palette-line) px-3 py-1.5 text-xs text-(--palette-ink-3)">
           {t('constructionInspection.grid.workGroupsLoading')}
         </div>
       )}
       {workGroupsFailed && (
-        <div className="px-[12px] py-[6px] text-[0.8571rem] text-[#dc2626] border-t border-t-[color:var(--palette-line)]">
+        <div className="border-t border-t-(--palette-line) px-3 py-1.5 text-xs text-(--palette-danger)">
           {t('constructionInspection.grid.workGroupsFailed')}
         </div>
       )}
       {computedSubItems.length === 0 && (
-        <div className="px-[16px] py-[32px] text-center text-sm text-[color:var(--palette-ink-3)]">
+        <div className="px-4 py-8 text-center text-sm text-(--palette-ink-3)">
           {readOnly
             ? t('constructionInspection.grid.emptyReadOnly')
             : t('constructionInspection.grid.empty')}
@@ -483,14 +520,14 @@ export function ConstructionDetailTable({
       )}
 
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-x-[14px] gap-y-[2px] min-h-[28px] px-[12px] py-[4px] border-t border-t-[color:var(--palette-line)] bg-[color:var(--palette-surface-2)] text-[0.8571rem] text-[color:var(--palette-ink-3)]">
+        <div className="flex min-h-8 flex-wrap items-center gap-x-3.5 gap-y-0.5 border-t border-t-(--palette-line) bg-(--palette-surface-2) px-3 py-1 text-xs text-(--palette-ink-3)">
           {split === 'over' && (
-            <span className="font-medium text-[#dc2626]">
+            <span className="font-medium text-(--palette-danger)">
               {t('constructionInspection.status.overBlocksSave', { pct: pct(total.proportion) })}
             </span>
           )}
           {pending.length > 0 && (
-            <span className="text-[color:var(--palette-warn)]">
+            <span className="text-(--palette-warn)">
               {t('constructionInspection.status.pending', {
                 count: pending.length,
                 // A new round starts with every row pending: name a few, count the rest.
@@ -503,7 +540,7 @@ export function ConstructionDetailTable({
             </span>
           )}
           {regressed.length > 0 && (
-            <span className="text-[#dc2626]">
+            <span className="text-(--palette-danger)">
               ⚠{' '}
               {t('constructionInspection.status.regressed', {
                 count: regressed.length,
