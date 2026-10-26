@@ -19,6 +19,8 @@ import DocumentCardHeader from './documentCard/DocumentCardHeader';
 import DocumentPreviewPane from './documentCard/DocumentPreviewPane';
 import { useCardIsWide, usePreviewPaneShown } from './documentCard/usePaneLayout';
 import SlideOverPanel from '@/shared/components/SlideOverPanel';
+import { placeAddress } from '../utils/titleList';
+import type { RequestTitleDtoType } from '../schemas/form';
 import DocumentSection, { type SectionActions } from './documentCard/DocumentSection';
 import DocumentToolbar from './documentCard/DocumentToolbar';
 import { useTitleLabel } from '../hooks/useTitleLabel';
@@ -29,11 +31,12 @@ import {
   useAppointmentLetter,
 } from '../hooks/useAppointmentLetter';
 import { useTitleEditorOpen } from '../store/titleEditorStore';
+import { runLimited } from '@shared/utils/runLimited';
 import { MAX_UPLOAD_BYTES, useUploadDocument, useViewDocument } from '../api';
 import {
   placeInFlight,
   revertInFlight,
-  runLimited,
+  UPLOAD_CONCURRENCY,
   splitUploadable,
   startInFlight,
 } from '../utils/uploadFiles';
@@ -791,7 +794,7 @@ const DocumentCard: React.FunctionComponent<
         quiet: valid.length > 1,
       }),
     );
-    const results = await runLimited(tasks);
+    const results = await runLimited(tasks, UPLOAD_CONCURRENCY);
     // A single file says so itself; several say it once
     const done = results.filter(Boolean).length;
     if (valid.length > 1 && done > 0) toast.success(t('toasts.uploadSuccess', { n: done }));
@@ -1136,15 +1139,9 @@ const DocumentCard: React.FunctionComponent<
         label: t('moveDocument.requestLevelLabel'),
         detail: t('moveDocument.requestLevelHint'),
       };
-    const form = getValues(`titles.${section.entityIndex}`) as
-      | {
-          ownerName?: string | null;
-          titleAddress?: { districtName?: string; provinceName?: string };
-        }
-      | undefined;
-    const place = [form?.titleAddress?.districtName, form?.titleAddress?.provinceName]
-      .filter(Boolean)
-      .join(' ');
+    const form = getValues(`titles.${section.entityIndex}`) as RequestTitleDtoType | undefined;
+    const address = form && placeAddress(form);
+    const place = [address?.districtName, address?.provinceName].filter(Boolean).join(' ');
     const docKey = doc?.level === 'Title' ? titleKey(doc.collateralType, doc.titleNumber) : null;
     return {
       entityType: 'title',
@@ -1295,11 +1292,13 @@ const DocumentCard: React.FunctionComponent<
       >
         <section
           className={clsx(
-            'min-w-0 bg-white',
+            'min-w-0 bg-(--palette-surface)',
             // Scoped (a title's drawer): the drawer's own box is the frame, so none here
             scoped ? 'rounded-none' : 'rounded-t-2xl rounded-b-none border shadow-sm',
             !scoped &&
-              (isDraggingOver ? 'border-primary ring-2 ring-primary/20' : 'border-gray-100'),
+              (isDraggingOver
+                ? 'border-primary ring-2 ring-primary/20'
+                : 'border-(--palette-line-soft)'),
           )}
           onDragOver={e => {
             if (scoped || !editable || !isFileDrag(e)) return;
@@ -1393,18 +1392,26 @@ const DocumentCard: React.FunctionComponent<
 
               {selectedDocuments.size > 0 && editable && (
                 <div className="flex flex-wrap items-center gap-3 border-b border-primary/20 bg-primary/10 px-4 py-2 text-sm">
-                  <Icon name="circle-check" style="solid" className="size-3.5 text-primary" />
-                  <span className="font-medium text-primary">
+                  <Icon
+                    name="circle-check"
+                    style="solid"
+                    className="size-3.5 text-(--palette-primary-text)"
+                  />
+                  <span className="font-medium text-(--palette-primary-text)">
                     {t('docCard.bulk.selected', { n: selectedDocuments.size })}
                   </span>
                   <Button type="button" size="sm" variant="outline" onClick={handleBulkDelete}>
-                    <Icon name="trash" style="solid" className="mr-1 size-3 text-red-600" />
+                    <Icon
+                      name="trash"
+                      style="solid"
+                      className="mr-1 size-3 text-(--palette-danger)"
+                    />
                     {t('docCard.bulk.delete')}
                   </Button>
                   <button
                     type="button"
                     onClick={() => setSelectedDocuments(new Set())}
-                    className="cursor-pointer text-primary underline underline-offset-2"
+                    className="cursor-pointer text-(--palette-primary-text) underline underline-offset-2"
                   >
                     {t('docCard.bulk.clear')}
                   </button>
@@ -1424,10 +1431,10 @@ const DocumentCard: React.FunctionComponent<
               types with files on its right. The box below frames the rows; the first row has no top
               border of its own. */}
           {scoped && (
-            <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-gray-100 pb-1.5">
-              <h3 className="m-0 text-sm font-semibold text-gray-800">{scope.heading}</h3>
+            <div className="mb-3 flex items-baseline justify-between gap-3 border-b border-(--palette-line-soft) pb-1.5">
+              <h3 className="m-0 text-sm font-semibold text-(--palette-ink)">{scope.heading}</h3>
               <span className="flex items-center gap-3">
-                <span className="text-xs text-gray-500">
+                <span className="text-xs text-(--palette-gray-500)">
                   {t('docCard.section.typesWithFiles', {
                     filled: sectionStats(sectionRows[0]).filled,
                     total: sectionStats(sectionRows[0]).types,
@@ -1438,7 +1445,7 @@ const DocumentCard: React.FunctionComponent<
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="bg-primary/10! text-primary! hover:bg-primary/15!"
+                    className="bg-primary/10! text-(--palette-primary-text)! hover:bg-primary/15!"
                     leftIcon={<Icon style="solid" name="plus" className="text-xs" />}
                     onClick={() => setAddOtherOpen(true)}
                   >
@@ -1449,7 +1456,11 @@ const DocumentCard: React.FunctionComponent<
             </div>
           )}
 
-          <div className={scoped ? 'overflow-hidden rounded-lg border border-gray-200' : undefined}>
+          <div
+            className={
+              scoped ? 'overflow-hidden rounded-lg border border-(--palette-line)' : undefined
+            }
+          >
             {views.map(({ section, rows, shown, hidden, key: sectionKey }) => {
               // A search or filter leaves out a section with nothing to show
               if (isFiltering && shown.length === 0 && hidden.length === 0) return null;
@@ -1512,7 +1523,7 @@ const DocumentCard: React.FunctionComponent<
               );
             })}
             {renderedSections === 0 && (
-              <div className="px-4 py-6 text-center text-sm text-gray-500">
+              <div className="px-4 py-6 text-center text-sm text-(--palette-gray-500)">
                 {isFiltering ? t('docCard.noMatch') : t('empty.noDocuments')}
               </div>
             )}

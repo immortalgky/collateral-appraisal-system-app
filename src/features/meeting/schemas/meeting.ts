@@ -8,7 +8,7 @@
  * validation messages honour the active locale.
  */
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
 import { SELECTABLE_POSITIONS } from '../constants';
 
@@ -199,42 +199,15 @@ export type UpdateAgendaFormValues = z.infer<typeof updateAgendaSchema>;
 
 // ==================== Convenience hooks ====================
 
-export const useCreateMeetingSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).createMeetingFormSchema;
-};
+// Built once with the token `t`: the messages are translated where they are shown, so these
+// schemas do not depend on the language and the hooks need no `useTranslation`.
+const tokenSchemas = makeMeetingSchemas(tokenT('meeting'));
 
-export const useUpdateMeetingSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).updateMeetingFormSchema;
-};
-
-export const useCancelMeetingSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).cancelMeetingSchema;
-};
-
-export const useRouteBackSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).routeBackSchema;
-};
-
-export const useRecallSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).recallSchema;
-};
-
-export const useMemberFormSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).memberFormSchema;
-};
-
-export const useUpdateAgendaSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).updateAgendaSchema;
-};
-
-export const useBulkCreateMeetingsSchema = () => {
-  const { t } = useTranslation('meeting');
-  return makeMeetingSchemas(t).bulkCreateMeetingsSchema;
-};
+export const useCreateMeetingSchema = () => tokenSchemas.createMeetingFormSchema;
+export const useUpdateMeetingSchema = () => tokenSchemas.updateMeetingFormSchema;
+export const useCancelMeetingSchema = () => tokenSchemas.cancelMeetingSchema;
+export const useRouteBackSchema = () => tokenSchemas.routeBackSchema;
+export const useRecallSchema = () => tokenSchemas.recallSchema;
+export const useMemberFormSchema = () => tokenSchemas.memberFormSchema;
+export const useUpdateAgendaSchema = () => tokenSchemas.updateAgendaSchema;
+export const useBulkCreateMeetingsSchema = () => tokenSchemas.bulkCreateMeetingsSchema;

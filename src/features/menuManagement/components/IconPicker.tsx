@@ -95,26 +95,30 @@ export function IconPicker({
         disabled={disabled}
         onClick={() => setIsOpen(o => !o)}
         aria-invalid={invalid}
-        className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed ${
-          invalid ? 'border-danger' : 'border-gray-200'
+        className={`flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-(--palette-surface-2) disabled:opacity-50 disabled:cursor-not-allowed ${
+          invalid ? 'border-danger' : 'border-(--palette-line)'
         }`}
       >
         {value ? (
           <>
-            <Icon name={value} style={styleValue} className="size-4 text-gray-600" />
-            <span className="text-gray-700">{value}</span>
+            <Icon name={value} style={styleValue} className="size-4 text-(--palette-gray-600)" />
+            <span className="text-(--palette-ink)">{value}</span>
           </>
         ) : (
-          <span className="text-gray-400">{t('iconPicker.pickIcon')}</span>
+          <span className="text-(--palette-gray-400)">{t('iconPicker.pickIcon')}</span>
         )}
-        <Icon name="chevron-down" style="solid" className="size-3 text-gray-400 ml-auto" />
+        <Icon
+          name="chevron-down"
+          style="solid"
+          className="size-3 text-(--palette-gray-400) ml-auto"
+        />
       </button>
 
       {/* Picker dropdown */}
       {isOpen && (
-        <div className="absolute z-50 mt-1 w-80 bg-white border border-gray-200 rounded-xl shadow-lg">
+        <div className="absolute z-50 mt-1 w-80 bg-(--palette-surface) border border-(--palette-line) rounded-xl shadow-lg">
           {/* Style selector */}
-          <div className="p-2 border-b border-gray-100 flex flex-wrap gap-1">
+          <div className="p-2 border-b border-(--palette-line-soft) flex flex-wrap gap-1">
             {ICON_STYLES.map(s => (
               <button
                 key={s}
@@ -123,7 +127,7 @@ export function IconPicker({
                 className={`px-2 py-0.5 rounded text-xs font-medium capitalize transition-colors ${
                   styleValue === s
                     ? 'bg-primary text-white'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-(--palette-surface-3) text-(--palette-gray-600) hover:bg-(--palette-line)'
                 }`}
               >
                 {s}
@@ -132,7 +136,7 @@ export function IconPicker({
           </div>
 
           {/* Search */}
-          <div className="p-2 border-b border-gray-100">
+          <div className="p-2 border-b border-(--palette-line-soft)">
             <input
               ref={focusSearchOnMount}
               type="text"
@@ -140,16 +144,20 @@ export function IconPicker({
               onChange={e => setSearch(e.target.value)}
               placeholder={t('iconPicker.searchPlaceholder')}
               aria-label={t('iconPicker.searchAriaLabel')}
-              className="w-full text-sm border border-gray-200 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full text-sm border border-(--palette-line) rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
           {/* Icon grid */}
           <div className="p-2 max-h-56 overflow-y-auto">
             {loading ? (
-              <p className="text-center text-sm text-gray-400 py-4">{t('iconPicker.loading')}</p>
+              <p className="text-center text-sm text-(--palette-gray-400) py-4">
+                {t('iconPicker.loading')}
+              </p>
             ) : filtered.length === 0 ? (
-              <p className="text-center text-sm text-gray-400 py-4">{t('iconPicker.noIcons')}</p>
+              <p className="text-center text-sm text-(--palette-gray-400) py-4">
+                {t('iconPicker.noIcons')}
+              </p>
             ) : (
               <div className="grid grid-cols-8 gap-1">
                 {filtered.slice(0, 200).map(id => (
@@ -161,17 +169,21 @@ export function IconPicker({
                       onChangeIcon(id);
                       setIsOpen(false);
                     }}
-                    className={`flex items-center justify-center p-1.5 rounded hover:bg-gray-100 transition-colors ${
+                    className={`flex items-center justify-center p-1.5 rounded hover:bg-(--palette-surface-3) transition-colors ${
                       value === id ? 'bg-primary/10 ring-1 ring-primary' : ''
                     }`}
                   >
-                    <Icon name={id} style={styleValue} className="size-4 text-gray-600" />
+                    <Icon
+                      name={id}
+                      style={styleValue}
+                      className="size-4 text-(--palette-gray-600)"
+                    />
                   </button>
                 ))}
               </div>
             )}
             {!loading && filtered.length > 200 && (
-              <p className="text-center text-xs text-gray-400 mt-2">
+              <p className="text-center text-xs text-(--palette-gray-400) mt-2">
                 {t('iconPicker.moreIcons', { n: filtered.length - 200 })}
               </p>
             )}

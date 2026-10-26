@@ -3,7 +3,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import Section from '@/shared/components/sections/Section';
 import { ConstructionInspectionTab } from '../tabs/ConstructionInspectionTab';
 import { ConstructionClearGuard } from './ConstructionClearGuard';
-import { hasConstructionData } from './constructionGrid';
+import { formHasConstructionData } from './constructionGrid';
 import { ConstructionScopeContext } from './constructionScope';
 
 interface ConstructionEditorSectionProps {
@@ -39,7 +39,7 @@ export function ConstructionEditorSection({
   // the tab. `compute` re-renders only when the answer changes, not on every keystroke.
   const mounted = useWatch({
     control,
-    compute: values => !!values.isUnderConstruction || hasConstructionData(values),
+    compute: values => !!values.isUnderConstruction || formHasConstructionData(values),
   });
 
   // This property's scope (see constructionScope). Set in the effect body, not only at creation:

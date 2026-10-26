@@ -12,7 +12,10 @@ describe('flattenFormErrors', () => {
       detail: { loanDetail: { bankingSegment: { message: 'Banking Segment is required' } } },
     });
     expect(result).toEqual([
-      { path: 'detail.loanDetail.bankingSegment', text: 'Banking Segment: Banking Segment is required' },
+      {
+        path: 'detail.loanDetail.bankingSegment',
+        text: 'Banking Segment: Banking Segment is required',
+      },
     ]);
   });
 
@@ -96,6 +99,39 @@ describe('scrollToField', () => {
       <div data-field="purpose"><button id="listbox-button"></button></div>`;
     scrollToField('purpose');
     expect(document.activeElement?.id).toBe('listbox-button');
+  });
+
+  it('focuses the checked radio of a chip group, which is a span and not an input', () => {
+    document.body.innerHTML = `
+      <div data-field="buildingType">
+        <span role="radio" aria-checked="false" tabindex="-1" id="r1"></span>
+        <span role="radio" aria-checked="true" tabindex="0" id="r2"></span>
+      </div>`;
+    scrollToField('buildingType');
+    expect(document.activeElement?.id).toBe('r2');
+  });
+
+  it('focuses the first radio when none is checked', () => {
+    document.body.innerHTML = `
+      <div data-field="buildingType">
+        <span role="radio" aria-checked="false" tabindex="0" id="r1"></span>
+        <span role="radio" aria-checked="false" tabindex="-1" id="r2"></span>
+      </div>`;
+    scrollToField('buildingType');
+    expect(document.activeElement?.id).toBe('r1');
+  });
+
+  it('focuses a checkbox or switch role control', () => {
+    document.body.innerHTML = `<div data-field="flag"><span role="switch" tabindex="0" id="sw"></span></div>`;
+    scrollToField('flag');
+    expect(document.activeElement?.id).toBe('sw');
+  });
+
+  it('focuses the wrapper itself when nothing in it can take focus', () => {
+    document.body.innerHTML = `<div data-field="titles" id="wrap"><p>no control</p></div>`;
+    scrollToField('titles');
+    expect(document.activeElement?.id).toBe('wrap');
+    expect(document.getElementById('wrap')).toHaveAttribute('tabindex', '-1');
   });
 
   it('is a silent no-op when nothing matches, rather than throwing', () => {

@@ -48,6 +48,8 @@ export interface ExternalCompany {
   contactEmail: string;
   rating: number; // 1-5 stars
   activeAssignments: number;
+  // Banking Segments the company can appraise (Company.LoanTypes).
+  loanTypes?: string[];
   // False when the company is outside its MOU approval window. Selecting it would be blocked
   // (escalated) at assignment time, so the picker should flag/disable it. Optional/advisory:
   // absent is treated as assignable.
@@ -64,6 +66,8 @@ export interface CurrentAssignment {
   assignmentType: string;
   assignmentStatus: string;
   assigneeUserId: string | null;
+  /** The assignee user's display name; null/absent when it cannot be resolved (show the code). */
+  assigneeUserName?: string | null;
   assigneeCompanyId: string | null;
   externalAppraiserName: string | null;
   externalAppraiserLicense: string | null;
@@ -71,12 +75,17 @@ export interface CurrentAssignment {
   reassignmentNumber: number;
   progressPercent: number;
   assignedAt: string;
+  /** Employee code of whoever made the assignment. */
   assignedBy: string;
+  /** Their display name; null when it cannot be resolved (show the code alone). */
+  assignedByName?: string | null;
   startedAt: string | null;
   completedAt: string | null;
   rejectionReason: string | null;
   cancellationReason: string | null;
   internalAppraiserId: string | null;
+  /** The follow-up staff member's display name; null/absent when it cannot be resolved. */
+  internalAppraiserName?: string | null;
   internalFollowupAssignmentMethod: string | null;
   remark: string | null;
   // Set when the admin has saved a draft; null for a freshly-created (never-drafted) assignment.
@@ -88,6 +97,31 @@ export interface CurrentAssignment {
    */
   offlineBookDate?: string | null;
   createdOn: string | null;
+}
+
+/**
+ * The company that did the inspection on the prior appraisal the admin's appraisal was copied from
+ * (Construction Inspection only). Dates carry no Z (local time).
+ */
+export interface PreviousCompany {
+  companyId: string;
+  companyName: string;
+  appraisalId: string;
+  appraisalNumber: string;
+  /** Null when the prior is the original appraisal rather than an inspection. */
+  inspectionNumber: number | null;
+  completedAt: string | null;
+  /** False when the company is outside its MOU approval window: shown, never preselected. */
+  mouActive: boolean;
+}
+
+/** GET /appraisals/{appraisalId}/assignment-defaults, in the stored spelling (External, RoundRobin). */
+export interface AssignmentDefaultsResponse {
+  assignmentType: string;
+  assignmentMethod: string;
+  internalFollowupAssignmentMethod: string;
+  /** Always sent; null when the appraisal has no prior inspection company. */
+  previousCompany?: PreviousCompany | null;
 }
 
 /**
@@ -145,6 +179,8 @@ export interface Quotation {
   shortlistSentToRmAt?: string;
   tentativeWinnerQuotationId?: string;
   tentativelySelectedAt?: string;
+  /** When the winner was finalized (list DTO); null until then. */
+  selectedAt?: string | null;
   tentativelySelectedByRole?: string;
 }
 
@@ -177,7 +213,6 @@ export interface StartQuotationFromTaskRequest {
    */
   taskExecutionId?: string | null;
   cutOffTime: string;
-  bankingSegment: string;
   invitedCompanyIds: string[];
   specialRequirements?: string | null;
   /**

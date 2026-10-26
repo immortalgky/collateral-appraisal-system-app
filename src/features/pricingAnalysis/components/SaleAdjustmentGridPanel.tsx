@@ -2,7 +2,6 @@ import { useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
-  makeSaleAdjustmentGridDto,
   SaleAdjustmentGridDto,
   type SaleAdjustmentGridType,
 } from '@features/pricingAnalysis/schemas/saleAdjustmentGridForm.ts';
@@ -29,6 +28,8 @@ import { syncSaleAdjustmentGridFormSurveys } from '@features/pricingAnalysis/ada
 import { restoreSaleAdjustmentGridFromSavedData } from '@features/pricingAnalysis/adapters/restoreSaleAdjustmentGridFromSavedData.ts';
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
+import { useTemplateMissingFields } from '../hooks/useTemplateMissingFields';
 import { Button, Icon } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MethodTopBarPortal } from './MethodTopBarPortal';
@@ -90,6 +91,7 @@ export function SaleAdjustmentGridPanel({
   onCancelCalculationMethod,
 }: SaleAdjustmentGridPanelProps) {
   const { t } = useTranslation('pricingAnalysis');
+  const missingFields = useTemplateMissingFields();
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'SAG_COST';
 
@@ -101,7 +103,7 @@ export function SaleAdjustmentGridPanel({
 
   const methods = useForm<SaleAdjustmentGridType>({
     mode: 'onSubmit',
-    resolver: zodResolver(makeSaleAdjustmentGridDto(t)),
+    resolver: zodResolver(SaleAdjustmentGridDto),
   });
 
   const {
@@ -420,7 +422,7 @@ export function SaleAdjustmentGridPanel({
   }, [isDirty, onCalculationMethodDirty]);
 
   return (
-    <FormProvider methods={methods} schema={SaleAdjustmentGridDto}>
+    <FormProvider methods={methods} schema={SaleAdjustmentGridDto} fields={missingFields}>
       <MethodTopBarPortal slot="chip">
         {/* Template chip — replaces the old PricingAnalysisTemplateSelector card; same
             fields/handlers, now a popover anchored to the top bar beside the method name. */}
@@ -439,14 +441,16 @@ export function SaleAdjustmentGridPanel({
         {isGenerated && (
           <>
             <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-              <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-              <span className="text-sm font-semibold text-primary tabular-nums">
+              <span className="text-[10px] text-(--palette-gray-400)">
+                {t('finalValue.indicatedValue')}
+              </span>
+              <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
                 {fmt(Number(indicatedValue) || 0)}
               </span>
             </div>
             {!isReadOnly && (
               <>
-                <span className="w-px h-5 bg-gray-200 shrink-0" />
+                <span className="w-px h-5 bg-(--palette-line) shrink-0" />
                 <Button
                   variant="ghost"
                   type="button"
@@ -464,11 +468,12 @@ export function SaleAdjustmentGridPanel({
                     disabled={saveMutation.isPending}
                     title={t('footer.reset')}
                     aria-label={t('footer.reset')}
-                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger) shrink-0"
                   >
                     <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
                   </Button>
                 )}
+                <MissingFieldsChip placement="down" />
                 <Button
                   type="submit"
                   form={formId}

@@ -51,7 +51,7 @@ const settleWithin = (promise: Promise<unknown>, ms: number) =>
 
 // The sign-out in progress (or just completed, until the page has had time to leave), so a double
 // click or a second caller joins it instead of starting another.
-let current: Promise<void> | null = null;
+let current: Promise<boolean> | null = null;
 
 /**
  * Ends the server session, then lets the API send the browser through the identity provider's
@@ -61,14 +61,17 @@ let current: Promise<void> | null = null;
  * never gated on /auth/me. Anything else means the session may still be alive, so nothing is torn
  * down: the user stays signed in, is told, and can try again.
  *
+ * Resolves true when it signed out (the page is on its way to leave; if the navigation threw, a
+ * best-effort redirect to the sign-in page is tried instead), false when it did not.
+ *
  * Navigates without touching the auth store: clearing it would make ProtectedRoute redirect to
  * /login and cancel the navigation to the identity provider.
  */
-export function logout(): Promise<void> {
+export function logout(): Promise<boolean> {
   return (current ??= signOut());
 }
 
-async function signOut(): Promise<void> {
+async function signOut(): Promise<boolean> {
   let destination = '/login';
   // Whatever 401 races this request, or the slower hop through the identity provider that follows
   // (a poll, the hub's session check), must not replace that navigation with a sign-in redirect.
@@ -84,21 +87,36 @@ async function signOut(): Promise<void> {
     suspendLoginRedirect(false);
     current = null;
     toast.error(i18n.t('auth:logout.failed'));
-    return;
+    return false;
   }
-  // The session is gone: stop the hub so it does not reconnect during the unload window, but never
-  // let a slow stop hold the sign-out.
-  await settleWithin(appHub.stop(), REDIRECT_SETTLE_MS);
-  authChannel?.postMessage({ type: 'logout' });
-  queryClient.clear();
-  session.clear();
-  // Read once by the sign-in page this lands on, to say "you signed out" rather than the first-visit text.
-  session.set(SIGNED_OUT_KEY, '1');
-  window.location.replace(destination);
-  // Held while the page leaves. If it is still here (a cancelled "Leave site?" prompt) the server
-  // session is gone anyway, so let the next 401 send the user to sign in.
-  setTimeout(() => {
-    suspendLoginRedirect(false);
-    current = null;
-  }, REDIRECT_SETTLE_MS);
+  try {
+    // The session is gone: stop the hub so it does not reconnect during the unload window, but never
+    // let a slow stop hold the sign-out.
+    await settleWithin(appHub.stop(), REDIRECT_SETTLE_MS);
+    authChannel?.postMessage({ type: 'logout' });
+    queryClient.clear();
+    session.clear();
+    // Read once by the sign-in page this lands on, to say "you signed out" rather than the first-visit text.
+    session.set(SIGNED_OUT_KEY, '1');
+    window.location.replace(destination);
+    return true;
+  } catch {
+    // The session is gone on the server, so the sign-out happened: a throw here (a blocked
+    // navigation, say) must not strand the caller. Best effort to reach the sign-in page.
+    session.clear(); // as on the way out above: nothing of this user's tab state survives
+    try {
+      redirectToLogin(null, 'signed-out');
+    } catch {
+      // nothing more to try; the next 401 sends the user there
+    }
+    return true;
+  } finally {
+    // Held while the page leaves, also if a step above threw. If the page is still here (a cancelled
+    // "Leave site?" prompt) the server session is gone anyway, so let the next 401 send the user to
+    // sign in.
+    setTimeout(() => {
+      suspendLoginRedirect(false);
+      current = null;
+    }, REDIRECT_SETTLE_MS);
+  }
 }

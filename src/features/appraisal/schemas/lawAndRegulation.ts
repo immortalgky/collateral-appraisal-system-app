@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
 export const makeCreateLawAndRegulationForm = (t: TFunction<'appraisal'>) =>
   z.object({
@@ -8,17 +8,12 @@ export const makeCreateLawAndRegulationForm = (t: TFunction<'appraisal'>) =>
     remark: z.string().max(4000).nullable(),
   });
 
-// Static export for type inference
-export const createLawAndRegulationForm = makeCreateLawAndRegulationForm(
-  ((key: string) => key) as unknown as TFunction<'appraisal'>,
-);
+// Built with the token `t`: the message is translated where it is shown.
+export const createLawAndRegulationForm = makeCreateLawAndRegulationForm(tokenT('appraisal'));
 
 export type CreateLawAndRegulationFormType = z.infer<typeof createLawAndRegulationForm>;
 
-export const useCreateLawAndRegulationFormSchema = () => {
-  const { t } = useTranslation('appraisal');
-  return makeCreateLawAndRegulationForm(t);
-};
+export const useCreateLawAndRegulationFormSchema = () => createLawAndRegulationForm;
 
 export const createLawAndRegulationFormDefault: CreateLawAndRegulationFormType = {
   headerCode: '',

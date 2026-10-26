@@ -14,11 +14,29 @@ export const webhookSubscriptionKeys = {
   all: ['webhook-subscriptions'] as const,
   list: (params: GetWebhookSubscriptionsParams) =>
     ['webhook-subscriptions', 'list', params] as const,
+  eventTypes: () => ['webhook-subscriptions', 'event-types'] as const,
 };
 
-export const useGetWebhookSubscriptions = (params: GetWebhookSubscriptionsParams = {}) => {
+/** The event codes the outbound consumers can send; the create panel's "single event" choices. */
+export const useGetWebhookEventTypes = (enabled = true) => {
+  return useQuery({
+    queryKey: webhookSubscriptionKeys.eventTypes(),
+    queryFn: async (): Promise<string[]> => {
+      const { data } = await axios.get<string[]>('/webhook-subscriptions/event-types');
+      return data;
+    },
+    enabled,
+    staleTime: Infinity,
+  });
+};
+
+export const useGetWebhookSubscriptions = (
+  params: GetWebhookSubscriptionsParams = {},
+  enabled = true,
+) => {
   return useQuery({
     queryKey: webhookSubscriptionKeys.list(params),
+    enabled,
     queryFn: async (): Promise<WebhookSubscriptionListResult> => {
       const { data } = await axios.get<WebhookSubscriptionListResult>('/webhook-subscriptions', {
         params: {
@@ -47,7 +65,11 @@ export const useCreateWebhookSubscription = () => {
       toast.success(t('subscriptions.toasts.created'));
       void queryClient.invalidateQueries({ queryKey: webhookSubscriptionKeys.all });
     },
-    onError: (err: any) => toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.createFailed')),
+    // A 409 (this system/event pair exists) is shown inline by the panel instead of a toast.
+    onError: (err: { apiError?: { status?: number; detail?: string } }) => {
+      if (err?.apiError?.status === 409) return;
+      toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.createFailed'));
+    },
   });
 };
 
@@ -70,7 +92,8 @@ export const useUpdateWebhookSubscription = () => {
       toast.success(t('subscriptions.toasts.updated'));
       void queryClient.invalidateQueries({ queryKey: webhookSubscriptionKeys.all });
     },
-    onError: (err: any) => toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.updateFailed')),
+    onError: (err: any) =>
+      toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.updateFailed')),
   });
 };
 
@@ -87,7 +110,8 @@ export const useToggleWebhookSubscription = () => {
       );
       void queryClient.invalidateQueries({ queryKey: webhookSubscriptionKeys.all });
     },
-    onError: (err: any) => toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.toggleFailed')),
+    onError: (err: any) =>
+      toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.toggleFailed')),
   });
 };
 
@@ -102,7 +126,8 @@ export const useDeleteWebhookSubscription = () => {
       toast.success(t('subscriptions.toasts.deleted'));
       void queryClient.invalidateQueries({ queryKey: webhookSubscriptionKeys.all });
     },
-    onError: (err: any) => toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.deleteFailed')),
+    onError: (err: any) =>
+      toast.error(err?.apiError?.detail ?? t('subscriptions.toasts.deleteFailed')),
   });
 };
 

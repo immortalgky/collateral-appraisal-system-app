@@ -8,6 +8,7 @@ import {
   isLoginPath,
   isSavedUserOrUnknown,
   isSavedUserStrict,
+  lastSignInMethod,
   readSavedReturn,
   sameOriginPath,
   saveReturn,
@@ -545,6 +546,19 @@ describe('startSignIn', () => {
     );
   });
 
+  it('adds the method after the hint', () => {
+    const location = stubLocation('https://app.example.com/login');
+    const returnUrl = encodeURIComponent('https://app.example.com/tasks');
+    startSignIn('/tasks', { method: 'passkey' });
+    expect(location.href).toBe(
+      `https://api.example.com/auth/login?returnUrl=${returnUrl}&method=passkey`,
+    );
+    startSignIn('/tasks', { loginHint: 'ann', method: 'password' });
+    expect(location.href).toBe(
+      `https://api.example.com/auth/login?returnUrl=${returnUrl}&login_hint=ann&method=password`,
+    );
+  });
+
   it.each([
     undefined,
     '/login',
@@ -561,6 +575,33 @@ describe('startSignIn', () => {
     expect(location.href).toBe(
       `https://api.example.com/auth/login?returnUrl=${encodeURIComponent('https://app.example.com/')}`,
     );
+  });
+});
+
+describe('lastSignInMethod', () => {
+  const setCookie = (value: string) => {
+    document.cookie = value;
+  };
+  afterEach(() => setCookie('cas-login-method=; Max-Age=0; Path=/'));
+
+  it('is undefined without the cookie', () => {
+    expect(lastSignInMethod()).toBeUndefined();
+  });
+
+  it.each(['passkey', 'password'] as const)('reads %s among other cookies', method => {
+    setCookie('cas-lang=th; Path=/');
+    setCookie(`cas-login-method=${method}; Path=/`);
+    expect(lastSignInMethod()).toBe(method);
+    setCookie('cas-lang=; Max-Age=0; Path=/');
+  });
+
+  it('ignores a value it does not know, and a cookie that only ends in the name', () => {
+    setCookie('cas-login-method=fido; Path=/');
+    expect(lastSignInMethod()).toBeUndefined();
+    setCookie('x-cas-login-method=passkey; Path=/');
+    setCookie('cas-login-method=; Max-Age=0; Path=/');
+    expect(lastSignInMethod()).toBeUndefined();
+    setCookie('x-cas-login-method=; Max-Age=0; Path=/');
   });
 });
 

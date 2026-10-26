@@ -6,9 +6,11 @@ import Dropdown from '@shared/components/inputs/Dropdown';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import type { FeeItem } from '../types/appointmentAndFee';
-import { FEE_ITEM_TYPE_OPTIONS, VAT_PERCENTAGE } from '../types/appointmentAndFee';
+import { VAT_PERCENTAGE } from '../types/appointmentAndFee';
+import { useFeeTypeLabel } from '../utils/useFeeTypeLabel';
 import type { AppraisalFeeItem } from '../api/fee';
 import AddFeeModal from './AddFeeModal';
+import AdminFeeBadge from './AdminFeeBadge';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 
 export const BANK_ABSORB_FEE_TYPES = ['04'];
@@ -22,11 +24,12 @@ interface FeeInformationSectionProps {
   vatRate?: number;
   feePaymentType?: string | null;
   onUpdateFeePaymentType?: (value: string) => void;
+  /** Resolves false when nothing was sent (the caller says why): the modal stays open. */
   onAddFeeItem?: (data: {
     feeCode: string;
     feeDescription: string;
     feeAmount: number;
-  }) => Promise<void>;
+  }) => Promise<void | boolean>;
   onUpdateFeeItem?: (
     feeId: string,
     feeItemId: string,
@@ -139,26 +142,23 @@ export default function FeeInformationSection({
     !item.requiresApproval || item.approvalStatus === 'Approved';
 
   // Calculate totals from billable API items only
-  const subtotal = items
-    .filter(isBillable)
-    .reduce((sum, item) => sum + (item.feeAmount || 0), 0);
+  const subtotal = items.filter(isBillable).reduce((sum, item) => sum + (item.feeAmount || 0), 0);
   const vatRate = vatRateProp ?? VAT_PERCENTAGE;
   const vat = subtotal * (vatRate / 100);
   const total = subtotal + vat;
 
-  // Resolve fee code to label
-  const getFeeTypeLabel = (code: string | undefined) =>
-    FEE_ITEM_TYPE_OPTIONS.find(opt => opt.value === code)?.label ?? code ?? '';
+  // Resolve fee code to label (the same key set as the assignment fee card)
+  const getFeeTypeLabel = useFeeTypeLabel();
 
   // Badge color by fee type code
   const getBadgeClass = (code: string | undefined) => {
     switch (code) {
       case '01':
-        return 'bg-emerald-100 text-emerald-700';
+        return 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300';
       case '02':
-        return 'bg-blue-100 text-blue-700';
+        return 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300';
       default:
-        return 'bg-gray-100 text-gray-600';
+        return 'bg-(--palette-surface-3) text-(--palette-gray-600)';
     }
   };
 
@@ -170,28 +170,31 @@ export default function FeeInformationSection({
     });
   };
 
-  const handleAddFee = async (data: Omit<FeeItem, 'id'>) => {
-    if (!onAddFeeItem) return;
+  // The add/edit handlers return false when the save failed, so the modal stays open with its input.
+  const handleAddFee = async (data: Omit<FeeItem, 'id'>): Promise<boolean | void> => {
+    if (!onAddFeeItem) return false;
     try {
-      await onAddFeeItem({
+      const sent = await onAddFeeItem({
         feeCode: data.type,
         feeDescription: data.description,
         feeAmount: data.amount,
       });
+      if (sent === false) return false;
       setIsAddModalOpen(false);
       toast.success(t('fee.toasts.feeAdded'));
+      return true;
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('fee.toasts.feeAddFailed'));
+      return false;
     }
   };
 
-  const handleEditFee = async (data: Omit<FeeItem, 'id'>) => {
-    if (!editingFee || !onUpdateFeeItem) return;
+  const handleEditFee = async (data: Omit<FeeItem, 'id'>): Promise<boolean | void> => {
+    if (!editingFee || !onUpdateFeeItem) return false;
     const apiItem = items.find(i => i.id === editingFee.id);
     if (!apiItem) {
       toast.error(t('fee.toasts.feeUpdateFailed'));
-      setEditingFee(null);
-      return;
+      return false;
     }
     try {
       await onUpdateFeeItem(apiItem.appraisalFeeId, apiItem.id, {
@@ -201,8 +204,10 @@ export default function FeeInformationSection({
       });
       setEditingFee(null);
       toast.success(t('fee.toasts.feeUpdated'));
+      return true;
     } catch (error: any) {
       toast.error(error.apiError?.detail || t('fee.toasts.feeUpdateFailed'));
+      return false;
     }
   };
 
@@ -266,24 +271,46 @@ export default function FeeInformationSection({
     return `${item?.feeDescription || 'this fee'} (${formatCurrency(item?.feeAmount || 0)})`;
   };
 
+  // An admin set this item before assignment; whoever got the job can read it but not change it
+  // (the server refuses too).
+  const isAdminSet = (item: AppraisalFeeItem) => item.source === 'Admin';
+
   // Check if an item is editable (only type 01 is locked)
   // Base appraisal fee ('01') is never editable; neither is a fee whose approval is finalised
-  // (Approved/Rejected) — its amount is locked once the bank has decided.
+  // (Approved/Rejected) — its amount is locked once the bank has decided — nor an admin's item.
   const isEditable = (item: AppraisalFeeItem) =>
     item.feeCode !== '01' &&
+    !isAdminSet(item) &&
     item.approvalStatus !== 'Approved' &&
     item.approvalStatus !== 'Rejected';
 
   // Delete is allowed for any non-base fee — including approved/rejected ones (the amount is
-  // locked from editing, but the line can still be removed).
-  const isDeletable = (item: AppraisalFeeItem) => item.feeCode !== '01';
+  // locked from editing, but the line can still be removed) — except an admin's item.
+  const isDeletable = (item: AppraisalFeeItem) => item.feeCode !== '01' && !isAdminSet(item);
+
+  // The chip under a row's description saying an admin set it. No "system calculated" figure here:
+  // it would be today's recompute, not what was in force when the admin overrode it.
+  const renderAdminChips = (item: AppraisalFeeItem) =>
+    isAdminSet(item) ? <AdminFeeBadge label={t('fee.adminChip')} /> : null;
+
+  const adminLock = (
+    <span
+      role="img"
+      aria-label={t('fee.lockedAria')}
+      title={t('fee.lockedTitle')}
+      className="p-1 text-(--palette-gray-400)"
+    >
+      <Icon name="lock" style="solid" className="size-4!" />
+    </span>
+  );
 
   // Get approval info directly from API item
   // New backend fields (approvalSubmittedAt) arrive via .passthrough()
   const getApprovalInfo = (item: AppraisalFeeItem) => {
     if (!item.requiresApproval) return null;
     const status = item.approvalStatus?.toLowerCase();
-    const submittedAt = (item as AppraisalFeeItem & { approvalSubmittedAt?: string | null }).approvalSubmittedAt;
+    const submittedAt = (item as AppraisalFeeItem & { approvalSubmittedAt?: string | null })
+      .approvalSubmittedAt;
 
     if (status === 'approved') {
       return { label: item.approvalStatus!, colorClass: 'bg-success/10 text-success' };
@@ -293,9 +320,15 @@ export default function FeeInformationSection({
     }
     // Pending — distinguish draft (not yet submitted) from submitted (awaiting bank)
     if (submittedAt) {
-      return { label: t('approval.badge.awaiting'), colorClass: 'bg-blue-100 text-blue-700' };
+      return {
+        label: t('approval.badge.awaiting'),
+        colorClass: 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300',
+      };
     }
-    return { label: t('approval.badge.needsApproval'), colorClass: 'bg-amber-100 text-amber-700' };
+    return {
+      label: t('approval.badge.needsApproval'),
+      colorClass: 'bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)',
+    };
   };
 
   return (
@@ -305,7 +338,7 @@ export default function FeeInformationSection({
         <div className="size-8 rounded-lg bg-emerald-500 flex items-center justify-center shadow-sm">
           <Icon name="file-invoice-dollar" style="solid" className="size-4 text-white" />
         </div>
-        <h3 className="text-base font-semibold text-gray-800">{t('fee.sectionTitle')}</h3>
+        <h3 className="text-base font-semibold text-(--palette-ink)">{t('fee.sectionTitle')}</h3>
       </div>
 
       {/* Fee Type Dropdown */}
@@ -321,7 +354,7 @@ export default function FeeInformationSection({
 
       {/* Bank Absorb Amount — visible when feePaymentType ∈ ['04','99'] */}
       {showAbsorbInput && (
-        <div className="border border-blue-200 bg-blue-50/40 rounded-lg p-4">
+        <div className="border border-blue-200 dark:border-blue-500/30 bg-blue-50/40 dark:bg-blue-500/10 rounded-lg p-4">
           <NumberInput
             name="bankAbsorbAmount"
             label={t('fee.bankAbsorbAmount')}
@@ -335,34 +368,38 @@ export default function FeeInformationSection({
             disabled={readOnly || editLocked || isAbsorbAmountUpdating}
             placeholder="0.00"
           />
-          <p className="mt-2 text-xs text-gray-500">{t('fee.bankAbsorbAmountHint')}</p>
+          <p className="mt-2 text-xs text-(--palette-gray-500)">{t('fee.bankAbsorbAmountHint')}</p>
         </div>
       )}
 
       {/* Fee Table */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
+      <div className="border border-(--palette-line) rounded-lg overflow-hidden">
         {/* Table Header - Hidden on mobile */}
-        <div className="hidden md:grid bg-white border-b border-gray-200 grid-cols-[120px_1fr_100px_60px] gap-2 px-4 py-3">
-          <span className="text-xs text-gray-500">{t('fee.columns.type')}</span>
-          <span className="text-xs text-gray-500">{t('fee.columns.description')}</span>
-          <span className="text-xs text-gray-500 text-right">{t('fee.columns.amount')}</span>
-          <span className="text-xs text-gray-500 text-center">{t('fee.columns.actions')}</span>
+        <div className="hidden md:grid bg-(--palette-surface) border-b border-(--palette-line) grid-cols-[120px_1fr_100px_60px] gap-2 px-4 py-3">
+          <span className="text-xs text-(--palette-gray-500)">{t('fee.columns.type')}</span>
+          <span className="text-xs text-(--palette-gray-500)">{t('fee.columns.description')}</span>
+          <span className="text-xs text-(--palette-gray-500) text-right">
+            {t('fee.columns.amount')}
+          </span>
+          <span className="text-xs text-(--palette-gray-500) text-center">
+            {t('fee.columns.actions')}
+          </span>
         </div>
 
         {/* Empty State */}
         {items.length === 0 && (
-          <div className="bg-emerald-50/50 px-6 py-8 text-center">
+          <div className="bg-emerald-50/50 dark:bg-emerald-500/10 px-6 py-8 text-center">
             <div className="flex justify-center mb-3">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center">
                 <Icon
                   name="file-invoice-dollar"
                   style="regular"
-                  className="w-6 h-6 text-emerald-500"
+                  className="size-6! text-emerald-500"
                 />
               </div>
             </div>
-            <p className="text-sm text-gray-600 mb-1">{t('fee.empty')}</p>
-            <p className="text-xs text-gray-400">{t('fee.emptyHint')}</p>
+            <p className="text-sm text-(--palette-gray-600) mb-1">{t('fee.empty')}</p>
+            <p className="text-xs text-(--palette-gray-400)">{t('fee.emptyHint')}</p>
           </div>
         )}
 
@@ -378,7 +415,7 @@ export default function FeeInformationSection({
           return (
             <div
               key={item.id}
-              className="bg-white border-b border-gray-200 px-4 py-4 hover:bg-gray-50 transition-colors animate-fadeIn"
+              className="bg-(--palette-surface) border-b border-(--palette-line) px-4 py-4 hover:bg-(--palette-surface-2) transition-colors animate-fadeIn"
             >
               {/* Desktop Layout */}
               <div className="hidden md:grid grid-cols-[120px_1fr_100px_60px] gap-2 items-center">
@@ -387,42 +424,46 @@ export default function FeeInformationSection({
                 >
                   {getFeeTypeLabel(item.feeCode)}
                 </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-600">{item.feeDescription}</span>
-                  {approval && (
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${approval.colorClass}`}
-                    >
-                      {approval.label}
-                    </span>
-                  )}
+                <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-(--palette-gray-600)">{item.feeDescription}</span>
+                    {approval && (
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${approval.colorClass}`}
+                      >
+                        {approval.label}
+                      </span>
+                    )}
+                  </div>
+                  {renderAdminChips(item)}
                 </div>
-                <span className="text-sm text-gray-600 text-right">
+                <span className="text-sm text-(--palette-gray-600) text-right">
                   {formatCurrency(item.feeAmount)}
                 </span>
                 <div className="flex items-center justify-center gap-1">
+                  {isAdminSet(item) && adminLock}
                   {!readOnly && !editLocked && (
                     <>
                       {editable && (
                         <button
                           type="button"
                           onClick={() => openEditModal(item)}
-                          className="text-gray-400 hover:text-secondary transition-colors p-1"
+                          className="text-(--palette-gray-400) hover:text-secondary transition-colors p-1"
                           aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                           title={t('fee.aria.editFeeTitle')}
                         >
-                          <Icon name="pen" style="regular" className="w-4 h-4" />
+                          <Icon name="pen" style="regular" className="size-4!" />
                         </button>
                       )}
                       {deletable && (
                         <button
                           type="button"
                           onClick={() => setDeletingFeeId(item.id)}
-                          className="text-gray-400 hover:text-danger transition-colors p-1"
+                          className="text-(--palette-gray-400) hover:text-danger transition-colors p-1"
                           aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                           title={t('fee.aria.deleteFeeTitle')}
                         >
-                          <Icon name="trash" style="regular" className="w-4 h-4" />
+                          <Icon name="trash" style="regular" className="size-4!" />
                         </button>
                       )}
                       {approval && !item.approvalStatus && (
@@ -436,7 +477,7 @@ export default function FeeInformationSection({
                               className="text-success hover:text-success/80 transition-colors p-1"
                               title={t('fee.aria.approveFee')}
                             >
-                              <Icon name="check" style="solid" className="w-4 h-4" />
+                              <Icon name="check" style="solid" className="size-4!" />
                             </button>
                           )}
                           {onRejectFeeItem && (
@@ -448,7 +489,7 @@ export default function FeeInformationSection({
                               className="text-danger hover:text-danger/80 transition-colors p-1"
                               title={t('fee.aria.rejectFee')}
                             >
-                              <Icon name="xmark" style="solid" className="w-4 h-4" />
+                              <Icon name="xmark" style="solid" className="size-4!" />
                             </button>
                           )}
                         </>
@@ -474,30 +515,32 @@ export default function FeeInformationSection({
                         {approval.label}
                       </span>
                     )}
+                    {isAdminSet(item) && adminLock}
                     {!readOnly && !editLocked && editable && (
                       <button
                         type="button"
                         onClick={() => openEditModal(item)}
-                        className="text-gray-400 hover:text-secondary transition-colors p-1"
+                        className="text-(--palette-gray-400) hover:text-secondary transition-colors p-1"
                         aria-label={t('fee.aria.editFee', { description: item.feeDescription })}
                       >
-                        <Icon name="pen" style="regular" className="w-4 h-4" />
+                        <Icon name="pen" style="regular" className="size-4!" />
                       </button>
                     )}
                     {!readOnly && !editLocked && deletable && (
                       <button
                         type="button"
                         onClick={() => setDeletingFeeId(item.id)}
-                        className="text-gray-400 hover:text-danger transition-colors p-1"
+                        className="text-(--palette-gray-400) hover:text-danger transition-colors p-1"
                         aria-label={t('fee.aria.deleteFee', { description: item.feeDescription })}
                       >
-                        <Icon name="trash" style="regular" className="w-4 h-4" />
+                        <Icon name="trash" style="regular" className="size-4!" />
                       </button>
                     )}
                   </div>
                 </div>
-                <span className="text-sm text-gray-600">{item.feeDescription}</span>
-                <span className="text-sm font-medium text-gray-800">
+                <span className="text-sm text-(--palette-gray-600)">{item.feeDescription}</span>
+                {renderAdminChips(item)}
+                <span className="text-sm font-medium text-(--palette-ink)">
                   {formatCurrency(item.feeAmount)}
                 </span>
               </div>
@@ -507,39 +550,45 @@ export default function FeeInformationSection({
 
         {/* Add Fee Button */}
         {!readOnly && (
-          <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="bg-(--palette-surface) border-b border-(--palette-line) px-4 py-3">
             <button
               type="button"
               onClick={!editLocked ? () => setIsAddModalOpen(true) : undefined}
               disabled={editLocked}
               title={editLocked ? t('approval.banner.awaiting') : undefined}
-              className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:border-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white disabled:hover:border-emerald-300"
+              className="w-full flex items-center justify-center gap-2 py-2.5 border-2 border-dashed border-emerald-300 dark:border-emerald-500/40 rounded-lg text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:border-emerald-400 transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-(--palette-surface) disabled:hover:border-emerald-300 dark:disabled:hover:border-emerald-500/40"
             >
-              <Icon name="circle-plus" style="solid" className="w-5 h-5" />
+              <Icon name="circle-plus" style="solid" className="size-5!" />
               <span className="text-sm font-medium">{t('fee.addFee')}</span>
             </button>
           </div>
         )}
 
         {/* Summary Rows */}
-        <div className="bg-gray-100 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">
-          <span className="text-sm font-medium text-gray-800">{t('fee.subtotal')}</span>
-          <span className="text-sm text-gray-600 text-right">{formatCurrency(subtotal)}</span>
+        <div className="bg-(--palette-surface-3) grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">
+          <span className="text-sm font-medium text-(--palette-ink)">{t('fee.subtotal')}</span>
+          <span className="text-sm text-(--palette-gray-600) text-right">
+            {formatCurrency(subtotal)}
+          </span>
           <span className="hidden md:block" />
         </div>
-        <div className="bg-gray-100 border-b border-gray-200 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">
-          <span className="text-sm font-medium text-gray-800 flex items-center gap-1">
+        <div className="bg-(--palette-surface-3) border-b border-(--palette-line) grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-2 items-center">
+          <span className="text-sm font-medium text-(--palette-ink) flex items-center gap-1">
             {t('fee.vat', { rate: vatRate })}
-            <span className="text-gray-400 cursor-help" title={t('fee.vatTooltip')}>
-              <Icon name="circle-info" style="regular" className="w-3.5 h-3.5" />
+            <span className="text-(--palette-gray-400) cursor-help" title={t('fee.vatTooltip')}>
+              <Icon name="circle-info" style="regular" className="size-3.5!" />
             </span>
           </span>
-          <span className="text-sm text-gray-600 text-right">{formatCurrency(vat)}</span>
+          <span className="text-sm text-(--palette-gray-600) text-right">
+            {formatCurrency(vat)}
+          </span>
           <span className="hidden md:block" />
         </div>
-        <div className="bg-emerald-50 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-3 items-center">
-          <span className="text-sm font-semibold text-emerald-800">{t('fee.total')}</span>
-          <span className="text-base font-bold text-emerald-700 text-right">
+        <div className="bg-emerald-50 dark:bg-emerald-500/10 grid grid-cols-[1fr_auto] md:grid-cols-[1fr_100px_60px] gap-2 px-4 py-3 items-center">
+          <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+            {t('fee.total')}
+          </span>
+          <span className="text-base font-bold text-emerald-700 dark:text-emerald-300 text-right">
             {formatCurrency(total)}
           </span>
           <span className="hidden md:block" />
@@ -548,7 +597,7 @@ export default function FeeInformationSection({
 
       {/* Construction Inspection Fee — only visible when at least one building property is under construction */}
       {showConstructionInspectionFee && (
-        <div className="border border-amber-200 bg-amber-50/40 rounded-lg p-4">
+        <div className="border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash)/40 rounded-lg p-4">
           <NumberInput
             name="constructionInspectionFee"
             label={t('fee.constructionInspectionFee')}
@@ -560,7 +609,9 @@ export default function FeeInformationSection({
             disabled={readOnly || isConstructionInspectionFeeUpdating}
             placeholder="0.00"
           />
-          <p className="mt-2 text-xs text-gray-500">{t('fee.constructionInspectionFeeHint')}</p>
+          <p className="mt-2 text-xs text-(--palette-gray-500)">
+            {t('fee.constructionInspectionFeeHint')}
+          </p>
         </div>
       )}
 

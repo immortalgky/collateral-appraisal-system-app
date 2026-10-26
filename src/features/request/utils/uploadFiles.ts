@@ -30,23 +30,6 @@ export const splitUploadable = (
 /** How many files of one pick go up at a time. */
 export const UPLOAD_CONCURRENCY = 3;
 
-/** Runs the tasks with at most `limit` in flight, in order; a task that fails does not stop the rest. */
-export const runLimited = async <T>(
-  tasks: (() => Promise<T>)[],
-  limit = UPLOAD_CONCURRENCY,
-): Promise<T[]> => {
-  const results: T[] = new Array(tasks.length);
-  let next = 0;
-  const worker = async () => {
-    while (next < tasks.length) {
-      const at = next++;
-      results[at] = await tasks[at]();
-    }
-  };
-  await Promise.all(Array.from({ length: Math.min(limit, tasks.length) }, worker));
-  return results;
-};
-
 /**
  * Where an in-flight row (an upload, a generated letter) goes in its list, and how it comes back out.
  * One place for both, so they cannot drift: `slot` is the empty row it was started from, kept only if it

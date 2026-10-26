@@ -39,11 +39,19 @@ const matchUnit = (unit: ProjectUnitDetail, q: string): boolean => {
 // ─── Compact metrics-bar helpers ──────────────────────────────────────────────
 
 // Colored dot + label + count, used for the Sold / Available tallies.
-const MiniStat = ({ dotClass, label, value }: { dotClass: string; label: string; value: number }) => (
+const MiniStat = ({
+  dotClass,
+  label,
+  value,
+}: {
+  dotClass: string;
+  label: string;
+  value: number;
+}) => (
   <div className="flex items-center gap-1.5 whitespace-nowrap">
     <span className={`size-2 rounded-full ${dotClass}`} />
-    <span className="text-xs text-gray-500">{label}</span>
-    <span className="text-sm font-semibold text-gray-900 tabular-nums">{value}</span>
+    <span className="text-xs text-(--palette-gray-500)">{label}</span>
+    <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">{value}</span>
   </div>
 );
 
@@ -66,8 +74,8 @@ const MiniMetric = ({
       <Icon style="solid" name={icon} className={`size-3.5 ${iconColor}`} />
     </div>
     <div className="flex flex-col leading-tight items-end text-right">
-      <span className="text-[10px] text-gray-400">{label}</span>
-      <span className="text-sm font-semibold text-gray-900 tabular-nums">{value}</span>
+      <span className="text-[10px] text-(--palette-gray-400)">{label}</span>
+      <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">{value}</span>
     </div>
   </div>
 );
@@ -105,13 +113,13 @@ const StatusChips = ({
             className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
               active
                 ? 'bg-primary text-white border-primary'
-                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                : 'bg-(--palette-surface) text-(--palette-ink) border-(--palette-line) hover:bg-(--palette-surface-2)'
             }`}
           >
             <span>{c.label}</span>
             <span
               className={`tabular-nums px-1.5 py-px rounded-full text-[10px] ${
-                active ? 'bg-white/20' : 'bg-gray-100 text-gray-600'
+                active ? 'bg-white/20' : 'bg-(--palette-surface-3) text-(--palette-gray-600)'
               }`}
             >
               {counts[c.key]}
@@ -174,23 +182,26 @@ const SortableTh = ({
   align?: 'left' | 'right' | 'center';
 }) => {
   const active = activeKey === columnKey;
-  const alignClass = align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
+  const alignClass =
+    align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left';
   const justifyClass =
     align === 'right' ? 'justify-end' : align === 'center' ? 'justify-center' : 'justify-start';
   return (
-    <th className={`text-xs py-2 px-3 text-gray-500 font-semibold whitespace-nowrap ${alignClass}`}>
+    <th
+      className={`text-xs py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap ${alignClass}`}
+    >
       <button
         type="button"
         onClick={() => onSort(columnKey)}
-        className={`inline-flex w-full items-center gap-1 hover:text-gray-700 transition-colors ${justifyClass} ${
-          active ? 'text-gray-700' : ''
+        className={`inline-flex w-full items-center gap-1 hover:text-(--palette-ink) transition-colors ${justifyClass} ${
+          active ? 'text-(--palette-ink)' : ''
         }`}
       >
         <span>{label}</span>
         <Icon
           style="solid"
           name={active ? (dir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
-          className={`size-2.5 ${active ? 'text-primary' : 'text-gray-300'}`}
+          className={`size-2.5 ${active ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)'}`}
         />
       </button>
     </th>
@@ -482,22 +493,22 @@ const BlockUnitMaintenanceDetailPage = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={handleBack}
-            className="flex items-center justify-center size-7 rounded-md border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            className="flex items-center justify-center size-7 rounded-md border border-(--palette-line) text-(--palette-gray-500) hover:bg-(--palette-surface-2) hover:text-(--palette-ink) transition-colors"
           >
             <Icon style="solid" name="arrow-left" className="size-3.5" />
           </button>
           <div className="flex items-center gap-2 flex-wrap">
-            <h2 className="text-base font-semibold text-gray-900">
+            <h2 className="text-base font-semibold text-(--palette-ink)">
               {project?.projectName ?? '—'}
             </h2>
             {project && projectTypeLabel && (
               <>
-                <span className="text-gray-300">·</span>
+                <span className="text-(--palette-gray-300)">·</span>
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium ${
                     isCondo(project.projectType)
-                      ? 'bg-blue-50 text-blue-700 border border-blue-100'
-                      : 'bg-amber-50 text-amber-700 border border-amber-100'
+                      ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300 border border-blue-100 dark:border-blue-500/20'
+                      : 'bg-(--palette-warn-wash) text-(--palette-warn) border border-amber-100 dark:border-amber-500/20'
                   }`}
                 >
                   {projectTypeLabel}
@@ -506,8 +517,10 @@ const BlockUnitMaintenanceDetailPage = () => {
             )}
             {project?.appraisalReportNo && (
               <>
-                <span className="text-gray-300">·</span>
-                <span className="text-xs text-gray-500">ID: {project.appraisalReportNo}</span>
+                <span className="text-(--palette-gray-300)">·</span>
+                <span className="text-xs text-(--palette-gray-500)">
+                  {t('detail.idLabel')}: {project.appraisalReportNo}
+                </span>
               </>
             )}
           </div>
@@ -515,25 +528,27 @@ const BlockUnitMaintenanceDetailPage = () => {
       </div>
 
       {/* ─── Compact metrics bar ──────────────────────────────────────────── */}
-      <section className="shrink-0 bg-white rounded-lg border border-gray-200">
+      <section className="shrink-0 bg-(--palette-surface) rounded-lg border border-(--palette-line)">
         <div className="flex items-center gap-x-6 gap-y-3 px-4 py-2.5 flex-wrap">
           {/* Sold progress gauge */}
           <div className="flex items-center gap-3 min-w-[220px]">
             <div className="flex flex-col leading-tight">
-              <span className="text-[11px] text-gray-400">{t('detail.donutSoldLabel')}</span>
-              <span className="text-sm font-semibold text-gray-900 tabular-nums">
+              <span className="text-[11px] text-(--palette-gray-400)">
+                {t('detail.donutSoldLabel')}
+              </span>
+              <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                 {soldPct.toFixed(1)}%
-                <span className="ml-1 text-xs font-normal text-gray-400">
+                <span className="ml-1 text-xs font-normal text-(--palette-gray-400)">
                   ({soldCount}/{totalUnits})
                 </span>
               </span>
             </div>
-            <div className="flex-1 min-w-[64px] h-1.5 rounded-full bg-gray-100 overflow-hidden">
+            <div className="flex-1 min-w-[64px] h-1.5 rounded-full bg-(--palette-surface-3) overflow-hidden">
               <div className="h-full rounded-full bg-violet-500" style={{ width: `${soldPct}%` }} />
             </div>
           </div>
 
-          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+          <div className="hidden sm:block h-8 w-px bg-(--palette-line)" />
 
           {/* Sold / Available tallies */}
           <div className="flex items-center gap-5">
@@ -545,21 +560,21 @@ const BlockUnitMaintenanceDetailPage = () => {
             />
           </div>
 
-          <div className="hidden sm:block h-8 w-px bg-gray-200" />
+          <div className="hidden sm:block h-8 w-px bg-(--palette-line)" />
 
           {/* Estimate KPIs */}
           <div className="flex items-center gap-6">
             <MiniMetric
               icon="money-bill"
-              iconBg="bg-violet-50"
-              iconColor="text-violet-600"
+              iconBg="bg-violet-50 dark:bg-violet-500/10"
+              iconColor="text-violet-600 dark:text-violet-400"
               label={t('detail.kpi.totalEstimate')}
               value={totalEstimate > 0 ? totalEstimate.toLocaleString() : '–'}
             />
             <MiniMetric
               icon="chart-line"
-              iconBg="bg-indigo-50"
-              iconColor="text-indigo-600"
+              iconBg="bg-indigo-50 dark:bg-indigo-500/10"
+              iconColor="text-indigo-600 dark:text-indigo-400"
               label={t('detail.kpi.avgEstimate')}
               value={avgEstimate > 0 ? avgEstimate.toLocaleString() : '–'}
             />
@@ -584,7 +599,7 @@ const BlockUnitMaintenanceDetailPage = () => {
             value={minValue}
             onChange={e => setMinValue(e.target.value)}
           />
-          <span className="text-gray-400">–</span>
+          <span className="text-(--palette-gray-400)">–</span>
           <NumberInput
             className="w-28"
             placeholder={t('detail.filter.appraisalMax')}
@@ -613,7 +628,7 @@ const BlockUnitMaintenanceDetailPage = () => {
       {/* ─── Bulk action bar (visible only when selection > 0) ────────────── */}
       {selected.size > 0 && (
         <div className="shrink-0 flex items-center gap-3 flex-wrap rounded-lg border border-primary/30 bg-primary/5 px-3 py-2">
-          <span className="text-xs font-medium text-primary">
+          <span className="text-xs font-medium text-(--palette-primary-text)">
             {t('detail.bulk.selectedCount', { count: selected.size })}
           </span>
           <span className="h-4 w-px bg-primary/20" aria-hidden />
@@ -632,7 +647,7 @@ const BlockUnitMaintenanceDetailPage = () => {
               value={bulkLoanBank}
               onChange={e => setBulkLoanBank(e.target.value)}
               placeholder={t('detail.bulk.bankPlaceholder')}
-              className="text-xs border border-gray-200 rounded px-2 py-1 w-36 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+              className="text-xs border border-(--palette-line) rounded px-2 py-1 w-36 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
             />
           </div>
           <Button size="sm" variant="secondary" onClick={handleBulkAvailable}>
@@ -647,10 +662,10 @@ const BlockUnitMaintenanceDetailPage = () => {
       )}
 
       {/* ─── Units table ──────────────────────────────────────────────────── */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-xs">
-            <thead className="bg-gray-50 sticky top-0 z-10 border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 border-b border-(--palette-line)">
               {project && isCondo(project.projectType) ? (
                 <tr>
                   <th className="text-xs py-2 pl-3 pr-1 w-8 font-semibold">
@@ -662,25 +677,29 @@ const BlockUnitMaintenanceDetailPage = () => {
                       }}
                       onChange={handleToggleSelectAll}
                       aria-label={t('units.selectAll')}
-                      className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+                      className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     #
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold">
                     {t('detail.cols.floor')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('detail.cols.towerName')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('detail.cols.regNumber')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('detail.cols.roomNo')}
                   </th>
-                  <SortableTh label={t('detail.cols.modelType')} columnKey="modelType" {...sortProps} />
+                  <SortableTh
+                    label={t('detail.cols.modelType')}
+                    columnKey="modelType"
+                    {...sortProps}
+                  />
                   <SortableTh
                     label={t('detail.cols.usableAreaSqm')}
                     columnKey="usableArea"
@@ -699,13 +718,13 @@ const BlockUnitMaintenanceDetailPage = () => {
                     align="right"
                     {...sortProps}
                   />
-                  <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-center py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('units.col.purchaseBy')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
                   <SortableTh
@@ -725,15 +744,27 @@ const BlockUnitMaintenanceDetailPage = () => {
                       }}
                       onChange={handleToggleSelectAll}
                       aria-label={t('units.selectAll')}
-                      className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+                      className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer"
                     />
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     #
                   </th>
-                  <SortableTh label={t('detail.cols.plotNo')} columnKey="plotNumber" {...sortProps} />
-                  <SortableTh label={t('detail.cols.houseNo')} columnKey="houseNumber" {...sortProps} />
-                  <SortableTh label={t('detail.cols.modelName')} columnKey="modelType" {...sortProps} />
+                  <SortableTh
+                    label={t('detail.cols.plotNo')}
+                    columnKey="plotNumber"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.houseNo')}
+                    columnKey="houseNumber"
+                    {...sortProps}
+                  />
+                  <SortableTh
+                    label={t('detail.cols.modelName')}
+                    columnKey="modelType"
+                    {...sortProps}
+                  />
                   <SortableTh
                     label={t('detail.cols.numFloors')}
                     columnKey="numberOfFloors"
@@ -764,13 +795,13 @@ const BlockUnitMaintenanceDetailPage = () => {
                     align="right"
                     {...sortProps}
                   />
-                  <th className="text-xs text-center py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-center py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('units.col.isSold')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('units.col.purchaseBy')}
                   </th>
-                  <th className="text-xs text-left py-2 px-3 text-gray-500 font-semibold whitespace-nowrap">
+                  <th className="text-xs text-left py-2 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
                     {t('units.col.loanBankName')}
                   </th>
                   <SortableTh
@@ -797,8 +828,12 @@ const BlockUnitMaintenanceDetailPage = () => {
                 <tr>
                   <td colSpan={14} className="px-4 py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-sm text-gray-500">{t('units.empty')}</p>
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-sm text-(--palette-gray-500)">{t('units.empty')}</p>
                     </div>
                   </td>
                 </tr>
@@ -830,10 +865,10 @@ const BlockUnitMaintenanceDetailPage = () => {
         </div>
 
         {/* Save footer */}
-        <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-t border-gray-200 bg-gray-50">
-          <span className="text-xs text-gray-500 flex items-center gap-2">
+        <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-t border-(--palette-line) bg-(--palette-surface-2)">
+          <span className="text-xs text-(--palette-gray-500) flex items-center gap-2">
             {hasDirty && (
-              <span className="inline-flex items-center gap-1.5 text-amber-700">
+              <span className="inline-flex items-center gap-1.5 text-(--palette-warn)">
                 <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
                 {t('detail.dirtyCount', { count: dirtyIds.length })}
               </span>

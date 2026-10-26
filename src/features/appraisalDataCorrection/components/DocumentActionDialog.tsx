@@ -243,8 +243,10 @@ const DocumentActionDialog = ({
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         {state.kind === 'regenerate' && (
           <>
-            <p className="text-sm text-gray-600">{t('documents.dialog.regenerate.intro')}</p>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-gray-600">
+            <p className="text-sm text-(--palette-gray-600)">
+              {t('documents.dialog.regenerate.intro')}
+            </p>
+            <ul className="list-disc space-y-1 pl-5 text-sm text-(--palette-gray-600)">
               <li>{t('documents.dialog.regenerate.useWhen1')}</li>
               <li>{t('documents.dialog.regenerate.useWhen2')}</li>
             </ul>
@@ -253,10 +255,10 @@ const DocumentActionDialog = ({
 
         {state.kind === 'notify' && (
           <>
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--palette-gray-600)">
               {t('documents.dialog.notify.intro', { system })}
             </p>
-            <p className="text-xs text-gray-500">{t('documents.dialog.notify.note')}</p>
+            <p className="text-xs text-(--palette-gray-500)">{t('documents.dialog.notify.note')}</p>
           </>
         )}
 
@@ -276,15 +278,15 @@ const DocumentActionDialog = ({
         )}
 
         {(state.kind === 'replace' || state.kind === 'delete') && (
-          <div className="space-y-1 rounded-lg bg-gray-50 px-3 py-2 text-xs">
-            <div className="text-gray-500">
+          <div className="space-y-1 rounded-lg bg-(--palette-surface-2) px-3 py-2 text-xs">
+            <div className="text-(--palette-gray-500)">
               {rowType ? documentTypeName(rowType, i18n.language) : state.typeCode}
             </div>
             <div
               className={
                 state.kind === 'replace'
-                  ? 'text-gray-400 line-through'
-                  : 'font-medium text-gray-900'
+                  ? 'text-(--palette-gray-400) line-through'
+                  : 'font-medium text-(--palette-ink)'
               }
             >
               {state.file.fileName}
@@ -301,7 +303,7 @@ const DocumentActionDialog = ({
 
         {needsFile && (
           <div>
-            <p className="block text-sm font-medium text-gray-700 mb-1">
+            <p className="block text-sm font-medium text-(--palette-ink) mb-1">
               {t('documents.dialog.fileLabel')} <span className="text-danger">*</span>
             </p>
             <UploadArea
@@ -311,13 +313,19 @@ const DocumentActionDialog = ({
               onChange={e => setFile(e.target.files?.[0] ?? null)}
             />
             {file && (
-              <div className="mt-2 flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                <Icon style="solid" name="file" className="size-4 shrink-0 text-gray-400" />
+              <div className="mt-2 flex items-center gap-2 rounded-lg bg-(--palette-surface-2) px-3 py-2 text-sm text-(--palette-ink)">
+                <Icon
+                  style="solid"
+                  name="file"
+                  className="size-4 shrink-0 text-(--palette-gray-400)"
+                />
                 <span className="min-w-0 truncate">{file.name}</span>
               </div>
             )}
             {fileInvalid && (
-              <p className="mt-1 text-xs text-red-600">{t('documents.dialog.fileInvalid')}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                {t('documents.dialog.fileInvalid')}
+              </p>
             )}
           </div>
         )}
@@ -335,30 +343,32 @@ const DocumentActionDialog = ({
         />
 
         {state.kind === 'replace' && (
-          <p className="text-sm text-gray-600">{t('documents.dialog.replace.note')}</p>
+          <p className="text-sm text-(--palette-gray-600)">{t('documents.dialog.replace.note')}</p>
         )}
 
         {state.kind === 'regenerate' &&
           (externalSystem ? (
-            <div className="flex items-start gap-2 text-sm text-gray-700">
+            <div className="flex items-start gap-2 text-sm text-(--palette-ink)">
               <input
                 id={`${id}-notify`}
                 type="checkbox"
                 checked={notifyExternal}
                 onChange={e => setNotifyExternal(e.target.checked)}
-                className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600"
+                className="mt-0.5 h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
               />
               <div>
                 <label htmlFor={`${id}-notify`} className="font-medium">
                   {t('documents.dialog.regenerate.notifyLabel', { system })}
                 </label>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-(--palette-gray-500)">
                   {t('documents.dialog.regenerate.notifyHint', { system })}
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-gray-500">{t('documents.dialog.regenerate.noSource')}</p>
+            <p className="text-xs text-(--palette-gray-500)">
+              {t('documents.dialog.regenerate.noSource')}
+            </p>
           ))}
 
         <div className="flex justify-end gap-3 pt-2">

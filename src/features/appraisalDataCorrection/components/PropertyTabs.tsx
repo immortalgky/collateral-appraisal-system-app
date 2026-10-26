@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useState, type ReactNode, type RefObject } from 'react';
 import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import BuildingDetailForm from '@/features/appraisal/forms/BuildingDetailForm';
@@ -8,12 +8,11 @@ import LeaseAgreementForm from '@/features/appraisal/forms/LeaseAgreementForm';
 import MachineryDetailForm from '@/features/appraisal/forms/MachineryDetailForm';
 import RentalInfoForm from '@/features/appraisal/forms/RentalInfoForm';
 import TitleDeedForm from '@/features/appraisal/forms/TitleDeedForm';
-import { EditorTabBar, type EditorTab } from '@/features/appraisal/components/EditorIdentityCard';
+import { EditorTabBar, type EditorTab } from '@/features/appraisal/components/EditorTabBar';
 import { countFailedIn, panelHasField } from '@/features/appraisal/components/PropertyEditorHeader';
 import { ConstructionEditorSection } from '@/features/appraisal/components/construction/ConstructionEditorSection';
 import { useConstructionTab } from '@/features/appraisal/hooks/useConstructionTab';
-import { flattenFormErrors, scrollToField } from '@/shared/components/form';
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
+import { flattenFormErrors, useRegisterMissingReveal } from '@/shared/components/form';
 import Section from '@/shared/components/sections/Section';
 
 /**
@@ -42,6 +41,10 @@ export interface EditorContext {
   onSelectProperty: (propertyId: string) => void;
   /** The identity block above the tab bar, so picking a tab can scroll back up to it. */
   scrollAnchorRef?: RefObject<HTMLElement | null>;
+  /** Above the panels, under the tab bar: the property's latest correction. */
+  lead?: ReactNode;
+  /** Below the panels, on whichever tab is open: the reason for the correction. */
+  trail?: ReactNode;
 }
 
 /** Which tabs a property type has, in the order its page shows them. */
@@ -57,7 +60,7 @@ export interface TabLayout {
 }
 
 // Typed as plain strings on purpose: threading i18next's overloaded `t` through a keyed lookup is
-// what has made tsc crash here before (see FormSectionHeader).
+// what has made tsc crash here before (see GeneratedDetailForm).
 const TAB_LABEL_KEY: Record<PanelId, string> = {
   land: 'createPage.navLand',
   building: 'createPage.navBuilding',
@@ -68,11 +71,24 @@ const TAB_LABEL_KEY: Record<PanelId, string> = {
   'rental-info': 'createPage.navRentalInfo',
 };
 
-/** The frame the pages put every editor body in; its side panel is never opened here. */
-export const PropertyBodyFrame = ({ children }: { children: ReactNode }) => (
-  <ResizableSidebar isOpen={false} onToggle={() => undefined} openedWidth="w-1/5">
-    <ResizableSidebar.Main>{children}</ResizableSidebar.Main>
-  </ResizableSidebar>
+/**
+ * The body under the header: `@container/form-shell` is what the table kit and `FormSection`
+ * measure (DESIGN.md 17.1). No rail here, the pane is narrower than a page.
+ */
+export const PropertyBodyFrame = ({
+  context,
+  children,
+}: {
+  context?: Pick<EditorContext, 'lead' | 'trail'>;
+  children: ReactNode;
+}) => (
+  <div className="@container/form-shell px-3 pb-6 pt-[0.8571rem]">
+    <div className="flex min-w-0 flex-col gap-[0.8571rem]">
+      {context?.lead}
+      {children}
+      {context?.trail}
+    </div>
+  </div>
 );
 
 const isLeasePanel = (id: PanelId) => id === 'lease-agreement' || id === 'rental-info';
@@ -83,7 +99,7 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
   const { control } = methods;
   const isUnderConstruction = useWatch({ control, name: 'isUnderConstruction' });
   const isRentedOut = useWatch({ control, name: 'isRentedOut' });
-  const { errors, submitCount } = useFormState({ control });
+  const { errors } = useFormState({ control });
 
   const first = layout.panels[0];
   const [activeTab, setActiveTab] = useState<PanelId>(first);
@@ -114,36 +130,13 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
     errorCount: failed.length > 0 ? countFailedIn(`${id}-section`, failed) : 0,
   }));
 
-  // After a failed save, bring a failed field into view: stay on this tab if it has one, otherwise
-  // open the first tab that does and scroll once it is showing. The property pages do the same
-  // from their header (PropertyEditorHeader), which carries photos and navigation this screen has
-  // no use for.
-  const pendingScroll = useRef<string | null>(null);
-  useEffect(() => {
-    if (!submitCount || visible.length < 2) return;
-    const failedNow = flattenFormErrors(errors);
-    const here = failedNow.find(f => panelHasField(`${shown}-section`, f.path));
-    if (here) {
-      requestAnimationFrame(() => scrollToField(here.path));
-      return;
-    }
-    for (const f of failedNow) {
-      const target = visible.find(id => panelHasField(`${id}-section`, f.path));
-      if (!target) continue;
-      pendingScroll.current = f.path;
-      setActiveTab(target);
-      return;
-    }
-    // Only on the submit that produced the errors, not on every keystroke that clears one.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submitCount]);
-  useEffect(() => {
-    const path = pendingScroll.current;
-    if (!path) return;
-    pendingScroll.current = null;
-    const frame = requestAnimationFrame(() => scrollToField(path));
-    return () => cancelAnimationFrame(frame);
-  }, [activeTab]);
+  // The missing-fields popover's "go to field": open the tab the field sits on first, as the
+  // property pages do from their header (PropertyEditorHeader), which carries photos and navigation
+  // this screen has no use for. The chip's own jump scrolls once that tab is showing.
+  useRegisterMissingReveal(path => {
+    const target = visible.find(id => panelHasField(`${id}-section`, path));
+    if (target && target !== shown) setActiveTab(target);
+  });
 
   const hidden = (id: PanelId) => (shown === id ? '' : 'hidden');
 
@@ -240,7 +233,7 @@ export function PropertyTabs({ layout, context }: { layout: TabLayout; context: 
           onSelect={id => setActiveTab(id as PanelId)}
         />
       )}
-      <PropertyBodyFrame>
+      <PropertyBodyFrame context={context}>
         <div className="flex-auto flex flex-col gap-6 min-w-0">
           {layout.panels.map(renderPanel)}
         </div>

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT, vmsg } from '@/shared/components/form/validationMessage';
 
 // ─── Status ───────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,12 @@ export const CompanyQuotationStatusSchema = z.enum([
   'Rejected',
   'Withdrawn',
   'Declined',
+  'Expired',
 ]);
+
+/** Declined or Expired — the company has no bid to show and is not a candidate. */
+export const isNonParticipatingStatus = (status: string) =>
+  status === 'Declined' || status === 'Expired';
 
 // ─── Negotiation ──────────────────────────────────────────────────────────────
 
@@ -126,8 +132,9 @@ export const AppraisalSummarySchema = z.object({
   appraisalNumber: z.string().nullable().optional(),
   propertyType: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
-  loanType: z.string().nullable().optional(),
   channel: z.string().nullable().optional(),
+  /** The appraisal's own Banking Segment. */
+  bankingSegment: z.string().nullable().optional(),
   addedAt: z.string().datetime({ offset: true }).optional(),
   addedBy: z.string().nullable().optional(),
   /** v7: requestId from which documents are fetched for the share-docs picker. */
@@ -139,6 +146,23 @@ export const AppraisalSummarySchema = z.object({
   /** Appraisal type: New | ReAppraisal | Progressive | PreAppraisal. Gates the Send-to-RM action. */
   appraisalType: z.string().nullable().optional(),
   titles: z.array(QuotationTitleDetailSchema).optional().default([]),
+  // Finalize auto-assign outcome, written when the winner was assigned at Finalize. Nullable +
+  // optional so an older API (or an old finalization) still parses.
+  /** 'Assigned' | 'Failed' | 'Parked' | 'Skipped' */
+  autoAssignResult: z.string().nullable().optional(),
+  autoAssignMessage: z.string().nullable().optional(),
+  /** Machine code for autoAssignMessage (e.g. 'notPending'); null for a plain Assigned or an old row. */
+  autoAssignReasonCode: z.string().nullable().optional(),
+  autoAssignedAt: z.string().nullable().optional(),
+  /** Live: the activity the appraisal sits at now. */
+  currentActivityId: z.string().nullable().optional(),
+  /** Live: status of the appraisal's current assignment ('Pending' until someone assigns it). */
+  assignmentStatus: z.string().nullable().optional(),
+  /** Task of the appraisal-assignment activity, for opening the Administration page. */
+  assignmentTaskId: z.string().nullable().optional(),
+  followupStaffId: z.string().nullable().optional(),
+  followupStaffName: z.string().nullable().optional(),
+  followupMethod: z.string().nullable().optional(),
 });
 
 export type AppraisalSummaryDto = z.infer<typeof AppraisalSummarySchema>;
@@ -150,6 +174,10 @@ export const InvitedCompanySchema = z.object({
   companyName: z.string(),
   companyNameLocal: z.string().nullish(),
   email: z.string().nullable().optional(),
+  /** Banking Segments the company can appraise (Company.LoanTypes). */
+  loanTypes: z.array(z.string()).optional().default([]),
+  /** Segment Set entries the company cannot appraise — empty means it covers the quotation. */
+  missingSegments: z.array(z.string()).optional().default([]),
 });
 
 export type InvitedCompanyDto = z.infer<typeof InvitedCompanySchema>;
@@ -161,7 +189,8 @@ export const QuotationDraftSummarySchema = z.object({
   quotationNumber: z.string(),
   requestDate: z.string(),
   cutOffTime: z.string().nullable().optional(),
-  bankingSegment: z.string().nullable().optional(),
+  /** Distinct Banking Segments of the draft's current appraisals (computed live by the API, sorted). */
+  bankingSegment: z.array(z.string()).optional().default([]),
   totalAppraisals: z.number().int(),
   appraisalNumberPreview: z.array(z.string()).default([]),
   totalCompaniesInvited: z.number().int(),
@@ -224,7 +253,8 @@ export const QuotationRequestDetailSchema = z.object({
   requestId: z.string().uuid().nullable().optional(),
   workflowInstanceId: z.string().uuid().nullable().optional(),
   taskExecutionId: z.string().uuid().nullable().optional(),
-  bankingSegment: z.string().nullable().optional(),
+  /** Distinct Banking Segments of the quotation's current appraisals (computed live by the API, sorted). */
+  bankingSegment: z.array(z.string()).optional().default([]),
   rmUserId: z.string().uuid().nullable().optional(),
   rmUserName: z.string().nullable().optional(),
   rmUserFullName: z.string().nullable().optional(),
@@ -270,9 +300,11 @@ export const makeOpenNegotiationFormSchema = (t: TFunction<'quotation'>) =>
     message: z.string().min(1, t('validation.messageRequired')),
   });
 
-export const openNegotiationFormSchema = z.object({
-  message: z.string().min(1, 'Message is required'),
-});
+// The static schemas below are the factories built with the token `t`: each message is the token of
+// the same `quotation:validation.*` key, translated where it is shown.
+const tokens = tokenT('quotation');
+
+export const openNegotiationFormSchema = makeOpenNegotiationFormSchema(tokens);
 
 export type OpenNegotiationFormValues = z.infer<typeof openNegotiationFormSchema>;
 
@@ -283,11 +315,7 @@ export const makeRespondNegotiationFormSchema = (t: TFunction<'quotation'>) =>
     message: z.string().nullable().optional(),
   });
 
-export const respondNegotiationFormSchema = z.object({
-  verb: z.enum(['Accept', 'Counter', 'Reject']),
-  counterPrice: z.number().positive('Must be positive').nullable().optional(),
-  message: z.string().nullable().optional(),
-});
+export const respondNegotiationFormSchema = makeRespondNegotiationFormSchema(tokens);
 
 export type RespondNegotiationFormValues = z.infer<typeof respondNegotiationFormSchema>;
 
@@ -307,9 +335,7 @@ export const makeRejectTentativeFormSchema = (t: TFunction<'quotation'>) =>
     reason: z.string().min(1, t('validation.reasonRequired')),
   });
 
-export const rejectTentativeFormSchema = z.object({
-  reason: z.string().min(1, 'Reason is required'),
-});
+export const rejectTentativeFormSchema = makeRejectTentativeFormSchema(tokens);
 
 export type RejectTentativeFormValues = z.infer<typeof rejectTentativeFormSchema>;
 
@@ -320,15 +346,7 @@ export const makePickWinnerFormSchema = (t: TFunction<'quotation'>) =>
     negotiationNote: z.string().max(500, t('validation.noteMax')).nullable().optional(),
   });
 
-export const pickWinnerFormSchema = z.object({
-  reason: z.string().min(1, 'Please provide a reason for your selection'),
-  requestNegotiation: z.boolean().optional().default(false),
-  negotiationNote: z
-    .string()
-    .max(500, 'Note must be 500 characters or fewer')
-    .nullable()
-    .optional(),
-});
+export const pickWinnerFormSchema = makePickWinnerFormSchema(tokens);
 
 export type PickWinnerFormValues = z.infer<typeof pickWinnerFormSchema>;
 
@@ -371,49 +389,8 @@ export const makeSubmitQuotationItemSchema = (t: TFunction<'quotation'>) =>
       }
     });
 
-export const submitQuotationItemSchema = z
-  .object({
-    appraisalId: z.string().uuid(),
-    // Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
-    estimatedDays: z
-      .number({
-        required_error: 'Estimated Mandays is required',
-        invalid_type_error: 'Estimated Mandays is required',
-      })
-      .int('Must be a whole number')
-      .positive('Estimated Mandays must be positive'),
-    // Fee-breakdown fields — used in the Maker/Checker path.
-    feeAmount: z
-      .number({
-        required_error: 'Fee Amount is required',
-        invalid_type_error: 'Fee Amount is required',
-      })
-      .positive('Fee Amount must be positive'),
-    // Optional numeric fields — a cleared input emits null, so allow it (treated as 0 downstream).
-    discount: z.number().nonnegative().nullable().optional(),
-    negotiatedDiscount: z.number().nonnegative().nullable().optional(),
-    vatPercent: z.number().nonnegative().nullable().optional(),
-    /** Per-item company remark (maps to CompanyQuotationItem.ItemNotes). */
-    itemNotes: z.string().nullable().optional(),
-    /** Required when negotiatedDiscount resolves to 0/null on a Counter response. */
-    itemNegotiationReason: z
-      .string()
-      .max(500, 'Must be 500 characters or fewer')
-      .nullable()
-      .optional(),
-  })
-  .superRefine((item, ctx) => {
-    if (item.feeAmount === undefined) return;
-    const discount = item.discount ?? 0;
-    const negotiated = item.negotiatedDiscount ?? 0;
-    if (discount + negotiated > item.feeAmount) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['negotiatedDiscount'],
-        message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
-      });
-    }
-  });
+// Net price is derived server-side from feeAmount/discount/vatPercent — not collected on the form.
+export const submitQuotationItemSchema = makeSubmitQuotationItemSchema(tokens);
 
 export type SubmitQuotationItemValues = z.infer<typeof submitQuotationItemSchema>;
 
@@ -431,22 +408,9 @@ export const makeSubmitQuotationFormSchema = (t: TFunction<'quotation'>) =>
     contactPhone: z.string().nullable().optional(),
   });
 
-export const submitQuotationFormSchema = z.object({
-  // Kept in the schema so the save/submit payloads still wire through an empty string,
-  // but no longer surfaced as a form input — removed because it's the company's own
-  // external reference and often left blank. Empty string passes validation.
-  quotationNumber: z.string(),
-  /** Per-appraisal line items — at least one required. */
-  items: z.array(submitQuotationItemSchema).min(1, 'At least one appraisal item is required'),
-  validUntil: z.string().nullable().optional(),
-  proposedStartDate: z.string().nullable().optional(),
-  proposedCompletionDate: z.string().nullable().optional(),
-  remarks: z.string().nullable().optional(),
-  termsAndConditions: z.string().nullable().optional(),
-  contactName: z.string().nullable().optional(),
-  contactEmail: z.string().email('Invalid email').nullable().optional(),
-  contactPhone: z.string().nullable().optional(),
-});
+// `quotationNumber` stays in the schema so the save/submit payloads still wire through an empty
+// string, but is no longer a form input (the company's own external reference, often blank).
+export const submitQuotationFormSchema = makeSubmitQuotationFormSchema(tokens);
 
 export type SubmitQuotationFormValues = z.infer<typeof submitQuotationFormSchema>;
 
@@ -472,7 +436,7 @@ export const SaveDraftQuotationItemSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['negotiatedDiscount'],
-        message: 'Discount + Negotiated Discount cannot exceed Fee Amount',
+        message: vmsg('quotation:validation.discountExceedsFee'),
       });
     }
   });
@@ -538,10 +502,7 @@ export const makeEditDraftQuotationSchema = (t: TFunction<'quotation'>) =>
     companyIds: z.array(z.string().uuid()).min(0),
   });
 
-export const EditDraftQuotationSchema = z.object({
-  cutOffTime: z.string().min(1, 'Cut off time is required'),
-  companyIds: z.array(z.string().uuid()).min(0),
-});
+export const EditDraftQuotationSchema = makeEditDraftQuotationSchema(tokens);
 
 export type EditDraftQuotationFormValues = z.infer<typeof EditDraftQuotationSchema>;
 

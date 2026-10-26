@@ -7,27 +7,33 @@ import Pagination from '@shared/components/Pagination';
 import { TableRowSkeleton } from '@shared/components/Skeleton';
 import { formatLocaleDate } from '@shared/utils/dateUtils';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
+import { useProvinceName, usePropertyTypeLabels } from '@/shared/hooks/useCodeLabels';
+import { formatCurrency } from '@/shared/utils/formatUtils';
 import { useCollateralCatalog } from '../api/hooks';
 import type { CollateralCatalogParams, CollateralType } from '../api/types';
 
-const TYPE_OPTIONS: { value: CollateralType | ''; label: string }[] = [
-  { value: '', label: 'All types' },
-  { value: 'Land', label: 'Land' },
-  { value: 'Condo', label: 'Condo' },
-  { value: 'Leasehold', label: 'Leasehold' },
-  { value: 'Machine', label: 'Machine' },
-];
-
 const TYPE_ICON: Record<CollateralType, string> = {
-  Land: 'mountain-sun',
-  Condo: 'building-user',
-  Leasehold: 'file-contract',
-  Machine: 'gear',
+  L: 'mountain-sun',
+  LB: 'mountain-sun',
+  U: 'building-user',
+  LSL: 'file-contract',
+  LSB: 'file-contract',
+  LS: 'file-contract',
+  LSU: 'file-contract',
+  MAC: 'gear',
+  PRJ: 'building',
+  UNK: 'circle-question',
 };
+
+const TYPE_CODES = Object.keys(TYPE_ICON) as CollateralType[];
 
 export default function CollateralCatalogPage() {
   const navigate = useNavigate();
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // PropertyType uses the same codes as the backend's collateral types; unknown ones show as the code
+  const typeLabel = usePropertyTypeLabels();
+  const provinceName = useProvinceName();
 
   // Filters
   const [type, setType] = useState<CollateralType | ''>('');
@@ -83,8 +89,8 @@ export default function CollateralCatalogPage() {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">Failed to load collateral masters</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">Failed to load collateral masters</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -95,12 +101,12 @@ export default function CollateralCatalogPage() {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">Collateral Masters</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">Collateral Masters</h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             Admin catalog of all collateral masters (Land / Condo / Leasehold / Machine)
           </p>
         </div>
@@ -117,20 +123,21 @@ export default function CollateralCatalogPage() {
       {/* Filters */}
       <div className="shrink-0 flex flex-wrap gap-3 pb-1">
         {/* Type */}
-        <select
+        <NativeSelect
           value={type}
           onChange={e => {
             setType(e.target.value as CollateralType | '');
             setPage(0);
           }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 min-w-32"
+          className="min-w-32"
         >
-          {TYPE_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
+          <option value="">{t('collateralMaster.allTypes')}</option>
+          {TYPE_CODES.map(code => (
+            <option key={code} value={code}>
+              {typeLabel(code)}
             </option>
           ))}
-        </select>
+        </NativeSelect>
 
         {/* Province */}
         <input
@@ -141,7 +148,7 @@ export default function CollateralCatalogPage() {
             setProvince(e.target.value);
             setPage(0);
           }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 w-36"
+          className="px-3 py-2 text-sm border border-(--palette-line) rounded-lg outline-none bg-(--palette-surface) hover:border-(--palette-line-strong) w-36"
         />
 
         {/* Owner */}
@@ -153,26 +160,26 @@ export default function CollateralCatalogPage() {
             setOwner(e.target.value);
             setPage(0);
           }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 w-40"
+          className="px-3 py-2 text-sm border border-(--palette-line) rounded-lg outline-none bg-(--palette-surface) hover:border-(--palette-line-strong) w-40"
         />
 
         {/* Under construction filter */}
-        <select
+        <NativeSelect
           value={isUnderConstruction == null ? '' : String(isUnderConstruction)}
           onChange={e => {
             setIsUnderConstruction(e.target.value === '' ? undefined : e.target.value === 'true');
             setPage(0);
           }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300 min-w-40"
+          className="min-w-40"
         >
           <option value="">Construction (all)</option>
           <option value="true">Under construction</option>
           <option value="false">Not under construction</option>
-        </select>
+        </NativeSelect>
 
         {/* Last appraised from */}
         <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-500 shrink-0">From</span>
+          <span className="text-xs text-(--palette-gray-500) shrink-0">From</span>
           <input
             type="date"
             value={lastAppraisedFrom}
@@ -180,13 +187,13 @@ export default function CollateralCatalogPage() {
               setLastAppraisedFrom(e.target.value);
               setPage(0);
             }}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300"
+            className="px-3 py-2 text-sm border border-(--palette-line) rounded-lg outline-none bg-(--palette-surface) hover:border-(--palette-line-strong)"
           />
         </div>
 
         {/* Last appraised to */}
         <div className="flex items-center gap-1">
-          <span className="text-xs text-gray-500 shrink-0">To</span>
+          <span className="text-xs text-(--palette-gray-500) shrink-0">To</span>
           <input
             type="date"
             value={lastAppraisedTo}
@@ -194,7 +201,7 @@ export default function CollateralCatalogPage() {
               setLastAppraisedTo(e.target.value);
               setPage(0);
             }}
-            className="px-3 py-2 text-sm border border-gray-200 rounded-lg outline-none bg-white hover:border-gray-300"
+            className="px-3 py-2 text-sm border border-(--palette-line) rounded-lg outline-none bg-(--palette-surface) hover:border-(--palette-line-strong)"
           />
         </div>
 
@@ -207,36 +214,40 @@ export default function CollateralCatalogPage() {
       </div>
 
       {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">Type</th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
+                  Type
+                </th>
+                <th className="text-xs text-left font-semibold text-(--palette-ink-2) px-4 py-2.5">
                   Identity
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">Owner</th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
+                  Owner
+                </th>
+                <th className="text-xs text-left font-semibold text-(--palette-ink-2) px-4 py-2.5">
                   Province
                 </th>
-                <th className="text-xs text-center font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-center font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Engagements
                 </th>
-                <th className="text-xs text-left font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-left font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Last Appraised
                 </th>
-                <th className="text-xs text-right font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-right font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Last Value
                 </th>
-                <th className="text-xs text-center font-semibold text-gray-600 px-4 py-2.5">
+                <th className="text-xs text-center font-semibold text-(--palette-gray-600) px-4 py-2.5">
                   Status
                 </th>
               </tr>
             </thead>
             <tbody
               className={clsx(
-                'divide-y divide-gray-100',
+                'divide-y divide-(--palette-line-soft)',
                 isRefetching && 'opacity-50 pointer-events-none',
               )}
             >
@@ -258,9 +269,15 @@ export default function CollateralCatalogPage() {
                 <tr>
                   <td colSpan={8} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">No collateral masters found</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">
+                        No collateral masters found
+                      </p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {hasFilters
                           ? 'Try different filters'
                           : 'Run backfill to import existing appraisals'}
@@ -274,7 +291,7 @@ export default function CollateralCatalogPage() {
                     key={item.id}
                     onClick={() => navigate(`/admin/collateral-masters/${item.id}`)}
                     className={clsx(
-                      'hover:bg-gray-50 transition-colors cursor-pointer even:bg-gray-50/40',
+                      'hover:bg-(--palette-surface-2) transition-colors cursor-pointer even:bg-(--palette-surface-2)/40',
                       item.isDeleted && 'opacity-50',
                     )}
                   >
@@ -284,45 +301,47 @@ export default function CollateralCatalogPage() {
                           <Icon
                             style="solid"
                             name={TYPE_ICON[item.collateralType]}
-                            className="size-3.5 text-primary"
+                            className="size-3.5 text-(--palette-primary-text)"
                           />
                         </div>
-                        <span className="font-medium text-gray-900 text-xs">
-                          {item.collateralType}
+                        <span className="font-medium text-(--palette-ink) text-xs">
+                          {typeLabel(item.collateralType)}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 py-2.5 font-mono text-xs text-gray-700 max-w-[220px] truncate">
-                      {item.dedupKeySnippet}
+                    <td className="px-4 py-2.5 font-mono text-xs text-(--palette-ink) max-w-[220px] truncate">
+                      {item.land_TitleNumber ?? item.condo_CondoName ?? '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 text-xs max-w-[140px] truncate">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) text-xs max-w-[140px] truncate">
                       {item.ownerName ?? '—'}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 text-xs">{item.province ?? '—'}</td>
-                    <td className="px-4 py-2.5 text-center tabular-nums text-gray-700">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) text-xs">
+                      {provinceName(item.land_Province ?? item.condo_Province) || '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-center tabular-nums text-(--palette-ink)">
                       {item.engagementCount}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 text-xs whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) text-xs whitespace-nowrap">
                       {formatLocaleDate(item.lastAppraisedDate, i18n.language)}
                     </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700 text-xs">
+                    <td className="px-4 py-2.5 text-right tabular-nums text-(--palette-ink) text-xs">
                       {item.lastAppraisedValue != null
-                        ? `฿${item.lastAppraisedValue.toLocaleString('th-TH')}`
+                        ? formatCurrency(item.lastAppraisedValue)
                         : '—'}
                     </td>
                     <td className="px-4 py-2.5 text-center">
                       {item.isDeleted ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-red-50 text-red-600 ring-1 ring-red-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-(--palette-req-wash) text-(--palette-danger) ring-1 ring-(--palette-req-line)">
                           <Icon name="trash" style="solid" className="size-2.5" />
                           Deleted
                         </span>
                       ) : item.isUnderConstructionAtLastAppraisal ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-50 text-amber-600 ring-1 ring-amber-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-(--palette-warn-wash) text-amber-600 dark:text-amber-400 ring-1 ring-amber-200 dark:ring-amber-500/30">
                           <Icon name="hard-hat" style="solid" className="size-2.5" />
                           Construction
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-600 ring-1 ring-green-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 ring-1 ring-green-200 dark:ring-green-500/30">
                           <Icon name="check" style="solid" className="size-2.5" />
                           Active
                         </span>
@@ -335,7 +354,11 @@ export default function CollateralCatalogPage() {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>

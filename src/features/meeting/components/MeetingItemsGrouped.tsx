@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import clsx from 'clsx';
 
 import Icon from '@/shared/components/Icon';
@@ -46,9 +47,9 @@ interface MeetingItemsGroupedProps {
 // ── Decision badge ────────────────────────────────────────────────────────────
 
 const DECISION_VARIANT: Record<ItemDecision, string> = {
-  Pending: 'bg-gray-100 text-gray-600',
-  Released: 'bg-emerald-50 text-emerald-700',
-  RoutedBack: 'bg-red-50 text-red-700',
+  Pending: 'bg-(--palette-surface-3) text-(--palette-gray-600)',
+  Released: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  RoutedBack: 'bg-(--palette-req-wash) text-(--palette-req)',
 };
 
 const ItemDecisionBadge = ({ decision }: { decision: ItemDecision }) => {
@@ -83,9 +84,9 @@ const deriveDecisionAction = (item: MeetingItemDto): DecisionAction | null => {
 };
 
 const ACTION_BADGE: Record<DecisionAction, string> = {
-  released: 'bg-emerald-50 text-emerald-700',
-  routedBack: 'bg-red-50 text-red-700',
-  recalled: 'bg-amber-50 text-amber-700',
+  released: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
+  routedBack: 'bg-(--palette-req-wash) text-(--palette-req)',
+  recalled: 'bg-(--palette-warn-wash) text-(--palette-warn)',
 };
 
 const ACTION_LABEL_KEY: Record<
@@ -280,11 +281,11 @@ const ItemRow = ({
     <>
       <tr
         className={clsx(
-          'border-l-4 transition-colors hover:bg-gray-50',
+          'border-l-4 transition-colors hover:bg-(--palette-surface-2)',
           showActions ? DECISION_ROW_ACCENT[item.itemDecision] : 'border-l-transparent',
           // Routed-back rows carry a faint tint so problem items are findable without reading
           // every decision cell.
-          showActions && item.itemDecision === 'RoutedBack' && 'bg-red-50/40',
+          showActions && item.itemDecision === 'RoutedBack' && 'bg-(--palette-req-wash)/40',
         )}
       >
         <td className="px-1 py-3 text-center">
@@ -294,7 +295,7 @@ const ItemRow = ({
               onClick={() => setExpanded(e => !e)}
               aria-expanded={expanded}
               aria-label={t('items.toggleDetail', { label })}
-              className="rounded p-1 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+              className="rounded p-1 text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
             >
               <Icon
                 name="chevron-right"
@@ -304,24 +305,26 @@ const ItemRow = ({
             </button>
           )}
         </td>
-        <td className="px-2 py-1.5 text-center text-xs text-gray-400 tabular-nums">{index + 1}</td>
+        <td className="px-2 py-1.5 text-center text-xs text-(--palette-gray-400) tabular-nums">
+          {index + 1}
+        </td>
         <td className="truncate px-3 py-1.5 text-sm whitespace-nowrap">
           <Link
             to={`/appraisals/${item.appraisalId}/summary`}
-            className="font-semibold text-primary hover:underline"
+            className="font-semibold text-(--palette-primary-text) hover:underline"
           >
             {label}
           </Link>
         </td>
-        <td className="truncate px-3 py-1.5 text-left text-sm text-gray-900">
+        <td className="truncate px-3 py-1.5 text-left text-sm text-(--palette-ink)">
           {item.customerName}
         </td>
         {/* Staff is context, not the subject of the row — muted so the eye lands on the
             appraisal number, the customer and the value. */}
-        <td className="truncate px-3 py-1.5 text-left text-sm text-gray-500">
+        <td className="truncate px-3 py-1.5 text-left text-sm text-(--palette-gray-500)">
           {item.appraisalStaff}
         </td>
-        <td className="px-3 py-1.5 text-right text-sm font-semibold whitespace-nowrap tabular-nums text-gray-900">
+        <td className="px-3 py-1.5 text-right text-sm font-semibold whitespace-nowrap tabular-nums text-(--palette-ink)">
           {formatMoney(item.appraisedValue)}
         </td>
         {/* Status — always rendered for decision rows, regardless of what the viewer may do.
@@ -346,7 +349,7 @@ const ItemRow = ({
       </tr>
 
       {expanded && (
-        <tr className="bg-gray-50/70">
+        <tr className="bg-(--palette-surface-2)/70">
           {/* Skip the toggle and row-number columns so the detail starts flush under the
               Appraisal Number column rather than at an arbitrary offset. Using colSpan against
               the shared colgroup keeps that true if the widths ever change. */}
@@ -357,7 +360,7 @@ const ItemRow = ({
                 gap between them. The facts now read across one line and the reason sits beneath
                 at a readable measure. */}
             <div className="space-y-2">
-              <h5 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+              <h5 className="text-[10px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
                 {t('items.decisionRecord')}
               </h5>
 
@@ -366,7 +369,7 @@ const ItemRow = ({
                     carries the status, and "Pending" told you nothing about what happened. */}
                 {decisionAction && (
                   <div className="flex items-center gap-2">
-                    <dt className="text-gray-500">{t('items.action')}</dt>
+                    <dt className="text-(--palette-gray-500)">{t('items.action')}</dt>
                     <dd>
                       <span
                         className={clsx(
@@ -381,25 +384,25 @@ const ItemRow = ({
                 )}
                 {item.decisionBy && (
                   <div className="flex items-center gap-2">
-                    <dt className="text-gray-500">{t('items.decidedBy')}</dt>
-                    <dd className="font-medium text-gray-800">{item.decisionBy}</dd>
+                    <dt className="text-(--palette-gray-500)">{t('items.decidedBy')}</dt>
+                    <dd className="font-medium text-(--palette-ink)">{item.decisionBy}</dd>
                   </div>
                 )}
                 {item.decisionAt && (
                   <div className="flex items-center gap-2">
-                    <dt className="text-gray-500">{t('items.decidedAt')}</dt>
-                    <dd className="text-gray-800">{formatDateTime(item.decisionAt)}</dd>
+                    <dt className="text-(--palette-gray-500)">{t('items.decidedAt')}</dt>
+                    <dd className="text-(--palette-ink)">{formatDateTime(item.decisionAt)}</dd>
                   </div>
                 )}
               </dl>
 
               {item.decisionReason && (
                 <div>
-                  <h5 className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+                  <h5 className="text-[10px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
                     {t('items.reason')}
                   </h5>
                   {/* Quoted, not boxed — the bordered white box read as an editable input. */}
-                  <p className="mt-1 max-w-prose border-l-2 border-gray-200 pl-2.5 text-xs whitespace-pre-wrap text-gray-700">
+                  <p className="mt-1 max-w-prose border-l-2 border-(--palette-line) pl-2.5 text-xs whitespace-pre-wrap text-(--palette-ink)">
                     {item.decisionReason}
                   </p>
                 </div>
@@ -467,8 +470,8 @@ const ItemsGroupTable = ({
           style={{ backgroundColor: accentColor }}
         />
       )}
-      <h4 className="text-xs font-semibold tracking-wide text-gray-700">{label}</h4>
-      <span className="text-[11px] text-gray-400 tabular-nums">{items.length}</span>
+      <h4 className="text-xs font-semibold tracking-wide text-(--palette-ink)">{label}</h4>
+      <span className="text-[11px] text-(--palette-gray-400) tabular-nums">{items.length}</span>
     </div>
   );
 
@@ -479,7 +482,7 @@ const ItemsGroupTable = ({
     return (
       <div>
         {heading}
-        <p className="border-t border-gray-100 py-2 text-xs text-gray-300 italic">
+        <p className="border-t border-(--palette-line-soft) py-2 text-xs text-(--palette-gray-300) italic">
           {t('empty.noItems')}
         </p>
       </div>
@@ -495,21 +498,21 @@ const ItemsGroupTable = ({
         <table className="w-full table-fixed">
           <ItemsTableColgroup />
           <thead>
-            <tr className="border-b border-gray-200">
+            <tr className="border-b border-(--palette-line)">
               <th className="text-xs px-1 pb-2 font-semibold" aria-hidden="true" />
-              <th className="px-2 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              <th className="px-2 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                 {t('columns.no')}
               </th>
-              <th className="px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              <th className="px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                 {t('columns.appraisalNumber')}
               </th>
-              <th className="px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              <th className="px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                 {t('columns.customerName')}
               </th>
-              <th className="px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              <th className="px-3 pb-2 text-left text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                 {t('columns.appraisalStaff')}
               </th>
-              <th className="px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+              <th className="px-3 pb-2 text-right text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                 {t('columns.appraisalValue')}
               </th>
               {/* Status and actions are separate columns: status must be readable on every row,
@@ -518,13 +521,13 @@ const ItemsGroupTable = ({
                   tables stay aligned. */}
               {showActions ? (
                 <>
-                  <th className="px-3 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  <th className="px-3 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                     {t('columns.decision')}
                   </th>
-                  <th className="px-3 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  <th className="px-3 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                     {t('columns.votes')}
                   </th>
-                  <th className="px-3 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                  <th className="px-3 pb-2 text-center text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                     {t('columns.actions')}
                   </th>
                 </>
@@ -537,7 +540,7 @@ const ItemsGroupTable = ({
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {items.map((item, index) => (
               <ItemRow
                 key={item.id}
@@ -554,14 +557,14 @@ const ItemsGroupTable = ({
           </tbody>
           {items.length > 1 && (
             <tfoot>
-              <tr className="border-t border-gray-200">
+              <tr className="border-t border-(--palette-line)">
                 <td
                   colSpan={5}
-                  className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-gray-400"
+                  className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)"
                 >
                   {t('items.subtotal')}
                 </td>
-                <td className="px-3 py-2 text-right text-sm font-bold tabular-nums text-gray-900">
+                <td className="px-3 py-2 text-right text-sm font-bold tabular-nums text-(--palette-ink)">
                   {formatMoney(subtotal)}
                 </td>
                 <td colSpan={3} />
@@ -661,7 +664,7 @@ const MeetingItemsGrouped = ({
             <Icon
               name="magnifying-glass"
               style="solid"
-              className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-gray-400"
+              className="pointer-events-none absolute left-2.5 top-1/2 size-3 -translate-y-1/2 text-(--palette-gray-400)"
             />
             <input
               type="search"
@@ -669,15 +672,14 @@ const MeetingItemsGrouped = ({
               onChange={e => setSearch(e.target.value)}
               placeholder={t('items.searchPlaceholder')}
               aria-label={t('items.searchPlaceholder')}
-              className="w-full rounded-lg border border-gray-200 py-1.5 pl-8 pr-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-(--palette-line) py-1.5 pl-8 pr-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
           </div>
 
-          <select
+          <NativeSelect
             value={decisionFilter}
             onChange={e => setDecisionFilter(e.target.value as DecisionFilter)}
             aria-label={t('columns.decision')}
-            className="rounded-lg border border-gray-200 px-2 py-1.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             <option value="all">{t('items.allDecisions')}</option>
             {(['Pending', 'Released', 'RoutedBack'] as ItemDecision[]).map(d => (
@@ -685,10 +687,10 @@ const MeetingItemsGrouped = ({
                 {t(`decision.${d}` as `decision.${ItemDecision}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
           {isFiltering && (
-            <span className="text-xs text-gray-500 tabular-nums">
+            <span className="text-xs text-(--palette-gray-500) tabular-nums">
               {t('items.showing', { shown: shownCount, total: totalItemCount })}
             </span>
           )}
@@ -698,12 +700,12 @@ const MeetingItemsGrouped = ({
       {/* Both sections and every group inside them always render — an empty group shows its
           own "no items" row rather than disappearing. */}
       {isFiltering && shownCount === 0 && (
-        <p className="text-center text-sm text-gray-400">{t('items.noMatches')}</p>
+        <p className="text-center text-sm text-(--palette-gray-400)">{t('items.noMatches')}</p>
       )}
 
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
-          <Icon name="gavel" style="solid" className="size-3.5 text-primary" />
+        <h3 className="flex items-center gap-2 text-base font-semibold text-(--palette-ink)">
+          <Icon name="gavel" style="solid" className="size-3.5 text-(--palette-primary-text)" />
           {t('sections.decisionItems', { n: decisionShown })}
         </h3>
         {decisionGroups.map(group => (
@@ -723,7 +725,7 @@ const MeetingItemsGrouped = ({
       </div>
 
       <div className="space-y-4">
-        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
+        <h3 className="flex items-center gap-2 text-base font-semibold text-(--palette-ink)">
           <Icon name="circle-info" style="solid" className="size-3.5 text-purple-500" />
           {t('sections.acknowledgementItems', { n: ackShown })}
         </h3>

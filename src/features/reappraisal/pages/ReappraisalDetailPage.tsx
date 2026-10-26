@@ -22,10 +22,10 @@ import type {
   InitiateReappraisalResult,
   BlockUnitInfo,
   NearbyReappraisalCandidate,
-  SkippedReappraisalItem,
 } from '../types';
 import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
+import { BookList, InitiateResultModal, TAG } from './InitiateResultModal';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -38,26 +38,38 @@ function rowToken(c: NearbyReappraisalCandidate): string {
   return (c.appraisalId ?? c.candidateId) as string;
 }
 
-const TAG =
-  'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border whitespace-nowrap';
-
 /** Why a book is in the group table: AS400 lists it as due, or it is a CAS appraisal brought forward. */
 function SourceTag({ row }: { row: NearbyReappraisalCandidate }) {
   const { t } = useTranslation('reappraisal');
   if (row.isInProgress)
     return (
-      <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200 opacity-70')}>
+      <span
+        className={clsx(
+          TAG,
+          'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30 opacity-70',
+        )}
+      >
         {t('badge.inProgress')}
       </span>
     );
   if (row.source === 'Candidate')
     return (
-      <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
+      <span
+        className={clsx(
+          TAG,
+          'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30',
+        )}
+      >
         {t('detail.source.due')}
       </span>
     );
   return (
-    <span className={clsx(TAG, 'bg-sky-50 text-sky-700 border-sky-200')}>
+    <span
+      className={clsx(
+        TAG,
+        'bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-500/30',
+      )}
+    >
       {t('detail.source.inSystemNotDue')}
     </span>
   );
@@ -75,10 +87,12 @@ function FactCard({
   children: ReactNode;
 }) {
   return (
-    <section className="bg-white rounded-lg border border-gray-200 shadow-sm px-4 py-3 min-w-0">
-      <h3 className="flex items-baseline justify-between gap-2 mb-2 text-xs font-semibold text-gray-800">
+    <section className="bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm px-4 py-3 min-w-0">
+      <h3 className="flex items-baseline justify-between gap-2 mb-2 text-xs font-semibold text-(--palette-ink)">
         {title}
-        {aside && <span className="text-[11px] font-normal text-gray-400">{aside}</span>}
+        {aside && (
+          <span className="text-[11px] font-normal text-(--palette-gray-400)">{aside}</span>
+        )}
       </h3>
       <dl className="grid grid-cols-[max-content_minmax(0,1fr)] gap-x-4 gap-y-1.5 text-xs">
         {children}
@@ -90,8 +104,13 @@ function FactCard({
 function Fact({ label, children, long }: { label: string; children?: ReactNode; long?: boolean }) {
   return (
     <>
-      <dt className="text-gray-500 whitespace-nowrap">{label}</dt>
-      <dd className={clsx('text-gray-900 break-words', long ? 'leading-relaxed' : 'font-medium')}>
+      <dt className="text-(--palette-gray-500) whitespace-nowrap">{label}</dt>
+      <dd
+        className={clsx(
+          'text-(--palette-ink) break-words',
+          long ? 'leading-relaxed' : 'font-medium',
+        )}
+      >
         {children == null || children === false || children === '' ? '—' : children}
       </dd>
     </>
@@ -110,17 +129,19 @@ function Stat({
   className?: string;
 }) {
   return (
-    <div className="px-4 py-3 border-gray-100 [&:not(:first-child)]:border-l">
-      <div className="text-[11px] text-gray-500">{label}</div>
+    <div className="px-4 py-3 border-(--palette-line-soft) [&:not(:first-child)]:border-l">
+      <div className="text-[11px] text-(--palette-gray-500)">{label}</div>
       <div
         className={clsx(
           'mt-0.5 text-[15px] font-semibold tabular-nums whitespace-nowrap',
-          className ?? 'text-gray-900',
+          className ?? 'text-(--palette-ink)',
         )}
       >
         {value}
       </div>
-      {note && <div className="mt-px text-[11px] text-gray-400 tabular-nums">{note}</div>}
+      {note && (
+        <div className="mt-px text-[11px] text-(--palette-gray-400) tabular-nums">{note}</div>
+      )}
     </div>
   );
 }
@@ -137,10 +158,12 @@ function Banner({
   action?: ReactNode;
 }) {
   const style = {
-    amber: 'bg-amber-50 border-amber-200 text-amber-900',
-    violet: 'bg-violet-50 border-violet-200 text-violet-900',
-    rose: 'bg-rose-50 border-rose-200 text-rose-900',
-    gray: 'bg-gray-50 border-gray-200 text-gray-700',
+    amber:
+      'bg-(--palette-warn-wash) border-amber-200 dark:border-amber-500/30 text-amber-900 dark:text-amber-200',
+    violet:
+      'bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/30 text-violet-900 dark:text-violet-200',
+    rose: 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200',
+    gray: 'bg-(--palette-surface-2) border-(--palette-line) text-(--palette-ink)',
   }[tone];
   return (
     <div
@@ -229,7 +252,7 @@ function BlockUnitSection({ unit }: { unit?: BlockUnitInfo }) {
             {unit && (
               <Link
                 to={`/appraisals/${unit.projectAppraisalId}/360`}
-                className="text-primary hover:underline tabular-nums"
+                className="text-(--palette-primary-text) hover:underline tabular-nums"
               >
                 {unit.projectAppraisalNumber}
               </Link>
@@ -259,7 +282,7 @@ function ConfirmFooter({
 }) {
   const { t } = useTranslation('common');
   return (
-    <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
+    <div className="flex justify-end gap-2 pt-3 border-t border-(--palette-line-soft)">
       <Button variant="outline" size="sm" onClick={onClose} disabled={isPending}>
         {t('actions.cancel')}
       </Button>
@@ -285,7 +308,9 @@ function SkipConfirmModal({
   return (
     <Modal isOpen={open} onClose={onClose} title={t('detail.deleteModal.title')} size="sm">
       <div className="space-y-4">
-        <p className="text-sm text-gray-700 leading-relaxed">{t('detail.deleteModal.body')}</p>
+        <p className="text-sm text-(--palette-ink) leading-relaxed">
+          {t('detail.deleteModal.body')}
+        </p>
         <ConfirmFooter
           onClose={onClose}
           onConfirm={onConfirm}
@@ -294,33 +319,6 @@ function SkipConfirmModal({
         />
       </div>
     </Modal>
-  );
-}
-
-/** One line per book: what its request will start with. */
-function BookList({
-  books,
-}: {
-  books: { bookNumber: string; hasPrior: boolean; tag?: ReactNode; note?: string }[];
-}) {
-  const { t } = useTranslation('reappraisal');
-  return (
-    <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100">
-      {books.map(b => (
-        <li key={b.bookNumber} className="px-3 py-2">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium text-primary tabular-nums">{b.bookNumber}</span>
-            {b.tag}
-          </div>
-          <p className="mt-0.5 text-[11px] text-gray-500">
-            {b.note ??
-              (b.hasPrior
-                ? t('detail.initiateModal.copiesPrior')
-                : t('detail.initiateModal.startsEmpty'))}
-          </p>
-        </li>
-      ))}
-    </ul>
   );
 }
 
@@ -347,7 +345,7 @@ function InitiateConfirmModal({
     >
       <div className="space-y-4">
         <BookList books={books} />
-        <p className="rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 text-xs text-gray-700 leading-relaxed">
+        <p className="rounded-lg bg-primary/5 border border-primary/15 px-3 py-2 text-xs text-(--palette-ink) leading-relaxed">
           {t('detail.initiateModal.draftNotice')}
         </p>
         <ConfirmFooter
@@ -356,113 +354,6 @@ function InitiateConfirmModal({
           isPending={isPending}
           confirmLabel={t('detail.initiateModal.confirm', { total: books.length })}
         />
-      </div>
-    </Modal>
-  );
-}
-
-const SKIP_REASON_KEY: Record<SkippedReappraisalItem['reason'], string> = {
-  AlreadyInFlight: 'detail.successModal.alreadyInFlight',
-  AlreadyReviewed: 'detail.successModal.alreadyReviewed',
-  NoBookNumber: 'detail.successModal.noBookNumber',
-  NotDue: 'detail.successModal.notDue',
-};
-
-function InitiateResultModal({
-  result,
-  onClose,
-}: {
-  result: InitiateReappraisalResult | null;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation(['reappraisal', 'common']);
-  const navigate = useNavigate();
-  if (!result) return null;
-  const accepted = result.accepted ?? [];
-  const createdCount = result.acceptedCount ?? accepted.length;
-  const skipped = result.skipped ?? [];
-  return (
-    <Modal isOpen onClose={onClose} title={t('detail.successModal.title')} size="md">
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={clsx(
-              'size-9 shrink-0 rounded-full flex items-center justify-center',
-              createdCount > 0 ? 'bg-primary/10' : 'bg-amber-50',
-            )}
-          >
-            <Icon
-              style="solid"
-              name={createdCount > 0 ? 'check' : 'ban'}
-              className={clsx('size-4', createdCount > 0 ? 'text-primary' : 'text-amber-600')}
-            />
-          </div>
-          <div className="text-xs">
-            <p className="text-sm font-semibold text-gray-900">
-              {t('detail.successModal.createdDrafts', { total: createdCount })}
-              {createdCount > 0 && (
-                <span className="font-normal text-gray-500">
-                  {' · '}
-                  {t('detail.successModal.groupNumber')}{' '}
-                  <span className="tabular-nums">{result.groupNumber}</span>
-                </span>
-              )}
-            </p>
-            {createdCount > 0 && (
-              <p className="text-gray-500 mt-0.5">{t('detail.successModal.notSubmitted')}</p>
-            )}
-          </div>
-        </div>
-
-        {accepted.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-gray-600">
-              {t('detail.successModal.createdHeading')}
-            </p>
-            <BookList
-              books={accepted.map(a => ({
-                bookNumber: a.bookNumber,
-                hasPrior: a.prevAppraisalId != null,
-                tag: (
-                  <span className={clsx(TAG, 'bg-primary/5 text-primary border-primary/20')}>
-                    {t('progress.draft')}
-                  </span>
-                ),
-              }))}
-            />
-          </div>
-        )}
-
-        {skipped.length > 0 && (
-          <div className="space-y-1.5">
-            <p className="text-[11px] font-semibold text-gray-600">
-              {t('detail.successModal.skippedHeading', { total: skipped.length })}
-            </p>
-            <BookList
-              books={skipped.map((s, i) => ({
-                bookNumber: s.oldAppraisalReportNumber ?? `—${i}`,
-                hasPrior: false,
-                tag: (
-                  <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
-                    {t(SKIP_REASON_KEY[s.reason] as 'detail.successModal.notDue')}
-                  </span>
-                ),
-                note: t(`detail.successModal.reasonHint.${s.reason}`),
-              }))}
-            />
-          </div>
-        )}
-
-        <div className="flex justify-end gap-2 pt-3 border-t border-gray-100">
-          <Button variant="outline" size="sm" onClick={onClose}>
-            {t('detail.backToList')}
-          </Button>
-          {createdCount > 0 && (
-            <Button variant="primary" size="sm" onClick={() => navigate('/requests')}>
-              {t('detail.successModal.goToRequests')}
-            </Button>
-          )}
-        </div>
       </div>
     </Modal>
   );
@@ -560,11 +451,11 @@ function ReappraisalDetailPage() {
   if (isLoading) {
     return (
       <div className="flex flex-col gap-4 p-4">
-        <div className="h-6 w-48 bg-gray-100 rounded animate-pulse" />
-        <div className="h-16 bg-gray-100 rounded animate-pulse" />
+        <div className="h-6 w-48 bg-(--palette-surface-3) rounded animate-pulse" />
+        <div className="h-16 bg-(--palette-surface-3) rounded animate-pulse" />
         <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-32 bg-gray-100 rounded animate-pulse" />
+            <div key={i} className="h-32 bg-(--palette-surface-3) rounded animate-pulse" />
           ))}
         </div>
       </div>
@@ -574,14 +465,14 @@ function ReappraisalDetailPage() {
   if (isError || !detail) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">
+          <p className="text-sm font-medium text-(--palette-ink)">
             {isError ? t('detail.error.loadFailed') : t('detail.error.notFound')}
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
         <Button variant="outline" size="sm" onClick={backToList}>
           {t('detail.backToList')}
@@ -685,13 +576,13 @@ function ReappraisalDetailPage() {
           <button
             onClick={backToList}
             aria-label={t('detail.backToList')}
-            className="flex items-center justify-center size-7 shrink-0 rounded-md border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 hover:text-gray-700 transition-colors"
+            className="flex items-center justify-center size-7 shrink-0 rounded-md border border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-500) hover:bg-(--palette-surface-2) hover:text-(--palette-ink) transition-colors"
           >
             <Icon style="solid" name="arrow-left" className="size-3.5" />
           </button>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-base font-semibold text-gray-900 tabular-nums">
+              <h2 className="text-base font-semibold text-(--palette-ink) tabular-nums">
                 {detail.oldAppraisalReportNumber}
               </h2>
               <ReappraisalStatusBadge
@@ -700,12 +591,17 @@ function ReappraisalDetailPage() {
               />
               <PriorSourceBadge source={detail.priorAppraisalSource} />
               {detail.isBlockUnit && (
-                <span className={clsx(TAG, 'bg-teal-50 text-teal-700 border-teal-200')}>
+                <span
+                  className={clsx(
+                    TAG,
+                    'bg-(--palette-accent-wash) text-(--palette-accent-ink) border-(--palette-accent-line)',
+                  )}
+                >
                   {t('unit.tag')}
                 </span>
               )}
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">
               {detail.customerName ?? '—'} · CIF {detail.cifNumber} ·{' '}
               {t(`reviewType.${detail.reviewType}`, { defaultValue: detail.reviewType })}
             </p>
@@ -761,7 +657,7 @@ function ReappraisalDetailPage() {
             detail.newAppraisalId && (
               <Link
                 to={`/appraisals/${detail.newAppraisalId}`}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 bg-white rounded-lg text-gray-800 hover:bg-gray-100"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-(--palette-line-strong) bg-(--palette-surface) rounded-lg text-(--palette-ink) hover:bg-(--palette-surface-3)"
               >
                 {t('detail.banner.open', { number: detail.newAppraisalNumber })}
                 <Icon style="solid" name="arrow-up-right-from-square" className="size-2.5" />
@@ -805,7 +701,7 @@ function ReappraisalDetailPage() {
             openWork && (
               <Link
                 to={openWork.to}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-amber-300 bg-white rounded-lg text-amber-800 hover:bg-amber-100"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-amber-300 dark:border-amber-500/40 bg-(--palette-surface) rounded-lg text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20"
               >
                 {t('detail.banner.open', { number: openWork.label })}
                 <Icon style="solid" name="arrow-up-right-from-square" className="size-2.5" />
@@ -837,7 +733,7 @@ function ReappraisalDetailPage() {
       {detail.isBlockUnit && <BlockUnitSection unit={detail.unit} />}
 
       {/* ── Due summary ── */}
-      <section className="shrink-0 bg-white rounded-lg border border-gray-200 shadow-sm grid grid-cols-2 lg:grid-cols-4">
+      <section className="shrink-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm grid grid-cols-2 lg:grid-cols-4">
         <Stat
           label={t('detail.stats.reviewDue')}
           value={due ? remaining(due.due, due.daysLeft) : '—'}
@@ -892,7 +788,7 @@ function ReappraisalDetailPage() {
             {detail.appraisalId && (
               <Link
                 to={`/appraisals/${detail.appraisalId}/360`}
-                className="ml-2 font-normal text-primary hover:underline"
+                className="ml-2 font-normal text-(--palette-primary-text) hover:underline"
               >
                 {t('detail.openPrior')}
               </Link>
@@ -944,16 +840,18 @@ function ReappraisalDetailPage() {
       </div>
 
       {/* ── Group selection ── */}
-      <section className="flex-1 min-h-[20rem] bg-white rounded-lg border border-gray-200 shadow-sm flex flex-col">
-        <div className="shrink-0 px-4 py-3 border-b border-gray-100">
-          <h3 className="text-xs font-semibold text-gray-800">{t('detail.group.title')}</h3>
-          <p className="text-[11px] text-gray-500 mt-0.5">{t('detail.group.subtitle')}</p>
+      <section className="flex-1 min-h-[20rem] bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm flex flex-col">
+        <div className="shrink-0 px-4 py-3 border-b border-(--palette-line-soft)">
+          <h3 className="text-xs font-semibold text-(--palette-ink)">{t('detail.group.title')}</h3>
+          <p className="text-[11px] text-(--palette-gray-500) mt-0.5">
+            {t('detail.group.subtitle')}
+          </p>
         </div>
 
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full min-w-max text-xs">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gray-50 border-b border-gray-200 text-gray-500">
+              <tr className="bg-(--palette-surface-2) border-b border-(--palette-line) text-(--palette-gray-500)">
                 <th className="text-xs px-4 py-2.5 w-8 font-semibold" />
                 {[
                   t('detail.group.columns.book'),
@@ -973,7 +871,7 @@ function ReappraisalDetailPage() {
                 <th className="text-xs px-3 py-2.5 font-semibold" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {/* Main book — always included */}
               <tr className="bg-primary/[0.03]">
                 <td className="px-4 py-2">
@@ -985,21 +883,31 @@ function ReappraisalDetailPage() {
                   </span>
                 </td>
                 <td className="px-3 py-2 whitespace-nowrap">
-                  <span className="font-medium text-primary tabular-nums">
+                  <span className="font-medium text-(--palette-primary-text) tabular-nums">
                     {detail.oldAppraisalReportNumber}
                   </span>
-                  <span className={clsx(TAG, 'ml-1.5 bg-primary/5 text-primary border-primary/20')}>
+                  <span
+                    className={clsx(
+                      TAG,
+                      'ml-1.5 bg-primary/5 text-(--palette-primary-text) border-primary/20',
+                    )}
+                  >
                     {t('detail.group.thisBook')}
                   </span>
                 </td>
                 <td className="px-3 py-2">
-                  <span className={clsx(TAG, 'bg-amber-50 text-amber-700 border-amber-200')}>
+                  <span
+                    className={clsx(
+                      TAG,
+                      'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30',
+                    )}
+                  >
                     {t('detail.source.due')}
                   </span>
                 </td>
-                <td className="px-3 py-2 text-gray-700">{detail.customerName ?? '—'}</td>
-                <td className="px-3 py-2 text-gray-300">—</td>
-                <td className="px-3 py-2 text-gray-700 whitespace-nowrap tabular-nums">
+                <td className="px-3 py-2 text-(--palette-ink)">{detail.customerName ?? '—'}</td>
+                <td className="px-3 py-2 text-(--palette-gray-300)">—</td>
+                <td className="px-3 py-2 text-(--palette-ink) whitespace-nowrap tabular-nums">
                   {fd(detail.appraisalDate)}
                 </td>
                 <td className="px-3 py-2">
@@ -1010,7 +918,7 @@ function ReappraisalDetailPage() {
 
               {nearby.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-8 text-center text-xs text-gray-400">
+                  <td colSpan={8} className="py-8 text-center text-xs text-(--palette-gray-400)">
                     {hasCoords ? t('detail.group.empty') : t('detail.group.noCoordinates')}
                   </td>
                 </tr>
@@ -1024,10 +932,10 @@ function ReappraisalDetailPage() {
                       key={token}
                       className={clsx(
                         c.isInProgress
-                          ? 'text-gray-400'
+                          ? 'text-(--palette-gray-400)'
                           : checked
                             ? 'bg-primary/[0.03]'
-                            : 'hover:bg-gray-50',
+                            : 'hover:bg-(--palette-surface-2)',
                       )}
                     >
                       <td className="px-4 py-2">
@@ -1039,14 +947,16 @@ function ReappraisalDetailPage() {
                           aria-label={t('detail.group.selectBook', {
                             number: c.oldAppraisalReportNumber,
                           })}
-                          className="size-4 rounded border-gray-300 accent-[var(--color-primary-600)] disabled:opacity-40"
+                          className="size-4 rounded border-(--palette-line-strong) accent-[var(--color-primary-600)] disabled:opacity-40"
                         />
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
                         <span
                           className={clsx(
                             'font-medium tabular-nums',
-                            c.isInProgress ? 'text-gray-400' : 'text-primary',
+                            c.isInProgress
+                              ? 'text-(--palette-gray-400)'
+                              : 'text-(--palette-primary-text)',
                           )}
                         >
                           {c.oldAppraisalReportNumber}
@@ -1055,7 +965,7 @@ function ReappraisalDetailPage() {
                           <span
                             className={clsx(
                               TAG,
-                              'ml-1.5 bg-violet-50 text-violet-700 border-violet-200',
+                              'ml-1.5 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30',
                             )}
                           >
                             {t('detail.group.notInCas')}
@@ -1084,7 +994,7 @@ function ReappraisalDetailPage() {
                             onClick={() =>
                               setSkipTarget({ candidateId: c.candidateId!, token: rowToken(c) })
                             }
-                            className="px-2 py-1 text-[11px] text-gray-500 rounded-md border border-transparent hover:border-red-200 hover:bg-red-50 hover:text-red-700 whitespace-nowrap"
+                            className="px-2 py-1 text-[11px] text-(--palette-gray-500) rounded-md border border-transparent hover:border-(--palette-req-line) hover:bg-(--palette-req-wash) hover:text-(--palette-req) whitespace-nowrap"
                           >
                             {t('detail.group.deleteCandidate')}
                           </button>
@@ -1099,8 +1009,8 @@ function ReappraisalDetailPage() {
         </div>
 
         {/* Action bar — the selection and the action that uses it, together */}
-        <div className="sticky bottom-0 shrink-0 px-4 py-2.5 border-t border-gray-200 bg-gray-50/90 backdrop-blur rounded-b-lg flex flex-wrap items-center justify-between gap-3">
-          <span className="text-xs text-gray-600">
+        <div className="sticky bottom-0 shrink-0 px-4 py-2.5 border-t border-(--palette-line) bg-(--palette-surface-2)/90 backdrop-blur rounded-b-lg flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-(--palette-gray-600)">
             {isBlocked
               ? detail.status === 'Deleted'
                 ? t('detail.actionBar.restoreFirst')

@@ -1,7 +1,6 @@
 import { formatNumber } from '@shared/utils/formatUtils';
-import { INPUT_BOX, INPUT_SIZE } from '../tables/denseTable';
-
-export { INPUT_BOX };
+import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
+import { roundBaht } from '../../utils/constructionMoney';
 
 /** Shared by the construction inspection grid (detail and summary modes) and the tab's toolbar. */
 
@@ -67,26 +66,8 @@ export function sumWork(items: ComputedItem[]): WorkTotals {
   };
 }
 
-// Pixel values on purpose: the app's root font-size is 13px, so rem utilities (text-xs, px-2)
-// render smaller than the pricing grids this table matches.
-export const TH =
-  'px-[8px] py-[5px] leading-[1.0769rem] align-top whitespace-nowrap bg-[color:var(--palette-surface-2)] font-medium text-[color:var(--palette-ink-2)] border-b border-b-[color:var(--palette-line)] border-r border-r-[color:var(--palette-line-soft)]';
-/** A cell's rules without its padding, for cells that set their own (p-0 would lose to px-[8px]). */
-export const CELL =
-  'py-0 whitespace-nowrap border-b border-b-[color:var(--palette-line-soft)] border-r border-r-[color:var(--palette-line-soft)]';
-export const TD = `px-[8px] ${CELL}`;
-// The frozen column draws its own edge: `pa-sticky-edge` only has a rule inside the pricing
-// screen's ScrollableTableContainer, which this table does not use.
-export const NAME =
-  'sticky left-0 z-10 w-[220px] min-w-[220px] max-w-[220px] overflow-hidden text-ellipsis shadow-[1px_0_0_#e3e9e8]';
-export const RO = 'text-[color:var(--palette-ink-3)] bg-[color:var(--palette-surface-2)]';
-/**
- * A cell holding an input: the input plus 2px above and below, which makes the row `--cas-row-h`
- * (34px) counting the 1px rule under it. The fallbacks are the skin's light values, for a screen outside `.cas-form-grid`.
- */
-export const INPUT_TD =
-  'px-[3px] pt-[calc((var(--cas-row-h,2.6154rem)_-_var(--cas-input-h,2.3077rem))_/_2)] pb-[calc((var(--cas-row-h,2.6154rem)_-_var(--cas-input-h,2.3077rem))_/_2_-_1px)] whitespace-nowrap border-b border-b-[color:var(--palette-line-soft)] border-r border-r-[color:var(--palette-line-soft)]';
-export const REGRESSED = `${INPUT_SIZE} border-[#dc2626]! bg-[#fef2f2]! text-[#dc2626]!`;
+/** A read-only figure carried over from the previous round: tinted, quieter than the cells to fill in. */
+export const RO = 'bg-(--palette-surface-2) text-(--palette-ink-2)';
 
 export const pct = (n: number) => formatNumber(n, 2);
 export const baht = (n: number) => formatNumber(n, 0);
@@ -118,8 +99,14 @@ interface ConstructionFormValues {
     summaryCurrentProgressPct?: number | null;
     summaryPreviousProgressPct?: number | null;
     documentId?: string | null;
+    currentValueOverride?: number | null;
   } | null;
   constructionRemark?: string | null;
+  /**
+   * False without a value base: the override is hidden there (and not sent), so it is nothing the
+   * user can see or lose. Left out, it counts.
+   */
+  hasValueBase?: boolean;
 }
 
 /** Anything recorded for the inspection — what saving as "not under construction" would delete. */
@@ -129,4 +116,18 @@ export const hasConstructionData = (v: ConstructionFormValues) =>
   !!v.constructionSummary?.summaryCurrentProgressPct ||
   !!v.constructionSummary?.summaryPreviousProgressPct ||
   !!v.constructionSummary?.documentId ||
+  (v.hasValueBase !== false && v.constructionSummary?.currentValueOverride != null) ||
   !!String(v.constructionRemark ?? '').trim();
+
+/** `hasConstructionData` over a whole form's values: the value base is read off them, as the tab does. */
+export const formHasConstructionData = (values: ConstructionFormValues & Record<string, unknown>) =>
+  hasConstructionData({
+    ...values,
+    hasValueBase:
+      roundBaht(
+        buildingFinalCostValue({
+          buildingCostValue: values.buildingCostValue,
+          depreciationDetails: values.depreciationDetails ?? [],
+        } as Record<string, unknown>),
+      ) > 0,
+  });

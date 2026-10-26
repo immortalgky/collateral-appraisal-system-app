@@ -6,11 +6,16 @@ export type ProjectType = 'U' | 'LB' | 'L';
 export const isCondo = (t: ProjectType): boolean => t === 'U';
 
 /**
- * True when the project is Land and Building (LB) or Land and Building
- * (Construction) (L). Both share the same domain logic in v1.
- * // TODO(Land): revisit each call site if Land-specific branches are needed.
+ * True for the two non-condo types, LB (Land and Building) and L (Land and Building (Construction)).
+ * They share the village route and the land-based pricing; use `hasStructures` where L must differ.
  */
 export const isLandAndBuildingLike = (t: ProjectType): boolean => t === 'LB' || t === 'L';
+
+/**
+ * True when the project holds buildings (U or LB), as BE `ProjectType.HasStructures()`. L (Land and
+ * Building (Construction)) is appraised as land only: no models, no buildings.
+ */
+export const hasStructures = (t: ProjectType): boolean => t === 'U' || t === 'LB';
 
 // ─── Project ──────────────────────────────────────────────────────────────────
 
@@ -272,6 +277,9 @@ export interface ProjectUnit {
   towerName?: string;
   condoRegistrationNumber?: string;
   roomNumber?: string;
+  /** Condo: the tower / model this unit belongs to. null on units not matched to one yet. */
+  projectTowerId?: string | null;
+  projectModelId?: string | null;
   // LandAndBuilding-only
   plotNumber?: string;
   houseNumber?: string;
@@ -316,6 +324,8 @@ export interface ProjectUnitPrice {
   modelType?: string;
   usableArea?: number;
   sellingPrice?: number;
+  /** Sold units still carry a price and count in every total. */
+  isSold: boolean;
   // Condo-only unit fields
   floor?: number;
   towerName?: string;
@@ -341,12 +351,75 @@ export interface ProjectUnitPrice {
   totalAppraisalValue?: number;
   totalAppraisalValueRounded?: number;
   forceSellingPrice?: number;
+  /** Per-unit TOTAL baht (rate x usable area, rounded to 1000), not a per-sq.m. rate. */
   coverageAmount?: number;
   // Condo-only calculated
   priceIncrementPerFloor?: number;
   // LB-only calculated
   landIncreaseDecreaseAmount?: number;
   landAreaDifference?: number;
+}
+
+// ─── Unit price import (Excel) ────────────────────────────────────────────────
+
+export type UnitPriceSource = 'Calculated' | 'Imported';
+
+export interface UnitPriceSourceInfo {
+  source: UnitPriceSource;
+  fileName: string | null;
+  importedAt: string | null;
+  importedBy: string | null;
+  /** Units that currently hold a price, whichever way it got there. */
+  pricedUnitCount: number;
+  /** Sum of the rounded appraisal values. null when no unit is priced (never 0). */
+  totalAppraisalValueRounded?: number | null;
+  /** Sum of the force-selling prices. Same null rule. */
+  totalForceSellingPrice?: number | null;
+}
+
+export type UnitPriceImportErrorCode =
+  | 'MissingHeader'
+  | 'UnitNotFound'
+  | 'AmbiguousMatch'
+  | 'DuplicateUnit'
+  | 'InvalidNumber'
+  | 'MissingAppraisalValue'
+  | 'MissingPrice';
+
+export interface UnitPriceImportTotals<T = number> {
+  appraisalValue: T;
+  forceSellingPrice: T;
+  coverageAmount: T;
+}
+
+export interface UnitPriceImportPreview {
+  fileName: string;
+  projectType: 'Condo' | 'LandAndBuilding' | 'Land';
+  rowCount: number;
+  matchedCount: number;
+  matchedByPrimaryKey: number;
+  matchedBySecondaryKey: number;
+  unitsInProject: number;
+  errors: { rowNumber: number; key: string | null; code: string; message: string }[];
+  attributeDiffs: {
+    rowNumber: number;
+    key: string;
+    column: string;
+    systemValue: string | null;
+    fileValue: string | null;
+  }[];
+  unitsMissingFromFile: { projectUnitId: string; key: string | null }[];
+  rows: {
+    rowNumber: number;
+    key: string;
+    projectUnitId: string | null;
+    previousAppraisalValue: number | null;
+    newAppraisalValue: number | null;
+  }[];
+  totals: UnitPriceImportTotals;
+  sheetTotals: UnitPriceImportTotals<number | null> | null;
+  sheetTotalsMatch: boolean | null;
+  canImport: boolean;
 }
 
 /** Request shape for saving location flags on unit prices. */
@@ -398,6 +471,8 @@ export interface ProjectPricingAssumption {
   edgeAdjustment?: number;
   otherAdjustment?: number;
   forceSalePercentage?: number;
+  /** What the BE applies when the saved percentage is null or outside 0..100. */
+  systemDefaultForceSalePercentage?: number;
   // Condo-only
   poolViewAdjustment?: number;
   southAdjustment?: number;

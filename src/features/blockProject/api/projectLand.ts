@@ -30,7 +30,7 @@ type SaveProjectLandRequest = Omit<
  *
  * Returns 204 (null) if no land has been saved yet, or if the project is Condo.
  */
-export const useGetProjectLand = (appraisalId: string) => {
+export const useGetProjectLand = (appraisalId: string, enabled = true) => {
   return useQuery({
     queryKey: projectLandKeys.detail(appraisalId),
     queryFn: async (): Promise<ProjectLand | null> => {
@@ -39,7 +39,7 @@ export const useGetProjectLand = (appraisalId: string) => {
       );
       return data ?? null;
     },
-    enabled: !!appraisalId,
+    enabled: !!appraisalId && enabled,
   });
 };
 

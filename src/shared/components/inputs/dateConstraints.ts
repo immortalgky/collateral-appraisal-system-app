@@ -1,4 +1,5 @@
 import { startOfDay, isBefore, isAfter, isEqual, addDays } from 'date-fns';
+import { vmsg } from '../form/validationMessage';
 
 /** One public holiday. `date` is a plain calendar date, `yyyy-MM-dd`, never a timestamp. */
 export interface HolidayInfo {
@@ -111,7 +112,7 @@ export function buildDisabledMatcher(
 }
 
 /**
- * Returns an error message if the date violates constraints, or null if valid.
+ * Returns an error message (a `vmsg` token) if the date violates constraints, or null if valid.
  */
 export function validateDateConstraints(date: Date, presets: DateConstraintPresets): string | null {
   const day = startOfDay(date);
@@ -120,29 +121,29 @@ export function validateDateConstraints(date: Date, presets: DateConstraintPrese
 
   if (presets.disableHolidays) {
     const holidayName = buildHolidayMap(presets.holidays).get(toDateKey(day));
-    if (holidayName) return `Cannot select a holiday (${holidayName})`;
+    if (holidayName) return vmsg('dateHoliday', { name: holidayName });
   }
   if (presets.disablePastDates && isBefore(day, today)) {
-    return 'Cannot select a past date';
+    return vmsg('datePast');
   }
   if (presets.disableFutureDates && isAfter(day, today)) {
-    return 'Cannot select a future date';
+    return vmsg('dateFuture');
   }
   if (presets.disableToday && isEqual(day, today)) {
-    return "Cannot select today's date";
+    return vmsg('dateToday');
   }
   if (minAnchor && isBefore(day, minAnchor)) {
-    return 'Cannot select a date before the minimum allowed date';
+    return vmsg('dateBeforeMin');
   }
   if (presets.disableDaysBefore != null && presets.disableDaysBefore > 0) {
     if (isBefore(day, startOfDay(addDays(today, -presets.disableDaysBefore)))) {
-      return `Cannot select a date more than ${presets.disableDaysBefore} day(s) in the past`;
+      return vmsg('dateTooFarPast', { days: presets.disableDaysBefore });
     }
   }
 
   if (presets.disableDaysAfter != null && presets.disableDaysAfter > 0) {
     if (!isAfter(day, startOfDay(addDays(today, presets.disableDaysAfter)))) {
-      return `Must select a date at least ${presets.disableDaysAfter} day(s) in the future`;
+      return vmsg('dateTooSoon', { days: presets.disableDaysAfter });
     }
   }
 

@@ -1,33 +1,38 @@
-import { Fragment, useEffect, useMemo, useState } from 'react';
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import type { KeyboardEvent, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { z } from 'zod';
 import NumberInput from '@shared/components/inputs/NumberInput';
-import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
 import Icon from '@shared/components/Icon';
+import {
+  FormTableCell,
+  FormTableFrame,
+  FormTableHead,
+  FormTableRow,
+  FormTableRowActions,
+  useFormLayout,
+  type FormTableColumn,
+} from '@/shared/components/form';
 import { schemas } from '@shared/schemas/v1';
 import {
   baht,
-  CELL,
-  INPUT_TD,
   isPendingProgress,
   isRegressedProgress,
-  NAME,
   pct,
-  INPUT_BOX,
-  REGRESSED,
   RO,
   sumWork,
-  TD,
-  TH,
   type ComputedItem,
   type RowFigures,
   type WorkTotals,
 } from './constructionGrid';
 import type { proportionStatus } from '../../utils/constructionMoney';
-import { Change, HeaderCell } from './constructionGridCells';
+import {
+  Change,
+  CurrentValueCell,
+  HeadLabel,
+  type CurrentValueOverride,
+} from './constructionGridCells';
 
 type ConstructionWorkGroupDto = z.infer<typeof schemas.ConstructionWorkGroupDto>;
 type ConstructionWorkItemDto = ConstructionWorkGroupDto['items'][number];
@@ -48,9 +53,12 @@ interface ConstructionDetailTableProps {
   showCalculated: boolean;
   /** False without a value base of its own (a condo, or a house without its building cost). */
   showMoney: boolean;
+  /** The building-total row's value, typed in place of the calculated sum. */
+  override?: CurrentValueOverride;
+  /** A null item id is a name the appraiser typed, outside the master list. */
   onAddSubItem: (
     constructionWorkGroupId: string,
-    constructionWorkItemId: string,
+    constructionWorkItemId: string | null,
     workItemName: string,
   ) => void;
   onUpdateSubItem: (index: number, field: string, value: number) => void;
@@ -60,50 +68,136 @@ interface ConstructionDetailTableProps {
 
 const OTHER_GROUP = '__other';
 
-const CATEGORY_ICONS: Record<string, string> = {
-  BuildingStructure: 'cubes',
-  Architecture: 'layer-group',
-  BuildingManagement: 'gears',
-};
+/** Column widths in rem: the work-item name (flexible, this is its minimum), the figures, the row actions. */
+const NAME_W = 13.7143;
+/** An input column is the mock's 92px input plus the cell's 8px on each side. */
+const FIGURE_W = 7.7143;
+const PREVIOUS_W = 6.2857;
+const CHANGE_W = 5.7143;
+/** The value column: 124px, room for "999,999,999" and the reset icon in the total row. */
+const VALUE_W = 10;
+/** The calculated columns ("show calculated"). */
+const CALC_W = 6.8571;
+const ACTIONS_W = 3.4286;
+/** Longest name the server stores for a work item. */
+const NAME_MAX = 200;
+
+/** Row heights of the mock, per layout. Cells' own padding and `h-ctl` give way to these. */
+const ROW = {
+  standard: {
+    head: '[&_thead_th]:h-[2.8571rem] [&_thead_th]:py-0',
+    group: '[&>td]:h-[2.8571rem] [&>td]:py-0',
+    item: '[&>td]:h-[3.1429rem] [&>td]:py-0',
+    total: '[&>td]:h-[3.4286rem] [&>td]:py-0',
+    quick: '',
+  },
+  compact: {
+    head: '[&_thead_th]:h-[2.2857rem] [&_thead_th]:py-0',
+    group: '[&>td]:h-[2.2857rem] [&>td]:py-0',
+    item: '[&>td]:h-[2.5714rem] [&>td]:py-0',
+    total: '[&>td]:h-[2.7143rem] [&>td]:py-0',
+    quick: '[&>td]:h-[2.4286rem] [&>td]:py-0',
+  },
+} as const;
 
 /**
- * The group's "+ Add item" list. A menu rather than a native <select>: a closed select changes value
- * on every arrow key on Windows, and each change would have added an item.
+ * The group's quick-add row: one chip per master work item it does not hold yet, and "Other" for a
+ * name typed by hand. Chips rather than a menu so that adding is one click and what is left is visible.
  */
-function AddItemMenu({
-  label,
+export function QuickAddRow({
   items,
   itemLabel,
+  colSpan,
   onPick,
+  onPickCustom,
 }: {
-  label: string;
   items: ConstructionWorkItemDto[];
   itemLabel: (item: ConstructionWorkItemDto) => string;
+  colSpan: number;
   onPick: (item: ConstructionWorkItemDto) => void;
+  onPickCustom: (name: string) => void;
 }) {
+  const { t } = useTranslation('appraisal');
+  const standard = useFormLayout() === 'standard';
+  const [typing, setTyping] = useState(false);
+  // Stable, so typing does not pull focus back on every render.
+  const focusOnMount = useCallback((el: HTMLInputElement | null) => el?.focus(), []);
+  const [name, setName] = useState('');
+  const chip = clsx(
+    'inline-flex items-center gap-1 rounded-full border bg-(--palette-surface) text-xs',
+    standard ? 'h-[2rem] px-[0.6429rem]' : 'h-[1.8571rem] px-[0.5714rem]',
+  );
+  const dashed =
+    'border-dashed border-(--palette-line-strong) text-(--palette-ink) hover:border-solid hover:border-(--palette-accent-ink) hover:bg-(--palette-accent-wash) hover:text-(--palette-accent-ink)';
+  const plus = (
+    <Icon name="plus" style="solid" className="text-[0.8571rem] text-(--palette-accent-ink)" />
+  );
+  // Only Enter adds and Escape cancels. Leaving the field never adds: it would move the layout
+  // under a click in progress, and a half-typed name is not an answer.
+  const finish = (add: boolean) => {
+    const typed = name.trim();
+    setTyping(false);
+    setName('');
+    if (add && typed) onPickCustom(typed);
+  };
   return (
-    <Menu>
-      <MenuButton className="inline-flex items-center gap-[4px] h-[21px] px-[7px] rounded-[4px] border border-dashed border-[color:var(--palette-accent-line)] bg-[color:var(--palette-surface)] text-sm font-medium text-[color:var(--palette-accent-ink)] hover:border-[#0d9488] focus:outline-none focus:border-[#0d9488]">
-        {label}
-        <Icon name="chevron-down" style="solid" className="size-[8px]" />
-      </MenuButton>
-      <MenuItems
-        anchor={{ to: 'bottom start', gap: 4, padding: 8 }}
-        className="z-50 max-h-[240px] min-w-[190px] overflow-y-auto rounded-[8px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] py-[4px] shadow-xl focus:outline-none"
-      >
-        {items.map(item => (
-          <MenuItem key={item.id}>
+    <FormTableRow className={ROW[standard ? 'standard' : 'compact'].quick}>
+      <FormTableCell colSpan={colSpan}>
+        <div
+          className={clsx(
+            'flex flex-wrap items-center gap-1.5',
+            standard ? 'pl-[3.25rem]' : 'pl-[2.857rem]',
+          )}
+        >
+          <span className="mr-0.5 text-xs text-(--palette-ink-2)">
+            {t('constructionInspection.grid.quickAdd')}
+          </span>
+          {items.map(item => (
             <button
+              key={item.id}
               type="button"
               onClick={() => onPick(item)}
-              className="block w-full px-[10px] py-[3px] text-left text-sm leading-[1.5385rem] text-[color:var(--palette-ink)] data-[focus]:bg-[color:var(--palette-accent-wash)]"
+              className={clsx(chip, dashed)}
             >
+              {plus}
               {itemLabel(item)}
             </button>
-          </MenuItem>
-        ))}
-      </MenuItems>
-    </Menu>
+          ))}
+          {typing ? (
+            <input
+              ref={focusOnMount}
+              maxLength={NAME_MAX}
+              value={name}
+              placeholder={t('constructionInspection.grid.customNamePlaceholder')}
+              onChange={e => setName(e.target.value)}
+              // Enter would submit the whole property form.
+              onKeyDown={e => {
+                // Enter that confirms an IME composition is not ours.
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (!e.nativeEvent.isComposing) finish(true);
+                } else if (e.key === 'Escape') finish(false);
+              }}
+              onBlur={() => !name.trim() && finish(false)}
+              aria-label={t('constructionInspection.grid.addOther')}
+              className={clsx(chip, 'w-[12rem] border-(--palette-line-strong)')}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setTyping(true)}
+              className={clsx(
+                chip,
+                'border-(--palette-line) text-(--palette-ink-2) hover:border-(--palette-accent-ink) hover:text-(--palette-accent-ink)',
+              )}
+            >
+              {plus}
+              {t('constructionInspection.grid.addOther')}
+            </button>
+          )}
+        </div>
+      </FormTableCell>
+    </FormTableRow>
   );
 }
 
@@ -117,12 +211,15 @@ export function ConstructionDetailTable({
   showPrevious,
   showCalculated,
   showMoney,
+  override,
   onAddSubItem,
   onUpdateSubItem,
   onDeleteSubItem,
   readOnly,
 }: ConstructionDetailTableProps) {
   const { t, i18n } = useTranslation('appraisal');
+  const standard = useFormLayout() === 'standard';
+  const rows = ROW[standard ? 'standard' : 'compact'];
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [focusRow, setFocusRow] = useState<number | null>(null);
 
@@ -198,50 +295,84 @@ export function ConstructionDetailTable({
     all[all.indexOf(el) + step]?.focus();
   };
 
-  const header = (label: string, unit: string) => (
-    <HeaderCell key={label} label={label} unit={unit} />
-  );
-  // The one list of visible columns: the header row renders it, and the group band spans it.
-  const headerCells = [
-    <th key="name" className={clsx(TH, NAME, 'text-left z-20')}>
-      {t('constructionInspection.grid.workItem')}
-    </th>,
-    header(t('constructionInspection.grid.proportion'), '(%)'),
+  const figureColumn = (
+    key: string,
+    label: string,
+    unit: string,
+    width = FIGURE_W,
+  ): FormTableColumn<ComputedItem> => ({
+    key,
+    align: 'end',
+    width: `${width}rem`,
+    header: <HeadLabel label={label} unit={unit} />,
+  });
+  // The one list of visible columns: the head renders it, and the group band spans it.
+  const columns = [
+    // No width: the name takes what the figure columns leave.
+    { key: 'name', header: t('constructionInspection.grid.workItem') },
+    figureColumn(
+      'proportion',
+      t('constructionInspection.grid.proportion'),
+      t('constructionInspection.grid.ofBuilding'),
+    ),
     showCalculated &&
       showMoney &&
-      header(
+      figureColumn(
+        'constructionValue',
         t('constructionInspection.grid.constructionValue'),
         t('constructionInspection.grid.baht'),
+        CALC_W,
       ),
-    showPrevious && header(t('constructionInspection.grid.previousProgress'), '(%)'),
-    header(t('constructionInspection.grid.currentProgress'), '(%)'),
-    showPrevious && header(t('constructionInspection.grid.change'), '(%)'),
+    showPrevious &&
+      figureColumn(
+        'previousProgress',
+        t('constructionInspection.grid.previousProgress'),
+        '(%)',
+        PREVIOUS_W,
+      ),
+    figureColumn('currentProgress', t('constructionInspection.grid.currentProgress'), '(%)'),
+    showPrevious && figureColumn('change', t('constructionInspection.grid.change'), '', CHANGE_W),
     showCalculated &&
-      header(
+      figureColumn(
+        'currentShare',
         t('constructionInspection.grid.currentShare'),
         t('constructionInspection.grid.ofBuilding'),
+        CALC_W,
       ),
     showCalculated &&
       showPrevious &&
       showMoney &&
-      header(t('constructionInspection.grid.previousValue'), t('constructionInspection.grid.baht')),
+      figureColumn(
+        'previousValue',
+        t('constructionInspection.grid.previousValue'),
+        t('constructionInspection.grid.baht'),
+        CALC_W,
+      ),
     showMoney &&
-      header(t('constructionInspection.grid.currentValue'), t('constructionInspection.grid.baht')),
-    !readOnly && <th key="actions" className={clsx(TH, 'w-[3.75rem] min-w-[3.75rem]')} />,
-  ].filter(Boolean);
-  const fullSpan = headerCells.length;
+      figureColumn(
+        'currentValue',
+        t('constructionInspection.grid.currentValue'),
+        t('constructionInspection.grid.baht'),
+        VALUE_W,
+      ),
+    !readOnly && { key: 'actions', kind: 'action' as const, width: `${ACTIONS_W}rem` },
+  ].filter((c): c is FormTableColumn<ComputedItem> => !!c);
+  const fullSpan = columns.length;
+  const minWidth = columns.reduce((sum, c) => sum + (parseFloat(c.width ?? '') || NAME_W), 0);
 
   const pctInput = (item: ComputedItem, field: 'proportionPct' | 'currentProgressPct') => {
     const value = item[field];
     const regressedCell = field === 'currentProgressPct' && isRegressed(item);
     if (readOnly)
       return (
-        <td className={clsx(TD, 'text-right', regressedCell && 'text-[#dc2626]')}>{pct(value)}</td>
+        <FormTableCell align="end" className={clsx(regressedCell && 'text-(--palette-danger)')}>
+          {pct(value)}
+        </FormTableCell>
       );
     return (
-      <td className={INPUT_TD}>
+      <FormTableCell kind="input" align="end">
         <NumberInput
-          dense
+          cell
           value={value}
           onChange={e => onUpdateSubItem(item._index, field, e.target.value ?? 0)}
           decimalPlaces={2}
@@ -250,16 +381,17 @@ export function ConstructionDetailTable({
           data-ci-row={item._index}
           onKeyDown={handleKeyDown}
           aria-label={`${itemName(item)} ${field === 'proportionPct' ? t('constructionInspection.grid.proportion') : t('constructionInspection.grid.currentProgress')}`}
-          className={regressedCell ? REGRESSED : INPUT_BOX}
+          invalid={regressedCell}
+          className={standard ? 'h-ctl-c!' : undefined}
         />
-      </td>
+      </FormTableCell>
     );
   };
 
   /** The figure columns shared by the item, group and building rows. */
   const figures = (
     f: RowFigures,
-    cells: { proportion: ReactNode; current: ReactNode },
+    cells: { proportion: ReactNode; current: ReactNode; value?: ReactNode },
     /** `incomplete`: a total over rows still being entered. `shareIsProgress`: the building row,
      *  whose progress already is the share — printed once, not twice. */
     opts: { incomplete?: boolean; shareIsProgress?: boolean } = {},
@@ -267,215 +399,234 @@ export function ConstructionDetailTable({
     <>
       {cells.proportion}
       {showCalculated && showMoney && (
-        <td className={clsx(TD, 'text-right')}>{baht(f.constructionValue)}</td>
+        <FormTableCell align="end">{baht(f.constructionValue)}</FormTableCell>
       )}
-      {showPrevious && <td className={clsx(TD, 'text-right', RO)}>{pct(f.previousProgress)}</td>}
+      {showPrevious && (
+        <FormTableCell align="end" className={RO}>
+          {pct(f.previousProgress)}
+        </FormTableCell>
+      )}
       {cells.current}
       {showPrevious && (
-        <td className={clsx(TD, 'text-right')}>
+        <FormTableCell align="end">
           <Change
             from={f.previousProgress}
             to={f.currentProgress}
             final={final}
             incomplete={opts.incomplete}
           />
-        </td>
+        </FormTableCell>
       )}
       {showCalculated && (
-        <td className={clsx(TD, 'text-right')}>
-          {opts.shareIsProgress ? '' : pct(f.currentShare)}
-        </td>
+        <FormTableCell align="end">{opts.shareIsProgress ? '' : pct(f.currentShare)}</FormTableCell>
       )}
       {showCalculated && showPrevious && showMoney && (
-        <td className={clsx(TD, 'text-right', RO)}>{baht(f.previousValue)}</td>
+        <FormTableCell align="end" className={RO}>
+          {baht(f.previousValue)}
+        </FormTableCell>
       )}
-      {showMoney && <td className={clsx(TD, 'text-right')}>{baht(f.currentValue)}</td>}
+      {showMoney &&
+        (cells.value ?? <FormTableCell align="end">{baht(f.currentValue)}</FormTableCell>)}
     </>
   );
 
   const totalRow = (
-    label: string,
+    label: ReactNode,
     f: WorkTotals,
     rowClass: string,
-    opts: { incomplete: boolean; shareIsProgress?: boolean },
+    opts: { incomplete: boolean; shareIsProgress?: boolean; blank?: boolean },
     proportionClass = '',
+    value?: ReactNode,
   ) => (
-    <tr className={rowClass}>
-      <td className={clsx(TD, NAME, 'bg-inherit')}>{label}</td>
-      {figures(
-        f,
-        {
-          proportion: (
-            <td className={clsx(TD, 'text-right', proportionClass)}>{pct(f.proportion)}</td>
-          ),
-          current: <td className={clsx(TD, 'text-right')}>{pct(f.currentProgress)}</td>,
-        },
-        opts,
+    <FormTableRow className={rowClass}>
+      <FormTableCell frozen="first" className="bg-inherit!">
+        {label}
+      </FormTableCell>
+      {opts.blank ? (
+        // An empty group has no figures to total: 0.00 everywhere would read as a result.
+        <FormTableCell colSpan={fullSpan - 1} />
+      ) : (
+        <>
+          {figures(
+            f,
+            {
+              proportion: (
+                <FormTableCell align="end" className={proportionClass}>
+                  {pct(f.proportion)}
+                </FormTableCell>
+              ),
+              current: <FormTableCell align="end">{pct(f.currentProgress)}</FormTableCell>,
+              value,
+            },
+            opts,
+          )}
+          {!readOnly && <FormTableCell />}
+        </>
       )}
-      {!readOnly && <td className={TD} />}
-    </tr>
+    </FormTableRow>
   );
 
   return (
     <div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-sm leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
-          <thead>
-            <tr>{headerCells}</tr>
-          </thead>
-          <tbody>
-            {groups.map(group => {
-              const items =
-                group.id === OTHER_GROUP
-                  ? orphans
-                  : computedSubItems.filter(i => i.constructionWorkGroupId === group.id);
-              if (readOnly && items.length === 0) return null;
-              const taken = new Set(items.map(i => i.constructionWorkItemId));
-              const available = group.items.filter(i => !taken.has(i.id));
-              const isCollapsed = collapsed[group.id] && items.length > 0;
-              const groupTotals = sumWork(items);
-              const groupName = isThai ? group.nameTh : group.nameEn;
+      <FormTableFrame minWidth={minWidth} bleed className={clsx('table-fixed', rows.head)}>
+        <colgroup>
+          {columns.map(c => (
+            <col key={c.key} style={c.width ? { width: c.width } : undefined} />
+          ))}
+        </colgroup>
+        <FormTableHead columns={columns} frozen={i => (i === 0 ? 'first' : undefined)} />
+        <tbody>
+          {groups.map(group => {
+            const items =
+              group.id === OTHER_GROUP
+                ? orphans
+                : computedSubItems.filter(i => i.constructionWorkGroupId === group.id);
+            if (readOnly && items.length === 0) return null;
+            const taken = new Set(items.map(i => i.constructionWorkItemId));
+            const available = group.items.filter(i => !taken.has(i.id));
+            const isCollapsed = collapsed[group.id] && items.length > 0;
+            const groupTotals = sumWork(items);
+            const groupName = isThai ? group.nameTh : group.nameEn;
 
-              return (
-                <Fragment key={group.id}>
-                  <tr className="bg-[color:var(--palette-surface-3)] text-[0.8462rem] font-semibold text-[color:var(--palette-ink-2)] leading-[1.7692rem]">
-                    <td className={clsx(CELL, NAME, 'bg-[color:var(--palette-surface-3)] p-0')}>
-                      <button
-                        type="button"
-                        onClick={() => setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }))}
-                        aria-expanded={!isCollapsed}
-                        className="flex items-center gap-[6px] w-full h-full px-[8px] text-left"
-                      >
-                        <Icon
-                          name="chevron-down"
-                          style="solid"
-                          className={clsx(
-                            'size-[9px] transition-transform',
-                            isCollapsed && '-rotate-90',
-                          )}
-                        />
-                        <Icon
-                          name={CATEGORY_ICONS[group.code] || 'folder'}
-                          style="solid"
-                          className="size-[11px] text-[color:var(--palette-ink-3)]"
-                        />
-                        <span className="truncate">{groupName}</span>
-                      </button>
-                    </td>
-                    <td className={TD} colSpan={fullSpan - 1}>
-                      <div className="flex items-center gap-[10px]">
-                        {!readOnly && available.length > 0 && (
-                          <AddItemMenu
-                            label={t('constructionInspection.grid.addItem')}
-                            items={available}
-                            itemLabel={i => (isThai ? i.nameTh : i.nameEn)}
-                            onPick={picked => {
-                              setCollapsed(c => ({ ...c, [group.id]: false }));
-                              setFocusRow(computedSubItems.length);
-                              onAddSubItem(group.id, picked.id, picked.nameEn);
-                            }}
-                          />
+            return (
+              <Fragment key={group.id}>
+                {/* The group's own totals, in the columns the rows below fill in: its progress is
+                    the proportion-weighted progress of its items, like theirs. */}
+                {totalRow(
+                  <div className="flex min-w-0 items-center gap-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setCollapsed(c => ({ ...c, [group.id]: !c[group.id] }))}
+                      aria-expanded={!isCollapsed}
+                      aria-label={groupName}
+                      className="inline-flex size-[1.5714rem] shrink-0 items-center justify-center rounded-[0.3571rem] text-(--palette-ink-2) hover:bg-(--palette-surface-3)"
+                    >
+                      <Icon
+                        name="chevron-down"
+                        style="solid"
+                        className={clsx(
+                          'text-[0.7143rem] transition-transform',
+                          isCollapsed && '-rotate-90',
                         )}
-                        <span className="ml-auto font-normal text-[color:var(--palette-ink-3)]">
-                          {t('constructionInspection.grid.itemCount', { count: items.length })}
-                          {isCollapsed &&
-                            ` · ${pct(groupTotals.currentProgress)}%` +
-                              (showMoney ? ` · ${baht(groupTotals.currentValue)}` : '')}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
+                      />
+                    </button>
+                    <span className="min-w-0 truncate font-semibold" title={groupName}>
+                      {groupName}
+                    </span>
+                    <small className="shrink-0 whitespace-nowrap text-xs font-normal text-(--palette-ink-2)">
+                      {t('constructionInspection.grid.itemCount', { count: items.length })}
+                    </small>
+                  </div>,
+                  groupTotals,
+                  clsx('bg-(--palette-surface-2) font-semibold', rows.group),
+                  { incomplete: items.some(isPending), blank: items.length === 0 },
+                )}
 
-                  {!isCollapsed &&
-                    items.map(item => {
-                      const name = itemName(item);
-                      return (
-                        <tr key={item._key} className="bg-[color:var(--palette-surface)]">
-                          <td className={clsx(TD, NAME, 'bg-[color:var(--palette-surface)]')}>
-                            <span className="block truncate">{name}</span>
-                          </td>
-                          {figures(
-                            {
-                              constructionValue: item.constructionValue,
-                              currentShare: item.currentProportionPct,
-                              previousProgress: item.previousProgressPct,
-                              currentProgress: item.currentProgressPct,
-                              previousValue: item.previousPropertyValue,
-                              currentValue: item.currentPropertyValue,
-                            },
-                            {
-                              proportion: pctInput(item, 'proportionPct'),
-                              current: pctInput(item, 'currentProgressPct'),
-                            },
-                          )}
-                          {!readOnly && (
-                            <td
-                              className={clsx(
-                                CELL,
-                                'w-[3.75rem] min-w-[3.75rem] p-0 text-center align-middle leading-[0]',
-                              )}
-                            >
-                              {/* Two clicks instead of a modal: the first arms the button. */}
-                              <ConfirmDeleteButton
-                                onConfirm={() => onDeleteSubItem(item._index)}
-                                label={t('constructionInspection.grid.remove', { name })}
-                                className="inline-grid h-[20px] w-[20px] place-items-center rounded-[4px] leading-none text-[color:var(--palette-ink-3)] hover:bg-[#fef2f2] hover:text-[#dc2626]"
-                              >
-                                <Icon name="xmark" style="solid" className="size-[11px]" />
-                              </ConfirmDeleteButton>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
+                {!isCollapsed &&
+                  items.map(item => {
+                    const name = itemName(item);
+                    return (
+                      <FormTableRow key={item._key} className={rows.item}>
+                        <FormTableCell
+                          frozen="first"
+                          className="max-w-[20rem] truncate pl-[3.25rem]!"
+                        >
+                          <span title={name}>{name}</span>
+                        </FormTableCell>
+                        {figures(
+                          {
+                            constructionValue: item.constructionValue,
+                            currentShare: item.currentProportionPct,
+                            previousProgress: item.previousProgressPct,
+                            currentProgress: item.currentProgressPct,
+                            previousValue: item.previousPropertyValue,
+                            currentValue: item.currentPropertyValue,
+                          },
+                          {
+                            proportion: pctInput(item, 'proportionPct'),
+                            current: pctInput(item, 'currentProgressPct'),
+                          },
+                        )}
+                        {!readOnly && (
+                          <FormTableCell kind="action">
+                            {/* Two clicks instead of a modal: the first arms the button. */}
+                            <FormTableRowActions
+                              position={item._index}
+                              count={computedSubItems.length}
+                              onDelete={() => onDeleteSubItem(item._index)}
+                              deleteLabel={t('constructionInspection.grid.remove', { name })}
+                            />
+                          </FormTableCell>
+                        )}
+                      </FormTableRow>
+                    );
+                  })}
 
-                  {!isCollapsed &&
-                    items.length > 0 &&
-                    totalRow(
-                      t('constructionInspection.grid.groupTotal', { name: groupName }),
-                      groupTotals,
-                      'bg-[color:var(--palette-surface-2)] font-semibold',
-                      { incomplete: items.some(isPending) },
-                    )}
-                </Fragment>
-              );
-            })}
+                {!isCollapsed && !readOnly && group.id !== OTHER_GROUP && (
+                  <QuickAddRow
+                    items={available}
+                    itemLabel={i => (isThai ? i.nameTh : i.nameEn)}
+                    colSpan={fullSpan}
+                    onPick={picked => {
+                      setFocusRow(computedSubItems.length);
+                      onAddSubItem(group.id, picked.id, picked.nameEn);
+                    }}
+                    onPickCustom={typed => {
+                      setFocusRow(computedSubItems.length);
+                      onAddSubItem(group.id, null, typed);
+                    }}
+                  />
+                )}
+              </Fragment>
+            );
+          })}
 
-            {/* Progress here is the share of the whole building (Σ proportion × progress / 100) — the
-                toolbar's figure and the server's. The group rows keep their own weighted progress;
-                the two readings agree once the split reaches 100%. */}
-            {computedSubItems.length > 0 &&
-              totalRow(
-                t('constructionInspection.grid.buildingTotal'),
-                {
-                  ...total,
-                  previousProgress: total.previousShare,
-                  currentProgress: total.currentShare,
-                },
-                'bg-[color:var(--palette-accent-wash)] font-bold text-[color:var(--palette-accent-ink)] [&>td]:border-t [&>td]:border-t-[color:var(--palette-line-strong)]',
-                { incomplete: pending.length > 0, shareIsProgress: true },
-                split === 'over'
-                  ? 'text-[#dc2626]'
-                  : split === 'short'
-                    ? 'text-[color:var(--palette-warn)]'
-                    : '',
-              )}
-          </tbody>
-        </table>
-      </div>
+          {/* Progress here is the share of the whole building (Σ proportion × progress / 100) — the
+              toolbar's figure and the server's. The group rows above show their items' own
+              proportion-weighted progress; the two agree once the split reaches 100%. */}
+          {computedSubItems.length > 0 &&
+            totalRow(
+              t('constructionInspection.grid.buildingTotal'),
+              {
+                ...total,
+                previousProgress: total.previousShare,
+                currentProgress: total.currentShare,
+              },
+              clsx(
+                'bg-(--palette-surface-2) font-bold text-(--palette-ink) [&>td]:border-t [&>td]:border-t-(--palette-line-strong)',
+                rows.total,
+              ),
+              { incomplete: pending.length > 0, shareIsProgress: true },
+              split === 'over'
+                ? 'text-(--palette-danger)'
+                : split === 'short'
+                  ? 'text-(--palette-warn)'
+                  : '',
+              <FormTableCell kind={override && !readOnly ? 'input' : 'text'} align="end">
+                <CurrentValueCell
+                  calculated={total.currentValue}
+                  override={override}
+                  readOnly={readOnly}
+                  ariaLabel={t('constructionInspection.grid.currentValue')}
+                  onKeyDown={e => e.key === 'Enter' && e.preventDefault()}
+                />
+              </FormTableCell>,
+            )}
+        </tbody>
+      </FormTableFrame>
 
       {workGroupsLoading && computedSubItems.length > 0 && (
-        <div className="px-[12px] py-[6px] text-[0.8571rem] text-[color:var(--palette-ink-3)] border-t border-t-[color:var(--palette-line)]">
+        <div className="border-t border-t-(--palette-line) px-3 py-1.5 text-xs text-(--palette-ink-3)">
           {t('constructionInspection.grid.workGroupsLoading')}
         </div>
       )}
       {workGroupsFailed && (
-        <div className="px-[12px] py-[6px] text-[0.8571rem] text-[#dc2626] border-t border-t-[color:var(--palette-line)]">
+        <div className="border-t border-t-(--palette-line) px-3 py-1.5 text-xs text-(--palette-danger)">
           {t('constructionInspection.grid.workGroupsFailed')}
         </div>
       )}
       {computedSubItems.length === 0 && (
-        <div className="px-[16px] py-[32px] text-center text-sm text-[color:var(--palette-ink-3)]">
+        <div className="px-4 py-8 text-center text-sm text-(--palette-ink-3)">
           {readOnly
             ? t('constructionInspection.grid.emptyReadOnly')
             : t('constructionInspection.grid.empty')}
@@ -483,14 +634,14 @@ export function ConstructionDetailTable({
       )}
 
       {!readOnly && (
-        <div className="flex flex-wrap items-center gap-x-[14px] gap-y-[2px] min-h-[28px] px-[12px] py-[4px] border-t border-t-[color:var(--palette-line)] bg-[color:var(--palette-surface-2)] text-[0.8571rem] text-[color:var(--palette-ink-3)]">
+        <div className="flex min-h-8 flex-wrap items-center gap-x-3.5 gap-y-0.5 border-t border-t-(--palette-line) bg-(--palette-surface-2) px-3 py-1 text-xs text-(--palette-ink-3)">
           {split === 'over' && (
-            <span className="font-medium text-[#dc2626]">
+            <span className="font-medium text-(--palette-danger)">
               {t('constructionInspection.status.overBlocksSave', { pct: pct(total.proportion) })}
             </span>
           )}
           {pending.length > 0 && (
-            <span className="text-[color:var(--palette-warn)]">
+            <span className="text-(--palette-warn)">
               {t('constructionInspection.status.pending', {
                 count: pending.length,
                 // A new round starts with every row pending: name a few, count the rest.
@@ -503,7 +654,7 @@ export function ConstructionDetailTable({
             </span>
           )}
           {regressed.length > 0 && (
-            <span className="text-[#dc2626]">
+            <span className="text-(--palette-danger)">
               ⚠{' '}
               {t('constructionInspection.status.regressed', {
                 count: regressed.length,

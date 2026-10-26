@@ -76,20 +76,20 @@ export function AssetSummaryDrawer({
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={handleClose} aria-hidden="true" />
       <div
-        className={`fixed inset-y-0 right-0 z-50 bg-white shadow-2xl flex flex-col transition-[width,max-width] duration-200 ${
+        className={`fixed inset-y-0 right-0 z-50 bg-(--palette-surface) shadow-2xl flex flex-col transition-[width,max-width] duration-200 ${
           expanded ? 'w-screen max-w-none' : 'w-[90vw] max-w-5xl'
         }`}
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">Asset Summary</h2>
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-(--palette-line)">
+          <h2 className="text-base font-semibold text-(--palette-ink)">Asset Summary</h2>
           <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => setExpanded(prev => !prev)}
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded"
+              className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors p-1 rounded"
               aria-label={expanded ? 'Restore width' : 'Expand to full screen'}
               title={expanded ? 'Restore width' : 'Expand to full screen'}
             >
@@ -107,7 +107,7 @@ export function AssetSummaryDrawer({
               type="button"
               onClick={handleClose}
               aria-label="Close"
-              className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded"
+              className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors p-1 rounded"
             >
               <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
                 <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
@@ -118,7 +118,7 @@ export function AssetSummaryDrawer({
 
         <div className="flex-1 min-h-0 overflow-y-auto">
           {/* Groups section label */}
-          <p className="px-4 pt-3 pb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <p className="px-4 pt-3 pb-2 text-xs font-semibold text-(--palette-gray-400) uppercase tracking-wider">
             Groups
           </p>
 
@@ -131,7 +131,7 @@ export function AssetSummaryDrawer({
                 onClick={() =>
                   scrollRef.current?.scrollBy({ left: -CARD_SCROLL_STEP, behavior: 'smooth' })
                 }
-                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-7 h-7 bg-white border border-gray-200 rounded-full shadow-sm text-gray-500 hover:text-gray-800 hover:shadow-md transition-all"
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-7 h-7 bg-(--palette-surface) border border-(--palette-line) rounded-full shadow-sm text-(--palette-gray-500) hover:text-(--palette-ink) hover:shadow-md transition-all"
                 aria-label="Scroll left"
               >
                 <Icon style="solid" name="chevron-left" className="size-3" />
@@ -162,7 +162,7 @@ export function AssetSummaryDrawer({
                 onClick={() =>
                   scrollRef.current?.scrollBy({ left: CARD_SCROLL_STEP, behavior: 'smooth' })
                 }
-                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-7 h-7 bg-white border border-gray-200 rounded-full shadow-sm text-gray-500 hover:text-gray-800 hover:shadow-md transition-all"
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-7 h-7 bg-(--palette-surface) border border-(--palette-line) rounded-full shadow-sm text-(--palette-gray-500) hover:text-(--palette-ink) hover:shadow-md transition-all"
                 aria-label="Scroll right"
               >
                 <Icon style="solid" name="chevron-right" className="size-3" />
@@ -172,7 +172,7 @@ export function AssetSummaryDrawer({
 
           {/* Details header + active filter chips on the same row */}
           <div className="px-4 pt-1 pb-2 flex items-center gap-3 flex-wrap">
-            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider shrink-0">
+            <p className="text-xs font-semibold text-(--palette-gray-400) uppercase tracking-wider shrink-0">
               Details
             </p>
 
@@ -183,14 +183,14 @@ export function AssetSummaryDrawer({
                   return (
                     <span
                       key={p}
-                      className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-0.5 text-xs bg-amber-50 text-amber-700 border border-amber-200 rounded-full font-medium"
+                      className="inline-flex items-center gap-1 pl-2.5 pr-1.5 py-0.5 text-xs bg-(--palette-warn-wash) text-(--palette-warn) border border-amber-200 dark:border-amber-500/30 rounded-full font-medium"
                     >
                       {groupLabel}
                       <button
                         type="button"
                         onClick={() => handleRemoveFilter(p)}
                         aria-label={`Remove filter for ${groupLabel}`}
-                        className="text-amber-400 hover:text-amber-700 ml-0.5 cursor-pointer transition-colors"
+                        className="text-amber-400 hover:text-(--palette-warn) ml-0.5 cursor-pointer transition-colors"
                       >
                         <Icon style="solid" name="xmark" className="size-2.5" />
                       </button>

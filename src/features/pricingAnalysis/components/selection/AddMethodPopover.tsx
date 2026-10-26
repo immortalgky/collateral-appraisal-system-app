@@ -148,16 +148,18 @@ export const AddMethodPopover = ({
             // Never paint at the top-left fallback (anchorRect not measured yet) for one frame.
             visibility: anchorRect ? 'visible' : 'hidden',
           }}
-          className="z-[100] overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg flex flex-col outline-none"
+          className="z-[100] overflow-y-auto rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg flex flex-col outline-none"
         >
-          <div className="px-3 py-2 text-sm font-medium text-gray-700 border-b border-gray-100 shrink-0">
+          <div className="px-3 py-2 text-sm font-medium text-(--palette-ink) border-b border-(--palette-line-soft) shrink-0">
             {t('addMethodPopover.title')}
           </div>
           <div className="flex flex-col gap-2 p-2 overflow-y-auto">
             {pricingConfiguration.map(appr => (
               <div key={appr.approachType} className="flex flex-col gap-0.5">
                 {pricingConfiguration.length > 1 && (
-                  <div className="px-2 py-1 text-xs font-semibold text-gray-500">{appr.label}</div>
+                  <div className="px-2 py-1 text-xs font-semibold text-(--palette-gray-500)">
+                    {appr.label}
+                  </div>
                 )}
                 {appr.methods.map(m => {
                   const key = methodKey(appr.approachType, m.methodType);
@@ -168,8 +170,8 @@ export const AddMethodPopover = ({
                       className={clsx(
                         'flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm',
                         already
-                          ? 'text-gray-400'
-                          : 'text-gray-700 hover:bg-primary/5 cursor-pointer',
+                          ? 'text-(--palette-gray-400)'
+                          : 'text-(--palette-ink) hover:bg-primary/5 cursor-pointer',
                       )}
                     >
                       <input
@@ -177,12 +179,12 @@ export const AddMethodPopover = ({
                         checked={already || picked.has(key)}
                         disabled={already || submitting}
                         onChange={() => toggle(key)}
-                        className="size-3.5 rounded border-gray-300 text-primary focus:ring-primary disabled:opacity-60"
+                        className="size-3.5 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary disabled:opacity-60"
                       />
                       <Icon name={m.icon ?? 'image'} style="solid" className="size-3 shrink-0" />
                       <span className="flex-1">{m.label}</span>
                       {already && (
-                        <span className="text-xs text-gray-400 shrink-0">
+                        <span className="text-xs text-(--palette-gray-400) shrink-0">
                           {t('addMethodPopover.alreadyAdded')}
                         </span>
                       )}
@@ -192,10 +194,10 @@ export const AddMethodPopover = ({
               </div>
             ))}
           </div>
-          <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-gray-100 shrink-0">
+          <div className="flex items-center justify-end gap-2 px-3 py-2 border-t border-(--palette-line-soft) shrink-0">
             <button
               type="button"
-              className="px-3 py-1.5 rounded-lg text-sm text-gray-600 hover:bg-gray-50 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg text-sm text-(--palette-gray-600) hover:bg-(--palette-surface-2) cursor-pointer"
               onClick={onClose}
             >
               {t('addMethodPopover.cancel')}

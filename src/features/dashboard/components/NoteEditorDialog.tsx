@@ -86,11 +86,11 @@ function NoteEditorDialog({ open, note, onClose }: NoteEditorDialogProps) {
             onKeyDown={handleKeyDown}
             placeholder={t('notes.editor.placeholder')}
             rows={6}
-            className="w-full resize-none rounded-lg border border-gray-200 px-3 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full resize-none rounded-lg border border-(--palette-line) px-3 py-2.5 text-sm text-(--palette-ink) placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <span
             className={`absolute bottom-2 right-2 text-xs ${
-              overCap ? 'text-red-500 font-medium' : 'text-gray-400'
+              overCap ? 'text-red-500 font-medium' : 'text-(--palette-gray-400)'
             }`}
           >
             {content.length.toLocaleString()} / {MAX_CHARS.toLocaleString()}
@@ -106,7 +106,7 @@ function NoteEditorDialog({ open, note, onClose }: NoteEditorDialogProps) {
             type="button"
             onClick={onClose}
             disabled={isPending}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 text-sm font-medium text-(--palette-ink) bg-(--palette-surface-3) hover:bg-(--palette-line) rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common:actions.cancel')}
           </button>

@@ -4,6 +4,10 @@ import { FormProvider, useForm } from 'react-hook-form';
 import { render, screen } from '@/test/test-utils';
 import { useAuthStore } from '@/features/auth/store';
 import { FormReadOnlyContext } from '@/shared/components/form/context';
+import type {
+  ConstructionBlockReason,
+  ConstructionChainStatus,
+} from '@/features/appraisal/api/priorAppraisal';
 import { AppraisalCopyProvider } from '../contexts/AppraisalCopyContext';
 import PriorAppraisalBlock from './PriorAppraisalBlock';
 
@@ -29,6 +33,9 @@ function Harness({
   disabled = false,
   round = null,
   locked,
+  chain = null,
+  rejection = null,
+  onUseLatest,
 }: {
   purpose?: string;
   detail?: Record<string, unknown>;
@@ -38,12 +45,18 @@ function Harness({
   /** The next inspection round, which the page keeps out of the form and hands over here. */
   round?: number | null;
   locked?: boolean;
+  /** What the page read of the prior's chain, and why the API last refused a submit. */
+  chain?: ConstructionChainStatus | null;
+  rejection?: ConstructionBlockReason | null;
+  onUseLatest?: (appraisalId: string) => void;
 }) {
-  const methods = useForm({ defaultValues: { purpose, detail: { ...detail } } });
+  const methods = useForm({
+    defaultValues: { purpose, detail: { ...detail }, meta: { priorLocked: locked } },
+  });
   const block = (
     <FormReadOnlyContext.Provider value={readOnly}>
       <FormProvider {...methods}>
-        <PriorAppraisalBlock locked={locked} />
+        <PriorAppraisalBlock />
       </FormProvider>
     </FormReadOnlyContext.Provider>
   );
@@ -53,6 +66,9 @@ function Harness({
       onClear={handlers.onClear}
       disabled={disabled}
       round={round}
+      chain={chain}
+      rejection={rejection}
+      onUseLatest={onUseLatest}
     >
       {block}
     </AppraisalCopyProvider>
@@ -257,5 +273,142 @@ describe('PriorAppraisalBlock locked by the page', () => {
   it('with no handlers it is locked whatever the page says', () => {
     render(<Harness purpose="03" locked={false} />);
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+});
+
+describe('PriorAppraisalBlock construction chain', () => {
+  const chainOf = (over: Partial<ConstructionChainStatus> = {}): ConstructionChainStatus => ({
+    appraisalId: 'a-1',
+    construction: {
+      status: 'InProgress',
+      progressPct: 72.69,
+      sourceAppraisalId: 'a-1',
+      sourceAppraisalNumber: '69105470',
+      sourceInspectionNumber: 4,
+      sourceCompletedAt: '2026-09-23T00:00:00',
+    },
+    selected: { status: 'InProgress', progressPct: 72.69 },
+    laterInspection: null,
+    openInspectionRequest: null,
+    latestAppraisal: null,
+    blockReason: null,
+    ...over,
+  });
+  const newer = {
+    appraisalId: 'a-9',
+    appraisalNumber: '69120871',
+    purposeCode: '03',
+    completedAt: '2026-08-02T00:00:00',
+    progressPct: null,
+  };
+  const show = (props: Partial<Parameters<typeof Harness>[0]> = {}) => {
+    asUser(['APPRAISAL_VIEW']);
+    return render(<Harness purpose="06" detail={prior} handlers={handlers()} {...props} />);
+  };
+
+  it("shows the picked appraisal's own construction % as a chip", () => {
+    show({ chain: chainOf() });
+    expect(screen.getByRole('status')).toHaveTextContent('Construction 72.69%');
+  });
+
+  it('shows a whole-number % without decimals, 100% included', () => {
+    show({ chain: chainOf({ selected: { status: 'Complete', progressPct: 100 } }) });
+    expect(screen.getByRole('status')).toHaveTextContent('Construction 100%');
+  });
+
+  it('says the appraisal has no construction % when the chain has one from another appraisal', () => {
+    show({
+      chain: chainOf({
+        selected: { status: 'NoData', progressPct: null },
+        // the chain holds 6.75% on an earlier appraisal: not this one's, so it is not shown
+        construction: {
+          status: 'InProgress',
+          progressPct: 6.75,
+          sourceAppraisalId: 'a-0',
+          sourceAppraisalNumber: '69105454',
+          sourceInspectionNumber: 3,
+          sourceCompletedAt: '2026-05-12T00:00:00',
+        },
+      }),
+    });
+    const strip = screen.getByRole('status');
+    expect(strip).toHaveTextContent('No construction % on this appraisal');
+    expect(strip).not.toHaveTextContent('6.75');
+    expect(strip).not.toHaveTextContent('69105454');
+    expect(strip).not.toHaveTextContent('Construction 6');
+  });
+
+  it('says there is no construction % whenever it is null, whatever the status says', () => {
+    show({ chain: chainOf({ selected: { status: 'InProgress', progressPct: null } }) });
+    expect(screen.getByRole('status')).toHaveTextContent('No construction % on this appraisal');
+  });
+
+  it('shows no construction figure at all when the API sends no `selected`', () => {
+    show({ chain: chainOf({ selected: undefined }) });
+    const strip = screen.getByRole('status');
+    expect(strip).not.toHaveTextContent('Construction');
+    expect(strip).not.toHaveTextContent('No construction %');
+    expect(strip).not.toHaveTextContent('72.69');
+  });
+
+  it('warns that a newer appraisal exists, and swaps to it from the link', async () => {
+    const onUseLatest = vi.fn();
+    const { user } = show({ chain: chainOf({ latestAppraisal: newer }), onUseLatest });
+    const strip = screen.getByRole('status');
+    expect(strip).toHaveTextContent('Not the latest appraisal in the chain: appraisal 69120871');
+    expect(strip).toHaveTextContent('02/08/2026');
+    await user.click(screen.getByRole('button', { name: 'Use appraisal 69120871 instead' }));
+    expect(onUseLatest).toHaveBeenCalledWith('a-9');
+  });
+
+  it('holds the swap while a pick is loading, and offers none on a locked prior', () => {
+    const { unmount } = show({
+      chain: chainOf({ latestAppraisal: newer }),
+      onUseLatest: vi.fn(),
+      disabled: true,
+    });
+    expect(screen.getByRole('button', { name: 'Use appraisal 69120871 instead' })).toBeDisabled();
+    unmount();
+
+    show({ chain: chainOf({ latestAppraisal: newer }), onUseLatest: vi.fn(), locked: true });
+    expect(screen.getByRole('status')).toHaveTextContent('Not the latest appraisal in the chain');
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
+  it('shows none of it for a purpose that is not a construction inspection, or with no chain', () => {
+    const { unmount } = show({ purpose: '03', chain: chainOf({ latestAppraisal: newer }) });
+    expect(screen.getByRole('status')).not.toHaveTextContent('Construction 72.69%');
+    expect(screen.getByRole('status')).not.toHaveTextContent('Not the latest');
+    unmount();
+
+    show({ chain: null });
+    expect(screen.getByRole('status')).not.toHaveTextContent('Construction 72.69%');
+    expect(screen.getByRole('status')).not.toHaveTextContent('No construction %');
+  });
+
+  it.each<[ConstructionBlockReason, RegExp]>([
+    ['ConstructionComplete', /already 100% built/],
+    ['LaterInspectionExists', /already has a later inspection/],
+    ['OpenInspectionRequest', /inspection request in this chain is still open/],
+  ])('turns red under the message for %s when a submit was refused', (rejection, message) => {
+    show({ chain: chainOf({ latestAppraisal: newer }), rejection, round: 3 });
+    expect(screen.getByRole('alert')).toHaveTextContent(message);
+    const strip = screen.getByRole('status');
+    expect(strip).toHaveClass('border-danger');
+    // what described a usable prior is gone while it is refused
+    expect(strip).not.toHaveTextContent('Construction 72.69%');
+    expect(strip).not.toHaveTextContent('Not the latest');
+    expect(strip).not.toHaveTextContent('Inspection round');
+  });
+
+  it('turns red too when the status itself says the prior is refused', () => {
+    show({ chain: chainOf({ blockReason: 'OpenInspectionRequest' }) });
+    expect(screen.getByRole('alert')).toHaveTextContent(/still open/);
+  });
+
+  it('has no alert when nothing was refused', () => {
+    show({ chain: chainOf() });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveClass('border-(--palette-accent-line)');
   });
 });

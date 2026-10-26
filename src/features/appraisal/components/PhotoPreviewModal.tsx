@@ -1,4 +1,5 @@
 import { useState, useCallback, useLayoutEffect, useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 
 export interface PreviewablePhoto {
@@ -40,6 +41,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
   onDelete,
   showInUseStatus = true,
 }: PhotoPreviewModalProps<T>) {
+  const { t } = useTranslation('appraisal');
   const currentIndex = photos.findIndex(p => p.id === photo.id);
   const hasPrev = currentIndex > 0;
   const hasNext = currentIndex < photos.length - 1;
@@ -143,7 +145,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
           {isThumbnail && (
             <div className="px-3 py-1.5 bg-amber-500/90 backdrop-blur-sm rounded-lg text-white text-xs font-semibold flex items-center gap-1.5">
               <Icon name="star" style="solid" className="text-[10px]" />
-              Cover Photo
+              {t('photoPreview.coverPhoto')}
             </div>
           )}
         </div>
@@ -158,10 +160,10 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                 onSetThumbnail();
               }}
               className="flex items-center gap-2 px-4 py-2 bg-amber-500/90 hover:bg-amber-500 backdrop-blur-sm rounded-xl text-white text-sm font-medium transition-all hover:scale-105"
-              title="Set as cover photo"
+              title={t('photoPreview.setCoverTitle')}
             >
               <Icon name="star" className="text-sm" />
-              Set as Cover
+              {t('photoPreview.setCover')}
             </button>
           )}
           {onDelete && (
@@ -172,10 +174,10 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                 onDelete();
               }}
               className="flex items-center gap-2 px-4 py-2 bg-red-500/80 hover:bg-red-500 backdrop-blur-sm rounded-xl text-white text-sm font-medium transition-all hover:scale-105"
-              title="Delete photo"
+              title={t('photoPreview.deleteTitle')}
             >
               <Icon name="trash" className="text-sm" />
-              Delete
+              {t('photoPreview.delete')}
             </button>
           )}
           <div className="w-px h-6 bg-white/20 mx-1" />
@@ -183,7 +185,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
             type="button"
             onClick={onClose}
             className="p-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-white transition-colors"
-            title="Close (Esc)"
+            title={t('photoPreview.closeTitle')}
           >
             <Icon name="xmark" className="text-lg" />
           </button>
@@ -199,7 +201,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
             goToPrev();
           }}
           className="absolute left-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl text-white transition-all hover:scale-110 group"
-          title="Previous"
+          title={t('photoPreview.previous')}
         >
           <Icon
             name="chevron-left"
@@ -215,7 +217,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
             goToNext();
           }}
           className="absolute right-4 top-1/2 -translate-y-1/2 w-14 h-14 flex items-center justify-center bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-2xl text-white transition-all hover:scale-110 group"
-          title="Next"
+          title={t('photoPreview.next')}
         >
           <Icon
             name="chevron-right"
@@ -227,7 +229,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
       {/* Image */}
       <img
         src={photo.src}
-        alt={photo.fileName || 'Photo'}
+        alt={photo.fileName || t('photoPreview.photo')}
         className="max-w-[85vw] max-h-[80vh] object-contain rounded-xl shadow-2xl"
         onClick={e => e.stopPropagation()}
       />
@@ -252,7 +254,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                       value={draft}
                       onChange={e => setDraft(e.target.value)}
                       maxLength={captionMaxLength}
-                      placeholder="Enter description..."
+                      placeholder={t('photoPreview.enterDescription')}
                       className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-1.5 text-sm text-white placeholder-white/40 focus:outline-none focus:border-white/40"
                       disabled={isSavingDescription}
                     />
@@ -261,7 +263,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                       onClick={saveDescription}
                       disabled={isSavingDescription}
                       className="p-1.5 bg-green-500/80 hover:bg-green-500 rounded-lg text-white transition-colors disabled:opacity-50"
-                      title="Save"
+                      title={t('photoPreview.save')}
                     >
                       {isSavingDescription ? (
                         <Icon name="spinner" style="solid" className="text-sm animate-spin" />
@@ -274,7 +276,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                       onClick={cancelEditing}
                       disabled={isSavingDescription}
                       className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors disabled:opacity-50"
-                      title="Cancel"
+                      title={t('photoPreview.cancel')}
                     >
                       <Icon name="xmark" className="text-sm" />
                     </button>
@@ -282,14 +284,14 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                 ) : (
                   <div className="flex items-center gap-2">
                     <p className="font-medium truncate flex-1">
-                      {photo.caption || photo.fileName || 'Photo'}
+                      {photo.caption || photo.fileName || t('photoPreview.photo')}
                     </p>
                     {onSaveDescription && (
                       <button
                         type="button"
                         onClick={startEditing}
                         className="p-1.5 bg-white/10 hover:bg-white/20 rounded-lg text-white/60 hover:text-white transition-colors flex-shrink-0"
-                        title="Edit description"
+                        title={t('photoPreview.editDescription')}
                       >
                         <Icon name="pen-to-square" className="text-sm" />
                       </button>
@@ -306,7 +308,7 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
                   className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${photo.isInUse ? 'bg-green-500/20 text-green-300' : 'bg-white/10 text-white/50'}`}
                 >
                   <Icon name={photo.isInUse ? 'check-circle' : 'clock'} className="text-[10px]" />
-                  {photo.isInUse ? 'In Use' : 'Not Used'}
+                  {photo.isInUse ? t('photoPreview.inUse') : t('photoPreview.notUsed')}
                 </span>
               )}
               {(photo.fileExtension || photo.mimeType) && (
@@ -335,11 +337,11 @@ function PhotoPreviewModal<T extends PreviewablePhoto>({
           <span className="flex items-center gap-1.5">
             <kbd className="px-2 py-0.5 bg-white/10 rounded">&#8592;</kbd>
             <kbd className="px-2 py-0.5 bg-white/10 rounded">&#8594;</kbd>
-            Navigate
+            {t('photoPreview.navigate')}
           </span>
           <span className="flex items-center gap-1.5">
             <kbd className="px-2 py-0.5 bg-white/10 rounded">Esc</kbd>
-            Close
+            {t('photoPreview.close')}
           </span>
         </div>
       </div>

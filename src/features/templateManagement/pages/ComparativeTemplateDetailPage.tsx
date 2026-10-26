@@ -279,15 +279,15 @@ const ComparativeTemplateDetailPage = () => {
         <button
           onClick={() => navigate('/comparative-templates')}
           aria-label={t('common:actions.back')}
-          className="text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
         >
           <Icon name="chevron-left" style="solid" className="size-5" />
         </button>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             {isEditMode ? t('templateDetail.compEditTitle') : t('templateDetail.compCreateTitle')}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             {isEditMode ? templateDetail?.templateCode : t('templateDetail.createSubtitle')}
           </p>
         </div>
@@ -308,7 +308,7 @@ const ComparativeTemplateDetailPage = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-6">
         <TemplateForm value={form} onChange={setForm} isEditMode={isEditMode} />
 
         <div className="flex justify-end gap-2 mt-6">
@@ -322,7 +322,7 @@ const ComparativeTemplateDetailPage = () => {
       </div>
 
       {isEditMode && (
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-6">
           <TemplateFactorManager
             factors={templateDetail?.comparativeFactors ?? []}
             allFactors={allFactors}

@@ -153,7 +153,7 @@ export default function RescheduleModal({
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
             <Button type="button" variant="ghost" onClick={handleClose}>
               Cancel
             </Button>

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { z } from 'zod';
 import { buildFormSchema, mergeSchemas } from './schemaBuilder';
 import type { FormField } from './types';
+import { vmsg } from './validationMessage';
 
 // =============================================================================
 // Helpers
@@ -40,7 +41,14 @@ describe('buildFormSchema — field types', () => {
 
   it('text-input with minLength/maxLength', () => {
     const fields: FormField[] = [
-      { type: 'text-input', name: 'code', label: 'Code', required: true, minLength: 2, maxLength: 5 },
+      {
+        type: 'text-input',
+        name: 'code',
+        label: 'Code',
+        required: true,
+        minLength: 2,
+        maxLength: 5,
+      },
     ];
     const schema = buildFormSchema(fields);
 
@@ -63,7 +71,13 @@ describe('buildFormSchema — field types', () => {
 
   it('number-input with maxIntegerDigits limits digits before decimal', () => {
     const fields: FormField[] = [
-      { type: 'number-input', name: 'amount', label: 'Amount', maxIntegerDigits: 3, decimalPlaces: 2 },
+      {
+        type: 'number-input',
+        name: 'amount',
+        label: 'Amount',
+        maxIntegerDigits: 3,
+        decimalPlaces: 2,
+      },
     ];
     const schema = buildFormSchema(fields);
 
@@ -129,9 +143,7 @@ describe('buildFormSchema — field types', () => {
   });
 
   it('optional field accepts null/undefined', () => {
-    const fields: FormField[] = [
-      { type: 'text-input', name: 'nickname', label: 'Nickname' },
-    ];
+    const fields: FormField[] = [{ type: 'text-input', name: 'nickname', label: 'Nickname' }];
     const schema = buildFormSchema(fields);
 
     expect(parse(schema, { nickname: null }).success).toBe(true);
@@ -141,7 +153,13 @@ describe('buildFormSchema — field types', () => {
 
   it('field with requiredWhen is optional in base schema', () => {
     const fields: FormField[] = [
-      { type: 'text-input', name: 'reason', label: 'Reason', required: true, requiredWhen: { field: 'status', is: 'rejected' } },
+      {
+        type: 'text-input',
+        name: 'reason',
+        label: 'Reason',
+        required: true,
+        requiredWhen: { field: 'status', is: 'rejected' },
+      },
     ];
     const schema = buildFormSchema(fields);
     // Schema should be ZodEffects (has superRefine)
@@ -171,7 +189,15 @@ describe('buildFormSchema — required number-input + allowZero', () => {
 
   it('required number-input with allowZero accepts 0 but rejects null/empty', () => {
     const fields: FormField[] = [
-      { type: 'number-input', name: 'lat', label: 'Latitude', required: true, min: -90, max: 90, allowZero: true },
+      {
+        type: 'number-input',
+        name: 'lat',
+        label: 'Latitude',
+        required: true,
+        min: -90,
+        max: 90,
+        allowZero: true,
+      },
     ];
     const schema = buildFormSchema(fields);
 
@@ -185,13 +211,21 @@ describe('buildFormSchema — required number-input + allowZero', () => {
 
   it('required number-input with allowZero shows required message (not NaN)', () => {
     const fields: FormField[] = [
-      { type: 'number-input', name: 'lat', label: 'Latitude', required: true, min: -90, max: 90, allowZero: true },
+      {
+        type: 'number-input',
+        name: 'lat',
+        label: 'Latitude',
+        required: true,
+        min: -90,
+        max: 90,
+        allowZero: true,
+      },
     ];
     const schema = buildFormSchema(fields);
 
     const result = parse(schema, { lat: null });
     expect(result.success).toBe(false);
-    expect(result.error?.issues[0]?.message).toBe('Latitude is required');
+    expect(result.error?.issues[0]?.message).toBe(vmsg('required'));
   });
 
   it('required number-input without min still rejects 0 (backward compat)', () => {
@@ -213,6 +247,97 @@ describe('buildFormSchema — required number-input + allowZero', () => {
     expect(parse(schema, { code: '' }).success).toBe(false);
     expect(parse(schema, { code: 'AB' }).success).toBe(false); // too short
     expect(parse(schema, { code: 'ABC' }).success).toBe(true);
+  });
+});
+
+// =============================================================================
+// buildFormSchema — messages are locale-independent tokens
+// =============================================================================
+
+describe('buildFormSchema — message tokens', () => {
+  /** The message of the first issue the field produces. */
+  function firstMessage(field: FormField, value: unknown) {
+    const result = parse(buildFormSchema([field]), { [field.name]: value });
+    return result.error?.issues[0]?.message;
+  }
+
+  it('required: the same token whatever the label says', () => {
+    const base = { type: 'text-input', name: 'a', required: true } as const;
+    expect(firstMessage({ ...base, label: 'Land Description' }, '')).toBe(vmsg('required'));
+    expect(firstMessage({ ...base, label: 'รายละเอียดที่ดิน' }, '')).toBe(vmsg('required'));
+  });
+
+  it('text length carries the limit', () => {
+    expect(firstMessage({ type: 'text-input', name: 'a', label: 'A', maxLength: 3 }, 'abcd')).toBe(
+      vmsg('maxLength', { max: 3 }),
+    );
+    expect(firstMessage({ type: 'text-input', name: 'a', label: 'A', minLength: 3 }, 'ab')).toBe(
+      vmsg('minLength', { min: 3 }),
+    );
+    expect(firstMessage({ type: 'textarea', name: 'a', label: 'A', maxLength: 3 }, 'abcd')).toBe(
+      vmsg('maxLength', { max: 3 }),
+    );
+  });
+
+  it('number range, sign, decimals and integer digits', () => {
+    const number = { type: 'number-input', name: 'n', label: 'N' } as const;
+    expect(firstMessage({ ...number, min: 5 }, 4)).toBe(vmsg('minValue', { min: 5 }));
+    expect(firstMessage({ ...number, max: 5 }, 6)).toBe(vmsg('maxValue', { max: 5 }));
+    expect(firstMessage({ ...number, allowNegative: false }, -1)).toBe(
+      vmsg('minValue', { min: 0 }),
+    );
+    expect(firstMessage({ ...number, decimalPlaces: 2 }, 1.234)).toBe(
+      vmsg('maxDecimals', { max: 2 }),
+    );
+    expect(firstMessage({ ...number, decimalPlaces: 0 }, 1.5)).toBe(vmsg('wholeNumber'));
+    expect(firstMessage({ ...number, maxIntegerDigits: 2 }, 123)).toBe(
+      vmsg('maxIntegerDigits', { max: 2 }),
+    );
+  });
+
+  it('a pattern without its own message gets the format token', () => {
+    expect(
+      firstMessage({ type: 'text-input', name: 'a', label: 'A', formatPattern: '^\\d+$' }, 'abc'),
+    ).toBe(vmsg('invalidFormat'));
+  });
+
+  it('item counts', () => {
+    const rows = (extra: object) =>
+      ({
+        type: 'field-array',
+        name: 'rows',
+        label: 'Rows',
+        fields: [{ type: 'text-input', name: 'x', label: 'X' }],
+        ...extra,
+      }) as FormField;
+    expect(firstMessage(rows({ required: true, minItems: 2 }), [{ x: 'a' }])).toBe(
+      vmsg('minItems', { min: 2 }),
+    );
+    expect(firstMessage(rows({ maxItems: 1 }), [{ x: 'a' }, { x: 'b' }])).toBe(
+      vmsg('maxItems', { max: 1 }),
+    );
+  });
+
+  it('a conditionally required field uses the same token', () => {
+    const schema = buildFormSchema([
+      { type: 'select-input', name: 'type', label: 'Type', options: [] },
+      {
+        type: 'text-input',
+        name: 'note',
+        label: 'Note',
+        requiredWhen: { field: 'type', is: 'x' },
+      },
+    ]);
+    const result = parse(schema, { type: 'x', note: '' });
+    expect(result.error?.issues[0]?.message).toBe(vmsg('required'));
+  });
+
+  it('zod defaults nobody wrote become tokens too', () => {
+    const result = parse(z.object({ a: z.string(), b: z.string().email() }), { b: 'nope' });
+    expect(result.error?.issues.map(i => i.message)).toEqual([
+      vmsg('required'),
+      vmsg('invalidEmail'),
+    ]);
   });
 });
 
@@ -278,17 +403,27 @@ describe('buildFormSchema — dotted field names (nested objects)', () => {
 
   it('multi-level nesting — "detail.loanDetail.bankingSegment"', () => {
     const fields: FormField[] = [
-      { type: 'dropdown', name: 'detail.loanDetail.bankingSegment', label: 'Banking Segment', group: 'BankingSegment', required: true },
+      {
+        type: 'dropdown',
+        name: 'detail.loanDetail.bankingSegment',
+        label: 'Banking Segment',
+        group: 'BankingSegment',
+        required: true,
+      },
     ];
     const schema = buildFormSchema(fields);
 
-    expect(parse(schema, {
-      detail: { loanDetail: { bankingSegment: 'retail' } },
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        detail: { loanDetail: { bankingSegment: 'retail' } },
+      }).success,
+    ).toBe(true);
 
-    expect(parse(schema, {
-      detail: { loanDetail: {} },
-    }).success).toBe(false);
+    expect(
+      parse(schema, {
+        detail: { loanDetail: {} },
+      }).success,
+    ).toBe(false);
   });
 
   it('mixed flat + dotted fields in same schema', () => {
@@ -305,10 +440,12 @@ describe('buildFormSchema — dotted field names (nested objects)', () => {
     // Nested fields exist
     expect(inner.shape.detail._def.typeName).toBe('ZodObject');
 
-    expect(parse(schema, {
-      purpose: 'test',
-      detail: { address: { city: 'Bangkok', street: null } },
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        purpose: 'test',
+        detail: { address: { city: 'Bangkok', street: null } },
+      }).success,
+    ).toBe(true);
   });
 
   it('multiple dotted fields under same parent merge correctly', () => {
@@ -319,13 +456,17 @@ describe('buildFormSchema — dotted field names (nested objects)', () => {
     ];
     const schema = buildFormSchema(fields);
 
-    expect(parse(schema, {
-      detail: { firstName: 'John', lastName: 'Doe', age: null },
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        detail: { firstName: 'John', lastName: 'Doe', age: null },
+      }).success,
+    ).toBe(true);
 
-    expect(parse(schema, {
-      detail: { firstName: 'John' },
-    }).success).toBe(false); // missing lastName
+    expect(
+      parse(schema, {
+        detail: { firstName: 'John' },
+      }).success,
+    ).toBe(false); // missing lastName
   });
 });
 
@@ -356,9 +497,11 @@ describe('buildFormSchema — deep merge with base', () => {
     expect(detailShape.c).toBeDefined();
 
     // detail.a should be number (field-wins), detail.b stays number, detail.c stays boolean
-    expect(parse(schema, {
-      detail: { a: 42, b: 1, c: true },
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        detail: { a: 42, b: 1, c: true },
+      }).success,
+    ).toBe(true);
   });
 
   it('deep merge with field-wins overrides overlapping sub-field', () => {
@@ -415,7 +558,12 @@ describe('buildFormSchema — deep merge with base', () => {
     // Fields only define 3 address sub-fields
     const fields: FormField[] = [
       { type: 'text-input', name: 'detail.address.houseNumber', label: 'House No' },
-      { type: 'text-input', name: 'detail.address.subDistrict', label: 'Sub District', required: true },
+      {
+        type: 'text-input',
+        name: 'detail.address.subDistrict',
+        label: 'Sub District',
+        required: true,
+      },
       { type: 'text-input', name: 'detail.address.postcode', label: 'Postcode' },
     ];
     const schema = buildFormSchema(fields, baseSchema);
@@ -631,12 +779,15 @@ describe('buildFormSchema — conditional validation', () => {
       detail: { loanDetail: { loanApplicationNumber: '' } },
     });
     expect(fail.success).toBe(false);
-    expect(fail.error?.issues.some(i =>
-      i.path.length === 3 &&
-      i.path[0] === 'detail' &&
-      i.path[1] === 'loanDetail' &&
-      i.path[2] === 'loanApplicationNumber',
-    )).toBe(true);
+    expect(
+      fail.error?.issues.some(
+        i =>
+          i.path.length === 3 &&
+          i.path[0] === 'detail' &&
+          i.path[1] === 'loanDetail' &&
+          i.path[2] === 'loanApplicationNumber',
+      ),
+    ).toBe(true);
 
     // purpose !== '01' + empty loan app number → passes
     const pass = parse(schema, {
@@ -667,20 +818,30 @@ describe('buildFormSchema — field-array', () => {
         required: true,
         fields: [
           { type: 'text-input', name: 'name', label: 'Name', required: true, minLength: 1 },
-          { type: 'text-input', name: 'contactNumber', label: 'Contact', required: true, minLength: 1 },
+          {
+            type: 'text-input',
+            name: 'contactNumber',
+            label: 'Contact',
+            required: true,
+            minLength: 1,
+          },
         ],
       },
     ];
     const schema = buildFormSchema(fields);
 
-    expect(parse(schema, {
-      customers: [{ name: 'Alice', contactNumber: '123' }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        customers: [{ name: 'Alice', contactNumber: '123' }],
+      }).success,
+    ).toBe(true);
 
     // child field validation: name too short
-    expect(parse(schema, {
-      customers: [{ name: '', contactNumber: '123' }],
-    }).success).toBe(false);
+    expect(
+      parse(schema, {
+        customers: [{ name: '', contactNumber: '123' }],
+      }).success,
+    ).toBe(false);
   });
 
   it('minItems / maxItems constraints', () => {
@@ -691,9 +852,7 @@ describe('buildFormSchema — field-array', () => {
         required: true,
         minItems: 2,
         maxItems: 4,
-        fields: [
-          { type: 'text-input', name: 'value', label: 'Value', required: true },
-        ],
+        fields: [{ type: 'text-input', name: 'value', label: 'Value', required: true }],
       },
     ];
     const schema = buildFormSchema(fields);
@@ -703,13 +862,17 @@ describe('buildFormSchema — field-array', () => {
     // just right
     expect(parse(schema, { items: [{ value: 'a' }, { value: 'b' }] }).success).toBe(true);
     // max
-    expect(parse(schema, {
-      items: [{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        items: [{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }],
+      }).success,
+    ).toBe(true);
     // too many
-    expect(parse(schema, {
-      items: [{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }, { value: 'e' }],
-    }).success).toBe(false);
+    expect(
+      parse(schema, {
+        items: [{ value: 'a' }, { value: 'b' }, { value: 'c' }, { value: 'd' }, { value: 'e' }],
+      }).success,
+    ).toBe(false);
   });
 
   it('required + no minItems defaults to .min(1)', () => {
@@ -718,9 +881,7 @@ describe('buildFormSchema — field-array', () => {
         type: 'field-array',
         name: 'tags',
         required: true,
-        fields: [
-          { type: 'text-input', name: 'label', label: 'Label', required: true },
-        ],
+        fields: [{ type: 'text-input', name: 'label', label: 'Label', required: true }],
       },
     ];
     const schema = buildFormSchema(fields);
@@ -736,9 +897,7 @@ describe('buildFormSchema — field-array', () => {
       {
         type: 'field-array',
         name: 'notes',
-        fields: [
-          { type: 'text-input', name: 'text', label: 'Text' },
-        ],
+        fields: [{ type: 'text-input', name: 'text', label: 'Text' }],
       },
     ];
     const schema = buildFormSchema(fields);
@@ -763,29 +922,35 @@ describe('buildFormSchema — field-array', () => {
             name: 'members',
             required: true,
             minItems: 1,
-            fields: [
-              { type: 'text-input', name: 'memberName', label: 'Member', required: true },
-            ],
+            fields: [{ type: 'text-input', name: 'memberName', label: 'Member', required: true }],
           },
         ],
       },
     ];
     const schema = buildFormSchema(fields);
 
-    expect(parse(schema, {
-      groups: [{
-        groupName: 'Team A',
-        members: [{ memberName: 'Alice' }],
-      }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        groups: [
+          {
+            groupName: 'Team A',
+            members: [{ memberName: 'Alice' }],
+          },
+        ],
+      }).success,
+    ).toBe(true);
 
     // nested array empty fails (minItems: 1)
-    expect(parse(schema, {
-      groups: [{
-        groupName: 'Team A',
-        members: [],
-      }],
-    }).success).toBe(false);
+    expect(
+      parse(schema, {
+        groups: [
+          {
+            groupName: 'Team A',
+            members: [],
+          },
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   it('array with conditional child field is optional in element schema', () => {
@@ -809,9 +974,11 @@ describe('buildFormSchema — field-array', () => {
     const schema = buildFormSchema(fields);
 
     // 'details' has requiredWhen → optional in base schema → null accepted
-    expect(parse(schema, {
-      entries: [{ title: 'Test', details: null }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        entries: [{ title: 'Test', details: null }],
+      }).success,
+    ).toBe(true);
   });
 
   it('field-array with requiredWhen child — enforces per element', () => {
@@ -841,14 +1008,18 @@ describe('buildFormSchema — field-array', () => {
     expect(fail.error?.issues.some(i => i.path.includes('titleNumber'))).toBe(true);
 
     // collateralType = 'L' + filled titleNumber → passes
-    expect(parse(schema, {
-      titles: [{ collateralType: 'L', titleNumber: '123' }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        titles: [{ collateralType: 'L', titleNumber: '123' }],
+      }).success,
+    ).toBe(true);
 
     // collateralType = 'B' + empty titleNumber → passes (condition not met)
-    expect(parse(schema, {
-      titles: [{ collateralType: 'B', titleNumber: null }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        titles: [{ collateralType: 'B', titleNumber: null }],
+      }).success,
+    ).toBe(true);
   });
 
   it('field-array with showWhen child — hidden child skips validation', () => {
@@ -872,9 +1043,11 @@ describe('buildFormSchema — field-array', () => {
     const schema = buildFormSchema(fields);
 
     // type != 'special' → extra hidden → should pass with null
-    expect(parse(schema, {
-      items: [{ type: 'normal', extra: null }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        items: [{ type: 'normal', extra: null }],
+      }).success,
+    ).toBe(true);
 
     // type == 'special' → extra visible + required → empty fails
     const fail = parse(schema, {
@@ -883,9 +1056,11 @@ describe('buildFormSchema — field-array', () => {
     expect(fail.success).toBe(false);
 
     // type == 'special' + filled → passes
-    expect(parse(schema, {
-      items: [{ type: 'special', extra: 'data' }],
-    }).success).toBe(true);
+    expect(
+      parse(schema, {
+        items: [{ type: 'special', extra: 'data' }],
+      }).success,
+    ).toBe(true);
   });
 
   it('field-array element-level validation — per-element errors', () => {

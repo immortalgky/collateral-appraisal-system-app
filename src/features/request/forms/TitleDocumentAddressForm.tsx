@@ -38,6 +38,7 @@ const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressForm
     | undefined;
 
   const prefix = `titles.${index}.titleAddress`;
+  const requestAddress = useWatch({ name: 'detail.address' }) as AddressValue | undefined;
 
   // The request's address is picked from the DOPA master and a title's from the Title master, which
   // number places differently: the typed fields are copied, the locality is looked up in the Title
@@ -58,26 +59,36 @@ const TitleDocumentAddressForm = ({ index, isReadOnly }: TitleDocumentAdressForm
     addressHasValue(getValues(prefix)) ? setConfirming(true) : copyFromRequest();
 
   return (
-    <div className="grid content-start gap-3 rounded-xl border border-gray-200 p-3">
+    <div className="grid content-start gap-3 rounded-xl border border-(--palette-line) p-3">
       <div className="flex min-h-7 flex-wrap items-center gap-2">
         <h4 className="m-0 text-sm font-semibold">{t('titleAddress.header')}</h4>
         {!isReadOnly && (
           <button
             type="button"
             onClick={handleUseRequestAddress}
-            className="ml-auto rounded-md px-2 py-1 text-sm text-primary transition-colors hover:bg-primary/10"
+            // the locality is looked up in the Title master, so nothing can be placed until it loads;
+            // and an empty request address would only blank a typed one
+            disabled={!addressHasValue(requestAddress) || titleRows.length === 0}
+            title={
+              titleRows.length === 0
+                ? t('titleSection.address.masterUnavailable')
+                : !addressHasValue(requestAddress)
+                  ? t('titleSection.address.requestAddressEmpty')
+                  : undefined
+            }
+            className="ml-auto rounded-md px-2 py-1 text-sm text-(--palette-primary-text) transition-colors hover:bg-primary/10 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
           >
             {t('titleSection.address.useRequest')}
           </button>
         )}
       </div>
       {movedDistrict && subDistrict === movedDistrict.code && (
-        <p role="status" className="m-0 text-sm text-amber-700">
+        <p role="status" className="m-0 text-sm text-(--palette-warn)">
           {t('titleSection.address.districtDiffersTitle', { district: movedDistrict.district })}
         </p>
       )}
       {missedLocality && !subDistrict && (
-        <p role="status" className="m-0 text-sm text-amber-700">
+        <p role="status" className="m-0 text-sm text-(--palette-warn)">
           {t('titleSection.address.titleMissing')}
         </p>
       )}

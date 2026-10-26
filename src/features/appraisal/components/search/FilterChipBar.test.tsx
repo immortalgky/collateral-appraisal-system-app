@@ -178,8 +178,8 @@ describe('FilterChipBar add-filter hand-off', () => {
     // "Status" with its chevron, not "Status: All" in the filled style
     const chip = chipButton('Status');
     expect(chip).toHaveTextContent(/^Status$/);
-    expect(chip.closest('span')?.className).toContain('bg-white');
-    expect(chip.closest('span')?.className).not.toContain('bg-gray-100');
+    expect(chip.closest('span')?.className).toContain('bg-(--palette-surface)');
+    expect(chip.closest('span')?.className).not.toContain('bg-(--palette-surface-3)');
     expect(values()).toEqual({});
   });
 
@@ -239,10 +239,17 @@ const wide: FilterField[] = [
   },
 ];
 
-function PinnedHarness() {
-  const [values, setValues] = useState<Record<string, string>>({ appraisalType: 'New' });
+function PinnedHarness({
+  singleLine = false,
+  initial = { appraisalType: 'New' },
+}: {
+  singleLine?: boolean;
+  initial?: Record<string, string>;
+}) {
+  const [values, setValues] = useState<Record<string, string>>(initial);
   return (
     <FilterChipBar
+      singleLine={singleLine}
       filters={wide}
       values={values}
       pinned={['status', 'slaStatus', 'priority']}
@@ -392,6 +399,53 @@ describe('FilterChipBar overflow', () => {
     // the one added chip does not fit on those lines, so it is the only thing in "More"
     expect(moreButton()).toHaveTextContent('More +1');
     expect(hiddenChip(/^Job type/)).not.toBeNull();
+  });
+
+  it('singleLine: folds the pinned chips too, unset ones first, so the bar stays one line', () => {
+    // 400 to use, two chips fit with the overflow chip and the tail. Job type (added) holds a value,
+    // so it keeps its place; of the unset pinned ones Status goes first in the row.
+    render(<PinnedHarness singleLine />);
+    expect(moreButton()).toHaveTextContent('More +2');
+    expect(screen.getByRole('button', { name: /^Job type/ }).closest('.invisible')).toBeNull();
+    expect(screen.getByRole('button', { name: /^Status/ }).closest('.invisible')).toBeNull();
+    expect(hiddenChip(/^SLA status/)).not.toBeNull();
+    expect(hiddenChip(/^Priority/)).not.toBeNull();
+    // nothing hidden holds a value, so the overflow chip is not marked
+    expect(document.querySelector('[data-more-active]')).toBeNull();
+  });
+
+  it('singleLine: gives the one slot to the chip that holds a value, the unset ones fold', () => {
+    // 300 to use: the overflow chip and the tail take 190, so one chip fits
+    widths.row = 301;
+    render(<PinnedHarness singleLine />);
+    expect(moreButton()).toHaveTextContent('More +3');
+    expect(screen.getByRole('button', { name: /^Job type/ }).closest('.invisible')).toBeNull();
+    // everything folded is unset: the overflow chip is not marked
+    expect(document.querySelector('[data-more-active]')).toBeNull();
+  });
+
+  it('singleLine: marks the overflow chip when a folded chip holds a value', () => {
+    widths.row = 301;
+    render(<PinnedHarness singleLine initial={{ appraisalType: 'New', slaStatus: 'AtRisk' }} />);
+    // two chips hold a value and one slot: the other is folded, and the overflow chip says so
+    expect(moreButton()).toHaveTextContent('More +3');
+    expect(hiddenChip(/^Job type/)).not.toBeNull();
+    expect(document.querySelector('[data-more-active]')).not.toBeNull();
+  });
+
+  it('singleLine: the open chip stays and the others make room as it grows, so the row never overflows', async () => {
+    const { user } = render(<PinnedHarness singleLine initial={{}} />);
+    expect(screen.getByRole('button', { name: /^SLA status/ }).closest('.invisible')).toBeNull();
+    await user.click(screen.getByRole('button', { name: /^Status/ }));
+    await user.click(await screen.findByRole('checkbox', { name: 'Pending' }));
+    await user.click(screen.getByRole('checkbox', { name: 'Assigned' }));
+    // two values widen the chip (160): with its panel still open, SLA status gives way at once
+    expect(screen.getByRole('button', { name: /^Status/ })).toHaveAttribute(
+      'aria-expanded',
+      'true',
+    );
+    expect(screen.getByRole('button', { name: /^Status/ }).closest('.invisible')).toBeNull();
+    expect(hiddenChip(/^SLA status/)).not.toBeNull();
   });
 
   it('closes the menu, and puts the focus on Add filter, when its last hidden filter is cleared', async () => {

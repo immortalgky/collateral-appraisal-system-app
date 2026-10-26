@@ -22,19 +22,19 @@ const AddressAutofill = () => {
 
   return (
     <div className="col-span-7 @max-[45.7143rem]:col-span-12">
-      <span className="mb-1 block text-xs font-medium text-gray-700">
+      <span className="mb-1 block text-xs font-medium text-(--palette-ink)">
         {t('fields.district')} · {t('fields.province')} · {t('fields.postcode')}
       </span>
-      <div className="flex min-h-10 flex-wrap items-center gap-x-3.5 gap-y-1 rounded-lg border border-dashed border-gray-200 bg-gray-50 px-3 py-1.5 text-sm text-gray-700">
+      <div className="flex min-h-10 flex-wrap items-center gap-x-3.5 gap-y-1 rounded-lg border border-dashed border-(--palette-line) bg-(--palette-surface-2) px-3 py-1.5 text-sm text-(--palette-ink)">
         {parts.length ? (
           parts.map(([label, value]) => (
             <span key={label}>
-              <span className="mr-1 text-xs text-gray-500">{label}</span>
+              <span className="mr-1 text-xs text-(--palette-gray-500)">{label}</span>
               {value}
             </span>
           ))
         ) : (
-          <span className="text-gray-400">{t('requestForm.addressAutofill')}</span>
+          <span className="text-(--palette-gray-400)">{t('requestForm.addressAutofill')}</span>
         )}
       </div>
     </div>

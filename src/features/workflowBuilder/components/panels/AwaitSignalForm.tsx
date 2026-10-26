@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeAwaitSignalFormSchema, type AwaitSignalFormValues } from '../../schemas';
+import { awaitSignalFormSchema, type AwaitSignalFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { AwaitSignalProperties } from '../../types';
 
@@ -26,7 +27,7 @@ export function AwaitSignalForm({ nodeId }: Props) {
     reset,
     formState: { errors },
   } = useForm<AwaitSignalFormValues>({
-    resolver: zodResolver(makeAwaitSignalFormSchema(t)),
+    resolver: zodResolver(awaitSignalFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -70,9 +71,11 @@ export function AwaitSignalForm({ nodeId }: Props) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -97,9 +100,11 @@ export function AwaitSignalForm({ nodeId }: Props) {
           placeholder={t('forms.placeholders.signalNameHint')}
         />
         {errors.signalName && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.signalName.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.signalName.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -113,9 +118,11 @@ export function AwaitSignalForm({ nodeId }: Props) {
           placeholder={t('forms.placeholders.correlationKeyHint')}
         />
         {errors.correlationKey && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.correlationKey.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.correlationKey.message} />
+            </span>
+          </div>
         )}
       </div>
 

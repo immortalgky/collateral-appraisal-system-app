@@ -1,11 +1,7 @@
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
-import {
-  makeDirectComparisonDto,
-  DirectComparisonDto,
-  type DirectComparisonType,
-} from '../schemas/directComparisonForm';
+import { DirectComparisonDto, type DirectComparisonType } from '../schemas/directComparisonForm';
 import { useEffect, useState } from 'react';
 import type {
   CalculationType,
@@ -29,6 +25,8 @@ import { DirectComparisonForm } from '@features/pricingAnalysis/components/Direc
 import ConfirmDialog from '@shared/components/ConfirmDialog.tsx';
 import { useLinkedComparables } from '@features/pricingAnalysis/hooks/useLinkedComparables';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
+import { useTemplateMissingFields } from '../hooks/useTemplateMissingFields';
 import { Button, Icon } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MethodTopBarPortal } from './MethodTopBarPortal';
@@ -90,6 +88,7 @@ export function DirectComparisonPanel({
   onCancelCalculationMethod,
 }: DirectComparisonPanelProps) {
   const { t } = useTranslation('pricingAnalysis');
+  const missingFields = useTemplateMissingFields();
   const { methodId, methodType } = activeMethod ?? {};
   const isCostApproach = methodType === 'DC_COST';
 
@@ -101,7 +100,7 @@ export function DirectComparisonPanel({
 
   const methods = useForm<DirectComparisonType>({
     mode: 'onSubmit',
-    resolver: zodResolver(makeDirectComparisonDto(t)),
+    resolver: zodResolver(DirectComparisonDto),
   });
 
   const {
@@ -425,7 +424,7 @@ export function DirectComparisonPanel({
   }, [isDirty, onCalculationMethodDirty]);
 
   return (
-    <FormProvider methods={methods} schema={DirectComparisonDto}>
+    <FormProvider methods={methods} schema={DirectComparisonDto} fields={missingFields}>
       <MethodTopBarPortal slot="chip">
         {/* Template chip — replaces the old PricingAnalysisTemplateSelector card; same
             fields/handlers, now a popover anchored to the top bar beside the method name. */}
@@ -444,14 +443,16 @@ export function DirectComparisonPanel({
         {isGenerated && (
           <>
             <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-              <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-              <span className="text-sm font-semibold text-primary tabular-nums">
+              <span className="text-[10px] text-(--palette-gray-400)">
+                {t('finalValue.indicatedValue')}
+              </span>
+              <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
                 {fmt(Number(indicatedValue) || 0)}
               </span>
             </div>
             {!isReadOnly && (
               <>
-                <span className="w-px h-5 bg-gray-200 shrink-0" />
+                <span className="w-px h-5 bg-(--palette-line) shrink-0" />
                 <Button
                   variant="ghost"
                   type="button"
@@ -469,11 +470,12 @@ export function DirectComparisonPanel({
                     disabled={saveMutation.isPending}
                     title={t('footer.reset')}
                     aria-label={t('footer.reset')}
-                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+                    className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger) shrink-0"
                   >
                     <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
                   </Button>
                 )}
+                <MissingFieldsChip placement="down" />
                 <Button
                   type="submit"
                   form={formId}

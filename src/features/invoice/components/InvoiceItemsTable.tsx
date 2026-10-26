@@ -71,22 +71,31 @@ interface SortableHeaderProps {
 // Matches the project-standard sort affordance from the task list (ActivityTaskTable):
 // click the entire <th>, primary-colored text + single-chevron icon when active,
 // dual-arrow ghost icon when inactive.
-const SortableHeader = ({ label, field, active, dir, align = 'left', onSort }: SortableHeaderProps) => {
+const SortableHeader = ({
+  label,
+  field,
+  active,
+  dir,
+  align = 'left',
+  onSort,
+}: SortableHeaderProps) => {
   const isActive = active === field;
   const iconName = isActive ? (dir === 'asc' ? 'sort-up' : 'sort-down') : 'sort';
   return (
     <th
       onClick={() => onSort(field)}
-      className={`font-semibold px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${
+      className={`font-semibold px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-(--palette-ink) ${
         align === 'right' ? 'text-right' : 'text-left'
-      } ${isActive ? 'text-primary' : 'text-gray-600'}`}
+      } ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-600)'}`}
     >
-      <div className={`inline-flex items-center gap-1 ${align === 'right' ? 'flex-row-reverse' : ''}`}>
+      <div
+        className={`inline-flex items-center gap-1 ${align === 'right' ? 'flex-row-reverse' : ''}`}
+      >
         <span>{label}</span>
         <Icon
           style="solid"
           name={iconName}
-          className={`size-2.5 ${isActive ? 'text-primary' : 'text-gray-300'}`}
+          className={`size-2.5 ${isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-300)'}`}
         />
       </div>
     </th>
@@ -133,16 +142,16 @@ const InvoiceItemsTable = ({
   const sumRemaining = items.reduce((s, i) => s + i.remainingFee, 0);
 
   const headColCount =
-    (hidePaymentColumns ? 9 : 11) +
-    (showCostCenter ? 1 : 0) -
-    (hideLastPayment ? 1 : 0);
+    (hidePaymentColumns ? 9 : 11) + (showCostCenter ? 1 : 0) - (hideLastPayment ? 1 : 0);
 
   return (
-    <div className="overflow-auto rounded-lg border border-gray-200">
+    <div className="overflow-auto rounded-lg border border-(--palette-line)">
       <table className="w-full text-sm">
-        <thead className="bg-gray-100 sticky top-0">
-          <tr className="border-b-2 border-gray-300">
-            <th className="text-center font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide w-10">#</th>
+        <thead className="bg-(--palette-surface-3) sticky top-0">
+          <tr className="border-b-2 border-(--palette-line-strong)">
+            <th className="text-center font-semibold text-(--palette-gray-600) px-4 py-2.5 text-xs uppercase tracking-wide w-10">
+              #
+            </th>
             <SortableHeader
               label={t('book.col.appraisalReportNo')}
               field="appraisalNumber"
@@ -158,7 +167,7 @@ const InvoiceItemsTable = ({
               onSort={handleSort}
             />
             {showCostCenter && (
-              <th className="text-left font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
+              <th className="text-left font-semibold text-(--palette-gray-600) px-4 py-2.5 text-xs uppercase tracking-wide whitespace-nowrap">
                 {t('book.col.costCenter')}
               </th>
             )}
@@ -170,7 +179,7 @@ const InvoiceItemsTable = ({
               dir={sortDir}
               onSort={handleSort}
             />
-            <th className="text-right font-semibold text-gray-600 px-4 py-2.5 text-xs uppercase tracking-wide">
+            <th className="text-right font-semibold text-(--palette-gray-600) px-4 py-2.5 text-xs uppercase tracking-wide">
               {t('book.col.vat')}
             </th>
             <SortableHeader
@@ -227,62 +236,63 @@ const InvoiceItemsTable = ({
             />
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {sortedItems.length === 0 ? (
             <tr>
-              <td colSpan={headColCount} className="text-center py-10 text-gray-400 text-xs">
+              <td
+                colSpan={headColCount}
+                className="text-center py-10 text-(--palette-gray-400) text-xs"
+              >
                 {t('draft.noItems')}
               </td>
             </tr>
           ) : (
             sortedItems.map((item, index) => (
-              <tr key={item.id} className="even:bg-gray-50/50">
-                <td className="px-4 py-2.5 text-center text-gray-400 tabular-nums">
+              <tr key={item.id} className="even:bg-(--palette-surface-2)/50">
+                <td className="px-4 py-2.5 text-center text-(--palette-gray-400) tabular-nums">
                   {index + 1}
                 </td>
-                <td className="px-4 py-2.5 font-medium text-primary whitespace-nowrap">
+                <td className="px-4 py-2.5 font-medium text-(--palette-primary-text) whitespace-nowrap">
                   {item.appraisalNumber ?? '—'}
                 </td>
-                <td className="px-4 py-2.5 text-gray-700">{item.customerName ?? '—'}</td>
+                <td className="px-4 py-2.5 text-(--palette-ink)">{item.customerName ?? '—'}</td>
                 {showCostCenter && (
-                  <td className="px-4 py-2.5 text-gray-400 whitespace-nowrap italic">
+                  <td className="px-4 py-2.5 text-(--palette-gray-400) whitespace-nowrap italic">
                     {t('book.col.notAvailable')}
                   </td>
                 )}
-                <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap">
                   {formatCurrency(item.feeBeforeVAT)}
                 </td>
-                <td className="px-4 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right text-(--palette-gray-600) tabular-nums whitespace-nowrap">
                   {formatCurrency(item.vatAmount)}{' '}
-                  <span className="text-gray-400">({item.vatRate}%)</span>
+                  <span className="text-(--palette-gray-400)">({item.vatRate}%)</span>
                 </td>
-                <td className="px-4 py-2.5 text-right font-medium text-gray-900 tabular-nums whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right font-medium text-(--palette-ink) tabular-nums whitespace-nowrap">
                   {formatCurrency(item.totalFeeAfterVAT)}
                 </td>
                 {!hidePaymentColumns && (
-                  <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
+                  <td className="px-4 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap">
                     {formatCurrency(item.payPartialAmount)}
                   </td>
                 )}
-                <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
+                <td className="px-4 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap">
                   {formatCurrency(item.bankAbsorbAmount)}
                 </td>
                 {!hidePaymentColumns && (
-                  <td className="px-4 py-2.5 text-right text-gray-700 tabular-nums whitespace-nowrap">
+                  <td className="px-4 py-2.5 text-right text-(--palette-ink) tabular-nums whitespace-nowrap">
                     {formatCurrency(item.remainingFee)}
                   </td>
                 )}
                 {!hideLastPayment && (
-                  <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                  <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                     {item.lastPaymentDate
                       ? formatLocaleDate(item.lastPaymentDate, i18n.language)
                       : '—'}
                   </td>
                 )}
-                <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
-                  {item.submittedDate
-                    ? formatLocaleDate(item.submittedDate, i18n.language)
-                    : '—'}
+                <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
+                  {item.submittedDate ? formatLocaleDate(item.submittedDate, i18n.language) : '—'}
                 </td>
               </tr>
             ))
@@ -290,30 +300,30 @@ const InvoiceItemsTable = ({
         </tbody>
         {items.length > 0 && (
           <tfoot>
-            <tr className="bg-gray-50 border-t-2 border-gray-300">
+            <tr className="bg-(--palette-surface-2) border-t-2 border-(--palette-line-strong)">
               <td
                 colSpan={3 + (showCostCenter ? 1 : 0)}
-                className="px-4 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide"
+                className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-600) uppercase tracking-wide"
               >
                 {t('list.grandTotal')}
               </td>
-              <td className="px-4 py-2.5 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap text-sm">
+              <td className="px-4 py-2.5 text-right font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap text-sm">
                 {formatCurrency(sumFee)}
               </td>
               <td />
-              <td className="px-4 py-2.5 text-right font-semibold text-gray-900 tabular-nums whitespace-nowrap text-sm">
+              <td className="px-4 py-2.5 text-right font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap text-sm">
                 {formatCurrency(sumTotal)}
               </td>
               {!hidePaymentColumns && (
-                <td className="px-4 py-2.5 text-right font-semibold text-gray-700 tabular-nums whitespace-nowrap text-sm">
+                <td className="px-4 py-2.5 text-right font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap text-sm">
                   {formatCurrency(sumPaid)}
                 </td>
               )}
-              <td className="px-4 py-2.5 text-right font-bold text-primary tabular-nums whitespace-nowrap text-sm">
+              <td className="px-4 py-2.5 text-right font-bold text-(--palette-primary-text) tabular-nums whitespace-nowrap text-sm">
                 {formatCurrency(sumBankAbsorb)}
               </td>
               {!hidePaymentColumns && (
-                <td className="px-4 py-2.5 text-right font-semibold text-gray-700 tabular-nums whitespace-nowrap text-sm">
+                <td className="px-4 py-2.5 text-right font-semibold text-(--palette-ink) tabular-nums whitespace-nowrap text-sm">
                   {formatCurrency(sumRemaining)}
                 </td>
               )}

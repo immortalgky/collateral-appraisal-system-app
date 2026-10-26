@@ -197,7 +197,7 @@ export default function PropertyInformationPage() {
         {/* The strip scrolls when the labels outgrow the width, but the scrollbar itself stays
             hidden: `overflow-x-auto` also turns `overflow-y` into `auto`, and macOS set to
             "always show scrollbars" then paints a track next to a row that never scrolls. */}
-        <nav className="flex gap-1 border-b border-gray-200 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav className="flex gap-1 border-b border-(--palette-line) overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {visibleTabs.map(tab => {
             const isActive = activeTab === tab.id;
             return (
@@ -208,21 +208,26 @@ export default function PropertyInformationPage() {
                 className={clsx(
                   '-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-xs font-medium transition-colors',
                   isActive
-                    ? 'border-primary text-gray-900'
-                    : 'border-transparent text-gray-500 hover:text-gray-700',
+                    ? 'border-primary text-(--palette-ink)'
+                    : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)',
                 )}
               >
                 <Icon
                   name={tab.icon}
                   style="solid"
-                  className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
+                  className={clsx(
+                    'size-3.5',
+                    isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-400)',
+                  )}
                 />
                 <span>{tab.label}</span>
                 {tab.count != null && tab.count > 0 && (
                   <span
                     className={clsx(
                       'rounded-full px-1.5 text-[10px] font-semibold tabular-nums',
-                      isActive ? 'bg-primary-50 text-primary-700' : 'bg-gray-100 text-gray-500',
+                      isActive
+                        ? 'bg-(--palette-accent-wash) text-(--palette-accent-ink)'
+                        : 'bg-(--palette-surface-3) text-(--palette-gray-500)',
                     )}
                   >
                     {tab.count}

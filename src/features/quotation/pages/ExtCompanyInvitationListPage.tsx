@@ -28,6 +28,7 @@ type VendorStatusCode =
   | 'Tentative'
   | 'Negotiating'
   | 'Declined'
+  | 'Expired'
   | 'Cancelled';
 
 const STATUS_FILTER_GROUPS: { key: string; codes: VendorStatusCode[] }[] = [
@@ -38,8 +39,38 @@ const STATUS_FILTER_GROUPS: { key: string; codes: VendorStatusCode[] }[] = [
   { key: 'Tentative', codes: ['Tentative'] },
   { key: 'Negotiating', codes: ['Negotiating'] },
   { key: 'Declined', codes: ['Declined'] },
+  { key: 'Expired', codes: ['Expired'] },
   { key: 'Cancelled', codes: ['Cancelled'] },
 ];
+
+const statusStorageKey = (userId: string) => `quotation.extInvitations.statusGroups.${userId}`;
+
+/** Read the remembered status filter. Returns null when nothing valid is stored (so the role default applies);
+    an empty array is a valid, deliberate "all statuses" choice. */
+const loadStatusGroups = (userId: string | undefined): string[] | null => {
+  if (!userId) return null;
+  try {
+    const raw = localStorage.getItem(statusStorageKey(userId));
+    if (raw == null) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return null;
+    const known = new Set(STATUS_FILTER_GROUPS.map(g => g.key));
+    const valid = parsed.filter((k): k is string => typeof k === 'string' && known.has(k));
+    // Everything stored was stale/unknown -> fall back to the default rather than show "all".
+    return valid.length === 0 && parsed.length > 0 ? null : valid;
+  } catch {
+    return null;
+  }
+};
+
+const saveStatusGroups = (userId: string | undefined, groups: string[]) => {
+  if (!userId) return;
+  try {
+    localStorage.setItem(statusStorageKey(userId), JSON.stringify(groups));
+  } catch {
+    // Storage unavailable (private mode / quota) — the filter simply isn't remembered.
+  }
+};
 
 // Single search box + a "search by" selector: only the chosen field is sent to the backend.
 type SearchField = 'quotationNo' | 'appraisalNo' | 'customerName';
@@ -68,16 +99,22 @@ const ExtCompanyInvitationListPage = () => {
   const currentUser = useAuthStore(state => state.user);
   const isChecker = currentUser?.roles.includes('ExtAppraisalChecker') ?? false;
   const isAdmin = currentUser?.roles.includes('ExtAdmin') ?? false;
-  const defaultStatusGroups = isChecker
-    ? ['PendingCheckerReview']
-    : isAdmin
-      ? ['PendingSubmission']
+  const defaultStatusGroups = isAdmin
+    ? ['PendingSubmission', 'Negotiating']
+    : isChecker
+      ? ['PendingCheckerReview']
       : [];
 
   // Filter state — date filters store ISO from DatePickerInput; sliced to yyyy-MM-dd at the API boundary.
   const [searchField, setSearchField] = useState<SearchField>('quotationNo');
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusGroups, setStatusGroups] = useState<string[]>(() => defaultStatusGroups);
+  const [statusGroups, setStatusGroups] = useState<string[]>(
+    () => loadStatusGroups(currentUser?.id) ?? defaultStatusGroups,
+  );
+  const handleStatusGroupsChange = (groups: string[]) => {
+    setStatusGroups(groups);
+    saveStatusGroups(currentUser?.id, groups);
+  };
   const statuses = useMemo(
     () => statusGroups.flatMap(key => STATUS_FILTER_GROUPS.find(g => g.key === key)?.codes ?? []),
     [statusGroups],
@@ -142,7 +179,7 @@ const ExtCompanyInvitationListPage = () => {
 
   const handleClearFilters = () => {
     setSearchTerm('');
-    setStatusGroups([]);
+    handleStatusGroupsChange([]);
     setCutOffTimeFrom(null);
     setCutOffTimeTo(null);
   };
@@ -151,8 +188,8 @@ const ExtCompanyInvitationListPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('errors.failedToLoadInvitations')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('errors.failedToLoadInvitations')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -163,12 +200,16 @@ const ExtCompanyInvitationListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('page.invitationsTitle')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('page.invitationsTitle')}
+            </h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {totalCount}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.invitationsSubtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
+            {t('page.invitationsSubtitle')}
+          </p>
         </div>
       </div>
 
@@ -176,7 +217,9 @@ const ExtCompanyInvitationListPage = () => {
       <div className="shrink-0 flex items-end gap-3 pb-1 flex-wrap">
         {/* Search — one bar: "search by" selector + input */}
         <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">{t('filters.searchBy')}</label>
+          <label className="block text-xs font-medium text-(--palette-ink)">
+            {t('filters.searchBy')}
+          </label>
           <SearchByInput
             options={searchFieldOptions}
             field={searchField}
@@ -190,11 +233,13 @@ const ExtCompanyInvitationListPage = () => {
 
         {/* Status Filter — multi-select */}
         <div className="flex flex-col gap-1">
-          <label className="block text-xs font-medium text-gray-700">{t('columns.status')}</label>
+          <label className="block text-xs font-medium text-(--palette-ink)">
+            {t('columns.status')}
+          </label>
           <MultiSelectDropdown
             options={statusOptions}
             value={statusGroups}
-            onChange={setStatusGroups}
+            onChange={handleStatusGroupsChange}
             placeholder={t('filters.allStatuses')}
             showValuePrefix={false}
             className="min-w-40"
@@ -230,11 +275,11 @@ const ExtCompanyInvitationListPage = () => {
       </div>
 
       {/* Table */}
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
                 <SortableTh
                   label={t('columns.quotationNumber')}
                   sortKey="QuotationNumber"
@@ -297,7 +342,7 @@ const ExtCompanyInvitationListPage = () => {
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`divide-y divide-(--palette-line-soft) ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -318,12 +363,16 @@ const ExtCompanyInvitationListPage = () => {
                 <tr>
                   <td colSpan={9} className="text-center py-16">
                     <div className="flex flex-col items-center gap-3">
-                      <Icon name="inbox" style="regular" className="size-12 text-gray-300" />
+                      <Icon
+                        name="inbox"
+                        style="regular"
+                        className="size-12 text-(--palette-gray-300)"
+                      />
                       <div className="text-center">
-                        <p className="text-sm font-medium text-gray-700">
+                        <p className="text-sm font-medium text-(--palette-ink)">
                           {t('empty.noInvitations')}
                         </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="text-xs text-(--palette-gray-500) mt-0.5">
                           {hasFilters
                             ? t('empty.noInvitationsFilterHint')
                             : t('empty.noInvitationsHint')}
@@ -337,20 +386,22 @@ const ExtCompanyInvitationListPage = () => {
                   <tr
                     key={item.id}
                     onClick={() => navigate(`/ext/quotations/${item.id}`)}
-                    className="hover:bg-gray-50 even:bg-gray-50/50 transition-colors cursor-pointer"
+                    className="hover:bg-(--palette-surface-2) even:bg-(--palette-surface-2)/50 transition-colors cursor-pointer"
                   >
                     <td className="px-4 py-2.5">
-                      <span className="font-medium text-primary">{item.quotationNumber}</span>
+                      <span className="font-medium text-(--palette-primary-text)">
+                        {item.quotationNumber}
+                      </span>
                     </td>
                     <td
-                      className="px-4 py-2.5 text-gray-600 max-w-[16rem]"
+                      className="px-4 py-2.5 text-(--palette-gray-600) max-w-[16rem]"
                       title={item.customerNames ?? undefined}
                     >
                       <span className="inline-block max-w-full truncate align-bottom">
                         {item.customerName ?? '—'}
                       </span>
                       {item.customerCount > 1 && (
-                        <span className="ml-1 text-xs text-gray-400">
+                        <span className="ml-1 text-xs text-(--palette-gray-400)">
                           +{item.customerCount - 1}
                         </span>
                       )}
@@ -358,20 +409,22 @@ const ExtCompanyInvitationListPage = () => {
                     <td className="px-4 py-2.5">
                       <MyInvitationStatusBadge status={item.companyStatus} />
                     </td>
-                    <td className="px-4 py-2.5 text-center text-gray-600 tabular-nums">
+                    <td className="px-4 py-2.5 text-center text-(--palette-gray-600) tabular-nums">
                       {item.totalAppraisals}
                     </td>
-                    <td className="px-4 py-2.5 text-right text-gray-600 tabular-nums whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-right text-(--palette-gray-600) tabular-nums whitespace-nowrap">
                       {formatCurrency(item.totalFeeAmount)}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                       {formatLocaleDateTime(item.receivedAt, i18n.language)}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                       {formatLocaleDateTime(item.cutOffTime, i18n.language)}
                     </td>
-                    <td className="px-4 py-2.5 text-gray-600">{item.quotedBy ?? '—'}</td>
-                    <td className="px-4 py-2.5 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-2.5 text-(--palette-gray-600)">
+                      {item.quotedBy ?? '—'}
+                    </td>
+                    <td className="px-4 py-2.5 text-(--palette-gray-600) whitespace-nowrap">
                       {formatLocaleDateTime(item.quotedAt, i18n.language)}
                     </td>
                   </tr>
@@ -381,7 +434,11 @@ const ExtCompanyInvitationListPage = () => {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>

@@ -175,7 +175,7 @@ export function PlacesAutocomplete({ ready, placeholder, onPlaceSelect }: Places
       {/* Input */}
       <div className="relative">
         <svg
-          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--palette-gray-400) pointer-events-none"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -198,7 +198,7 @@ export function PlacesAutocomplete({ ready, placeholder, onPlaceSelect }: Places
           disabled={!ready}
           aria-autocomplete="list"
           aria-expanded={open}
-          className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:cursor-not-allowed"
+          className="w-full pl-9 pr-3 py-2 border border-(--palette-input-edge) bg-(--form-input-bg) text-(--palette-ink) rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-(--palette-surface-2) disabled:cursor-not-allowed"
         />
       </div>
 
@@ -206,7 +206,7 @@ export function PlacesAutocomplete({ ready, placeholder, onPlaceSelect }: Places
       {open && suggestions.length > 0 && (
         <ul
           role="listbox"
-          className="absolute z-20 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-md shadow-lg"
+          className="absolute z-20 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-(--palette-surface) border border-(--palette-line) rounded-md shadow-lg"
         >
           {suggestions.map((suggestion, idx) => {
             const prediction = suggestion?.placePrediction;
@@ -222,11 +222,13 @@ export function PlacesAutocomplete({ ready, placeholder, onPlaceSelect }: Places
                   onMouseEnter={() => setActiveIndex(idx)}
                   className={[
                     'w-full text-left px-3 py-2 text-sm flex flex-col',
-                    isActive ? 'bg-blue-50' : 'hover:bg-gray-50',
+                    isActive ? 'bg-blue-500/10' : 'hover:bg-(--palette-surface-2)',
                   ].join(' ')}
                 >
-                  <span className="font-medium text-gray-800 truncate">{main}</span>
-                  {secondary && <span className="text-xs text-gray-500 truncate">{secondary}</span>}
+                  <span className="font-medium text-(--palette-ink) truncate">{main}</span>
+                  {secondary && (
+                    <span className="text-xs text-(--palette-gray-500) truncate">{secondary}</span>
+                  )}
                 </button>
               </li>
             );

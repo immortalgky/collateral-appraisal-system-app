@@ -17,17 +17,12 @@ import { describe, it, expect, vi } from 'vitest';
 import { useState } from 'react';
 import { render, screen } from '@/test/test-utils';
 import TextInput from './TextInput';
+import { FormLayoutProvider } from '../form/FormLayoutProvider';
 
 // Wrapper for controlled input testing
 function ControlledTextInput(props: React.ComponentProps<typeof TextInput>) {
   const [value, setValue] = useState(props.value ?? '');
-  return (
-    <TextInput
-      {...props}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
-  );
+  return <TextInput {...props} value={value} onChange={e => setValue(e.target.value)} />;
 }
 
 describe('TextInput', () => {
@@ -120,9 +115,7 @@ describe('TextInput', () => {
     // ------------------------------------------
     it('should call onChange when typing', async () => {
       const handleChange = vi.fn();
-      const { user } = render(
-        <TextInput label="Name" onChange={handleChange} />
-      );
+      const { user } = render(<TextInput label="Name" onChange={handleChange} />);
 
       const input = screen.getByLabelText('Name');
       await user.type(input, 'A');
@@ -148,9 +141,7 @@ describe('TextInput', () => {
     it('should clear the box when a controlled value becomes null', () => {
       const { rerender } = render(<TextInput label="Name" value="Old" onChange={() => {}} />);
 
-      rerender(
-        <TextInput label="Name" value={null as unknown as string} onChange={() => {}} />
-      );
+      rerender(<TextInput label="Name" value={null as unknown as string} onChange={() => {}} />);
 
       expect(screen.getByLabelText('Name')).toHaveValue('');
     });
@@ -222,7 +213,8 @@ describe('TextInput', () => {
       render(<TextInput label="Name" disabled />);
 
       const input = screen.getByLabelText('Name');
-      expect(input).toHaveClass('bg-gray-50', 'cursor-not-allowed');
+      // Same box, never bare text (DESIGN.md 17.3).
+      expect(input).toHaveClass('bg-(--palette-surface-2)', 'border', 'cursor-not-allowed');
     });
 
     // ------------------------------------------
@@ -230,9 +222,7 @@ describe('TextInput', () => {
     // ------------------------------------------
     it('should not allow typing when disabled', async () => {
       const handleChange = vi.fn();
-      const { user } = render(
-        <TextInput label="Name" disabled onChange={handleChange} />
-      );
+      const { user } = render(<TextInput label="Name" disabled onChange={handleChange} />);
 
       const input = screen.getByLabelText('Name');
       await user.type(input, 'Test');
@@ -264,14 +254,7 @@ describe('TextInput', () => {
     // Scenario 17: Shows character count with maxLength
     // ------------------------------------------
     it('should show character count when showCharCount and maxLength are set', () => {
-      render(
-        <ControlledTextInput
-          label="Bio"
-          maxLength={100}
-          showCharCount
-          value="Hello"
-        />
-      );
+      render(<ControlledTextInput label="Bio" maxLength={100} showCharCount value="Hello" />);
 
       expect(screen.getByText('5/100')).toBeInTheDocument();
     });
@@ -280,9 +263,7 @@ describe('TextInput', () => {
     // Scenario 18: Updates character count when typing
     // ------------------------------------------
     it('should update character count when typing', async () => {
-      const { user } = render(
-        <ControlledTextInput label="Bio" maxLength={50} showCharCount />
-      );
+      const { user } = render(<ControlledTextInput label="Bio" maxLength={50} showCharCount />);
 
       const input = screen.getByLabelText('Bio');
       await user.type(input, 'Hello World');
@@ -322,6 +303,43 @@ describe('TextInput', () => {
 
       const input = screen.getByLabelText('Email');
       expect(input).toHaveAttribute('aria-describedby', 'email-error');
+    });
+  });
+
+  // ============================================
+  // Layout Tests (DESIGN.md 17.3)
+  // ============================================
+  describe('layout', () => {
+    it('should be the 36px Standard control by default, sized by height not padding', () => {
+      render(<TextInput label="Name" />);
+
+      const input = screen.getByLabelText('Name');
+      expect(input).toHaveClass('h-ctl', 'rounded-ctl', 'px-[0.8571rem]');
+      expect(input.className).not.toMatch(/(^|\s)py-/);
+    });
+
+    it('should be the 32px control in a Compact form', () => {
+      render(
+        <FormLayoutProvider layout="compact">
+          <TextInput label="Name" />
+        </FormLayoutProvider>,
+      );
+
+      expect(screen.getByLabelText('Name')).toHaveClass('h-ctl-c', 'rounded-ctl-c');
+    });
+
+    it('should be 28px as a table cell in a Compact form, and unchanged in Standard', () => {
+      render(
+        <>
+          <FormLayoutProvider layout="compact">
+            <TextInput label="Compact cell" cell />
+          </FormLayoutProvider>
+          <TextInput label="Standard cell" cell />
+        </>,
+      );
+
+      expect(screen.getByLabelText('Compact cell')).toHaveClass('h-8');
+      expect(screen.getByLabelText('Standard cell')).toHaveClass('h-ctl');
     });
   });
 });

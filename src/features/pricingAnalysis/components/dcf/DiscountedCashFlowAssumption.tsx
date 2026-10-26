@@ -50,7 +50,7 @@ export function DiscountedCashFlowAssumption({
           group-hover would light up every row's icons while the pointer is anywhere over the
           table. */}
       <tr className="group/asm">
-        <td className={clsx(STK_CLASS_FLEX, 'pl-4 bg-white')}>
+        <td className={clsx(STK_CLASS_FLEX, 'pl-4 bg-(--palette-surface)')}>
           <div className="flex flex-row gap-1 items-center w-full min-w-0">
             {/* mock `.g.dcf .chevb` — borderless ▾/▸ glyph button, 16px wide, ink-3. */}
             <button
@@ -58,7 +58,7 @@ export function DiscountedCashFlowAssumption({
               onClick={() => setExpanded(!expanded)}
               aria-expanded={expanded}
               aria-label={t('aria.toggleAccordion')}
-              className="shrink-0 w-4 mr-[2px] p-0 border-0 bg-transparent text-[#8a96a0] cursor-pointer"
+              className="shrink-0 w-4 mr-[2px] p-0 border-0 bg-transparent text-(--palette-ink-3) cursor-pointer"
             >
               {expanded ? '▾' : '▸'}
             </button>
@@ -73,7 +73,7 @@ export function DiscountedCashFlowAssumption({
                   <button
                     type="button"
                     onClick={() => onOpenEditMode(assumption.clientId)}
-                    className="truncate text-left cursor-pointer hover:text-primary hover:underline min-w-0"
+                    className="truncate text-left cursor-pointer hover:text-(--palette-primary-text) hover:underline min-w-0"
                     title={label}
                   >
                     {label}
@@ -83,10 +83,10 @@ export function DiscountedCashFlowAssumption({
             />
           </div>
         </td>
-        <td className={clsx(STK2_CLASS_FLEX, 'bg-white')}>
+        <td className={clsx(STK2_CLASS_FLEX, 'bg-(--palette-surface)')}>
           <div className="relative flex flex-row items-center">
             <span
-              className="truncate text-[11px] text-gray-500 min-w-0 flex-1"
+              className="truncate text-[11px] text-(--palette-gray-500) min-w-0 flex-1"
               title={summary ? `${methodDesc}\n${summary}` : methodDesc}
             >
               {summary || methodDesc}
@@ -94,10 +94,10 @@ export function DiscountedCashFlowAssumption({
             {!isReadOnly && (
               // mock `.g.dcf tr.asmrow .ib` — absolutely placed over the text's right end on a
               // white backing, so the summary keeps the full column when not hovered.
-              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-0.5 items-center bg-white pl-1 opacity-0 group-hover/asm:opacity-100 focus-within:opacity-100">
+              <div className="absolute right-0 top-1/2 -translate-y-1/2 flex gap-0.5 items-center bg-(--palette-surface) pl-1 opacity-0 group-hover/asm:opacity-100 focus-within:opacity-100">
                 <button
                   type="button"
-                  className="size-6 rounded-md inline-flex items-center justify-center text-gray-500 hover:text-primary hover:bg-primary/10 cursor-pointer"
+                  className="size-6 rounded-md inline-flex items-center justify-center text-(--palette-gray-500) hover:text-(--palette-primary-text) hover:bg-primary/10 cursor-pointer"
                   onClick={() => {
                     onOpenEditMode(assumption.clientId);
                   }}
@@ -107,7 +107,7 @@ export function DiscountedCashFlowAssumption({
                 </button>
                 <button
                   type="button"
-                  className="size-6 rounded-md inline-flex items-center justify-center text-gray-500 hover:text-danger hover:bg-danger/10 cursor-pointer"
+                  className="size-6 rounded-md inline-flex items-center justify-center text-(--palette-gray-500) hover:text-danger hover:bg-danger/10 cursor-pointer"
                   onClick={onRemoveAssumption}
                   aria-label={t('dcf.assumption.deleteAssumption')}
                 >
@@ -119,7 +119,7 @@ export function DiscountedCashFlowAssumption({
         </td>
         {Array.from({ length: totalNumberOfYears }, (_, index) => {
           return (
-            <td key={index} className={clsx(YEAR_CELL_CLASS, 'bg-white')}>
+            <td key={index} className={clsx(YEAR_CELL_CLASS, 'bg-(--palette-surface)')}>
               <RHFInputCell
                 fieldName={`${name}.totalAssumptionValues.${index}`}
                 inputType="display"

@@ -1,9 +1,4 @@
-import {
-  useLayoutEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 
@@ -21,10 +16,7 @@ interface Geometry {
   width: number;
 }
 
-function useSlidingIndicator<K extends string>(
-  activeKey: K,
-  deps: ReadonlyArray<unknown> = [],
-) {
+function useSlidingIndicator<K extends string>(activeKey: K, deps: ReadonlyArray<unknown> = []) {
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<Map<K, HTMLElement | null>>(new Map());
   const [geometry, setGeometry] = useState<Geometry | null>(null);
@@ -60,14 +52,7 @@ interface TabButtonProps {
   buttonRef: (el: HTMLButtonElement | null) => void;
 }
 
-const TabButton = ({
-  isActive,
-  icon,
-  label,
-  count,
-  onClick,
-  buttonRef,
-}: TabButtonProps) => (
+const TabButton = ({ isActive, icon, label, count, onClick, buttonRef }: TabButtonProps) => (
   <button
     ref={buttonRef}
     type="button"
@@ -75,33 +60,27 @@ const TabButton = ({
     aria-selected={isActive}
     onClick={onClick}
     className={`relative z-10 inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 ${
-      isActive ? 'text-gray-900' : 'text-gray-600 hover:text-gray-900'
+      isActive ? 'text-(--palette-ink)' : 'text-(--palette-gray-600) hover:text-(--palette-ink)'
     }`}
   >
     <Icon
       style={isActive ? 'solid' : 'regular'}
       name={icon}
       className={`size-3.5 transition-colors duration-200 ${
-        isActive ? 'text-primary' : 'text-gray-400'
+        isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-400)'
       }`}
     />
     <span>{label}</span>
-    {count !== undefined && (
-      <CountBadge isActive={isActive}>{count}</CountBadge>
-    )}
+    {count !== undefined && <CountBadge isActive={isActive}>{count}</CountBadge>}
   </button>
 );
 
-const CountBadge = ({
-  isActive,
-  children,
-}: {
-  isActive: boolean;
-  children: ReactNode;
-}) => (
+const CountBadge = ({ isActive, children }: { isActive: boolean; children: ReactNode }) => (
   <span
     className={`ml-0.5 px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums leading-none transition-colors duration-200 ${
-      isActive ? 'bg-primary/10 text-primary' : 'bg-gray-200 text-gray-600'
+      isActive
+        ? 'bg-primary/10 text-(--palette-primary-text)'
+        : 'bg-(--palette-surface-3) text-(--palette-gray-600)'
     }`}
   >
     {children}
@@ -129,13 +108,13 @@ const InvoiceListTabs = ({ value, onChange, counts }: InvoiceListTabsProps) => {
       ref={containerRef}
       role="tablist"
       aria-label={t('list.title')}
-      className="relative inline-flex p-1 bg-gray-100 rounded-lg gap-1"
+      className="relative inline-flex p-1 bg-(--palette-surface-3) rounded-lg gap-1"
     >
       {/* Sliding white pill behind the active tab */}
       {geometry && (
         <div
           aria-hidden="true"
-          className="absolute top-1 bottom-1 bg-white rounded-md shadow-sm transition-[left,width] duration-300 ease-out"
+          className="absolute top-1 bottom-1 bg-(--palette-surface) rounded-md shadow-sm transition-[left,width] duration-300 ease-out"
           style={{ left: geometry.left, width: geometry.width }}
         />
       )}

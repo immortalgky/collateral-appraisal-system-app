@@ -6,6 +6,7 @@ import { formatLocaleDateTime } from '@shared/utils/dateUtils';
 import ChangePasswordModal from '../ChangePasswordModal';
 import type { UserProfile } from '../../types';
 import ProfileSection from './ProfileSection';
+import PasskeysCard from './PasskeysCard';
 import ReadOnlyField from './ReadOnlyField';
 import TwoFactorCard from './TwoFactorCard';
 
@@ -76,7 +77,10 @@ const ProfileSecurityTab = ({ me, isLdap }: ProfileSecurityTabProps) => {
         )}
       </ProfileSection>
 
-      {/* Unlike Change Password, 2FA is offered to LDAP accounts too: the code is checked by us. */}
+      {/* Passkeys and 2FA, unlike Change Password, are offered to LDAP accounts too. */}
+      <PasskeysCard />
+
+      {/* The 2FA code is checked by us, whichever directory holds the password. */}
       <TwoFactorCard me={me} />
 
       <ProfileSection icon="clock-rotate-left" color="slate" title={t('myProfile.session')}>

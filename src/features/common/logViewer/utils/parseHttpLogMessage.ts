@@ -49,7 +49,7 @@ export function parseHttpLogMessage(message: string | null | undefined): ParsedH
 /** Tailwind classes for an HTTP status pill — shared by the table row and the drawer's trace tab. */
 export const httpStatusClass = (status: number): string =>
   status >= 500
-    ? 'bg-red-50 text-red-700'
+    ? 'bg-(--palette-req-wash) text-(--palette-req)'
     : status >= 400
-      ? 'bg-amber-50 text-amber-700'
-      : 'bg-green-50 text-green-700';
+      ? 'bg-(--palette-warn-wash) text-(--palette-warn)'
+      : 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300';

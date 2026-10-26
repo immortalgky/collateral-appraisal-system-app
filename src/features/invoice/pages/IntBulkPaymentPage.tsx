@@ -40,9 +40,7 @@ const IntBulkPaymentPage = () => {
     })),
   });
 
-  const invoices = detailQueries
-    .map(q => q.data)
-    .filter((d): d is InvoiceDetail => !!d);
+  const invoices = detailQueries.map(q => q.data).filter((d): d is InvoiceDetail => !!d);
   const isLoadingAny = detailQueries.some(q => q.isLoading);
 
   const { mutate: bulkMarkPaid, isPending } = useBulkMarkInvoicesPaid();
@@ -70,7 +68,7 @@ const IntBulkPaymentPage = () => {
 
   if (isLoadingAny && invoices.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-400">
+      <div className="flex items-center justify-center h-64 text-(--palette-gray-400)">
         <Icon style="solid" name="spinner" className="size-5 animate-spin mr-2" />
         {t('common.loading')}
       </div>

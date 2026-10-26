@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { delay, http, HttpResponse } from 'msw';
 import toast from 'react-hot-toast';
 import { server } from '@/test/mocks/server';
@@ -14,6 +14,14 @@ vi.mock('react-i18next', () => ({
 }));
 
 vi.mock('react-hot-toast', () => ({ default: { success: vi.fn(), error: vi.fn() } }));
+
+const logout = vi.hoisted(() => vi.fn());
+vi.mock('@features/auth/utils/logout', () => ({ logout }));
+const redirectToLogin = vi.hoisted(() => vi.fn());
+vi.mock('@features/auth/utils/auth', async importOriginal => ({
+  ...(await importOriginal<typeof import('@features/auth/utils/auth')>()),
+  redirectToLogin,
+}));
 
 const baseMe: UserProfile = {
   id: 'u1',
@@ -52,6 +60,10 @@ const recorder = () => {
   return { bodies, record: async (request: Request) => bodies.push(await request.json()) };
 };
 
+// clearMocks wipes the calls; the fallback test changes the result, so set it again for each.
+beforeEach(() => logout.mockResolvedValue(true));
+afterEach(() => sessionStorage.clear());
+
 describe('TwoFactorCard states', () => {
   it('required but still off: says it will be asked for, and offers to turn it on', () => {
     render(<TwoFactorCard me={{ ...baseMe, twoFactorRequired: true }} />);
@@ -81,6 +93,15 @@ describe('TwoFactorCard states', () => {
     expect(screen.queryByText('twoFactor.disable.button')).not.toBeInTheDocument();
     expect(screen.getByText('twoFactor.requiredNote')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'twoFactor.regenerate.button' })).toBeInTheDocument();
+  });
+
+  it('new device: offered whenever 2FA is on, also when required, never when off', () => {
+    const { rerender } = render(<TwoFactorCard me={enabledMe} />);
+    expect(screen.getByRole('button', { name: 'twoFactor.newDevice.button' })).toBeInTheDocument();
+    rerender(<TwoFactorCard me={{ ...enabledMe, twoFactorRequired: true }} />);
+    expect(screen.getByRole('button', { name: 'twoFactor.newDevice.button' })).toBeInTheDocument();
+    rerender(<TwoFactorCard me={baseMe} />);
+    expect(screen.queryByText('twoFactor.newDevice.button')).not.toBeInTheDocument();
   });
 
   it('is offered to an LDAP account too', () => {
@@ -388,5 +409,124 @@ describe('TwoFactorCard disable and regenerate', () => {
 
     expect(await screen.findByText(CODES[9])).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'twoFactor.recovery.done' })).toBeDisabled();
+  });
+});
+
+describe('TwoFactorCard new device', () => {
+  const open = async (queryClient?: ReturnType<typeof createTestQueryClient>) => {
+    const view = render(<TwoFactorCard me={enabledMe} />, { queryClient });
+    await view.user.click(screen.getByRole('button', { name: 'twoFactor.newDevice.button' }));
+    const field = await screen.findByLabelText('twoFactor.newDevice.codeLabel');
+    return { ...view, field };
+  };
+  const submit = () => screen.getByRole('button', { name: 'twoFactor.newDevice.submit' });
+
+  it('explains the sign-out first, and sends a recovery code as typed, then signs out', async () => {
+    const sent = recorder();
+    server.use(
+      http.post(`${API}/new-device`, async ({ request }) => {
+        await sent.record(request);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { user, field } = await open();
+    expect(screen.getByText('twoFactor.newDevice.warning')).toBeInTheDocument();
+
+    await user.type(field, 'AB12C-d34ef');
+    expect(field).toHaveValue('AB12C-d34ef');
+    await user.click(submit());
+
+    await waitFor(() => expect(sent.bodies).toEqual([{ code: 'AB12C-d34ef' }]));
+    await waitFor(() => expect(logout).toHaveBeenCalledTimes(1));
+    expect(redirectToLogin).not.toHaveBeenCalled();
+  });
+
+  it('goes to the sign-in page itself when the sign-out call failed after the 204', async () => {
+    server.use(http.post(`${API}/new-device`, () => new HttpResponse(null, { status: 204 })));
+    logout.mockResolvedValue(false);
+    sessionStorage.setItem('cas-other-tab-state', 'x'); // only session.clear() removes this
+    const { user, field } = await open();
+    await user.type(field, 'ab12c-d34ef');
+    await user.click(submit());
+    await waitFor(() => expect(redirectToLogin).toHaveBeenCalledWith(null, 'signed-out'));
+    expect(sessionStorage.getItem('cas-other-tab-state')).toBeNull(); // cleared like a sign-out would
+  });
+
+  it.each(['TwoFactorNotEnabled', 'TwoFactorLockedOut'])(
+    'a %s refusal shows its text, refreshes /auth/me only when the state moved, and does not sign out',
+    async errorCode => {
+      server.use(
+        http.post(`${API}/new-device`, () =>
+          HttpResponse.json({ detail: 'No.', status: 400, errorCode }, { status: 400 }),
+        ),
+      );
+      const queryClient = createTestQueryClient();
+      const invalidate = vi.spyOn(queryClient, 'invalidateQueries');
+      const { user, field } = await open(queryClient);
+      await user.type(field, 'ab12c-d34ef');
+      await user.click(submit());
+
+      const key = errorCode === 'TwoFactorNotEnabled' ? 'notEnabled' : 'lockedOut';
+      expect(await screen.findByRole('alert')).toHaveTextContent(`twoFactor.errors.${key}`);
+      if (errorCode === 'TwoFactorNotEnabled') {
+        expect(invalidate).toHaveBeenCalledWith({ queryKey: ['me'] });
+      } else {
+        expect(invalidate).not.toHaveBeenCalled();
+      }
+      expect(logout).not.toHaveBeenCalled();
+    },
+  );
+
+  it('also takes the 6-digit code, and waits for at least six characters', async () => {
+    const sent = recorder();
+    server.use(
+      http.post(`${API}/new-device`, async ({ request }) => {
+        await sent.record(request);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { user, field } = await open();
+    await user.type(field, '12345');
+    expect(submit()).toBeDisabled();
+    await user.clear(field);
+    await user.type(field, 'ab-12c'); // six characters, five of them letters or digits
+    expect(submit()).toBeDisabled();
+    await user.clear(field);
+    await user.type(field, '12345');
+    await user.type(field, '6');
+    await user.click(submit());
+    await waitFor(() => expect(sent.bodies).toEqual([{ code: '123456' }]));
+  });
+
+  it('a wrong code says "code or recovery code", not the authenticator-only text', async () => {
+    server.use(http.post(`${API}/new-device`, badCode));
+    const { user, field } = await open();
+    await user.type(field, 'ab12c-d34ef');
+    await user.click(submit());
+    expect(await screen.findByRole('alert')).toHaveTextContent('twoFactor.newDevice.invalidCode');
+    expect(logout).not.toHaveBeenCalled();
+  });
+
+  it('shows the server detail under the field, keeps the dialog, and does not sign out', async () => {
+    server.use(
+      http.post(`${API}/new-device`, () =>
+        HttpResponse.json(
+          {
+            title: 'Bad Request',
+            status: 400,
+            detail: 'Server says no.',
+            errorCode: 'constructor',
+          },
+          { status: 400 },
+        ),
+      ),
+    );
+    const { user, field } = await open();
+    await user.type(field, 'ab12c-d34ef');
+    await user.click(submit());
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Server says no.');
+    expect(screen.getByText('twoFactor.newDevice.title')).toBeInTheDocument();
+    expect(logout).not.toHaveBeenCalled();
   });
 });

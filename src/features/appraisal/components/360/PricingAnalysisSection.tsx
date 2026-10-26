@@ -21,7 +21,7 @@ const PricingAnalysisSection = ({
     <div className="space-y-4">
       <div className="flex items-center gap-2 px-1">
         <Icon name="table-cells" style="solid" className="w-4 h-4 text-teal-500" />
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+        <h2 className="text-sm font-semibold text-(--palette-ink) uppercase tracking-wider">
           {t('view360.pricingAnalysisSection.heading')}
         </h2>
       </div>
@@ -36,7 +36,11 @@ const PricingAnalysisSection = ({
       >
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
+            <Icon
+              name="spinner"
+              style="solid"
+              className="w-6 h-6 animate-spin text-(--palette-gray-400)"
+            />
           </div>
         ) : decisionSummary?.approachMatrix && decisionSummary.approachMatrix.length > 0 ? (
           <ApproachMatrixTable
@@ -44,7 +48,7 @@ const PricingAnalysisSection = ({
             onGroupClick={onGroupClick}
           />
         ) : (
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-(--palette-gray-500)">
             {t('view360.pricingAnalysisSection.noApproachData')}
           </p>
         )}

@@ -60,8 +60,8 @@ const DocumentToolbar = ({
       className={clsx(
         'cursor-pointer rounded-full border px-3 py-1 text-sm',
         filter === value
-          ? 'border-primary bg-primary/10 font-semibold text-primary'
-          : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+          ? 'border-primary bg-primary/10 font-semibold text-(--palette-primary-text)'
+          : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:border-(--palette-line-strong)',
       )}
     >
       {label}
@@ -69,7 +69,7 @@ const DocumentToolbar = ({
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 bg-gray-50 px-4 py-2.5">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line-soft) bg-(--palette-surface-2) px-4 py-2.5">
       {selectAll && (
         <input
           ref={selectAllBox}
@@ -106,7 +106,7 @@ const DocumentToolbar = ({
           <button
             type="button"
             onClick={onExpandAll}
-            className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
+            className="inline-flex cursor-pointer items-center gap-1 text-xs text-(--palette-gray-600) hover:text-(--palette-ink)"
           >
             <Icon name="up-right-and-down-left-from-center" style="solid" className="size-3" />
             {t('documents.expandAll')}
@@ -116,7 +116,7 @@ const DocumentToolbar = ({
           <button
             type="button"
             onClick={onCollapseAll}
-            className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
+            className="inline-flex cursor-pointer items-center gap-1 text-xs text-(--palette-gray-600) hover:text-(--palette-ink)"
           >
             <Icon name="down-left-and-up-right-to-center" style="solid" className="size-3" />
             {t('documents.collapseAll')}
@@ -127,7 +127,7 @@ const DocumentToolbar = ({
             type="button"
             onClick={allTypes.onToggle}
             aria-pressed={allTypes.shown}
-            className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
+            className="inline-flex cursor-pointer items-center gap-1 text-xs text-(--palette-gray-600) hover:text-(--palette-ink)"
           >
             <Icon name={allTypes.shown ? 'eye' : 'eye-slash'} style="regular" className="size-3" />
             {t('docCard.toolbar.showAllTypes')}
@@ -138,7 +138,7 @@ const DocumentToolbar = ({
             type="button"
             onClick={previewToggle.onToggle}
             aria-pressed={previewToggle.shown}
-            className="inline-flex cursor-pointer items-center gap-1 text-xs text-gray-600 hover:text-gray-900"
+            className="inline-flex cursor-pointer items-center gap-1 text-xs text-(--palette-gray-600) hover:text-(--palette-ink)"
           >
             <Icon name="table-columns" style="regular" className="size-3" />
             {previewToggle.shown

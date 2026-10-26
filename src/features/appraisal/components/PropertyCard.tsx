@@ -75,7 +75,7 @@ export const PropertyCard = React.memo(
         style={style}
         data-property-id={property.id}
         onContextMenu={readOnly ? undefined : e => onContextMenu(e, property, groupId)}
-        className="group/row flex items-stretch bg-white hover:bg-gray-50/70 focus-within:bg-gray-50 transition-colors"
+        className="group/row flex items-stretch bg-(--palette-surface) hover:bg-(--palette-surface-2)/70 focus-within:bg-(--palette-surface-2) transition-colors"
       >
         {/* Drag handle — a faint gutter rather than a filled bar, so the row reads as one
             surface. It stays in the DOM (never display:none) or dnd-kit loses its activator. */}
@@ -86,7 +86,7 @@ export const PropertyCard = React.memo(
           className={`flex items-center justify-center w-5 flex-shrink-0 text-gray-200 transition-colors ${
             readOnly
               ? 'cursor-default'
-              : 'cursor-grab active:cursor-grabbing group-hover/row:text-gray-400'
+              : 'cursor-grab active:cursor-grabbing group-hover/row:text-(--palette-gray-400)'
           }`}
           style={{ touchAction: 'none' }}
           title={readOnly ? undefined : t('properties.dragToReorder')}

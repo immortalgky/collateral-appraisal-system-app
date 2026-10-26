@@ -28,6 +28,7 @@ export function useBlockReappraisalDueList(params: BlockReappraisalListParams = 
       const {
         pageNumber = 0,
         pageSize = 20,
+        status,
         search,
         lastAppraisedDateFrom,
         lastAppraisedDateTo,
@@ -41,6 +42,7 @@ export function useBlockReappraisalDueList(params: BlockReappraisalListParams = 
         params: {
           pageNumber,
           pageSize,
+          ...(status && { status }),
           ...(search && { search }),
           ...(lastAppraisedDateFrom && { lastAppraisedDateFrom }),
           ...(lastAppraisedDateTo && { lastAppraisedDateTo }),
@@ -80,8 +82,25 @@ export function useCreateBlockReappraisal() {
       const { data } = await axios.post(`/block-reappraisal/${collateralMasterId}/create`);
       return data.result ?? data;
     },
-    onSuccess: () => {
+    onSuccess: (_, collateralMasterId) => {
       queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.detail(collateralMasterId) });
+    },
+  });
+}
+
+// ─── Restore mutation ─────────────────────────────────────────────────────────
+
+/** Puts a not-required (Deleted) project back on the Pending list. */
+export function useRestoreBlockReappraisal() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (collateralMasterId: string): Promise<void> => {
+      await axios.post(`/block-reappraisal/${collateralMasterId}/restore`);
+    },
+    onSuccess: (_, collateralMasterId) => {
+      queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.detail(collateralMasterId) });
     },
   });
 }
@@ -100,8 +119,10 @@ export function useMarkBlockReappraisalNotRequired() {
     }): Promise<void> => {
       await axios.post(`/block-reappraisal/${collateralMasterId}/opt-out`, { remark });
     },
-    onSuccess: () => {
+    // The detail page shows the status too (its banner), so refetch it as well as the lists.
+    onSuccess: (_, { collateralMasterId }) => {
       queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: blockReappraisalKeys.detail(collateralMasterId) });
     },
   });
 }

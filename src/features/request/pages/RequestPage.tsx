@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { FormProvider } from '@shared/components/form';
 import { type SubmitHandler, useForm, useWatch } from 'react-hook-form';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '@/features/auth/store';
 import { useBreadcrumb } from '@shared/hooks/useBreadcrumb';
@@ -24,10 +24,10 @@ import CommentsDrawer from '../components/page/CommentsDrawer';
 import RequestHeaderStrip from '../components/page/RequestHeaderStrip';
 import RequestPageSkeleton from '../components/page/RequestPageSkeleton';
 import RequestSectionNav from '../components/page/RequestSectionNav';
-import MissingFieldsChip from '../components/page/MissingFieldsChip';
 import MoreActionsMenu from '../components/page/MoreActionsMenu';
 import UploadBusyGate from '../components/page/UploadBusyGate';
 import SubmitConfirmDialog from '../components/page/SubmitConfirmDialog';
+import LatestChoiceDialog, { type LatestChoice } from '../components/page/LatestChoiceDialog';
 import {
   MissingFieldsProvider,
   type MissingFieldsHandle,
@@ -63,10 +63,17 @@ import { mergeChecklistSlots } from '../hooks/useRequiredDocuments';
 import { runGuarded } from '@/shared/utils/runGuarded';
 import { requiredDocumentsKey } from '../api/requiredDocuments';
 import {
+  CARRYABLE_STATUS,
   carriableDocuments,
+  constructionRefusalOf,
+  fetchConstructionChainStatus,
+  fetchPriorAppraisal,
   loadPriorAppraisalDocuments,
   priorAppraisalKeys,
+  useConstructionChainStatus,
   useNextInspectionNumber,
+  type ConstructionBlockReason,
+  type ConstructionChainStatus,
   type PriorAppraisal,
   type PriorAppraisalDocuments,
 } from '@/features/appraisal/api/priorAppraisal';
@@ -115,7 +122,7 @@ const createRequestFormDefaults: createRequestFormType = {
   detail: { ...createRequestFormDefault.detail, prevAppraisalReportNo: null },
   // Form-only facts about the request (never sent): whether it has been submitted, which switches
   // off the rules that only apply before submit (see buildRequestPayload, which drops it)
-  meta: { isSubmitted: false },
+  meta: { isSubmitted: false, priorLocked: false },
   customers: [emptyRowFor(CUSTOMER_COLUMNS)],
   properties: [emptyRowFor(PROPERTY_COLUMNS)],
 };
@@ -171,6 +178,11 @@ function RequestPage() {
   const isSubmitted =
     isEditMode && isRequestSubmitted(requestData?.status, requestData?.requestedAt);
 
+  // The purpose and the prior appraisal cannot be changed: a submitted request, or a draft the
+  // periodical-reappraisal Initiate created (the backend fixes both). Reaches the form as
+  // `meta.priorLocked`, for the parts that read the form rather than the page.
+  const priorLocked = isSubmitted || (isEditMode && !!requestData?.isPeriodicalReappraisal);
+
   // Add minimum loading delay for better UX (show skeleton) - only in edit mode
   // When data is cached, isLoadingRequest will be false immediately, so we skip the delay
   const [minLoadingDone, setMinLoadingDone] = useState(true);
@@ -197,7 +209,10 @@ function RequestPage() {
 
   // Form setup
   const methods = useForm<createRequestFormType>({
-    defaultValues: isEditMode ? createRequestFormDefault : createRequestFormDefaults,
+    // A request already in the cache is locked from the first render, not after the reset below
+    defaultValues: isEditMode
+      ? { ...createRequestFormDefault, meta: { isSubmitted, priorLocked } }
+      : createRequestFormDefaults,
     resolver: zodResolver(createRequestForm),
   });
 
@@ -309,7 +324,7 @@ function RequestPage() {
     if (isEditMode && requestData) {
       const formValues: createRequestFormType = {
         ...mapRequestResponseToForm(requestData),
-        meta: { isSubmitted },
+        meta: { isSubmitted, priorLocked },
       };
       // An editable table always shows a row to type in, also for a draft saved with none (blank
       // rows are never sent). Part of the reset values, so the form stays pristine.
@@ -319,7 +334,7 @@ function RequestPage() {
       }
       reset(formValues);
     }
-  }, [isEditMode, requestData, reset, readOnly, isSubmitted]);
+  }, [isEditMode, requestData, reset, readOnly, isSubmitted, priorLocked]);
 
   // Mutations
   const { mutate: createRequest, isPending: isCreating } = useCreateRequest();
@@ -590,20 +605,62 @@ function RequestPage() {
     ],
   );
 
-  // The round a new Construction Inspection would be is display-only: it is asked for, and shown,
-  // only while a prior is set and the purpose is a construction-inspection one, whatever order those
-  // came in (a pick, a purpose chosen afterwards, a draft or duplicate that arrives with both). The
-  // query key carries the prior, so a late answer for an appraisal picked before is never shown.
+  // What the prior-appraisal strip shows for a construction inspection is display-only: it is asked
+  // for, and shown, only while a prior is set and the purpose is a construction-inspection one,
+  // whatever order those came in (a pick, a purpose chosen afterwards, a draft or duplicate that
+  // arrives with both). The query keys carry the prior, so a late answer for an appraisal picked
+  // before is never shown.
   const purposeNow = useWatch({ control: methods.control, name: 'purpose' });
   const prevIdNow = useWatch({ control: methods.control, name: 'detail.prevAppraisalId' });
-  // Only while the request can still be edited: the next number counts this request's own appraisal
-  // once it is submitted, and a request does not store a round, so there is none to show then.
-  const roundApplies = !readOnly && !isSubmitted;
-  const showRound = roundApplies && !!prevIdNow && CI_PURPOSES.includes(purposeNow ?? '');
-  const { data: nextRound } = useNextInspectionNumber(prevIdNow, showRound);
+  const isCiPrior = !!prevIdNow && CI_PURPOSES.includes(purposeNow ?? '');
+  // Submitted: this request is itself the chain's open inspection request and its appraisal counts
+  // in the chain, so the block, the red state, "use latest" and the next number no longer apply to
+  // it. The round is the one stamped on its own appraisal, null until that exists. A read-only draft
+  // (a checker or non-owner looking at it) is not submitted, so it still shows what the maker saw.
+  const settled = isSubmitted;
+  const { data: nextRound } = useNextInspectionNumber(prevIdNow, isCiPrior && !settled);
   // Handed to the prior-appraisal strip through AppraisalCopyProvider, not written into the form: a
   // display-only value in form state is lost on every reset (a save's refetch) and counts as a change.
-  const inspectionRound = showRound ? (nextRound ?? null) : null;
+  const inspectionRound = !isCiPrior
+    ? null
+    : settled
+      ? (requestData?.inspectionNumber ?? null)
+      : (nextRound ?? null);
+  // The chain status of the prior is read whenever it is shown, submitted or not: the prior's own
+  // construction % does not depend on this request. Once settled it is handed over without the
+  // parts about the chain's other work (blockReason, latestAppraisal), which would only describe
+  // this very request. A submit the API refused for it is remembered with the prior it concerned,
+  // so choosing another prior drops the red state without an effect.
+  const { data: chainData } = useConstructionChainStatus(prevIdNow, isCiPrior);
+  const chainStatus = useMemo(() => {
+    if (!isCiPrior || !chainData) return null;
+    return settled ? { ...chainData, blockReason: null, latestAppraisal: null } : chainData;
+  }, [isCiPrior, chainData, settled]);
+  const [submitRefusal, setSubmitRefusal] = useState<{
+    priorId: string | null;
+    reason: ConstructionBlockReason;
+  } | null>(null);
+  const priorRefusal =
+    isCiPrior && !settled && submitRefusal && submitRefusal.priorId === (prevIdNow ?? null)
+      ? submitRefusal.reason
+      : null;
+
+  // A save or submit the API refused because of the prior's chain (its error carries the reason as a
+  // code): says so on the banner and in a toast, and reads the status again, which may have moved
+  // while the maker filled in the form. False for any other error, which keeps its usual toast.
+  const refusedByChainGuard = useCallback(
+    (error: unknown) => {
+      const reason = constructionRefusalOf(error);
+      if (!reason) return false;
+      const priorId = getValues('detail.prevAppraisalId') ?? null;
+      setSubmitRefusal({ priorId, reason });
+      toast.error(t(`constructionGuard.rejected.${reason}`));
+      if (priorId)
+        void queryClient.invalidateQueries({ queryKey: priorAppraisalKeys.chainStatus(priorId) });
+      return true;
+    },
+    [getValues, queryClient, t],
+  );
 
   // The form already references this appraisal but holds none of its files (a duplicated request, a
   // draft from before files were carried): add its default files, without re-copying anything.
@@ -658,8 +715,12 @@ function RequestPage() {
     null,
   );
 
+  // A construction-inspection pick that is not the latest of its chain: the maker chooses which one
+  // to copy from before anything is applied (the answer re-enters handlePrevSelect, `latestAnswered`).
+  const [pendingLatest, setPendingLatest] = useState<LatestChoice | null>(null);
+
   const handlePrevSelect = useCallback(
-    async (template: PriorAppraisal) => {
+    async (template: PriorAppraisal, chain?: ConstructionChainStatus, latestAnswered = false) => {
       const target = template.id;
       const formId = getValues('detail.prevAppraisalId');
       const current = getValues();
@@ -678,6 +739,14 @@ function RequestPage() {
         return;
       }
 
+      const newer = chain?.latestAppraisal;
+      if (chain && newer && newer.appraisalId !== target && !latestAnswered) {
+        setPendingLatest({ template, chain });
+        return;
+      }
+      // The banner reads this key next, so it need not ask the API again at once
+      if (chain) queryClient.setQueryData(priorAppraisalKeys.chainStatus(target), chain);
+
       if (isBlockedByUploads()) return;
       if (!formId) {
         await applyPrevPick(template);
@@ -689,7 +758,45 @@ function RequestPage() {
         ownCount: countOwnFiles(current.documents, current.titles),
       });
     },
-    [getValues, applyPrevPick, isBlockedByUploads, t],
+    [getValues, applyPrevPick, isBlockedByUploads, queryClient, t],
+  );
+
+  // Picks another appraisal of the chain by its id (the dialog's and the banner's "use the latest"):
+  // reads what the search modal reads for a pick, with the same locks, then goes on as that pick would.
+  const pickAppraisalById = useCallback(
+    async (appraisalId: string) => {
+      runningLoads.current++;
+      setIsPicking(true);
+      let loaded: [PriorAppraisal, ConstructionChainStatus] | null = null;
+      try {
+        loaded = await Promise.all([
+          fetchPriorAppraisal(appraisalId),
+          fetchConstructionChainStatus(appraisalId),
+        ]);
+      } catch (err) {
+        toast.error(
+          t(
+            isAxiosError(err) && err.response?.status === 404
+              ? 'toasts.appraisalNotFound'
+              : 'toasts.appraisalLoadFailed',
+          ),
+        );
+      } finally {
+        runningLoads.current--;
+        setIsPicking(runningLoads.current > 0);
+      }
+      if (!loaded) return;
+      const [template, chain] = loaded;
+      if (template.status !== CARRYABLE_STATUS) {
+        toast.error(t('toasts.appraisalNotCompleted'));
+      } else if (chain.blockReason) {
+        toast.error(t(`constructionGuard.rejected.${chain.blockReason}`));
+      } else {
+        // The latest was asked for: it is not asked about again
+        await handlePrevSelect(template, chain, true);
+      }
+    },
+    [handlePrevSelect, t],
   );
 
   // Clear only the prevAppraisal* metadata fields — do NOT wipe copied data
@@ -759,8 +866,9 @@ function RequestPage() {
 
   useEffect(() => {
     // A submitted request keeps its purpose and prior (the appraisal is built from them): they are
-    // read-only there, and nothing here may clear them
-    if (isSubmitted) return;
+    // read-only there, and nothing here may clear them. Same for an Initiate draft, whose purpose
+    // and prior the backend fixes.
+    if (priorLocked) return;
     // Whatever was written before this subscribed (the reset on open) is the baseline
     committedPurpose.current = getValues('purpose') ?? '';
     const subscription = watch((values, { name, type }) => {
@@ -803,7 +911,7 @@ function RequestPage() {
       });
     });
     return () => subscription.unsubscribe();
-  }, [isSubmitted, watch, getValues, putPurposeBack, isBlockedByUploads, clearPrevReference, t]);
+  }, [priorLocked, watch, getValues, putPurposeBack, isBlockedByUploads, clearPrevReference, t]);
 
   const handleConfirmDuplicate = () => {
     const currentData = getValues();
@@ -815,7 +923,7 @@ function RequestPage() {
       // stored ones), and no comments come along. Customer and property rows carry no ids.
       comments: [],
       // a new request is not submitted, whatever the one it is copied from is
-      meta: { isSubmitted: false },
+      meta: { isSubmitted: false, priorLocked: false },
       titles: currentData.titles.map((title: createRequestFormType['titles'][number]) => ({
         ...withoutForeignIds(title),
         documents: [],
@@ -833,6 +941,7 @@ function RequestPage() {
     // A file still uploading is not on the server: saving now would send its row without it
     if (isBlockedByUploads()) return;
     setSaveAction('save');
+    setSubmitRefusal(null);
 
     if (isEditMode && requestId) {
       // Update existing request
@@ -850,7 +959,8 @@ function RequestPage() {
             setSaveAction(null);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestUpdateFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestUpdateFailed'));
             setSaveAction(null);
           },
         },
@@ -882,7 +992,8 @@ function RequestPage() {
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestCreateFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestCreateFailed'));
             setSaveAction(null);
           },
         },
@@ -980,12 +1091,21 @@ function RequestPage() {
           skipWarning();
         },
         onError: (error: any) => {
-          toast.error(error.apiError?.detail || t('toasts.requestSubmitFailed'));
+          if (!refusedByChainGuard(error))
+            toast.error(error.apiError?.detail || t('toasts.requestSubmitFailed'));
           setSaveAction(null);
         },
       });
     },
-    [submitRequest, showLiftoff, requestNumber, requestId, skipWarning, queryClient],
+    [
+      submitRequest,
+      showLiftoff,
+      requestNumber,
+      requestId,
+      skipWarning,
+      queryClient,
+      refusedByChainGuard,
+    ],
   );
 
   // The form is valid and the maker pressed Submit: hold the data until they confirm the dialog.
@@ -1022,6 +1142,8 @@ function RequestPage() {
     const { data } = pendingSubmit;
     setPendingSubmit(null);
     setSaveAction('submit');
+    // A new attempt: the last refusal is no longer news (a new one sets it again)
+    setSubmitRefusal(null);
 
     if (isEditMode && requestId) {
       // Update existing request first, then check and submit
@@ -1037,7 +1159,8 @@ function RequestPage() {
             doSubmit(requestId);
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -1068,7 +1191,8 @@ function RequestPage() {
             }
           },
           onError: (error: any) => {
-            toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
+            if (!refusedByChainGuard(error))
+              toast.error(error.apiError?.detail || t('toasts.requestSaveFailed'));
             setSaveAction(null);
           },
         },
@@ -1092,10 +1216,10 @@ function RequestPage() {
           name={is404 ? 'file-circle-question' : 'triangle-exclamation'}
           className="size-16 text-red-500"
         />
-        <h2 className="text-xl font-semibold text-gray-900">
+        <h2 className="text-xl font-semibold text-(--palette-ink)">
           {is404 ? t('page.requestNotFound') : t('page.failedToLoad')}
         </h2>
-        <p className="text-gray-500">
+        <p className="text-(--palette-gray-500)">
           {is404 ? t('page.requestNotFoundDesc') : (error as Error)?.message || 'Unknown error'}
         </p>
         <Button onClick={() => navigate('/requests')}>
@@ -1109,7 +1233,7 @@ function RequestPage() {
   return (
     <div className="flex flex-col h-full min-h-0">
       {/* Main Content Area */}
-      <FormProvider methods={methods} schema={createRequestForm} showErrorAlert={false}>
+      <FormProvider methods={methods} schema={createRequestForm} missingSummary={false}>
         <MissingFieldsProvider schema={createRequestForm} handleRef={missingFieldsRef}>
           <RequiredDocumentsInitializer />
           <form
@@ -1145,23 +1269,22 @@ function RequestPage() {
                       >
                         <div className="flex flex-col gap-6">
                           <CustomersForm />
-                          {/* Before submit the prior-appraisal strip gets the pick / clear handlers (and the
-                              inspection round) from AppraisalCopyProvider: a full copy when
-                              creating, reference + carried files when reopening a draft. Once
-                              submitted, `submitted` locks the purpose and the prior (display-only);
-                              that lock comes from the flag, not from the provider. */}
-                          {isSubmitted ? (
-                            <RequestForm submitted />
-                          ) : (
-                            <AppraisalCopyProvider
-                              onCopySelect={handlePrevSelect}
-                              onClear={handlePrevClear}
-                              disabled={isPicking}
-                              round={inspectionRound}
-                            >
-                              <RequestForm />
-                            </AppraisalCopyProvider>
-                          )}
+                          {/* The prior-appraisal strip gets the pick / clear handlers (and the inspection
+                              round) from AppraisalCopyProvider: a full copy when creating,
+                              reference + carried files when reopening a draft. A submitted request
+                              and a draft Initiate created have the purpose and the prior locked
+                              (display-only); that lock is `meta.priorLocked`, not the provider. */}
+                          <AppraisalCopyProvider
+                            onCopySelect={handlePrevSelect}
+                            onClear={handlePrevClear}
+                            disabled={isPicking}
+                            round={inspectionRound}
+                            chain={chainStatus}
+                            rejection={priorRefusal}
+                            onUseLatest={pickAppraisalById}
+                          >
+                            <RequestForm />
+                          </AppraisalCopyProvider>
                         </div>
                       </FormCard>
                     </Section>
@@ -1238,7 +1361,7 @@ function RequestPage() {
                     </div>
                   </ActionBar.Left>
                   <ActionBar.Right>
-                    <MissingFieldsChip />
+                    {/* The missing-fields chip comes first, from ActionBar.Right itself */}
                     <UploadBusyGate>
                       {busy => (
                         <>
@@ -1330,6 +1453,19 @@ function RequestPage() {
           />
         </MissingFieldsProvider>
       </FormProvider>
+
+      <LatestChoiceDialog
+        choice={pendingLatest}
+        onClose={() => setPendingLatest(null)}
+        onUseSelected={({ template, chain }) => {
+          setPendingLatest(null);
+          runGuarded(() => handlePrevSelect(template, chain, true), t('common:status.error'));
+        }}
+        onUseLatest={latestId => {
+          setPendingLatest(null);
+          runGuarded(() => pickAppraisalById(latestId), t('common:status.error'));
+        }}
+      />
 
       <ConfirmDialog
         isOpen={pendingPick !== null}

@@ -1,27 +1,31 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import clsx from 'clsx';
+import { useQueryClient } from '@tanstack/react-query';
 import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import type { AxiosError } from 'axios';
 
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
+import { useAuthStore } from '@/features/auth/store';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { FormProvider } from '@/shared/components/form';
+import { FormReadOnlyContext } from '@/shared/components/form/context';
 import Icon from '@/shared/components/Icon';
 import Button from '@/shared/components/Button';
+import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import ActionBar from '@/shared/components/ActionBar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
-import Checkbox from '@/shared/components/inputs/Checkbox';
-import Pagination from '@/shared/components/Pagination';
-import type { ApiError } from '@/shared/types/api';
+import { errorText } from '@/shared/utils/errorUtils';
 
 import {
   useGetProjectPricingAssumptions,
   useSaveProjectPricingAssumptions,
 } from '../../api/projectPricingAssumption';
 import {
+  projectUnitPriceKeys,
   useGetProjectUnitPrices,
+  useGetUnitPriceSource,
   useCalculateProjectUnitPrices,
   useSaveProjectUnitPrices,
 } from '../../api/projectUnitPrice';
@@ -31,6 +35,8 @@ import type {
   ProjectUnitPrice,
   ProjectUnitPriceFlagData,
   ProjectType,
+  UnitPriceSource,
+  UnitPriceSourceInfo,
 } from '../../types';
 import {
   projectPricingAssumptionForm,
@@ -40,23 +46,25 @@ import {
   type LbPricingAssumptionFormType,
 } from '../../schemas/form';
 import PricingAssumptionForm from '../../forms/PricingAssumptionForm';
-import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
-import { recomputeUnitPrice, type AssumptionInputs } from '../../utils/recomputeUnitPrice';
-
-type AppError = AxiosError & { apiError?: ApiError };
-
-// ── Section Header ────────────────────────────────────────────────────────────
-
-function SectionHeader({ icon, label, color }: { icon: string; label: string; color: string }) {
-  return (
-    <div className="flex items-center gap-3 mb-4">
-      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color}`}>
-        <Icon name={icon} style="solid" className="w-5 h-5" />
-      </div>
-      <h2 className="text-base font-semibold text-gray-900">{label}</h2>
-    </div>
-  );
-}
+import { useFireInsuranceOptions, useGetFireInsuranceRates } from '@/shared/api/pricingParameters';
+import DataErrorState from '@/shared/components/DataErrorState';
+import {
+  buildDisplayedUnitPrices,
+  differsFromStored,
+  type AssumptionInputs,
+  type ModelPricing,
+} from '../../utils/recomputeUnitPrice';
+import UnitPriceImportDialog from '../UnitPriceImportDialog';
+import { CondoPriceResults, type FlagKey } from '../condo/unitsPrice/CondoPriceResults';
+import { CondoPriceLayout, type AssumptionStripInfo } from '../condo/unitsPrice/CondoPriceLayout';
+import { RecalcSummaryNote } from '../condo/unitsPrice/RecalcSummaryNote';
+import { summarizeRecalc, type RecalcSummary } from '../../utils/recalcSummary';
+import { dataRow, dataTable } from '../condo/unitsPrice/lookClasses';
+import {
+  CondoImportControls,
+  CondoImportNotice,
+  CondoSourceSwitch,
+} from '../condo/unitsPrice/CondoHeadControls';
 
 // ── Model Assumptions Table ───────────────────────────────────────────────────
 
@@ -65,6 +73,7 @@ interface ModelAssumptionsTableProps {
   projectType: ProjectType;
 }
 
+/** Read-only model assumptions, as the data table of DESIGN.md section 10. */
 function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTableProps) {
   const { t } = useTranslation('blockProject');
   const condoFireInsuranceOptions = useFireInsuranceOptions('Condo');
@@ -76,54 +85,50 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
 
   if (assumptions.length === 0) {
     return (
-      <p className="text-xs text-gray-400 text-center py-6">{t('unitPrice.noModelAssumptions')}</p>
+      <p className="text-xs text-(--palette-gray-400) text-center py-6">
+        {t('unitPrice.noModelAssumptions')}
+      </p>
     );
   }
 
+  const th = clsx(dataTable.th, 'sticky top-0 z-10');
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs">
-        <thead className="bg-gray-50">
+      <table className={dataTable.table}>
+        <thead>
           <tr>
             {isCondo(projectType) && (
-              <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap min-w-[100px]">
+              <th className={clsx(th, 'text-left min-w-[100px]')}>
                 {t('unitPrice.cols.towerName')}
               </th>
             )}
-            <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap min-w-[160px]">
-              {t('unitPrice.cols.model')}
-            </th>
-            <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold w-full min-w-[200px]">
+            <th className={clsx(th, 'text-left min-w-[160px]')}>{t('unitPrice.cols.model')}</th>
+            <th className={clsx(th, 'w-full min-w-[200px] text-left')}>
               {t('unitPrice.cols.description')}
             </th>
-            <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-              {t('unitPrice.cols.usableAreaSqm2')}
-            </th>
+            <th className={clsx(th, 'text-right')}>{t('unitPrice.cols.usableAreaSqm2')}</th>
             {isLandAndBuildingLike(projectType) && (
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.standardLandSqWa')}
-              </th>
+              <th className={clsx(th, 'text-right')}>{t('unitPrice.cols.standardLandSqWa')}</th>
             )}
-            <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-              {t('unitPrice.cols.standardPriceBahtSqm')}
+            <th className={clsx(th, 'text-right')}>
+              {t(
+                // LB's standard price is the price of the whole house, not a rate per sq.m.
+                isCondo(projectType)
+                  ? 'unitPrice.cols.standardPriceBahtSqm'
+                  : 'lbPrice.cols.standardPrice',
+              )}
             </th>
-            <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-              {t('unitPrice.cols.coverageAmountBahtSqm')}
-            </th>
-            <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-              {t('unitPrice.cols.fireInsuranceCode')}
-            </th>
+            <th className={clsx(th, 'text-right')}>{t('unitPrice.cols.coverageAmountBahtSqm')}</th>
+            <th className={clsx(th, 'text-left')}>{t('unitPrice.cols.fireInsuranceCode')}</th>
           </tr>
         </thead>
         <tbody>
           {assumptions.map(m => (
-            <tr key={m.projectModelId} className="border-b border-gray-100 hover:bg-gray-50">
-              {isCondo(projectType) && (
-                <td className="py-2 px-3 text-gray-600">{m.towerName ?? '-'}</td>
-              )}
-              <td className="py-2 px-3 font-medium text-gray-800">{m.modelType ?? '-'}</td>
-              <td className="py-2 px-3 text-gray-600">{m.modelDescription ?? '-'}</td>
-              <td className="py-2 px-3 text-right text-gray-800 whitespace-nowrap">
+            <tr key={m.projectModelId} className={dataRow.normal}>
+              {isCondo(projectType) && <td className={dataTable.td}>{m.towerName ?? '-'}</td>}
+              <td className={clsx(dataTable.td, 'font-medium')}>{m.modelType ?? '-'}</td>
+              <td className={dataTable.td}>{m.modelDescription ?? '-'}</td>
+              <td className={clsx(dataTable.td, 'text-right')}>
                 {m.usableAreaFrom == null && m.usableAreaTo == null
                   ? '-'
                   : m.usableAreaFrom != null &&
@@ -133,553 +138,25 @@ function ModelAssumptionsTable({ assumptions, projectType }: ModelAssumptionsTab
                     : ((m.usableAreaFrom ?? m.usableAreaTo)?.toLocaleString() ?? '-')}
               </td>
               {isLandAndBuildingLike(projectType) && (
-                <td className="py-2 px-3 text-right text-gray-800">
+                <td className={clsx(dataTable.td, 'text-right')}>
                   {m.standardLandPrice?.toLocaleString() ?? '-'}
                 </td>
               )}
-              <td className="py-2 px-3 text-right text-gray-800">
+              <td className={clsx(dataTable.td, 'text-right')}>
                 {m.finalAppraisedValue?.toLocaleString() ?? '-'}
               </td>
-              <td className="py-2 px-3 text-right text-gray-800">
+              <td className={clsx(dataTable.td, 'text-right')}>
                 {m.coverageAmount?.toLocaleString() ?? '-'}
               </td>
-              <td className="py-2 px-3 text-gray-600">
+              <td className={dataTable.td}>
                 {m.fireInsuranceCode
-                  ? (fireInsuranceLabelByCondition.get(m.fireInsuranceCode) ??
-                    m.fireInsuranceCode)
+                  ? (fireInsuranceLabelByCondition.get(m.fireInsuranceCode) ?? m.fireInsuranceCode)
                   : '-'}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
-  );
-}
-
-// ── Unit Price Result Table ───────────────────────────────────────────────────
-// NOTE: UnitPriceResultTable is intentionally OUTSIDE <FormProvider>.
-// Flag checkboxes (Condo + LB) directly call saveUnitFlags + calculatePrices and do
-// not participate in RHF state.
-
-function fmt(value?: number | null) {
-  return (
-    value?.toLocaleString(undefined, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }) ?? '-'
-  );
-}
-
-// Condo: editable FlagCell (checkbox + amount column)
-function FlagCell({
-  checked,
-  amount,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  amount?: number | null;
-  onChange: (next: boolean) => void;
-  disabled: boolean;
-}) {
-  return (
-    <td className="py-2 px-3 whitespace-nowrap">
-      <div className="flex items-center gap-2">
-        <Checkbox checked={checked} onChange={onChange} disabled={disabled} />
-        {checked && <span className="text-gray-800">{fmt(amount)}</span>}
-      </div>
-    </td>
-  );
-}
-
-type CondoFlag = 'isCorner' | 'isEdge' | 'isPoolView' | 'isSouth' | 'isOther' | 'isNearGarden';
-
-interface UnitPriceResultTableProps {
-  unitPrices: ProjectUnitPrice[];
-  projectType: ProjectType;
-  isLoading: boolean;
-  pricingAssumption:
-    | {
-        cornerAdjustment?: number | null;
-        edgeAdjustment?: number | null;
-        poolViewAdjustment?: number | null;
-        southAdjustment?: number | null;
-        otherAdjustment?: number | null;
-        nearGardenAdjustment?: number | null;
-      }
-    | null
-    | undefined;
-  onToggleFlag: (unitId: string, flag: CondoFlag, value: boolean) => void;
-  isDisabled: boolean;
-  pageNumber: number;
-  pageSize: number;
-  onPageChange: (pageNumber: number) => void;
-  onPageSizeChange: (size: number) => void;
-}
-
-function UnitPriceResultTable({
-  unitPrices,
-  projectType,
-  isLoading,
-  pricingAssumption,
-  onToggleFlag,
-  isDisabled,
-  pageNumber,
-  pageSize,
-  onPageChange,
-  onPageSizeChange,
-}: UnitPriceResultTableProps) {
-  const { t } = useTranslation('blockProject');
-  const pagedUnitPrices = useMemo(
-    () => unitPrices.slice(pageNumber * pageSize, pageNumber * pageSize + pageSize),
-    [unitPrices, pageNumber, pageSize],
-  );
-  const totalPages = Math.ceil(unitPrices.length / pageSize);
-  const totals = useMemo(() => {
-    const sum = (fn: (up: ProjectUnitPrice) => number | null | undefined): number =>
-      unitPrices.reduce((acc, up) => {
-        const v = fn(up);
-        return v != null ? acc + v : acc;
-      }, 0);
-    const adj = pricingAssumption;
-    const cornerCount = unitPrices.filter(up => up.isCorner).length;
-    const edgeCount = unitPrices.filter(up => up.isEdge).length;
-    const poolViewCount = unitPrices.filter(up => up.isPoolView).length;
-    const southCount = unitPrices.filter(up => up.isSouth).length;
-    const otherCount = unitPrices.filter(up => up.isOther).length;
-    const nearGardenCount = unitPrices.filter(up => up.isNearGarden).length;
-    return {
-      unitCount: unitPrices.length,
-      usableArea: sum(up => up.usableArea),
-      sellingPrice: sum(up => up.sellingPrice),
-      landArea: sum(up => up.landArea),
-      cornerCount,
-      cornerAmount: cornerCount > 0 ? cornerCount * (adj?.cornerAdjustment ?? 0) : null,
-      edgeCount,
-      edgeAmount: edgeCount > 0 ? edgeCount * (adj?.edgeAdjustment ?? 0) : null,
-      poolViewCount,
-      poolViewAmount: poolViewCount > 0 ? poolViewCount * (adj?.poolViewAdjustment ?? 0) : null,
-      southCount,
-      southAmount: southCount > 0 ? southCount * (adj?.southAdjustment ?? 0) : null,
-      otherCount,
-      otherAmount: otherCount > 0 ? otherCount * (adj?.otherAdjustment ?? 0) : null,
-      nearGardenCount,
-      nearGardenAmount:
-        nearGardenCount > 0 ? nearGardenCount * (adj?.nearGardenAdjustment ?? 0) : null,
-      adjustPriceLocation: sum(up => up.adjustPriceLocation),
-      landAreaDifference: sum(up => up.landAreaDifference),
-      landIncreaseDecreaseAmount: sum(up => up.landIncreaseDecreaseAmount),
-      totalAppraisalValue: sum(up => up.totalAppraisalValue),
-      totalAppraisalValueRounded: sum(up => up.totalAppraisalValueRounded),
-      forceSellingPrice: sum(up => up.forceSellingPrice),
-      coverageAmount: sum(up =>
-        up.coverageAmount != null && up.usableArea != null
-          ? up.coverageAmount * up.usableArea
-          : null,
-      ),
-    };
-  }, [unitPrices, pricingAssumption]);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-2">
-        {[1, 2, 3, 4].map(i => (
-          <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
-        ))}
-      </div>
-    );
-  }
-
-  if (unitPrices.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center py-10 text-gray-400">
-        <Icon name="calculator" className="text-3xl mb-2" />
-        <p className="text-sm">{t('unitPrice.noUnitsUploaded')}</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="flex flex-col flex-1 min-h-0">
-      <div className="overflow-x-auto">
-        <table className="w-full text-xs">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="text-xs text-center py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.seqNo')}
-              </th>
-              {isCondo(projectType) && (
-                <>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.floor')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.towerName')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.regNumber')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.roomNo')}
-                  </th>
-                </>
-              )}
-              {isLandAndBuildingLike(projectType) && (
-                <>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.plotNo')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.houseNo')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.model')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.numberOfFloors')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.landAreaSqWa')}
-                  </th>
-                </>
-              )}
-              {isCondo(projectType) && (
-                <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                  {t('unitPrice.cols.model')}
-                </th>
-              )}
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.usableAreaSqm')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.sellingPrice')}
-              </th>
-              {/* Common flags */}
-              {isCondo(projectType) ? (
-                <>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.standardPrice')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.corner')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.edge')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.poolView')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.south')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.other')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.adjustPriceLocation')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.priceIncrementFloor')}
-                  </th>
-                </>
-              ) : (
-                <>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.standardPrice')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.corner')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.edge')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.nearGardenClubhouse')}
-                  </th>
-                  <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold">
-                    {t('unitPrice.cols.other')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.landDiffSqWa')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.landPlusMinus')}
-                  </th>
-                  <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                    {t('unitPrice.cols.locationAdj')}
-                  </th>
-                </>
-              )}
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.appraisalValue')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.roundedValue')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.forceSalePrice')}
-              </th>
-              <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-                {t('unitPrice.cols.coverageAmount')}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {pagedUnitPrices.map(up => (
-              <tr key={up.projectUnitId} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-2 px-3 text-center text-gray-700">{up.sequenceNumber}</td>
-                {isCondo(projectType) && (
-                  <>
-                    <td className="py-2 px-3 text-right text-gray-700">{up.floor ?? '-'}</td>
-                    <td className="py-2 px-3 text-gray-700">{up.towerName ?? '-'}</td>
-                    <td className="py-2 px-3 text-gray-700">{up.condoRegistrationNumber ?? '-'}</td>
-                    <td className="py-2 px-3 text-gray-700">{up.roomNumber ?? '-'}</td>
-                  </>
-                )}
-                {isLandAndBuildingLike(projectType) && (
-                  <>
-                    <td className="py-2 px-3 text-gray-700">{up.plotNumber ?? '-'}</td>
-                    <td className="py-2 px-3 text-gray-700">{up.houseNumber ?? '-'}</td>
-                    <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
-                    <td className="py-2 px-3 text-right text-gray-700">
-                      {up.numberOfFloors ?? '-'}
-                    </td>
-                    <td className="py-2 px-3 text-right text-gray-700">{fmt(up.landArea)}</td>
-                  </>
-                )}
-                {isCondo(projectType) && (
-                  <td className="py-2 px-3 text-gray-700">{up.modelType ?? '-'}</td>
-                )}
-                <td className="py-2 px-3 text-right text-gray-700">{fmt(up.usableArea)}</td>
-                <td className="py-2 px-3 text-right text-gray-700">{fmt(up.sellingPrice)}</td>
-                {isCondo(projectType) ? (
-                  <>
-                    <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
-                    <FlagCell
-                      checked={up.isCorner}
-                      amount={pricingAssumption?.cornerAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isCorner', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isEdge}
-                      amount={pricingAssumption?.edgeAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isEdge', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isPoolView}
-                      amount={pricingAssumption?.poolViewAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isPoolView', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isSouth}
-                      amount={pricingAssumption?.southAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isSouth', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isOther}
-                      amount={pricingAssumption?.otherAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
-                      disabled={isDisabled}
-                    />
-                    <td className="py-2 px-3 text-right text-gray-800">
-                      {fmt(up.adjustPriceLocation)}
-                    </td>
-                    <td className="py-2 px-3 text-right text-gray-800">
-                      {fmt(up.priceIncrementPerFloor)}
-                    </td>
-                  </>
-                ) : (
-                  <>
-                    <td className="py-2 px-3 text-right text-gray-800">{fmt(up.standardPrice)}</td>
-                    <FlagCell
-                      checked={up.isCorner}
-                      amount={pricingAssumption?.cornerAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isCorner', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isEdge}
-                      amount={pricingAssumption?.edgeAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isEdge', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isNearGarden}
-                      amount={pricingAssumption?.nearGardenAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isNearGarden', v)}
-                      disabled={isDisabled}
-                    />
-                    <FlagCell
-                      checked={up.isOther}
-                      amount={pricingAssumption?.otherAdjustment}
-                      onChange={v => onToggleFlag(up.projectUnitId, 'isOther', v)}
-                      disabled={isDisabled}
-                    />
-                    <td className="py-2 px-3 text-right text-gray-800">
-                      {up.landAreaDifference != null ? fmt(up.landAreaDifference) : '-'}
-                    </td>
-                    <td className="py-2 px-3 text-right text-gray-800">
-                      {up.landIncreaseDecreaseAmount?.toLocaleString() ?? '-'}
-                    </td>
-                    <td className="py-2 px-3 text-right text-gray-800">
-                      {fmt(up.adjustPriceLocation)}
-                    </td>
-                  </>
-                )}
-                <td className="py-2 px-3 text-right font-medium text-gray-900">
-                  {fmt(up.totalAppraisalValue)}
-                </td>
-                <td className="py-2 px-3 text-right font-medium text-gray-900">
-                  {fmt(up.totalAppraisalValueRounded)}
-                </td>
-                <td className="py-2 px-3 text-right text-gray-800">{fmt(up.forceSellingPrice)}</td>
-                <td className="py-2 px-3 text-right text-gray-800">
-                  {fmt(
-                    up.coverageAmount != null && up.usableArea != null
-                      ? up.coverageAmount * up.usableArea
-                      : null,
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-          {unitPrices.length > 0 && (
-            <tfoot>
-              <tr className="bg-primary/5 border-t-2 border-primary/20">
-                {isCondo(projectType) ? (
-                  <td
-                    colSpan={6}
-                    className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
-                  >
-                    {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
-                  </td>
-                ) : (
-                  <td
-                    colSpan={5}
-                    className="py-2.5 px-3 text-xs font-semibold text-primary whitespace-nowrap"
-                  >
-                    {t('unitPrice.total', { n: totals.unitCount.toLocaleString() })}
-                  </td>
-                )}
-                {isLandAndBuildingLike(projectType) && (
-                  <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                    {fmt(totals.landArea)}
-                  </td>
-                )}
-                <td className="py-2.5 px-3" />
-                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                  {fmt(totals.sellingPrice)}
-                </td>
-                {/* Standard Price — skip (per-sqm rate, not summable) */}
-                <td className="py-2.5 px-3" />
-                {/* Flag totals */}
-                <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                  {totals.cornerCount > 0 ? (
-                    <>
-                      {totals.cornerCount} · {fmt(totals.cornerAmount)}
-                    </>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                  {totals.edgeCount > 0 ? (
-                    <>
-                      {totals.edgeCount} · {fmt(totals.edgeAmount)}
-                    </>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                {isCondo(projectType) ? (
-                  <>
-                    <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                      {totals.poolViewCount > 0 ? (
-                        <>
-                          {totals.poolViewCount} · {fmt(totals.poolViewAmount)}
-                        </>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                    <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                      {totals.southCount > 0 ? (
-                        <>
-                          {totals.southCount} · {fmt(totals.southAmount)}
-                        </>
-                      ) : (
-                        <span className="text-gray-400">-</span>
-                      )}
-                    </td>
-                  </>
-                ) : (
-                  <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                    {totals.nearGardenCount > 0 ? (
-                      <>
-                        {totals.nearGardenCount} · {fmt(totals.nearGardenAmount)}
-                      </>
-                    ) : (
-                      <span className="text-gray-400">-</span>
-                    )}
-                  </td>
-                )}
-                <td className="py-2.5 px-3 text-xs font-medium text-gray-700 whitespace-nowrap">
-                  {totals.otherCount > 0 ? (
-                    <>
-                      {totals.otherCount} · {fmt(totals.otherAmount)}
-                    </>
-                  ) : (
-                    <span className="text-gray-400">-</span>
-                  )}
-                </td>
-                {isLandAndBuildingLike(projectType) && (
-                  <>
-                    <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
-                      {fmt(totals.landAreaDifference)}
-                    </td>
-                    <td className="py-2.5 px-3 text-right text-xs font-medium text-gray-700">
-                      {fmt(totals.landIncreaseDecreaseAmount)}
-                    </td>
-                  </>
-                )}
-                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                  {fmt(totals.adjustPriceLocation)}
-                </td>
-                {isCondo(projectType) && (
-                  /* Price Increment/Floor — not summable */
-                  <td className="py-2.5 px-3" />
-                )}
-                <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
-                  {fmt(totals.totalAppraisalValue)}
-                </td>
-                <td className="py-2.5 px-3 text-right text-xs font-bold text-primary">
-                  {fmt(totals.totalAppraisalValueRounded)}
-                </td>
-                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                  {fmt(totals.forceSellingPrice)}
-                </td>
-                <td className="py-2.5 px-3 text-right text-xs font-semibold text-gray-800">
-                  {fmt(totals.coverageAmount)}
-                </td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
-      <Pagination
-        currentPage={pageNumber}
-        totalPages={totalPages}
-        totalCount={unitPrices.length}
-        pageSize={pageSize}
-        pageSizeOptions={[5, 10, 25, 50, 75, 100]}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-      />
     </div>
   );
 }
@@ -693,20 +170,102 @@ interface UnitPriceTabProps {
 export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const { t } = useTranslation('blockProject');
   const appraisalId = useAppraisalId();
+  const queryClient = useQueryClient();
   const isReadOnly = usePageReadOnly();
+  const condo = isCondo(projectType);
+  // L (appraised as land only) has no models: a unit is priced from its land alone, so nothing waits on a
+  // model's standard price and there is no model table or fire cover.
+  const land = projectType === 'L';
 
   const schema = projectPricingAssumptionForm(projectType);
-  const defaults = isCondo(projectType)
-    ? condoPricingAssumptionFormDefaults
-    : lbPricingAssumptionFormDefaults;
+  const defaults = condo ? condoPricingAssumptionFormDefaults : lbPricingAssumptionFormDefaults;
 
-  const { data: pricingAssumption, isLoading: assumptionLoading } = useGetProjectPricingAssumptions(
-    appraisalId ?? '',
-  );
+  const {
+    data: pricingAssumption,
+    isLoading: assumptionLoading,
+    isError: assumptionError,
+    isFetching: assumptionFetching,
+    refetch: refetchAssumption,
+  } = useGetProjectPricingAssumptions(appraisalId ?? '');
 
-  const { data: unitPricesData, isLoading: pricesLoading } = useGetProjectUnitPrices(
-    appraisalId ?? '',
-  );
+  const {
+    data: unitPricesData,
+    isLoading: pricesLoading,
+    isError: pricesError,
+    isFetching: pricesFetching,
+    refetch: refetchPrices,
+  } = useGetProjectUnitPrices(appraisalId ?? '', { alwaysRefetch: true });
+  const {
+    data: sourceInfo,
+    isLoading: sourceLoading,
+    isFetching: sourceFetching,
+    dataUpdatedAt: sourceUpdatedAt,
+    refetch: refetchSource,
+  } = useGetUnitPriceSource(appraisalId ?? '', { alwaysRefetch: true });
+  const {
+    data: fireRates,
+    isLoading: ratesLoading,
+    isError: ratesError,
+    refetch: refetchRates,
+  } = useGetFireInsuranceRates({ alwaysRefetch: true });
+
+  // The server's price source is the truth; the toggle only overrides it locally. After an import
+  // or a Save (calculate) succeeds the override is set to the new source, so the tab doesn't flash
+  // the stale server mode while the source query refetches. Never reset by an effect.
+  const [modeOverride, setModeOverride] = useState<UnitPriceSource | null>(null);
+  const [confirmSwitch, setConfirmSwitch] = useState(false);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  // The source the user asked for, waiting on an in-page confirm (stored prices exist).
+  const [confirmSource, setConfirmSource] = useState<UnitPriceSource | null>(null);
+  const [uploadOpen, setUploadOpen] = useState(false);
+  // The source as known after this tab's own last write. A successful import / calculate has
+  // changed it on the server, but the cached value stays until the refetch lands: this is
+  // authoritative in between. Dropped only by a source read that completed after the write began
+  // (dataUpdatedAt) and says the same: a failed refetch leaves the cached record, which may be older.
+  const [writtenSource, setWrittenSource] = useState<UnitPriceSource | null>(null);
+  const [writtenAt, setWrittenAt] = useState(0);
+  // Likewise the details of the file just imported, so the card doesn't show the previous file (or
+  // none) until the refetch brings the server's own record.
+  const [justImported, setJustImported] = useState<Pick<
+    UnitPriceSourceInfo,
+    'fileName' | 'importedAt' | 'importedBy'
+  > | null>(null);
+  const currentUsername = useAuthStore(s => s.user?.username ?? null);
+  useEffect(() => {
+    if (
+      writtenSource &&
+      !sourceFetching &&
+      sourceUpdatedAt > writtenAt &&
+      sourceInfo?.source === writtenSource &&
+      // After an import the record must also be the new file's: a read that began before the import
+      // and landed after it can carry the same source with the previous file.
+      (!justImported || sourceInfo.fileName === justImported.fileName)
+    ) {
+      setWrittenSource(null);
+      setJustImported(null);
+    }
+  }, [
+    writtenSource,
+    writtenAt,
+    justImported,
+    sourceFetching,
+    sourceUpdatedAt,
+    sourceInfo?.source,
+    sourceInfo?.fileName,
+  ]);
+  const serverSource = writtenSource ?? sourceInfo?.source;
+  // Built on the effective source (written, else server): a stale cached 'Imported' record must not
+  // read as current after a calculate; the file details only follow a just-finished import.
+  const cardSource: UnitPriceSourceInfo | undefined = sourceInfo && {
+    ...sourceInfo,
+    source: serverSource ?? sourceInfo.source,
+    ...(writtenSource === 'Imported' && justImported ? justImported : {}),
+  };
+  const mode: UnitPriceSource = modeOverride ?? serverSource ?? 'Calculated';
+  const imported = mode === 'Imported';
+  // The Imported view can be open while the server still holds calculated prices (local toggle);
+  // only then-stored prices from a real import get the "imported file" labels and metadata.
+  const showingImported = imported && serverSource === 'Imported';
 
   // Local mirror of unit prices: lets the user toggle flags and see an immediate
   // client-side recompute (preview). The backend remains the source of truth on
@@ -715,22 +274,15 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const [localUnitPrices, setLocalUnitPrices] = useState<ProjectUnitPrice[]>([]);
   const [flagsDirty, setFlagsDirty] = useState(false);
   const [saveIntent, setSaveIntent] = useState<'draft' | 'full' | null>(null);
-  const [pageNumber, setPageNumber] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
+  // What the last "Save and recalculate" changed, until the user dismisses it.
+  const [recalcSummary, setRecalcSummary] = useState<RecalcSummary | null>(null);
+  // Bumped when the form refuses a save: the (maybe collapsed) panel must show what is wrong.
+  const [revealPanel, setRevealPanel] = useState(0);
+  const onInvalid = () => setRevealPanel(n => n + 1);
   useEffect(() => {
     setLocalUnitPrices(unitPricesData ?? []);
     setFlagsDirty(false);
-    setPageNumber(prev => {
-      const totalPages = Math.max(1, Math.ceil((unitPricesData?.length ?? 0) / pageSize));
-      return Math.min(prev, totalPages - 1);
-    });
-  }, [unitPricesData]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handlePageChange = (page: number) => setPageNumber(page);
-  const handlePageSizeChange = (size: number) => {
-    setPageSize(size);
-    setPageNumber(0);
-  };
+  }, [unitPricesData]);
 
   const { mutateAsync: saveAssumptionAsync, isPending: isSaving } =
     useSaveProjectPricingAssumptions();
@@ -750,8 +302,12 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
     formState: { isDirty },
   } = methods;
 
-  useEffect(() => {
-    if (pricingAssumption) {
+  const resetFormToServer = useCallback(() => {
+    // Nothing saved yet (the normal first state of an L project, which has no models to derive an
+    // assumption from): back to the type's blank form.
+    if (!pricingAssumption) {
+      reset(defaults);
+    } else {
       if (isCondo(projectType)) {
         reset({
           locationMethod: pricingAssumption.locationMethod ?? 'AdjustPriceSqm',
@@ -776,7 +332,10 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
         } satisfies LbPricingAssumptionFormType);
       }
     }
-  }, [pricingAssumption, reset, projectType]);
+  }, [pricingAssumption, reset, projectType, defaults]);
+  useEffect(() => {
+    if (pricingAssumption) resetFormToServer();
+  }, [pricingAssumption, resetFormToServer]);
 
   // Live form values for the client-side preview recompute (uses unsaved edits).
   // Cast: react-hook-form's generic is `any` here since the schema differs per project type.
@@ -789,6 +348,10 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   const persistAssumption = async (data: any, withCalculate: boolean) => {
     if (!appraisalId) return;
     setSaveIntent(withCalculate ? 'full' : 'draft');
+    setRecalcSummary(null);
+    const startedAt = Date.now();
+    // The prices as stored now, to say afterwards what the recalculation changed.
+    const storedBefore = unitPricesData ?? [];
     const flags: ProjectUnitPriceFlagData[] = localUnitPrices.map(up => ({
       projectUnitId: up.projectUnitId,
       isCorner: up.isCorner,
@@ -805,16 +368,35 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
       }
       await saveAssumptionAsync({ appraisalId, data });
       reset(data);
+      // The flags are stored now. Not left to the [unitPricesData] effect: when the refetch returns
+      // identical data React Query keeps the same reference and that effect never runs.
+      setFlagsDirty(false);
 
       if (withCalculate) {
+        // After the flag and assumption saves, whose own refetches stamp the prices too.
+        const calculateStartedAt = Date.now();
         await calculatePricesAsync({ appraisalId });
-        toast.success(t('toasts.pricing.saveSuccess'));
+        setModeOverride('Calculated'); // the new server source, ahead of the refetch
+        setWrittenSource('Calculated');
+        setWrittenAt(startedAt);
+        refetchRates(); // calculate priced with the current rates; the preview should too
+        // calculate's onSettled has refetched the prices by now: the cache holds the new stored
+        // rows. A failed refetch leaves the old rows (status 'error', or an update older than this
+        // calculate): no summary then, and the toast says it worked.
+        const fresh = queryClient.getQueryState<ProjectUnitPrice[]>(
+          projectUnitPriceKeys.all(appraisalId),
+        );
+        const summary =
+          fresh?.status === 'success' && fresh.data && fresh.dataUpdatedAt >= calculateStartedAt
+            ? summarizeRecalc(storedBefore, fresh.data)
+            : null;
+        if (summary) setRecalcSummary(summary);
+        else toast.success(t('toasts.pricing.saveSuccess'));
       } else {
         toast.success(t('toasts.pricing.saveDraftSuccess'));
       }
     } catch (err) {
-      const error = err as AppError;
-      toast.error(error?.apiError?.detail ?? t('toasts.pricing.saveFailed'));
+      toast.error(errorText(err, t('toasts.pricing.saveFailed')));
     } finally {
       setSaveIntent(null);
     }
@@ -824,14 +406,44 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   // The displayed totals are derived below via `displayedUnitPrices`, so any
   // change to the assumption form OR a flag toggle re-runs the preview.
   // No API call here — the server recomputes on Save / Save Draft.
-  const handleToggleFlag = (unitId: string, flag: CondoFlag, value: boolean) => {
+  const handleToggleFlag = (unitId: string, flag: FlagKey, value: boolean) => {
     setLocalUnitPrices(prev =>
       prev.map(up => (up.projectUnitId === unitId ? { ...up, [flag]: value } : up)),
     );
     setFlagsDirty(true);
   };
 
-  const modelAssumptions = pricingAssumption?.modelAssumptions ?? [];
+  const modelAssumptions = useMemo(
+    () => pricingAssumption?.modelAssumptions ?? [],
+    [pricingAssumption],
+  );
+
+  // Current fire-insurance rate (Baht/sq.m.) per rate code. No property-kind filter: the backend's
+  // calculate looks rates up by code alone.
+  const fireRateByCode = useMemo(
+    () => new Map((fireRates ?? []).map(r => [r.code, r.ratePerSqm])),
+    [fireRates],
+  );
+
+  // The coverage rate for a model, as the backend resolves it: the current rate for its
+  // fire-insurance code, else the one saved on the model assumption. The preview and the table of
+  // assumptions both use it.
+  const coverageRateOf = useCallback(
+    (m: ProjectModelAssumption) =>
+      (m.fireInsuranceCode ? fireRateByCode.get(m.fireInsuranceCode) : undefined) ??
+      m.coverageAmount,
+    [fireRateByCode],
+  );
+  const shownAssumptions = useMemo(() => {
+    const rows = modelAssumptions.map(m => ({ ...m, coverageAmount: coverageRateOf(m) }));
+    // By tower (condo only), then model, in natural order ("A 2" before "A 10"); no tower last.
+    const natural = (a: string, b: string) =>
+      a.localeCompare(b, 'th', { numeric: true, sensitivity: 'base' });
+    const byName = (a?: string, b?: string) => (a && b ? natural(a, b) : a ? -1 : b ? 1 : 0);
+    return rows.sort(
+      (a, b) => byName(a.towerName, b.towerName) || byName(a.modelType, b.modelType),
+    );
+  }, [modelAssumptions, coverageRateOf]);
 
   // Lookup: projectModelId → model assumption fields needed for the live preview.
   // Keyed by id, not modelType — for Condo a model's identity is (Tower, ModelName), so the same
@@ -840,146 +452,435 @@ export default function UnitPriceTab({ projectType }: UnitPriceTabProps) {
   // name repeats in another tower.
   const modelLookup = useMemo(
     () =>
-      new Map(
+      new Map<string, ModelPricing>(
         modelAssumptions.map(m => [
           m.projectModelId,
           {
             standardPrice: m.finalAppraisedValue,
-            coverageAmount: m.coverageAmount,
+            coverageAmount: coverageRateOf(m),
             // standardLandPrice holds the standard land AREA (Sq.Wa) — see DeriveFromModels
             standardLandArea: m.standardLandPrice,
           },
         ]),
       ),
-    [modelAssumptions],
+    [modelAssumptions, coverageRateOf],
   );
 
-  // Derived display rows: re-run the preview calc whenever the local flag set
-  // OR the watched assumption form values change.
-  const displayedUnitPrices = useMemo(
+  // The form's forced-sale % (unsaved edits included) when it is a number in 0..100, else the
+  // system default. Not the saved/effective rate: clearing the field stores null on Save, and the
+  // backend then applies the system default (it also treats an out-of-range value that way).
+  const previewAssumption = useMemo<AssumptionInputs>(() => {
+    const entered = watchedAssumption.forceSalePercentage;
+    const valid = typeof entered === 'number' && entered >= 0 && entered <= 100;
+    return {
+      ...watchedAssumption,
+      forceSalePercentage: valid
+        ? entered
+        : (pricingAssumption?.systemDefaultForceSalePercentage ?? null),
+    };
+  }, [watchedAssumption, pricingAssumption?.systemDefaultForceSalePercentage]);
+
+  // The live recompute (what Save would write). The Imported view has none: it shows the stored
+  // rows exactly as the API returned them.
+  const recomputedUnitPrices = useMemo(
     () =>
-      localUnitPrices.map(up => {
-        const lookup = modelLookup.get(up.projectModelId ?? '');
-        // For LB: compute land area diff and land +/- live from model standard land area.
-        // Always recompute so it responds to rate / assumption changes in the form.
-        const landAreaDifference =
-          isLandAndBuildingLike(projectType) &&
-          up.landArea != null &&
-          lookup?.standardLandArea != null
-            ? up.landArea - lookup.standardLandArea
-            : up.landAreaDifference;
-        const landIncreaseDecreaseAmount =
-          landAreaDifference != null &&
-          (watchedAssumption as AssumptionInputs).landIncreaseDecreaseRate != null
-            ? landAreaDifference *
-              ((watchedAssumption as AssumptionInputs).landIncreaseDecreaseRate as number)
-            : up.landIncreaseDecreaseAmount;
-        const enriched: typeof up = {
-          ...up,
-          standardPrice: lookup?.standardPrice ?? up.standardPrice ?? undefined,
-          coverageAmount: lookup?.coverageAmount ?? up.coverageAmount ?? undefined,
-          landAreaDifference,
-          landIncreaseDecreaseAmount,
-        };
-        return recomputeUnitPrice(enriched, watchedAssumption, projectType);
-      }),
-    [localUnitPrices, watchedAssumption, projectType, modelLookup],
+      imported
+        ? localUnitPrices
+        : buildDisplayedUnitPrices(localUnitPrices, previewAssumption, projectType, modelLookup),
+    [imported, localUnitPrices, previewAssumption, projectType, modelLookup],
   );
-  const isBusy = isSaving || isSavingFlags || isCalculating;
+
+  // The Calculated grid is only "calculated" when it equals what is stored. It is a preview while
+  // the form or a flag is dirty, or over an imported price list. A recompute that merely differs
+  // from the stored rows is a hint, not a preview. Not while the lookup it is priced from is still
+  // loading or has failed: an empty lookup would mark every row as changed.
+  // A background refetch that fails while earlier data is on screen is not a failed load.
+  // "No data" means undefined: a successful null (nothing saved yet) is data.
+  const assumptionFailed = assumptionError && pricingAssumption === undefined;
+  const ratesFailed = ratesError && fireRates === undefined;
+  const pricesFailed = pricesError && unitPricesData === undefined;
+  const lookupReady = !assumptionLoading && !assumptionFailed && !ratesLoading && !ratesFailed;
+  // Skipped when the answer cannot matter: an edit already makes the grid "unsaved", and the Imported
+  // view shows the stored rows themselves.
+  const editing = isDirty || flagsDirty;
+
+  // Shows what is stored until the user edits an assumption or a flag (or looks at the Calculated
+  // view over an imported list, where the recompute is what Save would write). A recompute that
+  // merely differs from what is stored is a hint, not an unsaved change: models without a pricing
+  // analysis recompute to 0, which must not read as the project's prices.
+  const showRecompute = editing || serverSource === 'Imported';
+  const displayedUnitPrices = imported || !showRecompute ? localUnitPrices : recomputedUnitPrices;
+
+  // Units whose model has a standard price: only those can be priced by a recompute.
+  const pricedModelIds = useMemo(
+    () =>
+      new Set(
+        modelAssumptions.filter(m => m.finalAppraisedValue != null).map(m => m.projectModelId),
+      ),
+    [modelAssumptions],
+  );
+  // Q6 ("—" and left out of the totals) is for the recompute only. The stored view and the
+  // Imported view show every stored value as it is: a unit counts as priced when it has one.
+  // L has no models: every unit can be priced.
+  const modelPriced = useCallback(
+    (up: ProjectUnitPrice) =>
+      imported || !showRecompute || land || pricedModelIds.has(up.projectModelId ?? ''),
+    [imported, showRecompute, land, pricedModelIds],
+  );
+  // Units holding a stored price although their model has no standard price: a recompute would
+  // price them without one. (A stored 0 loses nothing.)
+  const noStandardCount = useMemo(
+    () =>
+      land
+        ? 0
+        : (unitPricesData ?? []).filter(
+            up =>
+              !pricedModelIds.has(up.projectModelId ?? '') &&
+              (up.totalAppraisalValueRounded ?? 0) !== 0,
+          ).length,
+    [land, unitPricesData, pricedModelIds],
+  );
+  // Hint: how many units a recalculation would re-price (no unsaved indicator for this).
+  const recalcCount = useMemo(
+    () =>
+      // A read-only user cannot recalculate: no hint.
+      showRecompute || imported || !lookupReady || isReadOnly
+        ? 0
+        : recomputedUnitPrices.reduce((n, row, i) => {
+            const stored = localUnitPrices[i];
+            // A model with no standard price recomputes to nothing: a unit it never priced has
+            // nothing to change.
+            if (
+              !land &&
+              !pricedModelIds.has(row.projectModelId ?? '') &&
+              (stored.totalAppraisalValueRounded ?? 0) === 0
+            ) {
+              return n;
+            }
+            return differsFromStored([row], [stored]) ? n + 1 : n;
+          }, 0),
+    [
+      land,
+      showRecompute,
+      imported,
+      lookupReady,
+      recomputedUnitPrices,
+      localUnitPrices,
+      pricedModelIds,
+      isReadOnly,
+    ],
+  );
+  const previewDriven = lookupReady && serverSource === 'Imported';
+  // Unsaved: edits, or the Calculated view over an imported list. The "Preview" badge is stricter:
+  // it also needs the lookup the preview is priced from (an empty one would mislabel).
+  const hasUnsaved = !imported && (isDirty || flagsDirty || previewDriven);
+  const isPreviewing = hasUnsaved && lookupReady;
+  const isBusy = isSaving || isSavingFlags || isCalculating || saveIntent !== null;
+  // Save writes the form over the stored assumption, so it waits for that assumption to be known.
+  // Nor before the source is fresh: a cached mode may be stale, and Save's meaning depends on it.
+  const assumptionBlocked = assumptionLoading || assumptionFailed;
+  // While the assumption or the stored prices are being refetched, the effects that copy the server's
+  // values into the form and the local rows could overwrite an edit made in the meantime: so nothing
+  // is editable (nor savable) until they have landed.
+  const refreshing = assumptionFetching || pricesFetching;
+  // One lock for everything the user can edit or save, so the parts cannot drift apart: read-only
+  // page, a save in progress, or any of the data it is built on being refetched. (The source toggle
+  // has its own rule.)
+  const locked = isReadOnly || isBusy || refreshing || sourceFetching;
+
+  const handleSwitchMode = (next: UnitPriceSource) => {
+    if (isReadOnly || isBusy || next === mode) return;
+    // Leaving an imported price list: nothing is written until Save, but warn first.
+    if (next === 'Calculated' && serverSource === 'Imported') setConfirmSwitch(true);
+    // Unsaved edits are not carried into the Imported view: ask, then drop them.
+    else if (next === 'Imported' && (isDirty || flagsDirty)) setConfirmDiscard(true);
+    // Any switch away from stored prices is confirmed in the page.
+    else if ((cardSource?.pricedUnitCount ?? 0) > 0) setConfirmSource(next);
+    else setModeOverride(next);
+  };
+
+  // Back to what is stored: the form and the flags return to the server's values.
+  const handleResetEdits = () => {
+    resetFormToServer();
+    setLocalUnitPrices(unitPricesData ?? []);
+    setFlagsDirty(false);
+  };
+
+  const handleDiscardAndImport = () => {
+    handleResetEdits();
+    setModeOverride('Imported');
+    setConfirmDiscard(false);
+  };
+
+  // Until the server says where the prices come from, nothing is offered: guessing Calculated
+  // would put Save Draft in front of an imported price list.
+  if (sourceLoading) {
+    return (
+      <div className="space-y-3 p-2" role="status" aria-label={t('unitPrice.source.loading')}>
+        {[1, 2, 3, 4].map(i => (
+          <div key={i} className="h-10 animate-pulse rounded bg-(--palette-surface-3)" />
+        ))}
+      </div>
+    );
+  }
+  // Only with no source data at all: a failed background refetch keeps the tab on screen.
+  if (sourceInfo === undefined) {
+    return <DataErrorState variant="inline" onRetry={() => refetchSource()} />;
+  }
+
+  // What the collapsed assumptions strip keeps on show.
+  // A saved percentage method (the BE still prices it) keeps its own label; anything else but
+  // Lumpsum reads as the per-area method.
+  const method = watchedAssumption.locationMethod;
+  const methodKey =
+    method === 'Lumpsum' || method === 'AdjustPricePercentage' ? method : 'AdjustPriceSqm';
+  const stripInfo: AssumptionStripInfo = {
+    method: { AdjustPriceSqm: '01', Lumpsum: '02', AdjustPricePercentage: '%' }[methodKey],
+    methodTitle:
+      methodKey === 'AdjustPricePercentage'
+        ? t('options.locationMethod.AdjustPricePercentage')
+        : t(`options.${condo ? 'locationMethodBySqWa' : 'locationMethodByM'}.${methodKey}`),
+    forceSale: previewAssumption.forceSalePercentage ?? null,
+    // method + the locations + the floor / land values + forced sale (the panel's fields)
+    count: condo ? 9 : land ? 6 : 7,
+    edited: !isReadOnly && editing,
+  };
+  const recalcHint = t('unitPrice.actions.saveAndRecalculateHint');
+
+  // One results card (the source switch, the folded model assumptions or the import controls all
+  // live in its head) next to the assumption panel.
+  const body = (
+    <CondoPriceLayout
+      // Only once the saved assumption is known, so the blank defaults can never be saved over it.
+      panel={
+        !imported && !assumptionBlocked ? (
+          <FormReadOnlyContext.Provider value={locked}>
+            <PricingAssumptionForm projectType={projectType} plain={isReadOnly} />
+          </FormReadOnlyContext.Provider>
+        ) : undefined
+      }
+      stripInfo={stripInfo}
+      revealPanel={revealPanel}
+      results={
+        <CondoPriceResults
+          projectType={projectType}
+          recalcSummary={
+            recalcSummary && !imported && !isReadOnly ? (
+              <RecalcSummaryNote summary={recalcSummary} onDismiss={() => setRecalcSummary(null)} />
+            ) : undefined
+          }
+          sourceSwitch={
+            <CondoSourceSwitch
+              current={mode}
+              readOnly={isReadOnly}
+              busy={isBusy}
+              onSwitch={handleSwitchMode}
+            />
+          }
+          importControls={
+            imported ? (
+              <CondoImportControls
+                appraisalId={appraisalId ?? ''}
+                source={cardSource}
+                isReadOnly={isReadOnly}
+                onUpload={() => setUploadOpen(true)}
+              />
+            ) : undefined
+          }
+          notice={
+            imported ? (
+              <CondoImportNotice source={cardSource} unitPrices={unitPricesData} />
+            ) : undefined
+          }
+          assumptions={
+            imported || land
+              ? undefined
+              : {
+                  modelCount: modelAssumptions.length,
+                  pricedCount: pricedModelIds.size,
+                  table: assumptionLoading ? (
+                    <div className="space-y-2 p-4">
+                      {[1, 2].map(i => (
+                        <div
+                          key={i}
+                          className="h-8 animate-pulse rounded bg-(--palette-surface-3)"
+                        />
+                      ))}
+                    </div>
+                  ) : assumptionFailed ? (
+                    // Retry lives on the unit price table, which waits on the same query.
+                    <DataErrorState variant="inline" />
+                  ) : (
+                    <ModelAssumptionsTable
+                      assumptions={shownAssumptions}
+                      projectType={projectType}
+                    />
+                  ),
+                }
+          }
+          rows={displayedUnitPrices}
+          baseline={isPreviewing && editing ? (unitPricesData ?? []) : undefined}
+          modelPriced={modelPriced}
+          imported={imported}
+          showingImported={showingImported}
+          preview={isPreviewing ? (editing ? 'edit' : 'switch') : null}
+          recalcCount={recalcCount}
+          noStandardCount={noStandardCount}
+          amounts={watchedAssumption}
+          flagsEditable={!isReadOnly}
+          locked={locked}
+          onToggleFlag={handleToggleFlag}
+          onReset={editing ? handleResetEdits : undefined}
+          // The recompute prices every row from the model lookup and the fire-insurance rates:
+          // until both have loaded (or if one failed) rows would come out priced at 0, so wait.
+          isLoading={pricesLoading || (!imported && (assumptionLoading || ratesLoading))}
+          error={
+            pricesFailed ? (
+              // A failed load must not read as "no units uploaded".
+              <DataErrorState variant="inline" onRetry={() => refetchPrices()} />
+            ) : !imported && (assumptionFailed || ratesFailed) ? (
+              <DataErrorState
+                variant="inline"
+                onRetry={() => {
+                  if (assumptionFailed) refetchAssumption();
+                  if (ratesFailed) refetchRates();
+                }}
+              />
+            ) : undefined
+          }
+        />
+      }
+    />
+  );
 
   return (
     <FormProvider methods={methods} schema={schema}>
       <form
-        onSubmit={handleSubmit(data => persistAssumption(data, true))}
+        onSubmit={handleSubmit(data => persistAssumption(data, true), onInvalid)}
         className="flex flex-col h-full min-h-0"
       >
-        <div className="flex-1 min-h-0 overflow-y-auto pb-4">
-          <div className="flex flex-col gap-6">
-            {/* Model Assumptions (read-only display) */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <SectionHeader
-                icon="layer-group"
-                label={t('unitPrice.modelAssumptions')}
-                color="bg-blue-50 text-blue-600"
-              />
-              <div className="h-px bg-gray-100 mb-4" />
-              {assumptionLoading ? (
-                <div className="space-y-2">
-                  {[1, 2].map(i => (
-                    <div key={i} className="h-8 bg-gray-100 rounded animate-pulse" />
-                  ))}
-                </div>
-              ) : (
-                <ModelAssumptionsTable assumptions={modelAssumptions} projectType={projectType} />
-              )}
-            </div>
-
-            {/* Pricing Assumption form */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <PricingAssumptionForm projectType={projectType} />
-            </div>
-
-            {/* Calculated Unit Prices */}
-            <div className="bg-white rounded-xl border border-gray-100 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <SectionHeader
-                  icon="tags"
-                  label={t('unitPrice.calculatedUnitPrices')}
-                  color="bg-violet-50 text-violet-600"
-                />
-                {displayedUnitPrices.length > 0 && (
-                  <span className="text-xs text-gray-500 self-start mt-0.5">
-                    {t('unitPrice.totalUnits', { n: displayedUnitPrices.length.toLocaleString() })}
-                  </span>
-                )}
-              </div>
-              <div className="h-px bg-gray-100 mb-4" />
-              <UnitPriceResultTable
-                unitPrices={displayedUnitPrices}
-                projectType={projectType}
-                isLoading={pricesLoading}
-                pricingAssumption={watchedAssumption}
-                onToggleFlag={handleToggleFlag}
-                isDisabled={isReadOnly || isBusy}
-                pageNumber={pageNumber}
-                pageSize={pageSize}
-                onPageChange={handlePageChange}
-                onPageSizeChange={handlePageSizeChange}
-              />
-            </div>
-          </div>
-        </div>
+        {/* The scroller is a size container, so the results card and the sticky assumption panel
+            can end exactly where the scroll area (and so the action bar below it) begins: 100cqh. */}
+        <div className="flex-1 min-h-0 overflow-y-auto pb-4 [container-type:size]">{body}</div>
 
         {/* Sticky bottom action bar */}
         <ActionBar>
           <ActionBar.Left>
             <CancelButton />
-            {!isReadOnly && (
+            {!isReadOnly && !imported && (
               <>
                 <ActionBar.Divider />
-                <ActionBar.UnsavedIndicator show={isDirty || flagsDirty} />
+                <ActionBar.UnsavedIndicator show={hasUnsaved} />
               </>
             )}
           </ActionBar.Left>
-          {!isReadOnly && (
+          {!isReadOnly && !imported && (
+            // Its own flex item (not inside `ActionBar.Right`, which cannot shrink): the buttons keep
+            // their labels whole and this is what gets one line cut with an ellipsis (`truncate`
+            // keeps Thai marks, DESIGN.md section 4).
+            <span
+              id="recalc-consequence"
+              title={recalcHint}
+              className="min-w-0 flex-1 truncate px-3 py-0.5 text-right text-xs text-(--palette-ink-2)"
+            >
+              {recalcHint}
+            </span>
+          )}
+          {!isReadOnly && !imported && (
             <ActionBar.Right>
+              {/* Over an imported price list only Save is offered: it recalculates and flips the
+                  source, whereas a draft would leave the imported prices next to new assumptions. */}
+              {serverSource !== 'Imported' && (
+                <Button
+                  variant="ghost"
+                  type="button"
+                  onClick={() => handleSubmit(data => persistAssumption(data, false), onInvalid)()}
+                  isLoading={saveIntent === 'draft' && isBusy}
+                  disabled={locked || assumptionBlocked}
+                  className="shrink-0 whitespace-nowrap"
+                >
+                  {t('actions.saveDraft')}
+                </Button>
+              )}
               <Button
-                variant="ghost"
-                type="button"
-                onClick={() => handleSubmit(data => persistAssumption(data, false))()}
-                isLoading={saveIntent === 'draft' && isBusy}
-                disabled={isBusy}
+                type="submit"
+                title={recalcHint}
+                aria-describedby="recalc-consequence"
+                className="shrink-0 whitespace-nowrap"
+                isLoading={saveIntent === 'full' && isBusy}
+                disabled={locked || assumptionBlocked}
               >
-                Save Draft
-              </Button>
-              <Button type="submit" isLoading={saveIntent === 'full' && isBusy} disabled={isBusy}>
                 <Icon name="calculator" style="solid" className="size-4 mr-2" />
-                Save
+                {t('unitPrice.actions.saveAndRecalculate')}
               </Button>
             </ActionBar.Right>
           )}
         </ActionBar>
       </form>
+
+      <ConfirmDialog
+        isOpen={confirmSwitch}
+        onClose={() => setConfirmSwitch(false)}
+        onConfirm={() => {
+          setModeOverride('Calculated');
+          setConfirmSwitch(false);
+        }}
+        title={t('unitPrice.switchToCalculated.title')}
+        message={t('unitPrice.switchToCalculated.message')}
+        confirmText={t('unitPrice.switchToCalculated.confirm')}
+        variant="warning"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmSource !== null}
+        onClose={() => setConfirmSource(null)}
+        onConfirm={() => {
+          if (confirmSource) setModeOverride(confirmSource);
+          setConfirmSource(null);
+        }}
+        title={t(
+          confirmSource === 'Imported'
+            ? 'condoUnitsPrice.switch.toImportedTitle'
+            : 'condoUnitsPrice.switch.toCalculatedTitle',
+        )}
+        message={
+          confirmSource === 'Imported'
+            ? t('condoUnitsPrice.switch.toImportedMessage', {
+                count: cardSource?.pricedUnitCount ?? 0,
+                n: (cardSource?.pricedUnitCount ?? 0).toLocaleString(),
+              })
+            : t('condoUnitsPrice.switch.toCalculatedMessage')
+        }
+        confirmText={t('unitPrice.switchToCalculated.confirm')}
+        variant="warning"
+      />
+
+      <ConfirmDialog
+        isOpen={confirmDiscard}
+        onClose={() => setConfirmDiscard(false)}
+        onConfirm={handleDiscardAndImport}
+        title={t('unitPrice.discardChanges.title')}
+        message={t('unitPrice.discardChanges.message')}
+        confirmText={t('unitPrice.discardChanges.confirm')}
+        variant="warning"
+      />
+
+      {uploadOpen && appraisalId && (
+        <UnitPriceImportDialog
+          appraisalId={appraisalId}
+          onClose={() => setUploadOpen(false)}
+          onImported={(result, startedAt) => {
+            setModeOverride('Imported');
+            setWrittenSource('Imported');
+            setWrittenAt(startedAt);
+            setJustImported({
+              fileName: result.fileName,
+              importedAt: new Date().toISOString(),
+              importedBy: currentUsername,
+            });
+          }}
+        />
+      )}
     </FormProvider>
   );
 }

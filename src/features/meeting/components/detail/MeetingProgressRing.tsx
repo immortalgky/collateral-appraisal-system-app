@@ -38,7 +38,7 @@ const MeetingProgressRing = ({ stats, animate = true }: MeetingProgressRingProps
         {/* Neutral track behind the chart. Without it a meeting at 0% released renders as one
             flat grey circle (Pending is the only slice) and reads as broken rather than "not
             started". The coloured arc now sits against a lighter ring. */}
-        <div className="absolute inset-[4px] rounded-full border-[16px] border-gray-100" />
+        <div className="absolute inset-[4px] rounded-full border-[16px] border-(--palette-line-soft)" />
         {/* With no decision items at all (an acknowledgement-only meeting) the track above is
             the whole visual — there is nothing to chart. */}
         {slices.length > 0 && (
@@ -70,14 +70,14 @@ const MeetingProgressRing = ({ stats, animate = true }: MeetingProgressRingProps
           <span
             className={clsx(
               'text-2xl font-bold tabular-nums leading-none',
-              pct === 0 && 'text-gray-400',
-              pct > 0 && pct < 100 && 'text-amber-600',
-              pct === 100 && 'text-emerald-600',
+              pct === 0 && 'text-(--palette-gray-400)',
+              pct > 0 && pct < 100 && 'text-amber-600 dark:text-amber-400',
+              pct === 100 && 'text-emerald-600 dark:text-emerald-400',
             )}
           >
             {pct}%
           </span>
-          <span className="mt-1 text-[11px] text-gray-400">{t('pulse.released')}</span>
+          <span className="mt-1 text-[11px] text-(--palette-gray-400)">{t('pulse.released')}</span>
         </div>
       </div>
 
@@ -89,20 +89,20 @@ const MeetingProgressRing = ({ stats, animate = true }: MeetingProgressRingProps
                 className="block size-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: DECISION_CHART_COLORS[decision] }}
               />
-              <span className="text-sm text-gray-600 truncate">
+              <span className="text-sm text-(--palette-gray-600) truncate">
                 {t(`decision.${decision}` as `decision.${ItemDecision}`)}
               </span>
             </dt>
-            <dd className="text-sm font-semibold text-gray-800 tabular-nums shrink-0">
+            <dd className="text-sm font-semibold text-(--palette-ink) tabular-nums shrink-0">
               {stats.decisionCounts[decision]}
             </dd>
           </div>
         ))}
-        <div className="flex items-center justify-between gap-3 pt-1.5 border-t border-gray-100">
-          <dt className="text-xs uppercase tracking-wide text-gray-400">
+        <div className="flex items-center justify-between gap-3 pt-1.5 border-t border-(--palette-line-soft)">
+          <dt className="text-xs uppercase tracking-wide text-(--palette-gray-400)">
             {t('pulse.decisionTotal')}
           </dt>
-          <dd className="text-sm font-semibold text-gray-800 tabular-nums">
+          <dd className="text-sm font-semibold text-(--palette-ink) tabular-nums">
             {stats.totalDecision}
           </dd>
         </div>

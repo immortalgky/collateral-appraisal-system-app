@@ -5,6 +5,16 @@ import { format, formatISO, isValid, setHours, setMinutes } from 'date-fns';
 import clsx from 'clsx';
 import 'react-day-picker/style.css';
 import { useFormReadOnly } from '../form/context';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import {
+  controlFrame,
+  controlPad,
+  controlSkin,
+  ERROR_TEXT,
+  HELPER_TEXT,
+  REQUIRED_MARK,
+} from './controlStyles';
 import {
   buildDisabledMatcher,
   buildHolidayMap,
@@ -50,7 +60,10 @@ const CALENDAR_RDP_STYLE = {
   '--rdp-weekday-padding': '0',
   '--rdp-weekday-opacity': '0.6',
   '--rdp-font-family': 'inherit',
-  '--rdp-accent-color': 'var(--color-primary)',
+  // primary-700, not the brand teal: the selected day is white text on this fill (17.11).
+  '--rdp-accent-color': 'var(--color-primary-700)',
+  // Today's number is text on the popover surface, and primary-700 is 3.4:1 there in dark.
+  '--rdp-today-color': 'var(--palette-accent-ink)',
 } as React.CSSProperties;
 
 // Single-letter weekday headers (M T W T F S S) to match the design.
@@ -65,6 +78,8 @@ interface DateTimePickerInputProps {
   disabled?: boolean;
   placeholder?: string;
   className?: string;
+  /** Id of the text box, for an outside `<label htmlFor>` (FormFields draws the label itself). */
+  id?: string;
   /** Value from react-hook-form (ISO string or Date) */
   value?: string | Date | null;
   /** onChange handler - receives ISO string value */
@@ -127,7 +142,7 @@ function TimeInput24({ value, onChange, id, className }: TimeInput24Props) {
         placement="top"
         maxHeightClass="max-h-40"
       />
-      <span className="text-gray-500">:</span>
+      <span className="text-(--palette-gray-500)">:</span>
       <ScrollableSelect
         ariaLabel="Minutes"
         value={minutes}
@@ -151,6 +166,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
       disabled,
       placeholder = 'dd/mm/yyyy hh:mm',
       className,
+      id,
       value,
       onChange,
       onBlur,
@@ -168,9 +184,10 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     ref,
   ) => {
     const uuid = useId();
-    const inputId = uuid;
+    const inputId = id ?? uuid;
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
+    const layout = useFormLayout();
     const inputRef = useRef<HTMLInputElement>(null);
     // The calendar button: where focus returns when the calendar closes. A press on it is on the
     // field (it is inside the reference), so it toggles rather than dismisses.
@@ -313,13 +330,9 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
     return (
       <div className={clsx('relative', fullWidth && 'w-full')}>
         {label && (
-          <label
-            data-field-label
-            htmlFor={inputId}
-            className="block text-xs font-medium text-gray-700 mb-1"
-          >
+          <label htmlFor={inputId} className="block text-xs font-medium text-(--palette-ink) mb-1">
             {label}
-            {required && <span className="text-danger ml-0.5">*</span>}
+            {required && <span className={REQUIRED_MARK}>*</span>}
           </label>
         )}
 
@@ -334,19 +347,19 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
             name={name}
             type="text"
             className={clsx(
+              'block',
+              controlFrame(layout),
+              controlPad(layout, false, 'l'),
               // The calendar button sits over the right edge, and "dd/mm/yyyy hh:mm" is long enough
               // to run under it in a narrow column.
-              'block py-2 pl-3 border rounded-lg text-sm transition-colors duration-200',
               CALENDAR_BUTTON_PADDING,
-              'placeholder:text-gray-400',
-              error
-                ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
-              isDisabled
-                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : 'bg-white hover:border-gray-300 cursor-text',
-              // A value still being typed reads as a draft rather than as a date.
-              !error && !constraintError && segmentInput.isIncomplete && 'text-gray-400',
+              controlSkin({
+                error: !!(error || constraintError),
+                disabled: isDisabled,
+                // A value still being typed reads as a draft rather than as a date.
+                muted: segmentInput.isIncomplete,
+              }),
+              !isDisabled && 'cursor-text',
               fullWidth && 'w-full',
               className,
             )}
@@ -381,12 +394,8 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
           />
         </div>
 
-        {/* Calendar Popover with Time — portalled to <body>, not rendered inside the field.
-            react-day-picker builds the month as a <table>, and every rule in the grid form layout
-            is gated on `[data-field]:not(:has(table))` (so LandTitleTable keeps its own layout). An
-            in-place calendar put a table inside the field the moment it opened, switched the whole
-            two-column row off, and dropped the input onto its own full-width line (building
-            permit expiry, constructionLicenseExpirationDate). Same fix as DatePickerInput. */}
+        {/* Calendar Popover with Time — portalled to <body>, not rendered inside the field, so
+            react-day-picker's <table> never sits inside a `[data-field]`. Same as DatePickerInput. */}
         {isOpen && (
           <FloatingPortal>
             {/* Modal: it is a dialog with time controls and Done, so Tab stays inside it and the
@@ -401,7 +410,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
               <div
                 ref={calendar.setFloating}
                 {...calendar.floatingProps}
-                className="z-[100] bg-base-100 rounded-box shadow-lg border border-gray-200"
+                className="z-[100] bg-base-100 rounded-box shadow-lg border border-(--palette-line)"
               >
                 <div className="flex">
                   <div className="p-2">
@@ -435,7 +444,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                     />
                   </div>
                   {showMonths && (
-                    <div className="w-44 p-2 pl-3 border-l border-gray-200">
+                    <div className="w-44 p-2 pl-3 border-l border-(--palette-line)">
                       <MonthYearPanel
                         year={month.getFullYear()}
                         selectedMonth={month.getMonth()}
@@ -458,19 +467,19 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                 footer wider than the seven-column grid, and since the popover takes the width of
                 its widest child, the whole calendar was stretched to fit it. Today only navigates —
                 it jumps the calendar to this month without picking a date. */}
-                <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
+                <div className="flex items-center gap-2 px-2 py-1.5 border-t border-(--palette-line)">
                   <button
                     type="button"
                     onClick={() => {
                       setMonth(new Date());
                       setShowMonths(false);
                     }}
-                    className="rounded px-1 py-0.5 text-xs font-semibold text-primary hover:bg-primary/10"
+                    className="rounded px-1 py-0.5 text-xs font-semibold text-(--palette-primary-text) hover:bg-(--palette-primary-wash)"
                   >
                     {todayLabel}
                   </button>
                   {selectedDate && (
-                    <span className="ml-auto text-xs text-gray-400">
+                    <span className="ml-auto text-xs text-(--palette-gray-400)">
                       {format(selectedDate, 'd MMM yyyy')}
                     </span>
                   )}
@@ -479,9 +488,9 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                 {/* The clock icon stands in for a "Time" label: the two boxes either side of a colon
                 already read as a time, and the word cost more width than the row had. The selects
                 carry their own aria-labels, so nothing is lost to a screen reader. */}
-                <div className="flex items-center gap-2 px-2 py-1.5 border-t border-gray-200">
+                <div className="flex items-center gap-2 px-2 py-1.5 border-t border-(--palette-line)">
                   <svg
-                    className="w-4 h-4 text-gray-400 flex-shrink-0"
+                    className="w-4 h-4 text-(--palette-gray-400) flex-shrink-0"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -502,7 +511,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                   <button
                     type="button"
                     onClick={handleDone}
-                    className="ml-auto px-3 py-1 bg-primary text-primary-content rounded text-sm font-medium hover:bg-primary/90 transition-colors"
+                    className="ml-auto px-3 py-1 bg-primary-700 text-primary-content rounded text-sm font-medium hover:bg-primary-800 transition-colors"
                   >
                     Done
                   </button>
@@ -514,10 +523,7 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
 
         {(helperText || error || constraintError) && (
           <p
-            className={clsx(
-              'mt-1 text-xs',
-              constraintError || error ? 'text-danger' : 'text-gray-500',
-            )}
+            className={clsx('mt-1', constraintError || error ? ERROR_TEXT : HELPER_TEXT)}
             id={
               constraintError || error
                 ? `${inputId}-error`
@@ -526,7 +532,11 @@ const DateTimePickerInput = forwardRef<HTMLInputElement, DateTimePickerInputProp
                   : undefined
             }
           >
-            {constraintError || error || helperText}
+            {constraintError || error ? (
+              <ValidationText message={(constraintError || error)!} label={label} />
+            ) : (
+              helperText
+            )}
           </p>
         )}
       </div>

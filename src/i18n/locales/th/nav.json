@@ -62,7 +62,13 @@
       "licensePlateNumber": "ทะเบียนรถ",
       "ownerName": "ผู้ถือกรรมสิทธิ์",
       "projectName": "ชื่อโครงการ",
-      "condoName": "ชื่อคอนโด"
+      "condoName": "ชื่อคอนโด",
+      "province": "จังหวัด",
+      "district": "อำเภอ",
+      "subDistrict": "ตำบล",
+      "dopaProvince": "จังหวัด",
+      "dopaDistrict": "อำเภอ",
+      "dopaSubDistrict": "ตำบล"
     }
   },
   "notifications": "การแจ้งเตือน",

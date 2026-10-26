@@ -3,11 +3,12 @@ import clsx from 'clsx';
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import { TextInput, DateInput } from '@/shared/components/inputs';
+import { TextInput, DateInput, NativeSelect } from '@/shared/components/inputs';
 import type { TaskDateType, TaskFilterParams } from '../types';
 import { ACTIVITY_IDS, getActivityConfig } from '../config/activityConfig';
 import { APPRAISAL_STATUS_FILTER_OPTIONS } from '@shared/constants/appraisalStatus';
 import { useParameterOptions } from '@shared/utils/parameterUtils';
+import { toLegacyRange } from '../hooks/useTaskListUrlState';
 
 const REQUEST_STATUS_OPTIONS = APPRAISAL_STATUS_FILTER_OPTIONS;
 
@@ -40,30 +41,20 @@ function SelectField({
 }: SelectFieldProps) {
   return (
     <div className="w-full">
-      <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
-      <div className="relative">
-        <select
-          {...rest}
-          value={value ?? ''}
-          onChange={e => onChange(e.target.value || undefined)}
-          className={clsx(
-            'block w-full appearance-none px-3 py-2 pr-9 border rounded-lg text-sm transition-colors duration-200',
-            'border-gray-200 bg-white hover:border-gray-300',
-            'focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500',
-            !value && 'text-gray-400',
-          )}
-        >
-          <option value="">{placeholder}</option>
-          {options.map(o => (
-            <option key={o.value} value={o.value} className="text-gray-900">
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-          <Icon style="regular" name="chevron-down" className="size-3.5" />
-        </div>
-      </div>
+      <label className="block text-xs font-medium text-(--palette-ink) mb-1">{label}</label>
+      <NativeSelect
+        {...rest}
+        value={value ?? ''}
+        onChange={e => onChange(e.target.value || undefined)}
+        className={clsx('w-full', !value && 'text-(--palette-ink-2)!')}
+      >
+        <option value="">{placeholder}</option>
+        {options.map(o => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </NativeSelect>
     </div>
   );
 }
@@ -76,7 +67,8 @@ interface TaskFilterDialogProps {
 }
 
 export function TaskFilterDialog({ open, initialValues, onApply, onClose }: TaskFilterDialogProps) {
-  const [values, setValues] = useState<TaskFilterParams>(initialValues);
+  // The dialog has one date range (type + from + to); the filters hold three, so it shows the first set
+  const [values, setValues] = useState<TaskFilterParams>(() => toLegacyRange(initialValues));
   const PURPOSE_TYPE_OPTIONS = useParameterOptions('AppraisalPurpose')
     .filter(o => !!o.isActive)
     .map(o => ({
@@ -89,7 +81,7 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
   }));
 
   useEffect(() => {
-    if (open) setValues(initialValues);
+    if (open) setValues(toLegacyRange(initialValues));
   }, [open, initialValues]);
 
   const handleClear = () => setValues({});
@@ -144,14 +136,14 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
           />
         </section>
 
-        <div className="border-t border-gray-100" />
+        <div className="border-t border-(--palette-line-soft)" />
 
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+            <h3 className="text-xs font-semibold text-(--palette-gray-600) uppercase tracking-wide">
               Date Range
               {selectedDateTypeLabel && (
-                <span className="ml-2 normal-case tracking-normal text-gray-400 font-normal">
+                <span className="ml-2 normal-case tracking-normal text-(--palette-gray-400) font-normal">
                   · {selectedDateTypeLabel}
                 </span>
               )}
@@ -167,7 +159,7 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
                     dateTo: undefined,
                   }))
                 }
-                className="text-xs text-gray-500 hover:text-gray-700 inline-flex items-center gap-1"
+                className="text-xs text-(--palette-gray-500) hover:text-(--palette-ink) inline-flex items-center gap-1"
               >
                 <Icon style="regular" name="xmark" className="size-3" />
                 Clear dates
@@ -184,14 +176,14 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
               }
             />
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">From</label>
+              <label className="block text-xs font-medium text-(--palette-ink) mb-1">From</label>
               <DateInput
                 value={values.dateFrom ?? null}
                 onChange={val => setValues(v => ({ ...v, dateFrom: val ?? undefined }))}
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">To</label>
+              <label className="block text-xs font-medium text-(--palette-ink) mb-1">To</label>
               <DateInput
                 value={values.dateTo ?? null}
                 onChange={val => setValues(v => ({ ...v, dateTo: val ?? undefined }))}
@@ -200,7 +192,7 @@ export function TaskFilterDialog({ open, initialValues, onApply, onClose }: Task
           </div>
         </section>
 
-        <div className="flex justify-end gap-2 pt-4 border-t border-gray-100">
+        <div className="flex justify-end gap-2 pt-4 border-t border-(--palette-line-soft)">
           <Button variant="outline" size="sm" onClick={onClose}>
             Cancel
           </Button>

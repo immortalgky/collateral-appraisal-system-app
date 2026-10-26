@@ -1,10 +1,14 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import Icon from '@/shared/components/Icon';
+import Badge from '@/shared/components/Badge';
 import Button from '@/shared/components/Button';
+import Input from '@/shared/components/Input';
+import FormCard from '@/shared/components/sections/FormCard';
+import Textarea from '@/shared/components/inputs/Textarea';
 import DateTimePickerInput from '@/shared/components/inputs/DateTimePickerInput';
 import NumberInput from '@/shared/components/inputs/NumberInput';
 import { useGetAppraisalQuotations, useGetEligibleCompanies } from '../api/administration';
@@ -20,6 +24,8 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { QuotationStatus } from '../types/administration';
 import type {
   AppraisalSummaryDto,
+  CompanyQuotationDto,
+  InvitedCompanyDto,
   SharedDocumentSelectionDto,
 } from '@/features/quotation/schemas/quotation';
 import QuotationStatusBadge from '@/features/quotation/components/QuotationStatusBadge';
@@ -28,10 +34,27 @@ import ShortlistSentPanel from '@/features/quotation/components/ShortlistSentPan
 import NegotiationPanel from '@/features/quotation/components/NegotiationPanel';
 import RejectTentativeModal from '@/features/quotation/components/RejectTentativeModal';
 import FinalizeModal from '@/features/quotation/components/FinalizeModal';
+import { isStandaloneQuotation } from '@/features/quotation/utils/isStandaloneQuotation';
+import {
+  newestQuotation,
+  pickShownQuotation,
+} from '@/features/quotation/utils/pickActiveQuotation';
 import NegotiationModal from '@/features/quotation/components/NegotiationModal';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import AppraisalsPopover from '@/features/quotation/components/AppraisalsPopover';
 import InvitedCompaniesPopover from '@/features/quotation/components/InvitedCompaniesPopover';
+import {
+  MissingSegmentsBadge,
+  SegmentChips,
+  SegmentGapsAlert,
+} from '@/features/quotation/components/SegmentBadges';
+import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
+import { useCoveringCompanySearch } from '@/features/quotation/hooks/useCoveringCompanySearch';
+import {
+  getMissingSegments,
+  getSegmentGaps,
+  isSegmentCoverageMismatch,
+} from '@/features/quotation/utils/segmentCoverage';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Modal from '@/shared/components/Modal';
 import EmailCompositionModal from '@/shared/components/EmailCompositionModal';
@@ -39,9 +62,12 @@ import type { EmailFormValues } from '@/shared/schemas/email';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
 import { useAuthStore } from '@/features/auth/store';
+import { formatDate, formatLocaleDate, formatLocaleDateTime } from '@/shared/utils/dateUtils';
+import { formatCurrency } from '@/shared/utils/formatUtils';
 import { sortCompanyResponses } from '@/features/quotation/utils/sortCompanyResponses';
 import { Link } from 'react-router-dom';
-import { QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
+import { MAX_NEGOTIATION_ROUNDS, QUOTATION_SELECTION_ROLES } from '@/features/quotation/constants';
+import { sumQuotationItems } from '@/features/quotation/utils/sumQuotationItems';
 import { hasRoleOrPermission } from '@/shared/utils/accessControl';
 import {
   buildQuotationEmailHtml,
@@ -49,6 +75,158 @@ import {
   formatQuotationSubjectCustomerLabel,
   TABLE_ROW_THRESHOLD,
 } from '@/features/quotation/utils/quotationEmailTemplate';
+
+// ─── Shared bits ──────────────────────────────────────────────────────────────
+
+const fmtCurrency = (v?: number | null) => (v != null ? formatCurrency(v) : '—');
+
+/** Date (follows the language's calendar, like the cut-off) + HH:mm, split so the table can stack
+    them; null for a missing/unparsable date. */
+const splitDateTime = (iso: string | null | undefined, language: string | undefined) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  return { date: formatLocaleDate(d, language), time: formatDate(d, 'HH:mm') };
+};
+
+const Dash = () => <span className="text-(--palette-gray-400)">—</span>;
+
+/** Row of equal stat cells; each cell may carry an info popover next to its label. */
+const StatStrip = ({ children }: { children: ReactNode }) => (
+  <div className="grid grid-cols-3 divide-x divide-(--palette-line-soft) overflow-hidden rounded-xl border border-(--palette-line-soft)">
+    {children}
+  </div>
+);
+
+const Stat = ({
+  label,
+  warn = false,
+  children,
+}: {
+  label: ReactNode;
+  /** Amber value: a required figure that is still missing/zero. */
+  warn?: boolean;
+  children: ReactNode;
+}) => (
+  <div className="min-w-0 px-3 py-2">
+    <div className="flex items-center gap-1 text-xs text-(--palette-gray-500)">{label}</div>
+    <div
+      className={clsx(
+        'text-sm font-semibold',
+        warn ? 'text-amber-600 dark:text-amber-400' : 'text-(--palette-ink)',
+      )}
+    >
+      {children}
+    </div>
+  </div>
+);
+
+/** A company with no CompanyQuotation, or one still on the company's side (its own draft or
+    internal maker/checker review), has not replied to the bank: dashes and a neutral badge, never
+    the internal state. */
+const NOT_REPLIED_STATUSES = ['Draft', 'Pending', 'PendingCheckerReview'];
+
+interface ResponsesTableProps {
+  invitedCompanies: InvitedCompanyDto[];
+  companyQuotations: CompanyQuotationDto[];
+}
+
+/** Sent: one row per invited company. Figures of a company that has not replied are "—", never 0.00. */
+const ResponsesTable = ({ invitedCompanies, companyQuotations }: ResponsesTableProps) => {
+  const { t, i18n } = useTranslation(['appraisal', 'quotation']);
+  const localizeCompanyName = useLocalizedCompanyName();
+  const th =
+    'bg-(--palette-surface-2) border-b border-(--palette-line) px-2 py-2 align-bottom text-xs font-semibold text-(--palette-gray-600)';
+  const td = 'border-b border-(--palette-line-soft) px-2 py-2 align-middle';
+
+  return (
+    <div className="overflow-x-auto rounded-lg border border-(--palette-line)">
+      <table className="w-full min-w-[40rem] text-sm tabular-nums">
+        <thead>
+          <tr>
+            <th className={clsx(th, 'text-left')}>{t('quotation.table.company')}</th>
+            <th className={clsx(th, 'text-right')}>{t('quotation.table.totalFeeAmount')}</th>
+            <th className={clsx(th, 'text-right')}>{t('quotation.table.totalDiscount')}</th>
+            <th className={clsx(th, 'text-right')}>{t('quotation.table.totalNetAmount')}</th>
+            <th className={clsx(th, 'text-right')}>{t('quotation.table.totalEstimateManday')}</th>
+            <th className={clsx(th, 'text-left')}>{t('quotation.table.submittedAt')}</th>
+            <th className={clsx(th, 'text-left')}>{t('quotation.table.status')}</th>
+          </tr>
+        </thead>
+        <tbody className="[&_tr:last-child_td]:border-b-0">
+          {invitedCompanies.map(inv => {
+            const cq = companyQuotations.find(q => q.companyId === inv.companyId);
+            const replied = cq !== undefined && !NOT_REPLIED_STATUSES.includes(cq.status);
+            // Items of a company that has not replied count as none, so "has items" already says
+            // "replied": Total fee and Discount show a figure only then, never a made-up 0.00.
+            const items = (replied ? cq?.items : undefined) ?? [];
+            const { totalFeeAmount, totalDiscount } = sumQuotationItems(items);
+            const days = items
+              .map(item => item.estimatedDays)
+              .filter((d): d is number => typeof d === 'number' && d > 0);
+            const minDays = days.length ? Math.min(...days) : undefined;
+            const maxDays = days.length ? Math.max(...days) : undefined;
+            const hasQuote = replied && (items.length > 0 || (cq?.totalQuotedPrice ?? 0) > 0);
+            const submitted = replied ? splitDateTime(cq?.submittedAt, i18n.language) : null;
+            const companyName = localizeCompanyName(inv.companyName, inv.companyNameLocal);
+
+            return (
+              <tr key={inv.companyId} className="hover:bg-(--palette-surface-2)">
+                <td className={td}>
+                  <div
+                    className="max-w-[14rem] truncate font-medium text-(--palette-ink)"
+                    title={companyName}
+                  >
+                    {companyName}
+                  </div>
+                </td>
+                <td className={clsx(td, 'text-right')}>
+                  {items.length > 0 ? fmtCurrency(totalFeeAmount) : <Dash />}
+                </td>
+                <td className={clsx(td, 'text-right')}>
+                  {items.length > 0 ? fmtCurrency(totalDiscount) : <Dash />}
+                </td>
+                <td className={clsx(td, 'text-right font-semibold text-(--palette-ink)')}>
+                  {hasQuote ? fmtCurrency(cq?.totalQuotedPrice) : <Dash />}
+                </td>
+                <td className={clsx(td, 'text-right')}>
+                  {minDays !== undefined && maxDays !== undefined ? (
+                    minDays === maxDays ? (
+                      minDays
+                    ) : (
+                      `${minDays} - ${maxDays}`
+                    )
+                  ) : (
+                    <Dash />
+                  )}
+                </td>
+                <td className={td}>
+                  {submitted ? (
+                    <>
+                      <div>{submitted.date}</div>
+                      <div className="text-xs text-(--palette-gray-400)">{submitted.time}</div>
+                    </>
+                  ) : (
+                    <Dash />
+                  )}
+                </td>
+                <td className={td}>
+                  {replied && cq ? (
+                    <QuotationStatusBadge status={cq.status} className="whitespace-nowrap" />
+                  ) : (
+                    <Badge tone="gray" dot={false} className="whitespace-nowrap">
+                      {t('quotation:vendorStatus.Pending')}
+                    </Badge>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+};
 
 // ─── ShareDocumentsStep ───────────────────────────────────────────────────────
 
@@ -88,7 +266,7 @@ const ShareDocumentsStep = ({
 
   if (appraisals.length === 0) {
     return (
-      <p className="text-sm text-gray-500 py-4 text-center">
+      <p className="text-sm text-(--palette-gray-500) py-4 text-center">
         {t('quotation.shareDocuments.noAppraisals')}
       </p>
     );
@@ -97,7 +275,7 @@ const ShareDocumentsStep = ({
   return (
     <div className="flex flex-col gap-0">
       {/* Tab bar */}
-      <div className="flex border-b border-gray-200 overflow-x-auto shrink-0">
+      <div className="flex border-b border-(--palette-line) overflow-x-auto shrink-0">
         {appraisals.map((ap, idx) => {
           const apSelection = selections[ap.appraisalId] ?? {};
           const hasNoDocs = noDocsAppraisalIds.has(ap.appraisalId);
@@ -110,16 +288,16 @@ const ShareDocumentsStep = ({
               className={clsx(
                 'flex items-center gap-1.5 px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
                 activeTabIdx === idx
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
+                  ? 'border-primary text-(--palette-primary-text)'
+                  : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink) hover:border-(--palette-line-strong)',
               )}
             >
               {hasNoDocs ? (
-                <Icon name="circle-minus" style="solid" className="size-3 text-gray-300" />
+                <Icon name="circle-minus" style="solid" className="text-(--palette-gray-300)" />
               ) : covered ? (
-                <Icon name="circle-check" style="solid" className="size-3 text-green-500" />
+                <Icon name="circle-check" style="solid" className="text-green-500" />
               ) : (
-                <Icon name="triangle-exclamation" style="solid" className="size-3 text-amber-400" />
+                <Icon name="triangle-exclamation" style="solid" className="text-amber-400" />
               )}
               {ap.appraisalNumber ?? ap.appraisalId.slice(0, 8)}
             </button>
@@ -173,8 +351,8 @@ const AppraisalDocTab = ({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-6 px-3 text-xs text-gray-400">
-        <Icon name="spinner" style="solid" className="size-3.5 animate-spin" />
+      <div className="flex items-center gap-2 py-6 px-3 text-xs text-(--palette-gray-400)">
+        <Icon name="spinner" style="solid" className="animate-spin" />
         {t('quotation.shareDocuments.loadingDocuments')}
       </div>
     );
@@ -182,8 +360,8 @@ const AppraisalDocTab = ({
 
   if (!appraisal.requestId) {
     return (
-      <div className="px-3 py-4 text-xs text-amber-600 flex items-center gap-1.5">
-        <Icon name="triangle-exclamation" style="solid" className="size-3.5 shrink-0" />
+      <div className="px-3 py-4 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+        <Icon name="triangle-exclamation" style="solid" className="shrink-0" />
         {t('quotation.shareDocuments.noRequestLinked')}
       </div>
     );
@@ -191,14 +369,14 @@ const AppraisalDocTab = ({
 
   if (!hasAnyUploadedDocs) {
     return (
-      <div className="px-3 py-4 text-xs text-gray-400">
+      <div className="px-3 py-4 text-xs text-(--palette-gray-400)">
         {t('quotation.shareDocuments.noDocuments')}
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col gap-0 divide-y divide-gray-100 max-h-[320px] overflow-y-auto">
+    <div className="flex flex-col gap-0 divide-y divide-(--palette-line-soft) max-h-80 overflow-y-auto">
       {sections.map((section, sIdx) => {
         const level: SharedDocumentSelectionDto['level'] =
           section.titleId == null ? 'RequestLevel' : 'TitleLevel';
@@ -215,7 +393,7 @@ const AppraisalDocTab = ({
         return (
           <div key={sIdx} className="px-3 py-2">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">
+              <span className="text-xs font-medium text-(--palette-gray-500)">
                 {section.sectionLabel}
               </span>
               <label className="flex items-center gap-1.5 cursor-pointer">
@@ -223,9 +401,9 @@ const AppraisalDocTab = ({
                   type="checkbox"
                   checked={allSelected}
                   onChange={e => handleSelectAll(e.target.checked)}
-                  className="size-3 accent-primary rounded"
+                  className="size-3.5 accent-primary rounded"
                 />
-                <span className="text-[10px] text-gray-500">
+                <span className="text-xs text-(--palette-gray-500)">
                   {t('quotation.shareDocuments.selectAll')}
                 </span>
               </label>
@@ -244,10 +422,10 @@ const AppraisalDocTab = ({
                     }
                     className="size-3.5 accent-primary rounded shrink-0"
                   />
-                  <span className="text-xs text-gray-800 truncate group-hover:text-primary">
+                  <span className="text-xs text-(--palette-ink) truncate group-hover:text-(--palette-primary-text)">
                     {doc.fileName ?? doc.documentId}
                     {doc.documentTypeName && (
-                      <span className="text-gray-400"> ({doc.documentTypeName})</span>
+                      <span className="text-(--palette-gray-400)"> ({doc.documentTypeName})</span>
                     )}
                   </span>
                 </label>
@@ -263,8 +441,14 @@ const AppraisalDocTab = ({
 // ─── EditDraftForm ────────────────────────────────────────────────────────────
 // TODO: extract the company-picker JSX into a shared component when time permits.
 
+const EMPTY_SEGMENT_SET: string[] = [];
+const EMPTY_INVITED: InvitedCompanyDto[] = [];
+
 interface EditDraftFormProps {
-  bankingSegment: string | undefined;
+  /** The draft's Segment Set; only companies covering every segment in it are listed. */
+  segmentSet: ReadonlyArray<string>;
+  /** Currently invited companies, with the server's coverage gaps; fallback for `missingFor`. */
+  invitedCompanies: ReadonlyArray<Pick<InvitedCompanyDto, 'companyId' | 'missingSegments'>>;
   editDueDate: string | null;
   onDueDateChange: (v: string | null) => void;
   editCompanyIds: Set<string>;
@@ -280,7 +464,8 @@ interface EditDraftFormProps {
 }
 
 const EditDraftForm = ({
-  bankingSegment,
+  segmentSet,
+  invitedCompanies,
   editDueDate,
   onDueDateChange,
   editCompanyIds,
@@ -294,12 +479,16 @@ const EditDraftForm = ({
   editSpecialRequirements,
   onEditSpecialRequirementsChange,
 }: EditDraftFormProps) => {
-  const { t } = useTranslation(['appraisal', 'common']);
+  const { t } = useTranslation(['appraisal', 'quotation', 'common']);
   const localizeCompanyName = useLocalizedCompanyName();
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
-    bankingSegment,
-    true,
-  );
+  const segmentLabel = useSegmentLabel();
+  // Unfiltered: the draft can hold several segments, so coverage is checked client-side against the
+  // whole Segment Set (same as EditDraftQuotationModal). The API's Send guard is authoritative.
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompanies,
+    isError: isCompaniesError,
+  } = useGetEligibleCompanies(undefined, true, false);
 
   const allCompanies = useMemo(
     () =>
@@ -307,20 +496,24 @@ const EditDraftForm = ({
         id: c.id,
         companyName: c.companyName,
         companyNameLocal: c.companyNameLocal,
+        loanTypes: c.loanTypes ?? [],
       })),
     [rawCompanies],
   );
 
-  const filteredCompanies = useMemo(() => {
-    const q = editSearchQuery.toLowerCase().trim();
-    return q
-      ? allCompanies.filter(
-          c =>
-            c.companyName.toLowerCase().includes(q) ||
-            c.companyNameLocal?.toLowerCase().includes(q),
-        )
-      : allCompanies;
-  }, [allCompanies, editSearchQuery]);
+  const { filtered: filteredCompanies, noCoverage } = useCoveringCompanySearch(
+    allCompanies,
+    segmentSet,
+    editSearchQuery,
+  );
+
+  // Segments an already-chosen company lacks. Falls back to the server's per-company gaps when the
+  // company is not in the eligible list (e.g. it was deactivated since it was invited).
+  const missingFor = (companyId: string) => {
+    const company = allCompanies.find(c => c.id === companyId);
+    if (company) return getMissingSegments(segmentSet, company.loanTypes);
+    return invitedCompanies.find(c => c.companyId === companyId)?.missingSegments ?? [];
+  };
 
   const handleToggleCompany = (company: {
     id: string;
@@ -353,13 +546,13 @@ const EditDraftForm = ({
   };
 
   return (
-    <div className="px-4 py-3 flex flex-col gap-4 text-sm text-gray-600">
+    <div className="flex flex-col gap-4 rounded-xl border border-(--palette-line-soft) p-4 text-sm text-(--palette-gray-600)">
       {/* Max Appraisal Duration — editable for this appraisal only */}
-      <div>
+      <div className="max-w-xs">
         <NumberInput
           label={t('quotation.maxAppraisalDuration')}
           helperText={t('quotation.editDraft.maxAppraisalDurationHelper')}
-          placeholder="e.g. 7"
+          placeholder={t('quotation:picker.maxDaysPlaceholder')}
           value={editMaxAppraisalDays}
           decimalPlaces={0}
           thousandSeparator={false}
@@ -371,11 +564,12 @@ const EditDraftForm = ({
 
       {/* Companies Invited — editable multiselect */}
       <div className="flex flex-col gap-2">
-        <div className="text-xs font-medium text-gray-700">
+        <div className="text-xs font-medium text-(--palette-ink)">
           {t('quotation.editDraft.companiesInvited')}
-          {bankingSegment && (
-            <span className="ml-1.5 text-purple-600 font-normal">
-              ({t('quotation.editDraft.eligibleFor')} <strong>{bankingSegment}</strong>)
+          {segmentSet.length > 0 && (
+            <span className="ml-1.5 text-purple-600 dark:text-purple-400 font-normal">
+              ({t('quotation.editDraft.eligibleFor')}{' '}
+              <strong>{segmentSet.map(segmentLabel).join(', ')}</strong>)
             </span>
           )}
         </div>
@@ -386,16 +580,20 @@ const EditDraftForm = ({
             {Array.from(editCompanyIds).map(id => (
               <div
                 key={id}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 text-purple-700 rounded-full text-xs"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-xs"
               >
-                <Icon name="building" style="solid" className="size-3" />
+                <Icon name="building" style="solid" />
                 <span className="font-medium">{editCompanyNames[id] ?? id.slice(0, 8)}</span>
+                <MissingSegmentsBadge missing={missingFor(id)} />
                 <button
                   type="button"
                   onClick={() => handleRemoveChip(id)}
-                  className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                  aria-label={t('quotation:section.removeCompany', {
+                    company: editCompanyNames[id] ?? id.slice(0, 8),
+                  })}
+                  className="p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-500/30 transition-colors"
                 >
-                  <Icon name="xmark" style="solid" className="size-2.5" />
+                  <Icon name="xmark" style="solid" />
                 </button>
               </div>
             ))}
@@ -403,82 +601,78 @@ const EditDraftForm = ({
         )}
 
         {/* Company list picker */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="p-2 border-b border-gray-100">
-            <div className="relative">
-              <Icon
-                name="magnifying-glass"
-                style="regular"
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
-              />
-              <input
-                type="text"
-                placeholder={t('quotation.editDraft.companySearchPlaceholder')}
-                value={editSearchQuery}
-                onChange={e => onEditSearchQueryChange(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs border-0 focus:ring-0 outline-none"
-              />
+        <Input
+          type="text"
+          placeholder={t('quotation.editDraft.companySearchPlaceholder')}
+          value={editSearchQuery}
+          onChange={e => onEditSearchQueryChange(e.target.value)}
+          leftIcon={<Icon name="magnifying-glass" style="regular" className="size-3.5!" />}
+        />
+        <div className="max-h-36 overflow-y-auto rounded-lg border border-(--palette-line)">
+          {isLoadingCompanies ? (
+            <div className="px-4 py-4 text-center text-(--palette-gray-500)">
+              <Icon name="spinner" style="solid" className="animate-spin mx-auto mb-1" />
+              <span className="text-xs">{t('common:status.loading')}</span>
             </div>
-          </div>
-          <div className="max-h-36 overflow-y-auto">
-            {isLoadingCompanies ? (
-              <div className="px-4 py-4 text-center text-gray-500">
-                <Icon name="spinner" style="solid" className="size-3.5 animate-spin mx-auto mb-1" />
-                <span className="text-xs">{t('common:status.loading')}</span>
-              </div>
-            ) : filteredCompanies.length === 0 ? (
-              <div className="px-4 py-4 text-center text-gray-500 text-xs">
-                {bankingSegment
-                  ? t('quotation.editDraft.noEligibleCompanies')
+          ) : filteredCompanies.length === 0 ? (
+            <div className="px-4 py-4 text-center text-(--palette-gray-500) text-xs">
+              {isCompaniesError
+                ? t('quotation.editDraft.failedToLoadCompanies')
+                : noCoverage
+                  ? t('quotation.editDraft.noCoveringCompanies')
                   : t('quotation.editDraft.noCompaniesFound')}
-              </div>
-            ) : (
-              <div className="divide-y divide-gray-100">
-                {filteredCompanies.map(company => {
-                  const isSelected = editCompanyIds.has(company.id);
-                  return (
-                    <button
-                      key={company.id}
-                      type="button"
-                      onClick={() => handleToggleCompany(company)}
+            </div>
+          ) : (
+            <div className="divide-y divide-(--palette-line-soft)">
+              {filteredCompanies.map(company => {
+                const isSelected = editCompanyIds.has(company.id);
+                return (
+                  <button
+                    key={company.id}
+                    type="button"
+                    onClick={() => handleToggleCompany(company)}
+                    className={clsx(
+                      'w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors',
+                      isSelected
+                        ? 'bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
+                        : 'hover:bg-(--palette-surface-2)',
+                    )}
+                  >
+                    <div
                       className={clsx(
-                        'w-full flex items-center gap-2.5 px-3 py-2 text-left text-xs transition-colors',
-                        isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                        'size-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
+                        isSelected
+                          ? 'bg-purple-500 border-purple-500'
+                          : 'border-(--palette-line-strong) bg-(--palette-surface)',
                       )}
                     >
-                      <div
-                        className={clsx(
-                          'size-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                          isSelected
-                            ? 'bg-purple-500 border-purple-500'
-                            : 'border-gray-300 bg-white',
-                        )}
-                      >
-                        {isSelected && (
-                          <Icon name="check" style="solid" className="size-2.5 text-white" />
-                        )}
-                      </div>
-                      <div className="size-6 rounded bg-purple-100 flex items-center justify-center shrink-0">
-                        <Icon name="building" style="solid" className="size-3 text-purple-600" />
-                      </div>
-                      <span className="flex-1 truncate text-gray-900">
-                        {localizeCompanyName(company.companyName, company.companyNameLocal)}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                      {isSelected && <Icon name="check" style="solid" className="text-white" />}
+                    </div>
+                    <div className="size-6 rounded bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0">
+                      <Icon
+                        name="building"
+                        style="solid"
+                        className="text-purple-600 dark:text-purple-400"
+                      />
+                    </div>
+                    <span className="flex-1 truncate text-(--palette-ink)">
+                      {localizeCompanyName(company.companyName, company.companyNameLocal)}
+                    </span>
+                    <SegmentChips segments={company.loanTypes} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Cut Off Time — editable */}
-      <div>
+      <div className="max-w-xs">
         <DateTimePickerInput
           label={t('quotation.editDraft.cutOffTime')}
           required
-          placeholder="dd/mm/yyyy hh:mm"
+          placeholder={t('quotation:section.dateTimePlaceholder')}
           value={editDueDate}
           onChange={onDueDateChange}
           disablePastDates
@@ -486,19 +680,15 @@ const EditDraftForm = ({
       </div>
 
       {/* Special Requirements — quotation-level, editable */}
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-medium text-gray-700">
-          {t('quotation.specialRequirements')}
-        </label>
-        <textarea
-          value={editSpecialRequirements}
-          onChange={e => onEditSpecialRequirementsChange(e.target.value)}
-          rows={3}
-          maxLength={500}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
-        />
-        <p className="text-xs text-gray-400 text-right">{editSpecialRequirements.length}/500</p>
-      </div>
+      <Textarea
+        label={t('quotation.specialRequirements')}
+        value={editSpecialRequirements}
+        onChange={e => onEditSpecialRequirementsChange(e.target.value)}
+        rows={3}
+        maxLength={500}
+        showCharCount
+        className="min-h-20! resize-none!"
+      />
     </div>
   );
 };
@@ -531,13 +721,26 @@ interface QuotationSectionProps {
   onCreateNew: () => void;
   /** @deprecated The "add to existing" flow is not used in the IBG quotation model. */
   onAddToExisting?: () => void;
+  /**
+   * Offer "assign every appraisal right after finalize" in the Finalize dialog (standalone
+   * quotations only). The Administration page passes false: the admin has this appraisal's
+   * appraisal-assignment task open there, and auto-assign would resume that same task.
+   */
+  allowAutoAssign?: boolean;
 }
 
 type SendStep = 'confirm' | 'share-docs';
 
-const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) => {
+/** Action row under a card's content: top rule, buttons wrap on a narrow column. */
+const ACTION_ROW = 'flex flex-wrap items-center gap-2 border-t border-(--palette-line-soft) pt-3';
+
+const QuotationSection = ({
+  appraisalId,
+  onCreateNew,
+  allowAutoAssign = true,
+}: QuotationSectionProps) => {
   const readOnly = usePageReadOnly();
-  const { t, i18n } = useTranslation('appraisal');
+  const { t, i18n } = useTranslation(['appraisal', 'quotation']);
   const localizeCompanyName = useLocalizedCompanyName();
   const currentUser = useAuthStore(s => s.user);
   const canOpenQuotation = hasRoleOrPermission(currentUser, QUOTATION_SELECTION_ROLES);
@@ -604,11 +807,15 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
   const { data: quotations = [], isLoading: isLoadingList } =
     useGetAppraisalQuotations(appraisalId);
 
-  // If there's an active quotation, fetch its detail (with company submissions)
-  const activeQuotation = quotations[0] ?? null;
-  const { data: quotationDetail, isLoading: isLoadingDetail } = useGetQuotationById(
-    activeQuotation?.id ?? null,
-  );
+  // The quotation this section shows (shared rule with the Administration page, see
+  // pickShownQuotation): so card and lock banner never disagree. A Cancelled quotation newer than
+  // the shown Finalized one is noted under the Finalized card (with "new quotation").
+  const activeQuotation = pickShownQuotation(quotations) ?? null;
+  const {
+    data: quotationDetail,
+    isLoading: isLoadingDetail,
+    isError: isDetailError,
+  } = useGetQuotationById(activeQuotation?.id ?? null);
   const { mutate: sendQuotation, isPending: isSending } = useSendQuotation(
     activeQuotation?.id ?? '',
   );
@@ -650,9 +857,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const distinctCustomerNames = [
       ...new Set(appraisals.map(a => a.customerName).filter((n): n is string => Boolean(n))),
     ];
-    const appraisalNumbers = appraisals
-      .map(a => a.appraisalNumber ?? '')
-      .filter(Boolean);
+    const appraisalNumbers = appraisals.map(a => a.appraisalNumber ?? '').filter(Boolean);
 
     const targetTime = cutOffTime
       ? cutOffTime.toLocaleTimeString('th-TH', {
@@ -749,153 +954,143 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   const isLoading = isLoadingList || (!!activeQuotation && isLoadingDetail);
 
-  const formatDateTime = (dateString: string) => {
-    const d = new Date(dateString);
-    // Thai locale → Buddhist calendar ("25 เม.ย. 2569 00:00"); otherwise dd/MM/yyyy HH:mm.
-    if (i18n.language?.startsWith('th')) {
-      return d.toLocaleString('th-TH', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      });
-    }
-    const dd = String(d.getDate()).padStart(2, '0');
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const yyyy = d.getFullYear();
-    const hh = String(d.getHours()).padStart(2, '0');
-    const min = String(d.getMinutes()).padStart(2, '0');
-    return `${dd}/${mm}/${yyyy} ${hh}:${min}`;
-  };
+  // Thai → Buddhist calendar ("25 เม.ย. 2569 00:00"); otherwise dd/MM/yyyy HH:mm.
+  const formatDateTime = (dateString: string) => formatLocaleDateTime(dateString, i18n.language);
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-        <div className="px-4 py-8 text-center">
-          <Icon
-            name="spinner"
-            style="solid"
-            className="size-5 animate-spin text-gray-400 mx-auto mb-2"
-          />
-          <p className="text-sm text-gray-500">{t('quotation.loading')}</p>
+      <FormCard title={t('quotation.sectionTitle')}>
+        <div className="flex items-center gap-2 text-sm text-(--palette-gray-500)">
+          <Icon name="spinner" style="solid" className="animate-spin text-(--palette-gray-400)" />
+          {t('quotation.loading')}
         </div>
-      </div>
+      </FormCard>
     );
   }
 
   // ── No quotation yet ──────────────────────────────────────────────────────
   if (!activeQuotation) {
     return (
-      <div className="bg-white rounded-xl border border-dashed border-purple-300 overflow-hidden">
-        <div className="flex flex-col items-center justify-center py-10 gap-3">
-          <div className="size-12 rounded-xl bg-purple-100 flex items-center justify-center">
-            <Icon name="file-invoice-dollar" style="solid" className="size-6 text-purple-500" />
-          </div>
-          <div className="text-center">
-            <p className="text-sm font-medium text-gray-700">{t('quotation.noQuotation')}</p>
-            <p className="text-xs text-gray-500 mt-0.5">{t('quotation.noQuotationHint')}</p>
+      <FormCard title={t('quotation.sectionTitle')}>
+        <div className="flex flex-col items-start gap-3">
+          <div className="w-full rounded-lg border border-dashed border-(--palette-line-strong) bg-(--palette-surface-2) px-3 py-2">
+            <p className="text-sm font-medium text-(--palette-ink)">{t('quotation.noQuotation')}</p>
+            <p className="text-xs text-(--palette-gray-500)">{t('quotation.noQuotationHint')}</p>
           </div>
           {!readOnly && (
-            <Button onClick={onCreateNew} size="sm">
-              <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
+            <Button
+              onClick={onCreateNew}
+              size="sm"
+              leftIcon={<Icon name="file-circle-plus" style="solid" />}
+            >
               {t('quotation.requestQuotation')}
             </Button>
           )}
         </div>
-      </div>
+      </FormCard>
     );
   }
 
   const status = (quotationDetail?.status ?? activeQuotation.status) as QuotationStatus | string;
 
-  /** Quotation-number label, wrapped in the nav-to-quotation link when permitted.
-      Every status branch below renders this with the same canNavigate/quotationId. */
-  const renderQuotationNumber = (className: string) => (
-    <NavToQuotationScreen canNavigate={canOpenQuotation} quotationId={activeQuotation.id}>
-      <span className={clsx(className, 'group-hover:text-blue-400 transition-colors')}>
-        {activeQuotation.quotationNumber}
-      </span>
-    </NavToQuotationScreen>
+  /** Card header's right side, identical for every status: quotation number (a link when the user
+      may open it) and the status badge. */
+  const headerMeta = (
+    <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-1">
+      <NavToQuotationScreen canNavigate={canOpenQuotation} quotationId={activeQuotation.id}>
+        <span
+          className={clsx(
+            'text-sm font-semibold',
+            canOpenQuotation
+              ? 'text-(--palette-primary-text) group-hover:underline'
+              : 'text-(--palette-ink)',
+          )}
+        >
+          {activeQuotation.quotationNumber}
+        </span>
+      </NavToQuotationScreen>
+      <QuotationStatusBadge status={status} />
+    </div>
   );
 
-  /** Cancel Quotation footer + modal — rendered in every non-terminal, non-Draft branch.
-      Draft auto-cancels via last-appraisal-removal so it gets the Remove button instead;
+  const renderFrame = (children: ReactNode, title: string = t('quotation.sectionTitle')) => (
+    <FormCard title={title} rightIcon={headerMeta}>
+      <div className="flex flex-col gap-3">{children}</div>
+    </FormCard>
+  );
+
+  /** Detail not available (request failed): header stays, body says why. */
+  const renderDetailMissing = () =>
+    renderFrame(
+      <p className="text-xs text-(--palette-gray-500)">{t('quotation.loadDetailFailed')}</p>,
+    );
+
+  /** Cancel Quotation link + modal — used in every non-terminal, non-Draft branch.
+      Draft auto-cancels via last-appraisal-removal so it gets the Remove link instead;
       Finalized/Cancelled are terminal so the action is hidden. */
   const closeCancelModal = () => {
     setShowCancelConfirm(false);
     setCancelReason('');
   };
-  const renderCancelFooter = () => (
-    <>
-      {!readOnly && (
-        <div className="flex justify-end pt-1">
-          <button
-            type="button"
-            onClick={() => setShowCancelConfirm(true)}
-            disabled={isCancelling}
-            className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
+  const cancelLink = (
+    <button
+      type="button"
+      onClick={() => setShowCancelConfirm(true)}
+      disabled={isCancelling}
+      className="inline-flex items-center gap-1 text-xs font-medium text-danger hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+    >
+      <Icon name="ban" style="solid" />
+      {t('quotation.cancelQuotation')}
+    </button>
+  );
+  /** Cancel link on a row of its own (statuses that have no other action row). */
+  const renderCancelRow = () =>
+    !readOnly && <div className={clsx(ACTION_ROW, 'justify-end')}>{cancelLink}</div>;
+  const cancelModal = (
+    <Modal
+      isOpen={showCancelConfirm}
+      onClose={closeCancelModal}
+      title={t('quotation.cancelQuotationTitle')}
+      size="sm"
+    >
+      <div className="flex flex-col gap-4">
+        <div className="p-3 bg-(--palette-req-wash) rounded-lg border border-red-100 dark:border-red-500/20 flex items-start gap-2">
+          <Icon
+            name="triangle-exclamation"
+            style="solid"
+            className="text-red-500 shrink-0 mt-0.5"
+          />
+          <p className="text-sm text-(--palette-req)">
+            {t('quotation.cancelConfirmMessage', {
+              quotationNumber: activeQuotation.quotationNumber,
+            })}
+          </p>
+        </div>
+        <Textarea
+          label={`${t('quotation.cancelReasonLabel')} ${t('quotation.cancelReasonOptional')}`}
+          rows={3}
+          maxLength={500}
+          showCharCount
+          value={cancelReason}
+          onChange={e => setCancelReason(e.target.value)}
+          placeholder={t('quotation.cancelReasonPlaceholder')}
+          className="min-h-20! resize-none!"
+        />
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={closeCancelModal} disabled={isCancelling}>
+            {t('quotation.goBack')}
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleConfirmCancelQuotation}
+            isLoading={isCancelling}
+            leftIcon={<Icon name="ban" style="solid" />}
           >
-            <Icon name="ban" style="solid" className="size-3" />
-            {t('quotation.cancelQuotation')}
-          </button>
+            {isCancelling ? t('quotation.cancelling') : t('quotation.cancelQuotation')}
+          </Button>
         </div>
-      )}
-      <Modal
-        isOpen={showCancelConfirm}
-        onClose={closeCancelModal}
-        title={t('quotation.cancelQuotationTitle')}
-        size="sm"
-      >
-        <div className="flex flex-col gap-4">
-          <div className="p-3 bg-red-50 rounded-lg border border-red-100 flex items-start gap-2">
-            <Icon
-              name="triangle-exclamation"
-              style="solid"
-              className="size-4 text-red-500 shrink-0 mt-0.5"
-            />
-            <p className="text-sm text-red-700">
-              {t('quotation.cancelConfirmMessage', {
-                quotationNumber: activeQuotation.quotationNumber,
-              })}
-            </p>
-          </div>
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">
-              {t('quotation.cancelReasonLabel')}{' '}
-              <span className="text-gray-400">{t('quotation.cancelReasonOptional')}</span>
-            </label>
-            <textarea
-              rows={3}
-              maxLength={500}
-              value={cancelReason}
-              onChange={e => setCancelReason(e.target.value)}
-              placeholder={t('quotation.cancelReasonPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
-            />
-            <p className="mt-1 text-[11px] text-gray-400 text-right">{cancelReason.length}/500</p>
-          </div>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="outline" onClick={closeCancelModal} disabled={isCancelling}>
-              {t('quotation.goBack')}
-            </Button>
-            <Button variant="danger" onClick={handleConfirmCancelQuotation} disabled={isCancelling}>
-              {isCancelling ? (
-                <>
-                  <Icon name="spinner" style="solid" className="size-4 mr-2 animate-spin" />
-                  {t('quotation.cancelling')}
-                </>
-              ) : (
-                <>
-                  <Icon name="ban" style="solid" className="size-4 mr-2" />
-                  {t('quotation.cancelQuotation')}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </Modal>
-    </>
+      </div>
+    </Modal>
   );
 
   // ── Sent — countdown + company status ────────────────────────────────────
@@ -904,19 +1099,6 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
     const now = new Date();
     const hoursLeft = Math.max(0, Math.floor((cutOffTimeDate.getTime() - now.getTime()) / 36e5));
     const sentCompanyQuotations = quotationDetail?.companyQuotations ?? [];
-
-    const fmtCurrency = (v?: number | null) =>
-      v != null
-        ? new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(v)
-        : '—';
-
-    const fmtDt = (iso: string | null | undefined) => {
-      if (!iso) return '—';
-      const d = new Date(iso);
-      if (isNaN(d.getTime())) return '—';
-      const p = (n: number) => String(n).padStart(2, '0');
-      return `${p(d.getDate())}/${p(d.getMonth() + 1)}/${d.getFullYear()} ${p(d.getHours())}:${p(d.getMinutes())}`;
-    };
 
     const invitedCompanies = sortCompanyResponses(quotationDetail?.invitedCompanies ?? [], inv => {
       const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
@@ -927,191 +1109,111 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       };
     });
 
+    // Under 48h the strip turns amber, under 24h red; the countdown text only shows under 48h.
+    const stripTone =
+      hoursLeft < 24
+        ? 'border-(--palette-req-line) bg-(--palette-req-wash) text-red-800 dark:text-red-300'
+        : hoursLeft < 48
+          ? 'border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300'
+          : 'border-blue-200 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-300';
+
     return (
-      <div className="flex flex-col gap-2">
-        <div className="bg-white rounded-xl border border-purple-200 overflow-hidden">
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-                <Icon name="clock" style="solid" className="size-4 text-purple-700" />
-              </div>
-              <div>
-                {renderQuotationNumber('text-sm font-semibold text-gray-900')}
-                <QuotationStatusBadge status={status} className="ml-2" />
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-500">{t('quotation.closes')}</div>
-              <div
-                className={clsx(
-                  'text-sm font-medium',
-                  hoursLeft < 24 ? 'text-red-600' : 'text-gray-800',
-                )}
-              >
-                {formatDateTime(activeQuotation.cutOffTime)}
-              </div>
+      <>
+        {renderFrame(
+          <>
+            <div
+              className={clsx(
+                'flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-lg border px-3 py-2 text-xs',
+                stripTone,
+              )}
+            >
+              <span>
+                {t('quotation.closes')}{' '}
+                <span className="text-sm font-semibold">
+                  {formatDateTime(activeQuotation.cutOffTime)}
+                </span>
+              </span>
               {hoursLeft < 48 && (
-                <div className="text-xs text-amber-600">
+                <span className="text-sm font-semibold">
                   {t('quotation.hoursRemaining', { n: hoursLeft })}
-                </div>
+                </span>
               )}
             </div>
-          </div>
 
-          {/* Stats */}
-          <div className="px-4 py-3 text-sm text-gray-600 border-b border-gray-100">
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <div className="text-xs text-gray-500 flex items-center gap-1">
-                  {t('quotation.stats.companiesInvited')}
-                  <InvitedCompaniesPopover
-                    companies={quotationDetail?.invitedCompanies ?? []}
-                    totalInvited={activeQuotation.totalCompaniesInvited}
-                  />
-                </div>
-                <div className="font-medium text-gray-900">
-                  {activeQuotation.totalCompaniesInvited}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">{t('quotation.stats.responses')}</div>
-                <div className="font-medium text-gray-900">
-                  {activeQuotation.totalQuotationsReceived} /{' '}
-                  {activeQuotation.totalCompaniesInvited}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500 flex items-center gap-1">
-                  {t('quotation.stats.appraisals')}
-                  <AppraisalsPopover
-                    appraisals={quotationDetail?.appraisals ?? []}
-                    totalAppraisals={activeQuotation.totalAppraisals}
-                  />
-                </div>
-                <div className="font-medium text-gray-900">{activeQuotation.totalAppraisals}</div>
-              </div>
-            </div>
-          </div>
+            <StatStrip>
+              <Stat
+                label={
+                  <>
+                    {t('quotation.stats.companiesInvited')}
+                    <InvitedCompaniesPopover
+                      companies={quotationDetail?.invitedCompanies ?? []}
+                      totalInvited={activeQuotation.totalCompaniesInvited}
+                    />
+                  </>
+                }
+              >
+                {activeQuotation.totalCompaniesInvited}
+              </Stat>
+              <Stat label={t('quotation.stats.responses')}>
+                {activeQuotation.totalQuotationsReceived} / {activeQuotation.totalCompaniesInvited}
+              </Stat>
+              <Stat
+                label={
+                  <>
+                    {t('quotation.stats.appraisals')}
+                    <AppraisalsPopover
+                      appraisals={quotationDetail?.appraisals ?? []}
+                      totalAppraisals={activeQuotation.totalAppraisals}
+                    />
+                  </>
+                }
+              >
+                {activeQuotation.totalAppraisals}
+              </Stat>
+            </StatStrip>
 
-          {/* Company responses table */}
-          {invitedCompanies.length > 0 && (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gray-50 border-b border-gray-200">
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.company')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.totalFeeAmount')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.totalDiscount')}
-                    </th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.totalNetAmount')}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.totalEstimateManday')}
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.submittedAt')}
-                    </th>
-                    <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      {t('quotation.table.status')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {invitedCompanies.map(inv => {
-                    const cq = sentCompanyQuotations.find(q => q.companyId === inv.companyId);
-                    const items = cq?.items ?? [];
-                    const hasItems = items.length > 0;
-                    const totalFeeAmount = items.reduce(
-                      (sum, item) => sum + (item.feeAmount ?? 0),
-                      0,
-                    );
-                    const totalDiscount = items.reduce(
-                      (sum, item) => sum + (item.discount ?? 0) + (item.negotiatedDiscount ?? 0),
-                      0,
-                    );
-                    const validEstimatedDays = items
-                      .map(item => item.estimatedDays)
-                      .filter((d): d is number => typeof d === 'number' && d > 0);
-                    const minEstimateManday = validEstimatedDays.length
-                      ? Math.min(...validEstimatedDays)
-                      : undefined;
-                    const maxEstimateManday = validEstimatedDays.length
-                      ? Math.max(...validEstimatedDays)
-                      : undefined;
-                    return (
-                      <tr key={inv.companyId} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">
-                            {localizeCompanyName(inv.companyName, inv.companyNameLocal)}
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
-                            {hasItems ? fmtCurrency(totalFeeAmount) : '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-sm text-gray-700 tabular-nums">
-                            {hasItems ? fmtCurrency(totalDiscount) : '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-semibold text-gray-900 tabular-nums">
-                            {cq ? fmtCurrency(cq.totalQuotedPrice) : '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className="text-sm text-gray-600">
-                            {minEstimateManday !== undefined && maxEstimateManday !== undefined
-                              ? minEstimateManday === maxEstimateManday
-                                ? minEstimateManday
-                                : `${minEstimateManday} - ${maxEstimateManday}`
-                              : '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="text-sm text-gray-600">
-                            {cq ? fmtDt(cq.submittedAt) : '—'}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {cq ? (
-                            <QuotationStatusBadge status={cq.status} />
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+            {invitedCompanies.length > 0 && (
+              <ResponsesTable
+                invitedCompanies={invitedCompanies}
+                companyQuotations={sentCompanyQuotations}
+              />
+            )}
 
-        {renderCancelFooter()}
-      </div>
+            {renderCancelRow()}
+          </>,
+        )}
+        {cancelModal}
+      </>
     );
   }
 
-  // ── Draft — hint banner + Send Quotation button ──────────────────────────
+  // ── Draft — hint + Send Quotation button ─────────────────────────────────
   if (status === 'Draft') {
     const draftDetail = quotationDetail;
     const appraisalCount = draftDetail?.totalAppraisals ?? activeQuotation.totalAppraisals ?? 0;
     const companyCount =
       draftDetail?.totalCompaniesInvited ?? activeQuotation.totalCompaniesInvited ?? 0;
     const hasDueDate = !!activeQuotation.cutOffTime;
-    const canSend = appraisalCount >= 1 && companyCount >= 1 && hasDueDate;
+    // Segment Coverage: every invited company must be able to appraise every banking segment in
+    // the quotation's Segment Set, otherwise the API refuses to send it.
+    const segmentGaps = getSegmentGaps(draftDetail?.invitedCompanies);
+    // Not sendable until the detail has loaded: without it the gaps are unknown.
+    const canSend =
+      !!draftDetail &&
+      appraisalCount >= 1 &&
+      companyCount >= 1 &&
+      hasDueDate &&
+      segmentGaps.length === 0;
+    // Why Send is disabled (null when sendable), used as the button tooltip.
+    const sendBlockedReason = canSend
+      ? null
+      : !draftDetail
+        ? isDetailError
+          ? t('quotation.loadDetailFailed')
+          : null
+        : segmentGaps.length > 0
+          ? t('quotation:segment.sendBlockedTitle')
+          : t('quotation.sendRequirementsHint');
     const draftAppraisals = draftDetail?.appraisals ?? [];
 
     /** Step 1 (share docs) → Step 2 (email). Requires full doc coverage. */
@@ -1167,7 +1269,17 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               },
               onError: (err: unknown) => {
                 const apiErr = err as { apiError?: { detail?: string } };
-                toast.error(apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'));
+                if (isSegmentCoverageMismatch(err)) {
+                  // Localized text instead of the API's English detail. useSendQuotation refetches
+                  // the detail; leave the flow so the user lands on the refreshed segment alert
+                  // (shared-doc picks are kept for the next attempt).
+                  toast.error(t('quotation:segment.sendBlockedTitle'));
+                  setSendStep(null);
+                } else {
+                  toast.error(
+                    apiErr?.apiError?.detail ?? t('quotation.toasts.quotationSendFailed'),
+                  );
+                }
               },
             },
           );
@@ -1231,10 +1343,8 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
             setIsEditing(false);
           },
           onError: (err: unknown) => {
-            const apiErr = err as { data?: { message?: string }; error?: string };
-            toast.error(
-              apiErr?.data?.message ?? apiErr?.error ?? t('quotation.toasts.draftUpdateFailed'),
-            );
+            const detail = (err as { apiError?: { detail?: string | null } })?.apiError?.detail;
+            toast.error(detail || t('quotation.toasts.draftUpdateFailed'));
           },
         },
       );
@@ -1247,183 +1357,159 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
       !currentUser || !draftDetail?.requestedBy || currentUser.username === draftDetail.requestedBy;
 
     return (
-      <div className="flex flex-col gap-3">
-        {/* Draft header */}
-        <div className="bg-white rounded-xl border border-purple-200 overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
-            <div className="flex items-center gap-2">
-              <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-                <Icon name="file-pen" style="solid" className="size-4 text-purple-700" />
-              </div>
-              <div>
-                {renderQuotationNumber('text-sm font-semibold text-gray-900')}
-                <QuotationStatusBadge status={status} className="ml-2" />
-              </div>
-            </div>
-            {!readOnly &&
-              (isEditing ? (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleCancelEdit}
-                    disabled={isEditSaving}
-                  >
-                    {t('quotation.cancel')}
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSaveEdit}
-                    disabled={isEditSaving || !editDueDate}
-                  >
-                    {isEditSaving ? (
+      <>
+        {renderFrame(
+          <>
+            {isEditing ? (
+              <EditDraftForm
+                segmentSet={draftDetail?.bankingSegment ?? EMPTY_SEGMENT_SET}
+                invitedCompanies={draftDetail?.invitedCompanies ?? EMPTY_INVITED}
+                editDueDate={editDueDate}
+                onDueDateChange={setEditDueDate}
+                editCompanyIds={editCompanyIds}
+                editCompanyNames={editCompanyNames}
+                onEditCompanyIdsChange={setEditCompanyIds}
+                onEditCompanyNamesChange={setEditCompanyNames}
+                editSearchQuery={editSearchQuery}
+                onEditSearchQueryChange={setEditSearchQuery}
+                editMaxAppraisalDays={editMaxAppraisalDays}
+                onEditMaxAppraisalDaysChange={setEditMaxAppraisalDays}
+                editSpecialRequirements={editSpecialRequirements}
+                onEditSpecialRequirementsChange={setEditSpecialRequirements}
+              />
+            ) : (
+              <>
+                <p className="text-xs text-(--palette-gray-500)">{t('quotation.draftHint')}</p>
+
+                <StatStrip>
+                  <Stat
+                    warn={appraisalCount === 0}
+                    label={
                       <>
-                        <Icon
-                          name="spinner"
-                          style="solid"
-                          className="size-3.5 mr-1.5 animate-spin"
+                        {t('quotation.stats.appraisals')}
+                        <AppraisalsPopover
+                          appraisals={draftAppraisals}
+                          totalAppraisals={appraisalCount}
                         />
-                        {t('quotation.saving')}
                       </>
-                    ) : (
-                      <>
-                        <Icon name="floppy-disk" style="solid" className="size-3.5 mr-1.5" />
-                        {t('quotation.save')}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  {canEdit && (
-                    <Button variant="outline" size="sm" onClick={handleEnterEdit} disabled={isBusy}>
-                      <Icon name="pencil" style="solid" className="size-3.5 mr-1.5" />
-                      {t('quotation.edit')}
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    onClick={() => setSendStep('share-docs')}
-                    disabled={!canSend || isBusy}
-                    title={
-                      !canSend
-                        ? 'Add at least 1 appraisal, 1 company, and set a due date before sending'
-                        : undefined
                     }
                   >
-                    <Icon name="paper-plane" style="solid" className="size-3.5 mr-1.5" />
-                    {t('quotation.sendQuotation')}
-                  </Button>
-                </div>
-              ))}
-          </div>
-
-          {/* Hint banner — visible in both read and edit mode */}
-          <div className="flex items-start gap-2 px-4 py-3 bg-amber-50 border-b border-amber-100">
-            <Icon
-              name="circle-info"
-              style="solid"
-              className="size-4 text-amber-500 shrink-0 mt-0.5"
-            />
-            <p className="text-xs text-amber-700">{t('quotation.draftHint')}</p>
-          </div>
-
-          {/* Stats — read-only or edit form */}
-          {isEditing ? (
-            <EditDraftForm
-              bankingSegment={draftDetail?.bankingSegment || undefined}
-              editDueDate={editDueDate}
-              onDueDateChange={setEditDueDate}
-              editCompanyIds={editCompanyIds}
-              editCompanyNames={editCompanyNames}
-              onEditCompanyIdsChange={setEditCompanyIds}
-              onEditCompanyNamesChange={setEditCompanyNames}
-              editSearchQuery={editSearchQuery}
-              onEditSearchQueryChange={setEditSearchQuery}
-              editMaxAppraisalDays={editMaxAppraisalDays}
-              onEditMaxAppraisalDaysChange={setEditMaxAppraisalDays}
-              editSpecialRequirements={editSpecialRequirements}
-              onEditSpecialRequirementsChange={setEditSpecialRequirements}
-            />
-          ) : (
-            <div className="px-4 py-3 text-sm text-gray-600">
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1">
-                    {t('quotation.stats.appraisals')}
-                    <AppraisalsPopover
-                      appraisals={draftAppraisals}
-                      totalAppraisals={appraisalCount}
-                    />
-                  </div>
-                  <div
-                    className={clsx(
-                      'font-medium',
-                      appraisalCount === 0 ? 'text-amber-600' : 'text-gray-900',
-                    )}
-                  >
                     {appraisalCount}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500 flex items-center gap-1">
-                    {t('quotation.stats.companiesInvited')}
-                    <InvitedCompaniesPopover
-                      companies={draftDetail?.invitedCompanies ?? []}
-                      totalInvited={companyCount}
-                    />
-                  </div>
-                  <div
-                    className={clsx(
-                      'font-medium',
-                      companyCount === 0 ? 'text-amber-600' : 'text-gray-900',
-                    )}
+                  </Stat>
+                  <Stat
+                    warn={companyCount === 0}
+                    label={
+                      <>
+                        {t('quotation.stats.companiesInvited')}
+                        <InvitedCompaniesPopover
+                          companies={draftDetail?.invitedCompanies ?? []}
+                          totalInvited={companyCount}
+                          showSegmentGaps
+                        />
+                      </>
+                    }
                   >
                     {companyCount}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-xs text-gray-500">{t('quotation.stats.cutOffTime')}</div>
-                  <div
-                    className={clsx(
-                      'font-medium',
-                      !hasDueDate ? 'text-amber-600' : 'text-gray-900',
-                    )}
-                  >
+                  </Stat>
+                  <Stat warn={!hasDueDate} label={t('quotation.stats.cutOffTime')}>
                     {hasDueDate
                       ? formatDateTime(activeQuotation.cutOffTime)
                       : t('quotation.notSet')}
-                  </div>
-                </div>
-              </div>
+                  </Stat>
+                </StatStrip>
 
-              {/* Request Details — Special Requirements (request-wide). Per-appraisal
-                  Max Appraisal Duration now lives in the Appraisals ⓘ popover above. */}
-              <div className="mt-3 pt-3 border-t border-gray-100">
+                {(draftDetail?.bankingSegment?.length ?? 0) > 0 && (
+                  <div>
+                    <div className="mb-1 text-xs text-(--palette-gray-500)">
+                      {t('quotation:segment.segmentSet')}
+                    </div>
+                    <SegmentChips segments={draftDetail?.bankingSegment} />
+                  </div>
+                )}
+
+                {/* Segment Coverage warning — only for users who can fix it, i.e. when the Edit
+                    button shows (not read-only, owner of the draft), and not under the inline edit
+                    form, which flags gaps per company itself. */}
+                {!readOnly && canEdit && (
+                  <SegmentGapsAlert
+                    gaps={segmentGaps}
+                    className="rounded-lg border border-amber-200 dark:border-amber-500/30 px-3 py-2 text-xs"
+                  />
+                )}
+
+                {/* Request Details — Special Requirements (request-wide). Per-appraisal
+                    Max Appraisal Duration lives in the Appraisals ⓘ popover above. */}
                 <div>
-                  <div className="text-xs text-gray-500">{t('quotation.specialRequirements')}</div>
-                  <div className="font-medium text-gray-900 whitespace-pre-wrap">
+                  <div className="text-xs text-(--palette-gray-500)">
+                    {t('quotation.specialRequirements')}
+                  </div>
+                  <div className="whitespace-pre-wrap text-sm text-(--palette-ink)">
                     {draftDetail?.specialRequirements?.trim() || t('quotation.notSet')}
                   </div>
                 </div>
-              </div>
-            </div>
-          )}
-        </div>
+              </>
+            )}
 
-        {/* Remove this appraisal from the draft quotation */}
-        {!readOnly && (
-          <div className="flex justify-end px-4 py-2 border-t border-gray-100 bg-gray-50">
-            <button
-              type="button"
-              onClick={() => setShowRemoveConfirm(true)}
-              disabled={isBusy || isRemoving}
-              className="inline-flex items-center gap-1 text-xs text-red-600 hover:text-red-700 underline-offset-2 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Icon name="trash" style="solid" className="size-3" />
-              {t('quotation.removeFromQuotation')}
-            </button>
-          </div>
+            {!readOnly && (
+              <div className={isEditing ? 'flex flex-wrap items-center gap-2' : ACTION_ROW}>
+                {isEditing ? (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={handleSaveEdit}
+                      isLoading={isEditSaving}
+                      disabled={!editDueDate}
+                      leftIcon={<Icon name="floppy-disk" style="solid" />}
+                    >
+                      {isEditSaving ? t('quotation.saving') : t('quotation.save')}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCancelEdit}
+                      disabled={isEditSaving}
+                    >
+                      {t('quotation.cancel')}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      size="sm"
+                      onClick={() => setSendStep('share-docs')}
+                      disabled={!canSend || isBusy}
+                      title={sendBlockedReason ?? undefined}
+                      leftIcon={<Icon name="paper-plane" style="solid" />}
+                    >
+                      {t('quotation.sendQuotation')}
+                    </Button>
+                    {canEdit && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleEnterEdit}
+                        disabled={isBusy}
+                        leftIcon={<Icon name="pencil" style="solid" />}
+                      >
+                        {t('quotation.edit')}
+                      </Button>
+                    )}
+                    {/* Remove this appraisal from the draft quotation */}
+                    <button
+                      type="button"
+                      onClick={() => setShowRemoveConfirm(true)}
+                      disabled={isBusy || isRemoving}
+                      className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-danger hover:underline disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <Icon name="trash" style="solid" />
+                      {t('quotation.removeFromQuotation')}
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
+          </>,
+          isEditing ? t('quotation:draft.editModal') : undefined,
         )}
 
         <ConfirmDialog
@@ -1451,171 +1537,177 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           showAttachments={true}
           attachmentPicker={{ quotationId: activeQuotation?.id ?? '' }}
           requireAttachment={(quotationDetail?.appraisals?.length ?? 0) > TABLE_ROW_THRESHOLD}
-          subjectLabel="Subject"
+          subjectLabel={t('quotation:email.subjectLabel')}
+          labels={{
+            from: t('quotation:email.from'),
+            send: t('quotation:email.send'),
+            cancel: t('quotation:email.cancel'),
+            to: t('quotation:email.to'),
+            cc: t('quotation:email.cc'),
+            bcc: t('quotation:email.bcc'),
+            content: t('quotation:email.content'),
+            attachments: t('quotation:email.attachments'),
+            addAttachment: t('quotation:email.addAttachment'),
+            attachmentPlaceholder: t('quotation:email.attachmentPlaceholder'),
+          }}
           isPending={isBusy}
           richTextContent
           onSubmit={handleFinalSend}
         />
 
         {/* ── Step 1: Share documents ── */}
-        {sendStep === 'share-docs' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="size-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <Icon name="file-check" style="solid" className="size-5 text-blue-600" />
-                </div>
-                <div>
-                  <h3 className="text-base font-semibold text-gray-900">
-                    {t('quotation.shareDocuments.title')}
-                  </h3>
-                  <p className="text-xs text-gray-500">{t('quotation.shareDocuments.step')}</p>
-                </div>
+        <Modal
+          isOpen={sendStep === 'share-docs'}
+          // Esc / backdrop behave like the Cancel button (drops the picks); never mid-send.
+          onClose={() => {
+            if (!isBusy) handleCancelSendFlow();
+          }}
+          title={t('quotation.shareDocuments.title')}
+          size="md"
+        >
+          <div className="flex flex-col gap-3">
+            <p className="text-xs text-(--palette-gray-500)">
+              {t('quotation.shareDocuments.step')}
+            </p>
+
+            <ShareDocumentsStep
+              appraisals={draftAppraisals}
+              selections={shareSelections}
+              onToggle={handleDocToggle}
+              noDocsAppraisalIds={noDocsAppraisalIds}
+              onReportNoDocs={handleReportNoDocs}
+            />
+
+            {!allAppraisalsCovered && draftAppraisals.length > 0 && (
+              <div className="flex items-center gap-1.5 rounded-lg border border-amber-100 dark:border-amber-500/20 bg-(--palette-warn-wash) p-2">
+                <Icon
+                  name="triangle-exclamation"
+                  style="solid"
+                  className="shrink-0 text-amber-500"
+                />
+                <p className="text-xs text-(--palette-warn)">
+                  {t('quotation.shareDocuments.coverageWarning')}
+                </p>
               </div>
+            )}
 
-              <ShareDocumentsStep
-                appraisals={draftAppraisals}
-                selections={shareSelections}
-                onToggle={handleDocToggle}
-                noDocsAppraisalIds={noDocsAppraisalIds}
-                onReportNoDocs={handleReportNoDocs}
-              />
-
-              {!allAppraisalsCovered && draftAppraisals.length > 0 && (
-                <div className="mt-3 flex items-center gap-1.5 p-2 bg-amber-50 rounded-lg border border-amber-100">
-                  <Icon
-                    name="triangle-exclamation"
-                    style="solid"
-                    className="size-3.5 text-amber-500 shrink-0"
-                  />
-                  <p className="text-xs text-amber-700">
-                    {t('quotation.shareDocuments.coverageWarning')}
-                  </p>
-                </div>
-              )}
-
-              <div className="flex gap-2 justify-end mt-5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="button"
-                  onClick={handleCancelSendFlow}
-                  disabled={isBusy}
-                >
-                  {t('quotation.cancel')}
-                </Button>
-                <Button
-                  size="sm"
-                  type="button"
-                  onClick={handleShareDocsNext}
-                  disabled={isBusy || !allAppraisalsCovered}
-                  title={
-                    !allAppraisalsCovered ? t('quotation.shareDocuments.coverageTitle') : undefined
-                  }
-                >
-                  {t('quotation.next')}
-                  <Icon name="arrow-right" style="solid" className="size-3.5 ml-1.5" />
-                </Button>
-              </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                variant="outline"
+                size="sm"
+                type="button"
+                onClick={handleCancelSendFlow}
+                disabled={isBusy}
+              >
+                {t('quotation.cancel')}
+              </Button>
+              <Button
+                size="sm"
+                type="button"
+                onClick={handleShareDocsNext}
+                disabled={isBusy || !allAppraisalsCovered}
+                title={
+                  !allAppraisalsCovered ? t('quotation.shareDocuments.coverageTitle') : undefined
+                }
+                rightIcon={<Icon name="arrow-right" style="solid" />}
+              >
+                {t('quotation.next')}
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+        </Modal>
+      </>
     );
   }
 
   // ── UnderAdminReview — shortlist panel ───────────────────────────────────
   if (status === 'UnderAdminReview') {
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {renderQuotationNumber('text-sm font-semibold text-gray-700')}
-            <QuotationStatusBadge status={status} />
-          </div>
-        </div>
-        <AdminShortlistPanel
-          quotationId={activeQuotation.id}
-          companyQuotations={quotationDetail?.companyQuotations ?? []}
-          appraisals={quotationDetail?.appraisals ?? []}
-        />
-        {renderCancelFooter()}
-      </div>
+      <>
+        {renderFrame(
+          <>
+            <AdminShortlistPanel
+              quotationId={activeQuotation.id}
+              companyQuotations={quotationDetail?.companyQuotations ?? []}
+              appraisals={quotationDetail?.appraisals ?? []}
+            />
+            {renderCancelRow()}
+          </>,
+        )}
+        {cancelModal}
+      </>
     );
   }
 
   // ── PendingRmSelection — shortlist sent panel ─────────────────────────────
   if (status === 'PendingRmSelection') {
-    if (!quotationDetail) return null;
+    if (!quotationDetail) return renderDetailMissing();
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          {renderQuotationNumber('text-sm font-semibold text-gray-700')}
-          <QuotationStatusBadge status={status} />
-        </div>
-        <ShortlistSentPanel quotation={quotationDetail} />
-        {renderCancelFooter()}
-      </div>
+      <>
+        {renderFrame(
+          <>
+            <ShortlistSentPanel quotation={quotationDetail} />
+            {renderCancelRow()}
+          </>,
+        )}
+        {cancelModal}
+      </>
     );
   }
 
   // ── WinnerTentative — shortlist table + Reject/Finalize actions ─────────────
   if (status === 'WinnerTentative') {
-    if (!quotationDetail) return null;
+    if (!quotationDetail) return renderDetailMissing();
     const winner = quotationDetail.companyQuotations?.find(
       cq => cq.id === quotationDetail.tentativeWinnerQuotationId,
     );
+    const roundsUsed = winner?.negotiationRounds ?? 0;
+    const maxRoundsReached = roundsUsed >= MAX_NEGOTIATION_ROUNDS;
     return (
       <>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {renderQuotationNumber('text-sm font-semibold text-gray-700')}
-              <QuotationStatusBadge status={status} />
-            </div>
+        {renderFrame(
+          <>
+            <ShortlistSentPanel quotation={quotationDetail} />
             {winner && !readOnly && (
-              <div className="flex items-center gap-2">
+              <div className={ACTION_ROW}>
                 <Button
-                  variant="outline"
                   size="sm"
-                  onClick={openReject}
-                  className="text-red-600 border-red-300 hover:bg-red-50"
+                  onClick={openFinalize}
+                  leftIcon={<Icon name="flag-checkered" style="solid" />}
                 >
-                  <Icon name="xmark" style="solid" className="size-3.5 mr-1.5" />
-                  {t('quotation.rejectWinner')}
+                  {t('quotation.finalize')}
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={openNegotiate}
-                  disabled={(winner.negotiationRounds ?? 0) >= 3}
-                  title={
-                    (winner.negotiationRounds ?? 0) >= 3
-                      ? t('quotation.maximumNegotiationRounds')
-                      : undefined
-                  }
+                  disabled={maxRoundsReached}
+                  title={maxRoundsReached ? t('quotation.maximumNegotiationRounds') : undefined}
+                  leftIcon={<Icon name="handshake" style="solid" className="text-orange-500" />}
                 >
-                  <Icon
-                    name="handshake"
-                    style="solid"
-                    className="size-3.5 mr-1.5 text-orange-500"
-                  />
                   {t('quotation.openNegotiation')}
                 </Button>
+                <span className="text-xs text-(--palette-gray-500)">
+                  {t('quotation:negotiation.roundsCount', {
+                    used: roundsUsed,
+                    max: MAX_NEGOTIATION_ROUNDS,
+                  })}
+                </span>
                 <Button
+                  variant="outline"
                   size="sm"
-                  onClick={openFinalize}
-                  className="bg-green-600 hover:bg-green-700"
+                  onClick={openReject}
+                  className="ml-auto text-danger! border-red-300! hover:bg-(--palette-req-wash)!"
+                  leftIcon={<Icon name="xmark" style="solid" />}
                 >
-                  <Icon name="flag-checkered" style="solid" className="size-3.5 mr-1.5" />
-                  {t('quotation.finalize')}
+                  {t('quotation.rejectWinner')}
                 </Button>
               </div>
             )}
-          </div>
-          <ShortlistSentPanel quotation={quotationDetail} />
-          {renderCancelFooter()}
-        </div>
+            {!readOnly && <div className="flex justify-end">{cancelLink}</div>}
+          </>,
+        )}
+        {cancelModal}
         {winner && (
           <>
             <RejectTentativeModal
@@ -1632,6 +1724,7 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
               companyName={localizeCompanyName(winner.companyName, winner.companyNameLocal)}
               winnerItems={winner.items ?? []}
               appraisals={quotationDetail.appraisals ?? []}
+              allowAutoAssign={allowAutoAssign && isStandaloneQuotation(quotationDetail)}
             />
             <NegotiationModal
               isOpen={isNegotiateOpen}
@@ -1649,16 +1742,17 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
 
   // ── Negotiating ───────────────────────────────────────────────────────────
   if (status === 'Negotiating') {
-    if (!quotationDetail) return null;
+    if (!quotationDetail) return renderDetailMissing();
     return (
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          {renderQuotationNumber('text-sm font-semibold text-gray-700')}
-          <QuotationStatusBadge status={status} />
-        </div>
-        <NegotiationPanel quotation={quotationDetail} />
-        {renderCancelFooter()}
-      </div>
+      <>
+        {renderFrame(
+          <>
+            <NegotiationPanel quotation={quotationDetail} allowAutoAssign={allowAutoAssign} />
+            {renderCancelRow()}
+          </>,
+        )}
+        {cancelModal}
+      </>
     );
   }
 
@@ -1685,19 +1779,15 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
         finalPrice = appraisalItem.quotedPrice;
       }
     }
-    return (
-      <div className="bg-white rounded-xl border border-green-200 overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-200">
-          <div className="size-8 rounded-lg bg-green-200 flex items-center justify-center">
-            <Icon name="circle-check" style="solid" className="size-4 text-green-700" />
-          </div>
-          <div>
-            {renderQuotationNumber('text-sm font-semibold text-gray-900')}
-            <QuotationStatusBadge status={status} className="ml-2" />
-          </div>
-        </div>
-        <div className="px-4 py-3 text-sm text-gray-600">
-          <p>
+    // A newer quotation was cancelled after this one was finalized: this winner stays usable, and
+    // the way to quote again is offered on a compact line under it.
+    const newest = newestQuotation(quotations);
+    const newerCancelled =
+      newest && newest.id !== activeQuotation.id && newest.status === 'Cancelled' ? newest : null;
+    return renderFrame(
+      <>
+        <div className="rounded-lg border border-green-200 dark:border-green-500/30 bg-green-50 dark:bg-green-500/10 px-3 py-2 text-sm text-green-800 dark:text-green-300">
+          <p className="font-semibold">
             {t('quotation.finalizedWith', {
               company: winner
                 ? localizeCompanyName(winner.companyName, winner.companyNameLocal)
@@ -1707,69 +1797,77 @@ const QuotationSection = ({ appraisalId, onCreateNew }: QuotationSectionProps) =
           {finalPrice != null && (
             <p className="mt-1">
               {t('quotation.finalPrice')}{' '}
-              <strong className="text-green-700">
-                {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(
-                  finalPrice,
-                )}
-              </strong>
+              <strong className="text-base tabular-nums">{formatCurrency(finalPrice)}</strong>
             </p>
           )}
-          <p className="mt-2 text-xs text-gray-400">{t('quotation.finalizedHint')}</p>
+          <p className="mt-1 text-xs text-green-700 dark:text-green-300">
+            {t('quotation.finalizedHint')}
+          </p>
         </div>
-      </div>
+        {newerCancelled && (
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 text-xs text-(--palette-gray-500)">
+            <span>
+              {t('quotation:section.latestCancelled', { number: newerCancelled.quotationNumber })}
+            </span>
+            {!readOnly && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onCreateNew}
+                leftIcon={<Icon name="file-circle-plus" style="solid" />}
+              >
+                {t('quotation.newQuotation')}
+              </Button>
+            )}
+          </div>
+        )}
+      </>,
     );
   }
 
   // ── Cancelled ─────────────────────────────────────────────────────────────
   if (status === 'Cancelled') {
-    return (
-      <div className="bg-white rounded-xl border border-red-200 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border-b border-red-200">
-          <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-red-200 flex items-center justify-center">
-              <Icon name="ban" style="solid" className="size-4 text-red-700" />
-            </div>
-            <div>
-              {renderQuotationNumber('text-sm font-semibold text-gray-900')}
-              <QuotationStatusBadge status={status} className="ml-2" />
-            </div>
-          </div>
-          {!readOnly && (
-            <Button size="sm" onClick={onCreateNew}>
-              <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-              {t('quotation.newQuotation')}
-            </Button>
+    return renderFrame(
+      <>
+        <div className="rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) px-3 py-2 text-sm text-red-800 dark:text-red-300">
+          <p>{t('quotation.cancelledHint')}</p>
+          {quotationDetail?.cancellationReason && (
+            <p className="mt-1 text-xs">
+              {t('quotation:shared.cancelledWith')} {quotationDetail.cancellationReason}
+            </p>
           )}
         </div>
-        <div className="px-4 py-3 text-sm text-gray-500">{t('quotation.cancelledHint')}</div>
-      </div>
+        {!readOnly && (
+          <div>
+            <Button
+              size="sm"
+              onClick={onCreateNew}
+              leftIcon={<Icon name="file-circle-plus" style="solid" />}
+            >
+              {t('quotation.newQuotation')}
+            </Button>
+          </div>
+        )}
+      </>,
     );
   }
 
-  // ── Fallback: existing list view (Draft or unknown) ───────────────────────
-  return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
-        <div className="flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-            <Icon name="file-invoice-dollar" style="solid" className="size-4 text-purple-700" />
-          </div>
-          <span className="text-sm font-semibold text-gray-900">{t('quotation.sectionTitle')}</span>
-        </div>
-        {!readOnly && (
-          <Button size="sm" onClick={onCreateNew}>
-            <Icon name="file-circle-plus" style="solid" className="size-3.5 mr-1.5" />
-            {t('quotation.newQuotation')}
-          </Button>
-        )}
+  // ── Fallback: status this section does not know ───────────────────────────
+  return renderFrame(
+    readOnly ? (
+      // Nothing to act on: say what the quotation's status is rather than draw an empty body.
+      <p className="text-sm text-(--palette-gray-500)">{status || t('administration.noData')}</p>
+    ) : (
+      <div>
+        <Button
+          size="sm"
+          onClick={onCreateNew}
+          leftIcon={<Icon name="file-circle-plus" style="solid" />}
+        >
+          {t('quotation.newQuotation')}
+        </Button>
       </div>
-      <div className="px-4 py-3">
-        <div className="flex items-center justify-between">
-          {renderQuotationNumber('text-sm font-medium text-purple-600')}
-          <QuotationStatusBadge status={status} />
-        </div>
-      </div>
-    </div>
+    ),
   );
 };
 

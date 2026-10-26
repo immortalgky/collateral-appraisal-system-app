@@ -25,7 +25,11 @@ interface WQSRSQSectionProps {
   onClose: () => void;
 }
 
-export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose }: WQSRSQSectionProps) {
+export function WQSRSQSection({
+  comparativeSurveys,
+  readOnly: _readOnly,
+  onClose,
+}: WQSRSQSectionProps) {
   const { t } = useTranslation('pricingAnalysis');
   const { control } = useFormContext();
 
@@ -91,7 +95,12 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
     // font-semibold like Final value below — main's WQSAdjustFinalValueSection.tsx had
     // this row bold in both states; the red-warning treatment now lives solely in the
     // summary's ตรวจทาน card (WQSValueRangeCard.tsx), not duplicated here.
-    { label: 'Coefficient of decision', value: coefficientOfDecision, decimals: 4, emphasize: true },
+    {
+      label: 'Coefficient of decision',
+      value: coefficientOfDecision,
+      decimals: 4,
+      emphasize: true,
+    },
     { label: 'Standard error', value: standardError, decimals: 2 },
     { label: 'Intersection point', value: intersectionPoint, decimals: 2 },
     { label: 'Slope', value: slope, decimals: 2 },
@@ -107,15 +116,15 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
     // own, opaque white, and only a left border — see WQSForm.tsx, where this is now a
     // direct flex sibling of WQSScoringSection's own root (not nested behind an extra
     // wrapper div), sized/stretched by that shared flex row.
-    <div className="w-[262px] shrink-0 flex flex-col border-l border-[rgb(227,233,232)] bg-white">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
-        <span className="text-[10.5px] font-semibold uppercase tracking-[0.04em] text-gray-700">
+    <div className="w-[262px] shrink-0 flex flex-col border-l border-[rgb(227,233,232)] bg-(--palette-surface)">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line)">
+        <span className="text-[10.5px] font-semibold uppercase tracking-[0.04em] text-(--palette-ink)">
           {t('wqs.regression.title')}
         </span>
         <button
           type="button"
           onClick={onClose}
-          className="size-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+          className="size-6 flex items-center justify-center rounded text-(--palette-gray-400) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) transition-colors"
           aria-label="Close"
         >
           <Icon name="xmark" className="size-3.5" />
@@ -132,8 +141,8 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
             </colgroup>
             <tbody>
               {statsRows.map(row => (
-                <tr key={row.label} className="border-b border-gray-100">
-                  <td className="py-1 pr-2 text-gray-600 truncate">{row.label}</td>
+                <tr key={row.label} className="border-b border-(--palette-line-soft)">
+                  <td className="py-1 pr-2 text-(--palette-gray-600) truncate">{row.label}</td>
                   <td
                     className={clsx(
                       'py-1 text-right truncate',
@@ -153,13 +162,13 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
           </table>
 
           {/* Legend — filled dot = market, hollow ring = subject */}
-          <div className="flex items-center gap-4 text-[11px] text-gray-500">
+          <div className="flex items-center gap-4 text-[11px] text-(--palette-gray-500)">
             <span className="flex items-center gap-1.5">
               <span className="inline-block size-2.5 rounded-full bg-[#0d9488]" />
               {t('wqs.regression.legendMarket')}
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="inline-block size-2.5 rounded-full border-2 border-[#b45309] bg-white" />
+              <span className="inline-block size-2.5 rounded-full border-2 border-[#b45309] bg-(--palette-surface)" />
               {t('wqs.regression.legendSubject')}
             </span>
           </div>
@@ -197,7 +206,9 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
                     width={34}
                     // Millions, abbreviated — matches the mock's axis (4.4ล., 4.7ล., …),
                     // display only, no change to the underlying adjusted-value numbers.
-                    tickFormatter={v => `${(v / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}ล.`}
+                    tickFormatter={v =>
+                      `${(v / 1_000_000).toLocaleString(undefined, { maximumFractionDigits: 1 })}ล.`
+                    }
                   />
                   <Tooltip formatter={(value: any) => value?.toLocaleString?.() ?? value} />
                   {/* Shaded band: lowest to highest estimate */}
@@ -224,12 +235,19 @@ export function WQSRSQSection({ comparativeSurveys, readOnly: _readOnly, onClose
                   <Scatter data={scatterData} fill="#0d9488" r={4} />
                   {/* Subject — hollow ring so it reads apart from the filled market dots */}
                   {subjectPoint.length > 0 && (
-                    <Scatter data={subjectPoint} shape="circle" fill="white" stroke="#b45309" strokeWidth={2} r={5} />
+                    <Scatter
+                      data={subjectPoint}
+                      shape="circle"
+                      fill="white"
+                      stroke="#b45309"
+                      strokeWidth={2}
+                      r={5}
+                    />
                   )}
                 </ScatterChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+              <div className="flex items-center justify-center h-full text-(--palette-gray-400) text-sm">
                 No data available for chart
               </div>
             )}

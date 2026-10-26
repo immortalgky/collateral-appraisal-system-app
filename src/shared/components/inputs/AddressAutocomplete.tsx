@@ -1,5 +1,11 @@
-import { useState, useMemo } from 'react';
-import { Combobox, ComboboxButton, ComboboxInput, ComboboxOption, ComboboxOptions } from '@headlessui/react';
+import { useId, useState, useMemo } from 'react';
+import {
+  Combobox,
+  ComboboxButton,
+  ComboboxInput,
+  ComboboxOption,
+  ComboboxOptions,
+} from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '../Icon';
 import { useAddressStore } from '@/shared/store';
@@ -7,6 +13,9 @@ import { useAddressesQuery } from '@/shared/api/addresses';
 import type { ThaiAddress } from '@/shared/data/thaiAddresses';
 import type { AddressSource } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import { controlFrame, controlPad, controlSkin, ERROR_TEXT, REQUIRED_MARK } from './controlStyles';
 
 /**
  * The address master has thousands of rows ("หนอง" alone matches ~600 sub-districts), so the list is
@@ -38,6 +47,8 @@ const AddressAutocomplete = ({
 }: AddressAutocompleteProps) => {
   const isReadOnly = useFormReadOnly();
   const isDisabled = disabled || isReadOnly;
+  const layout = useFormLayout();
+  const errorId = useId();
   const [query, setQuery] = useState('');
   const searchBySubDistrict = useAddressStore(state => state.searchBySubDistrict);
   const titleAddresses = useAddressStore(state => state.titleAddresses);
@@ -91,9 +102,9 @@ const AddressAutocomplete = ({
   return (
     <div className="w-full">
       {label && (
-        <label data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+        <label className="block text-xs font-medium text-(--palette-ink) mb-1">
           {label}
-          {required && <span className="text-danger ml-0.5">*</span>}
+          {required && <span className={REQUIRED_MARK}>*</span>}
         </label>
       )}
 
@@ -101,15 +112,14 @@ const AddressAutocomplete = ({
         <div className="relative">
           <ComboboxInput
             className={clsx(
-              'block w-full px-3 py-2 pr-16 border rounded-lg text-sm transition-colors duration-200',
-              'placeholder:text-gray-400',
-              error
-                ? 'border-danger text-danger-900 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
-              isDisabled
-                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : 'bg-white hover:border-gray-300',
+              // The form-system box (17.3); the right inset holds the clear button and chevron.
+              'block w-full pr-16',
+              controlFrame(layout),
+              controlPad(layout, false, 'l'),
+              controlSkin({ error: !!error, disabled: isDisabled }),
             )}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             displayValue={formatDisplayValue}
             onChange={e => setQuery(e.target.value)}
             placeholder={placeholder}
@@ -120,32 +130,29 @@ const AddressAutocomplete = ({
             <button
               type="button"
               onClick={handleClear}
-              className="absolute inset-y-0 right-8 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute inset-y-0 right-8 flex items-center text-base text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
               title="ล้างข้อมูล"
             >
-              <Icon name="xmark" style="solid" className="w-4 h-4" />
+              <Icon name="xmark" style="solid" />
             </button>
           )}
 
           {/* Dropdown button */}
-          <ComboboxButton className="absolute inset-y-0 right-0 flex items-center pr-3">
-            <Icon
-              name="chevron-down"
-              style="solid"
-              className="w-4 h-4 text-gray-400"
-            />
+          <ComboboxButton className="absolute inset-y-0 right-[0.7857rem] flex items-center text-base text-(--palette-ink-2)">
+            <Icon name="chevron-down" style="solid" />
           </ComboboxButton>
 
           <ComboboxOptions
             className={clsx(
-              'absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg bg-white py-1',
-              'shadow-lg ring-1 ring-black/5 focus:outline-none',
+              'absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg py-1',
+              'bg-(--palette-surface) text-(--palette-ink) border border-(--palette-line)',
+              'shadow-lg focus:outline-none',
               'transition-opacity duration-100',
               'empty:hidden',
             )}
           >
             {trimmedQuery.length > 0 && filteredAddresses.length === 0 && (
-              <div className="px-4 py-3 text-sm text-gray-500 text-center">
+              <div className="px-4 py-3 text-sm text-(--palette-gray-500) text-center">
                 {isLoadingAddresses
                   ? 'กำลังโหลดข้อมูลที่อยู่...'
                   : hasAddressData
@@ -160,9 +167,9 @@ const AddressAutocomplete = ({
                 value={address}
                 className={({ focus, selected }) =>
                   clsx(
-                    'relative cursor-pointer select-none py-2.5 px-4 text-sm',
-                    focus ? 'bg-gray-100 text-gray-900' : 'text-gray-900',
-                    selected && 'bg-gray-100',
+                    'relative cursor-pointer select-none py-2.5 px-4 text-sm leading-normal text-(--palette-ink)',
+                    // Same option look as `Dropdown` (17.3): highlight, then the selected wash.
+                    focus ? 'bg-(--palette-surface-3)' : selected && 'bg-(--palette-accent-wash)',
                   )
                 }
               >
@@ -172,7 +179,7 @@ const AddressAutocomplete = ({
                       {address.subDistrictName}, {address.districtName}, {address.provinceName}
                     </span>
                     {selected && (
-                      <Icon name="check" style="solid" className="w-4 h-4 text-gray-600" />
+                      <Icon name="check" style="solid" className="text-(--palette-gray-600)" />
                     )}
                   </div>
                 )}
@@ -180,7 +187,7 @@ const AddressAutocomplete = ({
             ))}
 
             {totalMatches > filteredAddresses.length && (
-              <div className="border-t border-gray-100 mt-1 px-4 py-2 text-xs text-gray-500 text-center">
+              <div className="border-t border-(--palette-line-soft) mt-1 px-4 py-2 text-xs text-(--palette-gray-500) text-center">
                 แสดง {filteredAddresses.length} จาก {totalMatches} รายการ —
                 เว้นวรรคแล้วพิมพ์ชื่ออำเภอหรือจังหวัดเพื่อค้นหาให้แคบลง
               </div>
@@ -190,7 +197,9 @@ const AddressAutocomplete = ({
       </Combobox>
 
       {error && (
-        <p className="mt-1 text-xs text-danger">{error}</p>
+        <p id={errorId} className={clsx('mt-1', ERROR_TEXT)}>
+          <ValidationText message={error} label={label} />
+        </p>
       )}
     </div>
   );

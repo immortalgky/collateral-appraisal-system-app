@@ -10,7 +10,7 @@
 // whitespace-nowrap — mock `.g.dcf .stk/.stk2 { white-space: nowrap }`: a long label
 // truncates (with a `title`) instead of wrapping its row to 51px.
 const BASE_CELL =
-  'px-[8px] py-0 h-[26px] text-[12px] leading-[25px] border-b border-gray-300 whitespace-nowrap';
+  'px-[8px] py-0 h-[26px] text-[12px] leading-[25px] border-b border-(--palette-line-strong) whitespace-nowrap';
 
 /** Column 1 — the item (`.stk`): category/assumption/row name. Mock width 230px
  * (mock:669). Was widened to 320 for long names, but 320+350 pushed every year column off

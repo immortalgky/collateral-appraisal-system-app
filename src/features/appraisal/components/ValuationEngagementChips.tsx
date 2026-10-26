@@ -194,7 +194,7 @@ const ValuationEngagementChips = ({
         <button
           type="button"
           onClick={editDialog.onOpen}
-          className="flex items-center gap-1.5 rounded-full border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100 hover:border-amber-400 transition-colors cursor-pointer"
+          className="flex items-center gap-1.5 rounded-full border border-amber-300 dark:border-amber-500/40 bg-(--palette-warn-wash) px-2.5 py-1 text-xs font-medium text-amber-800 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-500/20 hover:border-amber-400 transition-colors cursor-pointer"
           title={t('offlineEngagement.title')}
         >
           <Icon name="triangle-exclamation" style="solid" className="w-3.5 h-3.5 text-amber-500" />
@@ -208,12 +208,12 @@ const ValuationEngagementChips = ({
           <Icon name="pen-to-square" style="solid" className="w-3.5 h-3.5" />
         </button>
       ) : (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+        <div className="flex items-center gap-1.5 text-xs text-(--palette-gray-500)">
           {/* Emoji glyph, matching the 🗓️ used by the appraisal-date chip beside it — the Icon
               component renders a different weight and colour and looked out of place next to it. */}
           <span className="text-sm leading-none">🏢</span>
           <span>{t('offlineEngagement.companyLabel')}</span>
-          <span className="font-semibold text-gray-700">
+          <span className="font-semibold text-(--palette-ink)">
             {localizeCompanyName(companyName ?? '', selectedCompany?.companyNameLocal)}
           </span>
           {canEdit && (
@@ -221,7 +221,7 @@ const ValuationEngagementChips = ({
               type="button"
               onClick={editDialog.onOpen}
               title={t('offlineEngagement.title')}
-              className="ml-0.5 p-1 rounded text-gray-400 hover:text-amber-600 hover:bg-amber-50 transition-colors cursor-pointer"
+              className="ml-0.5 p-1 rounded text-(--palette-gray-400) hover:text-amber-600 dark:hover:text-amber-400 hover:bg-(--palette-warn-wash) transition-colors cursor-pointer"
             >
               <Icon name="pen-to-square" style="solid" className="w-3.5 h-3.5" />
             </button>
@@ -235,17 +235,17 @@ const ValuationEngagementChips = ({
         title={t('offlineEngagement.title')}
       >
         <div className="flex flex-col gap-6">
-          <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-4 py-3">
             <Icon
               name="circle-info"
               style="solid"
               className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
             />
-            <p className="text-xs text-amber-700">{t('offlineEngagement.hint')}</p>
+            <p className="text-xs text-(--palette-warn)">{t('offlineEngagement.hint')}</p>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-2">
               {t('offlineEngagement.companyLabel')} <span className="text-danger">*</span>
             </label>
             {selectedCompany ? (
@@ -260,7 +260,7 @@ const ValuationEngagementChips = ({
               <button
                 type="button"
                 onClick={companyModal.onOpen}
-                className="w-full rounded-xl border-2 border-dashed border-gray-300 p-4 text-sm text-gray-500 hover:border-amber-400 hover:text-amber-600 transition-colors"
+                className="w-full rounded-xl border-2 border-dashed border-(--palette-line-strong) p-4 text-sm text-(--palette-gray-500) hover:border-amber-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
               >
                 <Icon name="magnifying-glass" style="solid" className="size-4 mr-2 inline" />
                 {t('offlineEngagement.selectCompany')}
@@ -269,7 +269,7 @@ const ValuationEngagementChips = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-2">
               {t('offlineEngagement.bookDateLabel')} <span className="text-danger">*</span>
             </label>
             {/* The book is already in hand, so a future date is always wrong. The backend validator

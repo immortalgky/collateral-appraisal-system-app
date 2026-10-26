@@ -2,11 +2,9 @@ import type { ReactNode } from 'react';
 import { z } from 'zod';
 import { PROPERTY_FORM_RECIPES } from '@/features/appraisal/utils/propertyFormRecipes';
 import { getDetailEndpoint } from '@/features/appraisal/utils/propertyTypeConfig';
-import Section from '@/shared/components/sections/Section';
 import type { FormField } from '@/shared/components/form';
 import { vehicleCorrectionFields, vesselCorrectionFields } from './generatedFields';
 import GeneratedDetailForm from '../components/GeneratedDetailForm';
-import FormSectionHeader from '../components/FormSectionHeader';
 import {
   PropertyBodyFrame,
   PropertyTabs,
@@ -96,14 +94,9 @@ const generatedForm = (title: string, fields: FormField[], suffix: string): Prop
       isOwnerVerified: raw.verifiableOwner ?? false,
     }),
     toPayload: values => Object.fromEntries(names.map(name => [name, values[name] ?? null])),
-    render: () => (
-      <PropertyBodyFrame>
-        <div className="flex flex-col gap-6 min-w-0 max-w-full">
-          <FormSectionHeader tone="generated" titleKey={title} />
-          <Section className="flex flex-col gap-6 min-w-0 overflow-hidden">
-            <GeneratedDetailForm fields={fields} />
-          </Section>
-        </div>
+    render: context => (
+      <PropertyBodyFrame context={context}>
+        <GeneratedDetailForm titleKey={title} fields={fields} />
       </PropertyBodyFrame>
     ),
   };

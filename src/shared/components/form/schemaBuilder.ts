@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { FormField, LocationSelectorField } from './types';
 import { evaluateConditions, getNestedValue } from './conditions';
+import { vmsg } from './validationMessage';
 
 // =============================================================================
 // Types
@@ -39,7 +40,8 @@ function hasConditions(field: FormField): boolean {
 function buildZodTypeForField(field: FormField): z.ZodTypeAny {
   const conditional = hasConditions(field);
   const staticRequired = field.required === true && !conditional;
-  const requiredMsg = `${getFieldLabel(field)} is required`;
+  // Messages are tokens, not sentences: the field's label is put in where the error is shown.
+  const requiredMsg = vmsg('required');
 
   let schema: z.ZodTypeAny;
 
@@ -48,14 +50,16 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
       let s = staticRequired
         ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
         : z.string();
-      const textLabel = getFieldLabel(field);
       if (staticRequired) s = s.min(1, requiredMsg);
       if (field.minLength != null)
-        s = s.min(field.minLength, `${textLabel} must be at least ${field.minLength} characters`);
+        s = s.min(field.minLength, vmsg('minLength', { min: field.minLength }));
       if (field.maxLength != null)
-        s = s.max(field.maxLength, `${textLabel} must be at most ${field.maxLength} characters`);
+        s = s.max(field.maxLength, vmsg('maxLength', { max: field.maxLength }));
       if (field.formatPattern) {
-        s = s.regex(new RegExp(field.formatPattern), field.formatPatternMessage);
+        s = s.regex(
+          new RegExp(field.formatPattern),
+          field.formatPatternMessage ?? vmsg('invalidFormat'),
+        );
       }
       schema = s;
       break;
@@ -65,22 +69,20 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
       let s = staticRequired
         ? z.string({ required_error: requiredMsg, invalid_type_error: requiredMsg })
         : z.string();
-      const textareaLabel = getFieldLabel(field);
       if (staticRequired) s = s.min(1, requiredMsg);
       if (field.maxLength != null)
-        s = s.max(
-          field.maxLength,
-          `${textareaLabel} must be at most ${field.maxLength} characters`,
-        );
+        s = s.max(field.maxLength, vmsg('maxLength', { max: field.maxLength }));
       if (field.formatPattern) {
-        s = s.regex(new RegExp(field.formatPattern), field.formatPatternMessage);
+        s = s.regex(
+          new RegExp(field.formatPattern),
+          field.formatPatternMessage ?? vmsg('invalidFormat'),
+        );
       }
       schema = s;
       break;
     }
 
     case 'number-input': {
-      const numLabel = getFieldLabel(field);
       const needsAllowZeroGuard = staticRequired && field.allowZero;
 
       // For allowZero required fields, use z.number() (not z.coerce) so that
@@ -90,18 +92,23 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
         ? z.number({ required_error: requiredMsg, invalid_type_error: requiredMsg })
         : z.coerce.number();
 
-      if (field.min != null) n = n.min(field.min, `${numLabel} must be at least ${field.min}`);
-      if (field.max != null) n = n.max(field.max, `${numLabel} must be at most ${field.max}`);
-      if (field.allowNegative === false) n = n.nonnegative();
+      if (field.min != null) n = n.min(field.min, vmsg('minValue', { min: field.min }));
+      if (field.max != null) n = n.max(field.max, vmsg('maxValue', { max: field.max }));
+      if (field.allowNegative === false) n = n.nonnegative(vmsg('minValue', { min: 0 }));
       if (field.decimalPlaces != null && field.decimalPlaces >= 0) {
-        n = n.multipleOf(Math.pow(10, -field.decimalPlaces));
+        n = n.multipleOf(
+          Math.pow(10, -field.decimalPlaces),
+          field.decimalPlaces === 0
+            ? vmsg('wholeNumber')
+            : vmsg('maxDecimals', { max: field.decimalPlaces }),
+        );
       }
       // Refining turns the ZodNumber into a ZodEffects, so the checks below go on a wider variable.
       let checked: z.ZodType<number> = n;
       if (field.maxIntegerDigits != null) {
         const maxInt = field.maxIntegerDigits;
         checked = checked.refine(val => Math.trunc(Math.abs(val)).toString().length <= maxInt, {
-          message: `Must not exceed ${maxInt} digits before decimal point`,
+          message: vmsg('maxIntegerDigits', { max: maxInt }),
         });
       }
       // Enforce "required": treat 0 as empty unless allowZero is set.
@@ -129,7 +136,10 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
         : z.string();
       if (staticRequired) s = s.min(1, requiredMsg);
       if (field.formatPattern) {
-        s = s.regex(new RegExp(field.formatPattern), field.formatPatternMessage);
+        s = s.regex(
+          new RegExp(field.formatPattern),
+          field.formatPatternMessage ?? vmsg('invalidFormat'),
+        );
       }
       schema = s;
       break;
@@ -206,16 +216,12 @@ function buildZodTypeForField(field: FormField): z.ZodTypeAny {
       }
 
       let arr = z.array(elementSchema);
-      const arrLabel = getFieldLabel(field);
       const minItems = staticRequired ? (field.minItems ?? 1) : 0;
-      const minMessage =
-        field.minItems != null
-          ? `${arrLabel} must have at least ${field.minItems} item(s)`
-          : `${arrLabel} must have at least 1 item`;
+      const minMessage = vmsg('minItems', { min: minItems });
       // With skipped rows the minimum is of the rows that count, so it is checked on them below
       if (minItems > 0 && !skipRow) arr = arr.min(minItems, minMessage);
       if (field.maxItems != null)
-        arr = arr.max(field.maxItems, `${arrLabel} must have at most ${field.maxItems} item(s)`);
+        arr = arr.max(field.maxItems, vmsg('maxItems', { max: field.maxItems }));
       schema =
         minItems > 0 && skipRow
           ? arr.superRefine((rows, ctx) => {
@@ -333,12 +339,6 @@ function deepMergeShapes(
 // Internal: Conditional refinement
 // =============================================================================
 
-/** Get display label for a field (used in error messages). */
-function getFieldLabel(field: FormField): string {
-  if ('label' in field && field.label) return field.label;
-  return field.name;
-}
-
 /**
  * Builds a superRefine callback that evaluates conditional visibility,
  * disabled state, and required state at validation time — mirroring the
@@ -384,7 +384,7 @@ export function buildConditionalRefinement(fields: FormField[]) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             path: field.name.split('.'),
-            message: `${getFieldLabel(field)} is required`,
+            message: vmsg('required'),
           });
         }
       }

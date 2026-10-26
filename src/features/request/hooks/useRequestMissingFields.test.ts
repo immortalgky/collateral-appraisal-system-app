@@ -9,6 +9,7 @@ import {
   countFiles,
   sectionOf,
   sectionTotal,
+  toChipSummary,
 } from './useRequestMissingFields';
 
 const issue = (...path: (string | number)[]) =>
@@ -102,6 +103,33 @@ describe('buildMissingSummary', () => {
   });
 });
 
+describe('toChipSummary', () => {
+  it('hands the shared chip the cards that have something missing, landing on each card id', () => {
+    const summary = buildMissingSummary(
+      { titles: [{}] },
+      [issue('customers', 0, 'name'), issue('titles', 0, 'titleNumber'), issue('titles', 0, 'x')],
+      resolver,
+    );
+    const chip = toChipSummary(summary, section => `title:${section}`);
+
+    expect(chip.total).toBe(summary.total);
+    // only s1 and titles have items, in the nav's order; ids are the cards' DOM ids
+    expect(chip.sections.map(s => [s.id, s.title])).toEqual([
+      ['s1', 'title:s1'],
+      ['title-document-info', 'title:titles'],
+    ]);
+    // a title row keeps the count of the empty fields it stands for
+    expect(chip.sections[1].items[0]).toMatchObject({ path: 'titles.0', count: 2 });
+  });
+
+  it('has no sections when nothing is missing', () => {
+    expect(toChipSummary(buildMissingSummary({}, [], resolver), s => s)).toEqual({
+      total: 0,
+      sections: [],
+    });
+  });
+});
+
 describe('what reaches the popover', () => {
   it('folds district and province into the sub-district and counts it once', () => {
     const summary = buildMissingSummary(
@@ -155,13 +183,13 @@ describe('collectIssues', () => {
     const issuePaths = (values: object) =>
       collectIssues(createRequestForm, values).map(i => i.path.join('.'));
 
-    expect(issuePaths({ ...base, meta: { isSubmitted: false } })).toContain(
+    expect(issuePaths({ ...base, meta: { priorLocked: false } })).toContain(
       'detail.prevAppraisalReportNo',
     );
     // a draft that never had the meta key (old callers) is still asked
     expect(issuePaths(base)).toContain('detail.prevAppraisalReportNo');
 
-    const submitted = { ...base, meta: { isSubmitted: true } };
+    const submitted = { ...base, meta: { priorLocked: true } };
     expect(issuePaths(submitted)).not.toContain('detail.prevAppraisalReportNo');
     const summary = buildMissingSummary(submitted, collectIssues(createRequestForm, submitted), {
       t: resolver.t,
@@ -199,6 +227,22 @@ describe('collectIssues', () => {
     expect(noRetail).not.toContain('properties.0.sellingPrice');
   });
 
+  it('asks for a building type on every property type that has a building', () => {
+    const types = ['L', 'LSL', 'MAC', 'VEH', 'VES', 'U', 'LSU', 'LB', 'B', 'LS', 'LSB'];
+    const values = {
+      ...createRequestFormDefault,
+      properties: types.map(propertyType => ({
+        propertyType,
+        buildingType: '',
+        buildingTypeOther: '',
+        sellingPrice: 1,
+      })),
+    };
+    const paths = collectIssues(createRequestForm, values).map(i => i.path.join('.'));
+    const asked = types.filter((_, i) => paths.includes(`properties.${i}.buildingType`));
+    expect(asked).toEqual(['U', 'LSU', 'LB', 'B', 'LS', 'LSB']);
+  });
+
   it('counts an untouched price cell (an empty string) the same as null for a RETAIL segment', () => {
     const values = {
       ...createRequestFormDefault,
@@ -214,11 +258,26 @@ describe('collectIssues', () => {
     expect(paths).toContain('properties.0.sellingPrice');
   });
 
+  it('accepts a request house number of exactly 50 characters and rejects 51', () => {
+    const withHouseNumber = (houseNumber: string) => ({
+      ...createRequestFormDefault,
+      detail: {
+        ...createRequestFormDefault.detail,
+        address: { ...createRequestFormDefault.detail.address, houseNumber },
+      },
+    });
+    const issuePaths = (houseNumber: string) =>
+      collectIssues(createRequestForm, withHouseNumber(houseNumber)).map(i => i.path.join('.'));
+
+    expect(issuePaths('x'.repeat(50))).not.toContain('detail.address.houseNumber');
+    expect(issuePaths('x'.repeat(51))).toContain('detail.address.houseNumber');
+  });
+
   describe('the prior appraisal', () => {
     const PATH = 'detail.prevAppraisalReportNo';
     const summaryFor = (
       purpose: string,
-      extra: Record<string, unknown> & { meta?: { isSubmitted: boolean } } = {},
+      extra: Record<string, unknown> & { meta?: { priorLocked: boolean } } = {},
     ) => {
       const { meta, ...detail } = extra;
       const values = {
@@ -257,13 +316,13 @@ describe('collectIssues', () => {
     });
 
     it('is not asked for of a submitted request, which cannot choose one any more', () => {
-      const meta = { meta: { isSubmitted: true } };
+      const meta = { meta: { priorLocked: true } };
       expect(summaryFor('02', meta).paths).not.toContain(PATH);
       expect(summaryFor('02', meta).summary.items.s1.map(i => i.path)).not.toContain(PATH);
     });
 
     it('is still asked for of a draft, whether the flag is false or absent', () => {
-      expect(summaryFor('02', { meta: { isSubmitted: false } }).paths).toContain(PATH);
+      expect(summaryFor('02', { meta: { priorLocked: false } }).paths).toContain(PATH);
       expect(summaryFor('02').paths).toContain(PATH);
     });
 

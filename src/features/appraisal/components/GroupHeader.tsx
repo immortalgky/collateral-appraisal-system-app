@@ -85,8 +85,8 @@ export const GroupHeader = ({
   }, [group.items]);
 
   return (
-    <div className="flex h-10 items-center gap-2 border-b border-gray-100 px-3">
-      <DisclosureButton className="p-0.5 text-gray-400 hover:text-gray-600 transition-colors shrink-0">
+    <div className="flex h-10 items-center gap-2 border-b border-(--palette-line-soft) px-3">
+      <DisclosureButton className="p-0.5 text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors shrink-0">
         <Icon
           name="chevron-down"
           className={clsx('text-xs transition-transform duration-200', !open && '-rotate-90')}
@@ -101,13 +101,13 @@ export const GroupHeader = ({
           onChange={e => rename.setValue(e.target.value)}
           onBlur={rename.commit}
           onKeyDown={rename.onKeyDown}
-          className="text-[13px] font-semibold text-gray-900 bg-white border border-primary rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary min-w-0 w-48"
+          className="text-[13px] font-semibold text-(--palette-ink) bg-(--palette-surface) border border-primary rounded px-1.5 py-0.5 outline-none focus:ring-1 focus:ring-primary min-w-0 w-48"
         />
       ) : (
         <h2
           className={clsx(
-            'text-[13px] font-semibold text-gray-900 whitespace-nowrap transition-colors',
-            canEdit && 'cursor-pointer hover:text-primary',
+            'text-[13px] font-semibold text-(--palette-ink) whitespace-nowrap transition-colors',
+            canEdit && 'cursor-pointer hover:text-(--palette-primary-text)',
           )}
           onClick={canEdit ? rename.start : undefined}
           title={canEdit ? t('properties.renameHint') : undefined}
@@ -116,7 +116,7 @@ export const GroupHeader = ({
         </h2>
       )}
 
-      <span className="text-[11px] text-gray-400 whitespace-nowrap tabular-nums">
+      <span className="text-[11px] text-(--palette-gray-400) whitespace-nowrap tabular-nums">
         {t('properties.itemCount', { n: group.items.length })}
       </span>
 
@@ -135,8 +135,8 @@ export const GroupHeader = ({
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5">
         {areaTotals.map(total => (
-          <span key={total.key} className="text-[11px] text-gray-500 whitespace-nowrap">
-            <b className="font-semibold text-gray-700 tabular-nums">{total.value}</b>{' '}
+          <span key={total.key} className="text-[11px] text-(--palette-gray-500) whitespace-nowrap">
+            <b className="font-semibold text-(--palette-ink) tabular-nums">{total.value}</b>{' '}
             {t(total.unitKey)}
           </span>
         ))}

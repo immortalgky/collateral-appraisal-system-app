@@ -60,8 +60,9 @@ const ToolbarButton = ({ active, disabled, onClick, icon, label }: ToolbarButton
     onMouseDown={e => e.preventDefault()}
     onClick={onClick}
     className={clsx(
-      'inline-flex size-7 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-200 hover:text-gray-700 disabled:pointer-events-none disabled:opacity-40',
-      active && 'bg-primary/10 text-primary hover:bg-primary/15 hover:text-primary',
+      'inline-flex size-7 items-center justify-center rounded-md text-(--palette-gray-500) transition-colors hover:bg-(--palette-line) hover:text-(--palette-ink) disabled:pointer-events-none disabled:opacity-40',
+      active &&
+        'bg-primary/10 text-(--palette-primary-text) hover:bg-primary/15 hover:text-(--palette-primary-text)',
     )}
   >
     <Icon name={icon} style="solid" className="size-3.5" />
@@ -101,11 +102,11 @@ const RichTextEditor = ({
   return (
     <div
       className={clsx(
-        'rounded-lg border border-gray-200 bg-gray-50/60 transition-colors focus-within:border-primary focus-within:bg-white focus-within:ring-2 focus-within:ring-primary/20',
+        'rounded-lg border border-(--palette-input-edge) bg-(--form-input-bg) transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20',
         className,
       )}
     >
-      <div className="flex items-center gap-1 border-b border-gray-200 px-2 py-1.5">
+      <div className="flex items-center gap-1 border-b border-(--palette-line) px-2 py-1.5">
         <ToolbarButton
           label="Bold"
           icon="bold"
@@ -118,7 +119,7 @@ const RichTextEditor = ({
           active={editor.isActive('italic')}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         />
-        <div className="mx-1 h-4 w-px bg-gray-200" />
+        <div className="mx-1 h-4 w-px bg-(--palette-line)" />
         <ToolbarButton
           label="Bullet list"
           icon="list-ul"
@@ -131,7 +132,7 @@ const RichTextEditor = ({
           active={editor.isActive('orderedList')}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         />
-        <div className="mx-1 h-4 w-px bg-gray-200" />
+        <div className="mx-1 h-4 w-px bg-(--palette-line)" />
         <ToolbarButton
           label="Insert table"
           icon="table"
@@ -144,10 +145,10 @@ const RichTextEditor = ({
       <EditorContent
         editor={editor}
         className={clsx(
-          'flex max-h-96 flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-gray-900 [&_.ProseMirror]:flex-1',
+          'flex max-h-96 flex-col overflow-y-auto px-3.5 py-2.5 text-sm leading-relaxed text-(--palette-ink) [&_.ProseMirror]:flex-1',
           '[&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5',
           '[&_table]:my-2 [&_table]:w-full [&_table]:table-fixed [&_table]:border-collapse',
-          '[&_td]:border [&_td]:border-gray-300 [&_td]:p-1.5 [&_td]:break-words [&_th]:border [&_th]:border-gray-300 [&_th]:bg-gray-100 [&_th]:p-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:break-words',
+          '[&_td]:border [&_td]:border-(--palette-line-strong) [&_td]:p-1.5 [&_td]:break-words [&_th]:border [&_th]:border-(--palette-line-strong) [&_th]:bg-(--palette-surface-3) [&_th]:p-1.5 [&_th]:text-left [&_th]:font-semibold [&_th]:break-words',
           minHeightClass,
         )}
       />

@@ -4,11 +4,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import type { TFunction } from 'i18next';
 
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import Modal from '@/shared/components/Modal';
+import { ValidationText } from '@/shared/components/form/ValidationText';
+import { tokenT } from '@/shared/components/form/validationMessage';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useGetUsers } from '@/features/userManagement/api/users';
 import {
@@ -17,10 +20,7 @@ import {
   SELECTABLE_POSITIONS,
 } from '@/features/meeting/constants';
 import type { CommitteeMemberPosition } from '@/features/meeting/api/types';
-import {
-  useSelectablePositions,
-  usePositionLabel,
-} from '@/features/meeting/hooks/usePositions';
+import { useSelectablePositions, usePositionLabel } from '@/features/meeting/hooks/usePositions';
 
 import {
   useAddCommitteeCondition,
@@ -171,14 +171,14 @@ type ConditionFormValues = z.infer<ReturnType<typeof makeConditionSchema>>;
 // ── Shared input class ────────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 // ── Attendance tooltip ────────────────────────────────────────────────────────
 
 const AttendanceHelp = () => {
   const { t } = useTranslation('committee');
   return (
-    <span className="ml-1 text-gray-400 cursor-help" title={t('help.attendance')}>
+    <span className="ml-1 text-(--palette-gray-400) cursor-help" title={t('help.attendance')}>
       <Icon name="circle-question" style="regular" className="inline w-3.5 h-3.5" />
     </span>
   );
@@ -209,7 +209,7 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
     setValue,
     formState: { errors },
   } = useForm<AddMemberFormValues>({
-    resolver: zodResolver(makeAddMemberSchema(t)),
+    resolver: zodResolver(makeAddMemberSchema(tokenT('committee'))),
     defaultValues: {
       userId: '',
       memberName: '',
@@ -274,14 +274,14 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
     <Modal isOpen={isOpen} onClose={handleClose} title={t('addDialog.title')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="cm-user" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="cm-user" className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('fields.user')} <span className="text-red-500">*</span>
           </label>
-          <select
+          <NativeSelect
             id="cm-user"
             onChange={handleUserSelect}
             disabled={isLoadingUsers}
-            className={inputClass}
+            className="w-full"
             defaultValue=""
           >
             <option value="" disabled>
@@ -298,39 +298,52 @@ const AddMemberDialog = ({ isOpen, onClose, committeeId }: AddMemberDialogProps)
                   : user.username}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           <input type="hidden" {...register('userId')} />
           <input type="hidden" {...register('memberName')} />
-          {errors.userId && <p className="mt-1 text-xs text-red-600">{errors.userId.message}</p>}
+          {errors.userId && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.userId.message} />
+            </p>
+          )}
         </div>
 
         <div>
-          <label htmlFor="cm-role" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="cm-role" className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('fields.role')} <span className="text-red-500">*</span>
           </label>
-          <select id="cm-role" {...register('role')} className={inputClass}>
+          <NativeSelect id="cm-role" {...register('role')} className="w-full">
             {selectablePositions.map(pos => (
               <option key={pos} value={pos}>
                 {positionLabel(pos)}
               </option>
             ))}
-          </select>
-          {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
+          </NativeSelect>
+          {errors.role && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.role.message} />
+            </p>
+          )}
         </div>
 
         <div>
-          <label htmlFor="cm-attendance" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cm-attendance"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.attendance')} <AttendanceHelp />
           </label>
-          <select id="cm-attendance" {...register('attendance')} className={inputClass}>
+          <NativeSelect id="cm-attendance" {...register('attendance')} className="w-full">
             {ATTENDANCE_OPTIONS.map(att => (
               <option key={att} value={att}>
                 {t(`attendance.${ATTENDANCE_KEY[att]}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {errors.attendance && (
-            <p className="mt-1 text-xs text-red-600">{errors.attendance.message}</p>
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.attendance.message} />
+            </p>
           )}
         </div>
 
@@ -377,7 +390,7 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
     handleSubmit,
     formState: { errors },
   } = useForm<UpdateMemberFormValues>({
-    resolver: zodResolver(makeUpdateMemberSchema(t, member.role)),
+    resolver: zodResolver(makeUpdateMemberSchema(tokenT('committee'), member.role)),
     defaultValues: {
       role: member.role,
       attendance: member.attendance,
@@ -414,13 +427,16 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('editDialog.title')} size="sm">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <p className="text-sm text-gray-700 font-medium">{member.memberName}</p>
+        <p className="text-sm text-(--palette-ink) font-medium">{member.memberName}</p>
 
         <div>
-          <label htmlFor="edit-role" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="edit-role"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.role')}
           </label>
-          <select id="edit-role" {...register('role')} className={inputClass}>
+          <NativeSelect id="edit-role" {...register('role')} className="w-full">
             {isRetiredRole && (
               <option value={member.role} disabled>
                 {positionLabel(member.role)}
@@ -431,23 +447,32 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
                 {positionLabel(pos)}
               </option>
             ))}
-          </select>
-          {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
+          </NativeSelect>
+          {errors.role && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.role.message} />
+            </p>
+          )}
         </div>
 
         <div>
-          <label htmlFor="edit-attendance" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="edit-attendance"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.attendance')} <AttendanceHelp />
           </label>
-          <select id="edit-attendance" {...register('attendance')} className={inputClass}>
+          <NativeSelect id="edit-attendance" {...register('attendance')} className="w-full">
             {ATTENDANCE_OPTIONS.map(att => (
               <option key={att} value={att}>
                 {t(`attendance.${ATTENDANCE_KEY[att]}`)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {errors.attendance && (
-            <p className="mt-1 text-xs text-red-600">{errors.attendance.message}</p>
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.attendance.message} />
+            </p>
           )}
         </div>
 
@@ -456,9 +481,9 @@ const EditMemberDialog = ({ isOpen, onClose, committeeId, member }: EditMemberDi
             id="edit-isActive"
             type="checkbox"
             {...register('isActive')}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400 focus:ring-blue-500"
           />
-          <label htmlFor="edit-isActive" className="text-sm font-medium text-gray-700">
+          <label htmlFor="edit-isActive" className="text-sm font-medium text-(--palette-ink)">
             {t('fields.active')}
           </label>
         </div>
@@ -503,7 +528,7 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
     watch,
     formState: { errors },
   } = useForm<CommitteeSettingsFormValues>({
-    resolver: zodResolver(makeCommitteeSettingsSchema(t, activeMemberCount)),
+    resolver: zodResolver(makeCommitteeSettingsSchema(tokenT('committee'), activeMemberCount)),
     defaultValues: {
       name: committee.name,
       description: committee.description ?? '',
@@ -552,15 +577,22 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
     <Modal isOpen={isOpen} onClose={handleClose} title={t('settingsDialog.title')} size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="cs-name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="cs-name" className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('fields.name')}
           </label>
           <input id="cs-name" type="text" {...register('name')} className={inputClass} />
-          {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+          {errors.name && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.name.message} />
+            </p>
+          )}
         </div>
 
         <div>
-          <label htmlFor="cs-description" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cs-description"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.description')}
           </label>
           <textarea
@@ -573,18 +605,21 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label htmlFor="cs-quorumType" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="cs-quorumType"
+              className="block text-sm font-medium text-(--palette-ink) mb-1"
+            >
               {t('fields.quorumType')}
             </label>
-            <select id="cs-quorumType" {...register('quorumType')} className={inputClass}>
+            <NativeSelect id="cs-quorumType" {...register('quorumType')} className="w-full">
               <option value="Fixed">{t('quorumType.fixed')}</option>
               <option value="Percentage">{t('quorumType.percentage')}</option>
-            </select>
+            </NativeSelect>
           </div>
           <div>
             <label
               htmlFor="cs-quorumValue"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-(--palette-ink) mb-1"
             >
               {quorumType === 'Percentage'
                 ? t('fields.quorumValuePercent')
@@ -599,23 +634,28 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
               className={inputClass}
             />
             {errors.quorumValue && (
-              <p className="mt-1 text-xs text-red-600">{errors.quorumValue.message}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                <ValidationText message={errors.quorumValue.message} />
+              </p>
             )}
           </div>
         </div>
 
         <div>
-          <label htmlFor="cs-majorityType" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cs-majorityType"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.majorityType')}
           </label>
-          <select id="cs-majorityType" {...register('majorityType')} className={inputClass}>
+          <NativeSelect id="cs-majorityType" {...register('majorityType')} className="w-full">
             <option value="Simple">{t('majorityType.simple')}</option>
             <option value="TwoThirds">{t('majorityType.twoThirds')}</option>
             <option value="Unanimous">{t('majorityType.unanimous')}</option>
             <option value="FixedCount">{t('majorityType.fixedCount')}</option>
-          </select>
+          </NativeSelect>
           {/* The proportional rules are evaluated against the whole committee, not votes cast. */}
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-(--palette-gray-400)">
             {majorityType === 'FixedCount' ? t('help.majorityFixedCount') : t('help.majority')}
           </p>
         </div>
@@ -626,7 +666,7 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
           <div>
             <label
               htmlFor="cs-majorityValue"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-(--palette-ink) mb-1"
             >
               {t('fields.majorityValue')}
             </label>
@@ -639,9 +679,11 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
               className={inputClass}
             />
             {errors.majorityValue ? (
-              <p className="mt-1 text-xs text-red-600">{errors.majorityValue.message}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                <ValidationText message={errors.majorityValue.message} />
+              </p>
             ) : (
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-(--palette-gray-400)">
                 {t('help.majorityValue', { max: activeMemberCount })}
               </p>
             )}
@@ -649,14 +691,17 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
         )}
 
         <div>
-          <label htmlFor="cs-votingMode" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cs-votingMode"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.votingMode')}
           </label>
-          <select id="cs-votingMode" {...register('votingMode')} className={inputClass}>
+          <NativeSelect id="cs-votingMode" {...register('votingMode')} className="w-full">
             <option value="WaitForAll">{t('votingMode.waitForAll')}</option>
             <option value="Quorum">{t('votingMode.quorum')}</option>
-          </select>
-          <p className="mt-1 text-xs text-gray-400">
+          </NativeSelect>
+          <p className="mt-1 text-xs text-(--palette-gray-400)">
             {votingMode === 'Quorum' ? t('help.votingQuorum') : t('help.votingWaitForAll')}
           </p>
         </div>
@@ -666,13 +711,13 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
             id="cs-isActive"
             type="checkbox"
             {...register('isActive')}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400 focus:ring-blue-500"
           />
-          <label htmlFor="cs-isActive" className="text-sm font-medium text-gray-700">
+          <label htmlFor="cs-isActive" className="text-sm font-medium text-(--palette-ink)">
             {t('fields.active')}
           </label>
         </div>
-        <p className="text-xs text-gray-400">{t('help.committeeActive')}</p>
+        <p className="text-xs text-(--palette-gray-400)">{t('help.committeeActive')}</p>
 
         <div className="flex justify-end gap-3 pt-2">
           <Button
@@ -696,8 +741,8 @@ const CommitteeSettingsDialog = ({ isOpen, onClose, committee }: CommitteeSettin
 
 const SettingItem = ({ label, value }: { label: string; value: string }) => (
   <div>
-    <p className="text-xs text-gray-500">{label}</p>
-    <p className="text-sm text-gray-900">{value}</p>
+    <p className="text-xs text-(--palette-gray-500)">{label}</p>
+    <p className="text-sm text-(--palette-ink)">{value}</p>
   </div>
 );
 
@@ -738,7 +783,8 @@ const ConditionDialog = ({
   // — the roles held by active members, unfiltered — which really can be `Risk` today, giving the
   // select a value matching none of its options.
   const seededRole = condition?.roleRequired ?? votingPositions[0] ?? '';
-  const isUnlistedRole = !!seededRole && !(votingPositions as readonly string[]).includes(seededRole);
+  const isUnlistedRole =
+    !!seededRole && !(votingPositions as readonly string[]).includes(seededRole);
 
   const {
     register,
@@ -746,7 +792,7 @@ const ConditionDialog = ({
     watch,
     formState: { errors },
   } = useForm<ConditionFormValues>({
-    resolver: zodResolver(makeConditionSchema(t, votingPositions)),
+    resolver: zodResolver(makeConditionSchema(tokenT('committee'), votingPositions)),
     defaultValues: {
       conditionType: condition?.conditionType ?? 'RoleRequired',
       roleRequired: seededRole,
@@ -802,21 +848,27 @@ const ConditionDialog = ({
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="cond-type" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cond-type"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('conditions.fields.type')}
           </label>
-          <select id="cond-type" {...register('conditionType')} className={inputClass}>
+          <NativeSelect id="cond-type" {...register('conditionType')} className="w-full">
             <option value="RoleRequired">{t('conditions.type.roleRequired')}</option>
             <option value="MinVotes">{t('conditions.type.minVotes')}</option>
-          </select>
+          </NativeSelect>
         </div>
 
         {conditionType === 'RoleRequired' ? (
           <div>
-            <label htmlFor="cond-role" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="cond-role"
+              className="block text-sm font-medium text-(--palette-ink) mb-1"
+            >
               {t('conditions.fields.role')}
             </label>
-            <select id="cond-role" {...register('roleRequired')} className={inputClass}>
+            <NativeSelect id="cond-role" {...register('roleRequired')} className="w-full">
               {/*
                 An existing condition on a role that is no longer offered (retired, or since
                 deactivated in the MeetingPosition group) would otherwise leave the select showing
@@ -834,15 +886,20 @@ const ConditionDialog = ({
                   {activeRoles.includes(pos) ? '' : ` — ${t('conditions.noMemberHolds')}`}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             {errors.roleRequired && (
-              <p className="mt-1 text-xs text-red-600">{errors.roleRequired.message}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                <ValidationText message={errors.roleRequired.message} />
+              </p>
             )}
-            <p className="mt-1 text-xs text-gray-400">{t('conditions.help.role')}</p>
+            <p className="mt-1 text-xs text-(--palette-gray-400)">{t('conditions.help.role')}</p>
           </div>
         ) : (
           <div>
-            <label htmlFor="cond-min" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="cond-min"
+              className="block text-sm font-medium text-(--palette-ink) mb-1"
+            >
               {t('conditions.fields.minVotes')}
             </label>
             <input
@@ -853,13 +910,18 @@ const ConditionDialog = ({
               className={inputClass}
             />
             {errors.minVotesRequired && (
-              <p className="mt-1 text-xs text-red-600">{errors.minVotesRequired.message}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                <ValidationText message={errors.minVotesRequired.message} />
+              </p>
             )}
           </div>
         )}
 
         <div>
-          <label htmlFor="cond-priority" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cond-priority"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('conditions.fields.priority')}
           </label>
           <input
@@ -872,7 +934,10 @@ const ConditionDialog = ({
         </div>
 
         <div>
-          <label htmlFor="cond-desc" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="cond-desc"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('conditions.fields.description')}
           </label>
           <textarea id="cond-desc" rows={2} {...register('description')} className={inputClass} />
@@ -884,15 +949,15 @@ const ConditionDialog = ({
               id="cond-active"
               type="checkbox"
               {...register('isActive')}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400 focus:ring-blue-500"
             />
-            <label htmlFor="cond-active" className="text-sm font-medium text-gray-700">
+            <label htmlFor="cond-active" className="text-sm font-medium text-(--palette-ink)">
               {t('conditions.fields.active')}
             </label>
           </div>
         )}
 
-        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+        <p className="text-xs text-(--palette-warn) bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 rounded px-2 py-1.5">
           {t('conditions.help.snapshot')}
         </p>
 
@@ -929,7 +994,11 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -988,12 +1057,12 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
     <div className="space-y-4">
       {/* Committee-level configuration — quorum, majority and voting mode drive how the
           approval step resolves, so they belong on this screen next to the members. */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface) p-4">
         <div className="mb-3 flex items-start justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-700">{t('summary.title')}</h3>
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('summary.title')}</h3>
             {committee.description && (
-              <p className="mt-0.5 text-xs text-gray-500">{committee.description}</p>
+              <p className="mt-0.5 text-xs text-(--palette-gray-500)">{committee.description}</p>
             )}
           </div>
           <Button size="sm" variant="ghost" type="button" onClick={settingsDialog.onOpen}>
@@ -1018,9 +1087,9 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
 
       {/* Approval conditions — extra rules on top of quorum and the approval rule. Placed above
           Members because they are evaluated against member roles. */}
-      <div className="rounded-lg border border-gray-200 bg-white p-4">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface) p-4">
         <div className="flex items-center justify-between mb-2">
-          <h3 className="text-base font-semibold text-gray-700">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             {t('conditions.title', { count: conditions.filter(c => c.isActive).length })}
           </h3>
           <Button
@@ -1038,25 +1107,25 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
         </div>
 
         {conditions.length === 0 ? (
-          <p className="text-xs text-gray-400 italic py-2">{t('conditions.empty')}</p>
+          <p className="text-xs text-(--palette-gray-400) italic py-2">{t('conditions.empty')}</p>
         ) : (
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-(--palette-line-soft)">
             {conditions.map(c => (
               <li key={c.id} className="flex items-center gap-3 py-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-(--palette-ink)">
                     {describeCondition(c)}
                     {!c.isActive && (
-                      <span className="ml-2 rounded bg-gray-100 px-1.5 py-0.5 text-xs text-gray-500">
+                      <span className="ml-2 rounded bg-(--palette-surface-3) px-1.5 py-0.5 text-xs text-(--palette-gray-500)">
                         {t('common:status.inactive')}
                       </span>
                     )}
                   </p>
                   {c.description && (
-                    <p className="truncate text-xs text-gray-400">{c.description}</p>
+                    <p className="truncate text-xs text-(--palette-gray-400)">{c.description}</p>
                   )}
                 </div>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-(--palette-gray-400)">
                   {t('conditions.priorityShort', { value: c.priority })}
                 </span>
                 <button
@@ -1065,7 +1134,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                     setEditingCondition(c);
                     conditionDialog.onOpen();
                   }}
-                  className="p-1 text-gray-400 hover:text-gray-600"
+                  className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                   aria-label={t('conditions.edit')}
                 >
                   <Icon name="pen" style="solid" className="size-3.5" />
@@ -1073,7 +1142,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                 <button
                   type="button"
                   onClick={() => handleRemoveCondition(c)}
-                  className="p-1 text-gray-400 hover:text-red-600"
+                  className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger)"
                   aria-label={t('conditions.remove')}
                 >
                   <Icon name="trash" style="solid" className="size-3.5" />
@@ -1085,7 +1154,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
       </div>
 
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold text-gray-700">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
           {t('panel.membersActive', { count: members.filter(m => m.isActive).length })}
         </h3>
         <Button size="sm" type="button" onClick={addMemberDialog.onOpen}>
@@ -1095,41 +1164,45 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
       </div>
 
       {members.length === 0 ? (
-        <p className="text-sm text-gray-400 italic py-4 text-center">{t('panel.noMembers')}</p>
+        <p className="text-sm text-(--palette-gray-400) italic py-4 text-center">
+          {t('panel.noMembers')}
+        </p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
-          <table className="min-w-full divide-y divide-gray-200 text-table">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg border border-(--palette-line)">
+          <table className="min-w-full divide-y divide-(--palette-line) text-table">
+            <thead className="bg-(--palette-surface-2)">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('columns.name')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('columns.role')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('columns.attendance')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('columns.status')}
                 </th>
                 <th className="text-xs w-20 px-4 py-2.5 font-semibold" />
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-(--palette-surface) divide-y divide-(--palette-line)">
               {members.map(member => (
-                <tr key={member.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-900 font-medium">{member.memberName}</td>
-                  <td className="px-4 py-3 text-gray-600">{member.role}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                <tr key={member.id} className="hover:bg-(--palette-surface-2)">
+                  <td className="px-4 py-3 text-(--palette-ink) font-medium">
+                    {member.memberName}
+                  </td>
+                  <td className="px-4 py-3 text-(--palette-gray-600)">{member.role}</td>
+                  <td className="px-4 py-3 text-(--palette-gray-600)">
                     {t(`attendance.${ATTENDANCE_KEY[member.attendance]}`)}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         member.isActive
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-gray-100 text-gray-500'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                       }`}
                     >
                       {member.isActive ? t('common:status.active') : t('common:status.inactive')}
@@ -1140,7 +1213,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                       <button
                         type="button"
                         onClick={() => setEditingMember(member)}
-                        className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600) rounded"
                         aria-label={t('aria.edit', { name: member.memberName })}
                       >
                         <Icon name="pen" style="solid" className="size-3.5" />
@@ -1148,7 +1221,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
                       <button
                         type="button"
                         onClick={() => handleRemove(member)}
-                        className="p-1 text-gray-400 hover:text-red-600 rounded"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger) rounded"
                         aria-label={t('aria.remove', { name: member.memberName })}
                       >
                         <Icon name="trash" style="solid" className="size-3.5" />
@@ -1164,11 +1237,7 @@ const CommitteeDetailPanel = ({ committeeId }: CommitteeDetailPanelProps) => {
 
       {/* Remount per open so the form re-seeds from the latest server values. */}
       {addMemberDialog.isOpen && (
-        <AddMemberDialog
-          isOpen
-          onClose={addMemberDialog.onClose}
-          committeeId={committeeId}
-        />
+        <AddMemberDialog isOpen onClose={addMemberDialog.onClose} committeeId={committeeId} />
       )}
 
       {/* Remount per open so the form re-seeds from the latest server values. */}
@@ -1214,19 +1283,23 @@ const CommitteeAdminPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
       <div className="shrink-0">
-        <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+        <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
       </div>
 
       <div className="flex flex-1 min-h-0 gap-4">
         {/* Committee list */}
-        <div className="w-72 shrink-0 bg-white rounded-lg border border-gray-200 overflow-auto">
+        <div className="w-72 shrink-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+              <Icon
+                name="spinner"
+                style="solid"
+                className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+              />
             </div>
           ) : committeeList.length === 0 ? (
-            <p className="px-4 py-8 text-sm text-gray-400 italic text-center">
+            <p className="px-4 py-8 text-sm text-(--palette-gray-400) italic text-center">
               {t('page.noCommittees')}
             </p>
           ) : (
@@ -1236,15 +1309,15 @@ const CommitteeAdminPage = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedCommitteeId(c.id)}
-                    className={`w-full text-left px-4 py-3 text-sm transition-colors border-b border-gray-100 last:border-0 ${
+                    className={`w-full text-left px-4 py-3 text-sm transition-colors border-b border-(--palette-line-soft) last:border-0 ${
                       selectedCommitteeId === c.id
-                        ? 'bg-blue-50 text-blue-700'
-                        : 'hover:bg-gray-50 text-gray-900'
+                        ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                        : 'hover:bg-(--palette-surface-2) text-(--palette-ink)'
                     }`}
                   >
                     <span className="font-medium">{c.name}</span>
-                    <span className="ml-2 text-xs text-gray-400">{c.code}</span>
-                    <div className="text-xs text-gray-500 mt-0.5">
+                    <span className="ml-2 text-xs text-(--palette-gray-400)">{c.code}</span>
+                    <div className="text-xs text-(--palette-gray-500) mt-0.5">
                       {t('page.memberCount', { count: c.memberCount })}
                     </div>
                   </button>
@@ -1257,11 +1330,11 @@ const CommitteeAdminPage = () => {
         {/* Detail panel */}
         <div className="flex-1 min-h-0 overflow-auto">
           {selectedCommitteeId ? (
-            <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
               <CommitteeDetailPanel committeeId={selectedCommitteeId} />
             </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-gray-400 text-sm">
+            <div className="flex items-center justify-center h-full text-(--palette-gray-400) text-sm">
               {t('page.selectPrompt')}
             </div>
           )}

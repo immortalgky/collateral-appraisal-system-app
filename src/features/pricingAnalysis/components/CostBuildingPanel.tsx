@@ -5,6 +5,7 @@ import { DenseProvider, RHFInputCell } from './table/RHFInputCell';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useFormContext, useWatch } from 'react-hook-form';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
 import z from 'zod';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import toast from 'react-hot-toast';
@@ -256,14 +257,16 @@ export function CostBuildingPanel({
     <FormProvider methods={methods} schema={costBuildingDto}>
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-          <span className="text-sm font-semibold text-primary tabular-nums">
+          <span className="text-[10px] text-(--palette-gray-400)">
+            {t('finalValue.indicatedValue')}
+          </span>
+          <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
             {fmt(Number(indicatedValue) || 0)}
           </span>
         </div>
         {!isReadOnly && (
           <>
-            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <span className="w-px h-5 bg-(--palette-line) shrink-0" />
             <Button
               variant="ghost"
               type="button"
@@ -281,11 +284,12 @@ export function CostBuildingPanel({
                 disabled={saveMutation.isPending}
                 title={t('footer.reset')}
                 aria-label={t('footer.reset')}
-                className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+                className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger)"
               >
                 <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
               </Button>
             )}
+            <MissingFieldsChip placement="down" />
             <Button
               type="submit"
               form={formId}
@@ -400,10 +404,7 @@ export function CostBuildingPanel({
                 // on this screen distinguishes a hand-keyed figure from one that merely
                 // coincides with the rounded total. No exposure today (0 of 241 buildings
                 // carry an override); see FinalCostRow's own comment in BuildingCostTable.tsx.
-                <BuildingCostTable
-                  buildingCost={buildingProperties ?? []}
-                  showProvenance={false}
-                />
+                <BuildingCostTable buildingCost={buildingProperties ?? []} showProvenance={false} />
               ),
             },
             {
@@ -474,15 +475,15 @@ function AdjustAppraisalPrice({
         // that number came from instead of flagging a change nobody made.
         if (delta === 0) {
           return (
-            <span className="text-[10.5px] text-[#8a96a0]">
+            <span className="text-[10.5px] text-(--palette-ink-3)">
               {t('costBuilding.summary.sumOfAllBuildingsHint')}
             </span>
           );
         }
         const sign = delta > 0 ? '+' : '−';
         return (
-          <span className="text-[10.5px] text-gray-400 inline-flex items-center gap-1 flex-wrap justify-end">
-            <span className="font-semibold text-[#b45309]">
+          <span className="text-[10.5px] text-(--palette-gray-400) inline-flex items-center gap-1 flex-wrap justify-end">
+            <span className="font-semibold text-(--palette-warn)">
               {t('comparativeAnalysis.editedLabel')}
             </span>
             {t('comparativeAnalysis.differsFromComputed', {
@@ -491,7 +492,7 @@ function AdjustAppraisalPrice({
             <span>·</span>
             <button
               type="button"
-              className="text-primary hover:underline"
+              className="text-(--palette-primary-text) hover:underline"
               onClick={() => setValue(editableFieldPath, computed, { shouldDirty: true })}
             >
               {t('comparativeAnalysis.useComputedValue')}
@@ -521,11 +522,11 @@ function AdjustAppraisalPrice({
     // at 540px rather than stretching the full tab. That is also roughly what each of the
     // siblings' two 50% columns comes to, so this card reads the same size as theirs.
     <div className="py-[14px] px-[16px]">
-      <div className="max-w-[540px] min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
+      <div className="max-w-[540px] min-w-0 border border-(--palette-line) rounded-[10px] overflow-hidden">
         {/* mock:586-587's `.panel` / `.panel h4`. `overflow-hidden` on the card is what
             clips this header band to the rounded corners — it fills edge to edge rather
             than floating inside body padding. */}
-        <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+        <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-(--palette-ink) bg-(--palette-surface-2) border-b border-(--palette-line)">
           {t('costBuilding.summary.valueByThisMethod')}
         </h4>
         {/* `KvRow` rather than the hand-rolled flex rows this replaced — the same shared
@@ -557,7 +558,7 @@ function AdjustAppraisalPrice({
               count: buildingCount,
             })}
             value={
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-(--palette-ink)">
                 {fmt(Number(totalBuildingValue) || 0)}
               </span>
             }
@@ -571,10 +572,10 @@ function AdjustAppraisalPrice({
             // method's result is, the way machinery's card already does.
             label={
               <span className="flex flex-col">
-                <span className="text-[14px] font-semibold text-[#0f766e]">
+                <span className="text-[14px] font-semibold text-(--palette-accent-ink)">
                   {t('finalValue.indicatedValue')}
                 </span>
-                <span className="text-[10.5px] text-[#8a96a0]">
+                <span className="text-[10.5px] text-(--palette-ink-3)">
                   {t('costBuilding.summary.totalBuildingCostSubLabel')}
                 </span>
               </span>
@@ -608,7 +609,7 @@ function AdjustAppraisalPrice({
                 // CostMachinePanel.tsx:419); v4 does not recognise that form, so those may
                 // be emitting nothing at all. Not changed here — that is their files' call
                 // and needs a browser to confirm — but see the handoff note.
-                inputClassName="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+                inputClassName="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
               />
             }
             unit={t('costBuilding.summary.baht')}

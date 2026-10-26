@@ -12,13 +12,8 @@ import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import Section from '@/shared/components/sections/Section';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import { FormProvider } from '@/shared/components/form';
 import type { ApiError } from '@/shared/types/api';
 
 import {
@@ -38,6 +33,7 @@ import {
 import ProjectTowerPhotoSection, {
   type ProjectTowerPhotoSectionRef,
 } from '../components/ProjectTowerPhotoSection';
+import { CondoDetailShell } from '../components/condo/towersModels/CondoDetailShell';
 
 type AppError = AxiosError & { apiError?: ApiError };
 
@@ -124,7 +120,6 @@ export default function TowerDetailPage() {
   } = methods;
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
-  const { isOpen, onToggle } = useDisclosure();
 
   useEffect(() => {
     if (isEditMode && towerData) {
@@ -218,112 +213,93 @@ export default function TowerDetailPage() {
   if (isLoading || (isEditMode && !towerData)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="tower-form-scroll"
-          anchors={[
-            { label: t('towerDetail.navAnchors.images'), id: 'tower-images', icon: 'images' },
-            { label: t('towerDetail.navAnchors.towerInfo'), id: 'tower-info', icon: 'building' },
-            { label: t('towerDetail.navAnchors.remark'), id: 'tower-remark', icon: 'comment' },
-          ]}
-        />
-      </div>
+  // The unit count the form checks itself against comes from the saved tower, so it changes on
+  // save, not as the user types.
+  const savedTower = isEditMode ? towerData : undefined;
 
-      <FormProvider methods={methods} schema={projectTowerForm}>
-        <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col">
-          <div
-            id="tower-form-scroll"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+  const footer = (
+    <>
+      {/* Action Bar */}
+      <ActionBar>
+        <ActionBar.Left>
+          <Button variant="ghost" type="button" onClick={handleNavigateBack}>
+            {t('actions.cancel')}
+          </Button>
+          {isEditMode && !isReadOnly && (
+            <DeleteButton
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isPending || isDeleting}
+            />
+          )}
+          {!isReadOnly && (
+            <>
+              <ActionBar.Divider />
+              <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+            </>
+          )}
+        </ActionBar.Left>
+        {!isReadOnly && (
+          <ActionBar.Right>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={handleSaveDraft}
+              isLoading={isPending && saveAction === 'draft'}
+              disabled={isPending}
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Tower Images */}
-                  <Section id="tower-images" anchor>
-                    <ProjectTowerPhotoSection
-                      ref={photoSectionRef}
-                      appraisalId={appraisalId ?? ''}
-                      entityId={towerId}
-                      images={towerData?.images}
-                    />
-                  </Section>
+              {t('actions.saveDraft')}
+            </Button>
+            <Button
+              type="submit"
+              isLoading={isPending && saveAction === 'submit'}
+              disabled={isPending}
+            >
+              <Icon name="check" style="solid" className="size-4 mr-2" />
+              {t('actions.save')}
+            </Button>
+          </ActionBar.Right>
+        )}
+      </ActionBar>
 
-                  {/* Tower Information */}
-                  <Section id="tower-info" anchor className="min-w-0 overflow-hidden">
-                    <TowerDetailForm />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title={t('dialogs.deleteTower.title')}
+        message={t('dialogs.deleteTower.message')}
+        confirmText={t('dialogs.deleteTower.confirm')}
+        isLoading={isDeleting}
+      />
+      <UnsavedChangesDialog blocker={blocker} />
+    </>
+  );
 
-          {/* Action Bar */}
-          <ActionBar>
-            <ActionBar.Left>
-              <Button variant="ghost" type="button" onClick={handleNavigateBack}>
-                Cancel
-              </Button>
-              {isEditMode && !isReadOnly && (
-                <DeleteButton
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isPending || isDeleting}
-                />
-              )}
-              {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
-              )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
-
-          <ConfirmDialog
-            isOpen={isDeleteDialogOpen}
-            onClose={() => setIsDeleteDialogOpen(false)}
-            onConfirm={handleDelete}
-            title={t('dialogs.deleteTower.title')}
-            message={t('dialogs.deleteTower.message')}
-            confirmText={t('dialogs.deleteTower.confirm')}
-            isLoading={isDeleting}
-          />
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
-    </div>
+  return (
+    <CondoDetailShell
+      methods={methods}
+      schema={projectTowerForm}
+      onSubmit={handleSave}
+      photos={renderGallery => (
+        <ProjectTowerPhotoSection
+          ref={photoSectionRef}
+          appraisalId={appraisalId ?? ''}
+          entityId={towerId}
+          images={towerData?.images}
+          renderGallery={renderGallery}
+        />
+      )}
+      footer={footer}
+    >
+      <TowerDetailForm savedTower={savedTower} />
+    </CondoDetailShell>
   );
 }

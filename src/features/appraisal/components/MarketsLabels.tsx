@@ -28,7 +28,7 @@ export const UsedInBadge = ({ method }: { method: string }) => {
   const { t } = useTranslation('appraisal');
   const label = isMethodCode(method) ? t(`markets.methods.${method}`) : method;
   return (
-    <span className="inline-flex items-center whitespace-nowrap rounded-full bg-primary-50 px-1.5 text-[10.5px] font-semibold leading-[1.5] text-primary-700">
+    <span className="inline-flex items-center whitespace-nowrap rounded-full bg-(--palette-accent-wash) px-1.5 text-[10.5px] font-semibold leading-[1.5] text-(--palette-accent-ink)">
       {t('markets.usedIn', { method: label })}
     </span>
   );
@@ -58,7 +58,7 @@ export const DotJoin = ({ parts, className }: { parts: ReactNode[]; className?: 
     <p className={className}>
       {shown.map((part, i) => (
         <Fragment key={i}>
-          {i > 0 && <span className="mx-1.5 text-gray-300">·</span>}
+          {i > 0 && <span className="mx-1.5 text-(--palette-gray-300)">·</span>}
           {part}
         </Fragment>
       ))}

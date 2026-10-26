@@ -52,17 +52,19 @@ const DOT_COLOR: Record<StatusVariant, string> = {
 // Mirrors the ROW_VARIANT_TINT values used in MonitoringDataTable.
 // Returns '' for healthy/unknown so the row stays neutral.
 
-export function getRowVariantClasses(bucket: 'breached' | 'atRisk' | 'healthy' | undefined): string {
+export function getRowVariantClasses(
+  bucket: 'breached' | 'atRisk' | 'healthy' | undefined,
+): string {
   // The left-stripe is applied as an inset box-shadow on the first <td> because
   // box-shadow on a <tr> is suppressed in border-collapse: collapse tables.
   // The first <td> also gets the OPAQUE variant background (not the translucent
-  // /40 /30 used on the row body) — sticky pinned cells set their own bg-white
+  // /40 /30 used on the row body) — sticky pinned cells set their own bg-(--palette-surface)
   // for horizontal-scroll layering, which would otherwise hide the row tint.
   switch (bucket) {
     case 'breached':
-      return 'bg-red-50/40 group-hover:bg-red-50 [&>td:first-child]:bg-red-50 [&>td:first-child]:group-hover:bg-red-100 [&>td:first-child]:shadow-[inset_4px_0_0_0_rgb(239,68,68)]';
+      return 'bg-(--palette-req-wash)/40 group-hover:bg-(--palette-req-wash) [&>td:first-child]:bg-(--palette-req-wash) [&>td:first-child]:group-hover:bg-red-100 dark:[&>td:first-child]:group-hover:bg-red-500/20 [&>td:first-child]:shadow-[inset_4px_0_0_0_rgb(239,68,68)]';
     case 'atRisk':
-      return 'bg-amber-50/30 group-hover:bg-amber-50 [&>td:first-child]:bg-amber-50 [&>td:first-child]:group-hover:bg-amber-100 [&>td:first-child]:shadow-[inset_4px_0_0_0_rgb(245,158,11)]';
+      return 'bg-(--palette-warn-wash)/30 group-hover:bg-(--palette-warn-wash) [&>td:first-child]:bg-(--palette-warn-wash) [&>td:first-child]:group-hover:bg-amber-100 dark:[&>td:first-child]:group-hover:bg-amber-500/20 [&>td:first-child]:shadow-[inset_4px_0_0_0_rgb(245,158,11)]';
     case 'healthy':
     default:
       return '';
@@ -99,13 +101,13 @@ export function SlaDueCell({
     } else if (assignedDate && targetHours != null) {
       dueDate = new Date(parseISO(assignedDate).getTime() + targetHours * 3_600_000);
     } else {
-      return <span className="text-gray-400">—</span>;
+      return <span className="text-(--palette-gray-400)">—</span>;
     }
   } catch {
-    return <span className="text-gray-400">—</span>;
+    return <span className="text-(--palette-gray-400)">—</span>;
   }
   if (Number.isNaN(dueDate.getTime())) {
-    return <span className="text-gray-400">—</span>;
+    return <span className="text-(--palette-gray-400)">—</span>;
   }
 
   const variant = variantOf(slaStatus);
@@ -122,21 +124,21 @@ export function SlaDueCell({
         ? 'text-amber-500'
         : variant === 'healthy'
           ? 'text-emerald-500'
-          : 'text-gray-400';
+          : 'text-(--palette-gray-400)';
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-table tabular-nums text-gray-700">
+    <span className="inline-flex items-center gap-1.5 text-table tabular-nums text-(--palette-ink)">
       <Icon style="solid" name={iconName} className={`size-3.5 shrink-0 ${iconColor}`} />
       <span className="flex flex-col gap-0.5">
         <span className="inline-flex items-center gap-1.5">
           {format(dueDate, 'dd/MM/yyyy HH:mm')}
           {slaDurationHours != null && (
-            <span className="inline-flex items-center rounded border border-gray-200 px-1 py-px text-xs font-medium text-gray-500 tabular-nums">
+            <span className="inline-flex items-center rounded border border-(--palette-line) px-1 py-px text-xs font-medium text-(--palette-gray-500) tabular-nums">
               {slaDurationHours}h
             </span>
           )}
         </span>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-(--palette-gray-400)">
           {formatDistanceToNowStrict(dueDate, { addSuffix: true })}
         </span>
       </span>
@@ -154,9 +156,11 @@ interface ElapsedCellProps {
 
 export function ElapsedCell({ actualHours }: ElapsedCellProps) {
   if (actualHours == null) {
-    return <span className="text-gray-400">—</span>;
+    return <span className="text-(--palette-gray-400)">—</span>;
   }
-  return <span className="text-table tabular-nums font-medium text-gray-700">{actualHours}h</span>;
+  return (
+    <span className="text-table tabular-nums font-medium text-(--palette-ink)">{actualHours}h</span>
+  );
 }
 
 // ─── Remaining (hrs) ──────────────────────────────────────────────────────────
@@ -171,17 +175,19 @@ interface RemainingCellProps {
 
 export function RemainingCell({ targetHours, actualHours }: RemainingCellProps) {
   if (targetHours == null || actualHours == null) {
-    return <span className="text-gray-400">—</span>;
+    return <span className="text-(--palette-gray-400)">—</span>;
   }
   const remaining = targetHours - actualHours;
   if (remaining < 0) {
     return (
-      <span className="text-table tabular-nums font-medium text-gray-700">
-        {Math.abs(remaining)}h<span className="text-red-600"> late</span>
+      <span className="text-table tabular-nums font-medium text-(--palette-ink)">
+        {Math.abs(remaining)}h<span className="text-(--palette-danger)"> late</span>
       </span>
     );
   }
-  return <span className="text-table tabular-nums font-medium text-gray-700">{remaining}h</span>;
+  return (
+    <span className="text-table tabular-nums font-medium text-(--palette-ink)">{remaining}h</span>
+  );
 }
 
 // ─── SLA Status badge (subtle, with colored dot) ──────────────────────────────
@@ -194,14 +200,13 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function SlaStatusBadge({ sla }: { sla: string | null }) {
-  if (!sla) return <span className="text-gray-400">—</span>;
+  if (!sla) return <span className="text-(--palette-gray-400)">—</span>;
   const variant = variantOf(sla);
   const label = STATUS_LABEL[sla] ?? sla.replace(/([a-z])([A-Z])/g, '$1 $2');
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium rounded-full bg-(--palette-surface-3) text-(--palette-ink)">
       <span className={`size-1.5 rounded-full ${DOT_COLOR[variant]}`} />
       {label}
     </span>
   );
 }
-

@@ -220,6 +220,7 @@ export interface UserProfile {
   email?: string | null;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
   avatarUrl?: string | null;
   position?: string | null;
   department?: string | null;
@@ -250,6 +251,29 @@ export interface TwoFactorSetupResponse {
   authenticatorUri: string;
   /** The QR code as an SVG document. */
   qrSvg: string;
+}
+
+/** A passkey as the API lists it; the credential itself never leaves the authenticator. */
+export interface Passkey {
+  id: string;
+  name: string;
+  /** Backed up and usable on the user's other devices (iCloud, Google), not tied to one. */
+  synced: boolean;
+  createdAt: string;
+  lastUsedAt: string | null;
+}
+
+/** POST /auth/me/passkeys/register/options: what to hand the browser, and the sealed state to send back. */
+export interface PasskeyRegisterOptions {
+  options: PublicKeyCredentialCreationOptionsJSON;
+  state: string;
+}
+
+export interface PasskeyRegisterRequest {
+  state: string;
+  name: string;
+  /** `credential.toJSON()` of what the authenticator made. */
+  credential: PublicKeyCredentialJSON;
 }
 
 export interface TwoFactorCodeRequest {
@@ -292,6 +316,7 @@ export interface UpdateProfileRequest {
   avatarUrl?: string | null;
   position?: string | null;
   department?: string | null;
+  phoneNumber?: string | null;
 }
 
 export interface ChangePasswordRequest {
@@ -319,6 +344,7 @@ export interface AdminUserListItem {
 }
 
 export interface AdminUserDetail extends AdminUserListItem {
+  phoneNumber: string | null;
   avatarUrl: string | null;
   authSource: 'Local' | 'LDAP';
   aoCode: string | null;
@@ -329,6 +355,8 @@ export interface AdminUserDetail extends AdminUserListItem {
   teams: UserTeam[];
   lastLoginAt: string | null;
   twoFactorEnabled: boolean;
+  /** Absent from an API that predates passkeys. */
+  passkeys?: Passkey[];
 }
 
 export interface AdminUserListResult {
@@ -354,6 +382,7 @@ export interface AdminUpdateUserRequest {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber?: string | null;
   position?: string | null;
   department?: string | null;
   companyId?: string | null;
@@ -402,6 +431,7 @@ export interface CreateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
   position?: string | null;
   department?: string | null;
   companyId?: string | null;

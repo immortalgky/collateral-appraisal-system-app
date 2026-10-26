@@ -1,9 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { FormFields, type FormField } from '@/shared/components/form';
+import { FormFields, FormSection, FormSheet, type FormField } from '@/shared/components/form';
 import LandAreaDeductionTable from '../components/tables/LandAreaDeductionTable';
-import Icon from '@/shared/components/Icon';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import BoundaryFields from '../components/BoundaryFields';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
@@ -32,41 +31,12 @@ import {
   roadSurfaceField,
   transpotationField,
 } from '../configs/fields';
-import FieldGroupLabel from './FieldGroupLabel';
 import { PropertyNameTriggerIcon, type PropertyType } from '../components/PropertyNameTriggerIcon';
 import { FieldLabels } from '../components/FieldLabels';
 
-/** Section row component for form layout */
-interface SectionRowProps {
-  title: string;
-  icon?: string;
-  children: React.ReactNode;
-  isLast?: boolean;
-}
 interface LandDetailFormProps {
   propertyType?: PropertyType;
 }
-
-const SectionRow = ({ title, icon, children, isLast = false }: SectionRowProps) => (
-  <>
-    <div className="cas-section-head col-span-full xl:col-span-1 pt-1">
-      <div className="flex items-center gap-2">
-        {icon && (
-          <div className="w-7 h-7 rounded-lg bg-primary-50 flex items-center justify-center shrink-0">
-            <Icon style="solid" name={icon} className="size-3.5 text-primary-600" />
-          </div>
-        )}
-        <span className="text-sm font-medium text-gray-700 leading-tight">{title}</span>
-      </div>
-    </div>
-    <div className="col-span-full xl:col-span-4">
-      <div className="grid grid-cols-12 gap-4">{children}</div>
-    </div>
-    {!isLast && (
-      <div className="cas-section-rule h-px bg-gray-200 col-span-full xl:col-span-5 my-2" />
-    )}
-  </>
-);
 
 const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
   // 'appraisal' stays the default namespace; 'common' is here for the shared action labels on the
@@ -110,7 +80,11 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
     [pickerButton, fillIcon, readOnly],
   );
   const identity = useMemo(() => decorate(identityFields), [decorate]);
-  const coordinates = useMemo(() => decorate(coordinateFields), [decorate]);
+  // One FormFields call, so the land office and the coordinates are read as one row (6 + 3 + 3).
+  const officeAndCoordinates = useMemo(
+    () => [...landOfficeFields, ...decorate(coordinateFields)],
+    [decorate],
+  );
 
   // Stored as IsEncroached, but the label now names the whole bucket the bank already uses —
   // encroachment, land used by others, and any other reason to cut appraised area.
@@ -162,59 +136,56 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
 
   return (
     <FieldLabels scope="land">
-      <div className="w-full max-w-full overflow-hidden">
+      <div className="w-full max-w-full">
         {/* No page heading here: the section header above this form already names it, so
           printing it again read as two copies of the same title. */}
-        <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
-          <SectionRow title={t('forms.land.groups.identification')} icon="circle-info">
+        <FormSheet>
+          <FormSection title={t('forms.land.groups.identification')} icon="circle-info">
             <FormFields fields={identity} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('forms.land.groups.ownership')} icon="scale-balanced">
+          <FormSection title={t('forms.land.groups.ownership')} icon="scale-balanced">
             <FormFields fields={ownershipFields} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('forms.land.groups.location')} icon="map-location-dot">
+          <FormSection title={t('forms.land.groups.location')} icon="map-location-dot">
             <FormFields fields={locationCheckFields} />
-            <FieldGroupLabel label={t('fieldLabels.land.titleAddressGroup')} />
-            <FormFields fields={landAddressFields} />
-            <FieldGroupLabel label={t('fieldLabels.land.dopaAddressGroup')} />
-            <FormFields fields={landDopaAddressFields} />
-            <FormFields fields={landOfficeFields} />
+            <FormFields fields={addressFields} />
+            <FormFields fields={dopaAddressFields} />
+            <FormFields fields={officeAndCoordinates} />
             <FormFields fields={streetFields} />
-            <FormFields fields={coordinates} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('forms.land.groups.areaZoning')} icon="city">
+          <FormSection title={t('forms.land.groups.areaZoning')} icon="city">
             <FormFields fields={areaZoningFields} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('forms.land.groups.access')} icon="road">
+          <FormSection title={t('forms.land.groups.access')} icon="road">
             <FormFields fields={accessFields} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('forms.land.groups.utilities')} icon="bolt">
+          <FormSection title={t('forms.land.groups.utilities')} icon="bolt">
             <FormFields fields={utilityFields} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('forms.land.groups.physical')} icon="mountain">
+          <FormSection title={t('forms.land.groups.physical')} icon="mountain">
             <FormFields fields={physicalFields} />
             <BoundaryFields readOnly={readOnly} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow
+          <FormSection
             title={t('landCharacteristicsForm.sections.limitation')}
             icon="triangle-exclamation"
           >
             <FormFields fields={limitationFieldsBeforeDeductions} />
             {hasAreaDeductions && <LandAreaDeductionTable />}
             <FormFields fields={limitationFieldsAfterDeductions} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow title={t('landCharacteristicsForm.sections.remark')} icon="comment" isLast>
+          <FormSection title={t('landCharacteristicsForm.sections.remark')} icon="comment">
             <FormFields fields={remarkLandField} />
-          </SectionRow>
-        </div>
+          </FormSection>
+        </FormSheet>
 
         <MapLocationPicker
           isOpen={pickerOpen}
@@ -252,10 +223,22 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
  * forms and the schema read them) and are picked by name here; a span given here replaces the
  * config's own col-span for this screen only.
  */
+const urbanPlanChips: FormField = {
+  type: 'radio-group',
+  label: 'Type of urban plan',
+  name: 'urbanPlanningType',
+  orientation: 'horizontal',
+  group: 'TypeOfUrbanPlanning',
+  variant: 'button',
+  wrapperClassName: 'col-span-12',
+};
+
 const byName = new Map(
   [
     ...landInfoField,
     ...landInfoFieldTail,
+    ...landAddressFields,
+    ...landDopaAddressFields,
     ...landLocationField,
     ...plotLocationField,
     ...landFillField,
@@ -273,114 +256,137 @@ const byName = new Map(
     ...evictionField,
     ...allocationField,
     ...otherInformationField,
+    // Chips on this screen only: the config stays a dropdown for the block and market forms.
+    urbanPlanChips,
   ].map(field => [field.name, field]),
 );
 
-const pick = (...entries: (string | [name: string, span: string])[]): FormField[] =>
+const pick = (
+  ...entries: (string | [name: string, span: string, narrowSpan?: 3 | 4 | 6 | 12])[]
+): FormField[] =>
   entries.map(entry => {
-    const [name, span] = typeof entry === 'string' ? [entry] : entry;
+    const [name, span, narrowSpan] = typeof entry === 'string' ? [entry] : entry;
     const field = byName.get(name);
     // Fail loudly: a renamed config field would otherwise just vanish from the form.
     if (!field) throw new Error(`LandDetailForm: no field config named "${name}"`);
     if (!span) return field;
     const rest = (field.wrapperClassName ?? '').replace(/\bcol-span-\d+\b/g, '').trim();
-    return { ...field, wrapperClassName: `${span} ${rest}`.trim() };
+    return { ...field, wrapperClassName: `${span} ${rest}`.trim(), narrowSpan };
   });
 
 const identityFields = pick('propertyName', 'landDescription');
 
-// The deed's issuing office sits under the DOPA address, as on the condo form.
-const landOfficeFields = pick('landOffice');
+// The deed's issuing office sits right under the DOPA address, with the coordinates (6 + 3 + 3).
+const landOfficeFields = pick(['landOffice', 'col-span-6']);
 
 const ownershipFields = pick(
-  // Full rows each, as configured: the owner's name sits on its own line under the check.
-  'isOwnerVerifiedLand',
-  'ownerNameLand',
+  ['isOwnerVerifiedLand', 'col-span-4'],
+  ['ownerNameLand', 'col-span-8'],
   'hasObligation',
   'obligationDetails',
-  'isRentedOut',
+  // After the obligation chips and their details, on a row of its own.
+  ['isRentedOut', 'col-span-3'],
+);
+
+const addressFields = pick(
+  ['subDistrict', 'col-span-4'],
+  ['districtName', 'col-span-4'],
+  ['provinceName', 'col-span-4'],
+);
+
+const dopaAddressFields = pick(
+  ['dopaSubDistrict', 'col-span-4'],
+  ['dopaDistrictName', 'col-span-4'],
+  ['dopaProvinceName', 'col-span-4'],
 );
 
 const locationCheckFields = pick(
-  'isLandLocationVerified',
-  'landCheckMethodType',
+  ['isLandLocationVerified', 'col-span-4'],
+  ['landCheckMethodType', 'col-span-8'],
   'landCheckMethodTypeOther',
 );
 
 const streetFields = pick(
   ['village', 'col-span-6'],
   ['addressLocation', 'col-span-6'],
-  'street',
-  'soi',
-  'distanceFromMainRoad',
+  ['street', 'col-span-4'],
+  ['soi', 'col-span-4'],
+  ['distanceFromMainRoad', 'col-span-4'],
 );
 
-const coordinateFields = pick('latitude', 'longitude');
+const coordinateFields = pick(['latitude', 'col-span-3'], ['longitude', 'col-span-3']);
 
 const areaZoningFields = pick(
   'landZoneType',
   'landZoneTypeOther',
+  // Whether the plot sits in a licensed housing-estate project (new / old / not allocated).
+  ['allocationType', 'col-span-6'],
+  ['propertyAnticipationType', 'col-span-6'],
+  'propertyAnticipationTypeOther',
   'urbanPlanningType',
   'landUseType',
   'landUseTypeOther',
-  // Whether the plot sits in a licensed housing-estate project (new / old / not allocated).
-  'allocationType',
-  'propertyAnticipationType',
-  'propertyAnticipationTypeOther',
   'plotLocationType',
   'plotLocationTypeOther',
 );
 
+// Access first (chips, full rows), then the road: road in front 6 + width 3 + lanes 3, surface,
+// frontage 6 + sides 6.
 const accessFields = pick(
-  'accessRoadWidth',
-  'rightOfWay',
-  'roadFrontage',
-  'numberOfSidesFacingRoad',
-  'roadPassInFrontOfLand',
   'landAccessibilityType',
   'landAccessibilityRemark',
-  'roadSurfaceType',
-  'roadSurfaceTypeOther',
-  'landEntranceExitType',
-  'landEntranceExitTypeOther',
   'transportationAccessType',
   'transportationAccessTypeOther',
+  'landEntranceExitType',
+  'landEntranceExitTypeOther',
+  ['roadPassInFrontOfLand', 'col-span-6'],
+  ['accessRoadWidth', 'col-span-3'],
+  ['rightOfWay', 'col-span-3'],
+  'roadSurfaceType',
+  'roadSurfaceTypeOther',
+  ['roadFrontage', 'col-span-6'],
+  ['numberOfSidesFacingRoad', 'col-span-6'],
 );
 
 const utilityFields = pick('publicUtilityType', 'publicUtilityTypeOther');
 
 const physicalFields = pick(
-  'landShapeType',
-  'landShapeTypeOther',
-  'landFillType',
+  // Chips: a row of their own in Standard, whatever span is given.
+  ['landFillType', 'col-span-6'],
   'landFillTypeOther',
-  'landFillPercent',
-  'soilLevel',
-  'pondArea',
-  'pondDepth',
-  'hasBuilding',
+  // Fill share, soil level and shape make one row (3 + 3 + 6).
+  ['landFillPercent', 'col-span-3'],
+  ['soilLevel', 'col-span-3'],
+  ['landShapeType', 'col-span-6'],
+  'landShapeTypeOther',
+  ['pondArea', 'col-span-3'],
+  ['pondDepth', 'col-span-3'],
+  ['hasBuilding', 'col-span-3'],
   'hasBuildingOther',
 );
 
 // Split either side of the deduction table: the table belongs directly under the toggle that
 // governs it, and the old single remark is gone — every deduction row carries its own.
 const limitationFieldsBeforeDeductions = pick(
-  'isExpropriated',
+  // The royal decree belongs to the expropriation line and stays top-right whichever toggle is on
+  // (3 + 3 + 6); both remarks open under that row, so they never push the decree down.
+  ['isExpropriated', 'col-span-3', 3],
+  ['isInExpropriationLine', 'col-span-3', 3],
+  ['royalDecree', 'col-span-6'],
   'expropriationRemark',
-  'isInExpropriationLine',
   'expropriationLineRemark',
-  'royalDecree',
-  'isLandlocked',
-  'landlockedRemark',
-  'isForestBoundary',
-  'forestBoundaryRemark',
+  // Three toggles and a distance make one row (3 + 3 + 3 + 3); their remarks open under it.
+  ['isLandlocked', 'col-span-3', 3],
+  ['isForestBoundary', 'col-span-3', 3],
   // Named hasElectricity, but it records a plot lying far from the power line (the distance opens
   // only once it is ticked), which costs an extension — a limitation, not a utility.
-  'hasElectricity',
-  'electricityDistance',
+  ['hasElectricity', 'col-span-3', 3],
+  ['electricityDistance', 'col-span-3', 3],
+  'landlockedRemark',
+  'forestBoundaryRemark',
   // Right restriction (การรอนสิทธิ์), stored as evictionType: part of the plot given over to a
   // high-voltage line or an underground railway — a limitation like the expropriation line.
-  'evictionType',
+  ['evictionType', 'col-span-6'],
   'evictionTypeOther',
   // Area deductions follow the right restriction, their deduction table right under the toggle.
   'isEncroached',

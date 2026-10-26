@@ -3,10 +3,10 @@ import { DUE_SOON_DAYS, diffYMD, startOfToday, type Urgency } from './due';
 
 /** Text colour per urgency; `later` stays neutral so only what needs attention stands out. */
 export const URGENCY_TEXT: Record<Urgency, string> = {
-  overdue: 'text-red-700',
-  soon: 'text-amber-700',
-  year: 'text-sky-700',
-  later: 'text-gray-500',
+  overdue: 'text-(--palette-req)',
+  soon: 'text-(--palette-warn)',
+  year: 'text-sky-700 dark:text-sky-300',
+  later: 'text-(--palette-gray-500)',
 };
 
 /** "Overdue by 47 days" / "in 50 days" / "in 4 years 6 months". */

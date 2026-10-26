@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import clsx from 'clsx';
+import { useRegisterMissingReveal } from '@/shared/components/form/missing/missingFieldsContext';
 import { MethodTabsNavSlotCtx } from '../store/methodTabsNavSlotContext';
 
 export interface MethodTab {
@@ -48,6 +49,20 @@ export function MethodTabs({ tabs }: MethodTabsProps) {
   // state we render around, so this stays honest about that instead of asserting a
   // non-empty type the array itself doesn't guarantee.
   const [activeTab, setActiveTab] = useState<string | undefined>(tabs[0]?.id);
+  const panelsRef = useRef<HTMLDivElement>(null);
+  const uid = useId();
+  // The missing-fields popover's "go to field": open the tab the field sits on first. Every tab
+  // stays mounted (hidden), so the field is found in the DOM. The grids draw no `data-field`
+  // wrapper, so a cell is also matched by the `name` of its input.
+  useRegisterMissingReveal(path => {
+    const escaped = CSS.escape(path);
+    const selector = `[data-field="${escaped}"], [data-field^="${escaped}."], [name="${escaped}"]`;
+    const panel = Array.from(
+      panelsRef.current?.querySelectorAll<HTMLElement>('[data-method-tab]') ?? [],
+    ).find(el => el.querySelector(selector));
+    const id = panel?.dataset.methodTab;
+    if (id && id !== activeTab) setActiveTab(id);
+  });
   const activeTabDef = tabs.find(tab => tab.id === activeTab);
   const activeTools = activeTabDef?.tools;
   const activeToolsAfterNav = activeTabDef?.toolsAfterNav;
@@ -58,10 +73,11 @@ export function MethodTabs({ tabs }: MethodTabsProps) {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-stretch gap-1 px-1 h-[34px] border-b border-gray-200 shrink-0">
+      <div className="flex items-stretch gap-1 px-1 h-[34px] border-b border-(--palette-line) shrink-0">
         {tabs.map(tab => (
           <button
             key={tab.id}
+            id={`${uid}-tab-${tab.id}`}
             type="button"
             role="tab"
             aria-selected={activeTab === tab.id}
@@ -69,8 +85,8 @@ export function MethodTabs({ tabs }: MethodTabsProps) {
             className={clsx(
               'px-3 text-[12.5px] font-medium border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0',
               activeTab === tab.id
-                ? 'text-primary border-primary'
-                : 'text-gray-500 border-transparent hover:text-gray-700',
+                ? 'text-(--palette-primary-text) border-primary'
+                : 'text-(--palette-gray-500) border-transparent hover:text-(--palette-ink)',
             )}
           >
             {tab.label}
@@ -85,7 +101,10 @@ export function MethodTabs({ tabs }: MethodTabsProps) {
           {activeToolsAfterNav}
         </div>
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-0 pb-[16px]">
+      <div
+        ref={panelsRef}
+        className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden pt-0 pb-[16px]"
+      >
         {tabs.map(tab => (
           // h-full — the scroll container above has a definite height (flex-1 min-h-0
           // off MethodTabs' own h-full chain); without this, this wrapper sizes to its
@@ -94,8 +113,13 @@ export function MethodTabs({ tabs }: MethodTabsProps) {
           // — the percentage chain breaks right here. Harmless for tabs that don't opt
           // into that pattern: a flex-col child with no flex-grow of its own still sizes
           // to its content and lets this scroll container handle overflow as before.
-          <div
+          // A titled `section[id]` (named by its tab), which is how the missing-fields chip groups
+          // what is missing: by the tab it sits on.
+          <section
             key={tab.id}
+            id={`${uid}-panel-${tab.id}`}
+            aria-labelledby={`${uid}-tab-${tab.id}`}
+            data-method-tab={tab.id}
             className={clsx('flex h-full flex-col gap-4', tab.id !== activeTab && 'hidden')}
           >
             {/* Only the active tab's content gets a real slot — an inactive tab's
@@ -107,7 +131,7 @@ export function MethodTabs({ tabs }: MethodTabsProps) {
             <MethodTabsNavSlotCtx.Provider value={tab.id === activeTab ? navSlot : null}>
               {tab.content}
             </MethodTabsNavSlotCtx.Provider>
-          </div>
+          </section>
         ))}
       </div>
     </div>

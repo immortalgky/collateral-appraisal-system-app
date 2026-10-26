@@ -1,20 +1,23 @@
-import { Fragment, type ReactNode, type Ref, useEffect, useMemo, useRef } from 'react';
+import { Fragment, type ReactNode, useMemo } from 'react';
 import { useFormState } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-import { type FlatFormError, flattenFormErrors, scrollToField } from '@/shared/components/form';
+import {
+  type FlatFormError,
+  flattenFormErrors,
+  useRegisterMissingReveal,
+} from '@/shared/components/form';
+import { useMissingFields } from '@/shared/components/form/missing';
+import { itemCount } from '@/shared/components/form/missing/types';
 import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import { useEnrichedPropertyGroups } from '../hooks/useEnrichedPropertyGroups';
 import type { PropertyGroup, PropertyItem } from '../types';
 import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
 import { resolveTypeCode } from '../utils/propertyTypeConfig';
-import PropertyPhotoSection, {
-  type PhotoSectionView,
-  type PropertyPhotoSectionRef,
-} from './PropertyPhotoSection';
 import { MACHINE_TYPES, PlaceValue, brandModel } from './PropertyCardContent';
 import { PropertyTypeChip } from './PropertyTypeChip';
-import { EditorIdentityCard, EditorTabBar, type EditorTab } from './EditorIdentityCard';
+import { EditorHeader } from './EditorHeader';
+import type { EditorTab } from './EditorTabBar';
 
 interface PropertyEditorHeaderProps {
   appraisalId?: string;
@@ -22,8 +25,6 @@ interface PropertyEditorHeaderProps {
   propertyId?: string;
   /** The form's property type code, e.g. 'L' or 'LB' — a new property has no saved row yet. */
   typeCode: string;
-  /** Absent on the PMA editors, which carry no photos: the card then has no cover tile. */
-  photoSectionRef?: Ref<PropertyPhotoSectionRef>;
   /** A PMA property: the type chip reads "… (PMA)" and an unnamed one is titled for what it is. */
   pma?: boolean;
   /** Beside the type chip and position, e.g. the PMA sync status. */
@@ -39,22 +40,20 @@ interface PropertyEditorHeaderProps {
 }
 
 /**
- * The top of a property form: which property this is, its photos, and its tabs.
+ * The top of a property form (DESIGN.md 17.8): which property this is, and its tabs. The photos are
+ * the shell's (`PropertyFormShell`): the rail card when wide, the first section when narrow.
  *
- * It replaced three stacked pieces — an anchor bar whose first button scrolled while the others
- * switched tabs, a Photos section well over a hundred pixels tall, and a heading repeating the
- * tab's name. The facts come from the saved property list, the same row the rail and the cards
- * show, so they change when the form is saved rather than as the user types.
+ * The facts come from the saved property list, the same row the cards show, so they change when the
+ * form is saved rather than as the user types.
  *
- * Returned as two siblings on purpose: the card scrolls away and the tabs stay pinned. A sticky
- * element only sticks inside its parent, so the tabs have to be a direct child of the form's
+ * Returned as two siblings on purpose: the identity row scrolls away and the tabs stay pinned. A
+ * sticky element only sticks inside its parent, so the tabs have to be a direct child of the form's
  * scroll container rather than of a wrapper in here.
  */
 export const PropertyEditorHeader = ({
   appraisalId,
   propertyId,
   typeCode,
-  photoSectionRef,
   pma = false,
   meta,
   tabs = [],
@@ -62,7 +61,6 @@ export const PropertyEditorHeader = ({
   onTabChange,
 }: PropertyEditorHeaderProps) => {
   const { t } = useTranslation('appraisal');
-  const cardRef = useRef<HTMLDivElement>(null);
   const { groups } = useEnrichedPropertyGroups(propertyId ? appraisalId : undefined);
 
   const found = useMemo(() => findProperty(groups, propertyId), [groups, propertyId]);
@@ -77,83 +75,72 @@ export const PropertyEditorHeader = ({
 
   // Failed fields per tab, so an error on a tab out of view still shows. Panels stay mounted
   // (hidden, not removed), so a failed field on any tab can be found by its `data-field`.
-  const { errors, submitCount } = useFormState();
+  const { errors } = useFormState();
   const failed = flattenFormErrors(errors);
+  // The chip counts the whole form but the TOC lists the open tab only, so each tab says how many
+  // of the missing fields are on it.
+  const missingItems = useMissingFields()?.summary?.sections.flatMap(section => section.items);
   const tabsWithErrors = tabs.map(tab => ({
     ...tab,
     errorCount: failed.length > 0 ? countFailedIn(`${tab.id}-section`, failed) : 0,
+    missingCount: (missingItems ?? []).reduce(
+      (sum, item) =>
+        item.path && panelHasField(`${tab.id}-section`, item.path) ? sum + itemCount(item) : sum,
+      0,
+    ),
   }));
 
-  // After a failed save, bring a failed field into view. The form's own scroll aims at the first
-  // error overall, and when that field sits on a hidden tab (`display: none`) it goes nowhere.
-  // So: stay on this tab if it has a failed field and go to the first one; otherwise open the tab
-  // holding the first error that is on any tab, and scroll once that tab is showing.
-  const pendingScroll = useRef<string | null>(null);
-  useEffect(() => {
-    if (!submitCount || failed.length === 0 || tabs.length < 2) return;
-    const onThisTab = activeTab
-      ? failed.find(f => panelHasField(`${activeTab}-section`, f.path))
-      : undefined;
-    if (onThisTab) {
-      requestAnimationFrame(() => scrollToField(onThisTab.path));
-      return;
-    }
-    // The first error that sits on a tab: one outside every panel (a field this form does not
-    // render, say) must not stop the search for one the user can actually get to.
-    for (const f of failed) {
-      const target = tabs.find(tab => panelHasField(`${tab.id}-section`, f.path));
-      if (!target) continue;
-      pendingScroll.current = f.path;
-      onTabChange?.(target.id);
-      return;
-    }
-    // Only on the submit that produced the errors, not on every keystroke that clears one.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submitCount]);
-  useEffect(() => {
-    const path = pendingScroll.current;
-    if (!path) return;
-    pendingScroll.current = null;
-    const frame = requestAnimationFrame(() => scrollToField(path));
-    return () => cancelAnimationFrame(frame);
-  }, [activeTab]);
+  // The missing-fields popover opens on a failed save and its "go to field" asks this header to
+  // switch to the field's tab first (a hidden tab is `display: none`, which a scroll cannot reach).
+  // The chip's own jump then scrolls once that tab is showing.
+  useRegisterMissingReveal(path => {
+    const target = tabs.find(tab => panelHasField(`${tab.id}-section`, path));
+    if (target && target.id !== activeTab) onTabChange?.(target.id);
+  });
 
-  const renderCard = (view?: PhotoSectionView) => (
-    <IdentityCard
-      view={view}
-      typeCode={typeCode}
-      item={found?.item}
-      groupName={found?.group.name}
-      isNew={!propertyId}
-      pma={pma}
-      meta={meta}
-    />
-  );
+  const item = found?.item;
+  const groupName = found?.group.name;
+  const name = leafName;
+  const isNew = !propertyId;
+
+  let facts: ReactNode = null;
+  if (item) facts = <PropertyFacts item={item} />;
+  else if (isNew) facts = <span>{t('editorHeader.newHint')}</span>;
 
   return (
-    <>
-      <div ref={cardRef} className="px-3">
-        {appraisalId && photoSectionRef ? (
-          <PropertyPhotoSection
-            ref={photoSectionRef}
-            appraisalId={appraisalId}
-            propertyId={propertyId}
-            renderGallery={renderCard}
-          />
-        ) : (
-          renderCard()
-        )}
-      </div>
-      {tabs.length > 0 && (
-        <EditorTabBar
-          scrollAnchorRef={cardRef}
-          tabs={tabsWithErrors}
-          activeId={activeTab}
-          label={t('editorHeader.tabsLabel')}
-          onSelect={id => onTabChange?.(id)}
+    <EditorHeader
+      badge={
+        <PropertyTypeChip
+          size="md"
+          code={typeCode}
+          suffix={pma ? `(${t('editorHeader.pmaSuffix')})` : undefined}
         />
-      )}
-    </>
+      }
+      title={
+        name ??
+        (pma
+          ? t('editorHeader.pmaTitle')
+          : isNew
+            ? t('editorHeader.newProperty')
+            : t('editorHeader.untitled'))
+      }
+      titleMuted={!name && !pma}
+      facts={
+        <>
+          {groupName && item?.sequenceNumber != null && (
+            <span className="mr-2">
+              {t('editorHeader.position', { group: groupName, n: item.sequenceNumber })}
+            </span>
+          )}
+          {facts}
+        </>
+      }
+      actions={meta}
+      tabs={tabsWithErrors}
+      activeTab={activeTab}
+      onTabChange={onTabChange}
+      tabsLabel={t('editorHeader.tabsLabel')}
+    />
   );
 };
 
@@ -186,62 +173,6 @@ export function panelHasField(panelId: string, path: string): boolean {
   const escaped = CSS.escape(path);
   return panel.querySelector(`[data-field="${escaped}"], [data-field^="${escaped}."]`) !== null;
 }
-
-interface IdentityCardProps {
-  view?: PhotoSectionView;
-  typeCode: string;
-  item?: PropertyItem;
-  groupName?: string;
-  isNew: boolean;
-  pma: boolean;
-  meta?: ReactNode;
-}
-
-/** The shared editor card, filled with a property's type, name and facts. */
-const IdentityCard = ({ view, typeCode, item, groupName, isNew, pma, meta }: IdentityCardProps) => {
-  const { t } = useTranslation('appraisal');
-  const name = item && item.address !== '-' ? item.address : null;
-
-  let factsLine: ReactNode = null;
-  if (item) factsLine = <PropertyFacts item={item} />;
-  else if (isNew) factsLine = <span className="text-gray-400">{t('editorHeader.newHint')}</span>;
-
-  return (
-    <EditorIdentityCard
-      view={view}
-      top={
-        <>
-          <PropertyTypeChip
-            code={typeCode}
-            suffix={pma ? `(${t('editorHeader.pmaSuffix')})` : undefined}
-            className="cas-id-badge"
-          />
-          {groupName && item?.sequenceNumber != null && (
-            // Beside the type chip, not pushed right: the right side now carries the cover photo
-            // and thumbnails, and the position drowned against them.
-            <span className="cas-id-pos rounded-full border border-primary-200 bg-primary-50 px-2 text-[11px] font-semibold leading-4 text-primary-700">
-              {t('editorHeader.position', { group: groupName, n: item.sequenceNumber })}
-            </span>
-          )}
-          {meta}
-        </>
-      }
-      title={
-        name ??
-        (pma
-          ? t('editorHeader.pmaTitle')
-          : isNew
-            ? t('editorHeader.newProperty')
-            : t('editorHeader.untitled'))
-      }
-      titleMuted={!name && !pma}
-    >
-      <div className="cas-id-facts flex flex-wrap items-center text-[13px] text-gray-600">
-        {factsLine}
-      </div>
-    </EditorIdentityCard>
-  );
-};
 
 const CONDO_CODES = new Set<string>(['U', 'LSU']);
 
@@ -303,7 +234,7 @@ const PropertyFacts = ({ item }: { item: PropertyItem }) => {
       {facts.map((fact, i) => (
         <Fragment key={i}>
           {i > 0 && (
-            <span aria-hidden className="mx-2 text-gray-300">
+            <span aria-hidden className="mx-2 text-(--palette-gray-300)">
               ·
             </span>
           )}

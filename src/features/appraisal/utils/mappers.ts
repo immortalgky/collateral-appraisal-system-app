@@ -151,33 +151,42 @@ export const mapProjectLandPropertyResponseToForm = (
   landOffice: response.landOffice ?? null,
 });
 
-export const mapConstructionInspectionResponseToForm = (ci: any) => ({
-  constructionEnterDetail: ci?.isFullDetail ?? true,
-  constructionSubItems: (ci?.workDetails ?? []).map((wd: any) => ({
-    id: wd.id,
-    constructionWorkGroupId: wd.constructionWorkGroupId,
-    constructionWorkItemId: wd.constructionWorkItemId,
-    workItemName: wd.workItemName,
-    displayOrder: wd.displayOrder,
-    proportionPct: wd.proportionPct ?? 0,
-    previousProgressPct: wd.previousProgressPct ?? 0,
-    currentProgressPct: wd.currentProgressPct ?? wd.previousProgressPct ?? 0,
-  })),
-  constructionSummary: {
-    summaryDetail: ci?.summaryDetail ?? '',
-    summaryPreviousProgressPct: ci?.summaryPreviousProgressPct ?? 0,
-    summaryPreviousValue: ci?.summaryPreviousValue ?? 0,
-    summaryCurrentProgressPct: ci?.summaryCurrentProgressPct ?? ci?.summaryPreviousProgressPct ?? 0,
-    summaryCurrentValue: ci?.summaryCurrentValue ?? 0,
-    documentId: ci?.documentId ?? null,
-    fileName: ci?.fileName ?? null,
-    filePath: ci?.filePath ?? null,
-    fileExtension: ci?.fileExtension ?? null,
-    mimeType: ci?.mimeType ?? null,
-    fileSizeBytes: ci?.fileSizeBytes ?? null,
-  },
-  constructionRemark: ci?.remark ?? '',
-});
+export const mapConstructionInspectionResponseToForm = (ci: any) => {
+  // The server also fills the Summary* columns of a detail-mode inspection (they hold the computed
+  // summary of the rows). The form must not see them: hasConstructionData reads them, and it would
+  // lock the method switch of a progressive round for good. Only summary mode owns these fields.
+  const summary = ci?.isFullDetail === false ? ci : null;
+  return {
+    constructionEnterDetail: ci?.isFullDetail ?? true,
+    constructionSubItems: (ci?.workDetails ?? []).map((wd: any) => ({
+      id: wd.id,
+      constructionWorkGroupId: wd.constructionWorkGroupId,
+      constructionWorkItemId: wd.constructionWorkItemId,
+      workItemName: wd.workItemName,
+      displayOrder: wd.displayOrder,
+      proportionPct: wd.proportionPct ?? 0,
+      previousProgressPct: wd.previousProgressPct ?? 0,
+      currentProgressPct: wd.currentProgressPct ?? wd.previousProgressPct ?? 0,
+    })),
+    constructionSummary: {
+      summaryDetail: ci?.summaryDetail ?? '',
+      summaryPreviousProgressPct: summary?.summaryPreviousProgressPct ?? 0,
+      summaryPreviousValue: summary?.summaryPreviousValue ?? 0,
+      summaryCurrentProgressPct:
+        summary?.summaryCurrentProgressPct ?? summary?.summaryPreviousProgressPct ?? 0,
+      summaryCurrentValue: summary?.summaryCurrentValue ?? 0,
+      // Read in both modes (unlike the Summary* columns): the flag says whether the stored value was typed.
+      currentValueOverride: ci?.isCurrentValueOverridden ? (ci.summaryCurrentValue ?? null) : null,
+      documentId: ci?.documentId ?? null,
+      fileName: ci?.fileName ?? null,
+      filePath: ci?.filePath ?? null,
+      fileExtension: ci?.fileExtension ?? null,
+      mimeType: ci?.mimeType ?? null,
+      fileSizeBytes: ci?.fileSizeBytes ?? null,
+    },
+    constructionRemark: ci?.remark ?? '',
+  };
+};
 
 export const mapBuildingPropertyResponseToForm = (
   response: GetBuildingPropertyResponseType,
@@ -297,9 +306,9 @@ export const mapCondoPropertyResponseToForm = (
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     hasObligation: response.hasObligation ?? '',
     obligationDetails: response.obligationDetails ?? '',
-    documentValidationResultType: response.documentValidationResultType ?? '',
+    documentValidationResultType: response.documentValidationResultType || '01',
 
-    locationType: response.locationType ?? '',
+    locationType: response.locationType || '1',
     street: response.street ?? '',
     soi: response.soi ?? '',
     distanceFromMainRoad: response.distanceFromMainRoad ?? null,
@@ -704,6 +713,9 @@ const mapConstructionInspectionFormToApi = (data: any) => {
     totalValue,
     // Remark is mode-independent: the backend keeps it on both Summary and Full Detail rows.
     remark: constructionRemark ?? null,
+    // Without a value base there is nothing to override (a condo), whatever the form still holds.
+    currentValueOverride:
+      totalValue > 0 ? (constructionSummary?.currentValueOverride ?? null) : null,
     ...(isFullDetail
       ? {
           workDetails: (constructionSubItems ?? []).map((item: any, idx: number) => ({

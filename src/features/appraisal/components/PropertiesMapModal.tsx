@@ -66,19 +66,19 @@ export function PropertiesMapModal({
       (mapPins?.marketComparables ?? [])
         .filter(mc => isWithinThailand(mc.lat, mc.lon))
         .map(mc => ({
-        marketComparableId: mc.marketComparableId,
-        lat: mc.lat,
-        lon: mc.lon,
-        propertyType: mc.propertyType,
-        surveyName: mc.surveyName,
-        infoDateTime: mc.infoDateTime,
-        offerPrice: mc.offerPrice,
-        salePrice: mc.salePrice,
-        distanceKm: null,
-        appraisalNumber: null,
-        customerName: null,
-        appraisalDate: null,
-      })),
+          marketComparableId: mc.marketComparableId,
+          lat: mc.lat,
+          lon: mc.lon,
+          propertyType: mc.propertyType,
+          surveyName: mc.surveyName,
+          infoDateTime: mc.infoDateTime,
+          offerPrice: mc.offerPrice,
+          salePrice: mc.salePrice,
+          distanceKm: null,
+          appraisalNumber: null,
+          customerName: null,
+          appraisalDate: null,
+        })),
     [mapPins],
   );
 
@@ -106,7 +106,8 @@ export function PropertiesMapModal({
   );
 
   const center = useMemo(() => {
-    const selected = pins.find(p => p.appraisalNumber === selectedPropertyId) ?? pins[0] ?? mcPins[0];
+    const selected =
+      pins.find(p => p.appraisalNumber === selectedPropertyId) ?? pins[0] ?? mcPins[0];
     return selected ? { lat: selected.lat, lon: selected.lon } : null;
   }, [pins, mcPins, selectedPropertyId]);
 
@@ -122,10 +123,12 @@ export function PropertiesMapModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('properties.map.title')} size="3xl">
       {pins.length === 0 && mcPins.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-[40vh] text-gray-400">
+        <div className="flex flex-col items-center justify-center h-[40vh] text-(--palette-gray-400)">
           <Icon name="location-dot" className="text-4xl mb-3" style="solid" />
-          <p className="text-sm font-medium text-gray-500">{t('properties.map.empty')}</p>
-          <p className="text-xs text-gray-400 mt-1">{t('properties.map.emptyHint')}</p>
+          <p className="text-sm font-medium text-(--palette-gray-500)">
+            {t('properties.map.empty')}
+          </p>
+          <p className="text-xs text-(--palette-gray-400) mt-1">{t('properties.map.emptyHint')}</p>
         </div>
       ) : (
         <>
@@ -147,7 +150,7 @@ export function PropertiesMapModal({
             />
           </div>
           {/* Legend */}
-          <div className="flex items-center gap-4 mt-3 text-xs text-gray-500">
+          <div className="flex items-center gap-4 mt-3 text-xs text-(--palette-gray-500)">
             <span className="flex items-center gap-1.5">
               <img src="/markers/collateral-main.svg" alt="" className="h-4 w-auto" />
               {t('properties.map.legendSelected')}

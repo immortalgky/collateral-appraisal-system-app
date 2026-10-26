@@ -247,8 +247,10 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
   if (isReadOnly && !pricingAnalysisId) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <Icon name="eye" style="solid" className="text-2xl text-gray-400" />
-        <p className="text-sm text-gray-500 font-medium">{t('page.noAnalysisAvailable')}</p>
+        <Icon name="eye" style="solid" className="text-2xl text-(--palette-gray-400)" />
+        <p className="text-sm text-(--palette-gray-500) font-medium">
+          {t('page.noAnalysisAvailable')}
+        </p>
       </div>
     );
   }
@@ -258,8 +260,8 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
         <Icon name="circle-exclamation" style="solid" className="text-2xl text-danger" />
-        <p className="text-sm text-gray-700 font-medium">{t('page.failedToCreate')}</p>
-        <p className="text-xs text-gray-400">{createError}</p>
+        <p className="text-sm text-(--palette-ink) font-medium">{t('page.failedToCreate')}</p>
+        <p className="text-xs text-(--palette-gray-400)">{createError}</p>
         <button
           type="button"
           onClick={() => {
@@ -278,8 +280,8 @@ function PricingAnalysisPage({ subject }: PricingAnalysisPageProps) {
   if (!pricingAnalysisId) {
     return (
       <div className="flex flex-col items-center justify-center h-full gap-3">
-        <Icon name="spinner" className="text-2xl text-primary animate-spin" />
-        <p className="text-sm text-gray-500">{t('page.creating')}</p>
+        <Icon name="spinner" className="text-2xl text-(--palette-primary-text) animate-spin" />
+        <p className="text-sm text-(--palette-gray-500)">{t('page.creating')}</p>
       </div>
     );
   }
@@ -829,11 +831,11 @@ function PricingAnalysisContent({
             }
             aria-label={t('page.back')}
             title={t('page.back')}
-            className="flex items-center px-2 py-1.5 rounded-lg text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors cursor-pointer shrink-0"
+            className="flex items-center px-2 py-1.5 rounded-lg text-sm text-(--palette-gray-500) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) transition-colors cursor-pointer shrink-0"
           >
             <Icon name="arrow-left" style="solid" className="size-3.5" />
           </button>
-          <nav className="flex gap-0.5 bg-gray-50/80 p-0.5 rounded-lg border border-gray-100">
+          <nav className="flex gap-0.5 bg-(--palette-surface-2)/80 p-0.5 rounded-lg border border-(--palette-line-soft)">
             {TABS.map(tab => {
               const isActive = activeTab === tab.id;
               return (
@@ -844,14 +846,17 @@ function PricingAnalysisContent({
                   className={clsx(
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap',
                     isActive
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-white/50',
+                      ? 'bg-(--palette-surface) text-(--palette-primary-text) shadow-sm'
+                      : 'text-(--palette-gray-500) hover:text-(--palette-ink) hover:bg-(--palette-surface)/50',
                   )}
                 >
                   <Icon
                     name={tab.icon}
                     style="solid"
-                    className={clsx('size-3.5', isActive ? 'text-primary' : 'text-gray-400')}
+                    className={clsx(
+                      'size-3.5',
+                      isActive ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-400)',
+                    )}
                   />
                   <span>{tab.label}</span>
                 </button>
@@ -864,14 +869,14 @@ function PricingAnalysisContent({
               already is that switch. */}
           {!topBarBadge && !openReferenceId && (
             <>
-              <span className="w-px h-5 bg-gray-200 shrink-0" />
-              <span className="text-[13px] font-semibold text-gray-800 truncate">
+              <span className="w-px h-5 bg-(--palette-line) shrink-0" />
+              <span className="text-[13px] font-semibold text-(--palette-ink) truncate">
                 {isModelSubject
                   ? `${flatContext?.projectName ? String(flatContext.projectName) : 'Project'} › ${flatContext?.modelName ? String(flatContext.modelName) : 'Model'}`
                   : `${t('accordion.group')} ${groupDetail?.groupNumber ?? ''} · ${groupDetail?.groupName ?? ''} · ${t('accordion.items', { count: groupDetail?.properties?.length ?? 0 })}`}
               </span>
               {!isModelSubject && (
-                <span className="shrink-0 rounded-[5px] bg-[#f0fdfa] px-[6px] py-px text-[11px] font-semibold text-[#0f766e]">
+                <span className="shrink-0 rounded-[5px] bg-(--palette-accent-wash) px-[6px] py-px text-[11px] font-semibold text-(--palette-accent-ink)">
                   {t(
                     `accordion.groupType.${groupTypeLabel(requiredComponents(groupDetail?.properties ?? []))}` as `accordion.groupType.${ReturnType<typeof groupTypeLabel>}`,
                   )}
@@ -882,7 +887,7 @@ function PricingAnalysisContent({
                   <button
                     type="button"
                     onClick={() => setIsAddMethodPopoverOpen(o => !o)}
-                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-gray-200 text-xs font-medium text-gray-600 hover:bg-gray-50"
+                    className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-(--palette-line) text-xs font-medium text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
                   >
                     {t('board.addMethod')}
                   </button>
@@ -900,7 +905,7 @@ function PricingAnalysisContent({
           )}
           {topBarBadge && (
             <>
-              <span className="w-px h-5 bg-gray-200 shrink-0" />
+              <span className="w-px h-5 bg-(--palette-line) shrink-0" />
               {/* Left side yields space before the right-hand value/actions ever can: the
                   group label shrinks first, then the method name; both truncate with a
                   title. shrink-[100], not a small factor — flex-shrink is weighted by
@@ -910,7 +915,7 @@ function PricingAnalysisContent({
                   type="button"
                   onClick={() => setIsGroupPopoverOpen(o => !o)}
                   title={`${t('accordion.group')} ${groupDetail?.groupNumber ?? ''} · ${groupDetail?.groupName ?? ''} · ${t('accordion.items', { count: groupDetail?.properties?.length ?? 0 })}`}
-                  className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 whitespace-nowrap max-w-full"
+                  className="flex items-center gap-1 text-xs text-(--palette-gray-500) hover:text-(--palette-ink) whitespace-nowrap max-w-full"
                 >
                   <span
                     className="truncate"
@@ -920,12 +925,16 @@ function PricingAnalysisContent({
                     {groupDetail?.groupName ?? ''} ·{' '}
                     {t('accordion.items', { count: groupDetail?.properties?.length ?? 0 })}
                   </span>
-                  <Icon name="chevron-down" style="solid" className="size-2.5 text-gray-400" />
+                  <Icon
+                    name="chevron-down"
+                    style="solid"
+                    className="size-2.5 text-(--palette-gray-400)"
+                  />
                 </button>
                 {isGroupPopoverOpen && (
-                  <div className="absolute left-0 top-full mt-1 z-30 w-72 max-h-80 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2 shadow-lg flex flex-col gap-1">
+                  <div className="absolute left-0 top-full mt-1 z-30 w-72 max-h-80 overflow-y-auto rounded-lg border border-(--palette-line) bg-(--palette-surface) p-2 shadow-lg flex flex-col gap-1">
                     {(groupDetail?.properties ?? []).length === 0 && (
-                      <span className="text-xs text-gray-400 px-2 py-1">
+                      <span className="text-xs text-(--palette-gray-400) px-2 py-1">
                         {t('accordion.noProperties')}
                       </span>
                     )}
@@ -934,10 +943,10 @@ function PricingAnalysisContent({
                       return (
                         <div
                           key={p.id}
-                          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-gray-50"
+                          className="flex items-center gap-2 px-2 py-1 rounded hover:bg-(--palette-surface-2)"
                         >
                           <PropertyTypeChip code={p.type} variant="dot" />
-                          <span className="text-xs text-gray-700 truncate">
+                          <span className="text-xs text-(--palette-ink) truncate">
                             {p.titleNo || p.address}
                           </span>
                         </div>
@@ -946,8 +955,8 @@ function PricingAnalysisContent({
                   </div>
                 )}
               </div>
-              <span className="inline-flex items-center gap-[6px] min-w-0 text-[13px] font-semibold text-gray-800">
-                <span className="shrink-0 rounded-[5px] bg-[#f0fdfa] px-[6px] py-[1px] text-[11px] font-semibold text-[#0f766e]">
+              <span className="inline-flex items-center gap-[6px] min-w-0 text-[13px] font-semibold text-(--palette-ink)">
+                <span className="shrink-0 rounded-[5px] bg-(--palette-accent-wash) px-[6px] py-[1px] text-[11px] font-semibold text-(--palette-accent-ink)">
                   {topBarBadge}
                 </span>
                 <span className="truncate" title={topBarMethodName}>
@@ -967,7 +976,7 @@ function PricingAnalysisContent({
               undefined (a reference and a group method cannot both be open). */}
           {openReferenceId && (
             <>
-              <span className="w-px h-5 bg-gray-200 shrink-0" />
+              <span className="w-px h-5 bg-(--palette-line) shrink-0" />
               <div ref={setTopBarChipSlot} className="flex items-center shrink-0" />
             </>
           )}
@@ -991,12 +1000,12 @@ function PricingAnalysisContent({
                 this same row — reads as two numbers for one thing. */}
             {!topBarBadge && !openReferenceId && selectedApproachValue != null && (
               <div className="order-first flex items-center gap-2">
-                <span aria-hidden="true" className="w-px h-6 bg-gray-200" />
+                <span aria-hidden="true" className="w-px h-6 bg-(--palette-line)" />
                 <div className="flex flex-col items-end leading-[1.15] px-1.5">
-                  <span className="text-[10.5px] text-gray-400">
+                  <span className="text-[10.5px] text-(--palette-gray-400)">
                     {t('page.selectedApproachValue')}
                   </span>
-                  <span className="text-[15px] font-semibold text-primary tabular-nums">
+                  <span className="text-[15px] font-semibold text-(--palette-primary-text) tabular-nums">
                     {Number(selectedApproachValue).toLocaleString()} ฿
                   </span>
                 </div>

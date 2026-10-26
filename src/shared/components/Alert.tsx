@@ -24,10 +24,10 @@ const Alert = ({
   ...props
 }: AlertProps) => {
   const variantStyles = {
-    info: 'bg-blue-50 text-blue-800',
-    success: 'bg-green-50 text-success',
-    warning: 'bg-amber-50 text-amber-800',
-    danger: 'bg-red-50 text-danger',
+    info: 'bg-blue-50 dark:bg-blue-500/10 text-blue-800 dark:text-blue-300',
+    success: 'bg-green-50 dark:bg-green-500/10 text-success',
+    warning: 'bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300',
+    danger: 'bg-(--palette-req-wash) text-danger',
   };
 
   const iconStyles = {
@@ -47,11 +47,7 @@ const Alert = ({
   return (
     <div
       role="alert"
-      className={clsx(
-        'relative rounded-lg p-4',
-        variantStyles[variant],
-        className,
-      )}
+      className={clsx('relative rounded-lg p-4', variantStyles[variant], className)}
       {...props}
     >
       <div className="flex">
@@ -66,9 +62,7 @@ const Alert = ({
         )}
 
         <div className={clsx('flex-1', icon && 'ml-3')}>
-          {title && (
-            <h3 className="text-sm font-medium mb-1">{title}</h3>
-          )}
+          {title && <h3 className="text-sm font-medium mb-1">{title}</h3>}
           <div className={clsx('text-sm', title && 'mt-1')}>{children}</div>
         </div>
 
@@ -79,10 +73,14 @@ const Alert = ({
               onClick={onDismiss}
               className={clsx(
                 'inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2',
-                variant === 'info' && 'hover:bg-blue-100 focus:ring-blue-500',
-                variant === 'success' && 'hover:bg-green-100 focus:ring-green-500',
-                variant === 'warning' && 'hover:bg-amber-100 focus:ring-amber-500',
-                variant === 'danger' && 'hover:bg-red-100 focus:ring-red-500',
+                variant === 'info' &&
+                  'hover:bg-blue-100 dark:hover:bg-blue-500/20 focus:ring-blue-500',
+                variant === 'success' &&
+                  'hover:bg-green-100 dark:hover:bg-green-500/20 focus:ring-green-500',
+                variant === 'warning' &&
+                  'hover:bg-amber-100 dark:hover:bg-amber-500/20 focus:ring-amber-500',
+                variant === 'danger' &&
+                  'hover:bg-red-100 dark:hover:bg-red-500/20 focus:ring-red-500',
               )}
             >
               <span className="sr-only">Dismiss</span>

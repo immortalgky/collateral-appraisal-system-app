@@ -1,4 +1,13 @@
 {
+  "actions": {
+    "saveDraft": "保存草稿",
+    "save": "保存",
+    "cancel": "取消"
+  },
+  "units": {
+    "sqm": "sq.m.",
+    "sqWa": "Sq.Wa"
+  },
   "page": {
     "tabs": {
       "projectInfo": "Project Info",
@@ -11,6 +20,84 @@
       "photos": "Photo",
       "laws": "Laws and Regulation",
       "projectLand": "Project Land"
+    }
+  },
+  "condoShell": {
+    "tabsLabel": "Project sections",
+    "typeBadge": {
+      "U": "Condominium",
+      "LB": "Housing estate",
+      "L": "Land and Building (Construction)"
+    },
+    "readOnly": "Read only",
+    "untitled": "Untitled project",
+    "kpi": {
+      "units": "Total units",
+      "unitsSub": "{{n}} sold",
+      "models": "Models",
+      "modelsSub": "{{n}} awaiting price",
+      "towers": "Towers",
+      "titles": "Title deeds",
+      "titlesValue": "{{n}} plots",
+      "titlesSub": "{{area}} rai",
+      "priced": "Units priced",
+      "value": "Total appraised value",
+      "force": "Total forced-sale price"
+    },
+    "derived": {
+      "fromUnits": "From the unit list",
+      "match": "Matches",
+      "differs": "Differs {{diff}}",
+      "use": "Use this value"
+    }
+  },
+  "condoTowersModels": {
+    "towers": {
+      "title": "Towers",
+      "summary": "{{towers}} towers · {{units}} units in the list",
+      "add": "Add Tower",
+      "empty": "No towers yet",
+      "emptyHint": "Click \"Add Tower\" to create your first tower",
+      "loadFailed": "Failed to load towers",
+      "loadFailedHint": "Please try refreshing the page",
+      "match": "Matches",
+      "differs": "Differs {{diff}}",
+      "cols": {
+        "image": "Image",
+        "name": "Tower name",
+        "registration": "Registration no.",
+        "entered": "Units (entered)",
+        "counted": "Units in the list (counted)",
+        "sold": "Sold",
+        "models": "Models",
+        "floors": "Floors",
+        "actions": "Actions"
+      }
+    },
+    "models": {
+      "title": "Models",
+      "summary": "{{models}} models · {{priced}} with a standard price · {{pending}} awaiting analysis",
+      "filterAll": "All",
+      "filterPending": "Awaiting analysis",
+      "groupByTower": "Group by tower",
+      "groupHead": "Tower {{tower}} · {{models}} models · {{units}} units",
+      "groupHeadNoTower": "No tower · {{models}} models · {{units}} units",
+      "allPriced": "Every model has a standard price",
+      "pending": "Awaiting analysis",
+      "standardPrice": "฿{{price}} / sq.m.",
+      "cols": {
+        "image": "Image",
+        "name": "Model name · tower",
+        "units": "Units",
+        "usableArea": "Usable area (sq.m.)",
+        "startingPrice": "Starting price (THB)",
+        "roomLayout": "Room layout",
+        "standardPrice": "Standard price",
+        "actions": "Actions"
+      }
+    },
+    "detail": {
+      "photos": "Photos"
     }
   },
   "projectInfo": {
@@ -161,7 +248,8 @@
       "landTitle": "Land Title",
       "landDetail": "Land Detail"
     },
-    "landInformationHeader": "Land Information"
+    "landInformationHeader": "Land Information",
+    "titlesSummary": "{{n}} plots · {{rnw}} rai ({{wa}} sq.wa)"
   },
   "pricingAssumption": {
     "sections": {
@@ -207,14 +295,8 @@
     "confirmReplace": {
       "title": "Replace existing units?",
       "message": "Uploading a new file will replace all current unit data. This cannot be undone.",
-      "confirm": "Replace"
-    },
-    "summary": {
-      "towers": "楼栋",
-      "models": "户型",
-      "totalUnits": "单元总数",
-      "remainingUnits": "剩余",
-      "soldUnits": "已售"
+      "confirm": "Replace",
+      "messageWithPrices": "上传新文件将替换所有现有单元数据，并清除所有单元价格（包括计算和导入的）。需要重新计算或导入价格，且无法撤销。"
     },
     "cols": {
       "no": "No",
@@ -247,13 +329,11 @@
       "sold": "已售",
       "available": "可售"
     },
-    "importHint": "上传项目单元清单 Excel。该文件将替换当前的单元集合及其计算出的价格。",
     "uploading": "上传中…",
     "lastUpload": "最近",
     "hideHistory": "隐藏历史",
     "showHistory": "历史 {{count}} 条",
     "systemBatch": "系统",
-    "searchPlaceholder": "搜索地块号、门牌号或房号",
     "noMatch": "没有符合条件的单元",
     "shownOf": "显示 {{shown}} / {{total}}",
     "filter": {
@@ -328,36 +408,16 @@
     }
   },
   "modelListing": {
-    "grid": "Grid",
-    "list": "List",
     "addModel": "Add Model",
     "noModels": "No models yet",
     "noModelsHint": "Click \"Add Model\" to create your first model",
     "unnamedModel": "Unnamed Model",
     "failedToLoad": "Failed to load models",
     "failedToLoadHint": "Please try refreshing the page",
-    "pendingAnalysis": "Pending analysis",
     "runPricing": "Run Pricing",
     "viewPricing": "View Pricing",
-    "running": "Running…",
-    "usableArea": "Usable Area",
-    "startingPrice": "Starting Price",
-    "roomType": "Room Type",
-    "landArea": "Land Area",
-    "houses": "Houses",
     "cols": {
-      "image": "Image",
-      "modelName": "Model Name",
-      "usableArea": "Usable Area",
-      "startingPrice": "Starting Price",
-      "roomType": "Room Type",
-      "landAreaStd": "Land Area (Std)",
-      "houses": "Houses",
-      "standardPrice": "Standard Price"
-    },
-    "confirmDelete": {
-      "title": "Delete Model",
-      "confirm": "Delete"
+      "modelName": "Model Name"
     },
     "aria": {
       "deleteModel": "Delete model",
@@ -366,12 +426,18 @@
     }
   },
   "unitPrice": {
+    "actions": {
+      "saveAndRecalculate": "保存并重新计算",
+      "saveAndRecalculateHint": "根据假设重新计算所有单元的价格，并替换已保存的价格。"
+    },
     "modelAssumptions": "Model Assumptions",
     "noModelAssumptions": "No model assumptions — add models first",
     "calculatedUnitPrices": "Calculated Unit Prices",
     "noUnitsUploaded": "No units uploaded yet — upload a unit list first",
-    "totalUnits": "{{n}} units",
-    "total": "Total — {{n}} units",
+    "totalUnits_one": "{{n}} 个单元",
+    "totalUnits_other": "{{n}} 个单元",
+    "total_one": "合计 — {{n}} 个单元",
+    "total_other": "合计 — {{n}} 个单元",
     "cols": {
       "seqNo": "Seq No",
       "floor": "Floor",
@@ -407,6 +473,221 @@
       "coverageAmountBahtSqm": "Coverage Amount (Baht/Sq.m)",
       "fireInsuranceCode": "Fire Insurance Condition",
       "description": "Description"
+    },
+    "importedUnitPrices": "导入文件中的单元价格",
+    "soldChip": "已售",
+    "valuesImported": "来自导入文件的数值",
+    "valuesPreview": "预览（未保存）",
+    "source": {
+      "label": "单元价格来源",
+      "calculated": "系统计算",
+      "imported": "从 Excel 导入价格",
+      "loading": "正在加载价格来源"
+    },
+    "switchToCalculated": {
+      "title": "切换为系统计算？",
+      "message": "导入的价格会保留到您点击 Save 为止（此模式下没有 Save Draft）。Save 会重新计算并覆盖所有单元，评估总额也会随之变化。",
+      "confirm": "切换模式"
+    },
+    "import": {
+      "emptyPrices": "尚无价格。请先上传价格文件；在此之前评估总额保持原值。",
+      "downloadTemplate": "下载模板",
+      "downloadTemplateTitle": "当前单元 + 最新价格",
+      "upload": "上传价格文件",
+      "templateFailed": "下载模板失败",
+      "dialog": {
+        "title": "从 Excel 导入单元价格",
+        "choose": "选择 .xlsx 文件",
+        "chooseAnother": "选择其他文件",
+        "hint": "仅使用第一个工作表 · 第一行为列标题 · 末尾的合计行仅用于核对总额，不会导入",
+        "checking": "正在检查文件",
+        "cancel": "取消",
+        "confirm_one": "导入 {{n}} 个单元的价格",
+        "confirm_other": "导入 {{n}} 个单元的价格",
+        "success_one": "已导入 {{n}} 个单元的价格",
+        "success_other": "已导入 {{n}} 个单元的价格",
+        "importFailed": "导入价格失败",
+        "previewFailed": "检查文件失败",
+        "invalidType": "仅支持 .xlsx 文件",
+        "tooLarge": "文件超过 {{max}} MB",
+        "matched": "已匹配单元",
+        "matchedBy": "按{{key1}} {{n1}} · {{key2}} {{n2}}",
+        "errorRows": "无法导入的行",
+        "passed": "通过",
+        "blocking": "需修改文件",
+        "missingFromFile": "文件中没有价格的单元（价格将被清除）",
+        "willClear": "价格将被清除",
+        "totalValue": "评估总值",
+        "noSheetTotals": "文件合计行中没有此项",
+        "sheetMatch": "与文件中的合计行一致",
+        "sheetMismatch": "与文件合计行不一致（文件为 {{n}}）",
+        "errorsBanner_one": "发现 {{n}} 处错误，请先修改文件再导入。",
+        "errorsBanner_other": "发现 {{n}} 处错误，请先修改文件再导入。",
+        "missingBanner_one": "有 {{n}} 个单元在文件中没有价格（不在文件中，或所在行价格为空），导入时这些单元的价格将被清除。",
+        "missingBanner_other": "有 {{n}} 个单元在文件中没有价格（不在文件中，或所在行价格为空），导入时这些单元的价格将被清除。",
+        "diffsBanner_one": "有 {{n}} 处单元信息与系统不一致，仅供参考，不会阻止导入，也不会被写入。",
+        "diffsBanner_other": "有 {{n}} 处单元信息与系统不一致，仅供参考，不会阻止导入，也不会被写入。",
+        "sampleTitle_one": "变更示例（前 {{n}} 行）",
+        "sampleTitle_other": "变更示例（前 {{n}} 行）",
+        "writeWarning": "导入后：所有单元价格将被文件中的数值替换 · 项目模式变为“从 Excel 导入” · 评估总额和工作流（用于选择审批级别）将立即更新",
+        "keys": {
+          "condo1": "房号",
+          "condo2": "登记号",
+          "lb1": "地块号",
+          "lb2": "房屋号"
+        },
+        "cols": {
+          "row": "行",
+          "key": "关键字",
+          "problem": "问题",
+          "column": "列",
+          "system": "系统中",
+          "file": "文件中",
+          "previous": "原取整值",
+          "new": "文件中",
+          "diff": "差额"
+        },
+        "errorCodes": {
+          "MissingHeader": "文件缺少必需的列标题",
+          "UnitNotFound": "系统中找不到此单元",
+          "AmbiguousMatch": "此行匹配多个单元",
+          "DuplicateUnit": "此单元被多行引用",
+          "InvalidNumber": "数字无效",
+          "MissingAppraisalValue": "缺少评估价值",
+          "MissingPrice": "已有价格的行中，强制出售价为空"
+        },
+        "moreItems": "另有 {{n}} 项",
+        "totalForceSale": "强制出售价合计",
+        "totalCoverage": "火险保额合计",
+        "noMatchBanner": "文件中没有与本项目匹配且已定价的单元，因此无法导入。"
+      },
+      "fileUnknown": "项目价格来自导入的文件，但文件详情不可用（例如重新上传单元列表之后）。"
+    },
+    "valuesCalculated": "系统计算",
+    "discardChanges": {
+      "title": "放弃未保存的修改？",
+      "message": "尚未保存的假设和标记修改将被放弃，并恢复为已保存的数值。",
+      "confirm": "放弃并切换"
+    }
+  },
+  "lbLists": {
+    "units": {
+      "searchPlaceholder": "Search plot or house number"
+    },
+    "models": {
+      "standardPrice": "฿{{price}} / house",
+      "cols": {
+        "units": "Units (sold)",
+        "standardLandArea": "Standard land area (sq.wa)",
+        "standardPrice": "Standard price (baht/house)"
+      }
+    },
+    "modelDetail": {
+      "usedBy": "Used by {{n}} houses",
+      "usedBySold": "Used by {{n}} houses ({{sold}} sold)",
+      "standardPrice": "Standard price ฿{{price}} / house"
+    }
+  },
+  "condoUnitsPrice": {
+    "cols": {
+      "roomNumber": "公寓单元编号",
+      "unitNo": "房间号"
+    },
+    "listing": {
+      "replaceNote": "Uploading a new file replaces all units and clears every unit price, which then have to be calculated or imported again. Units are not edited one by one on this page.",
+      "allFloors": "All floors",
+      "searchPlaceholder": "Search room, tower or condominium unit no.",
+      "filterHint": "Click to filter · the total row follows the filters",
+      "totalFiltered_one": "Total {{n}} unit (filtered)",
+      "totalFiltered_other": "Total {{n}} units (filtered)"
+    },
+    "dense": {
+      "assumptions": "户型假设 {{priced}}/{{total}}",
+      "sourceImported": "从 Excel 导入",
+      "panelButton": "假设面板",
+      "template": "模板",
+      "expand": "展开表格",
+      "collapse": "收起表格",
+      "expandTitle": "隐藏项目标题和标签页",
+      "collapseTitle": "还原 (Esc)"
+    },
+    "switch": {
+      "toImportedTitle": "Switch to imported prices?",
+      "toImportedMessage_one": "{{n}} unit currently holds a price. It stays as it is until you upload a price file; the upload then replaces the price of every unit.",
+      "toImportedMessage_other": "{{n}} units currently hold a price. They stay as they are until you upload a price file; the upload then replaces the price of every unit.",
+      "toCalculatedTitle": "Back to system calculation?",
+      "toCalculatedMessage": "The stored prices do not change until you press Save, which recalculates every unit."
+    },
+    "assumptions": {
+      "panelTitle": "Pricing assumptions",
+      "hidePanel": "Hide assumptions panel",
+      "showPanel": "Show assumptions panel",
+      "show": "显示",
+      "hide": "隐藏",
+      "strip": {
+        "forceSale": "强制出售百分比",
+        "count_one": "{{count}} 个假设值",
+        "count_other": "{{count}} 个假设值",
+        "edited": "已修改",
+        "editedTitle": "有未保存的更改"
+      },
+      "units": {
+        "baht": "Baht",
+        "bahtPerSqm": "Baht/sq.m.",
+        "percent": "%",
+        "floors": "floors"
+      }
+    },
+    "recalc": {
+      "title": "价格已重新计算",
+      "titleUnchanged": "价格已重新计算 · 价格未变化",
+      "changedLabel": "价格变化的单元",
+      "ofTotal": "共 {{total}} 个",
+      "valueLabel": "评估总价值",
+      "forceLabel": "强制出售总价",
+      "baht": "泰铢",
+      "dismiss": "关闭计算摘要"
+    },
+    "price": {
+      "saved": "Saved prices",
+      "previewNote": "Previewing your edits: the total appraisal value changes by {{delta}} Baht against the saved prices. Changed cells are highlighted. Nothing is saved until you press Save.",
+      "switchNote": "This is a preview of the system calculation. The imported prices are replaced for every unit only when you press Save.",
+      "recalcHint_one": "Recalculating would change the price of {{n}} unit.",
+      "recalcHint_other": "Recalculating would change the price of {{n}} units.",
+      "noStandardHint_one": "{{n}} of them has a model with no standard price, so its stored price would be replaced by a calculation without one.",
+      "noStandardHint_other": "{{n}} of them have a model with no standard price, so their stored prices would be replaced by a calculation without one.",
+      "noStandardNote_one": "{{n}} unit holds a stored price but its model has no standard price: it shows a dash here, is left out of these totals, and Save would recalculate it without one.",
+      "noStandardNote_other": "{{n}} units hold a stored price but their model has no standard price: they show a dash here, are left out of these totals, and Save would recalculate them without one.",
+      "searchPlaceholder": "Search room or tower",
+      "pendingStandard": "Standard price pending",
+      "resetToSaved": "Back to saved values",
+      "cols": {
+        "flags": "Location",
+        "standardPrice": "Standard Price (Baht/sq.m.)",
+        "forceSale": "强制出售价格",
+        "fireInsurance": "火灾保险价值"
+      },
+      "bands": {
+        "label": "Columns",
+        "unit": "Unit data",
+        "vars": "Calculation inputs",
+        "res": "Results",
+        "resImported": "From the imported file"
+      }
+    }
+  },
+  "lbPrice": {
+    "searchPlaceholder": "Search plot or house no.",
+    "cols": {
+      "standardPrice": "Standard Price (Baht/house)",
+      "landPrice": "Land price (Baht)"
+    },
+    "assumptions": {
+      "landRate": "Land increase / decrease",
+      "standardLandPrice": "Standard land price",
+      "units": {
+        "bahtPerSqWa": "Baht/Sq.Wa"
+      }
     }
   },
   "changeProjectType": {
@@ -606,6 +887,101 @@
       "landIncreaseDecreaseRate": "Land Increase/Decrease Rate (%)"
     }
   },
+  "fieldLabels": {
+    "specifyPlaceholder": "Please specify...",
+    "projectInfo": {
+      "projectName": "Project Name",
+      "projectDescription": "Project Description",
+      "developer": "Developer",
+      "landAreaRai": "Rai",
+      "landAreaNgan": "Ngan",
+      "landAreaSquareWa": "Square Wa",
+      "unitForSaleCount": "Unit For Sale",
+      "numberOfPhase": "Number of Phase",
+      "isUnderConstruction": "Under Construction",
+      "constructionProgressPercent": "Construction Progress (%)",
+      "houseNumber": "House Number",
+      "road": "Road",
+      "soi": "Soi",
+      "subDistrict": "DOPA Sub District",
+      "districtName": "DOPA District",
+      "provinceName": "DOPA Province",
+      "landOffice": "Land Office",
+      "latitude": "Latitude",
+      "longitude": "Longitude",
+      "builtOnTitleDeedNumber": "Title Number",
+      "licenseExpirationDate": "License Expiration Date",
+      "utilities": "Utilities",
+      "utilitiesOther": "Other Utilities",
+      "facilities": "Facilities",
+      "facilitiesOther": "Other Facilities",
+      "remark": "Remark"
+    },
+    "tower": {
+      "towerName": "Tower Name",
+      "condoRegistrationNumber": "Condo Registration Number",
+      "numberOfUnits": "Number of Units",
+      "numberOfFloors": "Number of Floors",
+      "conditionType": "Condition",
+      "hasObligation": "Is Obligation",
+      "obligationDetails": "Obligation",
+      "documentValidationType": "Document Validation",
+      "isLocationCorrect": "Location Correct",
+      "distance": "Distance (m)",
+      "roadWidth": "Road Width (m)",
+      "rightOfWay": "Right of Way (m)",
+      "roadSurfaceType": "Road Surface",
+      "roadSurfaceTypeOther": "Other Road Surface",
+      "decorationType": "Decoration",
+      "decorationTypeOther": "Other Decoration",
+      "buildingAge": "Building Age",
+      "buildingFormType": "Building Form",
+      "constructionMaterialType": "Construction Materials",
+      "roofType": "屋顶类型",
+      "roofTypeOther": "Other Roof Type",
+      "isExpropriated": "Is Expropriated",
+      "isInExpropriationLine": "In Line Expropriated",
+      "royalDecree": "Royal Decree Reference",
+      "expropriationRemark": "Expropriation Remark",
+      "isForestBoundary": "In Forest Boundary",
+      "forestBoundaryRemark": "Forest Boundary Remark",
+      "remark": "Remark"
+    },
+    "model": {
+      "modelName": "Model Name",
+      "modelDescription": "Model Description",
+      "hasMezzanine": "Has Mezzanine",
+      "startingPriceMin": "Starting Price Min (THB)",
+      "startingPriceMax": "Starting Price Max (THB)",
+      "usableAreaMin": "Usable Area Min (sq.m.)",
+      "usableAreaMax": "Usable Area Max (sq.m.)",
+      "standardUsableArea": "Standard Usable Area (sq.m.)",
+      "fireInsuranceCode": "Fire Insurance Condition",
+      "numberOfHouse": "Number of Houses",
+      "landAreaMin": "Land Area Min (Sq.Wa)",
+      "landAreaMax": "Land Area Max (Sq.Wa)",
+      "standardLandArea": "Standard Land Area (Sq.Wa)",
+      "constructionStyleRemark": "Remark",
+      "remark": "Remark"
+    },
+    "projectLand": {
+      "propertyName": "Property Name",
+      "subDistrict": "Sub District",
+      "districtName": "District",
+      "provinceName": "Province",
+      "landDescription": "Land Description",
+      "isOwnerVerified": "Check Owner",
+      "ownerName": "Owner",
+      "hasObligation": "Is Obligation",
+      "obligationDetails": "Obligation"
+    },
+    "pricing": {
+      "floorIncrementEveryXFloor": "Every X Floor",
+      "floorIncrementAmount": "Amount (Baht)",
+      "landIncreaseDecreaseRate": "Land Increase / Decrease (Baht/Sq.Wa)",
+      "forceSalePercentage": "Force Sale Percentage (%)"
+    }
+  },
   "validation": {
     "invalidPartialDate": "Use YYYY, YYYY-MM, or YYYY-MM-DD",
     "towerRequired": "Tower is required for Condo projects"
@@ -650,7 +1026,7 @@
       "deleteSuccess": "Upload deleted",
       "deleteFailed": "Failed to delete upload",
       "invalidFileType": "Invalid file type. Only {{extensions}} are supported.",
-      "fileTooLarge": "File size exceeds 10 MB limit."
+      "fileTooLarge": "文件大小超过 {{max}} MB 限制。"
     },
     "pricing": {
       "saveSuccess": "Pricing assumptions saved and unit prices recalculated",
@@ -676,6 +1052,9 @@
     "deleteModelListing": {
       "title": "Delete Model",
       "confirm": "Delete"
+    },
+    "deleteListing": {
+      "message": "Are you sure you want to delete \"{{name}}\"? This action cannot be undone."
     }
   },
   "errors": {

@@ -53,7 +53,11 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-start gap-2.5 rounded-xl border border-gray-200 bg-gray-50/70 px-4 py-3 text-sm text-gray-600 dark:border-base-300 dark:bg-base-200 dark:text-gray-300">
-        <Icon name="circle-info" style="solid" className="mt-0.5 size-4 shrink-0 text-gray-400" />
+        <Icon
+          name="circle-info"
+          style="solid"
+          className="mt-0.5 size-4 shrink-0 text-(--palette-gray-400)"
+        />
         <p>{t('myProfile.accessHint')}</p>
       </div>
 
@@ -72,11 +76,15 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         count={roles.length}
       >
         {roles.length === 0 ? (
-          <p className="text-sm text-gray-400">{t('empty.noRolesAssigned')}</p>
+          <p className="text-sm text-(--palette-gray-400)">{t('empty.noRolesAssigned')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {roles.map(role => (
-              <Pill key={role} tone="bg-violet-50 text-violet-700" dot="bg-violet-400">
+              <Pill
+                key={role}
+                tone="bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300"
+                dot="bg-violet-400"
+              >
                 {roleLabel(role)}
               </Pill>
             ))}
@@ -91,13 +99,13 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         count={groups.length}
       >
         {groups.length === 0 ? (
-          <p className="text-sm text-gray-400">{t('empty.noGroupsAssigned')}</p>
+          <p className="text-sm text-(--palette-gray-400)">{t('empty.noGroupsAssigned')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {groups.map(group => (
               <Pill
                 key={group.groupId}
-                tone="bg-amber-50 text-amber-700"
+                tone="bg-(--palette-warn-wash) text-(--palette-warn)"
                 dot={group.scope === 'Bank' ? 'bg-blue-400' : 'bg-amber-400'}
               >
                 {group.groupName}
@@ -114,13 +122,13 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         count={teams.length}
       >
         {teams.length === 0 ? (
-          <p className="text-sm text-gray-400">{t('empty.noTeamsAssigned')}</p>
+          <p className="text-sm text-(--palette-gray-400)">{t('empty.noTeamsAssigned')}</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {teams.map(team => (
               <Pill
                 key={team.teamId}
-                tone="bg-teal-50 text-teal-700"
+                tone="bg-(--palette-accent-wash) text-(--palette-accent-ink)"
                 dot={team.scope === 'Bank' ? 'bg-blue-400' : 'bg-teal-400'}
               >
                 {team.teamName}
@@ -146,7 +154,7 @@ const ProfileAccessTab = ({ me }: ProfileAccessTabProps) => {
         }
       >
         {permissions.length === 0 ? (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-(--palette-gray-400)">
             {(me.permissions?.length ?? 0) === 0
               ? t('empty.noPermissionsAssigned')
               : t('empty.noResults')}

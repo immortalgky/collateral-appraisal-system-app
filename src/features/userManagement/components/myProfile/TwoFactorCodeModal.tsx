@@ -15,16 +15,26 @@ interface TwoFactorCodeModalProps {
   children?: ReactNode;
   submitLabel: string;
   submitVariant?: 'primary' | 'danger';
+  /**
+   * Also accept an unused recovery code (like `ab12c-d34ef`), not only 6 digits: the field then takes
+   * any text, and the server validates and normalises what is sent.
+   */
+  allowRecoveryCode?: boolean;
+  /** Replaces the field's label (default: "6-digit code"). */
+  codeLabel?: string;
+  /** Replaces the text for a wrong code (default: the authenticator-app one). */
+  invalidCodeMessage?: string;
   /** Sends the code; rejects with the failed request's error. Resolving closes the modal. */
   onSubmit: (code: string) => Promise<unknown>;
 }
 
 const CODE_LENGTH = 6;
+const RECOVERY_INPUT_MAX_LENGTH = 64;
 
 /**
- * Asks for one 6-digit authenticator code and sends it. A wrong code comes back as a 400
- * ProblemDetails (never a 401, which would log the SPA out), shown under the field rather than as a
- * toast so the user can retype it without losing the dialog.
+ * Asks for one 6-digit authenticator code (or, with `allowRecoveryCode`, a recovery code) and sends
+ * it. A wrong code comes back as a 400 ProblemDetails (never a 401, which would log the SPA out),
+ * shown under the field rather than as a toast so the user can retype it without losing the dialog.
  */
 const TwoFactorCodeModal = ({
   isOpen,
@@ -34,14 +44,22 @@ const TwoFactorCodeModal = ({
   children,
   submitLabel,
   submitVariant = 'primary',
+  allowRecoveryCode = false,
+  codeLabel,
+  invalidCodeMessage,
   onSubmit,
 }: TwoFactorCodeModalProps) => {
   const { t } = useTranslation(['userManagement', 'common']);
-  const errorMessage = useTwoFactorErrorMessage();
+  const errorMessage = useTwoFactorErrorMessage(invalidCodeMessage);
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // A recovery code counts only its letters and digits, so "12 34" or "ab-12c" is not enough to send.
+  const complete = allowRecoveryCode
+    ? code.replace(/[^a-z0-9]/gi, '').length >= CODE_LENGTH
+    : code.length === CODE_LENGTH;
 
   const close = () => {
     setCode('');
@@ -55,11 +73,11 @@ const TwoFactorCodeModal = ({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (code.length !== CODE_LENGTH || pending) return;
+    if (!complete || pending) return;
     setPending(true);
     setError(null);
     try {
-      await onSubmit(code);
+      await onSubmit(code.trim());
       close();
     } catch (err) {
       setError(errorMessage(err, t('twoFactor.errors.generic')));
@@ -84,17 +102,26 @@ const TwoFactorCodeModal = ({
         {children}
         <Input
           ref={inputRef}
-          label={t('twoFactor.codeLabel')}
+          label={codeLabel ?? t('twoFactor.codeLabel')}
           type="text"
-          inputMode="numeric"
+          inputMode={allowRecoveryCode ? 'text' : 'numeric'}
           autoComplete="one-time-code"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          // Not sliced in JS: the server validates. This only stops a pasted blob from being posted.
+          maxLength={allowRecoveryCode ? RECOVERY_INPUT_MAX_LENGTH : undefined}
           autoFocus // eslint-disable-line jsx-a11y/no-autofocus -- the dialog exists only to enter this code
           value={code}
           onChange={e => {
-            setCode(e.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH));
+            setCode(
+              allowRecoveryCode
+                ? e.target.value
+                : e.target.value.replace(/\D/g, '').slice(0, CODE_LENGTH),
+            );
             setError(null);
           }}
-          placeholder={t('twoFactor.codePlaceholder')}
+          placeholder={allowRecoveryCode ? undefined : t('twoFactor.codePlaceholder')}
           error={error ?? undefined}
           className="font-mono tracking-widest"
         />
@@ -113,7 +140,7 @@ const TwoFactorCodeModal = ({
             variant={submitVariant}
             size="sm"
             isLoading={pending}
-            disabled={code.length !== CODE_LENGTH}
+            disabled={!complete}
           >
             {submitLabel}
           </Button>

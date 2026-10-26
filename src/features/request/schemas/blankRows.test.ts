@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { vmsg } from '@/shared/components/form/validationMessage';
 import { createRequestForm, createRequestFormDefault, refineRetailSellingPrice } from './form';
 
 const blankCustomer = { name: '', contactNumber: '' };
@@ -36,8 +37,8 @@ describe('untouched rows of the customers and properties tables', () => {
     const list = issues({ customers: [blankCustomer], properties: [blankProperty] });
     const customers = list.filter(i => i.path.join('.') === 'customers');
     const properties = list.filter(i => i.path.join('.') === 'properties');
-    expect(customers.map(i => i.message)).toEqual([expect.stringMatching(/at least 1 item/)]);
-    expect(properties.map(i => i.message)).toEqual([expect.stringMatching(/at least 1 item/)]);
+    expect(customers.map(i => i.message)).toEqual([vmsg('minItems', { min: 1 })]);
+    expect(properties.map(i => i.message)).toEqual([vmsg('minItems', { min: 1 })]);
     // …and no field of the blank row is called missing
     expect(
       under(

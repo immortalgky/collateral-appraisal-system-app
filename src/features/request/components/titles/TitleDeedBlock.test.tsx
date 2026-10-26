@@ -118,6 +118,8 @@ describe('TitleDeedBlock', () => {
     const includes = () =>
       screen.getAllByTestId('land-form').map(n => n.getAttribute('data-include'));
     expect(includes()).toEqual(['notes']);
+    // The notes field names itself: no section heading above it
+    expect(screen.queryByText('titleSection.drawer.section.deedDetail')).toBeNull();
     expect(screen.queryByTestId('form-view')).toBeNull();
     await userEvent.click(formButton());
     expect(includes()).toEqual(['ownerName,notes']);

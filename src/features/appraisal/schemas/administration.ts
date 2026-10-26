@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { useTranslation } from 'react-i18next';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
 /**
  * Zod schema for internal staff
@@ -30,6 +30,14 @@ export const externalCompanySchema = z.object({
   activeAssignments: z.number(),
 });
 
+/** Allowed form values; the schema and the Appraisal Type defaults mapper share them. */
+export const ASSIGNMENT_TYPES = ['internal', 'external', 'external-offline'] as const;
+export const ASSIGNMENT_METHODS = ['manual', 'roundrobin', 'quotation'] as const;
+export const FOLLOWUP_STAFF_METHODS = ['manual', 'roundrobin'] as const;
+
+/** The remark's length limit: the schema, the textarea's maxLength and the slip's check share it. */
+export const ASSIGNMENT_REMARKS_MAX = 4000;
+
 /**
  * Assignment form validation schema factory
  */
@@ -40,10 +48,10 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       // appraiser keys that company's book in afterwards. The admin picks nothing here —
       // the company and the book's appraisal date are recorded later by the keyer, who has
       // the paper book in hand.
-      assignmentType: z.enum(['internal', 'external', 'external-offline'], {
+      assignmentType: z.enum(ASSIGNMENT_TYPES, {
         required_error: t('validation.assignmentTypeRequired'),
       }),
-      assignmentMethod: z.enum(['manual', 'roundrobin', 'quotation'], {
+      assignmentMethod: z.enum(ASSIGNMENT_METHODS, {
         required_error: t('validation.assignmentMethodRequired'),
       }),
       staffId: z.string().nullable(),
@@ -52,27 +60,40 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       selectedCompany: externalCompanySchema.nullable(),
       followupStaffId: z.string().nullable(),
       selectedFollowupStaff: internalStaffSchema.nullable(),
-      followupStaffMethod: z.enum(['manual', 'roundrobin']),
-      remarks: z.string().max(4000, t('validation.remarksMaxLength')),
+      followupStaffMethod: z.enum(FOLLOWUP_STAFF_METHODS),
+      remarks: z
+        .string()
+        .max(
+          ASSIGNMENT_REMARKS_MAX,
+          t('validation.remarksMaxLength', { max: ASSIGNMENT_REMARKS_MAX }),
+        ),
     })
     .refine(
       data => {
-        // For manual selection, require either staffId or companyId based on type.
-        // Off-system external picks no COMPANY here (the keyer records it later from the book),
-        // but it does pick the internal appraiser who keys it in — so it requires staffId, exactly
-        // like the internal path.
-        if (data.assignmentMethod === 'manual') {
-          if (data.assignmentType === 'internal' || data.assignmentType === 'external-offline') {
-            return data.staffId !== null && data.staffId.length > 0;
-          }
-          return data.companyId !== null && data.companyId.length > 0;
-        }
-        // Round-robin and quotation don't require upfront selection
-        return true;
+        // Manual internal needs staffId. Off-system external picks no COMPANY here (the keyer
+        // records it later from the book), but it does pick the internal appraiser who keys it
+        // in — so it requires staffId, exactly like the internal path.
+        const needsStaff =
+          data.assignmentMethod === 'manual' &&
+          (data.assignmentType === 'internal' || data.assignmentType === 'external-offline');
+        return !needsStaff || (data.staffId !== null && data.staffId.length > 0);
       },
       {
         message: t('validation.selectAssignee'),
-        path: ['staffId'], // Will show on staffId field
+        path: ['staffId'],
+      },
+    )
+    .refine(
+      data => {
+        // Manual external needs companyId. It has its own path so the error lands under the
+        // company picker (it used to share staffId's, which that picker never shows).
+        const needsCompany =
+          data.assignmentMethod === 'manual' && data.assignmentType === 'external';
+        return !needsCompany || (data.companyId !== null && data.companyId.length > 0);
+      },
+      {
+        message: t('validation.selectCompany'),
+        path: ['companyId'],
       },
     )
     .refine(
@@ -89,17 +110,13 @@ export const makeAssignmentFormSchema = (t: TFunction<'appraisal'>) =>
       },
     );
 
-// Static export for backwards compatibility and type inference
-export const assignmentFormSchema = makeAssignmentFormSchema(
-  ((key: string) => key) as unknown as TFunction<'appraisal'>,
-);
+// Built once with the token `t`: the messages are translated where they are shown, so this one
+// schema serves every language.
+export const assignmentFormSchema = makeAssignmentFormSchema(tokenT('appraisal'));
 
 export type AssignmentFormType = z.infer<typeof assignmentFormSchema>;
 
-export const useAssignmentFormSchema = () => {
-  const { t } = useTranslation('appraisal');
-  return makeAssignmentFormSchema(t);
-};
+export const useAssignmentFormSchema = () => assignmentFormSchema;
 
 /**
  * Default values for the assignment form

@@ -34,13 +34,15 @@ interface KpiProps {
  * as the toolbar's quiet buttons — neutral surface, coloured glyph.
  */
 const Kpi = ({ icon, label, iconClassName, children, hint }: KpiProps) => (
-  <div className="rounded-xl border border-gray-200 bg-white px-3.5 py-3 transition-colors hover:border-gray-300">
+  <div className="rounded-xl border border-(--palette-line) bg-(--palette-surface) px-3.5 py-3 transition-colors hover:border-(--palette-line-strong)">
     <div className="flex items-center gap-1.5">
       <Icon name={icon} style="solid" className={`size-3 ${iconClassName}`} />
-      <span className="text-[10px] font-medium uppercase tracking-wide text-gray-500">{label}</span>
+      <span className="text-[10px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
+        {label}
+      </span>
     </div>
-    <div className="mt-1 text-lg font-bold tabular-nums text-gray-900">{children}</div>
-    {hint && <p className="mt-0.5 text-[10px] text-gray-400">{hint}</p>}
+    <div className="mt-1 text-lg font-bold tabular-nums text-(--palette-ink)">{children}</div>
+    {hint && <p className="mt-0.5 text-[10px] text-(--palette-gray-400)">{hint}</p>}
   </div>
 );
 
@@ -53,11 +55,11 @@ const MeetingPulse = ({ stats }: MeetingPulseProps) => {
   const unknown = stats.appraisedValue.unknown;
 
   return (
-    <section className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+    <section className="rounded-2xl border border-(--palette-line-soft) bg-(--palette-surface) p-5 shadow-sm">
       <div className="grid gap-6 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
         {/* Progress */}
-        <div className="lg:border-r lg:border-gray-100 lg:pr-6">
-          <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500">
+        <div className="lg:border-r lg:border-(--palette-line-soft) lg:pr-6">
+          <h3 className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-(--palette-gray-500)">
             <span aria-hidden="true" className="block h-3.5 w-1 rounded-full bg-primary" />
             {t('pulse.title')}
           </h3>
@@ -67,7 +69,11 @@ const MeetingPulse = ({ stats }: MeetingPulseProps) => {
         {/* KPIs + value distribution */}
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Kpi icon="gavel" label={t('pulse.kpiDecision')} iconClassName="text-primary">
+            <Kpi
+              icon="gavel"
+              label={t('pulse.kpiDecision')}
+              iconClassName="text-(--palette-primary-text)"
+            >
               <CountUpValue value={stats.totalDecision} animate={animate} />
             </Kpi>
             <Kpi icon="circle-info" label={t('pulse.kpiAck')} iconClassName="text-purple-500">
@@ -76,7 +82,7 @@ const MeetingPulse = ({ stats }: MeetingPulseProps) => {
             <Kpi
               icon="sack-dollar"
               label={t('pulse.kpiAppraised')}
-              iconClassName="text-emerald-600"
+              iconClassName="text-emerald-600 dark:text-emerald-400"
               hint={
                 unknown > 0
                   ? t(unknown === 1 ? 'pulse.unknownValues' : 'pulse.unknownValuesPlural', {

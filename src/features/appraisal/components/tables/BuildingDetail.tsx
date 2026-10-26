@@ -1,19 +1,33 @@
 import { Fragment, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import { Icon, NumberInput } from '@/shared/components';
-import { useFormReadOnly } from '@/shared/components/form/context';
+import { Button, Icon, Input, NumberInput } from '@/shared/components';
+import {
+  FormTable,
+  FormTableDash,
+  FormTableRowActions,
+  useFormLayout,
+  useFormReadOnly,
+  type FormTableColumn,
+} from '@/shared/components/form';
+import { FormReadValue } from '@/shared/components/form/FormReadValue';
+import { controlGeometry, controlSkin } from '@/shared/components/inputs/controlStyles';
 import { defaultDepreciationDetail, periodErrors, periodRules } from './BuildingDetailPopUpModal';
 import TDropdown from '@/features/pricingAnalysis/components/table/TDropdown';
 import { toNumber } from '../BuildingTable/BuildingDetailTable';
 import { type DerivedRule, useDerivedFieldArray } from '../BuildingTable/useDerivedFieldArray';
-import { Controller, useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import ConfirmDeleteButton from '@/shared/components/ConfirmDeleteButton';
-import { FIELD, INPUT_BOX, NUM, NumCell, TD, TH, money2, toNum } from './denseTable';
+import {
+  Controller,
+  type UseFormRegisterReturn,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { buildingInsuranceFigures } from '../../utils/buildingStoredValues';
 import {
   roundSumToThousand,
   scheduleCostFigures,
+  type Numberish,
 } from '@/features/pricingAnalysis/domain/calculation';
 
 interface BuildingDetailProps {
@@ -27,7 +41,171 @@ interface BuildingDetailProps {
 
 const ARRAY_FIELD = 'depreciationDetails';
 
-const sum = (rows: any[], key: string) => rows.reduce((acc, row) => acc + toNumber(row?.[key]), 0);
+/**
+ * The width of the 11-column table in rem (DESIGN.md 17.7): its fixed columns plus 10rem for the
+ * description (140px at 14px). Narrower than this, a narrow shell shows cards.
+ */
+const MIN_WIDTH = { standard: 71.2857, compact: 70.8571 };
+
+/**
+ * Standard keeps its roomy cells everywhere else; this table is dense, so its cells take ~5px of
+ * side padding and its in-cell controls 8px (24px on the chevron side). Child selectors keep the
+ * age-band editor's own table out of it.
+ */
+const STANDARD_DENSE = [
+  '[&>div>div>table>*>tr>:is(th,td)]:px-[0.3571rem]',
+  '[&>div>div>table>*>tr>td_:is(input,button)]:px-[0.5714rem]',
+  '[&>div>div>table>*>tr>td_button[aria-haspopup]]:pr-[1.7143rem]',
+].join(' ');
+
+/** The `costBuilding.table.*` strings the column heads, card labels and badges use. */
+type TableLabel =
+  | 'detailHeader'
+  | 'typeHeader'
+  | 'areaHeader'
+  | 'rcnBeforeDepreHeader'
+  | 'rcnAfterDepreHeader'
+  | 'depreciationHeader'
+  | 'pricePerSqmHeader'
+  | 'totalPriceHeader'
+  | 'yearHeader'
+  | 'percentPerYearHeader'
+  | 'totalPercentHeader'
+  | 'methodHeader'
+  | 'methodGross'
+  | 'methodPeriod'
+  | 'building'
+  | 'nonBuilding'
+  | 'editPeriods'
+  | 'setAgeFirst'
+  | 'addBuilding'
+  | 'addNonBuilding'
+  | 'noDepreciationData'
+  | 'tableTotal';
+
+/** One age band of a row: what the form holds, before it is coerced to a number. */
+type PeriodRow = {
+  atYear?: unknown;
+  toYear?: unknown;
+  depreciationPerYear?: unknown;
+  totalDepreciationPct?: unknown;
+  priceDepreciation?: unknown;
+};
+
+/** One row of the table as the form holds it. */
+type DepreciationRow = {
+  areaDescription?: string | null;
+  isBuilding?: boolean;
+  year?: unknown;
+  depreciationMethod?: string;
+  depreciationPeriods?: unknown[];
+  totalDepreciationPercentPerYear?: unknown;
+  totalDepreciationPct?: unknown;
+  priceBeforeDepreciation?: unknown;
+  priceDepreciation?: unknown;
+  pricePerSqMAfterDepreciation?: unknown;
+  priceAfterDepreciation?: Numberish;
+};
+
+const toNum = (v: unknown) => {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
+};
+
+/** Every figure in this table carries two decimals, the way the Cost of Building table shows them. */
+const money2 = (v: unknown): string => {
+  const n = Number(v);
+  if (Number.isFinite(n))
+    return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return typeof v === 'string' ? v : '';
+};
+
+/** A row with the field-array id and index it is edited under. */
+interface DepreciationItem {
+  id: string;
+  index: number;
+  row: DepreciationRow;
+}
+
+const sum = (rows: Record<string, unknown>[], key: string) =>
+  rows.reduce((acc, row) => acc + toNumber(row?.[key] as string), 0);
+
+/** A number cell: the figure as text when read-only, otherwise the cell-sized number input. */
+function NumCell({
+  name,
+  readOnly,
+  digits = 2,
+  maxInt = 15,
+  invalid = false,
+  label,
+}: {
+  name: string;
+  readOnly: boolean;
+  digits?: number;
+  maxInt?: number;
+  invalid?: boolean;
+  label: string;
+}) {
+  const { control } = useFormContext();
+  const value = useWatch({ name });
+  if (readOnly) return <>{digits ? money2(toNum(value)) : toNum(value)}</>;
+  return (
+    <Controller
+      name={name}
+      control={control}
+      // No ref for RHF: the input takes a `value` prop, and reset() writing into the DOM node
+      // behind React's back blanks it (see summaryField in BuildingDetail).
+      render={({ field }) => (
+        <NumberInput
+          name={field.name}
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          cell
+          decimalPlaces={digits}
+          maxIntegerDigits={maxInt}
+          invalid={invalid}
+          aria-label={label}
+        />
+      )}
+    />
+  );
+}
+
+/** The "2.00 ⌄" box of a Period row: looks like the editable cell beside it (white, drawn edge), opens the age bands. */
+function PeriodsTrigger({
+  open,
+  title,
+  value,
+  onClick,
+}: {
+  open: boolean;
+  title: string;
+  value: string;
+  onClick: () => void;
+}) {
+  const layout = useFormLayout();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={open}
+      title={title}
+      className={clsx(
+        'flex w-full items-center justify-end gap-1.5 tabular-nums',
+        controlGeometry(layout, true),
+        controlSkin({}),
+      )}
+    >
+      {value}
+      <Icon
+        style="solid"
+        name="chevron-down"
+        className={clsx('text-[0.7143rem] text-(--palette-ink-2)', !open && '-rotate-90')}
+      />
+    </button>
+  );
+}
 
 export function BuildingDetail({ name, showCostSummary = false }: BuildingDetailProps) {
   const { control, register, setValue } = useFormContext();
@@ -43,8 +221,10 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
 
   const { t } = useTranslation('pricingAnalysis');
   const { t: ta } = useTranslation('appraisal');
+  const layout = useFormLayout();
+  // The widths hold every figure at its widest realistic value (1,440,000.00 in a price column, 12,000.00 in an input), "Non-Building" and "เหมารวม" unclipped, the 24px row action inside its cell (measured with Roboto 13px)
+  const cw = (standard: string, compact: string) => (layout === 'compact' ? compact : standard);
   const { fields, append, remove } = useFieldArray({ control, name });
-  const formReadOnly = useFormReadOnly();
 
   // Writes the computed columns back into each row, exactly as the table's column headers did.
   useDerivedFieldArray({
@@ -58,7 +238,7 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
   const toggle = (id: string, open?: boolean) =>
     setExpanded(prev => ({ ...prev, [id]: open ?? !prev[id] }));
 
-  const values = useWatch({ name }) || [];
+  const values: DepreciationRow[] = useWatch({ name }) || [];
 
   // The overrides sit next to the table in the same form; `name` may be prefixed on nested forms.
   const base = name.endsWith(ARRAY_FIELD) ? name.slice(0, -ARRAY_FIELD.length) : '';
@@ -83,54 +263,27 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
   const totals = {
     area: sum(values, 'area'),
     // Each at 2 dp per row like `after`, so before − depreciation = after on screen.
-    before: roundSumToThousand(
-      values.map((row: { [key: string]: unknown }) => row?.priceBeforeDepreciation as number),
-    ).sum,
-    depreciation: roundSumToThousand(
-      values.map((row: { [key: string]: unknown }) => row?.priceDepreciation as number),
-    ).sum,
+    before: roundSumToThousand(values.map(row => row?.priceBeforeDepreciation as number)).sum,
+    depreciation: roundSumToThousand(values.map(row => row?.priceDepreciation as number)).sum,
     // The same total the Building Cost Value line rounds, so the two "Table total" figures agree.
     after,
   };
-  const columnCount = formReadOnly ? 12 : 13;
   const typeOptions = [
     {
       value: 'true',
       label: t('costBuilding.table.building'),
-      colorClass: 'text-[#15803d] dark:in-[.cas-form-grid]:text-[#4ade80]',
+      colorClass: 'text-[#15803d] dark:text-[#4ade80]',
     },
     {
       value: 'false',
       label: t('costBuilding.table.nonBuilding'),
-      colorClass: 'text-[#c2410c] dark:in-[.cas-form-grid]:text-[#fb923c]',
+      colorClass: 'text-[#c2410c] dark:text-[#fb923c]',
     },
   ];
   const methodOptions = [
     { value: 'Gross', label: t('costBuilding.table.methodGross') },
     { value: 'Period', label: t('costBuilding.table.methodPeriod') },
   ];
-
-  // One handler set for both copies of the add buttons: the band's links and the dashed buttons
-  // under the rows.
-  const addActions = [
-    { isBuilding: true, label: t('costBuilding.table.addBuilding'), dot: 'bg-primary-500' },
-    { isBuilding: false, label: t('costBuilding.table.addNonBuilding'), dot: 'bg-amber-500' },
-  ];
-  const addButtons = !formReadOnly && (
-    <div className="flex flex-wrap gap-1.5">
-      {addActions.map(({ isBuilding, label, dot }) => (
-        <button
-          key={String(isBuilding)}
-          type="button"
-          onClick={() => handleRequestAdd(isBuilding)}
-          className="inline-flex items-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.8571rem] text-gray-600 hover:border-primary-500 hover:text-primary-700"
-        >
-          <span className={`size-2 rounded-sm ${dot}`} />
-          {label}
-        </button>
-      ))}
-    </div>
-  );
 
   const costSummary = [
     {
@@ -152,355 +305,419 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
     },
   ];
 
+  const items: DepreciationItem[] = fields.map((field, index) => ({
+    id: field.id,
+    index,
+    row: values[index] ?? {},
+  }));
+
+  // Labels for the card, where the two-level head is gone: the group and the sub-header in one.
+  const tb = (key: TableLabel) => t(`costBuilding.table.${key}`);
+  const grouped = (group: TableLabel, header: TableLabel) => `${tb(group)} (${tb(header)})`;
+  const typeBadge = (isBuilding: boolean) => (
+    <span
+      className={clsx(
+        'rounded px-1.5 py-0.5 text-xs font-medium',
+        isBuilding
+          ? 'bg-[#e6f4ea] text-[#15803d] dark:bg-[#15803d]/20 dark:text-[#4ade80]'
+          : 'bg-[#fdf0e1] text-[#c2410c] dark:bg-[#c2410c]/20 dark:text-[#fb923c]',
+      )}
+    >
+      {isBuilding ? tb('building') : tb('nonBuilding')}
+    </span>
+  );
+
+  // A computed pair in one right-aligned cell: the small figure on top, the total price below
+  const stacked = (top: string, bottom: string) => (
+    <div className="leading-[1.3]">
+      <span className="block text-xs font-normal text-(--palette-ink-2)">{top}</span>
+      <span className="block font-medium">{bottom}</span>
+    </div>
+  );
+  const stackHeader = (top: string, bottom: string) => (
+    <span className="inline-flex flex-col items-end leading-[1.3]">
+      <span className="font-normal">{top}</span>
+      <span>{bottom}</span>
+    </span>
+  );
+
+  const columns: FormTableColumn<DepreciationItem>[] = [
+    {
+      key: 'description',
+      kind: 'input',
+      header: tb('detailHeader'),
+      card: { span: 6, title: ({ row }) => row.areaDescription },
+      cell: ({ index, row }, { position, readOnly }) =>
+        readOnly ? (
+          row.areaDescription || <FormTableDash />
+        ) : (
+          <Input
+            {...register(`${name}.${index}.areaDescription`)}
+            cell
+            maxLength={50}
+            aria-label={`${tb('detailHeader')} ${position + 1}`}
+          />
+        ),
+    },
+    {
+      key: 'type',
+      kind: 'input',
+      header: tb('typeHeader'),
+      // Room for "Non-Building" beside the chevron
+      width: cw('7.5714rem', '7.1429rem'),
+      cell: ({ index, row }, { readOnly }) =>
+        readOnly ? (
+          typeBadge(!!row.isBuilding)
+        ) : (
+          <Controller
+            name={`${name}.${index}.isBuilding`}
+            control={control}
+            render={({ field: f }) => (
+              <TDropdown
+                cell
+                showValue={false}
+                allowEmpty={false}
+                options={typeOptions}
+                value={String(f.value !== false)}
+                onChange={v => f.onChange(v === 'true')}
+              />
+            )}
+          />
+        ),
+    },
+    {
+      key: 'area',
+      kind: 'input',
+      align: 'end',
+      header: tb('areaHeader'),
+      width: '5.7143rem',
+      total: money2(totals.area),
+      cell: ({ index }, { position, readOnly }) => (
+        <NumCell
+          name={`${name}.${index}.area`}
+          readOnly={readOnly}
+          maxInt={6}
+          label={`${tb('areaHeader')} ${position + 1}`}
+        />
+      ),
+    },
+    {
+      key: 'pricePerSqmBefore',
+      kind: 'input',
+      align: 'end',
+      group: tb('rcnBeforeDepreHeader'),
+      header: tb('pricePerSqmHeader'),
+      width: cw('6.8571rem', '6.5714rem'),
+      card: { label: grouped('rcnBeforeDepreHeader', 'pricePerSqmHeader') },
+      cell: ({ index }, { position, readOnly }) => (
+        <NumCell
+          name={`${name}.${index}.pricePerSqMBeforeDepreciation`}
+          readOnly={readOnly}
+          label={`${grouped('rcnBeforeDepreHeader', 'pricePerSqmHeader')} ${position + 1}`}
+        />
+      ),
+    },
+    {
+      key: 'priceBefore',
+      kind: 'derived',
+      align: 'end',
+      group: tb('rcnBeforeDepreHeader'),
+      header: tb('totalPriceHeader'),
+      width: cw('7.4286rem', '7.7143rem'),
+      total: money2(totals.before),
+      card: { label: grouped('rcnBeforeDepreHeader', 'totalPriceHeader') },
+      cell: ({ row }) => money2(row.priceBeforeDepreciation),
+    },
+    {
+      key: 'year',
+      kind: 'input',
+      align: 'end',
+      header: tb('yearHeader'),
+      width: '3.4286rem',
+      cell: ({ index }, { position, readOnly }) => (
+        <NumCell
+          name={`${name}.${index}.year`}
+          readOnly={readOnly}
+          digits={0}
+          maxInt={3}
+          label={`${tb('yearHeader')} ${position + 1}`}
+        />
+      ),
+    },
+    {
+      key: 'perYear',
+      kind: 'input',
+      align: 'end',
+      group: tb('depreciationHeader'),
+      header: tb('percentPerYearHeader'),
+      width: cw('5.4286rem', '5.1429rem'),
+      card: { label: `${tb('depreciationHeader')} ${tb('percentPerYearHeader')}` },
+      cell: ({ id, index, row }, { position, readOnly }) => {
+        const isGross = row.depreciationMethod === 'Gross';
+        if (!isGross) {
+          const open = !!expanded[id];
+          return (
+            <PeriodsTrigger
+              open={open}
+              title={tb('editPeriods')}
+              onClick={() => toggle(id)}
+              value={toNum(row.totalDepreciationPercentPerYear).toFixed(2)}
+            />
+          );
+        }
+        if ((row.depreciationPeriods ?? []).length > 0)
+          return (
+            <NumCell
+              name={`${name}.${index}.depreciationPeriods.0.depreciationPerYear`}
+              readOnly={readOnly}
+              maxInt={3}
+              label={`${tb('percentPerYearHeader')} ${position + 1}`}
+            />
+          );
+        return (
+          <span title={tb('setAgeFirst')}>
+            <FormTableDash />
+          </span>
+        );
+      },
+    },
+    {
+      key: 'method',
+      kind: 'input',
+      group: tb('depreciationHeader'),
+      header: tb('methodHeader'),
+      width: cw('6.8571rem', '6.5714rem'),
+      cell: ({ id, index, row }, { readOnly }) =>
+        readOnly ? (
+          row.depreciationMethod === 'Gross' ? (
+            tb('methodGross')
+          ) : (
+            tb('methodPeriod')
+          )
+        ) : (
+          <Controller
+            name={`${name}.${index}.depreciationMethod`}
+            control={control}
+            render={({ field: f }) => (
+              <TDropdown
+                cell
+                showValue={false}
+                allowEmpty={false}
+                options={methodOptions}
+                value={f.value}
+                onChange={v => {
+                  f.onChange(v);
+                  toggle(id, v === 'Period');
+                }}
+              />
+            )}
+          />
+        ),
+    },
+    {
+      // Table: total % over total price in one cell. Card: the price alone, the % in its label (priceDepreciation below).
+      key: 'depreciationStack',
+      kind: 'derived',
+      align: 'end',
+      group: tb('depreciationHeader'),
+      header: stackHeader(tb('totalPercentHeader'), tb('totalPriceHeader')),
+      show: 'table',
+      width: cw('7.4286rem', '7.7143rem'),
+      total: money2(totals.depreciation),
+      cell: ({ row }) =>
+        stacked(`${toNum(row.totalDepreciationPct).toFixed(2)}%`, money2(row.priceDepreciation)),
+    },
+    {
+      key: 'priceDepreciation',
+      kind: 'derived',
+      group: tb('depreciationHeader'),
+      show: 'card',
+      total: money2(totals.depreciation),
+      card: {
+        label: grouped('depreciationHeader', 'totalPriceHeader'),
+        // The total % rides in the label, so the card keeps 4 result cells in one row
+        rowLabel: ({ row }) =>
+          t('costBuilding.table.depreciationTotalWithPercent', {
+            percent: toNum(row.totalDepreciationPct).toFixed(2),
+          }),
+      },
+      cell: ({ row }) => money2(row.priceDepreciation),
+    },
+    {
+      key: 'afterStack',
+      kind: 'derived',
+      align: 'end',
+      group: tb('rcnAfterDepreHeader'),
+      header: stackHeader(tb('pricePerSqmHeader'), tb('totalPriceHeader')),
+      show: 'table',
+      // Last figure before the frozen action column: a 15-digit total must not run under it
+      width: cw('8rem', '8.2857rem'),
+      total: money2(totals.after),
+      cell: ({ row }) =>
+        stacked(money2(row.pricePerSqMAfterDepreciation), money2(row.priceAfterDepreciation)),
+    },
+    {
+      key: 'pricePerSqmAfter',
+      kind: 'derived',
+      group: tb('rcnAfterDepreHeader'),
+      show: 'card',
+      card: { label: grouped('rcnAfterDepreHeader', 'pricePerSqmHeader') },
+      cell: ({ row }) => money2(row.pricePerSqMAfterDepreciation),
+    },
+    {
+      key: 'priceAfter',
+      kind: 'derived',
+      group: tb('rcnAfterDepreHeader'),
+      show: 'card',
+      total: money2(totals.after),
+      card: { label: grouped('rcnAfterDepreHeader', 'totalPriceHeader') },
+      cell: ({ row }) => money2(row.priceAfterDepreciation),
+    },
+    {
+      key: 'actions',
+      kind: 'action',
+      width: '2.5714rem',
+      cell: ({ index }, { position }) => (
+        <FormTableRowActions
+          position={position}
+          count={items.length}
+          onDelete={() => remove(index)}
+        />
+      ),
+    },
+  ];
+
   return (
     <div>
       {/* data-field: scroll target for array-level errors (see form/utils.ts). Kept on an empty
-          anchor rather than the card: formLayout.css restyles any [data-field] that wraps a table. */}
-      <div data-field={name} className="cas-repeater" />
-      <div className="cas-labelled-table">
-        {/* The band copy of the add buttons, shown wherever the layout shows `.cas-table-label`
-            (inside `.cas-form-grid`). Its twin under the rows, `cas-outside-form-only`, is for where
-            it is hidden — the block model form renders this table outside `.cas-form-grid` — and
-            `.cas-outside-form-only` (formLayoutSkin.css) hides that copy inside it. */}
-        <div className="cas-table-label">
-          {t('costBuilding.table.sectionLabel')}
-          {!isEmpty && (
-            <>
-              <span className="cas-label-meta">
-                {t('costBuilding.table.itemCount', { count: values.length })}
-              </span>
-              {!formReadOnly &&
-                addActions.map(({ isBuilding, label }) => (
-                  <button
-                    key={String(isBuilding)}
-                    type="button"
-                    onClick={() => handleRequestAdd(isBuilding)}
-                    className="cas-label-add"
-                  >
-                    + {label}
-                  </button>
-                ))}
-            </>
-          )}
-        </div>
-        <div className="cas-table-card min-w-0 flex-1 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          {isEmpty ? (
-            <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-              <Icon style="solid" name="building" className="size-5 text-gray-300" />
-              <p className="text-sm text-gray-600 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-2)]">
-                {t('costBuilding.table.noDepreciationData')}
-              </p>
-              {addButtons}
-            </div>
-          ) : (
-            <>
-              {fields.map((field, i) => (
-                <RowSync key={field.id} base={`${name}.${i}`} readOnly={formReadOnly} />
-              ))}
-              <div className="overflow-x-auto">
-                <table className="cas-dep-table w-full min-w-[980px] border-collapse text-sm leading-tight tabular-nums">
-                  <thead className="bg-[#f8fafa] text-[0.8571rem] font-medium text-[#55636f]">
-                    <tr>
-                      <th rowSpan={2} className={clsx(TH, 'text-left')}>
-                        {t('costBuilding.table.detailHeader')}
-                      </th>
-                      <th rowSpan={2} className={clsx(TH, 'text-left')}>
-                        {t('costBuilding.table.typeHeader')}
-                      </th>
-                      <th rowSpan={2} className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.areaHeader')}
-                      </th>
-                      <th colSpan={2} className={clsx(TH, 'text-center')}>
-                        {t('costBuilding.table.rcnBeforeDepreHeader')}
-                      </th>
-                      <th rowSpan={2} className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.yearHeader')}
-                      </th>
-                      <th colSpan={4} className={clsx(TH, 'text-center')}>
-                        {t('costBuilding.table.depreciationHeader')}
-                      </th>
-                      <th colSpan={2} className={clsx(TH, 'text-center')}>
-                        {t('costBuilding.table.rcnAfterDepreHeader')}
-                      </th>
-                      {!formReadOnly && <th rowSpan={2} className={clsx(TH, 'w-8')} />}
-                    </tr>
-                    <tr>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.pricePerSqmHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.totalPriceHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.percentPerYearHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.totalPercentHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-left')}>
-                        {t('costBuilding.table.methodHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.totalPriceHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.pricePerSqmHeader')}
-                      </th>
-                      <th className={clsx(TH, 'text-right')}>
-                        {t('costBuilding.table.totalPriceHeader')}
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
-                    {fields.map((field, rowIndex) => {
-                      const row = values[rowIndex] ?? {};
-                      const p = `${name}.${rowIndex}`;
-                      const isGross = row.depreciationMethod === 'Gross';
-                      const hasPeriod = (row.depreciationPeriods ?? []).length > 0;
-                      const open = !isGross && expanded[field.id];
-                      return (
-                        <Fragment key={field.id}>
-                          <tr>
-                            <td className={clsx(TD, 'min-w-[180px]')}>
-                              {formReadOnly ? (
-                                row.areaDescription
-                              ) : (
-                                <input
-                                  {...register(`${p}.areaDescription`)}
-                                  maxLength={50}
-                                  className={FIELD}
-                                />
-                              )}
-                            </td>
-                            <td className={clsx(TD, 'w-[130px]')}>
-                              {formReadOnly ? (
-                                <span
-                                  className={clsx(
-                                    'rounded px-1.5 py-0.5 text-[0.8571rem] font-medium',
-                                    row.isBuilding
-                                      ? 'bg-[#e6f4ea] text-[#15803d]'
-                                      : 'bg-[#fdf0e1] text-[#c2410c]',
-                                  )}
-                                >
-                                  {row.isBuilding
-                                    ? t('costBuilding.table.building')
-                                    : t('costBuilding.table.nonBuilding')}
-                                </span>
-                              ) : (
-                                <Controller
-                                  name={`${p}.isBuilding`}
-                                  control={control}
-                                  render={({ field: f }) => (
-                                    <TDropdown
-                                      dense
-                                      showValue={false}
-                                      allowEmpty={false}
-                                      options={typeOptions}
-                                      value={String(f.value !== false)}
-                                      onChange={v => f.onChange(v === 'true')}
-                                    />
-                                  )}
-                                />
-                              )}
-                            </td>
-                            <td className={clsx(NUM, 'w-[100px]')}>
-                              <NumCell name={`${p}.area`} readOnly={formReadOnly} maxInt={6} />
-                            </td>
-                            <td className={clsx(NUM, 'w-[120px]')}>
-                              <NumCell
-                                name={`${p}.pricePerSqMBeforeDepreciation`}
-                                readOnly={formReadOnly}
-                              />
-                            </td>
-                            <td className={NUM}>{money2(row.priceBeforeDepreciation)}</td>
-                            <td className={clsx(NUM, 'w-[64px]')}>
-                              <NumCell
-                                name={`${p}.year`}
-                                readOnly={formReadOnly}
-                                digits={0}
-                                maxInt={3}
-                              />
-                            </td>
-                            <td className={clsx(NUM, 'w-[84px]')}>
-                              {!isGross ? (
-                                <button
-                                  type="button"
-                                  onClick={() => toggle(field.id)}
-                                  aria-expanded={!!open}
-                                  title={t('costBuilding.table.editPeriods')}
-                                  className="inline-flex w-full items-center justify-end gap-1 rounded-[4px] px-[5px] text-[#0f766e] hover:bg-[#f0fdfa]"
-                                >
-                                  {toNum(row.totalDepreciationPercentPerYear).toFixed(2)}
-                                  <Icon
-                                    style="solid"
-                                    name="chevron-down"
-                                    className={clsx('size-2.5', !open && '-rotate-90')}
-                                  />
-                                </button>
-                              ) : hasPeriod ? (
-                                <NumCell
-                                  name={`${p}.depreciationPeriods.0.depreciationPerYear`}
-                                  readOnly={formReadOnly}
-                                  maxInt={3}
-                                />
-                              ) : (
-                                <span
-                                  className="text-gray-400"
-                                  title={t('costBuilding.table.setAgeFirst')}
-                                >
-                                  —
-                                </span>
-                              )}
-                            </td>
-                            <td className={NUM}>{toNum(row.totalDepreciationPct).toFixed(2)}</td>
-                            <td className={clsx(TD, 'w-[96px]')}>
-                              {formReadOnly ? (
-                                isGross ? (
-                                  t('costBuilding.table.methodGross')
-                                ) : (
-                                  t('costBuilding.table.methodPeriod')
-                                )
-                              ) : (
-                                <Controller
-                                  name={`${p}.depreciationMethod`}
-                                  control={control}
-                                  render={({ field: f }) => (
-                                    <TDropdown
-                                      dense
-                                      showValue={false}
-                                      allowEmpty={false}
-                                      options={methodOptions}
-                                      value={f.value}
-                                      onChange={v => {
-                                        f.onChange(v);
-                                        toggle(field.id, v === 'Period');
-                                      }}
-                                    />
-                                  )}
-                                />
-                              )}
-                            </td>
-                            <td className={NUM}>{money2(row.priceDepreciation)}</td>
-                            <td className={NUM}>{money2(row.pricePerSqMAfterDepreciation)}</td>
-                            <td className={NUM}>{money2(row.priceAfterDepreciation)}</td>
-                            {!formReadOnly && (
-                              <td className={clsx(TD, 'text-center')}>
-                                <ConfirmDeleteButton
-                                  onConfirm={() => remove(rowIndex)}
-                                  rowNumber={rowIndex + 1}
-                                  className="cas-row-btn inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
-                                >
-                                  <Icon style="solid" name="trash" className="size-3" />
-                                </ConfirmDeleteButton>
-                              </td>
-                            )}
-                          </tr>
-                          {open && (
-                            <tr>
-                              <td colSpan={columnCount} className={clsx(TD, 'bg-[#fbfcfc] pl-6')}>
-                                <PeriodEditor
-                                  base={p}
-                                  age={toNum(row.year)}
-                                  readOnly={formReadOnly}
-                                />
-                              </td>
-                            </tr>
-                          )}
-                        </Fragment>
-                      );
-                    })}
-                    {/* Twin of the band's add buttons (see the band above). */}
-                    {addButtons && (
-                      <tr className="cas-outside-form-only">
-                        <td colSpan={columnCount} className={TD}>
-                          {addButtons}
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                  <tfoot>
-                    <tr className="bg-[#f8fafa] font-semibold text-[#1f2937] dark:in-[.cas-form-grid]:text-[color:var(--palette-ink)]">
-                      <td className={TD}>{t('costBuilding.table.tableTotal')}</td>
-                      <td className={TD} />
-                      <td className={NUM}>{money2(totals.area)}</td>
-                      <td className={TD} />
-                      <td className={NUM}>{money2(totals.before)}</td>
-                      <td colSpan={4} className={TD} />
-                      <td className={NUM}>{money2(totals.depreciation)}</td>
-                      <td className={TD} />
-                      <td className={NUM}>{money2(totals.after)}</td>
-                      {!formReadOnly && <td className={TD} />}
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
+          anchor rather than the table. */}
+      <div data-field={name} />
+      {fields.map((field, i) => (
+        <RowSync key={field.id} base={`${name}.${i}`} />
+      ))}
+      <div className={layout === 'standard' ? STANDARD_DENSE : undefined}>
+        <FormTable
+          columns={columns}
+          rows={items}
+          rowKey={item => item.id}
+          minWidth={MIN_WIDTH[layout]}
+          add={[
+            { label: tb('addBuilding'), onClick: () => handleRequestAdd(true) },
+            { label: tb('addNonBuilding'), onClick: () => handleRequestAdd(false) },
+          ]}
+          empty={{ icon: 'building', message: tb('noDepreciationData') }}
+          totalLabel={`${tb('tableTotal')} ${t('costBuilding.table.itemCount', { count: items.length })}`}
+          rowNote={item =>
+            item.row.depreciationMethod !== 'Gross' && expanded[item.id] ? (
+              <PeriodEditor base={`${name}.${item.index}`} age={toNum(item.row.year)} />
+            ) : null
+          }
+        />
+      </div>
 
-              {/* These are the figures the rest of the appraisal reads off this table. */}
-              {showCostSummary && (
-                <div className="cas-cost-summary divide-y divide-gray-200 border-t border-gray-200">
-                  {costSummary.map(item => (
-                    <div
-                      key={item.field}
-                      className="cas-cost-row grid grid-cols-1 items-center gap-2 px-4 py-3 sm:grid-cols-[1fr_minmax(0,300px)] sm:gap-6"
-                    >
-                      {/* `display: contents` in the grid layout: the name, the source text and the
-                          input become one row of flex items there. */}
-                      <div className="cas-cost-lead flex flex-col gap-1">
-                        <div className="cas-cost-name flex items-center gap-2">
-                          <span className="text-sm font-semibold text-gray-800 dark:in-[.cas-form-grid]:text-[color:var(--palette-ink-strong)]">
-                            {item.label}
-                          </span>
-                          <span
-                            className={clsx(
-                              'rounded-full px-2 py-0.5 text-[0.8571rem] font-semibold',
-                              item.override != null
-                                ? 'bg-amber-50 text-amber-700'
-                                : 'bg-primary-50 text-primary-700',
-                            )}
-                          >
-                            {item.override != null
-                              ? t('comparativeAnalysis.editedLabel')
-                              : t('methodStatus.calculated')}
-                          </span>
-                        </div>
-                        <div className="cas-cost-src flex flex-wrap items-center gap-x-2 text-xs text-gray-400">
-                          <span>
-                            {item.source}{' '}
-                            <b className="font-medium text-gray-600 tabular-nums">
-                              {money2(item.sourceValue)}
-                            </b>{' '}
-                            → {t('methodTabs.partialUsage.roundedThousand')}{' '}
-                            <b className="font-medium text-gray-600 tabular-nums">
-                              {money2(item.computed)}
-                            </b>
-                          </span>
-                          {item.override != null && !formReadOnly && (
-                            <button
-                              type="button"
-                              className="text-[0.8571rem] text-primary-600 underline underline-offset-2"
-                              onClick={() => setValue(item.field, null, { shouldDirty: true })}
-                            >
-                              {t('hypothesis.ledger.useCalculated')}
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                      <NumberInput
-                        {...summaryField(item.field)}
-                        value={item.override ?? item.computed}
-                        maxIntegerDigits={15}
-                        decimalPlaces={2}
-                        dense
-                        className={clsx('font-semibold', INPUT_BOX)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </>
+      {/* These are the figures the rest of the appraisal reads off this table. */}
+      {!isEmpty && showCostSummary && (
+        <div className="mt-[1.1429rem] divide-y divide-(--palette-line-soft) border-t border-(--palette-line-soft)">
+          {costSummary.map(item => (
+            <CostSummaryRow
+              key={item.field}
+              item={item}
+              input={summaryField(item.field)}
+              onUseCalculated={() => setValue(item.field, null, { shouldDirty: true })}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface CostSummaryItem {
+  label: string;
+  field: string;
+  override: number | null | undefined;
+  computed: number;
+  source: string;
+  sourceValue: number;
+}
+
+/** One stored figure (building cost value, insurance price): where it comes from, and the box that can override it. */
+function CostSummaryRow({
+  item,
+  input,
+  onUseCalculated,
+}: {
+  item: CostSummaryItem;
+  input: Omit<UseFormRegisterReturn, 'ref'>;
+  onUseCalculated: () => void;
+}) {
+  const { t } = useTranslation('pricingAnalysis');
+  const readOnly = useFormReadOnly();
+  const layout = useFormLayout();
+  return (
+    <div
+      className={clsx(
+        'grid grid-cols-1 items-center gap-2 py-[0.7143rem] sm:grid-cols-[1fr_minmax(0,21.4286rem)] sm:gap-6',
+        // Compact sections have no body padding: the rows take the sheet's side padding
+        layout === 'compact' && 'px-[0.8571rem]',
+      )}
+    >
+      <div className="flex flex-col gap-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-(--palette-ink)">{item.label}</span>
+          <span
+            className={clsx(
+              'rounded-full px-2 py-0.5 text-xs font-semibold',
+              item.override != null
+                ? 'bg-(--palette-warn-wash) text-(--palette-warn)'
+                : 'bg-(--palette-accent-wash) text-(--palette-accent-ink)',
+            )}
+          >
+            {item.override != null
+              ? t('comparativeAnalysis.editedLabel')
+              : t('methodStatus.calculated')}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 text-xs text-(--palette-ink-2)">
+          <span>
+            {item.source}{' '}
+            <b className="font-medium tabular-nums text-(--palette-ink)">
+              {money2(item.sourceValue)}
+            </b>{' '}
+            → {t('methodTabs.partialUsage.roundedThousand')}{' '}
+            <b className="font-medium tabular-nums text-(--palette-ink)">{money2(item.computed)}</b>
+          </span>
+          {item.override != null && !readOnly && (
+            <button
+              type="button"
+              className="text-xs text-(--palette-accent-ink) underline underline-offset-2"
+              onClick={onUseCalculated}
+            >
+              {t('hypothesis.ledger.useCalculated')}
+            </button>
           )}
         </div>
       </div>
+      {readOnly ? (
+        // A read page shows the figure as text, the way FormFields does (DESIGN.md 17.3)
+        <div className="text-right font-semibold tabular-nums">
+          <FormReadValue
+            field={{ type: 'number-input', name: item.field, label: item.label, allowZero: true }}
+            name={item.field}
+            value={item.override ?? item.computed}
+            required={false}
+          />
+        </div>
+      ) : (
+        <NumberInput
+          {...input}
+          value={item.override ?? item.computed}
+          maxIntegerDigits={15}
+          decimalPlaces={2}
+          aria-label={item.label}
+          className="font-semibold"
+        />
+      )}
     </div>
   );
 }
@@ -509,8 +726,9 @@ export function BuildingDetail({ name, showCostSummary = false }: BuildingDetail
  * Keeps one row's age bands current, the job the slide-over used to do while it was open: each
  * band's % and ฿ follow area × price, and Gross stays a single band from year 1 to the age.
  */
-function RowSync({ base, readOnly }: { base: string; readOnly: boolean }) {
+function RowSync({ base }: { base: string }) {
   const { getValues, setValue } = useFormContext();
+  const readOnly = useFormReadOnly();
   const outScopeFields = useMemo(
     () => ({ area: `${base}.area`, pricePerSqm: `${base}.pricePerSqMBeforeDepreciation` }),
     [base],
@@ -541,15 +759,19 @@ function RowSync({ base, readOnly }: { base: string; readOnly: boolean }) {
   return null;
 }
 
+const PERIOD_TH = 'px-[0.5714rem] py-1 text-right text-xs font-medium text-(--palette-ink-2)';
+const PERIOD_TD = 'px-[0.5714rem] py-[0.2857rem] text-right align-middle';
+
 /** A Period row's age bands, edited in the sub-row under it. */
-function PeriodEditor({ base, age, readOnly }: { base: string; age: number; readOnly: boolean }) {
+function PeriodEditor({ base, age }: { base: string; age: number }) {
   const { t } = useTranslation('pricingAnalysis');
   const { control } = useFormContext();
+  const readOnly = useFormReadOnly();
   const { fields, append, remove } = useFieldArray({
     control,
     name: `${base}.depreciationPeriods`,
   });
-  const rows: any[] = useWatch({ name: `${base}.depreciationPeriods` }) ?? [];
+  const rows: PeriodRow[] = useWatch({ name: `${base}.depreciationPeriods` }) ?? [];
 
   const errors = periodErrors(rows, age, {
     toBeforeAt: (to, from) => t('costBuilding.table.periodToBeforeFrom', { to, from }),
@@ -561,30 +783,24 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
   const canAdd = !readOnly && age > 0 && lastToYear < age;
 
   if (age <= 0 && rows.length === 0) {
-    return <p className="text-gray-500">{t('costBuilding.table.setAgeFirst')}</p>;
+    return <p className="text-sm text-(--palette-ink-2)">{t('costBuilding.table.setAgeFirst')}</p>;
   }
 
   return (
-    <div className="flex max-w-[560px] flex-col gap-1">
+    <div
+      role="group"
+      aria-label={t('costBuilding.table.editPeriods')}
+      className="flex max-w-[35rem] flex-col gap-2 overflow-x-auto py-1"
+    >
       <table className="w-full text-sm tabular-nums">
-        <thead className="text-[#55636f]">
+        <thead>
           <tr>
-            <th className="text-xs px-1 py-0.5 text-right font-semibold">
-              {t('costBuilding.table.fromYearHeader')}
-            </th>
-            <th className="text-xs px-1 py-0.5 text-right font-semibold">
-              {t('costBuilding.table.toYearHeader')}
-            </th>
-            <th className="text-xs px-1 py-0.5 text-right font-semibold">
-              {t('costBuilding.table.percentPerYearHeader')}
-            </th>
-            <th className="text-xs px-1 py-0.5 text-right font-semibold">
-              {t('costBuilding.table.totalPercentHeader')}
-            </th>
-            <th className="text-xs px-1 py-0.5 text-right font-semibold">
-              {t('costBuilding.table.totalPriceHeader')}
-            </th>
-            {!readOnly && <th className="text-xs w-8 font-semibold" />}
+            <th className={PERIOD_TH}>{t('costBuilding.table.fromYearHeader')}</th>
+            <th className={PERIOD_TH}>{t('costBuilding.table.toYearHeader')}</th>
+            <th className={PERIOD_TH}>{t('costBuilding.table.percentPerYearHeader')}</th>
+            <th className={PERIOD_TH}>{t('costBuilding.table.totalPercentHeader')}</th>
+            <th className={PERIOD_TH}>{t('costBuilding.table.totalPriceHeader')}</th>
+            {!readOnly && <th className="w-10" />}
           </tr>
         </thead>
         <tbody>
@@ -596,46 +812,49 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
             return (
               <Fragment key={field.id}>
                 <tr>
-                  <td className="w-[72px] px-1 py-0.5 text-right">
+                  <td className={clsx(PERIOD_TD, 'w-[5.5rem]')}>
                     <NumCell
                       name={`${cell}.atYear`}
                       readOnly={readOnly}
                       digits={0}
                       maxInt={3}
                       invalid={invalid}
+                      label={`${t('costBuilding.table.fromYearHeader')} ${i + 1}`}
                     />
                   </td>
-                  <td className="w-[72px] px-1 py-0.5 text-right">
+                  <td className={clsx(PERIOD_TD, 'w-[5.5rem]')}>
                     <NumCell
                       name={`${cell}.toYear`}
                       readOnly={readOnly}
                       digits={0}
                       maxInt={3}
                       invalid={invalid}
+                      label={`${t('costBuilding.table.toYearHeader')} ${i + 1}`}
                     />
                   </td>
-                  <td className="w-[84px] px-1 py-0.5 text-right">
-                    <NumCell name={`${cell}.depreciationPerYear`} readOnly={readOnly} maxInt={3} />
+                  <td className={clsx(PERIOD_TD, 'w-[6.5rem]')}>
+                    <NumCell
+                      name={`${cell}.depreciationPerYear`}
+                      readOnly={readOnly}
+                      maxInt={3}
+                      label={`${t('costBuilding.table.percentPerYearHeader')} ${i + 1}`}
+                    />
                   </td>
-                  <td className="px-1 py-0.5 text-right">
-                    {toNum(row.totalDepreciationPct).toFixed(2)}
-                  </td>
-                  <td className="px-1 py-0.5 text-right">{money2(row.priceDepreciation)}</td>
+                  <td className={PERIOD_TD}>{toNum(row.totalDepreciationPct).toFixed(2)}</td>
+                  <td className={PERIOD_TD}>{money2(row.priceDepreciation)}</td>
                   {!readOnly && (
-                    <td className="px-1 py-0.5 text-center">
-                      <ConfirmDeleteButton
-                        onConfirm={() => remove(i)}
-                        rowNumber={i + 1}
-                        className="cas-row-btn inline-flex size-6 items-center justify-center rounded text-gray-400 hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Icon style="solid" name="trash" className="size-3" />
-                      </ConfirmDeleteButton>
+                    <td className={PERIOD_TD}>
+                      <FormTableRowActions
+                        position={i}
+                        count={fields.length}
+                        onDelete={() => remove(i)}
+                      />
                     </td>
                   )}
                 </tr>
                 {invalid && (
                   <tr>
-                    <td colSpan={6} className="px-1 pb-1 text-[0.8571rem] text-red-600">
+                    <td colSpan={6} className="px-[0.5714rem] pb-1 text-xs text-(--palette-danger)">
                       {rowErrors.join(' · ')}
                     </td>
                   </tr>
@@ -646,8 +865,10 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
         </tbody>
       </table>
       {!readOnly && (
-        <button
-          type="button"
+        <Button
+          variant="outline"
+          size="sm"
+          className="self-start"
           disabled={!canAdd}
           onClick={() =>
             append({
@@ -658,10 +879,9 @@ function PeriodEditor({ base, age, readOnly }: { base: string; age: number; read
               priceDepreciation: 0,
             })
           }
-          className="self-start rounded-md border border-dashed border-gray-300 px-2 py-0.5 text-[0.8571rem] text-gray-500 hover:border-primary-500 hover:text-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           + {t('costBuilding.table.addPeriod')}
-        </button>
+        </Button>
       )}
     </div>
   );
@@ -688,7 +908,7 @@ const derivedRules: DerivedRule[] = [
 
       if (!Array.isArray(buildingDepreciations) || buildingDepreciations.length === 0) return 0;
 
-      const totalYears = buildingDepreciations.reduce((acc: number, b: any) => {
+      const totalYears = buildingDepreciations.reduce((acc: number, b: PeriodRow) => {
         const atYear = toNum(b.atYear);
         const toYear = toNum(b.toYear);
         return acc + Math.max(toYear - atYear + 1, 0);
@@ -696,7 +916,7 @@ const derivedRules: DerivedRule[] = [
 
       if (totalYears === 0) return 0;
 
-      const weightedSum = buildingDepreciations.reduce((acc: number, b: any) => {
+      const weightedSum = buildingDepreciations.reduce((acc: number, b: PeriodRow) => {
         const atYear = toNum(b.atYear);
         const toYear = toNum(b.toYear);
         const yearSpan = Math.max(toYear - atYear + 1, 0);
@@ -714,7 +934,7 @@ const derivedRules: DerivedRule[] = [
 
       if (!Array.isArray(buildingDepreciations) || buildingDepreciations.length === 0) return 0;
 
-      const totalDepreciation = buildingDepreciations.reduce((acc: number, b: any) => {
+      const totalDepreciation = buildingDepreciations.reduce((acc: number, b: PeriodRow) => {
         return acc + toNum(b.totalDepreciationPct);
       }, 0);
 
@@ -730,8 +950,8 @@ const derivedRules: DerivedRule[] = [
       if (!Array.isArray(buildingDepreciations) || buildingDepreciations.length === 0) return 0;
 
       const priceDepreciation = buildingDepreciations
-        .map((b: any) => b.priceDepreciation)
-        .reduce((acc: number, curr: any) => acc + toNum(curr), 0);
+        .map((b: PeriodRow) => b.priceDepreciation)
+        .reduce((acc: number, curr: unknown) => acc + toNum(curr), 0);
       return priceDepreciation;
     },
   },

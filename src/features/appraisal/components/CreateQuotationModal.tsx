@@ -11,6 +11,13 @@ import { useTranslation } from 'react-i18next';
 import { useCreateQuotation, useGetEligibleCompanies } from '../api/administration';
 import { useAppealExclusionStore } from '@/features/collateralMaster/store/appealExclusionStore';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
+import { MissingSegmentsBadge } from '@/features/quotation/components/SegmentBadges';
+import {
+  getSelectAllState,
+  useCoveringCompanySearch,
+} from '@/features/quotation/hooks/useCoveringCompanySearch';
+import { useSegmentLabel } from '@/features/quotation/hooks/useSegmentLabel';
+import { buildSegmentSet, getMissingSegments } from '@/features/quotation/utils/segmentCoverage';
 
 interface CreateQuotationModalProps {
   isOpen: boolean;
@@ -19,6 +26,10 @@ interface CreateQuotationModalProps {
   requestId?: string;
   workflowInstanceId?: string;
   bankingSegment?: string;
+  /** True while the parent is still loading `bankingSegment`; the company list waits for it. */
+  isSegmentLoading?: boolean;
+  /** True when loading `bankingSegment` failed; the company list shows a load error instead. */
+  isSegmentError?: boolean;
   onSuccess?: () => void;
   /** Optional slot rendered at the top of the modal body (used by QuotationEntryModal to inject the tab bar). */
   headerSlot?: ReactNode;
@@ -31,6 +42,7 @@ interface SelectedCompany {
   id: string;
   companyName: string;
   companyNameLocal?: string | null;
+  loanTypes: string[];
 }
 
 const CreateQuotationModal = ({
@@ -40,14 +52,17 @@ const CreateQuotationModal = ({
   requestId,
   workflowInstanceId,
   bankingSegment,
+  isSegmentLoading,
+  isSegmentError,
   onSuccess,
   headerSlot,
   assignmentType,
   assignmentMethod,
   internalFollowupAssignmentMethod,
 }: CreateQuotationModalProps) => {
-  const { t } = useTranslation('appraisal');
+  const { t } = useTranslation(['appraisal', 'quotation']);
   const localizeCompanyName = useLocalizedCompanyName();
+  const segmentLabel = useSegmentLabel();
   const [selectedCompanies, setSelectedCompanies] = useState<SelectedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [cutOffDateTime, setCutOffDateTime] = useState<string | null>(() =>
@@ -60,30 +75,42 @@ const CreateQuotationModal = ({
   // Wrapped in single-element array for the v1 plural-list contract on start-from-task.
   const excludedCompanyId = useAppealExclusionStore(s => s.excludedCompanyId);
 
-  const { data: rawCompanies, isLoading: isLoadingCompanies } = useGetEligibleCompanies(
-    bankingSegment,
-    isOpen,
-  );
+  // Unfiltered fetch, then the same client-side Segment Coverage filter as the other pickers; the
+  // list waits for the parent to finish loading the segment so it never flashes every company.
+  // A blank segment is skipped by Segment Coverage (it covers everything).
+  const segmentReady = !isSegmentLoading && !isSegmentError;
+  const {
+    data: rawCompanies,
+    isLoading: isLoadingCompaniesQuery,
+    isError: isCompaniesError,
+  } = useGetEligibleCompanies(undefined, isOpen && segmentReady, false);
+  const isLoadingCompanies = isLoadingCompaniesQuery || !!isSegmentLoading;
+
+  const segmentSet = useMemo(() => buildSegmentSet([bankingSegment]), [bankingSegment]);
 
   // Map raw company data to the SelectedCompany shape, filtering out the appeal-excluded company
   const allCompanies: SelectedCompany[] = useMemo(
     () =>
-      (rawCompanies ?? [])
-        .filter(c => c.id !== excludedCompanyId)
-        .map(c => ({ id: c.id, companyName: c.companyName, companyNameLocal: c.companyNameLocal })),
-    [rawCompanies, excludedCompanyId],
+      // A cached full list may exist even though the query is disabled; never show it while the
+      // segment is loading or failed.
+      segmentReady
+        ? (rawCompanies ?? [])
+            .filter(c => c.id !== excludedCompanyId)
+            .map(c => ({
+              id: c.id,
+              companyName: c.companyName,
+              companyNameLocal: c.companyNameLocal,
+              loanTypes: c.loanTypes ?? [],
+            }))
+        : [],
+    [rawCompanies, excludedCompanyId, segmentReady],
   );
 
-  const companyList = useMemo(() => {
-    if (!allCompanies) return [];
-    if (!searchQuery.trim()) return allCompanies;
-    const query = searchQuery.toLowerCase();
-    return allCompanies.filter(
-      c =>
-        c.companyName.toLowerCase().includes(query) ||
-        c.companyNameLocal?.toLowerCase().includes(query),
-    );
-  }, [allCompanies, searchQuery]);
+  const {
+    covering,
+    filtered: companyList,
+    noCoverage,
+  } = useCoveringCompanySearch(allCompanies, segmentSet, searchQuery);
 
   const { mutate: startQuotation, isPending } = useCreateQuotation();
 
@@ -124,7 +151,6 @@ const CreateQuotationModal = ({
         workflowInstanceId,
         taskExecutionId: null,
         cutOffTime: cutOffDateTime,
-        bankingSegment: bankingSegment ?? '',
         invitedCompanyIds: selectedCompanies.map(c => c.id),
         specialRequirements: remarks || null,
         maxAppraisalDays: maxAppraisalDays ?? null,
@@ -148,15 +174,28 @@ const CreateQuotationModal = ({
   };
 
   const isCompanySelected = (companyId: string) => selectedCompanies.some(c => c.id === companyId);
-  const isAllCompanySelected =
-    companyList.length > 0 && companyList.every(c => isCompanySelected(c.id));
+  const { allVisibleSelected, allChecked, indeterminate, hiddenSelected } = getSelectAllState(
+    companyList,
+    covering,
+    selectedCompanies,
+    searchQuery,
+  );
+
+  // Nothing to select, and nothing hidden to clear (or the list is loading / failed to load).
+  const selectAllDisabled =
+    isLoadingCompanies ||
+    !segmentReady ||
+    (companyList.length === 0 && hiddenSelected.length === 0);
 
   const handleToggleAllCompany = () => {
     setSelectedCompanies(prev => {
-      if (isAllCompanySelected) {
-        return prev.filter(c => !companyList.some(vc => vc.id === c.id));
+      // An empty visible list can still hide selected companies: clear them rather than add nothing.
+      if (allVisibleSelected || companyList.length === 0) {
+        const drop = new Set([...companyList, ...hiddenSelected].map(c => c.id));
+        return prev.filter(c => !drop.has(c.id));
       }
-      return [...prev, ...companyList.filter(c => !isCompanySelected(c.id))];
+      const ids = new Set(prev.map(c => c.id));
+      return [...prev, ...companyList.filter(c => !ids.has(c.id))];
     });
   };
 
@@ -167,23 +206,26 @@ const CreateQuotationModal = ({
         {/* Selected Companies Display */}
         {selectedCompanies.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
               Selected Companies ({selectedCompanies.length})
             </label>
             <div className="flex flex-wrap gap-2">
               {selectedCompanies.map(company => (
                 <div
                   key={company.id}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-full text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-sm"
                 >
                   <Icon name="building" style="solid" className="size-3.5" />
                   <span className="font-medium">
                     {localizeCompanyName(company.companyName, company.companyNameLocal)}
                   </span>
+                  <MissingSegmentsBadge
+                    missing={getMissingSegments(segmentSet, company.loanTypes)}
+                  />
                   <button
                     type="button"
                     onClick={() => handleRemoveCompany(company.id)}
-                    className="p-0.5 rounded-full hover:bg-purple-200 transition-colors"
+                    className="p-0.5 rounded-full hover:bg-purple-200 dark:hover:bg-purple-500/30 transition-colors"
                   >
                     <Icon name="xmark" style="solid" className="size-3" />
                   </button>
@@ -195,44 +237,52 @@ const CreateQuotationModal = ({
 
         {/* Company Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
             Select External Companies <span className="text-danger">*</span>
           </label>
-          {bankingSegment && (
-            <p className="text-xs text-purple-600 mb-1.5 flex items-center gap-1">
+          {segmentSet.length > 0 && (
+            <p className="text-xs text-purple-600 dark:text-purple-400 mb-1.5 flex items-center gap-1">
               <Icon name="circle-info" style="solid" className="size-3.5" />
-              Showing companies eligible for <strong>{bankingSegment}</strong> segment
+              {t('quotation.editDraft.showingEligibleFor', {
+                segment: segmentLabel(segmentSet[0]),
+              })}
             </p>
           )}
 
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="flex p-2 border-b border-gray-100">
+          <div className="border border-(--palette-line) rounded-lg overflow-hidden">
+            <div className="flex p-2 border-b border-(--palette-line-soft)">
               <button
                 type="button"
+                role="checkbox"
+                aria-checked={indeterminate ? 'mixed' : allChecked}
+                aria-label={t('quotation:aria.selectAllVisibleCompanies')}
+                disabled={selectAllDisabled}
                 onClick={() => handleToggleAllCompany()}
                 className={clsx(
                   'flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                  isAllCompanySelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                  'disabled:opacity-50 disabled:cursor-not-allowed',
+                  allChecked
+                    ? 'bg-purple-50 dark:bg-purple-500/10 enabled:hover:bg-purple-100 dark:enabled:hover:bg-purple-500/20'
+                    : 'enabled:hover:bg-(--palette-surface-2)',
                 )}
               >
                 <div
                   className={clsx(
                     'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
-                    isAllCompanySelected
+                    allChecked || indeterminate
                       ? 'bg-purple-500 border-purple-500'
-                      : 'border-gray-300 bg-white',
+                      : 'border-(--palette-line-strong) bg-(--palette-surface)',
                   )}
                 >
-                  {isAllCompanySelected && (
-                    <Icon name="check" style="solid" className="size-3 text-white" />
-                  )}
+                  {allChecked && <Icon name="check" style="solid" className="size-3 text-white" />}
+                  {indeterminate && <span className="h-0.5 w-2.5 rounded bg-(--palette-surface)" />}
                 </div>
               </button>
               <div className="relative w-full">
                 <Icon
                   name="magnifying-glass"
                   style="regular"
-                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-(--palette-gray-400)"
                 />
                 <input
                   type="text"
@@ -245,7 +295,7 @@ const CreateQuotationModal = ({
             </div>
             <div className="max-h-48 overflow-y-auto">
               {isLoadingCompanies ? (
-                <div className="px-4 py-6 text-center text-gray-500">
+                <div className="px-4 py-6 text-center text-(--palette-gray-500)">
                   <Icon
                     name="spinner"
                     style="solid"
@@ -254,11 +304,17 @@ const CreateQuotationModal = ({
                   <span className="text-xs">Loading...</span>
                 </div>
               ) : companyList.length === 0 ? (
-                <div className="px-4 py-6 text-center text-gray-500 text-sm">
-                  {bankingSegment ? 'No eligible companies for this segment' : 'No companies found'}
+                <div className="px-4 py-6 text-center text-(--palette-gray-500) text-sm">
+                  {isSegmentError
+                    ? t('quotation.segmentLoadFailed')
+                    : isCompaniesError
+                      ? t('quotation.editDraft.failedToLoadCompanies')
+                      : noCoverage
+                        ? t('quotation.editDraft.noCoveringCompanies')
+                        : t('quotation.editDraft.noCompaniesFound')}
                 </div>
               ) : (
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-(--palette-line-soft)">
                   {companyList.map(company => {
                     const isSelected = isCompanySelected(company.id);
                     return (
@@ -268,7 +324,9 @@ const CreateQuotationModal = ({
                         onClick={() => handleToggleCompany(company)}
                         className={clsx(
                           'w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors',
-                          isSelected ? 'bg-purple-50 hover:bg-purple-100' : 'hover:bg-gray-50',
+                          isSelected
+                            ? 'bg-purple-50 dark:bg-purple-500/10 hover:bg-purple-100 dark:hover:bg-purple-500/20'
+                            : 'hover:bg-(--palette-surface-2)',
                         )}
                       >
                         <div
@@ -276,18 +334,22 @@ const CreateQuotationModal = ({
                             'size-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
                             isSelected
                               ? 'bg-purple-500 border-purple-500'
-                              : 'border-gray-300 bg-white',
+                              : 'border-(--palette-line-strong) bg-(--palette-surface)',
                           )}
                         >
                           {isSelected && (
                             <Icon name="check" style="solid" className="size-3 text-white" />
                           )}
                         </div>
-                        <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center shrink-0">
-                          <Icon name="building" style="solid" className="size-4 text-purple-600" />
+                        <div className="size-8 rounded-lg bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center shrink-0">
+                          <Icon
+                            name="building"
+                            style="solid"
+                            className="size-4 text-purple-600 dark:text-purple-400"
+                          />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-medium text-gray-900 truncate">
+                          <div className="text-sm font-medium text-(--palette-ink) truncate">
                             {localizeCompanyName(company.companyName, company.companyNameLocal)}
                           </div>
                         </div>
@@ -330,8 +392,9 @@ const CreateQuotationModal = ({
 
         {/* Remarks */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">
-            Special Requirements <span className="text-xs text-gray-400">(optional)</span>
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1.5">
+            Special Requirements{' '}
+            <span className="text-xs text-(--palette-gray-400)">(optional)</span>
           </label>
           <textarea
             value={remarks}
@@ -339,20 +402,20 @@ const CreateQuotationModal = ({
             placeholder="Add any special instructions or requirements..."
             rows={3}
             maxLength={500}
-            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
+            className="w-full px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 outline-none resize-none"
           />
-          <p className="text-xs text-gray-400 mt-1 text-right">{remarks.length}/500</p>
+          <p className="text-xs text-(--palette-gray-400) mt-1 text-right">{remarks.length}/500</p>
         </div>
 
         {/* Context warning if required fields are missing */}
         {(!requestId || !workflowInstanceId) && (
-          <div className="bg-amber-50 rounded-lg p-3 flex items-start gap-2">
+          <div className="bg-(--palette-warn-wash) rounded-lg p-3 flex items-start gap-2">
             <Icon
               name="triangle-exclamation"
               style="solid"
               className="size-4 text-amber-500 shrink-0 mt-0.5"
             />
-            <p className="text-xs text-amber-700">
+            <p className="text-xs text-(--palette-warn)">
               This quotation must be started from an active admin workflow task. Make sure you have
               opened this page from the task list.
             </p>
