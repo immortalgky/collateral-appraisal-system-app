@@ -175,6 +175,7 @@
   "hints": {
     "loanTypesComma": "Separate multiple loan types with a comma",
     "ldapPassword": "Password is managed by Active Directory — the user signs in with their AD credentials.",
+    "ldapUnavailable": "LDAP isn't available for company users or temporary-access accounts — they sign in with a local password.",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
     "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
     "temporaryAccessCreate": "Starts closed — the account has no password until an admin opens an access window.",
@@ -507,6 +508,11 @@
     "temporaryAccessSection": "Temporary Access",
     "maxAccessWindowHours": "Max access window (hours)",
     "maxAccessWindowHoursHint": "Default 8. Hard limit 720 hours (30 days).",
+    "twoFactorSection": "Two-factor authentication",
+    "requireTwoFactorForExternal": "Require 2FA for external users (company accounts)",
+    "requireTwoFactorForExternalHint": "Company users who have not set it up are asked to at their next sign-in.",
+    "twoFactorRememberHours": "Remember a verified device for (hours)",
+    "twoFactorRememberHoursHint": "0 = ask for a code at every sign-in. Up to 720 hours (30 days).",
     "save": "Save policy",
     "saved": "Password policy updated.",
     "saveFailed": "Failed to update password policy."
@@ -609,6 +615,150 @@
       "copied": "Copied",
       "confirmCheckbox": "I copied this password",
       "done": "Done"
+    }
+  },
+  "twoFactor": {
+    "title": "Two-factor authentication",
+    "statusOn": "On",
+    "statusOff": "Off",
+    "statusOnTitle": "Two-factor authentication is on",
+    "statusOffTitle": "Two-factor authentication is off",
+    "hint": "Add a second step to sign-in: a 6-digit code from an authenticator app.",
+    "recoveryCodesLeft": "Recovery codes left: {{n}}",
+    "requiredNote": "Your organisation requires two-factor authentication, so it cannot be turned off.",
+    "requiredNotEnabledNote": "Your organisation requires two-factor authentication for this account. Turn it on here, or you will be asked to set it up at your next sign-in.",
+    "setupFailed": "Could not start two-factor setup.",
+    "codeLabel": "6-digit code",
+    "codePlaceholder": "000000",
+    "errors": {
+      "generic": "Something went wrong. Please try again.",
+      "invalidCode": "That code is not valid. Check your authenticator app and try again.",
+      "lockedOut": "The account is temporarily locked. Try again later.",
+      "alreadyEnabled": "Two-factor authentication is already on.",
+      "notEnabled": "Two-factor authentication is not on.",
+      "requiredByPolicy": "Your organisation requires this account to use two-factor authentication.",
+      "saveFailed": "Could not save. Please contact your administrator."
+    },
+    "enable": {
+      "button": "Turn on",
+      "title": "Turn on two-factor authentication",
+      "scanHint": "Scan this QR code with an authenticator app (Microsoft Authenticator, Google Authenticator, Authy), then enter the 6-digit code it shows.",
+      "qrAlt": "QR code to add this account to an authenticator app",
+      "manualKey": "Cannot scan? Enter this key in the app",
+      "copyKey": "Copy key",
+      "keyCopied": "Key copied",
+      "submit": "Verify and turn on"
+    },
+    "disable": {
+      "button": "Turn off",
+      "title": "Turn off two-factor authentication",
+      "hint": "Enter the current 6-digit code from your authenticator app to confirm.",
+      "submit": "Turn off",
+      "done": "Two-factor authentication is off."
+    },
+    "regenerate": {
+      "button": "New recovery codes",
+      "title": "Generate new recovery codes",
+      "hint": "Enter the current 6-digit code. Your old recovery codes stop working.",
+      "submit": "Generate"
+    },
+    "newDevice": {
+      "button": "Set up a new device",
+      "title": "Set up a new device",
+      "hint": "Use this if you lost or replaced your phone. Enter the 6-digit code from your app, or a recovery code.",
+      "warning": "This turns two-factor authentication off and signs you out on every device; the old authenticator stops working. Sign in again and scan a new QR code: you are taken to the setup page if your organisation requires it, otherwise set it up again here in Profile.",
+      "codeLabel": "Authenticator code or recovery code",
+      "invalidCode": "That code is not valid. Check the 6-digit code or recovery code and try again.",
+      "submit": "Turn off and sign out"
+    },
+    "recovery": {
+      "title": "Your recovery codes",
+      "warning": "Use these codes to sign in when you cannot access your authenticator app. Each code works once. They are shown only now and cannot be retrieved again. Keep them somewhere safe.",
+      "copyAll": "Copy all",
+      "download": "Download .txt",
+      "copied": "Recovery codes copied",
+      "copyFailed": "Could not copy. Select the text and copy it by hand.",
+      "confirmCheckbox": "I saved these recovery codes",
+      "done": "Done"
+    },
+    "admin": {
+      "button": "Reset 2FA",
+      "confirmTitle": "Reset two-factor authentication?",
+      "confirmMessage": "{{name}} will have to set up two-factor authentication again, and will be signed out everywhere.",
+      "done": "Two-factor authentication reset.",
+      "failed": "Failed to reset two-factor authentication."
+    }
+  },
+  "passkeys": {
+    "title": "My passkeys",
+    "description": "Sign in with your fingerprint, face or device PIN instead of typing a password. Each device or cloud account has its own passkey.",
+    "loadFailed": "Could not load your passkeys.",
+    "empty": "You have no passkeys yet.",
+    "typeSynced": "Synced across devices",
+    "typeDevice": "Bound to this device",
+    "neverUsed": "Never used",
+    "columns": {
+      "name": "Name",
+      "type": "Type",
+      "added": "Added",
+      "lastUsed": "Last used",
+      "actions": "Actions"
+    },
+    "notes": {
+      "recentSignIn": "To add a passkey you must have signed in within the last 10 minutes.",
+      "lostDevice": "Lost or replaced a device? Delete that device's passkey here. This does not sign out your other devices: to sign out everywhere, ask an administrator to revoke your passkeys. You can still sign in with your password as usual."
+    },
+    "add": {
+      "button": "Add passkey",
+      "title": "Add a passkey",
+      "hint": "Give it a name, then follow your browser's prompt to use your fingerprint, face, PIN or security key.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Office laptop",
+      "nameHint": "So you can tell your passkeys apart later.",
+      "submit": "Create passkey",
+      "unsupported": "This browser does not support passkeys.",
+      "reauthBody": "To add a passkey you must have signed in within the last 10 minutes. Sign in again, then add it from Profile › Security.",
+      "reauthButton": "Sign in again",
+      "cancelled": "Cancelled. Press the button to try again.",
+      "retry": "Try again",
+      "refreshed": "The request was out of date and has been refreshed. Press the button again.",
+      "createFailed": "This browser could not create the passkey.",
+      "prepareFailed": "Could not start adding a passkey. Close this and try again."
+    },
+    "rename": {
+      "title": "Rename passkey",
+      "button": "Rename"
+    },
+    "delete": {
+      "title": "Delete this passkey?",
+      "message": "{{name}} will no longer work for signing in. You can still sign in with your password.",
+      "button": "Delete"
+    },
+    "toasts": {
+      "added": "Passkey added",
+      "addFailed": "Could not add the passkey.",
+      "renamed": "Passkey renamed",
+      "renameFailed": "Could not rename the passkey.",
+      "renameGone": "This passkey no longer exists.",
+      "deleted": "Passkey deleted",
+      "deleteFailed": "Could not delete the passkey."
+    },
+    "errors": {
+      "reauthRequired": "Sign in again first: you must have signed in within the last 10 minutes.",
+      "stateExpired": "That took too long. Press the button to try again.",
+      "limitReached": "You can have at most 10 passkeys. Delete one first.",
+      "registrationFailed": "The passkey could not be verified. Try again.",
+      "alreadyRegistered": "This passkey is already registered.",
+      "nameInvalid": "Enter a name of 1 to 100 characters."
+    },
+    "admin": {
+      "title": "Passkeys",
+      "button": "Revoke all passkeys",
+      "lastUsed": "Last used {{time}}",
+      "confirmTitle": "Revoke all passkeys?",
+      "confirmMessage": "{{name}}'s passkeys will be removed and they will be signed out everywhere. They can still sign in with their password.",
+      "done": "Passkeys revoked.",
+      "failed": "Failed to revoke passkeys."
     }
   }
 }

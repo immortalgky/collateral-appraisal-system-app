@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -57,7 +58,9 @@ function ConfigModal({
   }, [editing, isOpen]);
 
   const nameOf = useMemo(() => {
-    const map = new Map(companies.map(c => [c.id, localizeCompanyName(c.companyName, c.companyNameLocal)]));
+    const map = new Map(
+      companies.map(c => [c.id, localizeCompanyName(c.companyName, c.companyNameLocal)]),
+    );
     return (id: string) => map.get(id) ?? id;
   }, [companies, localizeCompanyName]);
 
@@ -103,7 +106,7 @@ function ConfigModal({
       <div className="space-y-4 p-6">
         {/* Loan-type scope */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('modal.loanTypeLabel')}
           </label>
           <input
@@ -111,21 +114,21 @@ function ConfigModal({
             value={loanType}
             onChange={e => setLoanType(e.target.value)}
             placeholder={t('modal.loanTypePlaceholder')}
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
+            className="w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20"
           />
-          <p className="text-xs text-gray-400 mt-1">{t('modal.loanTypeHint')}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-1">{t('modal.loanTypeHint')}</p>
         </div>
 
         {/* Company picker */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('modal.companies')}
           </label>
           <div className="flex gap-2">
-            <select
+            <NativeSelect
               value={pickCompanyId}
               onChange={e => setPickCompanyId(e.target.value)}
-              className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm"
+              className="flex-1"
             >
               <option value="">{t('modal.selectCompany')}</option>
               {availableCompanies.map(c => (
@@ -133,19 +136,19 @@ function ConfigModal({
                   {localizeCompanyName(c.companyName, c.companyNameLocal)}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
             <Button size="sm" type="button" onClick={addCompany} disabled={!pickCompanyId}>
               <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
               {t('modal.addCompany')}
             </Button>
           </div>
           {companiesError && (
-            <p className="text-xs text-red-600 mt-1 flex items-center gap-1.5">
+            <p className="text-xs text-(--palette-danger) mt-1 flex items-center gap-1.5">
               {t('modal.companiesLoadError')}
               <button
                 type="button"
                 onClick={onRetryCompanies}
-                className="underline hover:text-red-700"
+                className="underline hover:text-(--palette-req)"
               >
                 {t('modal.retry')}
               </button>
@@ -155,26 +158,28 @@ function ConfigModal({
 
         {/* Entry rows */}
         {entries.length === 0 ? (
-          <p className="text-xs text-gray-400 py-2">{t('modal.noCompanies')}</p>
+          <p className="text-xs text-(--palette-gray-400) py-2">{t('modal.noCompanies')}</p>
         ) : (
-          <div className="rounded-lg border border-gray-200 divide-y divide-gray-100">
+          <div className="rounded-lg border border-(--palette-line) divide-y divide-(--palette-line-soft)">
             {entries.map(entry => (
               <div key={entry.companyId} className="flex items-center gap-3 px-3 py-2">
-                <span className="flex-1 text-sm text-gray-700">{nameOf(entry.companyId)}</span>
+                <span className="flex-1 text-sm text-(--palette-ink)">
+                  {nameOf(entry.companyId)}
+                </span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs text-gray-500">{t('modal.weight')}</span>
+                  <span className="text-xs text-(--palette-gray-500)">{t('modal.weight')}</span>
                   <input
                     type="number"
                     min={1}
                     value={entry.weight}
                     onChange={e => setWeight(entry.companyId, Number(e.target.value))}
-                    className="w-20 rounded-lg border border-gray-300 px-2 py-1 text-sm"
+                    className="w-20 rounded-lg border border-(--palette-line-strong) px-2 py-1 text-sm"
                   />
                 </div>
                 <button
                   type="button"
                   onClick={() => removeEntry(entry.companyId)}
-                  className="p-1 text-gray-400 hover:text-red-600"
+                  className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger)"
                   title={t('modal.remove')}
                 >
                   <Icon name="trash" style="solid" className="size-3.5" />
@@ -185,12 +190,12 @@ function ConfigModal({
         )}
 
         {/* Active toggle */}
-        <label className="flex items-center gap-2 text-sm text-gray-700">
+        <label className="flex items-center gap-2 text-sm text-(--palette-ink)">
           <input
             type="checkbox"
             checked={isActive}
             onChange={e => setIsActive(e.target.checked)}
-            className="rounded border-gray-300 text-primary focus:ring-primary/20"
+            className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20"
           />
           {t('modal.isActive')}
         </label>
@@ -218,8 +223,11 @@ const CompanyRoundRobinConfigPage = () => {
   const modal = useDisclosure();
 
   const { data: configs = [], isLoading } = useListCompanyRoundRobinConfigs();
-  const { data: companies = [], isError: companiesError, refetch: refetchCompanies } =
-    useCompaniesQuery();
+  const {
+    data: companies = [],
+    isError: companiesError,
+    refetch: refetchCompanies,
+  } = useCompaniesQuery();
 
   const createConfig = useCreateCompanyRoundRobinConfig();
   const updateConfig = useUpdateCompanyRoundRobinConfig();
@@ -264,8 +272,8 @@ const CompanyRoundRobinConfigPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" type="button" onClick={handleAdd}>
           <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
@@ -276,37 +284,41 @@ const CompanyRoundRobinConfigPage = () => {
       {/* Table */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+          />
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+          <table className="min-w-full divide-y divide-(--palette-line) text-sm">
+            <thead className="bg-(--palette-surface-2)">
               <tr>
                 {[t('table.scope'), t('table.companies'), t('table.status'), ''].map((h, i) => (
                   <th
                     key={i}
-                    className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase last:w-20"
+                    className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase last:w-20"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-(--palette-surface) divide-y divide-(--palette-line)">
               {configs.map(row => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr key={row.id} className="hover:bg-(--palette-surface-2)">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{scopeLabel(row)}</p>
-                    <p className="text-xs text-gray-400 font-mono">{row.id}</p>
+                    <p className="font-medium text-(--palette-ink)">{scopeLabel(row)}</p>
+                    <p className="text-xs text-(--palette-gray-400) font-mono">{row.id}</p>
                   </td>
-                  <td className="px-4 py-3 text-gray-700">{row.entries.length}</td>
+                  <td className="px-4 py-3 text-(--palette-ink)">{row.entries.length}</td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         row.isActive
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-gray-100 text-gray-500'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                       }`}
                     >
                       {row.isActive ? t('status.active') : t('status.inactive')}
@@ -317,14 +329,14 @@ const CompanyRoundRobinConfigPage = () => {
                       <button
                         type="button"
                         onClick={() => handleEdit(row)}
-                        className="p-1 text-gray-400 hover:text-gray-600"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                       >
                         <Icon name="pen" style="solid" className="size-3.5" />
                       </button>
                       <button
                         type="button"
                         onClick={() => handleDelete(row)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger)"
                       >
                         <Icon name="trash" style="solid" className="size-3.5" />
                       </button>

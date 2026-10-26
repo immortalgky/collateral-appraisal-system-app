@@ -3,6 +3,7 @@ import { useGroupBuildingCostMethod } from './BuildingCostLink';
 import { useController, useFieldArray, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
 import { MethodTopBarPortal } from './MethodTopBarPortal';
 import { MethodTabs } from './MethodTabs';
 import {
@@ -480,17 +481,17 @@ export function ProfitRentPanel({
   }
 
   if (isSavedDataError) {
-    return (
-      <DataErrorState title={t('profitRent.loadError')} onRetry={refetchSavedData} />
-    );
+    return <DataErrorState title={t('profitRent.loadError')} onRetry={refetchSavedData} />;
   }
 
   return (
     <FormProvider methods={methods as any} schema={ProfitRentFormSchema as any}>
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-          <span className="text-sm font-semibold text-primary tabular-nums">
+          <span className="text-[10px] text-(--palette-gray-400)">
+            {t('finalValue.indicatedValue')}
+          </span>
+          <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
             {fmt(
               indicatedValueField.value ??
                 (isBuildingCostIncluded
@@ -503,7 +504,7 @@ export function ProfitRentPanel({
         </div>
         {!readOnly && (
           <>
-            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <span className="w-px h-5 bg-(--palette-line) shrink-0" />
             <Button
               variant="ghost"
               type="button"
@@ -520,10 +521,11 @@ export function ProfitRentPanel({
               disabled={saveMutation.isPending}
               title={t('footer.reset')}
               aria-label={t('footer.reset')}
-              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger)"
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
             </Button>
+            <MissingFieldsChip placement="down" />
             <Button
               type="submit"
               form={formId}
@@ -615,9 +617,14 @@ export function ProfitRentPanel({
                           leaseEndDate={leaseAgreement?.leaseEndDate}
                           onViewRentalInfo={() => setIsRentalInfoModalOpen(true)}
                         />
-                        <MethodRailSectionTitle>{t('profitRent.rentSectionTitle')}</MethodRailSectionTitle>
-                        <MethodRailField label={t('profitRent.landArea')} unit={t('profitRent.unitSqWa')}>
-                          <span className="text-xs font-medium text-gray-700 tabular-nums">
+                        <MethodRailSectionTitle>
+                          {t('profitRent.rentSectionTitle')}
+                        </MethodRailSectionTitle>
+                        <MethodRailField
+                          label={t('profitRent.landArea')}
+                          unit={t('profitRent.unitSqWa')}
+                        >
+                          <span className="text-xs font-medium text-(--palette-ink) tabular-nums">
                             {fmt(landAreaSqWa)}
                           </span>
                         </MethodRailField>
@@ -678,7 +685,7 @@ export function ProfitRentPanel({
                           label={t('profitRent.monthlyTotal')}
                           unit={t('methodTabs.units.bahtPerMonth')}
                         >
-                          <span className="text-gray-800 tabular-nums">
+                          <span className="text-(--palette-ink) tabular-nums">
                             {fmt((marketFeeField.value ?? 0) * landAreaSqWa)}
                           </span>
                         </MethodRailField>
@@ -726,7 +733,10 @@ export function ProfitRentPanel({
                                 disabled={readOnly}
                               />
                             </MethodRailField>
-                            <MethodRailField label={t('profitRent.every')} unit={t('profitRent.unitYear')}>
+                            <MethodRailField
+                              label={t('profitRent.every')}
+                              unit={t('profitRent.unitYear')}
+                            >
                               <NumberInput
                                 dense
                                 name={intervalField.name}
@@ -744,14 +754,23 @@ export function ProfitRentPanel({
                           <div className="space-y-1.5 py-1">
                             <MethodRailPeriodHeader />
                             {growthPeriodFields.map((field, index) => (
-                              <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 items-center">
+                              <div
+                                key={field.id}
+                                className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 items-center"
+                              >
                                 <NumberInput
                                   dense
+                                  name={`growthPeriods.${index}.fromYear`}
+                                  aria-label={`${t('profitRent.marketRentalFeeIncrease')} · ${t('methodTabs.periodCols.from')}`}
                                   value={watch(`growthPeriods.${index}.fromYear` as any)}
                                   onChange={e =>
-                                    setValue(`growthPeriods.${index}.fromYear` as any, e.target.value ?? 0, {
-                                      shouldDirty: true,
-                                    })
+                                    setValue(
+                                      `growthPeriods.${index}.fromYear` as any,
+                                      e.target.value ?? 0,
+                                      {
+                                        shouldDirty: true,
+                                      },
+                                    )
                                   }
                                   maxIntegerDigits={3}
                                   decimalPlaces={0}
@@ -759,11 +778,17 @@ export function ProfitRentPanel({
                                 />
                                 <NumberInput
                                   dense
+                                  name={`growthPeriods.${index}.toYear`}
+                                  aria-label={`${t('profitRent.marketRentalFeeIncrease')} · ${t('methodTabs.periodCols.to')}`}
                                   value={watch(`growthPeriods.${index}.toYear` as any)}
                                   onChange={e =>
-                                    setValue(`growthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
-                                      shouldDirty: true,
-                                    })
+                                    setValue(
+                                      `growthPeriods.${index}.toYear` as any,
+                                      e.target.value ?? 0,
+                                      {
+                                        shouldDirty: true,
+                                      },
+                                    )
                                   }
                                   decimalPlaces={0}
                                   maxIntegerDigits={3}
@@ -771,6 +796,8 @@ export function ProfitRentPanel({
                                 />
                                 <NumberInput
                                   dense
+                                  name={`growthPeriods.${index}.growthRatePercent`}
+                                  aria-label={`${t('profitRent.marketRentalFeeIncrease')} · ${t('methodTabs.periodCols.rate')}`}
                                   value={watch(`growthPeriods.${index}.growthRatePercent` as any)}
                                   onChange={e =>
                                     setValue(
@@ -787,7 +814,7 @@ export function ProfitRentPanel({
                                   <button
                                     type="button"
                                     onClick={() => removePeriod(index)}
-                                    className="flex items-center justify-center text-red-400 hover:text-red-600"
+                                    className="flex items-center justify-center text-red-400 hover:text-(--palette-danger)"
                                   >
                                     <Icon name="xmark" className="size-3" />
                                   </button>
@@ -797,7 +824,9 @@ export function ProfitRentPanel({
                             {!readOnly && (
                               <MethodRailAddRow
                                 label={t('profitRent.addPeriods')}
-                                onClick={() => appendPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })}
+                                onClick={() =>
+                                  appendPeriod({ fromYear: 0, toYear: 0, growthRatePercent: 0 })
+                                }
                               />
                             )}
                           </div>
@@ -851,7 +880,7 @@ export function ProfitRentPanel({
                           label={
                             <>
                               {t('profitRent.estimatePriceFromPv')}{' '}
-                              <span className="text-gray-400 text-[10.5px]">(PV)</span>
+                              <span className="text-(--palette-gray-400) text-[10.5px]">(PV)</span>
                             </>
                           }
                           value={tableResult?.totalPresentValue ?? 0}
@@ -875,8 +904,12 @@ export function ProfitRentPanel({
                             </Checkbox>
                           }
                           value={
-                            <span className="text-gray-600">
-                              {t(isBuildingCostIncluded ? 'profitRent.included' : 'profitRent.notIncluded')}
+                            <span className="text-(--palette-gray-600)">
+                              {t(
+                                isBuildingCostIncluded
+                                  ? 'profitRent.included'
+                                  : 'profitRent.notIncluded',
+                              )}
                             </span>
                           }
                         />
@@ -887,7 +920,9 @@ export function ProfitRentPanel({
                             <DisplayValueRow
                               label={
                                 <span className="pl-3">
-                                  {t('methodTabs.buildingSummary.afterRow', { n: allGroupProperties.length })}
+                                  {t('methodTabs.buildingSummary.afterRow', {
+                                    n: allGroupProperties.length,
+                                  })}
                                 </span>
                               }
                               value={buildingValue}
@@ -900,11 +935,11 @@ export function ProfitRentPanel({
                         )}
                         <IndicatedValueRow
                           label={
-                            <span className="font-semibold text-[#0f766e]">
+                            <span className="font-semibold text-(--palette-accent-ink)">
                               {t('costMachine.summary.indicatedValueLabel')}{' '}
                               {/* The *SubLabel key is the English gloss, deliberately empty in
                                   en/zh so it does not repeat the label it sits next to. */}
-                              <span className="text-[10.5px] text-gray-400 font-normal">
+                              <span className="text-[10.5px] text-(--palette-gray-400) font-normal">
                                 {t('finalValue.indicatedValueSubLabel')}
                               </span>
                             </span>
@@ -981,7 +1016,7 @@ function ProfitRentTable({
   onColHover: (col: number | null) => void;
 }) {
   const { t } = useTranslation('pricingAnalysis');
-  const colHl = 'bg-blue-50/60';
+  const colHl = 'bg-blue-50/60 dark:bg-blue-500/10';
 
   // Sticky columns: only col 0 (Year) is pinned left — mock:2444 (`data-sticky="64"`,
   // one column wide) pins just the year, not Start/End alongside it. It alone carries
@@ -991,20 +1026,20 @@ function ProfitRentTable({
   // losing their pin, same as Year; every other column stays right-aligned.
   const leftAlignCols = new Set([0, 1, 2]);
 
-  const headBg = 'bg-gray-50';
-  const bodyBg = 'bg-white';
-  const totalBg = 'bg-gray-100';
+  const headBg = 'bg-(--palette-surface-2)';
+  const bodyBg = 'bg-(--palette-surface)';
+  const totalBg = 'bg-(--palette-surface-3)';
   // Soft, directional divider between every column — see the recipe note on
   // ComparativeFactorTable/WQSScoringSection; never a bare border-[…].
-  const divider = 'border-r border-r-[#eef2f2]';
+  const divider = 'border-r border-r-(--palette-line-soft)';
 
   const thCls = (col: number, extra?: string) => {
     const isSticky = col === 0;
     const alignCls = leftAlignCols.has(col) ? '' : 'text-right';
     // Sticky-left + sticky-top headers need z-30 (above both axes)
     const base = isSticky
-      ? `${stickyBase} sticky top-0 z-30 ${headBg} px-[8px] py-0 h-[36px] text-gray-600 font-medium border-b border-gray-200 ${divider}`
-      : `sticky top-0 z-20 ${headBg} px-[8px] py-0 h-[36px] ${alignCls} text-gray-600 font-medium border-b border-gray-200 ${divider} ${extra ?? ''}`;
+      ? `${stickyBase} sticky top-0 z-30 ${headBg} px-[8px] py-0 h-[36px] text-(--palette-gray-600) font-medium border-b border-(--palette-line) ${divider}`
+      : `sticky top-0 z-20 ${headBg} px-[8px] py-0 h-[36px] ${alignCls} text-(--palette-gray-600) font-medium border-b border-(--palette-line) ${divider} ${extra ?? ''}`;
     return `${base} ${hoveredCol === col ? colHl : ''}`;
   };
 
@@ -1012,13 +1047,13 @@ function ProfitRentTable({
     const isSticky = col === 0;
     const alignCls = leftAlignCols.has(col) ? '' : 'text-right';
     const base = isSticky
-      ? `${stickyBase} ${bodyBg} px-[8px] py-0 h-[26px] text-gray-700 border-b border-gray-100 ${divider}`
-      : `px-[8px] py-0 h-[26px] ${alignCls} text-gray-700 border-b border-gray-100 ${divider} ${extra ?? ''}`;
+      ? `${stickyBase} ${bodyBg} px-[8px] py-0 h-[26px] text-(--palette-ink) border-b border-(--palette-line-soft) ${divider}`
+      : `px-[8px] py-0 h-[26px] ${alignCls} text-(--palette-ink) border-b border-(--palette-line-soft) ${divider} ${extra ?? ''}`;
     return `${base} ${hoveredCol === col ? colHl : ''}`;
   };
 
   const totalTdCls = (col: number, extra?: string) => {
-    const base = `px-[8px] py-0 h-[26px] text-right text-gray-800 ${divider} ${extra ?? ''}`;
+    const base = `px-[8px] py-0 h-[26px] text-right text-(--palette-ink) ${divider} ${extra ?? ''}`;
     return `${base} ${hoveredCol === col ? colHl : ''}`;
   };
 
@@ -1071,7 +1106,7 @@ function ProfitRentTable({
   return (
     <>
       <thead>
-        <tr className="bg-gray-50 h-[36px]">
+        <tr className="bg-(--palette-surface-2) h-[36px]">
           {headers.map((h, col) => (
             <th
               key={col}
@@ -1081,7 +1116,7 @@ function ProfitRentTable({
             >
               {h.label}
               {h.sub && (
-                <span className="block text-[10px] text-gray-400 font-normal leading-[12px]">
+                <span className="block text-[10px] text-(--palette-gray-400) font-normal leading-[12px]">
                   {h.sub}
                 </span>
               )}
@@ -1091,7 +1126,7 @@ function ProfitRentTable({
       </thead>
       <tbody onMouseLeave={() => onColHover(null)}>
         {tableResult.rows.map(row => (
-          <tr key={row.year} className="hover:bg-gray-50/50">
+          <tr key={row.year} className="hover:bg-(--palette-surface-2)/50">
             <td className={tdCls(0)} {...cellProps(0)}>
               {row.year.toFixed(1)}
             </td>
@@ -1107,7 +1142,9 @@ function ProfitRentTable({
             <td className={tdCls(4, headers[4].minW)} {...cellProps(4)}>
               <div>{fmt(row.marketRentalFeePerSqWa)}</div>
               {row.marketRentalFeeGrowthPercent > 0 && (
-                <div className="text-[9px] text-gray-400">+{row.marketRentalFeeGrowthPercent}%</div>
+                <div className="text-[9px] text-(--palette-gray-400)">
+                  +{row.marketRentalFeeGrowthPercent}%
+                </div>
               )}
             </td>
             <td className={tdCls(5, headers[5].minW)} {...cellProps(5)}>
@@ -1132,9 +1169,9 @@ function ProfitRentTable({
         ))}
       </tbody>
       <tfoot className="sticky bottom-0 z-20">
-        <tr className="bg-gray-100 font-semibold border-t-2 border-gray-300 h-[26px]">
+        <tr className="bg-(--palette-surface-3) font-semibold border-t-2 border-(--palette-line-strong) h-[26px]">
           <td
-            className={`sticky left-0 z-30 ${totalBg} px-[8px] py-0 h-[26px] text-gray-800 pa-sticky-edge`}
+            className={`sticky left-0 z-30 ${totalBg} px-[8px] py-0 h-[26px] text-(--palette-ink) pa-sticky-edge`}
           >
             {t('profitRent.total')}
           </td>
@@ -1185,18 +1222,27 @@ function BuildingCostSummaryCard({ buildingCost }: { buildingCost: Record<string
     };
   });
   const totalAfter = rows.reduce((sum, r) => sum + r.after, 0);
-  const cell = 'px-[12px] h-[26px] leading-[25px] border-b border-[#e3e9e8] whitespace-nowrap';
+  const cell =
+    'px-[12px] h-[26px] leading-[25px] border-b border-(--palette-line) whitespace-nowrap';
   return (
     <SummaryCard
       title={t('methodTabs.buildingSummary.head', { n: rows.length, total: fmt(totalAfter) })}
     >
       <table className="w-full border-separate border-spacing-0 text-[12px] tabular-nums">
         <thead>
-          <tr className="text-[#55636f]">
-            <th className={`${cell} text-left font-medium`}>{t('methodTabs.buildingSummary.property')}</th>
-            <th className={`${cell} text-right font-medium`}>{t('methodTabs.buildingSummary.area')}</th>
-            <th className={`${cell} text-right font-medium`}>{t('methodTabs.buildingSummary.before')}</th>
-            <th className={`${cell} text-right font-medium`}>{t('methodTabs.buildingSummary.after')}</th>
+          <tr className="text-(--palette-ink-2)">
+            <th className={`${cell} text-left font-medium`}>
+              {t('methodTabs.buildingSummary.property')}
+            </th>
+            <th className={`${cell} text-right font-medium`}>
+              {t('methodTabs.buildingSummary.area')}
+            </th>
+            <th className={`${cell} text-right font-medium`}>
+              {t('methodTabs.buildingSummary.before')}
+            </th>
+            <th className={`${cell} text-right font-medium`}>
+              {t('methodTabs.buildingSummary.after')}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -1212,7 +1258,7 @@ function BuildingCostSummaryCard({ buildingCost }: { buildingCost: Record<string
           ))}
         </tbody>
       </table>
-      <p className="m-0 px-[12px] py-[6px] text-[11px] text-gray-400">
+      <p className="m-0 px-[12px] py-[6px] text-[11px] text-(--palette-gray-400)">
         {t('methodTabs.buildingSummary.readOnlyNote')}
       </p>
     </SummaryCard>
@@ -1225,60 +1271,60 @@ function PanelSkeleton() {
     <div className="flex flex-col flex-1 min-h-0 gap-4 animate-pulse">
       {/* Header */}
       <div className="flex items-center gap-2.5">
-        <div className="size-8 rounded-lg bg-gray-200" />
-        <div className="bg-gray-200 rounded h-5 w-32" />
+        <div className="size-8 rounded-lg bg-(--palette-surface-3)" />
+        <div className="bg-(--palette-surface-3) rounded h-5 w-32" />
       </div>
 
       {/* Info cards */}
-      <div className="rounded-lg border border-gray-200 p-5 space-y-4">
+      <div className="rounded-lg border border-(--palette-line) p-5 space-y-4">
         <div className="grid grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-md bg-gray-100 px-3 py-2.5 h-14">
-              <div className="bg-gray-200 rounded h-2.5 w-16 mb-2" />
-              <div className="bg-gray-200 rounded h-3.5 w-24" />
+            <div key={i} className="rounded-md bg-(--palette-surface-3) px-3 py-2.5 h-14">
+              <div className="bg-(--palette-surface-3) rounded h-2.5 w-16 mb-2" />
+              <div className="bg-(--palette-surface-3) rounded h-3.5 w-24" />
             </div>
           ))}
         </div>
       </div>
 
       {/* Market Rental Fee section */}
-      <div className="rounded-lg border border-gray-200 p-5 space-y-5">
+      <div className="rounded-lg border border-(--palette-line) p-5 space-y-5">
         <div className="grid grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-md bg-gray-100 px-4 py-3 h-16">
-              <div className="bg-gray-200 rounded h-2.5 w-20 mb-2" />
-              <div className="bg-gray-200 rounded h-5 w-28" />
+            <div key={i} className="rounded-md bg-(--palette-surface-3) px-4 py-3 h-16">
+              <div className="bg-(--palette-surface-3) rounded h-2.5 w-20 mb-2" />
+              <div className="bg-(--palette-surface-3) rounded h-5 w-28" />
             </div>
           ))}
         </div>
-        <div className="border-t border-gray-200" />
+        <div className="border-t border-(--palette-line)" />
         <div className="space-y-3">
-          <div className="bg-gray-200 rounded h-3.5 w-40" />
+          <div className="bg-(--palette-surface-3) rounded h-3.5 w-40" />
           <div className="flex gap-2">
-            <div className="bg-gray-200 rounded-full h-7 w-20" />
-            <div className="bg-gray-200 rounded-full h-7 w-16" />
+            <div className="bg-(--palette-surface-3) rounded-full h-7 w-20" />
+            <div className="bg-(--palette-surface-3) rounded-full h-7 w-16" />
           </div>
           <div className="flex gap-3 items-end">
-            <div className="bg-gray-100 rounded h-9 w-24" />
-            <div className="bg-gray-200 rounded h-3 w-10" />
-            <div className="bg-gray-100 rounded h-9 w-24" />
+            <div className="bg-(--palette-surface-3) rounded h-9 w-24" />
+            <div className="bg-(--palette-surface-3) rounded h-3 w-10" />
+            <div className="bg-(--palette-surface-3) rounded h-9 w-24" />
           </div>
         </div>
       </div>
 
       {/* Discount Rate + Generate */}
       <div className="flex items-end justify-between">
-        <div className="bg-gray-100 rounded h-14 w-40" />
-        <div className="bg-gray-200 rounded h-8 w-24" />
+        <div className="bg-(--palette-surface-3) rounded h-14 w-40" />
+        <div className="bg-(--palette-surface-3) rounded h-8 w-24" />
       </div>
 
       {/* Table skeleton */}
       <TableSkeleton />
 
       {/* Estimate Price */}
-      <div className="rounded-lg border border-gray-200 p-4 flex items-center justify-between">
-        <div className="bg-gray-200 rounded h-4 w-36" />
-        <div className="bg-gray-100 rounded h-9 w-64" />
+      <div className="rounded-lg border border-(--palette-line) p-4 flex items-center justify-between">
+        <div className="bg-(--palette-surface-3) rounded h-4 w-36" />
+        <div className="bg-(--palette-surface-3) rounded h-9 w-64" />
       </div>
     </div>
   );
@@ -1287,8 +1333,8 @@ function PanelSkeleton() {
 /** Skeleton loader for the table */
 function TableSkeleton() {
   return (
-    <div className="animate-pulse space-y-0 border border-gray-200 rounded-lg overflow-hidden">
-      <div className="bg-gray-100 h-9 flex items-center px-3">
+    <div className="animate-pulse space-y-0 border border-(--palette-line) rounded-lg overflow-hidden">
+      <div className="bg-(--palette-surface-3) h-9 flex items-center px-3">
         <div className="bg-gray-300 rounded h-3 w-16" />
         <div className="flex gap-6 ml-auto">
           {Array.from({ length: 6 }).map((_, i) => (
@@ -1297,11 +1343,11 @@ function TableSkeleton() {
         </div>
       </div>
       {Array.from({ length: 8 }).map((_, row) => (
-        <div key={row} className="h-8 flex items-center px-3 border-t border-gray-100">
-          <div className="bg-gray-200 rounded h-3 w-32" />
+        <div key={row} className="h-8 flex items-center px-3 border-t border-(--palette-line-soft)">
+          <div className="bg-(--palette-surface-3) rounded h-3 w-32" />
           <div className="flex gap-6 ml-auto">
             {Array.from({ length: 6 }).map((_, col) => (
-              <div key={col} className="bg-gray-200 rounded h-3 w-16" />
+              <div key={col} className="bg-(--palette-surface-3) rounded h-3 w-16" />
             ))}
           </div>
         </div>
@@ -1309,7 +1355,7 @@ function TableSkeleton() {
       {Array.from({ length: 3 }).map((_, i) => (
         <div
           key={i}
-          className={`h-9 flex items-center px-3 border-t border-gray-200 ${i >= 1 ? 'bg-green-50' : 'bg-gray-50'}`}
+          className={`h-9 flex items-center px-3 border-t border-(--palette-line) ${i >= 1 ? 'bg-green-50 dark:bg-green-500/10' : 'bg-(--palette-surface-2)'}`}
         >
           <div className="bg-gray-300 rounded h-3 w-40" />
           <div className="ml-auto bg-gray-300 rounded h-3 w-20" />

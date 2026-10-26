@@ -2,12 +2,17 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useController, useForm, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
 import {
   CostMachineFormSchema,
   isMachineRowLocked,
   type CostMachineFormType,
 } from '../schemas/costMachineForm';
-import { CostMachineSection, type MachineryItem, type MachineryRowFormValue } from './CostMachineSection';
+import {
+  CostMachineSection,
+  type MachineryItem,
+  type MachineryRowFormValue,
+} from './CostMachineSection';
 import { RemarkField } from './CostMachineForm';
 import { KvRow } from './KvRow';
 import toast from 'react-hot-toast';
@@ -266,14 +271,16 @@ export function CostMachinePanel({
     <FormProvider methods={methods} schema={CostMachineFormSchema}>
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-          <span className="text-sm font-semibold text-primary tabular-nums">
+          <span className="text-[10px] text-(--palette-gray-400)">
+            {t('finalValue.indicatedValue')}
+          </span>
+          <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
             {fmt(Number(indicatedValueField.value ?? totalFmv) || 0)}
           </span>
         </div>
         {!isReadOnly && (
           <>
-            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <span className="w-px h-5 bg-(--palette-line) shrink-0" />
             <Button
               variant="ghost"
               type="button"
@@ -290,10 +297,11 @@ export function CostMachinePanel({
               disabled={saveMutation.isPending}
               title={t('footer.reset')}
               aria-label={t('footer.reset')}
-              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger)"
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
             </Button>
+            <MissingFieldsChip placement="down" />
             <Button
               type="submit"
               form={formId}
@@ -356,8 +364,8 @@ export function CostMachinePanel({
               // is the same two-card shape the other three methods' summary tabs have.
               content: (
                 <div className="grid grid-cols-2 items-start gap-[16px] py-[14px] px-[16px]">
-                  <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-                    <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+                  <div className="min-w-0 border border-(--palette-line) rounded-[10px] overflow-hidden">
+                    <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-(--palette-ink) bg-(--palette-surface-2) border-b border-(--palette-line)">
                       {t('costMachine.summary.title')}
                     </h4>
                     {/* `KvRow` rather than the hand-rolled flex rows this replaced — the same
@@ -371,7 +379,7 @@ export function CostMachinePanel({
                       <KvRow
                         label={t('costMachine.summary.quantity')}
                         value={
-                          <span className="font-semibold text-gray-800">
+                          <span className="font-semibold text-(--palette-ink)">
                             {totalQuantity.toLocaleString()}
                           </span>
                         }
@@ -379,22 +387,30 @@ export function CostMachinePanel({
                       />
                       <KvRow
                         label={t('costMachine.summary.totalRcn')}
-                        value={<span className="font-semibold text-gray-800">{fmt(totalRcn)}</span>}
+                        value={
+                          <span className="font-semibold text-(--palette-ink)">
+                            {fmt(totalRcn)}
+                          </span>
+                        }
                         unit={t('costMachine.summary.baht')}
                       />
                       <KvRow
                         label={t('costMachine.summary.totalFmvFromTable')}
-                        value={<span className="font-semibold text-gray-800">{fmt(totalFmv)}</span>}
+                        value={
+                          <span className="font-semibold text-(--palette-ink)">
+                            {fmt(totalFmv)}
+                          </span>
+                        }
                         unit={t('costMachine.summary.baht')}
                       />
                       <KvRow
                         label={
                           <span className="flex flex-col">
-                            <span className="text-[14px] font-semibold text-[#0f766e]">
-                              <span className="mr-1 text-gray-400">=</span>
+                            <span className="text-[14px] font-semibold text-(--palette-accent-ink)">
+                              <span className="mr-1 text-(--palette-gray-400)">=</span>
                               {t('costMachine.summary.indicatedValueLabel')}
                             </span>
-                            <span className="text-[10.5px] text-gray-400">
+                            <span className="text-[10.5px] text-(--palette-gray-400)">
                               {t('costMachine.summary.indicatedValueSubLabel')}
                             </span>
                           </span>
@@ -416,7 +432,7 @@ export function CostMachinePanel({
                             disabled={isReadOnly}
                             // Green — same `.kv .final .in` palette as WQSAdjustFinalValueSection's
                             // Indicated Value inputs (mock:587-589).
-                            className="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]!"
+                            className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]!"
                           />
                         }
                         hint={
@@ -441,8 +457,8 @@ export function CostMachinePanel({
                           // would state a rounding that never happened. The three strings and
                           // the markup are the shared ones; only the plumbing differs.
                           overrideDelta !== 0 ? (
-                            <span className="text-[10.5px] text-gray-400 inline-flex items-center gap-1 flex-wrap justify-end">
-                              <span className="font-semibold text-[#b45309]">
+                            <span className="text-[10.5px] text-(--palette-gray-400) inline-flex items-center gap-1 flex-wrap justify-end">
+                              <span className="font-semibold text-(--palette-warn)">
                                 {t('comparativeAnalysis.editedLabel')}
                               </span>
                               {t('comparativeAnalysis.differsFromComputed', {
@@ -460,7 +476,7 @@ export function CostMachinePanel({
                                       as a permanent override that merely looks un-edited. */}
                                   <button
                                     type="button"
-                                    className="text-primary hover:underline"
+                                    className="text-(--palette-primary-text) hover:underline"
                                     onClick={() => indicatedValueField.onChange(null)}
                                   >
                                     {t('comparativeAnalysis.useComputedValue')}
@@ -469,7 +485,7 @@ export function CostMachinePanel({
                               )}
                             </span>
                           ) : (
-                            <span className="text-[10.5px] text-gray-400">
+                            <span className="text-[10.5px] text-(--palette-gray-400)">
                               {t('costMachine.summary.computedHint')}
                             </span>
                           )
@@ -478,8 +494,8 @@ export function CostMachinePanel({
                       />
                     </div>
                   </div>
-                  <div className="min-w-0 border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-                    <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+                  <div className="min-w-0 border border-(--palette-line) rounded-[10px] overflow-hidden">
+                    <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-(--palette-ink) bg-(--palette-surface-2) border-b border-(--palette-line)">
                       {t('costMachine.summary.remarkTitle')}
                     </h4>
                     <div className="px-[12px] py-3">

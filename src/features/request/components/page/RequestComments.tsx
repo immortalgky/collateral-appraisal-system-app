@@ -205,15 +205,15 @@ const RequestComments = ({
               <div key={i} className={clsx('flex', i % 2 === 0 ? 'justify-end' : 'justify-start')}>
                 {i % 2 !== 0 && (
                   <div className="flex max-w-[80%] items-start gap-2">
-                    <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-gray-200" />
+                    <div className="h-6 w-6 shrink-0 animate-pulse rounded-full bg-(--palette-line)" />
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center gap-2">
-                        <div className="h-3 w-16 animate-pulse rounded bg-gray-200" />
-                        <div className="h-3 w-10 animate-pulse rounded bg-gray-200" />
+                        <div className="h-3 w-16 animate-pulse rounded bg-(--palette-line)" />
+                        <div className="h-3 w-10 animate-pulse rounded bg-(--palette-line)" />
                       </div>
-                      <div className="animate-pulse rounded-2xl rounded-tl-sm bg-gray-100 px-3 py-2">
-                        <div className="h-3 w-full rounded bg-gray-200" />
-                        <div className="mt-1 h-3 w-2/3 rounded bg-gray-200" />
+                      <div className="animate-pulse rounded-2xl rounded-tl-sm bg-(--palette-surface-3) px-3 py-2">
+                        <div className="h-3 w-full rounded bg-(--palette-surface-3)" />
+                        <div className="mt-1 h-3 w-2/3 rounded bg-(--palette-line)" />
                       </div>
                     </div>
                   </div>
@@ -224,7 +224,7 @@ const RequestComments = ({
                       <div className="h-3 w-full rounded bg-primary/30" />
                       <div className="mt-1 h-3 w-1/2 rounded bg-primary/30" />
                     </div>
-                    <div className="mt-1 ml-auto h-3 w-10 animate-pulse rounded bg-gray-200" />
+                    <div className="mt-1 ml-auto h-3 w-10 animate-pulse rounded bg-(--palette-line)" />
                   </div>
                 )}
               </div>
@@ -232,11 +232,13 @@ const RequestComments = ({
           </div>
         ) : comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100">
-              <Icon style="regular" name="comments" className="size-5! text-gray-400" />
+            <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-(--palette-surface-3)">
+              <Icon style="regular" name="comments" className="size-5! text-(--palette-gray-400)" />
             </div>
-            <p className="text-sm text-gray-500">{t('rightMenu.noComments')}</p>
-            <p className="mt-1 text-xs text-gray-400">{t('rightMenu.noCommentsHint')}</p>
+            <p className="text-sm text-(--palette-gray-500)">{t('rightMenu.noComments')}</p>
+            <p className="mt-1 text-xs text-(--palette-gray-400)">
+              {t('rightMenu.noCommentsHint')}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -265,7 +267,7 @@ const RequestComments = ({
                             <button
                               type="button"
                               onClick={handleCancelEdit}
-                              className="rounded px-2 py-1 text-xs text-gray-600 transition-colors hover:bg-gray-100"
+                              className="rounded px-2 py-1 text-xs text-(--palette-gray-600) transition-colors hover:bg-(--palette-surface-3)"
                             >
                               {t('common:actions.cancel')}
                             </button>
@@ -292,7 +294,7 @@ const RequestComments = ({
                             <button
                               type="button"
                               onClick={() => handleEditClick(index, comment)}
-                              className="flex h-5 w-5 items-center justify-center rounded text-gray-400 transition-all hover:bg-primary-50 hover:text-primary"
+                              className="flex h-5 w-5 items-center justify-center rounded text-(--palette-gray-400) transition-all hover:bg-(--palette-accent-wash) hover:text-(--palette-primary-text)"
                               title={t('common:actions.edit')}
                             >
                               <Icon style="regular" name="pen" className="size-2.5!" />
@@ -300,7 +302,7 @@ const RequestComments = ({
                             <button
                               type="button"
                               onClick={() => setDeleteConfirmIndex(index)}
-                              className="flex h-5 w-5 items-center justify-center rounded text-gray-400 transition-all hover:bg-danger-50 hover:text-danger-500"
+                              className="flex h-5 w-5 items-center justify-center rounded text-(--palette-gray-400) transition-all hover:bg-(--palette-req-wash) hover:text-danger-500"
                               title={t('common:actions.delete')}
                             >
                               <Icon style="solid" name="xmark" className="size-3!" />
@@ -308,7 +310,9 @@ const RequestComments = ({
                           </div>
                         </div>
                       )}
-                      <p className="mt-0.5 text-right text-xs text-gray-400">{timeDisplay}</p>
+                      <p className="mt-0.5 text-right text-xs text-(--palette-gray-400)">
+                        {timeDisplay}
+                      </p>
                     </div>
                   ) : (
                     // Others' comment - left-aligned, gray bubble with avatar
@@ -318,15 +322,17 @@ const RequestComments = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="mb-0.5 flex items-center gap-2">
-                          <span className="text-xs font-medium text-gray-900">
+                          <span className="text-xs font-medium text-(--palette-ink)">
                             {comment.commentedByName}
                           </span>
-                          <span className="text-xs text-gray-400">{timeDisplay}</span>
+                          <span className="text-xs text-(--palette-gray-400)">{timeDisplay}</span>
                         </div>
-                        <div className="min-w-0 overflow-hidden rounded-2xl rounded-tl-sm bg-gray-100 px-3 py-2 text-gray-800">
+                        <div className="min-w-0 overflow-hidden rounded-2xl rounded-tl-sm bg-(--palette-surface-3) px-3 py-2 text-(--palette-ink)">
                           <p className="text-sm break-words break-all">{comment.comment}</p>
                           {comment.lastModifiedAt && (
-                            <span className="text-xs text-gray-400">{t('rightMenu.edited')}</span>
+                            <span className="text-xs text-(--palette-gray-400)">
+                              {t('rightMenu.edited')}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -340,7 +346,7 @@ const RequestComments = ({
       </div>
 
       {/* Comment input - fixed at bottom */}
-      <div className="shrink-0 border-t border-gray-100 p-4">
+      <div className="shrink-0 border-t border-(--palette-line-soft) p-4">
         <div className="flex gap-2">
           <input
             type="text"
@@ -348,7 +354,7 @@ const RequestComments = ({
             onChange={e => setNewComment(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder={t('rightMenu.commentPlaceholder')}
-            className="flex-1 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none"
+            className="flex-1 rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 py-2 text-sm focus:border-primary focus:ring-2 focus:ring-primary/50 focus:outline-none"
           />
           <button
             type="button"

@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeRoutingFormSchema, type RoutingFormValues } from '../../schemas';
+import { routingFormSchema, type RoutingFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { RoutingProperties } from '../../types';
 
@@ -40,7 +41,7 @@ export function RoutingForm({ nodeId }: RoutingFormProps) {
     watch,
     formState: { errors },
   } = useForm<RoutingFormValues>({
-    resolver: zodResolver(makeRoutingFormSchema(t)),
+    resolver: zodResolver(routingFormSchema),
     defaultValues: buildDefaults(data, props),
   });
 
@@ -83,9 +84,11 @@ export function RoutingForm({ nodeId }: RoutingFormProps) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -135,7 +138,7 @@ export function RoutingForm({ nodeId }: RoutingFormProps) {
             appendCondition({ key: '', value: '' });
             setTimeout(() => handleSubmit(onSubmit)(), 0);
           }}
-          className="btn btn-ghost btn-xs text-primary"
+          className="btn btn-ghost btn-xs text-(--palette-primary-text)"
         >
           {t('forms.buttons.addCondition')}
         </button>

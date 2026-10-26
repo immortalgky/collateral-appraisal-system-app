@@ -55,37 +55,39 @@ export const UnitRow = ({
 
   const identityCells = isCondo(projectType) ? (
     <>
-      <td className="py-1.5 px-3 text-gray-600">{unit.sequenceNumber}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.floor ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.towerName ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-600">{unit.condoRegistrationNumber ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.roomNumber ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
-      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-1.5 px-3 text-(--palette-gray-600)">{unit.sequenceNumber}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.floor ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.towerName ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-gray-600)">
+        {unit.condoRegistrationNumber ?? '-'}
+      </td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.roomNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.modelType ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink) text-right">{fmt(unit.usableArea)}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink) text-right">{fmt(unit.sellingPrice)}</td>
       <td className="py-1.5 px-3 text-right">
         {(unit.lastAppraisedValue ?? 0) > 0 ? (
-          <span className="text-gray-900">{fmt(unit.lastAppraisedValue)}</span>
+          <span className="text-(--palette-ink)">{fmt(unit.lastAppraisedValue)}</span>
         ) : (
-          <span className="text-gray-300">–</span>
+          <span className="text-(--palette-gray-300)">–</span>
         )}
       </td>
     </>
   ) : (
     <>
-      <td className="py-1.5 px-3 text-gray-600">{unit.sequenceNumber}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.plotNumber ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.houseNumber ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800">{unit.modelType ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800 text-center">{unit.numberOfFloors ?? '-'}</td>
-      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.landArea)}</td>
-      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.usableArea)}</td>
-      <td className="py-1.5 px-3 text-gray-800 text-right">{fmt(unit.sellingPrice)}</td>
+      <td className="py-1.5 px-3 text-(--palette-gray-600)">{unit.sequenceNumber}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.plotNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.houseNumber ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink)">{unit.modelType ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink) text-center">{unit.numberOfFloors ?? '-'}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink) text-right">{fmt(unit.landArea)}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink) text-right">{fmt(unit.usableArea)}</td>
+      <td className="py-1.5 px-3 text-(--palette-ink) text-right">{fmt(unit.sellingPrice)}</td>
       <td className="py-1.5 px-3 text-right">
         {(unit.lastAppraisedValue ?? 0) > 0 ? (
-          <span className="text-gray-900">{fmt(unit.lastAppraisedValue)}</span>
+          <span className="text-(--palette-ink)">{fmt(unit.lastAppraisedValue)}</span>
         ) : (
-          <span className="text-gray-300">–</span>
+          <span className="text-(--palette-gray-300)">–</span>
         )}
       </td>
     </>
@@ -94,16 +96,18 @@ export const UnitRow = ({
   // Segmented Cash | Loan button group
   const segBtnBase =
     'px-2.5 py-1 text-xs font-medium border first:rounded-l-md last:rounded-r-md focus:outline-none transition-colors';
-  const segBtnInactive = 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50';
+  const segBtnInactive =
+    'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:bg-(--palette-surface-2)';
   const segBtnActive = 'border-primary bg-primary text-white';
-  const segBtnDisabled = 'border-gray-200 bg-gray-50 text-gray-300 cursor-not-allowed';
+  const segBtnDisabled =
+    'border-(--palette-line) bg-(--palette-surface-2) text-(--palette-gray-300) cursor-not-allowed';
 
   return (
     <tr
-      className={`border-b border-gray-100 hover:bg-gray-50 ${
-        isDirty ? 'bg-amber-50/30' : ''
+      className={`border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) ${
+        isDirty ? 'bg-(--palette-warn-wash)/30' : ''
       } ${isSelected ? 'bg-primary/5' : ''} ${
-        !isDirty && !isSelected && isSold ? 'bg-violet-50/40' : ''
+        !isDirty && !isSelected && isSold ? 'bg-violet-50/40 dark:bg-violet-500/10' : ''
       }`}
     >
       {/* Dirty indicator + selection checkbox in one slim column */}
@@ -119,7 +123,7 @@ export const UnitRow = ({
           checked={isSelected}
           onChange={() => onToggleSelect(unit.id)}
           aria-label={t('units.selectUnit')}
-          className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+          className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer"
         />
       </td>
       {identityCells}
@@ -130,7 +134,7 @@ export const UnitRow = ({
           checked={isSold}
           onChange={e => handleSoldChange(e.target.checked)}
           aria-label={t('units.col.isSold')}
-          className="rounded border-gray-300 text-primary focus:ring-primary/20 cursor-pointer"
+          className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20 cursor-pointer"
         />
       </td>
       {/* Purchase by — segmented control */}
@@ -167,13 +171,13 @@ export const UnitRow = ({
           onChange={e => onChange(unit.id, { loanBankName: e.target.value })}
           disabled={!isSold || purchaseBy !== 'Loan'}
           placeholder={purchaseBy === 'Loan' && isSold ? t('units.bankNamePlaceholder') : ''}
-          className="w-full text-xs border border-gray-200 rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+          className="w-full text-xs border border-(--palette-line) rounded px-2 py-1 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-400) disabled:cursor-not-allowed"
         />
       </td>
-      <td className="py-1.5 px-3 text-gray-700 whitespace-nowrap leading-tight">
+      <td className="py-1.5 px-3 text-(--palette-ink) whitespace-nowrap leading-tight">
         <div>{formatLocaleDateTime(unit.updatedAt, i18n.language)}</div>
         {unit.updatedBy && (
-          <div className="text-[10px] text-gray-400">
+          <div className="text-[10px] text-(--palette-gray-400)">
             {t('units.updatedByLine', { name: unit.updatedBy })}
           </div>
         )}

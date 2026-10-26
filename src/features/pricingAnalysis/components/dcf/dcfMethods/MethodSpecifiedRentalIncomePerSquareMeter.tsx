@@ -25,7 +25,9 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
       {expanded && (
         <>
           <tr className="group transition-colors">
-            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.saleableArea')}</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.common.saleableArea')}
+            </td>
             {Array.from({ length: totalNumberOfYears }).map((_, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
@@ -122,11 +124,15 @@ export function MethodSpecifiedRentalIncomePerSquareMeter({
             })}
           </tr>
           <tr className="group transition-colors">
-            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>{t('dcf.common.increaseRate')}</td>
+            <td colSpan={2} className={clsx(baseStyles.rowHeader)}>
+              {t('dcf.common.increaseRate')}
+            </td>
             {(method.detail?.rentalRateIncrease ?? []).map((val, idx) => {
               return (
                 <td key={idx} className={clsx(baseStyles.rowBody)}>
-                  <span className={clsx('text-right', val > 0 ? 'text-primary' : '')}>
+                  <span
+                    className={clsx('text-right', val > 0 ? 'text-(--palette-primary-text)' : '')}
+                  >
                     {val ? val.toLocaleString() : 0}
                   </span>
                 </td>

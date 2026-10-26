@@ -263,6 +263,10 @@ const GetRequestByIdResponse = z
     creator: UserInfoDto,
     priority: z.string().nullable(),
     isPma: z.boolean(),
+    isPeriodicalReappraisal: z.boolean().optional(),
+    // The Construction Inspection round stamped on this request's own appraisal; null until that
+    // appraisal exists (and for any other purpose)
+    inspectionNumber: z.number().int().nullable().optional(),
     detail: RequestDetailDto.nullable(),
     customers: z.array(RequestCustomerDto).nullable(),
     properties: z.array(RequestPropertyDto).nullable(),
@@ -2991,6 +2995,7 @@ const ConstructionInspectionData = z
     summaryPreviousValue: z.number().nullish().default(null),
     summaryCurrentProgressPct: z.number().nullish().default(null),
     summaryCurrentValue: z.number().nullish().default(null),
+    currentValueOverride: z.number().nullish().default(null),
     remark: z.string().nullish().default(null),
     documentId: z.string().uuid().nullish().default(null),
     documentFileName: z.string().nullish().default(null),
@@ -3206,6 +3211,7 @@ const ConstructionInspectionDto = z
     summaryPreviousValue: z.number().nullable(),
     summaryCurrentProgressPct: z.number().nullable(),
     summaryCurrentValue: z.number().nullable(),
+    isCurrentValueOverridden: z.boolean(),
     remark: z.string().nullable(),
     documentId: z.string().uuid().nullable(),
     documentFileName: z.string().nullable(),
@@ -5556,7 +5562,6 @@ export type CreateCondoPMAPropertyRequestType = z.infer<typeof CreateCondoPMAPro
 export type CreateCondoPMAPropertyResponseType = z.infer<typeof CreateCondoPMAPropertyResponse>;
 export type UpdateLandPMAPropertyRequestType = z.infer<typeof UpdateLandPMAPropertyRequest>;
 export type UpdateCondoPMAPropertyRequestType = z.infer<typeof UpdateCondoPMAPropertyRequest>;
-
 
 // Property Update response types
 // export type UpdateBuildingPropertyResponseType = z.infer<typeof UpdateBuildingPropertyResponse>;

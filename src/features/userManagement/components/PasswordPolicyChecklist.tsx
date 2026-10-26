@@ -29,9 +29,15 @@ const PasswordPolicyChecklist = ({
           <Icon
             name={check.passed ? 'circle-check' : 'circle-xmark'}
             style="solid"
-            className={`size-3.5 shrink-0 ${check.passed ? 'text-green-500' : 'text-gray-300'}`}
+            className={`size-3.5 shrink-0 ${check.passed ? 'text-green-500' : 'text-(--palette-gray-300)'}`}
           />
-          <span className={check.passed ? 'text-green-700' : 'text-gray-400'}>{check.label}</span>
+          <span
+            className={
+              check.passed ? 'text-green-700 dark:text-green-300' : 'text-(--palette-gray-400)'
+            }
+          >
+            {check.label}
+          </span>
         </li>
       ))}
     </ul>

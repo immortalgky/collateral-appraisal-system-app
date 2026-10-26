@@ -21,12 +21,12 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
       tabIndex={0}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:border-gray-300 transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40"
+      className="bg-(--palette-surface) border border-(--palette-line) rounded-lg overflow-hidden shadow-sm hover:shadow-md hover:border-(--palette-line-strong) transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40"
     >
       {/* Card Header */}
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+      <div className="px-4 py-3 border-b border-(--palette-line-soft) flex items-center justify-between">
         <div>
-          <span className="font-semibold text-gray-900 text-sm">{task.appraisalNumber}</span>
+          <span className="font-semibold text-(--palette-ink) text-sm">{task.appraisalNumber}</span>
         </div>
         <Badge type="status" value={task.status} size="sm" />
       </div>
@@ -38,9 +38,9 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
           <Icon
             style="regular"
             name="user"
-            className="size-3.5 text-gray-400 mt-0.5 flex-shrink-0"
+            className="size-3.5 text-(--palette-gray-400) mt-0.5 flex-shrink-0"
           />
-          <span className="text-sm text-gray-900 font-medium line-clamp-1">
+          <span className="text-sm text-(--palette-ink) font-medium line-clamp-1">
             {task.customerName}
           </span>
         </div>
@@ -50,9 +50,11 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
           <Icon
             style="regular"
             name="clipboard-list"
-            className="size-3.5 text-gray-400 mt-0.5 flex-shrink-0"
+            className="size-3.5 text-(--palette-gray-400) mt-0.5 flex-shrink-0"
           />
-          <span className="text-sm text-gray-600 line-clamp-1">{task.taskDescription || task.taskType}</span>
+          <span className="text-sm text-(--palette-gray-600) line-clamp-1">
+            {task.taskDescription || task.taskType}
+          </span>
         </div>
 
         {/* Purpose */}
@@ -60,9 +62,9 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
           <Icon
             style="regular"
             name="bullseye"
-            className="size-3.5 text-gray-400 mt-0.5 flex-shrink-0"
+            className="size-3.5 text-(--palette-gray-400) mt-0.5 flex-shrink-0"
           />
-          <span className="text-sm text-gray-600 line-clamp-1">{task.purpose}</span>
+          <span className="text-sm text-(--palette-gray-600) line-clamp-1">{task.purpose}</span>
         </div>
 
         {/* Property Type */}
@@ -70,15 +72,15 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
           <Icon
             style="regular"
             name="building"
-            className="size-3.5 text-gray-400 mt-0.5 flex-shrink-0"
+            className="size-3.5 text-(--palette-gray-400) mt-0.5 flex-shrink-0"
           />
-          <span className="text-sm text-gray-600">{task.propertyType}</span>
+          <span className="text-sm text-(--palette-gray-600)">{task.propertyType}</span>
         </div>
       </div>
 
       {/* Card Footer */}
-      <div className="px-4 py-2.5 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-        <span className="text-xs text-gray-500">
+      <div className="px-4 py-2.5 bg-(--palette-surface-2) border-t border-(--palette-line-soft) flex items-center justify-between">
+        <span className="text-xs text-(--palette-gray-500)">
           {task.requestedAt
             ? new Date(task.requestedAt).toLocaleDateString('th-TH', {
                 day: '2-digit',
@@ -92,7 +94,7 @@ export const TaskCard = ({ task, onClick }: TaskCardProps) => {
             e.stopPropagation();
             onClick?.();
           }}
-          className="text-xs text-primary hover:text-primary/80 font-medium flex items-center gap-1"
+          className="text-xs text-(--palette-primary-text) hover:text-(--palette-primary-text)/80 font-medium flex items-center gap-1"
         >
           View Details
           <Icon style="solid" name="arrow-right" className="size-3" />

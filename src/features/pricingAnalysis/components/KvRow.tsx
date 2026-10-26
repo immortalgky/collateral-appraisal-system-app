@@ -43,7 +43,7 @@ export function KvRow({
     // `last:border-b-0` — the card body used to carry `py-3`, which held this stack
     // clear of the card's own border; with that padding removed (user: "เอา padding
     // ของตารางนี้ออก") the final row's separator landed directly on the card's
-    // `border-[#e3e9e8]`, a doubled 1px edge that `rounded-[10px] overflow-hidden`
+    // `border-(--palette-line)`, a doubled 1px edge that `rounded-[10px] overflow-hidden`
     // then clipped square across the rounded corners. A `last-child` rule rather than
     // an "is this the last row" flag from the caller: rows here are rendered behind
     // branches (`{cond && kvRow(...)}`), so which row is last changes with the data,
@@ -77,10 +77,12 @@ export function KvRow({
     // `items-center` keeps doing its job unchanged — it now centres the label against a
     // row that is at least 32px — and the hint keeps its own grid row, so neither
     // earlier fix is undone.
+    // data-label-row: the missing-fields chip names an input in the value cell by the label cell.
     <div
-      className={`grid ${KV_GRID_COLS} min-h-[32px] items-center border-b border-b-[#eef2f2] last:border-b-0`}
+      data-label-row=""
+      className={`grid ${KV_GRID_COLS} min-h-[32px] items-center border-b border-b-(--palette-line-soft) last:border-b-0`}
     >
-      <div className="px-[12px] text-gray-500">{label}</div>
+      <div className="px-[12px] text-(--palette-gray-500)">{label}</div>
       {/* Bottom padding moves to the hint row when there is one, so the row's total
           vertical rhythm (py-1 outside, gap-0.5 between the stacked lines) is
           unchanged from when value and hint shared one cell. */}
@@ -92,7 +94,9 @@ export function KvRow({
       {/* mock:585 — `.kv .u { padding-left: 0 }`, not the uniform px-[12px] the other
           two cells get. Gives the unit 12px more usable width before it needs to grow
           past its 44px floor. */}
-      <div className="pl-0 pr-[12px] text-[#8a96a0] text-right whitespace-nowrap">{unit}</div>
+      <div className="pl-0 pr-[12px] text-(--palette-ink-3) text-right whitespace-nowrap">
+        {unit}
+      </div>
       {/* Same cell shape as the value cell above (a `hint` can itself be two stacked
           lines — an edited badge over a formula sub-line), just placed on the grid's
           second row under the value column. */}
@@ -118,8 +122,8 @@ export function KvWarningRow({ children }: { children: ReactNode }) {
     // rendered and collide with the card border exactly as a `KvRow` would. It sits
     // near the top of every current layout, so today the rule is inert here; it's
     // present so the two row types can't disagree if the order ever changes.
-    <div className={`grid ${KV_GRID_COLS} border-b border-b-[#eef2f2] last:border-b-0`}>
-      <div className="col-span-3 px-[12px] py-1.5 text-[11.5px] text-amber-700 bg-amber-50">
+    <div className={`grid ${KV_GRID_COLS} border-b border-b-(--palette-line-soft) last:border-b-0`}>
+      <div className="col-span-3 px-[12px] py-1.5 text-[11.5px] text-(--palette-warn) bg-(--palette-warn-wash)">
         {children}
       </div>
     </div>

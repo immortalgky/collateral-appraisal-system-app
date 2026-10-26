@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
-import { hasConstructionData } from './constructionGrid';
+import { formHasConstructionData } from './constructionGrid';
 
 /**
  * Asks before "Under Construction" is switched off while construction data is filled in.
@@ -22,7 +22,7 @@ export function ConstructionClearGuard() {
   useEffect(() => {
     const subscription = watch((values, { name, type }) => {
       if (name !== 'isUnderConstruction' || type !== 'change') return;
-      if (values.isUnderConstruction === false && hasConstructionData(values)) setIsOpen(true);
+      if (values.isUnderConstruction === false && formHasConstructionData(values)) setIsOpen(true);
     });
     return () => subscription.unsubscribe();
   }, [watch]);

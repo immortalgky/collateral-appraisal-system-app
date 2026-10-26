@@ -139,16 +139,18 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
   return (
     <div className="flex flex-col gap-4 p-6">
       {/* General Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
             <Icon name="building" style="solid" className="size-4 text-blue-500" />
-            <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.general')}
+            </span>
           </div>
           <button
             type="button"
             onClick={handleOpenEdit}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
@@ -163,10 +165,12 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
           <InfoRow label={t('fields.contactPerson')} value={company.contactPerson} />
           <InfoRow label={t('fields.hostCompanyCode')} value={company.hostCompanyCode} />
           <div>
-            <div className="text-xs text-gray-400 mb-0.5">{t('fields.status')}</div>
+            <div className="text-xs text-(--palette-gray-400) mb-0.5">{t('fields.status')}</div>
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                company.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                company.isActive
+                  ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
               }`}
             >
               {company.isActive ? t('status.active') : t('status.inactive')}
@@ -176,10 +180,12 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       </section>
 
       {/* Address Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-(--palette-line-soft)">
           <Icon name="location-dot" style="solid" className="size-4 text-amber-500" />
-          <span className="text-sm font-semibold text-gray-800">{t('sections.address')}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {t('sections.address')}
+          </span>
         </div>
         <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
           <InfoRow label={t('fields.addressLine1')} value={company.addressLine1} />
@@ -188,10 +194,10 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       </section>
 
       {/* Approval Period Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-(--palette-line-soft)">
           <Icon name="calendar" style="solid" className="size-4 text-emerald-500" />
-          <span className="text-sm font-semibold text-gray-800">
+          <span className="text-sm font-semibold text-(--palette-ink)">
             {t('sections.approvalPeriod')}
           </span>
         </div>
@@ -202,10 +208,12 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       </section>
 
       {/* Bank Account Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-(--palette-line-soft)">
           <Icon name="landmark" style="solid" className="size-4 text-violet-500" />
-          <span className="text-sm font-semibold text-gray-800">{t('sections.bankAccount')}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {t('sections.bankAccount')}
+          </span>
         </div>
         <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-2">
           <InfoRow label={t('fields.bankAccountNo')} value={company.bankAccountNo} />
@@ -215,16 +223,18 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
 
       {/* Loan Types */}
       {(company.loanTypes ?? []).length > 0 && (
-        <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+        <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-(--palette-line-soft)">
             <Icon name="tags" style="solid" className="size-4 text-cyan-500" />
-            <span className="text-sm font-semibold text-gray-800">{t('fields.loanTypes')}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('fields.loanTypes')}
+            </span>
           </div>
           <div className="px-4 py-3 flex flex-wrap gap-1.5">
             {(company.loanTypes ?? []).map(lt => (
               <span
                 key={lt}
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-50 text-cyan-700"
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300"
               >
                 {lt}
               </span>
@@ -234,13 +244,17 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
       )}
 
       {/* Security Section */}
-      <section className="bg-white rounded-xl border border-red-100 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-red-100 dark:border-red-500/20 shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-red-100 dark:border-red-500/20">
           <Icon name="triangle-exclamation" style="solid" className="size-4 text-danger" />
-          <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {t('sections.security')}
+          </span>
         </div>
         <div className="px-4 py-3">
-          <p className="text-xs text-gray-500 mb-3">{t('security.deleteCompanyWarning')}</p>
+          <p className="text-xs text-(--palette-gray-500) mb-3">
+            {t('security.deleteCompanyWarning')}
+          </p>
           <Button
             variant="danger"
             size="sm"
@@ -331,9 +345,9 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
               id="company-isActive"
               checked={editForm.isActive ?? true}
               onChange={e => setEditForm(prev => ({ ...prev, isActive: e.target.checked }))}
-              className="rounded border-gray-300 text-primary focus:ring-primary/20"
+              className="rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/20"
             />
-            <label htmlFor="company-isActive" className="text-sm text-gray-700">
+            <label htmlFor="company-isActive" className="text-sm text-(--palette-ink)">
               {t('fields.isActive')}
             </label>
           </div>
@@ -397,7 +411,7 @@ const CompanyDetailPanel = ({ companyId, onDeleted }: CompanyDetailPanelProps) =
               }}
               placeholder={t('placeholders.loanTypes')}
             />
-            <p className="text-xs text-gray-400 mt-1">{t('hints.loanTypesComma')}</p>
+            <p className="text-xs text-(--palette-gray-400) mt-1">{t('hints.loanTypesComma')}</p>
           </div>
         </div>
         <div className="flex justify-end gap-2 px-6 pb-6">
@@ -442,8 +456,8 @@ interface InfoRowProps {
 
 const InfoRow = ({ label, value }: InfoRowProps) => (
   <div>
-    <div className="text-xs text-gray-400 mb-0.5">{label}</div>
-    <div className="text-sm text-gray-700">{value || '—'}</div>
+    <div className="text-xs text-(--palette-gray-400) mb-0.5">{label}</div>
+    <div className="text-sm text-(--palette-ink)">{value || '—'}</div>
   </div>
 );
 

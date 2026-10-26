@@ -27,7 +27,13 @@ const fmtCompact = (n: number): string => {
 const fmtTooltip = (n: number): string =>
   n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const tooltipStyle = { fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' };
+const tooltipStyle = {
+  fontSize: 11,
+  borderRadius: 8,
+  border: '1px solid var(--palette-line)',
+  background: 'var(--palette-surface)',
+  color: 'var(--palette-ink)',
+};
 
 type TFn = (key: string) => string;
 
@@ -42,9 +48,15 @@ function makeIncomeTooltip(t: TFn) {
     const reversion = row.reversionPvToday ?? 0;
     return (
       <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
-        <div className="text-gray-500 mb-1">{t('viz.leaseholdChart.tooltipYear')} {Number(label).toFixed(1)}</div>
-        <div style={{ color: '#f97316' }}>{t('viz.leaseholdChart.rentalIncome')}: {fmtTooltip(rental)}</div>
-        <div style={{ color: '#22c55e' }}>{t('viz.leaseholdChart.netPvRental')}: {fmtTooltip(netPv)}</div>
+        <div className="text-gray-500 mb-1">
+          {t('viz.leaseholdChart.tooltipYear')} {Number(label).toFixed(1)}
+        </div>
+        <div style={{ color: '#f97316' }}>
+          {t('viz.leaseholdChart.rentalIncome')}: {fmtTooltip(rental)}
+        </div>
+        <div style={{ color: '#22c55e' }}>
+          {t('viz.leaseholdChart.netPvRental')}: {fmtTooltip(netPv)}
+        </div>
         <div className="border-t border-gray-100 mt-1 pt-1 font-medium text-gray-700">
           {t('viz.leaseholdChart.cumulativePv')}: {cumPct.toFixed(1)}%
         </div>
@@ -72,17 +84,33 @@ function makePropertyTooltip(t: TFn) {
     const encumbered = row.encumberedCollateralValue ?? 0;
     return (
       <div style={tooltipStyle} className="bg-white px-3 py-2 shadow-md">
-        <div className="text-gray-500 mb-1">{t('viz.leaseholdChart.tooltipYear')} {Number(label).toFixed(1)}</div>
-        <div style={{ color: '#22c55e' }}>{t('viz.leaseholdChart.landPvToday')}: {fmtTooltip(landPv)}</div>
-        <div style={{ color: '#3b82f6' }}>{t('viz.leaseholdChart.buildingPvToday')}: {fmtTooltip(buildingPv)}</div>
-        <div className="font-medium text-gray-700">{t('viz.leaseholdChart.totalLbPvToday')}: {fmtTooltip(totalPv)}</div>
+        <div className="text-gray-500 mb-1">
+          {t('viz.leaseholdChart.tooltipYear')} {Number(label).toFixed(1)}
+        </div>
+        <div style={{ color: '#22c55e' }}>
+          {t('viz.leaseholdChart.landPvToday')}: {fmtTooltip(landPv)}
+        </div>
+        <div style={{ color: '#3b82f6' }}>
+          {t('viz.leaseholdChart.buildingPvToday')}: {fmtTooltip(buildingPv)}
+        </div>
+        <div className="font-medium text-gray-700">
+          {t('viz.leaseholdChart.totalLbPvToday')}: {fmtTooltip(totalPv)}
+        </div>
         <div className="border-t border-gray-100 mt-1 pt-1 text-[10px] text-gray-400">
-          <div>{t('viz.leaseholdChart.landNominal')}: {fmtTooltip(landNominal)}</div>
-          <div>{t('viz.leaseholdChart.buildingNominal')}: {fmtTooltip(buildingNominal)}</div>
-          <div>{t('viz.leaseholdChart.totalLbNominal')}: {fmtTooltip(totalNominal)}</div>
+          <div>
+            {t('viz.leaseholdChart.landNominal')}: {fmtTooltip(landNominal)}
+          </div>
+          <div>
+            {t('viz.leaseholdChart.buildingNominal')}: {fmtTooltip(buildingNominal)}
+          </div>
+          <div>
+            {t('viz.leaseholdChart.totalLbNominal')}: {fmtTooltip(totalNominal)}
+          </div>
         </div>
         <div className="border-t border-gray-100 mt-1 pt-1" style={{ color: '#6366f1' }}>
-          <span className="font-medium">{t('viz.leaseholdChart.encumberedCollateral')}: {fmtTooltip(encumbered)}</span>
+          <span className="font-medium">
+            {t('viz.leaseholdChart.encumberedCollateral')}: {fmtTooltip(encumbered)}
+          </span>
           <div className="text-[10px] text-gray-500 font-normal">
             {t('viz.leaseholdChart.encumberedNote')}
           </div>
@@ -185,10 +213,14 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               type="number"
               domain={[firstYear, lastYear]}
               ticks={yearTicks}
-              tick={{ fontSize: 9, fill: '#9ca3af' }}
+              tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }}
               tickFormatter={v => String(Math.round(v))}
             />
-            <YAxis tick={{ fontSize: 9, fill: '#9ca3af' }} tickFormatter={fmtCompact} width={45} />
+            <YAxis
+              tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }}
+              tickFormatter={fmtCompact}
+              width={45}
+            />
             <Tooltip content={<PropertyTooltip />} />
             <Legend wrapperStyle={{ fontSize: 9, paddingTop: 2 }} />
             <Area
@@ -237,11 +269,14 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
 
       {/* Right: Leasehold Value Composition */}
       <div className="rounded-lg border border-gray-200 p-3">
-        <div className="text-[11px] font-medium text-gray-500">{t('viz.leaseholdChart.compositionTitle')}</div>
+        <div className="text-[11px] font-medium text-gray-500">
+          {t('viz.leaseholdChart.compositionTitle')}
+        </div>
         <div className="text-[9px] text-gray-400 mb-1">
-          {t('viz.leaseholdChart.compositionRent')}: {fmtCompact(totalRentPv)} ({rentPercent.toFixed(0)}%) · {t('viz.leaseholdChart.compositionReversion')}:{' '}
-          {fmtCompact(reversionPvToday)} ({reversionPercent.toFixed(0)}%) · {t('viz.leaseholdChart.compositionTotal')}:{' '}
-          {fmtCompact(totalLeaseholdValuePv)}
+          {t('viz.leaseholdChart.compositionRent')}: {fmtCompact(totalRentPv)} (
+          {rentPercent.toFixed(0)}%) · {t('viz.leaseholdChart.compositionReversion')}:{' '}
+          {fmtCompact(reversionPvToday)} ({reversionPercent.toFixed(0)}%) ·{' '}
+          {t('viz.leaseholdChart.compositionTotal')}: {fmtCompact(totalLeaseholdValuePv)}
         </div>
         <ResponsiveContainer width="100%" height={200}>
           <ComposedChart data={data} margin={{ top: 5, right: 5, left: 5, bottom: 0 }}>
@@ -251,12 +286,12 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               type="number"
               domain={[firstYear, lastYear]}
               ticks={yearTicks}
-              tick={{ fontSize: 9, fill: '#9ca3af' }}
+              tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }}
               tickFormatter={v => String(Math.round(v))}
             />
             <YAxis
               yAxisId="left"
-              tick={{ fontSize: 9, fill: '#9ca3af' }}
+              tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }}
               tickFormatter={fmtCompact}
               width={45}
             />
@@ -264,7 +299,7 @@ export function LeaseholdChart({ result }: LeaseholdChartProps) {
               yAxisId="right"
               orientation="right"
               domain={[0, 100]}
-              tick={{ fontSize: 9, fill: '#9ca3af' }}
+              tick={{ fontSize: 9, fill: 'var(--palette-ink-3)' }}
               tickFormatter={v => `${v}%`}
               width={32}
             />

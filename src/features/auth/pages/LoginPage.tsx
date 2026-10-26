@@ -14,6 +14,7 @@ import {
   isSavedUserStrict,
   readSavedReturn,
   saveReturn,
+  lastSignInMethod,
   safeReturnPath,
   session,
   SIGNED_OUT_KEY,
@@ -31,16 +32,11 @@ const BOUNCE_WINDOW_MS = 30_000;
 const quietPeriodOver = () =>
   Date.now() - (Number(session.get(BOUNCE_KEY)) || 0) >= BOUNCE_WINDOW_MS;
 
-// The ways to sign in, first one primary. Adding one (a passkey) is one more entry here. `hint` is
-// the username of the user whose session timed out, when known; only a method that `acceptsHint`
-// is given it and is shown as "Continue as <name>".
+// The ways to sign in. The one this browser used last (a cookie the identity provider writes) goes
+// first and is primary; with no cookie that is the password.
 const SIGN_IN_METHODS = [
-  {
-    id: 'password',
-    labelKey: 'interstitial.methods.password',
-    acceptsHint: true,
-    start: (returnPath: string, hint?: string) => startSignIn(returnPath, { loginHint: hint }),
-  },
+  { id: 'password', labelKey: 'interstitial.methods.password', icon: 'lock' },
+  { id: 'passkey', labelKey: 'interstitial.methods.passkey', icon: 'fingerprint' },
 ] as const;
 
 // Drop the old query from the address at once. Not the router's setSearchParams: its update can
@@ -62,6 +58,14 @@ const REASON_VIEW: Record<LoginReason, View> = {
   ended: { icon: 'shield-halved', tone: 'bg-blue-300/15 text-blue-300', copy: 'ended' },
   'signed-out': { icon: 'check', tone: 'bg-green-400/15 text-green-400', copy: 'signedOut' },
 };
+
+// Fixed px on purpose (see the comment on the root below), shared by what repeats.
+// min-h, not h: a long "Continue as <name>" wraps inside the button instead of overflowing it.
+const BUTTON =
+  'min-h-[42px] w-full cursor-pointer rounded-[5.25px] px-[12px] py-[6px] text-[15px] font-medium text-white';
+const BODY_TEXT = 'text-[13px] text-pretty text-white/80';
+const CAPTION = 'text-center text-[12px] text-white/60';
+const ICON_ROW = 'flex items-center gap-[8.75px]';
 
 const asReason = (value: unknown) => REASONS.find(r => r === value);
 
@@ -121,6 +125,12 @@ function LoginPage() {
     };
   });
   const { returnPath } = arrival;
+
+  // Read once: the cookie only changes when a sign-in completes, which leaves this page.
+  const [passkeyFirst] = useState(() => lastSignInMethod() === 'passkey');
+  const methods: readonly (typeof SIGN_IN_METHODS)[number][] = passkeyFirst
+    ? [...SIGN_IN_METHODS].reverse()
+    : SIGN_IN_METHODS;
 
   // "Not you?" was chosen: the card is gone from the screen, also when the page is shown again
   // from the back/forward cache (where this state survives).
@@ -242,31 +252,37 @@ function LoginPage() {
   );
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a1428] md:flex-row">
-      <div className="h-40 shrink-0 overflow-hidden md:h-auto md:flex-1">
+    // Same box as the identity provider's pages (fixed px, mobile at 600px and below, content starting
+    // at the same top offset) so moving between the two does not shift the logo or the image. On
+    // desktop the page never scrolls, the panel does; at 600px and below the page scrolls. max-[601px]
+    // is "up to 600px": Tailwind's max-[N] is width < N.
+    <div className="flex h-screen bg-[#0a1428] supports-[height:100dvh]:h-dvh max-[601px]:h-auto max-[601px]:min-h-screen max-[601px]:supports-[height:100dvh]:min-h-dvh max-[601px]:flex-col">
+      <div className="h-full flex-1 overflow-hidden max-[601px]:h-[160px] max-[601px]:flex-none">
         <img src={skyline} alt="" className="block h-full w-full object-cover" />
       </div>
 
-      <div className="flex flex-1 justify-center md:w-2/5 md:items-center md:min-w-[27rem] md:flex-none">
-        <div className="flex w-full flex-col md:max-w-[27rem] gap-5 px-7 py-6 md:px-9 md:py-8">
+      <div className="flex h-full w-[40%] min-w-[380px] items-start overflow-y-auto pt-[max(0px,calc((100dvh-520px)/2))] max-[601px]:h-auto max-[601px]:w-auto max-[601px]:min-w-0 max-[601px]:flex-1 max-[601px]:items-stretch max-[601px]:overflow-visible max-[601px]:pt-0">
+        <div className="mx-auto flex w-full max-w-[380px] flex-col gap-[20px] p-[32px] max-[601px]:max-w-full max-[601px]:p-[24px]">
           <div className="flex items-center justify-between">
-            <img src={logo} alt="LH Bank" className="w-[11.5rem]" />
+            <img src={logo} alt="LH Bank" className="w-[160px]" />
             <LanguageSwitcher onDark />
           </div>
 
           {view ? (
             <>
-              <div className="flex flex-col gap-0.5">
-                <div className="text-base font-medium tracking-wide text-white">
+              <div className="flex flex-col">
+                <div className="text-[15.2px] font-medium tracking-[0.02em] text-white">
                   Collateral Appraisal System
                 </div>
-                <div className="text-sm text-white/65">{t('interstitial.appSubtitle')}</div>
+                <div className="mt-[2px] text-[12.8px] text-white/65">
+                  {t('interstitial.appSubtitle')}
+                </div>
               </div>
-              <div className="h-px bg-white/10" />
-              <div className="flex items-start gap-3.5">
+              <div className="h-px bg-white/12" />
+              <div className="flex items-start gap-[12.25px]">
                 <div
                   className={clsx(
-                    'flex size-11 shrink-0 items-center justify-center rounded-full text-xl',
+                    'flex size-[38.5px] shrink-0 items-center justify-center rounded-full text-[18px]',
                     view.tone,
                   )}
                 >
@@ -276,19 +292,16 @@ function LoginPage() {
                     className={clsx(view.icon === 'spinner' && 'animate-spin')}
                   />
                 </div>
-                <div className="flex flex-col gap-1.5">
-                  <h1 className="text-2xl font-semibold text-white">
+                <div className="flex flex-col gap-[5.25px]">
+                  <h1 className="text-[22px] font-semibold text-white">
                     {t(`interstitial.${view.copy}.title`)}
                   </h1>
                   {view.copy === 'otherTab' && !autoReturn ? (
-                    <p role="status" className="text-sm text-pretty text-white/80">
+                    <p role="status" className={BODY_TEXT}>
                       {t('interstitial.otherTab.pressToReturn')}
                     </p>
                   ) : view.copy === 'otherTab' ? (
-                    <div
-                      role="status"
-                      className="flex flex-col gap-1 text-sm text-pretty text-white/80"
-                    >
+                    <div role="status" className={clsx('flex flex-col gap-[3.5px]', BODY_TEXT)}>
                       <p>
                         {sameUser && arrival.label ? (
                           <>
@@ -302,44 +315,42 @@ function LoginPage() {
                       <p>{t('interstitial.otherTab.noRetype')}</p>
                     </div>
                   ) : (
-                    <p className="text-sm text-pretty text-white/80">
-                      {t(`interstitial.${view.copy}.body`)}
-                    </p>
+                    <p className={BODY_TEXT}>{t(`interstitial.${view.copy}.body`)}</p>
                   )}
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              <h1 className="text-3xl font-semibold tracking-wide text-white">
+            <div className="flex flex-col gap-[5.25px]">
+              <h1 className="text-[28px] leading-[1.2] font-semibold tracking-wide text-white">
                 Collateral Appraisal System
               </h1>
-              <div className="text-base text-white/70">{t('interstitial.appSubtitle')}</div>
+              <div className="text-[15px] text-white/70">{t('interstitial.appSubtitle')}</div>
             </div>
           )}
 
           {showReturnBox && !otherTab && (
-            <div className="flex flex-col gap-2.5 rounded-lg border border-white/10 bg-white/5 px-4 py-3.5 text-sm text-white/85">
+            <div className="flex flex-col gap-[8.75px] rounded-[7px] border border-white/10 bg-white/5 px-[14px] py-[12.25px] text-[13px] text-white/85">
               {account && (
-                <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-[10.5px] border-b border-white/10 pb-[10.5px]">
                   <div
                     aria-hidden="true"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-blue-600/30 text-base font-semibold text-blue-200"
+                    className="flex size-[35px] shrink-0 items-center justify-center rounded-full bg-blue-600/30 text-[15px] font-semibold text-blue-200"
                   >
                     {account.initials}
                   </div>
-                  <div className="flex min-w-0 flex-col gap-0.5">
-                    <div className="text-base font-medium text-white">{account.displayName}</div>
-                    {returnTo && <div className="text-xs text-white/70">{returnTo}</div>}
+                  <div className="flex min-w-0 flex-col gap-[1.75px]">
+                    <div className="text-[15px] font-medium text-white">{account.displayName}</div>
+                    {returnTo && <div className="text-[12px] text-white/70">{returnTo}</div>}
                   </div>
                 </div>
               )}
-              <div className="flex items-center gap-2.5">
+              <div className={ICON_ROW}>
                 <Icon name="check" style="solid" className="shrink-0 text-green-400" />
                 <span>{t('interstitial.saved')}</span>
               </div>
               {!account && returnTo && (
-                <div className="flex items-center gap-2.5">
+                <div className={ICON_ROW}>
                   <Icon name="reply" style="solid" className="shrink-0 text-blue-300" />
                   <span>{returnTo}</span>
                 </div>
@@ -351,42 +362,44 @@ function LoginPage() {
             <button
               type="button"
               onClick={goBack}
-              className="mt-auto h-12 w-full cursor-pointer rounded-md border border-white/30 text-base font-medium text-white hover:bg-white/10 md:mt-0"
+              className={clsx(
+                BUTTON,
+                'border border-white/30 hover:bg-white/10 max-[601px]:mt-auto',
+              )}
             >
               {t('interstitial.otherTab.goNow')}
             </button>
           ) : (
-            <div className="mt-auto flex flex-col gap-2.5 md:mt-0">
-              {SIGN_IN_METHODS.map((method, index) => {
-                const continuing = account && method.acceptsHint;
-                return (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={() =>
-                      method.start(
-                        fresh ? '/' : returnPath,
-                        continuing ? account.username : undefined,
-                      )
-                    }
-                    className={clsx(
-                      'h-12 w-full cursor-pointer rounded-md text-base font-medium text-white',
-                      index === 0
-                        ? 'bg-[#2563eb] hover:bg-[#1d4ed8]'
-                        : 'border border-white/35 hover:bg-white/10',
-                    )}
-                  >
-                    {continuing ? (
-                      <span className="flex items-center justify-center gap-2.5">
-                        <Icon name="lock" style="solid" className="text-lg" />
-                        {t('interstitial.continueAs', { name: account.displayName })}
-                      </span>
-                    ) : (
-                      t(method.labelKey)
-                    )}
-                  </button>
-                );
-              })}
+            <div className="flex flex-col gap-[8.75px] max-[601px]:mt-auto">
+              {methods.map((method, index) => (
+                <button
+                  key={method.id}
+                  type="button"
+                  onClick={() =>
+                    startSignIn(fresh ? '/' : returnPath, {
+                      // Either method can start from the known account; only the first says so.
+                      loginHint: account?.username,
+                      method: method.id,
+                    })
+                  }
+                  className={clsx(
+                    BUTTON,
+                    index === 0
+                      ? 'bg-[#2563eb] hover:bg-[#1d4ed8]'
+                      : 'border border-white/35 hover:bg-white/10',
+                  )}
+                >
+                  <span className="flex items-center justify-center gap-[8.75px]">
+                    <Icon name={method.icon} style="solid" className="shrink-0 text-[16px]" />
+                    {account && index === 0
+                      ? t('interstitial.continueAs', { name: account.displayName })
+                      : t(method.labelKey)}
+                  </span>
+                </button>
+              ))}
+              <p className={CAPTION}>
+                {t(passkeyFirst ? 'interstitial.passkeyFirst' : 'interstitial.noPasskeyYet')}
+              </p>
               {account && (
                 <button
                   type="button"
@@ -395,7 +408,7 @@ function LoginPage() {
                     setForgotten(true);
                     startSignIn('/');
                   }}
-                  className="cursor-pointer px-1 py-1.5 text-center text-sm text-blue-300 hover:text-white hover:underline"
+                  className="cursor-pointer px-[3.5px] py-[5.25px] text-center text-[13px] text-blue-300 hover:text-white hover:underline"
                 >
                   {t('interstitial.notYou')}
                 </button>
@@ -404,7 +417,7 @@ function LoginPage() {
           )}
 
           {showReturnBox && !otherTab && !(account && shownReason === 'idle') && (
-            <p className="text-center text-xs text-white/60">
+            <p className={CAPTION}>
               {t(
                 shownReason === 'idle' ? 'interstitial.sharedDevice' : 'interstitial.contactAdmin',
               )}

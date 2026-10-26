@@ -70,21 +70,21 @@ export const PropertyTypeDropdown = ({
           // The chrome is a default, not a base: a caller passing `px-2.5` next to a base `px-4`
           // only wins by Tailwind's output order, which is not something to build on.
           buttonClassName ??
-            'px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50',
+            'px-4 py-2 text-sm text-(--palette-ink) border border-(--palette-line-strong) rounded-lg hover:bg-(--palette-surface-2)',
         )}
       >
-        <Icon name="circle-plus" className={iconClassName ?? 'text-gray-500'} />
+        <Icon name="circle-plus" className={iconClassName ?? 'text-(--palette-gray-500)'} />
         <span>{buttonLabel ?? t('properties.addToGroup')}</span>
         <Icon
           name="chevron-down"
-          className={clsx('ml-1', iconClassName ?? 'text-gray-400')}
+          className={clsx('ml-1', iconClassName ?? 'text-(--palette-gray-400)')}
           style="solid"
         />
       </MenuButton>
 
       <MenuItems
         anchor={{ to: align === 'right' ? 'bottom end' : 'bottom start', gap: 8 }}
-        className="z-50 overflow-hidden rounded-xl bg-white shadow-lg ring-1 ring-black/5 focus:outline-none"
+        className="z-50 overflow-hidden rounded-xl bg-(--palette-surface) shadow-lg ring-1 ring-black/5 focus:outline-none"
       >
         <PropertyTypePicker onPick={handleSelect} />
       </MenuItems>

@@ -1,0 +1,180 @@
+{
+  "page": {
+    "title": "全部任务",
+    "subtitleMy": "分配给您的任务",
+    "subtitlePool": "团队中等待领取的任务",
+    "tabsLabel": "任务视图",
+    "tabMy": "我的任务",
+    "tabPool": "任务池",
+    "listLabel": "任务列表"
+  },
+  "search": {
+    "placeholder": "搜索评估编号或客户名称…"
+  },
+  "filters": {
+    "taskType": "任务类型",
+    "status": "申请状态",
+    "purpose": "目的",
+    "channel": "渠道",
+    "slaStatus": "SLA 状态",
+    "appointment": "预约日期",
+    "assigned": "分配日期",
+    "requested": "申请日期",
+    "appraisalNumber": "评估编号",
+    "customerName": "客户名称",
+    "taskStatus": "任务状态",
+    "assignee": "负责人"
+  },
+  "filterChips": {
+    "appraisalNumber": "评估编号",
+    "customerName": "客户",
+    "status": "申请状态",
+    "pendingTaskStatus": "任务状态",
+    "slaStatus": "SLA",
+    "assigneeUserId": "负责人",
+    "activityId": "任务类型",
+    "purpose": "目的",
+    "channel": "渠道",
+    "dateType": "日期类型",
+    "dateFrom": "起始",
+    "dateTo": "截止",
+    "assignedFrom": "分配起始",
+    "assignedTo": "分配截止",
+    "appointmentFrom": "预约起始",
+    "appointmentTo": "预约截止",
+    "requestedFrom": "申请起始",
+    "requestedTo": "申请截止"
+  },
+  "sla": {
+    "Breached": "已逾期",
+    "AtRisk": "有逾期风险",
+    "OnTime": "按时",
+    "NoSla": "无 SLA"
+  },
+  "activity": {
+    "appraisal-initiation-check": "评估启动检查",
+    "appraisal-initiation": "评估启动",
+    "appraisal-assignment": "评估分配",
+    "fee-appointment-approval": "费用与预约审批",
+    "ext-appraisal-assignment": "外部评估分配",
+    "ext-appraisal-execution": "外部评估执行",
+    "ext-appraisal-check": "外部评估复核",
+    "ext-appraisal-verification": "外部评估核实",
+    "appraisal-book-verification": "评估报告核实",
+    "int-appraisal-execution": "内部评估执行",
+    "int-offline-book-keyin": "离线评估报告录入",
+    "int-appraisal-check": "内部评估复核",
+    "int-appraisal-verification": "内部评估核实",
+    "int-pma-input": "PMA 资产录入",
+    "pending-approval": "待审批",
+    "provide-additional-documents": "补充文件提供",
+    "admin-review-submissions": "审核报价提交",
+    "rm-pick-winner": "选定报价赢家",
+    "admin-finalize": "报价定稿",
+    "ext-collect-submissions": "提交报价",
+    "ext-respond-negotiation": "回应议价"
+  },
+  "panel": {
+    "title": "筛选",
+    "toggle": "筛选面板",
+    "hide": "关闭筛选面板",
+    "showTitle": "显示左侧筛选面板",
+    "hideTitle": "隐藏筛选面板，改用标签",
+    "summary": "正在筛选：",
+    "selectedCount_one": "已选 {{count}} 项",
+    "selectedCount_other": "已选 {{count}} 项",
+    "inUse": "使用中",
+    "noOptions": "暂无可选项",
+    "showAll": "显示全部（{{count}}）",
+    "showFewer": "仅显示有任务的类型"
+  },
+  "view": {
+    "label": "显示方式",
+    "table": "表格",
+    "board": "看板",
+    "groupBy": "分组依据",
+    "groupByOptions": {
+      "status": "任务状态",
+      "purpose": "目的",
+      "priority": "优先级",
+      "activity": "任务类型",
+      "slaStatus": "SLA 紧急程度"
+    }
+  },
+  "columns": {
+    "appraisalNumber": "评估编号",
+    "lockState": "领取状态",
+    "requestNumber": "申请编号",
+    "channel": "渠道",
+    "customerName": "客户名称",
+    "taskType": "任务类型",
+    "purpose": "目的",
+    "propertyType": "资产类型",
+    "status": "状态",
+    "appointmentDateTime": "预约日期",
+    "requestedAt": "申请时间",
+    "requestedBy": "申请人",
+    "reportReceivedAt": "报告接收日期",
+    "requestReceivedDate": "申请接收日期",
+    "internalFollowupStaff": "内部跟进人员",
+    "appraiser": "评估人",
+    "assignedDate": "分配日期",
+    "movement": "流转方向",
+    "dueAt": "SLA 到期",
+    "elapsedHours": "已用时间（小时）",
+    "remainingHours": "剩余时间（小时）",
+    "slaStatus": "SLA 状态",
+    "priority": "优先级"
+  },
+  "table": {
+    "actions": "操作",
+    "pinned": "已固定的列"
+  },
+  "row": {
+    "open": "打开任务",
+    "copyNumber": "复制评估编号",
+    "copied": "已复制评估编号",
+    "copyFailed": "复制评估编号失败"
+  },
+  "legend": {
+    "slaBreached": "超出 SLA",
+    "slaAtRisk": "有 SLA 逾期风险"
+  },
+  "empty": {
+    "filteredTitle": "没有符合筛选条件的任务",
+    "filteredHint": "请尝试移除部分筛选条件或更改搜索词",
+    "clear": "清除所有筛选",
+    "myTitle": "全部处理完毕",
+    "myHint": "您目前没有分配的任务。",
+    "poolTitle": "任务池为空",
+    "poolHint": "任务池中目前没有任务。"
+  },
+  "errors": {
+    "loadFailed": "加载任务失败"
+  },
+  "pool": {
+    "loadFailed": "加载任务池失败",
+    "view": "仅查看",
+    "edit": "开始处理",
+    "continue": "继续",
+    "takeOut": "移到我的任务",
+    "lockedByYou": "您正在编辑",
+    "lockedByName": "{{name}} 已锁定",
+    "lockedLessThanMinute": "不到 1 分钟前",
+    "lockedMinutesAgo_one": "{{count}} 分钟前",
+    "lockedMinutesAgo_other": "{{count}} 分钟前",
+    "state": {
+      "free": "空闲",
+      "byYou": "您正在处理",
+      "byName": "{{name}} 正在处理",
+      "waiting": "进入任务池 {{ago}}",
+      "lockedAgo": "锁定 {{ago}}"
+    },
+    "toasts": {
+      "lockedBy": "{{name}} 正在编辑此任务",
+      "lockFailed": "无法锁定任务，请重试。",
+      "claimed": "任务已移至您的任务",
+      "claimFailed": "无法领取任务，请重试。"
+    }
+  }
+}

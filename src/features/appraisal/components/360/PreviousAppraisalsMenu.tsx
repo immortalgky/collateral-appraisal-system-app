@@ -37,28 +37,32 @@ function PreviousAppraisalsMenu({ items }: PreviousAppraisalsMenuProps) {
     // and arrow-key roving focus. `anchor` portals the panel through floating-ui, which also
     // stops the 320px list clipping off the right edge of the right-aligned header row.
     <Menu as="div" className="relative shrink-0">
-      <MenuButton className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
-        <Icon name="clock-rotate-left" style="solid" className="w-3.5 h-3.5 text-gray-500" />
+      <MenuButton className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-(--palette-ink) bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-sm hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">
+        <Icon
+          name="clock-rotate-left"
+          style="solid"
+          className="w-3.5 h-3.5 text-(--palette-gray-500)"
+        />
         {t('view360.previousAppraisals.trigger')}
       </MenuButton>
 
       <MenuItems
         anchor="bottom end"
-        className="mt-1 w-80 max-h-80 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-50 focus:outline-none"
+        className="mt-1 w-80 max-h-80 overflow-y-auto bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-lg z-50 focus:outline-none"
       >
         {items.map(item => (
           <MenuItem key={item.appraisalId ?? item.appraisalNumber} disabled={!item.appraisalId}>
             <button
               type="button"
               onClick={() => item.appraisalId && handleSelect(item.appraisalId)}
-              className="flex w-full flex-col gap-1 px-3 py-2.5 text-left transition-colors border-b border-gray-100 last:border-b-0 hover:bg-gray-50 data-focus:bg-gray-100 data-disabled:cursor-default data-disabled:hover:bg-transparent"
+              className="flex w-full flex-col gap-1 px-3 py-2.5 text-left transition-colors border-b border-(--palette-line-soft) last:border-b-0 hover:bg-(--palette-surface-2) data-focus:bg-(--palette-surface-3) data-disabled:cursor-default data-disabled:hover:bg-transparent"
             >
               <div className="flex items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-gray-800 truncate">
+                <span className="text-xs font-semibold text-(--palette-ink) truncate">
                   {item.appraisalNumber}
                 </span>
                 {!item.appraisalId && (
-                  <span className="text-[10px] text-violet-600">
+                  <span className="text-[10px] text-violet-600 dark:text-violet-400">
                     {t('view360.previousAppraisals.legacyBook')}
                   </span>
                 )}
@@ -71,7 +75,7 @@ function PreviousAppraisalsMenu({ items }: PreviousAppraisalsMenuProps) {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-3 text-[10px] text-gray-400">
+              <div className="flex items-center gap-3 text-[10px] text-(--palette-gray-400)">
                 <span>
                   {t('view360.previousAppraisals.fields.date')}: {item.appraisalDate ?? '-'}
                 </span>

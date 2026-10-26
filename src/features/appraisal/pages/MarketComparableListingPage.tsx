@@ -81,7 +81,7 @@ const MarketComparableListingPage = () => {
   if (isLoading) {
     return (
       <div className="w-full flex justify-center col-span-4">
-        <span className="loading loading-spinner text-primary"></span>
+        <span className="loading loading-spinner text-(--palette-primary-text)"></span>
       </div>
     );
   }
@@ -100,8 +100,8 @@ const MarketComparableListingPage = () => {
     <PageReadOnlyContext.Provider value={isReadOnly}>
       <div>
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Market Comparables</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h3 className="text-base font-semibold text-(--palette-ink)">Market Comparables</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             {items.length} comparable{items.length !== 1 ? 's' : ''} linked to this appraisal
           </p>
         </div>
@@ -125,12 +125,12 @@ const MarketComparableListingPage = () => {
                 </Section>
               </div>
               {!isReadOnly && (
-                <div className="border-t border-gray-100 sticky bottom-0 pt-3">
+                <div className="border-t border-(--palette-line-soft) sticky bottom-0 pt-3">
                   <button
                     type="button"
                     onClick={handleOpenModal}
                     className="w-full flex items-center justify-center gap-2 py-4 mt-2 text-sm font-medium
-                      border-2 border-dashed border-misc-1 text-neutral-5 bg-white hover:bg-neutral-1
+                      border-2 border-dashed border-misc-1 text-neutral-5 bg-(--palette-surface) hover:bg-neutral-1
                       transition-colors rounded-lg"
                   >
                     <div className="w-6 h-6 rounded-full bg-neutral-5 flex items-center justify-center">

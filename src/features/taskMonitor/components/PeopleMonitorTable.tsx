@@ -45,12 +45,12 @@ function PeopleMonitorTable({
   if (!isLoading && people.length === 0) {
     return (
       <div className="flex-1 min-h-0 flex flex-col items-center justify-center py-24 gap-4">
-        <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-          <Icon style="regular" name="users" className="size-7 text-gray-300" />
+        <div className="size-16 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+          <Icon style="regular" name="users" className="size-7 text-(--palette-gray-300)" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-semibold text-gray-700">{t('empty.peopleTitle')}</p>
-          <p className="text-xs text-gray-400 mt-1">{t('empty.peopleDesc')}</p>
+          <p className="text-sm font-semibold text-(--palette-ink)">{t('empty.peopleTitle')}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-1">{t('empty.peopleDesc')}</p>
         </div>
       </div>
     );
@@ -60,7 +60,7 @@ function PeopleMonitorTable({
     <div className="flex-1 min-h-0 overflow-auto">
       <table className="w-full min-w-max text-table">
         <thead className="sticky top-0 z-20">
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
             {COLUMNS.map(col => (
               <SortableTh
                 key={col.key}
@@ -74,7 +74,7 @@ function PeopleMonitorTable({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {isLoading ? (
             <TableRowSkeleton columns={COLUMNS.map(() => ({ width: 'w-24' }))} rows={8} />
           ) : (
@@ -85,29 +85,31 @@ function PeopleMonitorTable({
                 <tr
                   key={person.userName}
                   onClick={() => navigate(to, { state: linkState })}
-                  className="group hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="group hover:bg-(--palette-surface-2) transition-colors cursor-pointer"
                 >
-                  <td className="px-4 py-3 text-xs text-gray-500 font-mono">{person.userName}</td>
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-500) font-mono">
+                    {person.userName}
+                  </td>
                   <td className="px-4 py-3">
                     <Link
                       to={to}
                       state={linkState}
                       onClick={e => e.stopPropagation()}
-                      className="flex items-center gap-2 group-hover:text-primary"
+                      className="flex items-center gap-2 group-hover:text-(--palette-primary-text)"
                     >
                       <Avatar name={person.displayName || person.userName} size="sm" />
-                      <span className="text-table font-medium text-gray-900 truncate max-w-[220px]">
+                      <span className="text-table font-medium text-(--palette-ink) truncate max-w-[220px]">
                         {person.displayName || person.userName}
                       </span>
                     </Link>
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-table text-gray-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-table text-(--palette-ink)">
                     {person.openTasks}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-table text-gray-700">
+                  <td className="px-4 py-3 text-right tabular-nums text-table text-(--palette-ink)">
                     {person.availableTasks}
                   </td>
-                  <td className="px-4 py-3 text-right tabular-nums text-table text-gray-900 font-semibold">
+                  <td className="px-4 py-3 text-right tabular-nums text-table text-(--palette-ink) font-semibold">
                     {person.totalTasks}
                   </td>
                 </tr>

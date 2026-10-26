@@ -84,7 +84,7 @@ export function SupportingDataMaintenanceListPage() {
           <Link
             to={`/standalone/supporting-data-maintenance/${item.id}`}
             onClick={e => e.stopPropagation()}
-            className="font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+            className="font-medium text-(--palette-primary-text) hover:underline inline-flex items-center gap-1.5"
           >
             {item.supportingNumber ?? '-'}
           </Link>
@@ -185,12 +185,12 @@ export function SupportingDataMaintenanceListPage() {
 
   const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+      return <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />;
     return (
       <Icon
         style="solid"
         name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
+        className="size-2.5 text-(--palette-primary-text)"
       />
     );
   };
@@ -340,12 +340,14 @@ export function SupportingDataMaintenanceListPage() {
   if (isListError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">{t('errors.failedToLoad')}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(listError as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('errors.failedToLoad')}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">
+            {(listError as Error)?.message}
+          </p>
         </div>
       </div>
     );
@@ -357,23 +359,25 @@ export function SupportingDataMaintenanceListPage() {
       <div className="shrink-0 mb-3 flex items-start justify-between gap-3">
         <div>
           <div className="flex items-center gap-3">
-            <h2 className="text-base font-semibold text-gray-900">{t('page.listTitle')}</h2>
+            <h2 className="text-base font-semibold text-(--palette-ink)">{t('page.listTitle')}</h2>
             {!isListLoading && totalCount > 0 && (
-              <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full tabular-nums">
+              <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full tabular-nums">
                 {totalCount}
               </span>
             )}
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
       </div>
 
       {/* ── Toolbar: tabs + controls ── */}
-      <div className="shrink-0 flex items-end gap-2 border-b border-gray-200 mb-3">
+      <div className="shrink-0 flex items-end gap-2 border-b border-(--palette-line) mb-3">
         <button
           onClick={() => setActiveTab('importing')}
           className={`relative flex items-center gap-1 px-1 pb-2 text-xs font-medium transition-colors cursor-pointer ${
-            activeTab === 'importing' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'importing'
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
           }`}
         >
           <Icon style="solid" name="user" className="size-3" />
@@ -382,8 +386,8 @@ export function SupportingDataMaintenanceListPage() {
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
                 activeTab === 'importing'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-primary/10 text-(--palette-primary-text)'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
               }`}
             >
               {importingCount}
@@ -396,7 +400,9 @@ export function SupportingDataMaintenanceListPage() {
         <button
           onClick={() => setActiveTab('archived')}
           className={`relative flex items-center gap-1 px-1 pb-2 ml-3 text-xs font-medium transition-colors cursor-pointer ${
-            activeTab === 'archived' ? 'text-primary' : 'text-gray-500 hover:text-gray-700'
+            activeTab === 'archived'
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
           }`}
         >
           <Icon style="solid" name="users" className="size-3" />
@@ -405,8 +411,8 @@ export function SupportingDataMaintenanceListPage() {
             <span
               className={`px-1 py-0.5 rounded text-[10px] font-semibold tabular-nums ${
                 activeTab === 'archived'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-gray-100 text-gray-500'
+                  ? 'bg-primary/10 text-(--palette-primary-text)'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
               }`}
             >
               {archivedCount}
@@ -426,13 +432,13 @@ export function SupportingDataMaintenanceListPage() {
             <Icon
               style="solid"
               name="spinner"
-              className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-primary animate-spin pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-primary-text) animate-spin pointer-events-none"
             />
           ) : (
             <Icon
               style="solid"
               name="magnifying-glass"
-              className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+              className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
             />
           )}
           <input
@@ -440,13 +446,13 @@ export function SupportingDataMaintenanceListPage() {
             placeholder={t('search.placeholder')}
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+            className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
           />
           {searchTerm && (
             <button
               onClick={() => setSearchTerm('')}
               aria-label={t('aria.clearSearch')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
             >
               <Icon style="solid" name="xmark" className="size-3.5" />
             </button>
@@ -459,8 +465,8 @@ export function SupportingDataMaintenanceListPage() {
           title={t('actions.filters')}
           className={`mb-2 relative flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-all cursor-pointer ${
             activeFilterChips.length > 0
-              ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-              : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:text-gray-700'
+              ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
+              : 'border-(--palette-line) text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:text-(--palette-ink)'
           }`}
         >
           <Icon style="solid" name="sliders" className="size-3.5" />
@@ -496,20 +502,23 @@ export function SupportingDataMaintenanceListPage() {
           {activeFilterChips.map(([key, value]) => (
             <span
               key={key}
-              className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+              className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
             >
-              <span className="text-primary/60">{FILTER_LABELS[key]}:</span>{' '}
+              <span className="text-(--palette-primary-text)/60">{FILTER_LABELS[key]}:</span>{' '}
               {key === 'dateFrom' || key === 'dateTo'
                 ? formatLocaleDate(value, i18n.language)
                 : value}
-              <button onClick={() => removeFilter(key)} className="hover:text-primary/60 ml-0.5">
+              <button
+                onClick={() => removeFilter(key)}
+                className="hover:text-(--palette-primary-text)/60 ml-0.5"
+              >
                 <Icon style="solid" name="xmark" className="size-2.5" />
               </button>
             </span>
           ))}
           <button
             onClick={() => setFilters({})}
-            className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+            className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
           >
             {t('actions.clearAll')}
           </button>
@@ -517,20 +526,20 @@ export function SupportingDataMaintenanceListPage() {
       )}
 
       {/* ── Table ── */}
-      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full min-w-max text-table">
             <thead className="sticky top-0 z-20">
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                 {columns.map(col => {
                   const isSticky = col.key === STICKY_COLUMN_KEY;
                   const isActive = !!col.sortField && sortField === col.sortField;
                   const base =
-                    'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                    'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
                   const thClass = isSticky
-                    ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                    ? `${base} sticky left-0 z-30 cursor-pointer hover:text-(--palette-gray-600) after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)`
                     : col.sortField
-                      ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
+                      ? `${base} cursor-pointer hover:text-(--palette-gray-600) ${isActive ? 'text-(--palette-primary-text)' : ''}`
                       : base;
                   return (
                     <th
@@ -549,24 +558,28 @@ export function SupportingDataMaintenanceListPage() {
                     </th>
                   );
                 })}
-                <th className="text-xs px-4 py-2.5 w-8 bg-gray-50 font-semibold" />
+                <th className="text-xs px-4 py-2.5 w-8 bg-(--palette-surface-2) font-semibold" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
                 <TableRowSkeleton columns={columns.map(() => ({ width: 'w-24' }))} rows={8} />
               ) : tabItems.length === 0 ? (
                 <tr>
                   <td colSpan={columns.length + 1} className="py-24">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                        <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
+                      <div className="size-16 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                        <Icon
+                          style="regular"
+                          name="inbox"
+                          className="size-7 text-(--palette-gray-300)"
+                        />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-(--palette-ink)">
                           {hasFilters ? t('empty.noMatchingRecords') : t('empty.noSupportingData')}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-(--palette-gray-400) mt-1">
                           {hasFilters
                             ? t('empty.tryAdjusting')
                             : activeTab === 'archived'
@@ -577,7 +590,7 @@ export function SupportingDataMaintenanceListPage() {
                       {hasFilters && (
                         <button
                           onClick={() => setSearchTerm('')}
-                          className="text-xs text-primary hover:underline font-medium"
+                          className="text-xs text-(--palette-primary-text) hover:underline font-medium"
                         >
                           {t('actions.clearSearch')}
                         </button>
@@ -590,7 +603,7 @@ export function SupportingDataMaintenanceListPage() {
                   <tr
                     key={item.id}
                     onDoubleClick={() => handleRowClick(item)}
-                    className="group hover:bg-gray-50 cursor-default transition-colors"
+                    className="group hover:bg-(--palette-surface-2) cursor-default transition-colors"
                     onContextMenu={e => {
                       e.preventDefault();
                       setContextMenu({
@@ -609,8 +622,9 @@ export function SupportingDataMaintenanceListPage() {
                           key={col.key}
                           className={
                             isSticky
-                              ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                              : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-table')
+                              ? 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2) transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-surface-3)'
+                              : (col.tdClassName ??
+                                'px-4 py-3 text-(--palette-gray-600) text-table')
                           }
                           onClick={isSticky ? e => e.stopPropagation() : undefined}
                         >
@@ -622,7 +636,7 @@ export function SupportingDataMaintenanceListPage() {
                       <Icon
                         style="solid"
                         name="arrow-right"
-                        className="size-3 text-gray-200 group-hover:text-primary/40 transition-colors"
+                        className="size-3 text-gray-200 group-hover:text-(--palette-primary-text)/40 transition-colors"
                       />
                     </td>
                   </tr>
@@ -648,7 +662,7 @@ export function SupportingDataMaintenanceListPage() {
         {contextMenu.visible && (
           <div
             ref={contextMenuRef}
-            className="fixed bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 min-w-[160px]"
+            className="fixed bg-(--palette-surface) rounded-xl shadow-xl border border-(--palette-line-soft) py-1 z-50 min-w-[160px]"
             style={{ top: contextMenu.y, left: contextMenu.x }}
           >
             <button
@@ -657,13 +671,13 @@ export function SupportingDataMaintenanceListPage() {
                 if (item) handleRowClick(item);
                 setContextMenu(p => ({ ...p, visible: false }));
               }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+              className="w-full px-3 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2.5 rounded-lg mx-1"
               style={{ width: 'calc(100% - 8px)' }}
             >
               <Icon
                 style="regular"
                 name="arrow-up-right-from-square"
-                className="size-3.5 text-gray-400"
+                className="size-3.5 text-(--palette-gray-400)"
               />
               {t('actions.open')}
             </button>
@@ -674,10 +688,10 @@ export function SupportingDataMaintenanceListPage() {
                   if (item?.id) handleRowRemove(item);
                   setContextMenu(p => ({ ...p, visible: false }));
                 }}
-                className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2.5 rounded-lg mx-1"
+                className="w-full px-3 py-2 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2.5 rounded-lg mx-1"
                 style={{ width: 'calc(100% - 8px)' }}
               >
-                <Icon style="regular" name="trash" className="size-3.5 text-gray-400" />
+                <Icon style="regular" name="trash" className="size-3.5 text-(--palette-gray-400)" />
                 {t('common:actions.delete')}
               </button>
             )}

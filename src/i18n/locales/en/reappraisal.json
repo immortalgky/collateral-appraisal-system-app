@@ -185,6 +185,7 @@
       "alreadyInFlight": "Already in Progress",
       "alreadyReviewed": "Already Reappraised",
       "notDue": "Not on Latest File",
+      "priorNotCompleted": "Prior Appraisal Not Completed",
       "createdDrafts": "Created {{total}} draft requests",
       "createdHeading": "Created",
       "skippedHeading": "Skipped ({{total}})",
@@ -192,7 +193,8 @@
         "AlreadyInFlight": "This appraisal already has a reappraisal or an unsent request",
         "AlreadyReviewed": "This appraisal was already reappraised — review its successor instead",
         "NoBookNumber": "No appraisal number to track it by",
-        "NotDue": "The appraisal is no longer on AS400's latest file"
+        "NotDue": "The appraisal is no longer on AS400's latest file",
+        "PriorNotCompleted": "The prior appraisal in CAS is not completed, was cancelled or was deleted, so no reappraisal request can be created"
       }
     },
     "stats": {

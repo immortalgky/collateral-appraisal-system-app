@@ -84,12 +84,12 @@ function RecentTaskWidget() {
 
   const SortIcon = ({ field }: { field: SortKey }) => {
     if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+      return <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />;
     return (
       <Icon
         style="solid"
         name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
+        className="size-2.5 text-(--palette-primary-text)"
       />
     );
   };
@@ -100,17 +100,19 @@ function RecentTaskWidget() {
 
   return (
     <WidgetWrapper id="recent-task">
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h3 className="text-base font-semibold text-gray-800">{t('recentTask.title')}</h3>
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line-soft)">
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('recentTask.title')}</h3>
           <div className="flex items-center gap-3">
             {updatedLabel && (
-              <span className="text-xs text-gray-400">{t('updatedAgo', { n: updatedLabel })}</span>
+              <span className="text-xs text-(--palette-gray-400)">
+                {t('updatedAgo', { n: updatedLabel })}
+              </span>
             )}
             <a
               href="/tasks"
-              className="text-blue-500 text-sm font-medium hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+              className="text-(--palette-accent-ink) text-sm font-medium hover:opacity-80 flex items-center gap-1.5 transition-colors"
             >
               {t('recentTask.viewAll')}
               <Icon name="arrow-up-right-from-square" style="solid" className="size-3" />
@@ -120,16 +122,18 @@ function RecentTaskWidget() {
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="border-b border-(--palette-line)">
                 {SORTABLE_COLUMNS.map(col => {
                   const isActive = sortField === col.key;
                   const base =
-                    'px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-gray-600 bg-gray-50';
+                    'px-4 py-2.5 text-left text-xs font-medium whitespace-nowrap select-none cursor-pointer hover:text-(--palette-gray-600) bg-(--palette-surface-2)';
                   const stickyExtra = col.sticky
-                    ? ' sticky left-0 z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200'
+                    ? ' sticky left-0 z-10 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)'
                     : '';
-                  const activeColor = isActive ? ' text-primary' : ' text-gray-500';
+                  const activeColor = isActive
+                    ? ' text-(--palette-primary-text)'
+                    : ' text-(--palette-gray-500)';
                   return (
                     <th
                       key={col.key}
@@ -143,22 +147,26 @@ function RecentTaskWidget() {
                     </th>
                   );
                 })}
-                <th className="px-4 py-2.5 text-left text-xs font-semibold text-gray-500 whitespace-nowrap select-none bg-gray-50">
+                <th className="px-4 py-2.5 text-left text-xs font-semibold text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)">
                   {t('recentTask.columns.status')}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {isLoading ? (
                 <TableRowSkeleton columns={SKELETON_COLUMNS} rows={10} />
               ) : tasks.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="py-16">
                     <div className="flex flex-col items-center gap-3">
-                      <div className="size-12 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                        <Icon style="regular" name="inbox" className="size-5 text-gray-300" />
+                      <div className="size-12 rounded-xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                        <Icon
+                          style="regular"
+                          name="inbox"
+                          className="size-5 text-(--palette-gray-300)"
+                        />
                       </div>
-                      <p className="text-sm text-gray-400">{t('recentTask.empty')}</p>
+                      <p className="text-sm text-(--palette-gray-400)">{t('recentTask.empty')}</p>
                     </div>
                   </td>
                 </tr>

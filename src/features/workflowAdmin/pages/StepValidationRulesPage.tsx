@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Modal from '@shared/components/Modal';
 import { useDisclosure } from '@shared/hooks/useDisclosure';
 import { PROPERTY_TYPES } from '@features/appraisal/components/PropertyTypeDropdown';
@@ -22,12 +23,16 @@ import {
 // ──────────────────────────────────────────────────────────────────────────────
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 /** Try to parse a JSON Schema string and return required + property names */
 function parseSchemaShape(
   schemaStr: string | null,
-): { type: 'unknown' } | { type: 'validateAppraisalFields' } | { type: 'validatePropertyMandatoryFields' } | { type: 'freeform' } {
+):
+  | { type: 'unknown' }
+  | { type: 'validateAppraisalFields' }
+  | { type: 'validatePropertyMandatoryFields' }
+  | { type: 'freeform' } {
   if (!schemaStr) return { type: 'unknown' };
   try {
     const schema = JSON.parse(schemaStr) as { properties?: Record<string, unknown> };
@@ -93,41 +98,41 @@ function ValidateAppraisalFieldsForm({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-gray-600">Field Rules</p>
+        <p className="text-xs font-medium text-(--palette-gray-600)">Field Rules</p>
         <button
           type="button"
           onClick={addRule}
-          className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+          className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 flex items-center gap-1"
         >
           <Icon name="plus" style="solid" className="size-3" />
           Add rule
         </button>
       </div>
       {rules.length === 0 && (
-        <p className="text-xs text-gray-400 italic">No rules defined</p>
+        <p className="text-xs text-(--palette-gray-400) italic">No rules defined</p>
       )}
       {rules.map((rule, idx) => (
         <div
           key={idx}
-          className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2"
+          className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2) p-3 space-y-2"
         >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-500">Rule #{idx + 1}</span>
+            <span className="text-xs font-medium text-(--palette-gray-500)">Rule #{idx + 1}</span>
             <button
               type="button"
               onClick={() => removeRule(idx)}
-              className="text-gray-400 hover:text-red-500"
+              className="text-(--palette-gray-400) hover:text-red-500"
             >
               <Icon name="trash" style="solid" className="size-3" />
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-xs text-gray-500 mb-0.5">Field</label>
-              <select
+              <label className="block text-xs text-(--palette-gray-500) mb-0.5">Field</label>
+              <NativeSelect
                 value={rule.fieldKey ?? ''}
                 onChange={e => updateRule(idx, { fieldKey: e.target.value })}
-                className={inputClass}
+                className="w-full"
               >
                 <option value="">— use expression —</option>
                 {fields.map(f => (
@@ -135,14 +140,14 @@ function ValidateAppraisalFieldsForm({
                     {f.displayName} ({f.key})
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-0.5">Operator</label>
-              <select
+              <label className="block text-xs text-(--palette-gray-500) mb-0.5">Operator</label>
+              <NativeSelect
                 value={rule.op ?? ''}
                 onChange={e => updateRule(idx, { op: e.target.value })}
-                className={inputClass}
+                className="w-full"
               >
                 <option value="Required">required</option>
                 <option value="Equals">equals</option>
@@ -151,12 +156,12 @@ function ValidateAppraisalFieldsForm({
                 <option value="GreaterOrEqual">greater or equal</option>
                 <option value="LessThan">less than</option>
                 <option value="LessOrEqual">less or equal</option>
-              </select>
+              </NativeSelect>
             </div>
           </div>
           {!rule.fieldKey && (
             <div>
-              <label className="block text-xs text-gray-500 mb-0.5">Expression</label>
+              <label className="block text-xs text-(--palette-gray-500) mb-0.5">Expression</label>
               <input
                 type="text"
                 value={rule.expression ?? ''}
@@ -168,7 +173,7 @@ function ValidateAppraisalFieldsForm({
           )}
           {rule.op !== 'Required' && (
             <div>
-              <label className="block text-xs text-gray-500 mb-0.5">Value</label>
+              <label className="block text-xs text-(--palette-gray-500) mb-0.5">Value</label>
               <input
                 type="text"
                 value={rule.value ?? ''}
@@ -179,7 +184,7 @@ function ValidateAppraisalFieldsForm({
             </div>
           )}
           <div>
-            <label className="block text-xs text-gray-500 mb-0.5">Message</label>
+            <label className="block text-xs text-(--palette-gray-500) mb-0.5">Message</label>
             <input
               type="text"
               value={rule.message}
@@ -245,39 +250,40 @@ function ValidatePropertyMandatoryFieldsForm({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs font-medium text-gray-600">Required Fields by Property Type</p>
+        <p className="text-xs font-medium text-(--palette-gray-600)">
+          Required Fields by Property Type
+        </p>
       </div>
       {availableTypes.length > 0 && (
-        <select
-          value=""
-          onChange={e => addType(e.target.value)}
-          className={inputClass}
-        >
+        <NativeSelect value="" onChange={e => addType(e.target.value)} className="w-full">
           <option value="">— add a property type —</option>
           {availableTypes.map(pt => (
             <option key={pt.code} value={pt.code}>
               {pt.type} ({pt.code})
             </option>
           ))}
-        </select>
+        </NativeSelect>
       )}
       {typeCodes.length === 0 && (
-        <p className="text-xs text-gray-400 italic">No types defined</p>
+        <p className="text-xs text-(--palette-gray-400) italic">No types defined</p>
       )}
       {typeCodes.map(typeCode => (
-        <div key={typeCode} className="rounded-lg border border-gray-200 bg-gray-50 p-3 space-y-2">
+        <div
+          key={typeCode}
+          className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2) p-3 space-y-2"
+        >
           <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-gray-700 font-mono">{typeCode}</span>
+            <span className="text-xs font-medium text-(--palette-ink) font-mono">{typeCode}</span>
             <button
               type="button"
               onClick={() => removeType(typeCode)}
-              className="text-gray-400 hover:text-red-500"
+              className="text-(--palette-gray-400) hover:text-red-500"
             >
               <Icon name="trash" style="solid" className="size-3" />
             </button>
           </div>
           {propertyFields.length === 0 ? (
-            <p className="text-xs text-gray-400 italic">
+            <p className="text-xs text-(--palette-gray-400) italic">
               No property fields available — apply the property validation view.
             </p>
           ) : (
@@ -288,9 +294,9 @@ function ValidatePropertyMandatoryFieldsForm({
                     type="checkbox"
                     checked={(rbt[typeCode] ?? []).includes(f.key)}
                     onChange={() => toggleField(typeCode, f.key)}
-                    className="h-3 w-3 rounded border-gray-300 text-blue-600"
+                    className="h-3 w-3 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
                   />
-                  <span className="text-gray-700">{f.displayName}</span>
+                  <span className="text-(--palette-ink)">{f.displayName}</span>
                 </label>
               ))}
             </div>
@@ -317,7 +323,15 @@ interface StepModalProps {
   onSave: (row: ProcessConfigRow) => void;
 }
 
-function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, onSave }: StepModalProps) {
+function StepModal({
+  isOpen,
+  onClose,
+  editing,
+  catalog,
+  fields,
+  propertyFields,
+  onSave,
+}: StepModalProps) {
   const [processorName, setProcessorName] = useState(editing?.processorName ?? '');
   const [sortOrder, setSortOrder] = useState(String(editing?.sortOrder ?? 0));
   const [parametersJson, setParametersJson] = useState(editing?.parametersJson ?? '');
@@ -380,17 +394,17 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
       <div className="space-y-4">
         {/* Processor picker */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             Step <span className="text-red-500">*</span>
           </label>
-          <select
+          <NativeSelect
             value={processorName}
             onChange={e => {
               setProcessorName(e.target.value);
               setParametersJson('');
               setExampleOpen(false);
             }}
-            className={inputClass}
+            className="w-full"
           >
             <option value="">— select a step —</option>
             {catalog.map(c => (
@@ -398,9 +412,11 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
                 {c.displayName} ({c.kind})
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {selectedCatalogItem?.description && (
-            <p className="mt-1 text-xs text-gray-500">{selectedCatalogItem.description}</p>
+            <p className="mt-1 text-xs text-(--palette-gray-500)">
+              {selectedCatalogItem.description}
+            </p>
           )}
           {/* Collapsible example — shown for all step shapes when exampleParametersJson exists */}
           {prettyExample && (
@@ -408,7 +424,7 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
               <button
                 type="button"
                 onClick={() => setExampleOpen(o => !o)}
-                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+                className="flex items-center gap-1 text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600)"
               >
                 <Icon
                   name={exampleOpen ? 'chevron-down' : 'chevron-right'}
@@ -418,7 +434,7 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
                 Example
               </button>
               {exampleOpen && (
-                <pre className="mt-1 rounded-md border border-gray-200 bg-gray-50 p-2 font-mono text-xs text-gray-600 overflow-x-auto whitespace-pre-wrap">
+                <pre className="mt-1 rounded-md border border-(--palette-line) bg-(--palette-surface-2) p-2 font-mono text-xs text-(--palette-gray-600) overflow-x-auto whitespace-pre-wrap">
                   {prettyExample}
                 </pre>
               )}
@@ -429,7 +445,9 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
         {/* Sort order */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Sort Order</label>
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1">
+              Sort Order
+            </label>
             <input
               type="number"
               value={sortOrder}
@@ -438,12 +456,12 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
             />
           </div>
           <div className="flex items-end pb-2">
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+            <label className="flex items-center gap-2 text-sm font-medium text-(--palette-ink)">
               <input
                 type="checkbox"
                 checked={isActive}
                 onChange={e => setIsActive(e.target.checked)}
-                className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
               />
               Active
             </label>
@@ -453,15 +471,15 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
         {/* Severity — only relevant for Validation steps */}
         {(catalog.find(c => c.name === processorName)?.kind ?? '') === 'Validation' && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Severity</label>
-            <select
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1">Severity</label>
+            <NativeSelect
               value={severity}
               onChange={e => setSeverity(e.target.value as 'Error' | 'Warning')}
-              className={inputClass}
+              className="w-full"
             >
               <option value="Error">Error (blocks completion)</option>
               <option value="Warning">Warning (requires acknowledgement)</option>
-            </select>
+            </NativeSelect>
           </div>
         )}
 
@@ -469,14 +487,14 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
         {processorName && (
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-700">Parameters</label>
+              <label className="block text-sm font-medium text-(--palette-ink)">Parameters</label>
               {/* "Insert example" only shown for freeform textarea when example exists */}
               {prettyExample &&
                 (schemaShape.type === 'freeform' || schemaShape.type === 'unknown') && (
                   <button
                     type="button"
                     onClick={handleInsertExample}
-                    className="text-xs text-blue-600 hover:text-blue-800"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                   >
                     Insert example
                   </button>
@@ -507,9 +525,9 @@ function StepModal({ isOpen, onClose, editing, catalog, fields, propertyFields, 
 
         {/* runIfExpression */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             Run-If Expression{' '}
-            <span className="text-xs font-normal text-gray-400">(optional)</span>
+            <span className="text-xs font-normal text-(--palette-gray-400)">(optional)</span>
           </label>
           <input
             type="text"
@@ -648,18 +666,22 @@ const StepValidationRulesPage = () => {
     <div className="flex flex-col gap-4">
       {/* Page header */}
       <div>
-        <h3 className="text-base font-semibold text-gray-900">Step Validation Rules</h3>
-        <p className="text-xs text-gray-500 mt-0.5">
+        <h3 className="text-base font-semibold text-(--palette-ink)">Step Validation Rules</h3>
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">
           Configure which validation steps run when completing each workflow activity.
         </p>
       </div>
 
       {/* Activity picker */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) p-4">
+        <label
+          htmlFor="step-validation-activity-name"
+          className="block text-sm font-medium text-(--palette-ink) mb-1"
+        >
           Activity Name <span className="text-red-500">*</span>
         </label>
         <input
+          id="step-validation-activity-name"
           type="text"
           value={activityName}
           onChange={e => {
@@ -669,7 +691,7 @@ const StepValidationRulesPage = () => {
           className={inputClass}
           placeholder="e.g. ext-appraisal-assignment"
         />
-        <p className="mt-1 text-xs text-gray-400">
+        <p className="mt-1 text-xs text-(--palette-gray-400)">
           Enter the exact workflow activity name from the workflow definition.
         </p>
       </div>
@@ -678,10 +700,14 @@ const StepValidationRulesPage = () => {
       {activityName && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-gray-700">
+            <span className="text-sm font-medium text-(--palette-ink)">
               Validation steps
               {configLoading && (
-                <Icon name="spinner" style="solid" className="ml-2 size-3.5 animate-spin text-gray-400 inline-block" />
+                <Icon
+                  name="spinner"
+                  style="solid"
+                  className="ml-2 size-3.5 animate-spin text-(--palette-gray-400) inline-block"
+                />
               )}
             </span>
             <Button size="sm" type="button" onClick={handleAddStep} disabled={catalogLoading}>
@@ -691,43 +717,43 @@ const StepValidationRulesPage = () => {
           </div>
 
           {rows.length === 0 && !configLoading ? (
-            <div className="bg-white rounded-lg border border-gray-200 px-4 py-8 text-center text-sm text-gray-400 italic">
+            <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) px-4 py-8 text-center text-sm text-(--palette-gray-400) italic">
               No validation steps configured for this activity.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-              <table className="min-w-full divide-y divide-gray-200 text-sm">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+              <table className="min-w-full divide-y divide-(--palette-line) text-sm">
+                <thead className="bg-(--palette-surface-2)">
                   <tr>
                     <th className="text-xs w-8 px-2 py-2.5 font-semibold" />
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                       Order
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                       Step
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                       Kind
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                       Severity
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                       Run-If
                     </th>
-                    <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                    <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                       Status
                     </th>
                     <th className="text-xs w-24 px-4 py-2.5 font-semibold" />
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-(--palette-surface) divide-y divide-(--palette-line)">
                   {rows.map((row, idx) => {
                     const rowError = errorsByIndex.get(idx);
                     return (
                       <tr
                         key={idx}
-                        className={`hover:bg-gray-50 ${rowError ? 'bg-red-50' : ''}`}
+                        className={`hover:bg-(--palette-surface-2) ${rowError ? 'bg-(--palette-req-wash)' : ''}`}
                       >
                         <td className="px-2 py-3">
                           <div className="flex flex-col gap-0.5">
@@ -735,7 +761,7 @@ const StepValidationRulesPage = () => {
                               type="button"
                               disabled={idx === 0}
                               onClick={() => handleMoveRow(idx, 'up')}
-                              className="text-gray-300 hover:text-gray-500 disabled:opacity-0"
+                              className="text-(--palette-gray-300) hover:text-(--palette-gray-500) disabled:opacity-0"
                             >
                               <Icon name="chevron-up" style="solid" className="size-3" />
                             </button>
@@ -743,25 +769,31 @@ const StepValidationRulesPage = () => {
                               type="button"
                               disabled={idx === rows.length - 1}
                               onClick={() => handleMoveRow(idx, 'down')}
-                              className="text-gray-300 hover:text-gray-500 disabled:opacity-0"
+                              className="text-(--palette-gray-300) hover:text-(--palette-gray-500) disabled:opacity-0"
                             >
                               <Icon name="chevron-down" style="solid" className="size-3" />
                             </button>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-500 tabular-nums">{row.sortOrder}</td>
+                        <td className="px-4 py-3 text-(--palette-gray-500) tabular-nums">
+                          {row.sortOrder}
+                        </td>
                         <td className="px-4 py-3">
                           <div>
-                            <p className="font-medium text-gray-900">
+                            <p className="font-medium text-(--palette-ink)">
                               {getCatalogLabel(row.processorName)}
                             </p>
-                            <p className="text-xs text-gray-400 font-mono">{row.processorName}</p>
+                            <p className="text-xs text-(--palette-gray-400) font-mono">
+                              {row.processorName}
+                            </p>
                             {rowError && (
-                              <p className="mt-0.5 text-xs text-red-600">{rowError.message}</p>
+                              <p className="mt-0.5 text-xs text-(--palette-danger)">
+                                {rowError.message}
+                              </p>
                             )}
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-gray-500 text-xs">
+                        <td className="px-4 py-3 text-(--palette-gray-500) text-xs">
                           {getCatalogKind(row.processorName)}
                         </td>
                         <td className="px-4 py-3">
@@ -769,25 +801,27 @@ const StepValidationRulesPage = () => {
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                                 (row.severity ?? 'Error') === 'Warning'
-                                  ? 'bg-amber-50 text-amber-700'
-                                  : 'bg-red-50 text-red-700'
+                                  ? 'bg-(--palette-warn-wash) text-(--palette-warn)'
+                                  : 'bg-(--palette-req-wash) text-(--palette-req)'
                               }`}
                             >
                               {row.severity ?? 'Error'}
                             </span>
                           ) : (
-                            <span className="text-gray-300 text-xs italic">—</span>
+                            <span className="text-(--palette-gray-300) text-xs italic">—</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-gray-500 font-mono text-xs max-w-xs truncate">
-                          {row.runIfExpression ?? <span className="italic text-gray-300">always</span>}
+                        <td className="px-4 py-3 text-(--palette-gray-500) font-mono text-xs max-w-xs truncate">
+                          {row.runIfExpression ?? (
+                            <span className="italic text-(--palette-gray-300)">always</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <span
                             className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                               row.isActive
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : 'bg-gray-100 text-gray-500'
+                                ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                                : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                             }`}
                           >
                             {row.isActive ? 'Active' : 'Inactive'}
@@ -798,7 +832,7 @@ const StepValidationRulesPage = () => {
                             <button
                               type="button"
                               onClick={() => handleEditRow(row, idx)}
-                              className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                              className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600) rounded"
                               aria-label={`Edit ${row.processorName}`}
                             >
                               <Icon name="pen" style="solid" className="size-3.5" />
@@ -806,7 +840,7 @@ const StepValidationRulesPage = () => {
                             <button
                               type="button"
                               onClick={() => handleDeleteRow(idx)}
-                              className="p-1 text-gray-400 hover:text-red-600 rounded"
+                              className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger) rounded"
                               aria-label={`Delete ${row.processorName}`}
                             >
                               <Icon name="trash" style="solid" className="size-3.5" />
@@ -842,12 +876,7 @@ const StepValidationRulesPage = () => {
                 </>
               )}
             </Button>
-            <Button
-              size="sm"
-              type="button"
-              onClick={handleSave}
-              disabled={saveConfig.isPending}
-            >
+            <Button size="sm" type="button" onClick={handleSave} disabled={saveConfig.isPending}>
               {saveConfig.isPending ? (
                 <>
                   <Icon name="spinner" style="solid" className="size-3.5 mr-1.5 animate-spin" />
@@ -861,10 +890,10 @@ const StepValidationRulesPage = () => {
 
           {/* Validation errors summary */}
           {validationErrors.length > 0 && (
-            <div className="rounded-lg border border-red-200 bg-red-50 p-3 space-y-1">
-              <p className="text-xs font-medium text-red-700">Validation errors:</p>
+            <div className="rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) p-3 space-y-1">
+              <p className="text-xs font-medium text-(--palette-req)">Validation errors:</p>
               {validationErrors.map((e, i) => (
-                <p key={i} className="text-xs text-red-600">
+                <p key={i} className="text-xs text-(--palette-danger)">
                   Row {e.index + 1} ({e.stepName}): {e.message}
                 </p>
               ))}

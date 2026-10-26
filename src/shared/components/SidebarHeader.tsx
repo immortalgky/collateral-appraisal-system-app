@@ -37,7 +37,7 @@ export default function SidebarHeader({
           className={clsx(
             'shrink-0 w-7 h-7 flex items-center justify-center rounded-lg transition-colors hover:bg-gray-50 dark:hover:bg-base-200',
             pinned
-              ? 'text-primary'
+              ? 'text-(--palette-primary-text)'
               : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300',
           )}
         >

@@ -37,32 +37,36 @@ export function ProfitRentChart({ result }: ProfitRentChartProps) {
 
   return (
     <div className="rounded-lg border border-gray-200 p-4">
-      <div className="text-xs font-medium text-gray-500 mb-2">
-        {t('viz.profitRentChart.title')}
-      </div>
+      <div className="text-xs font-medium text-gray-500 mb-2">{t('viz.profitRentChart.title')}</div>
       <ResponsiveContainer width="100%" height={240}>
         <ComposedChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis
             dataKey="year"
-            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            tick={{ fontSize: 10, fill: 'var(--palette-ink-3)' }}
             tickFormatter={v => v.toFixed(1)}
           />
           <YAxis
             yAxisId="left"
-            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            tick={{ fontSize: 10, fill: 'var(--palette-ink-3)' }}
             tickFormatter={fmtCompact}
             width={50}
           />
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fontSize: 10, fill: '#9ca3af' }}
+            tick={{ fontSize: 10, fill: 'var(--palette-ink-3)' }}
             tickFormatter={fmtCompact}
             width={50}
           />
           <Tooltip
-            contentStyle={{ fontSize: 11, borderRadius: 8, border: '1px solid #e5e7eb' }}
+            contentStyle={{
+              fontSize: 11,
+              borderRadius: 8,
+              border: '1px solid var(--palette-line)',
+              background: 'var(--palette-surface)',
+              color: 'var(--palette-ink)',
+            }}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             formatter={((value: number, name: string) => [fmtTooltip(value), name]) as any}
             labelFormatter={label => t('viz.profitRentChart.year', { n: Number(label).toFixed(1) })}

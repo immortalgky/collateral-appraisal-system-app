@@ -18,10 +18,21 @@ function StatusChip({ job }: { job: TrackedReportJob }) {
 
   if (status === 'Pending' || status === 'Running') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-600 border border-amber-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-(--palette-warn-wash) text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
         <svg className="animate-spin size-3" viewBox="0 0 24 24" fill="none">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          <circle
+            className="opacity-25"
+            cx="12"
+            cy="12"
+            r="10"
+            stroke="currentColor"
+            strokeWidth="4"
+          />
+          <path
+            className="opacity-75"
+            fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+          />
         </svg>
         Generating…
       </span>
@@ -30,7 +41,7 @@ function StatusChip({ job }: { job: TrackedReportJob }) {
 
   if (status === 'Ready') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-600 border border-emerald-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
         <Icon name="circle-check" style="solid" className="size-3" />
         Ready
       </span>
@@ -39,7 +50,7 @@ function StatusChip({ job }: { job: TrackedReportJob }) {
 
   if (status === 'Failed') {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-red-50 text-red-600 border border-red-200">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-(--palette-req-wash) text-(--palette-danger) border border-(--palette-req-line)">
         <Icon name="circle-xmark" style="solid" className="size-3" />
         Failed
       </span>
@@ -76,9 +87,7 @@ export function ReportActionButtons({
   const jobs = useReportJobsStore(s => s.jobs);
 
   // Pick the most recent job for this entity+type as the chip source
-  const entityJobs = jobsForEntity(entityId).filter(
-    j => j.reportTypeKey === reportTypeKey,
-  );
+  const entityJobs = jobsForEntity(entityId).filter(j => j.reportTypeKey === reportTypeKey);
   const latestJob = entityJobs.length > 0 ? entityJobs[entityJobs.length - 1] : null;
 
   const generationMode = modeByKey.get(reportTypeKey) ?? 'Sync';
@@ -86,8 +95,7 @@ export function ReportActionButtons({
 
   // Derive whether there is an in-progress job so we can disable the button
   const isEnqueuing =
-    latestJob != null &&
-    (latestJob.status === 'Pending' || latestJob.status === 'Running');
+    latestJob != null && (latestJob.status === 'Pending' || latestJob.status === 'Running');
 
   async function handleView() {
     if (!entityId.trim()) {
@@ -149,7 +157,9 @@ export function ReportActionButtons({
           <StatusChip job={latestJob} />
           {/* Mount a zero-output poller for every unresolved tracked job */}
           {Array.from(jobs.values())
-            .filter(j => j.entityId === entityId && j.reportTypeKey === reportTypeKey && !j.resolved)
+            .filter(
+              j => j.entityId === entityId && j.reportTypeKey === reportTypeKey && !j.resolved,
+            )
             .map(j => (
               <JobPoller key={j.jobId} jobId={j.jobId} job={j} />
             ))}

@@ -36,12 +36,18 @@ function manualChunks(id: string): string | undefined {
   // `charts` chunk otherwise, whose interop wrapper calls back into `react-vendor`
   // before React's exports are initialized -> "Cannot set properties of undefined
   // (setting 'Activity')". Co-locating it removes the cross-chunk eval-order cycle.
-  if (/[\\/]node_modules[\\/](react|react-dom|react-is|react-router|react-router-dom|scheduler)[\\/]/.test(id))
+  if (
+    /[\\/]node_modules[\\/](react|react-dom|react-is|react-router|react-router-dom|scheduler)[\\/]/.test(
+      id,
+    )
+  )
     return 'react-vendor';
   if (/[\\/]node_modules[\\/](recharts|d3-|victory-vendor|internmap)/.test(id)) return 'charts';
   if (/[\\/]node_modules[\\/](@xyflow|dagre|@dagrejs|graphlib)/.test(id)) return 'flow';
   if (/[\\/]node_modules[\\/]fabric[\\/]/.test(id)) return 'canvas';
   if (/[\\/]node_modules[\\/]@microsoft[\\/]signalr/.test(id)) return 'signalr';
+  // Only the lazy collateral 3D scene imports it; naming the chunk keeps it out of every other one.
+  if (/[\\/]node_modules[\\/]three[\\/]/.test(id)) return 'three';
   // Matches i18next, react-i18next, i18next-browser-languagedetector, and
   // i18next-resources-to-backend (all start with i18next or react-i18next).
   if (/[\\/]node_modules[\\/](react-)?i18next/.test(id)) return 'i18n-vendor';

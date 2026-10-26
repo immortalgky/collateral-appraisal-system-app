@@ -20,7 +20,7 @@ export const ACCENT_CLASSES: Record<
     gradient: 'bg-gradient-to-br from-primary to-primary/70',
     ring: 'ring-primary',
     border: 'border-primary',
-    text: 'text-primary',
+    text: 'text-(--palette-primary-text)',
     dot: 'bg-primary',
     glow: 'shadow-[0_8px_24px_-6px_hsl(var(--p)/0.45)]',
     softRing: 'ring-primary/20',

@@ -35,7 +35,7 @@ function FavoriteItemRow({ node, lang }: FavoriteItemRowProps) {
         to={node.path!}
         className={clsx(
           'group flex items-center gap-2.5 py-2 px-2.5 rounded-xl transition-all duration-200',
-          isActive ? 'bg-primary/10' : 'hover:bg-gray-50',
+          isActive ? 'bg-primary/10' : 'hover:bg-(--palette-surface-2)',
         )}
       >
         <div
@@ -48,10 +48,10 @@ function FavoriteItemRow({ node, lang }: FavoriteItemRowProps) {
           <Icon
             name={node.iconName}
             style={node.iconStyle}
-            className={clsx('size-3.5', node.iconColor ?? 'text-gray-500')}
+            className={clsx('size-3.5', node.iconColor ?? 'text-(--palette-gray-500)')}
           />
         </div>
-        <span className="text-xs font-medium text-gray-700 truncate">{label}</span>
+        <span className="text-xs font-medium text-(--palette-ink) truncate">{label}</span>
         <button
           type="button"
           onClick={e => {
@@ -85,7 +85,7 @@ export function SidebarFavoritesSection({ collapsed }: SidebarFavoritesSectionPr
         type="button"
         onClick={() => setExpanded(!expanded)}
         className={clsx(
-          'flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-gray-50 transition-all group',
+          'flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-(--palette-surface-2) transition-all group',
           collapsed && 'pointer-events-none',
         )}
         aria-expanded={expanded}
@@ -98,7 +98,7 @@ export function SidebarFavoritesSection({ collapsed }: SidebarFavoritesSectionPr
           <span className="w-7 flex justify-center">
             <Icon name="star" style="solid" className="size-2.5 text-amber-400" />
           </span>
-          <span className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+          <span className="text-[11px] font-semibold text-(--palette-gray-400) uppercase tracking-wider">
             {t('favorites.sidebar.title')}
           </span>
         </span>
@@ -106,7 +106,7 @@ export function SidebarFavoritesSection({ collapsed }: SidebarFavoritesSectionPr
           name="chevron-down"
           style="solid"
           className={clsx(
-            'size-2.5 text-gray-300 transition-transform duration-200',
+            'size-2.5 text-(--palette-gray-300) transition-transform duration-200',
             expanded ? '' : '-rotate-90',
           )}
         />
@@ -127,7 +127,7 @@ export function SidebarFavoritesSection({ collapsed }: SidebarFavoritesSectionPr
       </div>
 
       {/* Divider */}
-      <div className="mx-2 mt-2 border-t border-gray-100" aria-hidden="true" />
+      <div className="mx-2 mt-2 border-t border-(--palette-line-soft)" aria-hidden="true" />
     </div>
   );
 }

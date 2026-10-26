@@ -25,7 +25,7 @@ const AddTitleDocumentModal = ({ isOpen, onClose, onChoose }: AddTitleDocumentMo
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('docCard.addOther.title')} compact>
       <div className="space-y-4">
-        <p className="m-0 text-sm text-gray-600">{t('docCard.addOther.description')}</p>
+        <p className="m-0 text-sm text-(--palette-gray-600)">{t('docCard.addOther.description')}</p>
         <Dropdown
           showValuePrefix={false}
           disabled={isLoading}

@@ -37,7 +37,7 @@ function RightMenuToggle() {
   }
 
   return (
-    <div className="hidden lg:flex shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100">
+    <div className="hidden lg:flex shrink-0 border-l border-gray-100 dark:border-base-300 bg-base-100">
       <button
         type="button"
         onClick={portalContext.onToggle}
@@ -60,7 +60,7 @@ function RightMenuContainer({ portalRef }: { portalRef: React.RefObject<HTMLDivE
 
   return (
     <aside
-      className={`${showSidebar ? 'lg:flex' : 'hidden'} hidden w-72 shrink-0 border-l border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 flex-col overflow-hidden`}
+      className={`${showSidebar ? 'lg:flex' : 'hidden'} hidden w-72 shrink-0 border-l border-gray-100 dark:border-base-300 bg-base-100 flex-col overflow-hidden`}
       style={{ height: '100%' }}
     >
       <div ref={portalRef} className="flex flex-col flex-1 min-h-0 overflow-hidden" />
@@ -139,7 +139,7 @@ function Layout() {
       <AddressLoader />
       <CompanyLoader />
       <ActivityProgressHubBootstrap />
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
         <MobileSidebar navigation={navigation} logo={Logo} />
         <Sidebar navigation={navigation} logo={Logo} />
 

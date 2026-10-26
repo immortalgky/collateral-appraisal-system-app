@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
+import { useSearchFieldLabel } from '@/shared/hooks/useCodeLabels';
 import SearchResultItem from './SearchResultItem';
 import { groupKey } from '@shared/utils/searchGrouping';
 import type { MatchKind, SearchAppraisal, SearchGroup } from '@shared/types/search';
@@ -72,6 +73,7 @@ export default function SearchResults({
   onRetry,
 }: Props) {
   const { t } = useTranslation('nav');
+  const fieldLabel = useSearchFieldLabel();
   const listRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,11 +99,11 @@ export default function SearchResults({
   if (!isShowingResults) {
     return (
       <div className="p-2">
-        <p className="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+        <p className="px-2 py-1 text-xs font-semibold text-(--palette-gray-400) uppercase tracking-wider">
           {t('search.recent')}
         </p>
         {recentSearches.length === 0 ? (
-          <p className="px-2 py-3 text-sm text-gray-400 text-center">
+          <p className="px-2 py-3 text-sm text-(--palette-gray-400) text-center">
             {t('search.noRecentSearches')}
           </p>
         ) : (
@@ -113,7 +115,11 @@ export default function SearchResults({
                 onClick={() => onSelectRecentSearch(term)}
                 className="flex items-center gap-3 w-full px-2 py-2 text-sm text-gray-600 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-base-300 transition-colors"
               >
-                <Icon name="clock-rotate-left" style="regular" className="size-4 text-gray-400" />
+                <Icon
+                  name="clock-rotate-left"
+                  style="regular"
+                  className="size-4 text-(--palette-gray-400)"
+                />
                 {term}
               </button>
             ))}
@@ -135,7 +141,7 @@ export default function SearchResults({
         <button
           type="button"
           onClick={onRetry}
-          className="text-sm font-medium text-primary-600 hover:text-primary-700"
+          className="text-sm font-medium text-(--palette-primary-text) hover:text-(--palette-accent-ink)"
         >
           {t('search.retry')}
         </button>
@@ -149,9 +155,9 @@ export default function SearchResults({
         <Icon
           name="magnifying-glass"
           style="regular"
-          className="size-8 text-gray-300 mx-auto mb-2"
+          className="size-8 text-(--palette-gray-300) mx-auto mb-2"
         />
-        <p className="text-sm text-gray-500">{t('search.noResults')}</p>
+        <p className="text-sm text-(--palette-gray-500)">{t('search.noResults')}</p>
         {/*
           Names are matched by prefix, so a surname alone finds nothing. Rather than make every
           keystroke pay for a substring scan, offer it here — once, and only when the fast search
@@ -185,7 +191,7 @@ export default function SearchResults({
 
       {exactGroups.length > 0 && (
         <div className="p-2 border-b border-gray-100 dark:border-base-300">
-          <p className="px-2 py-1 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+          <p className="px-2 py-1 text-xs font-semibold text-(--palette-gray-400) uppercase tracking-wider">
             {t('search.exactMatch')}
           </p>
           <div className="space-y-0.5">
@@ -243,24 +249,22 @@ export default function SearchResults({
               <Icon
                 name={matchKindIcon[group.matchKind]}
                 style="solid"
-                className="size-3 text-gray-400 shrink-0"
+                className="size-3 text-(--palette-gray-400) shrink-0"
               />
-              <span className="text-xs font-semibold uppercase tracking-wide text-gray-400 shrink-0">
-                {t(`search.fields.${group.matchField}` as never, {
-                  defaultValue: group.matchField,
-                })}
+              <span className="text-xs font-semibold uppercase tracking-wide text-(--palette-gray-400) shrink-0">
+                {fieldLabel(group.matchField)}
               </span>
               <span className="text-sm font-medium text-gray-900 dark:text-base-content truncate">
                 {group.matchLabel}
               </span>
-              <span className="ml-auto shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold text-primary-700 bg-primary-50">
+              <span className="ml-auto shrink-0 px-2 py-0.5 rounded-full text-xs font-semibold text-(--palette-accent-ink) bg-(--palette-accent-wash)">
                 {t('search.appraisalCount', { count: group.appraisalCount })}
               </span>
               <Icon
                 name="chevron-down"
                 style="solid"
                 className={clsx(
-                  'size-3 text-gray-400 shrink-0 transition-transform',
+                  'size-3 text-(--palette-gray-400) shrink-0 transition-transform',
                   isCollapsed && '-rotate-90',
                 )}
               />
@@ -292,8 +296,10 @@ export default function SearchResults({
         id={`search-result-${seeAllIndex}`}
         onClick={onOpenFullResults}
         className={clsx(
-          'flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-primary-600 border-t border-gray-100 dark:border-base-300 transition-colors',
-          highlightedIndex === seeAllIndex ? 'bg-primary-50' : 'hover:bg-primary-50/60',
+          'flex items-center gap-2 w-full px-4 py-2.5 text-sm font-medium text-(--palette-primary-text) border-t border-gray-100 dark:border-base-300 transition-colors',
+          highlightedIndex === seeAllIndex
+            ? 'bg-(--palette-accent-wash)'
+            : 'hover:bg-(--palette-accent-wash)/60',
         )}
       >
         <Icon name="arrow-up-right-from-square" style="solid" className="size-3.5" />

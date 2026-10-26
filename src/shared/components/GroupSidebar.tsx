@@ -62,12 +62,14 @@ function GroupSidebar({
   return (
     <aside
       aria-label={title}
-      className="shrink-0 w-60 border-r border-gray-200 bg-gray-50 flex flex-col min-h-0"
+      className="shrink-0 w-60 border-r border-(--palette-line) bg-(--palette-surface-2) flex flex-col min-h-0"
     >
       {/* Header */}
-      <div className="shrink-0 px-3 py-2.5 border-b border-gray-200 bg-white">
-        <p className="text-[10px] font-medium tracking-wider uppercase text-gray-500">{caption}</p>
-        <p className="text-sm font-semibold text-gray-800 mt-0.5">{title}</p>
+      <div className="shrink-0 px-3 py-2.5 border-b border-(--palette-line) bg-(--palette-surface)">
+        <p className="text-[10px] font-medium tracking-wider uppercase text-(--palette-gray-500)">
+          {caption}
+        </p>
+        <p className="text-sm font-semibold text-(--palette-ink) mt-0.5">{title}</p>
       </div>
 
       {/* Body */}
@@ -75,15 +77,15 @@ function GroupSidebar({
         {isLoading ? (
           <div className="p-3 space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-9 bg-gray-100 animate-pulse rounded" />
+              <div key={i} className="h-9 bg-(--palette-surface-3) animate-pulse rounded" />
             ))}
           </div>
         ) : isError ? (
-          <p className="px-4 py-8 text-center text-xs text-gray-400">{errorLabel}</p>
+          <p className="px-4 py-8 text-center text-xs text-(--palette-gray-400)">{errorLabel}</p>
         ) : groups.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 px-4 gap-2">
-            <Icon style="regular" name="inbox" className="size-6 text-gray-300" />
-            <p className="text-xs text-gray-400 text-center">{emptyLabel}</p>
+            <Icon style="regular" name="inbox" className="size-6 text-(--palette-gray-300)" />
+            <p className="text-xs text-(--palette-gray-400) text-center">{emptyLabel}</p>
           </div>
         ) : (
           <ul className="py-1">
@@ -99,8 +101,8 @@ function GroupSidebar({
                     onClick={() => onSelect(isOnlyOne ? null : group)}
                     className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left transition-colors disabled:cursor-default ${
                       isActive
-                        ? 'bg-white border-l-2 border-primary text-primary'
-                        : `border-l-2 border-transparent text-gray-700 ${group.disabled ? '' : 'hover:bg-white'}`
+                        ? 'bg-(--palette-surface) border-l-2 border-primary text-(--palette-primary-text)'
+                        : `border-l-2 border-transparent text-(--palette-ink) ${group.disabled ? '' : 'hover:bg-(--palette-surface)'}`
                     }`}
                   >
                     <span
@@ -112,7 +114,7 @@ function GroupSidebar({
                     <span className="shrink-0 flex items-center gap-1.5">
                       {showBreached && group.breached > 0 && (
                         <span
-                          className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums text-red-600"
+                          className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums text-(--palette-danger)"
                           title={breachedTitle(group.breached)}
                         >
                           <span className="size-1.5 rounded-full bg-red-500" />
@@ -121,14 +123,14 @@ function GroupSidebar({
                       )}
                       {showAtRisk && group.atRisk > 0 && (
                         <span
-                          className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums text-amber-600"
+                          className="inline-flex items-center gap-0.5 text-[10px] font-semibold tabular-nums text-amber-600 dark:text-amber-400"
                           title={atRiskTitle(group.atRisk)}
                         >
                           <span className="size-1.5 rounded-full bg-amber-500" />
                           {group.atRisk}
                         </span>
                       )}
-                      <span className="text-xs font-semibold tabular-nums text-gray-700 ml-1">
+                      <span className="text-xs font-semibold tabular-nums text-(--palette-ink) ml-1">
                         {group.count}
                       </span>
                     </span>

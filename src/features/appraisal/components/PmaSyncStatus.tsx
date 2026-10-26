@@ -32,7 +32,7 @@ const PmaSyncStatus = ({ status, error, syncedAt }: PmaSyncStatusProps) => {
             {t('editorHeader.pmaSync.synced')}
           </Badge>
           {synced && (
-            <span className="text-xs text-gray-400" title={synced.absolute}>
+            <span className="text-xs text-(--palette-gray-400)" title={synced.absolute}>
               · {synced.relative}
             </span>
           )}
@@ -58,7 +58,9 @@ const PmaSyncStatus = ({ status, error, syncedAt }: PmaSyncStatusProps) => {
             </Badge>
           </span>
           {!readOnly && (
-            <span className="text-xs text-gray-400">{t('editorHeader.pmaSync.retryHint')}</span>
+            <span className="text-xs text-(--palette-gray-400)">
+              {t('editorHeader.pmaSync.retryHint')}
+            </span>
           )}
           {error && (
             <span id={reasonId} className="sr-only">

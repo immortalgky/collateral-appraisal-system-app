@@ -1,4 +1,4 @@
-import { type ReactNode, useState, useEffect } from 'react';
+import type { ReactNode } from 'react';
 import {
   type FieldValues,
   FormProvider as RHFFormProvider,
@@ -6,8 +6,8 @@ import {
 } from 'react-hook-form';
 import type { z } from 'zod';
 import { FormSchemaContext, FormReadOnlyContext } from './context';
-import { flattenFormErrors, useScrollToFirstError } from './utils';
-import FormErrorAlert from './FormErrorAlert';
+import { FormMissingFields } from './missing/FormMissingFields';
+import type { FormField } from './types';
 import { usePageReadOnly } from '@shared/contexts/PageReadOnlyContext';
 
 interface FormProviderProps<TFieldValues extends FieldValues> {
@@ -16,8 +16,21 @@ interface FormProviderProps<TFieldValues extends FieldValues> {
   /** Zod schema for validation - same one passed to zodResolver() */
   schema: z.ZodType<TFieldValues>;
   children: ReactNode;
-  /** Show error alert when validation fails (default: true) */
-  showErrorAlert?: boolean;
+  /**
+   * The field configs `schema` was built from. Lets the missing-fields chip count conditional
+   * "required when X" fields before the plain required ones are filled, which zod would hide.
+   */
+  fields?: FormField[];
+  /**
+   * The chip lists only fields the page draws. For a schema that also flags fields the user cannot
+   * fill in (the hidden half of an either/or pair, a value a picker sets).
+   */
+  renderedOnly?: boolean;
+  /**
+   * Set to false when the page runs its own missing-fields provider (Request), so the form is not
+   * parsed twice. Default true.
+   */
+  missingSummary?: boolean;
 }
 
 /**
@@ -25,6 +38,10 @@ interface FormProviderProps<TFieldValues extends FieldValues> {
  *
  * This allows FormFields and other components to automatically extract
  * validation constraints (maxLength, minLength, required, etc.) from the schema.
+ *
+ * It is also what feeds the missing-fields chip (DESIGN.md 17.8): the form is checked against
+ * `schema` live, `ActionBar.Right` shows the chip, and a failed Save opens its popover. A form never
+ * shows an error banner; field errors stay inline.
  *
  * @example
  * ```tsx
@@ -51,28 +68,23 @@ export function FormProvider<TFieldValues extends FieldValues>({
   methods,
   schema,
   children,
-  showErrorAlert = true,
+  fields,
+  renderedOnly,
+  missingSummary = true,
 }: FormProviderProps<TFieldValues>) {
   const readOnly = usePageReadOnly();
-  const { errors, isSubmitted, submitCount } = methods.formState;
-  const [isDismissed, setIsDismissed] = useState(false);
-  const formErrors =
-    showErrorAlert && isSubmitted && !isDismissed ? flattenFormErrors(errors) : [];
-
-  // Reset dismissed state when user submits again
-  useEffect(() => {
-    setIsDismissed(false);
-  }, [submitCount]);
-
-  // Independent of showErrorAlert: forms that hide the banner should still scroll.
-  useScrollToFirstError(methods);
 
   return (
     <FormSchemaContext.Provider value={schema}>
       <FormReadOnlyContext.Provider value={readOnly}>
         <RHFFormProvider {...methods}>
-          <FormErrorAlert errors={formErrors} onDismiss={() => setIsDismissed(true)} />
-          {children}
+          {missingSummary ? (
+            <FormMissingFields schema={schema} fields={fields} renderedOnly={renderedOnly}>
+              {children}
+            </FormMissingFields>
+          ) : (
+            children
+          )}
         </RHFFormProvider>
       </FormReadOnlyContext.Provider>
     </FormSchemaContext.Provider>

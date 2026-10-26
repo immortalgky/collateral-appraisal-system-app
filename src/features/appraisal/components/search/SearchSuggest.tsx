@@ -75,12 +75,12 @@ function SearchSuggest({
   // (the global blue outline can only be switched off inline — see NO_OUTLINE).
   const rowClass = (i: number) =>
     `flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-left text-sm ${
-      i === activeIndex ? 'bg-gray-100' : 'hover:bg-gray-50'
+      i === activeIndex ? 'bg-(--palette-surface-3)' : 'hover:bg-(--palette-surface-2)'
     } ${pointerMode ? '' : KEYBOARD_RING_PLAIN}`;
 
   const section = (title: string, body: ReactNode) => (
-    <div className="border-b border-gray-100 p-1.5 last:border-b-0">
-      <p className="px-2.5 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+    <div className="border-b border-(--palette-line-soft) p-1.5 last:border-b-0">
+      <p className="px-2.5 pt-1 pb-1.5 text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
         {title}
       </p>
       {body}
@@ -105,16 +105,20 @@ function SearchSuggest({
                   style={NO_OUTLINE}
                   className={rowClass(i)}
                 >
-                  <Icon style="solid" name="clock-rotate-left" className="size-3 text-gray-400" />
+                  <Icon
+                    style="solid"
+                    name="clock-rotate-left"
+                    className="size-3 text-(--palette-gray-400)"
+                  />
                   {r}
                 </button>
               );
             }),
           )}
         <div className="p-3.5">
-          <p className="text-sm font-medium text-gray-900">{t('list.searchTips.title')}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('list.searchTips.title')}</p>
           <SearchTips minLength={minLength} showCoverage className="mt-2" />
-          <p className="mt-3 border-t border-gray-100 pt-2.5 text-[11px] text-gray-400">
+          <p className="mt-3 border-t border-(--palette-line-soft) pt-2.5 text-[11px] text-(--palette-gray-400)">
             {t('list.suggest.shortcut')}
           </p>
         </div>
@@ -122,7 +126,7 @@ function SearchSuggest({
     );
   } else if (trimmed.length < minLength) {
     content = (
-      <p className="p-3.5 text-xs text-amber-600">
+      <p className="p-3.5 text-xs text-amber-600 dark:text-amber-400">
         {t('list.searchTooShort', { count: minLength })}
       </p>
     );
@@ -132,13 +136,15 @@ function SearchSuggest({
         {section(
           t('list.suggest.goTo'),
           !isSettled ? (
-            <div className="flex items-center gap-2 px-2.5 py-2 text-xs text-gray-400">
+            <div className="flex items-center gap-2 px-2.5 py-2 text-xs text-(--palette-gray-400)">
               <Icon style="solid" name="spinner" className="size-3 animate-spin" />
             </div>
           ) : failed ? (
-            <p className="px-2.5 py-2 text-xs text-gray-400">—</p>
+            <p className="px-2.5 py-2 text-xs text-(--palette-gray-400)">—</p>
           ) : items.length === 0 ? (
-            <p className="px-2.5 py-2 text-xs text-gray-400">{t('list.suggest.noMatch')}</p>
+            <p className="px-2.5 py-2 text-xs text-(--palette-gray-400)">
+              {t('list.suggest.noMatch')}
+            </p>
           ) : (
             items.map(item => {
               const i = ++index;
@@ -151,8 +157,12 @@ function SearchSuggest({
                   style={NO_OUTLINE}
                   className={rowClass(i)}
                 >
-                  <span className="shrink-0 font-medium text-primary">{item.appraisalNumber}</span>
-                  <span className="min-w-0 flex-1 truncate text-gray-700">{item.customerName}</span>
+                  <span className="shrink-0 font-medium text-(--palette-primary-text)">
+                    {item.appraisalNumber}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-(--palette-ink)">
+                    {item.customerName}
+                  </span>
                   <Badge type="status" value={item.status} size="sm">
                     {t(`list.status.${item.status}`, { defaultValue: item.status })}
                   </Badge>
@@ -175,9 +185,13 @@ function SearchSuggest({
                 style={NO_OUTLINE}
                 className={rowClass(i)}
               >
-                <Icon style="solid" name={f.icon} className="size-3 text-primary" />
+                <Icon
+                  style="solid"
+                  name={f.icon}
+                  className="size-3 text-(--palette-primary-text)"
+                />
                 {f.label}
-                <span className="ml-auto text-xs tabular-nums text-gray-400">
+                <span className="ml-auto text-xs tabular-nums text-(--palette-gray-400)">
                   {count === undefined ? (
                     <Icon style="solid" name="spinner" className="size-3 animate-spin" />
                   ) : count === null ? (
@@ -200,14 +214,14 @@ function SearchSuggest({
     <div
       data-suggest-panel
       onPointerDownCapture={onPointerDownCapture}
-      className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[min(70vh,calc(100dvh-16rem))] overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg"
+      className="absolute left-0 right-0 top-full z-40 mt-1.5 max-h-[min(70vh,calc(100dvh-16rem))] overflow-y-auto rounded-xl border border-(--palette-line) bg-(--palette-surface) shadow-lg"
     >
       {/* Same chips as the topbar quick search (nav.search.searchIn). Not data-suggest-item: the
           arrow walk is for results; Tab reaches these, then Left/Right moves along the row. */}
-      <div className="border-b border-gray-100 p-2">
+      <div className="border-b border-(--palette-line-soft) p-2">
         <p
           id="appraisal-suggest-scope"
-          className="px-2 py-1 text-xs font-semibold uppercase tracking-wider text-gray-400"
+          className="px-2 py-1 text-xs font-semibold uppercase tracking-wider text-(--palette-gray-400)"
         >
           {t('list.suggest.scope')}
         </p>
@@ -241,8 +255,10 @@ function SearchSuggest({
                 onClick={() => onChangeField(f.value)}
                 className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
                   active
-                    ? (f.chipActive ?? 'bg-gray-200 text-gray-500 ring-1 ring-inset ring-gray-200')
-                    : (f.chip ?? 'bg-gray-50 text-gray-600 hover:bg-gray-100')
+                    ? (f.chipActive ??
+                      'bg-(--palette-surface-3) text-(--palette-gray-500) ring-1 ring-inset ring-(--palette-line)')
+                    : (f.chip ??
+                      'bg-(--palette-surface-2) text-(--palette-gray-600) hover:bg-(--palette-surface-3)')
                 } ${pointerMode ? '' : KEYBOARD_RING_PLAIN}`}
               >
                 <Icon style="solid" name={f.icon} className="size-3.5" />
@@ -253,7 +269,7 @@ function SearchSuggest({
         </div>
       </div>
       {content}
-      <div className="flex flex-wrap gap-3 border-t border-gray-100 bg-gray-50 px-3.5 py-2 text-[11px] text-gray-500">
+      <div className="flex flex-wrap gap-3 border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-3.5 py-2 text-[11px] text-(--palette-gray-500)">
         <span>
           <Kbd>↑</Kbd> <Kbd>↓</Kbd> {t('list.suggest.navigate')}
         </span>
@@ -270,7 +286,7 @@ function SearchSuggest({
 
 function Kbd({ children }: { children: ReactNode }) {
   return (
-    <kbd className="rounded border border-b-2 border-gray-200 bg-white px-1 font-mono text-[10px] text-gray-500">
+    <kbd className="rounded border border-b-2 border-(--palette-line) bg-(--palette-surface) px-1 font-mono text-[10px] text-(--palette-gray-500)">
       {children}
     </kbd>
   );

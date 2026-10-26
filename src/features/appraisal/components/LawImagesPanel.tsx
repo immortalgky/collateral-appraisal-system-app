@@ -43,7 +43,7 @@ interface LawImagesPanelProps {
 export const CAPTION_MAX = 500;
 
 const SMALL_BUTTON =
-  'inline-flex items-center gap-1.5 rounded-md border border-gray-300 bg-white px-2.5 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50';
+  'inline-flex items-center gap-1.5 rounded-md border border-(--palette-line-strong) bg-(--palette-surface) px-2.5 py-1 text-xs font-medium text-(--palette-ink) transition-colors hover:bg-(--palette-surface-2)';
 
 /**
  * The pictures of one law item, beside its text.
@@ -89,17 +89,17 @@ export const LawImagesPanel = ({
   return (
     <div
       ref={dropZoneRef}
-      className="relative rounded-xl border border-gray-200 bg-gray-50 p-3 lg:sticky lg:top-4"
+      className="relative rounded-xl border border-(--palette-line) bg-(--palette-surface-2) p-3 lg:sticky lg:top-4"
     >
       <div className="mb-2.5 flex items-baseline gap-2">
-        <h3 className="text-base font-semibold text-gray-900">
+        <h3 className="text-base font-semibold text-(--palette-ink)">
           {t('lawsRegulations.editor.images')}
         </h3>
         {images.length > 0 && (
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-(--palette-gray-400)">
             {t('lawsRegulations.editor.photoCount', { n: images.length })}
             {missingCount > 0 && (
-              <span className="text-red-600">
+              <span className="text-(--palette-danger)">
                 {' · '}
                 {t('lawsRegulations.editor.missingCount', { n: missingCount })}
               </span>
@@ -107,18 +107,18 @@ export const LawImagesPanel = ({
           </span>
         )}
         {images.length > 1 && !readOnly && (
-          <span className="ml-auto text-[11px] text-gray-400">
+          <span className="ml-auto text-[11px] text-(--palette-gray-400)">
             {t('lawsRegulations.editor.dragHint')}
           </span>
         )}
       </div>
 
       {images.length === 0 ? (
-        <div className="rounded-lg border-[1.5px] border-dashed border-gray-300 bg-white px-4 py-7 text-center">
-          <p className="text-sm font-medium text-gray-800">
+        <div className="rounded-lg border-[1.5px] border-dashed border-(--palette-line-strong) bg-(--palette-surface) px-4 py-7 text-center">
+          <p className="text-sm font-medium text-(--palette-ink)">
             {t('lawsRegulations.editor.emptyTitle')}
           </p>
-          <p className="mt-0.5 text-xs text-gray-400">
+          <p className="mt-0.5 text-xs text-(--palette-gray-400)">
             {readOnly
               ? t('lawsRegulations.editor.emptyReadOnly')
               : t('lawsRegulations.editor.emptyHint')}
@@ -141,8 +141,8 @@ export const LawImagesPanel = ({
                 />
               ))}
               {addButtons && (
-                <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border-[1.5px] border-dashed border-gray-300 bg-white px-3 py-2.5">
-                  <span className="text-xs text-gray-400">
+                <div className="col-span-2 flex flex-wrap items-center justify-between gap-2 rounded-lg border-[1.5px] border-dashed border-(--palette-line-strong) bg-(--palette-surface) px-3 py-2.5">
+                  <span className="text-xs text-(--palette-gray-400)">
                     {t('lawsRegulations.editor.dropHere')}
                   </span>
                   {addButtons}
@@ -168,12 +168,14 @@ export const LawImagesPanel = ({
       />
 
       {isDragging && !readOnly && (
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-primary-50/90 text-center">
+        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-xl border-2 border-dashed border-primary bg-(--palette-accent-wash)/90 text-center">
           <div>
-            <p className="text-sm font-semibold text-primary-700">
+            <p className="text-sm font-semibold text-(--palette-accent-ink)">
               {t('lawsRegulations.editor.dropTitle')}
             </p>
-            <p className="text-xs text-gray-500">{t('lawsRegulations.editor.dropSub')}</p>
+            <p className="text-xs text-(--palette-gray-500)">
+              {t('lawsRegulations.editor.dropSub')}
+            </p>
           </div>
         </div>
       )}
@@ -211,7 +213,9 @@ const SortableShot = ({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={clsx(
         'group flex flex-col overflow-hidden rounded-lg border',
-        image.missing ? 'border-dashed border-red-300 bg-red-50' : 'border-gray-200 bg-white',
+        image.missing
+          ? 'border-dashed border-red-300 dark:border-red-500/40 bg-(--palette-req-wash)'
+          : 'border-(--palette-line) bg-(--palette-surface)',
         isDragging && 'relative z-10 opacity-60 shadow-lg',
       )}
     >
@@ -219,7 +223,7 @@ const SortableShot = ({
           the box to its own height, so every tile came out a different size. */}
       <div className="relative aspect-[4/3] overflow-hidden">
         {image.missing ? (
-          <div className="flex size-full flex-col items-center justify-center px-2 text-center text-red-600">
+          <div className="flex size-full flex-col items-center justify-center px-2 text-center text-(--palette-danger)">
             <span className="text-xs font-semibold">
               {t('lawsRegulations.editor.missingTitle')}
             </span>
@@ -231,7 +235,7 @@ const SortableShot = ({
           <button
             type="button"
             onClick={() => onPreview(image.key)}
-            className="absolute inset-0 block cursor-zoom-in bg-gray-100"
+            className="absolute inset-0 block cursor-zoom-in bg-(--palette-surface-3)"
             {...(readOnly ? {} : { ...attributes, ...listeners })}
           >
             {image.src && (
@@ -260,13 +264,13 @@ const SortableShot = ({
         )}
       </div>
       {image.missing ? (
-        <div className="flex items-center justify-between gap-2 border-t border-red-200 px-2 py-1.5 text-[11px] text-red-600">
+        <div className="flex items-center justify-between gap-2 border-t border-(--palette-req-line) px-2 py-1.5 text-[11px] text-(--palette-danger)">
           <span>{t('lawsRegulations.editor.missingNoImage')}</span>
           {!readOnly && (
             <button
               type="button"
               onClick={() => onRemove(image.key)}
-              className="rounded border border-red-300 bg-white px-2 py-0.5 font-medium transition-colors hover:bg-red-50"
+              className="rounded border border-red-300 dark:border-red-500/40 bg-(--palette-surface) px-2 py-0.5 font-medium transition-colors hover:bg-(--palette-req-wash)"
             >
               {t('lawsRegulations.editor.remove')}
             </button>
@@ -285,7 +289,7 @@ const SortableShot = ({
               : t('lawsRegulations.editor.captionPlaceholder')
           }
           aria-label={t('lawsRegulations.editor.captionLabel', { n: index + 1 })}
-          className="w-full border-t border-gray-100 bg-transparent px-2 py-1.5 text-xs text-gray-700 placeholder:text-gray-400 focus:bg-primary-50/40 focus:outline-none"
+          className="w-full border-t border-(--palette-line-soft) bg-transparent px-2 py-1.5 text-xs text-(--palette-ink) placeholder:text-(--palette-gray-400) focus:bg-(--palette-accent-wash)/40 focus:outline-none"
         />
       )}
     </div>

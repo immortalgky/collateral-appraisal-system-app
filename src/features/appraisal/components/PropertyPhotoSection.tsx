@@ -47,6 +47,9 @@ export interface PhotoSectionView {
   readOnly: boolean;
   onAdd: () => void;
   onPreview: (photo: Photo) => void;
+  /** For a layout that draws the context-menu strip itself (`PhotoGallery`); the card does not need them. */
+  onDelete?: (photoId: string) => void;
+  onSetThumbnail?: (photoId: string) => void;
 }
 
 interface PropertyPhotoSectionProps {
@@ -505,6 +508,8 @@ const PropertyPhotoSection = forwardRef<PropertyPhotoSectionRef, PropertyPhotoSe
             readOnly,
             onAdd: () => setShowPhotoSourceModal(true),
             onPreview: handlePreview,
+            onDelete: handleDeleteRequest,
+            onSetThumbnail: handleSetThumbnail,
           })
         ) : (
           <PhotoGallery

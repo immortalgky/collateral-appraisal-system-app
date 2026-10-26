@@ -8,6 +8,9 @@ export default mergeConfig(
     // Override environment variables for tests
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify('http://localhost:3000/api'),
+      // A developer's `.env` sets a 500 ms dev delay; Vite loads it for tests too and every request
+      // then outlasts `waitFor`'s 1 s
+      'import.meta.env.VITE_API_DELAY': JSON.stringify('0'),
     },
     test: {
       // Use happy-dom for faster tests (lighter than jsdom)
@@ -43,5 +46,5 @@ export default mergeConfig(
       clearMocks: true,
       restoreMocks: true,
     },
-  })
+  }),
 );

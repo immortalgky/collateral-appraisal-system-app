@@ -128,7 +128,7 @@ const AddFactorModal = ({
           <Icon
             name="magnifying-glass"
             style="regular"
-            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
           />
           <input
             type="text"
@@ -136,7 +136,7 @@ const AddFactorModal = ({
             onChange={e => setSearch(e.target.value)}
             placeholder={t('addFactorModal.searchPlaceholder')}
             aria-label={t('addFactorModal.searchPlaceholder')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
         <Button variant="ghost" size="sm" onClick={selectAll}>
@@ -149,32 +149,32 @@ const AddFactorModal = ({
         )}
       </div>
 
-      <div className="max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
+      <div className="max-h-80 overflow-y-auto border border-(--palette-line) rounded-lg">
         {filtered.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="text-center py-8 text-(--palette-gray-500) text-sm">
             {t('addFactorModal.noFactors')}
           </div>
         ) : (
           <table className="w-full">
-            <thead className="sticky top-0 bg-gray-50">
+            <thead className="sticky top-0 bg-(--palette-surface-2)">
               <tr>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center w-10" />
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
+                <th className="text-xs font-semibold text-(--palette-gray-500) py-2 px-3 text-center w-10" />
+                <th className="text-xs font-semibold text-(--palette-gray-500) py-2 px-3 text-left">
                   {t('addFactorModal.columns.code')}
                 </th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
+                <th className="text-xs font-semibold text-(--palette-gray-500) py-2 px-3 text-left">
                   {t('addFactorModal.columns.name')}
                 </th>
-                <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-left">
+                <th className="text-xs font-semibold text-(--palette-gray-500) py-2 px-3 text-left">
                   {t('addFactorModal.columns.dataType')}
                 </th>
                 {showMandatory && (
-                  <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
+                  <th className="text-xs font-semibold text-(--palette-gray-500) py-2 px-3 text-center">
                     {t('addFactorModal.columns.mandatory')}
                   </th>
                 )}
                 {showCalculation && (
-                  <th className="text-xs font-semibold text-gray-500 py-2 px-3 text-center">
+                  <th className="text-xs font-semibold text-(--palette-gray-500) py-2 px-3 text-center">
                     {t('addFactorModal.columns.calculation')}
                   </th>
                 )}
@@ -188,21 +188,23 @@ const AddFactorModal = ({
                   <tr
                     key={factor.id}
                     className={clsx(
-                      'border-t border-gray-100 transition-colors cursor-pointer',
-                      isSelected ? 'bg-primary/5' : 'hover:bg-gray-50',
+                      'border-t border-(--palette-line-soft) transition-colors cursor-pointer',
+                      isSelected ? 'bg-primary/5' : 'hover:bg-(--palette-surface-2)',
                     )}
                     onClick={() => toggleSelect(factor.id)}
                   >
                     <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
                       <Checkbox checked={isSelected} onChange={() => toggleSelect(factor.id)} />
                     </td>
-                    <td className="py-2 px-3 text-sm font-mono text-gray-700">
+                    <td className="py-2 px-3 text-sm font-mono text-(--palette-ink)">
                       {factor.factorCode}
                     </td>
-                    <td className="py-2 px-3 text-sm text-gray-900">
+                    <td className="py-2 px-3 text-sm text-(--palette-ink)">
                       {getTranslatedFactorName(factor.translations, language)}
                     </td>
-                    <td className="py-2 px-3 text-sm text-gray-600">{factor.dataType}</td>
+                    <td className="py-2 px-3 text-sm text-(--palette-gray-600)">
+                      {factor.dataType}
+                    </td>
                     {showMandatory && (
                       <td className="py-2 px-3 text-center" onClick={e => e.stopPropagation()}>
                         {isSelected && (
@@ -232,7 +234,7 @@ const AddFactorModal = ({
       </div>
 
       <div className="flex items-center justify-between mt-4">
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-(--palette-gray-500)">
           {selectedCount > 0
             ? t('addFactorModal.selectedCount', { n: selectedCount })
             : t('addFactorModal.selectPrompt')}

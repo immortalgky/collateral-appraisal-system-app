@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 
 import Button from '@/shared/components/Button';
 import Badge from '@/shared/components/Badge';
@@ -7,6 +8,7 @@ import DataErrorState from '@/shared/components/DataErrorState';
 import Icon from '@/shared/components/Icon';
 import Pagination from '@/shared/components/Pagination';
 import ProvinceAutocomplete from '@/shared/components/inputs/ProvinceAutocomplete';
+import { DateInput } from '@/shared/components/inputs';
 
 import {
   useEligibleAppraisalsForQuotation,
@@ -16,6 +18,14 @@ import { useGetRequestDocuments } from '@/features/request/api/documents';
 import type { SharedDocumentSelectionDto } from '../schemas/quotation';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { APPRAISAL_STATUS_OPTIONS } from '@/shared/constants/appraisalStatus';
+import { useSegmentLabel } from '../hooks/useSegmentLabel';
+import { SegmentChips } from './SegmentBadges';
+import { useDelayedFlag } from '@/shared/hooks/useDelayedFlag';
+import { ValidationText } from '@/shared/components/form/ValidationText';
+
+const EMPTY = <span className="text-(--palette-gray-400)">—</span>;
+
+const COLUMN_COUNT = 10;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -25,6 +35,7 @@ export interface SelectedAppraisal {
   appraisalNumber: string;
   customerName: string | null;
   maxAppraisalDays: number | null;
+  bankingSegment?: string | null;
 }
 
 /** Outer key = appraisalId, inner key = documentId, value = level */
@@ -58,38 +69,6 @@ const EMPTY_FILTERS: AppraisalFilters = {
   district: '',
   province: '',
 };
-
-const STORAGE_KEY = 'quotation-picker-filters-v1';
-
-interface StoredFilterState {
-  filters: Partial<AppraisalFilters>;
-  moreOpen: boolean;
-}
-
-function readStoredFilters(): StoredFilterState | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as StoredFilterState;
-  } catch {
-    return null;
-  }
-}
-
-function writeStoredFilters(state: StoredFilterState): void {
-  try {
-    // Strip empty strings before persisting
-    const stripped = Object.fromEntries(
-      Object.entries(state.filters).filter(([, v]) => v !== ''),
-    ) as Partial<AppraisalFilters>;
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ filters: stripped, moreOpen: state.moreOpen }),
-    );
-  } catch {
-    // ignore — private mode / storage full
-  }
-}
 
 function useDebounced<T>(value: T, delay: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -138,26 +117,28 @@ export function SelectedAppraisalRow({
 
   if (isMarkedForRemoval) {
     return (
-      <div className="px-3 py-2 flex items-center gap-2 bg-amber-50">
-        <div className="size-7 rounded bg-amber-100 flex items-center justify-center shrink-0">
+      <div className="px-3 py-2 flex items-center gap-2 bg-(--palette-warn-wash)">
+        <div className="size-7 rounded bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center shrink-0">
           <Icon name="file-chart-column" style="solid" className="size-3.5 text-amber-500" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-400 line-through truncate">
+          <p className="text-sm font-medium text-(--palette-gray-400) line-through truncate">
             {a.appraisalNumber || a.id.slice(0, 8)}
           </p>
           {a.customerName && (
-            <p className="text-xs text-gray-400 line-through truncate">{a.customerName}</p>
+            <p className="text-xs text-(--palette-gray-400) line-through truncate">
+              {a.customerName}
+            </p>
           )}
         </div>
-        <span className="text-xs text-amber-600 italic whitespace-nowrap">
+        <span className="text-xs text-amber-600 dark:text-amber-400 italic whitespace-nowrap">
           {t('appraisalPanel.willBeRemoved')}
         </span>
         {onUndoRemoval && (
           <button
             type="button"
             onClick={() => onUndoRemoval(a.id)}
-            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-amber-700 hover:text-amber-900 hover:bg-amber-100 rounded transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-(--palette-warn) hover:text-amber-900 dark:hover:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-500/20 rounded transition-colors"
           >
             <Icon name="arrow-rotate-left" style="solid" className="size-3" />
             {t('appraisalPanel.undo')}
@@ -171,7 +152,7 @@ export function SelectedAppraisalRow({
     <div>
       {/* Compact row */}
       <div
-        className="px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-(--palette-surface-2) transition-colors"
         onClick={() => onToggleExpanded(a.id)}
         role="button"
         tabIndex={0}
@@ -183,25 +164,31 @@ export function SelectedAppraisalRow({
         }}
       >
         <div className="size-7 rounded bg-primary/10 flex items-center justify-center shrink-0">
-          <Icon name="file-chart-column" style="solid" className="size-3.5 text-primary" />
+          <Icon
+            name="file-chart-column"
+            style="solid"
+            className="size-3.5 text-(--palette-primary-text)"
+          />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 truncate">
+          <p className="text-sm font-medium text-(--palette-ink) truncate">
             {a.appraisalNumber || a.id.slice(0, 8)}
             {a.customerName && (
-              <span className="text-gray-400 font-normal"> – {a.customerName}</span>
+              <span className="text-(--palette-gray-400) font-normal"> – {a.customerName}</span>
             )}
           </p>
         </div>
+        {/* Appraisal banking segment */}
+        <SegmentChips segments={[a.bankingSegment]} className="shrink-0" />
         {/* Max days chip */}
         {a.maxAppraisalDays != null && (
-          <span className="shrink-0 px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 text-xs tabular-nums whitespace-nowrap">
+          <span className="shrink-0 px-1.5 py-0.5 rounded bg-(--palette-surface-3) text-(--palette-gray-600) text-xs tabular-nums whitespace-nowrap">
             Max {a.maxAppraisalDays}d
           </span>
         )}
         {/* Doc count chip */}
         {docCount > 0 && (
-          <span className="shrink-0 px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-xs tabular-nums whitespace-nowrap">
+          <span className="shrink-0 px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 text-xs tabular-nums whitespace-nowrap">
             {t('picker.docsCount', { n: docCount })}
           </span>
         )}
@@ -211,7 +198,7 @@ export function SelectedAppraisalRow({
             e.stopPropagation();
             onToggleExpanded(a.id);
           }}
-          className="size-6 shrink-0 rounded-md hover:bg-gray-100 text-gray-400 transition-colors flex items-center justify-center"
+          className="size-6 shrink-0 rounded-md hover:bg-(--palette-surface-3) text-(--palette-gray-400) transition-colors flex items-center justify-center"
           aria-label={
             isExpanded
               ? t('aria.collapseAppraisal', { number: a.appraisalNumber })
@@ -230,7 +217,7 @@ export function SelectedAppraisalRow({
             e.stopPropagation();
             onRemove(a.id);
           }}
-          className="size-6 shrink-0 rounded-md hover:bg-rose-50 hover:text-rose-600 text-gray-400 transition-colors flex items-center justify-center"
+          className="size-6 shrink-0 rounded-md hover:bg-rose-50 dark:hover:bg-rose-500/10 hover:text-rose-600 dark:hover:text-rose-400 text-(--palette-gray-400) transition-colors flex items-center justify-center"
           aria-label={t('aria.removeAppraisal', { number: a.appraisalNumber })}
         >
           <Icon name="xmark" style="solid" className="size-3" />
@@ -239,10 +226,12 @@ export function SelectedAppraisalRow({
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="border-t border-gray-100 bg-gray-50 px-3 py-2 flex flex-col gap-2">
+        <div className="border-t border-(--palette-line-soft) bg-(--palette-surface-2) px-3 py-2 flex flex-col gap-2">
           {/* Max days input */}
           <div className="flex items-center gap-2">
-            <label className="text-xs text-gray-500 whitespace-nowrap">{t('picker.maxDays')}</label>
+            <label className="text-xs text-(--palette-gray-500) whitespace-nowrap">
+              {t('picker.maxDays')}
+            </label>
             <input
               type="number"
               min={1}
@@ -255,7 +244,7 @@ export function SelectedAppraisalRow({
               }}
               placeholder="—"
               aria-label={t('aria.maxDaysFor', { number: a.appraisalNumber })}
-              className="w-20 px-2 py-1 text-right text-sm tabular-nums border border-gray-200 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white"
+              className="w-20 px-2 py-1 text-right text-sm tabular-nums border border-(--palette-line) rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-(--palette-surface)"
               onClick={e => e.stopPropagation()}
             />
           </div>
@@ -299,8 +288,10 @@ export function SetMaxDaysBar({
   const activeCount = appraisals.filter(a => !(markedForRemovalIds?.has(a.id) ?? false)).length;
 
   return (
-    <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2 flex-wrap">
-      <span className="text-xs text-gray-500 whitespace-nowrap">{t('picker.maxDaysAll')}</span>
+    <div className="px-3 py-2 bg-(--palette-surface-2) border-b border-(--palette-line) flex items-center gap-2 flex-wrap">
+      <span className="text-xs text-(--palette-gray-500) whitespace-nowrap">
+        {t('picker.maxDaysAll')}
+      </span>
       <input
         type="number"
         min={1}
@@ -310,7 +301,7 @@ export function SetMaxDaysBar({
         onChange={e => setBulkDays(e.target.value)}
         placeholder={t('picker.maxDaysPlaceholder')}
         disabled={activeCount === 0}
-        className="w-20 px-2 py-1 text-sm tabular-nums border border-gray-200 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white disabled:opacity-50"
+        className="w-20 px-2 py-1 text-sm tabular-nums border border-(--palette-line) rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-(--palette-surface) disabled:opacity-50"
       />
       <Button
         size="xs"
@@ -368,10 +359,12 @@ function SelectedAppraisalList({
   const activeCount = selected.filter(a => !(markedForRemovalIds?.has(a.id) ?? false)).length;
 
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
+    <div className="rounded-lg border border-(--palette-line) overflow-hidden">
       {/* "Set max days for all" bar */}
-      <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex items-center gap-2 flex-wrap">
-        <span className="text-xs text-gray-500 whitespace-nowrap">{t('picker.maxDaysAll')}</span>
+      <div className="px-3 py-2 bg-(--palette-surface-2) border-b border-(--palette-line) flex items-center gap-2 flex-wrap">
+        <span className="text-xs text-(--palette-gray-500) whitespace-nowrap">
+          {t('picker.maxDaysAll')}
+        </span>
         <input
           type="number"
           min={1}
@@ -381,7 +374,7 @@ function SelectedAppraisalList({
           onChange={e => setBulkDays(e.target.value)}
           placeholder={t('picker.maxDaysPlaceholder')}
           disabled={activeCount === 0}
-          className="w-20 px-2 py-1 text-sm tabular-nums border border-gray-200 rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-white disabled:opacity-50"
+          className="w-20 px-2 py-1 text-sm tabular-nums border border-(--palette-line) rounded-md focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none bg-(--palette-surface) disabled:opacity-50"
         />
         <Button
           size="xs"
@@ -394,7 +387,7 @@ function SelectedAppraisalList({
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-(--palette-line-soft)">
         {selected.map(a => (
           <SelectedAppraisalRow
             key={a.id}
@@ -472,25 +465,11 @@ export function AppraisalPicker({
     });
   };
 
-  // ── Filter state + localStorage hydration ──
-  const stored = useMemo(() => readStoredFilters(), []);
-  const [filters, setFilters] = useState<AppraisalFilters>({
-    ...EMPTY_FILTERS,
-    ...(stored?.filters ?? {}),
-  });
-  const [moreFiltersOpen, setMoreFiltersOpen] = useState<boolean>(stored?.moreOpen ?? false);
-
-  // Debounced write-back on filter/toggle changes
-  const writeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => {
-    if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    writeTimerRef.current = setTimeout(() => {
-      writeStoredFilters({ filters, moreOpen: moreFiltersOpen });
-    }, 500);
-    return () => {
-      if (writeTimerRef.current) clearTimeout(writeTimerRef.current);
-    };
-  }, [filters, moreFiltersOpen]);
+  // ── Filter state — always starts blank; not persisted across opens ──
+  const [filters, setFilters] = useState<AppraisalFilters>(EMPTY_FILTERS);
+  const [moreFiltersOpen, setMoreFiltersOpen] = useState(false);
+  // Bumped on clear to remount the date field, which keeps text it rejected (e.g. 31/02/2026).
+  const [clearCount, setClearCount] = useState(0);
 
   const [pageNumber, setPageNumber] = useState(0);
   const PAGE_SIZE = 10;
@@ -504,16 +483,16 @@ export function AppraisalPicker({
   const debouncedSubDistrict = useDebounced(effectiveFilters.subDistrict, 300).trim();
   const debouncedDistrict = useDebounced(effectiveFilters.district, 300).trim();
 
+  // DateInput's stored ISO is cut to yyyy-MM-dd for the query.
+  const requestedDay = effectiveFilters.requestedAt?.slice(0, 10) ?? '';
+
   const queryParams: EligibleAppraisalsParams = {
     pageNumber,
     pageSize: PAGE_SIZE,
     ...(debouncedCustomerName && { customerName: debouncedCustomerName }),
     ...(debouncedAppraisalNumber && { appraisalNumber: debouncedAppraisalNumber }),
     ...(effectiveFilters.purpose && { purpose: effectiveFilters.purpose }),
-    ...(effectiveFilters.requestedAt && {
-      requestedAtFrom: effectiveFilters.requestedAt,
-      requestedAtTo: effectiveFilters.requestedAt,
-    }),
+    ...(requestedDay && { requestedAtFrom: requestedDay, requestedAtTo: requestedDay }),
     ...(effectiveFilters.channel && { channel: effectiveFilters.channel }),
     ...(effectiveFilters.status && { status: effectiveFilters.status }),
     ...(effectiveFilters.bankingSegment && { bankingSegment: effectiveFilters.bankingSegment }),
@@ -525,6 +504,7 @@ export function AppraisalPicker({
 
   const {
     data,
+    isLoading,
     isFetching,
     isError: appraisalsError,
     refetch: refetchAppraisals,
@@ -534,20 +514,24 @@ export function AppraisalPicker({
   const channelOptions = useParameterOptions('Channel');
   const bankingSegmentOptions = useParameterOptions('BankingSegment');
 
+  const purposeLabels = useMemo(
+    () => new Map(purposeOptions.map(o => [o.value ?? '', o.label])),
+    [purposeOptions],
+  );
   const channelLabels = useMemo(
     () => new Map(channelOptions.map(o => [o.value ?? '', o.label])),
     [channelOptions],
   );
-  const bankingSegmentLabels = useMemo(
-    () => new Map(bankingSegmentOptions.map(o => [o.value ?? '', o.label])),
-    [bankingSegmentOptions],
-  );
+  const segmentLabel = useSegmentLabel();
 
   const excludeSet = useMemo(() => new Set(excludeIds ?? []), [excludeIds]);
 
   // Filter out already-on-quotation rows from results
   const rawItems = data?.items ?? [];
   const items = useMemo(() => rawItems.filter(r => !excludeSet.has(r.id)), [rawItems, excludeSet]);
+  const isSlowRefetch = useDelayedFlag(isFetching && !isLoading, 250);
+  const showSkeleton = isLoading || isSlowRefetch || (isFetching && items.length === 0);
+  const skeletonRows = items.length || PAGE_SIZE;
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / PAGE_SIZE);
 
@@ -583,6 +567,7 @@ export function AppraisalPicker({
 
   const handleClear = () => {
     setFilters(EMPTY_FILTERS);
+    setClearCount(c => c + 1);
     setPageNumber(0);
   };
 
@@ -598,6 +583,7 @@ export function AppraisalPicker({
         appraisalNumber: r.appraisalNumber ?? r.id.slice(0, 8),
         customerName: r.customerName ?? null,
         maxAppraisalDays: null,
+        bankingSegment: r.bankingSegment ?? null,
       });
     }
   };
@@ -614,6 +600,7 @@ export function AppraisalPicker({
             appraisalNumber: r.appraisalNumber ?? r.id.slice(0, 8),
             customerName: r.customerName ?? null,
             maxAppraisalDays: null,
+            bankingSegment: r.bankingSegment ?? null,
           });
         }
       });
@@ -649,11 +636,11 @@ export function AppraisalPicker({
       )}
 
       {/* ── Search-By Panel ── */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-3 flex flex-col gap-2">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2) p-3 flex flex-col gap-2">
         {/* Always-visible row: Customer Name, Appraisal No., Purpose, Status */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
               {t('picker.customerName')}
             </label>
             <input
@@ -661,11 +648,11 @@ export function AppraisalPicker({
               value={filters.customerName}
               onChange={e => handleFilterChange('customerName', e.target.value)}
               placeholder={t('picker.customerNamePlaceholder')}
-              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              className="w-full"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
               {t('picker.appraisalReportNo')}
             </label>
             <input
@@ -673,17 +660,17 @@ export function AppraisalPicker({
               value={filters.appraisalNumber}
               onChange={e => handleFilterChange('appraisalNumber', e.target.value)}
               placeholder={t('picker.appraisalReportNoPlaceholder')}
-              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              className="w-full"
             />
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
               {t('picker.purpose')}
             </label>
-            <select
+            <NativeSelect
               value={filters.purpose}
               onChange={e => handleFilterChange('purpose', e.target.value)}
-              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              className="w-full"
             >
               <option value="">{t('picker.purposeAll')}</option>
               {purposeOptions.map(opt => (
@@ -691,16 +678,16 @@ export function AppraisalPicker({
                   {opt.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
           <div className="flex flex-col gap-1">
-            <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+            <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
               {t('picker.status')}
             </label>
-            <select
+            <NativeSelect
               value={effectiveFilters.status}
               onChange={e => handleFilterChange('status', e.target.value)}
-              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+              className="w-full"
             >
               {fixedFilters?.status === undefined && (
                 <option value="">{t('picker.statusAll')}</option>
@@ -713,7 +700,7 @@ export function AppraisalPicker({
                   {opt.label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
         </div>
 
@@ -722,7 +709,7 @@ export function AppraisalPicker({
           <button
             type="button"
             onClick={() => setMoreFiltersOpen(v => !v)}
-            className="inline-flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-(--palette-gray-500) hover:text-(--palette-ink) transition-colors"
           >
             <Icon
               name={moreFiltersOpen ? 'chevron-up' : 'chevron-down'}
@@ -731,7 +718,7 @@ export function AppraisalPicker({
             />
             {moreFiltersOpen ? t('picker.fewerFilters') : t('picker.moreFilters')}
             {hasActiveMoreFilters && !moreFiltersOpen && (
-              <span className="ml-1 px-1 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+              <span className="ml-1 px-1 py-0.5 rounded-full bg-primary/10 text-(--palette-primary-text) text-[10px] font-medium">
                 {t('picker.filtersActive')}
               </span>
             )}
@@ -744,24 +731,28 @@ export function AppraisalPicker({
             {/* Row: Request Date, Channel, Banking Segment */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('picker.requestDate')}
                 </label>
-                <input
-                  type="date"
+                <DateInput
+                  key={clearCount}
+                  todayLabel={t('picker.today')}
+                  disableFutureDates
                   value={filters.requestedAt}
-                  onChange={e => handleFilterChange('requestedAt', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  onChange={v => handleFilterChange('requestedAt', v ?? '')}
+                  // py-1.5 spelled as the global input rule's calc (index.css): a plain py-1.5! is !important
+                  // and skips --cas-lead-trim, leaving the field taller than the other inputs.
+                  className="pl-2.5! py-[calc(var(--spacing)*1.5-var(--cas-lead-trim))]! rounded-md! focus:ring-1! focus:ring-primary! focus:border-primary!"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('picker.channel')}
                 </label>
-                <select
+                <NativeSelect
                   value={filters.channel}
                   onChange={e => handleFilterChange('channel', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full"
                 >
                   <option value="">{t('picker.channelAll')}</option>
                   {channelOptions.map(opt => (
@@ -769,16 +760,16 @@ export function AppraisalPicker({
                       {opt.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('picker.bankingSegment')}
                 </label>
-                <select
+                <NativeSelect
                   value={filters.bankingSegment}
                   onChange={e => handleFilterChange('bankingSegment', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full"
                 >
                   <option value="">{t('picker.bankingSegmentAll')}</option>
                   {bankingSegmentOptions.map(opt => (
@@ -786,7 +777,7 @@ export function AppraisalPicker({
                       {opt.label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </div>
               <div />
             </div>
@@ -794,7 +785,7 @@ export function AppraisalPicker({
             {/* Row: SubDistrict, District, Province + Clear */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 items-end">
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('picker.subDistrict')}
                 </label>
                 <input
@@ -802,11 +793,11 @@ export function AppraisalPicker({
                   value={filters.subDistrict}
                   onChange={e => handleFilterChange('subDistrict', e.target.value)}
                   placeholder={t('picker.subDistrictPlaceholder')}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('picker.district')}
                 </label>
                 <input
@@ -814,11 +805,11 @@ export function AppraisalPicker({
                   value={filters.district}
                   onChange={e => handleFilterChange('district', e.target.value)}
                   placeholder={t('picker.districtPlaceholder')}
-                  className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:ring-1 focus:ring-primary focus:border-primary outline-none"
+                  className="w-full"
                 />
               </div>
               <div className="flex flex-col gap-1">
-                <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wide">
+                <label className="text-[11px] font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('picker.province')}
                 </label>
                 <ProvinceAutocomplete
@@ -832,7 +823,7 @@ export function AppraisalPicker({
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-(--palette-gray-500) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) rounded-md transition-colors"
                   >
                     <Icon name="xmark" style="solid" className="size-3.5" />
                     {t('picker.clear')}
@@ -849,7 +840,7 @@ export function AppraisalPicker({
             <button
               type="button"
               onClick={handleClear}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm text-(--palette-gray-500) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) rounded-md transition-colors"
             >
               <Icon name="xmark" style="solid" className="size-3.5" />
               {t('picker.clearFilters')}
@@ -859,11 +850,16 @@ export function AppraisalPicker({
       </div>
 
       {/* ── Results Table ── */}
-      <div className="rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="rounded-lg border border-(--palette-line) overflow-hidden">
+        <div
+          className={`overflow-x-auto transition-opacity ${
+            isFetching || showSkeleton ? 'opacity-60 pointer-events-none' : ''
+          }`}
+          aria-busy={isFetching}
+        >
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
+              <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
                 <th className="text-xs px-3 py-2 text-left w-8 font-semibold">
                   <input
                     ref={headerCheckboxRef}
@@ -874,62 +870,66 @@ export function AppraisalPicker({
                     className="size-3.5 accent-primary rounded"
                   />
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.appraisalNo')}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.customer')}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.purpose')}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.status')}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.channelCol')}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.bankingSegmentCol')}
                 </th>
-                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-right text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.properties')}
                 </th>
-                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
                   {t('picker.requestedAt')}
+                </th>
+                <th className="px-3 py-2 text-left text-[11px] font-medium uppercase tracking-wide text-(--palette-gray-500)">
+                  {t('picker.previouslyQuoted')}
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {/* Enhancement #6 — Select-all hint */}
-              {allPageSelected && totalCount > PAGE_SIZE && (
+              {!showSkeleton && allPageSelected && totalCount > PAGE_SIZE && (
                 <tr>
-                  <td colSpan={9} className="px-3 py-1.5 bg-gray-50">
-                    <p className="text-xs text-gray-500">
+                  <td colSpan={10} className="px-3 py-1.5 bg-(--palette-surface-2)">
+                    <p className="text-xs text-(--palette-gray-500)">
                       {t('picker.selectAllHint', { page: PAGE_SIZE, total: totalCount })}
                     </p>
                   </td>
                 </tr>
               )}
-              {isFetching && items.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
-                    <div className="flex items-center justify-center gap-2 text-gray-400">
-                      <Icon name="spinner" style="solid" className="size-4 animate-spin" />
-                      <span className="text-xs">{t('common:status.loading')}</span>
-                    </div>
-                  </td>
-                </tr>
+              {showSkeleton ? (
+                Array.from({ length: skeletonRows }, (_, row) => (
+                  <tr key={row} className="animate-pulse">
+                    {Array.from({ length: COLUMN_COUNT }, (_, col) => (
+                      <td key={col} className="px-3 py-2">
+                        <div className="h-5 rounded bg-(--palette-surface-3)" />
+                      </td>
+                    ))}
+                  </tr>
+                ))
               ) : appraisalsError ? (
                 <tr>
-                  <td colSpan={9}>
+                  <td colSpan={COLUMN_COUNT}>
                     <DataErrorState variant="inline" onRetry={() => refetchAppraisals()} />
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="px-3 py-8 text-center">
-                    <p className="text-xs text-gray-400 italic">
+                  <td colSpan={COLUMN_COUNT} className="px-3 py-8 text-center">
+                    <p className="text-xs text-(--palette-gray-400) italic">
                       {t('empty.noEligibleAppraisals')}
                     </p>
                   </td>
@@ -941,7 +941,9 @@ export function AppraisalPicker({
                     <tr
                       key={r.id}
                       className={`transition-colors cursor-pointer ${
-                        isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-gray-50'
+                        isSelected
+                          ? 'bg-primary/5 hover:bg-primary/10'
+                          : 'hover:bg-(--palette-surface-2)'
                       }`}
                       onClick={() => handleToggleRow(r)}
                     >
@@ -953,41 +955,40 @@ export function AppraisalPicker({
                           className="size-3.5 accent-primary rounded"
                         />
                       </td>
-                      <td className="px-3 py-2 font-medium text-gray-900 whitespace-nowrap">
+                      <td className="px-3 py-2 font-medium text-(--palette-ink) whitespace-nowrap">
                         {r.appraisalNumber ?? r.id.slice(0, 8)}
                       </td>
-                      <td className="px-3 py-2 text-gray-700 truncate max-w-[180px]">
-                        {r.customerName ?? '—'}
+                      <td className="px-3 py-2 text-(--palette-ink)">
+                        <div className="truncate max-w-[180px]" title={r.customerName || undefined}>
+                          {r.customerName || EMPTY}
+                        </div>
                       </td>
-                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.purpose ?? '—'}
+                      <td className="px-3 py-2 text-(--palette-gray-600) whitespace-nowrap">
+                        {r.purpose ? (purposeLabels.get(r.purpose) ?? r.purpose) : EMPTY}
                       </td>
                       <td className="px-3 py-2 whitespace-nowrap">
-                        {r.status ? (
-                          <Badge type="status" value={r.status} size="sm" />
-                        ) : (
-                          <span className="text-gray-400">—</span>
-                        )}
+                        {r.status ? <Badge type="status" value={r.status} size="sm" /> : EMPTY}
                       </td>
-                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : '—'}
+                      <td className="px-3 py-2 text-(--palette-gray-600) whitespace-nowrap">
+                        {r.channel ? (channelLabels.get(r.channel) ?? r.channel) : EMPTY}
                       </td>
-                      <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                        {r.bankingSegment
-                          ? (bankingSegmentLabels.get(r.bankingSegment) ?? r.bankingSegment)
-                          : '—'}
+                      <td className="px-3 py-2 text-(--palette-gray-600) whitespace-nowrap">
+                        {r.bankingSegment ? segmentLabel(r.bankingSegment) : EMPTY}
                       </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-gray-700">
+                      <td className="px-3 py-2 text-right tabular-nums text-(--palette-ink)">
                         {r.propertyCount}
                       </td>
-                      <td className="px-3 py-2 text-gray-500 whitespace-nowrap text-xs">
+                      <td className="px-3 py-2 text-(--palette-gray-500) whitespace-nowrap text-xs">
                         {r.requestedAt
                           ? new Date(r.requestedAt).toLocaleDateString('th-TH', {
                               day: '2-digit',
                               month: 'short',
                               year: 'numeric',
                             })
-                          : '—'}
+                          : EMPTY}
+                      </td>
+                      <td className="px-3 py-2 text-(--palette-gray-600) whitespace-nowrap">
+                        {r.previouslyQuotedNumber || EMPTY}
                       </td>
                     </tr>
                   );
@@ -1009,7 +1010,11 @@ export function AppraisalPicker({
         )}
       </div>
 
-      {error && <p className="text-xs text-danger">{error}</p>}
+      {error && (
+        <p className="text-xs text-danger">
+          <ValidationText message={error} />
+        </p>
+      )}
     </div>
   );
 }
@@ -1052,7 +1057,7 @@ export function AppraisalDocPicker({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 py-4 px-3 text-xs text-gray-400">
+      <div className="flex items-center gap-2 py-4 px-3 text-xs text-(--palette-gray-400)">
         <Icon name="spinner" style="solid" className="size-3.5 animate-spin" />
         {t('shared.loadingDocument')}
       </div>
@@ -1065,7 +1070,7 @@ export function AppraisalDocPicker({
 
   if (!requestId) {
     return (
-      <div className="px-3 py-3 text-xs text-amber-600 flex items-center gap-1.5">
+      <div className="px-3 py-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
         <Icon name="triangle-exclamation" style="solid" className="size-3.5 shrink-0" />
         {t('empty.noRequestLinked')}
       </div>
@@ -1074,7 +1079,11 @@ export function AppraisalDocPicker({
 
   const hasUploaded = sections.some(s => s.documents.some(d => d.documentId));
   if (!hasUploaded) {
-    return <div className="px-3 py-3 text-xs text-gray-400">{t('empty.noDocumentsFound')}</div>;
+    return (
+      <div className="px-3 py-3 text-xs text-(--palette-gray-400)">
+        {t('empty.noDocumentsFound')}
+      </div>
+    );
   }
 
   const handleSelectAll = () => {
@@ -1087,10 +1096,10 @@ export function AppraisalDocPicker({
   };
 
   return (
-    <div className="flex flex-col divide-y divide-gray-100 max-h-[280px] overflow-y-auto">
+    <div className="flex flex-col divide-y divide-(--palette-line-soft) max-h-[280px] overflow-y-auto">
       {allUploadedDocs.length > 0 && (
         <div className="flex items-center justify-between px-3 py-2.5">
-          <span className="text-[10px] text-gray-500 tabular-nums">
+          <span className="text-[10px] text-(--palette-gray-500) tabular-nums">
             {t('picker.selectedCount', { selected: selectedCount, total: allUploadedDocs.length })}
           </span>
           <label className="flex items-center gap-1.5 cursor-pointer">
@@ -1101,7 +1110,9 @@ export function AppraisalDocPicker({
               onChange={handleSelectAll}
               className="size-3 accent-primary rounded"
             />
-            <span className="text-[10px] text-gray-500">{t('picker.selectAllDocuments')}</span>
+            <span className="text-[10px] text-(--palette-gray-500)">
+              {t('picker.selectAllDocuments')}
+            </span>
           </label>
         </div>
       )}
@@ -1119,7 +1130,7 @@ export function AppraisalDocPicker({
         return (
           <div key={sIdx} className="px-3 py-2.5">
             <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[10px] font-medium text-gray-500 uppercase tracking-wider">
+              <span className="text-[10px] font-medium text-(--palette-gray-500) uppercase tracking-wider">
                 {section.sectionLabel}
               </span>
               <label className="flex items-center gap-1.5 cursor-pointer">
@@ -1129,7 +1140,9 @@ export function AppraisalDocPicker({
                   onChange={e => handleSectionSelectAll(e.target.checked)}
                   className="size-3 accent-primary rounded"
                 />
-                <span className="text-[10px] text-gray-500">{t('picker.selectAll')}</span>
+                <span className="text-[10px] text-(--palette-gray-500)">
+                  {t('picker.selectAll')}
+                </span>
               </label>
             </div>
             <div className="flex flex-col gap-1">
@@ -1144,10 +1157,10 @@ export function AppraisalDocPicker({
                     onChange={e => onToggle(appraisalId, doc.documentId!, level, e.target.checked)}
                     className="size-3.5 accent-primary rounded shrink-0"
                   />
-                  <span className="text-xs text-gray-800 truncate group-hover:text-primary">
+                  <span className="text-xs text-(--palette-ink) truncate group-hover:text-(--palette-primary-text)">
                     {doc.fileName ?? doc.documentId}
                     {doc.documentTypeName && (
-                      <span className="text-gray-400"> ({doc.documentTypeName})</span>
+                      <span className="text-(--palette-gray-400)"> ({doc.documentTypeName})</span>
                     )}
                   </span>
                 </label>

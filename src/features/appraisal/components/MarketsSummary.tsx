@@ -67,15 +67,15 @@ export const MarketsSummary = ({ comparables, distances }: MarketsSummaryProps) 
 
   const Item = ({ label, value }: { label: ReactNode; value: ReactNode }) => (
     <div className="min-w-0">
-      <div className="whitespace-nowrap text-[11px] text-gray-400">{label}</div>
-      <div className="whitespace-nowrap text-[14px] font-semibold tabular-nums text-gray-900">
+      <div className="whitespace-nowrap text-[11px] text-(--palette-gray-400)">{label}</div>
+      <div className="whitespace-nowrap text-[14px] font-semibold tabular-nums text-(--palette-ink)">
         {value}
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-wrap items-start gap-x-7 gap-y-2 rounded-xl border border-gray-100 bg-gray-50/80 px-3.5 py-2.5">
+    <div className="flex flex-wrap items-start gap-x-7 gap-y-2 rounded-xl border border-(--palette-line-soft) bg-(--palette-surface-2)/80 px-3.5 py-2.5">
       {byUnit.map(g => (
         <Item
           key={g.unit ?? 'none'}
@@ -93,7 +93,7 @@ export const MarketsSummary = ({ comparables, distances }: MarketsSummaryProps) 
               <>
                 {f.money(g.min)} – {f.money(g.max)}
                 {g.median != null && (
-                  <span className="ml-1 text-[12px] font-normal text-gray-500">
+                  <span className="ml-1 text-[12px] font-normal text-(--palette-gray-500)">
                     ({t('markets.summary.medianValue', { price: f.money(g.median) })})
                   </span>
                 )}

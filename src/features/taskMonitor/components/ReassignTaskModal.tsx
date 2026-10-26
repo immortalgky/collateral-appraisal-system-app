@@ -94,7 +94,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
     <Modal isOpen={isOpen} onClose={handleClose} title={t('reassign.title')} size="lg">
       <div className="space-y-4">
         {/* ── Current assignment summary ── */}
-        <div className="rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 space-y-2">
+        <div className="rounded-lg border border-(--palette-line-soft) bg-(--palette-surface-2) px-4 py-3 space-y-2">
           <div className="flex items-start gap-3">
             <Avatar
               name={task.assignedToDisplayName || task.assignedTo}
@@ -102,21 +102,27 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
               className="mt-0.5"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 mb-0.5">{t('reassign.currentlyAssigned')}</p>
-              <p className="text-sm font-semibold text-gray-900 truncate">
+              <p className="text-xs text-(--palette-gray-500) mb-0.5">
+                {t('reassign.currentlyAssigned')}
+              </p>
+              <p className="text-sm font-semibold text-(--palette-ink) truncate">
                 {task.assignedToDisplayName || task.assignedTo}
               </p>
-              <p className="text-xs text-gray-500 truncate">{task.activityName}</p>
+              <p className="text-xs text-(--palette-gray-500) truncate">{task.activityName}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 pt-1">
-            <Icon style="solid" name="clock" className="size-3.5 text-gray-400 shrink-0" />
-            <span className="text-xs text-gray-600">
+            <Icon
+              style="solid"
+              name="clock"
+              className="size-3.5 text-(--palette-gray-400) shrink-0"
+            />
+            <span className="text-xs text-(--palette-gray-600)">
               {t('reassign.due')}{' '}
-              <span className="font-medium text-gray-800">{formatDueAt(task.dueAt)}</span>
+              <span className="font-medium text-(--palette-ink)">{formatDueAt(task.dueAt)}</span>
             </span>
-            <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-50 border border-blue-200 text-blue-700">
+            <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 text-[10px] font-semibold rounded-full bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300">
               <Icon style="solid" name="lock" className="size-2.5" />
               {t('reassign.slaPreserved')}
             </span>
@@ -125,20 +131,22 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
 
         {/* ── Eligible list ── */}
         <div>
-          <p className="block text-sm font-medium text-gray-700 mb-2">
+          <p className="block text-sm font-medium text-(--palette-ink) mb-2">
             {t('reassign.newAssignee')} <span className="text-red-500">*</span>
           </p>
 
           {isLoadingAssignees ? (
-            <div className="flex items-center justify-center py-12 text-xs text-gray-400">
+            <div className="flex items-center justify-center py-12 text-xs text-(--palette-gray-400)">
               <Icon style="solid" name="spinner" className="size-4 animate-spin mr-2" />
               {t('reassign.loadingUsers')}
             </div>
           ) : allCandidates.length === 0 ? (
-            <p className="text-xs text-gray-500 py-6 text-center">{t('reassign.noEligible')}</p>
+            <p className="text-xs text-(--palette-gray-500) py-6 text-center">
+              {t('reassign.noEligible')}
+            </p>
           ) : (
             <>
-              <ul className="rounded-lg border border-gray-200 divide-y divide-gray-100 max-h-[360px] overflow-auto">
+              <ul className="rounded-lg border border-(--palette-line) divide-y divide-(--palette-line-soft) max-h-[360px] overflow-auto">
                 {pagedCandidates.map(candidate => {
                   const isSelected = selectedUserId === candidate.userId;
                   return (
@@ -149,27 +157,27 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                           isSelected
                             ? 'bg-primary/5 ring-1 ring-inset ring-primary/30'
-                            : 'hover:bg-gray-50'
+                            : 'hover:bg-(--palette-surface-2)'
                         }`}
                       >
                         <Avatar name={candidate.displayName || candidate.userName} size="md" />
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm text-gray-900">
-                            <span className="font-mono text-xs text-gray-500">
+                          <p className="text-sm text-(--palette-ink)">
+                            <span className="font-mono text-xs text-(--palette-gray-500)">
                               {candidate.userName}
                             </span>
-                            <span className="mx-1.5 text-gray-300">-</span>
+                            <span className="mx-1.5 text-(--palette-gray-300)">-</span>
                             <span className="font-medium">{candidate.displayName}</span>
                           </p>
                         </div>
-                        <div className="text-xs text-gray-500 shrink-0 max-w-[180px] truncate text-right">
+                        <div className="text-xs text-(--palette-gray-500) shrink-0 max-w-[180px] truncate text-right">
                           {candidate.roles.length > 0 ? candidate.roles.join(', ') : '—'}
                         </div>
                         {isSelected && (
                           <Icon
                             style="solid"
                             name="circle-check"
-                            className="size-4 text-primary shrink-0"
+                            className="size-4 text-(--palette-primary-text) shrink-0"
                           />
                         )}
                       </button>
@@ -180,7 +188,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
 
               {/* Pagination (client-side; eligible pools are typically small) */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-3 text-xs text-gray-500">
+                <div className="flex items-center justify-between mt-3 text-xs text-(--palette-gray-500)">
                   <span>
                     {t('reassign.pageInfo', {
                       from: page * PAGE_SIZE + 1,
@@ -193,7 +201,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
                       type="button"
                       onClick={() => setPage(p => Math.max(0, p - 1))}
                       disabled={page === 0}
-                      className="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="px-2 py-1 rounded border border-(--palette-line) hover:bg-(--palette-surface-2) disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Icon style="solid" name="chevron-left" className="size-3" />
                     </button>
@@ -204,8 +212,8 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
                         onClick={() => setPage(i)}
                         className={`min-w-[28px] px-2 py-1 rounded border ${
                           i === page
-                            ? 'border-primary bg-primary/10 text-primary font-semibold'
-                            : 'border-gray-200 hover:bg-gray-50'
+                            ? 'border-primary bg-primary/10 text-(--palette-primary-text) font-semibold'
+                            : 'border-(--palette-line) hover:bg-(--palette-surface-2)'
                         }`}
                       >
                         {i + 1}
@@ -215,7 +223,7 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
                       type="button"
                       onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                       disabled={page >= totalPages - 1}
-                      className="px-2 py-1 rounded border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                      className="px-2 py-1 rounded border border-(--palette-line) hover:bg-(--palette-surface-2) disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                       <Icon style="solid" name="chevron-right" className="size-3" />
                     </button>
@@ -228,13 +236,13 @@ function ReassignTaskModal({ task, isOpen, onClose }: ReassignTaskModalProps) {
 
         {/* ── Server error ── */}
         {serverError && (
-          <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5">
+          <div className="flex items-start gap-2 rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) px-3 py-2.5">
             <Icon
               style="solid"
               name="triangle-exclamation"
               className="size-4 text-red-500 shrink-0 mt-0.5"
             />
-            <p className="text-sm text-red-700">{serverError}</p>
+            <p className="text-sm text-(--palette-req)">{serverError}</p>
           </div>
         )}
 

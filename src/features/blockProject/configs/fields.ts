@@ -99,6 +99,17 @@ export const projectCountFields: FormField[] = [
 ];
 
 /**
+ * Condo's counts: four columns each instead of two. In the compact (grid) layout a quarter of the
+ * sheet minus its label column left a two-column input about 40px wide. At 4 + 4 the construction
+ * pair no longer fits the same row (4 + 4 + 4 + 4); Condo's derived-vs-entered hint, a full-row
+ * line that follows the counts, makes the break explicit and groups the pair on the next row.
+ */
+export const condoProjectCountFields: FormField[] = projectCountFields.map(field => ({
+  ...field,
+  wrapperClassName: field.name === 'unitForSaleCount' ? 'col-span-4 col-start-1' : 'col-span-4',
+}));
+
+/**
  * Construction progress of the development as a whole. Shares the counts row, four columns
  * each, so the section's last row reads 2 + 2 + 4 + 4 = 12.
  *
@@ -145,7 +156,7 @@ export const projectLocationFields: FormField[] = [
     label: 'House Number',
     name: 'houseNumber',
     wrapperClassName: 'col-span-4',
-    maxLength: 10,
+    maxLength: 50,
   },
   {
     type: 'text-input',
@@ -342,17 +353,6 @@ export const pricingForceSaleFields: FormField[] = [
     decimalPlaces: 2,
     min: 0,
     max: 100,
-    wrapperClassName: 'col-span-6',
-  },
-];
-
-export const pricingLandAssumptionFields: FormField[] = [
-  {
-    type: 'number-input',
-    label: 'Land Increase / Decrease (Baht/Sq.Wa)',
-    name: 'landIncreaseDecreaseRate',
-    decimalPlaces: 2,
-    maxIntegerDigits: 15,
     wrapperClassName: 'col-span-6',
   },
 ];

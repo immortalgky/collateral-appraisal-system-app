@@ -32,7 +32,25 @@
     "apply": "ใช้งาน",
     "openCalendar": "เปิดปฏิทิน",
     "clear": "ล้าง",
-    "clearAll": "ล้างทั้งหมด"
+    "clearAll": "ล้างทั้งหมด",
+    "duplicate": "ทำสำเนา"
+  },
+  "toggle": {
+    "No": "ไม่ใช่",
+    "Yes": "ใช่",
+    "Correct": "ถูกต้อง",
+    "Incorrect": "ไม่ถูกต้อง",
+    "In Correct": "ไม่ถูกต้อง",
+    "Consistent": "ถูกต้องตรงกัน",
+    "Inconsistent": "ไม่สอดคล้องกัน",
+    "Can": "ตรวจสอบได้",
+    "Can not": "ตรวจสอบไม่ได้",
+    "Appraise": "ประเมิน",
+    "Not Appraised": "ไม่ประเมิน",
+    "isResidential": {
+      "Can": "ใช่",
+      "Can not": "ไม่ใช่"
+    }
   },
   "select": {
     "placeholder": "กรุณาเลือก",
@@ -47,6 +65,11 @@
   "range": {
     "from": "ตั้งแต่",
     "to": "ถึง"
+  },
+  "sectionToc": {
+    "title": "ในหน้านี้",
+    "complete": "ครบ",
+    "missing": "ขาด {{count}}"
   },
   "status": {
     "loading": "กำลังโหลด...",
@@ -112,10 +135,52 @@
     "stay": "อยู่ต่อ",
     "leave": "ออกจากหน้านี้"
   },
+  "missing": {
+    "chip": "ขาด {{count}} ช่อง",
+    "popoverTitle_one": "ขาด {{missing}} ช่อง ใน {{count}} ส่วน",
+    "popoverTitle_other": "ขาด {{missing}} ช่อง ใน {{count}} ส่วน",
+    "listLabel": "รายการที่ยังขาด",
+    "goTo": "ไปที่ช่อง",
+    "complete": "ครบถ้วน",
+    "fieldMissing": "ขาด",
+    "rowField": "{{label}} รายการที่ {{n}}",
+    "otherSection": "อื่นๆ"
+  },
   "validation": {
     "required": "จำเป็นต้องกรอกข้อมูลนี้",
+    "required_labeled": "กรุณาระบุ{{label}}",
     "invalidEmail": "อีเมลไม่ถูกต้อง",
-    "invalidNumber": "ตัวเลขไม่ถูกต้อง"
+    "invalidNumber": "ตัวเลขไม่ถูกต้อง",
+    "invalidFormat": "รูปแบบไม่ถูกต้อง",
+    "invalidValue": "ข้อมูลไม่ถูกต้อง",
+    "invalidDate": "วันที่ไม่ถูกต้อง",
+    "minLength": "ต้องมีอย่างน้อย {{min}} ตัวอักษร",
+    "minLength_labeled": "{{label}} ต้องมีอย่างน้อย {{min}} ตัวอักษร",
+    "maxLength": "ต้องไม่เกิน {{max}} ตัวอักษร",
+    "maxLength_labeled": "{{label}} ต้องไม่เกิน {{max}} ตัวอักษร",
+    "minValue": "ต้องไม่น้อยกว่า {{min}}",
+    "minValue_labeled": "{{label}} ต้องไม่น้อยกว่า {{min}}",
+    "maxValue": "ต้องไม่เกิน {{max}}",
+    "maxValue_labeled": "{{label}} ต้องไม่เกิน {{max}}",
+    "greaterThan": "ต้องมากกว่า {{min}}",
+    "lessThan": "ต้องน้อยกว่า {{max}}",
+    "minItems": "ต้องมีอย่างน้อย {{min}} รายการ",
+    "minItems_labeled": "{{label}} ต้องมีอย่างน้อย {{min}} รายการ",
+    "maxItems": "ต้องมีไม่เกิน {{max}} รายการ",
+    "maxItems_labeled": "{{label}} ต้องมีไม่เกิน {{max}} รายการ",
+    "maxDecimals": "ทศนิยมได้ไม่เกิน {{max}} ตำแหน่ง",
+    "wholeNumber": "ต้องเป็นจำนวนเต็ม",
+    "maxIntegerDigits": "ต้องไม่เกิน {{max}} หลักก่อนจุดทศนิยม",
+    "dateHoliday": "เลือกวันหยุดไม่ได้ ({{name}})",
+    "datePast": "เลือกวันที่ผ่านมาแล้วไม่ได้",
+    "dateFuture": "เลือกวันที่ในอนาคตไม่ได้",
+    "dateToday": "เลือกวันนี้ไม่ได้",
+    "dateBeforeMin": "เลือกวันที่ก่อนวันต่ำสุดที่กำหนดไม่ได้",
+    "dateTooFarPast": "เลือกวันที่ย้อนหลังเกิน {{days}} วันไม่ได้",
+    "dateTooSoon": "ต้องเลือกวันที่หลังจากวันนี้อย่างน้อย {{days}} วัน",
+    "maxBelowMin": "ค่าสูงสุดต้องไม่น้อยกว่าค่าต่ำสุด",
+    "invalidEmailList": "ต้องเป็นอีเมลที่ถูกต้อง (คั่นหลายรายการด้วย , หรือ ;)",
+    "recipientRequired": "ต้องระบุผู้รับอย่างน้อยหนึ่งราย (To, Cc หรือ Bcc)"
   },
   "hint": {
     "scrollWithArrowKeys": "เลื่อนตารางด้วยปุ่มลูกศร"
@@ -169,7 +234,11 @@
     "hideColumn": "ซ่อนคอลัมน์",
     "showColumn": "แสดงคอลัมน์",
     "dragHint": "ลากแถวเพื่อจัดลำดับคอลัมน์",
-    "rowNumber": "ลำดับที่"
+    "rowNumber": "ลำดับที่",
+    "pin": "ปัก {{label}} ไว้ด้านซ้าย",
+    "unpin": "เลิกปัก {{label}}",
+    "pinnedGroup": "ปักไว้ด้านซ้าย · เลื่อนตารางแล้วยังอยู่",
+    "otherGroup": "คอลัมน์อื่น"
   },
   "pagination": {
     "first": "หน้าแรก",
@@ -179,6 +248,12 @@
     "itemRange": "{{start}}-{{end}} จาก {{total}}",
     "noResults": "ไม่พบรายการ",
     "pageSize": "จำนวนต่อหน้า"
+  },
+  "table": {
+    "totalItems_one": "รวม · {{count}} รายการ",
+    "totalItems_other": "รวม · {{count}} รายการ",
+    "moveRowUp": "เลื่อนแถวที่ {{n}} ขึ้น",
+    "moveRowDown": "เลื่อนแถวที่ {{n}} ลง"
   },
   "reportJob": {
     "generating": "กำลังสร้างรายงาน…",
@@ -225,5 +300,9 @@
     "rejectStamp": "ไม่เห็นด้วย",
     "routeBackStamp": "ส่งกลับ",
     "finalNote": "ทุกขั้นตอนของใบงานนี้เสร็จสมบูรณ์แล้ว"
+  },
+  "collateralMaster": {
+    "allTypes": "ทุกประเภท",
+    "masterTitle": "ข้อมูลหลัก {{type}}"
   }
 }

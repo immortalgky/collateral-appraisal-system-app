@@ -100,18 +100,18 @@ export const PricingAnalysisMethodBoard = ({
         // Mock's `.g th, .g td` border spec (mock:133-137) — applied once here rather than
         // per-cell across this file, PricingAnalysisMethodBoardRow.tsx and
         // GroupReferencesSection.tsx, since all three render <tr>s into this one <table>.
-        '[&_td]:border-b [&_td]:border-b-[#eef2f2] [&_td]:border-r [&_td]:border-r-[#eef2f2]',
-        '[&_th]:border-r [&_th]:border-r-[#eef2f2]',
+        '[&_td]:border-b [&_td]:border-b-(--palette-line-soft) [&_td]:border-r [&_td]:border-r-(--palette-line-soft)',
+        '[&_th]:border-r [&_th]:border-r-(--palette-line-soft)',
         // Header override (mock:138-141): darker bottom border, taller line-height.
-        '[&_thead_th]:border-b [&_thead_th]:border-b-[#e3e9e8] [&_thead_th]:leading-[26px]',
+        '[&_thead_th]:border-b [&_thead_th]:border-b-(--palette-line) [&_thead_th]:leading-[26px]',
       )}
     >
       {/* Sticky to the accordion's scroller: the board and the documents card share one
           scroll container (mock:3390), so without this the header scrolls away as soon as the
           user reaches for the card below. The background sits on the cells, not the row — a
           transparent sticky cell lets the rows show through as they pass underneath. */}
-      <thead className="sticky top-0 z-20 [&_th]:bg-[#f8fafa]">
-        <tr className="bg-[#f8fafa] text-left text-[#55636f]">
+      <thead className="sticky top-0 z-20 [&_th]:bg-(--palette-surface-2)">
+        <tr className="bg-(--palette-surface-2) text-left text-(--palette-ink-2)">
           <th className="px-[8px] py-0 w-[36px] font-medium whitespace-nowrap">
             {t('board.selectColumn')}
           </th>
@@ -157,14 +157,19 @@ export const PricingAnalysisMethodBoard = ({
                   bottom rule); the selected one is a half-step darker so the heading still
                   registers a state change without borrowing the accent. */}
               <tr
-                className={clsx('h-[30px]', approach.isSelected ? 'bg-[#e3e9e8]' : 'bg-[#edf1f1]')}
+                className={clsx(
+                  'h-[30px]',
+                  approach.isSelected ? 'bg-(--palette-line)' : 'bg-(--palette-surface-3)',
+                )}
               >
-                <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
+                <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap">
                   {isReadOnly ? (
                     <div
                       className={clsx(
                         'size-3.5 rounded-sm border flex items-center justify-center shrink-0',
-                        approach.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
+                        approach.isSelected
+                          ? 'bg-primary border-primary'
+                          : 'border-(--palette-line-strong)',
                       )}
                     >
                       {approach.isSelected && (
@@ -189,7 +194,7 @@ export const PricingAnalysisMethodBoard = ({
                           'size-3.5 rounded-sm border flex items-center justify-center transition-all',
                           approach.isSelected
                             ? 'bg-primary border-primary'
-                            : 'border-gray-300 hover:border-gray-400',
+                            : 'border-(--palette-line-strong) hover:border-(--palette-line-strong)',
                         )}
                       >
                         {approach.isSelected && (
@@ -199,26 +204,26 @@ export const PricingAnalysisMethodBoard = ({
                     </button>
                   )}
                 </td>
-                <td className="px-[8px] py-0 border-r border-r-[#eef2f2]" colSpan={2}>
+                <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft)" colSpan={2}>
                   {/* Near-black, not the gray-800 the method rows' own labels use: the fill
                       change alone still left the heading the same weight of ink as the
                       content under it. #1f2937 is already this feature's darkest text. */}
-                  <span className="font-semibold text-[#1f2937]">{approach.label}</span>{' '}
-                  <span className="text-[#8a96a0]">
+                  <span className="font-semibold text-(--palette-ink)">{approach.label}</span>{' '}
+                  <span className="text-(--palette-ink-3)">
                     {t('board.methodCount', { count: approach.methods.length })}
                   </span>
                 </td>
-                <td className="px-[8px] py-0 text-right font-semibold border-r border-r-[#eef2f2] tabular-nums whitespace-nowrap">
+                <td className="px-[8px] py-0 text-right font-semibold border-r border-r-(--palette-line-soft) tabular-nums whitespace-nowrap">
                   {Number(approach.appraisalValue).toLocaleString()}
                 </td>
-                <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
+                <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap"></td>
                 <td className="px-[8px] py-0 text-right whitespace-nowrap">
                   {!isReadOnly && onAddMethods && availableMethods.length > 0 && (
                     <div className="relative inline-block text-left">
                       <button
                         type="button"
                         disabled={disabled}
-                        className="text-primary text-[12px] font-medium hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                        className="text-(--palette-primary-text) text-[12px] font-medium hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                         onClick={() => setOpenAddFor(isAddOpen ? null : approach.approachType)}
                       >
                         {t('board.addMethod')}
@@ -249,7 +254,10 @@ export const PricingAnalysisMethodBoard = ({
               {approach.methods.length === 0 && (
                 <tr>
                   <td></td>
-                  <td colSpan={5} className="px-[8px] py-0 text-[11.5px] text-[#8a96a0] italic">
+                  <td
+                    colSpan={5}
+                    className="px-[8px] py-0 text-[11.5px] text-(--palette-ink-3) italic"
+                  >
                     {t('board.noMethods')}
                   </td>
                 </tr>
@@ -296,10 +304,10 @@ export const PricingAnalysisMethodBoard = ({
             this row is showing, so it can never collide with one. */}
         {approaches.length === 0 && !isReadOnly && onAddMethods && pricingConfiguration && (
           <tr className="h-[52px]">
-            <td className="px-[8px] py-0 border-r border-r-[#eef2f2]"></td>
+            <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft)"></td>
             <td colSpan={5} className="px-[8px] py-0">
               <div className="flex items-center gap-2">
-                <span className="text-[11.5px] text-[#8a96a0] italic">
+                <span className="text-[11.5px] text-(--palette-ink-3) italic">
                   {t('board.noApproaches')}
                 </span>
                 {/* Button then popover, same parent and nothing between them:
@@ -309,7 +317,7 @@ export const PricingAnalysisMethodBoard = ({
                   <button
                     type="button"
                     disabled={disabled}
-                    className="text-primary text-[12px] font-medium hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+                    className="text-(--palette-primary-text) text-[12px] font-medium hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={() =>
                       setOpenAddFor(openAddFor === OPEN_ADD_FOR_EMPTY ? null : OPEN_ADD_FOR_EMPTY)
                     }

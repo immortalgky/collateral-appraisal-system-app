@@ -30,9 +30,10 @@ const CarryForwardSummary = ({
 
   return (
     <div className="mt-3 flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-violet-50 px-3 py-2 text-sm text-gray-700">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-violet-500/10 px-3 py-2 text-sm text-(--palette-ink)">
         <span>
-          {t('carryForward.summary.from')} <b className="text-violet-700">{number}</b>
+          {t('carryForward.summary.from')}{' '}
+          <b className="text-violet-700 dark:text-violet-300">{number}</b>
         </span>
         <span>
           · {t('carryForward.summary.used')} <b className="tabular-nums">{usedCount}</b>
@@ -45,7 +46,7 @@ const CarryForwardSummary = ({
             type="button"
             onClick={() => setShowUnused(v => !v)}
             aria-expanded={open}
-            className="cursor-pointer text-violet-700 underline underline-offset-2 hover:text-violet-900"
+            className="cursor-pointer text-violet-700 dark:text-violet-300 underline underline-offset-2 hover:text-violet-900 dark:hover:text-violet-200"
           >
             {open ? t('carryForward.summary.hide') : t('carryForward.summary.show')}
           </button>
@@ -53,26 +54,26 @@ const CarryForwardSummary = ({
       </div>
 
       {open && (
-        <div className="overflow-hidden rounded-lg border border-violet-200">
-          <div className="flex flex-wrap justify-between gap-1 bg-violet-50 px-3 py-2 text-sm text-gray-700">
+        <div className="overflow-hidden rounded-lg border border-violet-200 dark:border-violet-500/30">
+          <div className="flex flex-wrap justify-between gap-1 bg-violet-500/10 px-3 py-2 text-sm text-(--palette-ink)">
             <span>{t('carryForward.unusedPanel.title')}</span>
             <span>{t('carryForward.unusedPanel.hint')}</span>
           </div>
           {unused.map(doc => (
             <div
               key={carryEntryKey(doc)}
-              className="flex flex-wrap items-center gap-3 border-t border-gray-100 px-3 py-2"
+              className="flex flex-wrap items-center gap-3 border-t border-(--palette-line-soft) px-3 py-2"
             >
               <FileBadgeIcon fileName={doc.fileName} />
-              <span className="min-w-48 flex-1 text-sm text-gray-700">
+              <span className="min-w-48 flex-1 text-sm text-(--palette-ink)">
                 <b className="font-medium">{getDocTypeName(doc.suggestedType)}</b>
                 {/* A title's file says which title it came from: its deed is not told apart by its name */}
                 {carriedTitleRef(t, doc) && (
-                  <span className="text-gray-500"> · {carriedTitleRef(t, doc)}</span>
+                  <span className="text-(--palette-gray-500)"> ·{carriedTitleRef(t, doc)}</span>
                 )}{' '}
                 · {doc.fileName}
                 {!doc.defaultUse && (
-                  <span className="ml-2 rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-600">
+                  <span className="ml-2 rounded-full bg-(--palette-surface-3) px-2 py-0.5 text-xs text-(--palette-gray-600)">
                     {t('carryForward.unusedPanel.defaultNotUsed')}
                   </span>
                 )}
@@ -86,7 +87,7 @@ const CarryForwardSummary = ({
                   onClick={() => onView(doc)}
                   disabled={!doc.documentId}
                   aria-label={`${t('documentActions.view')} ${doc.fileName}`}
-                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex size-8 cursor-pointer items-center justify-center rounded-md border border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:bg-(--palette-surface-2) disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <Icon name="eye" style="regular" className="h-4 w-4" />
                 </button>
@@ -94,7 +95,7 @@ const CarryForwardSummary = ({
               <button
                 type="button"
                 onClick={() => onRestore(doc)}
-                className="cursor-pointer rounded-md border border-violet-200 bg-white px-3 py-1 text-sm text-violet-700 hover:bg-violet-50"
+                className="cursor-pointer rounded-md border border-violet-200 bg-(--palette-surface) px-3 py-1 text-sm text-violet-700 hover:bg-violet-500/10 dark:border-violet-500/40 dark:text-violet-300"
               >
                 {t('carryForward.unusedPanel.use')}
               </button>
@@ -118,13 +119,13 @@ export const CarryForwardLoadError = ({
 }) => {
   const { t } = useTranslation('request');
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+    <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-(--palette-warn-wash) px-3 py-2 text-sm text-amber-800 dark:text-amber-300">
       <span>{t('carryForward.retry.message')}</span>
       <button
         type="button"
         onClick={onRetry}
         disabled={retrying}
-        className="cursor-pointer text-violet-700 underline underline-offset-2 hover:text-violet-900 disabled:cursor-not-allowed disabled:opacity-50"
+        className="cursor-pointer text-violet-700 dark:text-violet-300 underline underline-offset-2 hover:text-violet-900 dark:hover:text-violet-200 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {t('carryForward.retry.action')}
       </button>

@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@shared/components/Icon';
 import Button from '@shared/components/Button';
 import { FormProvider } from '@/shared/components/form/FormProvider';
-import { FormFields } from '@/shared/components/form';
+import { FormFields, MissingFieldsChip } from '@/shared/components/form';
 import DataErrorState from '@/shared/components/DataErrorState';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
@@ -95,7 +95,11 @@ export const MachineryBookSection1Tab = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
-        <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-6 h-6 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -112,24 +116,30 @@ export const MachineryBookSection1Tab = () => {
   }
 
   return (
-    <FormProvider methods={methods} schema={machineryBookSection1Form}>
+    <FormProvider methods={methods} schema={machineryBookSection1Form} fields={fields}>
       <form onSubmit={methods.handleSubmit(onSubmit)} className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-base font-semibold text-gray-900">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
               {t('machineryBookSection1.title')}
             </h3>
-            <p className="text-xs text-gray-500 mt-0.5">{t('machineryBookSection1.subtitle')}</p>
+            <p className="text-xs text-(--palette-gray-500) mt-0.5">
+              {t('machineryBookSection1.subtitle')}
+            </p>
           </div>
           {!readOnly && (
-            <Button type="submit" size="sm" disabled={saveMutation.isPending}>
-              <Icon
-                name={saveMutation.isPending ? 'spinner' : 'floppy-disk'}
-                style="solid"
-                className={`w-3.5 h-3.5 mr-1.5 ${saveMutation.isPending ? 'animate-spin' : ''}`}
-              />
-              {t('machineryBookSection1.save')}
-            </Button>
+            <div className="flex items-center gap-3">
+              {/* No ActionBar on this tab, so the chip sits by Save and opens downward. */}
+              <MissingFieldsChip placement="down" />
+              <Button type="submit" size="sm" disabled={saveMutation.isPending}>
+                <Icon
+                  name={saveMutation.isPending ? 'spinner' : 'floppy-disk'}
+                  style="solid"
+                  className={`w-3.5 h-3.5 mr-1.5 ${saveMutation.isPending ? 'animate-spin' : ''}`}
+                />
+                {t('machineryBookSection1.save')}
+              </Button>
+            </div>
           )}
         </div>
 

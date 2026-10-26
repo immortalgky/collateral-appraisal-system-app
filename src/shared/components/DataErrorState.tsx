@@ -27,10 +27,12 @@ const DataErrorState = ({ title, message, onRetry, variant = 'page' }: DataError
         name="triangle-exclamation"
         className={clsx('text-red-500', isPage ? 'size-12' : 'size-8')}
       />
-      <p className={clsx(isPage ? 'text-gray-600' : 'text-sm text-gray-600')}>
+      <p
+        className={clsx(isPage ? 'text-(--palette-gray-600)' : 'text-sm text-(--palette-gray-600)')}
+      >
         {title ?? t('status.failedToLoad', 'Failed to load data')}
       </p>
-      {message && <p className="text-sm text-gray-400">{message}</p>}
+      {message && <p className="text-sm text-(--palette-gray-400)">{message}</p>}
       {onRetry && (
         <Button variant="outline" size="sm" onClick={onRetry}>
           {t('actions.retry', 'Retry')}

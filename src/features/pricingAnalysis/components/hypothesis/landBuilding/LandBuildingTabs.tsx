@@ -7,6 +7,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import { MethodTopBarPortal } from '../../MethodTopBarPortal';
 import { MethodTabs } from '../../MethodTabs';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
 import { fmt } from '../../../domain/formatters';
 import {
   LandBuildingFormSchema,
@@ -490,14 +491,16 @@ export function LandBuildingTabs({
     <FormProvider methods={methods} schema={LandBuildingFormSchema}>
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-          <span className="text-sm font-semibold text-primary tabular-nums">
+          <span className="text-[10px] text-(--palette-gray-400)">
+            {t('finalValue.indicatedValue')}
+          </span>
+          <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
             {fmt(indicatedValueWatched ?? effectiveSummary?.totalAssetValueRounded ?? 0)}
           </span>
         </div>
         {!readOnly && (
           <>
-            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <span className="w-px h-5 bg-(--palette-line) shrink-0" />
             <Button
               variant="ghost"
               type="button"
@@ -514,10 +517,11 @@ export function LandBuildingTabs({
               disabled={saveMutation.isPending}
               title={t('footer.reset')}
               aria-label={t('footer.reset')}
-              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger)"
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
             </Button>
+            <MissingFieldsChip placement="down" />
             <Button
               type="submit"
               form={formId}

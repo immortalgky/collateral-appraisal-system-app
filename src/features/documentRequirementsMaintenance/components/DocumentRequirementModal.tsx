@@ -86,13 +86,14 @@ export default function DocumentRequirementModal({
 
   const includedCount = Object.values(rows).filter(r => r.included).length;
 
-  const scopeHint = !propertyTypeCode && !purposeCode
-    ? 'Applies to all requests (application-wide).'
-    : propertyTypeCode && purposeCode
-      ? 'Applies only to this collateral type AND purpose combination.'
-      : propertyTypeCode
-        ? 'Applies to this collateral type (any purpose).'
-        : 'Applies to this purpose (any collateral type).';
+  const scopeHint =
+    !propertyTypeCode && !purposeCode
+      ? 'Applies to all requests (application-wide).'
+      : propertyTypeCode && purposeCode
+        ? 'Applies only to this collateral type AND purpose combination.'
+        : propertyTypeCode
+          ? 'Applies to this collateral type (any purpose).'
+          : 'Applies to this purpose (any collateral type).';
 
   const handleSave = async () => {
     const items = types
@@ -106,7 +107,11 @@ export default function DocumentRequirementModal({
       listed.add(r.documentTypeId);
       items.push({ documentTypeId: r.documentTypeId, isRequired: r.isRequired });
     }
-    await onSubmit({ propertyTypeCode: norm(propertyTypeCode), purposeCode: norm(purposeCode), items });
+    await onSubmit({
+      propertyTypeCode: norm(propertyTypeCode),
+      purposeCode: norm(purposeCode),
+      items,
+    });
   };
 
   const setRow = (id: string, patch: Partial<RowState>) =>
@@ -132,17 +137,17 @@ export default function DocumentRequirementModal({
             onChange={v => setPurposeCode(v ?? null)}
           />
         </div>
-        <p className="-mt-2 text-xs text-gray-500">{scopeHint}</p>
+        <p className="-mt-2 text-xs text-(--palette-gray-500)">{scopeHint}</p>
 
         {/* Document checklist */}
-        <div className="border border-gray-200 rounded-lg overflow-hidden">
-          <div className="flex items-center justify-between bg-gray-50 px-4 py-2 text-xs font-medium text-gray-500 uppercase">
+        <div className="border border-(--palette-line) rounded-lg overflow-hidden">
+          <div className="flex items-center justify-between bg-(--palette-surface-2) px-4 py-2 text-xs font-medium text-(--palette-gray-500) uppercase">
             <span>Documents ({includedCount} selected)</span>
             <span>Required</span>
           </div>
-          <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
+          <div className="max-h-80 overflow-y-auto divide-y divide-(--palette-line-soft)">
             {types.length === 0 ? (
-              <div className="px-4 py-6 text-center text-sm text-gray-500">
+              <div className="px-4 py-6 text-center text-sm text-(--palette-gray-500)">
                 {loadFailed ? (
                   <>
                     Could not load document types.{' '}
@@ -184,7 +189,7 @@ export default function DocumentRequirementModal({
           </div>
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>

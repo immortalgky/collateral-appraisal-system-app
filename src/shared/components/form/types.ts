@@ -117,6 +117,10 @@ interface BaseFormField {
   className?: string;
   /** CSS classes for the wrapper div (e.g., grid span) */
   wrapperClassName?: string;
+  /** A chip group only: keep the span in `wrapperClassName` in Standard instead of taking the whole row. */
+  keepSpan?: boolean;
+  /** Standard, narrow shell (below 84.2857rem, where spans 3 and 4 fall back to 6): take this many columns instead. 12 puts the field on a row of its own, so a companion after it keeps its 6 under it; 3 or 4 keep a field at its wide span. */
+  narrowSpan?: 3 | 4 | 6 | 12;
   /** Disable the input */
   disabled?: boolean;
   /** Value to set when field is disabled */
@@ -161,7 +165,7 @@ interface BaseFormField {
   /** Regex string for format validation. Used by schema builder for z.string().regex() */
   formatPattern?: string;
 
-  /** Error message when formatPattern fails */
+  /** Error message when formatPattern fails: a `vmsg()` token, not an English sentence (default: `invalidFormat`). */
   formatPatternMessage?: string;
 
   /** Input mask pattern (e.g., "99/99/9999" where 9=digit, a=letter, *=any).
@@ -195,6 +199,8 @@ export interface TextareaField extends BaseFormField {
   maxLength?: number;
   /** Show character count */
   showCharCount?: boolean;
+  /** Visible rows; the default is 5 for a maxLength of 1,000 or more. */
+  rows?: number;
 }
 
 // =============================================================================

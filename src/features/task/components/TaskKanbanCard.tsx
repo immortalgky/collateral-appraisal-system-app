@@ -201,12 +201,12 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
       tabIndex={0}
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      className={`relative bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 ${BORDER_ACCENT[bucket === 'healthy' ? 'none' : bucket]}`}
+      className={`relative bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary/40 ${BORDER_ACCENT[bucket === 'healthy' ? 'none' : bucket]}`}
     >
       {/* Activity header */}
       <div className="px-3 pt-3 pb-2 flex items-start justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5 min-w-0">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-gray-100 text-gray-600 max-w-[180px]">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded bg-(--palette-surface-3) text-(--palette-gray-600) max-w-[180px]">
             {activityConfig ? (
               <>
                 <Icon style="solid" name={activityConfig.icon} className="size-3 flex-shrink-0" />
@@ -227,26 +227,26 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
               e.stopPropagation();
               setMenuOpen(o => !o);
             }}
-            className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 rounded hover:bg-(--palette-surface-3) text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors"
           >
             <Icon style="solid" name="ellipsis-vertical" className="size-4" />
           </button>
           {menuOpen && (
             <div
               onClick={e => e.stopPropagation()}
-              className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-xl border border-gray-100 py-1 z-20 min-w-[160px]"
+              className="absolute right-0 top-full mt-1 bg-(--palette-surface) rounded-lg shadow-xl border border-(--palette-line-soft) py-1 z-20 min-w-[160px]"
             >
               <button
                 onClick={() => {
                   setMenuOpen(false);
                   onClick?.();
                 }}
-                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                className="w-full px-3 py-1.5 text-left text-xs text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2"
               >
                 <Icon
                   style="regular"
                   name="arrow-up-right-from-square"
-                  className="size-3 text-gray-400"
+                  className="size-3 text-(--palette-gray-400)"
                 />
                 Open task
               </button>
@@ -255,9 +255,9 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
                   navigator.clipboard.writeText(task.appraisalNumber ?? '');
                   setMenuOpen(false);
                 }}
-                className="w-full px-3 py-1.5 text-left text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                className="w-full px-3 py-1.5 text-left text-xs text-(--palette-ink) hover:bg-(--palette-surface-2) flex items-center gap-2"
               >
-                <Icon style="regular" name="copy" className="size-3 text-gray-400" />
+                <Icon style="regular" name="copy" className="size-3 text-(--palette-gray-400)" />
                 Copy appraisal #
               </button>
             </div>
@@ -269,13 +269,13 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
       <div className="px-3 pb-2">
         <h3
           title={`Customer Name: ${task.customerName ?? '-'}`}
-          className="text-base font-semibold text-gray-900 line-clamp-1"
+          className="text-base font-semibold text-(--palette-ink) line-clamp-1"
         >
           {task.customerName}
         </h3>
         <p
           title={task.appraisalNumber ? 'Appraisal Number' : 'Request Number'}
-          className="text-xs text-gray-500 mt-0.5 truncate"
+          className="text-xs text-(--palette-gray-500) mt-0.5 truncate"
         >
           {task.appraisalNumber ?? task.requestNumber ?? '-'}
         </p>
@@ -285,13 +285,13 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
       <div className="px-3 pb-2">
         <div className="flex items-center justify-between gap-2 text-xs">
           <SlaStatusBadge sla={task.slaStatus} />
-          <div className="flex items-center gap-2 text-gray-500">
+          <div className="flex items-center gap-2 text-(--palette-gray-500)">
             {task.dueAt && <span>{formatDateTime(task.dueAt)}</span>}
             {remaining && (
               <span
                 className={
                   task.remainingHours != null && task.remainingHours < 0
-                    ? 'text-red-600 font-medium'
+                    ? 'text-(--palette-danger) font-medium'
                     : ''
                 }
               >
@@ -300,7 +300,7 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
             )}
           </div>
         </div>
-        <div className="mt-1.5 h-1 w-full rounded-full bg-gray-100 overflow-hidden">
+        <div className="mt-1.5 h-1 w-full rounded-full bg-(--palette-surface-3) overflow-hidden">
           <div
             className="h-full rounded-full"
             style={{ width: `${progressPct}%`, backgroundImage: stripeBackground(bucket) }}
@@ -316,12 +316,12 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
             <div
               key={key}
               title={meta.label}
-              className="flex items-center gap-1.5 text-gray-600"
+              className="flex items-center gap-1.5 text-(--palette-gray-600)"
             >
               <Icon
                 style="regular"
                 name={meta.icon}
-                className="size-3.5 text-gray-400 flex-shrink-0"
+                className="size-3.5 text-(--palette-gray-400) flex-shrink-0"
               />
               {meta.render(task)}
             </div>
@@ -330,7 +330,7 @@ export const TaskKanbanCard = ({ task, onClick }: TaskKanbanCardProps) => {
       </div>
 
       {/* Footer with assignee */}
-      <div className="px-3 py-2 border-t border-gray-100 flex items-center justify-between">
+      <div className="px-3 py-2 border-t border-(--palette-line-soft) flex items-center justify-between">
         {assigneeName ? (
           <span
             className={`inline-flex items-center justify-center size-6 rounded-full text-[10px] font-bold flex-shrink-0 ${avatarColor(assigneeName)}`}

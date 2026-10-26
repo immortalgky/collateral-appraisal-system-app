@@ -116,8 +116,7 @@ export function BulkRcnReferenceDialog({
   // button's enabled state either — the count the button acts on and the count it looks like it
   // will act on have to be the same number.
   const selectedRows = rows.filter(
-    r =>
-      r.disabledReason == null && checked[r.rowIndex] && sourceKeyFor(r.rowIndex) !== NO_SOURCE,
+    r => r.disabledReason == null && checked[r.rowIndex] && sourceKeyFor(r.rowIndex) !== NO_SOURCE,
   );
 
   const handleClose = () => {
@@ -148,21 +147,21 @@ export function BulkRcnReferenceDialog({
           {/* mock:364 — the bulk popover is held to a 560px minimum by its rows. */}
           <DialogPanel
             transition
-            className="w-full max-w-[560px] overflow-hidden rounded-xl bg-white shadow-xl transition-all duration-300 ease-out data-closed:scale-95 data-closed:opacity-0"
+            className="w-full max-w-[560px] overflow-hidden rounded-xl bg-(--palette-surface) shadow-xl transition-all duration-300 ease-out data-closed:scale-95 data-closed:opacity-0"
           >
-            <div className="flex items-center justify-between border-b border-gray-200 bg-gray-50 px-4 py-3">
+            <div className="flex items-center justify-between border-b border-(--palette-line) bg-(--palette-surface-2) px-4 py-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                <div className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-(--palette-primary-text)">
                   <Icon name="link" style="solid" className="size-3.5" />
                 </div>
-                <h2 className="text-base font-semibold text-gray-900">
+                <h2 className="text-base font-semibold text-(--palette-ink)">
                   {t('marketRef.bulk.title')}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={handleClose}
-                className="text-gray-400 transition-colors hover:text-gray-600"
+                className="text-(--palette-gray-400) transition-colors hover:text-(--palette-gray-600)"
                 aria-label={t('marketRef.bulk.cancel')}
               >
                 <Icon name="xmark" style="regular" className="size-5" />
@@ -175,7 +174,7 @@ export function BulkRcnReferenceDialog({
                   <div className="size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                 </div>
               ) : usableSources.length === 0 ? (
-                <p className="px-[12px] py-[10px] text-[12px] text-[#8a96a0]">
+                <p className="px-[12px] py-[10px] text-[12px] text-(--palette-ink-3)">
                   {t('marketRef.bulk.empty')}
                 </p>
               ) : (
@@ -210,13 +209,15 @@ export function BulkRcnReferenceDialog({
                           htmlFor={inputId}
                           className={clsx(
                             'truncate',
-                            isDisabled ? 'text-gray-400' : 'cursor-pointer text-gray-700',
+                            isDisabled
+                              ? 'text-(--palette-gray-400)'
+                              : 'cursor-pointer text-(--palette-ink)',
                           )}
                         >
                           {row.rowIndex + 1}. {row.machineName ?? ''}
                         </label>
                         {isDisabled ? (
-                          <span className="truncate text-[11px] text-amber-700">
+                          <span className="truncate text-[11px] text-(--palette-warn)">
                             {row.disabledReason}
                           </span>
                         ) : (
@@ -229,7 +230,7 @@ export function BulkRcnReferenceDialog({
                             aria-label={t('marketRef.bulk.sourceLabel', {
                               name: row.machineName ?? '',
                             })}
-                            className="h-[24px] w-full rounded-[5px] border border-[#e3e9e8] bg-white px-[6px] text-left text-[12px] text-gray-700"
+                            className="h-[24px] w-full rounded-[5px] border border-(--palette-line) bg-(--palette-surface) px-[6px] text-left text-[12px] text-(--palette-ink)"
                           >
                             {/* A placeholder, not a source. This is what a machine with no
                                 reference of its own now opens on, and it is also the row's
@@ -265,11 +266,11 @@ export function BulkRcnReferenceDialog({
               )}
             </div>
 
-            <div className="flex justify-end gap-2 border-t border-gray-200 px-4 py-3">
+            <div className="flex justify-end gap-2 border-t border-(--palette-line) px-4 py-3">
               <button
                 type="button"
                 onClick={handleClose}
-                className="rounded-lg px-3 py-1.5 text-xs font-medium text-gray-600 transition-colors hover:bg-gray-100"
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-(--palette-gray-600) transition-colors hover:bg-(--palette-surface-3)"
               >
                 {t('marketRef.bulk.cancel')}
               </button>

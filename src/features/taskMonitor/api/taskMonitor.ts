@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import { z } from 'zod';
+import { vmsg } from '@/shared/components/form/validationMessage';
 import type {
   EligibleAssigneesResponse,
   GetMonitoredPeopleParams,
@@ -15,7 +16,7 @@ import type {
 // ─── Zod schemas ────────────────────────────────────────────────────────────
 
 export const reassignTaskSchema = z.object({
-  newAssignedTo: z.string().min(1, 'Please select an assignee'),
+  newAssignedTo: z.string().min(1, vmsg('appraisal:validation.selectAssignee')),
 });
 
 export type ReassignTaskFormValues = z.infer<typeof reassignTaskSchema>;

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { vmsg } from '@/shared/components/form/validationMessage';
 
 const MachineryItemSchema = z.object({
   appraisalPropertyId: z.string(),
@@ -46,11 +47,11 @@ export function isMachineRowLocked(machine: {
 
 /** The cost inputs, with the bounds each one is held to when the row IS editable. */
 const COST_INPUTS = [
-  { key: 'rcn', label: 'RCN', max: null },
-  { key: 'lifeSpan', label: 'Life span', max: null },
-  { key: 'conditionFactor', label: 'Condition factor', max: 1 },
-  { key: 'functionalObsolescence', label: 'Functional obsolescence', max: 1 },
-  { key: 'economicObsolescence', label: 'Economic obsolescence', max: 1 },
+  { key: 'rcn', max: null },
+  { key: 'lifeSpan', max: null },
+  { key: 'conditionFactor', max: 1 },
+  { key: 'functionalObsolescence', max: 1 },
+  { key: 'economicObsolescence', max: 1 },
 ] as const;
 
 const MachineryRowSchema = z
@@ -78,23 +79,25 @@ const MachineryRowSchema = z
   .superRefine((row, ctx) => {
     if (isMachineRowLocked(row.machine)) return;
 
-    for (const { key, label, max } of COST_INPUTS) {
+    // The cell sits under its column header, so the message need not name the field (tokens, see
+    // validationMessage.ts)
+    for (const { key, max } of COST_INPUTS) {
       const value = row[key];
       if (value == null) {
-        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: `${label} is required` });
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: [key], message: vmsg('required') });
         continue;
       }
       if (value < 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: [key],
-          message: `${label} must be at least 0`,
+          message: vmsg('minValue', { min: 0 }),
         });
       } else if (max != null && value > max) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: [key],
-          message: `${label} must be at most ${max}`,
+          message: vmsg('maxValue', { max }),
         });
       }
     }
@@ -104,7 +107,10 @@ export const CostMachineFormSchema = z.object({
   // appraisal.PricingAnalysisMethods.Remark is nvarchar(4000). The textarea caps typing at the
   // same number, so this only catches a value that got in some other way — but without it the
   // DOM attribute is the only thing standing between a long remark and a SQL truncation error.
-  remark: z.string().max(4000, 'Remark must be at most 4000 characters').nullable(),
+  remark: z
+    .string()
+    .max(4000, vmsg('maxLength', { max: 4000 }))
+    .nullable(),
   machineryCosts: z.array(MachineryRowSchema),
   // The appraiser's override of the table's FMV total (mock:2571's `mcTotOv`). No
   // `.default()` — same reasoning as leaseholdForm.ts's own indicatedValue: it would

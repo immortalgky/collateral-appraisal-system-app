@@ -33,25 +33,33 @@ export function ReappraisalStatusBadge({
 
   if (status === 'Consumed') {
     badge = (
-      <span className={`${BADGE} bg-gray-100 text-gray-500 border-gray-200`}>
+      <span
+        className={`${BADGE} bg-(--palette-surface-3) text-(--palette-gray-500) border-(--palette-line)`}
+      >
         {t('badge.used')}
       </span>
     );
   } else if (status === 'Deleted') {
     badge = (
-      <span className={`${BADGE} bg-rose-50 text-rose-700 border-rose-200`}>
+      <span
+        className={`${BADGE} bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30`}
+      >
         {t('badge.notReviewing')}
       </span>
     );
   } else if (status === 'Pending' && hasOpenAppraisal) {
     badge = (
-      <span className={`${BADGE} bg-amber-50 text-amber-700 border-amber-200`}>
+      <span
+        className={`${BADGE} bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30`}
+      >
         {t('badge.inProgress')}
       </span>
     );
   } else {
     badge = (
-      <span className={`${BADGE} bg-green-50 text-green-700 border-green-200`}>
+      <span
+        className={`${BADGE} bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 border-green-200 dark:border-green-500/30`}
+      >
         {t('badge.pending')}
       </span>
     );
@@ -61,21 +69,21 @@ export function ReappraisalStatusBadge({
   if (openAppraisalNumber != null) {
     link = (
       <span
-        className="text-[10px] text-gray-400 whitespace-nowrap"
+        className="text-[10px] text-(--palette-gray-400) whitespace-nowrap"
         data-appraisal-id={openAppraisalId}
         title={openAppraisalGroupTag != null ? `Group ${openAppraisalGroupTag}` : undefined}
       >
         → {openAppraisalNumber}
         {openAppraisalGroupTag != null && (
-          <span className="ml-1 text-gray-300">· {openAppraisalGroupTag}</span>
+          <span className="ml-1 text-(--palette-gray-300)">· {openAppraisalGroupTag}</span>
         )}
       </span>
     );
   } else if (openRequestNumber != null) {
     link = (
-      <span className="text-[10px] text-gray-400 whitespace-nowrap">
+      <span className="text-[10px] text-(--palette-gray-400) whitespace-nowrap">
         → {openRequestNumber}
-        <span className="ml-1 text-gray-300">· {t('badge.awaitingSubmit')}</span>
+        <span className="ml-1 text-(--palette-gray-300)">· {t('badge.awaitingSubmit')}</span>
       </span>
     );
   }
@@ -89,9 +97,11 @@ export function ReappraisalStatusBadge({
 }
 
 const SOURCE_STYLE: Record<PriorAppraisalSource, string> = {
-  CAS: 'bg-teal-50 text-teal-700 border-teal-200',
-  AS400Legacy: 'bg-violet-50 text-violet-700 border-violet-200',
-  Unknown: 'bg-rose-50 text-rose-700 border-rose-200',
+  CAS: 'bg-(--palette-accent-wash) text-(--palette-accent-ink) border-(--palette-accent-line)',
+  AS400Legacy:
+    'bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300 border-violet-200 dark:border-violet-500/30',
+  Unknown:
+    'bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30',
 };
 
 /**

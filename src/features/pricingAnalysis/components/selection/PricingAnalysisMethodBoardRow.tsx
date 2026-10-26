@@ -340,12 +340,12 @@ export const PricingAnalysisMethodBoardRow = ({
             'bg-primary/5 font-medium [&>td:first-child]:shadow-[inset_3px_0_0_#0d9488]',
         )}
       >
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap">
           {isReadOnly ? (
             <div
               className={clsx(
                 'size-3.5 rounded-sm border flex items-center justify-center shrink-0',
-                method.isSelected ? 'bg-primary border-primary' : 'border-gray-300',
+                method.isSelected ? 'bg-primary border-primary' : 'border-(--palette-line-strong)',
               )}
             >
               {method.isSelected && (
@@ -375,7 +375,7 @@ export const PricingAnalysisMethodBoardRow = ({
                   'size-3.5 rounded-sm border flex items-center justify-center transition-all',
                   method.isSelected
                     ? 'bg-primary border-primary'
-                    : 'border-gray-300 hover:border-gray-400',
+                    : 'border-(--palette-line-strong) hover:border-(--palette-line-strong)',
                 )}
               >
                 {method.isSelected && (
@@ -386,7 +386,7 @@ export const PricingAnalysisMethodBoardRow = ({
           )}
         </td>
 
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2]">
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft)">
           {/* min-w-0: flex items default to min-width:auto, which forces this container (and
               the name truncate span/button below) to their full content width regardless of
               overflow-hidden — the table column can then never shrink narrower than the
@@ -397,7 +397,7 @@ export const PricingAnalysisMethodBoardRow = ({
               style="solid"
               className={clsx(
                 'size-3 shrink-0',
-                method.isSelected ? 'text-primary' : 'text-gray-400',
+                method.isSelected ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-400)',
               )}
             />
             {/* Short method-type badge — mock's `.code` chip (mock:325/3200). */}
@@ -410,13 +410,15 @@ export const PricingAnalysisMethodBoardRow = ({
             {/* Manual-mode methods are deliberately not clickable through to their method
                 screen — same rule the old card's Wrapper=div enforced. */}
             {rowManualMode ? (
-              <span className="text-gray-700 truncate min-w-0">{method.label}</span>
+              <span className="text-(--palette-ink) truncate min-w-0">{method.label}</span>
             ) : (
               <button
                 type="button"
                 className={clsx(
                   'text-left hover:underline cursor-pointer truncate min-w-0',
-                  method.isSelected ? 'text-primary font-medium' : 'text-gray-700',
+                  method.isSelected
+                    ? 'text-(--palette-primary-text) font-medium'
+                    : 'text-(--palette-ink)',
                 )}
                 onClick={() =>
                   onSelectCalculationMethod({ approachType, methodType: method.methodType })
@@ -481,13 +483,13 @@ export const PricingAnalysisMethodBoardRow = ({
           </div>
         </td>
 
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap">
           <div className="flex items-center gap-1.5">
             {/* System/Manual — per method, independent of the group-wide toggle above the
                 board (see PricingAnalysisPage's calculationMode). Read-only mirrors the
                 role <select>'s pattern: a plain label instead of the interactive control. */}
             {isReadOnly ? (
-              <span className="shrink-0 text-[10.5px] font-medium text-gray-500 whitespace-nowrap">
+              <span className="shrink-0 text-[10.5px] font-medium text-(--palette-gray-500) whitespace-nowrap">
                 {useSystemCalc
                   ? t('calculationMode.systemToggle')
                   : t('calculationMode.manualToggle')}
@@ -508,8 +510,8 @@ export const PricingAnalysisMethodBoardRow = ({
                     // whole switch being off-centre against the status chip beside it.
                     'inline-flex h-5 items-center justify-center rounded px-[7px] text-[10.5px] font-medium whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-60',
                     useSystemCalc
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-500 cursor-pointer',
+                      ? 'bg-(--palette-surface) text-(--palette-primary-text) shadow-sm'
+                      : 'text-(--palette-gray-500) cursor-pointer',
                   )}
                 >
                   {t('calculationMode.systemToggle')}
@@ -522,8 +524,8 @@ export const PricingAnalysisMethodBoardRow = ({
                   className={clsx(
                     'inline-flex h-5 items-center justify-center rounded px-[7px] text-[10.5px] font-medium whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-60',
                     !useSystemCalc
-                      ? 'bg-white text-primary shadow-sm'
-                      : 'text-gray-500 cursor-pointer',
+                      ? 'bg-(--palette-surface) text-(--palette-primary-text) shadow-sm'
+                      : 'text-(--palette-gray-500) cursor-pointer',
                   )}
                 >
                   {t('calculationMode.manualToggle')}
@@ -559,7 +561,7 @@ export const PricingAnalysisMethodBoardRow = ({
         <td className="px-[8px] py-0 text-right tabular-nums whitespace-nowrap">
           {rowManualMode ? (
             isReadOnly ? (
-              <span className="font-semibold text-gray-800">
+              <span className="font-semibold text-(--palette-ink)">
                 {Number(method.appraisalValue).toLocaleString()}
               </span>
             ) : (
@@ -589,14 +591,17 @@ export const PricingAnalysisMethodBoardRow = ({
             )
           ) : (
             <span
-              className={clsx('font-medium', method.isSelected ? 'text-primary' : 'text-gray-700')}
+              className={clsx(
+                'font-medium',
+                method.isSelected ? 'text-(--palette-primary-text)' : 'text-(--palette-ink)',
+              )}
             >
               {Number(method.appraisalValue).toLocaleString()}
             </span>
           )}
         </td>
 
-        <td className="px-[8px] py-0 text-[#8a96a0] whitespace-nowrap">
+        <td className="px-[8px] py-0 text-(--palette-ink-3) whitespace-nowrap">
           {/* Null until the method's first save — the audit interceptor only stamps
               UpdatedAt on an update, so a never-edited method shows the dash. */}
           {method.updatedAt ? formatDateTime(method.updatedAt) : '—'}
@@ -612,7 +617,7 @@ export const PricingAnalysisMethodBoardRow = ({
               onClick={() =>
                 onSelectCalculationMethod({ approachType, methodType: method.methodType })
               }
-              className="text-primary text-[12px] font-medium hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              className="text-(--palette-primary-text) text-[12px] font-medium hover:underline cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               {statusKey === 'calculated' ? t('board.openMethod') : t('board.startCalculating')}
             </button>
@@ -624,12 +629,12 @@ export const PricingAnalysisMethodBoardRow = ({
               aria-label={t('board.deleteMethodLabel')}
               title={t('board.deleteMethodLabel')}
               onClick={() => onDeleteMethod({ approachType, methodType: method.methodType })}
-              className="p-1 ml-1 rounded hover:bg-red-50 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
+              className="p-1 ml-1 rounded hover:bg-(--palette-req-wash) transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Icon
                 name="xmark"
                 style="solid"
-                className="size-3.5 text-gray-400 hover:text-red-500 transition-colors"
+                className="size-3.5 text-(--palette-gray-400) hover:text-red-500 transition-colors"
               />
             </button>
           )}
@@ -679,7 +684,7 @@ export const PricingAnalysisMethodBoardRow = ({
                 className="w-full text-left! h-[26px] px-2"
               />
             ) : (
-              <p className="text-[11px] text-gray-500 italic">{savedRemark}</p>
+              <p className="text-[11px] text-(--palette-gray-500) italic">{savedRemark}</p>
             )}
           </td>
         </tr>

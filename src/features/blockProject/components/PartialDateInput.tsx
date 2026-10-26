@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import Dropdown, { type ListBoxItem } from '@/shared/components/inputs/Dropdown';
 import { useFormReadOnly } from '@/shared/components/form/context';
 import { useLocaleStore } from '@shared/store';
+import { monthLabel, parseValue, shouldShowBE, yearLabel } from '../utils/partialDateText';
 
 interface PartialDateInputProps {
   /** CE-canonical stored value: null | "YYYY" | "YYYY-MM" | "YYYY-MM-DD". */
@@ -19,40 +20,11 @@ interface PartialDateInputProps {
   yearEnd?: number;
 }
 
-const MONTH_NAMES = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const;
-
-/** Buddhist Era offset from CE. */
-const BE_OFFSET = 543;
-
-function parseValue(value: string | null | undefined) {
-  if (!value) return { year: '', month: '', day: '' };
-  const [y = '', m = '', d = ''] = value.split('-');
-  return { year: y, month: m, day: d };
-}
-
 function serialize(year: string, month: string, day: string): string | null {
   if (!year) return null;
   if (!month) return year;
   if (!day) return `${year}-${month}`;
   return `${year}-${month}-${day}`;
-}
-
-/** True when the user's chosen language is Thai — display in BE then. */
-function shouldShowBE(language: string | undefined): boolean {
-  return (language ?? '').toLowerCase() === 'th';
 }
 
 /**
@@ -75,7 +47,7 @@ export default function PartialDateInput({
   yearStart,
   yearEnd,
 }: PartialDateInputProps) {
-  const { t } = useTranslation('blockProject');
+  const { t, i18n } = useTranslation('blockProject');
   const isReadOnly = useFormReadOnly();
   const isDisabled = Boolean(disabled || isReadOnly);
   const language = useLocaleStore(s => s.language);
@@ -92,20 +64,18 @@ export default function PartialDateInput({
     const opts: ListBoxItem[] = [];
     for (let y = end; y >= start; y--) {
       const code = String(y);
-      const labelYear = isBE ? y + BE_OFFSET : y;
-      opts.push({ id: code, value: code, label: String(labelYear) });
+      opts.push({ id: code, value: code, label: yearLabel(y, isBE) });
     }
     return opts;
   }, [start, end, isBE]);
 
-  const monthOptions = useMemo<ListBoxItem[]>(
-    () =>
-      MONTH_NAMES.map((name, i) => {
-        const code = String(i + 1).padStart(2, '0');
-        return { id: code, value: code, label: name };
-      }),
-    [],
-  );
+  // Month names come from Intl in the UI language (en: January…, th: มกราคม…).
+  const monthOptions = useMemo<ListBoxItem[]>(() => {
+    return Array.from({ length: 12 }, (_, i) => {
+      const code = String(i + 1).padStart(2, '0');
+      return { id: code, value: code, label: monthLabel(i18n.language, i + 1) };
+    });
+  }, [i18n.language]);
 
   const dayOptions = useMemo<ListBoxItem[]>(() => {
     const max = daysInMonth(year, month);
@@ -142,10 +112,10 @@ export default function PartialDateInput({
   return (
     <div>
       {label && (
-        <span className="block text-xs font-medium text-gray-700 mb-1">
+        <span className="block text-xs font-medium text-(--palette-ink) mb-1">
           {label}
           {required && <span className="text-danger ml-0.5">*</span>}
-          <span className="ml-1.5 text-[10px] text-gray-400 font-normal">
+          <span className="ml-1.5 text-[10px] text-(--palette-gray-400) font-normal">
             ({isBE ? 'พ.ศ.' : 'ค.ศ.'})
           </span>
         </span>

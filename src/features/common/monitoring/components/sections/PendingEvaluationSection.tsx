@@ -32,11 +32,11 @@ const APPRAISAL_STATUS_DOT: Record<string, string> = {
 };
 
 function AppraisalStatusBadge({ status }: { status: string | null }) {
-  if (!status) return <span className="text-gray-400 text-xs">—</span>;
+  if (!status) return <span className="text-(--palette-gray-400) text-xs">—</span>;
   const dot = APPRAISAL_STATUS_DOT[status] ?? 'bg-gray-400';
   const label = status.replace(/([a-z])([A-Z])/g, '$1 $2');
   return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-gray-100 text-gray-700">
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[11px] font-medium rounded-full bg-(--palette-surface-3) text-(--palette-ink)">
       <span className={`size-1.5 rounded-full ${dot}`} />
       {label}
     </span>
@@ -52,7 +52,7 @@ function AppraiserCompanyCell({
 }) {
   const localizeCompanyName = useLocalizedCompanyName();
   return (
-    <span className="text-xs text-gray-700">
+    <span className="text-xs text-(--palette-ink)">
       {companyName ? localizeCompanyName(companyName, companyNameLocal) : '—'}
     </span>
   );
@@ -64,14 +64,16 @@ const COLUMNS: ColumnDef<PendingEvaluation>[] = [
     label: 'Appraisal Number',
     sortKey: 'AppraisalNumber',
     render: row => (
-      <span className="text-sm font-medium text-primary">{row.appraisalNumber ?? '—'}</span>
+      <span className="text-sm font-medium text-(--palette-primary-text)">
+        {row.appraisalNumber ?? '—'}
+      </span>
     ),
   },
   {
     key: 'customerName',
     label: 'Customer Name',
     sortKey: 'CustomerName',
-    render: row => <span className="text-xs text-gray-700">{row.customerName ?? '—'}</span>,
+    render: row => <span className="text-xs text-(--palette-ink)">{row.customerName ?? '—'}</span>,
     className: 'max-w-[160px] truncate',
   },
   {
@@ -97,7 +99,7 @@ const COLUMNS: ColumnDef<PendingEvaluation>[] = [
       row.evaluationStatus ? (
         <EvaluationStatusBadge status={row.evaluationStatus} />
       ) : (
-        <span className="text-gray-400 text-xs">—</span>
+        <span className="text-(--palette-gray-400) text-xs">—</span>
       ),
   },
   {
@@ -111,7 +113,7 @@ const COLUMNS: ColumnDef<PendingEvaluation>[] = [
     label: 'Appraisal Value',
     sortKey: 'AppraisalValue',
     render: row => (
-      <span className="text-xs tabular-nums text-gray-700">
+      <span className="text-xs tabular-nums text-(--palette-ink)">
         {row.appraisalValue != null
           ? row.appraisalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })
           : '—'}
@@ -126,12 +128,12 @@ const COLUMNS: ColumnDef<PendingEvaluation>[] = [
       row.totalScore != null ? (
         <span className="inline-flex items-center gap-1">
           <StarRating score={row.totalScore} />
-          <span className="text-[10px] tabular-nums text-gray-500">
+          <span className="text-[10px] tabular-nums text-(--palette-gray-500)">
             ({row.totalScore.toFixed(2)})
           </span>
         </span>
       ) : (
-        <span className="text-xs text-gray-400">—</span>
+        <span className="text-xs text-(--palette-gray-400)">—</span>
       ),
   },
 ];
@@ -208,14 +210,12 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
       ? [
           {
             key: 'appraisalCompanyId',
-            label: `Company: ${
-              (() => {
-                const match = companies.find(c => c.id === appraisalCompanyFilter);
-                return match
-                  ? localizeCompanyName(match.companyName, match.companyNameLocal)
-                  : appraisalCompanyFilter;
-              })()
-            }`,
+            label: `Company: ${(() => {
+              const match = companies.find(c => c.id === appraisalCompanyFilter);
+              return match
+                ? localizeCompanyName(match.companyName, match.companyNameLocal)
+                : appraisalCompanyFilter;
+            })()}`,
             onClear: () => {
               setAppraisalCompanyFilter('');
               setPage(0);
@@ -323,7 +323,7 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
           <button
             type="button"
             onClick={handleClearFilters}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:border-gray-300 hover:text-gray-700 transition-all"
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-(--palette-gray-500) border border-(--palette-line) rounded-lg hover:border-(--palette-line-strong) hover:text-(--palette-ink) transition-all"
           >
             <Icon style="solid" name="xmark" className="size-3.5" />
             {t('common.clearAll')}
@@ -333,16 +333,16 @@ function PendingEvaluationSection({ onCountChange }: PendingEvaluationSectionPro
 
       {isError && (
         <div className="flex flex-col items-center justify-center h-64 gap-3">
-          <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+          <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
             <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
           </div>
-          <p className="text-sm font-medium text-gray-800">{t('common.loadError')}</p>
-          <p className="text-xs text-gray-400">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('common.loadError')}</p>
+          <p className="text-xs text-(--palette-gray-400)">{(error as Error)?.message}</p>
         </div>
       )}
 
       {!isError && (
-        <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
           <MonitoringDataTable
             columns={COLUMNS}
             rows={rows}

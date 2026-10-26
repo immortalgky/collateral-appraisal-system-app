@@ -1,4 +1,5 @@
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -32,6 +33,7 @@ import Button from '@shared/components/Button';
 import { AppraisalRightPanel } from '@features/appraisal/components/AppraisalRightMenu';
 import { useSidebarCssVar } from '@shared/hooks/useSidebarCssVar';
 import { userNavigation } from '@shared/config/userNavigation';
+import { isSameUser } from '@features/task/utils/isSameUser';
 
 const HEARTBEAT_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -152,8 +154,8 @@ function TaskLayout() {
   // Pool task lock awareness
   const isPoolTask = taskData?.assignedType === '2';
   const lockOwner = taskData?.workingBy ?? null;
-  const isLockOwner = isPoolTask && !!lockOwner && lockOwner === currentUsername;
-  const isLockedByOther = isPoolTask && !!lockOwner && lockOwner !== currentUsername;
+  const isLockOwner = isPoolTask && isSameUser(lockOwner, currentUsername);
+  const isLockedByOther = isPoolTask && !!lockOwner && !isLockOwner;
   const isAdmin = currentUser?.permissions?.includes('TASK_LOCK_MANAGE') ?? false;
 
   // Heartbeat — only active when this user holds the lock
@@ -170,8 +172,12 @@ function TaskLayout() {
     onPoolTaskUpdate: useCallback(
       (event: PoolTaskUpdateEvent) => {
         if (event.taskId !== taskId) return;
-        if (event.type === 'PoolTaskClaimed') {
-          // Task has been permanently claimed by another user — refetch to get updated state
+        // Echo of our own completion: the task is gone (GET 404), so a refetch would show "Task Not Found"
+        // before the submitting page redirects itself.
+        if (event.type === 'PoolTaskCompleted' && isSameUser(event.completedBy, currentUsername))
+          return;
+        if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
+          // Task has been permanently claimed by another user or completed — refetch to get updated state
           queryClient.invalidateQueries({ queryKey: ['task', taskId] });
           return;
         }
@@ -185,7 +191,7 @@ function TaskLayout() {
             : old,
         );
       },
-      [queryClient, taskId],
+      [queryClient, taskId, currentUsername],
     ),
   });
 
@@ -259,7 +265,7 @@ function TaskLayout() {
 
   if (isLoading) {
     body = (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
         <MobileAppraisalSidebar logo={Logo} loading hideGeneralNav />
         <AppraisalSidebar logo={Logo} loading hideGeneralNav />
         <div
@@ -295,7 +301,7 @@ function TaskLayout() {
             ? 'This task is not assigned to you. You do not have permission to view or work on this task.'
             : 'The task you are looking for does not exist or has already been completed.'}
         </p>
-        <Button className="mt-6" onClick={() => navigate('/tasks')}>
+        <Button className="mt-6" onClick={() => navigate(taskListUrl())}>
           <Icon style="solid" name="arrow-left" className="size-4 mr-2" />
           Back to Tasks
         </Button>
@@ -319,7 +325,7 @@ function TaskLayout() {
     );
   } else {
     body = (
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
         <MobileAppraisalSidebar logo={Logo} hideGeneralNav />
         <AppraisalSidebar logo={Logo} hideGeneralNav />
 
@@ -337,11 +343,11 @@ function TaskLayout() {
 
                 {/* Pool task lock banners */}
                 {isLockedByOther && (
-                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-sm text-amber-800">
+                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-(--palette-warn-wash) border border-(--palette-warn)/30 text-sm text-(--palette-warn)">
                     <Icon
                       style="solid"
                       name="lock"
-                      className="size-4 text-amber-500 flex-shrink-0"
+                      className="size-4 text-(--palette-warn) flex-shrink-0"
                     />
                     <span className="flex-1">
                       This task is currently being edited by <strong>{lockOwner}</strong>. You are
@@ -351,7 +357,7 @@ function TaskLayout() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-amber-300 text-amber-700 hover:bg-amber-100"
+                        className="border-(--palette-warn)/40 text-(--palette-warn) hover:bg-(--palette-warn)/10"
                         disabled={isAdminUnlocking}
                         onClick={() => adminUnlock(taskId!)}
                       >
@@ -371,7 +377,7 @@ function TaskLayout() {
                 )}
 
                 {isLockOwner && (
-                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800">
+                  <div className="mb-4 shrink-0 flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200">
                     <Icon
                       style="solid"
                       name="lock"

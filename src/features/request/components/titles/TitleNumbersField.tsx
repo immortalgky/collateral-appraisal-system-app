@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { get, useController, useFormContext } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { useFormReadOnly } from '@/shared/components/form';
+import { useFormReadOnly, ValidationText } from '@/shared/components/form';
 import { CONDO_TITLE_NUMBER_MAX } from '../../configs/fields';
 import {
   normaliseLandTitleNumbers,
@@ -86,9 +86,9 @@ export function TitleNumbersField({ index }: { index: number }) {
   return (
     // data-field is where the page scrolls to for this field (see scrollToField).
     <div data-field={path} className="col-span-6 grid gap-1.5">
-      <label htmlFor={id} className="text-xs font-medium text-gray-800">
+      <label htmlFor={id} className="text-xs font-medium text-(--palette-ink)">
         {t('titleSection.numbers.heading', { count })}
-        {!readOnly && <span className="ml-0.5 text-danger">*</span>}
+        {!readOnly && <span className="ml-0.5 text-(--palette-req)">*</span>}
       </label>
       <textarea
         id={id}
@@ -114,25 +114,34 @@ export function TitleNumbersField({ index }: { index: number }) {
         aria-invalid={error || tooLong ? true : undefined}
         aria-describedby={`${id}-hint`}
         className={clsx(
-          'block w-full resize-none rounded-lg border bg-white px-3 py-2 text-sm leading-relaxed tabular-nums transition-colors',
-          'placeholder:text-gray-400 focus:outline-none focus:ring-2',
+          'block w-full resize-none rounded-lg border bg-(--form-input-bg) px-3 py-2 text-sm leading-relaxed tabular-nums text-(--palette-ink) transition-colors',
+          'placeholder:text-(--palette-gray-400) focus:outline-none focus:ring-2',
           error || tooLong
             ? 'border-danger focus:border-danger focus:ring-danger/20'
-            : 'border-gray-300 hover:border-gray-400 focus:border-gray-500 focus:ring-gray-200',
-          readOnly && 'cursor-default bg-gray-50 text-gray-600',
+            : 'border-(--palette-input-edge) hover:border-(--palette-input-edge-hover) focus:border-primary-500 focus:ring-primary-500/20',
+          readOnly && 'cursor-default bg-(--palette-surface-2) text-(--palette-gray-600)',
         )}
       />
       <div
         id={`${id}-hint`}
         className="flex flex-wrap items-start justify-between gap-x-4 gap-y-0.5"
       >
-        <p className={clsx('m-0 text-xs', error || tooLong ? 'text-danger' : 'text-gray-500')}>
-          {error ?? (readOnly ? null : t('titleSection.numbers.hint'))}
+        <p
+          className={clsx(
+            'm-0 text-xs',
+            error || tooLong ? 'text-danger' : 'text-(--palette-gray-500)',
+          )}
+        >
+          {error ? (
+            <ValidationText message={error} />
+          ) : readOnly ? null : (
+            t('titleSection.numbers.hint')
+          )}
         </p>
         <span
           className={clsx(
             'ml-auto whitespace-nowrap text-xs tabular-nums',
-            tooLong ? 'font-medium text-danger' : 'text-gray-500',
+            tooLong ? 'font-medium text-danger' : 'text-(--palette-gray-500)',
           )}
         >
           {t('titleSection.numbers.counter', { length, max: MAX_LENGTH, count })}
@@ -166,7 +175,7 @@ export function TitleNumbersSummary({ index }: { index: number }) {
       onClick={goToBox}
       title={entries.join(',') || undefined}
       aria-label={t('titleSection.numbers.goTo')}
-      className="min-h-[1.6rem] min-w-0 flex-1 cursor-pointer truncate px-1 pb-px pt-0.5 text-center text-[15px] font-semibold text-blue-700 outline-none focus-visible:underline"
+      className="min-h-[1.6rem] min-w-0 flex-1 cursor-pointer truncate px-1 pb-px pt-0.5 text-center text-[15px] font-semibold text-blue-700 dark:text-blue-300 outline-none focus-visible:underline"
     >
       {shown.join(',')}
       {left > 0 && ` … ${t('titleSection.numbers.more', { count: left })}`}

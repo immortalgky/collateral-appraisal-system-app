@@ -29,6 +29,8 @@ export interface OAuthClientDetail extends OAuthClientListItem {
   identityTokenLifetimeMinutes?: number | null;
   /** Rolling refresh tokens make this an idle timeout, not a cap on total session age. */
   refreshTokenLifetimeMinutes?: number | null;
+  /** Whole hours an upload session created by this client stays open; absent = server default. */
+  uploadSessionLifetimeHours?: number | null;
 }
 
 export interface OAuthClientListResult {
@@ -50,6 +52,7 @@ export interface CreateClientRequest {
   accessTokenLifetimeMinutes?: number | null;
   identityTokenLifetimeMinutes?: number | null;
   refreshTokenLifetimeMinutes?: number | null;
+  uploadSessionLifetimeHours?: number | null;
 }
 
 export type UpdateClientRequest = Omit<CreateClientRequest, 'clientId' | 'clientType'>;

@@ -69,7 +69,7 @@ interface RowProps {
 
 const Row = ({ label, children }: RowProps) => (
   <div className="flex items-baseline gap-6 whitespace-nowrap">
-    <span className="text-gray-400 shrink-0">{label}</span>
+    <span className="text-(--palette-gray-400) shrink-0">{label}</span>
     <span className="ml-auto text-right tabular-nums">{children}</span>
   </div>
 );
@@ -170,7 +170,7 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
         onFocus={open}
         onBlur={close}
         onKeyDown={onKeyDown}
-        className="border-b border-dotted border-gray-300 cursor-help outline-none
+        className="border-b border-dotted border-(--palette-line-strong) cursor-help outline-none
                    focus-visible:ring-1 focus-visible:ring-blue-400 rounded-sm"
       >
         {children}
@@ -202,7 +202,7 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
               {timing.openedAt ? (
                 formatDateTime(timing.openedAt)
               ) : (
-                <span className="text-gray-400 italic">
+                <span className="text-(--palette-gray-400) italic">
                   {timing.taskState === 'Assigned'
                     ? t('activityTracking.timing.notOpenedYet')
                     : t('activityTracking.timing.noOpenRecord')}
@@ -226,7 +226,7 @@ const HolderTimingTooltip = ({ timing, children }: HolderTimingTooltipProps) => 
               <Row label={t('activityTracking.timing.dueAt')}>
                 {formatDateTime(timing.dueAt)}
                 {timing.slaDurationHours != null && (
-                  <span className="text-gray-400">
+                  <span className="text-(--palette-gray-400)">
                     {' '}
                     · {t('activityTracking.timing.hoursShort', { hours: timing.slaDurationHours })}
                   </span>

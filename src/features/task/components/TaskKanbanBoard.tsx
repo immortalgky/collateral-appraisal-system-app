@@ -158,7 +158,7 @@ export const TaskKanbanBoard = ({
 
   if (sortedGroups.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-400">
+      <div className="flex flex-col items-center justify-center h-full text-(--palette-gray-400)">
         <InboxZeroArt className="h-24 w-28" />
         <p className="mt-2 text-sm">No tasks</p>
       </div>

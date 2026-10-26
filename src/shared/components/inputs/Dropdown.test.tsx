@@ -220,7 +220,8 @@ describe('Dropdown', () => {
       render(<Dropdown options={mockOptions} value={null} onChange={() => {}} disabled />);
 
       const button = screen.getByRole('button');
-      expect(button).toHaveClass('bg-gray-50', 'cursor-not-allowed');
+      // Same box, never bare text (DESIGN.md 17.3).
+      expect(button).toHaveClass('bg-(--palette-surface-2)', 'border', 'cursor-not-allowed');
     });
   });
 
@@ -253,6 +254,15 @@ describe('Dropdown', () => {
 
       const button = screen.getByRole('button');
       expect(button).toHaveClass('border-danger');
+    });
+
+    // The message is linked to the trigger (17.3).
+    it('should link the error message to the button', () => {
+      render(<Dropdown options={mockOptions} value={null} onChange={() => {}} error="Required" />);
+
+      const button = screen.getByRole('button');
+      expect(button).toHaveAttribute('aria-invalid', 'true');
+      expect(button).toHaveAccessibleDescription('Required');
     });
   });
 

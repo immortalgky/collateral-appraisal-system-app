@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslation } from 'react-i18next';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import { useWorkflowStore } from '../../hooks/useWorkflowStore';
-import { makeSwitchFormSchema, type SwitchFormValues } from '../../schemas';
+import { switchFormSchema, type SwitchFormValues } from '../../schemas';
 import type { ActivityNodeData } from '../../adapters/toReactFlow';
 import type { SwitchProperties } from '../../types';
 
@@ -28,7 +29,7 @@ export function SwitchForm({ nodeId }: Props) {
     setValue,
     formState: { errors },
   } = useForm<SwitchFormValues>({
-    resolver: zodResolver(makeSwitchFormSchema(t)),
+    resolver: zodResolver(switchFormSchema),
     defaultValues: {
       name: data?.name ?? '',
       description: data?.description ?? '',
@@ -80,9 +81,11 @@ export function SwitchForm({ nodeId }: Props) {
         </label>
         <input {...register('name')} className="input input-bordered input-sm w-full" />
         {errors.name && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.name.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.name.message} />
+            </span>
+          </div>
         )}
       </div>
 
@@ -107,9 +110,11 @@ export function SwitchForm({ nodeId }: Props) {
           placeholder={t('forms.placeholders.expressionHint')}
         />
         {errors.expression && (
-          <label className="label">
-            <span className="label-text-alt text-error">{errors.expression.message}</span>
-          </label>
+          <div className="label">
+            <span className="label-text-alt text-error">
+              <ValidationText message={errors.expression.message} />
+            </span>
+          </div>
         )}
       </div>
 

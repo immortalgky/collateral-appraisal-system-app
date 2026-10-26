@@ -43,7 +43,7 @@ function SortableTh({
   };
 
   const baseCls =
-    'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+    'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
 
   if (!isSortable) {
     return (
@@ -59,8 +59,8 @@ function SortableTh({
       <button
         type="button"
         onClick={handleClick}
-        className={`inline-flex items-center gap-1 hover:text-gray-700 transition-colors group ${
-          isActive ? 'text-primary' : ''
+        className={`inline-flex items-center gap-1 hover:text-(--palette-ink) transition-colors group ${
+          isActive ? 'text-(--palette-primary-text)' : ''
         }`}
       >
         <span>{label}</span>
@@ -68,7 +68,9 @@ function SortableTh({
           style="solid"
           name={isActive ? (activeSortDir === 'asc' ? 'sort-up' : 'sort-down') : 'sort'}
           className={`size-2.5 ${
-            isActive ? 'text-primary' : 'text-gray-300 group-hover:text-gray-500'
+            isActive
+              ? 'text-(--palette-primary-text)'
+              : 'text-(--palette-gray-300) group-hover:text-(--palette-gray-500)'
           }`}
         />
       </button>

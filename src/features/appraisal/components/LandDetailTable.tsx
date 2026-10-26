@@ -140,7 +140,7 @@ export default function LandDetailTable() {
                           <button
                             type="button"
                             onClick={() => setEditIndex(index)}
-                            className="btn btn-circle btn-xs btn-ghost text-primary"
+                            className="btn btn-circle btn-xs btn-ghost text-(--palette-primary-text)"
                           >
                             <Icon name="pen" style="solid" />
                           </button>

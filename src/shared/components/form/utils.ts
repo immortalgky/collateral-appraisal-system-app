@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-import type { FieldValues, UseFormReturn } from 'react-hook-form';
 import type { z, ZodTypeAny } from 'zod';
 
 /**
@@ -125,10 +123,18 @@ export function extractFieldConstraints(schema: ZodTypeAny): FieldConstraints {
  */
 export function getFieldConstraints(
   schema: z.ZodObject<any> | z.ZodEffects<any>,
-  fieldPath: string
+  fieldPath: string,
 ): FieldConstraints {
   const parts = fieldPath.split('.');
   let currentSchema: ZodTypeAny = schema;
+
+  // A page that adds a rule of its own to a config's schema (Data Correction's reason) intersects
+  // the two: the field is in whichever side declares it.
+  if (currentSchema._def?.typeName === 'ZodIntersection') {
+    const { left, right } = currentSchema._def;
+    const fromLeft = getFieldConstraints(left, fieldPath);
+    return Object.keys(fromLeft).length > 0 ? fromLeft : getFieldConstraints(right, fieldPath);
+  }
 
   // Handle ZodEffects wrapper
   if (currentSchema._def?.typeName === 'ZodEffects') {
@@ -156,7 +162,11 @@ export function getFieldConstraints(
       } else if (typeName === 'ZodArray') {
         currentSchema = unwrapped._def.type;
         unwrapped = currentSchema;
-      } else if (typeName === 'ZodOptional' || typeName === 'ZodNullable' || typeName === 'ZodDefault') {
+      } else if (
+        typeName === 'ZodOptional' ||
+        typeName === 'ZodNullable' ||
+        typeName === 'ZodDefault'
+      ) {
         unwrapped = unwrapped._def.innerType;
       } else if (typeName === 'ZodEffects') {
         unwrapped = unwrapped._def.schema;
@@ -218,7 +228,7 @@ export function constraintsToInputProps(constraints: FieldConstraints) {
  */
 export function getAllFieldConstraints(
   schema: z.ZodObject<any>,
-  prefix = ''
+  prefix = '',
 ): Record<string, FieldConstraints> {
   const result: Record<string, FieldConstraints> = {};
 
@@ -254,7 +264,11 @@ export function getAllFieldConstraints(
         const nestedConstraints = getAllFieldConstraints(unwrapped as z.ZodObject<any>, fieldPath);
         Object.assign(result, nestedConstraints);
         break;
-      } else if (typeName === 'ZodOptional' || typeName === 'ZodNullable' || typeName === 'ZodDefault') {
+      } else if (
+        typeName === 'ZodOptional' ||
+        typeName === 'ZodNullable' ||
+        typeName === 'ZodDefault'
+      ) {
         unwrapped = unwrapped._def.innerType;
       } else {
         break;
@@ -269,12 +283,12 @@ export function getAllFieldConstraints(
  * Turn a react-hook-form field key into a human-readable label.
  * camelCase / sn_case / kebab-case → Title Case, e.g. `sellingAreaPercent` → `Selling Area Percent`.
  */
-function humanizeFieldLabel(key: string): string {
+export function humanizeFieldLabel(key: string): string {
   return key
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
-    .replace(/^\w/, (c) => c.toUpperCase())
+    .replace(/^\w/, c => c.toUpperCase())
     .trim();
 }
 
@@ -288,8 +302,8 @@ export interface FlatFormError {
 
 /**
  * Recursively flatten react-hook-form FieldErrors into an array of errors carrying both the
- * humanized display text (so the banner names the offending field) and the dotted field path
- * (so the banner can scroll to it — see `scrollToField`).
+ * humanized display text and the dotted field path (so a caller can count or find the failed
+ * fields — see `scrollToField`). The missing-fields chip does the summarising for the user.
  *
  * Handles nested objects and array fields (numeric array indices fall back to the array field name
  * as the label source, while still contributing to the path).
@@ -346,7 +360,11 @@ export function scrollToField(path: string): void {
   const escaped = CSS.escape(path);
   const el =
     document.querySelector(`[data-field="${escaped}"]`) ??
-    document.querySelector(`[data-field^="${escaped}."]`);
+    document.querySelector(`[data-field^="${escaped}."]`) ??
+    // a control that stands for several paths (the pricing template picker)
+    document.querySelector(`[data-field-aliases~="${escaped}"]`) ??
+    // a bare input that carries only its `name` (the pricing rails)
+    document.querySelector(`input[name="${escaped}"], textarea[name="${escaped}"]`);
 
   if (!el) return;
 
@@ -358,31 +376,32 @@ export function scrollToField(path: string): void {
 
   el.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
   // preventScroll so focusing does not fight the smooth scroll already in flight.
-  el.querySelector<HTMLElement>('input,select,textarea,button')?.focus({ preventScroll: true });
+  focusFieldControl(el);
 }
 
-/**
- * After a failed submit, scroll to the first validation error.
- *
- * The app cannot rely on react-hook-form's `shouldFocusError` for this: it only reaches fields whose
- * ref landed on a focusable node, it handles a single field, and it can never reach array-level
- * errors, which have no input behind them at all.
- */
-export function useScrollToFirstError<T extends FieldValues>(methods: UseFormReturn<T>): void {
-  const { submitCount } = methods.formState;
+// Native controls, the chip groups' ARIA widgets (`span[role=radio]` and kin), anything else
+// the page made tabbable.
+const FOCUSABLE =
+  'input,select,textarea,button,[role="radio"],[role="checkbox"],[role="switch"],[tabindex]:not([tabindex="-1"])';
 
-  useEffect(() => {
-    if (!submitCount) return;
-    // Read errors here rather than depending on them: as a dep, every keystroke that clears an
-    // error would re-fire the scroll.
-    const [first] = flattenFormErrors(methods.formState.errors);
-    if (!first) return;
-    // Next frame: the error banner is inserted above the form on this same commit, and scrolling
-    // before that reflow lands on a stale offset. Cancelled on unmount — a form that closes
-    // between submit and the next frame would otherwise scroll to whatever `data-field` the
-    // replacement screen happens to expose.
-    const frame = requestAnimationFrame(() => scrollToField(first.path));
-    return () => cancelAnimationFrame(frame);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [submitCount]);
+/**
+ * Focus the control inside a field wrapper. A radio group takes the checked radio, else the first
+ * (the one a keyboard user would land on). A wrapper with nothing focusable in it is made
+ * focusable itself, so the jump never leaves focus behind on the popover.
+ */
+function focusFieldControl(wrapper: Element): void {
+  const radios = wrapper.querySelectorAll<HTMLElement>('[role="radio"]');
+  // `data-field` can sit on the control itself (a pricing grid cell has no wrapper)
+  const target = wrapper.matches(FOCUSABLE)
+    ? (wrapper as HTMLElement)
+    : radios.length > 0
+      ? (wrapper.querySelector<HTMLElement>('[role="radio"][aria-checked="true"]') ?? radios[0])
+      : wrapper.querySelector<HTMLElement>(FOCUSABLE);
+  if (target) {
+    target.focus({ preventScroll: true });
+    return;
+  }
+  if (!(wrapper instanceof HTMLElement)) return;
+  if (!wrapper.hasAttribute('tabindex')) wrapper.tabIndex = -1;
+  wrapper.focus({ preventScroll: true });
 }

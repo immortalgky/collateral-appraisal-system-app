@@ -1,6 +1,5 @@
-import { FormFields, type FormField } from '@/shared/components/form';
+import { FormFields, FormSection, FormSheet, type FormField } from '@/shared/components/form';
 import { machineInfoFields } from '../configs/fields';
-import SectionRow from '../components/SectionRow';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
@@ -90,18 +89,13 @@ const MachineryDetailForm = () => {
   const group = (...entries: GroupEntry[]) => pick(byName, entries);
 
   return (
-    <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-6">
-      {GROUPS.map((g, i) => (
-        <SectionRow
-          key={g.titleKey}
-          title={t(g.titleKey)}
-          icon={g.icon}
-          isLast={i === GROUPS.length - 1}
-        >
+    <FormSheet>
+      {GROUPS.map(g => (
+        <FormSection key={g.titleKey} title={t(g.titleKey)} icon={g.icon}>
           <FormFields fields={group(...g.fields)} />
-        </SectionRow>
+        </FormSection>
       ))}
-    </div>
+    </FormSheet>
   );
 };
 

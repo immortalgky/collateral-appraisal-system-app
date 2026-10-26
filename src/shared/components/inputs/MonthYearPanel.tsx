@@ -81,7 +81,7 @@ export function MonthYearPanel({
         <button
           type="button"
           onClick={toggleYearGrid}
-          className="text-sm font-semibold text-gray-800 hover:text-primary rounded px-1 -mx-1"
+          className="text-sm font-semibold text-(--palette-ink) hover:text-(--palette-primary-text) rounded px-1 -mx-1"
         >
           {yearGridOpen ? `${yearBase}–${yearBase + 11}` : year}
         </button>
@@ -90,7 +90,7 @@ export function MonthYearPanel({
             type="button"
             onClick={() => (yearGridOpen ? setYearBase(b => b - 12) : onStepYear(-1))}
             aria-label={prevYearAriaLabel}
-            className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
           >
             <svg
               width="16"
@@ -108,7 +108,7 @@ export function MonthYearPanel({
             type="button"
             onClick={() => (yearGridOpen ? setYearBase(b => b + 12) : onStepYear(1))}
             aria-label={nextYearAriaLabel}
-            className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="w-6 h-6 flex items-center justify-center rounded text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
           >
             <svg
               width="16"
@@ -134,7 +134,9 @@ export function MonthYearPanel({
               onClick={() => selectYear(y)}
               className={clsx(
                 'py-1.5 rounded text-xs font-medium transition-colors',
-                y === year ? 'bg-primary text-primary-content' : 'text-gray-700 hover:bg-gray-100',
+                y === year
+                  ? 'bg-primary-700 text-white'
+                  : 'text-(--palette-ink) hover:bg-(--palette-surface-3)',
               )}
             >
               {y}
@@ -156,10 +158,10 @@ export function MonthYearPanel({
                 className={clsx(
                   'py-1.5 rounded text-xs font-medium transition-colors',
                   disabled
-                    ? 'text-gray-300 cursor-not-allowed'
+                    ? 'text-(--palette-gray-300) cursor-not-allowed'
                     : isSelected
-                      ? 'bg-primary text-primary-content'
-                      : 'text-gray-700 hover:bg-gray-100',
+                      ? 'bg-primary-700 text-white'
+                      : 'text-(--palette-ink) hover:bg-(--palette-surface-3)',
                 )}
               >
                 {label}
@@ -177,7 +179,7 @@ export function MonthYearPanel({
               setYearGridOpen(false);
               onToday();
             }}
-            className="text-xs font-semibold text-primary hover:underline px-1 py-0.5"
+            className="text-xs font-semibold text-(--palette-primary-text) hover:underline px-1 py-0.5"
           >
             {todayLabel}
           </button>

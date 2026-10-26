@@ -32,11 +32,14 @@ export const useSystemConfiguration = (key: string, enabled = true) =>
   });
 
 /**
- * Reads a boolean system configuration entry, falling back to `defaultValue` while the request is
- * in flight or when the key does not exist — mirroring ISystemConfigurationReader.GetBoolAsync.
+ * Boolean value of a configuration entry, falling back to `defaultValue` while the request is in
+ * flight or when the key does not exist — mirroring ISystemConfigurationReader.GetBoolAsync.
  */
-export const useSystemConfigurationBool = (key: string, defaultValue: boolean, enabled = true) => {
-  const { data, isLoading } = useSystemConfiguration(key, enabled);
+export const configToBool = (
+  data: SystemConfigurationDto | null | undefined,
+  isLoading: boolean,
+  defaultValue: boolean,
+) => {
   if (isLoading || !data || data.isActive === false) return defaultValue;
   return data.value?.trim().toLowerCase() === 'true';
 };

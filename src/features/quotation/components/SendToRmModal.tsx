@@ -4,6 +4,7 @@ import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { useSendShortlistToRm } from '../api/quotation';
+import BoldTrans from './BoldTrans';
 
 interface SendToRmModalProps {
   isOpen: boolean;
@@ -31,21 +32,17 @@ const SendToRmModal = ({ isOpen, onClose, quotationId, shortlistedCount }: SendT
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('shortlist.sendToRmTitle')} size="sm">
       <div className="flex flex-col gap-4">
-        <div className="flex items-start gap-3 p-3 bg-purple-50 rounded-lg">
+        <div className="flex items-start gap-3 p-3 bg-purple-50 dark:bg-purple-500/10 rounded-lg">
           <Icon
             name="circle-info"
             style="solid"
             className="size-5 text-purple-500 shrink-0 mt-0.5"
           />
-          <div className="text-sm text-purple-700">
+          <div className="text-sm text-purple-700 dark:text-purple-300">
             <p className="font-medium mb-1">{t('shortlist.sendToRmConfirm')}</p>
-            <p
-              dangerouslySetInnerHTML={{
-                __html: t('shortlist.sendToRmBody', {
-                  count: `<strong>${shortlistedCount}</strong>`,
-                }),
-              }}
-            />
+            <p>
+              <BoldTrans i18nKey="shortlist.sendToRmBody" values={{ count: shortlistedCount }} />
+            </p>
           </div>
         </div>
 

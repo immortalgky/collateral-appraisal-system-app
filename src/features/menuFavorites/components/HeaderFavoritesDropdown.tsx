@@ -33,7 +33,7 @@ function FavoriteMenuItem({ node, lang, onClose }: FavoriteMenuItemProps) {
         <Icon
           name={node.iconName}
           style={node.iconStyle}
-          className={clsx('size-3', node.iconColor ?? 'text-gray-500')}
+          className={clsx('size-3', node.iconColor ?? 'text-(--palette-gray-500)')}
         />
       </div>
       <span className="text-xs font-medium text-gray-700 dark:text-gray-200 truncate">{label}</span>
@@ -140,7 +140,7 @@ export function HeaderFavoritesDropdown() {
               <button
                 type="button"
                 onClick={handleManage}
-                className="flex items-center justify-center gap-1.5 w-full px-4 py-2.5 text-sm font-medium text-primary hover:bg-gray-50 dark:hover:bg-base-300 transition-colors rounded-b-xl"
+                className="flex items-center justify-center gap-1.5 w-full px-4 py-2.5 text-sm font-medium text-(--palette-primary-text) hover:bg-gray-50 dark:hover:bg-base-300 transition-colors rounded-b-xl"
               >
                 <Icon name="gear" style="regular" className="size-3.5" />
                 {t('favorites.header.manage')}

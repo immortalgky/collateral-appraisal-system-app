@@ -78,8 +78,8 @@ const RailRow = ({
         'flex w-full items-center gap-2 border-l-[3px] py-1.5 pl-3 pr-2 text-left transition-colors',
         isDragging && 'opacity-50',
         active
-          ? 'border-primary bg-primary-100 font-semibold text-primary-800'
-          : 'border-transparent text-gray-600 hover:bg-gray-50',
+          ? 'border-primary bg-primary-100 dark:bg-primary-500/20 font-semibold text-primary-800 dark:text-primary-300'
+          : 'border-transparent text-(--palette-gray-600) hover:bg-(--palette-surface-2)',
       )}
     >
       <i className={clsx('h-1.5 w-1.5 shrink-0 rounded-full', getTypeDotColor(item.type))} />
@@ -121,7 +121,7 @@ const RailGroupHeader = ({
   const rename = useGroupRename(group.id, group.name, onRenameGroup);
 
   return (
-    <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-gray-100 bg-gray-50 px-3 py-1.5">
+    <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-(--palette-line-soft) bg-(--palette-surface-2) px-3 py-1.5">
       {rename.isEditing && canEdit ? (
         <input
           ref={rename.inputRef}
@@ -129,7 +129,7 @@ const RailGroupHeader = ({
           onChange={e => rename.setValue(e.target.value)}
           onBlur={rename.commit}
           onKeyDown={rename.onKeyDown}
-          className="min-w-0 flex-1 rounded border border-primary bg-white px-1 py-0.5 text-[11px] font-semibold text-gray-900 outline-none focus:ring-1 focus:ring-primary"
+          className="min-w-0 flex-1 rounded border border-primary bg-(--palette-surface) px-1 py-0.5 text-[11px] font-semibold text-(--palette-ink) outline-none focus:ring-1 focus:ring-primary"
         />
       ) : (
         <>
@@ -141,13 +141,15 @@ const RailGroupHeader = ({
             onClick={rename.start}
             title={canEdit ? t('properties.renameHint') : undefined}
             className={clsx(
-              'min-w-0 truncate text-left text-[11px] font-semibold text-gray-600',
-              canEdit && 'cursor-pointer hover:text-primary',
+              'min-w-0 truncate text-left text-[11px] font-semibold text-(--palette-gray-600)',
+              canEdit && 'cursor-pointer hover:text-(--palette-primary-text)',
             )}
           >
             {group.name}
           </button>
-          <span className="text-[10px] text-gray-400 tabular-nums">{group.items.length}</span>
+          <span className="text-[10px] text-(--palette-gray-400) tabular-nums">
+            {group.items.length}
+          </span>
         </>
       )}
 
@@ -326,9 +328,16 @@ export const PropertySplitView = ({
   };
 
   const field = (label: string, value: ReactNode, muted = false) => (
-    <div className="border-t border-gray-100 pt-1.5">
-      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400">{label}</div>
-      <div className={clsx('text-[13px] mt-0.5', muted ? 'italic text-gray-400' : 'text-gray-800')}>
+    <div className="border-t border-(--palette-line-soft) pt-1.5">
+      <div className="text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400)">
+        {label}
+      </div>
+      <div
+        className={clsx(
+          'text-[13px] mt-0.5',
+          muted ? 'italic text-(--palette-gray-400)' : 'text-(--palette-ink)',
+        )}
+      >
         {value}
       </div>
     </div>
@@ -340,9 +349,9 @@ export const PropertySplitView = ({
       : null;
 
   return (
-    <div className="flex h-full min-h-0 border border-gray-200 rounded-xl bg-white overflow-hidden">
+    <div className="flex h-full min-h-0 border border-(--palette-line) rounded-xl bg-(--palette-surface) overflow-hidden">
       {/* Left: every property in the appraisal, grouped */}
-      <div className="w-56 shrink-0 border-r border-gray-200 overflow-y-auto">
+      <div className="w-56 shrink-0 border-r border-(--palette-line) overflow-y-auto">
         {/* The summary belongs to the whole appraisal, so it sits above every group rather than
             inside one. Amber dot while something is still to do, a tick once it is in order. */}
         {machinerySummary && (
@@ -350,20 +359,24 @@ export const PropertySplitView = ({
             type="button"
             onClick={machinerySummary.onOpen}
             className={clsx(
-              'flex w-full items-center gap-2 border-b border-l-[3px] border-b-gray-200 px-3 py-2 text-left transition-colors',
+              'flex w-full items-center gap-2 border-b border-l-[3px] border-b-(--palette-line) px-3 py-2 text-left transition-colors',
               pathname.endsWith('/machinery-summary')
-                ? 'border-l-primary bg-primary-100'
-                : 'border-l-transparent hover:bg-gray-50',
+                ? 'border-l-primary bg-primary-100 dark:bg-primary-500/20'
+                : 'border-l-transparent hover:bg-(--palette-surface-2)',
             )}
           >
             <span className="flex size-6 shrink-0 items-center justify-center rounded-md bg-amber-700/10 text-amber-700">
               <Icon name="gears" style="solid" className="text-[11px]" />
             </span>
-            <span className="truncate text-xs font-semibold text-gray-800">
+            <span className="truncate text-xs font-semibold text-(--palette-ink)">
               {t('properties.machinerySummary.title')}
             </span>
             {machinerySummary.status === 'done' ? (
-              <Icon name="check" style="solid" className="ml-auto text-[10px] text-green-600" />
+              <Icon
+                name="check"
+                style="solid"
+                className="ml-auto text-[10px] text-green-600 dark:text-green-400"
+              />
             ) : machinerySummary.status ? (
               <span
                 className="ml-auto size-2 shrink-0 rounded-full bg-amber-500"
@@ -406,7 +419,7 @@ export const PropertySplitView = ({
               <PropertyTypeDropdown
                 groupId={g.id}
                 className="block px-2 py-1"
-                buttonClassName="w-full justify-center gap-1.5 rounded-md border border-dashed border-gray-300 px-2 py-1 text-[11px] font-medium text-gray-500 hover:border-gray-400 hover:bg-gray-100 hover:text-gray-800"
+                buttonClassName="w-full justify-center gap-1.5 rounded-md border border-dashed border-(--palette-line-strong) px-2 py-1 text-[11px] font-medium text-(--palette-gray-500) hover:border-(--palette-line-strong) hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
               />
             )}
           </div>
@@ -422,7 +435,11 @@ export const PropertySplitView = ({
           <Suspense
             fallback={
               <div className="flex h-full items-center justify-center">
-                <Icon name="spinner" style="solid" className="animate-spin text-primary" />
+                <Icon
+                  name="spinner"
+                  style="solid"
+                  className="animate-spin text-(--palette-primary-text)"
+                />
               </div>
             }
           >
@@ -438,7 +455,7 @@ export const PropertySplitView = ({
         <div className="flex-1 min-w-0 overflow-y-auto p-4">
           <div>
             <div className="flex items-start gap-4">
-              <div className="relative w-64 h-40 rounded-xl bg-gray-100 overflow-hidden shrink-0">
+              <div className="relative w-64 h-40 rounded-xl bg-(--palette-surface-3) overflow-hidden shrink-0">
                 {property.image ? (
                   <img
                     src={property.image}
@@ -447,7 +464,7 @@ export const PropertySplitView = ({
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Icon name="image" className="text-gray-400 text-3xl" />
+                    <Icon name="image" className="text-(--palette-gray-400) text-3xl" />
                   </div>
                 )}
                 {property.latitude != null && property.longitude != null && (
@@ -455,7 +472,7 @@ export const PropertySplitView = ({
                     type="button"
                     onClick={() => onShowOnMap(property.id)}
                     title={t('properties.map.pinView')}
-                    className="absolute top-2 left-2 p-1 bg-white rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
+                    className="absolute top-2 left-2 p-1 bg-(--palette-surface) rounded-full shadow-sm hover:shadow-md hover:scale-110 transition-all"
                   >
                     <Icon
                       name="location-dot"
@@ -468,7 +485,9 @@ export const PropertySplitView = ({
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-2">
-                  <h3 className="text-base font-bold text-gray-900 truncate">{property.address}</h3>
+                  <h3 className="text-base font-bold text-(--palette-ink) truncate">
+                    {property.address}
+                  </h3>
                   <PropertyRowActionsMenu
                     className="ml-auto shrink-0"
                     property={property}
@@ -481,7 +500,7 @@ export const PropertySplitView = ({
                     hasClipboard={hasClipboard}
                   />
                 </div>
-                <span className="inline-flex items-center gap-1.5 text-xs text-gray-500 mt-1">
+                <span className="inline-flex items-center gap-1.5 text-xs text-(--palette-gray-500) mt-1">
                   <i className={clsx('w-2 h-2 rounded-full', getTypeDotColor(property.type))} />
                   <ParameterDisplay
                     group="PropertyType"
@@ -600,7 +619,7 @@ export const PropertySplitView = ({
       ) : (
         // With no properties yet the rail still shows every group and its add button, so the
         // appraisal can be filled from here; this side only says where to start.
-        <div className="flex-1 flex items-center justify-center text-xs text-gray-400">
+        <div className="flex-1 flex items-center justify-center text-xs text-(--palette-gray-400)">
           {flat.length === 0
             ? // Only point at the add button to someone who has it.
               t(readOnly ? 'properties.splitView.emptyReadOnly' : 'properties.splitView.emptyHint')

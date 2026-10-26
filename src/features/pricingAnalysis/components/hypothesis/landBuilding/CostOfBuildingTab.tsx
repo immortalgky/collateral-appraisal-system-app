@@ -27,8 +27,9 @@ const BUILDING_TYPES = ['B', 'LB', 'LSB', 'LS'];
 
 type Mapping = LandBuildingFormValues['modelBuildingMappings'][number];
 
-const TD = 'px-[8px] py-0 h-[26px] border-r border-r-[#eef2f2]';
-const TH = 'px-[8px] py-0 h-[26px] border-r border-b border-gray-200 font-semibold text-gray-600';
+const TD = 'px-[8px] py-0 h-[26px] border-r border-r-(--palette-line-soft)';
+const TH =
+  'px-[8px] py-0 h-[26px] border-r border-b border-(--palette-line) font-semibold text-(--palette-gray-600)';
 
 interface CostOfBuildingTabProps {
   models: Record<string, LandBuildingModelAggregate> | null;
@@ -54,9 +55,11 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
   if (modelList.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
-        <Icon name="upload" style="regular" className="size-8 text-gray-300" />
-        <p className="text-sm text-gray-500 font-medium">{t('hypothesis.costTab.noUnits')}</p>
-        <p className="text-xs text-gray-400">{t('hypothesis.costTab.noUnitsHint')}</p>
+        <Icon name="upload" style="regular" className="size-8 text-(--palette-gray-300)" />
+        <p className="text-sm text-(--palette-gray-500) font-medium">
+          {t('hypothesis.costTab.noUnits')}
+        </p>
+        <p className="text-xs text-(--palette-gray-400)">{t('hypothesis.costTab.noUnitsHint')}</p>
       </div>
     );
   }
@@ -85,18 +88,20 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
 
   return (
     <div className="flex flex-col gap-[8px]">
-      <div className="text-[12px] text-gray-600 bg-primary/5 border border-primary/15 rounded-md px-[10px] py-[6px]">
+      <div className="text-[12px] text-(--palette-gray-600) bg-primary/5 border border-primary/15 rounded-md px-[10px] py-[6px]">
         {t('hypothesis.costTab.banner')}
       </div>
       {buildings.length === 0 && (
-        <div className="text-[12px] text-amber-700">{t('hypothesis.costTab.noBuildings')}</div>
+        <div className="text-[12px] text-(--palette-warn)">
+          {t('hypothesis.costTab.noBuildings')}
+        </div>
       )}
 
       <div className="overflow-x-auto">
         <table className="w-full min-w-max text-[12px] leading-[25px] border-collapse">
-          <thead className="bg-gray-50">
+          <thead className="bg-(--palette-surface-2)">
             <tr>
-              <th className={`${TH} text-left sticky left-0 bg-gray-50 w-[190px]`}>
+              <th className={`${TH} text-left sticky left-0 bg-(--palette-surface-2) w-[190px]`}>
                 {t('hypothesis.costTab.colModel')}
               </th>
               <th className={`${TH} text-right w-[90px]`}>{t('hypothesis.costTab.colUnits')}</th>
@@ -112,8 +117,10 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
               const edited = mapping.totalCost != null;
               const diff = total - computed;
               return (
-                <tr key={m.modelName} className="border-b border-gray-100">
-                  <td className={`${TD} sticky left-0 bg-white font-medium text-gray-800`}>
+                <tr key={m.modelName} className="border-b border-(--palette-line-soft)">
+                  <td
+                    className={`${TD} sticky left-0 bg-(--palette-surface) font-medium text-(--palette-ink)`}
+                  >
                     {m.modelName}
                   </td>
                   <td className={`${TD} text-right tabular-nums`}>{fmt(m.unitCount)}</td>
@@ -126,7 +133,7 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
                           update(m.modelName, { appraisalPropertyId: e.target.value || null })
                         }
                         aria-label={t('hypothesis.costTab.buildingAria', { model: m.modelName })}
-                        className="h-[21px] text-[12px] border border-gray-200 rounded px-[6px] bg-white min-w-[220px]"
+                        className="h-[21px] text-[12px] border border-(--palette-line) rounded px-[6px] bg-(--palette-surface) min-w-[220px]"
                       >
                         <option value="">{t('hypothesis.costTab.notSelected')}</option>
                         {buildings.map(b => (
@@ -143,12 +150,12 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
                     </div>
                   </td>
                   <td className={`${TD} text-right tabular-nums`}>
-                    {building ? fmt(perUnit) : <span className="text-gray-300">—</span>}
+                    {building ? fmt(perUnit) : <span className="text-(--palette-gray-300)">—</span>}
                   </td>
                   <td className="px-[8px] py-0 h-[26px] text-right">
                     <div className="flex items-center justify-end gap-[6px]">
                       {edited && (
-                        <span className="text-[11px] text-gray-500 whitespace-nowrap">
+                        <span className="text-[11px] text-(--palette-gray-500) whitespace-nowrap">
                           {t('hypothesis.costTab.edited', {
                             calc: fmt(computed),
                             diff: `${diff >= 0 ? '+' : '−'}${fmt(Math.abs(diff))}`,
@@ -158,7 +165,7 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
                               {' · '}
                               <button
                                 type="button"
-                                className="text-primary hover:underline"
+                                className="text-(--palette-primary-text) hover:underline"
                                 onClick={() => update(m.modelName, { totalCost: null })}
                               >
                                 {t('hypothesis.costTab.useCalculated')}
@@ -182,8 +189,8 @@ export function CostOfBuildingTab({ models, properties }: CostOfBuildingTabProps
                 </tr>
               );
             })}
-            <tr className="bg-gray-50 border-t-2 border-gray-300 font-semibold text-gray-800">
-              <td className={`${TD} sticky left-0 bg-gray-50`}>
+            <tr className="bg-(--palette-surface-2) border-t-2 border-(--palette-line-strong) font-semibold text-(--palette-ink)">
+              <td className={`${TD} sticky left-0 bg-(--palette-surface-2)`}>
                 {t('hypothesis.costTab.totalRow')}
               </td>
               <td className={`${TD} text-right tabular-nums`}>

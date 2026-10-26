@@ -27,6 +27,13 @@ interface FormCardProps extends HTMLAttributes<HTMLDivElement> {
   coloredBorder?: boolean;
   /** Heading size class (default text-base); only a page that needs another size sets it. */
   headingClassName?: string;
+  /** Header size: `sm` is the compact header for data-dense panes (DESIGN.md section 8). */
+  size?: 'md' | 'sm';
+  /**
+   * Extra classes for the body wrapper (the div under the header). Use it to make the body a flex
+   * column that fills a height-capped card: `bodyClassName="flex min-h-0 flex-1 flex-col"`.
+   */
+  bodyClassName?: string;
 }
 
 // Border color styles matching icon colors
@@ -40,7 +47,7 @@ const borderColorStyles: Record<IconColor, string> = {
   teal: 'border-l-teal-500',
   rose: 'border-l-rose-500',
   orange: 'border-l-orange-500',
-  gray: 'border-l-gray-400',
+  gray: 'border-l-(--palette-line-strong)',
 };
 
 /**
@@ -65,12 +72,14 @@ const FormCard = ({
   className,
   required,
   headingClassName,
+  size,
+  bodyClassName,
   ...props
 }: FormCardProps) => {
   return (
     <div
       className={clsx(
-        'bg-white rounded-2xl shadow-sm border border-gray-100',
+        'bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft)',
         coloredBorder && ['border-l-4', borderColorStyles[iconColor]],
         className,
       )}
@@ -85,8 +94,9 @@ const FormCard = ({
         variant="card"
         required={required}
         headingClassName={headingClassName}
+        size={size}
       />
-      <div className={clsx(!noPadding && 'p-5')}>{children}</div>
+      <div className={clsx(!noPadding && 'p-5', bodyClassName)}>{children}</div>
     </div>
   );
 };

@@ -30,7 +30,7 @@ function GroupByToggle({ value, onChange, availableFields = DEFAULT_FIELDS }: Gr
 
   return (
     <div className="inline-flex items-center gap-1.5">
-      <span className="text-[11px] text-gray-500 font-medium shrink-0">
+      <span className="text-[11px] text-(--palette-gray-500) font-medium shrink-0">
         {t('common.groupBy.label')}:
       </span>
       <div className="w-36">

@@ -48,17 +48,22 @@ const MarketComparableTable = ({
   };
 
   return (
-    <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+    <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
       <div className="w-full overflow-x-auto">
         <table className="table min-w-max">
-          <thead className="bg-gray-50 sticky top-0 z-10">
-            <tr className="border-b border-gray-200">
+          <thead className="bg-(--palette-surface-2) sticky top-0 z-10">
+            <tr className="border-b border-(--palette-line)">
               {headers.map((header, index) => (
-                <th key={index} className="text-xs text-gray-600 font-semibold px-4 py-3 text-left">
+                <th
+                  key={index}
+                  className="text-xs text-(--palette-gray-600) font-semibold px-4 py-3 text-left"
+                >
                   {header.label}
                 </th>
               ))}
-              <th className="text-xs text-gray-600 font-semibold px-4 py-3 text-right">Action</th>
+              <th className="text-xs text-(--palette-ink-2) font-semibold px-4 py-3 text-right">
+                Action
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -66,10 +71,14 @@ const MarketComparableTable = ({
               <tr>
                 <td colSpan={headers.length + 1} className="text-center py-6">
                   <div className="flex flex-col items-center gap-2">
-                    <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-                      <Icon style="regular" name="inbox" className="size-6 text-gray-400" />
+                    <div className="w-12 h-12 rounded-full bg-(--palette-surface-3) flex items-center justify-center">
+                      <Icon
+                        style="regular"
+                        name="inbox"
+                        className="size-6 text-(--palette-gray-400)"
+                      />
                     </div>
-                    <p className="text-sm text-gray-500">No market comparables yet</p>
+                    <p className="text-sm text-(--palette-gray-500)">No market comparables yet</p>
                   </div>
                 </td>
               </tr>
@@ -78,7 +87,7 @@ const MarketComparableTable = ({
                 <tr
                   key={item.id}
                   onDoubleClick={() => onSelect(item)}
-                  className=" hover:bg-gray-50"
+                  className=" hover:bg-(--palette-surface-2)"
                 >
                   <td className="px-4 py-3">{item.comparableNumber}</td>
                   <td className="px-4 py-3">{item.surveyName}</td>
@@ -91,7 +100,7 @@ const MarketComparableTable = ({
                       <button
                         type="button"
                         onClick={() => onSelect(item)}
-                        className="p-1.5 rounded hover:bg-gray-100 text-gray-500 hover:text-primary transition-colors"
+                        className="p-1.5 rounded hover:bg-(--palette-surface-3) text-(--palette-gray-500) hover:text-(--palette-primary-text) transition-colors"
                         title="Edit"
                       >
                         <Icon style="regular" name="pen-to-square" className="size-4" />
@@ -99,7 +108,7 @@ const MarketComparableTable = ({
                       <button
                         type="button"
                         onClick={() => handleDelete(item.id)}
-                        className="p-1.5 rounded hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
+                        className="p-1.5 rounded hover:bg-(--palette-req-wash) text-(--palette-gray-500) hover:text-(--palette-danger) transition-colors"
                         title="Delete"
                       >
                         <Icon style="regular" name="trash-can" className="size-4" />

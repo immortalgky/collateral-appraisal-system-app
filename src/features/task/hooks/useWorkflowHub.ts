@@ -2,11 +2,12 @@ import { useEffect, useRef } from 'react';
 import * as appHub from '@shared/realtime/appHub';
 
 export interface PoolTaskUpdateEvent {
-  type: 'PoolTaskLocked' | 'PoolTaskUnlocked' | 'PoolTaskClaimed';
+  type: 'PoolTaskLocked' | 'PoolTaskUnlocked' | 'PoolTaskClaimed' | 'PoolTaskCompleted';
   taskId: string;
   lockedBy?: string;
   releasedBy?: string;
   claimedBy?: string;
+  completedBy?: string;
   poolGroup: string;
   timestamp: string;
 }

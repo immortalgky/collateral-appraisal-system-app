@@ -75,19 +75,19 @@ export const PhotoSourceModal = ({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl w-full max-w-md overflow-hidden"
+        className="bg-(--palette-surface) rounded-xl w-full max-w-md overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between p-4 border-b border-(--palette-line)">
+          <h2 className="text-lg font-semibold text-(--palette-ink)">
             {title ?? t('photoSourceModal.title')}
           </h2>
           <button
             type="button"
             onClick={onClose}
             aria-label={t('photoSourceModal.close')}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:bg-(--palette-surface-3) rounded-lg transition-colors"
           >
             <Icon name="xmark" className="text-lg" />
           </button>
@@ -99,20 +99,22 @@ export const PhotoSourceModal = ({
           <button
             type="button"
             onClick={handleUploadClick}
-            className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-primary/50 transition-all group"
+            className="w-full flex items-center gap-4 p-4 border border-(--palette-line) rounded-xl hover:bg-(--palette-surface-2) hover:border-primary/50 transition-all group"
           >
             <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-              <Icon name="upload" className="text-xl text-primary" />
+              <Icon name="upload" className="text-xl text-(--palette-primary-text)" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-medium text-gray-900">
+              <p className="text-sm font-medium text-(--palette-ink)">
                 {t('photoSourceModal.uploadTitle')}
               </p>
-              <p className="text-xs text-gray-500 mt-0.5">{t('photoSourceModal.uploadHint')}</p>
+              <p className="text-xs text-(--palette-gray-500) mt-0.5">
+                {t('photoSourceModal.uploadHint')}
+              </p>
             </div>
             <Icon
               name="chevron-right"
-              className="ml-auto text-gray-400 group-hover:text-primary transition-colors"
+              className="ml-auto text-(--palette-gray-400) group-hover:text-(--palette-primary-text) transition-colors"
             />
           </button>
 
@@ -121,20 +123,22 @@ export const PhotoSourceModal = ({
             <button
               type="button"
               onClick={handleGalleryClick}
-              className="w-full flex items-center gap-4 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 hover:border-primary/50 transition-all group"
+              className="w-full flex items-center gap-4 p-4 border border-(--palette-line) rounded-xl hover:bg-(--palette-surface-2) hover:border-primary/50 transition-all group"
             >
-              <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center group-hover:bg-purple-200 transition-colors">
-                <Icon name="images" className="text-xl text-purple-600" />
+              <div className="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-500/30 transition-colors">
+                <Icon name="images" className="text-xl text-purple-600 dark:text-purple-400" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-gray-900">
+                <p className="text-sm font-medium text-(--palette-ink)">
                   {t('photoSourceModal.galleryTitle')}
                 </p>
-                <p className="text-xs text-gray-500 mt-0.5">{t('photoSourceModal.galleryHint')}</p>
+                <p className="text-xs text-(--palette-gray-500) mt-0.5">
+                  {t('photoSourceModal.galleryHint')}
+                </p>
               </div>
               <Icon
                 name="chevron-right"
-                className="ml-auto text-gray-400 group-hover:text-primary transition-colors"
+                className="ml-auto text-(--palette-gray-400) group-hover:text-(--palette-primary-text) transition-colors"
               />
             </button>
           )}
@@ -152,7 +156,7 @@ export const PhotoSourceModal = ({
 
         {/* Footer Note */}
         <div className="px-4 pb-4">
-          <p className="text-xs text-gray-400 text-center">
+          <p className="text-xs text-(--palette-gray-400) text-center">
             {t('photoSourceModal.supports', { types: describeAccept(accept) })}
           </p>
         </div>

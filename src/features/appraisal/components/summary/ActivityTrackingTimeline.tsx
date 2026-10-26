@@ -101,7 +101,7 @@ const statusConfig = {
   completed: {
     dotBg: 'bg-emerald-500',
     ringBg: '',
-    lineBorder: 'border-emerald-200',
+    lineBorder: 'border-emerald-200 dark:border-emerald-500/30',
     lineStyle: 'border-solid',
     icon: 'check',
     iconColor: 'text-white',
@@ -109,7 +109,7 @@ const statusConfig = {
   completed_backward: {
     dotBg: 'bg-rose-500',
     ringBg: '',
-    lineBorder: 'border-rose-200',
+    lineBorder: 'border-rose-200 dark:border-rose-500/30',
     lineStyle: 'border-solid',
     icon: 'rotate-left',
     iconColor: 'text-white',
@@ -117,7 +117,7 @@ const statusConfig = {
   in_progress: {
     dotBg: 'bg-cyan-500',
     ringBg: 'ring-4 ring-cyan-500/20 motion-safe:animate-pulse',
-    lineBorder: 'border-cyan-200',
+    lineBorder: 'border-cyan-200 dark:border-cyan-500/30',
     lineStyle: 'border-solid',
     icon: 'circle-dot',
     iconColor: 'text-white',
@@ -125,7 +125,7 @@ const statusConfig = {
   pending: {
     dotBg: 'bg-gray-300',
     ringBg: '',
-    lineBorder: 'border-gray-200',
+    lineBorder: 'border-(--palette-line)',
     lineStyle: 'border-dashed',
     icon: '',
     iconColor: '',
@@ -229,10 +229,14 @@ const ActivityTrackingTimeline = ({
   if (!activities || activities.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-10 gap-2">
-        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center">
-          <Icon name="clock-rotate-left" style="regular" className="w-6 h-6 text-gray-400" />
+        <div className="w-12 h-12 rounded-full bg-(--palette-surface-3) flex items-center justify-center">
+          <Icon
+            name="clock-rotate-left"
+            style="regular"
+            className="w-6 h-6 text-(--palette-gray-400)"
+          />
         </div>
-        <p className="text-sm text-gray-500">No activity history available yet</p>
+        <p className="text-sm text-(--palette-gray-500)">No activity history available yet</p>
       </div>
     );
   }
@@ -332,7 +336,7 @@ const ActivityTrackingTimeline = ({
                     className={clsx(
                       'w-0 flex-1 border-l-2 my-1',
                       leadsToGhost
-                        ? ['border-dashed', tone ? 'dz-line-tone' : 'border-gray-200']
+                        ? ['border-dashed', tone ? 'dz-line-tone' : 'border-(--palette-line)']
                         : [config.lineBorder, config.lineStyle],
                     )}
                   />
@@ -368,8 +372,12 @@ const ActivityTrackingTimeline = ({
 
               {/* Time range + duration (hover the start for the timing breakdown) */}
               {step.startedAt && (
-                <div className="flex items-center gap-1.5 mt-1 text-xs text-gray-500 flex-wrap">
-                  <Icon name="clock" style="regular" className="w-3 h-3 text-gray-400" />
+                <div className="flex items-center gap-1.5 mt-1 text-xs text-(--palette-gray-500) flex-wrap">
+                  <Icon
+                    name="clock"
+                    style="regular"
+                    className="w-3 h-3 text-(--palette-gray-400)"
+                  />
                   {step.timing ? (
                     <HolderTimingTooltip timing={step.timing}>
                       {formatDateTime(step.startedAt)}
@@ -380,13 +388,13 @@ const ActivityTrackingTimeline = ({
 
                   {!isInstant && step.completedAt && (
                     <>
-                      <span className="text-gray-300">→</span>
+                      <span className="text-(--palette-gray-300)">→</span>
                       <span>{formatDateTime(step.completedAt)}</span>
                     </>
                   )}
 
                   {!step.completedAt && (
-                    <span className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 bg-cyan-50 text-cyan-700 rounded-full text-[10px] font-medium">
+                    <span className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300 rounded-full text-[10px] font-medium">
                       <span className="size-1.5 rounded-full bg-cyan-500 motion-safe:animate-pulse" />
                       Active now
                     </span>
@@ -396,7 +404,9 @@ const ActivityTrackingTimeline = ({
                     <span
                       className={clsx(
                         'ml-1 px-1.5 py-0.5 rounded text-[10px] font-medium',
-                        isZeroDuration ? 'text-gray-300' : 'bg-gray-100 text-gray-500',
+                        isZeroDuration
+                          ? 'text-(--palette-gray-300)'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)',
                       )}
                     >
                       {duration}
@@ -411,7 +421,7 @@ const ActivityTrackingTimeline = ({
                   <Icon
                     name="message"
                     style="regular"
-                    className="w-3 h-3 text-gray-400 mt-0.5 shrink-0"
+                    className="w-3 h-3 text-(--palette-gray-400) mt-0.5 shrink-0"
                   />
                   <RemarkText text={step.remark} />
                 </div>

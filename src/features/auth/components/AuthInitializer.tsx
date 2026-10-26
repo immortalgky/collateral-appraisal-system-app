@@ -89,8 +89,8 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
         role="alert"
         className="flex h-screen w-full flex-col items-center justify-center gap-3 p-4 text-center"
       >
-        <p className="text-base font-semibold text-gray-900">{t('init.failedTitle')}</p>
-        <p className="max-w-md text-sm text-gray-500">{t('init.failedHint')}</p>
+        <p className="text-base font-semibold text-(--palette-ink)">{t('init.failedTitle')}</p>
+        <p className="max-w-md text-sm text-(--palette-gray-500)">{t('init.failedHint')}</p>
         <Button
           variant="primary"
           size="sm"
@@ -111,7 +111,7 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div
-          className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
+          className="h-8 w-8 animate-spin rounded-full border-4 border-(--palette-line) border-t-primary"
           role="status"
           aria-label={t('aria.initializing')}
         />

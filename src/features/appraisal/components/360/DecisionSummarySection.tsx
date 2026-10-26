@@ -17,7 +17,11 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-6 h-6 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -26,13 +30,17 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
     <div className="space-y-4">
       <div className="flex items-center gap-2 px-1">
         <Icon name="gavel" style="solid" className="w-4 h-4 text-sky-500" />
-        <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wider">
+        <h2 className="text-sm font-semibold text-(--palette-ink) uppercase tracking-wider">
           {t('view360.decisionSummarySection.title')}
         </h2>
       </div>
 
       {/* Appraisal Price Summary */}
-      <FormCard title={t('view360.decisionSummarySection.appraisalPriceSummary')} icon="coins" iconColor="amber">
+      <FormCard
+        title={t('view360.decisionSummarySection.appraisalPriceSummary')}
+        icon="coins"
+        iconColor="amber"
+      >
         <div className="grid grid-cols-3 gap-6">
           <ReadOnlyField
             label={t('view360.decisionSummarySection.totalAppraisalPrice')}
@@ -50,14 +58,18 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
       </FormCard>
 
       {/* Government Appraisal Price */}
-      <FormCard title={t('view360.decisionSummarySection.governmentAppraisalPrice')} icon="landmark" iconColor="teal">
+      <FormCard
+        title={t('view360.decisionSummarySection.governmentAppraisalPrice')}
+        icon="landmark"
+        iconColor="teal"
+      >
         {decisionSummary?.governmentPrices && decisionSummary.governmentPrices.length > 0 ? (
           <div>
             <div className="flex items-center gap-1.5 mb-2">
-              <h4 className="text-xs font-medium text-gray-500">
+              <h4 className="text-xs font-medium text-(--palette-gray-500)">
                 {t('governmentPriceTable.landSectionTitle')}
               </h4>
-              <span className="text-[11px] text-gray-400">
+              <span className="text-[11px] text-(--palette-gray-400)">
                 ({decisionSummary.governmentPrices.length})
               </span>
             </div>
@@ -69,13 +81,14 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
             />
           </div>
         ) : null}
-        {decisionSummary?.condoGovernmentPrices && decisionSummary.condoGovernmentPrices.length > 0 ? (
+        {decisionSummary?.condoGovernmentPrices &&
+        decisionSummary.condoGovernmentPrices.length > 0 ? (
           <div className={decisionSummary?.governmentPrices?.length ? 'mt-4' : ''}>
             <div className="flex items-center gap-1.5 mb-2">
-              <h4 className="text-xs font-medium text-gray-500">
+              <h4 className="text-xs font-medium text-(--palette-gray-500)">
                 {t('governmentPriceTable.condoSectionTitle')}
               </h4>
-              <span className="text-[11px] text-gray-400">
+              <span className="text-[11px] text-(--palette-gray-400)">
                 ({decisionSummary.condoGovernmentPrices.length})
               </span>
             </div>
@@ -86,9 +99,12 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
             />
           </div>
         ) : null}
-        {!decisionSummary?.governmentPrices?.length && !decisionSummary?.condoGovernmentPrices?.length && (
-          <p className="text-sm text-gray-500">{t('view360.decisionSummarySection.noGovernmentPrice')}</p>
-        )}
+        {!decisionSummary?.governmentPrices?.length &&
+          !decisionSummary?.condoGovernmentPrices?.length && (
+            <p className="text-sm text-(--palette-gray-500)">
+              {t('view360.decisionSummarySection.noGovernmentPrice')}
+            </p>
+          )}
       </FormCard>
     </div>
   );
@@ -96,8 +112,8 @@ const DecisionSummarySection = ({ decisionSummary, isLoading }: DecisionSummaryS
 
 const ReadOnlyField = ({ label, value }: { label: string; value: number | null | undefined }) => (
   <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-    <div className="rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+    <label className="block text-sm font-medium text-(--palette-ink) mb-1">{label}</label>
+    <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2) px-3 py-2 text-sm text-(--palette-ink)">
       {value != null ? formatNumber(value, 2) : '-'}
     </div>
   </div>

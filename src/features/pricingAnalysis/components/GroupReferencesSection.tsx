@@ -131,12 +131,12 @@ function ReferenceRow({
   return (
     <>
       <tr className="h-[30px]">
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] min-w-0">
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap"></td>
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) min-w-0">
           <button
             type="button"
             onClick={() => openReference(ref_.pricingAnalysisId)}
-            className="text-left hover:underline cursor-pointer truncate min-w-0 text-gray-700"
+            className="text-left hover:underline cursor-pointer truncate min-w-0 text-(--palette-ink)"
           >
             {hostMethod && (
               <>
@@ -148,11 +148,11 @@ function ReferenceRow({
                 </span>{' '}
               </>
             )}
-            <span className="text-[11px] text-[#8a96a0]">{hostMethodLabel}</span>{' '}
+            <span className="text-[11px] text-(--palette-ink-3)">{hostMethodLabel}</span>{' '}
             <span className="font-medium">{itemLabel}</span>
           </button>
         </td>
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap">
           {/* Same height override as the method rows' status chip (see
               PricingAnalysisMethodBoardRow) — these sit in one table, so the two have to be
               sized together or the reference rows end up taller than the method rows. */}
@@ -171,20 +171,20 @@ function ReferenceRow({
           {ref_.methods.length === 0
             ? '—'
             : ref_.methods.map((m, i) => (
-                <span key={m.methodId} className={clsx('text-gray-700', i > 0 && 'ml-2')}>
-                  <span className="text-gray-400 text-[10px] uppercase">
+                <span key={m.methodId} className={clsx('text-(--palette-ink)', i > 0 && 'ml-2')}>
+                  <span className="text-(--palette-gray-400) text-[10px] uppercase">
                     {getMethodCode(m.methodType)}
                   </span>{' '}
                   {m.valuePerUnit != null ? formatNumber(m.valuePerUnit) : '—'}
                 </span>
               ))}
         </td>
-        <td className="px-[8px] py-0 text-[#8a96a0] whitespace-nowrap">—</td>
+        <td className="px-[8px] py-0 text-(--palette-ink-3) whitespace-nowrap">—</td>
         <td className="px-[8px] py-0 text-right whitespace-nowrap">
           <button
             type="button"
             onClick={() => openReference(ref_.pricingAnalysisId)}
-            className="text-primary text-[12px] font-medium hover:underline cursor-pointer"
+            className="text-(--palette-primary-text) text-[12px] font-medium hover:underline cursor-pointer"
           >
             {isCalculated ? t('board.openMethod') : t('board.startCalculating')}
           </button>
@@ -194,12 +194,12 @@ function ReferenceRow({
               onClick={() => onDelete(ref_)}
               aria-label={t('groupReferences.deleteReference')}
               title={t('groupReferences.deleteReference')}
-              className="p-1 ml-1 rounded hover:bg-red-50 transition-colors cursor-pointer"
+              className="p-1 ml-1 rounded hover:bg-(--palette-req-wash) transition-colors cursor-pointer"
             >
               <Icon
                 name="xmark"
                 style="solid"
-                className="size-3.5 text-gray-400 hover:text-red-500 transition-colors"
+                className="size-3.5 text-(--palette-gray-400) hover:text-red-500 transition-colors"
               />
             </button>
           )}
@@ -247,18 +247,23 @@ export function GroupReferencesSection({
   return (
     <>
       {/* Band header — same row shape as an approach row (tr.apr.refband in the mock) */}
-      <tr className="h-[30px] bg-[#f8fafa]">
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap">
-          <Icon name="chart-bar" style="solid" className="size-3 text-gray-400" />
+      <tr className="h-[30px] bg-(--palette-surface-2)">
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap">
+          <Icon name="chart-bar" style="solid" className="size-3 text-(--palette-gray-400)" />
         </td>
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap" colSpan={2}>
-          <span className="font-semibold text-gray-800">{t('groupReferences.sectionTitle')}</span>{' '}
-          <span className="text-gray-400">
+        <td
+          className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap"
+          colSpan={2}
+        >
+          <span className="font-semibold text-(--palette-ink)">
+            {t('groupReferences.sectionTitle')}
+          </span>{' '}
+          <span className="text-(--palette-gray-400)">
             {t('groupReferences.bandSubtitle', { count: references.length })}
           </span>
         </td>
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
-        <td className="px-[8px] py-0 border-r border-r-[#eef2f2] whitespace-nowrap"></td>
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap"></td>
+        <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft) whitespace-nowrap"></td>
         {/* mock:3244 — `button.addm` in the band's last cell, same link styling as the board's
             per-approach "+ เพิ่มวิธี". */}
         <td className="px-[8px] py-0 text-right whitespace-nowrap">
@@ -266,7 +271,7 @@ export function GroupReferencesSection({
             <div className="relative inline-block text-left">
               <button
                 type="button"
-                className="text-primary text-[12px] font-medium hover:underline cursor-pointer"
+                className="text-(--palette-primary-text) text-[12px] font-medium hover:underline cursor-pointer"
                 onClick={() => setIsCreateOpen(open => !open)}
               >
                 {t('groupReferences.createReference')}
@@ -300,8 +305,8 @@ export function GroupReferencesSection({
         /* mock:3245 — `tr.empty-apr`. The band stays visible with nothing in it rather than
            disappearing, so the group's reference slot reads as empty instead of absent. */
         <tr className="h-[30px]">
-          <td className="px-[8px] py-0 border-r border-r-[#eef2f2]"></td>
-          <td colSpan={5} className="px-[8px] py-0 text-gray-400">
+          <td className="px-[8px] py-0 border-r border-r-(--palette-line-soft)"></td>
+          <td colSpan={5} className="px-[8px] py-0 text-(--palette-gray-400)">
             {t('groupReferences.empty')}
           </td>
         </tr>

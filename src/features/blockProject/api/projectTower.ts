@@ -24,14 +24,14 @@ type UpdateProjectTowerRequest = Omit<ProjectTower, 'id' | 'projectId'>;
  * List all towers for a project (Condo only — BE returns empty list for LandAndBuilding).
  * GET /appraisals/{appraisalId}/project/towers
  */
-export const useGetProjectTowers = (appraisalId: string) => {
+export const useGetProjectTowers = (appraisalId: string, enabled = true) => {
   return useQuery({
     queryKey: projectTowerKeys.all(appraisalId),
     queryFn: async (): Promise<ProjectTower[]> => {
       const { data } = await axios.get(`/appraisals/${appraisalId}/project/towers`);
       return data;
     },
-    enabled: !!appraisalId,
+    enabled: !!appraisalId && enabled,
   });
 };
 

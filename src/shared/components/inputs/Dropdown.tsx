@@ -1,16 +1,21 @@
 import {
+  Description,
+  Field,
   Listbox as HeadlessListBox,
   ListboxButton as HeadlessListboxButton,
   ListboxOption as HeadlessListboxOption,
   ListboxOptions as HeadlessListboxOptions,
 } from '@headlessui/react';
-import { forwardRef, type ReactNode, type SelectHTMLAttributes, useMemo } from 'react';
+import { forwardRef, type ReactNode, type SelectHTMLAttributes, useId, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import clsx from 'clsx';
 import { useParameterOptions } from '../../utils/parameterUtils';
 import type { AtLeastOne } from '@/shared/types';
 import { useFormReadOnly } from '../form/context';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import { controlFrame, controlPad, controlSkin, ERROR_TEXT, REQUIRED_MARK } from './controlStyles';
 
 type DropdownProps = DropdownBaseProps & AtLeastOne<{ group: string; options: ListBoxItem[] }>;
 
@@ -86,11 +91,17 @@ interface DropdownBaseProps extends Omit<SelectHTMLAttributes<HTMLSelectElement>
    * Shrink the control for a dense bar — a pagination footer, a toolbar — instead of a form row.
    * Same component, same behaviour, smaller box: without it the only way to fit a dropdown into
    * those places was a native <select>, which renders as an OS menu and matches nothing else here.
+   * Not a form layout: inside a form the box follows the form's Standard / Compact layout (17.3).
    *
    * Not called `size`: this interface extends SelectHTMLAttributes, where `size` is the number of
    * visible rows, and shadowing it with a string union makes the whole interface stop extending.
    */
   compact?: boolean;
+  /**
+   * A table cell trigger (DESIGN.md 17.7): 28px in a Compact form, the plain Standard control in a
+   * Standard one.
+   */
+  cell?: boolean;
   /** List the "Please select" entry first. Off for a control that always has a value. */
   showPlaceholderOption?: boolean;
   filterWatchValues?: Record<string, unknown>;
@@ -120,6 +131,7 @@ interface ListBoxProps {
   error?: string;
   showValuePrefix?: boolean;
   compact?: boolean;
+  cell?: boolean;
   /** Names the control for assistive tech where there is no visible label — a toolbar or footer. */
   ariaLabel?: string;
 }
@@ -153,6 +165,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       filterWatchValues,
       showValuePrefix = true,
       compact = false,
+      cell = false,
       showPlaceholderOption = true,
       otherField = false,
       otherTriggerValue = '99',
@@ -174,6 +187,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
       placeholder ?? t('select.placeholder', { defaultValue: 'Please select' });
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
+    const errorId = useId();
     const isOtherMode = otherField && value === otherTriggerValue;
     const parameterOptions = useParameterOptions(group ?? '');
     const filters = useMemo<OptionFilter[]>(() => {
@@ -204,25 +218,24 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
     };
 
     return (
-      <div className={clsx('w-full', props.className)}>
-        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
-            of this component with `display: contents`, so an extra element in between would take
-            the label column and stretch. */}
+      // A Headless `Field`, so the error `Description` below reaches the trigger as its
+      // `aria-describedby`: `ListboxButton` builds that attribute itself and drops one we pass.
+      <Field className={clsx('w-full', props.className)}>
         {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-1">
             {label && (
-              <div data-field-label className="block text-xs font-medium text-gray-700">
+              <div className="block text-xs font-medium text-(--palette-ink)">
                 {label}
-                {required && <span className="text-danger ml-0.5">*</span>}
+                {required && <span className={REQUIRED_MARK}>*</span>}
               </div>
             )}
             {labelAddon}
           </div>
         ) : (
           label && (
-            <div data-field-label className="block text-xs font-medium text-gray-700 mb-1">
+            <div className="block text-xs font-medium text-(--palette-ink) mb-1">
               {label}
-              {required && <span className="text-danger ml-0.5">*</span>}
+              {required && <span className={REQUIRED_MARK}>*</span>}
             </div>
           )
         )}
@@ -240,6 +253,8 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
             disabled={isDisabled}
             error={error}
             compact={compact}
+            cell={cell}
+            errorId={errorId}
             maxLength={otherMaxLength}
           />
         ) : (
@@ -253,6 +268,7 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
             disabled={isDisabled}
             error={error}
             compact={compact}
+            cell={cell}
             ariaLabel={ariaLabel}
             showValuePrefix={showValuePrefix}
           >
@@ -265,8 +281,12 @@ const Dropdown = forwardRef<HTMLButtonElement, DropdownProps>(
             ))}
           </ListBox>
         )}
-        {error && <div className="mt-1 text-xs text-danger">{error}</div>}
-      </div>
+        {error && (
+          <Description as="div" id={errorId} className={clsx('mt-1', ERROR_TEXT)}>
+            <ValidationText message={error} label={label} />
+          </Description>
+        )}
+      </Field>
     );
   },
 );
@@ -281,42 +301,40 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
       error,
       showValuePrefix = true,
       compact = false,
+      cell = false,
       ariaLabel,
       ...props
     },
     ref,
   ) => {
+    const layout = useFormLayout();
     return (
       <HeadlessListBox disabled={disabled} by="value" {...props}>
         <div className="relative">
           <HeadlessListboxButton
             ref={ref}
             aria-label={ariaLabel}
+            aria-invalid={error ? true : undefined}
             className={clsx(
-              'block relative w-full rounded-lg border text-left transition-colors duration-200',
-              compact ? 'text-xs pr-7' : 'text-sm pr-9',
-              'focus:outline-none focus:ring-2',
-              disabled
-                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : 'bg-white hover:border-gray-300',
-              error
-                ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
-                : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
+              'relative flex items-center w-full text-left leading-normal',
+              // The same box as a text control (17.3): fixed height, so the text is centred by the
+              // flex row and never by padding. `compact` is the toolbar / pagination size outside
+              // forms and keeps sizing itself from its content.
+              compact
+                ? 'rounded-lg px-2 py-1 pr-7'
+                : clsx(controlFrame(layout, cell), controlPad(layout, cell, 'l'), 'pr-[2.2857rem]'),
+              controlSkin({ error: !!error, disabled, trigger: true, small: compact }),
             )}
           >
-            <div
+            <span
               className={clsx(
-                'absolute inset-y-0 right-0 flex items-center pointer-events-none text-gray-400',
-                compact ? 'pr-2' : 'pr-3',
+                'absolute inset-y-0 flex items-center pointer-events-none text-(--palette-gray-400)',
+                compact ? 'right-2' : 'right-[0.7857rem] text-base',
               )}
             >
-              <Icon
-                style="regular"
-                name="chevron-down"
-                className={compact ? 'size-3' : 'size-3.5'}
-              />
-            </div>
-            <div className={clsx('truncate', compact ? 'px-2 py-1' : 'px-3 py-2')}>
+              <Icon style="regular" name="chevron-down" />
+            </span>
+            <span className="min-w-0 truncate">
               {selected?.value ? (
                 showValuePrefix ? (
                   `${selected.value} - ${selected.label}`
@@ -324,9 +342,9 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
                   selected.label
                 )
               ) : (
-                <span className="text-gray-400">{placeholder}</span>
+                <span className="text-(--palette-gray-400)">{placeholder}</span>
               )}
-            </div>
+            </span>
           </HeadlessListboxButton>
           <HeadlessListboxOptions
             anchor="bottom start"
@@ -336,7 +354,7 @@ const ListBox = forwardRef<HTMLButtonElement, ListBoxProps>(
             // Override by clamping the CSS variable itself — the lib's own min()
             // then evaluates to our cap.
             style={{ '--anchor-max-height': '20rem' } as React.CSSProperties}
-            className="min-w-(--button-width) max-w-[min(28rem,calc(100vw-2rem))] mt-1 bg-white rounded-lg border border-gray-200 shadow-lg py-1 z-50 overflow-y-auto"
+            className="min-w-(--button-width) max-w-[min(28rem,calc(100vw-2rem))] mt-1 bg-(--palette-surface) text-(--palette-ink) rounded-lg border border-(--palette-line) shadow-lg py-1 z-50 overflow-y-auto"
           >
             {children}
           </HeadlessListboxOptions>
@@ -356,10 +374,13 @@ interface OtherInputProps {
   clearTitle: string;
   disabled?: boolean;
   error?: string;
+  errorId?: string;
   compact?: boolean;
+  cell?: boolean;
   maxLength?: number;
 }
 
+/** The "other, please specify" text that replaces the trigger once "อื่นๆ" is chosen. */
 const OtherInput = ({
   value,
   onChange,
@@ -369,30 +390,31 @@ const OtherInput = ({
   clearTitle,
   disabled,
   error,
+  errorId,
   compact = false,
+  cell = false,
   maxLength,
 }: OtherInputProps) => {
+  const layout = useFormLayout();
   return (
     <div>
+      {/* The box is the wrapper (border + focus ring via focus-within); the input inside is bare. */}
       <div
         className={clsx(
-          'flex items-stretch w-full rounded-lg border border-gray-200 bg-white transition-colors duration-200',
-          'focus-within:ring-2 focus-within:ring-gray-200 focus-within:border-gray-400',
-          disabled ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-gray-300',
-          error
-            ? 'border-danger text-danger-900 focus:ring-danger/20 focus:border-danger'
-            : 'border-gray-200 focus:ring-gray-200 focus:border-gray-400',
+          'flex items-center w-full',
+          compact ? 'rounded-lg' : controlFrame(layout, cell),
+          controlSkin({ error: !!error, disabled, within: true, small: compact }),
         )}
       >
         <span
           className={clsx(
-            'flex items-center shrink-0 border-r border-gray-200 bg-gray-50 text-gray-500 rounded-l-lg',
-            compact ? 'px-2 text-xs' : 'px-3 text-sm',
+            'flex items-center self-stretch shrink-0 border-r border-(--palette-input-edge) bg-(--palette-surface-2) text-(--palette-gray-500) rounded-l-[inherit]',
+            compact ? 'px-2' : 'px-3',
           )}
         >
           {otherLabel}
         </span>
-        <div className="relative flex-1 min-w-0">
+        <div className="relative flex-1 min-w-0 h-full">
           <input
             type="text"
             value={value}
@@ -400,10 +422,11 @@ const OtherInput = ({
             placeholder={placeholder}
             disabled={disabled}
             maxLength={maxLength}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={error ? errorId : undefined}
             className={clsx(
-              'block w-full h-full bg-transparent focus:outline-none placeholder:text-gray-400',
-              compact ? 'text-xs pl-2 pr-7 py-1' : 'text-sm pl-3 pr-9 py-2',
-              disabled ? 'text-gray-500 cursor-not-allowed' : 'text-gray-900',
+              'block w-full h-full bg-transparent border-0 focus:outline-none placeholder:text-(--palette-ink-2) disabled:cursor-not-allowed',
+              compact ? 'pl-2 pr-7 py-1' : clsx(controlPad(layout, cell, 'l'), 'pr-9'),
             )}
           />
           {!disabled && (
@@ -411,12 +434,13 @@ const OtherInput = ({
               type="button"
               onClick={onClear}
               title={clearTitle}
+              aria-label={clearTitle}
               className={clsx(
-                'absolute inset-y-0 right-0 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none',
+                'absolute inset-y-0 right-0 flex items-center text-(--palette-gray-400) hover:text-(--palette-gray-600)',
                 compact ? 'pr-2' : 'pr-3',
               )}
             >
-              <Icon style="solid" name="xmark" className={compact ? 'size-3' : 'size-3.5'} />
+              <Icon style="solid" name="xmark" />
             </button>
           )}
         </div>
@@ -433,15 +457,16 @@ const ListBoxOption = ({ children, value, ...props }: ListBoxOptionProps) => {
     <HeadlessListboxOption
       value={value}
       className={clsx(
-        'group flex gap-2 px-3 py-2 text-sm cursor-pointer transition-colors',
-        'data-focus:bg-gray-100 data-focus:text-gray-900',
-        'data-selected:bg-gray-100 data-selected:text-gray-900 data-selected:font-medium',
+        'group flex gap-2 px-3 py-2 text-sm leading-normal cursor-pointer transition-colors',
+        'data-focus:bg-(--palette-surface-3)',
+        'data-selected:bg-(--palette-accent-wash) data-selected:font-medium',
+        'data-selected:data-focus:bg-(--palette-accent-line)',
       )}
       {...props}
     >
       {({ selected }) => (
         <div className="flex items-center gap-2 w-full">
-          {selected && <Icon style="solid" name="check" className="size-3.5 text-gray-600" />}
+          {selected && <Icon style="solid" name="check" className="text-(--palette-gray-600)" />}
           <span className={clsx('truncate', selected ? '' : 'ml-5')}>{children}</span>
         </div>
       )}

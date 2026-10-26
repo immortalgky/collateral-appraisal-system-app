@@ -44,11 +44,11 @@ export function SaleAdjustmentGridSecondRevision({
   // Every border below is SIDE-SPECIFIC, copied from SaleAdjustmentGridScoringSection's
   // own constants rather than respelled here — see the note above that file's
   // `colDivider`. These <tr>s render into that file's <table>, so a blanket
-  // `border-gray-300` put this block's dividers at #d1d5db against the parent's
+  // `border-(--palette-line-strong)` put this block's dividers at #d1d5db against the parent's
   // #eef2f2: the reported "2nd revision เส้น border ไม่บางเท่าเพื่อน".
-  const colDivider = 'border-r border-r-[#eef2f2]';
+  const colDivider = 'border-r border-r-(--palette-line-soft)';
   const leftColumnBody = clsx(
-    'border-b border-b-gray-300 text-left font-medium text-gray-600 px-[8px] py-0 sticky left-0 z-20 h-[26px] whitespace-nowrap',
+    'border-b border-b-(--palette-line-strong) text-left font-medium text-(--palette-gray-600) px-[8px] py-0 sticky left-0 z-20 h-[26px] whitespace-nowrap',
     colDivider,
   );
   // `--pa-factor-w` is set on SaleAdjustmentGridScoringSection's <table>, which is the
@@ -56,20 +56,20 @@ export function SaleAdjustmentGridSecondRevision({
   // width with no prop. The 190px fallback only applies if these rows are ever mounted
   // outside that table.
   const collateralColumnBody = clsx(
-    'border-b border-b-gray-300 text-left font-medium px-[8px] py-0 sticky left-[var(--pa-factor-w,190px)] z-20 w-[150px] min-w-[150px] max-w-[150px] h-[26px] whitespace-nowrap',
+    'border-b border-b-(--palette-line-strong) text-left font-medium px-[8px] py-0 sticky left-[var(--pa-factor-w,190px)] z-20 w-[150px] min-w-[150px] max-w-[150px] h-[26px] whitespace-nowrap',
     // This frozen column's right edge is a box-shadow, not a border. `.pa-sticky-edge`
     // is injected by ScrollableTableContainer (the parent table passes `edgeShadow`)
     // and is the mechanism THIS file keys off, where the parent's own cells use the
     // equivalent `group-data-[scrolled=true]:` utility — see the note at
     // ScrollableTableContainer.tsx:255 before collapsing the two. The `border-r
-    // border-gray-300` that used to sit here drew a second, much darker hairline on
+    // border-(--palette-line-strong)` that used to sit here drew a second, much darker hairline on
     // top of that shadow, which is why the vertical dividers read worst of all.
     'pa-sticky-edge',
   );
   // Single-value filler spanning both of a market's ระดับ/ปรับ % sub-columns (colSpan=2
   // on every usage below) — this file never puts per-market content in two separate
   // controls, so there's nothing to split, just to widen.
-  const surveyStyle = clsx('px-[8px] py-0 border-b border-b-gray-300', colDivider);
+  const surveyStyle = clsx('px-[8px] py-0 border-b border-b-(--palette-line-strong)', colDivider);
 
   return (
     /* No title row here any more: the parent now renders a collapsible band header
@@ -79,13 +79,13 @@ export function SaleAdjustmentGridSecondRevision({
       {showLand && (
         <>
           <tr>
-            <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+            <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
               <div className="flex flex-row justify-between items-center">
                 <span>{t('saleAdjustmentGrid.secondRevision.landAreaDiff')}</span>
                 <span>{t('saleAdjustmentGrid.secondRevision.sqWaUnit')}</span>
               </div>
             </td>
-            <td className={clsx('bg-white', collateralColumnBody)}></td>
+            <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
             {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
                 <td key={survey.id} className={clsx(surveyStyle)} colSpan={2}>
@@ -103,7 +103,7 @@ export function SaleAdjustmentGridSecondRevision({
             })}
           </tr>
           <tr>
-            <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+            <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
               <div className="flex flex-row justify-between items-center gap-2">
                 <span>{t('saleAdjustmentGrid.secondRevision.landPriceLabel')}</span>
                 <div className="flex flex-row justify items-center gap-1">
@@ -123,7 +123,7 @@ export function SaleAdjustmentGridSecondRevision({
                 </div>
               </div>
             </td>
-            <td className={clsx('bg-white', collateralColumnBody)}></td>
+            <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
             {comparativeSurveys.map((survey: MarketComparableDetailType) => {
               return (
                 <td key={survey.id} className={clsx(surveyStyle, 'text-right')} colSpan={2}>
@@ -139,13 +139,13 @@ export function SaleAdjustmentGridSecondRevision({
             })}
           </tr>
           <tr>
-            <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+            <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
               <div className="flex flex-row justify-between items-center">
                 <span>{t('saleAdjustmentGrid.secondRevision.landValueChange')}</span>
                 <span>{t('saleAdjustmentGrid.secondRevision.bahtUnit')}</span>
               </div>
             </td>
-            <td className={clsx('bg-white', collateralColumnBody)}></td>
+            <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
             {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
                 <td key={survey.id} className={clsx(surveyStyle, 'text-right')} colSpan={2}>
@@ -165,13 +165,13 @@ export function SaleAdjustmentGridSecondRevision({
       {showBuilding && (
         <>
           <tr>
-            <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+            <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
               <div className="flex flex-row justify-between items-center">
                 <span>{t('saleAdjustmentGrid.secondRevision.usableAreaDiff')}</span>
                 <span>{t('saleAdjustmentGrid.secondRevision.sqmUnit')}</span>
               </div>
             </td>
-            <td className={clsx('bg-white', collateralColumnBody)}></td>
+            <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
             {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
                 <td key={survey.id} className={clsx(surveyStyle, 'text-right')} colSpan={2}>
@@ -187,7 +187,7 @@ export function SaleAdjustmentGridSecondRevision({
             })}
           </tr>
           <tr>
-            <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+            <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
               <div className="flex flex-row justify-between items-center gap-2">
                 <span>{t('saleAdjustmentGrid.secondRevision.usableAreaPriceLabel')}</span>
                 <div className="flex flex-row justify items-center gap-1">
@@ -207,7 +207,7 @@ export function SaleAdjustmentGridSecondRevision({
                 </div>
               </div>
             </td>
-            <td className={clsx('bg-white', collateralColumnBody)}></td>
+            <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
             {comparativeSurveys.map((survey: MarketComparableDetailType) => {
               return (
                 <td key={survey.id} className={clsx(surveyStyle, 'text-right')} colSpan={2}>
@@ -221,13 +221,13 @@ export function SaleAdjustmentGridSecondRevision({
             })}
           </tr>
           <tr>
-            <td className={clsx('bg-white', leftColumnBody, bgGradient)}>
+            <td className={clsx('bg-(--palette-surface)', leftColumnBody, bgGradient)}>
               <div className="flex flex-row justify-between items-center">
                 <span>{t('saleAdjustmentGrid.secondRevision.buildingValueChange')}</span>
                 <span>{t('saleAdjustmentGrid.secondRevision.bahtUnit')}</span>
               </div>
             </td>
-            <td className={clsx('bg-white', collateralColumnBody)}></td>
+            <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
             {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
               return (
                 <td key={survey.id} className={clsx(surveyStyle, 'text-right')} colSpan={2}>
@@ -252,10 +252,10 @@ export function SaleAdjustmentGridSecondRevision({
             every other total row in this table — user: "พวกแถว total ทั้งหลายให้ใช้ฟ้อน
             หน้ากว่าตรงอื่น". These rows render into the parent's table, so the weight has
             to be spelled here rather than inherited from it. */}
-        <td className={clsx('bg-white font-semibold', leftColumnBody, bgGradient)}>
+        <td className={clsx('bg-(--palette-surface) font-semibold', leftColumnBody, bgGradient)}>
           <span>{t('saleAdjustmentGrid.secondRevision.totalSecondRevision')}</span>
         </td>
-        <td className={clsx('bg-white', collateralColumnBody)}></td>
+        <td className={clsx('bg-(--palette-surface)', collateralColumnBody)}></td>
         {comparativeSurveys.map((survey: MarketComparableDetailType, columnIndex: number) => {
           return (
             <td

@@ -17,6 +17,16 @@ export interface JobScheduleDto {
   description: string | null;
   /** False when no override row exists yet (startup seeds one per known job). */
   hasRow: boolean;
+  /** From Hangfire's recurring-job record; the DateTimes are application-local. */
+  lastExecution: string | null;
+  /** Null when the job is disabled or Hangfire has no record of it. */
+  nextExecution: string | null;
+  /** "Succeeded", "Failed", "Processing"…; null once Hangfire has expired the job (succeeded ones after ~1 day). */
+  lastJobState: string | null;
+  /** From the last job's Succeeded state; null when unknown. */
+  lastDurationMs: number | null;
+  /** False only when reading Hangfire failed: the run fields are then unknown, not "never". */
+  runInfoAvailable: boolean;
 }
 
 export interface UpdateJobScheduleBody {
@@ -32,7 +42,8 @@ export const jobScheduleKeys = {
   list: () => [...jobScheduleKeys.all, 'list'] as const,
 };
 
-export const useListJobSchedules = () =>
+/** `poll` off pauses the 60 s refresh (a row is open for editing and must not move under the admin). */
+export const useListJobSchedules = (poll = true) =>
   useQuery({
     queryKey: jobScheduleKeys.list(),
     queryFn: async (): Promise<JobScheduleDto[]> => {
@@ -40,6 +51,8 @@ export const useListJobSchedules = () =>
       return data ?? [];
     },
     staleTime: 30_000,
+    // Last / next run come from Hangfire and move on their own: keep the page current.
+    refetchInterval: poll ? 60_000 : false,
   });
 
 export const useUpdateJobSchedule = () => {

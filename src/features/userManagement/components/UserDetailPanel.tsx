@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import type { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import Badge from '@shared/components/Badge';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -11,6 +13,9 @@ import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatDate, formatLocaleDateTime } from '@shared/utils/dateUtils';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
+import { useHasPermission } from '@shared/hooks/useHasPermission';
+import { extractApiError } from '@shared/utils/errorUtils';
+import { useAuthStore } from '@features/auth/store';
 import {
   useGetUserById,
   useAdminUpdateUser,
@@ -20,6 +25,8 @@ import {
   useSetUserActivation,
   useUnlockUser,
   useResetPassword,
+  useResetTwoFactor,
+  useRevokePasskeys,
   useLdapLookup,
   useSetAccessWindow,
 } from '../api/users';
@@ -42,9 +49,9 @@ interface UserDetailPanelProps {
 }
 
 const SECTION_ICON_COLORS = {
-  blue: 'bg-blue-50 text-blue-500',
-  rose: 'bg-rose-50 text-rose-500',
-  amber: 'bg-amber-50 text-amber-500',
+  blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
+  rose: 'bg-rose-50 dark:bg-rose-500/10 text-rose-500',
+  amber: 'bg-(--palette-warn-wash) text-amber-500',
 } as const;
 
 const SectionLabel = ({
@@ -62,7 +69,7 @@ const SectionLabel = ({
     >
       <Icon name={icon} style="solid" className="size-3" />
     </span>
-    <span className="text-sm font-semibold text-gray-800">{children}</span>
+    <span className="text-sm font-semibold text-(--palette-ink)">{children}</span>
   </div>
 );
 
@@ -85,6 +92,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     firstName: '',
     lastName: '',
     email: '',
+    phoneNumber: '',
     position: '',
     department: '',
     companyId: null,
@@ -144,6 +152,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       firstName: user.firstName,
       lastName: user.lastName,
       email: user.email,
+      phoneNumber: user.phoneNumber ?? '',
       position: user.position ?? '',
       department: user.department ?? '',
       companyId: user.companyId,
@@ -180,6 +189,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         firstName: editForm.firstName,
         lastName: editForm.lastName,
         email: editForm.email.trim(),
+        phoneNumber: editForm.phoneNumber || null,
         position: editForm.position || null,
         department: isCompany ? null : editForm.department || null,
         companyId: isCompany ? editForm.companyId || null : null,
@@ -333,6 +343,44 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     });
   };
 
+  // Two-factor reset. The API's policy is CanManageUsers = USER_MANAGE; the other security
+  // buttons have no client-side gate, but this one signs the user out everywhere, so hide it.
+  const canManageUsers = useHasPermission('USER_MANAGE');
+  // Your own 2FA is managed from Profile, not reset here.
+  const currentUserId = useAuthStore(state => state.user?.id);
+  const resetTwoFactor = useResetTwoFactor();
+  const [showResetTwoFactorConfirm, setShowResetTwoFactorConfirm] = useState(false);
+
+  const handleResetTwoFactor = () => {
+    resetTwoFactor.mutate(userId, {
+      onSuccess: () => {
+        toast.success(t('twoFactor.admin.done'));
+        setShowResetTwoFactorConfirm(false);
+      },
+      onError: err => {
+        const apiError = extractApiError(err as AxiosError);
+        toast.error(apiError.detail || apiError.title || t('twoFactor.admin.failed'));
+      },
+    });
+  };
+
+  // Revoking passkeys ends the user's sessions, like the 2FA reset, so it has the same gates.
+  const revokePasskeys = useRevokePasskeys();
+  const [showRevokePasskeysConfirm, setShowRevokePasskeysConfirm] = useState(false);
+
+  const handleRevokePasskeys = () => {
+    revokePasskeys.mutate(userId, {
+      onSuccess: () => {
+        toast.success(t('passkeys.admin.done'));
+        setShowRevokePasskeysConfirm(false);
+      },
+      onError: err => {
+        const apiError = extractApiError(err as AxiosError);
+        toast.error(apiError.detail || apiError.title || t('passkeys.admin.failed'));
+      },
+    });
+  };
+
   // Temporary access window
   const setAccessWindow = useSetAccessWindow();
   const { data: passwordPolicyConfig } = useGetPasswordPolicyConfig();
@@ -390,22 +438,27 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   if (!user) return null;
 
   const displayName = `${user.firstName} ${user.lastName}`.trim() || user.username;
+  const passkeys = user.passkeys ?? [];
   const initials =
     (user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || user.username[0].toUpperCase();
 
   return (
     <div className="flex flex-col gap-4 p-6">
       {/* General Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-blue-50 dark:bg-blue-500/10">
               <Icon name="circle-info" style="solid" className="size-3 text-blue-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.general')}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.general')}
+            </span>
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
-                user.isActive ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
+                user.isActive
+                  ? 'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
               }`}
             >
               <span
@@ -414,7 +467,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               {user.isActive ? t('status.active') : t('status.inactive')}
             </span>
             {user.isLocked && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-(--palette-req-wash) text-(--palette-req)">
                 <Icon name="lock" style="solid" className="size-3" />
                 {t('status.locked')}
               </span>
@@ -423,7 +476,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           <button
             type="button"
             onClick={handleOpenEdit}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
@@ -434,11 +487,11 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
             <img
               src={user.avatarUrl}
               alt={displayName}
-              className="size-14 rounded-full object-cover shrink-0 ring-2 ring-gray-100"
+              className="size-14 rounded-full object-cover shrink-0 ring-2 ring-(--palette-line-soft)"
             />
           ) : (
-            <div className="size-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0 ring-2 ring-gray-100">
-              <span className="text-lg font-bold text-primary">{initials}</span>
+            <div className="size-14 rounded-full bg-primary/10 flex items-center justify-center shrink-0 ring-2 ring-(--palette-line-soft)">
+              <span className="text-lg font-bold text-(--palette-primary-text)">{initials}</span>
             </div>
           )}
           <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 flex-1">
@@ -465,6 +518,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                   ]
                 : []),
               { label: t('fields.authSource'), value: user.authSource },
+              { label: t('fields.phone'), value: user.phoneNumber },
               ...(user.lastLoginAt
                 ? [
                     {
@@ -475,9 +529,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 : []),
             ].map(({ label, value }) => (
               <div key={label}>
-                <dt className="text-xs text-gray-400">{label}</dt>
-                <dd className="text-sm text-gray-800 mt-0.5">
-                  {value || <span className="text-gray-300">—</span>}
+                <dt className="text-xs text-(--palette-gray-400)">{label}</dt>
+                <dd className="text-sm text-(--palette-ink) mt-0.5">
+                  {value || <span className="text-(--palette-gray-300)">—</span>}
                 </dd>
               </div>
             ))}
@@ -486,21 +540,23 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       </section>
 
       {/* Roles Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-violet-50 dark:bg-violet-500/10">
               <Icon name="user-shield" style="solid" className="size-3 text-violet-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.roles')}</span>
-            <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.roles')}
+            </span>
+            <span className="inline-flex items-center justify-center size-5 rounded-full bg-(--palette-surface-3) text-xs font-semibold text-(--palette-gray-600)">
               {user.roles.length}
             </span>
           </div>
           <button
             type="button"
             onClick={handleOpenRoles}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
@@ -508,13 +564,13 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         </div>
         <div className="px-4 py-3">
           {user.roles.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('empty.noRolesAssigned')}</p>
+            <p className="text-sm text-(--palette-gray-400)">{t('empty.noRolesAssigned')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {user.roles.map(r => (
                 <span
                   key={r.id}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 text-violet-700"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300"
                 >
                   <span
                     className={`size-1.5 rounded-full ${r.scope === 'Bank' ? 'bg-blue-400' : 'bg-violet-400'}`}
@@ -528,21 +584,23 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       </section>
 
       {/* Groups Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-amber-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-(--palette-warn-wash)">
               <Icon name="users-rectangle" style="solid" className="size-3 text-amber-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.groups')}</span>
-            <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.groups')}
+            </span>
+            <span className="inline-flex items-center justify-center size-5 rounded-full bg-(--palette-surface-3) text-xs font-semibold text-(--palette-gray-600)">
               {user.groups?.length ?? 0}
             </span>
           </div>
           <button
             type="button"
             onClick={handleOpenGroups}
-            className="text-xs text-primary hover:underline flex items-center gap-1"
+            className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
           >
             <Icon name="pen-to-square" style="regular" className="size-3.5" />
             {t('buttons.edit')}
@@ -550,13 +608,13 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         </div>
         <div className="px-4 py-3">
           {!user.groups || user.groups.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('empty.noGroupsAssigned')}</p>
+            <p className="text-sm text-(--palette-gray-400)">{t('empty.noGroupsAssigned')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {user.groups.map(g => (
                 <span
                   key={g.id}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-(--palette-warn-wash) text-(--palette-warn)"
                 >
                   <span
                     className={`size-1.5 rounded-full ${g.scope === 'Bank' ? 'bg-blue-400' : 'bg-amber-400'}`}
@@ -570,15 +628,17 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       </section>
 
       {/* Teams Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-(--palette-line-soft)">
           <div className="flex items-center gap-2">
-            <span className="flex size-6 items-center justify-center rounded-md bg-teal-50">
+            <span className="flex size-6 items-center justify-center rounded-md bg-(--palette-accent-wash)">
               <Icon name="people-group" style="solid" className="size-3 text-teal-500" />
             </span>
-            <span className="text-sm font-semibold text-gray-800">{t('sections.teams')}</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
+              {t('sections.teams')}
+            </span>
             {userScope !== 'Company' && (
-              <span className="inline-flex items-center justify-center size-5 rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+              <span className="inline-flex items-center justify-center size-5 rounded-full bg-(--palette-surface-3) text-xs font-semibold text-(--palette-gray-600)">
                 {user.teams?.length ?? 0}
               </span>
             )}
@@ -587,7 +647,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
             <button
               type="button"
               onClick={handleOpenTeams}
-              className="text-xs text-primary hover:underline flex items-center gap-1"
+              className="text-xs text-(--palette-primary-text) hover:underline flex items-center gap-1"
             >
               <Icon name="pen-to-square" style="regular" className="size-3.5" />
               {t('buttons.edit')}
@@ -596,7 +656,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         </div>
         <div className="px-4 py-3">
           {userScope === 'Company' ? (
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-(--palette-gray-500)">
               {t('hints.teamNotApplicableCompany', {
                 company: user.companyName
                   ? localizeCompanyName(user.companyName, user.companyNameLocal)
@@ -604,13 +664,13 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               })}
             </p>
           ) : !user.teams || user.teams.length === 0 ? (
-            <p className="text-sm text-gray-400">{t('empty.noTeamsAssigned')}</p>
+            <p className="text-sm text-(--palette-gray-400)">{t('empty.noTeamsAssigned')}</p>
           ) : (
             <div className="flex flex-wrap gap-2">
               {user.teams.map(tm => (
                 <span
                   key={tm.id}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-teal-50 text-teal-700"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-(--palette-accent-wash) text-(--palette-accent-ink)"
                 >
                   <span
                     className={`size-1.5 rounded-full ${tm.scope === 'Bank' ? 'bg-blue-400' : 'bg-teal-400'}`}
@@ -624,12 +684,14 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
       </section>
 
       {/* Security Section */}
-      <section className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-        <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
-          <span className="flex size-6 items-center justify-center rounded-md bg-red-50">
+      <section className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
+        <div className="flex items-center gap-2 px-4 py-3 border-b border-(--palette-line-soft)">
+          <span className="flex size-6 items-center justify-center rounded-md bg-(--palette-req-wash)">
             <Icon name="lock" style="solid" className="size-3 text-red-500" />
           </span>
-          <span className="text-sm font-semibold text-gray-800">{t('sections.security')}</span>
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {t('sections.security')}
+          </span>
         </div>
         <div className="px-4 py-3 flex flex-wrap gap-2">
           <Button
@@ -667,26 +729,77 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               </Button>
             </>
           )}
+          {user.twoFactorEnabled && canManageUsers && user.id !== currentUserId && (
+            <Button variant="danger" size="sm" onClick={() => setShowResetTwoFactorConfirm(true)}>
+              <Icon name="mobile-screen-button" style="solid" className="size-3.5! mr-1.5" />
+              {t('twoFactor.admin.button')}
+            </Button>
+          )}
+          {passkeys.length > 0 && canManageUsers && user.id !== currentUserId && (
+            <Button variant="danger" size="sm" onClick={() => setShowRevokePasskeysConfirm(true)}>
+              <Icon name="fingerprint" style="solid" className="size-3.5! mr-1.5" />
+              {t('passkeys.admin.button')}
+            </Button>
+          )}
         </div>
+        {passkeys.length > 0 && (
+          <div className="border-t border-gray-100 px-4 py-3">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-gray-600">
+              {t('passkeys.admin.title')}
+              <span className="inline-flex size-5 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                {passkeys.length}
+              </span>
+            </div>
+            <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 text-sm">
+              {passkeys.map(passkey => (
+                <li
+                  key={passkey.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2"
+                >
+                  <span
+                    className="min-w-0 flex-1 truncate font-medium text-gray-800"
+                    title={passkey.name}
+                  >
+                    {passkey.name}
+                  </span>
+                  <Badge
+                    tone={passkey.synced ? 'teal' : 'gray'}
+                    dot={false}
+                    className="whitespace-nowrap"
+                  >
+                    {passkey.synced ? t('passkeys.typeSynced') : t('passkeys.typeDevice')}
+                  </Badge>
+                  <span className="whitespace-nowrap text-xs text-gray-500">
+                    {passkey.lastUsedAt
+                      ? t('passkeys.admin.lastUsed', {
+                          time: formatLocaleDateTime(passkey.lastUsedAt, i18n.language),
+                        })
+                      : t('passkeys.neverUsed')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       {/* Temporary Access Section — only for ad-hoc accounts, closed by default */}
       {user.isTemporaryAccess && (
         <section
           className={clsx(
-            'bg-white rounded-xl border shadow-sm overflow-hidden',
+            'bg-(--palette-surface) rounded-xl border shadow-sm overflow-hidden',
             accessWindowOpen && countdown.isUnderWarningThreshold
-              ? 'border-amber-300'
-              : 'border-gray-200',
+              ? 'border-amber-300 dark:border-amber-500/40'
+              : 'border-(--palette-line)',
           )}
         >
-          <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-(--palette-line-soft)">
             <span
               className={clsx(
                 'flex size-6 items-center justify-center rounded-md',
                 accessWindowOpen && countdown.isUnderWarningThreshold
-                  ? 'bg-amber-50'
-                  : 'bg-cyan-50',
+                  ? 'bg-(--palette-warn-wash)'
+                  : 'bg-cyan-50 dark:bg-cyan-500/10',
               )}
             >
               <Icon
@@ -700,7 +813,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 )}
               />
             </span>
-            <span className="text-sm font-semibold text-gray-800">
+            <span className="text-sm font-semibold text-(--palette-ink)">
               {t('sections.temporaryAccess')}
             </span>
           </div>
@@ -711,14 +824,18 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                   <span
                     className={clsx(
                       'text-2xl font-bold tabular-nums',
-                      countdown.isUnderWarningThreshold ? 'text-amber-600' : 'text-gray-800',
+                      countdown.isUnderWarningThreshold
+                        ? 'text-amber-600 dark:text-amber-400'
+                        : 'text-(--palette-ink)',
                     )}
                   >
                     {countdown.label}
                   </span>
-                  <span className="text-xs text-gray-400">{t('accessWindow.remaining')}</span>
+                  <span className="text-xs text-(--palette-gray-400)">
+                    {t('accessWindow.remaining')}
+                  </span>
                 </div>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-(--palette-gray-500)">
                   {t('accessWindow.endsAt', {
                     time: formatLocaleDateTime(user.accessExpiresAt, i18n.language),
                   })}
@@ -744,8 +861,10 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <p className="text-sm text-gray-500">{t('accessWindow.closedMessage')}</p>
-                <p className="text-xs text-gray-400">
+                <p className="text-sm text-(--palette-gray-500)">
+                  {t('accessWindow.closedMessage')}
+                </p>
+                <p className="text-xs text-(--palette-gray-400)">
                   {t('accessWindow.capHint', {
                     hours: passwordPolicyConfig?.maxAccessWindowHours ?? 8,
                   })}
@@ -778,14 +897,16 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
             <SectionLabel icon="building" color="blue">
               {t('fields.scope')}
             </SectionLabel>
-            <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+            <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5">
               {(['Bank', 'Company'] as const).map(s => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => handleEditScopeChange(s)}
                   className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                    editScope === s ? 'bg-primary text-white' : 'text-gray-500 hover:text-gray-700'
+                    editScope === s
+                      ? 'bg-primary text-white'
+                      : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
                   }`}
                 >
                   {s === 'Bank' ? t('tabs.bank') : t('tabs.company')}
@@ -800,7 +921,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               {t('fields.authSource', 'Authentication')}
             </SectionLabel>
             <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex rounded-lg border border-gray-200 p-0.5">
+              <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5">
                 {(['Local', 'LDAP'] as const).map(s => (
                   <button
                     key={s}
@@ -809,7 +930,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                     className={`px-4 py-1.5 text-sm font-medium rounded-md transition-colors ${
                       editAuthSource === s
                         ? 'bg-primary text-white'
-                        : 'text-gray-500 hover:text-gray-700'
+                        : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
                     }`}
                   >
                     {s === 'Local'
@@ -830,7 +951,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               )}
             </div>
             {editAuthSource === 'Local' && user.authSource === 'LDAP' && (
-              <p className="mt-1.5 text-xs text-amber-600">
+              <p className="mt-1.5 text-xs text-amber-600 dark:text-amber-400">
                 {t(
                   'hints.switchToLocalPassword',
                   'Switching to local login — reset the password in Security so the user can sign in.',
@@ -841,17 +962,17 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
             {/* Converting an existing account in either direction. Lives here rather than in the
                 Temporary access card, which only renders for accounts that already carry the flag —
                 there would be nowhere to switch it on from. */}
-            <label className="mt-3 flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+            <label className="mt-3 flex items-start gap-2 text-sm text-(--palette-ink) cursor-pointer">
               <input
                 type="checkbox"
                 checked={editTemporaryAccess}
                 disabled={editAuthSource === 'LDAP'}
                 onChange={e => setEditTemporaryAccess(e.target.checked)}
-                className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary/30 disabled:opacity-40"
+                className="mt-0.5 size-4 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/30 disabled:opacity-40"
               />
               <span>
                 {t('fields.isTemporaryAccess')}
-                <span className="block text-xs text-gray-500">
+                <span className="block text-xs text-(--palette-gray-500)">
                   {editAuthSource === 'LDAP'
                     ? t('hints.temporaryAccessLocalOnly')
                     : editTemporaryAccess && !user.isTemporaryAccess
@@ -904,6 +1025,17 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               />
               {editScope === 'Company' ? (
                 <>
+                  <TextInput
+                    label={t('fields.phone')}
+                    value={editForm.phoneNumber ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, phoneNumber: value }));
+                    }}
+                    placeholder={t('placeholders.phone')}
+                    className="sm:col-span-2"
+                    maxLength={40}
+                  />
                   <Dropdown
                     label={t('fields.company')}
                     required
@@ -927,6 +1059,17 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
                 </>
               ) : (
                 <>
+                  <TextInput
+                    label={t('fields.phone')}
+                    value={editForm.phoneNumber ?? ''}
+                    onChange={e => {
+                      const value = e.currentTarget.value;
+                      setEditForm(prev => ({ ...prev, phoneNumber: value }));
+                    }}
+                    placeholder={t('placeholders.phone')}
+                    className="sm:col-span-2"
+                    maxLength={40}
+                  />
                   <TextInput
                     label={t('fields.position')}
                     value={editForm.position ?? ''}
@@ -991,7 +1134,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         title={t('dialogs.editRoles.title')}
         size="2xl"
       >
-        <p className="text-xs text-gray-500 mb-3 px-6">{t('dialogs.editRoles.hint')}</p>
+        <p className="text-xs text-(--palette-gray-500) mb-3 px-6">{t('dialogs.editRoles.hint')}</p>
         <div className="px-6">
           <AssignmentTable
             items={allRoles}
@@ -1034,7 +1177,9 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         title={t('dialogs.editGroups.title')}
         size="2xl"
       >
-        <p className="text-xs text-gray-500 mb-3 px-6">{t('dialogs.editGroups.hint')}</p>
+        <p className="text-xs text-(--palette-gray-500) mb-3 px-6">
+          {t('dialogs.editGroups.hint')}
+        </p>
         <div className="px-6">
           <AssignmentTable
             items={allGroups}
@@ -1077,7 +1222,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         title={t('dialogs.editTeams.title')}
         size="2xl"
       >
-        <p className="text-xs text-gray-500 mb-3 px-6">{t('dialogs.editTeams.hint')}</p>
+        <p className="text-xs text-(--palette-gray-500) mb-3 px-6">{t('dialogs.editTeams.hint')}</p>
         <div className="px-6">
           <AssignmentTable
             items={allTeams}
@@ -1156,16 +1301,18 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         isLoading={setAccessWindow.isPending}
       >
         <div className="text-left space-y-3">
-          <p className="text-sm text-gray-500">{t('accessWindow.closeConfirmMessage')}</p>
+          <p className="text-sm text-(--palette-gray-500)">
+            {t('accessWindow.closeConfirmMessage')}
+          </p>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-(--palette-ink) mb-1">
               {t('accessWindow.reasonLabel')} <span className="text-danger">*</span>
             </label>
             <textarea
               value={closeReason}
               onChange={e => setCloseReason(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               placeholder={t('accessWindow.reasonPlaceholder')}
             />
           </div>
@@ -1183,28 +1330,28 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
         size="sm"
       >
         <div className="flex flex-col gap-4 p-6">
-          <p className="text-xs text-gray-500">{t('dialogs.resetPassword.hint')}</p>
+          <p className="text-xs text-(--palette-gray-500)">{t('dialogs.resetPassword.hint')}</p>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-(--palette-ink) mb-1">
               {t('fields.newPassword')} <span className="text-danger">*</span>
             </label>
             <input
               type="password"
               value={resetForm.newPassword}
               onChange={e => setResetForm(prev => ({ ...prev, newPassword: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
           <PasswordPolicyChecklist password={resetForm.newPassword} />
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">
+            <label className="block text-xs font-medium text-(--palette-ink) mb-1">
               {t('fields.confirmPassword')} <span className="text-danger">*</span>
             </label>
             <input
               type="password"
               value={resetForm.confirmPassword}
               onChange={e => setResetForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full px-3 py-2 text-sm border border-(--palette-line) rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               placeholder={t('placeholders.reEnterNewPassword')}
             />
           </div>
@@ -1230,6 +1377,30 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           </Button>
         </div>
       </Modal>
+
+      {/* Reset 2FA Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showResetTwoFactorConfirm}
+        onClose={() => setShowResetTwoFactorConfirm(false)}
+        onConfirm={handleResetTwoFactor}
+        title={t('twoFactor.admin.confirmTitle')}
+        message={t('twoFactor.admin.confirmMessage', { name: displayName })}
+        confirmText={t('twoFactor.admin.button')}
+        variant="danger"
+        isLoading={resetTwoFactor.isPending}
+      />
+
+      {/* Revoke passkeys Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showRevokePasskeysConfirm}
+        onClose={() => setShowRevokePasskeysConfirm(false)}
+        onConfirm={handleRevokePasskeys}
+        title={t('passkeys.admin.confirmTitle')}
+        message={t('passkeys.admin.confirmMessage', { name: displayName })}
+        confirmText={t('passkeys.admin.button')}
+        variant="danger"
+        isLoading={revokePasskeys.isPending}
+      />
 
       {/* Activation Confirm Dialog */}
       <ConfirmDialog
