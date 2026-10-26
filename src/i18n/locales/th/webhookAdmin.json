@@ -1,37 +1,88 @@
 {
   "page": {
     "title": "การส่ง Webhook",
-    "subtitle": "ตรวจสอบและส่งซ้ำความพยายามส่ง Webhook ขาออก"
+    "subtitle": "ตรวจสอบและส่งซ้ำ Webhook ขาออก",
+    "subscriptionsLink": "การสมัครรับ Webhook"
+  },
+  "tabs": {
+    "label": "สถานะ",
+    "all": "ทั้งหมด"
   },
   "columns": {
-    "id": "ID",
-    "subscriptionId": "Subscription ID",
-    "created": "สร้างเมื่อ",
-    "eventType": "ประเภทเหตุการณ์",
+    "created": "เวลา",
+    "eventType": "เหตุการณ์",
     "system": "ระบบ",
     "status": "สถานะ",
-    "attempts": "จำนวนครั้ง",
-    "lastStatusCode": "สถานะ HTTP",
-    "lastError": "ข้อผิดพลาดล่าสุด",
-    "deliveredAt": "ส่งเมื่อ",
-    "actions": "การดำเนินการ"
+    "lastResult": "ผลครั้งล่าสุด",
+    "attempts": "ครั้ง"
   },
   "status": {
-    "Pending": "รอดำเนินการ",
+    "Pending": "รอส่ง",
     "Delivered": "ส่งสำเร็จ",
     "Failed": "ล้มเหลว"
   },
+  "select": {
+    "all": "เลือกทุกรายการที่ล้มเหลวในหน้านี้",
+    "row": "เลือกรายการ"
+  },
   "filters": {
-    "eventTypePlaceholder": "กรองตามประเภทเหตุการณ์...",
-    "statusLabel": "สถานะ",
-    "allStatuses": "ทุกสถานะ",
+    "searchPlaceholder": "ค้นหาเหตุการณ์ หรือ Delivery ID",
+    "searchLabel": "ค้นหา",
+    "allSystems": "ทุกระบบ",
+    "systemLabel": "ระบบ",
+    "timeLabel": "ช่วงเวลา",
+    "clear": "ล้างตัวกรองเหตุการณ์",
     "from": "ตั้งแต่",
     "to": "ถึง",
-    "clear": "ล้างตัวกรอง"
+    "time": {
+      "all": "ทุกช่วงเวลา",
+      "24h": "24 ชม.",
+      "7d": "7 วัน",
+      "30d": "30 วัน",
+      "90d": "90 วัน",
+      "custom": "กำหนดเอง"
+    }
+  },
+  "pendingBanner": {
+    "count_one": "รอส่ง {{count}} รายการ",
+    "count_other": "รอส่ง {{count}} รายการ",
+    "since": "ค้างตั้งแต่ {{since}} ({{days}})",
+    "days_one": "{{count}} วัน",
+    "days_other": "{{count}} วัน",
+    "never_one": "ยังไม่เคยลองส่ง {{count}} รายการ",
+    "never_other": "ยังไม่เคยลองส่ง {{count}} รายการ",
+    "view": "ดูรายการรอส่ง"
+  },
+  "failure": {
+    "httpAll_one": "ทั้ง {{count}} รายการได้ HTTP {{status}} จาก {{system}}",
+    "httpAll_other": "ทั้ง {{count}} รายการได้ HTTP {{status}} จาก {{system}}",
+    "httpSome_one": "{{count}} รายการได้ HTTP {{status}} จาก {{system}}",
+    "httpSome_other": "{{count}} รายการได้ HTTP {{status}} จาก {{system}}",
+    "noResponseAll_one": "ทั้ง {{count}} รายการส่งไม่ถึง {{system}} (ไม่มี HTTP response)",
+    "noResponseAll_other": "ทั้ง {{count}} รายการส่งไม่ถึง {{system}} (ไม่มี HTTP response)",
+    "noResponseSome_one": "{{count}} รายการส่งไม่ถึง {{system}} (ไม่มี HTTP response)",
+    "noResponseSome_other": "{{count}} รายการส่งไม่ถึง {{system}} (ไม่มี HTTP response)",
+    "destination": "ปลายทาง",
+    "checkSubscription": "ตรวจการสมัครรับ {{system}}"
   },
   "actions": {
     "view": "ดูรายละเอียด",
     "retry": "ส่งซ้ำ"
+  },
+  "bulk": {
+    "selected_one": "เลือกแล้ว {{count}} รายการ",
+    "selected_other": "เลือกแล้ว {{count}} รายการ",
+    "retry_one": "ส่งซ้ำ {{count}} รายการ",
+    "retry_other": "ส่งซ้ำ {{count}} รายการ",
+    "clear": "ล้างการเลือก",
+    "confirmMessage_one": "ระบบจะส่งข้อมูลชุดเดิมของ {{count}} รายการไปยัง callback URL ปัจจุบัน ทีละ 3 รายการ คุณต้องการดำเนินการต่อหรือไม่?",
+    "confirmMessage_other": "ระบบจะส่งข้อมูลชุดเดิมของ {{count}} รายการไปยัง callback URL ปัจจุบัน ทีละ 3 รายการ คุณต้องการดำเนินการต่อหรือไม่?",
+    "successToast_one": "เข้าคิวส่งซ้ำ {{count}} รายการแล้ว",
+    "successToast_other": "เข้าคิวส่งซ้ำ {{count}} รายการแล้ว",
+    "partialToast_one": "เข้าคิวส่งซ้ำ {{count}} รายการ ส่งซ้ำไม่สำเร็จ {{failed}} รายการ",
+    "partialToast_other": "เข้าคิวส่งซ้ำ {{count}} รายการ ส่งซ้ำไม่สำเร็จ {{failed}} รายการ",
+    "failedToast_one": "ส่งซ้ำไม่สำเร็จ {{count}} รายการ",
+    "failedToast_other": "ส่งซ้ำไม่สำเร็จ {{count}} รายการ"
   },
   "retry": {
     "confirmTitle": "ส่ง Webhook ซ้ำ",
@@ -42,10 +93,29 @@
     "errorToast": "ส่ง Webhook ซ้ำไม่สำเร็จ"
   },
   "drawer": {
-    "title": "รายละเอียดการส่ง",
+    "createdAt": "สร้างเมื่อ {{time}}",
+    "close": "ปิด",
+    "attempts_one": "ลองส่ง {{count}} ครั้ง",
+    "attempts_other": "ลองส่ง {{count}} ครั้ง",
+    "neverAttempted": "ยังไม่เคยลองส่ง",
+    "respondedWith": "ครั้งล่าสุดปลายทางตอบ",
+    "deliveredAt": "ส่งสำเร็จเมื่อ {{time}}",
+    "sections": {
+      "destination": "ปลายทาง",
+      "reference": "รหัสอ้างอิง"
+    },
+    "callbackUrl": "Callback URL",
+    "auth": "การยืนยันตัวตน",
+    "subscription": "การสมัครรับ",
+    "openSubscription": "เปิดการสมัครรับ",
+    "deliveryId": "Delivery ID",
+    "eventId": "Event ID",
+    "appraisalNumber": "เลขที่ประเมิน",
     "payload": "Payload",
     "copy": "คัดลอก",
-    "copied": "คัดลอกแล้ว!",
+    "copied": "คัดลอกแล้ว",
+    "copyFailed": "คัดลอกไม่สำเร็จ — กรุณาเลือกค่าแล้วคัดลอกเอง",
+    "copyField": "คัดลอก {{field}}",
     "noPayload": "ไม่มี Payload"
   },
   "emptyState": "ไม่พบรายการส่ง Webhook",
@@ -55,75 +125,109 @@
       "title": "การสมัครรับ Webhook",
       "subtitle": "ตั้งค่าระบบภายนอกที่จะรับเหตุการณ์ Webhook ขาออก"
     },
-    "columns": {
-      "systemCode": "รหัสระบบ",
-      "eventType": "ประเภทเหตุการณ์",
-      "callbackUrl": "Callback URL",
-      "authType": "การยืนยันตัวตน",
-      "active": "สถานะ",
-      "secret": "Secret",
-      "lastDelivery": "ส่งล่าสุด",
-      "actions": "จัดการ"
+    "tabs": {
+      "label": "สถานะ",
+      "all": "ทั้งหมด",
+      "active": "เปิดใช้",
+      "inactive": "ปิดอยู่"
     },
     "filters": {
-      "systemCodePlaceholder": "กรองตามรหัสระบบ...",
-      "statusAll": "ทั้งหมด",
-      "statusActive": "เฉพาะที่ใช้งานอยู่",
-      "statusInactive": "เฉพาะที่ไม่ได้ใช้งาน",
-      "clear": "ล้างตัวกรอง"
+      "searchPlaceholder": "ค้นหารหัสระบบ"
+    },
+    "banner": {
+      "count_one": "{{count}} รายการ",
+      "count_other": "{{count}} รายการ",
+      "text_one": "ยังเก็บ secret แบบไม่เข้ารหัส (บันทึกไว้ก่อนเปิดการเข้ารหัส) — กดแก้ไขแล้วกรอก secret ใหม่เพื่อเข้ารหัส",
+      "text_other": "ยังเก็บ secret แบบไม่เข้ารหัส (บันทึกไว้ก่อนเปิดการเข้ารหัส) — กดแก้ไขแล้วกรอก secret ใหม่เพื่อเข้ารหัส"
+    },
+    "columns": {
+      "systemEvent": "ระบบ / เหตุการณ์",
+      "destination": "ปลายทาง",
+      "secret": "Secret",
+      "active": "เปิดใช้",
+      "actions": "จัดการ"
+    },
+    "authLine": {
+      "HMAC": "HMAC-SHA256",
+      "TokenBearer": "Bearer token (OAuth client credentials)"
+    },
+    "authTypeShort": {
+      "HMAC": "HMAC",
+      "TokenBearer": "Bearer token"
+    },
+    "secretBadge": {
+      "encrypted": "เข้ารหัสแล้ว",
+      "plaintext": "ไม่เข้ารหัส",
+      "notSet": "ยังไม่ตั้งค่า"
+    },
+    "secretTitle": {
+      "plaintext": "ตั้งค่าแล้ว แต่ยังไม่เข้ารหัส — แก้ไขแล้วกรอก secret ใหม่"
     },
     "actions": {
       "add": "เพิ่มการสมัครรับ",
       "edit": "แก้ไข",
-      "activate": "เปิดใช้งาน",
-      "deactivate": "ปิดใช้งาน",
-      "delete": "ลบ"
-    },
-    "active": {
-      "yes": "ใช้งานอยู่",
-      "no": "ไม่ได้ใช้งาน"
+      "delete": "ลบ",
+      "toggle": "เปิดใช้ {{name}}"
     },
     "form": {
       "createTitle": "เพิ่มการสมัครรับ Webhook",
-      "editTitle": "แก้ไขการสมัครรับ Webhook",
+      "createSubtitle": "ลงทะเบียนระบบปลายทางใหม่ให้รับเหตุการณ์จากระบบประเมิน",
+      "active": "เปิดใช้",
+      "sections": {
+        "systemEvent": "ระบบและเหตุการณ์",
+        "destination": "ปลายทาง",
+        "auth": "การยืนยันตัวตน"
+      },
       "systemCode": "รหัสระบบ",
       "systemCodePlaceholder": "เช่น LOS, CLS",
-      "systemCodeLocked": "รหัสระบบและประเภทเหตุการณ์แก้ไขไม่ได้หลังสร้างแล้ว",
-      "callbackUrl": "Callback URL",
-      "secretKey": "Secret สำหรับลงลายเซ็น",
-      "secretKeyPlaceholder": "HMAC secret ที่ใช้ร่วมกับระบบปลายทาง",
-      "secretKeyHint": "HMAC-SHA256 secret ที่ใช้ร่วมกันเพื่อลงลายเซ็นข้อมูลขาออก ต้องตกลงค่ากับระบบปลายทาง",
-      "replaceSecret": "เปลี่ยน secret",
-      "keepSecret": "ใช้ secret เดิม",
-      "cancel": "ยกเลิก",
-      "create": "สร้าง",
-      "save": "บันทึก",
+      "eventScope": "เหตุการณ์ที่จะรับ",
+      "scopeAll": "ทุกเหตุการณ์ของระบบนี้",
+      "scopeAllDesc": "รับทุกเหตุการณ์ ยกเว้นที่มีการสมัครรับเฉพาะไว้แล้ว",
+      "scopeSingle": "เฉพาะเหตุการณ์เดียว",
+      "scopeSingleDesc": "ส่งไปปลายทางแยกของเหตุการณ์นั้น",
       "eventType": "ประเภทเหตุการณ์",
-      "eventTypePlaceholder": "เช่น APPRAISAL_PMA_UPDATED",
-      "eventTypeHint": "เว้นว่าง = รับทุกเหตุการณ์ของระบบนี้ (catch-all) แก้ไขไม่ได้หลังสร้างแล้ว",
+      "eventTypePlaceholder_one": "เลือกเหตุการณ์ ({{count}} แบบ)",
+      "eventTypePlaceholder_other": "เลือกเหตุการณ์ ({{count}} แบบ)",
+      "conflict": "มีการสมัครรับของ {{pair}} อยู่แล้ว",
+      "createLockedHint": "รหัสระบบและเหตุการณ์แก้ไม่ได้หลังสร้าง",
+      "editLockedHint": "ใช้จับคู่เหตุการณ์กับปลายทาง แก้ไม่ได้หลังสร้าง ถ้าต้องเปลี่ยนให้สร้างการสมัครรับใหม่",
+      "callbackUrl": "Callback URL",
+      "callbackUrlPlaceholder": "https://example.com/webhooks/cas",
+      "callbackUrlHint": "เปลี่ยน URL แล้วต้องกรอก secret ใหม่ ระบบไม่ส่ง secret เดิมไปยังปลายทางใหม่",
       "httpMethod": "HTTP Method",
       "authType": "วิธียืนยันตัวตน",
       "authTypes": {
         "HMAC": "ลายเซ็น HMAC",
-        "TokenBearer": "Bearer token (ขอจาก token endpoint)"
+        "TokenBearer": "Bearer token"
       },
       "tokenEndpoint": "Token Endpoint",
+      "tokenEndpointPlaceholder": "https://example.com/api/auth/token",
       "clientId": "Client ID",
       "clientSecret": "Client Secret",
       "clientSecretPlaceholder": "Client secret ที่ระบบปลายทางออกให้",
-      "clientSecretHint": "ส่งคู่กับ Client ID ไปที่ token endpoint เพื่อขอ bearer token",
-      "secretSet": "ตั้งค่าแล้ว (เก็บแบบเข้ารหัส)",
-      "secretNotSet": "ยังไม่ตั้งค่า",
-      "secretPlaintext": "ตั้งค่าแล้ว แต่ยังไม่เข้ารหัส — กรุณากรอกใหม่",
+      "clientSecretHint": "ส่งคู่กับ Client ID ไปที่ token endpoint เพื่อขอ bearer token ก่อนส่งทุกครั้ง",
+      "secretKey": "Secret สำหรับลงลายเซ็น",
+      "secretKeyPlaceholder": "HMAC secret ที่ตกลงกับระบบปลายทาง",
+      "secretKeyHint": "HMAC-SHA256 ที่ใช้ร่วมกับระบบปลายทางเพื่อลงลายเซ็นข้อมูลขาออก",
+      "secretPlaintextNote": "secret นี้บันทึกไว้ก่อนเปิดการเข้ารหัส กด \"เปลี่ยน secret\" แล้วกรอกค่าเดิมหรือค่าใหม่ เพื่อให้เก็บแบบเข้ารหัส",
       "clientSecretReenter": "เปลี่ยน callback URL, token endpoint หรือ client ID แล้ว ต้องกรอก client secret ใหม่",
       "secretKeyReenter": "เปลี่ยน callback URL แล้ว ต้องกรอก secret สำหรับลงลายเซ็นใหม่",
+      "secretSet": "ตั้งค่าแล้ว (เก็บแบบเข้ารหัส)",
+      "secretNotSet": "ยังไม่ตั้งค่า",
+      "replaceSecret": "เปลี่ยน secret",
+      "keepSecret": "ใช้ secret เดิม",
       "reveal": "ดูค่า",
       "hide": "ซ่อน",
       "copy": "คัดลอก",
       "copied": "คัดลอกแล้ว",
       "copyFailed": "คัดลอกไม่สำเร็จ — กรุณาเลือกค่าแล้วคัดลอกเอง",
       "revealAudited": "ทุกครั้งที่กดดูค่าจะถูกบันทึกไว้ (ใคร เมื่อไร จาก IP ไหน)",
-      "revealFailed": "ดูค่า secret ไม่สำเร็จ"
+      "revealFailed": "ดูค่า secret ไม่สำเร็จ",
+      "delete": "ลบการสมัครรับ",
+      "createNote": "สร้างแล้วเปิดใช้ทันที",
+      "cancel": "ยกเลิก",
+      "create": "สร้าง",
+      "save": "บันทึก"
     },
     "delete": {
       "confirmTitle": "ลบการสมัครรับ",
@@ -143,11 +247,8 @@
       "deleteFailed": "ลบการสมัครรับไม่สำเร็จ"
     },
     "emptyState": "ยังไม่ได้ตั้งค่าการสมัครรับ Webhook",
+    "emptyFiltered": "ไม่พบการสมัครรับที่ตรงกับตัวกรอง",
     "loadFailed": "โหลดการสมัครรับ Webhook ไม่สำเร็จ",
-    "catchAll": "ทุกเหตุการณ์",
-    "authTypeShort": {
-      "HMAC": "HMAC",
-      "TokenBearer": "Bearer token"
-    }
+    "catchAll": "ทุกเหตุการณ์"
   }
 }

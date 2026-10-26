@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
 import ConfirmDialog from '@shared/components/ConfirmDialog';
@@ -21,11 +22,11 @@ type Tab = 'authorizations' | 'tokens';
 const statusBadgeClass = (status: string | null): string => {
   switch ((status ?? '').toLowerCase()) {
     case 'valid':
-      return 'bg-emerald-50 text-emerald-700';
+      return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300';
     case 'revoked':
       return 'bg-danger/10 text-danger';
     default:
-      return 'bg-gray-100 text-gray-500';
+      return 'bg-(--palette-surface-3) text-(--palette-gray-500)';
   }
 };
 
@@ -97,7 +98,7 @@ const OAuthTokenListPage = () => {
       />
 
       {/* Tabs */}
-      <div className="flex gap-1 mt-4 border-b border-gray-200">
+      <div className="flex gap-1 mt-4 border-b border-(--palette-line)">
         {(['authorizations', 'tokens'] as Tab[]).map(key => (
           <button
             key={key}
@@ -105,8 +106,8 @@ const OAuthTokenListPage = () => {
             onClick={() => setTab(key)}
             className={`px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors ${
               tab === key
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-(--palette-primary-text)'
+                : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)'
             }`}
           >
             {t(`tokens.tabs.${key}` as const)}
@@ -114,7 +115,7 @@ const OAuthTokenListPage = () => {
         ))}
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm mt-4">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm mt-4">
         {/* Filters */}
         <div className="flex flex-wrap items-center gap-3 px-4 pt-4 pb-2">
           <input
@@ -122,32 +123,28 @@ const OAuthTokenListPage = () => {
             value={clientIdInput}
             onChange={e => setClientIdInput(e.target.value)}
             placeholder={t('tokens.filters.clientIdPlaceholder')}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-w-48"
+            className="px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-w-48"
           />
           <input
             type="text"
             value={subjectInput}
             onChange={e => setSubjectInput(e.target.value)}
             placeholder={t('tokens.filters.subjectPlaceholder')}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-w-48"
+            className="px-3 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-w-48"
           />
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value)}
-            className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary bg-white"
-          >
+          <NativeSelect value={status} onChange={e => setStatus(e.target.value)}>
             <option value="">{t('tokens.filters.allStatuses')}</option>
             {STATUS_OPTIONS.map(s => (
               <option key={s} value={s}>
                 {s}
               </option>
             ))}
-          </select>
+          </NativeSelect>
           {(clientIdInput || subjectInput || status) && (
             <button
               type="button"
               onClick={clearFilters}
-              className="text-xs text-gray-400 hover:text-gray-600"
+              className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600)"
             >
               {t('tokens.filters.clear')}
             </button>
@@ -157,26 +154,28 @@ const OAuthTokenListPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-table">
             <thead>
-              <tr className="border-b border-gray-100 bg-gray-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              <tr className="border-b border-(--palette-line-soft) bg-(--palette-surface-2)">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('tokens.columns.subject')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('tokens.columns.clientId')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('tokens.columns.status')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('tokens.columns.type')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  {tab === 'authorizations' ? t('tokens.columns.scopes') : t('tokens.columns.expires')}
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
+                  {tab === 'authorizations'
+                    ? t('tokens.columns.scopes')
+                    : t('tokens.columns.expires')}
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-left px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('tokens.columns.created')}
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                <th className="text-right px-4 py-3 text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
                   {t('tokens.columns.actions')}
                 </th>
               </tr>
@@ -207,8 +206,12 @@ const OAuthTokenListPage = () => {
                 </tr>
               ) : (active.data?.items.length ?? 0) === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-gray-400 text-sm">
-                    <Icon name="ticket" style="regular" className="size-8 mx-auto mb-2 opacity-40" />
+                  <td colSpan={7} className="text-center py-12 text-(--palette-gray-400) text-sm">
+                    <Icon
+                      name="ticket"
+                      style="regular"
+                      className="size-8 mx-auto mb-2 opacity-40"
+                    />
                     <p>
                       {tab === 'authorizations'
                         ? t('tokens.emptyAuthorizations')
@@ -218,9 +221,14 @@ const OAuthTokenListPage = () => {
                 </tr>
               ) : tab === 'authorizations' ? (
                 authorizationsQuery.data?.items.map(item => (
-                  <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-gray-700">{item.subject ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">{item.clientId ?? '—'}</td>
+                  <tr
+                    key={item.id}
+                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
+                  >
+                    <td className="px-4 py-3 text-(--palette-ink)">{item.subject ?? '—'}</td>
+                    <td className="px-4 py-3 text-(--palette-gray-600) font-mono text-xs">
+                      {item.clientId ?? '—'}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass(item.status)}`}
@@ -228,20 +236,22 @@ const OAuthTokenListPage = () => {
                         {item.status ?? '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{item.type ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs max-w-xs">
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs">
+                      {item.type ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs max-w-xs">
                       <span className="block truncate" title={item.scopes.join(' ')}>
                         {item.scopes.join(', ') || '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs whitespace-nowrap">
                       {item.creationDate ? new Date(item.creationDate).toLocaleString() : '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => setRevokeTarget({ id: item.id, kind: 'authorizations' })}
-                        className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
+                        className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
                         title={t('tokens.actions.revoke')}
                       >
                         <Icon name="ban" style="regular" className="size-4" />
@@ -251,9 +261,14 @@ const OAuthTokenListPage = () => {
                 ))
               ) : (
                 tokensQuery.data?.items.map(item => (
-                  <tr key={item.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-gray-700">{item.subject ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-600 font-mono text-xs">{item.clientId ?? '—'}</td>
+                  <tr
+                    key={item.id}
+                    className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2) transition-colors"
+                  >
+                    <td className="px-4 py-3 text-(--palette-ink)">{item.subject ?? '—'}</td>
+                    <td className="px-4 py-3 text-(--palette-gray-600) font-mono text-xs">
+                      {item.clientId ?? '—'}
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${statusBadgeClass(item.status)}`}
@@ -261,18 +276,20 @@ const OAuthTokenListPage = () => {
                         {item.status ?? '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{item.type ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs">
+                      {item.type ?? '—'}
+                    </td>
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs whitespace-nowrap">
                       {item.expirationDate ? new Date(item.expirationDate).toLocaleString() : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                    <td className="px-4 py-3 text-(--palette-gray-500) text-xs whitespace-nowrap">
                       {item.creationDate ? new Date(item.creationDate).toLocaleString() : '—'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
                         onClick={() => setRevokeTarget({ id: item.id, kind: 'tokens' })}
-                        className="p-1.5 text-gray-400 hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
+                        className="p-1.5 text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 rounded-lg transition-colors"
                         title={t('tokens.actions.revoke')}
                       >
                         <Icon name="ban" style="regular" className="size-4" />

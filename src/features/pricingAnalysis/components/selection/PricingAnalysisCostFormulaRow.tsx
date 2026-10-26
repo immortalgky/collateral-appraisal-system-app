@@ -79,13 +79,13 @@ export function PricingAnalysisCostFormulaRow({ methods }: PricingAnalysisCostFo
       key={key}
       className={clsx(
         'inline-flex flex-col justify-center whitespace-nowrap rounded-[7px] border px-[9px] py-[3px] leading-[1.2]',
-        opts.tot ? 'border-[#0d9488] bg-[#0d9488]' : 'bg-white',
+        opts.tot ? 'border-[#0d9488] bg-[#0d9488]' : 'bg-(--palette-surface)',
         opts.miss && 'border-dashed',
-        !opts.tot && !opts.borderColor && 'border-[#e3e9e8]',
+        !opts.tot && !opts.borderColor && 'border-(--palette-line)',
       )}
       style={opts.borderColor ? { borderColor: opts.borderColor } : undefined}
     >
-      <span className={clsx('text-[10px]', opts.tot ? 'text-white' : 'text-[#8a96a0]')}>
+      <span className={clsx('text-[10px]', opts.tot ? 'text-white' : 'text-(--palette-ink-3)')}>
         {label}
       </span>
       <b
@@ -94,8 +94,8 @@ export function PricingAnalysisCostFormulaRow({ methods }: PricingAnalysisCostFo
           opts.tot
             ? 'text-[12.5px] font-semibold text-white'
             : opts.miss
-              ? 'text-[11.5px] font-medium text-[#8a96a0]'
-              : 'text-[12.5px] font-semibold text-gray-800',
+              ? 'text-[11.5px] font-medium text-(--palette-ink-3)'
+              : 'text-[12.5px] font-semibold text-(--palette-ink)',
         )}
       >
         {value}
@@ -104,7 +104,7 @@ export function PricingAnalysisCostFormulaRow({ methods }: PricingAnalysisCostFo
   );
 
   const op = (key: string, symbol: '+' | '=') => (
-    <span key={key} className="font-semibold text-[#8a96a0]">
+    <span key={key} className="font-semibold text-(--palette-ink-3)">
       {symbol}
     </span>
   );
@@ -136,7 +136,7 @@ export function PricingAnalysisCostFormulaRow({ methods }: PricingAnalysisCostFo
     // stays transparent lets the surface underneath show through as a white gap — which is
     // exactly what the empty first column was doing. Written as the literal hex because
     // Tailwind v4's palette is OKLCH, so `teal-50` no longer equals the mock's token.
-    <tr className="[&>td]:bg-[#f0fdfa]">
+    <tr className="[&>td]:bg-(--palette-accent-wash)">
       <td></td>
       <td colSpan={5} className="px-[8px] py-1.5">
         <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[6px] text-[11px]">
@@ -155,13 +155,13 @@ export function PricingAnalysisCostFormulaRow({ methods }: PricingAnalysisCostFo
               tot: true,
             },
           )}
-          <div className="basis-full text-[10.5px] text-[#8a96a0]">
+          <div className="basis-full text-[10.5px] text-(--palette-ink-3)">
             {t('board.formula.requiredNote', {
               components: required.map(roleLabel).join(' + '),
             })}
           </div>
           {warnings.length > 0 && (
-            <div className="basis-full text-[11px] font-medium text-[#b45309]">
+            <div className="basis-full text-[11px] font-medium text-(--palette-warn)">
               {warnings.join(' · ')}
             </div>
           )}

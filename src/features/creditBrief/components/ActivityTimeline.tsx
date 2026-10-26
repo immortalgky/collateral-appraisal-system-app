@@ -158,10 +158,14 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
   if (!activityLog?.length) {
     return (
       <div className="flex flex-col items-center gap-2 py-8">
-        <span className="grid h-11 w-11 place-items-center rounded-full bg-gray-100">
-          <Icon name="clock-rotate-left" style="regular" className="h-5 w-5 text-gray-400" />
+        <span className="grid h-11 w-11 place-items-center rounded-full bg-(--palette-surface-3)">
+          <Icon
+            name="clock-rotate-left"
+            style="regular"
+            className="h-5 w-5 text-(--palette-gray-400)"
+          />
         </span>
-        <p className="text-sm text-gray-500">{t('activityTracking.brief.log.empty')}</p>
+        <p className="text-sm text-(--palette-gray-500)">{t('activityTracking.brief.log.empty')}</p>
       </div>
     );
   }
@@ -200,7 +204,7 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
           positioned into it — a grid would give every row the gutter's full height even when
           the date is not printed. */}
       <ol className="relative pl-[118px]">
-        <span className="absolute bottom-2 left-[104px] top-2 w-px bg-gray-200" />
+        <span className="absolute bottom-2 left-[104px] top-2 w-px bg-(--palette-line)" />
 
         {shown.map((entry, i) => {
           const item = entry.head;
@@ -249,12 +253,12 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
           return (
             <li
               key={`${item.sequenceNo}-${start}`}
-              className="relative border-t border-gray-100 py-3 first:border-t-0"
+              className="relative border-t border-(--palette-line-soft) py-3 first:border-t-0"
             >
-              <span className="absolute -left-[22px] top-[18px] text-right text-[11.5px] leading-tight text-gray-400">
+              <span className="absolute -left-[22px] top-[18px] text-right text-[11.5px] leading-tight text-(--palette-gray-400)">
                 <span className="absolute -left-[96px] top-0 w-[92px] text-right">
                   {newDay && (
-                    <span className="block text-xs font-semibold text-gray-600">
+                    <span className="block text-xs font-semibold text-(--palette-gray-600)">
                       {formatDay(start)}
                     </span>
                   )}
@@ -271,11 +275,11 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                 <span className="absolute -left-[18px] bottom-0 top-0 w-px bg-amber-300" />
               )}
               {returned || cancelled ? (
-                <span className="absolute -left-[23px] top-[14px] grid h-4 w-4 place-items-center rounded-full bg-amber-100 ring-2 ring-white">
+                <span className="absolute -left-[23px] top-[14px] grid h-4 w-4 place-items-center rounded-full bg-amber-100 dark:bg-amber-500/20 ring-2 ring-(--palette-surface)">
                   <Icon
                     name="arrow-turn-up"
                     style="solid"
-                    className="h-2 w-2 text-amber-700"
+                    className="h-2 w-2 text-(--palette-warn)"
                     aria-hidden
                   />
                 </span>
@@ -286,19 +290,19 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                 <span
                   className={clsx(
                     'absolute -left-[18px] top-[19px] h-2.5 w-2.5 rounded-full border-2 border-primary',
-                    item.status === 'Completed' ? 'bg-primary' : 'bg-white',
+                    item.status === 'Completed' ? 'bg-primary' : 'bg-(--palette-surface)',
                   )}
                 />
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                <span className="text-sm font-semibold text-gray-900">{phase}</span>
+                <span className="text-sm font-semibold text-(--palette-ink)">{phase}</span>
                 {folded && (
                   <button
                     type="button"
                     onClick={() => setOpenLegs(prev => ({ ...prev, [legKey]: !prev[legKey] }))}
                     aria-expanded={legOpen}
-                    className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10.5px] font-medium text-blue-700 transition hover:bg-blue-100"
+                    className="inline-flex items-center gap-1 rounded-full bg-blue-50 dark:bg-blue-500/10 px-2 py-0.5 text-[10.5px] font-medium text-blue-700 dark:text-blue-300 transition hover:bg-blue-100 dark:hover:bg-blue-500/20"
                   >
                     <Icon
                       name={legOpen ? 'chevron-up' : 'chevron-down'}
@@ -313,7 +317,9 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                   <span
                     className={clsx(
                       'rounded-full px-2 py-0.5 text-[11px] tabular-nums',
-                      slow ? 'bg-amber-50 text-amber-700' : 'bg-gray-100 text-gray-500',
+                      slow
+                        ? 'bg-(--palette-warn-wash) text-(--palette-warn)'
+                        : 'bg-(--palette-surface-3) text-(--palette-gray-500)',
                     )}
                   >
                     {item.timeTaken}
@@ -321,15 +327,15 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                 )}
               </div>
 
-              <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-gray-500">
+              <div className="mt-1 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs text-(--palette-gray-500)">
                 {who && (
                   <span className="inline-flex min-w-0 items-center gap-1.5">
                     <i
                       className={clsx(
                         'grid h-5 w-5 flex-none place-items-center rounded-full text-[9px] font-bold not-italic',
                         company || isPool || folded
-                          ? 'bg-blue-50 text-blue-700'
-                          : 'bg-teal-50 text-teal-700',
+                          ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                          : 'bg-(--palette-accent-wash) text-(--palette-accent-ink)',
                       )}
                     >
                       {/* A firm, a committee OR a pool — none of them is a person, and "IntAdmin"
@@ -347,14 +353,14 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                     </i>
                     <span className="truncate">
                       {who}
-                      {login && <span className="ml-1 text-gray-400">({login})</span>}
+                      {login && <span className="ml-1 text-(--palette-gray-400)">({login})</span>}
                     </span>
                   </span>
                 )}
                 {/* A folded entry's own movement codes describe hand-offs inside the firm, so
                     only the span is shown; a single step keeps its outcome. */}
                 {folded && endsAt ? (
-                  <span className="tabular-nums text-gray-400">
+                  <span className="tabular-nums text-(--palette-gray-400)">
                     {formatDay(start)} {formatTime(start)} – {formatDay(endsAt)}{' '}
                     {formatTime(endsAt)}
                   </span>
@@ -364,8 +370,8 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                       className={clsx(
                         'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10.5px] font-medium',
                         returned || cancelled
-                          ? 'bg-amber-50 text-amber-800'
-                          : 'bg-emerald-50 text-emerald-700',
+                          ? 'bg-(--palette-warn-wash) text-amber-800 dark:text-amber-300'
+                          : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
                       )}
                     >
                       <Icon
@@ -384,7 +390,7 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                   name the fold deliberately hides at the top level — and its own direction, so a
                   return inside the firm is as visible here as one between firm and bank. */}
               {folded && legOpen && (
-                <ol className="mt-2 space-y-1.5 border-l border-dashed border-blue-200 pl-3">
+                <ol className="mt-2 space-y-1.5 border-l border-dashed border-blue-200 dark:border-blue-500/30 pl-3">
                   {entry.items.map((step, stepIdx) => {
                     const stepDir = directionOf(step);
                     const stepBack = stepDir === 'back' || stepDir === 'cancel';
@@ -405,13 +411,17 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                     return (
                       <li
                         key={`${step.sequenceNo}-${step.startDate}`}
-                        className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] text-gray-500"
+                        className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11.5px] text-(--palette-gray-500)"
                       >
-                        <span className="tabular-nums text-gray-400">
-                          {stepDay && <span className="mr-1 text-gray-400">{stepDay}</span>}
+                        <span className="tabular-nums text-(--palette-gray-400)">
+                          {stepDay && (
+                            <span className="mr-1 text-(--palette-gray-400)">{stepDay}</span>
+                          )}
                           {formatTime(step.startDate)}
                         </span>
-                        <span className="font-medium text-gray-700">{step.activityName}</span>
+                        <span className="font-medium text-(--palette-ink)">
+                          {step.activityName}
+                        </span>
                         {(() => {
                           const stepPool = isPoolAssignee(step.assignedType)
                             ? poolLabel(step.assignedTo)
@@ -425,14 +435,16 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                               <span className="truncate">
                                 · {stepWho}
                                 {stepLogin && (
-                                  <span className="ml-1 text-gray-400">({stepLogin})</span>
+                                  <span className="ml-1 text-(--palette-gray-400)">
+                                    ({stepLogin})
+                                  </span>
                                 )}
                               </span>
                             )
                           );
                         })()}
                         {stepBack && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-1.5 text-[10px] font-medium text-amber-800">
+                          <span className="inline-flex items-center gap-1 rounded-full bg-(--palette-warn-wash) px-1.5 text-[10px] font-medium text-amber-800 dark:text-amber-300">
                             <Icon
                               name="arrow-turn-up"
                               style="solid"
@@ -442,7 +454,9 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
                             {t('activityTracking.brief.log.returned')}
                           </span>
                         )}
-                        {step.remark && <span className="w-full text-gray-500">{step.remark}</span>}
+                        {step.remark && (
+                          <span className="w-full text-(--palette-gray-500)">{step.remark}</span>
+                        )}
                       </li>
                     );
                   })}
@@ -452,7 +466,7 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
               {/* Spelled out, not hidden behind an icon. Why a step came back is the most useful
                   thing in this whole list, and the table made it a tooltip. */}
               {item.remark && (
-                <p className="mt-1.5 border-l-2 border-gray-200 bg-gray-50 py-1.5 pl-2.5 pr-2 text-xs text-gray-600">
+                <p className="mt-1.5 border-l-2 border-(--palette-line) bg-(--palette-surface-2) py-1.5 pl-2.5 pr-2 text-xs text-(--palette-gray-600)">
                   {item.remark}
                 </p>
               )}
@@ -465,7 +479,7 @@ const ActivityTimeline = ({ activityLog, collapseAfter = 8 }: ActivityTimelinePr
         <button
           type="button"
           onClick={() => setExpanded(v => !v)}
-          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-teal-800"
+          className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-(--palette-primary-text) hover:text-teal-800 dark:hover:text-teal-300"
         >
           <Icon
             name={expanded ? 'chevron-up' : 'chevron-down'}

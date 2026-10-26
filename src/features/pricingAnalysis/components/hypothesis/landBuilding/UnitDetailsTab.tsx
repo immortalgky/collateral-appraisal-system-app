@@ -63,7 +63,7 @@ export function UnitDetailsTab({
           <tbody>
             {rows.map(row => (
               <tr key={row.sequenceNumber}>
-                <td className={`${UT_TD} text-[#8a96a0] sticky left-0 z-[1]`}>
+                <td className={`${UT_TD} text-(--palette-ink-3) sticky left-0 z-[1]`}>
                   {row.sequenceNumber}
                 </td>
                 <td className={UT_TD}>{row.planNo ?? '—'}</td>
@@ -76,8 +76,8 @@ export function UnitDetailsTab({
                 <td className={`${UT_TD} text-right`}>{fmt(row.landAreaSqWa)}</td>
                 <td className={`${UT_TD} text-right`}>{fmt(row.usableAreaSqM)}</td>
                 <td className={`${UT_TD} text-right`}>{fmt(row.sellingPrice)}</td>
-                <td className={`${UT_TD} text-[#8a96a0]`}>{row.remark1 || '—'}</td>
-                <td className={`${UT_TD} text-[#8a96a0]`}>{row.remark2 || '—'}</td>
+                <td className={`${UT_TD} text-(--palette-ink-3)`}>{row.remark1 || '—'}</td>
+                <td className={`${UT_TD} text-(--palette-ink-3)`}>{row.remark2 || '—'}</td>
               </tr>
             ))}
             <tr>

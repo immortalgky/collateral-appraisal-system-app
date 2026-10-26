@@ -314,12 +314,14 @@ const MarketComparableFactorListPage = () => {
       <div className="shrink-0 flex items-center justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-gray-900">{t('factors.pageTitle')}</h3>
-            <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded-full">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('factors.pageTitle')}
+            </h3>
+            <span className="px-2 py-0.5 text-xs font-medium bg-(--palette-surface-3) text-(--palette-gray-600) rounded-full">
               {factors.length}
             </span>
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">{t('factors.pageSubtitle')}</p>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('factors.pageSubtitle')}</p>
         </div>
         <Button size="sm" onClick={handleOpenCreate}>
           <Icon style="solid" name="plus" className="size-3.5 mr-1.5" />
@@ -332,7 +334,7 @@ const MarketComparableFactorListPage = () => {
           <Icon
             name="magnifying-glass"
             style="regular"
-            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-(--palette-gray-400)"
           />
           <input
             type="text"
@@ -343,10 +345,10 @@ const MarketComparableFactorListPage = () => {
             }}
             placeholder={t('factors.searchPlaceholder')}
             aria-label={t('factors.searchPlaceholder')}
-            className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            className="w-full pl-10 pr-4 py-2 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
-        <div className="flex items-center rounded-lg border border-gray-200 overflow-hidden text-sm">
+        <div className="flex items-center rounded-lg border border-(--palette-line) overflow-hidden text-sm">
           {(['all', 'active', 'inactive'] as const).map(s => (
             <button
               key={s}
@@ -358,8 +360,8 @@ const MarketComparableFactorListPage = () => {
               className={clsx(
                 'px-3 py-2 transition-colors',
                 statusFilter === s
-                  ? 'bg-primary/10 text-primary font-medium'
-                  : 'text-gray-500 hover:bg-gray-50',
+                  ? 'bg-primary/10 text-(--palette-primary-text) font-medium'
+                  : 'text-(--palette-gray-500) hover:bg-(--palette-surface-2)',
               )}
             >
               {filterLabels[s]}
@@ -368,7 +370,7 @@ const MarketComparableFactorListPage = () => {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
         <FactorTable
           factors={pagedFactors}
           onEdit={handleOpenEdit}
@@ -459,7 +461,7 @@ const MarketComparableFactorListPage = () => {
         {/* Translations Table */}
         <div className="mt-5">
           <div className="flex items-center justify-between mb-3">
-            <label className="text-sm font-medium text-gray-700">
+            <label className="text-sm font-medium text-(--palette-ink)">
               {t('factorForm.translations.sectionLabel')} <span className="text-red-500">*</span>
             </label>
             {availableToAdd.length > 0 && (
@@ -474,17 +476,17 @@ const MarketComparableFactorListPage = () => {
               />
             )}
           </div>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <div className="border border-(--palette-line) rounded-lg overflow-hidden">
             <table className="w-full text-table">
               <thead>
-                <tr className="bg-gray-50">
-                  <th className="text-xs font-semibold text-gray-500 py-2.5 px-4 text-left w-24">
+                <tr className="bg-(--palette-surface-2)">
+                  <th className="text-xs font-semibold text-(--palette-gray-500) py-2.5 px-4 text-left w-24">
                     {t('factorForm.translations.columns.language')}
                   </th>
-                  <th className="text-xs font-semibold text-gray-500 py-2.5 px-4 text-left">
+                  <th className="text-xs font-semibold text-(--palette-gray-500) py-2.5 px-4 text-left">
                     {t('factorForm.translations.columns.factorName')}
                   </th>
-                  <th className="text-xs font-semibold text-gray-500 py-2.5 px-4 text-center w-16">
+                  <th className="text-xs font-semibold text-(--palette-gray-500) py-2.5 px-4 text-center w-16">
                     {t('factorForm.translations.columns.action')}
                   </th>
                 </tr>
@@ -495,9 +497,9 @@ const MarketComparableFactorListPage = () => {
                     availableLanguages.find(l => l.value === tr.language)?.label ?? tr.language;
                   const isEN = tr.language === 'en';
                   return (
-                    <tr key={tr.language} className="border-t border-gray-100">
+                    <tr key={tr.language} className="border-t border-(--palette-line-soft)">
                       <td className="py-2 px-4">
-                        <span className="text-xs font-semibold text-gray-600 bg-gray-100 rounded px-2 py-1">
+                        <span className="text-xs font-semibold text-(--palette-gray-600) bg-(--palette-surface-3) rounded px-2 py-1">
                           {tr.language}
                         </span>
                       </td>
@@ -512,7 +514,7 @@ const MarketComparableFactorListPage = () => {
                           aria-label={t('factorForm.translations.namePlaceholder', {
                             lang: langLabel,
                           })}
-                          className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                          className="w-full px-3 py-1.5 border border-(--palette-line) rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
                         />
                       </td>
                       <td className="py-2 px-4 text-center">
@@ -521,12 +523,12 @@ const MarketComparableFactorListPage = () => {
                             type="button"
                             onClick={() => setDeletingTranslationIndex(index)}
                             aria-label={t('common:actions.remove')}
-                            className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                            className="p-1 text-(--palette-gray-400) hover:text-red-500 transition-colors"
                           >
                             <Icon name="trash-can" style="regular" className="size-3.5" />
                           </button>
                         ) : (
-                          <span className="text-xs text-gray-400">
+                          <span className="text-xs text-(--palette-gray-400)">
                             {t('factorForm.translations.required')}
                           </span>
                         )}
@@ -545,11 +547,7 @@ const MarketComparableFactorListPage = () => {
               <Switch
                 checked={form.isActive}
                 onChange={checked => setForm(prev => ({ ...prev, isActive: checked }))}
-                label={
-                  form.isActive
-                    ? t('factors.status.active')
-                    : t('factors.status.inactive')
-                }
+                label={form.isActive ? t('factors.status.active') : t('factors.status.inactive')}
                 size="sm"
                 variant="status"
               />

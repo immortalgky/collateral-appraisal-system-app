@@ -143,10 +143,9 @@ const FieldHelp = ({ config, namePrefix = '', index }: FieldHelpProps) => {
         onClick={() => setOpen(o => !o)}
         className={clsx(
           'shrink-0 inline-flex items-center justify-center size-4 rounded-full border text-[10px] font-bold leading-none transition-colors',
-          'focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40',
           anyMet
             ? 'border-warning bg-warning/10 text-warning'
-            : 'border-gray-300 bg-white text-gray-400 hover:border-primary-500 hover:text-primary-500',
+            : 'border-(--palette-line-strong) bg-(--palette-surface) text-(--palette-gray-400) hover:border-primary-500 hover:text-primary-500',
         )}
       >
         ?
@@ -165,9 +164,9 @@ const FieldHelp = ({ config, namePrefix = '', index }: FieldHelpProps) => {
               left: position?.left ?? -9999,
               visibility: position ? 'visible' : 'hidden',
             }}
-            className="fixed z-50 max-w-[calc(100vw-1.5rem)] rounded-lg border border-gray-200 bg-white p-3 text-xs leading-relaxed text-gray-600 shadow-lg"
+            className="fixed z-50 max-w-[calc(100vw-1.5rem)] rounded-lg border border-(--palette-line) bg-(--palette-surface) p-3 text-xs leading-relaxed text-(--palette-gray-600) shadow-lg"
           >
-            <p className="mb-1.5 font-semibold text-gray-800">{config.title}</p>
+            <p className="mb-1.5 font-semibold text-(--palette-ink)">{config.title}</p>
 
             {config.lines?.map(line => (
               <p key={line} className="mb-1.5 last:mb-0">
@@ -176,16 +175,19 @@ const FieldHelp = ({ config, namePrefix = '', index }: FieldHelpProps) => {
             ))}
 
             {conditions.length > 0 && (
-              <ul className="mt-2 grid gap-1.5 border-t border-gray-100 pt-2">
+              <ul className="mt-2 grid gap-1.5 border-t border-(--palette-line-soft) pt-2">
                 {conditions.map((condition, i) => (
                   <li key={condition.text} className="grid grid-cols-[0.75rem_minmax(0,1fr)] gap-2">
                     <span
                       aria-hidden="true"
-                      className={clsx('font-bold', met[i] ? 'text-warning' : 'text-gray-300')}
+                      className={clsx(
+                        'font-bold',
+                        met[i] ? 'text-warning' : 'text-(--palette-gray-300)',
+                      )}
                     >
                       {met[i] ? '●' : '○'}
                     </span>
-                    <span className={met[i] ? 'text-gray-800' : 'text-gray-400'}>
+                    <span className={met[i] ? 'text-(--palette-ink)' : 'text-(--palette-gray-400)'}>
                       {condition.text}
                       <span className="sr-only">
                         {met[i] ? ' (เข้าเงื่อนไขนี้อยู่)' : ' (ยังไม่เข้าเงื่อนไข)'}
@@ -201,8 +203,8 @@ const FieldHelp = ({ config, namePrefix = '', index }: FieldHelpProps) => {
                 className={clsx(
                   'mt-2 rounded-md border px-2 py-1.5',
                   anyMet
-                    ? 'border-warning/30 bg-warning/10 text-warning-content'
-                    : 'border-gray-200 bg-gray-50 text-gray-600',
+                    ? 'border-warning/30 bg-warning/10 text-(--palette-warn)'
+                    : 'border-(--palette-line) bg-(--palette-surface-2) text-(--palette-gray-600)',
                 )}
               >
                 {anyMet ? config.whenMet : config.whenClear}

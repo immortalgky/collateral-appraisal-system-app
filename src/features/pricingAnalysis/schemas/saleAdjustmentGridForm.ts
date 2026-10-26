@@ -2,9 +2,10 @@ import type { SaleAdjustmentGrid } from '../types/saleAdjustmentGrid';
 import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
-// Static type-inference export (uses key-passthrough function — never an object)
-const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
+// The token `t`: messages are translated where they are shown, so the schema is built once.
+const _t = tokenT('pricingAnalysis');
 
 const ComparativeFactors = (t: TFunction<'pricingAnalysis'>) =>
   z
@@ -127,8 +128,9 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
       /** Qualitative section */
       saleAdjustmentGridQualitatives: z.array(SaleAdjustmentGridQualitative(t)),
       /** Calculation section */
-      saleAdjustmentGridCalculations: z.array(SaleAdjustmentGridCalculation(t)).superRefine(
-        (items, ctx) => {
+      saleAdjustmentGridCalculations: z
+        .array(SaleAdjustmentGridCalculation(t))
+        .superRefine((items, ctx) => {
           const total = items.reduce((sum, item) => sum + (item.weight ?? 0), 0);
           if (total > 1) {
             items.forEach((_, i) => {
@@ -139,8 +141,7 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
               });
             });
           }
-        },
-      ),
+        }),
       /** Adjustment Factors (adjust percentage) section */
       saleAdjustmentGridAdjustmentFactors: z.array(SaleAdjustmentGridAdjustmentFactor(t)),
       /** Final value section */
@@ -150,7 +151,7 @@ export const makeSaleAdjustmentGridDto = (t: TFunction<'pricingAnalysis'>) =>
     })
     .passthrough() as unknown as FormValidator<SaleAdjustmentGrid>;
 
-// Static schema for type inference only — no runtime messages
+// Built once with the token `t`; the panel resolves with it directly.
 export const SaleAdjustmentGridDto = makeSaleAdjustmentGridDto(_t);
 
 export type SaleAdjustmentGridCalculationFormType = z.infer<

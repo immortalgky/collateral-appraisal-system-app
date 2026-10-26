@@ -58,18 +58,22 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
 
   return (
     <>
-      <div className="rounded-xl border border-purple-200 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
+      <div className="rounded-xl border border-purple-200 dark:border-purple-500/30 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 bg-purple-50 dark:bg-purple-500/10 border-b border-purple-200 dark:border-purple-500/30">
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-              <Icon name="share-from-square" style="solid" className="size-4 text-purple-700" />
+            <div className="size-8 rounded-lg bg-purple-200 dark:bg-purple-500/30 flex items-center justify-center">
+              <Icon
+                name="share-from-square"
+                style="solid"
+                className="size-4 text-purple-700 dark:text-purple-300"
+              />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {t('shortlist.shortlistSentToRm')}
               </span>
               {quotation.shortlistSentToRmAt && (
-                <span className="ml-2 text-xs text-purple-700">
+                <span className="ml-2 text-xs text-purple-700 dark:text-purple-300">
                   {new Date(quotation.shortlistSentToRmAt).toLocaleString('th-TH')}
                 </span>
               )}
@@ -92,36 +96,40 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
         </div>
 
         {hasTentativeWinner && (
-          <div className="px-4 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center gap-2">
+          <div className="px-4 py-2 bg-indigo-50 dark:bg-indigo-500/10 border-b border-indigo-100 dark:border-indigo-500/20 flex items-center gap-2">
             <Icon name="circle-info" style="solid" className="size-4 text-indigo-500 shrink-0" />
-            <p className="text-xs text-indigo-700">{t('shortlist.recallDisabledHint')}</p>
+            <p className="text-xs text-indigo-700 dark:text-indigo-300">
+              {t('shortlist.recallDisabledHint')}
+            </p>
           </div>
         )}
 
         {/* RM negotiation recommendation */}
         {hasTentativeWinner && (quotation.rmRequestsNegotiation || quotation.rmNegotiationNote) && (
-          <div className="px-4 py-3 bg-orange-50 border-b border-orange-100">
+          <div className="px-4 py-3 bg-orange-50 dark:bg-orange-500/10 border-b border-orange-100 dark:border-orange-500/20">
             <div className="flex items-start gap-2">
               <Icon
                 name="comment-dots"
                 style="solid"
-                className="size-4 text-orange-600 shrink-0 mt-0.5"
+                className="size-4 text-orange-600 dark:text-orange-400 shrink-0 mt-0.5"
               />
               <div className="text-sm flex-1">
-                <div className="font-medium text-orange-900">
+                <div className="font-medium text-orange-900 dark:text-orange-200">
                   {t('negotiation.rmNegotiationRecommendation')}
                   {quotation.rmRequestsNegotiation && (
-                    <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-200 text-orange-800 uppercase tracking-wide">
+                    <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-200 dark:bg-orange-500/30 text-orange-800 dark:text-orange-300 uppercase tracking-wide">
                       {t('negotiation.negotiationRequested')}
                     </span>
                   )}
                 </div>
                 {quotation.rmNegotiationNote ? (
-                  <p className="mt-1 text-orange-800 whitespace-pre-wrap">
+                  <p className="mt-1 text-orange-800 dark:text-orange-300 whitespace-pre-wrap">
                     {quotation.rmNegotiationNote}
                   </p>
                 ) : (
-                  <p className="mt-1 text-orange-700 italic">{t('negotiation.noNoteProvided')}</p>
+                  <p className="mt-1 text-orange-700 dark:text-orange-300 italic">
+                    {t('negotiation.noNoteProvided')}
+                  </p>
                 )}
               </div>
             </div>
@@ -131,26 +139,26 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.company')}
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.totalFeeAmount')}
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.totalDiscount')}
                 </th>
-                <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.totalNetAmount')}
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.totalEstimateManday')}
                 </th>
-                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.submittedAt')}
                 </th>
-                <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                   {t('columns.status')}
                 </th>
                 <th
@@ -159,7 +167,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                 />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {shortlisted.map(cq => {
                 const items = cq.items ?? [];
                 const hasItems = items.length > 0;
@@ -181,17 +189,18 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                   <tr
                     key={cq.id}
                     className={clsx(
-                      'transition-colors hover:bg-gray-50',
-                      quotation.tentativeWinnerQuotationId === cq.id && 'bg-indigo-50',
+                      'transition-colors hover:bg-(--palette-surface-2)',
+                      quotation.tentativeWinnerQuotationId === cq.id &&
+                        'bg-indigo-50 dark:bg-indigo-500/10',
                     )}
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-(--palette-ink)">
                           {localizeCompanyName(cq.companyName, cq.companyNameLocal)}
                         </span>
                         {quotation.tentativeWinnerQuotationId === cq.id && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-indigo-100 text-indigo-700 font-medium">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 font-medium">
                             <Icon name="crown" style="solid" className="size-3" />
                             {t('shortlist.tentativeWinner')}
                           </span>
@@ -199,22 +208,22 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-sm text-gray-700 tabular-nums">
+                      <span className="text-sm text-(--palette-ink) tabular-nums">
                         {hasItems ? formatCurrency(totalFeeAmount) : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-sm text-gray-700 tabular-nums">
+                      <span className="text-sm text-(--palette-ink) tabular-nums">
                         {hasItems ? formatCurrency(totalDiscount) : '—'}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                      <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                         {formatCurrency(cq.totalQuotedPrice)}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className="text-sm text-gray-600">
+                      <span className="text-sm text-(--palette-gray-600)">
                         {minEstimateManday !== undefined && maxEstimateManday !== undefined
                           ? minEstimateManday === maxEstimateManday
                             ? minEstimateManday
@@ -223,7 +232,9 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-sm text-gray-600">{fmtDateTime(cq.submittedAt)}</span>
+                      <span className="text-sm text-(--palette-gray-600)">
+                        {fmtDateTime(cq.submittedAt)}
+                      </span>
                     </td>
                     <td className="px-4 py-3 text-center">
                       <QuotationStatusBadge status={cq.status} />
@@ -245,7 +256,7 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
                               company: localizeCompanyName(cq.companyName, cq.companyNameLocal),
                             })}
                             onClick={() => setDrawerCompanyQuotationId(cq.id)}
-                            className="p-1 rounded hover:bg-gray-100 transition-colors"
+                            className="p-1 rounded hover:bg-(--palette-surface-3) transition-colors"
                           >
                             <Icon
                               name="file-lines"
@@ -260,7 +271,10 @@ const ShortlistSentPanel = ({ quotation }: ShortlistSentPanelProps) => {
               })}
               {shortlisted.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-gray-500">
+                  <td
+                    colSpan={8}
+                    className="px-4 py-6 text-center text-sm text-(--palette-gray-500)"
+                  >
                     {t('empty.noShortlisted')}
                   </td>
                 </tr>

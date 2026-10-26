@@ -47,7 +47,7 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
     <>
       <div
         className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-          pinnable ? 'hover:bg-gray-50 cursor-pointer' : 'cursor-default'
+          pinnable ? 'hover:bg-(--palette-surface-2) cursor-pointer' : 'cursor-default'
         }`}
         style={{ paddingLeft: `${depth * 16 + 12}px` }}
         onClick={pinnable ? () => onToggle(node.id) : undefined}
@@ -72,7 +72,7 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
               e.stopPropagation();
               setExpanded(v => !v);
             }}
-            className="flex-shrink-0 text-gray-400 hover:text-gray-600 w-4"
+            className="flex-shrink-0 text-(--palette-gray-400) hover:text-(--palette-gray-600) w-4"
             aria-label={expanded ? t('favorites.aria.collapse') : t('favorites.aria.expand')}
           >
             <Icon
@@ -92,7 +92,7 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
             checked={checked.has(node.id)}
             onChange={() => onToggle(node.id)}
             onClick={e => e.stopPropagation()}
-            className="size-3.5 flex-shrink-0 accent-primary rounded border-gray-300 cursor-pointer"
+            className="size-3.5 flex-shrink-0 accent-primary rounded border-(--palette-line-strong) cursor-pointer"
           />
         ) : (
           <span className="size-3.5 flex-shrink-0" />
@@ -105,14 +105,16 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
           <Icon
             name={node.iconName}
             style={node.iconStyle}
-            className={`size-3 ${node.iconColor ?? 'text-gray-500'}`}
+            className={`size-3 ${node.iconColor ?? 'text-(--palette-gray-500)'}`}
           />
         </div>
 
         {/* Label */}
         <span
           className={`text-xs flex-1 min-w-0 truncate ${
-            pinnable ? 'text-gray-700 font-medium' : 'text-gray-500 font-semibold'
+            pinnable
+              ? 'text-(--palette-ink) font-medium'
+              : 'text-(--palette-gray-500) font-semibold'
           }`}
         >
           {label}
@@ -120,7 +122,7 @@ function TreeNodeRow({ node, checked, onToggle, lang, depth = 0 }: TreeNodeRowPr
 
         {/* "Folder" badge for non-pinnable parents */}
         {!pinnable && hasChildren && (
-          <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded flex-shrink-0">
+          <span className="text-[10px] text-(--palette-gray-400) bg-(--palette-surface-3) px-1.5 py-0.5 rounded flex-shrink-0">
             {t('favorites.picker.folderBadge')}
           </span>
         )}
@@ -201,19 +203,19 @@ export function FavoritesPickerModal({
         <Icon
           style="solid"
           name="magnifying-glass"
-          className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
         />
         <input
           type="text"
           placeholder={t('favorites.picker.searchPlaceholder')}
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+          className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
         />
         {search && (
           <button
             onClick={() => setSearch('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
           >
             <Icon style="solid" name="xmark" className="size-3.5" />
           </button>
@@ -221,7 +223,7 @@ export function FavoritesPickerModal({
       </div>
 
       {/* Tree */}
-      <div className="overflow-y-auto max-h-96 rounded-lg border border-gray-100">
+      <div className="overflow-y-auto max-h-96 rounded-lg border border-(--palette-line-soft)">
         {filteredMain.length > 0 ? (
           <div className="py-1">
             {filteredMain.map(node => (
@@ -236,21 +238,21 @@ export function FavoritesPickerModal({
           </div>
         ) : (
           <div className="py-12 text-center">
-            <p className="text-sm text-gray-400">{t('status.noData')}</p>
+            <p className="text-sm text-(--palette-gray-400)">{t('status.noData')}</p>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-        <span className="text-xs text-gray-400">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-(--palette-line-soft)">
+        <span className="text-xs text-(--palette-gray-400)">
           {checked.size} {t('favorites.picker.selected')}
         </span>
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleClose}
-            className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm text-(--palette-gray-600) border border-(--palette-line) rounded-lg hover:bg-(--palette-surface-2) transition-colors"
           >
             {t('actions.cancel')}
           </button>

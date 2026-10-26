@@ -15,23 +15,23 @@ import type {
 const statusConfig: Record<ReappraisalUnitStatus, { dot: string; text: string; badge: string }> = {
   Sold: {
     dot: 'bg-blue-500',
-    text: 'text-blue-700',
-    badge: 'bg-blue-50 text-blue-700',
+    text: 'text-blue-700 dark:text-blue-300',
+    badge: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
   },
   NewlySold: {
     dot: 'bg-cyan-500',
-    text: 'text-cyan-700',
-    badge: 'bg-cyan-50 text-cyan-700',
+    text: 'text-cyan-700 dark:text-cyan-300',
+    badge: 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-300',
   },
   Available: {
     dot: 'bg-amber-500',
-    text: 'text-amber-700',
-    badge: 'bg-amber-50 text-amber-700',
+    text: 'text-(--palette-warn)',
+    badge: 'bg-(--palette-warn-wash) text-(--palette-warn)',
   },
   MatchDifference: {
     dot: 'bg-red-500',
-    text: 'text-red-700',
-    badge: 'bg-red-50 text-red-700',
+    text: 'text-(--palette-req)',
+    badge: 'bg-(--palette-req-wash) text-(--palette-req)',
   },
 };
 
@@ -65,10 +65,10 @@ function SummaryCard({ label, count, dotColor, unitLabel }: SummaryCardProps) {
     <div className="flex-1 flex flex-col items-center gap-1 px-3 py-3">
       <div className="flex items-center gap-1.5 mb-0.5">
         <span className={clsx('size-2 rounded-full shrink-0', dotColor)} />
-        <span className="text-xs text-gray-500 whitespace-nowrap">{label}</span>
+        <span className="text-xs text-(--palette-gray-500) whitespace-nowrap">{label}</span>
       </div>
-      <span className="text-xl font-bold text-gray-900">{count.toLocaleString()}</span>
-      <span className="text-[10px] text-gray-400">{unitLabel}</span>
+      <span className="text-xl font-bold text-(--palette-ink)">{count.toLocaleString()}</span>
+      <span className="text-[10px] text-(--palette-gray-400)">{unitLabel}</span>
     </div>
   );
 }
@@ -99,12 +99,12 @@ function Cell({
       className={clsx(
         'py-2 px-3 text-xs',
         align === 'right' && 'text-right',
-        isDiff ? 'text-red-600 font-medium' : 'text-gray-800',
+        isDiff ? 'text-(--palette-danger) font-medium' : 'text-(--palette-ink)',
       )}
     >
       {isDiff && incoming !== undefined ? (
         <span className="inline-flex items-center gap-1 whitespace-nowrap">
-          <span className="text-gray-400 line-through">{value ?? '-'}</span>
+          <span className="text-(--palette-gray-400) line-through">{value ?? '-'}</span>
           <span aria-hidden="true">&rarr;</span>
           <span>
             {typeof incoming === 'number' ? incoming.toLocaleString() : (incoming ?? '-')}
@@ -123,41 +123,44 @@ function CondoTable({ units }: { units: ReappraisalPreviewUnit[] }) {
   const { t } = useTranslation('blockProject');
   return (
     <table className="w-full text-xs">
-      <thead className="bg-gray-50 sticky top-0">
+      <thead className="bg-(--palette-surface-2) sticky top-0">
         <tr>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.sqNo')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitVerification.cols.status')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.floor')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.towerName')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-            {t('unitListing.cols.regNumber')}
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
+            {t('condoUnitsPrice.cols.roomNumber')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-            {t('unitListing.cols.roomNo')}
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
+            {t('condoUnitsPrice.cols.unitNo')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.modelType')}
           </th>
-          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.usableAreaSqm')}
           </th>
-          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-right py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.sellingPriceBaht')}
           </th>
         </tr>
       </thead>
       <tbody>
         {units.map(unit => (
-          <tr key={unit.id} className="border-b border-gray-100 hover:bg-gray-50">
-            <td className="py-2 px-3 text-xs text-gray-600">{unit.sequenceNumber}</td>
+          <tr
+            key={unit.id}
+            className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2)"
+          >
+            <td className="py-2 px-3 text-xs text-(--palette-gray-600)">{unit.sequenceNumber}</td>
             <td className="py-2 px-3">
               <StatusBadge status={unit.status} />
             </td>
@@ -212,47 +215,70 @@ function CondoTable({ units }: { units: ReappraisalPreviewUnit[] }) {
   );
 }
 
-// ── LandAndBuilding table ─────────────────────────────────────────────────────
+// ── LandAndBuilding / Land table ──────────────────────────────────────────────
 
-function LandAndBuildingTable({ units }: { units: ReappraisalPreviewUnit[] }) {
+// Land and Building (Construction) (L) is appraised as land only: the plot, its land and its price,
+// with no model, building floors or usable area. The server flags a row on those fields all the
+// same (it compares every non-condo unit alike), so a hidden column appears as soon as any row
+// differs in it; otherwise a "ข้อมูลไม่ตรง" row would show nothing that differs.
+function LandAndBuildingTable({
+  units,
+  landOnly,
+}: {
+  units: ReappraisalPreviewUnit[];
+  landOnly: boolean;
+}) {
   const { t } = useTranslation('blockProject');
+  const shows = (field: string) => !landOnly || units.some(u => u.diffFields.includes(field));
+  const showModel = shows('modelType');
+  const showFloors = shows('numberOfFloors');
+  const showUsable = shows('usableArea');
   return (
     <table className="w-full text-xs">
-      <thead className="bg-gray-50 sticky top-0">
+      <thead className="bg-(--palette-surface-2) sticky top-0">
         <tr>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.sqNo')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitVerification.cols.status')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.plotNo')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.houseNo')}
           </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-            {t('unitListing.cols.modelName')}
-          </th>
-          <th className="text-xs text-left py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-            {t('unitListing.cols.numFloors')}
-          </th>
-          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          {showModel && (
+            <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
+              {t('unitListing.cols.modelName')}
+            </th>
+          )}
+          {showFloors && (
+            <th className="text-xs text-left py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
+              {t('unitListing.cols.numFloors')}
+            </th>
+          )}
+          <th className="text-xs text-right py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.landAreaSqWa')}
           </th>
-          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
-            {t('unitListing.cols.usableAreaSqm')}
-          </th>
-          <th className="text-xs text-right py-2.5 px-3 text-gray-500 font-semibold whitespace-nowrap">
+          {showUsable && (
+            <th className="text-xs text-right py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
+              {t('unitListing.cols.usableAreaSqm')}
+            </th>
+          )}
+          <th className="text-xs text-right py-2.5 px-3 text-(--palette-gray-500) font-semibold whitespace-nowrap">
             {t('unitListing.cols.sellingPriceBaht')}
           </th>
         </tr>
       </thead>
       <tbody>
         {units.map(unit => (
-          <tr key={unit.id} className="border-b border-gray-100 hover:bg-gray-50">
-            <td className="py-2 px-3 text-xs text-gray-600">{unit.sequenceNumber}</td>
+          <tr
+            key={unit.id}
+            className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2)"
+          >
+            <td className="py-2 px-3 text-xs text-(--palette-gray-600)">{unit.sequenceNumber}</td>
             <td className="py-2 px-3">
               <StatusBadge status={unit.status} />
             </td>
@@ -268,18 +294,22 @@ function LandAndBuildingTable({ units }: { units: ReappraisalPreviewUnit[] }) {
               diffFields={unit.diffFields}
               incomingValues={unit.incomingValues}
             />
-            <Cell
-              value={unit.modelType}
-              fieldName="modelType"
-              diffFields={unit.diffFields}
-              incomingValues={unit.incomingValues}
-            />
-            <Cell
-              value={unit.numberOfFloors}
-              fieldName="numberOfFloors"
-              diffFields={unit.diffFields}
-              incomingValues={unit.incomingValues}
-            />
+            {showModel && (
+              <Cell
+                value={unit.modelType}
+                fieldName="modelType"
+                diffFields={unit.diffFields}
+                incomingValues={unit.incomingValues}
+              />
+            )}
+            {showFloors && (
+              <Cell
+                value={unit.numberOfFloors}
+                fieldName="numberOfFloors"
+                diffFields={unit.diffFields}
+                incomingValues={unit.incomingValues}
+              />
+            )}
             <Cell
               value={unit.landArea?.toLocaleString()}
               fieldName="landArea"
@@ -287,13 +317,15 @@ function LandAndBuildingTable({ units }: { units: ReappraisalPreviewUnit[] }) {
               incomingValues={unit.incomingValues}
               align="right"
             />
-            <Cell
-              value={unit.usableArea?.toLocaleString()}
-              fieldName="usableArea"
-              diffFields={unit.diffFields}
-              incomingValues={unit.incomingValues}
-              align="right"
-            />
+            {showUsable && (
+              <Cell
+                value={unit.usableArea?.toLocaleString()}
+                fieldName="usableArea"
+                diffFields={unit.diffFields}
+                incomingValues={unit.incomingValues}
+                align="right"
+              />
+            )}
             <Cell
               value={unit.sellingPrice?.toLocaleString()}
               fieldName="sellingPrice"
@@ -325,68 +357,106 @@ function AddedUnitsTable({
   const { t } = useTranslation('blockProject');
   const condo = isCondo(projectType);
 
-  const headers = condo
-    ? [
-        { key: 'floor', label: t('unitListing.cols.floor'), align: 'left' as const },
-        { key: 'towerName', label: t('unitListing.cols.towerName'), align: 'left' as const },
-        { key: 'regNumber', label: t('unitListing.cols.regNumber'), align: 'left' as const },
-        { key: 'roomNo', label: t('unitListing.cols.roomNo'), align: 'left' as const },
-        { key: 'modelType', label: t('unitListing.cols.modelType'), align: 'left' as const },
-        { key: 'usableArea', label: t('unitListing.cols.usableAreaSqm'), align: 'right' as const },
-        {
-          key: 'sellingPrice',
-          label: t('unitListing.cols.sellingPriceBaht'),
-          align: 'right' as const,
-        },
-      ]
-    : [
-        { key: 'plotNo', label: t('unitListing.cols.plotNo'), align: 'left' as const },
-        { key: 'houseNo', label: t('unitListing.cols.houseNo'), align: 'left' as const },
-        { key: 'modelName', label: t('unitListing.cols.modelName'), align: 'left' as const },
-        { key: 'numFloors', label: t('unitListing.cols.numFloors'), align: 'left' as const },
-        { key: 'landArea', label: t('unitListing.cols.landAreaSqWa'), align: 'right' as const },
-        { key: 'usableArea', label: t('unitListing.cols.usableAreaSqm'), align: 'right' as const },
-        {
-          key: 'sellingPrice',
-          label: t('unitListing.cols.sellingPriceBaht'),
-          align: 'right' as const,
-        },
-      ];
+  type Column = {
+    key: string;
+    label: string;
+    align: 'left' | 'right';
+    value: (u: ReappraisalAddedUnit) => React.ReactNode;
+  };
+  const price: Column = {
+    key: 'sellingPrice',
+    label: t('unitListing.cols.sellingPriceBaht'),
+    align: 'right',
+    value: u => u.sellingPrice?.toLocaleString(),
+  };
+  const usableArea: Column = {
+    key: 'usableArea',
+    label: t('unitListing.cols.usableAreaSqm'),
+    align: 'right',
+    value: u => u.usableArea?.toLocaleString(),
+  };
+  const plot: Column[] = [
+    { key: 'plotNo', label: t('unitListing.cols.plotNo'), align: 'left', value: u => u.plotNumber },
+    {
+      key: 'houseNo',
+      label: t('unitListing.cols.houseNo'),
+      align: 'left',
+      value: u => u.houseNumber,
+    },
+  ];
+  const landArea: Column = {
+    key: 'landArea',
+    label: t('unitListing.cols.landAreaSqWa'),
+    align: 'right',
+    value: u => u.landArea?.toLocaleString(),
+  };
 
-  const cellsFor = (u: ReappraisalAddedUnit): React.ReactNode[] =>
-    condo
-      ? [
-          u.floor,
-          u.towerName,
-          u.condoRegistrationNumber,
-          u.roomNumber,
-          u.modelType,
-          u.usableArea?.toLocaleString(),
-          u.sellingPrice?.toLocaleString(),
-        ]
+  // L (Land and Building (Construction)): the plot, its land and its price. No model, building
+  // floors or usable area.
+  const columns: Column[] = condo
+    ? [
+        { key: 'floor', label: t('unitListing.cols.floor'), align: 'left', value: u => u.floor },
+        {
+          key: 'towerName',
+          label: t('unitListing.cols.towerName'),
+          align: 'left',
+          value: u => u.towerName,
+        },
+        {
+          key: 'regNumber',
+          label: t('condoUnitsPrice.cols.roomNumber'),
+          align: 'left',
+          value: u => u.condoRegistrationNumber,
+        },
+        {
+          key: 'roomNo',
+          label: t('condoUnitsPrice.cols.unitNo'),
+          align: 'left',
+          value: u => u.roomNumber,
+        },
+        {
+          key: 'modelType',
+          label: t('unitListing.cols.modelType'),
+          align: 'left',
+          value: u => u.modelType,
+        },
+        usableArea,
+        price,
+      ]
+    : projectType === 'L'
+      ? [...plot, landArea, price]
       : [
-          u.plotNumber,
-          u.houseNumber,
-          u.modelType,
-          u.numberOfFloors,
-          u.landArea?.toLocaleString(),
-          u.usableArea?.toLocaleString(),
-          u.sellingPrice?.toLocaleString(),
+          ...plot,
+          {
+            key: 'modelName',
+            label: t('unitListing.cols.modelName'),
+            align: 'left',
+            value: u => u.modelType,
+          },
+          {
+            key: 'numFloors',
+            label: t('unitListing.cols.numFloors'),
+            align: 'left',
+            value: u => u.numberOfFloors,
+          },
+          landArea,
+          usableArea,
+          price,
         ];
 
   return (
     <table className="w-full text-xs">
-      <thead className="bg-emerald-50 sticky top-0">
+      <thead className="bg-emerald-50 dark:bg-emerald-500/10 sticky top-0">
         <tr>
-          {headers.map(h => (
+          {columns.map(c => (
             <th
-              key={h.key}
+              key={c.key}
               className={clsx(
-                'py-2.5 px-3 text-emerald-800 font-medium whitespace-nowrap',
-                h.align === 'right' ? 'text-right' : 'text-left',
+                'py-2.5 px-3 text-emerald-800 dark:text-emerald-300 font-medium whitespace-nowrap',
+                c.align === 'right' ? 'text-right' : 'text-left',
               )}
             >
-              {h.label}
+              {c.label}
             </th>
           ))}
         </tr>
@@ -395,17 +465,17 @@ function AddedUnitsTable({
         {units.map((unit, i) => (
           <tr
             key={`${unit.roomNumber ?? unit.plotNumber ?? 'added'}-${i}`}
-            className="border-b border-gray-100 hover:bg-gray-50"
+            className="border-b border-(--palette-line-soft) hover:bg-(--palette-surface-2)"
           >
-            {cellsFor(unit).map((value, ci) => (
+            {columns.map(c => (
               <td
-                key={headers[ci].key}
+                key={c.key}
                 className={clsx(
-                  'py-2 px-3 text-xs text-gray-800',
-                  headers[ci].align === 'right' && 'text-right',
+                  'py-2 px-3 text-xs text-(--palette-ink)',
+                  c.align === 'right' && 'text-right',
                 )}
               >
-                {value ?? '-'}
+                {c.value(unit) ?? '-'}
               </td>
             ))}
           </tr>
@@ -450,13 +520,13 @@ export default function UnitVerificationDialog({
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={t('unitVerification.title')} size="3xl">
       {/* Summary row */}
-      <div className="rounded-lg border border-gray-200 bg-gray-50 mb-4">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2) mb-4">
         <div className="px-4 pt-3 pb-1">
-          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+          <span className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide">
             {t('unitVerification.resultLabel')}
           </span>
         </div>
-        <div className="flex divide-x divide-gray-200">
+        <div className="flex divide-x divide-(--palette-line)">
           <SummaryCard
             label={t('unitVerification.summary.total')}
             count={summary.total}
@@ -497,11 +567,11 @@ export default function UnitVerificationDialog({
       </div>
 
       {/* Units table */}
-      <div className="overflow-auto max-h-[50vh] rounded-lg border border-gray-200">
+      <div className="overflow-auto max-h-[50vh] rounded-lg border border-(--palette-line)">
         {isCondo(projectType) ? (
           <CondoTable units={units} />
         ) : (
-          <LandAndBuildingTable units={units} />
+          <LandAndBuildingTable units={units} landOnly={projectType === 'L'} />
         )}
       </div>
 
@@ -510,18 +580,18 @@ export default function UnitVerificationDialog({
         <div className="mt-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="size-2 rounded-full bg-emerald-500 shrink-0" />
-            <span className="text-xs font-semibold text-gray-700">
+            <span className="text-xs font-semibold text-(--palette-ink)">
               {t('unitVerification.addedSectionLabel', { count: addedUnits.length })}
             </span>
           </div>
-          <div className="overflow-auto max-h-[30vh] rounded-lg border border-emerald-200">
+          <div className="overflow-auto max-h-[30vh] rounded-lg border border-emerald-200 dark:border-emerald-500/30">
             <AddedUnitsTable units={addedUnits} projectType={projectType} />
           </div>
         </div>
       )}
 
       {/* Footer */}
-      <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-gray-200">
+      <div className="flex items-center justify-between gap-4 mt-4 pt-4 border-t border-(--palette-line)">
         <div>
           {needsConfirm && (
             <label className="flex items-start gap-2 cursor-pointer">
@@ -529,9 +599,9 @@ export default function UnitVerificationDialog({
                 type="checkbox"
                 checked={confirmed}
                 onChange={e => setConfirmed(e.target.checked)}
-                className="mt-0.5 size-4 shrink-0 rounded border-gray-300 text-primary focus:ring-primary"
+                className="mt-0.5 size-4 shrink-0 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary"
               />
-              <span className="text-xs text-gray-700">
+              <span className="text-xs text-(--palette-ink)">
                 {t('unitVerification.confirmChanges', {
                   changed: summary.matchDifference,
                   added: addedUnits.length,
@@ -544,7 +614,7 @@ export default function UnitVerificationDialog({
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-(--palette-ink) bg-(--palette-surface) border border-(--palette-line-strong) rounded-lg hover:bg-(--palette-surface-2) transition-colors"
           >
             {t('unitVerification.cancel')}
           </button>

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import clsx from 'clsx';
 import Icon from '@shared/components/Icon';
 import ActionBar from '@shared/components/ActionBar';
@@ -27,13 +28,19 @@ import { nextSort, type SortDir } from '../tableSort';
 
 const EFFECTIVE_BADGE = {
   editable: {
-    cls: 'bg-emerald-50 text-emerald-700',
+    cls: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
     labelKey: 'activityOverrides.effective.editable',
   },
-  readonly: { cls: 'bg-amber-50 text-amber-700', labelKey: 'activityOverrides.effective.readonly' },
-  hidden: { cls: 'bg-gray-100 text-gray-500', labelKey: 'activityOverrides.effective.hidden' },
+  readonly: {
+    cls: 'bg-(--palette-warn-wash) text-(--palette-warn)',
+    labelKey: 'activityOverrides.effective.readonly',
+  },
+  hidden: {
+    cls: 'bg-(--palette-surface-3) text-(--palette-gray-500)',
+    labelKey: 'activityOverrides.effective.hidden',
+  },
   noRoleAccess: {
-    cls: 'bg-red-50 text-red-600',
+    cls: 'bg-(--palette-req-wash) text-(--palette-danger)',
     labelKey: 'activityOverrides.effective.noRoleAccess',
   },
 } as const satisfies Record<EffectiveState, { cls: string; labelKey: string }>;
@@ -228,11 +235,11 @@ export function ActivityOverridesPanel() {
       {/* Header: activity picker + summary */}
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex-1 min-w-[16rem] max-w-md">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
             {t('activityOverrides.activityLabel')}
           </label>
-          <select
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <NativeSelect
+            className="w-full"
             value={activityId ?? ''}
             onChange={e => requestActivityChange(e.target.value || null)}
             disabled={isLoadingActivities}
@@ -246,16 +253,16 @@ export function ActivityOverridesPanel() {
                 {a.label} — {a.activityId}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         {/* Preview-as-role */}
         <div className="flex-1 min-w-[14rem] max-w-xs">
-          <label className="block text-xs font-medium text-gray-600 mb-1">
+          <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
             {t('activityOverrides.previewAsRole')}
           </label>
-          <select
-            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <NativeSelect
+            className="w-full"
             value={roleId ?? ''}
             onChange={e => setRoleId(e.target.value || null)}
           >
@@ -265,18 +272,18 @@ export function ActivityOverridesPanel() {
                 {r.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         {data && (
-          <div className="pb-2 text-xs text-gray-500">
+          <div className="pb-2 text-xs text-(--palette-gray-500)">
             {t('activityOverrides.summary', { restricted: restrictedCount, inherit: inheritCount })}
           </div>
         )}
       </div>
 
       {data && activeActivity && (
-        <p className="text-xs text-gray-500">{t('activityOverrides.overridesHint')}</p>
+        <p className="text-xs text-(--palette-gray-500)">{t('activityOverrides.overridesHint')}</p>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
@@ -288,20 +295,20 @@ export function ActivityOverridesPanel() {
               <Icon
                 name="magnifying-glass"
                 style="solid"
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400"
+                className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400)"
               />
               <input
                 type="text"
                 value={filterText}
                 onChange={e => setFilterText(e.target.value)}
                 placeholder={t('activityOverrides.filter.search')}
-                className="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                className="w-full rounded-lg border border-(--palette-line-strong) pl-9 pr-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-            <label className="flex items-center gap-1.5 text-xs text-gray-600 select-none">
+            <label className="flex items-center gap-1.5 text-xs text-(--palette-gray-600) select-none">
               <input
                 type="checkbox"
-                className="size-3.5 rounded border-gray-300 text-primary focus:ring-primary"
+                className="size-3.5 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary"
                 checked={onlyRestricted}
                 onChange={e => setOnlyRestricted(e.target.checked)}
               />
@@ -311,42 +318,44 @@ export function ActivityOverridesPanel() {
               <button
                 type="button"
                 onClick={() => bulkSet('hidden')}
-                className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-(--palette-line) px-2 py-1 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
               >
                 {t('activityOverrides.bulk.hideAll')}
               </button>
               <button
                 type="button"
                 onClick={() => bulkSet('readonly')}
-                className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-(--palette-line) px-2 py-1 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
               >
                 {t('activityOverrides.bulk.readonlyAll')}
               </button>
               <button
                 type="button"
                 onClick={() => bulkSet('inherit')}
-                className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-600 hover:bg-gray-50"
+                className="rounded-md border border-(--palette-line) px-2 py-1 text-xs text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
               >
                 {t('activityOverrides.bulk.resetAll')}
               </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) overflow-hidden">
             {isLoading && (
               <div className="flex items-center justify-center py-16">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-(--palette-line) border-t-primary" />
               </div>
             )}
 
             {isError && (
               <div className="flex flex-col items-center justify-center py-16 gap-3">
                 <Icon name="triangle-exclamation" style="solid" className="size-10 text-red-400" />
-                <p className="text-sm text-gray-500">{t('errors.failedToLoadOverrides')}</p>
+                <p className="text-sm text-(--palette-gray-500)">
+                  {t('errors.failedToLoadOverrides')}
+                </p>
                 <button
                   type="button"
                   onClick={() => refetch()}
-                  className="text-sm text-primary hover:underline"
+                  className="text-sm text-(--palette-primary-text) hover:underline"
                 >
                   {t('common:actions.retry')}
                 </button>
@@ -355,7 +364,7 @@ export function ActivityOverridesPanel() {
 
             {!isLoading && !isError && data && (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200 text-gray-600 font-medium">
+                <thead className="bg-(--palette-surface-2) border-b border-(--palette-line) text-(--palette-gray-600) font-medium">
                   <tr>
                     <SortableTh
                       label={t('activityOverrides.columns.appraisalMenu')}
@@ -385,22 +394,25 @@ export function ActivityOverridesPanel() {
                     return (
                       <tr
                         key={row.menuItemId}
-                        className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50/70 transition-colors"
+                        className="border-b border-(--palette-line-soft) last:border-b-0 hover:bg-(--palette-surface-2)/70 transition-colors"
                       >
                         <td className="px-4 py-2.5">
                           <div className="flex items-center gap-2.5">
                             {meta && (
-                              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-gray-50">
+                              <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-(--palette-surface-2)">
                                 <Icon
                                   name={meta.iconName}
                                   style={meta.iconStyle}
-                                  className={clsx('size-3.5', meta.iconColor ?? 'text-gray-500')}
+                                  className={clsx(
+                                    'size-3.5',
+                                    meta.iconColor ?? 'text-(--palette-gray-500)',
+                                  )}
                                 />
                               </div>
                             )}
                             <div className="min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="text-gray-900">{row.label}</span>
+                                <span className="text-(--palette-ink)">{row.label}</span>
                                 {touched && (
                                   <span
                                     className="size-1.5 rounded-full bg-amber-500"
@@ -408,7 +420,7 @@ export function ActivityOverridesPanel() {
                                   />
                                 )}
                               </div>
-                              <span className="text-gray-400 font-mono text-[11px]">
+                              <span className="text-(--palette-gray-400) font-mono text-[11px]">
                                 {row.itemKey}
                               </span>
                             </div>
@@ -435,13 +447,13 @@ export function ActivityOverridesPanel() {
                                 {t(badge.labelKey)}
                               </span>
                               {noEffect && (
-                                <span className="text-[10px] text-gray-400">
+                                <span className="text-[10px] text-(--palette-gray-400)">
                                   {t('activityOverrides.effective.roleNote')}
                                 </span>
                               )}
                             </div>
                           ) : (
-                            <span className="text-[11px] text-gray-300">—</span>
+                            <span className="text-[11px] text-(--palette-gray-300)">—</span>
                           )}
                         </td>
                       </tr>
@@ -449,7 +461,10 @@ export function ActivityOverridesPanel() {
                   })}
                   {filteredRows.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="px-4 py-10 text-center text-sm text-gray-400">
+                      <td
+                        colSpan={3}
+                        className="px-4 py-10 text-center text-sm text-(--palette-gray-400)"
+                      >
                         {t('activityOverrides.preview.empty')}
                       </td>
                     </tr>
@@ -474,7 +489,7 @@ export function ActivityOverridesPanel() {
           <ActionBar.Left>
             <ActionBar.UnsavedIndicator show={isDirty} />
             {isDirty && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-(--palette-gray-500)">
                 {t('activityOverrides.unsavedCount', { count: changeCount })}
               </span>
             )}
@@ -484,7 +499,7 @@ export function ActivityOverridesPanel() {
               type="button"
               onClick={() => setDraft({})}
               disabled={!isDirty || updateMutation.isPending}
-              className="px-4 py-2 text-sm font-medium rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="px-4 py-2 text-sm font-medium rounded-lg border border-(--palette-line) text-(--palette-ink) hover:bg-(--palette-surface-2) disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {t('activityOverrides.actions.discard')}
             </button>

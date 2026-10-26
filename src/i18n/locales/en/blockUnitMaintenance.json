@@ -35,6 +35,7 @@
     "title": "Block Unit Maintenance",
     "subtitle": "Update sale status, purchase method, and financing bank for each unit",
     "backToList": "Back",
+    "idLabel": "ID",
     "sold": "Sold",
     "available": "Available",
     "noSold": "No units sold yet",

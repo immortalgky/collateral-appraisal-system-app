@@ -1,8 +1,9 @@
-import i18n from 'i18next';
 import { z } from 'zod';
 import { buildFormSchema } from '@/shared/components/form';
+import { tokenT, vmsg } from '@/shared/components/form/validationMessage';
 import { isBlankRow } from '../components/tables/formTableUtils';
 import { PROPERTY_COLUMNS } from '../configs/tableColumns';
+import { MOVABLE_CODES } from '../data/mapCollateral';
 import {
   allRequestFields,
   CONDO_TYPES,
@@ -10,7 +11,6 @@ import {
   titlesFieldConfig,
 } from '../configs/fields';
 import type { TFunction } from 'i18next';
-import { useTranslation } from 'react-i18next';
 
 // =============================================================================
 // Static schema (used at module level — no i18n, labels are for schema builder)
@@ -56,7 +56,7 @@ function makeRequestDetailDto(t: TFunction<'request'>) {
     // when copying a prior appraisal — display-only, never user-editable.
     inspectionNumber: z.number().nullish(),
     address: z.object({
-      houseNumber: z.string().max(10).min(1, t('validation.houseNumberRequired')),
+      houseNumber: z.string().max(50).min(1, t('validation.houseNumberRequired')),
       projectName: z.string().max(100).nullable(),
       moo: z.string().max(10).nullable(),
       soi: z.string().max(100).nullable(),
@@ -104,16 +104,16 @@ function makeRequestPropertyDto(t: TFunction<'request'>) {
 
 const AddressDto = z
   .object({
-    houseNumber: z.string().max(10),
+    houseNumber: z.string().max(50),
     projectName: z.string().nullable(),
     moo: z.string().nullable(),
     soi: z.string().nullable(),
     road: z.string().nullable(),
-    subDistrict: z.string().min(1, 'Sub district is required.'),
+    subDistrict: z.string().min(1, vmsg('request:validation.subDistrictRequired')),
     subDistrictName: z.string().nullable(),
-    district: z.string().min(1, 'District is required.'),
+    district: z.string().min(1, vmsg('request:validation.districtRequired')),
     districtName: z.string().nullable(),
-    province: z.string().min(1, 'Province is required.'),
+    province: z.string().min(1, vmsg('request:validation.provinceRequired')),
     provinceName: z.string().nullable(),
     postcode: z.string().nullable(),
   })
@@ -137,6 +137,12 @@ const RequestTitleDocumentDto = z
   })
   .partial();
 
+// A movable has no title-document address, and no field on screen to fix one a record carries, so
+// any invalid value in it would block Save for good. So its `titleAddress` is held back from
+// validation under this key (an empty one stands in) and put back afterwards: the value is neither
+// checked nor lost.
+const MOVABLE_ADDRESS = '__movableTitleAddress';
+
 // Base for fields not expressible as FormField (UUIDs, documents, address sub-schemas)
 const TitleElementBase = z.object({
   id: z.string().uuid().optional(),
@@ -144,11 +150,13 @@ const TitleElementBase = z.object({
   documents: z.array(RequestTitleDocumentDto).optional(),
   titleAddress: AddressDto.optional(),
   dopaAddress: AddressDto.optional(),
+  // Where a movable's title address waits while the title is validated (see `RequestTitleDto`)
+  [MOVABLE_ADDRESS]: z.any().optional(),
 });
 
 // Element schema from field configs + base (deep merge preserves AddressDto sub-fields)
 // Only a condominium's title number may run past the land limit (it is a list of land titles).
-const RequestTitleDto = buildFormSchema(titlesFieldConfig.fields, TitleElementBase).superRefine(
+const RequestTitleDtoBase = buildFormSchema(titlesFieldConfig.fields, TitleElementBase).superRefine(
   (title, ctx) => {
     const isCondo = CONDO_TYPES.includes(String(title.collateralType ?? ''));
     const number = title.titleNumber;
@@ -156,14 +164,26 @@ const RequestTitleDto = buildFormSchema(titlesFieldConfig.fields, TitleElementBa
       ctx.addIssue({
         code: 'custom',
         path: ['titleNumber'],
-        // Resolved when it runs (this schema is built once, outside any component): the UI language then
-        message: i18n.t('validation.titleNumberTooLong', {
-          ns: 'request',
-          max: LAND_TITLE_NUMBER_MAX,
-        }),
+        // A token: this schema is built once, outside any component, and the language is picked
+        // where the message is shown
+        message: vmsg('request:validation.titleNumberTooLong', { max: LAND_TITLE_NUMBER_MAX }),
       });
   },
 );
+const RequestTitleDto = z
+  .preprocess(title => {
+    const { titleAddress, ...rest } = (title ?? {}) as Record<string, unknown>;
+    return MOVABLE_CODES.includes(String(rest.collateralType ?? ''))
+      ? { ...rest, titleAddress: {}, [MOVABLE_ADDRESS]: titleAddress }
+      : title;
+  }, RequestTitleDtoBase)
+  .transform(title => {
+    if (!(MOVABLE_ADDRESS in title)) return title;
+    const { [MOVABLE_ADDRESS]: titleAddress, ...rest } = title;
+    // the stand-in `{}` goes either way; a movable that had no address comes back without one
+    delete rest.titleAddress;
+    return titleAddress === undefined ? rest : { ...rest, titleAddress };
+  });
 const RequestDocumentDto = z
   .object({
     id: z.string().uuid().nullable().optional(),
@@ -243,7 +263,9 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
     comments: z.array(makeRequestCommentDto(t)),
     // Page state that is validated against but never sent. It must be in the shape: zod strips what is
     // not, and the conditional rules (the prior is not asked for of a submitted request) read it.
-    meta: z.object({ isSubmitted: z.boolean().nullish() }).optional(),
+    meta: z
+      .object({ isSubmitted: z.boolean().nullish(), priorLocked: z.boolean().nullish() })
+      .optional(),
   });
 
   return buildFormSchema(allRequestFields, createRequestFormBase).superRefine((data, ctx) =>
@@ -251,19 +273,14 @@ export function makeCreateRequestForm(t: TFunction<'request'>) {
   );
 }
 
-// Hook: resolve the form schema per render (re-built when language changes).
+// Built once with the token `t`: each message is `vmsg('request:validation.x')`, translated where
+// it is shown, so one schema serves every language and a message already in the form follows a
+// language switch.
+export const createRequestForm = makeCreateRequestForm(tokenT('request'));
+
 export function useCreateRequestForm() {
-  const { t } = useTranslation('request');
-  return makeCreateRequestForm(t);
+  return createRequestForm;
 }
-
-// Static fallback for components that need a non-reactive schema reference
-// (e.g. RequestTitleDto used in isTitleComplete).
-// The static version uses English error messages — acceptable since it's only
-// used for boolean pass/fail validation, not shown to the user.
-
-const _tStatic = ((key: string) => key) as TFunction<'request'>;
-export const createRequestForm = makeCreateRequestForm(_tStatic);
 
 export type UserDtoType = z.infer<typeof UserDto>;
 export type RequestorDtoType = z.infer<typeof RequestorDto>;
@@ -348,7 +365,7 @@ export const createRequestFormDefault: createRequestFormType = {
   documents: [],
   comments: [],
   // Page state, never sent: set from the loaded request (see the page)
-  meta: { isSubmitted: false },
+  meta: { isSubmitted: false, priorLocked: false },
 };
 export const requestTitleDefault: RequestTitleDtoType = {
   collateralType: '',
@@ -383,7 +400,7 @@ export const requestTitleDefault: RequestTitleDtoType = {
   vehicleRegistrationNumber: '',
   installationStatus: '',
   invoiceNumber: '',
-  numberOfMachine: 0,
+  numberOfMachine: null,
   buildingType: '',
   usableArea: null,
   numberOfBuilding: null,

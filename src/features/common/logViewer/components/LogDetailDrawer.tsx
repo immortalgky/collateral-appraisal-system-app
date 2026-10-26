@@ -54,14 +54,16 @@ const LabelValue = ({
   filterLabel?: string;
 }) => (
   <div className="flex flex-col gap-0.5 min-w-0">
-    <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</span>
-    <span className="text-sm text-gray-900 break-all flex items-center gap-2">
-      {value ?? <span className="text-gray-300">—</span>}
+    <span className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide">
+      {label}
+    </span>
+    <span className="text-sm text-(--palette-ink) break-all flex items-center gap-2">
+      {value ?? <span className="text-(--palette-gray-300)">—</span>}
       {value && onFilter && (
         <button
           type="button"
           onClick={onFilter}
-          className="text-xs text-primary underline shrink-0"
+          className="text-xs text-(--palette-primary-text) underline shrink-0"
         >
           {filterLabel}
         </button>
@@ -109,7 +111,7 @@ const CopyButton = ({
   <button
     type="button"
     onClick={() => onCopy(copyKey)}
-    className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-primary transition-colors"
+    className="flex items-center gap-1.5 text-xs text-(--palette-gray-500) hover:text-(--palette-primary-text) transition-colors"
   >
     <Icon
       name={activeKey === copyKey ? 'circle-check' : 'copy'}
@@ -256,7 +258,7 @@ const DrawerBody = ({
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('drawer.requestBody')}
                 </p>
                 {requestBody != null && (
@@ -274,14 +276,14 @@ const DrawerBody = ({
                   {prettyJson(requestBody)}
                 </pre>
               ) : (
-                <p className="text-sm text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+                <p className="text-sm text-(--palette-gray-400) bg-(--palette-surface-2) rounded-lg px-3 py-2">
                   {t('drawer.noBody')}
                 </p>
               )}
             </div>
             <div>
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide">
                   {t('drawer.responseBody')}
                 </p>
                 {responseBody != null && (
@@ -299,21 +301,21 @@ const DrawerBody = ({
                   {prettyJson(responseBody)}
                 </pre>
               ) : (
-                <p className="text-sm text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
+                <p className="text-sm text-(--palette-gray-400) bg-(--palette-surface-2) rounded-lg px-3 py-2">
                   {t('drawer.noBody')}
                 </p>
               )}
             </div>
-            <p className="text-xs text-gray-400">{t('drawer.httpHint')}</p>
+            <p className="text-xs text-(--palette-gray-400)">{t('drawer.httpHint')}</p>
           </>
         ) : (
           <>
             <div>
-              <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+              <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide mb-1">
                 {t('columns.message')}
               </p>
-              <p className="text-sm text-gray-900 whitespace-pre-wrap break-words bg-gray-50 rounded-lg px-3 py-2">
-                {row.message ?? <span className="text-gray-300">—</span>}
+              <p className="text-sm text-(--palette-ink) whitespace-pre-wrap break-words bg-(--palette-surface-2) rounded-lg px-3 py-2">
+                {row.message ?? <span className="text-(--palette-gray-300)">—</span>}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -380,7 +382,7 @@ const DrawerBody = ({
             {row.exception && (
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <p className="text-xs font-medium text-(--palette-gray-500) uppercase tracking-wide">
                     {t('drawer.exceptionHint')}
                   </p>
                   <CopyButton
@@ -405,7 +407,7 @@ const DrawerBody = ({
         <button
           type="button"
           onClick={() => onAroundLog(row.timeStamp)}
-          className="self-start text-xs font-mono rounded-lg border border-gray-200 px-2 py-1 text-gray-600 hover:border-primary hover:text-primary"
+          className="self-start text-xs font-mono rounded-lg border border-(--palette-line) px-2 py-1 text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text)"
         >
           {t('drawer.aroundThisLog')}
         </button>
@@ -413,10 +415,10 @@ const DrawerBody = ({
     );
   } else if (tab === 'trace') {
     body = isTraceLoading ? (
-      <p className="text-sm text-gray-400">{t('drawer.loading')}</p>
+      <p className="text-sm text-(--palette-gray-400)">{t('drawer.loading')}</p>
     ) : trace.length ? (
       <>
-        <p className="text-xs text-gray-500 mb-3">{t('drawer.traceHint')}</p>
+        <p className="text-xs text-(--palette-gray-500) mb-3">{t('drawer.traceHint')}</p>
         <ul className="flex flex-col">
           {trace.map(x => {
             const offset =
@@ -430,7 +432,7 @@ const DrawerBody = ({
                   x.id === row.id && 'bg-primary/5',
                 )}
               >
-                <span className="font-mono text-[11px] text-gray-400 tabular-nums pt-0.5">
+                <span className="font-mono text-[11px] text-(--palette-gray-400) tabular-nums pt-0.5">
                   +{offset.toFixed(3)}s
                 </span>
                 <span
@@ -439,7 +441,7 @@ const DrawerBody = ({
                     backgroundColor: levelLookup(logLevelDotColor, x.level, NEUTRAL_DOT_COLOR),
                   }}
                 />
-                <span className="text-sm text-gray-800 min-w-0">
+                <span className="text-sm text-(--palette-ink) min-w-0">
                   {xHttp ? (
                     <>
                       <span
@@ -456,7 +458,7 @@ const DrawerBody = ({
                     x.message
                   )}
                   <br />
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-(--palette-gray-400)">
                     {x.sourceContext?.split('.').at(-1)}
                   </span>
                 </span>
@@ -465,12 +467,12 @@ const DrawerBody = ({
           })}
         </ul>
         {traceResult?.hasMore && row.correlationId && (
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-(--palette-gray-500) mt-2">
             {t('drawer.traceHasMoreText')}{' '}
             <button
               type="button"
               onClick={() => onViewFullTrace(row.correlationId!, traceRange.from, traceRange.to)}
-              className="text-primary font-medium underline"
+              className="text-(--palette-primary-text) font-medium underline"
             >
               {t('drawer.traceHasMoreLink')}
             </button>
@@ -478,7 +480,7 @@ const DrawerBody = ({
         )}
       </>
     ) : (
-      <p className="text-sm text-gray-400">{t('drawer.noTrace')}</p>
+      <p className="text-sm text-(--palette-gray-400)">{t('drawer.noTrace')}</p>
     );
   } else {
     body = (
@@ -512,12 +514,12 @@ const DrawerBody = ({
             {isKnownLevel(row.level) ? t(`levels.${row.level}`) : row.level || '—'}
           </span>
           {isHttp && (
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
               {t('table.httpTag')}
             </span>
           )}
-          <span className="text-xs font-mono text-gray-400">#{row.id}</span>
-          <span className="text-xs text-gray-400">
+          <span className="text-xs font-mono text-(--palette-gray-400)">#{row.id}</span>
+          <span className="text-xs text-(--palette-gray-400)">
             {format(new Date(row.timeStamp), 'd/M/yyyy HH:mm:ss.SSS')} · {row.machineName}
           </span>
         </div>
@@ -530,7 +532,7 @@ const DrawerBody = ({
         />
       </div>
 
-      <div className="flex gap-4 border-b border-gray-200 -mx-6 px-6">
+      <div className="flex gap-4 border-b border-(--palette-line) -mx-6 px-6">
         {tabs.map(tabDef => (
           <button
             key={tabDef.key}
@@ -539,8 +541,8 @@ const DrawerBody = ({
             className={clsx(
               'pb-2 -mb-px border-b-2 text-sm font-medium transition-colors',
               tab === tabDef.key
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700',
+                ? 'border-primary text-(--palette-primary-text)'
+                : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)',
             )}
           >
             {tabDef.label}

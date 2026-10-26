@@ -1,12 +1,12 @@
 import Icon from '@shared/components/Icon';
 
 const SECTION_ICON_COLORS = {
-  blue: 'bg-blue-50 text-blue-500',
-  rose: 'bg-rose-50 text-rose-500',
-  amber: 'bg-amber-50 text-amber-500',
-  teal: 'bg-teal-50 text-teal-500',
-  violet: 'bg-violet-50 text-violet-500',
-  slate: 'bg-slate-100 text-slate-500',
+  blue: 'bg-blue-50 dark:bg-blue-500/10 text-blue-500',
+  rose: 'bg-rose-50 dark:bg-rose-500/10 text-rose-500',
+  amber: 'bg-(--palette-warn-wash) text-amber-500',
+  teal: 'bg-(--palette-accent-wash) text-teal-500',
+  violet: 'bg-violet-50 dark:bg-violet-500/10 text-violet-500',
+  slate: 'bg-(--palette-surface-3) text-(--palette-ink-2)',
 } as const;
 
 interface ProfileSectionProps {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import SectionHeader from '@shared/components/sections/SectionHeader';
 import Icon from '@shared/components/Icon';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import ReportActionButtons from '../components/ReportActionButtons';
 import { useReportDefinitions } from '../hooks/useReportDefinitions';
 
@@ -74,34 +75,38 @@ const ReportTestPage = () => {
       />
 
       {/* Form card */}
-      <div className="mt-4 bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+      <div className="mt-4 bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-5">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl">
           {/* Report Type */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Report Type</label>
-            <select
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
+              Report Type
+            </label>
+            <NativeSelect
               value={effectiveKey}
               onChange={e => handleReportTypeChange(e.target.value)}
               disabled={isLoadingDefs || definitions.length === 0}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-400"
+              className="w-full"
             >
               {definitions.map(rt => (
                 <option key={rt.reportTypeKey} value={rt.reportTypeKey}>
                   {rt.displayNameEn || rt.reportTypeKey}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           {/* Appraisal / Meeting number */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">{idLabel}</label>
+            <label className="block text-xs font-medium text-(--palette-gray-600) mb-1">
+              {idLabel}
+            </label>
             <input
               type="text"
               value={entityId}
               onChange={e => setEntityId(e.target.value)}
               placeholder={idPlaceholder}
-              className="w-full text-xs border border-gray-200 rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-full text-xs border border-(--palette-line) rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </div>
         </div>
@@ -120,14 +125,22 @@ const ReportTestPage = () => {
               }}
             />
           ) : (
-            <p className="text-xs text-gray-400">Enter {meetingMode ? 'a Meeting No.' : appointmentMode ? 'a Request No. or Appraisal No.' : 'an Appraisal No.'} to view or generate.</p>
+            <p className="text-xs text-(--palette-gray-400)">
+              Enter{' '}
+              {meetingMode
+                ? 'a Meeting No.'
+                : appointmentMode
+                  ? 'a Request No. or Appraisal No.'
+                  : 'an Appraisal No.'}{' '}
+              to view or generate.
+            </p>
           )}
 
           {objectUrl && (
             <button
               type="button"
               onClick={revokeCurrentUrl}
-              className="ml-auto text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"
+              className="ml-auto text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) flex items-center gap-1"
             >
               <Icon name="xmark" style="regular" className="size-3" />
               Clear preview
@@ -138,12 +151,8 @@ const ReportTestPage = () => {
 
       {/* PDF preview */}
       {objectUrl && (
-        <div className="mt-4 flex-1 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden min-h-[70vh]">
-          <iframe
-            src={objectUrl}
-            title="PDF Preview"
-            className="w-full h-[70vh] border-0"
-          />
+        <div className="mt-4 flex-1 bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden min-h-[70vh]">
+          <iframe src={objectUrl} title="PDF Preview" className="w-full h-[70vh] border-0" />
         </div>
       )}
     </div>

@@ -112,12 +112,12 @@ function DayPopover({ items, dateLabel, categoryLabel, onClose, anchorRef }: Pop
   return (
     <div
       ref={popoverRef}
-      className={`absolute z-50 ${alignClasses} mt-1 w-72 max-h-80 overflow-auto bg-white rounded-xl shadow-lg border border-gray-100 py-2`}
+      className={`absolute z-50 ${alignClasses} mt-1 w-72 max-h-80 overflow-auto bg-(--palette-surface) rounded-xl shadow-lg border border-(--palette-line-soft) py-2`}
       style={{ top: '100%' }}
     >
-      <p className="px-3 pb-1 text-xs font-semibold text-gray-500 border-b border-gray-100 mb-1">
+      <p className="px-3 pb-1 text-xs font-semibold text-(--palette-gray-500) border-b border-(--palette-line-soft) mb-1">
         {dateLabel}
-        <span className="ml-2 font-normal text-gray-400">
+        <span className="ml-2 font-normal text-(--palette-gray-400)">
           · {items.length} event{items.length === 1 ? '' : 's'}
         </span>
       </p>
@@ -132,23 +132,25 @@ function DayPopover({ items, dateLabel, categoryLabel, onClose, anchorRef }: Pop
               navigate(buildEntityUrl(item.linkEntityType, item.linkEntityId));
               onClose();
             }}
-            className="w-full flex items-start gap-2 px-3 py-2 hover:bg-gray-50 transition-colors text-left"
+            className="w-full flex items-start gap-2 px-3 py-2 hover:bg-(--palette-surface-2) transition-colors text-left"
           >
             <span className={`mt-1.5 size-2 rounded-full shrink-0 ${CATEGORY_DOT_CLASS[cat]}`} />
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-sm text-gray-800 leading-snug break-words">{item.title}</span>
-              <span className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <span className="text-sm text-(--palette-ink) leading-snug break-words">
+                {item.title}
+              </span>
+              <span className="text-xs text-(--palette-gray-400) mt-0.5 flex items-center gap-1.5 flex-wrap">
                 <span>{categoryLabel(cat)}</span>
                 {item.time && (
                   <>
-                    <span className="text-gray-300">·</span>
+                    <span className="text-(--palette-gray-300)">·</span>
                     <span>{item.time.slice(0, 5)}</span>
                   </>
                 )}
                 {item.appraisalNumber && (
                   <>
-                    <span className="text-gray-300">·</span>
-                    <span className="font-medium text-gray-600 tabular-nums">
+                    <span className="text-(--palette-gray-300)">·</span>
+                    <span className="font-medium text-(--palette-gray-600) tabular-nums">
                       {item.appraisalNumber}
                     </span>
                   </>
@@ -307,16 +309,16 @@ function CalendarWidget() {
 
   return (
     <WidgetWrapper id={WIDGET_ID}>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-(--palette-line-soft)">
           <div className="flex flex-col gap-0.5">
-            <h3 className="text-base font-semibold text-gray-800">{t('calendar.title')}</h3>
+            <h3 className="text-base font-semibold text-(--palette-ink)">{t('calendar.title')}</h3>
             <WidgetDateRangeBadge label={`${MONTH_SHORT[month]} ${year}`} />
           </div>
           <Link
             to="/calendar"
-            className="text-blue-500 text-sm font-medium hover:text-blue-600 flex items-center gap-1.5 transition-colors"
+            className="text-blue-500 text-sm font-medium hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-1.5 transition-colors"
           >
             {t('calendar.viewCalendar')}
             <Icon name="arrow-up-right-from-square" style="solid" className="size-3" />
@@ -330,7 +332,7 @@ function CalendarWidget() {
               type="button"
               onClick={prevMonth}
               aria-label={t('calendar.aria.previous')}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
             >
               <Icon name="chevron-left" style="solid" className="size-4" />
             </button>
@@ -339,7 +341,7 @@ function CalendarWidget() {
               <select
                 value={month}
                 onChange={e => setCurrentDate(new Date(year, Number(e.target.value), 1))}
-                className="text-sm font-semibold text-gray-800 border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded cursor-pointer pr-1"
+                className="text-sm font-semibold text-(--palette-ink) border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded cursor-pointer pr-1"
                 aria-label={t('calendar.aria.selectMonth')}
               >
                 {MONTHS.map((m, i) => (
@@ -351,7 +353,7 @@ function CalendarWidget() {
               <select
                 value={year}
                 onChange={e => setCurrentDate(new Date(Number(e.target.value), month, 1))}
-                className="text-sm font-semibold text-gray-800 border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded cursor-pointer"
+                className="text-sm font-semibold text-(--palette-ink) border-0 bg-transparent focus:outline-none focus:ring-1 focus:ring-blue-500 rounded cursor-pointer"
                 aria-label={t('calendar.aria.selectYear')}
               >
                 {YEAR_OPTIONS.map(y => (
@@ -371,8 +373,8 @@ function CalendarWidget() {
                   aria-label={t('calendar.aria.filterByTopic')}
                   className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors relative ${
                     activeFilterCount > 0
-                      ? 'text-blue-600 bg-blue-50 hover:bg-blue-100'
-                      : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
+                      ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20'
+                      : 'text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)'
                   }`}
                 >
                   <Icon name="filter" style="solid" className="size-3.5" />
@@ -383,8 +385,8 @@ function CalendarWidget() {
                   )}
                 </button>
                 {topicOpen && (
-                  <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white shadow-lg p-2">
-                    <p className="text-xs font-semibold text-gray-500 px-1 mb-1">
+                  <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg p-2">
+                    <p className="text-xs font-semibold text-(--palette-gray-500) px-1 mb-1">
                       {t('calendar.topics')}
                     </p>
                     {ALL_TYPES.map(type => {
@@ -393,13 +395,13 @@ function CalendarWidget() {
                       return (
                         <label
                           key={type}
-                          className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-gray-50 cursor-pointer text-sm text-gray-700"
+                          className="flex items-center gap-2 px-1 py-1.5 rounded hover:bg-(--palette-surface-2) cursor-pointer text-sm text-(--palette-ink)"
                         >
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleTopic(type)}
-                            className="rounded text-blue-600 focus:ring-blue-500"
+                            className="rounded text-blue-600 dark:text-blue-400 focus:ring-blue-500"
                           />
                           {TOPIC_LABELS[type]}
                         </label>
@@ -412,7 +414,7 @@ function CalendarWidget() {
                 type="button"
                 onClick={nextMonth}
                 aria-label={t('calendar.aria.next')}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
               >
                 <Icon name="chevron-right" style="solid" className="size-4" />
               </button>
@@ -422,7 +424,10 @@ function CalendarWidget() {
           {/* Day headers */}
           <div className="grid grid-cols-7 gap-1 mb-3">
             {DAYS.map((day, i) => (
-              <div key={i} className="text-center text-xs font-medium text-gray-400 py-1">
+              <div
+                key={i}
+                className="text-center text-xs font-medium text-(--palette-gray-400) py-1"
+              >
                 {day}
               </div>
             ))}
@@ -460,10 +465,10 @@ function CalendarWidget() {
                       isTodayCell(day as number, index)
                         ? 'bg-blue-500 text-white font-semibold shadow-sm'
                         : isSelected
-                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          ? 'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-medium'
                           : isCurrentMonthCell(index)
-                            ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                            : 'text-gray-300'
+                            ? 'text-(--palette-ink) hover:bg-blue-50 dark:hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400'
+                            : 'text-(--palette-gray-300)'
                     }`}
                   >
                     <span>{day}</span>

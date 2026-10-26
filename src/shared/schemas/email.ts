@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { vmsg } from '@/shared/components/form/validationMessage';
 
 // Split on ',' or ';' to match the backend's ParseAddresses, and require EACH part to look
 // like an email. The previous check only required a '@' somewhere in the whole string, so
@@ -11,38 +12,34 @@ const validAddresses = (v: string) =>
     .filter(Boolean)
     .every(s => EMAIL_RE.test(s));
 
+// Messages are tokens (see validationMessage.ts): EmailCompositionModal translates them where shown.
+const invalidList = { message: vmsg('invalidEmailList') };
+
 export const emailFormSchema = z
   .object({
-    from: z
-      .string()
-      .min(1, 'Required')
-      .max(500)
-      .refine(validAddresses, { message: 'From must contain valid email address(es)' }),
+    from: z.string().min(1, vmsg('required')).max(500).refine(validAddresses, invalidList),
     to: z
       .string()
       .max(500)
-      .refine(v => !v || validAddresses(v), { message: 'To must contain valid email address(es)' })
+      .refine(v => !v || validAddresses(v), invalidList)
       .optional(),
     cc: z
       .string()
       .max(500)
-      .refine(v => !v || validAddresses(v), { message: 'CC must contain valid email address(es)' })
+      .refine(v => !v || validAddresses(v), invalidList)
       .optional(),
     bcc: z
       .string()
       .max(500)
-      .refine(v => !v || validAddresses(v), { message: 'BCC must contain valid email address(es)' })
+      .refine(v => !v || validAddresses(v), invalidList)
       .optional(),
-    subject: z.string().min(1, 'Required').max(500),
+    subject: z.string().min(1, vmsg('required')).max(500),
     content: z.string().max(8000).optional(),
     attachments: z.array(z.string().max(200)).max(10).optional(),
   })
-  .refine(
-    data => !!(data.to?.trim() || data.cc?.trim() || data.bcc?.trim()),
-    {
-      message: 'At least one recipient (To, Cc, or Bcc) is required.',
-      path: ['to'],
-    },
-  );
+  .refine(data => !!(data.to?.trim() || data.cc?.trim() || data.bcc?.trim()), {
+    message: vmsg('recipientRequired'),
+    path: ['to'],
+  });
 
 export type EmailFormValues = z.infer<typeof emailFormSchema>;

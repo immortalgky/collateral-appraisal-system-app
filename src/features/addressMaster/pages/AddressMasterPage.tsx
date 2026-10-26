@@ -23,7 +23,7 @@ import {
 } from '../api/addressMaster';
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary/20 outline-none';
 
 type Level = 'province' | 'district' | 'subDistrict';
 
@@ -97,7 +97,9 @@ function RowDialog({ isOpen, onClose, level, editing, onSave, isSaving }: RowDia
     >
       <div className="space-y-4 p-6">
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">{t('fields.code')}</label>
+          <label className="mb-1 block text-sm font-medium text-(--palette-ink)">
+            {t('fields.code')}
+          </label>
           <input
             type="text"
             value={draft.code}
@@ -106,15 +108,19 @@ function RowDialog({ isOpen, onClose, level, editing, onSave, isSaving }: RowDia
             // backend fixes it at creation.
             disabled={isEditing}
             onChange={e => set('code')(e.target.value)}
-            className={inputClass + ' font-mono' + (isEditing ? ' bg-gray-50 text-gray-500' : '')}
+            className={
+              inputClass +
+              ' font-mono' +
+              (isEditing ? ' bg-(--palette-surface-2) text-(--palette-gray-500)' : '')
+            }
           />
-          <p className="mt-1 text-xs text-gray-400">
+          <p className="mt-1 text-xs text-(--palette-gray-400)">
             {isEditing ? t('hints.codeImmutable') : t('hints.code', { max: maxCode })}
           </p>
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-(--palette-ink)">
             {t('fields.nameTh')}
           </label>
           <input
@@ -126,7 +132,7 @@ function RowDialog({ isOpen, onClose, level, editing, onSave, isSaving }: RowDia
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-gray-700">
+          <label className="mb-1 block text-sm font-medium text-(--palette-ink)">
             {t('fields.nameEn')}
           </label>
           <input
@@ -139,7 +145,7 @@ function RowDialog({ isOpen, onClose, level, editing, onSave, isSaving }: RowDia
 
         {level === 'subDistrict' && (
           <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
+            <label className="mb-1 block text-sm font-medium text-(--palette-ink)">
               {t('fields.postcode')}
             </label>
             <input
@@ -149,7 +155,7 @@ function RowDialog({ isOpen, onClose, level, editing, onSave, isSaving }: RowDia
               onChange={e => set('postcode')(e.target.value)}
               className={inputClass + ' font-mono'}
             />
-            <p className="mt-1 text-xs text-gray-400">{t('hints.postcode')}</p>
+            <p className="mt-1 text-xs text-(--palette-gray-400)">{t('hints.postcode')}</p>
           </div>
         )}
 
@@ -180,11 +186,11 @@ interface ColumnRow {
 
 const RowLabel = ({ row }: { row: ColumnRow }) => (
   <>
-    <p className="truncate text-sm text-gray-900">
-      <span className="mr-1.5 font-mono text-xs text-gray-400">{row.code}</span>
+    <p className="truncate text-sm text-(--palette-ink)">
+      <span className="mr-1.5 font-mono text-xs text-(--palette-gray-400)">{row.code}</span>
       {row.nameTh}
     </p>
-    <p className="truncate text-xs text-gray-400">
+    <p className="truncate text-xs text-(--palette-gray-400)">
       {row.nameEn}
       {row.meta ? ` · ${row.meta}` : ''}
     </p>
@@ -234,11 +240,11 @@ function Column({
   }, [rows, search]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b border-gray-100 px-3 py-2">
-        <p className="text-xs font-semibold uppercase text-gray-500">
+    <div className="flex min-h-0 flex-1 flex-col rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+      <div className="flex items-center justify-between border-b border-(--palette-line-soft) px-3 py-2">
+        <p className="text-xs font-semibold uppercase text-(--palette-gray-500)">
           {title}
-          {!disabled && <span className="ml-1.5 text-gray-400">({rows.length})</span>}
+          {!disabled && <span className="ml-1.5 text-(--palette-gray-400)">({rows.length})</span>}
         </p>
         <Button size="sm" variant="ghost" type="button" onClick={onAdd} disabled={disabled}>
           <Icon name="plus" style="solid" className="size-3.5" />
@@ -246,37 +252,41 @@ function Column({
       </div>
 
       {disabled ? (
-        <p className="px-3 py-6 text-center text-xs text-gray-400">{disabledHint}</p>
+        <p className="px-3 py-6 text-center text-xs text-(--palette-gray-400)">{disabledHint}</p>
       ) : (
         <>
-          <div className="border-b border-gray-100 p-2">
+          <div className="border-b border-(--palette-line-soft) p-2">
             <input
               type="search"
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder={t('search')}
-              className="w-full rounded-md border border-gray-200 px-2 py-1 text-xs outline-none focus:border-primary"
+              className="w-full rounded-md border border-(--palette-line) px-2 py-1 text-xs outline-none focus:border-primary"
             />
           </div>
 
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Icon name="spinner" style="solid" className="h-4 w-4 animate-spin text-gray-400" />
+              <Icon
+                name="spinner"
+                style="solid"
+                className="h-4 w-4 animate-spin text-(--palette-gray-400)"
+              />
             </div>
           ) : filtered.length === 0 ? (
-            <p className="px-3 py-6 text-center text-xs text-gray-400">
+            <p className="px-3 py-6 text-center text-xs text-(--palette-gray-400)">
               {rows.length === 0 ? emptyHint : t('noMatches')}
             </p>
           ) : (
             // Long lists (a province can hold hundreds of sub-districts) scroll inside the column.
-            <ul className="min-h-0 flex-1 divide-y divide-gray-50 overflow-y-auto">
+            <ul className="min-h-0 flex-1 divide-y divide-(--palette-line-soft) overflow-y-auto">
               {filtered.map(row => {
                 const isSelected = selectedCode === row.code;
                 return (
                   <li
                     key={row.code}
                     className={`group flex items-center gap-2 px-3 ${
-                      isSelected ? 'bg-primary/5' : 'hover:bg-gray-50'
+                      isSelected ? 'bg-primary/5' : 'hover:bg-(--palette-surface-2)'
                     }`}
                   >
                     {/* A real button so the drill-down is keyboard reachable; the last column
@@ -299,7 +309,7 @@ function Column({
                       <button
                         type="button"
                         onClick={() => onEdit(row.code)}
-                        className="p-1 text-gray-400 hover:text-gray-600"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                         aria-label={`${t('actions.edit')} ${row.code}`}
                       >
                         <Icon name="pen" style="solid" className="size-3" />
@@ -307,7 +317,7 @@ function Column({
                       <button
                         type="button"
                         onClick={() => onDelete(row.code)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger)"
                         aria-label={`${t('actions.delete')} ${row.code}`}
                       >
                         <Icon name="trash" style="solid" className="size-3" />
@@ -453,8 +463,8 @@ const AddressMasterPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-        <p className="mt-0.5 text-xs text-gray-500">{t('page.subtitle')}</p>
+        <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+        <p className="mt-0.5 text-xs text-(--palette-gray-500)">{t('page.subtitle')}</p>
       </div>
 
       {/* Dataset switch */}
@@ -467,14 +477,14 @@ const AddressMasterPage = () => {
             className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
               dataset === d.value
                 ? 'border-primary bg-primary text-white'
-                : 'border-gray-300 bg-white text-gray-600 hover:border-gray-400'
+                : 'border-(--palette-line-strong) bg-(--palette-surface) text-(--palette-gray-600) hover:border-(--palette-line-strong)'
             }`}
           >
             {t(`dataset.${d.labelKey}`)}
           </button>
         ))}
       </div>
-      <p className="-mt-2 text-xs text-gray-400">{t(`dataset.${dataset}Hint`)}</p>
+      <p className="-mt-2 text-xs text-(--palette-gray-400)">{t(`dataset.${dataset}Hint`)}</p>
 
       {/* Drill-down */}
       <div className="flex h-[32rem] gap-4">

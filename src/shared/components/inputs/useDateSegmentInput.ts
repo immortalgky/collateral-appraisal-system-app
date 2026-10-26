@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { vmsg } from '../form/validationMessage';
 import {
   buildSegmentText,
   clampSegmentToMin,
@@ -133,7 +134,7 @@ export function useDateSegmentInput({
         // is 2 on its way to 2026, say. Every date is illegal on the way there, and complaining
         // three times per year typed is noise, not help. The message waits for the segment to
         // settle (auto-advance, arrow, click, or blur).
-        setError(partial ? null : 'Invalid date');
+        setError(partial ? null : vmsg('invalidDate'));
         return;
       }
       // …and nothing is published on the way there either. Re-typing the day of a filled field
@@ -361,7 +362,7 @@ export function useDateSegmentInput({
     }
     // Complete but impossible (a year still one digit long, say). Nothing was committed, and the
     // message was held back while the segment was being typed into — this is where it lands.
-    if (!dateFromParts(settled, segments)) setError('Invalid date');
+    if (!dateFromParts(settled, segments)) setError(vmsg('invalidDate'));
   }, [parts, segments, commit, applyParts]);
 
   return {

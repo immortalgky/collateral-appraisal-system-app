@@ -65,7 +65,11 @@ export default function LanguageSwitcher({
               />
               <span className="flex-1 text-left">{lang.label}</span>
               {current.code === lang.code && (
-                <Icon name="check" style="solid" className="size-3.5 text-primary-600" />
+                <Icon
+                  name="check"
+                  style="solid"
+                  className="size-3.5 text-(--palette-primary-text)"
+                />
               )}
             </button>
           </MenuItem>

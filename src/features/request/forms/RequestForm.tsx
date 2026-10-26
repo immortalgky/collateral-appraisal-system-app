@@ -12,22 +12,20 @@ import {
 } from '../configs/fields';
 import PriorAppraisalBlock from '../components/PriorAppraisalBlock';
 
-interface RequestFormProps {
-  /**
-   * The request has been submitted (a route-back included): its purpose and its prior appraisal are
-   * locked.
-   */
-  submitted?: boolean;
-}
-
-const RequestForm = ({ submitted = false }: RequestFormProps) => {
+/**
+ * The purpose and the prior appraisal are locked where `meta.priorLocked` is set: a submitted
+ * request (a route-back included), or a draft the periodical-reappraisal Initiate created, whose
+ * purpose and prior the backend fixes.
+ */
+const RequestForm = () => {
   const { t } = useTranslation('request');
+  const locked = !!useWatch({ name: 'meta.priorLocked' });
   const purposeFields = useMemo(
     () =>
       makePurposeFields(t).map(field =>
-        submitted && field.name === 'purpose' ? { ...field, disabled: true } : field,
+        locked && field.name === 'purpose' ? { ...field, disabled: true } : field,
       ),
-    [t, submitted],
+    [t, locked],
   );
   const channelFields = useMemo(() => makeChannelFields(t), [t]);
   const limits = useMemo(() => makeLimitFields(t), [t]);
@@ -69,7 +67,7 @@ const RequestForm = ({ submitted = false }: RequestFormProps) => {
         <SectionHeader title={t('requestForm.sections.purposeAndPrior')} />
         <div className="grid grid-cols-12 gap-x-3.5 gap-y-3">
           <FormFields fields={purposeFields} />
-          <PriorAppraisalBlock locked={submitted} />
+          <PriorAppraisalBlock />
         </div>
       </div>
       <div>
@@ -79,10 +77,10 @@ const RequestForm = ({ submitted = false }: RequestFormProps) => {
           <FormFields fields={limitFields} />
           {NO_FACILITY_PURPOSES.includes(purpose) && (
             <div className="col-span-3">
-              <span className="mb-1 block text-xs font-medium text-gray-700">
+              <span className="mb-1 block text-xs font-medium text-(--palette-ink)">
                 {t('requestForm.limitLabel')}
               </span>
-              <div className="rounded-lg bg-gray-50 px-3 py-2 text-xs text-gray-500">
+              <div className="rounded-lg bg-(--palette-surface-2) px-3 py-2 text-xs text-(--palette-gray-500)">
                 {t('requestForm.noLimit')}
               </div>
             </div>

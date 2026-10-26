@@ -102,7 +102,7 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="border border-gray-300 rounded-xl bg-gray-50 p-2 flex flex-col gap-1.5">
+      <div className="border border-(--palette-line-strong) rounded-xl bg-(--palette-surface-2) p-2 flex flex-col gap-1.5">
         <div className="flex flex-row gap-1.5 justify-between items-center">
           <span className={'w-80'}>{t('dcf.methods.tierOfPropertyValue.totalGovLandPrice')}</span>
           <div className={'flex flex-row w-44 gap-1.5'}>
@@ -164,39 +164,43 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
         </div>
       </div>
 
-      <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
+      <div className="border border-(--palette-line-strong) rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer className="flex-1 min-h-0">
           <table className={'table table-xs min-w-max border-separate border-spacing-0'}>
             <thead>
               <tr>
-                <th colSpan={4} className="border-b border-gray-300 text-center">
+                <th colSpan={4} className="border-b border-(--palette-line-strong) text-center">
                   {t('dcf.methods.tierOfPropertyValue.taxRatesTableTitle')}
                 </th>
               </tr>
               <tr>
-                <th colSpan={2} className="border-b border-r border-gray-300">
+                <th colSpan={2} className="border-b border-r border-(--palette-line-strong)">
                   <div className="flex justify-end">
                     {t('dcf.methods.tierOfPropertyValue.estimatedPrice')}
                   </div>
                 </th>
-                <th colSpan={1} rowSpan={2} className="border-b border-r border-gray-300">
+                <th
+                  colSpan={1}
+                  rowSpan={2}
+                  className="border-b border-r border-(--palette-line-strong)"
+                >
                   <div className="flex justify-end">
                     {t('dcf.methods.tierOfPropertyValue.taxRate')}
                   </div>
                 </th>
-                <th colSpan={1} rowSpan={2} className="border-b border-gray-300">
+                <th colSpan={1} rowSpan={2} className="border-b border-(--palette-line-strong)">
                   <div className="flex justify-end">
                     {t('dcf.methods.tierOfPropertyValue.taxCeiling')}
                   </div>
                 </th>
               </tr>
               <tr>
-                <th className="border-b border-r border-gray-300">
+                <th className="border-b border-r border-(--palette-line-strong)">
                   <div className="flex justify-end">
                     {t('dcf.methods.tierOfPropertyValue.from')}
                   </div>
                 </th>
-                <th className="border-b border-r border-gray-300">
+                <th className="border-b border-r border-(--palette-line-strong)">
                   <div className="flex justify-end">{t('dcf.methods.tierOfPropertyValue.to')}</div>
                 </th>
               </tr>
@@ -204,20 +208,20 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             <tbody>
               {propertyTaxRanges.map(range => (
                 <tr key={range.minValue}>
-                  <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
+                  <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2 text-right">
                     {range.minValue != undefined && range.minValue != null
                       ? toNumber(range.minValue).toLocaleString()
                       : '-'}
                   </td>
-                  <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
+                  <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2 text-right">
                     {range.maxValue != undefined && range.maxValue != null
                       ? toNumber(range.maxValue).toLocaleString()
                       : '-'}
                   </td>
-                  <td className="border-b border-r border-gray-300 px-1.5 py-2 text-right">
+                  <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2 text-right">
                     {`${toFixed2(range.taxRate * 100)} %`}
                   </td>
-                  <td className="border-b border-gray-300 px-1.5 py-2 text-right">
+                  <td className="border-b border-(--palette-line-strong) px-1.5 py-2 text-right">
                     {range.maxValue
                       ? toDecimal(
                           (range.maxValue - range.minValue) * range.taxRate,
@@ -232,24 +236,24 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
         </ScrollableTableContainer>
       </div>
 
-      <div className="border border-gray-300 rounded-xl p-1.5 overflow-auto">
+      <div className="border border-(--palette-line-strong) rounded-xl p-1.5 overflow-auto">
         <ScrollableTableContainer className="flex-1 min-h-0">
           <table className={'table table-xs min-w-max border-separate border-spacing-0'}>
             <thead>
               <tr>
                 <th
                   colSpan={totalNumberOfYears + 1}
-                  className="border-b border-gray-300 text-center"
+                  className="border-b border-(--palette-line-strong) text-center"
                 >
                   {t('dcf.methods.tierOfPropertyValue.taxTableTitle')}
                 </th>
               </tr>
               <tr>
-                <th className="border-b border-r border-gray-300 px-1.5 py-2"></th>
+                <th className="border-b border-r border-(--palette-line-strong) px-1.5 py-2"></th>
                 {Array.from({ length: totalNumberOfYears }, (_, i) => (
                   <th
                     key={i}
-                    className={`border-b border-gray-300 px-1.5 py-2 text-right${i < totalNumberOfYears - 1 ? ' border-r' : ''}`}
+                    className={`border-b border-(--palette-line-strong) px-1.5 py-2 text-right${i < totalNumberOfYears - 1 ? ' border-r' : ''}`}
                   >
                     {t('dcf.methods.tierOfPropertyValue.yearLabel', { year: i + 1 })}
                   </th>
@@ -258,13 +262,13 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
             </thead>
             <tbody>
               <tr>
-                <td className="border-b border-r border-gray-300 px-1.5 py-2">
+                <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2">
                   {t('dcf.methods.tierOfPropertyValue.row1Label')}
                 </td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td
                     key={idx}
-                    className={`border-b border-gray-300 px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
+                    className={`border-b border-(--palette-line-strong) px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
                   >
                     <RHFInputCell
                       fieldName={`${name}.propertyTax.landPrices.${idx}`}
@@ -277,26 +281,26 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 ))}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 px-1.5 py-2">
+                <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2">
                   {t('dcf.methods.tierOfPropertyValue.row2Label')}
                 </td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td
                     key={idx}
-                    className={`border-b border-gray-300 px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
+                    className={`border-b border-(--palette-line-strong) px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
                   >
                     <span>{buildingGovPrice ? buildingGovPrice.toLocaleString() : 0}</span>
                   </td>
                 ))}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 px-1.5 py-2">
+                <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2">
                   {t('dcf.methods.tierOfPropertyValue.row3Label')}
                 </td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td
                     key={idx}
-                    className={`border-b border-gray-300 px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
+                    className={`border-b border-(--palette-line-strong) px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
                   >
                     <RHFInputCell
                       fieldName={`${name}.propertyTax.totalPropertyPrice.${idx}`}
@@ -309,13 +313,13 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 ))}
               </tr>
               <tr>
-                <td className="border-b border-r border-gray-300 px-1.5 py-2">
+                <td className="border-b border-r border-(--palette-line-strong) px-1.5 py-2">
                   {t('dcf.methods.tierOfPropertyValue.propertyTaxRow')}
                 </td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td
                     key={idx}
-                    className={`border-b border-gray-300 px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
+                    className={`border-b border-(--palette-line-strong) px-1.5 py-2 text-right${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
                   >
                     <RHFInputCell
                       fieldName={`${name}.propertyTax.totalPropertyTax.${idx}`}
@@ -328,13 +332,13 @@ export function MethodParameterBasedOnTierOfPropertyValueModal({
                 ))}
               </tr>
               <tr>
-                <td className="border-r border-gray-300 px-1.5 py-2 text-gray-400">
+                <td className="border-r border-(--palette-line-strong) px-1.5 py-2 text-(--palette-gray-400)">
                   {t('dcf.methods.tierOfPropertyValue.taxRate')}
                 </td>
                 {Array.from({ length: totalNumberOfYears }, (_, idx) => (
                   <td
                     key={idx}
-                    className={`border-gray-300 px-1.5 py-2 text-right text-gray-400${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
+                    className={`border-(--palette-line-strong) px-1.5 py-2 text-right text-(--palette-ink-2)${idx < totalNumberOfYears - 1 ? ' border-r' : ''}`}
                   >
                     <RHFInputCell
                       fieldName={`${name}.propertyTax.totalPropertyTaxRates.${idx}`}

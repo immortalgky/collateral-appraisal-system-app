@@ -499,6 +499,8 @@ const EntityPhotoSection = forwardRef<EntityPhotoSectionRef, EntityPhotoSectionP
             readOnly,
             onAdd: () => setShowPhotoSourceModal(true),
             onPreview: handlePreview,
+            onDelete: handleDeleteRequest,
+            onSetThumbnail: hasThumbnailSupport ? handleSetThumbnail : undefined,
           })
         ) : (
           <PhotoGallery

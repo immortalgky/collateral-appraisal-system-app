@@ -74,10 +74,12 @@ const BulkActionToolbar = ({
           </MenuButton>
           <MenuItems
             anchor={{ to: 'top start', gap: 8 }}
-            className="z-50 w-60 rounded-md bg-white py-1 text-gray-700 shadow-lg ring-1 ring-black/5 focus:outline-none"
+            className="z-50 w-60 rounded-md bg-(--palette-surface) py-1 text-(--palette-ink) shadow-lg ring-1 ring-black/5 focus:outline-none"
           >
             {topics.length === 0 ? (
-              <div className="px-3 py-2 text-xs text-gray-400">{t('gallery.bulk.noTopics')}</div>
+              <div className="px-3 py-2 text-xs text-(--palette-gray-400)">
+                {t('gallery.bulk.noTopics')}
+              </div>
             ) : (
               topics.map(topic => (
                 <MenuItem key={topic.id}>
@@ -87,11 +89,11 @@ const BulkActionToolbar = ({
                       onClick={() => onAddToTopic(topic)}
                       className={clsx(
                         'flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm',
-                        focus && 'bg-gray-50',
+                        focus && 'bg-(--palette-surface-2)',
                       )}
                     >
                       <span className="truncate">{topic.topicName}</span>
-                      <span className="shrink-0 text-xs tabular-nums text-gray-400">
+                      <span className="shrink-0 text-xs tabular-nums text-(--palette-gray-400)">
                         {topic.photoCount}
                       </span>
                     </button>
@@ -126,12 +128,16 @@ const BulkActionToolbar = ({
 const EmptyGalleryState = ({ onUpload }: { onUpload: () => void }) => {
   const { t } = useTranslation('appraisal');
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 py-14">
-      <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
-        <Icon name="image" className="text-2xl text-gray-400" />
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-(--palette-line) py-14">
+      <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-(--palette-surface-3)">
+        <Icon name="image" className="text-2xl text-(--palette-gray-400)" />
       </div>
-      <h3 className="mb-1 text-base font-semibold text-gray-700">{t('gallery.empty.title')}</h3>
-      <p className="mb-5 max-w-sm text-center text-xs text-gray-500">{t('gallery.empty.hint')}</p>
+      <h3 className="mb-1 text-base font-semibold text-(--palette-ink)">
+        {t('gallery.empty.title')}
+      </h3>
+      <p className="mb-5 max-w-sm text-center text-xs text-(--palette-gray-500)">
+        {t('gallery.empty.hint')}
+      </p>
       <Button variant="primary" size="sm" onClick={onUpload}>
         <Icon name="cloud-arrow-up" className="mr-2" />
         {t('gallery.upload')}
@@ -176,18 +182,18 @@ const LinkToPropertyModal = ({
         className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-900">{t('gallery.link.title')}</h3>
-          <p className="text-sm text-gray-500 mt-1">{t('gallery.link.hint')}</p>
+      <div className="relative bg-(--palette-surface) rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+        <div className="px-6 py-4 border-b border-(--palette-line-soft)">
+          <h3 className="text-lg font-semibold text-(--palette-ink)">{t('gallery.link.title')}</h3>
+          <p className="text-sm text-(--palette-gray-500) mt-1">{t('gallery.link.hint')}</p>
         </div>
         <div className="p-6 max-h-96 overflow-y-auto">
           {properties.length === 0 ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                <Icon name="building" className="text-2xl text-gray-400" />
+              <div className="w-16 h-16 rounded-full bg-(--palette-surface-3) flex items-center justify-center mx-auto mb-4">
+                <Icon name="building" className="text-2xl text-(--palette-gray-400)" />
               </div>
-              <p className="text-sm text-gray-500">{t('gallery.link.none')}</p>
+              <p className="text-sm text-(--palette-gray-500)">{t('gallery.link.none')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -200,10 +206,10 @@ const LinkToPropertyModal = ({
                     'w-full p-3 rounded-xl border-2 text-left transition-all flex items-center gap-3',
                     selectedId === property.id
                       ? 'border-primary bg-primary/5'
-                      : 'border-gray-100 hover:border-gray-200 hover:bg-gray-50',
+                      : 'border-(--palette-line-soft) hover:border-(--palette-line) hover:bg-(--palette-surface-2)',
                   )}
                 >
-                  <div className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+                  <div className="w-12 h-12 rounded-lg bg-(--palette-surface-3) overflow-hidden flex-shrink-0">
                     {property.image ? (
                       <img
                         src={property.image}
@@ -212,23 +218,27 @@ const LinkToPropertyModal = ({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Icon name="image" className="text-gray-400" />
+                        <Icon name="image" className="text-(--palette-gray-400)" />
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-gray-100 text-gray-600">
+                      <span className="text-xs font-medium px-1.5 py-0.5 rounded bg-(--palette-surface-3) text-(--palette-gray-600)">
                         {property.type}
                       </span>
                     </div>
-                    <p className="text-sm font-medium text-gray-900 truncate">{property.address}</p>
-                    <p className="text-xs text-gray-500">{property.area}</p>
+                    <p className="text-sm font-medium text-(--palette-ink) truncate">
+                      {property.address}
+                    </p>
+                    <p className="text-xs text-(--palette-gray-500)">{property.area}</p>
                   </div>
                   <div
                     className={clsx(
                       'w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0',
-                      selectedId === property.id ? 'bg-primary border-primary' : 'border-gray-300',
+                      selectedId === property.id
+                        ? 'bg-primary border-primary'
+                        : 'border-(--palette-line-strong)',
                     )}
                   >
                     {selectedId === property.id && (
@@ -240,7 +250,7 @@ const LinkToPropertyModal = ({
             </div>
           )}
         </div>
-        <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-(--palette-line-soft) flex items-center justify-end gap-3">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             {t('gallery.cancel')}
           </Button>
@@ -751,7 +761,11 @@ export const GalleryTab = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Icon name="spinner" style="solid" className="text-2xl text-primary animate-spin" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="text-2xl text-(--palette-primary-text) animate-spin"
+        />
       </div>
     );
   }
@@ -761,9 +775,9 @@ export const GalleryTab = () => {
     <button
       type="button"
       onClick={() => fileInputRef.current?.click()}
-      className="flex aspect-[4/3] flex-col items-center justify-center gap-0.5 rounded-lg border-[1.5px] border-dashed border-gray-300 px-2 text-center text-[11px] text-gray-400 transition-colors hover:border-primary/50 hover:bg-primary-50/40"
+      className="flex aspect-[4/3] flex-col items-center justify-center gap-0.5 rounded-lg border-[1.5px] border-dashed border-(--palette-line-strong) px-2 text-center text-[11px] text-(--palette-gray-400) transition-colors hover:border-primary/50 hover:bg-(--palette-accent-wash)/40"
     >
-      <span className="text-xs font-semibold text-primary-700">
+      <span className="text-xs font-semibold text-(--palette-accent-ink)">
         + {t('gallery.uploadTile.title')}
       </span>
       {t('gallery.uploadTile.hint')}
@@ -775,12 +789,14 @@ export const GalleryTab = () => {
       {/* Both toolbar rows stay pinned while the photos scroll under them — filtering and
           uploading are reached for from anywhere down a long gallery. Sticky rather than a
           nested scroll box, so the page keeps its one scrollbar. */}
-      <div className="sticky top-0 z-20 flex flex-col gap-3 bg-white pb-2">
+      <div className="sticky top-0 z-20 flex flex-col gap-3 bg-(--palette-surface) pb-2">
         {/* Toolbar: title, filter-with-counts, search, upload */}
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0">
-            <h3 className="text-base font-semibold text-gray-900">{t('gallery.sectionTitle')}</h3>
-            <p className="text-xs text-gray-500">
+            <h3 className="text-base font-semibold text-(--palette-ink)">
+              {t('gallery.sectionTitle')}
+            </h3>
+            <p className="text-xs text-(--palette-gray-500)">
               {t('gallery.summary', { total: stats.total, used: stats.used })}
             </p>
           </div>
@@ -809,21 +825,21 @@ export const GalleryTab = () => {
             <div className="relative">
               <Icon
                 name="magnifying-glass"
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-gray-400"
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-(--palette-gray-400)"
               />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={t('gallery.searchPlaceholder')}
-                className="w-56 rounded-lg border border-gray-200 bg-white py-1.5 pl-7 pr-7 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+                className="w-56 rounded-lg border border-(--palette-line) bg-(--palette-surface) py-1.5 pl-7 pr-7 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label={t('gallery.noResults.clear')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
                 >
                   <Icon name="xmark" className="text-[11px]" />
                 </button>
@@ -853,7 +869,7 @@ export const GalleryTab = () => {
         </div>
 
         {/* Arrangement: group or not, sort order, select all, grid or list */}
-        <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
+        <div className="flex flex-wrap items-center gap-2 text-xs text-(--palette-gray-500)">
           <span>{t('gallery.layout.label')}</span>
           <SegmentedControl
             options={[
@@ -868,7 +884,7 @@ export const GalleryTab = () => {
             value={galleryPrefs.sort}
             onChange={e => setGalleryPrefs({ sort: e.target.value as GallerySort })}
             aria-label={t('gallery.sort.label')}
-            className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-lg border border-(--palette-line) bg-(--palette-surface) px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="newest">{t('gallery.sort.newest')}</option>
             <option value="oldest">{t('gallery.sort.oldest')}</option>
@@ -878,12 +894,12 @@ export const GalleryTab = () => {
             <button
               type="button"
               onClick={handleSelectAll}
-              className="ml-2 flex items-center gap-1.5 text-gray-600 transition-colors hover:text-gray-900"
+              className="ml-2 flex items-center gap-1.5 text-(--palette-gray-600) transition-colors hover:text-(--palette-ink)"
             >
               <span
                 className={clsx(
                   'flex size-4 items-center justify-center rounded border-2 transition-colors',
-                  allSelected ? 'border-primary bg-primary' : 'border-gray-300',
+                  allSelected ? 'border-primary bg-primary' : 'border-(--palette-line-strong)',
                 )}
               >
                 {allSelected && <Icon name="check" className="text-[9px] text-white" />}
@@ -905,16 +921,23 @@ export const GalleryTab = () => {
 
       {/* Upload Progress */}
       {uploadingPhotos.size > 0 && (
-        <div className="rounded-xl border border-blue-100 bg-blue-50 p-3">
+        <div className="rounded-xl border border-blue-100 dark:border-blue-500/20 bg-blue-50 dark:bg-blue-500/10 p-3">
           <div className="mb-2 flex items-center gap-2">
-            <Icon name="spinner" style="solid" className="animate-spin text-blue-600" />
-            <span className="text-sm font-medium text-blue-900">
+            <Icon
+              name="spinner"
+              style="solid"
+              className="animate-spin text-blue-600 dark:text-blue-400"
+            />
+            <span className="text-sm font-medium text-blue-900 dark:text-blue-200">
               {t('gallery.uploading', { n: uploadingPhotos.size })}
             </span>
           </div>
           <div className="space-y-1">
             {Array.from(uploadingPhotos.entries()).map(([id, { file }]) => (
-              <div key={id} className="flex items-center gap-3 text-xs text-blue-700">
+              <div
+                key={id}
+                className="flex items-center gap-3 text-xs text-blue-700 dark:text-blue-300"
+              >
                 <Icon name="file-image" className="text-blue-500" />
                 <span className="flex-1 truncate">{file.name}</span>
                 <span className="text-blue-500">{t('gallery.processing')}</span>
@@ -929,16 +952,18 @@ export const GalleryTab = () => {
         className={clsx(
           'pointer-events-none absolute inset-0 z-40 flex items-center justify-center rounded-2xl border-2 border-dashed transition-opacity',
           isDragging
-            ? 'border-primary bg-primary-50/60 opacity-100'
+            ? 'border-primary bg-(--palette-accent-wash)/60 opacity-100'
             : 'border-transparent opacity-0',
         )}
       >
         <div className="text-center">
-          <div className="mx-auto mb-3 flex size-16 animate-bounce items-center justify-center rounded-2xl bg-primary-100">
-            <Icon name="cloud-arrow-down" className="text-2xl text-primary" />
+          <div className="mx-auto mb-3 flex size-16 animate-bounce items-center justify-center rounded-2xl bg-primary-100 dark:bg-primary-500/20">
+            <Icon name="cloud-arrow-down" className="text-2xl text-(--palette-primary-text)" />
           </div>
-          <p className="text-lg font-semibold text-primary-700">{t('gallery.drop.title')}</p>
-          <p className="mt-1 text-sm text-primary/80">{t('gallery.drop.hint')}</p>
+          <p className="text-lg font-semibold text-(--palette-accent-ink)">
+            {t('gallery.drop.title')}
+          </p>
+          <p className="mt-1 text-sm text-(--palette-primary-text)/80">{t('gallery.drop.hint')}</p>
         </div>
       </div>
 
@@ -947,13 +972,15 @@ export const GalleryTab = () => {
         {filteredImages.length === 0 ? (
           searchQuery || filterStatus !== 'all' ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
-                <Icon name="magnifying-glass" className="text-xl text-gray-400" />
+              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-(--palette-surface-3)">
+                <Icon name="magnifying-glass" className="text-xl text-(--palette-gray-400)" />
               </div>
-              <p className="mb-1 text-sm font-medium text-gray-800">
+              <p className="mb-1 text-sm font-medium text-(--palette-ink)">
                 {t('gallery.noResults.title')}
               </p>
-              <p className="mb-4 text-xs text-gray-500">{t('gallery.noResults.hint')}</p>
+              <p className="mb-4 text-xs text-(--palette-gray-500)">
+                {t('gallery.noResults.hint')}
+              </p>
               <Button
                 variant="ghost"
                 onClick={() => {
@@ -966,10 +993,10 @@ export const GalleryTab = () => {
             </div>
           ) : readOnly ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-gray-100">
-                <Icon name="image" className="text-2xl text-gray-400" />
+              <div className="mb-3 flex size-14 items-center justify-center rounded-full bg-(--palette-surface-3)">
+                <Icon name="image" className="text-2xl text-(--palette-gray-400)" />
               </div>
-              <p className="text-sm text-gray-500">{t('gallery.empty.title')}</p>
+              <p className="text-sm text-(--palette-gray-500)">{t('gallery.empty.title')}</p>
             </div>
           ) : (
             <EmptyGalleryState onUpload={() => fileInputRef.current?.click()} />
@@ -979,9 +1006,9 @@ export const GalleryTab = () => {
             {sections.map((section, index) => (
               <section key={section.key}>
                 {section.key !== 'all' && (
-                  <h4 className="mb-2 flex items-baseline gap-2 text-xs font-semibold text-gray-600">
+                  <h4 className="mb-2 flex items-baseline gap-2 text-xs font-semibold text-(--palette-gray-600)">
                     {t(`gallery.types.${section.key}`)}
-                    <span className="font-normal text-gray-400">
+                    <span className="font-normal text-(--palette-gray-400)">
                       {t('gallery.typeCount', { n: section.images.length })}
                     </span>
                   </h4>
@@ -1018,7 +1045,7 @@ export const GalleryTab = () => {
 
       {/* Results Count — only when something is filtering the set */}
       {filteredImages.length > 0 && (searchQuery || filterStatus !== 'all') && (
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-(--palette-gray-400)">
           {t('gallery.showing', { shown: filteredImages.length, total: allImages.length })}
         </p>
       )}

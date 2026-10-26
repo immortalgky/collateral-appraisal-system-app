@@ -1,7 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { renderHook } from '@testing-library/react';
 import { requestTitleDefault, type RequestTitleDtoType } from '../../schemas/form';
-import { useTitleStatus } from './titleHooks';
+import { useMissingFieldLabel, useTitleStatus } from './titleHooks';
+
+vi.mock('react-i18next', async importOriginal => ({
+  ...(await importOriginal<typeof import('react-i18next')>()),
+  useTranslation: () => ({ t: (key: string) => key }),
+}));
 
 const title = (over: Partial<RequestTitleDtoType> = {}): RequestTitleDtoType => ({
   ...structuredClone(requestTitleDefault),
@@ -14,6 +19,21 @@ const doc = (over: object = {}) => ({
   fileName: null,
   documentType: 'x',
   ...over,
+});
+
+describe('useMissingFieldLabel', () => {
+  it('tags the DOPA address "DOPA", and as the property location for a movable', () => {
+    const { result } = renderHook(() => useMissingFieldLabel());
+    expect(result.current('dopaAddress.subDistrict')).toBe(
+      'fields.subDistrict (titleSection.address.tagDopa)',
+    );
+    expect(result.current('dopaAddress.subDistrict', { movable: true })).toBe(
+      'fields.subDistrict (titleSection.address.tagLocation)',
+    );
+    expect(result.current('titleAddress.subDistrict')).toBe(
+      'fields.subDistrict (titleSection.address.tagTitle)',
+    );
+  });
 });
 
 describe('useTitleStatus', () => {

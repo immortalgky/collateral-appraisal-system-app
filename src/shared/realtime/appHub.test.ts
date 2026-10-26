@@ -14,6 +14,8 @@ const conn = vi.hoisted(() => ({
     | undefined,
   urlOptions: [] as Record<string, unknown>[],
   start: (() => Promise.resolve()) as (...args: unknown[]) => Promise<void>,
+  invoke: vi.fn<(...args: unknown[]) => Promise<void>>(() => Promise.resolve()),
+  onclose: undefined as (() => void) | undefined,
 }));
 vi.mock('@microsoft/signalr', () => {
   const builder = {
@@ -35,7 +37,10 @@ vi.mock('@microsoft/signalr', () => {
       on: vi.fn(),
       onreconnecting: vi.fn(),
       onreconnected: vi.fn(),
-      onclose: vi.fn(),
+      invoke: (...args: unknown[]) => conn.invoke(...args),
+      onclose: (cb: () => void) => {
+        conn.onclose = cb;
+      },
     }),
   };
   return {
@@ -121,5 +126,88 @@ describe('appHub session check', () => {
       expect(options).toMatchObject({ withCredentials: true });
     }
     await hub.stop();
+  });
+
+  describe('groups asked for before the connection is up', () => {
+    const up = () =>
+      vi.fn().mockImplementation(async () => {
+        conn.state = 'Connected';
+      });
+    beforeEach(() => {
+      conn.state = 'Disconnected';
+      conn.invoke.mockClear();
+      conn.start = up();
+    });
+
+    it('are joined once the first start succeeds', async () => {
+      const hub = await import('./appHub');
+      await hub.joinGroup('pool-IntAdmin');
+      expect(conn.invoke).not.toHaveBeenCalled();
+
+      await hub.start('ann');
+      expect(conn.invoke).toHaveBeenCalledWith('JoinGroup', 'pool-IntAdmin');
+      await hub.stop();
+    });
+
+    it('are joined together, not one after the other', async () => {
+      const hub = await import('./appHub');
+      await hub.joinGroup('pool-A');
+      await hub.joinGroup('pool-B');
+      const releases: (() => void)[] = [];
+      conn.invoke.mockImplementation(
+        () =>
+          new Promise<void>(resolve => {
+            releases.push(resolve);
+          }),
+      );
+      const started = hub.start('ann');
+      await vi.advanceTimersByTimeAsync(0);
+      // both are out before either has answered
+      expect(conn.invoke).toHaveBeenCalledTimes(2);
+      releases.forEach(r => r());
+      await started;
+      await hub.stop();
+      conn.invoke.mockImplementation(() => Promise.resolve());
+    });
+
+    it('do not turn a connection that closed meanwhile back into connected', async () => {
+      const hub = await import('./appHub');
+      await hub.joinGroup('pool-A');
+      let release!: () => void;
+      conn.invoke.mockImplementation(
+        () =>
+          new Promise<void>(resolve => {
+            release = resolve;
+          }),
+      );
+      const started = hub.start('ann');
+      await vi.advanceTimersByTimeAsync(0);
+      // the socket drops while the groups are being joined
+      conn.state = 'Disconnected';
+      conn.onclose!();
+      release();
+      await started;
+      expect(hub.getStatus()).toBe('disconnected');
+      await hub.stop();
+      conn.invoke.mockImplementation(() => Promise.resolve());
+    });
+
+    it('are joined again after a restart, and a group left in between is not', async () => {
+      const hub = await import('./appHub');
+      await hub.start('ann');
+      await hub.joinGroup('pool-IntAdmin');
+      await hub.joinGroup('pool-Other');
+      await hub.leaveGroup('pool-Other');
+      expect(conn.invoke).toHaveBeenCalledWith('JoinGroup', 'pool-IntAdmin');
+
+      // the connection is lost for good: the hub rebuilds it after its restart delay
+      conn.invoke.mockClear();
+      conn.state = 'Disconnected';
+      conn.onclose!();
+      await vi.advanceTimersByTimeAsync(5000);
+      expect(conn.invoke).toHaveBeenCalledTimes(1);
+      expect(conn.invoke).toHaveBeenCalledWith('JoinGroup', 'pool-IntAdmin');
+      await hub.stop();
+    });
   });
 });

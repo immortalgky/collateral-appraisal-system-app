@@ -64,6 +64,10 @@ vi.mock('@/shared/components/ParameterDisplay', () => ({
 }));
 vi.mock('../hooks/useRequiredDocuments', () => ({ useTitleLevelRequiredDocuments: () => {} }));
 vi.mock('../components/TitleImportDialog', () => ({ TitleImportDialog: () => null }));
+// Has its own tests (and its own lookups); here only where it sits is checked.
+vi.mock('../components/PriorAppraisalSummary', () => ({
+  default: () => <div data-testid="prior-summary" />,
+}));
 // The editor has its own tests; here it is a stand-in that exposes what the list hands it.
 vi.mock('../components/titles/TitleDrawer', () => ({
   TitleDrawer: (props: {
@@ -191,6 +195,13 @@ describe('title list tables', () => {
     expect(numbers(movableTable())).toEqual(['1']);
   });
 
+  it('puts the prior-appraisal summary at the top of the title card, above the tables', () => {
+    const { container } = render(<Harness titles={[land('1')]} />);
+    const card = container.querySelector('[data-field="titles"]')!;
+    const summary = within(card as HTMLElement).getByTestId('prior-summary');
+    expect(summary.compareDocumentPosition(estateTable())).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+
   it('shows the movable table only when there is a movable', () => {
     render(<Harness titles={[land('1')]} />);
     expect(screen.queryByRole('region', { name: 'titleSection.group.movable' })).toBeNull();
@@ -255,7 +266,7 @@ describe('the bulk import button', () => {
     const button = screen.getByRole('button', { name: /titleImport\.button/ });
     expect(button.className).not.toMatch(/\btext-green/);
     expect(button.className).toContain('bg-transparent!');
-    expect(button.className).toContain('hover:bg-gray-100');
+    expect(button.className).toContain('hover:bg-(--palette-surface-3)');
     expect(button.className).not.toMatch(/\b(bg|border)-green/);
     expect(button.querySelector('svg')).toBeNull();
   });

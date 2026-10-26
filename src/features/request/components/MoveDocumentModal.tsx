@@ -114,20 +114,26 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
     >
       <div className="flex flex-col gap-3">
         {file && (
-          <div className="flex items-center gap-2.5 rounded-lg bg-gray-50 px-3 py-2">
+          <div className="flex items-center gap-2.5 rounded-lg bg-(--palette-surface-2) px-3 py-2">
             <FileBadgeIcon fileName={file.fileName} />
             <div className="min-w-0 flex-1">
-              <p className="m-0 truncate text-xs font-medium text-gray-900" title={file.fileName}>
+              <p
+                className="m-0 truncate text-xs font-medium text-(--palette-ink)"
+                title={file.fileName}
+              >
                 {file.fileName}
               </p>
               {file.typeLabel && (
-                <p className="m-0 truncate text-xs text-gray-500" title={file.typeLabel}>
+                <p
+                  className="m-0 truncate text-xs text-(--palette-gray-500)"
+                  title={file.typeLabel}
+                >
                   {file.typeLabel}
                 </p>
               )}
             </div>
             {file.fromLabel && (
-              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+              <span className="shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-(--palette-primary-text)">
                 {file.fromLabel}
               </span>
             )}
@@ -145,7 +151,9 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
           />
         )}
 
-        <p className="m-0 text-xs text-gray-500">{description ?? t('moveDocument.description')}</p>
+        <p className="m-0 text-xs text-(--palette-gray-500)">
+          {description ?? t('moveDocument.description')}
+        </p>
 
         {searchable && (
           <input
@@ -154,7 +162,7 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
             onChange={e => setQuery(e.target.value)}
             placeholder={t('moveDocument.searchPlaceholder')}
             aria-label={t('moveDocument.searchPlaceholder')}
-            className="h-9 w-full rounded-lg border border-gray-200 bg-white px-3 text-sm outline-none focus:border-primary"
+            className="h-9 w-full rounded-lg border border-(--palette-line) bg-(--palette-surface) px-3 text-sm outline-none focus:border-primary"
           />
         )}
 
@@ -170,7 +178,7 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
                   'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-primary/40',
                   isSelected
                     ? 'border-primary bg-primary/5'
-                    : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+                    : 'border-(--palette-line) hover:border-(--palette-line-strong) hover:bg-(--palette-surface-2)',
                 )}
               >
                 <input
@@ -183,22 +191,26 @@ const MoveDocumentModal: React.FunctionComponent<MoveDocumentModalProps> = ({
                 />
                 <span className="min-w-0 flex-1">
                   <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                    <span className="text-sm font-medium text-gray-900">{section.label}</span>
+                    <span className="text-sm font-medium text-(--palette-ink)">
+                      {section.label}
+                    </span>
                     {section.matches && (
-                      <span className="rounded-full bg-green-50 px-1.5 py-0.5 text-xs font-medium text-green-700">
+                      <span className="rounded-full bg-green-50 dark:bg-green-500/10 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:text-green-300">
                         {t('moveDocument.matches')}
                       </span>
                     )}
                   </span>
                   {section.detail && (
-                    <span className="block text-xs text-gray-500">{section.detail}</span>
+                    <span className="block text-xs text-(--palette-gray-500)">
+                      {section.detail}
+                    </span>
                   )}
                 </span>
               </label>
             );
           })}
           {shown.length === 0 && (
-            <p className="m-0 py-4 text-center text-xs text-gray-500">
+            <p className="m-0 py-4 text-center text-xs text-(--palette-gray-500)">
               {t('moveDocument.noMatch')}
             </p>
           )}

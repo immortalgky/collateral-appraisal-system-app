@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import Icon from '@/shared/components/Icon';
 import type { AppraisalSummaryDto, SharedDocumentEntryDto } from '../schemas/quotation';
 import { useRemoveAppraisalFromDraft } from '../api/quotation';
+import { SegmentChips } from './SegmentBadges';
 import SharedDocumentViewer from './SharedDocumentViewer';
 
 interface AppraisalContextPanelProps {
@@ -53,7 +54,7 @@ const AppraisalContextPanel = ({
 
   if (appraisals.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-500">
+      <div className="rounded-lg border border-(--palette-line) bg-(--palette-surface-2) px-4 py-3 text-sm text-(--palette-gray-500)">
         {t('empty.noAppraisals')}
       </div>
     );
@@ -61,27 +62,33 @@ const AppraisalContextPanel = ({
 
   return (
     <>
-      <div className="rounded-xl border border-blue-200 overflow-hidden">
+      <div className="rounded-xl border border-blue-200 dark:border-blue-500/30 overflow-hidden">
         {/* Header */}
-        <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 border-b border-blue-200">
-          <div className="size-7 rounded-lg bg-blue-200 flex items-center justify-center">
-            <Icon name="file-certificate" style="solid" className="size-3.5 text-blue-700" />
+        <div className="flex items-center gap-2 px-4 py-2.5 bg-blue-50 dark:bg-blue-500/10 border-b border-blue-200 dark:border-blue-500/30">
+          <div className="size-7 rounded-lg bg-blue-200 dark:bg-blue-500/30 flex items-center justify-center">
+            <Icon
+              name="file-certificate"
+              style="solid"
+              className="size-3.5 text-blue-700 dark:text-blue-300"
+            />
           </div>
-          <span className="text-sm font-semibold text-gray-800">{t('appraisalPanel.title')}</span>
-          <span className="ml-auto text-xs text-blue-600 font-medium">
+          <span className="text-sm font-semibold text-(--palette-ink)">
+            {t('appraisalPanel.title')}
+          </span>
+          <span className="ml-auto text-xs text-blue-600 dark:text-blue-400 font-medium">
             {t('appraisalPanel.appraisalCount_other', { count: appraisals.length })}
           </span>
         </div>
 
         {/* Rows */}
-        <div className="divide-y divide-gray-100">
+        <div className="divide-y divide-(--palette-line-soft)">
           {appraisals.map(ap => {
             const isExpanded = expandedId === ap.appraisalId;
             return (
-              <div key={ap.appraisalId} className="bg-white">
+              <div key={ap.appraisalId} className="bg-(--palette-surface)">
                 {/* Summary row */}
                 <div
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-(--palette-surface-2) transition-colors cursor-pointer"
                   onClick={() => setExpandedId(isExpanded ? null : ap.appraisalId)}
                   role="button"
                   aria-expanded={isExpanded}
@@ -89,23 +96,23 @@ const AppraisalContextPanel = ({
                   <Icon
                     name={isExpanded ? 'chevron-down' : 'chevron-right'}
                     style="solid"
-                    className="size-3 text-gray-400 shrink-0"
+                    className="size-3 text-(--palette-gray-400) shrink-0"
                   />
 
                   {/* Appraisal badge */}
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/5 rounded-md text-xs font-medium text-primary">
+                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/5 rounded-md text-xs font-medium text-(--palette-primary-text)">
                     <Icon name="file-certificate" style="solid" className="size-3" />
                     {ap.appraisalNumber ?? ap.appraisalId.slice(0, 8)}
                   </span>
 
                   {/* Property type */}
                   {ap.propertyType && (
-                    <span className="text-xs text-gray-600">{ap.propertyType}</span>
+                    <span className="text-xs text-(--palette-gray-600)">{ap.propertyType}</span>
                   )}
 
                   {/* Address preview */}
                   {ap.address && (
-                    <span className="text-xs text-gray-400 truncate flex-1 min-w-0">
+                    <span className="text-xs text-(--palette-gray-400) truncate flex-1 min-w-0">
                       {ap.address}
                     </span>
                   )}
@@ -122,8 +129,8 @@ const AppraisalContextPanel = ({
                       className={clsx(
                         'ml-auto shrink-0 flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors',
                         isRemoving
-                          ? 'opacity-50 cursor-not-allowed text-gray-400'
-                          : 'text-red-500 hover:bg-red-50 hover:text-red-600',
+                          ? 'opacity-50 cursor-not-allowed text-(--palette-gray-400)'
+                          : 'text-red-500 hover:bg-(--palette-req-wash) hover:text-(--palette-danger)',
                       )}
                       aria-label={t('aria.removeAppraisal', {
                         number: ap.appraisalNumber ?? ap.appraisalId,
@@ -137,23 +144,35 @@ const AppraisalContextPanel = ({
 
                 {/* Expanded detail */}
                 {isExpanded && (
-                  <div className="px-10 pb-3 bg-gray-50">
+                  <div className="px-10 pb-3 bg-(--palette-surface-2)">
                     <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
                       <div>
-                        <span className="text-gray-400">{t('appraisalPanel.appraisalNo')}</span>
-                        <p className="font-medium text-gray-800">{ap.appraisalNumber ?? '—'}</p>
+                        <span className="text-(--palette-gray-400)">
+                          {t('appraisalPanel.appraisalNo')}
+                        </span>
+                        <p className="font-medium text-(--palette-ink)">
+                          {ap.appraisalNumber ?? '—'}
+                        </p>
                       </div>
                       <div>
-                        <span className="text-gray-400">{t('appraisalPanel.propertyType')}</span>
-                        <p className="font-medium text-gray-800">{ap.propertyType ?? '—'}</p>
+                        <span className="text-(--palette-gray-400)">
+                          {t('appraisalPanel.propertyType')}
+                        </span>
+                        <p className="font-medium text-(--palette-ink)">{ap.propertyType ?? '—'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-400">{t('appraisalPanel.address')}</span>
-                        <p className="font-medium text-gray-800">{ap.address ?? '—'}</p>
+                        <span className="text-(--palette-gray-400)">
+                          {t('appraisalPanel.address')}
+                        </span>
+                        <p className="font-medium text-(--palette-ink)">{ap.address ?? '—'}</p>
                       </div>
                       <div>
-                        <span className="text-gray-400">{t('appraisalPanel.loanType')}</span>
-                        <p className="font-medium text-gray-800">{ap.loanType ?? '—'}</p>
+                        <span className="text-(--palette-gray-400)">
+                          {t('picker.bankingSegmentCol')}
+                        </span>
+                        <p className="font-medium text-(--palette-ink)">
+                          <SegmentChips segments={[ap.bankingSegment]} />
+                        </p>
                       </div>
                     </div>
 
@@ -165,13 +184,13 @@ const AppraisalContextPanel = ({
                         );
                         if (apShared.length === 0) {
                           return (
-                            <div className="mt-2 p-2 rounded-lg bg-gray-50 border border-gray-100 flex items-center gap-1.5">
+                            <div className="mt-2 p-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center gap-1.5">
                               <Icon
                                 name="circle-info"
                                 style="solid"
-                                className="size-3.5 text-gray-400 shrink-0"
+                                className="size-3.5 text-(--palette-gray-400) shrink-0"
                               />
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-(--palette-gray-500)">
                                 {t('empty.noDocumentsShared')}
                               </p>
                             </div>
@@ -185,23 +204,26 @@ const AppraisalContextPanel = ({
                             key={d.documentId}
                             type="button"
                             onClick={() => setViewerDoc(d)}
-                            className="flex items-center gap-1.5 py-0.5 w-full text-left hover:bg-blue-50 rounded px-1 -ml-1 transition-colors group"
+                            className="flex items-center gap-1.5 py-0.5 w-full text-left hover:bg-blue-50 dark:hover:bg-blue-500/10 rounded px-1 -ml-1 transition-colors group"
                           >
                             <Icon
                               name="file"
                               style="solid"
                               className={clsx('size-3 shrink-0', iconColor)}
                             />
-                            <span className="text-xs text-gray-700 group-hover:text-primary truncate">
+                            <span className="text-xs text-(--palette-ink) group-hover:text-(--palette-primary-text) truncate">
                               {d.fileName ?? d.documentId.slice(0, 8)}
                               {d.documentTypeName && (
-                                <span className="text-gray-400"> ({d.documentTypeName})</span>
+                                <span className="text-(--palette-gray-400)">
+                                  {' '}
+                                  ({d.documentTypeName})
+                                </span>
                               )}
                             </span>
                             <Icon
                               name="eye"
                               style="solid"
-                              className="size-2.5 text-gray-300 group-hover:text-primary ml-auto shrink-0"
+                              className="size-2.5 text-(--palette-gray-300) group-hover:text-(--palette-primary-text) ml-auto shrink-0"
                             />
                           </button>
                         );
@@ -210,20 +232,20 @@ const AppraisalContextPanel = ({
                           <div className="mt-2 flex flex-col gap-1.5">
                             {requestLevelDocs.length > 0 && (
                               <div>
-                                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">
+                                <p className="text-[10px] font-medium text-(--palette-gray-400) uppercase tracking-wider mb-1">
                                   {t('appraisalPanel.requestDocuments')}
                                 </p>
                                 {requestLevelDocs.map(d => renderDocRow(d, 'text-blue-400'))}
                               </div>
                             )}
                             {requestLevelDocs.length === 0 && titleLevelDocs.length === 0 && (
-                              <p className="text-xs text-gray-400">
+                              <p className="text-xs text-(--palette-gray-400)">
                                 {t('empty.noDocumentsShared')}
                               </p>
                             )}
                             {titleLevelDocs.length > 0 && (
                               <div>
-                                <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-1">
+                                <p className="text-[10px] font-medium text-(--palette-gray-400) uppercase tracking-wider mb-1">
                                   {t('appraisalPanel.titleDocuments')}
                                 </p>
                                 {titleLevelDocs.map(d => renderDocRow(d, 'text-indigo-400'))}

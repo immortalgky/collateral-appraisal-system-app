@@ -39,9 +39,9 @@ export function SensitivityStrip({ currentRate, calculateFinalValue }: Sensitivi
   const currentValue = scenarios.find(s => s.isCurrent)?.value ?? 0;
 
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
+    <div className="rounded-lg border border-(--palette-line) overflow-hidden">
       <div className="flex items-center gap-3">
-        <div className="px-3 py-1.5 text-[10px] font-medium text-gray-500 uppercase tracking-wide whitespace-nowrap shrink-0">
+        <div className="px-3 py-1.5 text-[10px] font-medium text-(--palette-gray-500) uppercase tracking-wide whitespace-nowrap shrink-0">
           {t('viz.sensitivity.title')}
         </div>
         <div
@@ -54,23 +54,23 @@ export function SensitivityStrip({ currentRate, calculateFinalValue }: Sensitivi
             return (
               <div
                 key={s.rate}
-                className={`px-2 py-1.5 text-center border-l border-gray-100 ${
+                className={`px-2 py-1.5 text-center border-l border-(--palette-line-soft) ${
                   s.isCurrent ? 'bg-primary/5 ring-1 ring-inset ring-primary/20' : ''
                 }`}
               >
                 <div
-                  className={`text-[10px] font-medium mb-0.5 ${s.isCurrent ? 'text-primary' : 'text-gray-500'}`}
+                  className={`text-[10px] font-medium mb-0.5 ${s.isCurrent ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-500)'}`}
                 >
                   {s.rate.toFixed(1)}%
                 </div>
                 <div
-                  className={`text-xs font-bold tabular-nums ${s.isCurrent ? 'text-primary' : 'text-gray-800'}`}
+                  className={`text-xs font-bold tabular-nums ${s.isCurrent ? 'text-(--palette-primary-text)' : 'text-(--palette-ink)'}`}
                 >
                   {s.value != null ? fmt(s.value) : '-'}
                 </div>
                 {!s.isCurrent && diff !== 0 && (
                   <div
-                    className={`text-[9px] mt-0.5 tabular-nums ${diff > 0 ? 'text-green-600' : 'text-red-500'}`}
+                    className={`text-[9px] mt-0.5 tabular-nums ${diff > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-500'}`}
                   >
                     {diff > 0 ? '+' : ''}
                     {diffPct.toFixed(1)}%

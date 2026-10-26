@@ -25,9 +25,6 @@ export * from './buttons';
 // Section components
 export * from './sections';
 
-// Table components
-export { default as Table } from './tables/Table';
-
 // Skeleton components
 export * from './Skeleton';
 

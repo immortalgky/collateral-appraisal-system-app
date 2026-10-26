@@ -220,6 +220,7 @@ export interface UserProfile {
   email?: string | null;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
   avatarUrl?: string | null;
   position?: string | null;
   department?: string | null;
@@ -315,6 +316,7 @@ export interface UpdateProfileRequest {
   avatarUrl?: string | null;
   position?: string | null;
   department?: string | null;
+  phoneNumber?: string | null;
 }
 
 export interface ChangePasswordRequest {
@@ -342,6 +344,7 @@ export interface AdminUserListItem {
 }
 
 export interface AdminUserDetail extends AdminUserListItem {
+  phoneNumber: string | null;
   avatarUrl: string | null;
   authSource: 'Local' | 'LDAP';
   aoCode: string | null;
@@ -379,6 +382,7 @@ export interface AdminUpdateUserRequest {
   firstName: string;
   lastName: string;
   email: string;
+  phoneNumber?: string | null;
   position?: string | null;
   department?: string | null;
   companyId?: string | null;
@@ -427,6 +431,7 @@ export interface CreateUserRequest {
   email: string;
   firstName: string;
   lastName: string;
+  phoneNumber?: string | null;
   position?: string | null;
   department?: string | null;
   companyId?: string | null;

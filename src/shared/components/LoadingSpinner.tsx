@@ -395,7 +395,7 @@ function LoadingSpinner({ size = 'md', variant = 'default', text }: LoadingSpinn
   return (
     <div className="flex flex-col items-center justify-center gap-3">
       <div className={wrapper}>{renderSpinner()}</div>
-      {text && <p className={`text-gray-500 font-medium ${textSize}`}>{text}</p>}
+      {text && <p className={`text-(--palette-gray-500) font-medium ${textSize}`}>{text}</p>}
     </div>
   );
 }

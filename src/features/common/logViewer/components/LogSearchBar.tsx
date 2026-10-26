@@ -52,11 +52,15 @@ const LogSearchBar = ({
       <div className="flex flex-wrap items-center gap-2">
         <label
           className={clsx(
-            'flex-1 min-w-72 flex items-center gap-2 rounded-lg border bg-gray-50 px-3 transition-colors',
-            isDirty ? 'border-amber-400' : 'border-gray-200 focus-within:border-primary',
+            'flex-1 min-w-72 flex items-center gap-2 rounded-lg border bg-(--palette-surface-2) px-3 transition-colors',
+            isDirty ? 'border-amber-400' : 'border-(--palette-line) focus-within:border-primary',
           )}
         >
-          <Icon name="magnifying-glass" style="regular" className="size-4 text-gray-400 shrink-0" />
+          <Icon
+            name="magnifying-glass"
+            style="regular"
+            className="size-4 text-(--palette-gray-400) shrink-0"
+          />
           <input
             ref={inputRef}
             type="text"
@@ -72,7 +76,7 @@ const LogSearchBar = ({
             autoComplete="off"
             className="flex-1 min-w-0 bg-transparent py-2 text-sm font-mono focus:outline-none"
           />
-          <kbd className="hidden sm:inline text-[11px] text-gray-400 border border-gray-200 rounded px-1">
+          <kbd className="hidden sm:inline text-[11px] text-(--palette-gray-400) border border-(--palette-line) rounded px-1">
             /
           </kbd>
         </label>
@@ -85,7 +89,7 @@ const LogSearchBar = ({
           {t('search.button')}
         </button>
 
-        <div className="flex items-center bg-gray-100 rounded-lg p-0.5 gap-0.5">
+        <div className="flex items-center bg-(--palette-surface-3) rounded-lg p-0.5 gap-0.5">
           {RANGE_PRESET_HOURS.map(hours => (
             <button
               key={hours}
@@ -95,8 +99,8 @@ const LogSearchBar = ({
               className={clsx(
                 'rounded-md px-2.5 h-7 text-xs font-medium transition-all',
                 rangeHours === hours
-                  ? 'bg-white shadow-sm text-primary'
-                  : 'text-gray-500 hover:text-gray-700',
+                  ? 'bg-(--palette-surface) shadow-sm text-(--palette-primary-text)'
+                  : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
               )}
             >
               {t(PRESET_LABEL_KEY[hours])}
@@ -119,8 +123,8 @@ const LogSearchBar = ({
           className={clsx(
             'inline-flex items-center gap-1.5 h-7 px-3 rounded-lg border text-sm font-medium transition-colors',
             live
-              ? 'border-green-300 bg-white text-green-700'
-              : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300',
+              ? 'border-green-300 dark:border-green-500/40 bg-(--palette-surface) text-green-700 dark:text-green-300'
+              : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:border-(--palette-line-strong)',
           )}
         >
           {live ? (
@@ -135,11 +139,17 @@ const LogSearchBar = ({
         </button>
       </div>
 
-      {isDirty && <p className="text-xs text-amber-600 -mt-1">{t('search.dirtyHint')}</p>}
+      {isDirty && (
+        <p className="text-xs text-amber-600 dark:text-amber-400 -mt-1">{t('search.dirtyHint')}</p>
+      )}
 
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-(--palette-gray-400)">
         {t('search.hint')}{' '}
-        <button type="button" onClick={onOpenGuide} className="text-primary font-medium underline">
+        <button
+          type="button"
+          onClick={onOpenGuide}
+          className="text-(--palette-primary-text) font-medium underline"
+        >
           {t('search.guideLink')}
         </button>
       </p>

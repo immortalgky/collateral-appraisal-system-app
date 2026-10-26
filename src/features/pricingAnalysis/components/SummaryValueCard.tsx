@@ -33,8 +33,8 @@ export function SummaryCard({ title, children }: { title: ReactNode; children: R
   return (
     // max-w — SummaryGrid's max-w caps the grid, not the card; with one track the card
     // would otherwise stretch to the whole pane (808px at 1366). Mock cards are ≤540.
-    <div className="min-w-0 max-w-[540px] border border-[#e3e9e8] rounded-[10px] overflow-hidden">
-      <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-gray-800 bg-[#f8fafa] border-b border-[#e3e9e8]">
+    <div className="min-w-0 max-w-[540px] border border-(--palette-line) rounded-[10px] overflow-hidden">
+      <h4 className="m-0 px-[12px] py-[8px] text-base font-semibold text-(--palette-ink) bg-(--palette-surface-2) border-b border-(--palette-line)">
         {title}
       </h4>
       <div className="flex flex-col text-[12.5px]">{children}</div>
@@ -89,23 +89,29 @@ export function IndicatedValueRow({
           onBlur={() => setEditingEmpty(false)}
           decimalPlaces={2}
           disabled={disabled}
-          className="bg-[#f0fdfa]! border-[#99f6e4]! text-[#0f766e]! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
+          className="bg-(--palette-accent-wash)! border-(--palette-accent-line)! text-(--palette-accent-ink)! font-bold! text-[12.5px]! h-[26px]! py-0! px-[5px]! rounded-[4px]! w-full!"
         />
       }
       unit={t('finalValue.baht')}
       hint={
         delta === 0 ? (
-          <span className="text-[10.5px] text-gray-400">
+          <span className="text-[10.5px] text-(--palette-gray-400)">
             {t('comparativeAnalysis.roundingHint', { value: fmt(computedValue) })}
           </span>
         ) : (
-          <span className="text-[10.5px] text-gray-400 inline-flex items-center gap-1 flex-wrap justify-end">
-            <span className="font-semibold text-[#b45309]">{t('comparativeAnalysis.editedLabel')}</span>
+          <span className="text-[10.5px] text-(--palette-gray-400) inline-flex items-center gap-1 flex-wrap justify-end">
+            <span className="font-semibold text-(--palette-warn)">
+              {t('comparativeAnalysis.editedLabel')}
+            </span>
             {t('comparativeAnalysis.differsFromComputed', {
               value: `${delta > 0 ? '+' : '−'}${fmt(Math.abs(delta))}`,
             })}
             <span>·</span>
-            <button type="button" className="text-primary hover:underline" onClick={() => onChange(null)}>
+            <button
+              type="button"
+              className="text-(--palette-primary-text) hover:underline"
+              onClick={() => onChange(null)}
+            >
               {t('comparativeAnalysis.useComputedValue')}
             </button>
           </span>
@@ -116,12 +122,20 @@ export function IndicatedValueRow({
 }
 
 /** Plain read-only figure row — `valueDisplay` in WQSAdjustFinalValueSection.tsx. */
-export function DisplayValueRow({ label, value, unit }: { label: ReactNode; value: number; unit?: ReactNode }) {
+export function DisplayValueRow({
+  label,
+  value,
+  unit,
+}: {
+  label: ReactNode;
+  value: number;
+  unit?: ReactNode;
+}) {
   const { t } = useTranslation('pricingAnalysis');
   return (
     <KvRow
       label={label}
-      value={<span className="font-semibold text-gray-800 tabular-nums">{fmt(value)}</span>}
+      value={<span className="font-semibold text-(--palette-ink) tabular-nums">{fmt(value)}</span>}
       unit={unit ?? t('finalValue.baht')}
     />
   );
@@ -153,7 +167,7 @@ export function SummaryNotesCard({
           placeholder={t('remark.placeholder')}
           rows={4}
           disabled={disabled}
-          className="w-full text-xs text-gray-700 bg-transparent border border-gray-200 rounded-md px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400 disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed"
+          className="w-full text-xs text-(--palette-ink) bg-transparent border border-(--palette-line) rounded-md px-3 py-2 resize-y focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-(--palette-gray-400) disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-500) disabled:cursor-not-allowed"
         />
       </div>
     </SummaryCard>

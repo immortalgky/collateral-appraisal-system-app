@@ -44,13 +44,15 @@ export const eligibleAppraisalKeys = {
 export function useEligibleAppraisalsForQuotation(params: EligibleAppraisalsParams) {
   return useQuery({
     queryKey: eligibleAppraisalKeys.list(params),
-    queryFn: async () => {
+    // `signal` is forwarded so a request superseded by the next keystroke or filter change is
+    // aborted instead of running to completion on the server with its result thrown away.
+    queryFn: async ({ signal }) => {
       const cleanParams = Object.fromEntries(
         Object.entries(params).filter(([, v]) => v !== undefined && v !== '' && v !== null),
       );
       const { data } = await axios.get<EligibleAppraisalsResponse>(
         '/appraisals/eligible-for-quotation',
-        { params: cleanParams },
+        { params: cleanParams, signal },
       );
       return data;
     },

@@ -24,37 +24,60 @@
   "filter": {
     "title": "Filters",
     "fields": {
-      "search": "Search",
       "lastAppraisedDate": "Last Appraisal Date",
       "remainingDay": "Remaining Day"
     },
     "placeholders": {
       "search": "Project name or appraisal number",
-      "dateFrom": "From",
-      "dateTo": "To",
       "min": "Min",
       "max": "Max"
     },
-    "clear": "Clear filters"
+    "button": "Filters",
+    "clearSection": "Clear",
+    "remainingDayHint": "Counted to the reappraisal due date · negative = overdue",
+    "daysLeftFrom": "Days Left From",
+    "daysLeftTo": "Days Left To",
+    "duePreset": {
+      "overdue": "Overdue",
+      "dueSoon": "Within 90 Days",
+      "halfYear": "Within 6 Months",
+      "year": "Within 1 Year",
+      "custom": "Custom"
+    },
+    "chips": {
+      "lastAppraisedDateFrom": "Last Appraisal From",
+      "lastAppraisedDateTo": "Last Appraisal To",
+      "remainingDayMin": "Remaining From",
+      "remainingDayMax": "Remaining To"
+    }
   },
   "empty": {
     "noMatching": "No matching projects",
-    "noItems": "No projects due",
     "tryAdjusting": "Try adjusting your filters.",
-    "noneAtThisTime": "No block projects are due for reappraisal at this time.",
-    "clearFilters": "Clear filters"
+    "clearFilters": "Clear filters",
+    "tab": {
+      "Pending": "No projects due",
+      "Deleted": "No projects marked not required"
+    },
+    "tabHint": {
+      "Pending": "No block projects are due for reappraisal at this time.",
+      "Deleted": "Projects marked \"reappraisal not required\" appear here."
+    }
   },
   "error": {
     "loadFailed": "Failed to load block reappraisal list",
     "createFailed": "Failed to create appraisal request",
-    "optOutFailed": "Failed to mark as not required"
+    "optOutFailed": "Failed to mark as not required",
+    "restoreFailed": "Failed to restore to pending"
   },
   "success": {
-    "optOut": "Project marked as reappraisal not required"
+    "optOut": "Project marked as reappraisal not required",
+    "restore": "Project restored to pending"
   },
   "actions": {
     "createRequest": "Initiate reappraisal request",
-    "notRequired": "Reappraisal not required"
+    "notRequired": "Reappraisal not required",
+    "restore": "Restore"
   },
   "detail": {
     "backToList": "Back to list",
@@ -114,9 +137,14 @@
     "optOutModal": {
       "title": "Reappraisal Not Required",
       "body": "Mark this project as not requiring reappraisal? It will be removed from the due list.",
-      "confirm": "Confirm",
       "remarkLabel": "Remark",
-      "remarkPlaceholder": "Why doesn't this project require reappraisal?"
+      "remarkPlaceholder": "Why doesn't this project require reappraisal?",
+      "confirm": "Confirm"
+    },
+    "banner": {
+      "notRequiredTitle": "Marked \"Reappraisal Not Required\"",
+      "notRequiredRemark": "Remark: {{remark}}",
+      "notRequiredNoRemark": "No remark was given."
     }
   },
   "units": {
@@ -141,5 +169,14 @@
       "isSold": "Status",
       "lastUpdated": "Last Updated"
     }
+  },
+  "tabs": {
+    "Pending": "Pending",
+    "Deleted": "Reappraisal Not Required"
+  },
+  "quick": {
+    "all": "All",
+    "overdue": "Overdue",
+    "dueSoon": "Due in 90 Days"
   }
 }

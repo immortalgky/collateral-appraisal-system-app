@@ -233,7 +233,11 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-6 h-6 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -250,7 +254,7 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
   }
 
   if (!data) {
-    return <p className="text-sm text-gray-500 py-4">No pricing data available.</p>;
+    return <p className="text-sm text-(--palette-gray-500) py-4">No pricing data available.</p>;
   }
 
   const selectedApproaches = data.approaches?.filter(a => a.isSelected) ?? [];
@@ -282,7 +286,7 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
       {/* Selected Approaches + Methods with detail */}
       {selectedApproaches.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">
+          <h4 className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-3">
             Selected Approaches ({selectedApproaches.length})
           </h4>
           <div className="space-y-3">
@@ -305,7 +309,9 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
       {/* Other Approaches */}
       {otherApproaches.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 uppercase mb-3">Other Approaches</h4>
+          <h4 className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-3">
+            Other Approaches
+          </h4>
           <div className="space-y-3">
             {otherApproaches.map(approach => (
               <ApproachCard
@@ -324,8 +330,12 @@ const PricingBreakdownSlideOver = ({ pricingAnalysisId }: PricingBreakdownSlideO
 
       {data.approaches?.length === 0 && (
         <div className="text-center py-8">
-          <Icon name="chart-line" style="regular" className="w-8 h-8 text-gray-300 mx-auto mb-2" />
-          <p className="text-sm text-gray-500">No approaches configured yet.</p>
+          <Icon
+            name="chart-line"
+            style="regular"
+            className="w-8 h-8 text-(--palette-gray-300) mx-auto mb-2"
+          />
+          <p className="text-sm text-(--palette-gray-500)">No approaches configured yet.</p>
         </div>
       )}
     </div>
@@ -346,14 +356,16 @@ const ValueCard = ({
   <div
     className={
       highlight
-        ? 'p-3 rounded-xl bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-200'
-        : 'p-3 rounded-xl bg-gray-50 border border-gray-200'
+        ? 'p-3 rounded-xl bg-gradient-to-br from-(--palette-accent-wash) to-teal-100 dark:to-teal-500/20 border border-(--palette-accent-line)'
+        : 'p-3 rounded-xl bg-(--palette-surface-2) border border-(--palette-line)'
     }
   >
-    <p className="text-xs text-gray-500 mb-1">{label}</p>
+    <p className="text-xs text-(--palette-gray-500) mb-1">{label}</p>
     <p
       className={
-        highlight ? 'text-lg font-bold text-teal-800' : 'text-sm font-semibold text-gray-900'
+        highlight
+          ? 'text-lg font-bold text-teal-800 dark:text-teal-300'
+          : 'text-sm font-semibold text-(--palette-ink)'
       }
     >
       {value != null ? formatNumber(value, 2) : '-'}
@@ -363,8 +375,8 @@ const ValueCard = ({
 
 const MetaItem = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-center gap-2">
-    <span className="text-gray-500">{label}:</span>
-    <span className="font-medium text-gray-900">{value}</span>
+    <span className="text-(--palette-gray-500)">{label}:</span>
+    <span className="font-medium text-(--palette-ink)">{value}</span>
   </div>
 );
 
@@ -392,24 +404,24 @@ const ApproachCard = ({
     <div
       className={
         selected
-          ? 'rounded-xl border-2 border-teal-200 bg-teal-50/50 overflow-hidden'
-          : 'rounded-xl border border-gray-200 bg-white overflow-hidden'
+          ? 'rounded-xl border-2 border-(--palette-accent-line) bg-(--palette-accent-wash)/50 overflow-hidden'
+          : 'rounded-xl border border-(--palette-line) bg-(--palette-surface) overflow-hidden'
       }
     >
       <div className="px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           {selected && <Icon name="circle-check" style="solid" className="w-4 h-4 text-teal-500" />}
-          <span className="text-sm font-semibold text-gray-900">
+          <span className="text-sm font-semibold text-(--palette-ink)">
             {APPROACH_LABELS[approach.approachType] || approach.approachType}
           </span>
         </div>
-        <span className="text-xs text-gray-400">
+        <span className="text-xs text-(--palette-gray-400)">
           {approach.methods.length} {approach.methods.length === 1 ? 'method' : 'methods'}
         </span>
       </div>
 
       {approach.methods.length > 0 && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-(--palette-line-soft)">
           {selectedMethods.map(method => (
             <MethodSection
               key={method.id}
@@ -456,29 +468,39 @@ const MethodSection = ({
   isLoadingComparativeFactors: boolean;
   pricingAnalysisId: string;
 }) => (
-  <div className="border-b border-gray-50 last:border-b-0">
+  <div className="border-b border-(--palette-line-soft) last:border-b-0">
     {/* Method header — clickable to expand */}
     <button
       type="button"
       onClick={onToggle}
-      className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors"
+      className="w-full px-4 py-2.5 flex items-center justify-between hover:bg-(--palette-surface-2)/50 transition-colors"
     >
       <div className="flex items-center gap-2">
         {selected && <Icon name="check" style="solid" className="w-3 h-3 text-emerald-500" />}
-        <span className={selected ? 'text-sm text-gray-900 font-medium' : 'text-sm text-gray-500'}>
+        <span
+          className={
+            selected
+              ? 'text-sm text-(--palette-ink) font-medium'
+              : 'text-sm text-(--palette-gray-500)'
+          }
+        >
           {METHOD_LABELS[method.methodType] || method.methodType}
         </span>
       </div>
       <div className="flex items-center gap-2">
         <span
-          className={selected ? 'text-sm font-semibold text-gray-900' : 'text-sm text-gray-400'}
+          className={
+            selected
+              ? 'text-sm font-semibold text-(--palette-ink)'
+              : 'text-sm text-(--palette-gray-400)'
+          }
         >
           {method.methodValue != null ? formatNumber(method.methodValue, 2) : '-'}
         </span>
         <Icon
           name={isExpanded ? 'chevron-up' : 'chevron-down'}
           style="solid"
-          className="w-3 h-3 text-gray-400"
+          className="w-3 h-3 text-(--palette-gray-400)"
         />
       </div>
     </button>
@@ -489,12 +511,18 @@ const MethodSection = ({
         {COMPARATIVE_METHOD_TYPES.has(method.methodType) ? (
           isLoadingComparativeFactors && !factorsData ? (
             <div className="flex items-center justify-center py-4">
-              <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin text-gray-400" />
+              <Icon
+                name="spinner"
+                style="solid"
+                className="w-4 h-4 animate-spin text-(--palette-gray-400)"
+              />
             </div>
           ) : factorsData ? (
             <MethodDetail data={factorsData} />
           ) : (
-            <p className="text-xs text-gray-400 py-2">No calculation details available.</p>
+            <p className="text-xs text-(--palette-gray-400) py-2">
+              No calculation details available.
+            </p>
           )
         ) : method.methodType === 'MachineryCost' ? (
           <MachineryCostBreakdown360
@@ -529,7 +557,9 @@ const MethodSection = ({
             isExpanded={isExpanded}
           />
         ) : (
-          <p className="text-xs text-gray-400 py-2">No calculation details available.</p>
+          <p className="text-xs text-(--palette-gray-400) py-2">
+            No calculation details available.
+          </p>
         )}
       </div>
     )}
@@ -564,26 +594,28 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
       {/* Score Table: factors × (collateral + comparables) */}
       {factors.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Score Table</p>
+          <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">
+            Score Table
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="bg-gray-100">
-                  <th className="text-xs px-2 py-1.5 text-left font-semibold text-gray-500">
+                <tr className="bg-(--palette-surface-3)">
+                  <th className="text-xs px-2 py-1.5 text-left font-semibold text-(--palette-gray-500)">
                     Factor
                   </th>
-                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500">
+                  <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500)">
                     Weight
                   </th>
                   {hasCollateralScores && (
-                    <th className="text-xs px-2 py-1.5 text-right font-semibold text-teal-600 bg-teal-50/50">
+                    <th className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-accent-ink) bg-(--palette-accent-wash)/50">
                       Collateral
                     </th>
                   )}
                   {comparables.map(c => (
                     <th
                       key={c.linkId}
-                      className="text-xs px-2 py-1.5 text-right font-semibold text-gray-500 max-w-[80px] truncate"
+                      className="text-xs px-2 py-1.5 text-right font-semibold text-(--palette-gray-500) max-w-[80px] truncate"
                     >
                       {surveyNameMap.get(c.marketComparableId) ||
                         c.comparableName ||
@@ -593,7 +625,7 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {factors.map(factor => {
                   const firstScore = factorScores.find(fs => fs.factorId === factor.factorId);
                   const weight = firstScore?.factorWeight;
@@ -602,12 +634,12 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
                   );
                   return (
                     <tr key={factor.id}>
-                      <td className="px-2 py-1.5 text-gray-700">{factor.factorName}</td>
-                      <td className="px-2 py-1.5 text-right text-gray-600">
+                      <td className="px-2 py-1.5 text-(--palette-ink)">{factor.factorName}</td>
+                      <td className="px-2 py-1.5 text-right text-(--palette-gray-600)">
                         {weight != null ? `${weight}%` : '-'}
                       </td>
                       {hasCollateralScores && (
-                        <td className="px-2 py-1.5 text-right bg-teal-50/30">
+                        <td className="px-2 py-1.5 text-right bg-(--palette-accent-wash)/30">
                           <ScoreCell score={collateralScore} />
                         </td>
                       )}
@@ -618,7 +650,10 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
                             fs.marketComparableId === comp.marketComparableId,
                         );
                         return (
-                          <td key={comp.linkId} className="px-2 py-1.5 text-right text-gray-600">
+                          <td
+                            key={comp.linkId}
+                            className="px-2 py-1.5 text-right text-(--palette-gray-600)"
+                          >
                             <ScoreCell score={score} />
                           </td>
                         );
@@ -635,7 +670,7 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
       {/* Calculation per comparable */}
       {calculations.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">
+          <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">
             Calculations ({calculations.length})
           </p>
           <div className="space-y-3">
@@ -644,9 +679,9 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
             ))}
           </div>
           {/* Method Value footer */}
-          <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg bg-teal-50 border border-teal-200">
-            <span className="text-xs font-semibold text-gray-900">Method Value</span>
-            <span className="text-sm font-bold text-teal-700">
+          <div className="mt-3 flex items-center justify-between px-3 py-2 rounded-lg bg-(--palette-accent-wash) border border-(--palette-accent-line)">
+            <span className="text-xs font-semibold text-(--palette-ink)">Method Value</span>
+            <span className="text-sm font-bold text-(--palette-accent-ink)">
               {data.methodValue != null ? formatNumber(data.methodValue, 2) : '-'}
             </span>
           </div>
@@ -655,26 +690,26 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
 
       {/* R² Result */}
       {data.rsqResult && (
-        <div className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 space-y-1.5">
+        <div className="px-3 py-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line) space-y-1.5">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">R² Final Value</span>
-            <span className="text-sm font-semibold text-gray-900">
+            <span className="text-xs text-(--palette-gray-500)">R² Final Value</span>
+            <span className="text-sm font-semibold text-(--palette-ink)">
               {data.rsqResult.rsqFinalValue != null
                 ? formatNumber(data.rsqResult.rsqFinalValue, 4)
                 : '-'}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Coefficient of Decision (R²)</span>
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs text-(--palette-gray-500)">Coefficient of Decision (R²)</span>
+            <span className="text-xs font-medium text-(--palette-ink)">
               {data.rsqResult.coefficientOfDecision != null
                 ? formatNumber(data.rsqResult.coefficientOfDecision, 4)
                 : '-'}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Standard Error</span>
-            <span className="text-xs font-medium text-gray-700">
+            <span className="text-xs text-(--palette-gray-500)">Standard Error</span>
+            <span className="text-xs font-medium text-(--palette-ink)">
               {data.rsqResult.standardError != null
                 ? formatNumber(data.rsqResult.standardError, 4)
                 : '-'}
@@ -682,8 +717,8 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
           </div>
           {(data.rsqResult.lowestEstimate != null || data.rsqResult.highestEstimate != null) && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">Estimate Range</span>
-              <span className="text-xs font-medium text-gray-700">
+              <span className="text-xs text-(--palette-gray-500)">Estimate Range</span>
+              <span className="text-xs font-medium text-(--palette-ink)">
                 {data.rsqResult.lowestEstimate != null
                   ? formatNumber(data.rsqResult.lowestEstimate, 2)
                   : '-'}
@@ -699,18 +734,20 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
 
       {/* Final Value block */}
       {data.finalValue && (
-        <div className="space-y-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-          <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Final Value</p>
+        <div className="space-y-1 px-3 py-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line)">
+          <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">
+            Final Value
+          </p>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">Final Value</span>
-            <span className="text-xs font-medium text-gray-800">
+            <span className="text-xs text-(--palette-gray-500)">Final Value</span>
+            <span className="text-xs font-medium text-(--palette-ink)">
               {formatNumber(data.finalValue.finalValue, 2)}
             </span>
           </div>
           {data.finalValue.finalValueOverride != null && (
             <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-500">Adjusted</span>
-              <span className="text-sm font-bold text-teal-700">
+              <span className="text-xs text-(--palette-gray-500)">Adjusted</span>
+              <span className="text-sm font-bold text-(--palette-accent-ink)">
                 {formatNumber(data.finalValue.finalValueOverride, 2)}
               </span>
             </div>
@@ -719,16 +756,16 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
             <>
               {data.finalValue.landArea != null && (
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Land Area (Sq.Wa)</span>
-                  <span className="text-xs font-medium text-gray-800">
+                  <span className="text-xs text-(--palette-gray-500)">Land Area (Sq.Wa)</span>
+                  <span className="text-xs font-medium text-(--palette-ink)">
                     {formatNumber(data.finalValue.landArea, 2)}
                   </span>
                 </div>
               )}
               {data.finalValue.landValue != null && (
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Land Value</span>
-                  <span className="text-xs font-medium text-gray-800">
+                  <span className="text-xs text-(--palette-gray-500)">Land Value</span>
+                  <span className="text-xs font-medium text-(--palette-ink)">
                     {formatNumber(data.finalValue.landValue, 2)}
                   </span>
                 </div>
@@ -739,16 +776,16 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
             <>
               {data.finalValue.buildingValue != null && (
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Building Cost</span>
-                  <span className="text-xs font-medium text-gray-800">
+                  <span className="text-xs text-(--palette-gray-500)">Building Cost</span>
+                  <span className="text-xs font-medium text-(--palette-ink)">
                     {formatNumber(data.finalValue.buildingValue, 2)}
                   </span>
                 </div>
               )}
               {data.finalValue.indicatedValue != null && (
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-gray-500">Appraisal Price (Final)</span>
-                  <span className="text-xs font-medium text-gray-800">
+                  <span className="text-xs text-(--palette-gray-500)">Appraisal Price (Final)</span>
+                  <span className="text-xs font-medium text-(--palette-ink)">
                     {formatNumber(data.finalValue.indicatedValue, 2)}
                   </span>
                 </div>
@@ -760,24 +797,28 @@ const MethodDetail = ({ data }: { data: ComparativeFactorsData }) => {
 
       {/* Empty state */}
       {comparables.length === 0 && factors.length === 0 && calculations.length === 0 && (
-        <p className="text-xs text-gray-400 py-2">No calculation data recorded for this method.</p>
+        <p className="text-xs text-(--palette-gray-400) py-2">
+          No calculation data recorded for this method.
+        </p>
       )}
     </div>
   );
 };
 
 const ScoreCell = ({ score }: { score: FactorScore | undefined }) => {
-  if (!score) return <span className="text-gray-400">-</span>;
+  if (!score) return <span className="text-(--palette-gray-400)">-</span>;
   return (
     <div className="inline-flex flex-col items-end gap-0.5">
-      <span className="text-gray-700 font-medium">
+      <span className="text-(--palette-ink) font-medium">
         {score.score != null ? score.score : (score.value ?? '-')}
       </span>
       {score.weightedScore != null && (
-        <span className="text-[10px] text-gray-400">w: {formatNumber(score.weightedScore, 2)}</span>
+        <span className="text-[10px] text-(--palette-gray-400)">
+          w: {formatNumber(score.weightedScore, 2)}
+        </span>
       )}
       {score.adjustmentPct != null && (
-        <span className="text-[10px] text-gray-400">
+        <span className="text-[10px] text-(--palette-gray-400)">
           adj: {formatNumber(score.adjustmentPct, 1)}%
         </span>
       )}
@@ -785,7 +826,7 @@ const ScoreCell = ({ score }: { score: FactorScore | undefined }) => {
         <span
           className={`text-[10px] font-medium ${
             score.comparisonResult === 'E'
-              ? 'text-gray-400'
+              ? 'text-(--palette-gray-400)'
               : score.comparisonResult === 'B'
                 ? 'text-emerald-500'
                 : 'text-orange-500'
@@ -875,20 +916,22 @@ const CalculationCard = ({ calc }: { calc: Calculation }) => {
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
-      <div className="px-3 py-1.5 bg-gray-50 border-b border-gray-200 flex items-center gap-2">
+    <div className="rounded-lg border border-(--palette-line) overflow-hidden">
+      <div className="px-3 py-1.5 bg-(--palette-surface-2) border-b border-(--palette-line) flex items-center gap-2">
         <Icon name="location-dot" style="solid" className="w-3 h-3 text-orange-400" />
-        <span className="text-xs font-semibold text-gray-700">{calc.comparableName || '-'}</span>
+        <span className="text-xs font-semibold text-(--palette-ink)">
+          {calc.comparableName || '-'}
+        </span>
       </div>
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-(--palette-line-soft)">
         {rows.map(row => (
           <div key={row.label} className="flex items-center justify-between px-3 py-1">
-            <span className="text-xs text-gray-500">{row.label}</span>
-            <span className="text-xs font-medium text-gray-800">{row.value}</span>
+            <span className="text-xs text-(--palette-gray-500)">{row.label}</span>
+            <span className="text-xs font-medium text-(--palette-ink)">{row.value}</span>
           </div>
         ))}
         {rows.length === 0 && (
-          <p className="text-xs text-gray-400 px-3 py-2">No calculation data.</p>
+          <p className="text-xs text-(--palette-gray-400) px-3 py-2">No calculation data.</p>
         )}
       </div>
     </div>

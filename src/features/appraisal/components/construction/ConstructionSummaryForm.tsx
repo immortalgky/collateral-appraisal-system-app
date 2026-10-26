@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import toast from 'react-hot-toast';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import TextInput from '@shared/components/inputs/TextInput';
@@ -6,20 +6,10 @@ import { formatFileSize } from '@shared/utils/formatUtils';
 import Icon from '@shared/components/Icon';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
-import { Change, HeaderCell } from './constructionGridCells';
+import { FormTable, type FormTableColumn } from '@/shared/components/form';
+import { Change, HeadLabel } from './constructionGridCells';
 import { useConstructionScope } from './constructionScope';
-import {
-  baht,
-  INPUT_TD,
-  isPendingProgress,
-  isRegressedProgress,
-  pct,
-  INPUT_BOX,
-  REGRESSED,
-  RO,
-  TD,
-  TH,
-} from './constructionGrid';
+import { baht, isPendingProgress, isRegressedProgress, pct, RO } from './constructionGrid';
 import {
   createUploadSession,
   useUploadDocument,
@@ -28,6 +18,9 @@ import {
 
 /** ConstructionInspection.SummaryDetailMaxLength on the server; longer fails the whole save. */
 const SUMMARY_DETAIL_MAX = 1000;
+
+/** Width of a figure column. */
+const FIGURE_W = '7.1429rem';
 
 interface ConstructionSummaryFormProps {
   summary: {
@@ -53,6 +46,8 @@ interface ConstructionSummaryFormProps {
   showMoney: boolean;
   readOnly?: boolean;
 }
+
+type SummaryRow = NonNullable<ConstructionSummaryFormProps['summary']>;
 
 export function ConstructionSummaryForm({
   summary,
@@ -150,102 +145,116 @@ export function ConstructionSummaryForm({
   const blockEnter = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') e.preventDefault();
   };
-  const head = (label: string, unit: string) => (
-    <HeaderCell label={label} unit={unit} className="w-[96px] min-w-[96px]" />
-  );
+  const figure = (
+    key: string,
+    kind: 'input' | 'derived',
+    label: string,
+    unit: string,
+    cell: () => ReactNode,
+    className?: string,
+  ): FormTableColumn<SummaryRow> => ({
+    key,
+    kind,
+    align: 'end',
+    width: FIGURE_W,
+    header: <HeadLabel label={label} unit={unit} />,
+    className,
+    cell,
+  });
+  const columns = [
+    {
+      key: 'description',
+      kind: 'input' as const,
+      header: t('constructionInspection.columns.description'),
+      cell: () =>
+        readOnly ? (
+          // Wraps: a long detail would otherwise stretch the table and push the figures off-screen.
+          <span className="block max-w-[32.5rem] whitespace-normal break-words">
+            {summary?.summaryDetail}
+          </span>
+        ) : (
+          <TextInput
+            cell
+            maxLength={SUMMARY_DETAIL_MAX}
+            value={summary?.summaryDetail ?? ''}
+            placeholder={t('constructionInspection.summaryForm.detailPlaceholder')}
+            onChange={e => onUpdateSummary('summaryDetail', e.target.value)}
+            onKeyDown={blockEnter}
+            aria-label={t('constructionInspection.columns.description')}
+          />
+        ),
+    },
+    showPrevious &&
+      figure(
+        'previousProgress',
+        'derived',
+        t('constructionInspection.grid.previousProgress'),
+        '(%)',
+        () => pct(previousPct),
+        RO,
+      ),
+    figure(
+      'currentProgress',
+      'input',
+      t('constructionInspection.grid.currentProgress'),
+      '(%)',
+      () =>
+        readOnly ? (
+          <span className={clsx(isRegressed && 'text-(--palette-danger)')}>{pct(currentPct)}</span>
+        ) : (
+          <NumberInput
+            cell
+            value={currentPct}
+            onChange={e => onUpdateSummary('summaryCurrentProgressPct', e.target.value ?? 0)}
+            decimalPlaces={2}
+            max={100}
+            onKeyDown={blockEnter}
+            aria-label={t('constructionInspection.grid.currentProgress')}
+            invalid={isRegressed}
+          />
+        ),
+    ),
+    showPrevious &&
+      figure('change', 'derived', t('constructionInspection.grid.change'), '(%)', () => (
+        <Change from={previousPct} to={currentPct} final={final} />
+      )),
+    showPrevious &&
+      showMoney &&
+      figure(
+        'previousValue',
+        'derived',
+        t('constructionInspection.grid.previousValue'),
+        t('constructionInspection.grid.baht'),
+        () => baht(summaryPreviousValue),
+        RO,
+      ),
+    showMoney &&
+      figure(
+        'currentValue',
+        'derived',
+        t('constructionInspection.grid.currentValue'),
+        t('constructionInspection.grid.baht'),
+        () => baht(summaryCurrentValue),
+        'font-semibold',
+      ),
+  ].filter((c): c is FormTableColumn<SummaryRow> => !!c);
 
   return (
     <div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-max border-separate border-spacing-0 text-sm leading-[1.9231rem] tabular-nums text-[color:var(--palette-ink)]">
-          <thead>
-            <tr>
-              <th className={clsx(TH, 'text-left min-w-[320px]')}>
-                {t('constructionInspection.columns.description')}
-              </th>
-              {showPrevious && head(t('constructionInspection.grid.previousProgress'), '(%)')}
-              {head(t('constructionInspection.grid.currentProgress'), '(%)')}
-              {showPrevious && head(t('constructionInspection.grid.change'), '(%)')}
-              {showPrevious &&
-                showMoney &&
-                head(
-                  t('constructionInspection.grid.previousValue'),
-                  t('constructionInspection.grid.baht'),
-                )}
-              {showMoney &&
-                head(
-                  t('constructionInspection.grid.currentValue'),
-                  t('constructionInspection.grid.baht'),
-                )}
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={INPUT_TD}>
-                {readOnly ? (
-                  // Wraps: a long detail would otherwise stretch the table and push the figures off-screen.
-                  <span className="block px-[5px] whitespace-normal break-words max-w-[520px]">
-                    {summary?.summaryDetail}
-                  </span>
-                ) : (
-                  <TextInput
-                    dense
-                    maxLength={SUMMARY_DETAIL_MAX}
-                    value={summary?.summaryDetail ?? ''}
-                    placeholder={t('constructionInspection.summaryForm.detailPlaceholder')}
-                    onChange={e => onUpdateSummary('summaryDetail', e.target.value)}
-                    onKeyDown={blockEnter}
-                    aria-label={t('constructionInspection.columns.description')}
-                    // Dense inputs are right-aligned for figures; this one is prose.
-                    className={clsx('text-left!', INPUT_BOX)}
-                  />
-                )}
-              </td>
-              {showPrevious && <td className={clsx(TD, 'text-right', RO)}>{pct(previousPct)}</td>}
-              {readOnly ? (
-                <td className={clsx(TD, 'text-right', isRegressed && 'text-[#dc2626]')}>
-                  {pct(currentPct)}
-                </td>
-              ) : (
-                <td className={INPUT_TD}>
-                  <NumberInput
-                    dense
-                    value={currentPct}
-                    onChange={e =>
-                      onUpdateSummary('summaryCurrentProgressPct', e.target.value ?? 0)
-                    }
-                    decimalPlaces={2}
-                    max={100}
-                    onKeyDown={blockEnter}
-                    aria-label={t('constructionInspection.grid.currentProgress')}
-                    className={isRegressed ? REGRESSED : INPUT_BOX}
-                  />
-                </td>
-              )}
-              {showPrevious && (
-                <td className={clsx(TD, 'text-right')}>
-                  <Change from={previousPct} to={currentPct} final={final} />
-                </td>
-              )}
-              {showPrevious && showMoney && (
-                <td className={clsx(TD, 'text-right', RO)}>{baht(summaryPreviousValue)}</td>
-              )}
-              {showMoney && (
-                <td className={clsx(TD, 'text-right font-semibold')}>
-                  {baht(summaryCurrentValue)}
-                </td>
-              )}
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <FormTable
+        columns={columns}
+        rows={[summary ?? {}]}
+        rowKey={() => 'summary'}
+        readOnly={readOnly}
+        bleed
+      />
       {isPending && (
         <div className="px-[12px] pt-[6px] text-[0.8571rem] text-[color:var(--palette-warn)]">
           {t('constructionInspection.status.summaryPending')}
         </div>
       )}
       {isRegressed && (
-        <div className="px-[12px] pt-[6px] text-[0.8571rem] text-[#dc2626]">
+        <div className="px-[12px] pt-[6px] text-[0.8571rem] text-(--palette-danger)">
           ⚠ {t('constructionInspection.status.summaryRegressed')}
         </div>
       )}
@@ -253,7 +262,7 @@ export function ConstructionSummaryForm({
       {/* Upload Construction Detail */}
       <div className="space-y-3 p-[12px]">
         <div className="flex items-center gap-2">
-          <Icon name="paperclip" style="solid" className="size-3.5 text-gray-400" />
+          <Icon name="paperclip" style="solid" className="size-3.5 text-(--palette-gray-400)" />
           <span className="text-xs font-semibold text-gray-700 dark:text-[color:var(--palette-ink)]">
             {t('constructionInspection.summaryForm.uploadTitle')}
           </span>
@@ -282,33 +291,37 @@ export function ConstructionSummaryForm({
                   ? 'border-primary/30 bg-primary/5 cursor-wait'
                   : isDragOver
                     ? 'border-primary bg-primary/5 cursor-pointer'
-                    : 'border-gray-200 dark:border-[color:var(--palette-line)] hover:border-gray-300 hover:bg-gray-50/50 cursor-pointer'
+                    : 'border-gray-200 dark:border-[color:var(--palette-line)] hover:border-(--palette-line-strong) hover:bg-(--palette-surface-2)/50 cursor-pointer'
               }`}
             >
               <div
                 className={`size-9 rounded-full flex items-center justify-center transition-colors ${
-                  isDragOver || isUploading ? 'bg-primary/10' : 'bg-primary-50'
+                  isDragOver || isUploading ? 'bg-primary/10' : 'bg-(--palette-accent-wash)'
                 }`}
               >
                 {isUploading ? (
-                  <Icon name="spinner" style="solid" className="size-4 text-primary animate-spin" />
+                  <Icon
+                    name="spinner"
+                    style="solid"
+                    className="size-4 text-(--palette-primary-text) animate-spin"
+                  />
                 ) : (
                   <Icon
                     name="cloud-arrow-up"
                     style="solid"
-                    className={`size-4 ${isDragOver ? 'text-primary' : 'text-gray-400'}`}
+                    className={`size-4 ${isDragOver ? 'text-(--palette-primary-text)' : 'text-(--palette-gray-400)'}`}
                   />
                 )}
               </div>
               <div className="text-center">
                 {isUploading ? (
-                  <p className="text-xs font-medium text-primary">
+                  <p className="text-xs font-medium text-(--palette-primary-text)">
                     {t('constructionInspection.summaryForm.uploading')}
                   </p>
                 ) : (
                   <>
                     <p className="text-xs font-medium text-gray-600 dark:text-[color:var(--palette-ink-2)]">
-                      <span className="text-primary">
+                      <span className="text-(--palette-primary-text)">
                         {t('constructionInspection.summaryForm.clickToUpload')}
                       </span>{' '}
                       {t('constructionInspection.summaryForm.orDragDrop')}
@@ -325,17 +338,21 @@ export function ConstructionSummaryForm({
 
         {/* Uploaded document */}
         {hasDocument && (
-          <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-[color:var(--palette-surface-2)] rounded-lg border border-gray-100 dark:border-[color:var(--palette-line)] group hover:border-gray-200 transition-colors">
+          <div className="flex items-center gap-3 px-3 py-2.5 bg-gray-50 dark:bg-[color:var(--palette-surface-2)] rounded-lg border border-gray-100 dark:border-[color:var(--palette-line)] group hover:border-(--palette-line) transition-colors">
             <button
               type="button"
               onClick={handleViewDocument}
               className="flex items-center gap-3 flex-1 min-w-0 text-left"
             >
               <div className="size-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <Icon name="file-lines" style="regular" className="size-3.5 text-primary" />
+                <Icon
+                  name="file-lines"
+                  style="regular"
+                  className="size-3.5 text-(--palette-primary-text)"
+                />
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-700 dark:text-[color:var(--palette-ink)] truncate hover:text-primary transition-colors">
+                <p className="text-xs font-medium text-gray-700 dark:text-[color:var(--palette-ink)] truncate hover:text-(--palette-primary-text) transition-colors">
                   {summary?.fileName ?? t('constructionInspection.summaryForm.document')}
                 </p>
                 <p className="text-[0.8571rem] text-gray-400 dark:text-[color:var(--palette-ink-3)]">
@@ -353,7 +370,7 @@ export function ConstructionSummaryForm({
                 type="button"
                 onClick={handleRemoveDocument}
                 aria-label={t('constructionInspection.summaryForm.removeDocument')}
-                className="p-1.5 rounded-md text-gray-400 hover:text-danger hover:bg-danger/5 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                className="p-1.5 rounded-md text-(--palette-gray-400) hover:text-danger hover:bg-danger/5 transition-all opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
               >
                 <Icon name="trash-can" style="regular" className="size-3" />
               </button>

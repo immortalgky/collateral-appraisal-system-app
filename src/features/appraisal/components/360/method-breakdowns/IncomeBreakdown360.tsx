@@ -25,7 +25,11 @@ const IncomeBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Props) 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-4">
-        <Icon name="spinner" style="solid" className="w-4 h-4 animate-spin text-gray-400" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-4 h-4 animate-spin text-(--palette-gray-400)"
+        />
       </div>
     );
   }
@@ -34,19 +38,19 @@ const IncomeBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Props) 
     return (
       <div className="flex items-center gap-2 py-2">
         <Icon name="circle-exclamation" style="solid" className="w-4 h-4 text-red-400" />
-        <p className="text-xs text-red-600">Failed to load income analysis details.</p>
+        <p className="text-xs text-(--palette-danger)">Failed to load income analysis details.</p>
       </div>
     );
   }
 
   if (!data) {
-    return <p className="text-xs text-gray-400 py-2">No income analysis available.</p>;
+    return <p className="text-xs text-(--palette-gray-400) py-2">No income analysis available.</p>;
   }
 
   return (
     <div className="space-y-4">
       {/* Assumption strip */}
-      <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
+      <div className="grid grid-cols-2 gap-x-4 gap-y-1 px-3 py-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line)">
         <AssumptionRow label="Template" value={data.templateName} isText />
         <AssumptionRow label="Capitalize Rate" value={data.capitalizeRate} pct />
         <AssumptionRow label="Discount Rate" value={data.discountedRate} pct />
@@ -55,7 +59,7 @@ const IncomeBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Props) 
 
       {/* HBU note */}
       {data.isHighestBestUsed && (
-        <p className="text-xs text-teal-700 font-medium border-l-2 border-teal-400 pl-2">
+        <p className="text-xs text-(--palette-accent-ink) font-medium border-l-2 border-teal-400 pl-2">
           Highest and Best Use (HBU) applied
         </p>
       )}
@@ -63,7 +67,7 @@ const IncomeBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Props) 
       {/* Sections */}
       {data.sections.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-semibold text-gray-500 uppercase">Sections</p>
+          <p className="text-xs font-semibold text-(--palette-gray-500) uppercase">Sections</p>
           {data.sections.map(section => (
             <SectionDisclosure key={section.id} section={section} />
           ))}
@@ -71,8 +75,8 @@ const IncomeBreakdown360 = ({ pricingAnalysisId, methodId, isExpanded }: Props) 
       )}
 
       {/* Final summary */}
-      <div className="space-y-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-        <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Summary</p>
+      <div className="space-y-1 px-3 py-2 rounded-lg bg-(--palette-surface-2) border border-(--palette-line)">
+        <p className="text-xs font-semibold text-(--palette-gray-500) uppercase mb-2">Summary</p>
         <SummaryRow label="Final Value" value={data.finalValue} />
         <SummaryRow label="Final Value Rounded" value={data.finalValueRounded} />
         {data.finalValueAdjust != null && (
@@ -102,8 +106,8 @@ const AssumptionRow = ({
   isText?: boolean;
 }) => (
   <div className="flex items-center justify-between gap-2">
-    <span className="text-xs text-gray-500 shrink-0">{label}</span>
-    <span className="text-xs font-medium text-gray-800 text-right">
+    <span className="text-xs text-(--palette-gray-500) shrink-0">{label}</span>
+    <span className="text-xs font-medium text-(--palette-ink) text-right">
       {isText
         ? (value ?? '-')
         : value != null
@@ -123,10 +127,12 @@ const SummaryRow = ({
   highlight?: boolean;
 }) => (
   <div className="flex items-center justify-between">
-    <span className="text-xs text-gray-500">{label}</span>
+    <span className="text-xs text-(--palette-gray-500)">{label}</span>
     <span
       className={
-        highlight ? 'text-sm font-bold text-teal-700' : 'text-xs font-medium text-gray-800'
+        highlight
+          ? 'text-sm font-bold text-(--palette-accent-ink)'
+          : 'text-xs font-medium text-(--palette-ink)'
       }
     >
       {value != null ? formatNumber(value, 2) : '-'}
@@ -138,21 +144,21 @@ const SectionDisclosure = ({ section }: { section: IncomeSectionDto }) => {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="rounded-lg border border-gray-200 overflow-hidden">
+    <div className="rounded-lg border border-(--palette-line) overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
-        className="w-full px-3 py-2 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full px-3 py-2 flex items-center justify-between bg-(--palette-surface-2) hover:bg-(--palette-surface-3) transition-colors"
       >
-        <span className="text-xs font-semibold text-gray-700">{section.sectionName}</span>
+        <span className="text-xs font-semibold text-(--palette-ink)">{section.sectionName}</span>
         <Icon
           name={open ? 'chevron-up' : 'chevron-down'}
           style="solid"
-          className="w-3 h-3 text-gray-400"
+          className="w-3 h-3 text-(--palette-gray-400)"
         />
       </button>
       {open && (
-        <div className="divide-y divide-gray-50">
+        <div className="divide-y divide-(--palette-line-soft)">
           {section.categories.map(cat => (
             <CategoryBlock key={cat.id} category={cat} />
           ))}
@@ -164,10 +170,10 @@ const SectionDisclosure = ({ section }: { section: IncomeSectionDto }) => {
 
 const CategoryBlock = ({ category }: { category: IncomeCategoryDto }) => (
   <div className="px-3 py-2 space-y-1.5">
-    <p className="text-xs font-medium text-gray-600">{category.categoryName}</p>
+    <p className="text-xs font-medium text-(--palette-gray-600)">{category.categoryName}</p>
     {category.assumptions.length > 0 && (
       <table className="w-full text-xs">
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {category.assumptions.map(a => (
             <AssumptionLine key={a.id} assumption={a} />
           ))}
@@ -182,8 +188,8 @@ const AssumptionLine = ({ assumption }: { assumption: IncomeAssumptionDto }) => 
   const firstVal = assumption.totalAssumptionValues[0];
   return (
     <tr>
-      <td className="py-0.5 text-gray-500">{assumption.assumptionName}</td>
-      <td className="py-0.5 text-right font-medium text-gray-700">
+      <td className="py-0.5 text-(--palette-gray-500)">{assumption.assumptionName}</td>
+      <td className="py-0.5 text-right font-medium text-(--palette-ink)">
         {firstVal != null ? formatNumber(firstVal, 2) : '-'}
       </td>
     </tr>

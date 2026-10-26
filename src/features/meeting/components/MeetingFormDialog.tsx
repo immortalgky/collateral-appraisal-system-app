@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import Modal from '@/shared/components/Modal';
 import Button from '@/shared/components/Button';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 import {
   type CreateMeetingFormValues,
   type UpdateMeetingFormValues,
@@ -63,7 +64,7 @@ const buildUpdateDefaults = (): UpdateMeetingFormValues => ({
 });
 
 const sharedInputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 // ── Create sub-form ───────────────────────────────────────────────────────────
 
@@ -205,7 +206,10 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {/* Title */}
       <div>
-        <label htmlFor="meeting-title" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="meeting-title"
+          className="block text-sm font-medium text-(--palette-ink) mb-1"
+        >
           {t('fields.title')} <span className="text-red-500">*</span>
         </label>
         <input
@@ -215,7 +219,11 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           className={sharedInputClass}
           placeholder={t('fields.titlePlaceholder')}
         />
-        {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title.message}</p>}
+        {errors.title && (
+          <p className="mt-1 text-xs text-(--palette-danger)">
+            <ValidationText message={errors.title.message} />
+          </p>
+        )}
       </div>
 
       {/* Start / End */}
@@ -243,7 +251,7 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
         <div>
           <label
             htmlFor="meeting-fromText"
-            className="block text-sm font-medium text-gray-700 mb-1"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
           >
             {t('fields.from')} <span className="text-red-500">*</span>
           </label>
@@ -254,11 +262,16 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
             className={sharedInputClass}
           />
           {errors.fromText && (
-            <p className="mt-1 text-xs text-red-600">{errors.fromText.message}</p>
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.fromText.message} />
+            </p>
           )}
         </div>
         <div>
-          <label htmlFor="meeting-toText" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="meeting-toText"
+            className="block text-sm font-medium text-(--palette-ink) mb-1"
+          >
             {t('fields.to')} <span className="text-red-500">*</span>
           </label>
           <input
@@ -267,13 +280,20 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
             {...register('toText')}
             className={sharedInputClass}
           />
-          {errors.toText && <p className="mt-1 text-xs text-red-600">{errors.toText.message}</p>}
+          {errors.toText && (
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.toText.message} />
+            </p>
+          )}
         </div>
       </div>
 
       {/* Location */}
       <div>
-        <label htmlFor="meeting-location" className="block text-sm font-medium text-gray-700 mb-1">
+        <label
+          htmlFor="meeting-location"
+          className="block text-sm font-medium text-(--palette-ink) mb-1"
+        >
           {t('fields.location')} <span className="text-red-500">*</span>
         </label>
         <input
@@ -282,7 +302,11 @@ const EditForm = ({ onClose, initialValues, meetingId, onSuccess }: EditFormProp
           {...register('location')}
           className={sharedInputClass}
         />
-        {errors.location && <p className="mt-1 text-xs text-red-600">{errors.location.message}</p>}
+        {errors.location && (
+          <p className="mt-1 text-xs text-(--palette-danger)">
+            <ValidationText message={errors.location.message} />
+          </p>
+        )}
       </div>
 
       <div className="flex justify-end gap-3 pt-2">

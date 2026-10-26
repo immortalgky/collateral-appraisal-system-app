@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import toast from 'react-hot-toast';
 import { arrayMove } from '@dnd-kit/sortable';
 import { ActivityType } from '@features/workflowBuilder/types';
@@ -27,7 +28,7 @@ import {
 } from '../utils/sameAssignee';
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500';
 
 const SEGMENTS: BankingSegment[] = ['Retail', 'IBG'];
 
@@ -57,9 +58,9 @@ function StrategyPicker({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <label className="block text-sm font-medium text-(--palette-ink) mb-1">{label}</label>
       {baseline !== undefined && (
-        <p className="text-xs text-gray-400 mb-1.5">
+        <p className="text-xs text-(--palette-gray-400) mb-1.5">
           {t('strategies.baseline', {
             list: baseline.length ? baseline.join(', ') : t('strategies.baselineNone'),
           })}
@@ -67,18 +68,18 @@ function StrategyPicker({
       )}
       {selected.length > 0 && (
         <div className="mb-2">
-          <p className="text-xs text-gray-400 mb-1">{t('strategies.orderHint')}</p>
-          <ol className="rounded-md border border-gray-300 bg-white divide-y divide-gray-100">
+          <p className="text-xs text-(--palette-gray-400) mb-1">{t('strategies.orderHint')}</p>
+          <ol className="rounded-md border border-(--palette-line-strong) bg-(--palette-surface) divide-y divide-(--palette-line-soft)">
             {selected.map((token, i) => (
               <li key={token} className="flex items-center gap-2 px-2 py-1 text-xs">
-                <span className="w-4 text-gray-400 text-right">{i + 1}.</span>
-                <span className="flex-1 font-mono text-gray-700">{token}</span>
+                <span className="w-4 text-(--palette-gray-400) text-right">{i + 1}.</span>
+                <span className="flex-1 font-mono text-(--palette-ink)">{token}</span>
                 <button
                   type="button"
                   onClick={() => move(i, -1)}
                   disabled={i === 0}
                   aria-label={t('strategies.moveUp', { strategy: token })}
-                  className="px-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-1.5 text-(--palette-gray-500) hover:text-(--palette-ink) disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   ↑
                 </button>
@@ -87,7 +88,7 @@ function StrategyPicker({
                   onClick={() => move(i, 1)}
                   disabled={i === selected.length - 1}
                   aria-label={t('strategies.moveDown', { strategy: token })}
-                  className="px-1.5 text-gray-500 hover:text-gray-900 disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="px-1.5 text-(--palette-gray-500) hover:text-(--palette-ink) disabled:opacity-30 disabled:cursor-not-allowed"
                 >
                   ↓
                 </button>
@@ -103,9 +104,9 @@ function StrategyPicker({
               type="checkbox"
               checked={selected.includes(token)}
               onChange={() => toggle(token)}
-              className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+              className="h-3.5 w-3.5 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
             />
-            <span className="font-mono text-gray-700">{token}</span>
+            <span className="font-mono text-(--palette-ink)">{token}</span>
           </label>
         ))}
       </div>
@@ -276,11 +277,11 @@ function ConfigModal({
       <div className="space-y-4">
         <fieldset disabled={activitiesLoading} className="min-w-0 space-y-4">
           {activitiesLoading && (
-            <p className="text-xs text-gray-400">{t('fields.activitiesLoading')}</p>
+            <p className="text-xs text-(--palette-gray-400)">{t('fields.activitiesLoading')}</p>
           )}
           {/* Activity */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1">
               {t('fields.activity')} <span className="text-red-500">*</span>
             </label>
             {editing ? (
@@ -288,7 +289,7 @@ function ConfigModal({
                 type="text"
                 value={activityId}
                 disabled
-                className={`${inputClass} bg-gray-50`}
+                className={`${inputClass} bg-(--palette-surface-2)`}
               />
             ) : activitiesUnavailable ? (
               <>
@@ -299,13 +300,15 @@ function ConfigModal({
                   className={inputClass}
                   placeholder={t('fields.activityFreePlaceholder')}
                 />
-                <p className="mt-1 text-xs text-amber-600">{t('fields.activityUnavailable')}</p>
+                <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">
+                  {t('fields.activityUnavailable')}
+                </p>
               </>
             ) : (
-              <select
+              <NativeSelect
                 value={activityId}
                 onChange={e => setActivityId(e.target.value)}
-                className={inputClass}
+                className="w-full"
               >
                 <option value="">{t('fields.activitySelect')}</option>
                 {activities.map(a => (
@@ -313,44 +316,52 @@ function ConfigModal({
                     {a.name} ({a.id})
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             )}
           </div>
 
           {/* Baseline being overridden */}
           {baseline && !isFollowupSelection && (
-            <div className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600 space-y-0.5">
-              <p className="font-medium text-gray-500">{t('baseline.heading')}</p>
+            <div className="rounded-md border border-(--palette-line) bg-(--palette-surface-2) px-3 py-2 text-xs text-(--palette-gray-600) space-y-0.5">
+              <p className="font-medium text-(--palette-gray-500)">{t('baseline.heading')}</p>
               <p>
                 {t('baseline.group')}:{' '}
                 <span className="font-mono">
-                  {baseline.assigneeGroup || <span className="italic text-gray-400">{t('baseline.none')}</span>}
+                  {baseline.assigneeGroup || (
+                    <span className="italic text-(--palette-gray-400)">{t('baseline.none')}</span>
+                  )}
                 </span>
               </p>
               <p>
                 {t('baseline.initial')}:{' '}
-                <span className="font-mono">{baseline.initialAssignmentStrategies.join(', ') || '—'}</span>
+                <span className="font-mono">
+                  {baseline.initialAssignmentStrategies.join(', ') || '—'}
+                </span>
               </p>
               <p>
                 {t('baseline.routeBack')}:{' '}
-                <span className="font-mono">{baseline.revisitAssignmentStrategies.join(', ') || '—'}</span>
+                <span className="font-mono">
+                  {baseline.revisitAssignmentStrategies.join(', ') || '—'}
+                </span>
               </p>
             </div>
           )}
 
           {isFollowupSelection && (
-            <p className="rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-xs text-gray-600">
+            <p className="rounded-md border border-(--palette-line) bg-(--palette-surface-2) px-3 py-2 text-xs text-(--palette-gray-600)">
               {t('fields.followupSelectionHint')}
             </p>
           )}
 
           {/* Banking segment */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">{t('fields.bankingSegment')}</label>
-            <select
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1">
+              {t('fields.bankingSegment')}
+            </label>
+            <NativeSelect
               value={bankingSegment}
               onChange={e => setBankingSegment(e.target.value as '' | BankingSegment)}
-              className={inputClass}
+              className="w-full"
             >
               <option value="">{t('fields.anySegment')}</option>
               {SEGMENTS.map(s => (
@@ -358,14 +369,16 @@ function ConfigModal({
                   {s}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </div>
 
           {!isFollowupSelection && (
             <>
               {/* Assignee group override */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">{t('fields.assigneeGroup')}</label>
+                <label className="block text-sm font-medium text-(--palette-ink) mb-1">
+                  {t('fields.assigneeGroup')}
+                </label>
                 <input
                   type="text"
                   value={assigneeGroup}
@@ -395,40 +408,46 @@ function ConfigModal({
 
               {/* Team constraint (tri-state) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-(--palette-ink) mb-1">
                   {t('fields.teamConstrained')}{' '}
-                  <span className="text-xs font-normal text-gray-400">{t('fields.teamConstrainedHint')}</span>
+                  <span className="text-xs font-normal text-(--palette-gray-400)">
+                    {t('fields.teamConstrainedHint')}
+                  </span>
                 </label>
-                <select
+                <NativeSelect
                   value={teamConstrained}
                   onChange={e => setTeamConstrained(e.target.value as '' | 'on' | 'off')}
-                  className={inputClass}
+                  className="w-full"
                 >
                   <option value="">{t('fields.teamConstrainedInherit')}</option>
                   <option value="on">{t('fields.teamConstrainedOn')}</option>
                   <option value="off">{t('fields.teamConstrainedOff')}</option>
-                </select>
+                </NativeSelect>
               </div>
 
               {/* Exclude assignees who completed an earlier activity */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-(--palette-ink) mb-1">
                   {t('fields.excludeAssigneesFrom')}{' '}
-                  <span className="text-xs font-normal text-gray-400">{t('fields.excludeAssigneesFromHint')}</span>
+                  <span className="text-xs font-normal text-(--palette-gray-400)">
+                    {t('fields.excludeAssigneesFromHint')}
+                  </span>
                 </label>
                 {excludeAssigneesFrom === null ? (
                   <button
                     type="button"
                     onClick={() => setExcludeAssigneesFrom([])}
-                    className="text-sm text-blue-600 hover:underline"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                   >
                     {t('fields.excludeAssigneesFromInherit')}
                   </button>
                 ) : (
                   <>
-                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-gray-200 p-2 max-h-40 overflow-y-auto">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 rounded-md border border-(--palette-line) p-2 max-h-40 overflow-y-auto">
                       {exclusionOptions.length === 0 ? (
-                        <p className="col-span-2 text-xs text-gray-400">{t('fields.excludeAssigneesFromNoActivities')}</p>
+                        <p className="col-span-2 text-xs text-(--palette-gray-400)">
+                          {t('fields.excludeAssigneesFromNoActivities')}
+                        </p>
                       ) : (
                         exclusionOptions.map(a => (
                           <label key={a.id} className="flex items-center gap-2 text-xs">
@@ -442,9 +461,9 @@ function ConfigModal({
                                     : [...(prev ?? []), a.id],
                                 )
                               }
-                              className="h-3.5 w-3.5 rounded border-gray-300 text-blue-600"
+                              className="h-3.5 w-3.5 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
                             />
-                            <span className="font-mono text-gray-700">{a.id}</span>
+                            <span className="font-mono text-(--palette-ink)">{a.id}</span>
                           </label>
                         ))
                       )}
@@ -452,7 +471,7 @@ function ConfigModal({
                     <button
                       type="button"
                       onClick={() => setExcludeAssigneesFrom(null)}
-                      className="mt-1 text-xs text-gray-500 hover:underline"
+                      className="mt-1 text-xs text-(--palette-gray-500) hover:underline"
                     >
                       {t('fields.excludeAssigneesFromReset')}
                     </button>
@@ -467,11 +486,11 @@ function ConfigModal({
             <div>
               <label
                 htmlFor={sourceFieldId}
-                className="block text-sm font-medium text-gray-700 mb-1"
+                className="block text-sm font-medium text-(--palette-ink) mb-1"
               >
                 {t('fields.sameAssigneeAsActivity')}
                 {!isFollowupSelection && (
-                  <span className="text-xs font-normal text-gray-400">
+                  <span className="text-xs font-normal text-(--palette-gray-400)">
                     {' '}
                     {t('fields.sameAssigneeAsActivityHint')}
                   </span>
@@ -483,15 +502,15 @@ function ConfigModal({
                   type="text"
                   value={sameAssigneeAsActivity}
                   onChange={e => setSameAssignee(e.target.value)}
-                  className={`${inputClass} bg-white`}
+                  className={`${inputClass} bg-(--palette-surface)`}
                   placeholder={t('fields.sameAssigneeFreePlaceholder')}
                 />
               ) : (
-                <select
+                <NativeSelect
                   id={sourceFieldId}
                   value={sameAssigneeAsActivity}
                   onChange={e => setSameAssignee(e.target.value)}
-                  className={`${inputClass} bg-white`}
+                  className="w-full"
                 >
                   <option value="">
                     {t('fields.sameAssigneeInherit', {
@@ -508,7 +527,7 @@ function ConfigModal({
                       {a.name} ({a.id})
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               )}
             </div>
           )}
@@ -517,9 +536,11 @@ function ConfigModal({
             <>
               {/* Specific assignee */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-(--palette-ink) mb-1">
                   {t('fields.specificAssignee')}{' '}
-                  <span className="text-xs font-normal text-gray-400">{t('fields.specificAssigneeHint')}</span>
+                  <span className="text-xs font-normal text-(--palette-gray-400)">
+                    {t('fields.specificAssigneeHint')}
+                  </span>
                 </label>
                 <input
                   type="text"
@@ -533,9 +554,9 @@ function ConfigModal({
               {/* Admin pool */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-(--palette-ink) mb-1">
                     {t('fields.adminPoolId')}{' '}
-                    <span className="text-xs font-normal text-gray-400">
+                    <span className="text-xs font-normal text-(--palette-gray-400)">
                       {t('fields.adminPoolHint')}
                     </span>
                   </label>
@@ -548,12 +569,12 @@ function ConfigModal({
                   />
                 </div>
                 <div className="flex items-end pb-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+                  <label className="flex items-center gap-2 text-sm font-medium text-(--palette-ink)">
                     <input
                       type="checkbox"
                       checked={escalateToAdminPool}
                       onChange={e => setEscalateToAdminPool(e.target.checked)}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600"
+                      className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
                     />
                     {t('fields.escalate')}
                   </label>
@@ -563,15 +584,17 @@ function ConfigModal({
           )}
 
           {/* Active toggle */}
-          <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
+          <label className="flex items-center gap-2 text-sm font-medium text-(--palette-ink)">
             <input
               type="checkbox"
               checked={isActive}
               onChange={e => setIsActive(e.target.checked)}
-              className="h-4 w-4 rounded border-gray-300 text-blue-600"
+              className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
             />
             {t('fields.isActive')}
-            <span className="text-xs font-normal text-gray-400">{t('fields.isActiveHint')}</span>
+            <span className="text-xs font-normal text-(--palette-gray-400)">
+              {t('fields.isActiveHint')}
+            </span>
           </label>
         </fieldset>
 
@@ -579,7 +602,12 @@ function ConfigModal({
           <Button variant="ghost" type="button" onClick={onClose}>
             {t('actions.cancel')}
           </Button>
-          <Button type="button" onClick={handleSave} isLoading={isSaving} disabled={!activityId.trim() || activitiesLoading}>
+          <Button
+            type="button"
+            onClick={handleSave}
+            isLoading={isSaving}
+            disabled={!activityId.trim() || activitiesLoading}
+          >
             {editing ? t('actions.update') : t('actions.add')}
           </Button>
         </div>
@@ -654,8 +682,8 @@ const TaskAssignmentConfigPage = () => {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-          <p className="text-xs text-gray-500 mt-0.5">{t('page.subtitle')}</p>
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('page.subtitle')}</p>
         </div>
         <Button size="sm" type="button" onClick={handleAdd}>
           <Icon name="plus" style="solid" className="size-3.5 mr-1.5" />
@@ -673,7 +701,7 @@ const TaskAssignmentConfigPage = () => {
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition-colors ${
               segmentFilter === seg
                 ? 'bg-primary text-white border-primary'
-                : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                : 'bg-(--palette-surface) text-(--palette-gray-600) border-(--palette-line-strong) hover:border-(--palette-line-strong)'
             }`}
           >
             {seg || t('filter.all')}
@@ -684,16 +712,20 @@ const TaskAssignmentConfigPage = () => {
       {/* Table */}
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+          />
         </div>
       ) : configs.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 px-4 py-8 text-center text-sm text-gray-400 italic">
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) px-4 py-8 text-center text-sm text-(--palette-gray-400) italic">
           {t('table.empty')}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+          <table className="min-w-full divide-y divide-(--palette-line) text-sm">
+            <thead className="bg-(--palette-surface-2)">
               <tr>
                 {[
                   t('table.activity'),
@@ -706,45 +738,57 @@ const TaskAssignmentConfigPage = () => {
                 ].map((h, i) => (
                   <th
                     key={i}
-                    className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase last:w-20"
+                    className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase last:w-20"
                   >
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-(--palette-surface) divide-y divide-(--palette-line)">
               {configs.map(row => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr key={row.id} className="hover:bg-(--palette-surface-2)">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-gray-900">{activityName(row.activityId)}</p>
-                    <p className="text-xs text-gray-400 font-mono">{row.activityId}</p>
+                    <p className="font-medium text-(--palette-ink)">
+                      {activityName(row.activityId)}
+                    </p>
+                    <p className="text-xs text-(--palette-gray-400) font-mono">{row.activityId}</p>
                   </td>
                   <td className="px-4 py-3">
                     {row.bankingSegment ? (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300">
                         {row.bankingSegment}
                       </span>
                     ) : (
-                      <span className="text-gray-400 text-xs italic">{t('table.any')}</span>
+                      <span className="text-(--palette-gray-400) text-xs italic">
+                        {t('table.any')}
+                      </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-700">
-                    {row.assigneeGroup || <span className="text-gray-300 italic">—</span>}
+                  <td className="px-4 py-3 font-mono text-xs text-(--palette-ink)">
+                    {row.assigneeGroup || (
+                      <span className="text-(--palette-gray-300) italic">—</span>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-xs text-gray-500 max-w-xs">
+                  <td className="px-4 py-3 text-xs text-(--palette-gray-500) max-w-xs">
                     <span className="font-mono">{row.primaryStrategies.join(', ') || '—'}</span>
                     {row.routeBackStrategies.length > 0 && (
-                      <span className="block text-gray-400">↩ {row.routeBackStrategies.join(', ')}</span>
+                      <span className="block text-(--palette-gray-400)">
+                        ↩ {row.routeBackStrategies.join(', ')}
+                      </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-700">
-                    {row.specificAssignee || <span className="text-gray-300 italic">—</span>}
+                  <td className="px-4 py-3 font-mono text-xs text-(--palette-ink)">
+                    {row.specificAssignee || (
+                      <span className="text-(--palette-gray-300) italic">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        row.isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-gray-100 text-gray-500'
+                        row.isActive
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                       }`}
                     >
                       {row.isActive ? t('table.active') : t('table.inactive')}
@@ -755,7 +799,7 @@ const TaskAssignmentConfigPage = () => {
                       <button
                         type="button"
                         onClick={() => handleEdit(row)}
-                        className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600) rounded"
                         aria-label={`Edit ${row.activityId}`}
                       >
                         <Icon name="pen" style="solid" className="size-3.5" />
@@ -763,7 +807,7 @@ const TaskAssignmentConfigPage = () => {
                       <button
                         type="button"
                         onClick={() => handleDelete(row)}
-                        className="p-1 text-gray-400 hover:text-red-600 rounded"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger) rounded"
                         aria-label={`Delete ${row.activityId}`}
                       >
                         <Icon name="trash" style="solid" className="size-3.5" />

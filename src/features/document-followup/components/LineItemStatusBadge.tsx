@@ -6,10 +6,12 @@ interface LineItemStatusBadgeProps {
 }
 
 const STATUS_CLASS: Record<LineItemStatus, string> = {
-  Pending: 'bg-amber-50 text-amber-700 border border-amber-200',
-  Uploaded: 'bg-green-50 text-green-700 border border-green-200',
-  Declined: 'bg-red-50 text-red-700 border border-red-200',
-  Cancelled: 'bg-gray-50 text-gray-500 border border-gray-200',
+  Pending:
+    'bg-(--palette-warn-wash) text-(--palette-warn) border border-amber-200 dark:border-amber-500/30',
+  Uploaded:
+    'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-500/30',
+  Declined: 'bg-(--palette-req-wash) text-(--palette-req) border border-(--palette-req-line)',
+  Cancelled: 'bg-(--palette-surface-2) text-(--palette-gray-500) border border-(--palette-line)',
 };
 
 export function LineItemStatusBadge({ status }: LineItemStatusBadgeProps) {

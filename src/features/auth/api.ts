@@ -17,6 +17,16 @@ const normalizeRoles = (roles: unknown): UserRole[] => {
   return roles.filter((r): r is UserRole => typeof r === 'string' && KNOWN_ROLES.has(r));
 };
 
+// /auth/me lists groups as { groupId, groupName, scope } and teams as { teamId, teamName, scope };
+// the Pool only needs the names of the one and the ids of the other.
+const pluck = (list: unknown, key: string): string[] =>
+  Array.isArray(list)
+    ? list.flatMap(item => {
+        const value = (item as Record<string, unknown> | null)?.[key];
+        return typeof value === 'string' ? [value] : [];
+      })
+    : [];
+
 // GET /auth/me and publish the result to the auth store (unless it is identical to what it holds).
 export const fetchCurrentUser = async (config?: AxiosRequestConfig): Promise<User> => {
   const { data } = await axios.get('/auth/me', config);
@@ -24,6 +34,8 @@ export const fetchCurrentUser = async (config?: AxiosRequestConfig): Promise<Use
     ...data,
     name: `${data.firstName ?? ''} ${data.lastName ?? ''}`.trim() || data.username || '',
     roles: normalizeRoles(data.roles),
+    groups: pluck(data.groups, 'groupName'),
+    teams: pluck(data.teams, 'teamId'),
   };
   // The browser has one session cookie: if another tab signed in as someone else, this tab's next
   // request would run as them. Start over at the home page as the user the cookie really belongs

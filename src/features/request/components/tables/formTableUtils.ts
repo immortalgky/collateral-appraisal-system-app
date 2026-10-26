@@ -13,13 +13,13 @@ export const emptyRowFor = (columns: FormTableColumn[]): Record<string, unknown>
   return row;
 };
 
+/** A cell with nothing in it: the rule behind a blank row. */
+export const isEmptyCell = (v: unknown): boolean => v === '' || v === null || v === undefined;
+
 /** Whether every column of the row is empty: nothing there to delete. */
 export const isBlankRow = (row: unknown, columns: FormTableColumn[]): boolean => {
   const values = (row ?? {}) as Record<string, unknown>;
-  return Object.keys(emptyRowFor(columns)).every(key => {
-    const v = values[key];
-    return v === '' || v === null || v === undefined;
-  });
+  return Object.keys(emptyRowFor(columns)).every(key => isEmptyCell(values[key]));
 };
 
 /**

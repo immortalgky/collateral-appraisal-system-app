@@ -18,10 +18,10 @@ import {
   mapLandAndBuildingPMAFormToPayload,
   mapLandAndBuildingPMAPropertyResponseToForm,
 } from '../utils/mappers';
-import { Button, CancelButton, Icon, ResizableSidebar, Section } from '@/shared/components';
-import { FormProvider } from '@/shared/components/form';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
+import { Button, CancelButton, Icon, Section } from '@/shared/components';
+import { FormProvider, UserFormLayoutProvider } from '@/shared/components/form';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import { allLandAndBuildingPMAFields } from '../configs/fields';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import LandBuildingPMAForm from '../forms/LandBuildingPMAForm';
 import RightMenuPortal from '@/shared/components/RightMenuPortal';
@@ -29,7 +29,7 @@ import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import ActionBar from '@/shared/components/ActionBar';
-import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
+import { PropertyFormShell } from '../components/PropertyFormShell';
 import PmaSyncStatus from '../components/PmaSyncStatus';
 
 const LandBuildingPMAPage = () => {
@@ -158,8 +158,6 @@ const LandBuildingPMAPage = () => {
     }
   };
 
-  const { isOpen, onToggle } = useDisclosure();
-
   useEffect(() => {
     if (isEditMode && propertyData) {
       const formValue = mapLandAndBuildingPMAPropertyResponseToForm(propertyData);
@@ -170,24 +168,26 @@ const LandBuildingPMAPage = () => {
   if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <FormProvider methods={methods} schema={landAndBuildingPMAFormSchema}>
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="cas-form-grid flex-1 min-h-0 flex flex-col"
+      <UserFormLayoutProvider>
+        <FormProvider
+          methods={methods}
+          schema={landAndBuildingPMAFormSchema}
+          fields={allLandAndBuildingPMAFields}
         >
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <PropertyEditorHeader
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <PropertyFormShell
               appraisalId={appraisalId}
               propertyId={propertyId}
               typeCode="LB"
@@ -201,70 +201,63 @@ const LandBuildingPMAPage = () => {
               }
               tabs={[{ id: 'pma', label: t('createPage.navPma') }]}
               activeTab="pma"
-            />
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  <Section
-                    id="pma-section"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <LandBuildingPMAForm />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+              <div className="flex-auto flex flex-col gap-6 min-w-0">
+                <Section
+                  id="pma-section"
+                  anchor
+                  className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                >
+                  <LandBuildingPMAForm />
+                </Section>
+              </div>
+            </PropertyFormShell>
 
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!isReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
               {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending || !hasDirtyFields}
+                  >
+                    {t('createPage.saveDraft')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={
+                      isPending ||
+                      (!hasDirtyFields && propertyData?.externalSyncStatus !== 'Failed')
+                    }
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    {t('createPage.save')}
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending || !hasDirtyFields}
-                >
-                  {t('createPage.saveDraft')}
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={
-                    isPending || (!hasDirtyFields && propertyData?.externalSyncStatus !== 'Failed')
-                  }
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  {t('createPage.save')}
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
+            <UnsavedChangesDialog blocker={blocker} />
 
-          <RightMenuPortal>
-            <div></div>
-          </RightMenuPortal>
-        </form>
-      </FormProvider>
+            <RightMenuPortal>
+              <div></div>
+            </RightMenuPortal>
+          </form>
+        </FormProvider>
+      </UserFormLayoutProvider>
     </div>
   );
 };

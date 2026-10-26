@@ -26,10 +26,10 @@ const fmt = (n: number) =>
 // Mirrors the mock's `.g` table rules (--surface/--surface-2, --line/--line-soft tokens).
 const tableCls = 'text-[12px] border-separate border-spacing-0 [font-variant-numeric:tabular-nums]';
 const cellCls =
-  'px-2 py-0 leading-[25px] whitespace-nowrap border-b border-r border-b-[#eef2f2] border-r-[#eef2f2] bg-white text-left text-gray-700';
+  'px-2 py-0 leading-[25px] whitespace-nowrap border-b border-r border-b-(--palette-line-soft) border-r-(--palette-line-soft) bg-(--palette-surface) text-left text-(--palette-ink)';
 const headCls =
-  'px-2 border-b border-r border-b-[#e3e9e8] border-r-[#eef2f2] bg-[#f8fafa] font-medium text-[#55636f] leading-[26px] whitespace-nowrap text-left';
-const totalCls = `${cellCls} font-semibold bg-[#f8fafa]`;
+  'px-2 border-b border-r border-b-(--palette-line) border-r-(--palette-line-soft) bg-(--palette-surface-2) font-medium text-(--palette-ink-2) leading-[26px] whitespace-nowrap text-left';
+const totalCls = `${cellCls} font-semibold bg-(--palette-surface-2)`;
 const numCls = 'text-right';
 
 export function LeaseholdRentalInfoModal({
@@ -73,14 +73,18 @@ export function LeaseholdRentalInfoModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-[95vw] p-6 space-y-4 max-h-[90vh] flex flex-col"
+        className="bg-(--palette-surface) rounded-xl shadow-xl w-full max-w-[95vw] p-6 space-y-4 max-h-[90vh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-(--palette-ink)">
             {t('leasehold.rentalModal.title')}
           </h3>
-          <button type="button" onClick={onClose} className="text-gray-400 hover:text-gray-600">
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-(--palette-gray-400) hover:text-(--palette-gray-600)"
+          >
             <Icon name="xmark" className="size-5" />
           </button>
         </div>
@@ -89,12 +93,12 @@ export function LeaseholdRentalInfoModal({
           <div className="grid grid-cols-[auto_auto] gap-0">
             {/* Headers */}
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
+              <h4 className="text-sm font-medium text-(--palette-ink) mb-2">
                 {t('leasehold.rentalModal.contractScheduleTitle')}
               </h4>
             </div>
             <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-2 pl-6">
+              <h4 className="text-sm font-medium text-(--palette-ink) mb-2 pl-6">
                 {t('leasehold.rentalModal.appraisalScheduleTitle')}
               </h4>
             </div>
@@ -201,7 +205,7 @@ export function LeaseholdRentalInfoModal({
           </div>
         </div>
 
-        <div className="flex justify-end pt-2 border-t border-gray-100">
+        <div className="flex justify-end pt-2 border-t border-(--palette-line-soft)">
           <Button variant="ghost" type="button" onClick={onClose}>
             {t('leasehold.rentalModal.close')}
           </Button>

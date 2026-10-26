@@ -264,7 +264,7 @@ export function LandBuildingSummaryTab({
             <LedgerRow
               label={L('houseModel')}
               rate={
-                <span className="text-[10.5px] text-gray-400">
+                <span className="text-[10.5px] text-(--palette-gray-400)">
                   {t('hypothesis.ledger.n.perModelUpload')}
                 </span>
               }
@@ -310,7 +310,7 @@ export function LandBuildingSummaryTab({
             <LedgerRow
               label={L('constructionCost')}
               rate={
-                <span className="text-[10.5px] text-gray-400">
+                <span className="text-[10.5px] text-(--palette-gray-400)">
                   {t('hypothesis.ledger.n.fromBuilding')}
                 </span>
               }
@@ -607,7 +607,7 @@ export function LandBuildingSummaryTab({
               label={L('currentValue')}
               tip={LB_TIPS.currentPropertyValue}
               rate={
-                <span className="text-[10.5px] text-gray-400">
+                <span className="text-[10.5px] text-(--palette-gray-400)">
                   {t('hypothesis.ledger.n.revenueMinusCost')}
                 </span>
               }
@@ -709,7 +709,7 @@ function UserAddedPdcRow({
               {...field}
               value={field.value ?? ''}
               placeholder={t('hypothesis.ledger.itemPlaceholder')}
-              className="w-full h-[21px] text-[12px] border border-gray-200 rounded px-[6px] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-gray-400"
+              className="w-full h-[21px] text-[12px] border border-(--palette-line) rounded px-[6px] focus:outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary/40 placeholder:text-(--palette-gray-400)"
             />
           )}
         />

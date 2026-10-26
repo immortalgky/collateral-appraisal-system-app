@@ -6,6 +6,7 @@ import { useUploadProgressStore } from '@/shared/api/uploadProgress';
 import { createTestQueryClient, render, screen, waitFor, within } from '@/test/test-utils';
 import { server } from '@/test/mocks/server';
 import { mockRequestPageApi } from '@/test/mocks/requestPage';
+import { PageReadOnlyContext } from '@/shared/contexts/PageReadOnlyContext';
 import { REQUEST_DOCUMENT_UPLOADS } from '../types/document';
 import RequestPage from './RequestPage';
 
@@ -116,14 +117,102 @@ describe('RequestPage: the inspection round', () => {
     expect(screen.getByText(/Inspection round 4/)).toBeInTheDocument();
   });
 
-  it('is not asked for or shown once the request is submitted', async () => {
+  it('is still asked for and shown on a read-only draft: only a submitted request is settled', async () => {
     const calls = rounds();
-    serveRequest(withPrior({ status: 'Submitted', requestedAt: '2026-10-01T00:00:00+07:00' }));
-    renderEdit();
-    expect(await screen.findByText('REQ-1', {}, { timeout: 4000 })).toBeInTheDocument();
-    await new Promise(resolve => setTimeout(resolve, 400));
-    expect(calls.n).toBe(0);
-    expect(screen.queryByText(/Inspection round/)).toBeNull();
+    serveRequest(withPrior({}));
+    render(
+      <PageReadOnlyContext.Provider value>
+        <Routes>
+          <Route path="/requests/:requestId" element={<RequestPage />} />
+        </Routes>
+      </PageReadOnlyContext.Provider>,
+      { initialEntries: ['/requests/r-1'] },
+    );
+
+    expect(
+      await screen.findByText(/Inspection round 4/, {}, { timeout: 4000 }),
+    ).toBeInTheDocument();
+    expect(calls.n).toBe(1);
+  });
+
+  describe('once the request is submitted', () => {
+    const submitted = (over: Record<string, unknown>) =>
+      withPrior({ status: 'Submitted', requestedAt: '2026-10-01T00:00:00+07:00', ...over });
+    // The chain as the API reads it for a request that is itself the chain's open inspection
+    // request: blocked by its own self, and with a newer appraisal named
+    const serveChain = (selected: { status: string; progressPct: number | null }) =>
+      server.use(
+        http.get('*/api/appraisals/prev-1/construction-chain-status', () =>
+          HttpResponse.json({
+            appraisalId: 'prev-1',
+            selected,
+            construction: {
+              status: selected.status,
+              progressPct: selected.progressPct,
+              sourceAppraisalId: 'prev-1',
+              sourceAppraisalNumber: '69000002',
+              sourceInspectionNumber: 3,
+              sourceCompletedAt: '2026-03-14T00:00:00',
+            },
+            laterInspection: null,
+            openInspectionRequest: { requestId: 'r-1', requestNumber: 'REQ-1' },
+            latestAppraisal: {
+              appraisalId: 'latest-1',
+              appraisalNumber: '69120871',
+              purposeCode: '03',
+              completedAt: '2026-08-02T00:00:00',
+              progressPct: null,
+            },
+            blockReason: 'OpenInspectionRequest',
+          }),
+        ),
+      );
+    const strip = () => document.querySelector('[data-field="detail.prevAppraisalReportNo"]');
+    const noBlockedUi = () => {
+      expect(screen.queryByRole('alert')).toBeNull();
+      expect(screen.queryByText(/still open/)).toBeNull();
+      expect(screen.queryByText(/Not the latest/)).toBeNull();
+      expect(screen.queryByRole('button', { name: /Use appraisal .* instead/ })).toBeNull();
+      expect(strip()?.querySelector('[role="status"]')).not.toHaveClass('border-danger');
+    };
+
+    it('shows the round stamped on its own appraisal and its own %, with nothing blocked, and never asks for the next number', async () => {
+      const calls = rounds();
+      serveChain({ status: 'InProgress', progressPct: 72.5 });
+      serveRequest(submitted({ inspectionNumber: 4 }));
+      renderEdit();
+      expect(
+        await screen.findByText(/Inspection round 4/, {}, { timeout: 4000 }),
+      ).toBeInTheDocument();
+      expect(await screen.findByText(/Construction 72\.50%/)).toBeInTheDocument();
+      noBlockedUi();
+      expect(calls.n).toBe(0);
+    });
+
+    it('shows no round while its appraisal does not exist yet, and still its own %', async () => {
+      const calls = rounds();
+      serveChain({ status: 'InProgress', progressPct: 72.5 });
+      serveRequest(submitted({ inspectionNumber: null }));
+      renderEdit();
+      expect(
+        await screen.findByText(/Construction 72\.50%/, {}, { timeout: 4000 }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Inspection round/)).toBeNull();
+      noBlockedUi();
+      expect(calls.n).toBe(0);
+    });
+
+    it('says the prior has no construction % when it has none', async () => {
+      rounds();
+      serveChain({ status: 'NoData', progressPct: null });
+      serveRequest(submitted({ inspectionNumber: 4 }));
+      renderEdit();
+      expect(
+        await screen.findByText(/No construction % on this appraisal/, {}, { timeout: 4000 }),
+      ).toBeInTheDocument();
+      expect(screen.queryByText(/Construction \d/)).toBeNull();
+      noBlockedUi();
+    });
   });
 });
 

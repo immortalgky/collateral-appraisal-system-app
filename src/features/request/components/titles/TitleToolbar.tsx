@@ -49,7 +49,7 @@ export function TitleToolbar({
   const active = filter.query.trim() !== '' || filter.chip !== 'all';
 
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-100 px-5 py-3">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-(--palette-line-soft) px-5 py-3">
       <FormReadOnlyContext.Provider value={false}>
         <div className="w-full max-w-72">
           <Input
@@ -78,14 +78,14 @@ export function TitleToolbar({
               'inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm transition-colors',
               filter.chip === chip
                 ? 'border-primary bg-primary font-medium text-white'
-                : 'border-gray-300 bg-white text-gray-600 hover:bg-gray-50',
+                : 'border-(--palette-line-strong) bg-(--palette-surface) text-(--palette-gray-600) hover:bg-(--palette-surface-2)',
             )}
           >
             {t(CHIP_KEYS[chip])}
             <span
               className={clsx(
                 'text-xs tabular-nums',
-                filter.chip === chip ? 'text-white/80' : 'text-gray-400',
+                filter.chip === chip ? 'text-white/80' : 'text-(--palette-gray-400)',
               )}
             >
               {count}
@@ -95,11 +95,11 @@ export function TitleToolbar({
       </div>
 
       <div
-        className="ml-auto flex flex-wrap items-center gap-x-3 text-xs text-gray-500"
+        className="ml-auto flex flex-wrap items-center gap-x-3 text-xs text-(--palette-gray-500)"
         role="status"
       >
         {dragHint && (
-          <span className="inline-flex items-center gap-1.5 text-amber-700">
+          <span className="inline-flex items-center gap-1.5 text-(--palette-warn)">
             <Icon style="solid" name="grip-vertical" className="size-3" />
             {t('titleSection.dnd.blocked')}
           </span>
@@ -109,7 +109,7 @@ export function TitleToolbar({
           <button
             type="button"
             onClick={() => onChange({ query: '', chip: 'all' })}
-            className="text-primary underline underline-offset-2 hover:no-underline"
+            className="text-(--palette-primary-text) underline underline-offset-2 hover:no-underline"
           >
             {t('titleSection.filter.clear')}
           </button>

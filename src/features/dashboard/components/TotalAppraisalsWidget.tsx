@@ -398,7 +398,11 @@ function TotalAppraisalsWidget() {
                 boxShadow: `inset 0 0 0 2px ${s.color}`,
               }}
             />
-            <span className={isHidden ? 'text-gray-400 line-through' : 'text-gray-600'}>
+            <span
+              className={
+                isHidden ? 'text-(--palette-gray-400) line-through' : 'text-(--palette-gray-600)'
+              }
+            >
               {s.label}
             </span>
           </button>
@@ -470,10 +474,10 @@ function TotalAppraisalsWidget() {
     const up = (deltaPct ?? 0) >= 0;
     return (
       <div className="flex min-w-0 flex-col gap-0.5">
-        <p className="text-xs text-gray-400 uppercase tracking-wider">{label}</p>
+        <p className="text-xs text-(--palette-gray-400) uppercase tracking-wider">{label}</p>
         {/* The change wraps under the number when the card is too narrow for both side by side */}
         <div className="flex flex-wrap items-end gap-x-2">
-          <p className="text-3xl font-bold text-gray-800 tabular-nums">{value}</p>
+          <p className="text-3xl font-bold text-(--palette-ink) tabular-nums">{value}</p>
           {deltaPct !== null && (
             <div
               className={`flex items-center gap-0.5 text-xs font-medium mb-1 ${up ? 'text-emerald-500' : 'text-red-500'}`}
@@ -500,20 +504,20 @@ function TotalAppraisalsWidget() {
           if (typeof idx === 'number' && data[idx]) handleDotClick(data[idx]);
         }}
       >
-        <CartesianGrid stroke="#f3f4f6" vertical={false} />
+        <CartesianGrid stroke="var(--palette-line)" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 12, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: 'var(--palette-ink-3)' }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 12, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: 'var(--palette-ink-3)' }}
           axisLine={false}
           tickLine={false}
           width={52}
         />
-        <Tooltip cursor={{ stroke: '#e5e7eb' }} content={<ChartTooltip />} />
+        <Tooltip cursor={{ stroke: 'var(--palette-line)' }} content={<ChartTooltip />} />
         <Legend content={() => renderLineLegend(overviewSeries)} />
         <Line
           type="monotone"
@@ -563,20 +567,20 @@ function TotalAppraisalsWidget() {
           }
         }}
       >
-        <CartesianGrid stroke="#f3f4f6" vertical={false} />
+        <CartesianGrid stroke="var(--palette-line)" vertical={false} />
         <XAxis
           dataKey="label"
-          tick={{ fontSize: 12, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: 'var(--palette-ink-3)' }}
           axisLine={false}
           tickLine={false}
         />
         <YAxis
-          tick={{ fontSize: 12, fill: '#9ca3af' }}
+          tick={{ fontSize: 12, fill: 'var(--palette-ink-3)' }}
           axisLine={false}
           tickLine={false}
           width={52}
         />
-        <Tooltip cursor={{ stroke: '#e5e7eb' }} content={<ChartTooltip />} />
+        <Tooltip cursor={{ stroke: 'var(--palette-line)' }} content={<ChartTooltip />} />
         <Legend content={() => renderLineLegend(byTypeSeries)} />
         {typeKeys.map((type, idx) => (
           <Line
@@ -597,17 +601,17 @@ function TotalAppraisalsWidget() {
 
   return (
     <WidgetWrapper id={WIDGET_ID}>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-full">
+      <div className="bg-(--palette-surface) rounded-2xl shadow-sm border border-(--palette-line-soft) h-full">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-(--palette-line-soft)">
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3 flex-wrap">
-              <h3 className="text-base font-semibold text-gray-800">
+              <h3 className="text-base font-semibold text-(--palette-ink)">
                 {t('totalAppraisals.title')}
               </h3>
               <PeriodSelect value={presetKey} custom={customRange} onChange={handlePeriodChange} />
               <SegmentSelect value={bankingSegment} onChange={handleSegmentChange} />
-              <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-xs">
+              <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5 text-xs">
                 {(['overview', 'byType'] as const).map(m => (
                   <button
                     key={m}
@@ -615,8 +619,8 @@ function TotalAppraisalsWidget() {
                     onClick={() => handleModeChange(m)}
                     className={`px-2 py-1 rounded-md transition-colors ${
                       mode === m
-                        ? 'bg-gray-100 text-gray-800 font-medium'
-                        : 'text-gray-500 hover:text-gray-700'
+                        ? 'bg-(--palette-surface-3) text-(--palette-ink) font-medium'
+                        : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
                     }`}
                   >
                     {t(`totalAppraisals.mode.${m}`)}
@@ -624,7 +628,7 @@ function TotalAppraisalsWidget() {
                 ))}
               </div>
               {isByType && (
-                <div className="inline-flex rounded-lg border border-gray-200 p-0.5 text-xs">
+                <div className="inline-flex rounded-lg border border-(--palette-line) p-0.5 text-xs">
                   {(['created', 'completed'] as const).map(mk => (
                     <button
                       key={mk}
@@ -632,8 +636,8 @@ function TotalAppraisalsWidget() {
                       onClick={() => handleMetricChange(mk)}
                       className={`px-2 py-1 rounded-md transition-colors ${
                         metric === mk
-                          ? 'bg-gray-100 text-gray-800 font-medium'
-                          : 'text-gray-500 hover:text-gray-700'
+                          ? 'bg-(--palette-surface-3) text-(--palette-ink) font-medium'
+                          : 'text-(--palette-gray-500) hover:text-(--palette-ink)'
                       }`}
                     >
                       {t(`totalAppraisals.metric.${mk}`)}
@@ -649,7 +653,7 @@ function TotalAppraisalsWidget() {
               type="button"
               onClick={() => setExpanded(true)}
               aria-label={t('totalAppraisals.aria.expand')}
-              className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
             >
               <Icon name="expand" style="solid" className="size-4" />
             </button>
@@ -658,35 +662,39 @@ function TotalAppraisalsWidget() {
                 type="button"
                 onClick={() => setMenuOpen(o => !o)}
                 aria-label={t('totalAppraisals.aria.menu')}
-                className="w-8 h-8 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600) transition-colors"
               >
                 <Icon name="ellipsis-vertical" style="solid" className="size-4" />
               </button>
               {menuOpen && (
-                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-gray-200 bg-white shadow-lg py-1 text-sm">
+                <div className="absolute right-0 z-20 mt-1 w-48 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg py-1 text-sm">
                   {updatedLabel && (
-                    <p className="px-3 py-1.5 text-xs text-gray-400 border-b border-gray-100">
+                    <p className="px-3 py-1.5 text-xs text-(--palette-gray-400) border-b border-(--palette-line-soft)">
                       {t('updatedAgo', { n: updatedLabel })}
                     </p>
                   )}
                   <button
                     type="button"
                     onClick={handleRefresh}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                   >
                     <Icon
                       name="arrow-rotate-right"
                       style="solid"
-                      className="size-3 text-gray-400"
+                      className="size-3 text-(--palette-gray-400)"
                     />
                     {t('totalAppraisals.menu.refresh')}
                   </button>
                   <button
                     type="button"
                     onClick={handleReset}
-                    className="w-full text-left px-3 py-1.5 text-gray-700 hover:bg-gray-100 flex items-center gap-2"
+                    className="w-full text-left px-3 py-1.5 text-(--palette-ink) hover:bg-(--palette-surface-3) flex items-center gap-2"
                   >
-                    <Icon name="rotate-left" style="solid" className="size-3 text-gray-400" />
+                    <Icon
+                      name="rotate-left"
+                      style="solid"
+                      className="size-3 text-(--palette-gray-400)"
+                    />
                     {t('totalAppraisals.menu.reset')}
                   </button>
                 </div>
@@ -723,8 +731,8 @@ function TotalAppraisalsWidget() {
                         className="size-2.5 rounded-full"
                         style={{ backgroundColor: typeColor(type, idx) }}
                       />
-                      <span className="text-xs text-gray-500">{typeLabel(type)}</span>
-                      <span className="text-sm font-semibold text-gray-800 tabular-nums">
+                      <span className="text-xs text-(--palette-gray-500)">{typeLabel(type)}</span>
+                      <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                         {byTypeTotals[type].toLocaleString()}
                       </span>
                     </div>
@@ -752,11 +760,11 @@ function TotalAppraisalsWidget() {
               )}
 
               {pace.isFutureRange && totals.created > 0 && (
-                <div className="mb-3 flex items-center gap-2 text-xs text-gray-500">
-                  <Icon name="forward" style="solid" className="size-3 text-gray-400" />
+                <div className="mb-3 flex items-center gap-2 text-xs text-(--palette-gray-500)">
+                  <Icon name="forward" style="solid" className="size-3 text-(--palette-gray-400)" />
                   <span>
                     {t('totalAppraisals.pace')}{' '}
-                    <span className="font-medium text-gray-700 tabular-nums">
+                    <span className="font-medium text-(--palette-ink) tabular-nums">
                       {pace.projectedTotal.toLocaleString()}
                     </span>{' '}
                     {t('totalAppraisals.paceByPeriodEnd')}
@@ -766,7 +774,7 @@ function TotalAppraisalsWidget() {
                         <span
                           className={
                             pace.projectedTotal >= totals.prevCreated
-                              ? 'text-emerald-600'
+                              ? 'text-emerald-600 dark:text-emerald-400'
                               : 'text-red-500'
                           }
                         >
@@ -783,14 +791,14 @@ function TotalAppraisalsWidget() {
               <div className="h-56">
                 {isByType ? (
                   byTypeData.every(p => typeKeys.every(type => p.counts[type] === 0)) ? (
-                    <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                    <div className="h-full flex items-center justify-center text-sm text-(--palette-gray-400)">
                       {t('totalAppraisals.noData')}
                     </div>
                   ) : (
                     byTypeChartContent
                   )
                 ) : data.every(d => d.created === 0 && d.completed === 0) ? (
-                  <div className="h-full flex items-center justify-center text-sm text-gray-400">
+                  <div className="h-full flex items-center justify-center text-sm text-(--palette-gray-400)">
                     {t('totalAppraisals.noData')}
                   </div>
                 ) : (
@@ -810,10 +818,10 @@ function TotalAppraisalsWidget() {
       >
         <div className="space-y-4">
           <div className="h-80">{isByType ? byTypeChartContent : chartContent}</div>
-          <div className="overflow-auto max-h-72 border border-gray-100 rounded-lg">
+          <div className="overflow-auto max-h-72 border border-(--palette-line-soft) rounded-lg">
             {isByType ? (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <thead className="bg-(--palette-surface-2) text-xs uppercase tracking-wider text-(--palette-gray-500)">
                   <tr>
                     <th className="text-xs px-3 py-2 text-left font-semibold">
                       {t('totalAppraisals.table.period')}
@@ -825,10 +833,10 @@ function TotalAppraisalsWidget() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-(--palette-line-soft)">
                   {byTypeData.map(p => (
-                    <tr key={p.key} className="hover:bg-gray-50">
-                      <td className="px-3 py-2 text-gray-700">{p.label}</td>
+                    <tr key={p.key} className="hover:bg-(--palette-surface-2)">
+                      <td className="px-3 py-2 text-(--palette-ink)">{p.label}</td>
                       {typeKeys.map(type => (
                         <td key={type} className="px-3 py-2 text-right tabular-nums">
                           {p.counts[type]}
@@ -840,7 +848,7 @@ function TotalAppraisalsWidget() {
               </table>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                <thead className="bg-(--palette-surface-2) text-xs uppercase tracking-wider text-(--palette-gray-500)">
                   <tr>
                     <th className="text-xs px-3 py-2 text-left font-semibold">
                       {t('totalAppraisals.table.period')}
@@ -859,18 +867,18 @@ function TotalAppraisalsWidget() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-(--palette-line-soft)">
                   {data.map(d => {
                     const rate = d.created > 0 ? (d.completed / d.created) * 100 : 0;
                     return (
-                      <tr key={d.key} className="hover:bg-gray-50">
-                        <td className="px-3 py-2 text-gray-700">{d.label}</td>
+                      <tr key={d.key} className="hover:bg-(--palette-surface-2)">
+                        <td className="px-3 py-2 text-(--palette-ink)">{d.label}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{d.created}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{d.completed}</td>
-                        <td className="px-3 py-2 text-right tabular-nums text-gray-500">
+                        <td className="px-3 py-2 text-right tabular-nums text-(--palette-gray-500)">
                           {rate.toFixed(1)}%
                         </td>
-                        <td className="px-3 py-2 text-right tabular-nums text-gray-400">
+                        <td className="px-3 py-2 text-right tabular-nums text-(--palette-gray-400)">
                           {d.prevCreated}
                         </td>
                       </tr>
@@ -880,7 +888,7 @@ function TotalAppraisalsWidget() {
               </table>
             )}
           </div>
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-(--palette-gray-500)">
             {t('totalAppraisals.table.period')}: {format(range.from, 'd MMM yyyy')} –{' '}
             {format(range.to, 'd MMM yyyy')}
             {' · '}

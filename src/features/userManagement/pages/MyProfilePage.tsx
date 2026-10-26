@@ -65,7 +65,7 @@ const MyProfilePage = () => {
   if (isError || !me) {
     return (
       <div className="p-6">
-        <p className="text-sm text-gray-500">{t('myProfile.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-500)">{t('myProfile.loadFailed')}</p>
       </div>
     );
   }
@@ -92,7 +92,9 @@ const MyProfilePage = () => {
             <span
               className={clsx(
                 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold',
-                isLdap ? 'bg-blue-50 text-blue-700' : 'bg-gray-100 text-gray-600',
+                isLdap
+                  ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                  : 'bg-(--palette-surface-3) text-(--palette-gray-600)',
               )}
             >
               <Icon name={isLdap ? 'building-lock' : 'user'} style="solid" className="size-2.5" />

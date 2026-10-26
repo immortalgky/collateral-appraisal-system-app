@@ -216,7 +216,7 @@ export function DiscountedCashFlowTable({
     // rest of this feature's tables (WQS/SAG/Cost/etc.) already wrap their scoring grids
     // the same way; the DCF table was the one left out.
     <DenseProvider value={true}>
-      <div className="flex-1 min-h-0 min-w-0 bg-white flex flex-col border border-gray-200">
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) flex flex-col border border-(--palette-line)">
         <StickyLabelTable
           className="flex-1 min-h-0"
           secondStickyColumnLeft={DCF_STK_WIDTH}
@@ -226,58 +226,58 @@ export function DiscountedCashFlowTable({
           stickyWidth={490}
           navGroupSize={5}
         >
-        <table className="table min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums rounded-none">
-          <thead className="bg-neutral-50">
-            <tr className="bg-white">
-              {/* mock:2172 — static "รายการ | สมมติฐาน". The projection-period/days
+          <table className="table min-w-max border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums rounded-none">
+            <thead className="bg-(--palette-surface-2)">
+              <tr className="bg-(--palette-surface)">
+                {/* mock:2172 — static "รายการ | สมมติฐาน". The projection-period/days
                   editors that used to live here moved to the assumptions rail
                   (DiscountedCashFlowPanel), which binds the same RHF fields. */}
-              <th className={clsx(STK_CLASS, 'font-medium text-left')}>
-                {t('methodTabs.dcf.table.item')}
-              </th>
-              <th className={clsx(STK2_CLASS, 'font-medium text-left')}>
-                {t('methodTabs.dcf.table.assumption')}
-              </th>
-              {Array.from({ length: totalNumberOfYears }, (_, i) => (
-                <th
-                  key={i}
-                  data-nav-col
-                  // mock `.g th.yr` — two lines (ปีที่ N / BE year), line-height 14 + 4px pad.
-                  className={clsx(YEAR_CELL_CLASS, 'font-medium leading-[14px]! py-[4px]!')}
-                >
-                  {t('dcf.common.yearColumn', { year: i + 1 })}
-                  {firstYearBE != null && (
-                    <span className="block text-[10px] text-[#8a96a0] font-normal leading-[12px]">
-                      {firstYearBE + i}
-                    </span>
-                  )}
+                <th className={clsx(STK_CLASS, 'font-medium text-left')}>
+                  {t('methodTabs.dcf.table.item')}
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {(sections ?? []).map((section: DCFSection, sectionIdx: number) => {
-              return (
-                <DiscountedCashFlowSectionRenderer
-                  key={section.dbId ?? section.clientId ?? sectionIdx}
-                  name={`sections.${sectionIdx}`}
-                  properties={properties}
-                  section={section}
-                  color={getSectionColor(section.sectionType)}
-                  totalNumberOfYears={totalNumberOfYears}
-                  icon={getIconSection(section.identifier)}
-                  isReadOnly={isReadOnly}
-                  onStructuralChange={onStructuralChange}
-                  incomeAnalysisId={incomeAnalysisId}
-                  hostMethodId={hostMethodId}
-                  marketSurveys={marketSurveys}
-                  ensureIncomeAnalysisId={ensureIncomeAnalysisId}
-                />
-              );
-            })}
-          </tbody>
-        </table>
-      </StickyLabelTable>
+                <th className={clsx(STK2_CLASS, 'font-medium text-left')}>
+                  {t('methodTabs.dcf.table.assumption')}
+                </th>
+                {Array.from({ length: totalNumberOfYears }, (_, i) => (
+                  <th
+                    key={i}
+                    data-nav-col
+                    // mock `.g th.yr` — two lines (ปีที่ N / BE year), line-height 14 + 4px pad.
+                    className={clsx(YEAR_CELL_CLASS, 'font-medium leading-[14px]! py-[4px]!')}
+                  >
+                    {t('dcf.common.yearColumn', { year: i + 1 })}
+                    {firstYearBE != null && (
+                      <span className="block text-[10px] text-(--palette-ink-3) font-normal leading-[12px]">
+                        {firstYearBE + i}
+                      </span>
+                    )}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {(sections ?? []).map((section: DCFSection, sectionIdx: number) => {
+                return (
+                  <DiscountedCashFlowSectionRenderer
+                    key={section.dbId ?? section.clientId ?? sectionIdx}
+                    name={`sections.${sectionIdx}`}
+                    properties={properties}
+                    section={section}
+                    color={getSectionColor(section.sectionType)}
+                    totalNumberOfYears={totalNumberOfYears}
+                    icon={getIconSection(section.identifier)}
+                    isReadOnly={isReadOnly}
+                    onStructuralChange={onStructuralChange}
+                    incomeAnalysisId={incomeAnalysisId}
+                    hostMethodId={hostMethodId}
+                    marketSurveys={marketSurveys}
+                    ensureIncomeAnalysisId={ensureIncomeAnalysisId}
+                  />
+                );
+              })}
+            </tbody>
+          </table>
+        </StickyLabelTable>
       </div>
     </DenseProvider>
   );

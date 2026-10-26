@@ -95,7 +95,7 @@ const QuotationFeeBreakdown = ({
     <div className="space-y-2">
       {/* Fee Amount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label htmlFor={`fee-amount-${index}`} className="text-sm text-gray-600">
+        <label htmlFor={`fee-amount-${index}`} className="text-sm text-(--palette-gray-600)">
           {t('columns.feeAmount')}
         </label>
         <Controller
@@ -118,7 +118,7 @@ const QuotationFeeBreakdown = ({
 
       {/* Discount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label htmlFor={`discount-${index}`} className="text-sm text-gray-600">
+        <label htmlFor={`discount-${index}`} className="text-sm text-(--palette-gray-600)">
           {t('columns.discount')}
         </label>
         <Controller
@@ -141,7 +141,7 @@ const QuotationFeeBreakdown = ({
 
       {/* Negotiated Discount */}
       <div className="grid grid-cols-2 gap-3 items-center">
-        <label htmlFor={`neg-discount-${index}`} className="text-sm text-gray-600">
+        <label htmlFor={`neg-discount-${index}`} className="text-sm text-(--palette-gray-600)">
           {t('columns.discountNegotiate')}
         </label>
         <Controller
@@ -164,17 +164,23 @@ const QuotationFeeBreakdown = ({
       </div>
 
       {/* ─── Totals block ─────────────────────────────────────────────── */}
-      <div className="mt-3 border-t border-gray-200 pt-2 space-y-1">
+      <div className="mt-3 border-t border-(--palette-line) pt-2 space-y-1">
         {/* Fee After Discount */}
         <div
           className={`grid grid-cols-2 gap-3 items-center px-2.5 py-1.5 rounded ${
-            discountOverflow || feeAfterDiscountZero ? 'bg-red-50 border border-red-200' : ''
+            discountOverflow || feeAfterDiscountZero
+              ? 'bg-(--palette-req-wash) border border-(--palette-req-line)'
+              : ''
           }`}
         >
-          <span className="text-sm text-gray-600 text-right">{t('columns.feeAfterDiscount')}</span>
+          <span className="text-sm text-(--palette-gray-600) text-right">
+            {t('columns.feeAfterDiscount')}
+          </span>
           <span
             className={`text-sm font-semibold text-right tabular-nums ${
-              discountOverflow || feeAfterDiscountZero ? 'text-red-600' : 'text-gray-900'
+              discountOverflow || feeAfterDiscountZero
+                ? 'text-(--palette-danger)'
+                : 'text-(--palette-ink)'
             }`}
           >
             {discountOverflow
@@ -188,10 +194,10 @@ const QuotationFeeBreakdown = ({
         {/* VAT — show rate and computed amount on one row. Rate is a system setting,
             the NumberInput is retained (hidden) to keep form state hydrated. */}
         <div className="grid grid-cols-2 gap-3 items-center px-2.5 py-1.5">
-          <span className="text-sm text-gray-600 text-right">
+          <span className="text-sm text-(--palette-gray-600) text-right">
             VAT ({(Number(vatPercent) || 0).toFixed(2)}%)
           </span>
-          <span className="text-sm font-semibold text-gray-900 text-right tabular-nums">
+          <span className="text-sm font-semibold text-(--palette-ink) text-right tabular-nums">
             {fmt(vatAmount)}
           </span>
         </div>
@@ -205,10 +211,10 @@ const QuotationFeeBreakdown = ({
 
         {/* Net Amount — primary total. Thick top border for emphasis. */}
         <div className="grid grid-cols-2 gap-3 items-center border-t-2 border-primary/30 mt-1 pt-2 px-2.5 py-2 bg-primary/5 rounded-b-lg">
-          <span className="text-sm font-semibold text-gray-800 text-right uppercase tracking-wide">
+          <span className="text-sm font-semibold text-(--palette-ink) text-right uppercase tracking-wide">
             {t('columns.netAmount')}
           </span>
-          <span className="text-base font-bold text-primary text-right tabular-nums">
+          <span className="text-base font-bold text-(--palette-primary-text) text-right tabular-nums">
             {fmt(netAmount)}
           </span>
         </div>

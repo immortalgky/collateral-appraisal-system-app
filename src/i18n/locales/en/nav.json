@@ -62,7 +62,13 @@
       "licensePlateNumber": "Licence plate",
       "ownerName": "Owner",
       "projectName": "Project",
-      "condoName": "Condo"
+      "condoName": "Condo",
+      "province": "Province",
+      "district": "District",
+      "subDistrict": "Sub-district",
+      "dopaProvince": "Province",
+      "dopaDistrict": "District",
+      "dopaSubDistrict": "Sub-district"
     }
   },
   "notifications": "Notifications",

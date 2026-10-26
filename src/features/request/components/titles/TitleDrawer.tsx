@@ -3,7 +3,6 @@ import { useCallback, useEffect, useId, useMemo, useRef, type ReactNode } from '
 import { createPortal } from 'react-dom';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { TitleLookupIntegration } from '@/features/collateralMaster/components/TitleLookupIntegration';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
 import { FormFields } from '@/shared/components/form';
@@ -17,9 +16,10 @@ import TitleDocumentAddressForm from '../../forms/TitleDocumentAddressForm';
 import TitleMachineForm from '../../forms/TitleMachineForm';
 import TitleVehicleForm from '../../forms/TitleVehicleForm';
 import TitleVesselForm from '../../forms/TitleVesselForm';
-import type { RequestTitleDtoType } from '../../schemas/form';
+import { requestTitleDefault, type RequestTitleDtoType } from '../../schemas/form';
 import {
   defaultTitleType,
+  isMovableFamily,
   missingFieldPaths,
   movableIdentity,
   summariseTitleNumber,
@@ -28,13 +28,14 @@ import {
 import { TitleDocumentsSection } from '../DocumentUploader';
 import { TitleDeedBlock } from './TitleDeedBlock';
 import { useMissingFieldLabel } from './titleHooks';
+import { usePriorAppraisalCheck } from './usePriorAppraisalCheck';
 
 const SLIDE_MS = 200;
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 const Section = ({ title, children }: { title: string; children: ReactNode }) => (
   <section className="grid gap-3">
-    <h3 className="m-0 border-b border-gray-100 pb-1.5 text-sm font-semibold text-gray-800">
+    <h3 className="m-0 border-b border-(--palette-line-soft) pb-1.5 text-sm font-semibold text-(--palette-ink)">
       {title}
     </h3>
     {children}
@@ -55,6 +56,7 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
   const { getValues, setValue } = useFormContext();
   const collateralType = useWatch({ name: `titles.${index}.collateralType` }) as string | undefined;
   const family = titleFamily(collateralType);
+  const movable = isMovableFamily(family);
 
   const typeField = useMemo(
     () =>
@@ -65,7 +67,9 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
   );
 
   // Choosing a type here makes a land, land-with-building or condo title a โฉนด unless it already
-  // has a type, as adding one from the menu does. Only on a change made here, not on opening.
+  // has a type, as adding one from the menu does. A change to a movable also empties the title
+  // address, which a movable has no field for (a deed address left from the earlier type would be
+  // saved with it). Only on a change made here, not on opening.
   const previousType = useRef(collateralType);
   useEffect(() => {
     if (previousType.current === collateralType) return;
@@ -74,33 +78,31 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
     const path = `titles.${index}.titleType`;
     const fallback = defaultTitleType(collateralType);
     if (fallback && !getValues(path)) setValue(path, fallback, { shouldDirty: true });
-  }, [collateralType, readOnly, index, getValues, setValue]);
+    if (movable)
+      setValue(`titles.${index}.titleAddress`, structuredClone(requestTitleDefault.titleAddress), {
+        shouldDirty: true,
+      });
+  }, [collateralType, movable, readOnly, index, getValues, setValue]);
 
   return (
     <div className="grid gap-6">
-      {/* Collateral lookup banner — fires when dedup-key fields fill in */}
-      {!readOnly && <TitleLookupIntegration titleIndex={index} />}
-
       <Grid>
         <FormFields fields={typeField} namePrefix="titles" index={index} />
       </Grid>
 
       {family === 'none' && (
-        <div className="py-8 text-center text-gray-500">
-          <Icon style="regular" name="hand-pointer" className="mx-auto mb-2 size-8 text-gray-400" />
+        <div className="py-8 text-center text-(--palette-gray-500)">
+          <Icon
+            style="regular"
+            name="hand-pointer"
+            className="mx-auto mb-2 size-8 text-(--palette-gray-400)"
+          />
           <p className="m-0">{t('titleOptions.noCollateralType')}</p>
         </div>
       )}
 
       {(family === 'land' || family === 'landBuilding') && (
         <TitleDeedBlock index={index} family={family} />
-      )}
-      {(family === 'landBuilding' || family === 'building') && (
-        <Section title={t('titleSection.drawer.section.building')}>
-          <Grid>
-            <TitleBuildingForm index={index} variant={family === 'building' ? 3 : 2} />
-          </Grid>
-        </Section>
       )}
       {family === 'condo' && <TitleDeedBlock index={index} family={family} />}
       {family === 'vehicle' && (
@@ -125,13 +127,25 @@ function TitleDrawerBody({ index, readOnly }: { index: number; readOnly: boolean
         </Section>
       )}
 
-      {/* Every type keeps both addresses: the schema requires them for movables too. */}
+      {/* A movable has no title document, so only the DOPA card (headed as its location). */}
       {family !== 'none' && (
         <Section title={t('titleSection.drawer.section.address')}>
-          <div className="grid gap-4 md:grid-cols-2">
-            <TitleDocumentAddressForm index={index} isReadOnly={readOnly} />
-            <DopaAddressForm index={index} isReadOnly={readOnly} />
+          <div className={clsx('grid gap-4', !movable && 'md:grid-cols-2')}>
+            {!movable && <TitleDocumentAddressForm index={index} isReadOnly={readOnly} />}
+            <DopaAddressForm
+              key={movable ? 'movable' : 'estate'}
+              index={index}
+              isReadOnly={readOnly}
+              movable={movable}
+            />
           </div>
+        </Section>
+      )}
+      {(family === 'landBuilding' || family === 'building') && (
+        <Section title={t('titleSection.drawer.section.building')}>
+          <Grid>
+            <TitleBuildingForm index={index} variant={family === 'building' ? 3 : 2} />
+          </Grid>
         </Section>
       )}
     </div>
@@ -159,6 +173,11 @@ export interface TitleDrawerProps {
   onSaveAndAdd: () => void;
   readOnly: boolean;
   /**
+   * Properties the user has already acknowledged as previously appraised (see
+   * usePriorAppraisalCheck). Owned by the page so it survives the drawer closing.
+   */
+  acknowledgedPriors?: Set<string>;
+  /**
    * What the document list needs from the page (the upload session, the saved request). Without it
    * the editor has no documents section.
    */
@@ -185,6 +204,7 @@ export function TitleDrawer({
   onCancel,
   onSaveAndAdd,
   readOnly,
+  acknowledgedPriors,
   documents,
 }: TitleDrawerProps) {
   const { t } = useTranslation(['request', 'common']);
@@ -196,6 +216,17 @@ export function TitleDrawer({
 
   const title = useWatch({ name: `titles.${index}` }) as RequestTitleDtoType | undefined;
   const missing = useMemo(() => (title ? missingFieldPaths(title) : []), [title]);
+  // Both save buttons ask the collateral master first; a known property is confirmed once
+  const {
+    guard,
+    checking,
+    dialog: priorDialog,
+  } = usePriorAppraisalCheck(index, title, readOnly, acknowledgedPriors);
+  // While the master is being asked, nothing may move the drawer off this title or drop it: the
+  // answer belongs to the save that started it
+  const closeIfFree = useCallback(() => {
+    if (!checking) onClose();
+  }, [checking, onClose]);
 
   const family = titleFamily(title?.collateralType);
   const typeName = title?.collateralType
@@ -204,7 +235,7 @@ export function TitleDrawer({
     : t('titleSection.drawer.newTitle');
   const condoNumbers = family === 'condo' ? summariseTitleNumber(title?.titleNumber) : null;
   const number = (
-    family === 'vehicle' || family === 'machine' || family === 'vessel'
+    isMovableFamily(family)
       ? movableIdentity(title as RequestTitleDtoType)
       : condoNumbers
         ? // A condominium's number is a list of land titles: the first of them and how many more.
@@ -245,11 +276,11 @@ export function TitleDrawer({
       )
         return;
       event.stopPropagation();
-      onClose();
+      closeIfFree();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  }, [closeIfFree]);
 
   // A click on the scrim closes, but only when the press started there too: selecting text in a
   // field and releasing outside the panel must not count.
@@ -259,10 +290,10 @@ export function TitleDrawer({
   }, []);
   const onScrimClick = useCallback(
     (event: React.MouseEvent) => {
-      if (pressedScrim.current && event.target === event.currentTarget) onClose();
+      if (pressedScrim.current && event.target === event.currentTarget) closeIfFree();
       pressedScrim.current = false;
     },
-    [onClose],
+    [closeIfFree],
   );
 
   return createPortal(
@@ -285,9 +316,9 @@ export function TitleDrawer({
         // The container takes the focus when the drawer opens or something inside is clicked; the
         // global :focus-visible outline beats the `outline-none` class, so only inline switches it off.
         style={NO_OUTLINE}
-        className="relative flex h-full w-full max-w-[min(1160px,75vw)] flex-col bg-white shadow-2xl outline-none"
+        className="relative flex h-full w-full max-w-[min(1160px,75vw)] flex-col bg-(--palette-surface) shadow-2xl outline-none"
       >
-        <header className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-200 px-5 py-3.5">
+        <header className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-b border-(--palette-line) px-5 py-3.5">
           <div className="min-w-0 flex-1">
             <h2
               id={headingId}
@@ -297,7 +328,7 @@ export function TitleDrawer({
               {typeName}
               {number ? ` · ${number}` : ''}
             </h2>
-            <p className="m-0 text-sm text-gray-500">
+            <p className="m-0 text-sm text-(--palette-gray-500)">
               {t('titleSection.drawer.position', { pos: position, total })}
             </p>
           </div>
@@ -310,7 +341,7 @@ export function TitleDrawer({
               variant="outline"
               size="sm"
               className="rounded-full!"
-              disabled={!onPrev}
+              disabled={!onPrev || checking}
               onClick={onPrev}
             >
               <Icon style="solid" name="chevron-left" className="mr-1.5 size-3" />
@@ -320,7 +351,7 @@ export function TitleDrawer({
               variant="outline"
               size="sm"
               className="rounded-full!"
-              disabled={!onNext}
+              disabled={!onNext || checking}
               onClick={onNext}
             >
               {t('titleSection.drawer.next')}
@@ -329,10 +360,11 @@ export function TitleDrawer({
           </div>
           <button
             type="button"
-            onClick={onClose}
+            onClick={closeIfFree}
+            disabled={checking}
             aria-label={t('common:actions.close')}
             title={t('common:actions.close')}
-            className="flex size-8 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700"
+            className="flex size-8 items-center justify-center rounded-md text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
           >
             <Icon style="regular" name="xmark" className="size-5" />
           </button>
@@ -342,20 +374,20 @@ export function TitleDrawer({
           (missing.length > 0 ? (
             <div
               role="status"
-              className="mx-5 mt-3 flex shrink-0 flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm"
+              className="mx-5 mt-3 flex shrink-0 flex-wrap items-baseline gap-x-1.5 gap-y-1 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-3 py-2 text-sm"
             >
-              <b className="text-amber-700">
+              <b className="text-(--palette-warn)">
                 {t('titleSection.drawer.missing', { count: missing.length })}
               </b>
               {missing.map((path, i) => (
                 <span key={path}>
-                  {i > 0 && <span className="mr-1.5 text-amber-700/60">·</span>}
+                  {i > 0 && <span className="mr-1.5 text-(--palette-warn)/60">·</span>}
                   <button
                     type="button"
                     onClick={() => scrollToField(`titles.${index}.${path}`)}
-                    className="text-amber-700 underline underline-offset-2 hover:no-underline"
+                    className="text-(--palette-warn) underline underline-offset-2 hover:no-underline"
                   >
-                    {labelOf(path)}
+                    {labelOf(path, { movable: isMovableFamily(family) })}
                   </button>
                 </span>
               ))}
@@ -363,7 +395,7 @@ export function TitleDrawer({
           ) : (
             <div
               role="status"
-              className="mx-5 mt-3 shrink-0 rounded-lg bg-green-50 px-3 py-2 text-sm text-green-700"
+              className="mx-5 mt-3 shrink-0 rounded-lg bg-green-50 dark:bg-green-500/10 px-3 py-2 text-sm text-green-700 dark:text-green-300"
             >
               {t('titleSection.drawer.complete')}
             </div>
@@ -385,7 +417,7 @@ export function TitleDrawer({
 
         <footer
           className={clsx(
-            'flex shrink-0 flex-wrap items-center gap-2 border-t border-gray-200 px-5 py-3',
+            'flex shrink-0 flex-wrap items-center gap-2 border-t border-(--palette-line) px-5 py-3',
             readOnly ? 'justify-end' : 'justify-between',
           )}
         >
@@ -395,20 +427,32 @@ export function TitleDrawer({
             </Button>
           ) : (
             <>
-              <Button variant="ghost" size="sm" onClick={onCancel}>
+              <Button variant="ghost" size="sm" disabled={checking} onClick={onCancel}>
                 {t('common:actions.cancel')}
               </Button>
               <span className="flex flex-wrap gap-2">
-                <Button variant="outline" size="sm" onClick={onSaveAndAdd}>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={checking}
+                  onClick={() => void guard(onSaveAndAdd)}
+                >
                   {t('titleSection.drawer.saveAndAdd')}
                 </Button>
-                <Button variant="primary" size="sm" onClick={onSave}>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  isLoading={checking}
+                  disabled={checking}
+                  onClick={() => void guard(onSave)}
+                >
                   {t('common:actions.save')}
                 </Button>
               </span>
             </>
           )}
         </footer>
+        {priorDialog}
       </aside>
     </div>,
     document.body,

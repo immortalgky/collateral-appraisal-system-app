@@ -1,4 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { Controller, useFieldArray, useForm, useWatch, type FieldErrors } from 'react-hook-form';
@@ -19,13 +20,18 @@ import {
   useSubmitQuotation,
   useTakeWorkflowAction,
 } from '../api/quotation';
-import { submitQuotationFormSchema, type SubmitQuotationFormValues } from '../schemas/quotation';
+import {
+  isNonParticipatingStatus,
+  submitQuotationFormSchema,
+  type SubmitQuotationFormValues,
+} from '../schemas/quotation';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import DeclineInvitationModal from '../components/DeclineInvitationModal';
 import SharedDocumentViewer from '../components/SharedDocumentViewer';
 import AppraisalLeftRail from '../components/AppraisalLeftRail';
 import QuotationFeeBreakdown, { deriveFeeTotals } from '../components/QuotationFeeBreakdown';
 import { useQuotationIdFromRoute } from '../hooks/useQuotationIdFromRoute';
+import { ValidationText } from '@/shared/components/form/ValidationText';
 
 const THB = new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' });
 
@@ -80,7 +86,7 @@ const QuotationActionBar = ({
   const anyPending = isSavePending || isSubmitPending;
   const isDisabled = anyPending || disabled;
   return (
-    <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
+    <div className="shrink-0 bg-(--palette-surface) border-t border-(--palette-line) px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
       <Button
         type="button"
         variant="outline"
@@ -153,7 +159,7 @@ const ExtCompanySubmitQuotationPage = () => {
       queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
       queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
       queryClient.invalidateQueries({ queryKey: ['task-counts'] });
-      navigate('/tasks');
+      navigate(taskListUrl());
     } else {
       navigate('/ext/quotations');
     }
@@ -285,6 +291,8 @@ const ExtCompanySubmitQuotationPage = () => {
   // Hydrate form from existing draft/submission once data arrives.
   // Priority: Draft or PendingCheckerReview → editable. Submitted → read-only display.
   const isHydrated = fields.length > 0;
+  // Keys the hydrate effect so it re-runs when the row becomes Expired, not on every status change.
+  const isExpired = mySubmission?.status === 'Expired';
 
   useEffect(() => {
     if (appraisals.length === 0) return;
@@ -292,8 +300,8 @@ const ExtCompanySubmitQuotationPage = () => {
     // Determine the initial item values — prefer from existing draft/submission.
     // Includes post-submission states (Submitted/UnderReview/Tentative/Accepted/Rejected)
     // so the standalone read-only view shows what was actually submitted.
-    // Decline is the only state with no values to show.
-    const hydrateFromSubmission = mySubmission && mySubmission.status !== 'Declined';
+    // Declined/Expired have no values to show (Expired comes back with no price data or quotation number).
+    const hydrateFromSubmission = mySubmission && !isNonParticipatingStatus(mySubmission.status);
 
     const items = appraisals.map(ap => {
       const existingItem = hydrateFromSubmission
@@ -324,12 +332,16 @@ const ExtCompanySubmitQuotationPage = () => {
       },
       // Preserve any in-progress edits across background refetches (e.g. after save-success
       // invalidates the query). Initial hydrate still populates because fields are pristine.
-      { keepDirtyValues: true },
+      // Expired drops unsaved edits so no stale amount survives.
+      { keepDirtyValues: !isExpired },
     );
-    setNotParticipating(!!mySubmission?.declineReason);
-    setDeclineReason(mySubmission?.declineReason ?? '');
+    if (isExpired) setIsDeclineModalOpen(false);
+    // Expired's auto-decline text must never land in local state (or a resent payload).
+    const declineText = isExpired ? '' : (mySubmission?.declineReason ?? '');
+    setNotParticipating(!!declineText);
+    setDeclineReason(declineText);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appraisals.length, mySubmission?.id]);
+  }, [appraisals.length, mySubmission?.id, isExpired]);
 
   // ─── Computed grand total ─────────────────────────────────────────────────
   const watchedItems = useWatch({ control, name: 'items' });
@@ -775,9 +787,9 @@ const ExtCompanySubmitQuotationPage = () => {
           itemNumber: idx + 1,
           estimatedDays: item.estimatedDays,
           feeAmount: item.feeAmount,
-          discount: item.discount,
+          discount: item.discount ?? 0,
           negotiatedDiscount: item.negotiatedDiscount,
-          vatPercent: item.vatPercent,
+          vatPercent: item.vatPercent ?? 7,
           itemNotes: item.itemNotes ?? null,
         })),
         notParticipating: false,
@@ -793,6 +805,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
   // ─── Derived flags ────────────────────────────────────────────────────────
   const isDeclined = mySubmission?.status === 'Declined';
+  const isNonParticipating = isNonParticipatingStatus(mySubmission?.status ?? '');
   const isSubmitted = mySubmission?.status === 'Submitted';
   const isPastDue = quotation ? new Date(quotation.cutOffTime) < new Date() : false;
 
@@ -892,7 +905,11 @@ const ExtCompanySubmitQuotationPage = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -901,7 +918,7 @@ const ExtCompanySubmitQuotationPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
         <Icon name="triangle-exclamation" style="solid" className="w-12 h-12 text-red-400" />
-        <p className="text-sm text-gray-600">{t('errors.unableToLoad')}</p>
+        <p className="text-sm text-(--palette-gray-600)">{t('errors.unableToLoad')}</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/ext/quotations')}>
           {t('buttons.backToInvitations')}
         </Button>
@@ -918,17 +935,18 @@ const ExtCompanySubmitQuotationPage = () => {
       <div className="flex-1 min-h-0 overflow-y-auto px-4 pb-6 scroll-smooth">
         {/* ── Page header ───────────────────────────────────────────────────── */}
         <div className="mb-4">
-          <div className="text-base font-semibold text-gray-900 leading-snug">
-            {t('page.extQuotationTitle')} <span className="text-primary">[{roleLabel}]</span>
+          <div className="text-base font-semibold text-(--palette-ink) leading-snug">
+            {t('page.extQuotationTitle')}{' '}
+            <span className="text-(--palette-primary-text)">[{roleLabel}]</span>
           </div>
-          <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-500 flex-wrap">
+          <div className="flex items-center gap-3 mt-0.5 text-xs text-(--palette-gray-500) flex-wrap">
             <span>
-              <span className="font-medium text-gray-700">{t('page.quotationId')}:</span>{' '}
+              <span className="font-medium text-(--palette-ink)">{t('page.quotationId')}:</span>{' '}
               {quotation.quotationNumber}
             </span>
             <span>·</span>
             <span>
-              <span className="font-medium text-gray-700">{t('page.cutOffDate')}:</span>{' '}
+              <span className="font-medium text-(--palette-ink)">{t('page.cutOffDate')}:</span>{' '}
               {formatCutoff(quotation.cutOffTime)}
             </span>
           </div>
@@ -939,38 +957,44 @@ const ExtCompanySubmitQuotationPage = () => {
             note for this round so the maker has the most relevant context up top.
             Outside negotiation, show Special Instructions as before.                */}
         {openNegotiation ? (
-          <div className="mb-4 rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
+          <div className="mb-4 rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-4 py-3">
             <div className="flex items-center gap-1.5 mb-1">
-              <Icon name="comment-dots" style="solid" className="size-4 text-orange-600 shrink-0" />
-              <span className="text-xs font-semibold text-orange-700 uppercase tracking-wide">
+              <Icon
+                name="comment-dots"
+                style="solid"
+                className="size-4 text-orange-600 dark:text-orange-400 shrink-0"
+              />
+              <span className="text-xs font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wide">
                 {t('negotiation.adminNegotiationNote', { n: openNegotiation.roundNumber })}
               </span>
             </div>
             {openNegotiation.message ? (
-              <p className="text-sm text-orange-900 whitespace-pre-wrap">
+              <p className="text-sm text-orange-900 dark:text-orange-200 whitespace-pre-wrap">
                 {openNegotiation.message}
               </p>
             ) : (
-              <p className="text-sm text-orange-700 italic">{t('negotiation.noNoteProvided')}</p>
+              <p className="text-sm text-orange-700 dark:text-orange-300 italic">
+                {t('negotiation.noNoteProvided')}
+              </p>
             )}
-            <p className="mt-2 text-xs text-orange-700 border-t border-orange-200 pt-2">
+            <p className="mt-2 text-xs text-orange-700 dark:text-orange-300 border-t border-orange-200 dark:border-orange-500/30 pt-2">
               {t('negotiation.adjustDiscountHint')}
             </p>
           </div>
         ) : (
           quotation.specialRequirements && (
-            <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+            <div className="mb-4 rounded-lg border border-amber-200 dark:border-amber-500/30 bg-(--palette-warn-wash) px-4 py-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <Icon
                   name="circle-exclamation"
                   style="solid"
                   className="size-4 text-amber-500 shrink-0"
                 />
-                <span className="text-xs font-semibold text-amber-700 uppercase tracking-wide">
+                <span className="text-xs font-semibold text-(--palette-warn) uppercase tracking-wide">
                   {t('shared.specialInstructions')}
                 </span>
               </div>
-              <p className="text-sm text-amber-900 whitespace-pre-line">
+              <p className="text-sm text-amber-900 dark:text-amber-200 whitespace-pre-line">
                 {quotation.specialRequirements}
               </p>
             </div>
@@ -979,48 +1003,73 @@ const ExtCompanySubmitQuotationPage = () => {
 
         {/* ── Declined banner ───────────────────────────────────────────────── */}
         {isDeclined && (
-          <div className="rounded-xl border border-red-200 overflow-hidden mb-5">
-            <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border-b border-red-200">
+          <div className="rounded-xl border border-(--palette-req-line) overflow-hidden mb-5">
+            <div className="flex items-center gap-2 px-4 py-3 bg-(--palette-req-wash) border-b border-(--palette-req-line)">
               <Icon name="ban" style="solid" className="size-5 text-red-500" />
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {t('shared.invitationDeclined')}
               </span>
             </div>
-            <div className="px-4 py-3 text-sm text-gray-500">
+            <div className="px-4 py-3 text-sm text-(--palette-gray-500)">
               {t('shared.invitationDeclinedBody')}
+            </div>
+          </div>
+        )}
+
+        {/* ── Expired banner — deadline passed with no response, never phrased as a decline ──── */}
+        {isExpired && (
+          <div className="rounded-xl border border-(--palette-line) overflow-hidden mb-5">
+            <div className="flex items-center gap-2 px-4 py-3 bg-(--palette-surface-2) border-b border-(--palette-line)">
+              <Icon name="clock" style="solid" className="size-5 text-(--palette-gray-400)" />
+              <span className="text-sm font-semibold text-(--palette-ink)">
+                {t('shared.invitationExpired')}
+              </span>
+            </div>
+            <div className="px-4 py-3 text-sm text-(--palette-gray-500)">
+              {t('shared.invitationExpiredBody')}
             </div>
           </div>
         )}
 
         {/* ── Submitted read-only banner ────────────────────────────────────── */}
         {isSubmitted && !openNegotiation && (
-          <div className="rounded-xl border border-green-200 overflow-hidden mb-5">
-            <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border-b border-green-200">
-              <Icon name="circle-check" style="solid" className="size-5 text-green-600" />
-              <span className="text-sm font-semibold text-gray-900">
+          <div className="rounded-xl border border-green-200 dark:border-green-500/30 overflow-hidden mb-5">
+            <div className="flex items-center gap-2 px-4 py-3 bg-green-50 dark:bg-green-500/10 border-b border-green-200 dark:border-green-500/30">
+              <Icon
+                name="circle-check"
+                style="solid"
+                className="size-5 text-green-600 dark:text-green-400"
+              />
+              <span className="text-sm font-semibold text-(--palette-ink)">
                 {t('shared.quotationSubmittedTitle')}
               </span>
             </div>
-            <div className="px-4 py-4 space-y-3 text-sm text-gray-600">
+            <div className="px-4 py-4 space-y-3 text-sm text-(--palette-gray-600)">
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
                 <div>
-                  <div className="text-xs text-gray-500 mb-0.5">{t('shared.totalQuotedPrice')}</div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="text-xs text-(--palette-gray-500) mb-0.5">
+                    {t('shared.totalQuotedPrice')}
+                  </div>
+                  <div className="font-semibold text-(--palette-ink)">
                     {mySubmission?.totalQuotedPrice != null
                       ? THB.format(mySubmission.totalQuotedPrice)
                       : '—'}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-gray-500 mb-0.5">{t('shared.estimatedDays')}</div>
-                  <div className="font-semibold text-gray-900">
+                  <div className="text-xs text-(--palette-gray-500) mb-0.5">
+                    {t('shared.estimatedDays')}
+                  </div>
+                  <div className="font-semibold text-(--palette-ink)">
                     {mySubmission?.estimatedDays ?? '—'}
                   </div>
                 </div>
               </div>
               {mySubmission?.remarks && (
                 <div>
-                  <div className="text-xs text-gray-500 mb-0.5">{t('shared.remarks')}</div>
+                  <div className="text-xs text-(--palette-gray-500) mb-0.5">
+                    {t('shared.remarks')}
+                  </div>
                   <div>{mySubmission.remarks}</div>
                 </div>
               )}
@@ -1031,13 +1080,13 @@ const ExtCompanySubmitQuotationPage = () => {
         {/* ── Past due without submission ───────────────────────────────────── */}
         {isPastDue && !mySubmission && !isDeclined && (
           <div className="flex flex-col items-center py-12 gap-3 text-center">
-            <Icon name="clock" style="regular" className="size-10 text-gray-300" />
-            <p className="text-sm text-gray-500">{t('shared.deadlinePassed')}</p>
+            <Icon name="clock" style="regular" className="size-10 text-(--palette-gray-300)" />
+            <p className="text-sm text-(--palette-gray-500)">{t('shared.deadlinePassed')}</p>
           </div>
         )}
 
         {/* ── Read-only banner (shown when task ownership is absent) ──────────── */}
-        {!canEdit && !isDeclined && !isSubmitted && !isPastDue && appraisals.length > 0 && (
+        {!canEdit && !isNonParticipating && !isSubmitted && !isPastDue && appraisals.length > 0 && (
           <Alert variant="info" className="mb-4">
             {t('shared.readOnlyBanner', { stage: currentStageLabel })}
           </Alert>
@@ -1046,15 +1095,18 @@ const ExtCompanySubmitQuotationPage = () => {
         {/* ── Validation summary — missing/invalid fields + duration-cap violations, grouped by
               appraisal. Shown only after a submit attempt; clears as each issue is fixed. ── */}
         {canEdit && submitCount > 0 && bannerErrors.length > 0 && (
-          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3">
-            <p className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-red-700">
+          <div
+            role="alert"
+            className="mb-4 rounded-lg border border-(--palette-req-line) bg-(--palette-req-wash) p-3"
+          >
+            <p className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-(--palette-req)">
               <span aria-hidden="true">⚠</span>
               {t('validation.summaryTitle', { count: bannerErrors.length })}
             </p>
-            <ul className="space-y-0.5 text-xs text-red-600">
+            <ul className="space-y-0.5 text-xs text-(--palette-danger)">
               {bannerErrors.map((e, i) => (
                 <li key={`${e.index}-${i}`}>
-                  • {e.label} — {e.message}
+                  • {e.label} — <ValidationText message={e.message} />
                 </li>
               ))}
             </ul>
@@ -1063,7 +1115,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
         {/* ── Main two-pane form — always rendered; inputs gate on canEdit (read-only when false). ── */}
         {appraisals.length > 0 && (
-          <div className="rounded-xl border border-gray-200 overflow-hidden">
+          <div className="rounded-xl border border-(--palette-line) overflow-hidden">
             {/* Two-pane layout — desktop uses CSS grid so the row's height is driven by the
               right pane; the rail's `min-h-0 overflow-hidden` prevents its intrinsic content
               from enlarging the row, and its inner list scrolls when it exceeds that height. */}
@@ -1084,23 +1136,23 @@ const ExtCompanySubmitQuotationPage = () => {
                   <div key={selectedIndex} className="p-5 space-y-6">
                     {/* Section 1: Appraisal Information (read-only) */}
                     <section aria-label={t('aria.sectionAppraisalInfo')}>
-                      <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                      <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                         {t('sections.appraisalInformation')}
                       </h2>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="block text-xs text-gray-500 mb-0.5">
+                          <span className="block text-xs text-(--palette-gray-500) mb-0.5">
                             {t('fields.appraisalNumber')}
                           </span>
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-(--palette-ink)">
                             {selectedAppraisal.appraisalNumber?.trim() || '—'}
                           </span>
                         </div>
                         <div>
-                          <span className="block text-xs text-gray-500 mb-0.5">
+                          <span className="block text-xs text-(--palette-gray-500) mb-0.5">
                             {t('fields.customerName')}
                           </span>
-                          <span className="font-medium text-gray-900">
+                          <span className="font-medium text-(--palette-ink)">
                             {selectedAppraisal.customerName ?? '—'}
                           </span>
                         </div>
@@ -1110,10 +1162,10 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Section 2: Attached Documents — grouped by section, mirroring DocumentChecklist. */}
                     {selectedDocs.length > 0 && (
                       <section aria-label={t('aria.sectionAttachedDocs')}>
-                        <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                        <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                           {t('sections.attachDocument')}
                         </h2>
-                        <div className="rounded-lg border border-gray-200 overflow-hidden">
+                        <div className="rounded-lg border border-(--palette-line) overflow-hidden">
                           <table className="w-full text-xs table-fixed">
                             <colgroup>
                               <col className="w-[24%]" />
@@ -1121,7 +1173,7 @@ const ExtCompanySubmitQuotationPage = () => {
                               <col className="w-[18%]" />
                               <col />
                             </colgroup>
-                            <thead className="bg-gray-100 text-[11px] uppercase tracking-wider text-gray-700 border-b-2 border-gray-300">
+                            <thead className="bg-(--palette-surface-3) text-[11px] uppercase tracking-wider text-(--palette-ink) border-b-2 border-(--palette-line-strong)">
                               <tr>
                                 <th className="text-xs text-left px-3 py-2.5 font-semibold">
                                   {t('columns.type')}
@@ -1138,28 +1190,34 @@ const ExtCompanySubmitQuotationPage = () => {
                               </tr>
                             </thead>
                             {docSectionGroups.map(group => (
-                              <tbody key={group.label} className="divide-y divide-gray-100">
-                                <tr className="bg-gray-50/60">
+                              <tbody
+                                key={group.label}
+                                className="divide-y divide-(--palette-line-soft)"
+                              >
+                                <tr className="bg-(--palette-surface-2)/60">
                                   <td colSpan={4} className="px-3 py-1.5">
                                     <div className="flex items-center gap-2">
                                       <Icon
                                         name={group.titleNumber ? 'building' : 'file-lines'}
                                         style="solid"
-                                        className="size-3 text-gray-400 shrink-0"
+                                        className="size-3 text-(--palette-gray-400) shrink-0"
                                       />
-                                      <span className="text-[11px] font-medium text-gray-600">
+                                      <span className="text-[11px] font-medium text-(--palette-gray-600)">
                                         {group.label}
                                       </span>
-                                      <span className="text-[10px] text-gray-400">
+                                      <span className="text-[10px] text-(--palette-gray-400)">
                                         ({group.docs.length})
                                       </span>
                                     </div>
                                   </td>
                                 </tr>
                                 {group.docs.map(doc => (
-                                  <tr key={doc.documentId} className="hover:bg-gray-50">
+                                  <tr
+                                    key={doc.documentId}
+                                    className="hover:bg-(--palette-surface-2)"
+                                  >
                                     <td
-                                      className="px-3 py-2 text-gray-700 truncate"
+                                      className="px-3 py-2 text-(--palette-ink) truncate"
                                       title={doc.documentTypeName ?? ''}
                                     >
                                       {doc.documentTypeName ?? '—'}
@@ -1175,19 +1233,19 @@ const ExtCompanySubmitQuotationPage = () => {
                                               fileType: doc.fileType,
                                             })
                                           }
-                                          className="text-primary hover:text-primary/70 hover:underline underline-offset-2 transition-colors text-left truncate max-w-full"
+                                          className="text-(--palette-primary-text) hover:text-(--palette-primary-text)/70 hover:underline underline-offset-2 transition-colors text-left truncate max-w-full"
                                         >
                                           {doc.fileName}
                                         </button>
                                       ) : (
-                                        <span className="text-gray-500">—</span>
+                                        <span className="text-(--palette-gray-500)">—</span>
                                       )}
                                     </td>
-                                    <td className="px-3 py-2 text-gray-500 truncate">
+                                    <td className="px-3 py-2 text-(--palette-gray-500) truncate">
                                       {doc.uploadedAt ? formatCutoff(doc.uploadedAt) : '—'}
                                     </td>
                                     <td
-                                      className="px-3 py-2 text-gray-500 truncate italic"
+                                      className="px-3 py-2 text-(--palette-gray-500) truncate italic"
                                       title={doc.notes ?? ''}
                                     >
                                       {doc.notes ?? '—'}
@@ -1204,20 +1262,20 @@ const ExtCompanySubmitQuotationPage = () => {
                     {/* Sections 3–5 (pricing/duration/remark) are void while not participating —
                         replaced with a single reason notice. Sections 1–2 above (appraisal info,
                         attached documents) stay visible either way since they're not pricing. */}
-                    {notParticipating ? (
+                    {isExpired ? null : notParticipating ? (
                       <section aria-label={t('aria.sectionQuotationInfo')}>
-                        <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3">
+                        <div className="rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 px-4 py-3">
                           <div className="flex items-center gap-1.5 mb-1">
                             <Icon
                               name="ban"
                               style="solid"
                               className="size-4 text-orange-500 shrink-0"
                             />
-                            <span className="text-sm font-semibold text-orange-800">
+                            <span className="text-sm font-semibold text-orange-800 dark:text-orange-300">
                               {t('shared.notParticipatingTitle')}
                             </span>
                           </div>
-                          <p className="text-sm text-orange-800 whitespace-pre-wrap">
+                          <p className="text-sm text-orange-800 dark:text-orange-300 whitespace-pre-wrap">
                             {declineReason || t('shared.notParticipatingNoReason')}
                           </p>
                         </div>
@@ -1226,7 +1284,7 @@ const ExtCompanySubmitQuotationPage = () => {
                       <>
                         {/* Section 3: Quotation Information — Fee Breakdown */}
                         <section aria-label={t('aria.sectionQuotationInfo')}>
-                          <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                             {t('sections.quotationInformationFee')}
                           </h2>
 
@@ -1246,16 +1304,16 @@ const ExtCompanySubmitQuotationPage = () => {
 
                         {/* Section 4: Duration / Mandays */}
                         <section aria-label={t('aria.sectionDuration')}>
-                          <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                             {t('sections.duration')}
                           </h2>
                           <div className="grid grid-cols-2 gap-4">
                             {/* Admin-set cap — read-only. When set, company's Estimated Mandays must not exceed it. */}
                             <div>
-                              <label className="block text-sm text-gray-600 mb-1">
+                              <label className="block text-sm text-(--palette-gray-600) mb-1">
                                 {t('fields.maxAppraisalDuration')}
                               </label>
-                              <div className="w-full px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600">
+                              <div className="w-full px-2.5 py-1.5 border border-(--palette-line) rounded-lg text-sm bg-(--palette-surface-2) text-(--palette-gray-600)">
                                 {selectedAppraisal?.maxAppraisalDays ?? '—'}
                               </div>
                             </div>
@@ -1264,7 +1322,7 @@ const ExtCompanySubmitQuotationPage = () => {
                             <div>
                               <label
                                 htmlFor={`est-mandays-${selectedIndex}`}
-                                className="block text-sm text-gray-600 mb-1"
+                                className="block text-sm text-(--palette-gray-600) mb-1"
                               >
                                 {t('fields.estimatedMandays')}{' '}
                                 <span className="text-danger">*</span>
@@ -1304,7 +1362,7 @@ const ExtCompanySubmitQuotationPage = () => {
 
                         {/* Section 5: Per-item Remark */}
                         <section aria-label={t('sections.appraisalRemark')}>
-                          <h2 className="text-base font-semibold text-gray-700 mb-3 pb-1.5 border-b border-gray-100">
+                          <h2 className="text-base font-semibold text-(--palette-ink) mb-3 pb-1.5 border-b border-(--palette-line-soft)">
                             {t('sections.appraisalRemark')}
                           </h2>
                           <Controller
@@ -1330,14 +1388,14 @@ const ExtCompanySubmitQuotationPage = () => {
           required/disabled state changes; avoids layout jumping on every keystroke. */}
                         {!!openNegotiation && needsReason && (
                           <section aria-label={t('sections.itemNegotiationReason')}>
-                            <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 p-3">
-                              <div className="flex items-center gap-2 mb-3 pb-1.5 border-b border-indigo-200">
-                                <h2 className="text-base font-semibold text-indigo-900">
+                            <div className="rounded-lg border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/60 dark:bg-indigo-500/10 p-3">
+                              <div className="flex items-center gap-2 mb-3 pb-1.5 border-b border-indigo-200 dark:border-indigo-500/30">
+                                <h2 className="text-base font-semibold text-indigo-900 dark:text-indigo-200">
                                   {t('sections.itemNegotiationReason')}
                                 </h2>
                                 {!!openNegotiation && (
                                   <span
-                                    className={`text-[11px] ${needsReason ? 'font-medium text-danger-600' : 'text-gray-400'}`}
+                                    className={`text-[11px] ${needsReason ? 'font-medium text-(--palette-danger)' : 'text-(--palette-gray-400)'}`}
                                   >
                                     {t('shared.reasonRequiredHint')}
                                   </span>
@@ -1358,12 +1416,12 @@ const ExtCompanySubmitQuotationPage = () => {
                                       maxLength={500}
                                       showCharCount
                                       error={fieldState.error?.message}
-                                      className="min-h-[72px] bg-white"
+                                      className="min-h-[72px] bg-(--palette-surface)"
                                     />
                                   )}
                                 />
                               ) : (
-                                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                <p className="text-sm text-(--palette-ink) whitespace-pre-wrap">
                                   {selectedItemNegotiationReason}
                                 </p>
                               )}
@@ -1374,79 +1432,81 @@ const ExtCompanySubmitQuotationPage = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center justify-center h-full p-8 text-sm text-gray-400">
+                  <div className="flex items-center justify-center h-full p-8 text-sm text-(--palette-gray-400)">
                     {t('empty.selectAppraisal')}
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Footer row */}
-            <div className="border-t border-primary/20 bg-primary/5 px-5 py-4 space-y-4">
-              {/* Total + Participating */}
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <span className="text-sm font-semibold text-gray-700">
-                    {t('fields.totalFeeAmount')}
-                  </span>
-                  <span className="ml-2 text-base font-bold text-primary">
-                    {grandTotal > 0 ? THB.format(grandTotal) : '—'}
-                  </span>
-                </div>
+            {/* Footer row — total, participating toggle and remark are void once Expired */}
+            {!isExpired && (
+              <div className="border-t border-primary/20 bg-primary/5 px-5 py-4 space-y-4">
+                {/* Total + Participating */}
+                <div className="flex items-center justify-between gap-4 flex-wrap">
+                  <div>
+                    <span className="text-sm font-semibold text-(--palette-ink)">
+                      {t('fields.totalFeeAmount')}
+                    </span>
+                    <span className="ml-2 text-base font-bold text-(--palette-primary-text)">
+                      {grandTotal > 0 ? THB.format(grandTotal) : '—'}
+                    </span>
+                  </div>
 
-                {/* Participating toggle hidden during negotiation — invitation acceptance
+                  {/* Participating toggle hidden during negotiation — invitation acceptance
                     isn't being decided here; the company can only counter or decline via the
                     action bar below. Shared by Maker and Checker — "not participate" is just a
                     flag on the normal Draft → Send-to-Checker → Submit pipeline now, so either
                     role can flip it while they hold the active task; the Checker's final Submit
                     is what's authoritative for Declined vs Submitted. */}
-                {!isNegotiatingLock && (
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-700">
-                      {t('fields.participating')} <span className="text-danger">*</span>
-                    </span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleParticipatingToggle(false)}
-                        disabled={!canEdit}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          notParticipating
-                            ? 'bg-red-500 text-white border-red-500'
-                            : 'border-gray-300 text-gray-600 hover:border-red-400 hover:text-red-500'
-                        }`}
-                      >
-                        No
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleParticipatingToggle(true)}
-                        disabled={!canEdit}
-                        className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                          !notParticipating
-                            ? 'bg-primary text-white border-primary'
-                            : 'border-gray-300 text-gray-600 hover:border-primary hover:text-primary'
-                        }`}
-                      >
-                        Yes
-                      </button>
+                  {!isNegotiatingLock && (
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-(--palette-ink)">
+                        {t('fields.participating')} <span className="text-danger">*</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleParticipatingToggle(false)}
+                          disabled={!canEdit}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            notParticipating
+                              ? 'bg-red-500 text-white border-red-500'
+                              : 'border-(--palette-line-strong) text-(--palette-gray-600) hover:border-red-400 hover:text-red-500'
+                          }`}
+                        >
+                          No
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleParticipatingToggle(true)}
+                          disabled={!canEdit}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            !notParticipating
+                              ? 'bg-primary text-white border-primary'
+                              : 'border-(--palette-line-strong) text-(--palette-gray-600) hover:border-primary hover:text-(--palette-primary-text)'
+                          }`}
+                        >
+                          Yes
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
 
-              {/* Quotation Remark */}
-              <div>
-                <Textarea
-                  label={t('fields.quotationRemark')}
-                  disabled={!canEdit || isNegotiatingLock}
-                  placeholder={t('placeholders.remarkHint')}
-                  maxLength={4000}
-                  showCharCount
-                  {...register('remarks')}
-                />
+                {/* Quotation Remark */}
+                <div>
+                  <Textarea
+                    label={t('fields.quotationRemark')}
+                    disabled={!canEdit || isNegotiatingLock}
+                    placeholder={t('placeholders.remarkHint')}
+                    maxLength={4000}
+                    showCharCount
+                    {...register('remarks')}
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
 
@@ -1487,11 +1547,13 @@ const ExtCompanySubmitQuotationPage = () => {
         )}
       </div>
 
-      {/* ── Sticky action bar — always rendered; buttons disable when !canEdit (read-only). ── */}
+      {/* ── Sticky action bar — buttons disable when !canEdit (read-only); hidden once Expired
+            (it holds only action buttons, no navigation). ── */}
       {appraisals.length > 0 &&
+        !isExpired &&
         (openNegotiation ? (
           /* Negotiation round — Decline this round + Submit Proposal. Maker → bank direct. */
-          <div className="shrink-0 bg-white border-t border-gray-200 px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
+          <div className="shrink-0 bg-(--palette-surface) border-t border-(--palette-line) px-4 py-3 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex items-center justify-end gap-3">
             <Button
               type="button"
               onClick={handleSubmitNegotiation}

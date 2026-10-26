@@ -32,9 +32,13 @@ const SavedSearchesPanel = ({
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
-      <h2 className="text-base font-semibold text-gray-900">{t('sidebar.savedSearchesTitle')}</h2>
-      <p className="text-xs text-gray-500 mt-0.5">{t('sidebar.savedSearchesSubtitle')}</p>
+    <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm p-4">
+      <h2 className="text-base font-semibold text-(--palette-ink)">
+        {t('sidebar.savedSearchesTitle')}
+      </h2>
+      <p className="text-xs text-(--palette-gray-500) mt-0.5">
+        {t('sidebar.savedSearchesSubtitle')}
+      </p>
 
       <div className="flex flex-col gap-1.5 mt-2.5">
         {savedSearches.map(search => (
@@ -42,12 +46,12 @@ const SavedSearchesPanel = ({
             <button
               type="button"
               onClick={() => onApply(search)}
-              className="flex-1 text-left rounded-lg border border-dashed border-gray-200 px-2.5 py-1.5 hover:border-primary transition-colors min-w-0"
+              className="flex-1 text-left rounded-lg border border-dashed border-(--palette-line) px-2.5 py-1.5 hover:border-primary transition-colors min-w-0"
             >
-              <span className="block text-xs font-medium text-gray-800 truncate">
+              <span className="block text-xs font-medium text-(--palette-ink) truncate">
                 {search.label}
               </span>
-              <code className="block text-[11px] text-gray-400 truncate">
+              <code className="block text-[11px] text-(--palette-gray-400) truncate">
                 {search.q || t('sidebar.savedSearchesNoQuery')}
               </code>
             </button>
@@ -55,7 +59,7 @@ const SavedSearchesPanel = ({
               type="button"
               onClick={() => onDelete(search.id)}
               aria-label={t('sidebar.savedSearchesDelete')}
-              className="px-1.5 text-gray-300 hover:text-danger transition-colors"
+              className="px-1.5 text-(--palette-gray-300) hover:text-danger transition-colors"
             >
               <Icon name="trash" style="regular" className="size-3.5" />
             </button>
@@ -63,7 +67,7 @@ const SavedSearchesPanel = ({
         ))}
       </div>
 
-      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-gray-100">
+      <div className="flex items-center gap-1.5 mt-3 pt-3 border-t border-(--palette-line-soft)">
         <input
           type="text"
           value={label}
@@ -71,7 +75,7 @@ const SavedSearchesPanel = ({
           onKeyDown={e => e.key === 'Enter' && submitSave()}
           disabled={!canSave}
           placeholder={t('sidebar.savedSearchesSavePlaceholder')}
-          className="min-w-0 flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-gray-50 disabled:text-gray-300"
+          className="min-w-0 flex-1 px-2.5 py-1.5 border border-(--palette-line) rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary disabled:bg-(--palette-surface-2) disabled:text-(--palette-gray-300)"
         />
         <button
           type="button"
@@ -83,7 +87,7 @@ const SavedSearchesPanel = ({
         </button>
       </div>
       {currentHours == null && (
-        <p className="text-[11px] text-gray-400 mt-1">
+        <p className="text-[11px] text-(--palette-gray-400) mt-1">
           {t('sidebar.savedSearchesCustomRangeHint')}
         </p>
       )}

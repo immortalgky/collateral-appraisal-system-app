@@ -24,8 +24,7 @@ function AoCodeAutocomplete({
   const [selectedLabel, setSelectedLabel] = useState('');
   const debouncedSearch = useDebounce(inputText, 300);
 
-  const { data: requestors, isFetching: requestorsFetching } =
-    useSearchRequestors(debouncedSearch);
+  const { data: requestors, isFetching: requestorsFetching } = useSearchRequestors(debouncedSearch);
 
   const items = useMemo(() => {
     const seen = new Set<string>();

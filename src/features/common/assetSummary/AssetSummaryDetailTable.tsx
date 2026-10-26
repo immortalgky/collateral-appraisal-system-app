@@ -59,14 +59,14 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
         key: 'area',
         label: 'Area',
         sortField: 'area',
-        tdClassName: 'px-4 py-3 text-gray-600 text-sm text-right tabular-nums',
+        tdClassName: 'px-4 py-3 text-(--palette-gray-600) text-sm text-right tabular-nums',
         render: item => <span>{item.area != null ? formatNumber(item.area, 2) : '—'}</span>,
       },
       {
         key: 'estimatedPrice',
         label: 'Estimated Price',
         sortField: 'estimatedPrice',
-        tdClassName: 'px-4 py-3 text-gray-600 text-sm text-right tabular-nums',
+        tdClassName: 'px-4 py-3 text-(--palette-gray-600) text-sm text-right tabular-nums',
         render: item => (
           <span>{item.estimatedPrice != null ? formatNumber(item.estimatedPrice) : '—'}</span>
         ),
@@ -75,7 +75,7 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
         key: 'currentPrice',
         label: 'Current Price',
         sortField: 'currentPrice',
-        tdClassName: 'px-4 py-3 text-gray-600 text-sm text-right tabular-nums',
+        tdClassName: 'px-4 py-3 text-(--palette-gray-600) text-sm text-right tabular-nums',
         render: item => (
           <span>{item.currentPrice != null ? formatNumber(item.currentPrice) : '—'}</span>
         ),
@@ -86,15 +86,15 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
         sortField: 'isPricesCurrent',
         render: item =>
           item.isPricesCurrent === true ? (
-            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-300">
               Current
             </span>
           ) : item.isPricesCurrent === false ? (
-            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
+            <span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-500/20 text-(--palette-warn)">
               Not Current
             </span>
           ) : (
-            <span className="text-gray-400 text-xs">—</span>
+            <span className="text-(--palette-gray-400) text-xs">—</span>
           ),
       },
     ],
@@ -127,30 +127,30 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
 
   const SortIcon = ({ field }: { field: string }) => {
     if (sortField !== field)
-      return <Icon style="solid" name="sort" className="size-2.5 text-gray-300" />;
+      return <Icon style="solid" name="sort" className="size-2.5 text-(--palette-gray-300)" />;
     return (
       <Icon
         style="solid"
         name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-        className="size-2.5 text-primary"
+        className="size-2.5 text-(--palette-primary-text)"
       />
     );
   };
 
   return (
-    <div className="overflow-x-auto border border-gray-200 rounded-sm">
+    <div className="overflow-x-auto border border-(--palette-line) rounded-sm">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-gray-50 border-b border-gray-200">
+          <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
             {columns.map(col => {
               const isSticky = col.key === STICKY_COLUMN_KEY;
               const isActive = !!col.sortField && sortField === col.sortField;
               const base =
-                'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
               const thClass = isSticky
-                ? `${base} sticky left-0 z-30 cursor-pointer hover:text-gray-600 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-200`
+                ? `${base} sticky left-0 z-30 cursor-pointer hover:text-(--palette-gray-600) after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-line)`
                 : col.sortField
-                  ? `${base} cursor-pointer hover:text-gray-600 ${isActive ? 'text-primary' : ''}`
+                  ? `${base} cursor-pointer hover:text-(--palette-gray-600) ${isActive ? 'text-(--palette-primary-text)' : ''}`
                   : base;
               return (
                 <th
@@ -174,7 +174,10 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
         <tbody>
           {sortedItems.length === 0 && (
             <tr>
-              <td colSpan={columns.length} className="px-4 py-10 text-center text-sm text-gray-400">
+              <td
+                colSpan={columns.length}
+                className="px-4 py-10 text-center text-sm text-(--palette-gray-400)"
+              >
                 No assets match the selected filter.
               </td>
             </tr>
@@ -183,7 +186,7 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
             return (
               <tr
                 key={item.id}
-                className="group bg-white hover:bg-gray-50 border-b border-gray-200 transition-colors"
+                className="group bg-(--palette-surface) hover:bg-(--palette-surface-2) border-b border-(--palette-line) transition-colors"
               >
                 {columns.map(col => {
                   const isSticky = col.key === STICKY_COLUMN_KEY;
@@ -192,8 +195,8 @@ export function AssetSummaryDetailTable({ items, filterParams }: AssetSummaryDet
                       key={col.key}
                       className={
                         isSticky
-                          ? 'bg-white group-hover:bg-gray-50 transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-gray-100'
-                          : (col.tdClassName ?? 'px-4 py-3 text-gray-600 text-sm')
+                          ? 'bg-(--palette-surface) group-hover:bg-(--palette-surface-2) transition-colors sticky left-0 z-10 px-4 py-3 after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-(--palette-surface-3)'
+                          : (col.tdClassName ?? 'px-4 py-3 text-(--palette-gray-600) text-sm')
                       }
                       onClick={isSticky ? e => e.stopPropagation() : undefined}
                     >

@@ -76,17 +76,25 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
       <div className="space-y-4">
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <Icon name="spinner" style="solid" className="w-6 h-6 animate-spin text-gray-400" />
+            <Icon
+              name="spinner"
+              style="solid"
+              className="w-6 h-6 animate-spin text-(--palette-gray-400)"
+            />
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center gap-2">
-            <Icon name="hourglass-half" style="regular" className="w-10 h-10 text-gray-300" />
-            <p className="text-sm text-gray-500">{t('empty.noQueuedAppraisals')}</p>
+            <Icon
+              name="hourglass-half"
+              style="regular"
+              className="w-10 h-10 text-(--palette-gray-300)"
+            />
+            <p className="text-sm text-(--palette-gray-500)">{t('empty.noQueuedAppraisals')}</p>
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 max-h-[55vh] overflow-y-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50 sticky top-0">
+          <div className="overflow-x-auto rounded-lg border border-(--palette-line) max-h-[55vh] overflow-y-auto">
+            <table className="min-w-full divide-y divide-(--palette-line)">
+              <thead className="bg-(--palette-surface-2) sticky top-0">
                 <tr>
                   <th className="text-xs px-3 py-2 text-left font-semibold">
                     <input
@@ -96,22 +104,26 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
                       aria-label={t('aria.selectAll')}
                     />
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                     {t('columns.appraisalNo')}
                   </th>
-                  <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-right text-xs font-medium text-(--palette-gray-500) uppercase">
                     {t('columns.appraisalValue')}
                   </th>
-                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                  <th className="px-3 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                     {t('columns.enqueued')}
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="bg-(--palette-surface) divide-y divide-(--palette-line)">
                 {items.map(item => (
                   <tr
                     key={item.id}
-                    className={selected.has(item.id) ? 'bg-blue-50' : 'hover:bg-gray-50'}
+                    className={
+                      selected.has(item.id)
+                        ? 'bg-blue-50 dark:bg-blue-500/10'
+                        : 'hover:bg-(--palette-surface-2)'
+                    }
                   >
                     <td className="px-3 py-2">
                       <input
@@ -123,13 +135,13 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
                         })}
                       />
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-900 whitespace-nowrap">
+                    <td className="px-3 py-2 text-sm text-(--palette-ink) whitespace-nowrap">
                       {item.appraisalNo ?? item.appraisalId.slice(0, 8)}
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-700 text-right whitespace-nowrap">
+                    <td className="px-3 py-2 text-sm text-(--palette-ink) text-right whitespace-nowrap">
                       {formatCurrency(item.appraisalValue)}
                     </td>
-                    <td className="px-3 py-2 text-sm text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-2 text-sm text-(--palette-gray-500) whitespace-nowrap">
                       {new Date(item.enqueuedAt).toLocaleDateString('en-GB', {
                         day: '2-digit',
                         month: 'short',
@@ -144,7 +156,7 @@ const AddItemsDialog = ({ isOpen, onClose, meetingId }: AddItemsDialogProps) => 
         )}
 
         <div className="flex items-center justify-between gap-3 pt-2">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-(--palette-gray-500)">
             {t('addItemsDialog.selectedCount', { selected: selected.size, total: items.length })}
           </p>
           <div className="flex gap-3">

@@ -45,32 +45,32 @@ function MonitoringOverviewStrip({ counts }: MonitoringOverviewStripProps) {
     healthPct >= 85 ? 'good' : healthPct >= 65 ? 'warn' : 'bad';
 
   const healthPillCls = {
-    good: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    warn: 'bg-amber-50 text-amber-700 border-amber-200',
-    bad: 'bg-red-50 text-red-700 border-red-200',
+    good: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30',
+    warn: 'bg-(--palette-warn-wash) text-(--palette-warn) border-amber-200 dark:border-amber-500/30',
+    bad: 'bg-(--palette-req-wash) text-(--palette-req) border-(--palette-req-line)',
   }[healthVariant];
 
   const healthIconCls = {
-    good: 'bg-emerald-50 text-emerald-600',
-    warn: 'bg-amber-50 text-amber-600',
-    bad: 'bg-red-50 text-red-600',
+    good: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    warn: 'bg-(--palette-warn-wash) text-amber-600 dark:text-amber-400',
+    bad: 'bg-(--palette-req-wash) text-(--palette-danger)',
   }[healthVariant];
 
   return (
-    <div className="flex items-center gap-6 px-4 py-3 rounded-lg border border-gray-200 bg-white shadow-sm">
+    <div className="flex items-center gap-6 px-4 py-3 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-sm">
       <Stat
         icon="layer-group"
-        iconCls="text-gray-500 bg-gray-100"
+        iconCls="text-(--palette-gray-500) bg-(--palette-surface-3)"
         label={t('overview.totalPending')}
         value={totalPending}
       />
       <Divider />
       <Stat
         icon="triangle-exclamation"
-        iconCls="text-red-600 bg-red-50"
+        iconCls="text-(--palette-danger) bg-(--palette-req-wash)"
         label={t('overview.totalBreached')}
         value={totalBreached}
-        valueCls={totalBreached > 0 ? 'text-red-600' : undefined}
+        valueCls={totalBreached > 0 ? 'text-(--palette-danger)' : undefined}
       />
       <Divider />
       <div className="flex items-center gap-3">
@@ -83,7 +83,9 @@ function MonitoringOverviewStrip({ counts }: MonitoringOverviewStripProps) {
           <Icon style="solid" name="shield-halved" className="size-4" />
         </span>
         <div className="flex flex-col">
-          <span className="text-[11px] text-gray-500 leading-none">{t('overview.slaHealth')}</span>
+          <span className="text-[11px] text-(--palette-gray-500) leading-none">
+            {t('overview.slaHealth')}
+          </span>
           <span
             className={[
               'mt-1 inline-flex items-center gap-1 px-2 py-0.5 text-xs font-semibold rounded-full border tabular-nums w-fit',
@@ -122,11 +124,11 @@ function Stat({ icon, iconCls, label, value, valueCls }: StatProps) {
         <Icon style="solid" name={icon} className="size-4" />
       </span>
       <div className="flex flex-col">
-        <span className="text-[11px] text-gray-500 leading-none">{label}</span>
+        <span className="text-[11px] text-(--palette-gray-500) leading-none">{label}</span>
         <span
           className={[
             'mt-1 text-xl font-bold tabular-nums leading-none',
-            valueCls ?? 'text-gray-900',
+            valueCls ?? 'text-(--palette-ink)',
           ].join(' ')}
         >
           {value}
@@ -137,7 +139,7 @@ function Stat({ icon, iconCls, label, value, valueCls }: StatProps) {
 }
 
 function Divider() {
-  return <span className="h-8 w-px bg-gray-200 shrink-0" aria-hidden />;
+  return <span className="h-8 w-px bg-(--palette-line) shrink-0" aria-hidden />;
 }
 
 export default MonitoringOverviewStrip;

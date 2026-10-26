@@ -47,8 +47,12 @@ export default function DocumentRequirementTable({
       const pt = norm(r.propertyTypeCode);
       const pp = norm(r.purposeCode);
       const key = `${pt ?? ''}|${pp ?? ''}`;
-      const g =
-        map.get(key) ?? { propertyTypeCode: pt, purposeCode: pp, total: 0, requiredCount: 0 };
+      const g = map.get(key) ?? {
+        propertyTypeCode: pt,
+        purposeCode: pp,
+        total: 0,
+        requiredCount: 0,
+      };
       g.total += 1;
       if (r.isRequired) g.requiredCount += 1;
       map.set(key, g);
@@ -66,16 +70,18 @@ export default function DocumentRequirementTable({
     code ? `${code} - ${purposeMap.get(code) ?? ''}` : 'Any';
 
   if (isLoading) {
-    return <div className="p-8 text-center text-gray-500">Loading…</div>;
+    return <div className="p-8 text-center text-(--palette-gray-500)">Loading…</div>;
   }
 
   if (groups.length === 0) {
-    return <div className="p-8 text-center text-gray-500">No requirements configured.</div>;
+    return (
+      <div className="p-8 text-center text-(--palette-gray-500)">No requirements configured.</div>
+    );
   }
 
   return (
-    <table className="min-w-full divide-y divide-gray-200 text-table">
-      <thead className="bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase">
+    <table className="min-w-full divide-y divide-(--palette-line) text-table">
+      <thead className="bg-(--palette-surface-2) text-left text-xs font-medium text-(--palette-gray-500) uppercase">
         <tr>
           <th className="text-xs px-4 py-3 font-semibold">Collateral Type</th>
           <th className="text-xs px-4 py-3 font-semibold">Purpose</th>
@@ -83,27 +89,31 @@ export default function DocumentRequirementTable({
           <th className="text-xs px-4 py-3 text-right font-semibold">Actions</th>
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-100">
+      <tbody className="divide-y divide-(--palette-line-soft)">
         {groups.map(g => (
           <tr key={`${g.propertyTypeCode ?? ''}|${g.purposeCode ?? ''}`}>
-            <td className="px-4 py-3 text-gray-700">{collateralLabel(g.propertyTypeCode)}</td>
-            <td className="px-4 py-3 text-gray-700">{purposeLabel(g.purposeCode)}</td>
-            <td className="px-4 py-3 text-gray-600">
+            <td className="px-4 py-3 text-(--palette-ink)">
+              {collateralLabel(g.propertyTypeCode)}
+            </td>
+            <td className="px-4 py-3 text-(--palette-ink)">{purposeLabel(g.purposeCode)}</td>
+            <td className="px-4 py-3 text-(--palette-gray-600)">
               {g.total} {g.total === 1 ? 'document' : 'documents'}
-              <span className="text-gray-400"> · {g.requiredCount} required</span>
+              <span className="text-(--palette-gray-400)"> · {g.requiredCount} required</span>
             </td>
             <td className="px-4 py-3">
               <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => onEdit({ propertyTypeCode: g.propertyTypeCode, purposeCode: g.purposeCode })}
-                  className="text-gray-400 hover:text-gray-700"
+                  onClick={() =>
+                    onEdit({ propertyTypeCode: g.propertyTypeCode, purposeCode: g.purposeCode })
+                  }
+                  className="text-(--palette-gray-400) hover:text-(--palette-ink)"
                   aria-label="Edit"
                 >
                   <Icon name="pen" style="regular" className="size-3.5" />
                 </button>
                 <button
                   onClick={() => onDelete(g)}
-                  className="text-gray-400 hover:text-danger"
+                  className="text-(--palette-gray-400) hover:text-danger"
                   aria-label="Delete"
                 >
                   <Icon name="trash" style="regular" className="size-3.5" />

@@ -112,16 +112,16 @@ const MissingDocRow = ({
   };
 
   return (
-    <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-gray-50 border border-gray-200">
+    <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-(--palette-surface-2) border border-(--palette-line)">
       <div className="flex items-center gap-2.5 min-w-0">
         <Icon
           name="file-circle-exclamation"
           style="solid"
           className="size-4 text-amber-500 shrink-0"
         />
-        <span className="text-sm font-medium text-gray-800 truncate">{name}</span>
+        <span className="text-sm font-medium text-(--palette-ink) truncate">{name}</span>
         {category && (
-          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-medium shrink-0">
+          <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-medium shrink-0">
             {category}
           </span>
         )}
@@ -139,7 +139,7 @@ const MissingDocRow = ({
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isUploading}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white border border-gray-300 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-(--palette-surface) border border-(--palette-line-strong) hover:bg-(--palette-surface-3) rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isUploading ? (
             <>
@@ -186,27 +186,29 @@ const MissingDocumentsModal = ({
 
   return (
     <dialog className="modal modal-open z-[60]">
-      <div className="modal-box bg-white rounded-2xl shadow-xl max-w-2xl w-full">
+      <div className="modal-box bg-(--palette-surface) rounded-2xl shadow-xl max-w-2xl w-full">
         {/* Header */}
         <div className="flex items-start justify-between mb-5">
           <div className="flex items-center gap-3">
             <div
               className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                isComplete ? 'bg-green-100' : 'bg-amber-100'
+                isComplete
+                  ? 'bg-green-100 dark:bg-green-500/20'
+                  : 'bg-amber-100 dark:bg-amber-500/20'
               }`}
             >
               <Icon
                 name={isComplete ? 'circle-check' : 'triangle-exclamation'}
                 style="solid"
-                className={`size-5 ${isComplete ? 'text-green-600' : 'text-amber-500'}`}
+                className={`size-5 ${isComplete ? 'text-green-600 dark:text-green-400' : 'text-amber-500'}`}
               />
             </div>
             <div>
-              <h3 className="font-semibold text-gray-900 text-base">
+              <h3 className="font-semibold text-(--palette-ink) text-base">
                 {isComplete ? t('missingDocuments.allUploaded') : t('missingDocuments.missing')}
               </h3>
               {!isComplete && (
-                <p className="text-sm text-gray-500 mt-0.5">
+                <p className="text-sm text-(--palette-gray-500) mt-0.5">
                   {missingCount === 1
                     ? t('missingDocuments.missingDesc_one', { count: missingCount })
                     : t('missingDocuments.missingDesc_other', { count: missingCount })}
@@ -218,7 +220,7 @@ const MissingDocumentsModal = ({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="text-gray-400 hover:text-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-4 shrink-0"
+            className="text-(--palette-gray-400) hover:text-(--palette-gray-600) transition-colors disabled:opacity-50 disabled:cursor-not-allowed ml-4 shrink-0"
           >
             <Icon name="xmark" style="solid" className="size-5" />
           </button>
@@ -226,12 +228,12 @@ const MissingDocumentsModal = ({
 
         {/* Body */}
         {isLoading ? (
-          <div className="flex items-center justify-center py-10 gap-2 text-gray-500">
+          <div className="flex items-center justify-center py-10 gap-2 text-(--palette-gray-500)">
             <Icon name="spinner" style="solid" className="size-5 animate-spin" />
             <span className="text-sm">{t('missingDocuments.checkingDocs')}</span>
           </div>
         ) : isComplete ? (
-          <div className="flex items-center gap-2 py-6 justify-center text-green-700">
+          <div className="flex items-center gap-2 py-6 justify-center text-green-700 dark:text-green-300">
             <Icon name="circle-check" style="solid" className="size-5" />
             <span className="text-sm font-medium">{t('missingDocuments.allUploadedConfirm')}</span>
           </div>
@@ -240,7 +242,7 @@ const MissingDocumentsModal = ({
             {/* Application / Request Documents */}
             {missingAppDocs.length > 0 && (
               <div>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-2">
                   {t('missingDocuments.requestDocuments')}
                 </p>
                 <div className="flex flex-col gap-2">
@@ -261,10 +263,10 @@ const MissingDocumentsModal = ({
             {/* Title Documents */}
             {missingTitleGroups.map(group => (
               <div key={group.titleId}>
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                <p className="text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-2">
                   {t('missingDocuments.titleDocuments')}
                   {(group.ownerName || group.collateralType) && (
-                    <span className="normal-case font-normal ml-1 text-gray-400">
+                    <span className="normal-case font-normal ml-1 text-(--palette-gray-400)">
                       — {[group.ownerName, group.collateralType].filter(Boolean).join(', ')}
                     </span>
                   )}
@@ -293,7 +295,7 @@ const MissingDocumentsModal = ({
             type="button"
             onClick={onClose}
             disabled={isSubmitting}
-            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {t('common:actions.cancel')}
           </button>

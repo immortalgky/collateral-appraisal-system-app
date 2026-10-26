@@ -61,11 +61,11 @@ export const AddPropertyBar = ({ groupId, className }: AddPropertyBarProps) => {
   return (
     <div
       className={clsx(
-        'flex flex-wrap items-center gap-1.5 border-t border-dashed border-gray-300 bg-gray-50/60 px-3 py-1.5',
+        'flex flex-wrap items-center gap-1.5 border-t border-dashed border-(--palette-line-strong) bg-(--palette-surface-2)/60 px-3 py-1.5',
         className,
       )}
     >
-      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-600">
+      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-(--palette-gray-600)">
         <Icon name="plus" className="text-[10px]" style="solid" />
         {t('properties.picker.addShort')}
       </span>
@@ -75,7 +75,7 @@ export const AddPropertyBar = ({ groupId, className }: AddPropertyBarProps) => {
           key={type.code}
           type="button"
           onClick={() => add(type.route as string, type.type)}
-          className="inline-flex items-center gap-1.5 rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-[11px] font-medium text-gray-800 transition-colors hover:border-gray-400 hover:bg-gray-100 hover:text-gray-900"
+          className="inline-flex items-center gap-1.5 rounded-full border border-(--palette-line-strong) bg-(--palette-surface) px-2.5 py-0.5 text-[11px] font-medium text-(--palette-ink) transition-colors hover:border-(--palette-line-strong) hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
         >
           <span
             className={clsx(
@@ -101,7 +101,7 @@ export const AddPropertyBar = ({ groupId, className }: AddPropertyBarProps) => {
         groupId={groupId}
         className="shrink-0"
         buttonLabel={t('properties.picker.other')}
-        buttonClassName="gap-1.5 rounded-full border border-dashed border-gray-400 bg-white px-2.5 py-0.5 text-[11px] font-medium text-gray-700 hover:border-gray-500 hover:bg-gray-100 hover:text-gray-900"
+        buttonClassName="gap-1.5 rounded-full border border-dashed border-(--palette-line-strong) bg-(--palette-surface) px-2.5 py-0.5 text-[11px] font-medium text-(--palette-ink) hover:border-gray-500 hover:bg-(--palette-surface-3) hover:text-(--palette-ink)"
       />
     </div>
   );

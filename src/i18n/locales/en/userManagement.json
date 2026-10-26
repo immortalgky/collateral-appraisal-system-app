@@ -175,6 +175,7 @@
   "hints": {
     "loanTypesComma": "Separate multiple loan types with a comma",
     "ldapPassword": "Password is managed by Active Directory — the user signs in with their AD credentials.",
+    "ldapUnavailable": "LDAP isn't available for company users or temporary-access accounts — they sign in with a local password.",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
     "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
     "temporaryAccessCreate": "Starts closed — the account has no password until an admin opens an access window.",

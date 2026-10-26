@@ -30,7 +30,7 @@ export function SidebarStarButton({ item }: SidebarStarButtonProps) {
       className={`flex-shrink-0 p-0.5 rounded transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ${
         pinned
           ? 'text-amber-400 hover:text-amber-500 !opacity-100'
-          : 'text-gray-300 hover:text-amber-400'
+          : 'text-(--palette-gray-300) hover:text-amber-400'
       }`}
     >
       <Icon name="star" style={pinned ? 'solid' : 'regular'} className="size-3" />

@@ -94,7 +94,7 @@ function App() {
         position="top-right"
         toastOptions={{
           duration: 4000,
-          style: { background: '#fff', color: '#363636' },
+          style: { background: 'var(--palette-surface)', color: 'var(--palette-ink)' },
           success: { duration: 3000, iconTheme: { primary: '#10b981', secondary: '#fff' } },
           error: { duration: 4000, iconTheme: { primary: '#ef4444', secondary: '#fff' } },
         }}
@@ -109,7 +109,7 @@ function App() {
                   <button
                     onClick={() => toast.dismiss(t.id)}
                     aria-label="Dismiss"
-                    className="ml-2 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                    className="ml-2 rounded p-1 text-(--palette-gray-400) hover:bg-(--palette-surface-3) hover:text-(--palette-gray-600)"
                   >
                     ×
                   </button>

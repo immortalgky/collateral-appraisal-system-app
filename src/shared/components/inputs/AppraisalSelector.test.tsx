@@ -46,10 +46,12 @@ function Harness({
   handlers,
   referenced = false,
   pickLoading = false,
+  priorLocked = false,
 }: {
   handlers?: { onSelect: () => void; onClear: () => void };
   referenced?: boolean;
   pickLoading?: boolean;
+  priorLocked?: boolean;
 }) {
   const methods = useForm({
     defaultValues: {
@@ -57,6 +59,7 @@ function Harness({
       appraisalId: referenced ? 'a-0' : '',
       appraisalValue: null as number | null,
       appraisalDate: null as string | null,
+      meta: { priorLocked },
     },
   });
 
@@ -136,6 +139,14 @@ describe('AppraisalSelector inside an AppraisalCopyProvider', () => {
   it('locks search and clear while a pick is loading', () => {
     render(<Harness referenced pickLoading handlers={{ onSelect: vi.fn(), onClear: vi.fn() }} />);
 
+    expect(screen.queryByTitle('Search previous appraisal reports')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Clear selection')).not.toBeInTheDocument();
+  });
+
+  it('is locked with the handlers there when the form says the prior is locked', () => {
+    render(<Harness referenced priorLocked handlers={{ onSelect: vi.fn(), onClear: vi.fn() }} />);
+
+    expect(screen.getByDisplayValue('AP-0000')).toBeDisabled();
     expect(screen.queryByTitle('Search previous appraisal reports')).not.toBeInTheDocument();
     expect(screen.queryByTitle('Clear selection')).not.toBeInTheDocument();
   });

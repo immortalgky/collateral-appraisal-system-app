@@ -40,7 +40,7 @@ export function MethodFooterActions({
               disabled={isSubmitting}
               title={t('footer.reset')}
               aria-label={t('footer.reset')}
-              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600 shrink-0"
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger) shrink-0"
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
             </Button>

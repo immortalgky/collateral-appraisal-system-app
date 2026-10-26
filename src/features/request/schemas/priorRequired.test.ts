@@ -13,7 +13,7 @@ const schema = buildFormSchema(
   prior,
   z.object({
     purpose: z.string(),
-    meta: z.object({ isSubmitted: z.boolean().optional() }).optional(),
+    meta: z.object({ priorLocked: z.boolean().optional() }).optional(),
   }),
 );
 const paths = (values: unknown) => {
@@ -24,13 +24,13 @@ const paths = (values: unknown) => {
 describe('the prior appraisal is asked for of a request that is not submitted yet', () => {
   it('a draft or new request with a purpose that uses one needs it', () => {
     expect(paths({ purpose: '02', detail: {} })).toContain('detail.prevAppraisalReportNo');
-    expect(paths({ purpose: '02', detail: {}, meta: { isSubmitted: false } })).toContain(
+    expect(paths({ purpose: '02', detail: {}, meta: { priorLocked: false } })).toContain(
       'detail.prevAppraisalReportNo',
     );
   });
 
   it('a submitted one is not asked: it is locked and cannot be given one', () => {
-    expect(paths({ purpose: '02', detail: {}, meta: { isSubmitted: true } })).toEqual([]);
+    expect(paths({ purpose: '02', detail: {}, meta: { priorLocked: true } })).toEqual([]);
   });
 
   it('a purpose that takes none asks for none either way', () => {

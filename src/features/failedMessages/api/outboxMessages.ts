@@ -13,7 +13,7 @@ import type {
 } from '../types';
 import { OUTBOX_SKIP_REASON_KEY, toastBulkResult } from '../utils/bulkResultToast';
 import { detailRefetchInterval, isOutboxDetailLive, pollRefetchInterval } from './detailPolling';
-import { isSameFilterOtherPage } from './keepPreviousPage';
+import { keepPreviousPage } from '@shared/utils/keepPreviousPage';
 import { failedMessageKeys } from './failedMessages';
 
 export const outboxMessageKeys = {
@@ -46,8 +46,7 @@ export const useGetOutboxMessages = (
     // A PAGE change keeps showing the previous page (flagged `isPlaceholderData`) so the pager stays
     // stable — the page dims it and gates selection/clamping on that flag. A tab/filter change must
     // NOT: it drops to undefined (skeleton) instead of showing the previous tab's rows and total.
-    placeholderData: (prev, prevQuery) =>
-      isSameFilterOtherPage(prevQuery?.queryKey[2], params) ? prev : undefined,
+    placeholderData: keepPreviousPage(params, 2, { keepEmptiedPage: true }),
     staleTime: 0,
     // The app-wide default is false; polling pauses while the tab is hidden but the server clock
     // keeps advancing, so returning must refetch at once or stale collectedAt values read as outages.

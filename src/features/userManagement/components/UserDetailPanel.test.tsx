@@ -67,6 +67,7 @@ const user = (extra: Partial<AdminUserDetail> = {}): AdminUserDetail => ({
   isLocked: false,
   isTemporaryAccess: false,
   accessExpiresAt: null,
+  phoneNumber: null,
   avatarUrl: null,
   authSource: 'Local',
   aoCode: null,

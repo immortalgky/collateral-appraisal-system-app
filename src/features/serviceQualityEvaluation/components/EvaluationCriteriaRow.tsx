@@ -11,23 +11,28 @@ export type CriteriaIndex = 0 | 1 | 2 | 3 | 4;
 const RATING_PILL: Record<number, { selected: string; unselected: string }> = {
   1: {
     selected: 'bg-red-500 text-white ring-1 ring-red-600',
-    unselected: 'bg-red-50 text-red-700 hover:bg-red-100',
+    unselected:
+      'bg-(--palette-req-wash) text-(--palette-req) hover:bg-red-100 dark:hover:bg-red-500/20',
   },
   2: {
     selected: 'bg-orange-500 text-white ring-1 ring-orange-600',
-    unselected: 'bg-orange-50 text-orange-700 hover:bg-orange-100',
+    unselected:
+      'bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300 hover:bg-orange-100 dark:hover:bg-orange-500/20',
   },
   3: {
     selected: 'bg-amber-500 text-white ring-1 ring-amber-600',
-    unselected: 'bg-amber-50 text-amber-700 hover:bg-amber-100',
+    unselected:
+      'bg-(--palette-warn-wash) text-(--palette-warn) hover:bg-amber-100 dark:hover:bg-amber-500/20',
   },
   4: {
     selected: 'bg-lime-500 text-white ring-1 ring-lime-600',
-    unselected: 'bg-lime-50 text-lime-700 hover:bg-lime-100',
+    unselected:
+      'bg-lime-50 dark:bg-lime-500/10 text-lime-700 dark:text-lime-300 hover:bg-lime-100 dark:hover:bg-lime-500/20',
   },
   5: {
     selected: 'bg-green-500 text-white ring-1 ring-green-600',
-    unselected: 'bg-green-50 text-green-700 hover:bg-green-100',
+    unselected:
+      'bg-green-50 dark:bg-green-500/10 text-green-700 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-500/20',
   },
 };
 
@@ -52,13 +57,7 @@ const RATING_KEYS: readonly [
   'criteria3Rating',
   'criteria4Rating',
   'criteria5Rating',
-] = [
-  'criteria1Rating',
-  'criteria2Rating',
-  'criteria3Rating',
-  'criteria4Rating',
-  'criteria5Rating',
-];
+] = ['criteria1Rating', 'criteria2Rating', 'criteria3Rating', 'criteria4Rating', 'criteria5Rating'];
 
 function EvaluationCriteriaRow({
   index,
@@ -91,7 +90,7 @@ function EvaluationCriteriaRow({
     if (guidanceProp) {
       const entry = guidanceProp[String(clampedRating)];
       if (entry) {
-        return i18n.language.startsWith('th') ? (entry.th || entry.en) : entry.en;
+        return i18n.language.startsWith('th') ? entry.th || entry.en : entry.en;
       }
     }
     return GUIDELINE_DESCRIPTIONS[index][clampedRating] ?? '—';
@@ -107,24 +106,18 @@ function EvaluationCriteriaRow({
 
   return (
     <tr
-      className={`border-b border-gray-100 last:border-0 ${
-        forceDisabled ? 'bg-blue-50/40' : ''
+      className={`border-b border-(--palette-line-soft) last:border-0 ${
+        forceDisabled ? 'bg-blue-50/40 dark:bg-blue-500/10' : ''
       }`}
     >
-      <td className="px-3 py-2.5 text-sm text-gray-500 text-center w-8">{index + 1}</td>
-      <td className="px-3 py-2.5 text-sm text-gray-700">
+      <td className="px-3 py-2.5 text-sm text-(--palette-gray-500) text-center w-8">{index + 1}</td>
+      <td className="px-3 py-2.5 text-sm text-(--palette-ink)">
         <span className="inline-flex items-center gap-1.5">
-          {forceDisabled && (
-            <Icon name="lock" style="solid" className="size-3 text-blue-500" />
-          )}
+          {forceDisabled && <Icon name="lock" style="solid" className="size-3 text-blue-500" />}
           {criteriaLabel}
           {showDetectedBadge && (
             <span className="relative group inline-flex">
-              <Icon
-                name="circle-info"
-                style="solid"
-                className="size-4 text-blue-500 cursor-help"
-              />
+              <Icon name="circle-info" style="solid" className="size-4 text-blue-500 cursor-help" />
               <span
                 role="tooltip"
                 className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-64 z-20 rounded-md bg-gray-900 px-3 py-2 text-xs font-normal text-white shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-normal text-left"
@@ -135,7 +128,7 @@ function EvaluationCriteriaRow({
           )}
         </span>
       </td>
-      <td className="px-3 py-2.5 text-sm text-gray-600 text-center tabular-nums w-16">
+      <td className="px-3 py-2.5 text-sm text-(--palette-gray-600) text-center tabular-nums w-16">
         {weight.toFixed(2)}
       </td>
       <td className="px-3 py-2.5 w-48">
@@ -165,13 +158,15 @@ function EvaluationCriteriaRow({
           })}
         </div>
       </td>
-      <td className="px-3 py-2.5 text-sm text-gray-700 text-center tabular-nums w-16">
+      <td className="px-3 py-2.5 text-sm text-(--palette-ink) text-center tabular-nums w-16">
         {score == null ? '—' : score.toFixed(2)}
       </td>
-      <td className={`px-3 py-2.5 text-sm ${description === '—' ? 'text-gray-400' : 'text-gray-600'}`}>
+      <td
+        className={`px-3 py-2.5 text-sm ${description === '—' ? 'text-(--palette-gray-400)' : 'text-(--palette-gray-600)'}`}
+      >
         {description}
         {showDetectedBadge && (
-          <span className="ml-1 text-gray-500 whitespace-nowrap">
+          <span className="ml-1 text-(--palette-gray-500) whitespace-nowrap">
             {t('deliveryTime.detectedDays', { days: (deliveryDetectedDays as number).toFixed(2) })}
           </span>
         )}

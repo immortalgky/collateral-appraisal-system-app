@@ -1,7 +1,13 @@
 import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParametersByGroup } from '@/shared/utils/parameterUtils';
-import { buildScene, type Kind, type SceneItem } from '../sceneModel';
+import {
+  SCENE_HEIGHT,
+  SCENE_HEIGHT_COMPACT,
+  SCENE_HEIGHT_COMPACT_PX,
+  SCENE_HEIGHT_PX,
+} from '../scene3d/sceneSize';
+import { buildScene, numberFormat, type Kind, type SceneItem } from '../sceneModel';
 import type { BriefAsset, BriefProject } from '../api/appraisalBrief';
 
 /**
@@ -9,8 +15,8 @@ import type { BriefAsset, BriefProject } from '../api/appraisalBrief';
  *
  * Answers "what is this secured on" faster than a list can: a reader sees one
  * parcel with a house on it, or a plant with twenty-eight machines, before
- * reading a word. It is a companion to CollateralList, not a replacement — the
- * rows carry the numbers, the scene carries the shape.
+ * reading a word. It is a companion to the property list under it — the
+ * list carries the numbers, the scene carries the shape.
  *
  * CSS 3D throughout (see styles/collateralScene.css): no library, no GL
  * context, no animation loop, and one fixed camera so two applications can be
@@ -20,6 +26,8 @@ interface CollateralSceneProps {
   assets: BriefAsset[];
   /** Set for a block appraisal, whose collateral is a project and not a list of assets. */
   project: BriefProject | null;
+  /** The permanent view of an application that is not drawn in 3D: its own height, not the hero's (see sceneSize.ts). */
+  compact?: boolean;
 }
 
 // ── palette ──────────────────────────────────────────────────────────────────
@@ -62,8 +70,8 @@ interface Callout {
   item: SceneItem;
 }
 
-const CollateralScene = ({ assets, project }: CollateralSceneProps) => {
-  const { t } = useTranslation('appraisal');
+const CollateralScene = ({ assets, project, compact = false }: CollateralSceneProps) => {
+  const { t, i18n } = useTranslation('appraisal');
   const hostRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
@@ -83,10 +91,14 @@ const CollateralScene = ({ assets, project }: CollateralSceneProps) => {
   const buildingTypes = useParametersByGroup('BuildingType');
   const items = useMemo(
     () =>
-      buildScene(assets, project, t, code =>
-        code ? (buildingTypes.find(p => p.code === code)?.description ?? '') : '',
+      buildScene(
+        assets,
+        project,
+        t,
+        code => (code ? (buildingTypes.find(p => p.code === code)?.description ?? '') : ''),
+        numberFormat(i18n.language),
       ),
-    [assets, project, t, buildingTypes],
+    [assets, project, t, buildingTypes, i18n.language],
   );
 
   // Nothing drawable — an application of vehicles or vessels only. The rows
@@ -127,7 +139,7 @@ const CollateralScene = ({ assets, project }: CollateralSceneProps) => {
   const tallest = Math.max(0, ...standing.map(o => heightOf(o.item.kind, o.storeys)));
 
   const stageW = size.w || 720;
-  const stageH = size.h || 250;
+  const stageH = size.h || (compact ? SCENE_HEIGHT_COMPACT_PX : SCENE_HEIGHT_PX);
 
   // Reserve the gutters the callouts live in, then fit the scene to what is
   // left. Scaling UP matters as much as down: the average application holds one
@@ -248,7 +260,7 @@ const CollateralScene = ({ assets, project }: CollateralSceneProps) => {
   return (
     <div
       ref={hostRef}
-      className="cscene mb-3 h-[250px] rounded-xl bg-gradient-to-b from-white via-gray-50 to-gray-100/70 ring-1 ring-gray-200"
+      className={`cscene mb-3 ${compact ? SCENE_HEIGHT_COMPACT : SCENE_HEIGHT} rounded-xl bg-gradient-to-b from-white via-gray-50 to-gray-100/70 ring-1 ring-gray-200`}
     >
       <div
         className="cscene-world"

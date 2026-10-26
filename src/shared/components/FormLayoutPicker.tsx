@@ -5,9 +5,8 @@ import { useUIStore } from '@shared/store';
 import { FORM_LAYOUT_OPTIONS } from './formLayoutConstants';
 
 /**
- * Segmented control for the appraisal form layout. Writes `data-form-layout` on
- * <html> via ThemeProvider; styles/formLayout.css turns that into a label column
- * and one field per row for screens that opt in with `.cas-form-grid`.
+ * Segmented control for the appraisal form layout (Standard / Compact). Stores the choice in the
+ * UI store; the property form screens read it through `UserFormLayoutProvider`.
  *
  * Same keyboard contract as DensityPicker, for the same reason: it lives inside a
  * Headless UI menu panel that drives its own item navigation off the arrow keys.

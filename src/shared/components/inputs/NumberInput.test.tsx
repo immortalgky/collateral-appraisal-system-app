@@ -17,16 +17,10 @@ import NumberInput from './NumberInput';
 
 // Controlled wrapper for testing
 function ControlledNumberInput(
-  props: React.ComponentProps<typeof NumberInput> & { initialValue?: number }
+  props: React.ComponentProps<typeof NumberInput> & { initialValue?: number },
 ) {
   const [value, setValue] = useState<number | null>(props.initialValue ?? null);
-  return (
-    <NumberInput
-      {...props}
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-    />
-  );
+  return <NumberInput {...props} value={value} onChange={e => setValue(e.target.value)} />;
 }
 
 describe('NumberInput', () => {
@@ -160,9 +154,7 @@ describe('NumberInput', () => {
     // Scenario 11: Allows negative when enabled
     // ------------------------------------------
     it('should allow negative numbers when allowNegative is true', async () => {
-      const { user } = render(
-        <ControlledNumberInput label="Balance" allowNegative />
-      );
+      const { user } = render(<ControlledNumberInput label="Balance" allowNegative />);
 
       const input = screen.getByLabelText('Balance');
       await user.type(input, '-500');
@@ -192,9 +184,7 @@ describe('NumberInput', () => {
     // Scenario 13: Custom decimal places
     // ------------------------------------------
     it('should format to custom decimal places on blur', async () => {
-      const { user } = render(
-        <ControlledNumberInput label="Amount" decimalPlaces={4} />
-      );
+      const { user } = render(<ControlledNumberInput label="Amount" decimalPlaces={4} />);
 
       const input = screen.getByLabelText('Amount');
       await user.type(input, '100');
@@ -207,9 +197,7 @@ describe('NumberInput', () => {
     // Scenario 14: No decimal places
     // ------------------------------------------
     it('should format without decimals when decimalPlaces is 0', async () => {
-      const { user } = render(
-        <ControlledNumberInput label="Quantity" decimalPlaces={0} />
-      );
+      const { user } = render(<ControlledNumberInput label="Quantity" decimalPlaces={0} />);
 
       const input = screen.getByLabelText('Quantity');
       await user.type(input, '100');
@@ -228,9 +216,7 @@ describe('NumberInput', () => {
     // ------------------------------------------
     it('should call onChange with numeric value', async () => {
       const handleChange = vi.fn();
-      const { user } = render(
-        <NumberInput label="Amount" onChange={handleChange} />
-      );
+      const { user } = render(<NumberInput label="Amount" onChange={handleChange} />);
 
       const input = screen.getByLabelText('Amount');
       await user.type(input, '1000');
@@ -246,9 +232,7 @@ describe('NumberInput', () => {
     // ------------------------------------------
     it('should call onChange with null when cleared', async () => {
       const handleChange = vi.fn();
-      const { user } = render(
-        <NumberInput label="Amount" value={100} onChange={handleChange} />
-      );
+      const { user } = render(<NumberInput label="Amount" value={100} onChange={handleChange} />);
 
       const input = screen.getByLabelText('Amount');
       await user.clear(input);
@@ -303,7 +287,7 @@ describe('NumberInput', () => {
       render(<NumberInput label="Amount" disabled />);
 
       const input = screen.getByLabelText('Amount');
-      expect(input).toHaveClass('bg-gray-50', 'cursor-not-allowed');
+      expect(input).toHaveClass('bg-(--palette-surface-2)', 'border', 'cursor-not-allowed');
     });
   });
 
@@ -315,9 +299,7 @@ describe('NumberInput', () => {
     // Scenario 21: K key multiplies by 1000
     // ------------------------------------------
     it('should multiply by 1000 when K key is pressed', async () => {
-      const { user } = render(
-        <ControlledNumberInput label="Amount" initialValue={5} />
-      );
+      const { user } = render(<ControlledNumberInput label="Amount" initialValue={5} />);
 
       const input = screen.getByLabelText('Amount');
       await user.click(input);
@@ -333,9 +315,7 @@ describe('NumberInput', () => {
     // Scenario 22: M key multiplies by 1000000
     // ------------------------------------------
     it('should multiply by 1000000 when M key is pressed', async () => {
-      const { user } = render(
-        <ControlledNumberInput label="Amount" initialValue={2} />
-      );
+      const { user } = render(<ControlledNumberInput label="Amount" initialValue={2} />);
 
       const input = screen.getByLabelText('Amount');
       await user.click(input);
@@ -356,12 +336,7 @@ describe('NumberInput', () => {
     // Scenario 23: Renders left icon
     // ------------------------------------------
     it('should render left icon', () => {
-      render(
-        <NumberInput
-          label="Price"
-          leftIcon={<span data-testid="currency">$</span>}
-        />
-      );
+      render(<NumberInput label="Price" leftIcon={<span data-testid="currency">$</span>} />);
 
       expect(screen.getByTestId('currency')).toBeInTheDocument();
     });
@@ -370,14 +345,30 @@ describe('NumberInput', () => {
     // Scenario 24: Renders right icon
     // ------------------------------------------
     it('should render right icon', () => {
-      render(
-        <NumberInput
-          label="Area"
-          rightIcon={<span data-testid="unit">sqm</span>}
-        />
-      );
+      render(<NumberInput label="Area" rightIcon={<span data-testid="unit">sqm</span>} />);
 
       expect(screen.getByTestId('unit')).toBeInTheDocument();
+    });
+  });
+
+  // ============================================
+  // Suffix Tests (DESIGN.md 17.3)
+  // ============================================
+  describe('suffix', () => {
+    it('should keep the unit inside the bordered box, with the input borderless', () => {
+      render(<NumberInput label="Width" suffix="m" />);
+
+      const input = screen.getByLabelText('Width');
+      const box = input.parentElement!;
+      expect(input).toHaveClass('border-0', 'text-right', 'tabular-nums');
+      expect(box).toHaveClass('border', 'focus-within:ring-[3px]', 'h-ctl');
+      expect(box).toContainElement(screen.getByText('m'));
+    });
+
+    it('should put the red border on the box in the error state', () => {
+      render(<NumberInput label="Width" suffix="m" error="Required" />);
+
+      expect(screen.getByLabelText('Width').parentElement).toHaveClass('border-danger');
     });
   });
 });

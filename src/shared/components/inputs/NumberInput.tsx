@@ -2,6 +2,17 @@ import type { InputHTMLAttributes, ReactNode } from 'react';
 import { forwardRef, useEffect, useId, useRef, useState } from 'react';
 import clsx from 'clsx';
 import { useFormReadOnly } from '../form/context';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import {
+  controlFrame,
+  controlGeometry,
+  controlPad,
+  controlSkin,
+  ERROR_TEXT,
+  HELPER_TEXT,
+  REQUIRED_MARK,
+} from './controlStyles';
 
 interface NumberInputProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -29,9 +40,15 @@ interface NumberInputProps extends Omit<
   /** Value from react-hook-form or controlled component */
   value?: number | string | null;
   /**
-   * Opt-in compact sizing (smaller padding, `text-xs`) for dense table cells — e.g. the
-   * pricing-analysis scoring grids. Defaults to false so every existing caller renders
-   * byte-identically; only pass `dense` from a context that actually needs a short row.
+   * A table cell input (DESIGN.md 17.7): 28px in a Compact form, the plain Standard control in a
+   * Standard one. Use it in the form table kit instead of `dense`.
+   */
+  cell?: boolean;
+  /** The error look (red edge and ring, `aria-invalid`) without a message, for a table cell whose reason is stated elsewhere. */
+  invalid?: boolean;
+  /**
+   * The pricing-analysis grids' 21px input (their own mock), outside the form system. Not for
+   * forms: a form table cell uses `cell`.
    */
   dense?: boolean;
   /** onChange handler - receives number value */
@@ -69,6 +86,8 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
       placeholder,
       min,
       dense = false,
+      cell = false,
+      invalid = false,
       ...props
     },
     ref,
@@ -77,6 +96,11 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
     const inputId = id || uuid;
     const isReadOnly = useFormReadOnly();
     const isDisabled = disabled || isReadOnly;
+    const layout = useFormLayout();
+    const hasError = !!error || invalid;
+    // The unit sits inside the box, after the figure: the border and ring move to a wrapper and the
+    // input inside is borderless (17.3). The pricing grids' dense input keeps its overlaid suffix.
+    const suffixInBox = !!suffix && !rightIcon && !dense;
     const [displayValue, setDisplayValue] = useState('');
     const inputRef = useRef<HTMLInputElement>(null);
     const cursorPosRef = useRef<number | null>(null);
@@ -283,19 +307,12 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
     return (
       <div className={clsx(fullWidth && 'w-full')}>
-        {/* Only wrap when there is an addon: the grid form layout hoists [data-field-label] out
-            of this component with `display: contents`, so an extra element in between would take
-            the label column and stretch. */}
         {labelAddon ? (
           <div className="flex items-center gap-1.5 mb-1">
             {label && (
-              <label
-                data-field-label
-                htmlFor={inputId}
-                className="block text-xs font-medium text-gray-700"
-              >
+              <label htmlFor={inputId} className="block text-xs font-medium text-(--palette-ink)">
                 {label}
-                {required && <span className="text-danger ml-0.5">*</span>}
+                {required && <span className={REQUIRED_MARK}>*</span>}
               </label>
             )}
             {labelAddon}
@@ -303,19 +320,30 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
         ) : (
           label && (
             <label
-              data-field-label
               htmlFor={inputId}
-              className="block text-xs font-medium text-gray-700 mb-1"
+              className="block text-xs font-medium text-(--palette-ink) mb-1"
             >
               {label}
-              {required && <span className="text-danger ml-0.5">*</span>}
+              {required && <span className={REQUIRED_MARK}>*</span>}
             </label>
           )
         )}
 
-        <div className={clsx('relative', fullWidth && 'w-full')}>
+        <div
+          className={clsx(
+            'relative',
+            fullWidth && 'w-full',
+            // The box itself when the unit sits inside it: border, fill and focus ring live here.
+            suffixInBox && [
+              'flex items-center',
+              controlFrame(layout, cell),
+              controlSkin({ error: hasError, disabled: isDisabled, within: true }),
+              className,
+            ],
+          )}
+        >
           {leftIcon && (
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-400">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-(--palette-gray-400)">
               {leftIcon}
             </div>
           )}
@@ -327,32 +355,43 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
             type="text"
             inputMode="decimal"
             className={clsx(
-              // Dense follows the mock's `.in` exactly (pricing-analysis-compact-mock.html:192-198):
-              // 21px tall, 4px radius, 12px text, quiet #f6f9f9 fill with a transparent border at
-              // rest — border only appears on hover/focus, no focus ring (mock: outline:none).
-              dense
-                ? 'block h-[21px] px-[5px] py-0 border rounded-[4px] text-[12px] tabular-nums transition-colors duration-200'
-                : 'block px-3 py-2 border rounded-lg text-sm transition-colors duration-200',
-              'placeholder:text-gray-400 text-right',
-              error
-                ? 'border-danger text-danger-900 placeholder:text-danger-300 focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
+              'block text-right tabular-nums',
+              suffixInBox
+                ? // Borderless: colour, size and focus come from the wrapper. The right edge is the
+                  // suffix's, so the input takes only the left padding.
+                  clsx(
+                    'min-w-0 flex-1 h-full bg-transparent border-0 pr-0 placeholder:text-(--palette-ink-2) focus:outline-none disabled:cursor-not-allowed',
+                    controlPad(layout, cell, 'l'),
+                  )
                 : dense
-                  ? 'border-transparent focus:outline-none focus:border-[#0d9488]'
-                  : 'border-gray-200 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
-              isDisabled
-                ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-                : dense
-                  ? 'bg-[#f6f9f9] hover:border-[#cbd5d3] focus:bg-white'
-                  : 'bg-white hover:border-gray-300',
+                  ? // Dense follows the mock's `.in` exactly (pricing-analysis-compact-mock.html:
+                    // 192-198): 21px tall, 4px radius, 12px text, quiet #f6f9f9 fill with a
+                    // transparent border at rest — border only appears on hover/focus, no focus
+                    // ring (mock: outline:none).
+                    clsx(
+                      'h-[21px] px-[5px] py-0 border rounded-[4px] text-[12px] transition-colors duration-200 placeholder:text-(--palette-ink-2)',
+                      error
+                        ? 'border-danger text-danger-900 dark:text-(--palette-danger) focus:outline-none focus:ring-2 focus:ring-danger/20 focus:border-danger'
+                        : 'border-transparent text-(--palette-ink) focus:outline-none focus:border-(--focus-edge)',
+                      isDisabled
+                        ? 'bg-(--palette-surface-2) text-(--palette-ink-2)! cursor-not-allowed'
+                        : 'bg-(--palette-surface-2) hover:border-(--palette-line-strong) focus:bg-(--form-input-bg)',
+                    )
+                  : // The form-system box (17.3). No `leading-*`: index.css gives every text input
+                    // a 1.8 line height for Thai marks, and the fixed height keeps it centred.
+                    clsx(
+                      controlGeometry(layout, cell),
+                      controlSkin({ error: hasError, disabled: isDisabled }),
+                    ),
               // `!`: the icon sits over the box, and a table cell's skin padding would put the
               // (right-aligned) figure under it.
               leftIcon && 'pl-9!',
               rightIcon && 'pr-12!',
-              suffix && !rightIcon && 'pr-10!',
+              dense && suffix && !rightIcon && 'pr-10!',
               fullWidth && 'w-full',
-              className,
+              !suffixInBox && className,
             )}
-            aria-invalid={error ? 'true' : 'false'}
+            aria-invalid={hasError ? 'true' : 'false'}
             aria-describedby={
               error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined
             }
@@ -367,7 +406,7 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           />
 
           {rightIcon && (
-            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-(--palette-gray-400)">
               {rightIcon}
             </div>
           )}
@@ -375,7 +414,14 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
           {suffix && !rightIcon && (
             <span
               aria-hidden="true"
-              className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-medium text-gray-400 select-none"
+              className={
+                suffixInBox
+                  ? clsx(
+                      'shrink-0 pl-2 text-xs text-(--palette-ink-2) select-none',
+                      controlPad(layout, cell, 'r'),
+                    )
+                  : 'absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-xs font-medium text-(--palette-gray-400) select-none'
+              }
             >
               {suffix}
             </span>
@@ -384,10 +430,10 @@ const NumberInput = forwardRef<HTMLInputElement, NumberInputProps>(
 
         {(helperText || error) && (
           <p
-            className={clsx('mt-1 text-xs', error ? 'text-danger' : 'text-gray-500')}
-            id={error ? `${inputId}-error` : helperText ? `${inputId}-helper` : undefined}
+            className={clsx('mt-1', error ? ERROR_TEXT : HELPER_TEXT)}
+            id={error ? `${inputId}-error` : `${inputId}-helper`}
           >
-            {error || helperText}
+            {error ? <ValidationText message={error} label={label} /> : helperText}
           </p>
         )}
       </div>

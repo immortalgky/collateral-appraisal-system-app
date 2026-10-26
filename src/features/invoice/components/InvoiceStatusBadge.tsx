@@ -12,9 +12,9 @@ interface InvoiceStatusBadgeProps {
 }
 
 const badgeColor: Record<string, string> = {
-  Pending: 'bg-amber-50 text-amber-700',
-  Sent: 'bg-blue-50 text-blue-700',
-  Paid: 'bg-emerald-50 text-emerald-700',
+  Pending: 'bg-(--palette-warn-wash) text-(--palette-warn)',
+  Sent: 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300',
+  Paid: 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
 };
 
 const dotColor: Record<string, string> = {
@@ -27,10 +27,9 @@ const InvoiceStatusBadge = ({ status, viewContext = 'external' }: InvoiceStatusB
   const { t } = useTranslation('invoice');
 
   // Internal view labels 'Sent' as 'Pending' (FSD §2.6.2)
-  const displayKey =
-    viewContext === 'internal' && status === 'Sent' ? 'Pending' : status;
+  const displayKey = viewContext === 'internal' && status === 'Sent' ? 'Pending' : status;
 
-  const color = badgeColor[status] ?? 'bg-gray-100 text-gray-600';
+  const color = badgeColor[status] ?? 'bg-(--palette-surface-3) text-(--palette-gray-600)';
   const dot = dotColor[status] ?? 'bg-gray-400';
 
   const label = t(`status.${displayKey}`, { defaultValue: displayKey });

@@ -66,19 +66,19 @@ const StickyRemarkFooter = ({ taskId, taskDraft, canEdit }: StickyRemarkFooterPr
     // flex column and the card would no longer stack above the button.
     <Popover className="pointer-events-none absolute inset-x-6 bottom-6 z-30 flex flex-col items-end gap-3">
       {/* Expanded comment card */}
-      <PopoverPanel className="pointer-events-auto w-full overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl ring-1 ring-black/5 transition">
+      <PopoverPanel className="pointer-events-auto w-full overflow-hidden rounded-2xl border border-(--palette-line) bg-(--palette-surface) shadow-2xl ring-1 ring-black/5 transition">
         {/* Header — colorized */}
-        <div className="flex items-center gap-2.5 bg-gradient-to-r from-primary/10 to-teal-50 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary">
+        <div className="flex items-center gap-2.5 bg-gradient-to-r from-primary/10 to-(--palette-accent-wash) px-4 py-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-(--palette-primary-text)">
             <Icon name="comment-dots" style="solid" className="h-4 w-4" />
           </div>
-          <p className="flex-1 text-sm font-semibold text-gray-800">
+          <p className="flex-1 text-sm font-semibold text-(--palette-ink)">
             {t('view360.remarkFooter.label')}
           </p>
           <CloseButton
             type="button"
             aria-label={t('common:actions.close')}
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-gray-400 transition-colors hover:bg-white/70 hover:text-gray-600"
+            className="flex h-7 w-7 items-center justify-center rounded-lg text-(--palette-gray-400) transition-colors hover:bg-(--palette-surface)/70 hover:text-(--palette-gray-600)"
           >
             <Icon name="xmark" style="solid" className="h-4 w-4" />
           </CloseButton>
@@ -109,7 +109,7 @@ const StickyRemarkFooter = ({ taskId, taskDraft, canEdit }: StickyRemarkFooterPr
               </div>
             </>
           ) : (
-            <p className="max-h-60 overflow-y-auto whitespace-pre-wrap break-words text-sm text-gray-700">
+            <p className="max-h-60 overflow-y-auto whitespace-pre-wrap break-words text-sm text-(--palette-ink)">
               {savedComment || '-'}
             </p>
           )}
@@ -135,7 +135,7 @@ const StickyRemarkFooter = ({ taskId, taskDraft, canEdit }: StickyRemarkFooterPr
             <Icon name={open ? 'xmark' : 'comment-dots'} style="solid" className="h-5 w-5" />
             {/* Has-content indicator */}
             {!open && hasComment && (
-              <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-amber-400" />
+              <span className="absolute -right-0.5 -top-0.5 h-3.5 w-3.5 rounded-full border-2 border-(--palette-surface) bg-amber-400" />
             )}
           </>
         )}

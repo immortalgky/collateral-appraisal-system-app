@@ -105,6 +105,137 @@ beforeEach(() => {
   useAddressStore.setState({ dopaAddresses: [dopaRow, otherDopaRow], titleAddresses: [] });
 });
 
+describe('DopaAddressForm for a movable (no title document)', () => {
+  const renderMovable = (dopaAddress: Record<string, string> = {}) =>
+    render(
+      <Harness titleAddress={titleOnly} dopaAddress={dopaAddress}>
+        <DopaAddressForm index={0} isReadOnly={false} movable />
+      </Harness>,
+    );
+
+  it('is headed as the property location, and copies the request address, locality from DOPA', async () => {
+    renderMovable();
+    expect(screen.getByText('titleAddress.propertyLocationHeader')).toBeInTheDocument();
+    expect(screen.queryByText('titleSection.address.copyFromTitle')).toBeNull();
+    await userEvent.click(screen.getByRole('button', { name: 'titleSection.address.useRequest' }));
+    // the request's house number, not the title address's; its code '777' is looked up by name
+    expect(form.getValues('titles.0.dopaAddress')).toMatchObject({
+      houseNumber: 'REQ',
+      subDistrict: '100101',
+      subDistrictName: 'บางกะปิ',
+      postcode: '10311',
+    });
+    expect(screen.queryByText('titleSection.address.dopaMissing')).toBeNull();
+  });
+
+  it('places a request by its DOPA code when the sub-district name agrees, whatever else was hydrated', async () => {
+    renderMovable();
+    form.setValue('detail.address', {
+      ...a,
+      houseNumber: 'REQ',
+      subDistrict: '100101', // a DOPA code
+      subDistrictName: 'บางกะปิ', // agrees with that row
+      districtName: null, // looked up without regard to the master: not trusted
+      provinceName: null,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'titleSection.address.useRequest' }));
+    expect(form.getValues('titles.0.dopaAddress')).toMatchObject({
+      houseNumber: 'REQ',
+      subDistrict: '100101',
+      subDistrictName: 'บางกะปิ',
+      districtName: 'ห้วยขวาง',
+      postcode: '10311',
+    });
+    expect(screen.queryByText('titleSection.address.dopaMissing')).toBeNull();
+    expect(screen.queryByText('titleSection.address.districtDiffersRequest')).toBeNull();
+  });
+
+  it('ignores the administrative prefix and spaces when comparing the names', async () => {
+    renderMovable();
+    form.setValue('detail.address', {
+      ...a,
+      subDistrict: '100101',
+      subDistrictName: 'แขวง บางกะปิ', // the row has 'บางกะปิ'
+      districtName: null,
+      provinceName: null,
+    });
+    await userEvent.click(screen.getByRole('button', { name: 'titleSection.address.useRequest' }));
+    expect(form.getValues('titles.0.dopaAddress.subDistrict')).toBe('100101');
+    expect(screen.queryByText('titleSection.address.dopaMissing')).toBeNull();
+  });
+
+  it.each([
+    ["the code is DOPA's but the name is another place", { subDistrictName: 'ชื่อผิด' }],
+    [
+      'the request carries no names',
+      { subDistrictName: null, districtName: null, provinceName: null },
+    ],
+  ])('goes by name, with the hint, when %s', async (_why, names) => {
+    renderMovable();
+    form.setValue('detail.address', { ...a, subDistrict: '100101', ...names });
+    await userEvent.click(screen.getByRole('button', { name: 'titleSection.address.useRequest' }));
+    expect(form.getValues('titles.0.dopaAddress.subDistrict')).toBe('');
+    expect(screen.getByText('titleSection.address.dopaMissing')).toBeInTheDocument();
+  });
+
+  it('cannot copy while the DOPA master has not loaded, and says why', () => {
+    useAddressStore.setState({ dopaAddresses: [] });
+    renderMovable();
+    const button = screen.getByRole('button', { name: 'titleSection.address.useRequest' });
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('title', 'titleSection.address.masterUnavailable');
+  });
+
+  it('cannot copy an empty request address, and says why (loading wins when both hold)', () => {
+    renderMovable();
+    const button = screen.getByRole('button', { name: 'titleSection.address.useRequest' });
+    expect(button).toBeEnabled();
+    expect(button).not.toHaveAttribute('title');
+    act(() => form.setValue('detail.address', {}));
+    expect(button).toBeDisabled();
+    expect(button).toHaveAttribute('title', 'titleSection.address.requestAddressEmpty');
+    act(() => useAddressStore.setState({ dopaAddresses: [] }));
+    expect(button).toHaveAttribute('title', 'titleSection.address.masterUnavailable');
+  });
+
+  it('never writes the request address code when DOPA has no such place; it says so', async () => {
+    useAddressStore.setState({ dopaAddresses: [otherDopaRow] });
+    renderMovable();
+    await userEvent.click(screen.getByRole('button', { name: 'titleSection.address.useRequest' }));
+    const dopa = form.getValues('titles.0.dopaAddress');
+    expect(dopa.houseNumber).toBe('REQ');
+    expect(dopa.subDistrict).toBe('');
+    expect(JSON.stringify(dopa)).not.toContain('777');
+    expect(screen.getByText('titleSection.address.dopaMissing')).toBeInTheDocument();
+  });
+
+  it('asks before replacing a typed address, in words about the request address', async () => {
+    renderMovable({ houseNumber: 'typed' });
+    await userEvent.click(screen.getByRole('button', { name: 'titleSection.address.useRequest' }));
+    expect(
+      screen.getByText('titleSection.address.copyOverwriteMessageRequest'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('titleSection.address.copyOverwriteMessage')).toBeNull();
+    expect(screen.getByText('titleSection.address.overwriteConfirm')).toBeInTheDocument();
+  });
+
+  it('keeps the DOPA heading and the title-address source for land', async () => {
+    render(
+      <Harness>
+        <DopaAddressForm index={0} isReadOnly={false} />
+      </Harness>,
+    );
+    expect(screen.getByText('titleAddress.dopaHeader')).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'titleSection.address.copyFromTitle' }),
+    ).toBeEnabled();
+    await userEvent.click(
+      screen.getByRole('button', { name: 'titleSection.address.copyFromTitle' }),
+    );
+    expect(screen.getByText('titleSection.address.copyOverwriteMessage')).toBeInTheDocument();
+  });
+});
+
 describe('DopaAddressForm "copy from the title-deed address"', () => {
   const copy = () => screen.getByRole('button', { name: 'titleSection.address.copyFromTitle' });
   const renderForm = (
@@ -205,14 +336,10 @@ describe('DopaAddressForm "copy from the title-deed address"', () => {
     });
   });
 
-  it('copies only the typed fields while the DOPA master has not loaded', async () => {
+  it('cannot copy while the DOPA master has not loaded, so the locality is never left half-done', () => {
     useAddressStore.setState({ dopaAddresses: [] });
     renderForm({ dopaAddress: { subDistrict: '500101', subDistrictName: 'ศรีภูมิ' } });
-    await userEvent.click(copy());
-    await userEvent.click(await screen.findByText('titleSection.address.copyOverwriteConfirm'));
-    expect(form.getValues('titles.0.dopaAddress.road')).toBe('R');
-    expect(form.getValues('titles.0.dopaAddress.subDistrict')).toBe('500101');
-    expect(screen.queryByText('titleSection.address.dopaMissing')).toBeNull();
+    expect(copy()).toBeDisabled();
   });
 
   it('asks before replacing an address that has values, and leaves it if declined', async () => {
@@ -279,6 +406,39 @@ describe('TitleDocumentAddressForm "use the request address"', () => {
     postcode: '10310',
   };
   beforeEach(() => useAddressStore.setState({ titleAddresses: [titleRow] }));
+
+  it('cannot copy an empty request address, which would only blank a typed one', () => {
+    render(
+      <Harness titleAddress={a} dopaAddress={{}}>
+        <TitleDocumentAddressForm index={0} isReadOnly={false} />
+      </Harness>,
+    );
+    expect(useRequest()).toBeEnabled();
+    act(() => form.setValue('detail.address', {}));
+    expect(useRequest()).toBeDisabled();
+  });
+
+  it('says why an empty request address cannot be copied', () => {
+    render(
+      <Harness titleAddress={a} dopaAddress={{}}>
+        <TitleDocumentAddressForm index={0} isReadOnly={false} />
+      </Harness>,
+    );
+    expect(useRequest()).not.toHaveAttribute('title');
+    act(() => form.setValue('detail.address', {}));
+    expect(useRequest()).toHaveAttribute('title', 'titleSection.address.requestAddressEmpty');
+  });
+
+  it('cannot copy while the Title master has not loaded, and says why', () => {
+    useAddressStore.setState({ titleAddresses: [] });
+    render(
+      <Harness titleAddress={{}} dopaAddress={{}}>
+        <TitleDocumentAddressForm index={0} isReadOnly={false} />
+      </Harness>,
+    );
+    expect(useRequest()).toBeDisabled();
+    expect(useRequest()).toHaveAttribute('title', 'titleSection.address.masterUnavailable');
+  });
 
   it('fills an empty address straight away, with no question', async () => {
     render(

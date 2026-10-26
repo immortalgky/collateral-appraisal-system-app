@@ -9,12 +9,13 @@ import RequestForm from './RequestForm';
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let methods: UseFormReturn<any>;
 
-function Harness({ purpose = '01', submitted }: { purpose?: string; submitted?: boolean }) {
+function Harness({ purpose = '01', locked }: { purpose?: string; locked?: boolean }) {
   methods = useForm<Record<string, unknown>>({
     defaultValues: {
       purpose,
       priority: 'Normal',
       channel: 'MANUAL',
+      meta: { priorLocked: locked },
       detail: {
         hasAppraisalBook: false,
         loanDetail: {
@@ -31,7 +32,7 @@ function Harness({ purpose = '01', submitted }: { purpose?: string; submitted?: 
   });
   return (
     <FormProvider {...methods}>
-      <RequestForm submitted={submitted} />
+      <RequestForm />
     </FormProvider>
   );
 }
@@ -108,12 +109,12 @@ describe('RequestForm limits follow the purpose', () => {
   });
 });
 
-describe('RequestForm on a submitted request', () => {
+describe('RequestForm with the prior locked (submitted or Initiate draft)', () => {
   const purposeButton = () =>
     document.querySelector<HTMLButtonElement>('[data-field="purpose"] button')!;
 
   it('locks the purpose, and only the purpose', () => {
-    render(<Harness purpose="03" submitted />);
+    render(<Harness purpose="03" locked />);
     expect(purposeButton()).toBeDisabled();
     // the other fields of the group are still the maker's to change (route-back)
     expect(document.querySelector('[data-field="channel"] button')).not.toBeDisabled();
@@ -125,7 +126,7 @@ describe('RequestForm on a submitted request', () => {
   });
 
   it('keeps the purpose value, and the limits that follow from it', () => {
-    render(<Harness purpose="01" submitted />);
+    render(<Harness purpose="01" locked />);
     expect(methods.getValues('purpose')).toBe('01');
     expect(
       document.querySelector('[data-field="detail.loanDetail.facilityLimit"]'),
@@ -135,7 +136,7 @@ describe('RequestForm on a submitted request', () => {
   it('locks the prior appraisal too, even where the page handlers are present', () => {
     render(
       <AppraisalCopyProvider onCopySelect={() => {}} onClear={() => {}} disabled={false}>
-        <Harness purpose="03" submitted />
+        <Harness purpose="03" locked />
       </AppraisalCopyProvider>,
     );
     expect(
