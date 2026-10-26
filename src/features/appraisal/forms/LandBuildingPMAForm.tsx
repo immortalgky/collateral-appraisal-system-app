@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { FormFields } from '@/shared/components/form';
+import { FormFields, FormSection, FormSheet, FormSubheading } from '@/shared/components/form';
 import {
   landPmaTitleFields,
   landPmaAreaFields,
@@ -10,8 +10,6 @@ import {
 } from '../configs/fields';
 import { FieldLabels } from '../components/FieldLabels';
 import { useForcedSalePriceDefault } from '../hooks/useForcedSalePriceDefault';
-import FieldGroupLabel from './FieldGroupLabel';
-import SectionRow from '../components/SectionRow';
 
 const LandBuildingPMAForm = () => {
   const { t } = useTranslation('appraisal');
@@ -35,19 +33,19 @@ const LandBuildingPMAForm = () => {
 
   return (
     <FieldLabels scope="landBuildingPma">
-      <div className="w-full max-w-full overflow-hidden">
-        <div className="cas-section-grid cas-sheet grid grid-cols-1 xl:grid-cols-5 gap-x-6 gap-y-4">
-          <SectionRow spacedRule title={t('forms.pma.groups.titleInfo')} icon="scroll">
+      <div className="w-full max-w-full">
+        <FormSheet>
+          <FormSection title={t('forms.pma.groups.titleInfo')} icon="scroll">
             <FormFields fields={landPmaTitleFields} />
             <FormFields fields={landPmaAreaFields} />
-            <FieldGroupLabel label={t('forms.pma.groups.titleAddress')} />
+            <FormSubheading>{t('forms.pma.groups.titleAddress')}</FormSubheading>
             <FormFields fields={landPmaAddressFields} />
-          </SectionRow>
+          </FormSection>
 
-          <SectionRow spacedRule title={t('forms.pma.groups.value')} icon="money-bill" isLast>
+          <FormSection title={t('forms.pma.groups.value')} icon="money-bill">
             <FormFields fields={pmaField} />
-          </SectionRow>
-        </div>
+          </FormSection>
+        </FormSheet>
       </div>
     </FieldLabels>
   );

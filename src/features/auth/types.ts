@@ -16,6 +16,16 @@ export interface User {
    * canonical `UserRole` union reach the store — unknown strings are dropped.
    */
   roles: UserRole[];
+  /**
+   * Names of the groups the user belongs to (`/auth/me` returns `{ groupId, groupName, scope }` for each).
+   * The Pool's tasks and realtime channels are named after these, not after the roles.
+   */
+  groups: string[];
+  /**
+   * Ids of the teams the user belongs to, as `/auth/me` serialises them (lowercase). A Pool task can
+   * be assigned to `<group>:Team_<teamId>`, so these name more Pool channels.
+   */
+  teams: string[];
   permissions: string[];
   /**
    * Company ID for ExtAdmin users. Sourced from `/auth/me`.

@@ -4,6 +4,7 @@ import { useMenuStore } from '@features/menuManagement/store';
 import type { MenuTreeNode } from '@features/menuManagement/types';
 import { resolveLabel } from '@features/menuManagement/utils/label';
 import { useAuthStore } from '../store';
+import type { User } from '../types';
 
 /** Why the user is on the sign-in page; none means a first visit. */
 export type LoginReason = 'idle' | 'ended' | 'signed-out';
@@ -115,13 +116,64 @@ export function hopToCanonicalOrigin(returnPath?: string): boolean {
   return true;
 }
 
+/**
+ * Who was signed in when a session timed out, for the "Continue as" card. `displayName` is masked
+ * (first name + first letter of the surname) because the sign-in page may be left on a shared screen.
+ */
+export type SavedAccount = { username: string; displayName: string; initials: string };
+
 /** `userId` is who was signed in when the session ended, to tell a different user's sign-in apart. */
 export type SavedReturn = {
   path?: string;
   label?: string;
   reason?: LoginReason;
   userId?: string;
+  account?: SavedAccount;
+  /**
+   * Written by "Not you?" and by another tab's sign-out: there is no previous page to return to, so
+   * the sign-in page ignores router state naming one.
+   */
+  notYou?: boolean;
 };
+
+/** The first letter that names a word: Thai leading vowels (เ แ โ ใ ไ) are written before the consonant. */
+const firstLetter = (text?: string) => {
+  const letters = Array.from(text?.trim() ?? '');
+  return letters.find(c => !'เแโใไ'.includes(c)) ?? letters[0] ?? '';
+};
+
+/**
+ * The signed-in user as the card shows them. Undefined without a username to hint or a first name
+ * to show: a username is never displayed, it can be an employee id or an email.
+ */
+function accountOf(user: User | null): SavedAccount | undefined {
+  const first = user?.firstName?.trim();
+  if (!user?.username || !first) return undefined;
+  const lastInitial = firstLetter(user.lastName).toUpperCase();
+  return {
+    username: user.username,
+    displayName: lastInitial ? `${first} ${lastInitial}.` : first,
+    initials: (firstLetter(first) + lastInitial).toUpperCase(),
+  };
+}
+
+/**
+ * The session cookie now belongs to someone else (another tab signed in): start this tab over at
+ * the app home. A reload would leave the new user on the previous user's page.
+ */
+export function goHomeAsNewUser() {
+  leaveWithoutPrompt(() =>
+    window.location.replace(`${canonicalOrigin() ?? window.location.origin}/`),
+  );
+}
+
+/** Is `id` the user whose session ended (`savedId`)? An unknown saved user counts as a match: carry on. */
+export const isSavedUserOrUnknown = (savedId: string | undefined, id: string | undefined) =>
+  !savedId || savedId === id;
+
+/** Is `id` the user whose session ended? Only a known match counts (the other-tab auto return). */
+export const isSavedUserStrict = (savedId: string | undefined, id: string | undefined) =>
+  !!savedId && savedId === id;
 
 /**
  * What redirectToLogin saved, so the sign-in page can restore it when its URL has lost the query
@@ -131,7 +183,13 @@ export type SavedReturn = {
 export function readSavedReturn(): SavedReturn | undefined {
   try {
     const saved = JSON.parse(session.get(RETURN_KEY) ?? 'null');
-    return saved && typeof saved === 'object' ? saved : undefined;
+    if (!saved || typeof saved !== 'object') return undefined;
+    const { username, displayName, initials } = saved.account ?? {};
+    const valid =
+      typeof username === 'string' &&
+      typeof displayName === 'string' &&
+      typeof initials === 'string';
+    return { ...saved, account: valid ? { username, displayName, initials } : undefined };
   } catch {
     return undefined;
   }
@@ -218,11 +276,19 @@ export function redirectToLogin(returnPath?: string | null, reason?: LoginReason
   if (hopToCanonicalOrigin(url)) return;
 
   if (path) {
+    const user = useAuthStore.getState().user; // null at boot: nobody to name then
+    // At boot (Back to a page after the session idled out) the user is unknown, but the sign-in page
+    // saved who it was for this same page: keep that, and fill in only what this call knows.
+    const prev = readSavedReturn();
+    const keep = !user && prev?.path === path && !prev.notYou ? prev : undefined;
     saveReturn({
       path,
-      label: menuLabelFor(path),
+      label: menuLabelFor(path) || keep?.label || '',
       reason,
-      userId: useAuthStore.getState().user?.id,
+      userId: user?.id ?? keep?.userId,
+      // Only a session that timed out under a known user; never for a sign-out or a first visit.
+      account:
+        reason === 'idle' || reason === 'ended' ? (accountOf(user) ?? keep?.account) : undefined,
     });
   } else {
     // Nothing from the previous user's page may be restored by a later bare /login.
@@ -235,8 +301,25 @@ export function redirectToLogin(returnPath?: string | null, reason?: LoginReason
  * Start a fresh sign-in. The API owns the whole OIDC dance and the session cookie; this only sends
  * the browser to it (a top-level navigation, never XHR) and says where to come back to.
  */
-export function startSignIn(returnPath?: string) {
+export function startSignIn(
+  returnPath?: string,
+  options?: { loginHint?: string; method?: SignInMethod },
+) {
   const appOrigin = canonicalOrigin() ?? window.location.origin;
-  const login = `${import.meta.env.VITE_API_URL}/auth/login?returnUrl=${encodeURIComponent(appOrigin + safeReturnPath(returnPath))}`;
+  const hint = options?.loginHint ? `&login_hint=${encodeURIComponent(options.loginHint)}` : '';
+  // Which page the identity provider opens first; without it, it decides.
+  const method = options?.method ? `&method=${options.method}` : '';
+  const login = `${import.meta.env.VITE_API_URL}/auth/login?returnUrl=${encodeURIComponent(appOrigin + safeReturnPath(returnPath))}${hint}${method}`;
   leaveWithoutPrompt(() => (window.location.href = login));
+}
+
+export type SignInMethod = 'passkey' | 'password';
+
+/**
+ * How this browser last signed in. The identity provider writes the cookie when a sign-in completes
+ * (readable by script, like the language cookie); the sign-in page puts that method first.
+ */
+export function lastSignInMethod(): SignInMethod | undefined {
+  const value = document.cookie.match(/(?:^|;\s*)cas-login-method=([^;]*)/)?.[1];
+  return value === 'passkey' || value === 'password' ? value : undefined;
 }

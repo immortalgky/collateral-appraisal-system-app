@@ -1,5 +1,6 @@
-import { isCondo } from '../types';
+import { isCondo, isLandAndBuildingLike } from '../types';
 import type { ProjectUnitPrice, ProjectType } from '../types';
+import { roundAwayFromZero, snap, truncateTowardZero } from '@/shared/utils/decimalRounding';
 
 /**
  * Client-side mirror of the backend's unit-price calculation
@@ -30,7 +31,7 @@ const num = (v: number | null | undefined): number =>
   typeof v === 'number' && !Number.isNaN(v) ? v : 0;
 
 /** Mirror of Project.cs:ApplyLocationMethod. */
-const applyLocationMethod = (
+export const applyLocationMethod = (
   rawAdjustment: number,
   method: string | null | undefined,
   standardPriceTotal: number,
@@ -38,9 +39,9 @@ const applyLocationMethod = (
 ): number => {
   switch (method) {
     case 'AdjustPriceSqm':
-      return rawAdjustment * areaMultiplier;
+      return snap(rawAdjustment * areaMultiplier);
     case 'AdjustPricePercentage':
-      return (standardPriceTotal * rawAdjustment) / 100;
+      return snap(snap(standardPriceTotal * rawAdjustment) / 100);
     case 'Lumpsum':
       // Flat baht — applied as-is, not multiplied by area or percentage.
       return rawAdjustment;
@@ -49,15 +50,131 @@ const applyLocationMethod = (
   }
 };
 
-const roundToNearest10000 = (value: number): number => Math.round(value / 10000) * 10000;
-const roundToNearest1000 = (value: number): number => Math.round(value / 1000) * 1000;
+/**
+ * Condo: what the unit's stored raw flag total (`adjustPriceLocation`) adds to its value under the
+ * given location method; the same step `recomputeCondo` takes, on the same standard price total.
+ */
+export const condoLocationContribution = (
+  unit: ProjectUnitPrice,
+  method: string | null | undefined,
+): number => {
+  const usableArea = num(unit.usableArea);
+  return applyLocationMethod(
+    num(unit.adjustPriceLocation),
+    method,
+    snap(num(unit.standardPrice) * usableArea),
+    usableArea,
+  );
+};
 
+/**
+ * LB / L: the same step for a land-and-building unit, as `recomputeLB` takes it: the multiplier is
+ * the land area (Sq.Wa) and the percentage base is the standard price as it is (a total, not a
+ * rate). A unit with no model (always the case for L) has a standard price of 0, so a percentage
+ * method gives 0 there.
+ */
+export const lbLocationContribution = (
+  unit: ProjectUnitPrice,
+  method: string | null | undefined,
+): number =>
+  applyLocationMethod(
+    num(unit.adjustPriceLocation),
+    method,
+    num(unit.standardPrice),
+    num(unit.landArea),
+  );
+
+/** The contribution of the unit's stored raw flag total, whichever the project type. */
+export const locationContribution = (
+  unit: ProjectUnitPrice,
+  method: string | null | undefined,
+  projectType: ProjectType,
+): number =>
+  isCondo(projectType)
+    ? condoLocationContribution(unit, method)
+    : lbLocationContribution(unit, method);
+
+const roundToNearest10000 = (value: number): number => roundAwayFromZero(value, 10000);
+const roundToNearest1000 = (value: number): number => roundAwayFromZero(value, 1000);
+/** total x percent / 100, with the product snapped before the division. */
+const percentOf = (total: number, percent: number): number => snap(snap(total * percent) / 100);
+
+/**
+ * `modelCoverage` is the matched model's fire-insurance rate (Baht/sq.m.); leave it undefined when
+ * the unit has no model, which keeps the unit's stored coverageAmount. Otherwise coverageAmount
+ * becomes the per-unit TOTAL the backend stores, round-to-1000 of rate x usable area, mirroring
+ * Project.cs exactly:
+ * - Condo: `(rate * usableArea) ?? 0`, so 0 when the rate or the area is null.
+ * - LB: no rate gives no coverage; no area counts as 0.
+ */
 export const recomputeUnitPrice = (
   unit: ProjectUnitPrice,
   assumption: AssumptionInputs,
   projectType: ProjectType,
-): ProjectUnitPrice =>
-  isCondo(projectType) ? recomputeCondo(unit, assumption) : recomputeLB(unit, assumption);
+  modelCoverage?: { rate: number | null | undefined },
+): ProjectUnitPrice => {
+  const priced = isCondo(projectType)
+    ? recomputeCondo(unit, assumption)
+    : recomputeLB(unit, assumption);
+  if (!modelCoverage) return priced;
+  const { rate } = modelCoverage;
+  const coverageAmount = isCondo(projectType)
+    ? rate == null || unit.usableArea == null
+      ? 0
+      : roundToNearest1000(rate * unit.usableArea)
+    : rate == null
+      ? undefined
+      : roundToNearest1000(rate * num(unit.usableArea));
+  return { ...priced, coverageAmount };
+};
+
+/** Per-model figures the live preview reads (the backend reads the same ones on Save). */
+export interface ModelPricing {
+  standardPrice?: number | null;
+  /** Fire-insurance rate, Baht/sq.m. */
+  coverageAmount?: number | null;
+  /** Standard land AREA (Sq.Wa) for LB models. */
+  standardLandArea?: number | null;
+}
+
+/**
+ * Rows for the Calculated view: always the live recompute (it is what Save would write), with the
+ * model's price and coverage looked up per unit. The Imported view does not call this; it shows
+ * the stored rows as the API returned them.
+ */
+export const buildDisplayedUnitPrices = (
+  units: ProjectUnitPrice[],
+  assumption: AssumptionInputs,
+  projectType: ProjectType,
+  modelLookup: Map<string, ModelPricing>,
+): ProjectUnitPrice[] => {
+  return units.map(up => {
+    const lookup = modelLookup.get(up.projectModelId ?? '');
+    // LB land +/- mirrors Project.cs exactly: (landArea ?? 0 - standardLandArea ?? 0) x (rate ?? 0),
+    // with no fallback to the stored amount. Condo has no land adjustment.
+    const isLB = isLandAndBuildingLike(projectType);
+    const landAreaDifference = isLB
+      ? snap(num(up.landArea) - num(lookup?.standardLandArea))
+      : up.landAreaDifference;
+    const landIncreaseDecreaseAmount = isLB
+      ? snap((landAreaDifference ?? 0) * num(assumption.landIncreaseDecreaseRate))
+      : up.landIncreaseDecreaseAmount;
+    // Mirrors the backend: a unit whose model is not in the lookup is priced at 0, with no coverage.
+    const enriched: ProjectUnitPrice = {
+      ...up,
+      standardPrice: lookup?.standardPrice ?? 0,
+      landAreaDifference,
+      landIncreaseDecreaseAmount,
+    };
+    const priced = recomputeUnitPrice(
+      enriched,
+      assumption,
+      projectType,
+      lookup && { rate: lookup.coverageAmount },
+    );
+    return lookup ? priced : { ...priced, coverageAmount: undefined };
+  });
+};
 
 /**
  * Condo: ProjectUnitPrice.standardPrice is stored as the per-sq.m. rate
@@ -66,7 +183,7 @@ export const recomputeUnitPrice = (
  */
 const recomputeCondo = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPrice => {
   const usableArea = num(unit.usableArea);
-  const standardPriceTotal = num(unit.standardPrice) * usableArea;
+  const standardPriceTotal = snap(num(unit.standardPrice) * usableArea);
 
   // adjustPriceLocation is stored as the raw flag-adjustment total. The
   // configured LocationMethod is only applied when folding it into the appraisal
@@ -86,16 +203,24 @@ const recomputeCondo = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUni
 
   const everyX = num(a.floorIncrementEveryXFloor);
   const incAmount = num(a.floorIncrementAmount);
-  const floor = num(unit.floor);
+  // C# integer division truncates toward zero, so floors <= 0 give 0 or negative steps, as in the
+  // backend: no `floor > 0` guard. `+ 0` turns the -0 of floor 0 (trunc(-1 / everyX)) into 0, which
+  // would otherwise render as "-0.00".
   const priceIncrementPerFloor =
-    floor > 0 && everyX > 0 ? Math.floor((floor - 1) / everyX) * incAmount : 0;
+    unit.floor != null && everyX > 0 ? Math.trunc((unit.floor - 1) / everyX) * incAmount + 0 : 0;
 
-  const totalAppraisalValue = standardPriceTotal + locationContribution + priceIncrementPerFloor;
-  const totalAppraisalValueRounded = Math.round(totalAppraisalValue);
+  const totalAppraisalValue = snap(
+    standardPriceTotal + locationContribution + priceIncrementPerFloor,
+  );
+  const totalAppraisalValueRounded = roundAwayFromZero(totalAppraisalValue);
   const forceSellingPrice =
     a.forceSalePercentage != null
-      ? roundToNearest1000((totalAppraisalValueRounded * a.forceSalePercentage) / 100)
-      : undefined;
+      ? roundToNearest1000(percentOf(totalAppraisalValueRounded, a.forceSalePercentage))
+      : // No percentage known (no models, no saved assumption): the forced sale of a unit worth 0
+        // is 0 whatever the percentage, which is what the backend stores; otherwise unknown.
+        totalAppraisalValueRounded === 0
+        ? 0
+        : undefined;
 
   return {
     ...unit,
@@ -132,13 +257,18 @@ const recomputeLB = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPr
     landArea,
   );
 
-  const totalAppraisalValue =
-    standardPriceTotal + landIncreaseDecreaseAmount + locationContribution;
+  const totalAppraisalValue = snap(
+    standardPriceTotal + landIncreaseDecreaseAmount + locationContribution,
+  );
   const totalAppraisalValueRounded = roundToNearest10000(totalAppraisalValue);
   const forceSellingPrice =
     a.forceSalePercentage != null
-      ? roundToNearest1000((totalAppraisalValueRounded * a.forceSalePercentage) / 100)
-      : undefined;
+      ? roundToNearest1000(percentOf(totalAppraisalValueRounded, a.forceSalePercentage))
+      : // No percentage known (no models, no saved assumption): the forced sale of a unit worth 0
+        // is 0 whatever the percentage, which is what the backend stores; otherwise unknown.
+        totalAppraisalValueRounded === 0
+        ? 0
+        : undefined;
 
   return {
     ...unit,
@@ -148,3 +278,33 @@ const recomputeLB = (unit: ProjectUnitPrice, a: AssumptionInputs): ProjectUnitPr
     forceSellingPrice,
   };
 };
+
+/**
+ * Stored money has two decimals, and a previewed figure can carry a third (1,369,326.125). Whether
+ * the database rounds that digit (away from zero) or truncates it on the way in is not settled, so
+ * either counts as the same figure: 1,369,326.13 or 1,369,326.12. A real difference is anything
+ * else. Null against a value is a difference.
+ */
+const sameFigure = (previewed?: number | null, stored?: number | null) =>
+  previewed == null || stored == null
+    ? previewed == stored
+    : Math.abs(roundAwayFromZero(previewed, 0.01) - stored) < 1e-6 ||
+      Math.abs(truncateTowardZero(previewed, 0.01) - stored) < 1e-6;
+
+/** Every calculated figure Save writes (the flags and unit attributes are inputs, not results). */
+const CALCULATED_FIELDS = [
+  'standardPrice',
+  'totalAppraisalValue',
+  'totalAppraisalValueRounded',
+  'forceSellingPrice',
+  'coverageAmount',
+  'adjustPriceLocation',
+  'priceIncrementPerFloor',
+  'landIncreaseDecreaseAmount',
+] as const satisfies readonly (keyof ProjectUnitPrice)[];
+
+/** Whether the recomputed rows differ from the stored ones in any figure Save would write. */
+export const differsFromStored = (displayed: ProjectUnitPrice[], stored: ProjectUnitPrice[]) =>
+  displayed.some((row, i) =>
+    CALCULATED_FIELDS.some(field => !sameFigure(row[field], stored[i]?.[field])),
+  );

@@ -20,7 +20,7 @@ const SKELETON_COLUMNS = [
 ];
 
 const baseCls =
-  'px-4 py-3 text-left text-xs font-semibold text-gray-500 whitespace-nowrap bg-gray-50';
+  'px-4 py-3 text-left text-xs font-semibold text-(--palette-gray-500) whitespace-nowrap bg-(--palette-surface-2)';
 
 function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
   const { t, i18n } = useTranslation('monitoring');
@@ -45,12 +45,12 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
             <th className={baseCls}>Meeting Date</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {isLoading && <TableRowSkeleton columns={SKELETON_COLUMNS} rows={5} />}
 
           {!isLoading && rows.length === 0 && (
             <tr>
-              <td colSpan={5} className="py-16 text-center text-sm text-gray-500">
+              <td colSpan={5} className="py-16 text-center text-sm text-(--palette-gray-500)">
                 {t('common.noRecords')}
               </td>
             </tr>
@@ -64,16 +64,16 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
                 <Fragment key={row.userId}>
                   <tr
                     onClick={() => toggle(row.userId)}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="hover:bg-(--palette-surface-2) cursor-pointer transition-colors"
                   >
                     <td className="px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <Icon
                           style="solid"
                           name="chevron-right"
-                          className={`size-3 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`}
+                          className={`size-3 text-(--palette-gray-400) transition-transform ${isOpen ? 'rotate-90' : ''}`}
                         />
-                        <span className="text-table font-medium text-gray-900">
+                        <span className="text-table font-medium text-(--palette-ink)">
                           {row.memberName}
                         </span>
                       </div>
@@ -82,8 +82,8 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
                       <span
                         className={`inline-flex min-w-6 justify-center px-1.5 py-0.5 rounded-full text-xs font-semibold tabular-nums ${
                           row.availableTasks > 0
-                            ? 'bg-amber-50 text-amber-700'
-                            : 'bg-gray-50 text-gray-400'
+                            ? 'bg-(--palette-warn-wash) text-(--palette-warn)'
+                            : 'bg-(--palette-surface-2) text-(--palette-gray-400)'
                         }`}
                       >
                         {row.availableTasks}
@@ -96,32 +96,35 @@ function CommitteeFollowupTable({ rows, isLoading, onOpenAppraisal }: Props) {
 
                   {isOpen &&
                     items.map(item => (
-                      <tr key={`${row.userId}-${item.appraisalId}`} className="bg-gray-50/60">
+                      <tr
+                        key={`${row.userId}-${item.appraisalId}`}
+                        className="bg-(--palette-surface-2)/60"
+                      >
                         <td className="px-4 py-2 pl-11">
                           <button
                             type="button"
                             onClick={() => onOpenAppraisal(item.appraisalId)}
-                            className="text-table font-medium text-primary hover:underline"
+                            className="text-table font-medium text-(--palette-primary-text) hover:underline"
                           >
                             {item.appraisalNumber}
                           </button>
                         </td>
                         <td className="px-4 py-2" />
-                        <td className="px-4 py-2 text-xs text-gray-600 max-w-[200px] truncate">
+                        <td className="px-4 py-2 text-xs text-(--palette-gray-600) max-w-[200px] truncate">
                           {item.customerName ?? '—'}
                         </td>
-                        <td className="px-4 py-2 text-xs text-gray-600">
+                        <td className="px-4 py-2 text-xs text-(--palette-gray-600)">
                           {item.meetingNumber ?? '—'}
                         </td>
-                        <td className="px-4 py-2 text-xs text-gray-600 whitespace-nowrap">
+                        <td className="px-4 py-2 text-xs text-(--palette-gray-600) whitespace-nowrap">
                           {formatLocaleDate(item.meetingDate, i18n.language ?? '—')}
                         </td>
                       </tr>
                     ))}
 
                   {isOpen && items.length === 0 && (
-                    <tr className="bg-gray-50/60">
-                      <td colSpan={5} className="px-4 py-3 pl-11 text-xs text-gray-400">
+                    <tr className="bg-(--palette-surface-2)/60">
+                      <td colSpan={5} className="px-4 py-3 pl-11 text-xs text-(--palette-gray-400)">
                         {t('common.noRecords')}
                       </td>
                     </tr>

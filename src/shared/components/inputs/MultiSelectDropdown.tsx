@@ -2,6 +2,7 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { useMemo } from 'react';
 import clsx from 'clsx';
 import Icon from '../Icon';
+import { FOCUS, NO_GLOBAL_OUTLINE } from './controlStyles';
 import { useParameterOptions } from '../../utils/parameterUtils';
 import type { ListBoxItem } from './Dropdown';
 
@@ -69,14 +70,16 @@ function MultiSelectDropdown({
           'block relative w-fit rounded-lg border text-left text-sm transition-colors duration-200',
           // Reserve room on the right for the chevron, plus extra for the count badge when selected.
           hasSelection ? 'pr-14' : 'pr-9',
-          'focus:outline-none focus:ring-2 border-gray-200 focus:ring-gray-200 focus:border-gray-400',
+          'focus:outline-none border-(--palette-input-edge)',
+          FOCUS.focus,
+          NO_GLOBAL_OUTLINE,
           disabled
-            ? 'bg-gray-50 text-gray-500 cursor-not-allowed'
-            : 'bg-white hover:border-gray-300',
+            ? 'bg-(--palette-surface-2) text-(--palette-gray-500) cursor-not-allowed'
+            : 'bg-(--palette-surface) hover:border-(--palette-input-edge-hover)',
         )}
       >
         {/* Chevron */}
-        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-(--palette-gray-400)">
           <Icon style="regular" name="chevron-down" className="size-3.5" />
         </div>
         {/* Count badge when ≥1 selected — actual values shown via ActiveFilterChips */}
@@ -88,21 +91,23 @@ function MultiSelectDropdown({
           </div>
         )}
         <div className="px-3 py-2 truncate">
-          <span className={hasSelection ? 'text-gray-900' : 'text-gray-400'}>{placeholder}</span>
+          <span className={hasSelection ? 'text-(--palette-ink)' : 'text-(--palette-gray-400)'}>
+            {placeholder}
+          </span>
         </div>
       </PopoverButton>
 
       <PopoverPanel
         anchor="bottom start"
         style={{ '--anchor-max-height': '20rem' } as React.CSSProperties}
-        className="min-w-(--button-width) max-w-[min(28rem,calc(100vw-2rem))] mt-1 bg-white rounded-lg border border-gray-200 shadow-lg z-50 flex flex-col overflow-hidden"
+        className="min-w-(--button-width) max-w-[min(28rem,calc(100vw-2rem))] mt-1 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-lg z-50 flex flex-col overflow-hidden"
       >
         {({ close }) => (
           <>
             {/* Option list — scrolls; Clear footer below stays pinned */}
             <div className="py-1 min-h-0 overflow-y-auto">
               {allOptions.length === 0 && (
-                <div className="px-3 py-2 text-xs text-gray-400">No options</div>
+                <div className="px-3 py-2 text-xs text-(--palette-gray-400)">No options</div>
               )}
               {allOptions.map(opt => {
                 const optValue = opt.value ?? '';
@@ -114,13 +119,13 @@ function MultiSelectDropdown({
                     key={opt.id ?? opt.value}
                     type="button"
                     onClick={() => toggle(optValue)}
-                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-(--palette-surface-2) transition-colors"
                   >
                     {/* Inline checkbox indicator — avoids double-fire from HeadlessCheckbox + button click */}
                     <span
                       className={clsx(
                         'flex items-center justify-center h-4 w-4 shrink-0 rounded-md border-2 transition-all duration-150',
-                        isChecked ? 'bg-primary border-primary' : 'border-gray-300',
+                        isChecked ? 'bg-primary border-primary' : 'border-(--palette-input-edge)',
                       )}
                     >
                       {isChecked && (
@@ -130,7 +135,7 @@ function MultiSelectDropdown({
                     <span
                       className={clsx(
                         'text-sm select-none truncate',
-                        isChecked ? 'font-medium text-gray-900' : 'text-gray-700',
+                        isChecked ? 'font-medium text-(--palette-ink)' : 'text-(--palette-ink)',
                       )}
                     >
                       {label}
@@ -142,14 +147,14 @@ function MultiSelectDropdown({
 
             {/* Footer: Clear action — pinned at the bottom, outside the scroll area */}
             {value.length > 0 && (
-              <div className="shrink-0 border-t border-gray-100 px-3 py-1.5 bg-white">
+              <div className="shrink-0 border-t border-(--palette-line-soft) px-3 py-1.5 bg-(--palette-surface)">
                 <button
                   type="button"
                   onClick={() => {
                     clear();
                     close();
                   }}
-                  className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
+                  className="text-xs text-(--palette-gray-500) hover:text-(--palette-ink) transition-colors"
                 >
                   Clear
                 </button>

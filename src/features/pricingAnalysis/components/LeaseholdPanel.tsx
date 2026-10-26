@@ -3,6 +3,7 @@ import { useForm, useWatch, useController, useFieldArray, type Resolver } from '
 import type { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import MissingFieldsChip from '@/shared/components/form/missing/MissingFieldsChip';
 import {
   useLeaseholdFormSchema,
   leaseholdFormDefaults,
@@ -447,7 +448,8 @@ export function LeaseholdPanel({
         onCalculationSave({
           approachType: activeMethod.approachType,
           methodType: activeMethod.methodType,
-          appraisalValue: data.indicatedValue ?? data.estimatePriceRounded ?? result.finalValueRounded,
+          appraisalValue:
+            data.indicatedValue ?? data.estimatePriceRounded ?? result.finalValueRounded,
         });
       }
       if (!silent) toast.success(t('toasts.saved'));
@@ -587,14 +589,18 @@ export function LeaseholdPanel({
     >
       <MethodTopBarPortal>
         <div className="flex flex-col items-end leading-tight shrink-0 px-1">
-          <span className="text-[10px] text-gray-400">{t('finalValue.indicatedValue')}</span>
-          <span className="text-sm font-semibold text-primary tabular-nums">
-            {fmt(indicatedValueField.value ?? estimatePriceRoundedWatched ?? finalValueRounded ?? 0)}
+          <span className="text-[10px] text-(--palette-gray-400)">
+            {t('finalValue.indicatedValue')}
+          </span>
+          <span className="text-sm font-semibold text-(--palette-primary-text) tabular-nums">
+            {fmt(
+              indicatedValueField.value ?? estimatePriceRoundedWatched ?? finalValueRounded ?? 0,
+            )}
           </span>
         </div>
         {!readOnly && (
           <>
-            <span className="w-px h-5 bg-gray-200 shrink-0" />
+            <span className="w-px h-5 bg-(--palette-line) shrink-0" />
             <Button
               variant="ghost"
               type="button"
@@ -611,10 +617,11 @@ export function LeaseholdPanel({
               disabled={saveMutation.isPending}
               title={t('footer.reset')}
               aria-label={t('footer.reset')}
-              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-red-600"
+              className="h-[28px]! w-[28px]! px-0! py-0! rounded-[7px]! text-red-500 hover:text-(--palette-danger)"
             >
               <Icon name="arrow-rotate-left" style="solid" className="size-[13px]" />
             </Button>
+            <MissingFieldsChip placement="down" />
             <Button
               type="submit"
               form={formId}
@@ -697,9 +704,14 @@ export function LeaseholdPanel({
                           leaseEndDate={leaseAgreement?.leaseEndDate}
                           onViewRentalInfo={() => setIsRentalInfoModalOpen(true)}
                         />
-                        <MethodRailSectionTitle>{t('leasehold.landSectionTitle')}</MethodRailSectionTitle>
-                        <MethodRailField label={t('leasehold.landArea')} unit={t('leasehold.units.sqWa')}>
-                          <span className="text-xs font-medium text-gray-700 tabular-nums">
+                        <MethodRailSectionTitle>
+                          {t('leasehold.landSectionTitle')}
+                        </MethodRailSectionTitle>
+                        <MethodRailField
+                          label={t('leasehold.landArea')}
+                          unit={t('leasehold.units.sqWa')}
+                        >
+                          <span className="text-xs font-medium text-(--palette-ink) tabular-nums">
                             {(propertyData?.totalLandAreaInSqWa ?? 0).toLocaleString('en-US', {
                               minimumFractionDigits: 2,
                               maximumFractionDigits: 2,
@@ -759,7 +771,7 @@ export function LeaseholdPanel({
                               />
                             </MethodRailField>
                             <MethodRailField label={t('leasehold.totalLeaseLandArea')}>
-                              <span className="text-xs font-medium text-gray-700 tabular-nums">
+                              <span className="text-xs font-medium text-(--palette-ink) tabular-nums">
                                 {(totalLeaseLandArea ?? 0).toLocaleString('en-US', {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
@@ -803,7 +815,9 @@ export function LeaseholdPanel({
                                   hostMethodId={methodId}
                                   marketSurveys={marketSurveys ?? []}
                                   templateList={templateList}
-                                  subjectProperty={propertyDetail as Record<string, unknown> | undefined}
+                                  subjectProperty={
+                                    propertyDetail as Record<string, unknown> | undefined
+                                  }
                                   onApplyValue={v => landValueField.onChange(v)}
                                   onBeforeOpen={
                                     effectiveId
@@ -820,18 +834,26 @@ export function LeaseholdPanel({
                             })()}
                           />
                         </MethodRailField>
-                        <MethodRailField label={t('leasehold.totalLandValue')} unit={t('methodTabs.units.baht')}>
-                          <span className="text-gray-800 tabular-nums">
+                        <MethodRailField
+                          label={t('leasehold.totalLandValue')}
+                          unit={t('methodTabs.units.baht')}
+                        >
+                          <span className="text-(--palette-ink) tabular-nums">
                             {(
                               (landValueField.value ?? 0) *
                               (isPartialUsage
                                 ? (totalLeaseLandArea ?? 0)
                                 : (propertyData?.totalLandAreaInSqWa ?? 0))
-                            ).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            ).toLocaleString('en-US', {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
                           </span>
                         </MethodRailField>
 
-                        <MethodRailSectionTitle>{t('leasehold.landValueGrowthRate')}</MethodRailSectionTitle>
+                        <MethodRailSectionTitle>
+                          {t('leasehold.landValueGrowthRate')}
+                        </MethodRailSectionTitle>
                         <MethodRailSeg
                           options={[
                             { value: 'Frequency', label: t('leasehold.growthTypes.frequency') },
@@ -846,7 +868,10 @@ export function LeaseholdPanel({
                         />
                         {landGrowthRateType === 'Frequency' ? (
                           <>
-                            <MethodRailField label={t('leasehold.rate')} unit={t('leasehold.units.percent')}>
+                            <MethodRailField
+                              label={t('leasehold.rate')}
+                              unit={t('leasehold.units.percent')}
+                            >
                               <NumberInput
                                 dense
                                 name={landGrowthPercentField.name}
@@ -858,7 +883,10 @@ export function LeaseholdPanel({
                                 disabled={readOnly}
                               />
                             </MethodRailField>
-                            <MethodRailField label={t('leasehold.every')} unit={t('leasehold.units.yr')}>
+                            <MethodRailField
+                              label={t('leasehold.every')}
+                              unit={t('leasehold.units.yr')}
+                            >
                               <NumberInput
                                 dense
                                 name={landIntervalField.name}
@@ -875,10 +903,17 @@ export function LeaseholdPanel({
                           <div className="space-y-1.5 py-1">
                             <MethodRailPeriodHeader />
                             {landPeriodFields.map((field, index) => (
-                              <div key={field.id} className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 items-center">
+                              <div
+                                key={field.id}
+                                className="grid grid-cols-[1fr_1fr_1fr_20px] gap-1 items-center"
+                              >
                                 <NumberInput
                                   dense
-                                  value={watch(`landGrowthPeriods.${index}.fromYear` as any) as number}
+                                  name={`landGrowthPeriods.${index}.fromYear`}
+                                  aria-label={`${t('leasehold.landValueGrowthRate')} · ${t('methodTabs.periodCols.from')}`}
+                                  value={
+                                    watch(`landGrowthPeriods.${index}.fromYear` as any) as number
+                                  }
                                   onChange={e =>
                                     setValue(
                                       `landGrowthPeriods.${index}.fromYear` as any,
@@ -891,18 +926,32 @@ export function LeaseholdPanel({
                                 />
                                 <NumberInput
                                   dense
-                                  value={watch(`landGrowthPeriods.${index}.toYear` as any) as number}
+                                  name={`landGrowthPeriods.${index}.toYear`}
+                                  aria-label={`${t('leasehold.landValueGrowthRate')} · ${t('methodTabs.periodCols.to')}`}
+                                  value={
+                                    watch(`landGrowthPeriods.${index}.toYear` as any) as number
+                                  }
                                   onChange={e =>
-                                    setValue(`landGrowthPeriods.${index}.toYear` as any, e.target.value ?? 0, {
-                                      shouldDirty: true,
-                                    })
+                                    setValue(
+                                      `landGrowthPeriods.${index}.toYear` as any,
+                                      e.target.value ?? 0,
+                                      {
+                                        shouldDirty: true,
+                                      },
+                                    )
                                   }
                                   decimalPlaces={0}
                                   disabled={readOnly}
                                 />
                                 <NumberInput
                                   dense
-                                  value={watch(`landGrowthPeriods.${index}.growthRatePercent` as any) as number}
+                                  name={`landGrowthPeriods.${index}.growthRatePercent`}
+                                  aria-label={`${t('leasehold.landValueGrowthRate')} · ${t('methodTabs.periodCols.rate')}`}
+                                  value={
+                                    watch(
+                                      `landGrowthPeriods.${index}.growthRatePercent` as any,
+                                    ) as number
+                                  }
                                   onChange={e =>
                                     setValue(
                                       `landGrowthPeriods.${index}.growthRatePercent` as any,
@@ -917,7 +966,7 @@ export function LeaseholdPanel({
                                   <button
                                     type="button"
                                     onClick={() => removeLandPeriod(index)}
-                                    className="flex items-center justify-center text-red-400 hover:text-red-600"
+                                    className="flex items-center justify-center text-red-400 hover:text-(--palette-danger)"
                                   >
                                     <Icon name="xmark" className="size-3" />
                                   </button>
@@ -935,7 +984,9 @@ export function LeaseholdPanel({
                           </div>
                         )}
 
-                        <MethodRailSectionTitle>{t('leasehold.buildingSectionTitle')}</MethodRailSectionTitle>
+                        <MethodRailSectionTitle>
+                          {t('leasehold.buildingSectionTitle')}
+                        </MethodRailSectionTitle>
                         <MethodRailField label={t('leasehold.constructionCostIndex')}>
                           <RHFInputCell
                             fieldName="constructionCostIndex"
@@ -975,7 +1026,9 @@ export function LeaseholdPanel({
                           />
                         </MethodRailField>
 
-                        <MethodRailSectionTitle>{t('leasehold.discountSectionTitle')}</MethodRailSectionTitle>
+                        <MethodRailSectionTitle>
+                          {t('leasehold.discountSectionTitle')}
+                        </MethodRailSectionTitle>
                         <MethodRailField
                           label={t('leasehold.discountedRate')}
                           unit={t('leasehold.units.percent')}
@@ -1050,11 +1103,11 @@ export function LeaseholdPanel({
                       )}
                       <IndicatedValueRow
                         label={
-                          <span className="font-semibold text-[#0f766e]">
+                          <span className="font-semibold text-(--palette-accent-ink)">
                             {t('costMachine.summary.indicatedValueLabel')}{' '}
                             {/* The *SubLabel key is the English gloss, deliberately empty in
                                 en/zh so it does not repeat the label it sits next to. */}
-                            <span className="text-[10.5px] text-gray-400 font-normal">
+                            <span className="text-[10.5px] text-(--palette-gray-400) font-normal">
                               {t('finalValue.indicatedValueSubLabel')}
                             </span>
                           </span>
@@ -1064,7 +1117,10 @@ export function LeaseholdPanel({
                         // above this row read via `roundToThousand(estimateNetPrice ?? finalValueRounded)`.
                         computedValue={estimateNetPrice ?? tableResult?.finalValue ?? 0}
                         value={
-                          indicatedValueField.value ?? estimatePriceRoundedWatched ?? finalValueRounded ?? 0
+                          indicatedValueField.value ??
+                          estimatePriceRoundedWatched ??
+                          finalValueRounded ??
+                          0
                         }
                         onChange={v => indicatedValueField.onChange(v)}
                         disabled={readOnly}
@@ -1107,46 +1163,46 @@ function PanelSkeleton() {
     <div className="flex flex-col flex-1 min-h-0 gap-4 animate-pulse">
       {/* Header */}
       <div className="flex items-center gap-2.5">
-        <div className="size-8 rounded-lg bg-gray-200" />
-        <div className="bg-gray-200 rounded h-5 w-32" />
+        <div className="size-8 rounded-lg bg-(--palette-surface-3)" />
+        <div className="bg-(--palette-surface-3) rounded h-5 w-32" />
       </div>
 
       {/* Info cards */}
-      <div className="rounded-lg border border-gray-200 p-5 space-y-4">
+      <div className="rounded-lg border border-(--palette-line) p-5 space-y-4">
         <div className="grid grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-md bg-gray-100 px-3 py-2.5 h-14">
-              <div className="bg-gray-200 rounded h-2.5 w-16 mb-2" />
-              <div className="bg-gray-200 rounded h-3.5 w-24" />
+            <div key={i} className="rounded-md bg-(--palette-surface-3) px-3 py-2.5 h-14">
+              <div className="bg-(--palette-surface-3) rounded h-2.5 w-16 mb-2" />
+              <div className="bg-(--palette-surface-3) rounded h-3.5 w-24" />
             </div>
           ))}
         </div>
       </div>
 
       {/* Land Value & Growth Config */}
-      <div className="rounded-lg border border-gray-200 p-5 space-y-5">
+      <div className="rounded-lg border border-(--palette-line) p-5 space-y-5">
         <div className="grid grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="rounded-md bg-gray-100 px-4 py-3 h-16">
-              <div className="bg-gray-200 rounded h-2.5 w-20 mb-2" />
-              <div className="bg-gray-200 rounded h-5 w-28" />
+            <div key={i} className="rounded-md bg-(--palette-surface-3) px-4 py-3 h-16">
+              <div className="bg-(--palette-surface-3) rounded h-2.5 w-20 mb-2" />
+              <div className="bg-(--palette-surface-3) rounded h-5 w-28" />
             </div>
           ))}
         </div>
-        <div className="border-t border-gray-200" />
+        <div className="border-t border-(--palette-line)" />
         <div className="space-y-3">
-          <div className="bg-gray-200 rounded h-3.5 w-40" />
+          <div className="bg-(--palette-surface-3) rounded h-3.5 w-40" />
           <div className="flex gap-2">
-            <div className="bg-gray-200 rounded-full h-7 w-20" />
-            <div className="bg-gray-200 rounded-full h-7 w-16" />
+            <div className="bg-(--palette-surface-3) rounded-full h-7 w-20" />
+            <div className="bg-(--palette-surface-3) rounded-full h-7 w-16" />
           </div>
         </div>
-        <div className="border-t border-gray-200" />
+        <div className="border-t border-(--palette-line)" />
         <div className="grid grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="rounded-md bg-gray-100 px-3 py-2 h-14">
-              <div className="bg-gray-200 rounded h-2.5 w-20 mb-2" />
-              <div className="bg-gray-200 rounded h-4 w-16" />
+            <div key={i} className="rounded-md bg-(--palette-surface-3) px-3 py-2 h-14">
+              <div className="bg-(--palette-surface-3) rounded h-2.5 w-20 mb-2" />
+              <div className="bg-(--palette-surface-3) rounded h-4 w-16" />
             </div>
           ))}
         </div>
@@ -1156,14 +1212,14 @@ function PanelSkeleton() {
       <TableSkeleton />
 
       {/* Estimate Price */}
-      <div className="border-t border-gray-200 pt-3 space-y-2">
+      <div className="border-t border-(--palette-line) pt-3 space-y-2">
         <div className="flex items-center justify-between">
-          <div className="bg-gray-200 rounded h-3 w-32" />
-          <div className="bg-gray-200 rounded h-3 w-24" />
+          <div className="bg-(--palette-surface-3) rounded h-3 w-32" />
+          <div className="bg-(--palette-surface-3) rounded h-3 w-24" />
         </div>
         <div className="flex items-center justify-between">
-          <div className="bg-gray-200 rounded h-4 w-28" />
-          <div className="bg-gray-100 rounded h-9 w-40" />
+          <div className="bg-(--palette-surface-3) rounded h-4 w-28" />
+          <div className="bg-(--palette-surface-3) rounded h-9 w-40" />
         </div>
       </div>
     </div>
@@ -1173,9 +1229,9 @@ function PanelSkeleton() {
 /** Skeleton loader for the leasehold table */
 function TableSkeleton() {
   return (
-    <div className="animate-pulse space-y-0 border border-gray-200 rounded-lg overflow-hidden">
+    <div className="animate-pulse space-y-0 border border-(--palette-line) rounded-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-gray-100 h-9 flex items-center px-3">
+      <div className="bg-(--palette-surface-3) h-9 flex items-center px-3">
         <div className="bg-gray-300 rounded h-3 w-16" />
         <div className="flex gap-6 ml-auto">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -1185,11 +1241,11 @@ function TableSkeleton() {
       </div>
       {/* Rows */}
       {Array.from({ length: 8 }).map((_, row) => (
-        <div key={row} className="h-8 flex items-center px-3 border-t border-gray-100">
-          <div className="bg-gray-200 rounded h-3 w-32" />
+        <div key={row} className="h-8 flex items-center px-3 border-t border-(--palette-line-soft)">
+          <div className="bg-(--palette-surface-3) rounded h-3 w-32" />
           <div className="flex gap-6 ml-auto">
             {Array.from({ length: 5 }).map((_, col) => (
-              <div key={col} className="bg-gray-200 rounded h-3 w-16" />
+              <div key={col} className="bg-(--palette-surface-3) rounded h-3 w-16" />
             ))}
           </div>
         </div>
@@ -1198,7 +1254,7 @@ function TableSkeleton() {
       {Array.from({ length: 4 }).map((_, i) => (
         <div
           key={i}
-          className={`h-9 flex items-center px-3 border-t border-gray-200 ${i >= 2 ? 'bg-green-50' : 'bg-gray-50'}`}
+          className={`h-9 flex items-center px-3 border-t border-(--palette-line) ${i >= 2 ? 'bg-green-50 dark:bg-green-500/10' : 'bg-(--palette-surface-2)'}`}
         >
           <div className="bg-gray-300 rounded h-3 w-40" />
           <div className="ml-auto bg-gray-300 rounded h-3 w-20" />

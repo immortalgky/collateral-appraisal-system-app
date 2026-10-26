@@ -13,7 +13,11 @@ import {
   useShortlistQuotation,
   useUnshortlistQuotation,
 } from '../api/quotation';
-import type { AppraisalSummaryDto, CompanyQuotationDto } from '../schemas/quotation';
+import {
+  isNonParticipatingStatus,
+  type AppraisalSummaryDto,
+  type CompanyQuotationDto,
+} from '../schemas/quotation';
 import { sortCompanyResponses } from '../utils/sortCompanyResponses';
 import QuotationStatusBadge from './QuotationStatusBadge';
 import SendToRmModal from './SendToRmModal';
@@ -124,15 +128,21 @@ const AdminShortlistPanel = ({
 
   return (
     <>
-      <div className="rounded-xl border border-purple-200 overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 bg-purple-50 border-b border-purple-200">
+      <div className="rounded-xl border border-purple-200 dark:border-purple-500/30 overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 bg-purple-50 dark:bg-purple-500/10 border-b border-purple-200 dark:border-purple-500/30">
           <div className="flex items-center gap-2">
-            <div className="size-8 rounded-lg bg-purple-200 flex items-center justify-center">
-              <Icon name="clipboard-list" style="solid" className="size-4 text-purple-700" />
+            <div className="size-8 rounded-lg bg-purple-200 dark:bg-purple-500/30 flex items-center justify-center">
+              <Icon
+                name="clipboard-list"
+                style="solid"
+                className="size-4 text-purple-700 dark:text-purple-300"
+              />
             </div>
             <div>
-              <span className="text-sm font-semibold text-gray-900">{t('shortlist.title')}</span>
-              <span className="ml-2 text-xs text-purple-700">
+              <span className="text-sm font-semibold text-(--palette-ink)">
+                {t('shortlist.title')}
+              </span>
+              <span className="ml-2 text-xs text-purple-700 dark:text-purple-300">
                 {t('shortlist.shortlistedCount', {
                   count: shortlistedCount,
                   total: companyQuotations.length,
@@ -175,36 +185,40 @@ const AdminShortlistPanel = ({
 
         {companyQuotations.length === 0 ? (
           <div className="px-4 py-8 text-center">
-            <Icon name="inbox" style="regular" className="size-8 text-gray-300 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">{t('empty.noSubmissions')}</p>
+            <Icon
+              name="inbox"
+              style="regular"
+              className="size-8 text-(--palette-gray-300) mx-auto mb-2"
+            />
+            <p className="text-sm text-(--palette-gray-500)">{t('empty.noSubmissions')}</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider w-10">
                     {t('columns.shortlist')}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.company')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.totalFeeAmount')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.totalDiscount')}
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-right text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.totalNetAmount')}
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.totalEstimateManday')}
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.submittedAt')}
                   </th>
-                  <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-4 py-3 text-center text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider">
                     {t('columns.status')}
                   </th>
                   <th
@@ -213,7 +227,7 @@ const AdminShortlistPanel = ({
                   />
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-(--palette-line-soft)">
                 {sortedCompanyQuotations.map(cq => {
                   const items = cq.items ?? [];
                   const hasItems = items.length > 0;
@@ -234,17 +248,19 @@ const AdminShortlistPanel = ({
                   const maxEstimateManday = validEstimatedDays.length
                     ? Math.max(...validEstimatedDays)
                     : undefined;
-                  const isDeclined = cq.status === 'Declined';
+                  const isNonParticipating = isNonParticipatingStatus(cq.status);
                   return (
                     <tr
                       key={cq.id}
                       className={clsx(
                         'transition-colors',
-                        cq.isShortlisted ? 'bg-indigo-50' : 'hover:bg-gray-50',
+                        cq.isShortlisted
+                          ? 'bg-indigo-50 dark:bg-indigo-500/10'
+                          : 'hover:bg-(--palette-surface-2)',
                       )}
                     >
                       <td className="px-4 py-3">
-                        {!isDeclined && (
+                        {!isNonParticipating && (
                           <button
                             type="button"
                             onClick={() => handleToggle(cq)}
@@ -253,7 +269,7 @@ const AdminShortlistPanel = ({
                               'size-6 rounded border-2 flex items-center justify-center transition-colors',
                               cq.isShortlisted
                                 ? 'bg-indigo-500 border-indigo-500'
-                                : 'border-gray-300 hover:border-indigo-400',
+                                : 'border-(--palette-line-strong) hover:border-indigo-400',
                               isPending && 'opacity-50 cursor-not-allowed',
                             )}
                             aria-label={
@@ -269,27 +285,27 @@ const AdminShortlistPanel = ({
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-(--palette-ink)">
                           {localizeCompanyName(cq.companyName, cq.companyNameLocal)?.trim() || '—'}
                         </div>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm text-gray-700 tabular-nums">
+                        <span className="text-sm text-(--palette-ink) tabular-nums">
                           {hasItems ? formatCurrency(totalFeeAmount) : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm text-gray-700 tabular-nums">
+                        <span className="text-sm text-(--palette-ink) tabular-nums">
                           {hasItems ? formatCurrency(totalDiscount) : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="text-sm font-semibold text-gray-900 tabular-nums">
+                        <span className="text-sm font-semibold text-(--palette-ink) tabular-nums">
                           {formatCurrency(cq.totalQuotedPrice)}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="text-sm text-gray-600">
+                        <span className="text-sm text-(--palette-gray-600)">
                           {minEstimateManday !== undefined && maxEstimateManday !== undefined
                             ? minEstimateManday === maxEstimateManday
                               ? minEstimateManday
@@ -298,12 +314,14 @@ const AdminShortlistPanel = ({
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-sm text-gray-600">{fmtDateTime(cq.submittedAt)}</span>
+                        <span className="text-sm text-(--palette-gray-600)">
+                          {fmtDateTime(cq.submittedAt)}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-center">
                         <QuotationStatusBadge
                           status={cq.status}
-                          reason={isDeclined ? cq.declineReason : undefined}
+                          reason={cq.status === 'Declined' ? cq.declineReason : undefined}
                         />
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -323,7 +341,7 @@ const AdminShortlistPanel = ({
                                 company: localizeCompanyName(cq.companyName, cq.companyNameLocal),
                               })}
                               onClick={() => setDrawerCompanyQuotationId(cq.id)}
-                              className="p-1 rounded hover:bg-gray-100 transition-colors"
+                              className="p-1 rounded hover:bg-(--palette-surface-3) transition-colors"
                             >
                               <Icon
                                 name="file-lines"
@@ -342,8 +360,8 @@ const AdminShortlistPanel = ({
         )}
 
         {companyQuotations.length > 0 && (
-          <div className="px-4 py-2 bg-purple-50 border-t border-purple-100">
-            <p className="text-xs text-purple-700 flex items-center gap-1">
+          <div className="px-4 py-2 bg-purple-50 dark:bg-purple-500/10 border-t border-purple-100 dark:border-purple-500/20">
+            <p className="text-xs text-purple-700 dark:text-purple-300 flex items-center gap-1">
               <Icon name="circle-info" style="solid" className="size-3.5 shrink-0" />
               {shortlistedCount === 0
                 ? t('shortlist.hint0')

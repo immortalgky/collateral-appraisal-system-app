@@ -39,21 +39,23 @@ function SegmentSelect({ value, onChange }: SegmentSelectProps) {
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1 text-sm border border-gray-200 rounded-lg px-3 py-1.5 bg-white text-gray-600 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="inline-flex items-center gap-1 text-sm border border-(--palette-line) rounded-lg px-3 py-1.5 bg-(--palette-surface) text-(--palette-gray-600) hover:bg-(--palette-surface-2) focus:outline-none focus:ring-2 focus:ring-blue-500"
       >
         <span>{label}</span>
-        <Icon name="chevron-down" style="solid" className="size-3 text-gray-400" />
+        <Icon name="chevron-down" style="solid" className="size-3 text-(--palette-gray-400)" />
       </button>
 
       {open && (
-        <div className="absolute left-0 z-20 mt-1 w-40 rounded-lg border border-gray-200 bg-white shadow-lg p-2">
+        <div className="absolute left-0 z-20 mt-1 w-40 rounded-lg border border-(--palette-line) bg-(--palette-surface) shadow-lg p-2">
           <ul className="text-sm">
             <li>
               <button
                 type="button"
                 onClick={() => select(undefined)}
-                className={`w-full text-left px-2 py-1.5 rounded hover:bg-gray-100 ${
-                  !value ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                className={`w-full text-left px-2 py-1.5 rounded hover:bg-(--palette-surface-3) ${
+                  !value
+                    ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                    : 'text-(--palette-ink)'
                 }`}
               >
                 {t('segment.all')}
@@ -64,8 +66,10 @@ function SegmentSelect({ value, onChange }: SegmentSelectProps) {
                 <button
                   type="button"
                   onClick={() => select(seg)}
-                  className={`w-full text-left px-2 py-1.5 rounded hover:bg-gray-100 ${
-                    known === seg ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
+                  className={`w-full text-left px-2 py-1.5 rounded hover:bg-(--palette-surface-3) ${
+                    known === seg
+                      ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300'
+                      : 'text-(--palette-ink)'
                   }`}
                 >
                   {t(`segment.${seg}`)}

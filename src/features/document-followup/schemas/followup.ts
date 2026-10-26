@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
+
+// The factories take a `t`; the static schemas below are built with the token `t`, so each message
+// is a token translated where it is shown and one schema serves every language.
 
 // --- Raise Followup ---
 
@@ -17,15 +21,11 @@ export const makeRaiseFollowupSchema = (t: TFunction<'documentFollowup'>) =>
     lineItems: z.array(makeLineItemInputSchema(t)).min(1, t('validation.atLeastOneItem')),
   });
 
-// Static schema used where a TFunction is not available (type inference only)
-export const lineItemInputSchema = z.object({
-  documentType: z.string().min(1),
-  notes: z.string().min(1),
-});
+const tokens = tokenT('documentFollowup');
 
-export const raiseFollowupSchema = z.object({
-  lineItems: z.array(lineItemInputSchema).min(1),
-});
+export const lineItemInputSchema = makeLineItemInputSchema(tokens);
+
+export const raiseFollowupSchema = makeRaiseFollowupSchema(tokens);
 
 export type RaiseFollowupFormValues = z.infer<typeof raiseFollowupSchema>;
 
@@ -36,9 +36,7 @@ export const makeCancelWithReasonSchema = (t: TFunction<'documentFollowup'>) =>
     reason: z.string().min(1, t('validation.reasonRequired')),
   });
 
-export const cancelWithReasonSchema = z.object({
-  reason: z.string().min(1),
-});
+export const cancelWithReasonSchema = makeCancelWithReasonSchema(tokens);
 
 export type CancelWithReasonFormValues = z.infer<typeof cancelWithReasonSchema>;
 
@@ -49,8 +47,6 @@ export const makeDeclineLineItemSchema = (t: TFunction<'documentFollowup'>) =>
     reason: z.string().min(1, t('validation.reasonRequired')),
   });
 
-export const declineLineItemSchema = z.object({
-  reason: z.string().min(1),
-});
+export const declineLineItemSchema = makeDeclineLineItemSchema(tokens);
 
 export type DeclineLineItemFormValues = z.infer<typeof declineLineItemSchema>;

@@ -204,7 +204,11 @@ const Appraisal360Page = () => {
   if (isPageLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
@@ -233,7 +237,7 @@ const Appraisal360Page = () => {
             <PreviousAppraisalsMenu items={previousChain ?? []} />
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-(--palette-ink) bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-sm hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) transition-colors"
               onClick={() =>
                 openLatestReportDocument(
                   APPRAISAL_REPORT_CODE,
@@ -241,12 +245,16 @@ const Appraisal360Page = () => {
                 )
               }
             >
-              <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-teal-600" />
+              <Icon
+                name="file-arrow-down"
+                style="solid"
+                className="w-3.5 h-3.5 text-(--palette-accent-ink)"
+              />
               {t('view360.page.appraisalReport')}
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-(--palette-ink) bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-sm hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) transition-colors"
               onClick={() =>
                 openLatestReportDocument(
                   APPRAISAL_SUMMARY_CODE,
@@ -254,13 +262,17 @@ const Appraisal360Page = () => {
                 )
               }
             >
-              <Icon name="file-arrow-down" style="solid" className="w-3.5 h-3.5 text-purple-600" />
+              <Icon
+                name="file-arrow-down"
+                style="solid"
+                className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400"
+              />
               {t('view360.page.appraisalSummary')}
             </button>
             <button
               type="button"
               onClick={() => setMapOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-medium text-(--palette-ink) bg-(--palette-surface) border border-(--palette-line) rounded-lg shadow-sm hover:bg-(--palette-surface-2) hover:border-(--palette-line-strong) transition-colors"
             >
               <GoogleMapPinIcon />
               {t('view360.page.viewOnMap')}

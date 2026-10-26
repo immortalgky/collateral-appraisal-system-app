@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useController, useFormContext } from 'react-hook-form';
 import RadioGroup, { type RadioOption } from './RadioGroup';
 import { useFormReadOnly } from '../form/context';
+import type { OtherSpec } from './OtherText';
 import type { AtLeastOne } from '@/shared/types';
 
 type GroupOrOptions = AtLeastOne<{ group: string; options: RadioOption[] }>;
@@ -18,6 +19,7 @@ interface FormRadioGroupBaseProps {
   size?: 'sm' | 'md' | 'lg';
   orientation?: 'horizontal' | 'vertical';
   variant?: 'default' | 'card' | 'button';
+  other?: OtherSpec;
 }
 
 const FormRadioGroup = ({
@@ -29,6 +31,7 @@ const FormRadioGroup = ({
   size,
   orientation,
   variant,
+  other,
   ...groupOrOptions
 }: FormRadioGroupProps) => {
   const formReadOnly = useFormReadOnly();
@@ -51,6 +54,7 @@ const FormRadioGroup = ({
       size={size}
       orientation={orientation}
       variant={variant}
+      other={other}
       name={name}
       {...groupOrOptions}
     />

@@ -32,7 +32,25 @@
     "viewDetails": "View Details",
     "apply": "Apply",
     "clear": "Clear",
-    "clearAll": "Clear all"
+    "clearAll": "Clear all",
+    "duplicate": "Duplicate"
+  },
+  "toggle": {
+    "No": "No",
+    "Yes": "Yes",
+    "Correct": "Correct",
+    "Incorrect": "Incorrect",
+    "In Correct": "In Correct",
+    "Consistent": "Consistent",
+    "Inconsistent": "Inconsistent",
+    "Can": "Can",
+    "Can not": "Can not",
+    "Appraise": "Appraise",
+    "Not Appraised": "Not Appraised",
+    "isResidential": {
+      "Can": "Can",
+      "Can not": "Can not"
+    }
   },
   "select": {
     "placeholder": "Please select",
@@ -47,6 +65,11 @@
   "range": {
     "from": "From",
     "to": "To"
+  },
+  "sectionToc": {
+    "title": "On this page",
+    "complete": "Complete",
+    "missing": "{{count}} missing"
   },
   "status": {
     "loading": "Loading...",
@@ -112,10 +135,52 @@
     "stay": "Stay",
     "leave": "Leave"
   },
+  "missing": {
+    "chip": "{{count}} missing",
+    "popoverTitle_one": "{{missing}} missing in {{count}} section",
+    "popoverTitle_other": "{{missing}} missing in {{count}} sections",
+    "listLabel": "Missing fields",
+    "goTo": "Go to field",
+    "complete": "Complete",
+    "fieldMissing": "missing",
+    "rowField": "{{label}} #{{n}}",
+    "otherSection": "Other"
+  },
   "validation": {
     "required": "This field is required",
+    "required_labeled": "{{label}} is required",
     "invalidEmail": "Invalid email address",
-    "invalidNumber": "Invalid number"
+    "invalidNumber": "Invalid number",
+    "invalidFormat": "Invalid format",
+    "invalidValue": "Invalid value",
+    "invalidDate": "Invalid date",
+    "minLength": "Must be at least {{min}} characters",
+    "minLength_labeled": "{{label}} must be at least {{min}} characters",
+    "maxLength": "Must be at most {{max}} characters",
+    "maxLength_labeled": "{{label}} must be at most {{max}} characters",
+    "minValue": "Must be at least {{min}}",
+    "minValue_labeled": "{{label}} must be at least {{min}}",
+    "maxValue": "Must be at most {{max}}",
+    "maxValue_labeled": "{{label}} must be at most {{max}}",
+    "greaterThan": "Must be greater than {{min}}",
+    "lessThan": "Must be less than {{max}}",
+    "minItems": "Must have at least {{min}} item(s)",
+    "minItems_labeled": "{{label}} must have at least {{min}} item(s)",
+    "maxItems": "Must have at most {{max}} item(s)",
+    "maxItems_labeled": "{{label}} must have at most {{max}} item(s)",
+    "maxDecimals": "At most {{max}} decimal places",
+    "wholeNumber": "Must be a whole number",
+    "maxIntegerDigits": "At most {{max}} digits before the decimal point",
+    "dateHoliday": "Cannot select a holiday ({{name}})",
+    "datePast": "Cannot select a past date",
+    "dateFuture": "Cannot select a future date",
+    "dateToday": "Cannot select today's date",
+    "dateBeforeMin": "Cannot select a date before the minimum allowed date",
+    "dateTooFarPast": "Cannot select a date more than {{days}} day(s) in the past",
+    "dateTooSoon": "Must select a date at least {{days}} day(s) in the future",
+    "maxBelowMin": "Max must be at least the min",
+    "invalidEmailList": "Must contain valid email address(es)",
+    "recipientRequired": "At least one recipient (To, Cc, or Bcc) is required"
   },
   "hint": {
     "scrollWithArrowKeys": "Scroll table with arrow keys"
@@ -169,7 +234,11 @@
     "hideColumn": "Hide column",
     "showColumn": "Show column",
     "dragHint": "Drag rows to reorder columns",
-    "rowNumber": "Row number"
+    "rowNumber": "Row number",
+    "pin": "Pin {{label}} to the left",
+    "unpin": "Unpin {{label}}",
+    "pinnedGroup": "Pinned left, stays while the table scrolls",
+    "otherGroup": "Other columns"
   },
   "pagination": {
     "first": "First page",
@@ -179,6 +248,12 @@
     "itemRange": "{{start}}-{{end}} of {{total}}",
     "noResults": "0 results",
     "pageSize": "Rows per page"
+  },
+  "table": {
+    "totalItems_one": "Total · {{count}} item",
+    "totalItems_other": "Total · {{count}} items",
+    "moveRowUp": "Move row {{n}} up",
+    "moveRowDown": "Move row {{n}} down"
   },
   "reportJob": {
     "generating": "Generating report…",
@@ -225,5 +300,9 @@
     "rejectStamp": "DISAGREE",
     "routeBackStamp": "SENT BACK",
     "finalNote": "Every step of this job is complete."
+  },
+  "collateralMaster": {
+    "allTypes": "All types",
+    "masterTitle": "{{type}} Master"
   }
 }

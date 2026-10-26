@@ -50,27 +50,29 @@ const AccessWindowPasswordModal = ({
       showCloseButton={false}
     >
       <div className="px-6 py-5 space-y-4">
-        <div className="flex items-start gap-3 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3">
+        <div className="flex items-start gap-3 rounded-lg bg-(--palette-warn-wash) border border-amber-200 dark:border-amber-500/30 px-4 py-3">
           <Icon
             name="triangle-exclamation"
             style="solid"
             className="size-5 text-amber-500 mt-0.5"
           />
-          <p className="text-sm text-amber-800">{t('accessWindow.passwordModal.warning')}</p>
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            {t('accessWindow.passwordModal.warning')}
+          </p>
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+          <label className="block text-xs font-semibold text-(--palette-gray-500) uppercase tracking-wide mb-1">
             {t('fields.password')}
           </label>
           <div className="flex items-stretch gap-2">
-            <div className="flex-1 font-mono text-sm text-gray-800 bg-gray-50 rounded-lg px-3 py-2 break-all">
+            <div className="flex-1 font-mono text-sm text-(--palette-ink) bg-(--palette-surface-2) rounded-lg px-3 py-2 break-all">
               {visible ? password : '•'.repeat(password.length)}
             </div>
             <button
               type="button"
               onClick={() => setVisible(v => !v)}
-              className="shrink-0 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="shrink-0 px-3 rounded-lg border border-(--palette-line) text-sm text-(--palette-gray-600) hover:bg-(--palette-surface-2) transition-colors"
               aria-label={visible ? t('buttons.hidePasswords') : t('buttons.showPasswords')}
             >
               <Icon name={visible ? 'eye-slash' : 'eye'} style="regular" className="size-4" />
@@ -78,7 +80,7 @@ const AccessWindowPasswordModal = ({
             <button
               type="button"
               onClick={copy}
-              className="shrink-0 px-3 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+              className="shrink-0 px-3 rounded-lg border border-(--palette-line) text-sm text-(--palette-gray-600) hover:bg-(--palette-surface-2) transition-colors"
             >
               <Icon name={copied ? 'check' : 'copy'} style="regular" className="size-4 mr-1" />
               {copied
@@ -88,18 +90,18 @@ const AccessWindowPasswordModal = ({
           </div>
         </div>
 
-        <label className="flex items-start gap-2 text-sm text-gray-700 cursor-pointer">
+        <label className="flex items-start gap-2 text-sm text-(--palette-ink) cursor-pointer">
           <input
             type="checkbox"
             checked={confirmed}
             onChange={e => setConfirmed(e.target.checked)}
-            className="mt-0.5 size-4 rounded border-gray-300 text-primary focus:ring-primary/30"
+            className="mt-0.5 size-4 rounded border-(--palette-line-strong) text-(--palette-primary-text) focus:ring-primary/30"
           />
           {t('accessWindow.passwordModal.confirmCheckbox')}
         </label>
       </div>
 
-      <div className="flex justify-end px-6 py-4 border-t border-gray-200">
+      <div className="flex justify-end px-6 py-4 border-t border-(--palette-line)">
         <Button onClick={handleClose} disabled={!confirmed}>
           {t('accessWindow.passwordModal.done')}
         </Button>

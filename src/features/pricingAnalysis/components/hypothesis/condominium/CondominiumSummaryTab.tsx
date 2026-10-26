@@ -445,7 +445,9 @@ export function CondominiumSummaryTab({
             <LedgerRow
               label={L('remainingValue')}
               tip={TIPS.totalRemainingValue}
-              rate={<span className="text-[10.5px] text-gray-400">{n('gdvMinusCost')}</span>}
+              rate={
+                <span className="text-[10.5px] text-(--palette-gray-400)">{n('gdvMinusCost')}</span>
+              }
               total={<Num value={s?.totalRemainingValue} />}
             />
             <LedgerRow

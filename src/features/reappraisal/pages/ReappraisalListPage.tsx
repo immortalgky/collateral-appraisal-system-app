@@ -196,9 +196,9 @@ const DEFAULT_SORT: Record<ReappraisalListStatus, { field: string; dir: 'asc' | 
 };
 
 // "CIF" / "COL" tag in front of an id.
-const ID_TAG = 'px-1 rounded bg-gray-100 text-[9px] font-bold text-gray-700';
+const ID_TAG = 'px-1 rounded bg-(--palette-surface-3) text-[9px] font-bold text-(--palette-ink)';
 
-const TH = 'px-3 py-2.5 text-left font-medium text-gray-600 whitespace-nowrap';
+const TH = 'px-3 py-2.5 text-left font-medium text-(--palette-gray-600) whitespace-nowrap';
 // Columns shrink to their content; only the customer column grows into the free width.
 const SHRINK = 'w-px';
 
@@ -360,12 +360,12 @@ function ReappraisalListPage() {
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">{t('error.loadFailed')}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('error.loadFailed')}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
       </div>
     );
@@ -380,7 +380,7 @@ function ReappraisalListPage() {
         className={clsx(
           TH,
           !grow && SHRINK,
-          'cursor-pointer hover:bg-gray-100 select-none',
+          'cursor-pointer hover:bg-(--palette-surface-3) select-none',
           active && 'bg-primary/5',
         )}
       >
@@ -390,10 +390,10 @@ function ReappraisalListPage() {
             <Icon
               style="solid"
               name={sortDirection === 'asc' ? 'sort-up' : 'sort-down'}
-              className="size-3 text-primary"
+              className="size-3 text-(--palette-primary-text)"
             />
           ) : (
-            <Icon style="solid" name="sort" className="size-3 text-gray-300" />
+            <Icon style="solid" name="sort" className="size-3 text-(--palette-gray-300)" />
           )}
         </div>
       </th>
@@ -417,7 +417,7 @@ function ReappraisalListPage() {
             <Icon
               style="regular"
               name="magnifying-glass"
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-gray-400 pointer-events-none"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3 text-(--palette-gray-400) pointer-events-none"
             />
             <input
               id="reappraisal-search"
@@ -426,7 +426,7 @@ function ReappraisalListPage() {
               onChange={e => setSearch(e.target.value)}
               placeholder={t('search.placeholder')}
               aria-label={t('search.placeholder')}
-              className="w-64 max-w-full pl-7 pr-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+              className="w-64 max-w-full pl-7 pr-2.5 py-1.5 text-sm border border-(--palette-line) rounded-lg bg-(--palette-surface) focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
             />
           </label>
           <button
@@ -435,8 +435,8 @@ function ReappraisalListPage() {
             className={clsx(
               'flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-lg transition-all',
               activeFilterChips.length > 0
-                ? 'border-primary/30 bg-primary/5 text-primary hover:bg-primary/10'
-                : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-gray-800',
+                ? 'border-primary/30 bg-primary/5 text-(--palette-primary-text) hover:bg-primary/10'
+                : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-600) hover:border-(--palette-line-strong) hover:text-(--palette-ink)',
             )}
           >
             <Icon style="solid" name="filter" className="size-3" />
@@ -453,7 +453,7 @@ function ReappraisalListPage() {
       {/* ── Tabs, then that tab's quick filters; the quick filters wrap on a narrow screen ── */}
       <div className="shrink-0 mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
         <div
-          className="inline-flex rounded-lg border border-gray-200 bg-gray-50 p-0.5"
+          className="inline-flex rounded-lg border border-(--palette-line) bg-(--palette-surface-2) p-0.5"
           role="group"
         >
           {TABS.map(tab => {
@@ -466,8 +466,8 @@ function ReappraisalListPage() {
                 className={clsx(
                   'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors',
                   status === tab
-                    ? 'bg-white text-primary shadow-sm'
-                    : 'text-gray-500 hover:text-gray-700',
+                    ? 'bg-(--palette-surface) text-(--palette-primary-text) shadow-sm'
+                    : 'text-(--palette-gray-500) hover:text-(--palette-ink)',
                 )}
               >
                 {t(`tabs.${tab}`)}
@@ -477,7 +477,7 @@ function ReappraisalListPage() {
         </div>
         {(isPending || isProcessed) && (
           <>
-            <span className="h-5 w-px bg-gray-200" aria-hidden />
+            <span className="h-5 w-px bg-(--palette-line)" aria-hidden />
             <div className="flex flex-wrap items-center gap-1.5">
               {isPending
                 ? (['all', 'overdue', 'dueSoon', 'inProgress', 'nonCas'] as const).map(q => {
@@ -495,8 +495,8 @@ function ReappraisalListPage() {
                         className={clsx(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] rounded-full border transition-colors',
                           quick === q
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
+                            ? 'border-primary bg-primary/5 text-(--palette-primary-text)'
+                            : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-500) hover:border-(--palette-line-strong)',
                         )}
                       >
                         {QUICK_DOT[q] && (
@@ -516,8 +516,8 @@ function ReappraisalListPage() {
                         className={clsx(
                           'inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] rounded-full border transition-colors',
                           processedQuick === q
-                            ? 'border-primary bg-primary/5 text-primary'
-                            : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300',
+                            ? 'border-primary bg-primary/5 text-(--palette-primary-text)'
+                            : 'border-(--palette-line) bg-(--palette-surface) text-(--palette-gray-500) hover:border-(--palette-line-strong)',
                         )}
                       >
                         {PROCESSED_DOT[q] && (
@@ -538,13 +538,13 @@ function ReappraisalListPage() {
           {activeFilterChips.map(([key, value]) => (
             <span
               key={key}
-              className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-primary border border-primary/15 rounded-full font-medium"
+              className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-0.5 text-xs bg-primary/8 text-(--palette-primary-text) border border-primary/15 rounded-full font-medium"
             >
-              <span className="text-primary/60">{t(`filter.chips.${key}`)}:</span>
+              <span className="text-(--palette-primary-text)/60">{t(`filter.chips.${key}`)}:</span>
               {getChipLabel(key, value)}
               <button
                 onClick={() => removeFilter(key)}
-                className="hover:text-primary/60 ml-0.5"
+                className="hover:text-(--palette-primary-text)/60 ml-0.5"
                 aria-label={t('common:actions.clear')}
               >
                 <Icon style="solid" name="xmark" className="size-2.5" />
@@ -553,7 +553,7 @@ function ReappraisalListPage() {
           ))}
           <button
             onClick={() => setView({ filters: {}, pageNumber: 0 })}
-            className="text-xs text-gray-400 hover:text-gray-600 hover:underline underline-offset-2"
+            className="text-xs text-(--palette-gray-400) hover:text-(--palette-gray-600) hover:underline underline-offset-2"
           >
             {t('common:actions.clearAll')}
           </button>
@@ -571,11 +571,11 @@ function ReappraisalListPage() {
       />
 
       {/* ── Table ── */}
-      <div className="flex-1 min-h-0 min-w-0 bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 min-w-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table">
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
                 <SortHeader
                   field="OldAppraisalReportNumber"
                   label={t('columns.bookAndCollateral')}
@@ -608,18 +608,22 @@ function ReappraisalListPage() {
                 )}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-(--palette-line-soft)">
               {showSkeleton ? (
                 <TableRowSkeleton columns={Array(columnCount).fill({ width: 'w-24' })} rows={8} />
               ) : items.length === 0 ? (
                 <tr>
                   <td colSpan={columnCount} className="py-24">
                     <div className="flex flex-col items-center gap-4">
-                      <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                        <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
+                      <div className="size-16 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                        <Icon
+                          style="regular"
+                          name="inbox"
+                          className="size-7 text-(--palette-gray-300)"
+                        />
                       </div>
                       <div className="text-center">
-                        <p className="text-sm font-semibold text-gray-700">
+                        <p className="text-sm font-semibold text-(--palette-ink)">
                           {isFiltered
                             ? t('empty.noMatching')
                             : status === 'Deleted'
@@ -628,7 +632,7 @@ function ReappraisalListPage() {
                                 ? t('empty.noProcessed')
                                 : t('empty.noCandidates')}
                         </p>
-                        <p className="text-xs text-gray-400 mt-1">
+                        <p className="text-xs text-(--palette-gray-400) mt-1">
                           {isFiltered
                             ? t('empty.tryAdjusting')
                             : status === 'Deleted'
@@ -641,7 +645,7 @@ function ReappraisalListPage() {
                       {isFiltered && (
                         <button
                           onClick={clearAll}
-                          className="text-xs text-primary hover:underline font-medium"
+                          className="text-xs text-(--palette-primary-text) hover:underline font-medium"
                         >
                           {t('empty.clearFilters')}
                         </button>
@@ -659,29 +663,29 @@ function ReappraisalListPage() {
                       })
                     }
                     className={clsx(
-                      'group cursor-pointer transition-colors hover:bg-gray-50',
-                      item.hasOpenAppraisal && 'bg-gray-50/40',
+                      'group cursor-pointer transition-colors hover:bg-(--palette-surface-2)',
+                      item.hasOpenAppraisal && 'bg-(--palette-surface-2)/40',
                     )}
                   >
                     <td className="px-3 py-2">
                       <div className="flex flex-col gap-px min-w-0">
-                        <span className="inline-flex items-center gap-1.5 font-medium text-primary whitespace-nowrap tabular-nums">
+                        <span className="inline-flex items-center gap-1.5 font-medium text-(--palette-primary-text) whitespace-nowrap tabular-nums">
                           {item.oldAppraisalReportNumber}
                           <PriorSourceBadge source={item.priorAppraisalSource} />
                           {item.isBlockUnit && (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-teal-50 text-teal-700 border-teal-200 whitespace-nowrap">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border bg-(--palette-accent-wash) text-(--palette-accent-ink) border-(--palette-accent-line) whitespace-nowrap">
                               {t('unit.tag')}
                             </span>
                           )}
                         </span>
                         <span className="flex items-baseline gap-1 min-w-0">
-                          <span className="shrink-0 flex items-center gap-1 text-[11px] text-gray-500 tabular-nums">
+                          <span className="shrink-0 flex items-center gap-1 text-[11px] text-(--palette-gray-500) tabular-nums">
                             <span className={ID_TAG}>COL</span>
                             {item.collateralId} ·
                           </span>
                           {item.isBlockUnit ? (
                             item.unitMatchedUnits === 1 ? (
-                              <span className="text-[11px] text-gray-500 truncate max-w-64">
+                              <span className="text-[11px] text-(--palette-gray-500) truncate max-w-64">
                                 {unitLabel(
                                   {
                                     roomNumber: item.unitRoomNumber,
@@ -694,12 +698,12 @@ function ReappraisalListPage() {
                                 )}
                               </span>
                             ) : (
-                              <span className="text-[11px] text-amber-700 truncate max-w-64">
+                              <span className="text-[11px] text-(--palette-warn) truncate max-w-64">
                                 {t('unit.notFoundShort')}
                               </span>
                             )
                           ) : (
-                            <span className="text-[11px] text-gray-500 truncate max-w-64">
+                            <span className="text-[11px] text-(--palette-gray-500) truncate max-w-64">
                               {item.collateralName ?? '—'}
                             </span>
                           )}
@@ -709,12 +713,12 @@ function ReappraisalListPage() {
                     <td className="px-3 py-2 w-full max-w-0 min-w-40">
                       <div className="flex flex-col gap-px min-w-0">
                         <span
-                          className="font-medium text-gray-900 truncate"
+                          className="font-medium text-(--palette-ink) truncate"
                           title={item.customerName ?? undefined}
                         >
                           {item.customerName ?? '—'}
                         </span>
-                        <span className="flex items-center gap-1 text-[11px] text-gray-500 tabular-nums">
+                        <span className="flex items-center gap-1 text-[11px] text-(--palette-gray-500) tabular-nums">
                           <span className={ID_TAG}>CIF</span>
                           {item.cifNumber}
                         </span>
@@ -724,7 +728,7 @@ function ReappraisalListPage() {
                       <ReviewTypeChip code={item.reviewType} />
                     </td>
                     {isPending && (
-                      <td className="px-3 py-2 text-gray-700 whitespace-nowrap tabular-nums">
+                      <td className="px-3 py-2 text-(--palette-ink) whitespace-nowrap tabular-nums">
                         {formatDay(item.appraisalDate)}
                       </td>
                     )}
@@ -738,7 +742,7 @@ function ReappraisalListPage() {
                         <td className="px-3 py-2">
                           <NewAppraisalCell item={item} />
                         </td>
-                        <td className="px-3 py-2 text-gray-500 whitespace-nowrap">
+                        <td className="px-3 py-2 text-(--palette-gray-500) whitespace-nowrap">
                           {item.newAppraisalId == null ? (
                             '—'
                           ) : item.newAppraisalGroupTag ? (
@@ -750,10 +754,10 @@ function ReappraisalListPage() {
                             t('processed.createdByHand')
                           )}
                         </td>
-                        <td className="px-3 py-2 text-gray-700 whitespace-nowrap tabular-nums">
+                        <td className="px-3 py-2 text-(--palette-ink) whitespace-nowrap tabular-nums">
                           {formatDay(item.newAppraisalSubmittedAt)}
                         </td>
-                        <td className="px-3 py-2 text-gray-700 whitespace-nowrap tabular-nums">
+                        <td className="px-3 py-2 text-(--palette-ink) whitespace-nowrap tabular-nums">
                           {item.newAppraisalStatus === 'Completed'
                             ? formatDay(item.newAppraisalCompletedAt)
                             : '—'}
@@ -762,7 +766,7 @@ function ReappraisalListPage() {
                           <Icon
                             style="solid"
                             name="chevron-right"
-                            className="size-3 text-gray-300 group-hover:text-primary transition-colors"
+                            className="size-3 text-(--palette-gray-300) group-hover:text-(--palette-primary-text) transition-colors"
                           />
                         </td>
                       </>
@@ -771,20 +775,20 @@ function ReappraisalListPage() {
                         <td className="px-3 py-2">
                           <ProgressCell item={item} />
                         </td>
-                        <td className="px-3 py-2 text-gray-400 whitespace-nowrap tabular-nums">
+                        <td className="px-3 py-2 text-(--palette-gray-400) whitespace-nowrap tabular-nums">
                           {formatMonthYear(item.firstSeenFileDate, i18n.language)}
                         </td>
                         <td className="px-3 py-2 w-8">
                           <Icon
                             style="solid"
                             name="chevron-right"
-                            className="size-3 text-gray-300 group-hover:text-primary transition-colors"
+                            className="size-3 text-(--palette-gray-300) group-hover:text-(--palette-primary-text) transition-colors"
                           />
                         </td>
                       </>
                     ) : (
                       <>
-                        <td className="px-3 py-2 text-gray-500 whitespace-nowrap tabular-nums">
+                        <td className="px-3 py-2 text-(--palette-gray-500) whitespace-nowrap tabular-nums">
                           {formatDay(item.lastSeenFileDate)}
                         </td>
                         <td className="px-3 py-2">
@@ -795,7 +799,7 @@ function ReappraisalListPage() {
                               restore(item);
                             }}
                             disabled={restoreMutation.isPending}
-                            className="px-3 py-1 text-[12px] font-medium border border-gray-200 rounded-lg bg-white text-gray-700 hover:border-primary/40 hover:text-primary whitespace-nowrap disabled:opacity-50"
+                            className="px-3 py-1 text-[12px] font-medium border border-(--palette-line) rounded-lg bg-(--palette-surface) text-(--palette-ink) hover:border-primary/40 hover:text-(--palette-primary-text) whitespace-nowrap disabled:opacity-50"
                           >
                             {t('actions.restore')}
                           </button>

@@ -8,7 +8,7 @@ import {
 } from '@/shared/constants/titleTypes';
 
 /** ฿ left-adornment for currency number-inputs (Land + Condo PMA prices). */
-const bahtPrefix = createElement('span', { className: 'text-sm text-gray-400' }, '฿');
+const bahtPrefix = createElement('span', { className: 'text-sm text-(--palette-gray-400)' }, '฿');
 
 /** Prefix all field names for schema building (short → full dotted path). */
 export function prefixFields(fields: FormField[], prefix: string): FormField[] {
@@ -904,7 +904,7 @@ export const buildingInfoField: FormField[] = [
     disableWhen: { field: 'noHouseNumber', is: '02' },
     disabledValue: '-',
     required: true,
-    maxLength: 10,
+    maxLength: 50,
   },
 
   {
@@ -951,6 +951,7 @@ export const buildingInfoField: FormField[] = [
     label: 'No House Number',
     name: 'noHouseNumber',
     wrapperClassName: 'col-span-12',
+    keepSpan: true,
     group: 'NoHouseNumber',
     orientation: 'horizontal',
     variant: 'button',
@@ -1724,7 +1725,6 @@ export const condoLocationFields: FormField[] = [
     name: 'distanceFromMainRoad',
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 5,
-    suffix: 'm',
   },
 
   {
@@ -1734,7 +1734,6 @@ export const condoLocationFields: FormField[] = [
     wrapperClassName: 'col-span-4',
     maxIntegerDigits: 3,
     decimalPlaces: 0,
-    suffix: 'm',
   },
 
   {
@@ -3148,7 +3147,7 @@ export const landPmaAreaFields: FormField[] = [
     type: 'number-input',
     label: 'Rai',
     name: 'areaRai',
-    wrapperClassName: 'cas-inline col-span-3',
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 0,
     maxIntegerDigits: 5,
   },
@@ -3157,7 +3156,7 @@ export const landPmaAreaFields: FormField[] = [
     type: 'number-input',
     label: 'Ngan',
     name: 'areaNgan',
-    wrapperClassName: 'cas-inline col-span-3',
+    wrapperClassName: 'col-span-3',
     decimalPlaces: 0,
     maxIntegerDigits: 1,
     max: 3,
@@ -3167,7 +3166,7 @@ export const landPmaAreaFields: FormField[] = [
     type: 'number-input',
     label: 'Sq.Wa',
     name: 'areaSquareWa',
-    wrapperClassName: 'cas-inline col-span-3',
+    wrapperClassName: 'col-span-3',
     maxIntegerDigits: 3,
   },
 
@@ -3180,7 +3179,7 @@ export const landPmaAreaFields: FormField[] = [
     type: 'number-input',
     label: 'Total Sq.Wa',
     name: 'totalSquareWa',
-    wrapperClassName: 'cas-inline col-span-3',
+    wrapperClassName: 'col-span-3',
     disabled: true,
     decimalPlaces: 2,
   },

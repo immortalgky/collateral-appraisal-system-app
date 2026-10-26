@@ -57,7 +57,7 @@ export function MenuInitializer({ children }: { children: React.ReactNode }) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <div
-          className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-primary"
+          className="h-8 w-8 animate-spin rounded-full border-4 border-(--palette-line) border-t-primary"
           role="status"
           aria-label={t('aria.loadingNavigation')}
         />

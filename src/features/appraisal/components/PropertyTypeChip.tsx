@@ -7,6 +7,8 @@ interface PropertyTypeChipProps {
   code: string;
   /** A coloured dot and plain text instead of a filled pill — for dense rows and headers. */
   variant?: 'pill' | 'dot';
+  /** `md` is the form header's pill (DESIGN.md 17.8); `sm` the one in dense lists. */
+  size?: 'sm' | 'md';
   /** Rendered before the label, e.g. the count in a group header. */
   prefix?: React.ReactNode;
   /** Rendered after the label, e.g. " (PMA)". */
@@ -28,6 +30,7 @@ interface PropertyTypeChipProps {
 export const PropertyTypeChip = ({
   code,
   variant = 'pill',
+  size = 'sm',
   prefix,
   suffix,
   className,
@@ -38,7 +41,7 @@ export const PropertyTypeChip = ({
     return (
       <span
         className={clsx(
-          'inline-flex items-center gap-1.5 whitespace-nowrap text-[0.7rem] text-gray-700',
+          'inline-flex items-center gap-1.5 whitespace-nowrap text-[0.7rem] text-(--palette-ink)',
           className,
         )}
       >
@@ -52,9 +55,12 @@ export const PropertyTypeChip = ({
   return (
     <span
       className={clsx(
-        // Sizes taken from the mock: 0.66rem text in 0.02rem/0.42rem padding. It sits beside a
-        // 0.8rem title, so anything larger competes with the property's own name.
-        'inline-flex items-center whitespace-nowrap rounded-full border px-[0.42rem] py-[0.02rem] text-[0.66rem] font-semibold leading-[1.4]',
+        'inline-flex items-center whitespace-nowrap rounded-full border',
+        size === 'md'
+          ? 'px-2.5 text-xs font-medium leading-normal'
+          : // Sizes taken from the mock: 0.66rem text in 0.02rem/0.42rem padding. It sits beside a
+            // 0.8rem title, so anything larger competes with the property's own name.
+            'px-[0.42rem] py-[0.02rem] text-[0.66rem] font-semibold leading-[1.4]',
         tone,
         className,
       )}
@@ -63,9 +69,16 @@ export const PropertyTypeChip = ({
         borderColor: 'color-mix(in srgb, currentColor 28%, transparent)',
       }}
     >
-      {prefix}
-      <ParameterDisplay group="PropertyType" code={code} fallback={code} />
-      {suffix && <span className="ml-1">{suffix}</span>}
+      {/* The tint and border come from the tone; the text is the tone pulled toward the theme's
+          ink, so it stays ≥4.5:1 on the tint in both themes (a 700 shade on a dark card is ~3:1). */}
+      <span
+        className="inline-flex items-center"
+        style={{ color: 'color-mix(in srgb, currentColor 55%, var(--palette-ink))' }}
+      >
+        {prefix}
+        <ParameterDisplay group="PropertyType" code={code} fallback={code} />
+        {suffix && <span className="ml-1">{suffix}</span>}
+      </span>
     </span>
   );
 };

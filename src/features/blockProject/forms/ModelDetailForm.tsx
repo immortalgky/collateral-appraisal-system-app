@@ -1,17 +1,22 @@
 import { useMemo } from 'react';
-import { Controller, useFormContext } from 'react-hook-form';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { useTranslation } from 'react-i18next';
-import { FormFields, type FormField } from '@/shared/components/form';
+import {
+  FormFieldShell,
+  FormFields,
+  FormReadValue,
+  FormSection,
+  FormSheet,
+  useFormReadOnly,
+  type FormField,
+} from '@/shared/components/form';
 import Dropdown, { type ListBoxItem } from '@/shared/components/inputs/Dropdown';
 import { useFireInsuranceOptions } from '@/shared/api/pricingParameters';
 import { isCondo } from '../types';
 import type { ProjectTower, ProjectType } from '../types';
-import SectionRow from '../components/SectionRow';
+import { FieldLabels } from '@/features/appraisal/components/FieldLabels';
 import CondoAreaDetailForm from '@/features/appraisal/forms/CondoAreaDetailForm';
-import {
-  condoModelInfoFields,
-  lbModelInfoFields,
-} from '../configs/fields';
+import { condoModelInfoFields, lbModelInfoFields } from '../configs/fields';
 import {
   bathroomFloorFields,
   buildingMaterialField,
@@ -41,6 +46,10 @@ interface ModelDetailFormProps {
   projectType: ProjectType;
   /** Condo only: list of towers for the projectTowerId selector. */
   towers?: ProjectTower[];
+  /** The pricing action, at the right end of the "Model information" head. */
+  pricingAction?: React.ReactNode;
+  /** Land and Building: quiet text in that head, before the action (units, standard price). */
+  facts?: React.ReactNode;
 }
 
 // ── TowerSelector ─────────────────────────────────────────────────────────────
@@ -59,8 +68,24 @@ const TowerSelector = ({ towers }: TowerSelectorProps) => {
     () => towers.map(t => ({ value: t.id, label: t.towerName ?? t.id, id: t.id })),
     [towers],
   );
+  const readOnly = useFormReadOnly();
+  const tower = useWatch({ control, name: 'projectTowerId' });
+  const towerLabel = t('modelDetail.fields.tower');
+  if (readOnly)
+    // A read page shows the tower's name, not a dropdown (DESIGN.md 17.3).
+    return (
+      <FormFieldShell name="projectTowerId" label={towerLabel} wrapperClassName="col-span-6" read>
+        <FormReadValue
+          field={{ type: 'dropdown', name: 'projectTowerId', label: towerLabel, options }}
+          name="projectTowerId"
+          value={tower}
+          required
+        />
+      </FormFieldShell>
+    );
   return (
-    <div className="col-span-6">
+    // data-field names this hand-built control the way FormFields do, so a form error scrolls to it.
+    <div className="col-span-6" data-field="projectTowerId">
       <Controller
         control={control}
         name="projectTowerId"
@@ -77,7 +102,9 @@ const TowerSelector = ({ towers }: TowerSelectorProps) => {
               placeholder={t('modelDetail.fields.selectTower')}
             />
             {towers.length === 0 && (
-              <p className="mt-1 text-xs text-gray-400">{t('modelDetail.fields.noTowers')}</p>
+              <p className="mt-1 text-xs text-(--palette-gray-400)">
+                {t('modelDetail.fields.noTowers')}
+              </p>
             )}
           </>
         )}
@@ -86,10 +113,10 @@ const TowerSelector = ({ towers }: TowerSelectorProps) => {
   );
 };
 
-/** Gray-50 card wrapper used to group sub-fields inside a SectionRow.
- *  Mirrors the appraisal BuildingDetailForm Card pattern. */
+/** Groups sub-fields inside a FormSection. No fill: a grey panel behind a label + pills read as a
+ *  box the other fields on the page do not have. */
 const Card = ({ children }: { children: React.ReactNode }) => (
-  <div className="col-span-12 bg-gray-50 rounded-lg p-3">
+  <div className="col-span-12">
     <div className="grid grid-cols-12 gap-3">{children}</div>
   </div>
 );
@@ -117,7 +144,12 @@ function withFireInsuranceOptions(fields: FormField[], options: ListBoxItem[]): 
  * projectType cannot change after creation so we don't need hidden inputs for
  * inapplicable fields (no runtime toggle).
  */
-const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => {
+const ModelDetailForm = ({
+  projectType,
+  towers = [],
+  pricingAction,
+  facts,
+}: ModelDetailFormProps) => {
   const { t } = useTranslation('blockProject');
   // Called unconditionally (both project types) to satisfy rules-of-hooks — only
   // the relevant one is used below depending on isCondo(projectType).
@@ -137,41 +169,49 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
     const [modelNameField, ...condoModelRestFields] = condoModelIdentityFields;
     const condoRemarkFields = condoModelInfoFields.filter(f => f.name === 'remark');
 
+    // The page shell above names the model, so there is no title.
+    // Two scopes: the reused appraisal configs (room layout, floors) take the property editor's
+    // wording, then the block-owned ones refine it, see FieldLabels.
     return (
-      <div className="w-full max-w-full overflow-hidden">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('modelDetail.title')}</h2>
-        <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-          <SectionRow title={t('modelDetail.sections.modelInformation')} icon="layer-group">
-            <FormFields fields={modelNameField ? [modelNameField] : []} />
-            <TowerSelector towers={towers} />
-            <FormFields fields={condoModelRestFields} />
-          </SectionRow>
+      <FieldLabels scope="condo">
+        <FieldLabels ns="blockProject" scope="model">
+          <FormSheet>
+            <FormSection
+              title={t('modelDetail.sections.modelInformation')}
+              icon="layer-group"
+              actions={pricingAction}
+            >
+              <FormFields fields={modelNameField ? [modelNameField] : []} />
+              <TowerSelector towers={towers} />
+              <FormFields fields={condoModelRestFields} />
+            </FormSection>
 
-          <SectionRow title={t('modelDetail.sections.roomLayout')} icon="grip-lines-vertical">
-            <FormFields fields={condoRoomLayoutFormFields} />
-          </SectionRow>
+            <FormSection title={t('modelDetail.sections.roomLayout')} icon="grip-lines-vertical">
+              <FormFields fields={condoRoomLayoutFormFields} />
+            </FormSection>
 
-          <SectionRow title={t('modelDetail.sections.floor')} icon="layer-group">
-            <Card>
-              <FormFields fields={groundFloorFields} />
-            </Card>
-            <Card>
-              <FormFields fields={upperFloorFields} />
-            </Card>
-            <Card>
-              <FormFields fields={bathroomFloorFields} />
-            </Card>
-          </SectionRow>
+            <FormSection title={t('modelDetail.sections.floor')} icon="layer-group">
+              <Card>
+                <FormFields fields={groundFloorFields} />
+              </Card>
+              <Card>
+                <FormFields fields={upperFloorFields} />
+              </Card>
+              <Card>
+                <FormFields fields={bathroomFloorFields} />
+              </Card>
+            </FormSection>
 
-          <SectionRow title={t('modelDetail.sections.areaDetail')} icon="chart-area">
-            <CondoAreaDetailForm name="areaDetails" />
-          </SectionRow>
+            <FormSection title={t('modelDetail.sections.areaDetail')} icon="chart-area">
+              <CondoAreaDetailForm name="areaDetails" showTitle={false} />
+            </FormSection>
 
-          <SectionRow title={t('modelDetail.sections.remark')} icon="comment" isLast>
-            <FormFields fields={condoRemarkFields} />
-          </SectionRow>
-        </div>
-      </div>
+            <FormSection title={t('modelDetail.sections.remark')} icon="comment">
+              <FormFields fields={condoRemarkFields} />
+            </FormSection>
+          </FormSheet>
+        </FieldLabels>
+      </FieldLabels>
     );
   }
 
@@ -204,97 +244,103 @@ const ModelDetailForm = ({ projectType, towers = [] }: ModelDetailFormProps) => 
   const remarkFields = lbModelInfoFields.filter(f => f.name === 'remark');
 
   return (
-    <div className="w-full max-w-full overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 mb-6">{t('modelDetail.title')}</h2>
-      <div className="grid grid-cols-5 gap-x-6 gap-y-4">
-        <SectionRow title={t('modelDetail.sections.modelInformation')} icon="layer-group">
-          <FormFields fields={modelIdentityFields} />
-        </SectionRow>
+    <FieldLabels scope="building">
+      <FieldLabels ns="blockProject" scope="model">
+        <FormSheet>
+          <FormSection
+            title={t('modelDetail.sections.modelInformation')}
+            icon="house"
+            hint={facts}
+            actions={pricingAction}
+          >
+            <FormFields fields={modelIdentityFields} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.landArea')} icon="ruler-combined">
-          <FormFields fields={landAreaFields} />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.landArea')} icon="ruler-combined">
+            <FormFields fields={landAreaFields} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.buildingType')} icon="list">
-          <FormFields fields={buildingTypeField} />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.buildingType')} icon="list">
+            <FormFields fields={buildingTypeField} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.decoration')} icon="paint-roller">
-          <FormFields fields={decorationField} />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.decoration')} icon="paint-roller">
+            <FormFields fields={decorationField} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.encroachment')} icon="arrows-left-right">
-          <FormFields fields={encroachmentField} />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.encroachment')} icon="arrows-left-right">
+            <FormFields fields={encroachmentField} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.materialStyle')} icon="cubes">
-          <Card>
-            <FormFields fields={buildingMaterialField} />
-          </Card>
-          <Card>
-            <FormFields fields={buildingStyleField} />
-          </Card>
-          <Card>
-            <FormFields fields={constructionStyleField} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.materialStyle')} icon="cubes">
+            <Card>
+              <FormFields fields={buildingMaterialField} />
+            </Card>
+            <Card>
+              <FormFields fields={buildingStyleField} />
+            </Card>
+            <Card>
+              <FormFields fields={constructionStyleField} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.isResidential')} icon="house">
-          <FormFields fields={isResidentialField} />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.isResidential')} icon="house">
+            <FormFields fields={isResidentialField} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.generalStructure')} icon="warehouse">
-          <FormFields fields={generalStructureField} />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.generalStructure')} icon="warehouse">
+            <FormFields fields={generalStructureField} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.roofCeiling')} icon="house-chimney">
-          <Card>
-            <FormFields fields={roofFrameField} />
-          </Card>
-          <Card>
-            <FormFields fields={roofField} />
-          </Card>
-          <Card>
-            <FormFields fields={ceilingField} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.roofCeiling')} icon="house-chimney">
+            <Card>
+              <FormFields fields={roofFrameField} />
+            </Card>
+            <Card>
+              <FormFields fields={roofField} />
+            </Card>
+            <Card>
+              <FormFields fields={ceilingField} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.wall')} icon="square">
-          <Card>
-            <FormFields fields={interiorWallFields} />
-          </Card>
-          <Card>
-            <FormFields fields={exteriorWallFields} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.wall')} icon="square">
+            <Card>
+              <FormFields fields={interiorWallFields} />
+            </Card>
+            <Card>
+              <FormFields fields={exteriorWallFields} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.surface')} icon="layer-group">
-          <SurfaceTable name="surfaces" />
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.surface')} icon="layer-group">
+            <SurfaceTable name="surfaces" showTitle={false} />
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.constructionUse')} icon="gears">
-          <Card>
-            <FormFields fields={fenceField} />
-          </Card>
-          <Card>
-            <FormFields fields={constTypeFeild} />
-          </Card>
-          <Card>
-            <FormFields fields={utilizationFeild} />
-          </Card>
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.constructionUse')} icon="gears">
+            <Card>
+              <FormFields fields={fenceField} />
+            </Card>
+            <Card>
+              <FormFields fields={constTypeFeild} />
+            </Card>
+            <Card>
+              <FormFields fields={utilizationFeild} />
+            </Card>
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.depreciation')} icon="chart-line">
-          <div className="col-span-12">
-            <BuildingDetail name="depreciationDetails" />
-          </div>
-        </SectionRow>
+          <FormSection title={t('modelDetail.sections.depreciation')} icon="chart-line">
+            <div className="col-span-12 min-w-0">
+              <BuildingDetail name="depreciationDetails" />
+            </div>
+          </FormSection>
 
-        <SectionRow title={t('modelDetail.sections.remark')} icon="comment" isLast>
-          <FormFields fields={remarkFields} />
-        </SectionRow>
-      </div>
-    </div>
+          <FormSection title={t('modelDetail.sections.remark')} icon="comment">
+            <FormFields fields={remarkFields} />
+          </FormSection>
+        </FormSheet>
+      </FieldLabels>
+    </FieldLabels>
   );
 };
 

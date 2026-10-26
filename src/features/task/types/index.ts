@@ -150,8 +150,22 @@ export interface PoolTaskListResponse {
   pageSize: number;
 }
 
+/**
+ * The three date ranges of the task list, each its own filter (and combinable). They map onto the
+ * API's separate params in api.ts (assigned = DateFrom/DateTo, appointment = AppointmentDateFrom/To,
+ * requested = RequestedAtFrom/To). Values are yyyy-MM-dd.
+ */
+export interface TaskDateRanges {
+  assignedFrom?: string;
+  assignedTo?: string;
+  appointmentFrom?: string;
+  appointmentTo?: string;
+  requestedFrom?: string;
+  requestedTo?: string;
+}
+
 // Query params for pool task listing
-export interface GetPoolTasksParams {
+export interface GetPoolTasksParams extends TaskDateRanges {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
@@ -159,12 +173,11 @@ export interface GetPoolTasksParams {
   sortDir?: 'asc' | 'desc';
   appraisalNumber?: string;
   customerName?: string;
+  pendingTaskStatus?: string;
   status?: string;
   purpose?: string;
   channel?: string;
-  dateType?: TaskDateType;
-  dateFrom?: string;
-  dateTo?: string;
+  slaStatus?: string;
   activityId?: string;
 }
 
@@ -181,7 +194,7 @@ export interface TaskListResponse {
 }
 
 // Query params for task listing
-export interface GetTasksParams {
+export interface GetTasksParams extends TaskDateRanges {
   pageNumber?: number;
   pageSize?: number;
   search?: string;
@@ -199,14 +212,16 @@ export interface GetTasksParams {
   assigneeUserId?: string;
   purpose?: string;
   channel?: string;
-  dateType?: TaskDateType;
-  dateFrom?: string;
-  dateTo?: string;
 }
 
 export type TaskDateType = 'assigned' | 'appointment' | 'requested';
 
-export interface TaskFilterParams {
+/**
+ * The list's filters. A list facet (status, purpose, channel, activityId, slaStatus) holds ONE
+ * string: a single value, or several comma-joined ("Pending,InProgress"), which is what the API
+ * takes as a multi-value. The older single-value dialog writes the single case of the same shape.
+ */
+export interface TaskFilterParams extends TaskDateRanges {
   appraisalNumber?: string;
   customerName?: string;
   status?: string;
@@ -216,6 +231,10 @@ export interface TaskFilterParams {
   activityId?: string;
   purpose?: string;
   channel?: string;
+  /**
+   * The old single date range, still written by the activity page's dialog and by older links.
+   * useTaskListUrlState turns it into one of the three ranges; the list never queries by it.
+   */
   dateType?: TaskDateType;
   dateFrom?: string;
   dateTo?: string;

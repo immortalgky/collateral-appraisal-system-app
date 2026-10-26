@@ -21,14 +21,7 @@ import type { FilterField, FilterGroup } from './tabConfigs';
 import { FILTER_GROUPS } from './tabConfigs';
 import FilterValuePanel from './FilterValuePanel';
 import { pickVisible } from './chipOverflow';
-import {
-  hasValue,
-  isFieldActive,
-  presetFor,
-  requestorLabel,
-  selectedValues,
-  useFilterFieldOptions,
-} from './filterOptions';
+import { hasValue, isFieldActive, useChipSummary } from './filterOptions';
 
 interface FilterChipBarProps {
   filters: FilterField[];
@@ -62,10 +55,17 @@ interface FilterChipBarProps {
    * against its own content and fold chips that had room. Omitted, the box's width is used.
    */
   availableWidth?: number;
+  /**
+   * Opt-in: one line, always. The pinned chips fold into the overflow chip like the added ones
+   * (from the end of the row) instead of always showing and wrapping, so the bar never takes a
+   * second line. `pinned` then only says which chips are drawn when unset. The wrapper must be a
+   * non-wrapping flex item that gets its width from the row (`flex-1 min-w-0`), not from the chips.
+   */
+  singleLine?: boolean;
 }
 
 const PANEL_CLASS =
-  'z-50 mt-1.5 rounded-xl border border-gray-200 bg-white p-3 shadow-lg max-h-none! overflow-visible!';
+  'z-50 mt-1.5 rounded-xl border border-(--palette-line) bg-(--palette-surface) p-3 shadow-lg max-h-none! overflow-visible!';
 
 /** Clearing a range means clearing the two keys it writes, not its own. */
 const clearField = (field: FilterField, onRemove: (key: string) => void) => {
@@ -76,30 +76,6 @@ const clearField = (field: FilterField, onRemove: (key: string) => void) => {
   }
   onRemove(field.key);
 };
-
-/** What a chip says after its label: the first value, "+N" for more, or the date range. */
-function useChipSummary(field: FilterField, values: Record<string, string>): string {
-  const { t } = useTranslation(['appraisal', 'common']);
-  // A requestor chip has no local list to read its label from, so it looks its first value up.
-  const options = useFilterFieldOptions(
-    field,
-    field.type === 'requestor-autocomplete' ? (selectedValues(values, field.key)[0] ?? '') : '',
-  );
-  if (field.type === 'date-range') {
-    const from = values[field.fromKey ?? ''];
-    const to = values[field.toKey ?? ''];
-    const preset = from && to ? presetFor(from, to) : undefined;
-    if (preset) return t(`appraisal:list.filters.presets.${preset.key}`);
-    return `${from || '…'} → ${to || '…'}`;
-  }
-  const selected = selectedValues(values, field.key);
-  if (selected.length === 0) return t('appraisal:list.filters.anyValue');
-  const first =
-    options.find(o => o.value === selected[0])?.label ?? requestorLabel(selected[0]) ?? selected[0];
-  // "+2" rather than the full list: a quick view can set four statuses at once, and spelling
-  // them all out pushes every other chip off the row.
-  return selected.length > 1 ? `${first} +${selected.length - 1}` : first;
-}
 
 interface FilterChipProps {
   field: FilterField;
@@ -213,7 +189,7 @@ function FilterChip({
   // have no control of their own — they get a chip that says what is filtered and can be removed.
   const chipBody = (
     <>
-      <span className="font-medium text-gray-400">{field.label}:</span>
+      <span className="font-medium text-(--palette-gray-400)">{field.label}:</span>
       <span className="truncate max-w-52">{summary}</span>
     </>
   );
@@ -224,7 +200,7 @@ function FilterChip({
       onClick={() => clearField(field, onRemove)}
       aria-label={t('appraisal:list.removeFilter') + ': ' + field.label}
       style={NO_OUTLINE}
-      className={`rounded p-0.5 opacity-60 hover:bg-gray-200 hover:opacity-100 ${
+      className={`rounded p-0.5 opacity-60 hover:bg-(--palette-line) hover:opacity-100 ${
         showRing ? KEYBOARD_RING_PLAIN : ''
       }`}
     >
@@ -234,7 +210,7 @@ function FilterChip({
 
   if (field.hidden && !unset) {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-100 px-2.5 py-1 text-xs text-gray-700">
+      <span className="inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) bg-(--palette-surface-3) px-2.5 py-1 text-xs text-(--palette-ink)">
         {chipBody}
         {remove}
       </span>
@@ -246,10 +222,10 @@ function FilterChip({
       {({ open }) => (
         <>
           <span
-            className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-200 py-1 text-xs transition-colors hover:border-gray-300 ${
+            className={`inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) py-1 text-xs transition-colors hover:border-(--palette-line-strong) ${
               unset
-                ? 'bg-white px-2.5 text-gray-600 hover:text-gray-800'
-                : 'bg-gray-100 pl-2.5 pr-1 text-gray-700'
+                ? 'bg-(--palette-surface) px-2.5 text-(--palette-gray-600) hover:text-(--palette-ink)'
+                : 'bg-(--palette-surface-3) pl-2.5 pr-1 text-(--palette-ink)'
             }`}
           >
             <PopoverButton
@@ -311,14 +287,17 @@ function OverflowRow({
   // A key a quick view set has no control to open: the row only says what it is and can clear it.
   const label = set ? `${field.label}: ${summary}` : field.label;
   return (
-    <div data-field-key={field.key} className="flex items-center rounded-lg hover:bg-gray-50">
+    <div
+      data-field-key={field.key}
+      className="flex items-center rounded-lg hover:bg-(--palette-surface-2)"
+    >
       <button
         type="button"
         data-overflow-row
         disabled={field.hidden}
         onClick={onOpen}
         style={NO_OUTLINE}
-        className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-left text-sm text-gray-700 disabled:cursor-default ${ring}`}
+        className={`min-w-0 flex-1 truncate rounded-lg px-2 py-1.5 text-left text-sm text-(--palette-ink) disabled:cursor-default ${ring}`}
       >
         {label}
       </button>
@@ -329,7 +308,7 @@ function OverflowRow({
           onClick={onClear}
           aria-label={t('appraisal:list.removeFilter') + ': ' + field.label}
           style={NO_OUTLINE}
-          className={`mr-1 rounded p-1 text-gray-400 hover:bg-gray-200 hover:text-gray-700 ${ring}`}
+          className={`mr-1 rounded p-1 text-(--palette-gray-400) hover:bg-(--palette-line) hover:text-(--palette-ink) ${ring}`}
         >
           <Icon style="solid" name="xmark" className="size-3" />
         </button>
@@ -357,6 +336,7 @@ function FilterChipBar({
   className = 'relative flex min-w-0 flex-wrap items-center gap-2',
   onOneLineWidth,
   availableWidth,
+  singleLine = false,
 }: FilterChipBarProps) {
   const { t } = useTranslation(['appraisal', 'common']);
   // The field just picked in the "add filter" menu. It is drawn as a chip of its own (empty, like
@@ -372,6 +352,11 @@ function FilterChipBar({
   // Which hidden filter the overflow menu has opened, or null for the list.
   const [overflowKey, setOverflowKey] = useState<string | null>(null);
   const [hiddenKeys, setHiddenKeys] = useState<string[]>([]);
+  // singleLine only: the chip whose value panel is open stays on show (the others make room), and
+  // the overflow menu being open is what freezes the layout; a chip panel cannot, because the
+  // chip grows as values are ticked and a frozen row would then run over its neighbours.
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [overflowOpen, setOverflowOpen] = useState(false);
   // How many popovers of the bar are open. While any is, the layout is frozen: a filter being
   // edited must not fold into (or out of) the overflow chip under the cursor as its text changes.
   const [openCount, setOpenCount] = useState(0);
@@ -412,7 +397,10 @@ function FilterChipBar({
   );
 
   // pinned '#' added: the one string says which chips there are and in what groups
-  const keysId = `${pinnedFields.map(f => f.key).join('|')}#${extras.map(f => f.key).join('|')}`;
+  // (singleLine: every chip is on the "added" side, so every one of them can fold)
+  const keysId = singleLine
+    ? `#${chipFields.map(f => f.key).join('|')}`
+    : `${pinnedFields.map(f => f.key).join('|')}#${extras.map(f => f.key).join('|')}`;
 
   useEffect(() => {
     if (
@@ -423,7 +411,13 @@ function FilterChipBar({
       setForcedKey(null);
     }
   }, [forcedKey, pendingKey, keysId]);
-  const isHidden = (key: string) => key !== forcedKey && hiddenKeys.includes(key);
+  const keepKey = forcedKey ?? (singleLine ? openKey : null);
+  const isHidden = (key: string) => key !== keepKey && hiddenKeys.includes(key);
+  // singleLine only: chips that hold a value take the slots before the unset ones, which fold first
+  const setId = chipFields
+    .filter(f => hasValue(values, f))
+    .map(f => f.key)
+    .join('|');
 
   const measure = useCallback(() => {
     const root = rootRef.current;
@@ -443,27 +437,32 @@ function FilterChipBar({
       items.push(widthOf(tailEl.current));
       onOneLineWidth(Math.ceil(items.reduce((a, b) => a + b, 0) + gap * (items.length - 1)));
     }
-    const visible = pickVisible({
+    // The order chips are offered the room in: as drawn, or (singleLine) the set ones first
+    const withValue = new Set(setId ? setId.split('|') : []);
+    const offer = keys.map((_, i) => i);
+    if (singleLine)
+      offer.sort((a, b) => Number(withValue.has(keys[b])) - Number(withValue.has(keys[a])));
+    const fits = pickVisible({
       pinned: pinnedIds.map(chipWidth),
-      added: keys.map(chipWidth),
-      forced: forcedKey ? keys.indexOf(forcedKey) : -1,
+      added: offer.map(i => chipWidth(keys[i])),
+      forced: keepKey ? offer.indexOf(keys.indexOf(keepKey)) : -1,
       available: availableWidth ?? root.clientWidth,
       safety: 1,
       overflowWidth: widthOf(overflowEl.current) + OVERFLOW_SLACK,
       tailWidth: widthOf(tailEl.current),
       gap,
     });
-    const next = keys.filter((_, i) => !visible[i]);
-    // Frozen: nothing moves, except to make room for the filter just added (a new `forcedKey`).
-    if (frozen.current && appliedForced.current === forcedKey) return;
-    appliedForced.current = forcedKey;
+    const next = keys.filter((_, i) => !fits[offer.indexOf(i)]);
+    // Frozen: nothing moves, except to make room for the filter just added (a new `keepKey`).
+    if (frozen.current && appliedForced.current === keepKey) return;
+    appliedForced.current = keepKey;
     setHiddenKeys(prev =>
       prev.length === next.length && prev.every((k, i) => k === next[i]) ? prev : next,
     );
-  }, [keysId, forcedKey, onOneLineWidth, availableWidth]);
+  }, [keysId, keepKey, setId, singleLine, onOneLineWidth, availableWidth]);
 
   useLayoutEffect(() => {
-    frozen.current = openCount > 0;
+    frozen.current = singleLine ? overflowOpen : openCount > 0;
   });
   // After every render: a chip's text (and so its width) can change without its key changing.
   useLayoutEffect(measure);
@@ -607,7 +606,10 @@ function FilterChipBar({
             unset={!hasValue(values, field)}
             showRing={!pointerMode}
             autoOpen={field.key === pendingKey}
-            onOpenChange={trackOpen}
+            onOpenChange={open => {
+              trackOpen(open);
+              if (singleLine) setOpenKey(k => (open ? field.key : k === field.key ? null : k));
+            }}
             onClosed={() => afterClose(field)}
           />,
         ),
@@ -632,14 +634,18 @@ function FilterChipBar({
                   count: hiddenFields.length,
                   label: t('appraisal:list.filters.more', { count: hiddenFields.length }),
                 })}
-                className={`inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-2.5 py-1 text-xs transition-colors hover:border-gray-300 ${
+                className={`inline-flex items-center gap-1.5 rounded-lg border border-(--palette-line) px-2.5 py-1 text-xs transition-colors hover:border-(--palette-line-strong) ${
                   pointerMode ? '' : KEYBOARD_RING
                 } ${
                   hiddenActive
-                    ? 'bg-gray-100 text-gray-700'
-                    : 'bg-white text-gray-600 hover:text-gray-800'
+                    ? 'border-(--palette-line-strong) bg-(--palette-surface-3) font-medium text-(--palette-ink)'
+                    : 'bg-(--palette-surface) text-(--palette-gray-600) hover:text-(--palette-ink)'
                 }`}
               >
+                {/* singleLine: a hidden chip with a value says so, so filters never hide unseen */}
+                {singleLine && hiddenActive && (
+                  <span data-more-active className="size-1.5 rounded-full bg-primary" />
+                )}
                 {t('appraisal:list.filters.more', { count: hiddenFields.length })}
                 <Icon style="solid" name="chevron-down" className="size-2.5 opacity-60" />
               </PopoverButton>
@@ -677,10 +683,12 @@ function FilterChipBar({
                 // opened from the keyboard: start on the first row
                 onOpened={() => {
                   trackOpen(true);
+                  setOverflowOpen(true);
                   focusInMenu(false);
                 }}
                 onClosed={() => {
                   trackOpen(false);
+                  setOverflowOpen(false);
                   setOverflowKey(null);
                   dropEmptyAdded();
                 }}
@@ -704,7 +712,7 @@ function FilterChipBar({
             <PopoverButton
               ref={addButtonRef}
               style={NO_OUTLINE}
-              className={`inline-flex items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-2.5 py-1 text-xs text-gray-600 transition-colors hover:border-primary hover:text-primary ${
+              className={`inline-flex items-center gap-1.5 rounded-lg border border-dashed border-(--palette-line-strong) px-2.5 py-1 text-xs text-(--palette-gray-600) transition-colors hover:border-primary hover:text-(--palette-primary-text) ${
                 pointerMode ? '' : KEYBOARD_RING
               }`}
             >
@@ -719,7 +727,7 @@ function FilterChipBar({
                     if (fields.length === 0) return null;
                     return (
                       <div key={group}>
-                        <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400">
+                        <p className="px-2 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-(--palette-gray-400)">
                           {t(`appraisal:list.filters.groups.${group}`)}
                         </p>
                         {fields.map(field => (
@@ -733,7 +741,7 @@ function FilterChipBar({
                               setForcedKey(field.key);
                               close();
                             }}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-gray-700 hover:bg-gray-50"
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-(--palette-ink) hover:bg-(--palette-surface-2)"
                           >
                             {field.label}
                           </button>
@@ -752,7 +760,7 @@ function FilterChipBar({
             type="button"
             onClick={onClear}
             style={NO_OUTLINE}
-            className={`rounded text-xs text-gray-500 underline hover:text-gray-700 ${
+            className={`rounded text-xs text-(--palette-gray-500) underline hover:text-(--palette-ink) ${
               pointerMode ? '' : KEYBOARD_RING_PLAIN
             }`}
           >

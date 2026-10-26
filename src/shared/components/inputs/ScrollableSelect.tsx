@@ -25,9 +25,9 @@ interface ScrollableSelectProps {
 
 const VARIANT_BUTTON_CLASS: Record<ScrollableSelectVariant, string> = {
   bordered:
-    'px-2 py-1 border border-gray-200 rounded text-xs bg-white hover:border-gray-300 focus:ring-2 focus:ring-gray-200 focus:border-gray-400',
+    'px-2 py-1 border border-(--palette-input-edge) rounded text-xs text-(--palette-ink) bg-(--form-input-bg) hover:border-(--palette-input-edge-hover) focus-visible:outline-none! focus:border-(--focus-edge) focus:ring-[3px] focus:ring-(color:--focus-ring)',
   ghost:
-    'px-1.5 py-0.5 rounded text-sm font-semibold text-gray-800 bg-transparent border border-transparent hover:bg-gray-100 focus:ring-2 focus:ring-gray-200',
+    'px-1.5 py-0.5 rounded text-sm font-semibold text-(--palette-ink) bg-transparent border border-transparent hover:bg-(--palette-surface-3) focus-visible:outline-none! focus:ring-[3px] focus:ring-(color:--focus-ring)',
 };
 
 export function ScrollableSelect({
@@ -94,7 +94,7 @@ export function ScrollableSelect({
           height="10"
           viewBox="0 0 20 20"
           fill="currentColor"
-          className="text-gray-500 flex-shrink-0"
+          className="text-(--palette-gray-500) flex-shrink-0"
         >
           <path d="M5.25 7.5l4.75 5 4.75-5H5.25z" />
         </svg>
@@ -104,7 +104,7 @@ export function ScrollableSelect({
           ref={listRef}
           role="listbox"
           className={clsx(
-            'absolute z-[110] min-w-full bg-white border border-gray-200 rounded shadow-lg py-1 overflow-y-auto',
+            'absolute z-[110] min-w-full bg-(--palette-surface) text-(--palette-ink) border border-(--palette-line) rounded shadow-lg py-1 overflow-y-auto',
             placement === 'bottom' ? 'top-full mt-1' : 'bottom-full mb-1',
             maxHeightClass,
             listClassName,
@@ -121,10 +121,10 @@ export function ScrollableSelect({
                 className={clsx(
                   'px-2 py-1 text-xs cursor-pointer whitespace-nowrap',
                   opt.disabled
-                    ? 'text-gray-300 cursor-not-allowed'
+                    ? 'text-(--palette-gray-300) cursor-not-allowed'
                     : isSelected
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'hover:bg-gray-100',
+                      ? 'bg-(--palette-primary-wash) text-(--palette-primary-text) font-medium'
+                      : 'hover:bg-(--palette-surface-3)',
                 )}
                 onClick={() => {
                   if (opt.disabled) return;

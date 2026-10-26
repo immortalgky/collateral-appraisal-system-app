@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { taskListUrl } from '@features/task/utils/taskReturn';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMenuStore } from '@features/menuManagement/store';
@@ -154,7 +155,7 @@ export function useAppraisalBreadcrumb({
           href: returnPath,
           icon: 'magnifying-glass',
         }
-      : { label: t('breadcrumb.tasks'), href: '/tasks', icon: 'list-check' };
+      : { label: t('breadcrumb.tasks'), href: taskListUrl(), icon: 'list-check' };
     const result: BreadcrumbItem[] = [
       firstCrumb,
       { label: number, href: basePath, icon: 'file-certificate' },

@@ -177,8 +177,10 @@ const EmptyTypeChip = ({
           : undefined
       }
       className={clsx(
-        'cursor-pointer rounded-full border border-dashed px-3 py-0.5 text-sm hover:border-primary hover:text-primary',
-        dragOver ? 'border-primary bg-primary/5 text-primary' : 'border-gray-300 text-gray-600',
+        'cursor-pointer rounded-full border border-dashed px-3 py-0.5 text-sm hover:border-primary hover:text-(--palette-primary-text)',
+        dragOver
+          ? 'border-primary bg-primary/5 text-(--palette-primary-text)'
+          : 'border-(--palette-line-strong) text-(--palette-gray-600)',
       )}
     >
       + {name}
@@ -217,7 +219,7 @@ const DocumentSection = ({
   const pct = stats.required ? Math.round((stats.requiredDone / stats.required) * 100) : 100;
 
   return (
-    <div className="@container border-t border-gray-100 first:border-t-0">
+    <div className="@container border-t border-(--palette-line-soft) first:border-t-0">
       {!headerless && (
         <button
           type="button"
@@ -225,8 +227,8 @@ const DocumentSection = ({
           disabled={locked}
           aria-expanded={!collapsed}
           className={clsx(
-            'flex w-full items-center gap-2 bg-gray-50 px-4 py-2 text-left text-sm font-semibold text-gray-700 select-none',
-            locked ? 'cursor-default' : 'cursor-pointer hover:bg-gray-100',
+            'flex w-full items-center gap-2 bg-(--palette-surface-2) px-4 py-2 text-left text-sm font-semibold text-(--palette-ink) select-none',
+            locked ? 'cursor-default' : 'cursor-pointer hover:bg-(--palette-surface-3)',
           )}
         >
           <Icon
@@ -237,16 +239,16 @@ const DocumentSection = ({
           <Icon
             name={isRequest ? 'folder-open' : 'file-certificate'}
             style="solid"
-            className="size-3.5 text-gray-400"
+            className="size-3.5 text-(--palette-gray-400)"
           />
           <span className="min-w-0 truncate">{label}</span>
-          <span className="font-normal text-gray-500">
+          <span className="font-normal text-(--palette-gray-500)">
             {t('docCard.section.typesWithFiles', { filled: stats.filled, total: stats.types })}
           </span>
           {stats.required > 0 && (
             <>
               <span
-                className="h-1 w-16 overflow-hidden rounded-sm bg-gray-200"
+                className="h-1 w-16 overflow-hidden rounded-sm bg-(--palette-line)"
                 role="progressbar"
                 aria-valuemin={0}
                 aria-valuemax={stats.required}
@@ -257,7 +259,7 @@ const DocumentSection = ({
                   style={{ width: `${pct}%` }}
                 />
               </span>
-              <span className="font-normal text-gray-500">
+              <span className="font-normal text-(--palette-gray-500)">
                 {t('docCard.section.required', { done: stats.requiredDone, total: stats.required })}
               </span>
             </>
@@ -267,7 +269,7 @@ const DocumentSection = ({
       {(headerless || !collapsed) && (
         <>
           {isEmpty && (
-            <div className="px-4 py-4 text-center text-sm text-gray-500">
+            <div className="px-4 py-4 text-center text-sm text-(--palette-gray-500)">
               {t('empty.noDocumentsSection')}
             </div>
           )}
@@ -345,7 +347,7 @@ const DocumentSection = ({
             },
           )}
           {emptyTypes.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 border-t border-gray-100 px-4 py-2.5 text-sm text-gray-500">
+            <div className="flex flex-wrap items-center gap-1.5 border-t border-(--palette-line-soft) px-4 py-2.5 text-sm text-(--palette-gray-500)">
               {t('docCard.emptyTypes', { n: emptyTypes.length })}
               {emptyTypes.map(type =>
                 editable ? (
@@ -360,7 +362,7 @@ const DocumentSection = ({
                 ) : (
                   <span
                     key={type.row.documentType}
-                    className="rounded bg-gray-100 px-2 py-0.5 text-sm text-gray-600"
+                    className="rounded bg-(--palette-surface-3) px-2 py-0.5 text-sm text-(--palette-gray-600)"
                   >
                     {type.name}
                   </span>

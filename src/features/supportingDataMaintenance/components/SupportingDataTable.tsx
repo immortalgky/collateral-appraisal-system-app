@@ -72,7 +72,7 @@ export function SupportingDataTable({
               if (el) el.indeterminate = somePageSelected;
             }}
             onChange={handleSelectAll}
-            className="size-4 rounded border-gray-300 accent-red-500 cursor-pointer"
+            className="size-4 rounded border-(--palette-line-strong) accent-red-500 cursor-pointer"
             aria-label="Select all on this page"
           />
         ),
@@ -91,26 +91,26 @@ export function SupportingDataTable({
   if (isError) {
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-3">
-        <div className="size-12 rounded-full bg-red-50 flex items-center justify-center">
+        <div className="size-12 rounded-full bg-(--palette-req-wash) flex items-center justify-center">
           <Icon style="solid" name="triangle-exclamation" className="size-5 text-red-500" />
         </div>
         <div className="text-center">
-          <p className="text-sm font-medium text-gray-800">{t('errors.failedToLoad')}</p>
-          <p className="text-xs text-gray-400 mt-0.5">{(error as Error)?.message}</p>
+          <p className="text-sm font-medium text-(--palette-ink)">{t('errors.failedToLoad')}</p>
+          <p className="text-xs text-(--palette-gray-400) mt-0.5">{(error as Error)?.message}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden flex flex-col">
+    <div className="w-full bg-(--palette-surface) rounded-lg border border-(--palette-line) shadow-sm overflow-hidden flex flex-col">
       <div className="overflow-auto">
         <table className="w-full min-w-max text-table">
           <thead className="sticky top-0 z-20">
-            <tr className="bg-gray-50 border-b border-gray-200">
+            <tr className="bg-(--palette-surface-2) border-b border-(--palette-line)">
               {columns.map(col => {
                 const base =
-                  'px-4 py-2.5 text-left text-xs font-medium text-gray-500 whitespace-nowrap select-none bg-gray-50';
+                  'px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) whitespace-nowrap select-none bg-(--palette-surface-2)';
                 return (
                   <th
                     key={col.key}
@@ -122,21 +122,25 @@ export function SupportingDataTable({
               })}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-(--palette-line-soft)">
             {isLoading ? (
               <TableRowSkeleton columns={columns.map(() => ({ width: 'w-24' }))} rows={pageSize} />
             ) : items.length === 0 ? (
               <tr>
                 <td colSpan={columns.length} className="py-16">
                   <div className="flex flex-col items-center gap-4">
-                    <div className="size-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center">
-                      <Icon style="regular" name="inbox" className="size-7 text-gray-300" />
+                    <div className="size-16 rounded-2xl bg-(--palette-surface-2) border border-(--palette-line-soft) flex items-center justify-center">
+                      <Icon
+                        style="regular"
+                        name="inbox"
+                        className="size-7 text-(--palette-gray-300)"
+                      />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-semibold text-gray-700">
+                      <p className="text-sm font-semibold text-(--palette-ink)">
                         {t('empty.noSupportingData')}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-(--palette-gray-400) mt-1">
                         {isReadOnly ? t('empty.noItemsAdded') : t('empty.addItemPrompt')}
                       </p>
                     </div>

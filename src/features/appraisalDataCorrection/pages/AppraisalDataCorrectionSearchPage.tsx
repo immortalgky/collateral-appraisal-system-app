@@ -68,8 +68,8 @@ const AppraisalDataCorrectionSearchPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <Icon style="solid" name="triangle-exclamation" className="size-12 text-red-500" />
-        <p className="text-gray-600">{t('search.loadFailed')}</p>
-        <p className="text-sm text-gray-400">{(error as Error)?.message}</p>
+        <p className="text-(--palette-gray-600)">{t('search.loadFailed')}</p>
+        <p className="text-sm text-(--palette-gray-400)">{(error as Error)?.message}</p>
       </div>
     );
   }
@@ -77,8 +77,8 @@ const AppraisalDataCorrectionSearchPage = () => {
   return (
     <div className="flex flex-col h-full min-h-0 gap-3">
       <div className="shrink-0">
-        <h3 className="text-base font-semibold text-gray-900">{t('search.title')}</h3>
-        <p className="text-xs text-gray-500 mt-0.5">{t('search.subtitle')}</p>
+        <h3 className="text-base font-semibold text-(--palette-ink)">{t('search.title')}</h3>
+        <p className="text-xs text-(--palette-gray-500) mt-0.5">{t('search.subtitle')}</p>
       </div>
 
       <div className="shrink-0 w-96">
@@ -93,7 +93,7 @@ const AppraisalDataCorrectionSearchPage = () => {
         />
       </div>
 
-      <div className="flex-1 min-h-0 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+      <div className="flex-1 min-h-0 bg-(--palette-surface) rounded-lg border border-(--palette-line) overflow-hidden flex flex-col">
         <div className="flex-1 min-h-0 overflow-auto">
           <table className="w-full text-table table-fixed">
             {/* Customer names are short; the property-type column holds several Thai chips and is
@@ -105,24 +105,24 @@ const AppraisalDataCorrectionSearchPage = () => {
               <col />
               <col className="w-32" />
             </colgroup>
-            <thead className="bg-gray-50 sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
-              <tr className="border-b border-gray-200">
-                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
+            <thead className="bg-(--palette-surface-2) sticky top-0 z-10 shadow-[0_1px_3px_rgba(0,0,0,0.05)]">
+              <tr className="border-b border-(--palette-line)">
+                <th className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-500) text-left whitespace-nowrap">
                   {t('search.col.appraisalNumber')}
                 </th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-500) text-left whitespace-nowrap">
                   {t('search.col.customerName')}
                 </th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-left whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-500) text-left whitespace-nowrap">
                   {t('search.col.propertyTypes')}
                 </th>
-                <th className="px-4 py-2.5 text-xs font-semibold text-gray-500 text-center whitespace-nowrap">
+                <th className="px-4 py-2.5 text-xs font-semibold text-(--palette-gray-500) text-center whitespace-nowrap">
                   {t('search.col.status')}
                 </th>
               </tr>
             </thead>
             <tbody
-              className={`divide-y divide-gray-100 ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
+              className={`divide-y divide-(--palette-line-soft) ${isRefetching ? 'opacity-50 pointer-events-none' : ''}`}
             >
               {isFirstLoad ? (
                 <TableRowSkeleton
@@ -138,9 +138,13 @@ const AppraisalDataCorrectionSearchPage = () => {
                 <tr>
                   <td colSpan={TOTAL_COLS} className="text-center py-16">
                     <div className="flex flex-col items-center gap-2">
-                      <Icon style="regular" name="folder-open" className="size-10 text-gray-300" />
-                      <p className="text-gray-500 font-medium">{t('search.empty')}</p>
-                      <p className="text-xs text-gray-400">
+                      <Icon
+                        style="regular"
+                        name="folder-open"
+                        className="size-10 text-(--palette-gray-300)"
+                      />
+                      <p className="text-(--palette-gray-500) font-medium">{t('search.empty')}</p>
+                      <p className="text-xs text-(--palette-gray-400)">
                         {debouncedSearch ? t('search.tryDifferentSearch') : t('search.emptyHint')}
                       </p>
                     </div>
@@ -150,16 +154,16 @@ const AppraisalDataCorrectionSearchPage = () => {
                 items.map(item => (
                   <tr
                     key={item.id}
-                    className="hover:bg-gray-50 cursor-pointer transition-colors"
+                    className="hover:bg-(--palette-surface-2) cursor-pointer transition-colors"
                     onClick={() => navigate(`/standalone/appraisal-data-correction/${item.id}`)}
                   >
                     <td className="px-4 py-3">
-                      <span className="font-medium text-primary text-xs">
+                      <span className="font-medium text-(--palette-primary-text) text-xs">
                         {item.appraisalNumber ?? '—'}
                       </span>
                     </td>
                     <td
-                      className="px-4 py-3 text-gray-700 truncate"
+                      className="px-4 py-3 text-(--palette-ink) truncate"
                       title={item.customerName ?? ''}
                     >
                       {item.customerName ?? '—'}
@@ -172,7 +176,7 @@ const AppraisalDataCorrectionSearchPage = () => {
                         {formatPropertyTypes(item.propertyTypes).map(label => (
                           <span
                             key={label}
-                            className="inline-flex items-center rounded-md bg-gray-100 px-2 py-0.5 text-xs text-gray-600 whitespace-nowrap"
+                            className="inline-flex items-center rounded-md bg-(--palette-surface-3) px-2 py-0.5 text-xs text-(--palette-gray-600) whitespace-nowrap"
                           >
                             {label}
                           </span>
@@ -191,13 +195,17 @@ const AppraisalDataCorrectionSearchPage = () => {
           </table>
           {isRefetching && (
             <div className="flex justify-center py-2">
-              <Icon style="solid" name="spinner" className="size-4 text-primary animate-spin" />
+              <Icon
+                style="solid"
+                name="spinner"
+                className="size-4 text-(--palette-primary-text) animate-spin"
+              />
             </div>
           )}
         </div>
 
         {totalCount > 0 && (
-          <div className="shrink-0 border-t border-gray-200">
+          <div className="shrink-0 border-t border-(--palette-line)">
             <Pagination
               currentPage={pageNumber}
               totalPages={totalPages}

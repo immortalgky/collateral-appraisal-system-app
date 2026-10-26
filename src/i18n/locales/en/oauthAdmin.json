@@ -55,7 +55,17 @@
         "refresh": "Refresh (session idle)"
       },
       "tokenLifetimeInherit": "Default",
-      "tokenLifetimeInvalid": "Whole number, 1–{{max}}"
+      "tokenLifetimeInvalid": "Whole number, 1–{{max}}",
+      "uploadSessionLifetime": "Upload session lifetime",
+      "uploadSessionLifetimeHint": "How long an upload session created by this system stays open. Leave empty to use the server default. Accepts 1 hour to 30 days.",
+      "uploadSessionLifetimeInvalid": "Whole number, 1–{{max}} {{unit}}",
+      "uploadSessionLifetimeUnit": {
+        "label": "Unit",
+        "hours": "Hours",
+        "days": "Days",
+        "hoursInline": "hours",
+        "daysInline": "days"
+      }
     },
     "grant": {
       "authorization_code": "Authorization Code",

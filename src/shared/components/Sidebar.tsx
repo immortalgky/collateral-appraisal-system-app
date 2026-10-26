@@ -100,7 +100,9 @@ function MenuItem({
             <span
               className={clsx(
                 'text-xs font-medium',
-                isChildActive ? 'text-primary' : 'text-gray-700 dark:text-gray-200',
+                isChildActive
+                  ? 'text-(--palette-primary-text)'
+                  : 'text-gray-700 dark:text-gray-200',
               )}
             >
               {item.name}
@@ -162,7 +164,11 @@ function MenuItem({
         {isChild && (
           <div className={clsx('w-2 h-2 rounded-full', isActive ? 'bg-primary' : 'bg-gray-300')} />
         )}
-        <span className={clsx('flex-1 min-w-0 text-xs font-medium text-gray-700 dark:text-gray-200')}>{item.name}</span>
+        <span
+          className={clsx('flex-1 min-w-0 text-xs font-medium text-gray-700 dark:text-gray-200')}
+        >
+          {item.name}
+        </span>
         {isTaskListChild && <TaskCountBadge activityId={taskActivityId ?? undefined} />}
         <span className="flex-shrink-0">
           <SidebarStarButton item={item} />
@@ -199,7 +205,7 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
             </div>
           </TransitionChild>
 
-          <div className="flex grow flex-col overflow-y-auto bg-white dark:bg-base-100">
+          <div className="flex grow flex-col overflow-y-auto bg-(--palette-surface)">
             {/* Logo Area */}
             <div className="px-3 py-4">
               <BrandLogo logo={logo} onClick={() => setSidebarOpen(false)} />
@@ -229,7 +235,11 @@ export function MobileSidebar({ navigation, logo }: SidebarProps): React.ReactNo
                       className="group flex items-center gap-3 py-2.5 px-3 rounded-xl transition-all duration-200 hover:bg-gray-50 dark:hover:bg-base-200"
                     >
                       <div className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-base-300 flex items-center justify-center transition-all duration-200 shadow-sm group-hover:scale-105">
-                        <Icon name="gear" style="solid" className="size-4 text-gray-500 dark:text-gray-300" />
+                        <Icon
+                          name="gear"
+                          style="solid"
+                          className="size-4 text-gray-500 dark:text-gray-300"
+                        />
                       </div>
                       <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         {t('sidebar.settings')}
@@ -307,7 +317,7 @@ export default function Sidebar({ navigation, logo }: SidebarProps): React.React
         transition: isDragging ? 'none' : 'width 300ms',
       }}
     >
-      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-gray-100 dark:border-base-300 bg-white dark:bg-base-100 shadow-sm">
+      <div className="flex grow flex-col min-h-0 overflow-hidden border-r border-(--palette-line) bg-(--palette-surface) shadow-sm">
         <div className="flex grow flex-col min-h-0" style={contentStyle}>
           <SidebarHeader logo={logo} expanded={expanded} scope="main" />
 

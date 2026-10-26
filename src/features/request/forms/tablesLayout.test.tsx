@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import '@/i18n';
-import { FormProvider, useForm } from 'react-hook-form';
+import { act } from '@testing-library/react';
+import { type FieldValues, FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { render, screen } from '@/test/test-utils';
 import CustomersForm from './CustomersForm';
 import PropertiesForm from './PropertiesForm';
 
+let form: UseFormReturn<FieldValues>;
+
 function Harness({ children, defaults }: { children: React.ReactNode; defaults: object }) {
   const methods = useForm({ defaultValues: defaults });
+  form = methods;
   return <FormProvider {...methods}>{children}</FormProvider>;
 }
 
@@ -28,7 +32,7 @@ describe('request tables keep one grid cell per track', () => {
         defaults={{
           detail: { loanDetail: {} },
           properties: [
-            { propertyType: 'L', buildingType, buildingTypeOther: 'x', sellingPrice: 1 },
+            { propertyType: 'LB', buildingType, buildingTypeOther: 'x', sellingPrice: 1 },
             { propertyType: '', buildingType: '', buildingTypeOther: '', sellingPrice: '' },
           ],
         }}
@@ -38,6 +42,47 @@ describe('request tables keep one grid cell per track', () => {
     );
     // seq | type | building | price | actions
     expect(shape()).toEqual({ tracks: 5, header: 5, rows: [5, 5] });
+  });
+
+  it('properties: the real Building Type cell is disabled for a type without a building', () => {
+    render(
+      <Harness
+        defaults={{
+          detail: { loanDetail: {} },
+          properties: [
+            { propertyType: 'VEH', buildingType: null, buildingTypeOther: null, sellingPrice: 1 },
+            { propertyType: 'LB', buildingType: '01', buildingTypeOther: null, sellingPrice: 2 },
+          ],
+        }}
+      >
+        <PropertiesForm />
+      </Harness>,
+    );
+    const cell = (row: number) =>
+      document.querySelector(`[data-field="properties.${row}.buildingType"] button`);
+    expect(cell(0)).toBeDisabled();
+    expect(cell(1)).not.toBeDisabled();
+  });
+
+  it('properties: changing a filled LB row to VEH empties its building type and "other" text', () => {
+    render(
+      <Harness
+        defaults={{
+          detail: { loanDetail: {} },
+          properties: [
+            { propertyType: 'LB', buildingType: '99', buildingTypeOther: 'x', sellingPrice: 1 },
+          ],
+        }}
+      >
+        <PropertiesForm />
+      </Harness>,
+    );
+    act(() => form.setValue('properties.0.propertyType', 'VEH'));
+    expect(form.getValues('properties.0')).toMatchObject({
+      propertyType: 'VEH',
+      buildingType: null,
+      buildingTypeOther: null,
+    });
   });
 
   it('properties: the dealer code sits under the table, after the total row, with no hint', () => {

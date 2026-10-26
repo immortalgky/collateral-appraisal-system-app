@@ -1,13 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type { AssignAppraisalRequestType, AssignAppraisalResponseType } from '@shared/schemas/v1';
 import type {
+  AssignmentDefaultsResponse,
   CurrentAssignment,
   ExternalCompany,
   InternalStaff,
+  PreviousCompany,
   Quotation,
   StartQuotationFromTaskRequest,
 } from '../types/administration';
+import { type AssignmentDefaults, toFormDefaults } from '../utils/assignmentDefaults';
+import { invalidateFeePreviews } from './feePreview';
 
 /**
  * Get a user by ID
@@ -63,7 +67,7 @@ export const useGetCompanyById = (companyId: string | null) => {
  * Get current assignment for an appraisal
  * GET /appraisals/{appraisalId}/assignments
  */
-export const useGetAssignment = (appraisalId: string) => {
+export const useGetAssignment = (appraisalId: string, options?: { staleTime?: number }) => {
   return useQuery({
     queryKey: ['appraisal', appraisalId, 'assignments'],
     queryFn: async (): Promise<CurrentAssignment[]> => {
@@ -71,7 +75,47 @@ export const useGetAssignment = (appraisalId: string) => {
       return data.assignments ?? [];
     },
     enabled: !!appraisalId,
+    ...(options?.staleTime !== undefined && { staleTime: options.staleTime }),
   });
+};
+
+type AssignmentDefaultsData = AssignmentDefaults & { previousCompany: PreviousCompany | null };
+
+/**
+ * Get the Appraisal Type's pre-selected assignment values, plus the prior inspection's company
+ * GET /appraisals/{appraisalId}/assignment-defaults
+ */
+export const useGetAssignmentDefaults = (appraisalId: string) => {
+  return useQuery({
+    queryKey: ['appraisal', appraisalId, 'assignment-defaults'],
+    queryFn: async (): Promise<AssignmentDefaultsData> => {
+      const { data } = await axios.get<AssignmentDefaultsResponse>(
+        `/appraisals/${appraisalId}/assignment-defaults`,
+      );
+      return { ...toFormDefaults(data), previousCompany: data.previousCompany ?? null };
+    },
+    // No `retry` override: the global policy skips 4xx but retries 5xx and network errors, so those
+    // keep the page's first seed waiting until the retries are exhausted; it then opens on the
+    // built-in defaults.
+    enabled: !!appraisalId,
+  });
+};
+
+/**
+ * Assigning completes an appraisal's pending task, so refresh the task lists and counts;
+ * otherwise the just-submitted task lingers in the (cached) list.
+ */
+export const invalidateTaskLists = (queryClient: QueryClient) => {
+  for (const key of [
+    'my-tasks',
+    'all-tasks',
+    'kanban-column',
+    'task-group-counts',
+    'pool-tasks',
+    'task-counts',
+  ]) {
+    queryClient.invalidateQueries({ queryKey: [key] });
+  }
 };
 
 /**
@@ -96,14 +140,10 @@ export const useCreateAssignment = () => {
       queryClient.invalidateQueries({
         queryKey: ['appraisal', variables.appraisalId, 'assignments'],
       });
-      // Assigning completes the current pending task, so refresh the task lists and
-      // counts; otherwise the just-submitted task lingers in the (cached) list.
-      queryClient.invalidateQueries({ queryKey: ['my-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['all-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['kanban-column'] });
-      queryClient.invalidateQueries({ queryKey: ['task-group-counts'] });
-      queryClient.invalidateQueries({ queryKey: ['pool-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['task-counts'] });
+      invalidateTaskLists(queryClient);
+      // A manual assign changes what a Finalized quotation's assignment summary shows
+      // (quotationKeys.details() — spelled out here because quotation.ts imports this file).
+      queryClient.invalidateQueries({ queryKey: ['quotations', 'detail'] });
     },
   });
 };
@@ -149,29 +189,35 @@ export const useSaveAssignmentDraft = () => {
  * Get eligible assignees for a workflow activity (same pool as round-robin)
  * GET /api/workflows/instances/{workflowInstanceId}/activities/{targetActivityId}/eligible-assignees
  */
+export const eligibleStaffQueryOptions = (
+  workflowInstanceId: string | undefined,
+  targetActivityId: string,
+  enabled = true,
+) => ({
+  queryKey: ['eligible-assignees', workflowInstanceId, targetActivityId],
+  queryFn: async (): Promise<InternalStaff[]> => {
+    const { data } = await axios.get(
+      `/api/workflows/instances/${workflowInstanceId}/activities/${targetActivityId}/eligible-assignees`,
+    );
+    return (data.eligibleAssignees ?? []).map((a: { userId: string; displayName: string }) => ({
+      id: a.userId,
+      employeeId: a.userId,
+      name: a.displayName,
+      email: '',
+      department: '',
+      avatar: null,
+      currentWorkload: 0,
+    }));
+  },
+  enabled: enabled && !!workflowInstanceId,
+});
+
 export const useGetEligibleStaff = (
   workflowInstanceId: string | undefined,
   targetActivityId: string,
   enabled = true,
 ) => {
-  return useQuery({
-    queryKey: ['eligible-assignees', workflowInstanceId, targetActivityId],
-    queryFn: async (): Promise<InternalStaff[]> => {
-      const { data } = await axios.get(
-        `/api/workflows/instances/${workflowInstanceId}/activities/${targetActivityId}/eligible-assignees`,
-      );
-      return (data.eligibleAssignees ?? []).map((a: { userId: string; displayName: string }) => ({
-        id: a.userId,
-        employeeId: a.userId,
-        name: a.displayName,
-        email: '',
-        department: '',
-        avatar: null,
-        currentWorkload: 0,
-      }));
-    },
-    enabled: enabled && !!workflowInstanceId,
-  });
+  return useQuery(eligibleStaffQueryOptions(workflowInstanceId, targetActivityId, enabled));
 };
 
 /**
@@ -190,7 +236,8 @@ export const useGetEligibleCompanies = (
   requireSegment = true,
 ) => {
   return useQuery({
-    queryKey: ['eligible-companies', bankingSegment],
+    // requireSegment keeps the disabled filtered call apart from the unfiltered one.
+    queryKey: ['eligible-companies', bankingSegment ?? null, requireSegment],
     queryFn: async (): Promise<ExternalCompany[]> => {
       const { data } = await axios.get('/companies/eligible', {
         params: { loanType: bankingSegment },
@@ -206,6 +253,7 @@ export const useGetEligibleCompanies = (
           email?: string;
           averageRating?: number;
           activeAssignments?: number;
+          loanTypes?: string[];
           isAssignable?: boolean;
         }) => ({
           id: c.id,
@@ -217,6 +265,7 @@ export const useGetEligibleCompanies = (
           contactEmail: c.email ?? '',
           rating: c.averageRating ?? 0,
           activeAssignments: c.activeAssignments ?? 0,
+          loanTypes: c.loanTypes ?? [],
           isAssignable: c.isAssignable ?? true,
         }),
       );
@@ -234,7 +283,11 @@ export const useGetEligibleCompanies = (
  * invalidate `['quotations', 'list']` also refresh this query (otherwise
  * AdministrationPage stays locked after status transitions).
  */
-export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = true) => {
+export const useGetAppraisalQuotations = (
+  appraisalId: string | null,
+  enabled = true,
+  options?: { staleTime?: number },
+) => {
   return useQuery({
     queryKey: ['quotations', 'list', { appraisalId }],
     queryFn: async (): Promise<Quotation[]> => {
@@ -245,6 +298,7 @@ export const useGetAppraisalQuotations = (appraisalId: string | null, enabled = 
       return result.items ?? [];
     },
     enabled: enabled && !!appraisalId,
+    ...(options?.staleTime !== undefined && { staleTime: options.staleTime }),
   });
 };
 
@@ -263,8 +317,10 @@ export const useCreateQuotation = () => {
       const { data } = await axios.post('/quotations/start-from-task', request);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, request) => {
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      // A quotation now exists for the appraisal: its fee preview (the quotation source) is stale.
+      invalidateFeePreviews(queryClient, [request.appraisalId]);
     },
   });
 };

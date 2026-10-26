@@ -5,11 +5,14 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 
 import Button from '@/shared/components/Button';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
 import Icon from '@/shared/components/Icon';
 import Modal from '@/shared/components/Modal';
+import { ValidationText } from '@/shared/components/form/ValidationText';
+import { vmsg } from '@/shared/components/form/validationMessage';
 import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import {
@@ -34,21 +37,21 @@ const APPRAISAL_TYPES = ['New', 'ReAppraisal', 'Progressive', 'PreAppraisal'] as
 // feeName is not a form field — it is derived from the selected TypeOfFee parameter's description.
 const feeSchema = z
   .object({
-    feeCode: z.string().min(1, 'Fee type is required').max(20),
+    feeCode: z.string().min(1, vmsg('required')).max(20),
     // Blank means "applies to any appraisal type" → null (the select's setValueAs maps '' → null).
     appraisalType: z.string().nullable(),
-    baseAmount: z.coerce.number().min(0, 'Base amount must be >= 0'),
-    minSellingPrice: z.coerce.number().min(0, 'Min selling price must be >= 0'),
+    baseAmount: z.coerce.number().min(0, vmsg('minValue', { min: 0 })),
+    minSellingPrice: z.coerce.number().min(0, vmsg('minValue', { min: 0 })),
     // Blank means "no upper limit" → null (the input's setValueAs maps '' → null).
     // Without this an empty input coerces to 0 and silently creates a degenerate
     // [0,0] / rejected top tier.
     maxSellingPrice: z.number().min(0).nullable(),
     isActive: z.boolean(),
   })
-  .refine(
-    v => v.maxSellingPrice == null || v.maxSellingPrice >= v.minSellingPrice,
-    { message: 'Max must be >= min', path: ['maxSellingPrice'] },
-  );
+  .refine(v => v.maxSellingPrice == null || v.maxSellingPrice >= v.minSellingPrice, {
+    message: vmsg('maxBelowMin'),
+    path: ['maxSellingPrice'],
+  });
 
 type FeeFormValues = {
   feeCode: string;
@@ -60,7 +63,7 @@ type FeeFormValues = {
 };
 
 const inputClass =
-  'w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500';
+  'w-full rounded-lg border border-(--palette-line-strong) px-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:bg-(--palette-surface-3) disabled:text-(--palette-gray-500)';
 
 // ---- Fee form modal ----
 
@@ -165,7 +168,7 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('feeStructureMaintenance:fields.feeType')} <span className="text-red-500">*</span>
           </label>
           {editing ? (
@@ -177,13 +180,13 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
                 value={`${editing.feeCode} — ${resolveFeeName(editing.feeCode)}`}
                 readOnly
               />
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-(--palette-gray-400)">
                 {t('feeStructureMaintenance:hints.feeCodeImmutable')}
               </p>
             </>
           ) : (
             <>
-              <select {...register('feeCode')} className={inputClass} defaultValue="">
+              <NativeSelect {...register('feeCode')} className="w-full" defaultValue="">
                 <option value="" disabled>
                   {t('feeStructureMaintenance:fields.feeTypePlaceholder')}
                 </option>
@@ -192,16 +195,18 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
                     {opt.value} — {opt.label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
               {errors.feeCode && (
-                <p className="mt-1 text-xs text-red-600">{errors.feeCode.message}</p>
+                <p className="mt-1 text-xs text-(--palette-danger)">
+                  <ValidationText message={errors.feeCode.message} />
+                </p>
               )}
             </>
           )}
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('feeStructureMaintenance:fields.appraisalType')}
           </label>
           {editing ? (
@@ -219,17 +224,17 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
                 }
                 readOnly
               />
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-(--palette-gray-400)">
                 {t('feeStructureMaintenance:hints.appraisalTypeImmutable')}
               </p>
             </>
           ) : (
             <>
-              <select
+              <NativeSelect
                 {...register('appraisalType', {
                   setValueAs: v => (v === '' || v === null || v === undefined ? null : String(v)),
                 })}
-                className={inputClass}
+                className="w-full"
               >
                 <option value="">{t('feeStructureMaintenance:fields.appraisalTypeAll')}</option>
                 {APPRAISAL_TYPES.map(type => (
@@ -237,8 +242,8 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
                     {t(`feeStructureMaintenance:appraisalTypes.${type}`, { defaultValue: type })}
                   </option>
                 ))}
-              </select>
-              <p className="mt-1 text-xs text-gray-400">
+              </NativeSelect>
+              <p className="mt-1 text-xs text-(--palette-gray-400)">
                 {t('feeStructureMaintenance:hints.appraisalType')}
               </p>
             </>
@@ -246,18 +251,20 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-(--palette-ink) mb-1">
             {t('feeStructureMaintenance:fields.baseAmount')} <span className="text-red-500">*</span>
           </label>
           <input type="number" step="0.01" {...register('baseAmount')} className={inputClass} />
           {errors.baseAmount && (
-            <p className="mt-1 text-xs text-red-600">{errors.baseAmount.message}</p>
+            <p className="mt-1 text-xs text-(--palette-danger)">
+              <ValidationText message={errors.baseAmount.message} />
+            </p>
           )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1">
               {t('feeStructureMaintenance:fields.minSellingPrice')}{' '}
               <span className="text-red-500">*</span>
             </label>
@@ -268,13 +275,15 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
               className={inputClass}
             />
             {errors.minSellingPrice && (
-              <p className="mt-1 text-xs text-red-600">{errors.minSellingPrice.message}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                <ValidationText message={errors.minSellingPrice.message} />
+              </p>
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-(--palette-ink) mb-1">
               {t('feeStructureMaintenance:fields.maxSellingPrice')}
-              <span className="text-xs text-gray-400 ml-1">(optional)</span>
+              <span className="text-xs text-(--palette-gray-400) ml-1">(optional)</span>
             </label>
             <input
               type="number"
@@ -286,7 +295,9 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
               placeholder={t('feeStructureMaintenance:hints.maxSellingPrice')}
             />
             {errors.maxSellingPrice && (
-              <p className="mt-1 text-xs text-red-600">{errors.maxSellingPrice.message}</p>
+              <p className="mt-1 text-xs text-(--palette-danger)">
+                <ValidationText message={errors.maxSellingPrice.message} />
+              </p>
             )}
           </div>
         </div>
@@ -296,9 +307,9 @@ function FeeModal({ isOpen, onClose, editing }: FeeModalProps) {
             id="fee-isActive"
             type="checkbox"
             {...register('isActive')}
-            className="h-4 w-4 rounded border-gray-300 text-blue-600"
+            className="h-4 w-4 rounded border-(--palette-line-strong) text-blue-600 dark:text-blue-400"
           />
-          <label htmlFor="fee-isActive" className="text-sm font-medium text-gray-700">
+          <label htmlFor="fee-isActive" className="text-sm font-medium text-(--palette-ink)">
             {t('feeStructureMaintenance:fields.isActive')}
           </label>
         </div>
@@ -335,8 +346,7 @@ const FeeStructurePage = () => {
   const feeList = fees ?? [];
 
   // Resolve the display name from a fee code via the TypeOfFee parameter group.
-  const feeName = (code: string) =>
-    feeTypeOptions.find(o => o.value === code)?.label ?? code;
+  const feeName = (code: string) => feeTypeOptions.find(o => o.value === code)?.label ?? code;
 
   const handleConfirmDelete = () => {
     if (!deleteTarget) return;
@@ -357,10 +367,10 @@ const FeeStructurePage = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">
+          <h3 className="text-base font-semibold text-(--palette-ink)">
             {t('feeStructureMaintenance:page.title')}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             {t('feeStructureMaintenance:page.subtitle')}
           </p>
         </div>
@@ -372,58 +382,66 @@ const FeeStructurePage = () => {
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
-          <Icon name="spinner" style="solid" className="w-5 h-5 animate-spin text-gray-400" />
+          <Icon
+            name="spinner"
+            style="solid"
+            className="w-5 h-5 animate-spin text-(--palette-gray-400)"
+          />
         </div>
       ) : feeList.length === 0 ? (
-        <div className="bg-white rounded-lg border border-gray-200 px-4 py-8 text-center text-sm text-gray-400 italic">
+        <div className="bg-(--palette-surface) rounded-lg border border-(--palette-line) px-4 py-8 text-center text-sm text-(--palette-gray-400) italic">
           {t('feeStructureMaintenance:page.noFees')}
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200 bg-white">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto rounded-lg border border-(--palette-line) bg-(--palette-surface)">
+          <table className="min-w-full divide-y divide-(--palette-line) text-sm">
+            <thead className="bg-(--palette-surface-2)">
               <tr>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('feeStructureMaintenance:columns.feeCode')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('feeStructureMaintenance:columns.feeName')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('feeStructureMaintenance:columns.appraisalType')}
                 </th>
-                <th className="px-4 py-2.5 text-right text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-right text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('feeStructureMaintenance:columns.baseAmount')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('feeStructureMaintenance:columns.range')}
                 </th>
-                <th className="px-4 py-2.5 text-left text-xs font-medium text-gray-500 uppercase">
+                <th className="px-4 py-2.5 text-left text-xs font-medium text-(--palette-gray-500) uppercase">
                   {t('feeStructureMaintenance:columns.status')}
                 </th>
                 <th className="text-xs w-20 px-4 py-2.5 font-semibold" />
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-(--palette-surface) divide-y divide-(--palette-line)">
               {feeList.map(fee => (
-                <tr key={fee.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-600 font-mono text-xs">{fee.feeCode}</td>
-                  <td className="px-4 py-3 text-gray-900 font-medium">{feeName(fee.feeCode)}</td>
-                  <td className="px-4 py-3 text-gray-600">
+                <tr key={fee.id} className="hover:bg-(--palette-surface-2)">
+                  <td className="px-4 py-3 text-(--palette-gray-600) font-mono text-xs">
+                    {fee.feeCode}
+                  </td>
+                  <td className="px-4 py-3 text-(--palette-ink) font-medium">
+                    {feeName(fee.feeCode)}
+                  </td>
+                  <td className="px-4 py-3 text-(--palette-gray-600)">
                     {fee.appraisalType ? (
                       t(`feeStructureMaintenance:appraisalTypes.${fee.appraisalType}`, {
                         defaultValue: fee.appraisalType,
                       })
                     ) : (
-                      <span className="text-gray-400 italic">
+                      <span className="text-(--palette-gray-400) italic">
                         {t('feeStructureMaintenance:fields.appraisalTypeAll')}
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-600 text-right">
+                  <td className="px-4 py-3 text-(--palette-gray-600) text-right">
                     {fee.baseAmount.toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-(--palette-gray-600)">
                     {fee.minSellingPrice.toLocaleString()}
                     {fee.maxSellingPrice != null
                       ? ` – ${fee.maxSellingPrice.toLocaleString()}`
@@ -433,8 +451,8 @@ const FeeStructurePage = () => {
                     <span
                       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                         fee.isActive
-                          ? 'bg-emerald-50 text-emerald-700'
-                          : 'bg-gray-100 text-gray-500'
+                          ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-(--palette-surface-3) text-(--palette-gray-500)'
                       }`}
                     >
                       {fee.isActive ? t('common:status.active') : t('common:status.inactive')}
@@ -445,7 +463,7 @@ const FeeStructurePage = () => {
                       <button
                         type="button"
                         onClick={() => setEditing(fee)}
-                        className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-gray-600) rounded"
                         aria-label={`Edit ${feeName(fee.feeCode)}`}
                       >
                         <Icon name="pen" style="solid" className="size-3.5" />
@@ -453,7 +471,7 @@ const FeeStructurePage = () => {
                       <button
                         type="button"
                         onClick={() => setDeleteTarget(fee)}
-                        className="p-1 text-gray-400 hover:text-red-600 rounded"
+                        className="p-1 text-(--palette-gray-400) hover:text-(--palette-danger) rounded"
                         aria-label={`Delete ${feeName(fee.feeCode)}`}
                       >
                         <Icon name="trash" style="solid" className="size-3.5" />

@@ -1,10 +1,30 @@
 import type { GetRequestByIdResultType } from '../api';
 import type { createRequestFormType } from '../schemas/form';
 import { findAddressBySubDistrictCode } from '@/shared/data/thaiAddresses';
+import { NO_BUILDING_PROPERTY_TYPES } from '../data/mapCollateral';
 import type {
   PriorAppraisal,
   PriorAppraisalRequest,
 } from '@/features/appraisal/api/priorAppraisal';
+
+/**
+ * A properties row for the form. Rows saved before CA-288 may carry a building type on a property
+ * type that has none: dropped here, so the form loads clean (not dirty) and read-only shows none.
+ */
+const propertyRow = (p: {
+  propertyType?: string | null;
+  buildingType?: string | null;
+  buildingTypeOther?: string | null;
+  sellingPrice?: number | null;
+}) => {
+  const noBuilding = NO_BUILDING_PROPERTY_TYPES.includes(p.propertyType ?? '');
+  return {
+    propertyType: p.propertyType ?? '',
+    buildingType: noBuilding ? null : (p.buildingType ?? null),
+    buildingTypeOther: noBuilding ? null : (p.buildingTypeOther ?? null),
+    sellingPrice: p.sellingPrice ?? null,
+  };
+};
 
 /**
  * Map Request API response to form values
@@ -83,12 +103,7 @@ export const mapRequestResponseToForm = (
       name: c.name ?? '',
       contactNumber: c.contactNumber ?? '',
     })),
-    properties: (response.properties ?? []).map(p => ({
-      propertyType: p.propertyType ?? '',
-      buildingType: p.buildingType ?? null,
-      buildingTypeOther: p.buildingTypeOther ?? null,
-      sellingPrice: p.sellingPrice ?? null,
-    })),
+    properties: (response.properties ?? []).map(propertyRow),
     // Type assertions needed due to complex Zod type inference differences
     // between API response schema and form schema
     titles: (response.titles ?? []) as createRequestFormType['titles'],
@@ -187,12 +202,7 @@ export const mapPriorAppraisalToForm = (
       name: c.name ?? '',
       contactNumber: c.contactNumber ?? '',
     })),
-    properties: (template.properties ?? []).map(p => ({
-      propertyType: p.propertyType ?? '',
-      buildingType: p.buildingType ?? null,
-      buildingTypeOther: p.buildingTypeOther ?? null,
-      sellingPrice: p.sellingPrice ?? null,
-    })),
+    properties: (template.properties ?? []).map(propertyRow),
     titles: (template.titles ?? []).map(withoutForeignIds) as createRequestFormType['titles'],
   };
 };

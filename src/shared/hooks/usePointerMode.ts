@@ -29,12 +29,12 @@ export function usePointerMode(resetKeys: readonly string[] = ['Tab']) {
 /**
  * The keyboard focus ring, for a control that draws its own: an inline `outline: none` (the
  * global `:focus-visible` outline in src/index.css is unlayered and beats Tailwind's layered
- * `outline-none`, so only an inline style switches it off) plus a green ring, worn only when
+ * `outline-none`, so only an inline style switches it off) plus a ring in the focus colour (`--focus-edge`), worn only when
  * `usePointerMode` says the last input was not the pointer.
  *
  * `KEYBOARD_RING` is for Headless UI buttons, which set `data-focus` themselves; `KEYBOARD_RING_PLAIN`
  * is for plain buttons, which only have `:focus-visible`.
  */
 export const NO_OUTLINE = { outline: 'none' } as const;
-export const KEYBOARD_RING = 'data-focus:ring-2 data-focus:ring-primary';
-export const KEYBOARD_RING_PLAIN = 'focus-visible:ring-2 focus-visible:ring-primary';
+export const KEYBOARD_RING = 'data-focus:ring-2 data-focus:ring-(--focus-edge)';
+export const KEYBOARD_RING_PLAIN = 'focus-visible:ring-2 focus-visible:ring-(--focus-edge)';

@@ -26,6 +26,9 @@ export const useUpdatePasswordPolicyConfig = () => {
       queryClient.invalidateQueries({ queryKey: passwordPolicyKeys.config });
       // The checklist endpoint (/auth/password-policy) is cached under this key — refresh it too.
       queryClient.invalidateQueries({ queryKey: passwordPolicyQueryKey });
+      // twoFactorRequired on the signed-in user's profile is derived from this policy.
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] });
     },
   });
 };

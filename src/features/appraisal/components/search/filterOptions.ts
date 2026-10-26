@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAddressStore, useCompanyStore } from '@/shared/store';
 import { useParameterOptions } from '@/shared/utils/parameterUtils';
 import { useLocalizedCompanyName } from '@/shared/utils/companyName';
@@ -150,3 +151,31 @@ export const hasValue = (values: Record<string, string>, field: FilterField): bo
   field.type === 'date-range'
     ? isFieldActive(values, field)
     : selectedValues(values, field.key).length > 0;
+
+/** yyyy-MM-dd as dd/MM/yyyy, the way the date fields write it; an empty end is an ellipsis. */
+const displayDate = (iso?: string) =>
+  iso ? (/^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').reverse().join('/') : iso) : '…';
+
+/** What a chip says after its label: the first value, "+N" for more, or the date range. */
+export function useChipSummary(field: FilterField, values: Record<string, string>): string {
+  const { t } = useTranslation(['appraisal', 'common']);
+  // A requestor chip has no local list to read its label from, so it looks its first value up.
+  const options = useFilterFieldOptions(
+    field,
+    field.type === 'requestor-autocomplete' ? (selectedValues(values, field.key)[0] ?? '') : '',
+  );
+  if (field.type === 'date-range') {
+    const from = values[field.fromKey ?? ''];
+    const to = values[field.toKey ?? ''];
+    const preset = from && to ? presetFor(from, to) : undefined;
+    if (preset) return t(`appraisal:list.filters.presets.${preset.key}`);
+    return `${displayDate(from)} → ${displayDate(to)}`;
+  }
+  const selected = selectedValues(values, field.key);
+  if (selected.length === 0) return t('appraisal:list.filters.anyValue');
+  const first =
+    options.find(o => o.value === selected[0])?.label ?? requestorLabel(selected[0]) ?? selected[0];
+  // "+2" rather than the full list: a quick view can set four statuses at once, and spelling
+  // them all out pushes every other chip off the row.
+  return selected.length > 1 ? `${first} +${selected.length - 1}` : first;
+}

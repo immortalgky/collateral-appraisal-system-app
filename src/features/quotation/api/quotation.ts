@@ -1,4 +1,10 @@
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  keepPreviousData,
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import axios from '@shared/api/axiosInstance';
 import type {
   EditDraftQuotationBody,
@@ -11,6 +17,11 @@ import type {
 } from '../schemas/quotation';
 import { QuotationActivityLogRowSchema } from '../schemas/quotation';
 import { z } from 'zod';
+import { isAxiosError } from 'axios';
+import { parseLocalDateTime } from '@/features/failedMessages/utils/queueHealth';
+import { notifyFinalizeError, notifyFinalizeSuccess } from './finalizeToasts';
+import { invalidateTaskLists } from '@/features/appraisal/api/administration';
+import { invalidateFeePreviews } from '@/features/appraisal/api/feePreview';
 import type {
   Quotation,
   StartQuotationFromTaskRequest,
@@ -35,18 +46,58 @@ export const quotationKeys = {
   details: () => [...quotationKeys.all, 'detail'] as const,
   detail: (id: string) => [...quotationKeys.details(), id] as const,
   myInvitations: (params: Record<string, unknown>) => ['my-invitations', params] as const,
-  drafts: (bankingSegment?: string) =>
-    [...quotationKeys.all, 'drafts', bankingSegment ?? ''] as const,
+  drafts: () => [...quotationKeys.all, 'drafts'] as const,
   activityLog: (id: string) => [...quotationKeys.detail(id), 'activity-log'] as const,
+  // Deliberately NOT under detail(id): finalize invalidates the detail prefix on settle, and a
+  // re-fetch of the preview there could fail and silently switch auto-assign off.
+  autoAssignPreview: (id: string) => [...quotationKeys.all, 'auto-assign-preview', id] as const,
 };
 
+/**
+ * Marks the fee-previews of the appraisals a quotation covers stale: the ones named (when the
+ * mutation knows them) plus those in the quotation's cached detail. If neither is known, every
+ * appraisal's preview is marked.
+ */
+const invalidateQuotationFees = (
+  queryClient: QueryClient,
+  quotationId: string,
+  appraisalIds: string[] = [],
+) =>
+  invalidateFeePreviews(queryClient, [
+    ...appraisalIds,
+    ...(queryClient
+      .getQueryData<QuotationRequestDetailDto>(quotationKeys.detail(quotationId))
+      ?.appraisals?.map(a => a.appraisalId) ?? []),
+  ]);
+
 // ─── GET /quotations/{id} ─────────────────────────────────────────────────────
+
+const FOLLOWUP_POLL_MS = 2_000;
+const FOLLOWUP_POLL_MAX_MS = 30_000;
+
+/**
+ * Some Assigned row still has no follow-up staff, and the auto-assign run is recent. The run stamps
+ * each row in turn, and the consumer's writes trail the last one, so the 30 s is measured from the
+ * newest stamp across all rows: an early row of a long run is already older than that.
+ */
+const isAwaitingFollowup = (quotation: QuotationRequestDetailDto | undefined) => {
+  const rows = quotation?.appraisals ?? [];
+  if (!rows.some(a => a.autoAssignResult === 'Assigned' && !a.followupStaffName)) return false;
+  // Server local time with no zone; an unparseable stamp is NaN and left out. No stamp, no polling.
+  const stamps = rows
+    .map(a => (a.autoAssignedAt ? parseLocalDateTime(a.autoAssignedAt).getTime() : NaN))
+    .filter(ms => !Number.isNaN(ms));
+  return stamps.length > 0 && Date.now() - Math.max(...stamps) < FOLLOWUP_POLL_MAX_MS;
+};
 
 /**
  * Fetch a single quotation request with all company submissions and negotiations.
  * Role-scoped: ExtCompany sees own bid only; RM sees shortlisted bids only.
  */
-export const useGetQuotationById = (id: string | null | undefined) => {
+export const useGetQuotationById = (
+  id: string | null | undefined,
+  { pollAutoAssignFollowup = false }: { pollAutoAssignFollowup?: boolean } = {},
+) => {
   return useQuery({
     queryKey: quotationKeys.detail(id ?? ''),
     queryFn: async (): Promise<QuotationRequestDetailDto> => {
@@ -55,6 +106,13 @@ export const useGetQuotationById = (id: string | null | undefined) => {
     },
     enabled: !!id,
     staleTime: 10_000,
+    // Opt-in, for the page that shows the assignment result: the async CompanyAssigned consumer writes
+    // the follow-up staff a moment after finalize returns, so the refetch on settle can read it still
+    // empty. Stateless: the window is measured from the stored autoAssignedAt, so an old row that never
+    // gets a name (returned to assignment, user deleted) does not poll on later visits.
+    refetchInterval: pollAutoAssignFollowup
+      ? query => (isAwaitingFollowup(query.state.data) ? FOLLOWUP_POLL_MS : false)
+      : false,
   });
 };
 
@@ -107,6 +165,8 @@ export interface QuotationListItem {
   customerName?: string | null;
   customerCount: number;
   customerNames?: string | null;
+  /** When the winner was finalized; null until then. */
+  selectedAt?: string | null;
 }
 
 export interface PaginatedQuotations {
@@ -263,7 +323,7 @@ export const useGetMyInvitations = (params: GetMyInvitationsParams = {}) => {
 // ─── POST /quotations/start-from-task ────────────────────────────────────────
 
 /**
- * Start a new IBG quotation linked to the current admin workflow task.
+ * Start a new quotation linked to the current admin workflow task.
  * Does NOT complete the task — admin keeps monitoring from the task page.
  */
 export const useStartQuotationFromTask = () => {
@@ -276,8 +336,10 @@ export const useStartQuotationFromTask = () => {
       const { data } = await axios.post('/quotations/start-from-task', request);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, request) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      // A quotation now exists for the appraisal: its fee preview (the quotation source) is stale.
+      invalidateFeePreviews(queryClient, [request.appraisalId]);
     },
   });
 };
@@ -390,6 +452,7 @@ export const usePickTentativeWinner = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -406,6 +469,7 @@ export const useOpenNegotiation = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -437,6 +501,7 @@ export const useRespondNegotiation = (quotationId: string) => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -457,23 +522,147 @@ export const useRejectTentativeWinner = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId);
     },
+  });
+};
+
+// ─── GET /quotations/{id}/auto-assign-preview ────────────────────────────────
+
+export interface AutoAssignPreviewAppraisal {
+  appraisalId: string;
+  appraisalNumber: string | null;
+  workflowInstanceId: string | null;
+  currentActivityId: string | null;
+  isPma: boolean;
+  /**
+   * What the finalize loop will do with this appraisal, from the same classifier the loop uses.
+   * The FE shows it and never re-derives it.
+   */
+  predictedOutcome: 'Ready' | 'Skipped' | 'Failed' | 'Parked';
+  /**
+   * null when Ready. Skipped: deleted | workflowEnded | noAssignment | notPending.
+   * Failed: constructionInspection | taskHeld | winnerUnavailable | unpriced | feeBaseMissing |
+   * assignmentNotReset | documentFollowupOpen.
+   * Parked: notAtAssignment.
+   */
+  reason: string | null;
+  /** Who holds the appraisal-assignment task (reason = taskHeld). */
+  taskHeldBy: string | null;
+}
+
+export interface AutoAssignPreview {
+  externalAssignmentEnabled: boolean;
+  /** False for a quotation started from an appraisal task: auto-assign is for standalone ones only. */
+  standalone: boolean;
+  appraisals: AutoAssignPreviewAppraisal[];
+}
+
+/** Per-appraisal readiness for "assign every appraisal right after finalize". */
+export const useGetAutoAssignPreview = (quotationId: string, enabled: boolean) => {
+  return useQuery({
+    queryKey: quotationKeys.autoAssignPreview(quotationId),
+    queryFn: async (): Promise<AutoAssignPreview> => {
+      const { data } = await axios.get(`/quotations/${quotationId}/auto-assign-preview`);
+      return data;
+    },
+    enabled: enabled && !!quotationId,
+    // Not redundant: the app-wide default is 5 min (app/queryClient.ts). Readiness moves while the
+    // modal is closed (an appraisal can be routed back), so always re-read on open.
+    staleTime: 0,
   });
 };
 
 // ─── POST /quotations/{id}/finalize ──────────────────────────────────────────
 
+export interface FinalizeQuotationPayload {
+  companyQuotationId: string;
+  reason?: string | null;
+  /** Omit for a plain finalize. An appraisal missing from `staff` is assigned round robin. */
+  autoAssign?: { staff: { appraisalId: string; staffId: string }[] } | null;
+}
+
+export type AutoAssignResultCode = 'Assigned' | 'Failed' | 'Parked' | 'Skipped';
+
+export interface FinalizeQuotationResponse {
+  /** Every appraisal on the quotation: each should have an entry in `autoAssignResults`. */
+  appraisalIds: string[];
+  autoAssignResults?:
+    | { appraisalId: string; result: AutoAssignResultCode; message: string | null }[]
+    | null;
+}
+
+/** Statuses that say nothing about whether the server acted: a timeout or a gateway giving up. */
+const NO_ANSWER_STATUSES = [408, 499, 502, 503, 504];
+
+const finalizeErrorStatus = (error: unknown) =>
+  isAxiosError(error) ? error.response?.status : undefined;
+
+/** The finalize request failed without an answer from the API, so it may have gone through. */
+export const isFinalizeOutcomeUnknown = (error: unknown) => {
+  const status = finalizeErrorStatus(error);
+  return status === undefined || NO_ANSWER_STATUSES.includes(status);
+};
+
+/** The API refused the request (a real 4xx), so nothing changed. */
+const isFinalizeRefused = (error: unknown) => {
+  const status = finalizeErrorStatus(error);
+  return status != null && status >= 400 && status < 500 && !NO_ANSWER_STATUSES.includes(status);
+};
+
 export const useFinalizeQuotation = (quotationId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (payload: { companyQuotationId: string; reason?: string | null }) => {
-      const { data } = await axios.post(`/quotations/${quotationId}/finalize`, payload);
+    mutationFn: async (payload: FinalizeQuotationPayload): Promise<FinalizeQuotationResponse> => {
+      // Auto-assign runs one synchronous loop over every appraisal; the shared 10 s timeout is too short for it.
+      const { data } = await axios.post(
+        `/quotations/${quotationId}/finalize`,
+        payload,
+        payload.autoAssign ? { timeout: 120_000 } : undefined,
+      );
       return data;
     },
-    onSuccess: () => {
+    // The result toasts live here, not in the dialog's per-call callbacks: the dialog can unmount
+    // mid-request (finalize commits before the auto-assign loop, so a refetch can flip the status),
+    // and TanStack drops per-call callbacks of an unmounted component.
+    onSuccess: (data, payload) => notifyFinalizeSuccess(data, !!payload.autoAssign),
+    onError: (error, payload) =>
+      notifyFinalizeError(error, !!payload.autoAssign && isFinalizeOutcomeUnknown(error)),
+    // Settled, not just success: the finalize can commit before the auto-assign step fails.
+    onSettled: (data, error, payload) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId, data?.appraisalIds);
+      if (!payload.autoAssign) return;
+      // A 4xx means the request was refused on facts the preview may have shown wrongly (e.g. the
+      // go-live flag was switched off after it loaded): re-read it, or every retry fails the same way.
+      const refused = isFinalizeRefused(error);
+      // A refusal changed nothing, so there is nothing else to refresh.
+      if (refused) {
+        queryClient.invalidateQueries({ queryKey: quotationKeys.autoAssignPreview(quotationId) });
+        return;
+      }
+      // Auto-assign completes each appraisal's pending task: refresh task lists and counts.
+      // (The per-appraisal quotation list sits under lists() above.)
+      invalidateTaskLists(queryClient);
+      // Refresh just the two queries the async consumer writes (the keys the Administration and fee
+      // pages register), as the manual assign path does; the rest of ['appraisal', id] (photos,
+      // comparables, ...) is untouched. They are invalidated, not removed: removing a query that a
+      // mounted page observes refetches it at once anyway and only adds a loading flash. On failure
+      // there is no response: take the ids from what the modal had cached.
+      const cachedIds =
+        queryClient
+          .getQueryData<AutoAssignPreview>(quotationKeys.autoAssignPreview(quotationId))
+          ?.appraisals.map(a => a.appraisalId) ??
+        queryClient
+          .getQueryData<QuotationRequestDetailDto>(quotationKeys.detail(quotationId))
+          ?.appraisals?.map(a => a.appraisalId) ??
+        [];
+      for (const id of data?.appraisalIds ?? cachedIds) {
+        queryClient.invalidateQueries({ queryKey: ['appraisal', id, 'assignments'] });
+        queryClient.invalidateQueries({ queryKey: ['appraisal', id, 'fees'] });
+      }
     },
   });
 };
@@ -491,6 +680,7 @@ export const useCancelQuotation = (quotationId: string) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      invalidateQuotationFees(queryClient, quotationId);
     },
   });
 };
@@ -576,8 +766,11 @@ export const useCreateQuotation = () => {
       const { data } = await axios.post('/quotations', body);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, body) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
+      // An empty list would read as "every appraisal" to invalidateFeePreviews: skip it instead.
+      const appraisalIds = body.appraisals?.map(a => a.appraisalId) ?? [];
+      if (appraisalIds.length > 0) invalidateFeePreviews(queryClient, appraisalIds);
     },
   });
 };
@@ -594,7 +787,7 @@ export const useCreateQuotation = () => {
  */
 export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, enabled = true) => {
   return useQuery({
-    queryKey: ['eligible-companies', loanType],
+    queryKey: ['eligible-companies', 'raw', loanType],
     queryFn: async () => {
       const { data } = await axios.get('/companies/eligible', {
         params: loanType ? { loanType } : undefined,
@@ -607,6 +800,7 @@ export const useGetLoanTypeMatchedCompanies = (loanType: string | undefined, ena
         contactPerson?: string;
         phone?: string;
         email?: string;
+        loanTypes?: string[];
       }>;
     },
     enabled: enabled,
@@ -628,10 +822,11 @@ export const useAddAppraisalToDraft = (quotationId: string) => {
       const { data } = await axios.post(`/quotations/${quotationId}/appraisals`, { appraisalId });
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, appraisalId) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      invalidateFeePreviews(queryClient, [appraisalId]);
     },
   });
 };
@@ -650,10 +845,11 @@ export const useRemoveAppraisalFromDraft = (quotationId: string) => {
       const { data } = await axios.delete(`/quotations/${quotationId}/appraisals/${appraisalId}`);
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data, appraisalId) => {
       queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['quotations'] });
+      invalidateFeePreviews(queryClient, [appraisalId]);
     },
   });
 };
@@ -682,19 +878,17 @@ export const useDeclineInvitation = (quotationId: string) => {
   });
 };
 
-// ─── v2: GET /quotations/drafts?bankingSegment={seg} ─────────────────────────
+// ─── v2: GET /quotations/drafts ───────────────────────────────────────────────
 
 /**
  * Fetch the current admin's Draft quotations for the entry-modal picker.
  * Allows admin to add an appraisal to an existing Draft instead of creating new.
  */
-export const useGetMyDraftsForAssembly = (bankingSegment?: string, enabled = true) => {
+export const useGetMyDraftsForAssembly = (enabled = true) => {
   return useQuery({
-    queryKey: quotationKeys.drafts(bankingSegment),
+    queryKey: quotationKeys.drafts(),
     queryFn: async (): Promise<QuotationDraftSummaryDto[]> => {
-      const { data } = await axios.get('/quotations/drafts', {
-        params: bankingSegment ? { bankingSegment } : undefined,
-      });
+      const { data } = await axios.get('/quotations/drafts');
       return data.drafts ?? data ?? [];
     },
     enabled: enabled,
@@ -726,9 +920,15 @@ export const useSendQuotation = (quotationId: string) => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
       queryClient.invalidateQueries({ queryKey: quotationKeys.lists() });
       queryClient.invalidateQueries({ queryKey: quotationKeys.all });
+      invalidateQuotationFees(queryClient, quotationId);
+    },
+    // A rejected Send (e.g. SEGMENT_COVERAGE_MISMATCH) means the draft changed since it was loaded,
+    // so refetch to show the server's current Segment Set / per-company coverage. (onSuccess already
+    // covers the detail through `all`.)
+    onError: () => {
+      queryClient.invalidateQueries({ queryKey: quotationKeys.detail(quotationId) });
     },
   });
 };

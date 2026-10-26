@@ -62,13 +62,13 @@ const LogHistogram = ({
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="flex items-center justify-between text-xs text-gray-500">
+      <div className="flex items-center justify-between text-xs text-(--palette-gray-500)">
         <span className="flex items-center gap-3">
           <LegendDot color={logLevelBarColor.information} label={t('levels.Information')} />
           <LegendDot color={logLevelBarColor.warning} label={t('levels.Warning')} />
           <LegendDot color={logLevelBarColor.error} label={t('histogram.errorFatalLabel')} />
         </span>
-        <span className="text-gray-400">{t('histogram.clickHint')}</span>
+        <span className="text-(--palette-gray-400)">{t('histogram.clickHint')}</span>
       </div>
       <ResponsiveContainer width="100%" height={90}>
         <BarChart

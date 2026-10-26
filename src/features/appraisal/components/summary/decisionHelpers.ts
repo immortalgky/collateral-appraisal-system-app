@@ -1,4 +1,5 @@
 import { type TFunction } from 'i18next';
+import { roundAwayFromZero, snap } from '@/shared/utils/decimalRounding';
 import { type ActivityAction } from '@/features/appraisal/api/workflow';
 import { getActivityConfig } from '@/features/task/config/activityConfig';
 import {
@@ -239,4 +240,44 @@ export const useCommitteeApproval = ({
     // A 4xx (not a member, no round yet) hides the panel like before; only an outage is shown.
     liveFailed: !isTerminal && live.isError && isTransientError(live.error),
   };
+};
+
+// ==================== Force Selling Price (Review) ====================
+
+const round1000 = (v: number) => roundAwayFromZero(v, 1000);
+
+/**
+ * The derived "Force Selling Price (Review)" for a typed Total Appraisal Price (Review).
+ *
+ * Non-block: the effective rate % of the reviewed total. Block: the rate already went into each
+ * unit's price, so the forced sale scales in proportion to the unit sums (the backend's rule),
+ * reviewed x (unit forced sale / unit appraisal total), or the resolved rate when there is no
+ * unit total to take a ratio of. Rounded to the nearest 1,000, except that the unit total itself
+ * returns the unit forced sale exactly.
+ */
+export const deriveForceSellingPriceReview = ({
+  reviewedTotal,
+  isBlock,
+  unitTotal,
+  unitForceSellingPrice,
+  blockRate,
+  effectiveRate,
+}: {
+  reviewedTotal: number | null | undefined;
+  isBlock: boolean;
+  unitTotal: number | null | undefined;
+  unitForceSellingPrice: number | null | undefined;
+  blockRate: number | null | undefined;
+  effectiveRate: number | null | undefined;
+}): number | null => {
+  if (reviewedTotal == null) return null;
+  if (!isBlock) {
+    return effectiveRate != null ? round1000(snap(reviewedTotal * effectiveRate) / 100) : null;
+  }
+  if (unitTotal != null && unitTotal > 0 && unitForceSellingPrice != null) {
+    // The unit total itself: the unit sum exactly, not re-rounded (the backend does the same).
+    if (reviewedTotal === unitTotal) return unitForceSellingPrice;
+    return round1000(snap((reviewedTotal * unitForceSellingPrice) / unitTotal));
+  }
+  return blockRate != null ? round1000(snap(reviewedTotal * blockRate) / 100) : null;
 };

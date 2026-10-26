@@ -1,38 +1,94 @@
 {
   "page": {
     "title": "Scheduled Jobs",
-    "subtitle": "Cron schedule, timezone and on/off state for every recurring background job. Changes take effect immediately — no restart needed.",
-    "empty": "No recurring jobs are registered."
+    "subtitle": "Schedule, time zone and on/off state of every module's background jobs — saved changes take effect immediately, no restart",
+    "empty": "No recurring jobs are registered.",
+    "emptyFiltered": "No jobs match the filters",
+    "failedUnknown": "Hangfire could not be read, so it is not known which jobs failed",
+    "loadFailed": "Failed to load scheduled jobs",
+    "runInfoUnavailable": "Last / next run could not be read from Hangfire right now — schedules can still be edited",
+    "hangfireLink": "Run history in Hangfire"
   },
-  "actions": {
-    "edit": "Edit"
+  "tabs": {
+    "label": "Filter jobs",
+    "all": "All",
+    "overridden": "Changed from default",
+    "disabled": "Disabled",
+    "failed": "Last run failed"
+  },
+  "filters": {
+    "searchPlaceholder": "Search jobs",
+    "allModules": "All modules",
+    "moduleLabel": "Module"
   },
   "table": {
     "job": "Job",
     "schedule": "Schedule",
-    "timeZone": "Time zone",
-    "status": "Status",
-    "overridden": "overridden",
-    "appDefault": "app default"
+    "lastRun": "Last run",
+    "nextRun": "Next run",
+    "overridden": "changed",
+    "defaultWas": "Default {{cron}}",
+    "disabled": "Disabled",
+    "noNextRun": "Hangfire has no next run for this job",
+    "jobCount_one": "{{count}} job",
+    "jobCount_other": "{{count}} jobs"
   },
-  "status": {
-    "enabled": "Enabled",
-    "disabled": "Disabled"
+  "actions": {
+    "edit": "Edit schedule",
+    "resetDefault": "Restore default"
+  },
+  "lastRun": {
+    "never": "Never run",
+    "disabledHint": "Disabled — Hangfire has no last-run data",
+    "unavailable": "Could not read from Hangfire",
+    "succeeded": "Succeeded",
+    "succeededIn": "Succeeded · {{s}} s",
+    "failed": "Failed",
+    "processing": "Running",
+    "scheduled": "Scheduled",
+    "enqueued": "Queued",
+    "awaiting": "Awaiting",
+    "deleted": "Deleted",
+    "expired": "No result in history",
+    "expiredHint": "Hangfire keeps successful job results for 1 day; this run has expired."
+  },
+  "time": {
+    "today": "Today {{time}}",
+    "tomorrow": "Tomorrow {{time}}",
+    "inMinutes_one": "in {{count}} min",
+    "inMinutes_other": "in {{count}} min",
+    "inHours_one": "in {{count}} h",
+    "inHours_other": "in {{count}} h",
+    "inDays_one": "in {{count}} day",
+    "inDays_other": "in {{count}} days",
+    "due": "Due"
+  },
+  "cron": {
+    "hourly": "Hourly (at minute {{minute}})",
+    "daily": "Daily at {{time}}",
+    "monthly": "Monthly on day {{day}} at {{time}}",
+    "weekly": "Weekly on {{weekday}} at {{time}}",
+    "weekday": {
+      "sun": "Sunday",
+      "mon": "Monday",
+      "tue": "Tuesday",
+      "wed": "Wednesday",
+      "thu": "Thursday",
+      "fri": "Friday",
+      "sat": "Saturday"
+    }
   },
   "fields": {
-    "jobId": "Job id",
     "cronExpression": "Cron expression",
     "timeZoneId": "Time zone",
-    "timeZonePlaceholder": "Application default ({{timeZone}})",
+    "timeZoneDefault": "Application default",
+    "timeZoneDefaultWith": "Application default ({{timeZone}})",
     "isEnabled": "Enabled"
   },
   "hints": {
-    "default": "Code default:",
-    "timeZone": "Leave blank to use the application timezone.",
-    "isEnabled": "When disabled, the job is removed from the scheduler and will not run."
-  },
-  "modal": {
-    "title": "Edit job schedule"
+    "reads": "Reads as:",
+    "default": "Code default",
+    "isEnabled": "When off, the job is removed from the scheduler"
   },
   "validation": {
     "cronRequired": "Cron expression is required.",

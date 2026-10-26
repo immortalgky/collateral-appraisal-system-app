@@ -85,7 +85,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
       <div className="flex flex-col gap-4 p-6">
         {/* Current password */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1">
             {t('fields.currentPassword')} <span className="text-danger">*</span>
           </label>
           <input
@@ -93,7 +93,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             value={form.currentPassword}
             onChange={e => updateField('currentPassword', e.target.value)}
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
-              errors.currentPassword ? 'border-danger' : 'border-gray-200'
+              errors.currentPassword ? 'border-danger' : 'border-(--palette-line)'
             }`}
             placeholder={t('placeholders.enterCurrentPassword')}
           />
@@ -104,7 +104,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
 
         {/* New password */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1">
             {t('fields.newPassword')} <span className="text-danger">*</span>
           </label>
           <input
@@ -112,7 +112,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             value={form.newPassword}
             onChange={e => updateField('newPassword', e.target.value)}
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
-              errors.newPassword ? 'border-danger' : 'border-gray-200'
+              errors.newPassword ? 'border-danger' : 'border-(--palette-line)'
             }`}
           />
           {errors.newPassword && <p className="mt-1 text-xs text-danger">{errors.newPassword}</p>}
@@ -123,7 +123,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
 
         {/* Confirm password */}
         <div>
-          <label className="block text-xs font-medium text-gray-700 mb-1">
+          <label className="block text-xs font-medium text-(--palette-ink) mb-1">
             {t('fields.confirmNewPassword')} <span className="text-danger">*</span>
           </label>
           <input
@@ -131,7 +131,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
             value={form.confirmPassword}
             onChange={e => updateField('confirmPassword', e.target.value)}
             className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary ${
-              errors.confirmPassword ? 'border-danger' : 'border-gray-200'
+              errors.confirmPassword ? 'border-danger' : 'border-(--palette-line)'
             }`}
             placeholder={t('placeholders.reEnterNewPassword')}
           />
@@ -144,7 +144,7 @@ const ChangePasswordModal = ({ isOpen, onClose, userId }: ChangePasswordModalPro
         <button
           type="button"
           onClick={() => setShowPasswords(p => !p)}
-          className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 self-start"
+          className="flex items-center gap-1.5 text-xs text-(--palette-gray-500) hover:text-(--palette-ink) self-start"
         >
           <Icon name={showPasswords ? 'eye-slash' : 'eye'} style="regular" className="size-3.5" />
           {showPasswords ? t('buttons.hidePasswords') : t('buttons.showPasswords')}

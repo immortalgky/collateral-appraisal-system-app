@@ -2,7 +2,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useBasePath, useAppraisalId } from '@/features/appraisal/context/AppraisalContext';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
 import type { PropertyPhotoSectionRef } from '../components/PropertyPhotoSection';
-import { PropertyEditorHeader } from '../components/PropertyEditorHeader';
+import { PropertyFormShell } from '../components/PropertyFormShell';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   createMachineryForm,
@@ -11,17 +11,17 @@ import {
 } from '../schemas/form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
+import { allMachineryFields } from '../configs/fields';
 import { type SubmitHandler, useForm } from 'react-hook-form';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import Icon from '@/shared/components/Icon';
 import { FormProvider } from '@/shared/components/form/FormProvider';
+import { UserFormLayoutProvider } from '@/shared/components/form';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Section from '@/shared/components/sections/Section';
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
 import CancelButton from '@/shared/components/buttons/CancelButton';
 import {
   useCreateMachineryProperty,
@@ -130,8 +130,6 @@ const CreateMachineryPage = () => {
     }
   };
 
-  const { isOpen, onToggle } = useDisclosure();
-
   const handleSaveDraft = () => {
     setSaveAction('draft');
     const data = getValues();
@@ -184,86 +182,79 @@ const CreateMachineryPage = () => {
   if (isLoading || (isEditMode && !propertyData)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <FormProvider methods={methods} schema={createMachineryForm}>
-        <form onSubmit={handleSubmit(onSubmit)} className="cas-form-grid flex-1 min-h-0 flex flex-col">
-          {/* Scrollable Form Content */}
-          <div
-            id="form-scroll-container"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <PropertyEditorHeader
+      <UserFormLayoutProvider>
+        <FormProvider methods={methods} schema={createMachineryForm} fields={allMachineryFields}>
+          <form onSubmit={handleSubmit(onSubmit)} className="flex-1 min-h-0 flex flex-col">
+            {/* Scrollable Form Content */}
+            <PropertyFormShell
               appraisalId={appraisalId}
               propertyId={propertyId}
               typeCode="MAC"
               photoSectionRef={photoSectionRef}
               tabs={[{ id: 'machinery', label: t('createPage.navMachinery') }]}
               activeTab="machinery"
-            />
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Machinery Forms */}
-                  <Section
-                    id="machinery-section"
-                    anchor
-                    className="flex flex-col gap-6 min-w-0 overflow-hidden"
-                  >
-                    <MachineryDetailForm />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+              <div className="flex-auto flex flex-col gap-6 min-w-0">
+                {/* Machinery Forms */}
+                <Section
+                  id="machinery-section"
+                  anchor
+                  className="flex flex-col gap-6 min-w-0 overflow-hidden"
+                >
+                  <MachineryDetailForm />
+                </Section>
+              </div>
+            </PropertyFormShell>
 
-          {/* Sticky Action Buttons */}
-          <ActionBar>
-            <ActionBar.Left>
-              <CancelButton />
+            {/* Sticky Action Buttons */}
+            <ActionBar>
+              <ActionBar.Left>
+                <CancelButton />
+                {!isReadOnly && (
+                  <>
+                    <ActionBar.Divider />
+                    <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+                  </>
+                )}
+              </ActionBar.Left>
               {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
+                <ActionBar.Right>
+                  <Button
+                    variant="ghost"
+                    type="button"
+                    onClick={handleSaveDraft}
+                    isLoading={isPending && saveAction === 'draft'}
+                    disabled={isPending}
+                  >
+                    {t('createPage.saveDraft')}
+                  </Button>
+                  <Button
+                    type="submit"
+                    isLoading={isPending && saveAction === 'submit'}
+                    disabled={isPending}
+                  >
+                    <Icon name="check" style="solid" className="size-4 mr-2" />
+                    {t('createPage.save')}
+                  </Button>
+                </ActionBar.Right>
               )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  {t('createPage.saveDraft')}
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  {t('createPage.save')}
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+            </ActionBar>
 
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
+            <UnsavedChangesDialog blocker={blocker} />
+          </form>
+        </FormProvider>
+      </UserFormLayoutProvider>
     </div>
   );
 };

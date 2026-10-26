@@ -101,6 +101,13 @@ export const useUploadProjectUnits = () => {
       queryClient.invalidateQueries({
         queryKey: projectPricingAssumptionKeys.detail(variables.appraisalId),
       });
+      // A new unit list clears every unit price (cascade), so the price grid and its source are stale.
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.source(variables.appraisalId),
+      });
     },
   });
 };
@@ -239,6 +246,9 @@ export const useUploadReappraisalUnits = () => {
       // the next five minutes: new units missing, prices computed from the superseded figures.
       queryClient.invalidateQueries({
         queryKey: projectUnitPriceKeys.all(variables.appraisalId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: projectUnitPriceKeys.source(variables.appraisalId),
       });
       // The model list grows when an added or renamed unit names one the project has not seen.
       queryClient.invalidateQueries({

@@ -523,19 +523,22 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
     return (
       <div className="flex flex-col h-full min-h-0">
         <div className="flex items-center justify-between mb-4">
-          <div className="h-9 w-40 bg-gray-200 rounded-lg animate-pulse" />
-          <div className="h-9 w-36 bg-gray-200 rounded-lg animate-pulse" />
+          <div className="h-9 w-40 bg-(--palette-line) rounded-lg animate-pulse" />
+          <div className="h-9 w-36 bg-(--palette-line) rounded-lg animate-pulse" />
         </div>
         <div className="space-y-4 flex-1">
           {[1, 2].map(i => (
-            <div key={i} className="border border-gray-200 rounded-lg bg-white p-4">
+            <div
+              key={i}
+              className="border border-(--palette-line) rounded-lg bg-(--palette-surface) p-4"
+            >
               <div className="flex items-center gap-2 mb-3">
-                <div className="h-4 w-24 bg-gray-200 rounded animate-pulse" />
-                <div className="h-4 w-16 bg-gray-200 rounded animate-pulse" />
+                <div className="h-4 w-24 bg-(--palette-line) rounded animate-pulse" />
+                <div className="h-4 w-16 bg-(--palette-line) rounded animate-pulse" />
               </div>
               <div className="space-y-2">
                 {[1, 2].map(j => (
-                  <div key={j} className="h-28 bg-gray-100 rounded-lg animate-pulse" />
+                  <div key={j} className="h-28 bg-(--palette-surface-3) rounded-lg animate-pulse" />
                 ))}
               </div>
             </div>
@@ -547,7 +550,7 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-red-50 rounded-xl border-2 border-dashed border-red-200">
+      <div className="flex flex-col items-center justify-center py-16 text-(--palette-gray-400) bg-(--palette-req-wash) rounded-xl border-2 border-dashed border-(--palette-req-line)">
         <Icon name="exclamation-triangle" className="text-4xl mb-3 text-red-400" />
         <p className="text-sm font-medium text-red-500">{t('properties.loadError')}</p>
         <p className="text-xs text-red-400 mt-1">{t('properties.loadErrorHint')}</p>
@@ -561,11 +564,13 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
     <div className="flex flex-col h-full min-h-0">
       {/* Toolbar */}
       <div className="flex items-center gap-3 mb-3">
-        <span className="text-xs text-gray-500">
-          <b className="font-semibold text-gray-700 tabular-nums">{groups.length}</b>{' '}
+        <span className="text-xs text-(--palette-gray-500)">
+          <b className="font-semibold text-(--palette-ink) tabular-nums">{groups.length}</b>{' '}
           {t('properties.toolbar.groups')}
-          <span className="mx-1.5 text-gray-400">·</span>
-          <b className="font-semibold text-gray-700 tabular-nums">{allProperties.length}</b>{' '}
+          <span className="mx-1.5 text-(--palette-gray-400)">·</span>
+          <b className="font-semibold text-(--palette-ink) tabular-nums">
+            {allProperties.length}
+          </b>{' '}
           {t('properties.toolbar.properties')}
         </span>
 
@@ -633,8 +638,8 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
               hovering over a 14rem column would hide the drop target it is aiming at. */}
           <DragOverlay dropAnimation={null}>
             {activeProperty ? (
-              <div className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs shadow-lg ring-2 ring-primary">
-                <Icon name="grip-vertical" className="text-[10px] text-gray-400" />
+              <div className="flex items-center gap-2 rounded-md border border-(--palette-line) bg-(--palette-surface) px-2 py-1 text-xs shadow-lg ring-2 ring-primary">
+                <Icon name="grip-vertical" className="text-[10px] text-(--palette-gray-400)" />
                 <span className="truncate">{activeProperty.address}</span>
               </div>
             ) : null}
@@ -660,10 +665,14 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
               />
             )}
             {groups.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+              <div className="flex flex-col items-center justify-center py-16 text-(--palette-gray-400) bg-(--palette-surface-2) rounded-xl border-2 border-dashed border-(--palette-line)">
                 <Icon name="layer-group" className="text-4xl mb-3" />
-                <p className="text-sm font-medium text-gray-500">{t('properties.noGroups')}</p>
-                <p className="text-xs text-gray-400 mt-1">{t('properties.noGroupsHint')}</p>
+                <p className="text-sm font-medium text-(--palette-gray-500)">
+                  {t('properties.noGroups')}
+                </p>
+                <p className="text-xs text-(--palette-gray-400) mt-1">
+                  {t('properties.noGroupsHint')}
+                </p>
               </div>
             ) : (
               groups.map(group => (
@@ -693,13 +702,13 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
           <DragOverlay dropAnimation={null}>
             {activeProperty ? (
               <div
-                className={`bg-white border border-gray-200 rounded-xl overflow-hidden shadow-xl ring-2 ring-primary cursor-grabbing flex items-stretch opacity-95 ${
+                className={`bg-(--palette-surface) border border-(--palette-line) rounded-xl overflow-hidden shadow-xl ring-2 ring-primary cursor-grabbing flex items-stretch opacity-95 ${
                   // A full-width row floating over a grid of 200 px cards reads as the wrong
                   // object; cap it so the preview stays about the size of what is being dragged.
                   viewMode === 'cards' ? 'max-w-[20rem]' : ''
                 }`}
               >
-                <div className="flex items-center justify-center w-5 flex-shrink-0 text-gray-400">
+                <div className="flex items-center justify-center w-5 flex-shrink-0 text-(--palette-gray-400)">
                   <Icon name="grip-vertical" className="text-[11px]" />
                 </div>
                 <PropertyCardContent property={activeProperty} showArrow={false} size="compact" />

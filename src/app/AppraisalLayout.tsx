@@ -45,7 +45,9 @@ function resolveReturnPath(appraisalId: string, locationState: unknown): string 
         return parsed.returnPath ?? APPRAISAL_SEARCH_ROUTE;
       }
     }
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
   return APPRAISAL_SEARCH_ROUTE;
 }
 
@@ -150,10 +152,14 @@ function AppraisalLayout() {
   if (isPageLoading) {
     return (
       <AppraisalProvider value={contextValue}>
-        <div className="h-screen flex flex-col">
+        <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
           <MobileAppraisalSidebar logo={Logo} loading />
           <AppraisalSidebar logo={Logo} loading />
-          <div className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}>
+          <div
+            className={
+              'lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300'
+            }
+          >
             <Navbar userNavigation={userNavigation} />
             <main className="py-4 flex-1 flex flex-col min-h-0">
               <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0">
@@ -170,16 +176,22 @@ function AppraisalLayout() {
   if (isAppraisalError) {
     return (
       <AppraisalProvider value={contextValue}>
-        <div className="h-screen flex flex-col">
+        <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
           <MobileAppraisalSidebar logo={Logo} loading />
           <AppraisalSidebar logo={Logo} loading />
-          <div className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}>
+          <div
+            className={
+              'lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300'
+            }
+          >
             <Navbar userNavigation={userNavigation} />
             <main className="py-4 flex-1 flex flex-col min-h-0">
               <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col items-center justify-center min-h-0">
                 <Icon style="solid" name="triangle-exclamation" className="size-16 text-red-500" />
-                <h2 className="mt-4 text-xl font-semibold text-gray-900">Failed to load appraisal</h2>
-                <p className="mt-2 text-gray-500">
+                <h2 className="mt-4 text-xl font-semibold text-base-content">
+                  Failed to load appraisal
+                </h2>
+                <p className="mt-2 text-(--palette-gray-500)">
                   {(appraisalError as Error)?.message || 'Unknown error'}
                 </p>
                 <Button className="mt-4" onClick={() => window.location.reload()}>
@@ -199,47 +211,51 @@ function AppraisalLayout() {
       <ParameterLoader />
       <DealerLoader />
       <AddressLoader />
-      <div className="h-screen flex flex-col">
+      <div className="h-screen flex flex-col bg-(--app-canvas) text-base-content">
         <MobileAppraisalSidebar logo={Logo} />
         <AppraisalSidebar logo={Logo} />
 
-        <div className={"lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300"}>
-          <div className="flex items-center justify-between px-4 py-2 bg-amber-50 border-b border-amber-200 shrink-0">
-              <div className="flex items-center gap-2">
-                <Icon name="lock" style="solid" className="size-3.5 text-amber-600" />
-                <span className="text-sm font-medium text-amber-700">Read-Only Mode</span>
-                <span className="text-sm text-amber-600">— View Only</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  sessionStorage.removeItem(RETURN_PATH_KEY);
-                  navigate(returnPath);
-                }}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium text-amber-700 hover:bg-amber-100 transition-colors"
-              >
-                <Icon name="xmark" style="solid" className="size-3.5" />
-                Exit
-              </button>
+        <div
+          className={
+            'lg:pl-[var(--cas-sidebar-w)] flex-1 flex flex-col min-h-0 transition-all duration-300'
+          }
+        >
+          <div className="flex items-center justify-between px-4 py-2 bg-(--palette-warn-wash) border-b border-(--palette-warn)/30 shrink-0">
+            <div className="flex items-center gap-2">
+              <Icon name="lock" style="solid" className="size-3.5 text-(--palette-warn)" />
+              <span className="text-sm font-medium text-(--palette-warn)">Read-Only Mode</span>
+              <span className="text-sm text-(--palette-warn)">— View Only</span>
             </div>
+            <button
+              type="button"
+              onClick={() => {
+                sessionStorage.removeItem(RETURN_PATH_KEY);
+                navigate(returnPath);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-sm font-medium text-(--palette-warn) hover:bg-(--palette-warn)/10 transition-colors"
+            >
+              <Icon name="xmark" style="solid" className="size-3.5" />
+              Exit
+            </button>
+          </div>
           <Navbar userNavigation={userNavigation} />
 
           <PageReadOnlyContext.Provider value={true}>
-          <div className="flex-1 flex min-h-0">
-            {/* Main Content */}
-            <main className="py-4 has-[[data-page-actions]]:pb-0 flex-1 flex flex-col min-h-0 min-w-0">
-              <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 min-w-0">
-                <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
-                <div className="flex-1 min-h-0 min-w-0">
-                  <ErrorBoundary>
+            <div className="flex-1 flex min-h-0">
+              {/* Main Content */}
+              <main className="py-4 has-[[data-page-actions]]:pb-0 flex-1 flex flex-col min-h-0 min-w-0">
+                <div className="px-4 sm:px-6 lg:px-8 flex-1 flex flex-col min-h-0 min-w-0">
+                  <Breadcrumb items={breadcrumbItemsWithExtras} className="mb-4 shrink-0" />
+                  <div className="flex-1 min-h-0 min-w-0">
+                    <ErrorBoundary>
                       <SuspenseOutlet />
-                  </ErrorBoundary>
+                    </ErrorBoundary>
+                  </div>
                 </div>
-              </div>
-            </main>
+              </main>
 
-            <AppraisalRightPanel />
-          </div>
+              <AppraisalRightPanel />
+            </div>
           </PageReadOnlyContext.Provider>
         </div>
 

@@ -17,7 +17,7 @@ const LoadingOverlay = () => {
       aria-live="polite"
       aria-label={message || 'Loading'}
     >
-      <div className="bg-white rounded-2xl p-8 shadow-xl">
+      <div className="bg-(--palette-surface) rounded-2xl p-8 shadow-xl">
         <LoadingSpinner size="lg" variant="default" text={message} />
       </div>
     </div>

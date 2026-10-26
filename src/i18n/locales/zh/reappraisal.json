@@ -185,6 +185,7 @@
       "alreadyInFlight": "进行中",
       "alreadyReviewed": "已重新评估",
       "notDue": "已不在最新文件中",
+      "priorNotCompleted": "原评估尚未完成",
       "createdDrafts": "已创建 {{total}} 个草稿申请",
       "createdHeading": "已创建",
       "skippedHeading": "跳过 {{total}} 份",
@@ -192,7 +193,8 @@
         "AlreadyInFlight": "该报告已有重新评估或未提交的申请",
         "AlreadyReviewed": "该报告已完成重新评估 — 应复评新报告",
         "NoBookNumber": "没有可追踪的报告编号",
-        "NotDue": "该报告已不在 AS400 最新文件中"
+        "NotDue": "该报告已不在 AS400 最新文件中",
+        "PriorNotCompleted": "CAS 中的原评估尚未完成、已被取消或已被删除，无法创建重新评估申请"
       }
     },
     "stats": {

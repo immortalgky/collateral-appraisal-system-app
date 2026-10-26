@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import NativeSelect from '@/shared/components/inputs/NativeSelect';
 import Icon from '@shared/components/Icon';
 import type { GetMonitoredTasksParams, SlaStatus } from '../types';
 
@@ -35,20 +36,20 @@ function TaskMonitorFilters({
         <Icon
           style="solid"
           name="magnifying-glass"
-          className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-gray-400 pointer-events-none"
+          className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-(--palette-gray-400) pointer-events-none"
         />
         <input
           type="text"
           placeholder={t('filters.searchTasksPlaceholder')}
           value={search}
           onChange={e => onSearchChange(e.target.value)}
-          className="w-full pl-9 pr-8 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+          className="w-full pl-9 pr-8 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
         />
         {search && (
           <button
             type="button"
             onClick={() => onSearchChange('')}
-            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-(--palette-gray-400) hover:text-(--palette-gray-600)"
           >
             <Icon style="solid" name="xmark" className="size-3.5" />
           </button>
@@ -56,10 +57,9 @@ function TaskMonitorFilters({
       </div>
 
       {/* SLA filter */}
-      <select
+      <NativeSelect
         value={filters.sla ?? ''}
         onChange={e => onFilterChange({ sla: (e.target.value as SlaStatus) || undefined })}
-        className="px-3 py-2 text-sm border border-gray-200 rounded-lg bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-gray-600"
       >
         <option value="">{t('filters.allSla')}</option>
         {slaOptions.map(o => (
@@ -67,7 +67,7 @@ function TaskMonitorFilters({
             {o.label}
           </option>
         ))}
-      </select>
+      </NativeSelect>
 
       {/* Group ID filter */}
       <div className="relative">
@@ -76,7 +76,7 @@ function TaskMonitorFilters({
           placeholder={t('filters.groupPlaceholder')}
           value={filters.groupId ?? ''}
           onChange={e => onFilterChange({ groupId: e.target.value || undefined })}
-          className="w-32 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+          className="w-32 px-3 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
         />
       </div>
 
@@ -87,7 +87,7 @@ function TaskMonitorFilters({
           placeholder={t('filters.assigneePlaceholder')}
           value={filters.assigneeUsername ?? ''}
           onChange={e => onFilterChange({ assigneeUsername: e.target.value || undefined })}
-          className="w-36 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+          className="w-36 px-3 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
         />
       </div>
 
@@ -98,7 +98,7 @@ function TaskMonitorFilters({
           placeholder={t('filters.activityPlaceholder')}
           value={filters.activityId ?? ''}
           onChange={e => onFilterChange({ activityId: e.target.value || undefined })}
-          className="w-36 px-3 py-2 text-sm bg-gray-50 border border-gray-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-gray-400"
+          className="w-36 px-3 py-2 text-sm bg-(--palette-surface-2) border border-(--palette-line) rounded-lg focus:bg-(--palette-surface) focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-(--palette-gray-400)"
         />
       </div>
 
@@ -107,12 +107,12 @@ function TaskMonitorFilters({
         <button
           type="button"
           onClick={onClearAll}
-          className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-500 border border-gray-200 rounded-lg hover:border-gray-300 hover:text-gray-700 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2 text-sm text-(--palette-gray-500) border border-(--palette-line) rounded-lg hover:border-(--palette-line-strong) hover:text-(--palette-ink) transition-all"
         >
           <Icon style="solid" name="xmark" className="size-3.5" />
           {t('common:actions.clear')}
           {activeCount > 0 && (
-            <span className="inline-flex items-center justify-center size-4 rounded-full bg-gray-200 text-gray-600 text-[10px] font-semibold">
+            <span className="inline-flex items-center justify-center size-4 rounded-full bg-(--palette-surface-3) text-(--palette-gray-600) text-[10px] font-semibold">
               {activeCount}
             </span>
           )}

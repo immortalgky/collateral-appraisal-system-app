@@ -62,7 +62,13 @@
       "licensePlateNumber": "车牌",
       "ownerName": "资产所有人",
       "projectName": "项目名称",
-      "condoName": "公寓名称"
+      "condoName": "公寓名称",
+      "province": "府",
+      "district": "县",
+      "subDistrict": "区",
+      "dopaProvince": "府",
+      "dopaDistrict": "县",
+      "dopaSubDistrict": "区"
     }
   },
   "notifications": "通知",

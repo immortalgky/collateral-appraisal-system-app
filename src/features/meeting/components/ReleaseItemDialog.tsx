@@ -49,13 +49,15 @@ const ReleaseItemDialog = ({
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={t('dialogs.releaseAppraisal')} size="sm">
       <div className="space-y-4">
-        <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg">
           <Icon
             name="circle-info"
             style="solid"
             className="w-5 h-5 text-blue-500 shrink-0 mt-0.5"
           />
-          <p className="text-sm text-blue-800">{t('releaseDialog.confirm', { label })}</p>
+          <p className="text-sm text-blue-800 dark:text-blue-300">
+            {t('releaseDialog.confirm', { label })}
+          </p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

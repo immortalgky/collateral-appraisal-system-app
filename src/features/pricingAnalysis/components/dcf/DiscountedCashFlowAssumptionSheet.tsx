@@ -26,7 +26,7 @@ import { DenseProvider, toNumber } from '../table/RHFInputCell';
 // dialog the table uses.
 
 const CELL =
-  'px-[8px] py-0 h-[26px] text-[12px] leading-[25px] border-b border-gray-300 whitespace-nowrap';
+  'px-[8px] py-0 h-[26px] text-[12px] leading-[25px] border-b border-(--palette-line-strong) whitespace-nowrap';
 const NUM = `${CELL} text-right tabular-nums`;
 const TRUNC = 'overflow-hidden text-ellipsis';
 
@@ -116,7 +116,7 @@ export function DiscountedCashFlowAssumptionSheet({
     >
       <td
         colSpan={5}
-        className="border-b border-gray-300 px-[8px] h-[22px] leading-[21px] bg-[#edf1f1] text-[11px] font-semibold tracking-[0.02em] text-[#55636f]"
+        className="border-b border-(--palette-line-strong) px-[8px] h-[22px] leading-[21px] bg-(--palette-surface-3) text-[11px] font-semibold tracking-[0.02em] text-(--palette-ink-2)"
       >
         <span
           className={clsx(
@@ -138,7 +138,7 @@ export function DiscountedCashFlowAssumptionSheet({
           different unit on every line (HANDOFF 18a trap). */}
       <td
         colSpan={2}
-        className={clsx(CELL, TRUNC, 'pl-[34px] text-[11px] text-gray-400')}
+        className={clsx(CELL, TRUNC, 'pl-[34px] text-[11px] text-(--palette-gray-400)')}
         title={text}
       >
         {text}
@@ -224,7 +224,10 @@ export function DiscountedCashFlowAssumptionSheet({
   // column 230px, scrolling inside its own row so the sheet never widens.
   const nested = (key: string, head: ReactNode, body: ReactNode) => (
     <tr key={key}>
-      <td colSpan={5} className="p-0 pl-[34px] border-b border-gray-300 bg-white">
+      <td
+        colSpan={5}
+        className="p-0 pl-[34px] border-b border-(--palette-line-strong) bg-(--palette-surface)"
+      >
         <div className="overflow-x-auto">
           <table className="w-full border-separate border-spacing-0 text-[11px] tabular-nums">
             <thead>{head}</thead>
@@ -234,8 +237,9 @@ export function DiscountedCashFlowAssumptionSheet({
       </td>
     </tr>
   );
-  const nCell = 'px-[8px] h-[24px] leading-[23px] border-b border-gray-200 whitespace-nowrap';
-  const nFirst = `${nCell} sticky left-0 z-[1] bg-white w-[230px] min-w-[230px] shadow-[1px_0_0_#e5e7eb]`;
+  const nCell =
+    'px-[8px] h-[24px] leading-[23px] border-b border-(--palette-line) whitespace-nowrap';
+  const nFirst = `${nCell} sticky left-0 z-[1] bg-(--palette-surface) w-[230px] min-w-[230px] shadow-[1px_0_0_#e5e7eb]`;
   const nNum = `${nCell} text-right min-w-[88px]`;
 
   const subTitle = (key: string, label: string, hint: string) => (
@@ -246,11 +250,13 @@ export function DiscountedCashFlowAssumptionSheet({
     >
       <td
         colSpan={5}
-        className="h-[20px] leading-[20px] pl-[20px] border-t border-[#cbd5d3] border-b border-gray-300 bg-[#f8fafa] text-[10.5px] font-semibold tracking-[0.04em] text-[#55636f] group-hover/st:bg-[#edf1f1]"
+        className="h-[20px] leading-[20px] pl-[20px] border-t border-(--palette-line-strong) border-b border-(--palette-line-strong) bg-(--palette-surface-2) text-[10.5px] font-semibold tracking-[0.04em] text-(--palette-ink-2) group-hover/st:bg-(--palette-surface-3)"
       >
-        <span className="inline-block w-[10px] text-[#8a96a0]">{open.has(key) ? '▾' : '▸'}</span>{' '}
+        <span className="inline-block w-[10px] text-(--palette-ink-3)">
+          {open.has(key) ? '▾' : '▸'}
+        </span>{' '}
         {label}
-        <span className="ml-2 font-normal tracking-normal text-[#8a96a0]">{hint}</span>
+        <span className="ml-2 font-normal tracking-normal text-(--palette-ink-3)">{hint}</span>
       </td>
     </tr>
   );
@@ -262,8 +268,10 @@ export function DiscountedCashFlowAssumptionSheet({
     const rates = propertyTaxRanges.map(r => r.taxRate * 100);
     const govRow = (key: string, label: string, value: number) => (
       <tr key={key}>
-        <td className={clsx(CELL, TRUNC, 'pl-[34px] text-[11px] text-gray-400')}>{label}</td>
-        <td className={clsx(CELL, 'text-right tabular-nums text-[11px] text-gray-500')}>
+        <td className={clsx(CELL, TRUNC, 'pl-[34px] text-[11px] text-(--palette-gray-400)')}>
+          {label}
+        </td>
+        <td className={clsx(CELL, 'text-right tabular-nums text-[11px] text-(--palette-gray-500)')}>
           {fmt(value, 2)}
         </td>
         <td className={CELL} />
@@ -363,16 +371,20 @@ export function DiscountedCashFlowAssumptionSheet({
         const catTot = category.totalCategoryValues ?? [];
         rows.push(
           <tr key={`c-${category.clientId ?? ci}`}>
-            <td className={clsx(CELL, TRUNC, 'bg-[#f8fafa] font-semibold')}>
+            <td className={clsx(CELL, TRUNC, 'bg-(--palette-surface-2) font-semibold')}>
               {dcfCategoryLabel(t, category.categoryName, category.categoryName ?? '')}{' '}
-              <span className="inline-flex items-center justify-center min-w-4 h-[15px] px-[5px] rounded-lg text-[10.5px] font-medium bg-[#edf1f1] text-[#55636f]">
+              <span className="inline-flex items-center justify-center min-w-4 h-[15px] px-[5px] rounded-lg text-[10.5px] font-medium bg-(--palette-surface-3) text-(--palette-ink-2)">
                 {category.assumptions?.length ?? 0}
               </span>
             </td>
-            <td className={clsx(CELL, 'bg-[#f8fafa]')} />
-            <td className={clsx(CELL, 'bg-[#f8fafa]')} />
-            <td className={clsx(NUM, 'bg-[#f8fafa] font-semibold')}>{fmt(catTot[0])}</td>
-            <td className={clsx(NUM, 'bg-[#f8fafa] font-semibold')}>{fmt(sum(catTot))}</td>
+            <td className={clsx(CELL, 'bg-(--palette-surface-2)')} />
+            <td className={clsx(CELL, 'bg-(--palette-surface-2)')} />
+            <td className={clsx(NUM, 'bg-(--palette-surface-2) font-semibold')}>
+              {fmt(catTot[0])}
+            </td>
+            <td className={clsx(NUM, 'bg-(--palette-surface-2) font-semibold')}>
+              {fmt(sum(catTot))}
+            </td>
           </tr>,
         );
         (category.assumptions ?? []).forEach((a, ai) => {
@@ -388,15 +400,21 @@ export function DiscountedCashFlowAssumptionSheet({
                   type="button"
                   onClick={() => setEditing({ s: si, c: ci, clientId: a.clientId })}
                   title={`${name} — ${t('methodTabs.dcf.sheet.clickToEdit')}`}
-                  className="max-w-full truncate text-left cursor-pointer hover:text-primary hover:underline"
+                  className="max-w-full truncate text-left cursor-pointer hover:text-(--palette-primary-text) hover:underline"
                 >
                   {name}
                 </button>
               </td>
-              <td className={clsx(CELL, TRUNC, 'text-[11px] text-gray-500')} title={smry}>
+              <td
+                className={clsx(CELL, TRUNC, 'text-[11px] text-(--palette-gray-500)')}
+                title={smry}
+              >
                 {smry}
               </td>
-              <td className={clsx(CELL, TRUNC, 'text-[11px] text-gray-500')} title={methodName}>
+              <td
+                className={clsx(CELL, TRUNC, 'text-[11px] text-(--palette-gray-500)')}
+                title={methodName}
+              >
                 {methodName}
               </td>
               <td className={NUM}>{fmt(vals[0])}</td>
@@ -413,15 +431,15 @@ export function DiscountedCashFlowAssumptionSheet({
     const secTot = section.totalSectionValues ?? [];
     rows.push(
       <tr key={`t-${key}`}>
-        <td className={clsx(CELL, TRUNC, 'bg-[#f8fafa] font-semibold')}>
+        <td className={clsx(CELL, TRUNC, 'bg-(--palette-surface-2) font-semibold')}>
           {section.sectionType === 'income'
             ? t('methodTabs.dcf.sectionTotal.income')
             : t('methodTabs.dcf.sectionTotal.expenses')}
         </td>
-        <td className={clsx(CELL, 'bg-[#f8fafa]')} />
-        <td className={clsx(CELL, 'bg-[#f8fafa]')} />
-        <td className={clsx(NUM, 'bg-[#f8fafa] font-semibold')}>{fmt(secTot[0])}</td>
-        <td className={clsx(NUM, 'bg-[#f8fafa] font-semibold')}>{fmt(sum(secTot))}</td>
+        <td className={clsx(CELL, 'bg-(--palette-surface-2)')} />
+        <td className={clsx(CELL, 'bg-(--palette-surface-2)')} />
+        <td className={clsx(NUM, 'bg-(--palette-surface-2) font-semibold')}>{fmt(secTot[0])}</td>
+        <td className={clsx(NUM, 'bg-(--palette-surface-2) font-semibold')}>{fmt(sum(secTot))}</td>
       </tr>,
     );
   });
@@ -430,7 +448,7 @@ export function DiscountedCashFlowAssumptionSheet({
     <div className="px-1 py-2">
       {/* table-fixed: max-width is ignored in auto layout, so without it the 230px item
           column stretched once there were no year columns to hold it (mock v91 trap). */}
-      <table className="table-fixed w-full border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums border border-gray-200">
+      <table className="table-fixed w-full border-separate border-spacing-0 text-[12px] leading-[25px] tabular-nums border border-(--palette-line)">
         <colgroup>
           <col className="w-[230px]" />
           <col />
@@ -439,20 +457,20 @@ export function DiscountedCashFlowAssumptionSheet({
           <col className="w-[140px]" />
         </colgroup>
         <thead>
-          <tr className="bg-[#f8fafa]">
-            <th className={clsx(CELL, 'text-left font-medium text-[#55636f]')}>
+          <tr className="bg-(--palette-surface-2)">
+            <th className={clsx(CELL, 'text-left font-medium text-(--palette-ink-2)')}>
               {t('methodTabs.dcf.table.item')}
             </th>
-            <th className={clsx(CELL, 'text-left font-medium text-[#55636f]')}>
+            <th className={clsx(CELL, 'text-left font-medium text-(--palette-ink-2)')}>
               {t('methodTabs.dcf.table.assumption')}
             </th>
-            <th className={clsx(CELL, 'text-left font-medium text-[#55636f]')}>
+            <th className={clsx(CELL, 'text-left font-medium text-(--palette-ink-2)')}>
               {t('methodTabs.dcf.sheet.method')}
             </th>
-            <th className={clsx(NUM, 'font-medium text-[#55636f]')}>
+            <th className={clsx(NUM, 'font-medium text-(--palette-ink-2)')}>
               {t('methodTabs.dcf.sheet.year1')}
             </th>
-            <th className={clsx(NUM, 'font-medium text-[#55636f]')}>
+            <th className={clsx(NUM, 'font-medium text-(--palette-ink-2)')}>
               {t('methodTabs.dcf.sheet.totalYears', { n: years })}
             </th>
           </tr>
@@ -460,22 +478,43 @@ export function DiscountedCashFlowAssumptionSheet({
         <tbody>
           {rows}
           <tr>
-            <td className={clsx(CELL, TRUNC, 'font-bold bg-[#f8fafa] border-t border-gray-400')}>
+            <td
+              className={clsx(
+                CELL,
+                TRUNC,
+                'font-bold bg-(--palette-surface-2) border-t border-(--palette-line-strong)',
+              )}
+            >
               {t('methodTabs.dcf.sheet.noi')}
             </td>
             <td
               className={clsx(
                 CELL,
-                'text-[11px] text-gray-400 bg-[#f8fafa] border-t border-gray-400',
+                'text-[11px] text-(--palette-gray-400) bg-(--palette-surface-2) border-t border-(--palette-line-strong)',
               )}
             >
               {t('methodTabs.dcf.sheet.noiNote')}
             </td>
-            <td className={clsx(CELL, 'bg-[#f8fafa] border-t border-gray-400')} />
-            <td className={clsx(NUM, 'font-bold bg-[#f8fafa] border-t border-gray-400')}>
+            <td
+              className={clsx(
+                CELL,
+                'bg-(--palette-surface-2) border-t border-(--palette-line-strong)',
+              )}
+            />
+            <td
+              className={clsx(
+                NUM,
+                'font-bold bg-(--palette-surface-2) border-t border-(--palette-line-strong)',
+              )}
+            >
               {fmt(noi[0])}
             </td>
-            <td className={clsx(NUM, 'font-bold bg-[#f8fafa] border-t border-gray-400')}>
+            <td
+              className={clsx(
+                NUM,
+                'font-bold bg-(--palette-surface-2) border-t border-(--palette-line-strong)',
+              )}
+            >
               {fmt(sum(noi))}
             </td>
           </tr>

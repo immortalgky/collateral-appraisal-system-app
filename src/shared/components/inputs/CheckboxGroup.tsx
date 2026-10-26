@@ -1,8 +1,21 @@
+import { Fragment, useId, useState } from 'react';
 import clsx from 'clsx';
 import { useController, useFormContext } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import Icon from '../Icon';
 import { useParameterAsCheckboxOptions } from '../../utils/parameterUtils';
 import { useFormReadOnly } from '../form/context';
+import { useFormLayout } from '../form/formLayoutContext';
+import { ValidationText } from '../form/ValidationText';
+import {
+  chipClass,
+  chipGroupGap,
+  chipTogglePad,
+  NO_GLOBAL_OUTLINE,
+  ERROR_TEXT,
+  REQUIRED_MARK,
+} from './controlStyles';
+import { OtherInput, OtherNote, type OtherSpec } from './OtherText';
 import type { AtLeastOne } from '@/shared/types';
 
 export interface CheckboxOption {
@@ -17,15 +30,17 @@ interface CheckboxGroupBaseProps {
   required?: boolean;
   className?: string;
   wrap?: boolean;
-  /** Visual variant for checkbox group */
+  /** @deprecated Ignored: there is one checkbox chip (DESIGN.md 17.5). Kept so field configs compile. */
   variant?: 'tag' | 'chip' | 'button';
-  /** Size of the tags/chips */
+  /** @deprecated Ignored: the chip height follows the form layout. Kept so field configs compile. */
   size?: 'sm' | 'md';
   disabled?: boolean;
   /** Show clear all button when items are selected */
   showClearAll?: boolean;
   /** Minimum selections before showing clear all (default: 2) */
   clearAllThreshold?: number;
+  /** The "อื่นๆ" companion field, typed inside its chip while that option is selected. */
+  other?: OtherSpec;
 }
 
 type CheckboxGroupProps = CheckboxGroupBaseProps &
@@ -39,13 +54,15 @@ const CheckboxGroup = ({
   required,
   className,
   wrap = true,
-  variant = 'tag',
-  size = 'md',
   disabled: disabledProp = false,
   showClearAll = true,
   clearAllThreshold = 2,
+  other,
 }: CheckboxGroupProps) => {
+  const { t } = useTranslation('common');
   const formReadOnly = useFormReadOnly();
+  const layout = useFormLayout();
+  const labelId = useId();
   const disabled = disabledProp || formReadOnly;
   const parameterOptions = useParameterAsCheckboxOptions(group ?? '');
   const resolvedOptions = options ?? parameterOptions;
@@ -57,8 +74,12 @@ const CheckboxGroup = ({
 
   const selectedValues: string[] = field.value || [];
 
+  // Set when the appraiser picks the "other" chip, so its input takes focus; not on a loaded value.
+  const [focusOther, setFocusOther] = useState(false);
+
   const handleToggle = (value: string) => {
     if (disabled) return;
+    setFocusOther(value === other?.is && !selectedValues.includes(value));
     const newValues = selectedValues.includes(value)
       ? selectedValues.filter(v => v !== value)
       : [...selectedValues, value];
@@ -70,150 +91,101 @@ const CheckboxGroup = ({
     field.onChange([]);
   };
 
-  const sizeStyles = {
-    sm: 'h-7 px-2.5 text-xs',
-    md: 'h-8 px-3 text-sm',
-  };
-
   const showClearButton = showClearAll && selectedValues.length >= clearAllThreshold;
 
-  // Header with label and clear all button
-  const Header = () => (
-    <div className="flex items-center justify-between gap-2">
-      {label && (
-        <label data-field-label className="text-xs font-medium text-gray-700">
-          {label}
-          {required && <span className="text-danger ml-1">*</span>}
-        </label>
-      )}
-      {showClearButton && (
-        <button
-          type="button"
-          onClick={handleClearAll}
-          disabled={disabled}
-          className={clsx(
-            'inline-flex items-center gap-1 text-xs font-medium text-gray-500 hover:text-gray-700 transition-colors',
-            disabled && 'opacity-50 cursor-not-allowed',
-          )}
-        >
-          <Icon name="xmark" className="size-3" />
-          Clear all ({selectedValues.length})
-        </button>
-      )}
-    </div>
-  );
-
-  // Chip variant - rounded pills with check icon
-  if (variant === 'chip') {
-    return (
-      <div className={clsx('flex flex-col gap-2', className)}>
-        <Header />
-        <div className={clsx('flex gap-2', wrap && 'flex-wrap')}>
-          {resolvedOptions.map(option => {
-            const isSelected = selectedValues.includes(option.value);
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleToggle(option.value)}
-                disabled={disabled}
-                aria-pressed={isSelected}
-                className={clsx(
-                  'inline-flex items-center gap-1.5 rounded-full border font-medium transition-all duration-200',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1',
-                  sizeStyles[size],
-                  isSelected
-                    ? 'border-primary bg-primary/5 text-primary shadow-sm'
-                    : 'border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:text-primary',
-                  disabled && 'opacity-50 cursor-not-allowed',
-                )}
-              >
-                {isSelected && <Icon style="solid" name="check" className="size-3" />}
-                {option.icon && <Icon style="solid" name={option.icon} className="size-3.5" />}
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        {error && <p className="text-sm text-danger">{error.message}</p>}
-      </div>
-    );
-  }
-
-  // Button variant - bordered buttons with highlight
-  if (variant === 'button') {
-    return (
-      <div className={clsx('flex flex-col gap-2', className)}>
-        <Header />
-        <div className={clsx('flex gap-2', wrap && 'flex-wrap')}>
-          {resolvedOptions.map(option => {
-            const isSelected = selectedValues.includes(option.value);
-            return (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleToggle(option.value)}
-                disabled={disabled}
-                className={clsx(
-                  'inline-flex items-center gap-2 rounded-lg border-2 font-medium transition-all duration-200',
-                  sizeStyles[size],
-                  isSelected
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-primary/40 hover:bg-primary/5',
-                  disabled && 'opacity-50 cursor-not-allowed',
-                )}
-              >
-                <span
-                  className={clsx(
-                    'flex items-center justify-center w-4 h-4 rounded border-2 transition-all duration-200',
-                    isSelected ? 'bg-primary border-primary' : 'border-gray-300',
-                  )}
-                >
-                  {isSelected && <Icon style="solid" name="check" className="size-2.5 text-white" />}
-                </span>
-                {option.icon && <Icon style="solid" name={option.icon} className="size-3.5" />}
-                <span>{option.label}</span>
-              </button>
-            );
-          })}
-        </div>
-        {error && <p className="text-sm text-danger">{error.message}</p>}
-      </div>
-    );
-  }
-
-  // Default tag variant - clean tag style with subtle colors
   return (
     <div className={clsx('flex flex-col gap-2', className)}>
-      <Header />
-      <div className={clsx('flex gap-2', wrap && 'flex-wrap')}>
+      {label && (
+        <label id={labelId} className="text-xs font-medium text-(--palette-ink)">
+          {label}
+          {required && <span className={REQUIRED_MARK}>*</span>}
+        </label>
+      )}
+      <div
+        role="group"
+        aria-labelledby={label ? labelId : undefined}
+        className={clsx('flex', chipGroupGap(layout), wrap && 'flex-wrap')}
+      >
         {resolvedOptions.map(option => {
           const isSelected = selectedValues.includes(option.value);
-          return (
+          const withInput = !!other && isSelected && option.value === other.is;
+          const toggle = (
             <button
-              key={option.value}
               type="button"
               onClick={() => handleToggle(option.value)}
               disabled={disabled}
               aria-pressed={isSelected}
-              className={clsx(
-                'group inline-flex items-center gap-1.5 rounded-md border font-medium transition-all duration-200',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-1',
-                sizeStyles[size],
-                isSelected
-                  ? 'border-primary bg-primary/10 text-primary shadow-sm'
-                  : 'border-gray-200 bg-white text-gray-600 hover:border-primary/40 hover:bg-primary/5 hover:text-primary',
-                disabled && 'opacity-50 cursor-not-allowed',
-              )}
+              title={option.label}
+              className={
+                withInput
+                  ? clsx(
+                      'inline-flex min-w-0 shrink-0 items-center self-stretch rounded-l-full leading-normal',
+                      NO_GLOBAL_OUTLINE,
+                      chipTogglePad(layout),
+                      disabled ? 'cursor-not-allowed' : 'cursor-pointer',
+                    )
+                  : chipClass(layout, isSelected, disabled)
+              }
             >
-              {isSelected && <Icon style="solid" name="check" className="size-3" />}
-              {option.icon && <Icon style="solid" name={option.icon} className="size-3.5" />}
-              <span>{option.label}</span>
+              {isSelected && (
+                // The check mark: 0.6429rem wide, 2px stroke, white, 0.4286rem before the label.
+                <svg
+                  aria-hidden="true"
+                  viewBox="0 0 10 8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mr-[0.4286rem] w-[0.6429rem] shrink-0"
+                >
+                  <path d="M1 4.2 3.7 7 9 1" />
+                </svg>
+              )}
+              {option.icon && (
+                <Icon style="solid" name={option.icon} className="mr-[0.4286rem] shrink-0" />
+              )}
+              <span className="min-w-0 truncate">
+                {option.label}
+                {withInput && ':'}
+              </span>
             </button>
           );
+          if (!withInput) return <Fragment key={option.value}>{toggle}</Fragment>;
+          return (
+            <span key={option.value} className={chipClass(layout, true, disabled, true)}>
+              {toggle}
+              <OtherInput spec={other} disabled={disabled} focusOnMount={focusOther} />
+            </span>
+          );
         })}
+        {showClearButton && (
+          // A plain text button closing the chip row: not chip-shaped, but the same height so it
+          // sits on the chips' baseline. Focus is the global outline.
+          <button
+            type="button"
+            onClick={handleClearAll}
+            disabled={disabled}
+            aria-label={`${t('actions.clearAll')} (${selectedValues.length})`}
+            className={clsx(
+              'inline-flex items-center gap-1 rounded-full px-1 text-sm leading-normal whitespace-nowrap text-(--palette-ink-2) transition-colors',
+              layout === 'standard' ? 'h-chip' : 'h-chip-c',
+              disabled
+                ? 'opacity-50 cursor-not-allowed'
+                : 'cursor-pointer hover:text-(--palette-ink) hover:underline',
+            )}
+          >
+            <Icon name="xmark" />
+            {t('actions.clear')} ({selectedValues.length})
+          </button>
+        )}
       </div>
-      {error && <p className="text-sm text-danger">{error.message}</p>}
+      {other && selectedValues.includes(other.is) && <OtherNote spec={other} />}
+      {error && (
+        <p className={ERROR_TEXT}>
+          {error.message && <ValidationText message={error.message} label={label} />}
+        </p>
+      )}
     </div>
   );
 };

@@ -53,9 +53,9 @@ const stickyGradient = '';
 
 /** Opaque background for sticky body cells so scrolling content doesn't bleed through. */
 function stickyCellBg(isSelected: boolean, isOddRow: boolean) {
-  if (isSelected) return 'bg-teal-50'; // opaque tint for selected
-  if (isOddRow) return 'bg-gray-50'; // opaque alternating
-  return 'bg-white';
+  if (isSelected) return 'bg-(--palette-accent-wash)'; // opaque tint for selected
+  if (isOddRow) return 'bg-(--palette-surface-2)'; // opaque alternating
+  return 'bg-(--palette-surface)';
 }
 
 export function SurveySelectionTable({
@@ -76,7 +76,7 @@ export function SurveySelectionTable({
 
   if (surveys.length === 0) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center text-gray-400">
+      <div className="flex-1 flex flex-col items-center justify-center text-(--palette-gray-400)">
         <Icon name="magnifying-glass" className="size-10 mb-3" />
         <span className="text-base">No market comparables available</span>
       </div>
@@ -87,9 +87,9 @@ export function SurveySelectionTable({
     <ScrollableTableContainer className="flex-1 min-h-0" edgeShadow>
       <table className="table w-full text-[12px] tabular-nums">
         <thead className="sticky top-0 z-30">
-          <tr className="border-b border-gray-200">
+          <tr className="border-b border-(--palette-line)">
             {/* Checkbox header */}
-            <th className="bg-gray-50 sticky left-0 z-30 w-[50px] min-w-[50px] px-3 py-2 text-center">
+            <th className="bg-(--palette-surface-2) sticky left-0 z-30 w-[50px] min-w-[50px] px-3 py-2 text-center">
               <input
                 type="checkbox"
                 checked={allChecked}
@@ -101,13 +101,13 @@ export function SurveySelectionTable({
               />
             </th>
             {/* Comparable No header */}
-            <th className="bg-gray-50 sticky left-[50px] z-30 w-[150px] min-w-[150px] px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
+            <th className="bg-(--palette-surface-2) sticky left-[50px] z-30 w-[150px] min-w-[150px] px-3 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider whitespace-nowrap">
               {t('comparativeAnalysis.comparableNoHeader')}
             </th>
             {/* Survey Name header */}
             <th
               className={clsx(
-                'bg-gray-50 sticky left-[200px] z-30 w-[180px] min-w-[180px] px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap relative pa-sticky-edge',
+                'bg-(--palette-surface-2) sticky left-[200px] z-30 w-[180px] min-w-[180px] px-3 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider whitespace-nowrap relative pa-sticky-edge',
                 stickyGradient,
               )}
             >
@@ -120,7 +120,7 @@ export function SurveySelectionTable({
               return (
                 <th
                   key={col.factorCode}
-                  className="bg-gray-50 px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap min-w-[120px]"
+                  className="bg-(--palette-surface-2) px-3 py-2 text-left text-xs font-medium text-(--palette-gray-500) uppercase tracking-wider whitespace-nowrap min-w-[120px]"
                   title={label}
                 >
                   <span className="truncate block max-w-[200px]">{label}</span>
@@ -136,26 +136,32 @@ export function SurveySelectionTable({
               key={`subject-${subject.id || i}`}
               onMouseEnter={() => onRowHover?.(subject.id)}
               onMouseLeave={() => onRowHover?.(null)}
-              className={clsx(hoveredId === subject.id ? 'bg-amber-100' : 'bg-amber-50/60')}
+              className={clsx(
+                hoveredId === subject.id
+                  ? 'bg-amber-100 dark:bg-amber-500/20'
+                  : 'bg-(--palette-warn-wash)/60',
+              )}
             >
               <td
                 className={clsx(
-                  'sticky left-0 z-20 px-3 py-2 text-center border-b border-gray-100',
-                  hoveredId === subject.id ? 'bg-amber-100' : 'bg-amber-50/60',
+                  'sticky left-0 z-20 px-3 py-2 text-center border-b border-(--palette-line-soft)',
+                  hoveredId === subject.id
+                    ? 'bg-amber-100 dark:bg-amber-500/20'
+                    : 'bg-(--palette-warn-wash)/60',
                 )}
               />
               <td
-                className="sticky left-[50px] z-20 px-3 py-2 border-b border-gray-100 bg-amber-50/60 whitespace-nowrap"
+                className="sticky left-[50px] z-20 px-3 py-2 border-b border-(--palette-line-soft) bg-(--palette-warn-wash)/60 whitespace-nowrap"
                 title={subject.label}
               >
-                <span className="flex items-center gap-1.5 text-sm font-medium text-amber-700">
+                <span className="flex items-center gap-1.5 text-sm font-medium text-(--palette-warn)">
                   <RowPin color={COLOR_SUBJECT} />
                   <span className="truncate block max-w-[120px]">{subject.label}</span>
                 </span>
               </td>
               <td
                 className={clsx(
-                  'sticky left-[200px] z-20 px-3 py-2 border-b border-gray-100 bg-amber-50/60 text-sm text-gray-400 whitespace-nowrap relative pa-sticky-edge',
+                  'sticky left-[200px] z-20 px-3 py-2 border-b border-(--palette-line-soft) bg-(--palette-warn-wash)/60 text-sm text-(--palette-gray-400) whitespace-nowrap relative pa-sticky-edge',
                   stickyGradient,
                 )}
               >
@@ -171,7 +177,7 @@ export function SurveySelectionTable({
                 return (
                   <td
                     key={col.factorCode}
-                    className="px-3 py-2 border-b border-gray-100 text-sm text-gray-600 whitespace-nowrap"
+                    className="px-3 py-2 border-b border-(--palette-line-soft) text-sm text-(--palette-gray-600) whitespace-nowrap"
                   >
                     {raw != null && raw !== '' ? (
                       <FactorValueDisplay
@@ -201,13 +207,15 @@ export function SurveySelectionTable({
                 className={clsx(
                   'cursor-pointer transition-colors',
                   stickyCellBg(isSelected, rowIndex % 2 === 1),
-                  hoveredId === surveyId ? 'bg-teal-100/60' : 'hover:bg-teal-100/50',
+                  hoveredId === surveyId
+                    ? 'bg-teal-100/60 dark:bg-teal-500/20'
+                    : 'hover:bg-teal-100/50 dark:hover:bg-teal-500/20',
                 )}
               >
                 {/* Checkbox cell */}
                 <td
                   className={clsx(
-                    'sticky left-0 z-20 px-3 py-2 text-center border-b border-gray-100',
+                    'sticky left-0 z-20 px-3 py-2 text-center border-b border-(--palette-line-soft)',
                     stickyCellBg(isSelected, rowIndex % 2 === 1),
                   )}
                   onClick={e => e.stopPropagation()}
@@ -222,7 +230,7 @@ export function SurveySelectionTable({
                 {/* Comparable No cell */}
                 <td
                   className={clsx(
-                    'sticky left-[50px] z-20 px-3 py-2 border-b border-gray-100 text-sm font-medium text-gray-700 whitespace-nowrap',
+                    'sticky left-[50px] z-20 px-3 py-2 border-b border-(--palette-line-soft) text-sm font-medium text-(--palette-ink) whitespace-nowrap',
                     stickyCellBg(isSelected, rowIndex % 2 === 1),
                   )}
                 >
@@ -234,7 +242,7 @@ export function SurveySelectionTable({
                 {/* Survey Name cell */}
                 <td
                   className={clsx(
-                    'sticky left-[200px] z-20 px-3 py-2 border-b border-gray-100 text-sm text-gray-700 whitespace-nowrap relative pa-sticky-edge',
+                    'sticky left-[200px] z-20 px-3 py-2 border-b border-(--palette-line-soft) text-sm text-(--palette-ink) whitespace-nowrap relative pa-sticky-edge',
                     stickyCellBg(isSelected, rowIndex % 2 === 1),
                     stickyGradient,
                   )}
@@ -248,7 +256,7 @@ export function SurveySelectionTable({
                   return (
                     <td
                       key={col.factorCode}
-                      className="px-3 py-2 border-b border-gray-100 text-sm text-gray-600 whitespace-nowrap"
+                      className="px-3 py-2 border-b border-(--palette-line-soft) text-sm text-(--palette-gray-600) whitespace-nowrap"
                     >
                       {factorData ? (
                         <FactorValueDisplay

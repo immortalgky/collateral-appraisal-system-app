@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import Modal from '@shared/components/Modal';
 import Button from '@shared/components/Button';
+import { vmsg } from '@/shared/components/form/validationMessage';
 import TextInput from '@shared/components/inputs/TextInput';
 import NumberInput from '@shared/components/inputs/NumberInput';
 import Checkbox from '@shared/components/inputs/Checkbox';
@@ -20,11 +21,11 @@ const CATEGORY_OPTIONS = [
 ];
 
 const Schema = z.object({
-  code: z.string().min(1, 'Code is required'),
-  name: z.string().min(1, 'Name is required'),
+  code: z.string().min(1, vmsg('required')),
+  name: z.string().min(1, vmsg('required')),
   description: z
     .string()
-    .max(500, 'Description must be 500 characters or fewer')
+    .max(500, vmsg('maxLength', { max: 500 }))
     .nullable()
     .optional(),
   category: z.string().nullable().optional(),
@@ -138,12 +139,12 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
           error={errors.sortOrder?.message}
         />
 
-        <fieldset className="flex flex-col gap-2 rounded-lg border border-gray-200 px-3 py-2.5">
-          <legend className="px-1 text-xs font-medium text-gray-600">
+        <fieldset className="flex flex-col gap-2 rounded-lg border border-(--palette-line) px-3 py-2.5">
+          <legend className="px-1 text-xs font-medium text-(--palette-gray-600)">
             {t('carryForward.admin.legend')}
           </legend>
           {carryLock ? (
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-(--palette-gray-600)">
               {carryLock === 'target'
                 ? t('carryForward.admin.lockedTargetText')
                 : t('carryForward.admin.lockedSourceText')}
@@ -168,16 +169,22 @@ export default function DocumentTypeModal({ isOpen, onClose, onSubmit, editing, 
                   },
                 ]}
               />
-              <p className="text-xs text-gray-400">{t('carryForward.admin.appliesLater')}</p>
+              <p className="text-xs text-(--palette-gray-400)">
+                {t('carryForward.admin.appliesLater')}
+              </p>
             </>
           )}
         </fieldset>
 
         {isEditing && (
-          <Checkbox label="Active" checked={watch('isActive')} onChange={c => setValue('isActive', c)} />
+          <Checkbox
+            label="Active"
+            checked={watch('isActive')}
+            onChange={c => setValue('isActive', c)}
+          />
         )}
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
+        <div className="flex justify-end gap-3 pt-4 border-t border-(--palette-line)">
           <Button type="button" variant="ghost" onClick={handleClose} disabled={isSaving}>
             Cancel
           </Button>

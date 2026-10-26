@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { EditorTabBar } from './EditorIdentityCard';
+import { EditorTabBar } from './EditorTabBar';
 
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({ t: (key: string) => key }),

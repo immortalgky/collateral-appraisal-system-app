@@ -54,7 +54,7 @@ export const PricingAnalysisApproachAccordion = ({
         <div
           className={clsx(
             'flex flex-col gap-1 ml-4 pl-4 border-l-2 mt-2',
-            hasSelectedMethods ? 'border-primary/30' : 'border-gray-200',
+            hasSelectedMethods ? 'border-primary/30' : 'border-(--palette-line)',
           )}
         >
           {includedMethods.map(method => (
@@ -72,19 +72,19 @@ export const PricingAnalysisApproachAccordion = ({
             <div>
               <button
                 type="button"
-                className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm text-primary hover:bg-primary/5 transition-colors cursor-pointer"
+                className="flex items-center gap-2 w-full px-4 py-2.5 rounded-lg text-sm text-(--palette-primary-text) hover:bg-primary/5 transition-colors cursor-pointer"
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
               >
                 <Icon name={isDropdownOpen ? 'minus' : 'plus'} style="solid" className="size-3" />
                 <span className="font-medium">{t('approaches.addMethod')}</span>
               </button>
               {isDropdownOpen && (
-                <div className="flex flex-col gap-0.5 mt-1 ml-2 pl-3 border-l border-dashed border-gray-300">
+                <div className="flex flex-col gap-0.5 mt-1 ml-2 pl-3 border-l border-dashed border-(--palette-line-strong)">
                   {availableMethods.map(cm => (
                     <button
                       key={cm.methodType}
                       type="button"
-                      className="flex items-center gap-3 w-full px-3 py-2 text-sm text-gray-600 hover:bg-primary/5 hover:text-primary rounded-lg transition-colors cursor-pointer"
+                      className="flex items-center gap-3 w-full px-3 py-2 text-sm text-(--palette-gray-600) hover:bg-primary/5 hover:text-(--palette-primary-text) rounded-lg transition-colors cursor-pointer"
                       onClick={() => {
                         onAddMethod({
                           approachType: approach.approachType,

@@ -61,7 +61,7 @@ export default function NotificationDropdown() {
         <span className="sr-only">{t('title')}</span>
         <Icon name="bell" style="solid" className="size-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-danger rounded-full ring-2 ring-white">
+          <span className="absolute -top-1 -right-1 flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[10px] font-bold text-white bg-red-600 rounded-full ring-2 ring-(--palette-surface)">
             {unreadCount > 99 ? '99+' : unreadCount}
           </span>
         )}
@@ -80,7 +80,7 @@ export default function NotificationDropdown() {
                   {t('title')}
                 </h3>
                 {unreadCount > 0 && (
-                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-danger rounded-full">
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-medium text-white bg-red-600 rounded-full">
                     {unreadCount}
                   </span>
                 )}
@@ -89,7 +89,7 @@ export default function NotificationDropdown() {
                 <button
                   type="button"
                   onClick={() => markAllAsRead(username)}
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+                  className="text-xs font-medium text-(--palette-primary-text) hover:opacity-80 transition-colors"
                 >
                   {t('markAllRead')}
                 </button>
@@ -107,7 +107,7 @@ export default function NotificationDropdown() {
                     onClick={() => handleNotificationClick(notification.id, notification.actionUrl)}
                     className={clsx(
                       'w-full flex items-start gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-base-300 transition-colors cursor-pointer',
-                      !notification.isRead && 'bg-blue-50/30',
+                      !notification.isRead && 'bg-blue-50/30 dark:bg-blue-500/10',
                     )}
                   >
                     <div
@@ -124,8 +124,8 @@ export default function NotificationDropdown() {
                           className={clsx(
                             'text-sm truncate',
                             !notification.isRead
-                              ? 'font-semibold text-gray-900 dark:text-base-content'
-                              : 'font-medium text-gray-700 dark:text-gray-300',
+                              ? 'font-semibold text-(--palette-ink)'
+                              : 'font-medium text-(--palette-ink)',
                           )}
                         >
                           {notification.title}
@@ -134,10 +134,10 @@ export default function NotificationDropdown() {
                           <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
                         )}
                       </div>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-0.5">
+                      <p className="text-xs text-(--palette-gray-500) line-clamp-2 mt-0.5">
                         {notification.message}
                       </p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">
+                      <p className="text-[11px] text-(--palette-gray-400) mt-1">
                         {timeAgo(notification.createdAt, t)}
                       </p>
                     </div>
@@ -151,7 +151,7 @@ export default function NotificationDropdown() {
               <Link
                 to="/notifications"
                 onClick={() => close()}
-                className="block w-full text-center px-4 py-2.5 text-sm font-medium text-primary hover:bg-gray-50 dark:hover:bg-base-300 transition-colors rounded-b-xl"
+                className="block w-full text-center px-4 py-2.5 text-sm font-medium text-(--palette-primary-text) hover:bg-gray-50 dark:hover:bg-base-300 transition-colors rounded-b-xl"
               >
                 {t('viewAll')}
               </Link>

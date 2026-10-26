@@ -8,7 +8,7 @@ function NotFoundPage() {
         <div className="flex justify-center mb-6">
           <Icon name="face-sad-tear" style="regular" className="size-24 text-base-300" />
         </div>
-        <p className="text-base font-semibold text-primary">404</p>
+        <p className="text-base font-semibold text-(--palette-primary-text)">404</p>
         <h1 className="mt-2 text-3xl font-bold tracking-tight text-base-content sm:text-5xl">
           Page not found
         </h1>

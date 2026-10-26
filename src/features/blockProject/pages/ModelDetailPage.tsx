@@ -12,13 +12,8 @@ import useBreadcrumbExtras from '@/shared/hooks/useBreadcrumbExtras';
 import ActionBar from '@/shared/components/ActionBar';
 import Button from '@/shared/components/Button';
 import Icon from '@/shared/components/Icon';
-import Section from '@/shared/components/sections/Section';
-import NavAnchors from '@/shared/components/sections/NavAnchors';
-import { useDisclosure } from '@/shared/hooks/useDisclosure';
 import { useUnsavedChangesWarning } from '@/shared/hooks/useUnsavedChangesWarning';
 import UnsavedChangesDialog from '@/shared/components/UnsavedChangesDialog';
-import ResizableSidebar from '@/shared/components/ResizableSidebar';
-import { FormProvider } from '@/shared/components/form';
 import type { ApiError } from '@/shared/types/api';
 
 import {
@@ -41,6 +36,9 @@ import {
   type CondoModelFormType,
   type LbModelFormType,
 } from '../schemas/form';
+import { CondoDetailShell } from '../components/condo/towersModels/CondoDetailShell';
+import { ModelPricingButton } from '../components/condo/towersModels/ModelPricingButton';
+import { VillageModelFacts } from '../components/condo/towersModels/VillageModelFacts';
 import { isCondo } from '../types';
 import type { ProjectType } from '../types';
 import { mapSurfacesToApi } from '@/features/appraisal/utils/mappers';
@@ -66,7 +64,7 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
 
   const isEditMode = Boolean(modelId);
   const routeSegment = isCondo(projectType) ? 'block-condo' : 'block-village';
-  const schema = projectModelForm(projectType);
+  const schema = useMemo(() => projectModelForm(projectType), [projectType]);
   const location = useLocation();
 
   const { data: modelData, isLoading } = useGetProjectModelById(appraisalId ?? '', modelId);
@@ -75,8 +73,16 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   // Only push the dynamic model name here; "New Model" is handled by the layout.
   const modelLeafLabel = isEditMode ? modelData?.modelName?.trim() || '...' : null;
   useBreadcrumbExtras(
-    modelLeafLabel ? [{ label: modelLeafLabel, href: location.pathname, icon: 'layer-group' }] : [],
-    [modelLeafLabel, location.pathname],
+    modelLeafLabel
+      ? [
+          {
+            label: modelLeafLabel,
+            href: location.pathname,
+            icon: isCondo(projectType) ? 'layer-group' : 'house',
+          },
+        ]
+      : [],
+    [modelLeafLabel, location.pathname, projectType],
   );
   // Condo: fetch towers for the tower selector on the model form
   const { data: towersData } = useGetProjectTowers(appraisalId ?? '');
@@ -189,7 +195,6 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   } = methods;
   const hasDirtyFields = Object.keys(dirtyFields).length > 0;
   const { blocker, skipWarning } = useUnsavedChangesWarning(hasDirtyFields);
-  const { isOpen, onToggle } = useDisclosure();
 
   useEffect(() => {
     if (isEditMode && modelData) {
@@ -284,111 +289,105 @@ export default function ModelDetailPage({ projectType }: ModelDetailPageProps) {
   if (isLoading || (isEditMode && !modelData)) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Icon name="spinner" style="solid" className="w-8 h-8 animate-spin text-primary" />
+        <Icon
+          name="spinner"
+          style="solid"
+          className="w-8 h-8 animate-spin text-(--palette-primary-text)"
+        />
       </div>
     );
   }
 
-  return (
-    <div className="flex flex-col h-full min-h-0">
-      {/* NavAnchors */}
-      <div className="shrink-0 pb-4">
-        <NavAnchors
-          containerId="model-form-scroll"
-          anchors={[
-            { label: t('modelDetail.navAnchors.images'), id: 'model-images', icon: 'images' },
-            { label: t('modelDetail.navAnchors.modelInfo'), id: 'model-info', icon: 'layer-group' },
-          ]}
-        />
-      </div>
-
-      <FormProvider methods={methods} schema={schema}>
-        <form onSubmit={handleSave} className="flex-1 min-h-0 flex flex-col">
-          <div
-            id="model-form-scroll"
-            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden scroll-smooth"
-          >
-            <ResizableSidebar
-              isOpen={isOpen}
-              onToggle={onToggle}
-              openedWidth="w-1/5"
-              closedWidth="w-1/50"
+  const footer = (
+    <>
+      {/* Action Bar */}
+      <ActionBar>
+        <ActionBar.Left>
+          <Button variant="ghost" type="button" onClick={handleNavigateBack}>
+            {t('actions.cancel')}
+          </Button>
+          {isEditMode && !isReadOnly && (
+            <DeleteButton
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isPending || isDeleting}
+            />
+          )}
+          {!isReadOnly && (
+            <>
+              <ActionBar.Divider />
+              <ActionBar.UnsavedIndicator show={hasDirtyFields} />
+            </>
+          )}
+        </ActionBar.Left>
+        {!isReadOnly && (
+          <ActionBar.Right>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={handleSaveDraft}
+              isLoading={isPending && saveAction === 'draft'}
+              disabled={isPending}
             >
-              <ResizableSidebar.Main>
-                <div className="flex-auto flex flex-col gap-6 min-w-0">
-                  {/* Model Images */}
-                  <Section id="model-images" anchor>
-                    <ProjectModelPhotoSection
-                      ref={photoSectionRef}
-                      appraisalId={appraisalId ?? ''}
-                      entityId={modelId}
-                      images={modelData?.images}
-                    />
-                  </Section>
+              {t('actions.saveDraft')}
+            </Button>
+            <Button
+              type="submit"
+              isLoading={isPending && saveAction === 'submit'}
+              disabled={isPending}
+            >
+              <Icon name="check" style="solid" className="size-4 mr-2" />
+              {t('actions.save')}
+            </Button>
+          </ActionBar.Right>
+        )}
+      </ActionBar>
 
-                  {/* Model Information */}
-                  <Section id="model-info" anchor className="min-w-0 overflow-hidden">
-                    <ModelDetailForm projectType={projectType} towers={towers} />
-                  </Section>
-                </div>
-              </ResizableSidebar.Main>
-            </ResizableSidebar>
-          </div>
+      <ConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title={t('dialogs.deleteModel.title')}
+        message={t('dialogs.deleteModel.message')}
+        confirmText={t('dialogs.deleteModel.confirm')}
+        isLoading={isDeleting}
+      />
+      <UnsavedChangesDialog blocker={blocker} />
+    </>
+  );
 
-          {/* Action Bar */}
-          <ActionBar>
-            <ActionBar.Left>
-              <Button variant="ghost" type="button" onClick={handleNavigateBack}>
-                Cancel
-              </Button>
-              {isEditMode && !isReadOnly && (
-                <DeleteButton
-                  onClick={() => setIsDeleteDialogOpen(true)}
-                  disabled={isPending || isDeleting}
-                />
-              )}
-              {!isReadOnly && (
-                <>
-                  <ActionBar.Divider />
-                  <ActionBar.UnsavedIndicator show={hasDirtyFields} />
-                </>
-              )}
-            </ActionBar.Left>
-            {!isReadOnly && (
-              <ActionBar.Right>
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={handleSaveDraft}
-                  isLoading={isPending && saveAction === 'draft'}
-                  disabled={isPending}
-                >
-                  Save draft
-                </Button>
-                <Button
-                  type="submit"
-                  isLoading={isPending && saveAction === 'submit'}
-                  disabled={isPending}
-                >
-                  <Icon name="check" style="solid" className="size-4 mr-2" />
-                  Save
-                </Button>
-              </ActionBar.Right>
-            )}
-          </ActionBar>
+  const savedModel = isEditMode ? modelData : undefined;
+  // The pricing action sits at the right end of the "Model information" section head, in Condo and
+  // Land and Building alike. Never "calculate" on a read-only page.
+  const pricingAction =
+    savedModel && (!isReadOnly || savedModel.pricingAnalysisId) ? (
+      <ModelPricingButton model={savedModel} projectType={projectType} />
+    ) : undefined;
+  // Land and Building: the model's figures, quiet text in that same head.
+  const facts =
+    !isCondo(projectType) && savedModel ? <VillageModelFacts model={savedModel} /> : undefined;
 
-          <ConfirmDialog
-            isOpen={isDeleteDialogOpen}
-            onClose={() => setIsDeleteDialogOpen(false)}
-            onConfirm={handleDelete}
-            title={t('dialogs.deleteModel.title')}
-            message={t('dialogs.deleteModel.message')}
-            confirmText={t('dialogs.deleteModel.confirm')}
-            isLoading={isDeleting}
-          />
-          <UnsavedChangesDialog blocker={blocker} />
-        </form>
-      </FormProvider>
-    </div>
+  return (
+    <CondoDetailShell
+      methods={methods}
+      schema={schema}
+      onSubmit={handleSave}
+      photos={renderGallery => (
+        <ProjectModelPhotoSection
+          ref={photoSectionRef}
+          appraisalId={appraisalId ?? ''}
+          entityId={modelId}
+          images={modelData?.images}
+          renderGallery={renderGallery}
+        />
+      )}
+      footer={footer}
+    >
+      <ModelDetailForm
+        projectType={projectType}
+        towers={towers}
+        pricingAction={pricingAction}
+        facts={facts}
+      />
+    </CondoDetailShell>
   );
 }

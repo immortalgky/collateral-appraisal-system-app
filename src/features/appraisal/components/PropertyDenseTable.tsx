@@ -79,13 +79,13 @@ export const PropertyDenseTable = ({
   };
 
   const headerClass =
-    'px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-gray-400 whitespace-nowrap';
+    'px-3 py-1.5 text-left text-[10px] font-bold uppercase tracking-wider text-(--palette-gray-400) whitespace-nowrap';
 
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
         <thead>
-          <tr className="border-b border-gray-100">
+          <tr className="border-b border-(--palette-line-soft)">
             <th className={clsx(headerClass, 'w-12')}>
               <span className="sr-only">{t('properties.table.image')}</span>
             </th>
@@ -117,20 +117,20 @@ export const PropertyDenseTable = ({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-50">
+        <tbody className="divide-y divide-(--palette-line-soft)">
           {group.items.map(property => {
             const coords = shortCoords(property);
             return (
               <tr
                 key={property.id}
                 data-property-id={property.id}
-                className="hover:bg-gray-50/70 transition-colors"
+                className="hover:bg-(--palette-surface-2)/70 transition-colors"
               >
                 <td
                   className="px-3 py-1 align-middle cursor-pointer"
                   onClick={() => openProperty(property)}
                 >
-                  <div className="w-8 h-6 rounded bg-gray-100 overflow-hidden">
+                  <div className="w-8 h-6 rounded bg-(--palette-surface-3) overflow-hidden">
                     {property.image ? (
                       <img
                         src={property.image}
@@ -141,7 +141,7 @@ export const PropertyDenseTable = ({
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <Icon name="image" className="text-gray-400 text-[10px]" />
+                        <Icon name="image" className="text-(--palette-gray-400) text-[10px]" />
                       </div>
                     )}
                   </div>
@@ -152,7 +152,7 @@ export const PropertyDenseTable = ({
                   onClick={() => openProperty(property)}
                 >
                   <p
-                    className="text-xs font-medium text-gray-900 truncate"
+                    className="text-xs font-medium text-(--palette-ink) truncate"
                     title={property.address}
                   >
                     {property.address}
@@ -161,16 +161,18 @@ export const PropertyDenseTable = ({
 
                 {isMachineGroup ? (
                   <>
-                    <td className="px-3 py-1 text-[11px] text-gray-500 tabular-nums whitespace-nowrap">
-                      {property.registrationNumber || <span className="text-gray-400">—</span>}
+                    <td className="px-3 py-1 text-[11px] text-(--palette-gray-500) tabular-nums whitespace-nowrap">
+                      {property.registrationNumber || (
+                        <span className="text-(--palette-gray-400)">—</span>
+                      )}
                     </td>
-                    <td className="px-3 py-1 text-[11px] text-gray-500 whitespace-nowrap">
+                    <td className="px-3 py-1 text-[11px] text-(--palette-gray-500) whitespace-nowrap">
                       {property.registrationStatus
                         ? t('properties.machineryChips.registered')
                         : t('properties.machineryChips.unregistered')}
                     </td>
-                    <td className="px-3 py-1 align-middle text-[11px] text-gray-500 whitespace-nowrap">
-                      {brandModel(property) || <span className="text-gray-400">—</span>}
+                    <td className="px-3 py-1 align-middle text-[11px] text-(--palette-gray-500) whitespace-nowrap">
+                      {brandModel(property) || <span className="text-(--palette-gray-400)">—</span>}
                     </td>
                   </>
                 ) : (
@@ -178,9 +180,9 @@ export const PropertyDenseTable = ({
                     <td className="px-3 py-1 align-middle whitespace-nowrap">
                       <PropertyTypeChip code={property.type} variant="dot" />
                     </td>
-                    <td className="px-3 py-1 align-middle text-[11px] text-gray-600 tabular-nums text-right whitespace-nowrap">
+                    <td className="px-3 py-1 align-middle text-[11px] text-(--palette-gray-600) tabular-nums text-right whitespace-nowrap">
                       {property.areaValue == null ? (
-                        <span className="text-gray-400">—</span>
+                        <span className="text-(--palette-gray-400)">—</span>
                       ) : property.areaUnit === 'wa' ? (
                         toRaiNganWa(property.areaValue)
                       ) : (
@@ -192,13 +194,15 @@ export const PropertyDenseTable = ({
                         so cutting the tail is cutting the useful half. The property column keeps
                         its ellipsis — its title repeats in the row beneath it. */}
                     <td className="px-3 py-1 min-w-[15rem] align-middle">
-                      <p className="text-[11px] leading-snug text-gray-500">
+                      <p className="text-[11px] leading-snug text-(--palette-gray-500)">
                         <PlaceValue property={property} />
                       </p>
                     </td>
-                    <td className="px-3 py-1 align-middle text-[11px] text-gray-500 tabular-nums text-right whitespace-nowrap">
+                    <td className="px-3 py-1 align-middle text-[11px] text-(--palette-gray-500) tabular-nums text-right whitespace-nowrap">
                       {coords ?? (
-                        <span className="italic text-gray-400">{t('properties.coordsNotSet')}</span>
+                        <span className="italic text-(--palette-gray-400)">
+                          {t('properties.coordsNotSet')}
+                        </span>
                       )}
                     </td>
                   </>

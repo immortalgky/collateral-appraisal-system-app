@@ -2,9 +2,10 @@ import type { WQS } from '../types/wqs';
 import type { FormValidator } from './formValidator';
 import { z } from 'zod';
 import type { TFunction } from 'i18next';
+import { tokenT } from '@/shared/components/form/validationMessage';
 
-// Static type-inference export (uses key-passthrough function — never an object)
-const _t = ((key: string) => key) as unknown as TFunction<'pricingAnalysis'>;
+// The token `t`: messages are translated where they are shown, so the schema is built once.
+const _t = tokenT('pricingAnalysis');
 
 /** select surveys section */
 const ComparativeFactor = (t: TFunction<'pricingAnalysis'>) =>
@@ -108,7 +109,7 @@ export const makeWQSDto = (t: TFunction<'pricingAnalysis'>) =>
     })
     .passthrough() as unknown as FormValidator<WQS>;
 
-// Static schema for type inference only — no runtime messages
+// Built once with the token `t`; the panel resolves with it directly.
 export const WQSDto = makeWQSDto(_t);
 
 export type WQSSurveyScoreFormType = z.infer<typeof WQSSurveyScore>;

@@ -40,7 +40,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
     >
       <MenuButton
         aria-label={t('docCard.chip.actions')}
-        className={`inline-flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-colors ${
+        className={`inline-flex items-center justify-center text-(--palette-gray-600) hover:text-(--palette-ink) hover:bg-(--palette-surface-3) rounded-full transition-colors ${
           size === 'sm' ? 'w-5 h-5' : 'w-8 h-8'
         }`}
       >
@@ -53,7 +53,7 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
 
       <MenuItems
         anchor="bottom end"
-        className="w-48 bg-white rounded-lg border border-neutral-300 shadow-lg mt-1 z-50"
+        className="w-48 bg-(--palette-surface) rounded-lg border border-(--palette-line-strong) shadow-lg mt-1 z-50"
       >
         {onView && (
           <MenuItem>
@@ -61,8 +61,8 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               <button
                 onClick={() => onView(document)}
                 className={`${
-                  focus ? 'bg-primary-100' : ''
-                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700 first:rounded-t-lg`}
+                  focus ? 'bg-primary-100 dark:bg-primary-500/20' : ''
+                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-(--palette-ink) first:rounded-t-lg`}
               >
                 <Icon name="eye" style="regular" className="w-4 h-4" />
                 {t('documentActions.view')}
@@ -77,8 +77,8 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               <button
                 onClick={() => onEdit(document)}
                 className={`${
-                  focus ? 'bg-primary-100' : ''
-                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
+                  focus ? 'bg-primary-100 dark:bg-primary-500/20' : ''
+                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-(--palette-ink)`}
               >
                 <Icon name="pen-to-square" style="regular" className="w-4 h-4" />
                 {editLabel ?? t('documentActions.editDetails')}
@@ -93,8 +93,8 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               <button
                 onClick={() => onMove(document)}
                 className={`${
-                  focus ? 'bg-primary-100' : ''
-                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
+                  focus ? 'bg-primary-100 dark:bg-primary-500/20' : ''
+                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-(--palette-ink)`}
               >
                 <Icon name="file-export" style="regular" className="w-4 h-4" />
                 {t('documentActions.moveTo')}
@@ -109,8 +109,8 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               <button
                 onClick={() => onReplace(document)}
                 className={`${
-                  focus ? 'bg-primary-100' : ''
-                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-gray-700`}
+                  focus ? 'bg-primary-100 dark:bg-primary-500/20' : ''
+                } group flex w-full items-center gap-3 px-4 py-2 text-sm text-(--palette-ink)`}
               >
                 <Icon name="arrow-up-from-bracket" style="regular" className="w-4 h-4" />
                 {t('documentActions.replaceFile')}
@@ -125,9 +125,15 @@ const DocumentActionMenu: React.FunctionComponent<DocumentActionMenuProps> = ({
               <button
                 onClick={() => onDelete(document)}
                 className={`${
-                  focus ? (isCarried ? 'bg-violet-100' : 'bg-red-100') : ''
+                  focus
+                    ? isCarried
+                      ? 'bg-violet-100 dark:bg-violet-500/20'
+                      : 'bg-red-100 dark:bg-red-500/20'
+                    : ''
                 } group flex w-full items-center gap-3 px-4 py-2 text-sm ${
-                  isCarried ? 'text-violet-700 font-medium' : 'text-red-600'
+                  isCarried
+                    ? 'text-violet-700 dark:text-violet-300 font-medium'
+                    : 'text-(--palette-danger)'
                 } last:rounded-b-lg`}
               >
                 <Icon

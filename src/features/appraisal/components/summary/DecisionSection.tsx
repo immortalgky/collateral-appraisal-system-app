@@ -113,15 +113,20 @@ const FoldSection = ({
   defaultOpen?: boolean;
   children: ReactNode;
 }) => (
-  <details open={defaultOpen} className="group rounded-lg border border-gray-200 bg-white">
+  <details
+    open={defaultOpen}
+    className="group rounded-lg border border-(--palette-line) bg-(--palette-surface)"
+  >
     <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 [&::-webkit-details-marker]:hidden">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-600">{title}</span>
-      {summary && <span className="ml-auto text-xs text-gray-500">{summary}</span>}
+      <span className="text-xs font-semibold uppercase tracking-wide text-(--palette-gray-600)">
+        {title}
+      </span>
+      {summary && <span className="ml-auto text-xs text-(--palette-gray-500)">{summary}</span>}
       <Icon
         name="chevron-down"
         style="solid"
         className={clsx(
-          'size-3 text-gray-400 transition-transform group-open:rotate-180',
+          'size-3 text-(--palette-gray-400) transition-transform group-open:rotate-180',
           !summary && 'ml-auto',
         )}
       />
@@ -476,7 +481,7 @@ const DecisionSection = ({
                     <Icon
                       name="spinner"
                       style="solid"
-                      className="w-5 h-5 animate-spin text-gray-400"
+                      className="w-5 h-5 animate-spin text-(--palette-gray-400)"
                     />
                   </div>
                 )}
@@ -686,16 +691,18 @@ export const DecisionConfirmSummary = ({
 
   return (
     <div className="text-left">
-      <p className="mb-3 text-center text-sm text-gray-500">
+      <p className="mb-3 text-center text-sm text-(--palette-gray-500)">
         {activityId === COMMITTEE_ACTIVITY_ID
           ? t('decisionSummary.confirmDialog.voteMessage')
           : t('decisionSummary.confirmDialog.message')}
       </p>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm">
+      <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 rounded-lg border border-(--palette-line) bg-(--palette-surface-2) px-4 py-3 text-sm">
         {rows.map(([k, v]) => (
           <div key={k} className="contents">
-            <dt className="text-gray-500">{k}</dt>
-            <dd className="font-medium text-gray-900 break-words whitespace-pre-wrap">{v}</dd>
+            <dt className="text-(--palette-gray-500)">{k}</dt>
+            <dd className="font-medium text-(--palette-ink) break-words whitespace-pre-wrap">
+              {v}
+            </dd>
           </div>
         ))}
       </dl>

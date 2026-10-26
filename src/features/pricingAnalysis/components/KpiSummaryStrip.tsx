@@ -31,32 +31,32 @@ export interface KpiCard {
 
 const colorMap = {
   green: {
-    bg: 'bg-green-50',
-    border: 'border-green-200',
-    icon: 'text-green-600',
-    value: 'text-green-700',
-    label: 'text-green-600/70',
+    bg: 'bg-green-50 dark:bg-green-500/10',
+    border: 'border-green-200 dark:border-green-500/30',
+    icon: 'text-green-600 dark:text-green-400',
+    value: 'text-green-700 dark:text-green-300',
+    label: 'text-green-600/70 dark:text-green-400',
   },
   blue: {
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    icon: 'text-blue-600',
-    value: 'text-blue-700',
-    label: 'text-blue-600/70',
+    bg: 'bg-blue-50 dark:bg-blue-500/10',
+    border: 'border-blue-200 dark:border-blue-500/30',
+    icon: 'text-blue-600 dark:text-blue-400',
+    value: 'text-blue-700 dark:text-blue-300',
+    label: 'text-blue-600/70 dark:text-blue-400',
   },
   gray: {
-    bg: 'bg-gray-50',
-    border: 'border-gray-200',
-    icon: 'text-gray-500',
-    value: 'text-gray-700',
-    label: 'text-gray-500',
+    bg: 'bg-(--palette-surface-2)',
+    border: 'border-(--palette-line)',
+    icon: 'text-(--palette-gray-500)',
+    value: 'text-(--palette-ink)',
+    label: 'text-(--palette-gray-500)',
   },
   amber: {
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    icon: 'text-amber-600',
-    value: 'text-amber-700',
-    label: 'text-amber-600/70',
+    bg: 'bg-(--palette-warn-wash)',
+    border: 'border-amber-200 dark:border-amber-500/30',
+    icon: 'text-amber-600 dark:text-amber-400',
+    value: 'text-(--palette-warn)',
+    label: 'text-amber-600/70 dark:text-amber-400',
   },
 };
 
@@ -102,16 +102,21 @@ export function KpiSummaryStrip({ cards, variant = 'cards' }: KpiSummaryStripPro
               card.secondary ? 'hidden 2xl:flex' : 'flex'
             }`}
           >
-            <span className="text-[10px] text-[#8a96a0] whitespace-nowrap">{card.label}</span>
+            <span className="text-[10px] text-(--palette-ink-3) whitespace-nowrap">
+              {card.label}
+            </span>
             <b
               className={`font-semibold tabular-nums whitespace-nowrap ${
-                card.primary ? 'text-[#1f2937]' : 'text-[#55636f]'
+                card.primary ? 'text-(--palette-ink)' : 'text-(--palette-ink-2)'
               }`}
             >
               {fmt(card.value)}
               {card.note && ` ${card.note}`}
               {card.suffix && (
-                <small className="text-[10px] font-normal text-[#8a96a0]"> {card.suffix}</small>
+                <small className="text-[10px] font-normal text-(--palette-ink-3)">
+                  {' '}
+                  {card.suffix}
+                </small>
               )}
             </b>
           </div>
@@ -132,7 +137,7 @@ export function KpiSummaryStrip({ cards, variant = 'cards' }: KpiSummaryStripPro
         return (
           <div
             key={card.label}
-            className={`rounded-lg border px-3 py-2.5 ${c.bg} ${c.border} ${card.primary ? 'ring-1 ring-green-300' : ''}`}
+            className={`rounded-lg border px-3 py-2.5 ${c.bg} ${c.border} ${card.primary ? 'ring-1 ring-green-300 dark:ring-green-500/40' : ''}`}
           >
             <div className="flex items-center gap-1.5 mb-1">
               {card.icon && <Icon name={card.icon} className={`size-3 ${c.icon}`} />}

@@ -175,6 +175,7 @@
   "hints": {
     "loanTypesComma": "Separate multiple loan types with a comma",
     "ldapPassword": "密码由 Active Directory 管理 — 用户使用其 AD 凭据登录。",
+    "ldapUnavailable": "公司用户和临时访问账户不能使用 LDAP——使用本地密码登录。",
     "switchToLocalPassword": "Switching to local login — reset the password in Security so the user can sign in.",
     "teamNotApplicableCompany": "Teams don't apply to company users — {{company}} acts as their team.",
     "temporaryAccessCreate": "账户创建后默认关闭——在管理员开启访问窗口之前没有密码。",
@@ -507,6 +508,11 @@
     "temporaryAccessSection": "临时访问",
     "maxAccessWindowHours": "最长访问窗口（小时）",
     "maxAccessWindowHoursHint": "默认 8 小时，上限 720 小时（30 天）。",
+    "twoFactorSection": "两步验证",
+    "requireTwoFactorForExternal": "对外部用户（公司账户）强制启用两步验证",
+    "requireTwoFactorForExternalHint": "尚未设置的公司用户将在下次登录时被要求设置。",
+    "twoFactorRememberHours": "已验证设备的记住时长（小时）",
+    "twoFactorRememberHoursHint": "0 = 每次登录都要求输入验证码。上限 720 小时（30 天）。",
     "save": "Save policy",
     "saved": "Password policy updated.",
     "saveFailed": "Failed to update password policy."
@@ -609,6 +615,150 @@
       "copied": "已复制",
       "confirmCheckbox": "我已复制此密码",
       "done": "完成"
+    }
+  },
+  "twoFactor": {
+    "title": "两步验证",
+    "statusOn": "已开启",
+    "statusOff": "未开启",
+    "statusOnTitle": "两步验证已开启",
+    "statusOffTitle": "两步验证未开启",
+    "hint": "为登录增加第二步：输入验证器应用生成的 6 位验证码。",
+    "recoveryCodesLeft": "剩余恢复码：{{n}}",
+    "requiredNote": "您的组织要求使用两步验证，因此无法关闭。",
+    "requiredNotEnabledNote": "您的组织要求此账户使用两步验证。可在此处开启，否则将在下次登录时要求设置。",
+    "setupFailed": "无法开始设置两步验证。",
+    "codeLabel": "6 位验证码",
+    "codePlaceholder": "000000",
+    "errors": {
+      "generic": "出了点问题，请重试。",
+      "invalidCode": "该验证码无效。请检查验证器应用后重试。",
+      "lockedOut": "账户已被暂时锁定，请稍后再试。",
+      "alreadyEnabled": "两步验证已经开启。",
+      "notEnabled": "尚未开启两步验证。",
+      "requiredByPolicy": "根据策略，此账户必须使用两步验证。",
+      "saveFailed": "保存失败，请联系管理员。"
+    },
+    "enable": {
+      "button": "开启",
+      "title": "开启两步验证",
+      "scanHint": "使用验证器应用（Microsoft Authenticator、Google Authenticator、Authy）扫描此二维码，然后输入应用显示的 6 位验证码。",
+      "qrAlt": "用于将此账户添加到验证器应用的二维码",
+      "manualKey": "无法扫描？请在应用中输入此密钥",
+      "copyKey": "复制密钥",
+      "keyCopied": "密钥已复制",
+      "submit": "验证并开启"
+    },
+    "disable": {
+      "button": "关闭",
+      "title": "关闭两步验证",
+      "hint": "请输入验证器应用当前显示的 6 位验证码以确认。",
+      "submit": "关闭",
+      "done": "两步验证已关闭。"
+    },
+    "regenerate": {
+      "button": "重新生成恢复码",
+      "title": "重新生成恢复码",
+      "hint": "请输入当前的 6 位验证码。旧的恢复码将失效。",
+      "submit": "生成"
+    },
+    "newDevice": {
+      "button": "设置新设备",
+      "title": "设置新设备",
+      "hint": "手机丢失或更换时使用。请输入应用中的 6 位验证码，或使用恢复码。",
+      "warning": "这将关闭两步验证，并使您在所有设备上退出登录，旧的验证器将失效。请重新登录并扫描新的二维码：如果组织要求使用，系统会自动带您进入设置页面，否则请在此处的个人资料中重新设置。",
+      "codeLabel": "验证码或恢复码",
+      "invalidCode": "6 位验证码或恢复码无效。请检查后重试。",
+      "submit": "关闭并退出登录"
+    },
+    "recovery": {
+      "title": "您的恢复码",
+      "warning": "当您无法使用验证器应用时，可使用这些恢复码登录。每个恢复码只能使用一次。恢复码仅在此处显示一次，之后无法再次查看，请妥善保管。",
+      "copyAll": "全部复制",
+      "download": "下载 .txt",
+      "copied": "恢复码已复制",
+      "copyFailed": "无法复制，请选中文本后手动复制。",
+      "confirmCheckbox": "我已保存这些恢复码",
+      "done": "完成"
+    },
+    "admin": {
+      "button": "重置两步验证",
+      "confirmTitle": "重置两步验证？",
+      "confirmMessage": "{{name}} 需要重新设置两步验证，并将在所有设备上退出登录。",
+      "done": "两步验证已重置。",
+      "failed": "重置两步验证失败。"
+    }
+  },
+  "passkeys": {
+    "title": "我的通行密钥",
+    "description": "使用指纹、面容或设备 PIN 登录，无需输入密码。每台设备或每个云账户都有各自的通行密钥。",
+    "loadFailed": "无法加载您的通行密钥。",
+    "empty": "您还没有通行密钥。",
+    "typeSynced": "跨设备同步",
+    "typeDevice": "绑定此设备",
+    "neverUsed": "从未使用",
+    "columns": {
+      "name": "名称",
+      "type": "类型",
+      "added": "添加时间",
+      "lastUsed": "上次使用",
+      "actions": "操作"
+    },
+    "notes": {
+      "recentSignIn": "添加通行密钥前，必须在最近 10 分钟内登录过。",
+      "lostDevice": "设备丢失或更换？请在此删除该设备的通行密钥。这不会让您的其他设备退出登录；如需在所有设备上退出登录，请联系管理员撤销您的通行密钥。您仍可照常使用密码登录。"
+    },
+    "add": {
+      "button": "添加通行密钥",
+      "title": "添加通行密钥",
+      "hint": "先起个名字，然后按浏览器提示使用指纹、面容、PIN 或安全密钥。",
+      "nameLabel": "名称",
+      "namePlaceholder": "例如：办公室笔记本",
+      "nameHint": "方便日后区分各个通行密钥。",
+      "submit": "创建通行密钥",
+      "unsupported": "此浏览器不支持通行密钥。",
+      "reauthBody": "添加通行密钥前，必须在最近 10 分钟内登录过。请重新登录，然后在“个人资料 › 安全”中添加。",
+      "reauthButton": "重新登录",
+      "cancelled": "已取消。点击按钮可重试。",
+      "retry": "重试",
+      "refreshed": "请求已过期并已刷新，请再次点击按钮。",
+      "createFailed": "此浏览器无法创建通行密钥。",
+      "prepareFailed": "无法开始添加通行密钥。请关闭此窗口后重试。"
+    },
+    "rename": {
+      "title": "重命名通行密钥",
+      "button": "重命名"
+    },
+    "delete": {
+      "title": "删除此通行密钥？",
+      "message": "{{name}} 将无法再用于登录。您仍可使用密码登录。",
+      "button": "删除"
+    },
+    "toasts": {
+      "added": "通行密钥已添加",
+      "addFailed": "无法添加通行密钥。",
+      "renamed": "通行密钥已重命名",
+      "renameFailed": "无法重命名通行密钥。",
+      "renameGone": "此通行密钥已不存在。",
+      "deleted": "通行密钥已删除",
+      "deleteFailed": "无法删除通行密钥。"
+    },
+    "errors": {
+      "reauthRequired": "请先重新登录：必须在最近 10 分钟内登录过。",
+      "stateExpired": "耗时过长，请点击按钮重试。",
+      "limitReached": "最多只能有 10 个通行密钥，请先删除一个。",
+      "registrationFailed": "通行密钥验证失败，请重试。",
+      "alreadyRegistered": "此通行密钥已注册。",
+      "nameInvalid": "请输入 1 到 100 个字符的名称。"
+    },
+    "admin": {
+      "title": "通行密钥",
+      "button": "撤销全部通行密钥",
+      "lastUsed": "上次使用 {{time}}",
+      "confirmTitle": "撤销全部通行密钥？",
+      "confirmMessage": "{{name}} 的通行密钥将被删除，并在所有设备上退出登录。该用户仍可使用密码登录。",
+      "done": "通行密钥已撤销。",
+      "failed": "撤销通行密钥失败。"
     }
   }
 }

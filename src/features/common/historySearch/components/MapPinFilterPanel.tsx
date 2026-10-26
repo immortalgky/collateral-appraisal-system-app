@@ -20,7 +20,12 @@ interface MapPinFilterPanelProps {
  * MarketComparable records). Defense-in-depth: parent also passes
  * `visibleAppraisalPins=[]` for externals.
  */
-export function MapPinFilterPanel({ filters, onFiltersChange, isExternal, mcOnly = false }: MapPinFilterPanelProps) {
+export function MapPinFilterPanel({
+  filters,
+  onFiltersChange,
+  isExternal,
+  mcOnly = false,
+}: MapPinFilterPanelProps) {
   const { t } = useTranslation('historySearch');
 
   const toggle = (key: keyof PinFilterState) => {
@@ -41,20 +46,52 @@ export function MapPinFilterPanel({ filters, onFiltersChange, isExternal, mcOnly
     /** When true, the row is rendered disabled (no backend yet). */
     comingSoon?: boolean;
   }> = [
-    { key: 'showCollateral',           layerKey: 'collateralExisting',   labelKey: 'appraisalExisting',    testId: 'filter-collateral',            internalOnly: true },
-    { key: 'showMarketComparables',    layerKey: 'mcExisting',           labelKey: 'mcExisting',           testId: 'filter-mc' },
-    { key: 'showCollateralAppraising', layerKey: 'collateralAppraising', labelKey: 'collateralAppraising', testId: 'filter-collateral-appraising', internalOnly: true },
-    { key: 'showMcAppraising',         layerKey: 'mcAppraising',         labelKey: 'mcAppraising',         testId: 'filter-mc-appraising' },
-    { key: 'showSupportingData',       layerKey: 'supportingData',       labelKey: 'supportingData',       testId: 'filter-supporting-data',       comingSoon: true },
+    {
+      key: 'showCollateral',
+      layerKey: 'collateralExisting',
+      labelKey: 'appraisalExisting',
+      testId: 'filter-collateral',
+      internalOnly: true,
+    },
+    {
+      key: 'showMarketComparables',
+      layerKey: 'mcExisting',
+      labelKey: 'mcExisting',
+      testId: 'filter-mc',
+    },
+    {
+      key: 'showCollateralAppraising',
+      layerKey: 'collateralAppraising',
+      labelKey: 'collateralAppraising',
+      testId: 'filter-collateral-appraising',
+      internalOnly: true,
+    },
+    {
+      key: 'showMcAppraising',
+      layerKey: 'mcAppraising',
+      labelKey: 'mcAppraising',
+      testId: 'filter-mc-appraising',
+    },
+    {
+      key: 'showSupportingData',
+      layerKey: 'supportingData',
+      labelKey: 'supportingData',
+      testId: 'filter-supporting-data',
+      comingSoon: true,
+    },
   ];
 
   return (
     <div className="flex flex-col gap-1 min-w-[15rem]">
-      <p className="text-xs font-semibold text-gray-700 uppercase tracking-wider pb-2 mb-1 border-b border-gray-100">
+      <p className="text-xs font-semibold text-(--palette-ink) uppercase tracking-wider pb-2 mb-1 border-b border-(--palette-line-soft)">
         {t('pinFilter.title')}
       </p>
 
-      {LAYERS.filter(layer => !(layer.internalOnly && isExternal) && !(mcOnly && layer.key !== 'showMarketComparables' && layer.key !== 'showMcAppraising')).map(layer => (
+      {LAYERS.filter(
+        layer =>
+          !(layer.internalOnly && isExternal) &&
+          !(mcOnly && layer.key !== 'showMarketComparables' && layer.key !== 'showMcAppraising'),
+      ).map(layer => (
         <PinRow
           key={layer.key}
           checked={filters[layer.key]}
@@ -83,12 +120,22 @@ interface PinRowProps {
   disabledTitle?: string;
 }
 
-function PinRow({ checked, onToggle, label, iconUrl, testId, disabled = false, disabledTitle }: PinRowProps) {
+function PinRow({
+  checked,
+  onToggle,
+  label,
+  iconUrl,
+  testId,
+  disabled = false,
+  disabledTitle,
+}: PinRowProps) {
   return (
     <label
       className={[
         'flex items-center gap-2.5 select-none px-1 py-1.5 rounded',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-gray-50',
+        disabled
+          ? 'opacity-50 cursor-not-allowed'
+          : 'cursor-pointer hover:bg-(--palette-surface-2)',
       ].join(' ')}
       title={disabled ? disabledTitle : undefined}
     >
@@ -104,13 +151,21 @@ function PinRow({ checked, onToggle, label, iconUrl, testId, disabled = false, d
       <span
         className={[
           'w-4 h-4 rounded flex items-center justify-center transition-colors shrink-0',
-          checked && !disabled ? 'bg-blue-600' : 'bg-white border border-gray-300',
+          checked && !disabled
+            ? 'bg-blue-600'
+            : 'bg-(--palette-surface) border border-(--palette-line-strong)',
         ].join(' ')}
         aria-hidden="true"
       >
         {checked && !disabled && (
           <svg className="w-3 h-3 text-white" viewBox="0 0 10 10" fill="none">
-            <path d="M1 5l3 3 5-6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            <path
+              d="M1 5l3 3 5-6"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
         )}
       </span>
@@ -118,7 +173,7 @@ function PinRow({ checked, onToggle, label, iconUrl, testId, disabled = false, d
       {/* Map-pin SVG — 3:4 aspect to preserve the teardrop shape */}
       <img src={iconUrl} alt="" width={22} height={28} className="shrink-0" aria-hidden="true" />
 
-      <span className="text-xs text-gray-700">{label}</span>
+      <span className="text-xs text-(--palette-ink)">{label}</span>
     </label>
   );
 }

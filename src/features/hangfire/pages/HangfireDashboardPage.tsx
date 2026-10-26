@@ -15,8 +15,8 @@ export default function HangfireDashboardPage() {
     <div className="flex h-full min-h-0 flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">{t('page.title')}</h3>
-          <p className="mt-0.5 text-xs text-gray-500">{t('page.subtitle')}</p>
+          <h3 className="text-base font-semibold text-(--palette-ink)">{t('page.title')}</h3>
+          <p className="mt-0.5 text-xs text-(--palette-gray-500)">{t('page.subtitle')}</p>
         </div>
         {/* Escape hatch: when the login cookie has expired the dashboard answers with a redirect to
             the login page, which refuses to be framed — so the frame shows an error. Opening the same
@@ -25,7 +25,7 @@ export default function HangfireDashboardPage() {
           href={DASHBOARD_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50"
+          className="flex shrink-0 items-center gap-1.5 rounded-lg border border-(--palette-line-strong) px-3 py-1.5 text-xs font-medium text-(--palette-gray-600) hover:bg-(--palette-surface-2)"
         >
           <Icon name="arrow-up-right-from-square" style="solid" className="h-3 w-3" />
           {t('actions.openInNewTab')}
@@ -38,12 +38,12 @@ export default function HangfireDashboardPage() {
         // allow-modals: Hangfire confirms "delete job" / "requeue" with window.confirm.
         // allow-top-navigation is deliberately absent, so the dashboard cannot navigate the app away.
         sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
-        className="w-full flex-1 min-h-0 rounded-lg border border-gray-200 bg-white"
+        className="w-full flex-1 min-h-0 rounded-lg border border-(--palette-line) bg-(--palette-surface)"
       />
 
       {/* A framing error inside the iframe explains nothing to the user, and the browser will not
           let us detect it, so the remedy is stated up front. */}
-      <p className="shrink-0 text-xs text-gray-400">{t('page.frameHint')}</p>
+      <p className="shrink-0 text-xs text-(--palette-gray-400)">{t('page.frameHint')}</p>
     </div>
   );
 }

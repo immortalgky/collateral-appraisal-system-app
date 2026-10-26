@@ -30,7 +30,8 @@ const DocumentRequirementsPage = () => {
   const [isSaving, setIsSaving] = useState(false);
 
   // Requirements state
-  const { data: requirements = [], isLoading: reqLoading } = useDocumentRequirements(includeInactive);
+  const { data: requirements = [], isLoading: reqLoading } =
+    useDocumentRequirements(includeInactive);
   const setScope = useSetScopeRequirements();
   const [reqModalOpen, setReqModalOpen] = useState(false);
   const [reqScope, setReqScope] = useState<{
@@ -134,8 +135,8 @@ const DocumentRequirementsPage = () => {
       className={clsx(
         'px-4 py-2 text-sm font-medium border-b-2 transition-colors',
         tab === key
-          ? 'border-gray-800 text-gray-900'
-          : 'border-transparent text-gray-500 hover:text-gray-700',
+          ? 'border-gray-800 text-(--palette-ink)'
+          : 'border-transparent text-(--palette-gray-500) hover:text-(--palette-ink)',
       )}
     >
       {label}
@@ -146,8 +147,8 @@ const DocumentRequirementsPage = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-base font-semibold text-gray-900">Document Requirements</h3>
-          <p className="text-xs text-gray-500 mt-0.5">
+          <h3 className="text-base font-semibold text-(--palette-ink)">Document Requirements</h3>
+          <p className="text-xs text-(--palette-gray-500) mt-0.5">
             Configure required documents by collateral type and purpose
           </p>
         </div>
@@ -169,12 +170,12 @@ const DocumentRequirementsPage = () => {
         </Button>
       </div>
 
-      <div className="flex items-center justify-between border-b border-gray-200">
+      <div className="flex items-center justify-between border-b border-(--palette-line)">
         <div className="flex gap-2">
           {tabBtn('types', 'Document Types')}
           {tabBtn('requirements', 'Requirements')}
         </div>
-        <label className="flex items-center gap-2 text-sm text-gray-600">
+        <label className="flex items-center gap-2 text-sm text-(--palette-gray-600)">
           <input
             type="checkbox"
             checked={includeInactive}
@@ -184,7 +185,7 @@ const DocumentRequirementsPage = () => {
         </label>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="bg-(--palette-surface) rounded-xl border border-(--palette-line) shadow-sm overflow-hidden">
         {tab === 'requirements' ? (
           <DocumentRequirementTable
             requirements={requirements}

@@ -1,3 +1,4 @@
+import { toSquareWa } from '@/shared/utils/landArea';
 import type { TFunction } from 'i18next';
 import { typeToBase } from '@/features/appraisal/utils/propertyTypeConfig';
 import type { BriefAsset, BriefProject } from './api/appraisalBrief';
@@ -35,16 +36,16 @@ export interface SceneItem {
  * place that shows; land gets 4 because more parcels genuinely mean a wider
  * site, which is worth seeing.
  */
-const DRAW_CAP: Record<Kind, number> = { machine: 1, condo: 1, building: 4, land: 4 };
+export const DRAW_CAP: Record<Kind, number> = { machine: 1, condo: 1, building: 4, land: 4 };
 
 /**
  * The BuildingType code that means "อื่นๆ". Its label is literally "other", so
  * for that one code the appraiser's own words in `buildingTypeOther` are the
  * answer and the label is not.
  */
-const BUILDING_TYPE_OTHER = '99';
+export const BUILDING_TYPE_OTHER = '99';
 
-const kindOf = (propertyType: string | null): Kind | null => {
+export const kindOf = (propertyType: string | null): Kind | null => {
   if (!propertyType) return null;
   if (propertyType === 'MAC') return 'machine';
   const base = typeToBase[propertyType];
@@ -60,34 +61,123 @@ const kindOf = (propertyType: string | null): Kind | null => {
  * would show a building floating, and drawing only the parcel would lose the
  * building entirely.
  */
-const bringsLand = (propertyType: string | null) =>
+export const bringsLand = (propertyType: string | null) =>
   !!propertyType && typeToBase[propertyType] === 'landBuilding';
 
+/** The three parts of a Thai land area, as a property, a title or a project's land records them. */
+export interface AreaFields {
+  areaRai?: number | null;
+  areaNgan?: number | null;
+  areaSquareWa?: number | null;
+}
+
 /**
- * Thai land area is mixed-radix — 100 square wa to a ngan, 4 ngan to a rai — so
- * the parts are summed separately and carried. Null when no parcel carries an
- * area at all, because "0-0-0" reads as "measured, and it is nothing".
+ * Thai land area is mixed-radix: 100 square wa to a ngan, 4 ngan to a rai. Each of the three parts
+ * can be a decimal (1 rai 2.5 ngan is a real record), so the parts are summed in square wa, rounded
+ * to two decimals, and the triple is read off that one total: wa is a remainder below 100 and ngan
+ * one below 4, so nothing can overflow ("0 งาน 100 วา") and the triple always agrees with the
+ * square-wa figure. The report does exactly this (ThaiLandAreaFormatter.NormalizeTotal). Null when
+ * no parcel carries an area at all, because "0-0-0" reads as "measured, and it is nothing".
  */
-export const totalArea = (assets: BriefAsset[]) => {
+export const totalArea = (assets: AreaFields[]) => {
   const withArea = assets.filter(
     a => a.areaRai != null || a.areaNgan != null || a.areaSquareWa != null,
   );
   if (withArea.length === 0) return null;
-
-  // Rounded FIRST, then carried. Rounding after the carry lets a remainder of 99.97 wa round to
-  // exactly 100 and be printed as "0 งาน 100 วา" — a unit that does not exist — instead of
-  // "1 งาน 0 วา". Land areas arrive with two decimals, so a remainder that close to the radix is
-  // an ordinary total, not a corner case.
-  let wa = Math.round(withArea.reduce((s, a) => s + (a.areaSquareWa ?? 0), 0) * 10) / 10;
-  let ngan = withArea.reduce((s, a) => s + (a.areaNgan ?? 0), 0) + Math.floor(wa / 100);
-  wa = Math.round((wa % 100) * 10) / 10;
-  const rai = withArea.reduce((s, a) => s + (a.areaRai ?? 0), 0) + Math.floor(ngan / 4);
-  ngan %= 4;
+  const sum = (part: keyof AreaFields) => withArea.reduce((s, a) => s + (a[part] ?? 0), 0);
+  const squareWa =
+    Math.round(toSquareWa(sum('areaRai'), sum('areaNgan'), sum('areaSquareWa')) * 100) / 100;
+  const rai = Math.floor(squareWa / 400);
+  const afterRai = squareWa - rai * 400;
+  const ngan = Math.floor(afterRai / 100);
+  const wa = Math.round((afterRai - ngan * 100) * 100) / 100;
   return { rai, ngan, wa };
 };
 
-/** How many condo units are named before the rest become "+N". */
-const MAX_CONDO_UNITS = 3;
+/** A total of 0 is "not recorded", not a plot of no size: null for it, the area otherwise. */
+export const recordedArea = <A extends { rai: number; ngan: number; wa: number }>(a: A | null) =>
+  a && a.rai + a.ngan + a.wa > 0 ? a : null;
+
+/** The properties that carry land: a parcel, or a parcel with a building on it. What every land figure sums. */
+export const landPropertiesOf = (assets: BriefAsset[]) =>
+  assets.filter(a => kindOf(a.propertyType) === 'land' || bringsLand(a.propertyType));
+
+/** A number as the screens print it: grouped, with the locale of the language, at most `digits` decimals. */
+export type NumberFormatter = (n: number, digits?: number) => string;
+const formats = new Map<string, Intl.NumberFormat>();
+export const numberFormat =
+  (language: string | undefined): NumberFormatter =>
+  (n, digits = 0) => {
+    // One formatter per locale and precision: building an Intl.NumberFormat costs more than formatting with it.
+    const locale = language?.startsWith('th') ? 'th-TH' : 'en-US';
+    const key = `${locale}|${digits}`;
+    let format = formats.get(key);
+    if (!format)
+      formats.set(key, (format = new Intl.NumberFormat(locale, { maximumFractionDigits: digits })));
+    return format.format(n);
+  };
+
+/** "รวม 8 ไร่ 3 งาน 9 วา": a land area in words, the way the section header and the CSS scene say it (wa to two decimals). */
+export const areaWords = (
+  t: TFunction<'appraisal'>,
+  area: { rai: number; ngan: number; wa: number },
+  nf: NumberFormatter,
+) =>
+  t('activityTracking.brief.collateral.totalArea', {
+    area: [
+      `${nf(area.rai, 2)} ${t('activityTracking.brief.collateral.rai')}`,
+      `${nf(area.ngan, 2)} ${t('activityTracking.brief.collateral.ngan')}`,
+      `${nf(area.wa, 2)} ${t('activityTracking.brief.collateral.wa')}`,
+    ].join(' '),
+  });
+
+/** The area a property records in its own fields, or null when it records none (0 is not a record). */
+const ownArea = (a: AreaFields) =>
+  (a.areaRai ?? 0) + (a.areaNgan ?? 0) + (a.areaSquareWa ?? 0) > 0 ? a : null;
+
+/**
+ * The area rows a land property counts for. The report's land figure (the พื้นที่ cell, `total_square_wa`
+ * in AppraisalSummaryLandBuildingDataProvider) is made of the property's TITLES: each title's rai-ngan-wa
+ * summed per property, then over the group. A title with no area adds nothing, as in the report. Only
+ * when the brief sends NO titles (an older API) does the property's own area stand in, which is
+ * itself the server's sum of its titles.
+ * Not modelled here: the report prints the priced land area when pricing recorded one, and takes off
+ * what the appraiser deducted; the brief carries neither.
+ */
+export const landAreaRows = (a: BriefAsset): AreaFields[] => {
+  const titles = a.landTitles ?? [];
+  if (titles.length > 0) return titles;
+  return ownArea(a) ? [a] : [];
+};
+
+/**
+ * The land area of properties: ONE rule for the sentence, the card, the hero, the 3D parcel, the CSS
+ * scene and the section header, carried and rounded once (see `totalArea`). Null when nothing says,
+ * and a total of 0 counts as not recorded.
+ */
+export const landAreaOf = (land: BriefAsset[]) =>
+  recordedArea(totalArea(land.flatMap(landAreaRows)));
+
+/** The land of a project as the area parts `totalArea` sums, so a project and a property are summed alike. */
+export const projectArea = (p: BriefProject) =>
+  recordedArea(
+    totalArea([
+      { areaRai: p.landAreaRai, areaNgan: p.landAreaNgan, areaSquareWa: p.landAreaSquareWa },
+    ]),
+  );
+
+/**
+ * A condo unit's room number, as recorded. Not the property's title: with no room number that is
+ * free text (the description), which must not be printed as a room.
+ */
+export const roomOf = (a: Pick<BriefAsset, 'roomNumber'>) => a.roomNumber?.trim() || null;
+
+/**
+ * How many condo units are named before the rest become "+N", in the CSS scene's callout and in the
+ * 3D scene's highlighted units alike. Three: the CSS callout is one 170px line, which holds three
+ * room-and-floor labels at most; the 3D scene counts the units past it (a bad floor on one is still said).
+ */
+export const MAX_CONDO_UNITS = 3;
 
 /**
  * "ห้อง 1205 ชั้น 12" for each unit on the application.
@@ -97,13 +187,13 @@ const MAX_CONDO_UNITS = 3;
  * which answered a question nobody asked and left out the room entirely; the
  * tower's height is already visible in the drawing.
  *
- * `title` is the room number for a condo: the brief resolves it as
- * COALESCE(titleNumber, roomNumber, description).
+ * The room number is `roomNumber` only. `title` is no substitute: the brief resolves it as
+ * COALESCE(titleNumber, roomNumber, description), so without a room number it is free text.
  */
 export const condoUnitLabels = (units: BriefAsset[], t: TFunction<'appraisal'>): string[] =>
   units
     .map(u => {
-      const room = u.title?.trim() || null;
+      const room = roomOf(u);
       const floor = parseFloor(u.condoFloorNumber);
       if (room && floor) return t('activityTracking.brief.collateral.condoUnit', { room, floor });
       if (floor) return t('activityTracking.brief.collateral.condoUnitNoRoom', { floor });
@@ -112,10 +202,29 @@ export const condoUnitLabels = (units: BriefAsset[], t: TFunction<'appraisal'>):
     })
     .filter(Boolean) as string[];
 
-/** `CondoAppraisalDetails.FloorNumber` is nvarchar and carries '-' where nobody filled it in. */
-const parseFloor = (raw: string | null): number | null => {
-  if (!raw) return null;
-  const n = Number.parseInt(raw, 10);
+/**
+ * `CondoAppraisalDetails.FloorNumber` is nvarchar and carries '-' where nobody filled it in. A
+ * single number is a floor, whatever stray dashes or spaces ride on it ("5 -" is floor 5). Not a
+ * floor to place, so unreadable (the text is printed as written, with the warning):
+ *  - two numbers in any form ("5-6", "5~6", "5/6", "5,6", "5 และ 6");
+ *  - any other letters before the number ("B1", "P2", "LG", "G", "ชั้นใต้ดิน 2": a basement, a car-park
+ *    level); only a floor word (ชั้น, ชั้นที่, F, Fl., Floor) may stand before it;
+ *  - a negative ("-1").
+ */
+/** What may stand before the number of a floor: "ชั้น 5", "ชั้นที่ 12", "F5", "Fl.5", "Floor 5". */
+/** A dash or minus of any kind (the set summaryText treats as a dash) at the end. */
+const MINUS = /[-−–—‐‑‒－﹣]$/;
+const FLOOR_WORD = /^\s*(?:ชั้นที่|ชั้น|floor|fl|f)\s*\.?\s*$/i;
+
+export const parseFloor = (raw: string | null): number | null => {
+  // Thai digits (๐-๙) are digits.
+  const text = raw?.replace(/[๐-๙]/g, d => String(d.charCodeAt(0) - 0x0e50)) ?? '';
+  const found = [...text.matchAll(/\d+/g)];
+  if (found.length !== 1) return null;
+  const before = text.slice(0, found[0].index);
+  // Any dash of the report's set straight before the number is a minus sign.
+  if (MINUS.test(before) || (/\p{L}/u.test(before) && !FLOOR_WORD.test(before))) return null;
+  const n = Number.parseInt(found[0][0], 10);
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
@@ -131,6 +240,7 @@ export function buildScene(
   project: BriefProject | null,
   t: TFunction<'appraisal'>,
   buildingTypeName: (code: string | null) => string,
+  nf: NumberFormatter,
 ): SceneItem[] {
   /**
    * A block appraisal has no properties at all — the project IS the collateral.
@@ -139,22 +249,8 @@ export function buildScene(
    */
   if (project) {
     const base = project.projectType ? typeToBase[project.projectType] : undefined;
-    const area = totalArea([
-      {
-        areaRai: project.landAreaRai,
-        areaNgan: project.landAreaNgan,
-        areaSquareWa: project.landAreaSquareWa,
-      } as BriefAsset,
-    ]);
-    const areaText = area
-      ? t('activityTracking.brief.collateral.totalArea', {
-          area: [
-            `${area.rai} ${t('activityTracking.brief.collateral.rai')}`,
-            `${area.ngan} ${t('activityTracking.brief.collateral.ngan')}`,
-            `${area.wa} ${t('activityTracking.brief.collateral.wa')}`,
-          ].join(' '),
-        })
-      : null;
+    const area = projectArea(project);
+    const areaText = area ? areaWords(t, area, nf) : null;
     const name = project.projectName || t('activityTracking.brief.collateral.project');
     const units = project.unitForSaleCount ?? project.unitCount ?? 1;
 
@@ -268,7 +364,7 @@ export function buildScene(
 
   const land = byKind.get('land');
   if (land?.length) {
-    const area = totalArea(land);
+    const area = landAreaOf(land);
     const drawn = Math.min(land.length, DRAW_CAP.land);
     items.push({
       kind: 'land',
@@ -277,15 +373,7 @@ export function buildScene(
       label: label('land'),
       /* Here "รวม" is correct: the scene's land object stands for every parcel on
          the application, whatever type carried it. */
-      detail: area
-        ? t('activityTracking.brief.collateral.totalArea', {
-            area: [
-              `${area.rai} ${t('activityTracking.brief.collateral.rai')}`,
-              `${area.ngan} ${t('activityTracking.brief.collateral.ngan')}`,
-              `${area.wa} ${t('activityTracking.brief.collateral.wa')}`,
-            ].join(' '),
-          })
-        : null,
+      detail: area ? areaWords(t, area, nf) : null,
       count: land.length,
       hidden: land.length - Math.min(land.length, DRAW_CAP.land),
     });

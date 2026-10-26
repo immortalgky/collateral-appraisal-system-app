@@ -60,8 +60,8 @@ const ListSortMenu = ({ options, sortKey, asc, onChange, title }: ListSortMenuPr
         className={clsx(
           'size-7 flex items-center justify-center rounded-lg border transition-colors',
           open
-            ? 'border-primary text-primary bg-primary/5'
-            : 'border-gray-200 text-gray-500 hover:bg-gray-50',
+            ? 'border-primary text-(--palette-primary-text) bg-primary/5'
+            : 'border-(--palette-line) text-(--palette-gray-500) hover:bg-(--palette-surface-2)',
         )}
       >
         <Icon name="arrow-down-short-wide" style="solid" className="size-3.5" />
@@ -70,9 +70,9 @@ const ListSortMenu = ({ options, sortKey, asc, onChange, title }: ListSortMenuPr
       {open && (
         <div
           role="menu"
-          className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-(--palette-line) bg-(--palette-surface) py-1 shadow-lg"
         >
-          <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-gray-400">
+          <div className="px-3 py-1 text-[10px] font-semibold uppercase tracking-wide text-(--palette-gray-400)">
             {t('sort.sortBy')}
           </div>
           {options.map(opt => {
@@ -86,7 +86,9 @@ const ListSortMenu = ({ options, sortKey, asc, onChange, title }: ListSortMenuPr
                 onClick={() => handleSelect(opt.key)}
                 className={clsx(
                   'w-full flex items-center justify-between gap-2 px-3 py-1.5 text-xs transition-colors',
-                  active ? 'text-primary font-medium' : 'text-gray-700 hover:bg-gray-50',
+                  active
+                    ? 'text-(--palette-primary-text) font-medium'
+                    : 'text-(--palette-ink) hover:bg-(--palette-surface-2)',
                 )}
               >
                 <span className="truncate">{opt.label}</span>

@@ -101,20 +101,20 @@ const ConfirmDialog = ({
     },
     warning: {
       icon: 'circle-exclamation',
-      iconBg: 'bg-amber-50',
+      iconBg: 'bg-amber-500/10',
       iconColor: 'text-amber-500',
       confirmBtn: 'bg-amber-500 hover:bg-amber-600 text-white',
     },
     info: {
       icon: 'circle-info',
-      iconBg: 'bg-blue-50',
+      iconBg: 'bg-blue-500/10',
       iconColor: 'text-blue-500',
       confirmBtn: 'bg-blue-500 hover:bg-blue-600 text-white',
     },
     primary: {
       icon: 'circle-check',
       iconBg: 'bg-primary/10',
-      iconColor: 'text-primary',
+      iconColor: 'text-(--palette-primary-text)',
       confirmBtn: 'bg-primary hover:bg-primary/80 text-white',
     },
   };
@@ -129,7 +129,7 @@ const ConfirmDialog = ({
   return createPortal(
     <dialog className="modal modal-open z-[60]">
       <div
-        className={`modal-box bg-white rounded-2xl shadow-xl ${children ? 'max-w-md' : 'max-w-sm'}`}
+        className={`modal-box bg-(--palette-surface) rounded-2xl shadow-xl ${children ? 'max-w-md' : 'max-w-sm'}`}
       >
         <div className="flex flex-col items-center text-center">
           <div
@@ -139,12 +139,16 @@ const ConfirmDialog = ({
                 : hasError
                   ? 'bg-danger/10'
                   : hasWarning
-                    ? 'bg-amber-50'
+                    ? 'bg-amber-500/10'
                     : styles.iconBg
             }`}
           >
             {isLoading ? (
-              <Icon name="spinner" style="solid" className="size-7 text-primary animate-spin" />
+              <Icon
+                name="spinner"
+                style="solid"
+                className="size-7 text-(--palette-primary-text) animate-spin"
+              />
             ) : hasError ? (
               <Icon name="triangle-exclamation" style="solid" className="size-7 text-danger" />
             ) : hasWarning ? (
@@ -153,12 +157,12 @@ const ConfirmDialog = ({
               <Icon name={styles.icon} style="solid" className={`size-7 ${styles.iconColor}`} />
             )}
           </div>
-          <h3 className="font-semibold text-lg text-gray-900 mb-2">{title}</h3>
+          <h3 className="font-semibold text-lg text-(--palette-ink) mb-2">{title}</h3>
           {children ? (
             <div className="w-full mb-6">{children}</div>
           ) : (
             <p
-              className={`text-sm mb-6 ${showProgress ? 'text-primary animate-pulse' : 'text-gray-500'}`}
+              className={`text-sm mb-6 ${showProgress ? 'text-(--palette-primary-text) animate-pulse' : 'text-(--palette-gray-500)'}`}
             >
               {bodyMessage}
             </p>
@@ -171,7 +175,7 @@ const ConfirmDialog = ({
                 type="button"
                 onClick={onClose}
                 disabled={isLoading}
-                className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 px-4 py-2.5 bg-(--palette-surface-3) hover:bg-(--palette-line) text-(--palette-ink) font-medium rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {cancelText ?? t('actions.cancel')}
               </button>

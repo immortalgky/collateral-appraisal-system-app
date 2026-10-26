@@ -21,6 +21,7 @@
       "appraisalNumber": "评估报告编号",
       "appraiser": "估价人员",
       "customerName": "客户名称",
+      "internalFollowupStaffName": "内部跟进人员",
       "reportReceivedDate": "报告接收日期",
       "status": "状态",
       "evaluationStatus": "评估状态",
