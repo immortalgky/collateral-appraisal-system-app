@@ -172,6 +172,10 @@ function TaskLayout() {
     onPoolTaskUpdate: useCallback(
       (event: PoolTaskUpdateEvent) => {
         if (event.taskId !== taskId) return;
+        // Echo of our own completion: the task is gone (GET 404), so a refetch would show "Task Not Found"
+        // before the submitting page redirects itself.
+        if (event.type === 'PoolTaskCompleted' && isSameUser(event.completedBy, currentUsername))
+          return;
         if (event.type === 'PoolTaskClaimed' || event.type === 'PoolTaskCompleted') {
           // Task has been permanently claimed by another user or completed — refetch to get updated state
           queryClient.invalidateQueries({ queryKey: ['task', taskId] });
@@ -187,7 +191,7 @@ function TaskLayout() {
             : old,
         );
       },
-      [queryClient, taskId],
+      [queryClient, taskId, currentUsername],
     ),
   });
 
