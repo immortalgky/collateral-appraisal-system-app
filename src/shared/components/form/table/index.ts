@@ -9,7 +9,7 @@ export {
   type FormTableProps,
   type FormTableRowElementProps,
 } from './FormTable';
-export { FormTableHeading } from './FormTableHeading';
+export { FormTableHeading, FormTableBlock } from './FormTableHeading';
 export { FormTableAdd, FormTableEmpty } from './FormTableAdd';
 export { FormTableRowActions } from './FormTableRowActions';
 export { TableAddSlotProvider, useTableAddSlot } from './addSlot';

@@ -6,7 +6,7 @@ import ParameterDisplay from '@/shared/components/ParameterDisplay';
 import {
   FormTable,
   FormTableDash,
-  FormTableHeading,
+  FormTableBlock,
   FormTableRowActions,
   type FormTableColumn,
 } from '@/shared/components/form';
@@ -133,21 +133,22 @@ export default function LandAreaDeductionTable({
     <div className="col-span-12">
       {/* data-field: scroll target for array-level errors (an empty list has no cell to scroll to). */}
       <div data-field={name}>
-        {showTitle && (
-          <FormTableHeading>{t('landCharacteristicsForm.deductionsTitle')}</FormTableHeading>
-        )}
-        <FormTable
-          columns={columns}
-          rows={items}
-          rowKey={item => item.id}
-          add={[
-            {
-              label: t('landCharacteristicsForm.addDeduction'),
-              onClick: () => append({ reasonCode: '', areaInSqWa: '', remark: '' }),
-            },
-          ]}
-          empty={{ icon: 'inbox', message: tRequest('table.noData') }}
-        />
+        <FormTableBlock
+          title={showTitle ? t('landCharacteristicsForm.deductionsTitle') : undefined}
+        >
+          <FormTable
+            columns={columns}
+            rows={items}
+            rowKey={item => item.id}
+            add={[
+              {
+                label: t('landCharacteristicsForm.addDeduction'),
+                onClick: () => append({ reasonCode: '', areaInSqWa: '', remark: '' }),
+              },
+            ]}
+            empty={{ icon: 'inbox', message: tRequest('table.noData') }}
+          />
+        </FormTableBlock>
       </div>
     </div>
   );

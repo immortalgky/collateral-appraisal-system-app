@@ -2416,6 +2416,11 @@
       "currentValue": "当前价值",
       "appraisedValue": "评估价值（整份评估）"
     },
+    "override": {
+      "badge": "已手动修改",
+      "resetTitle": "恢复为计算值",
+      "hint": "按 {{pct}}% 计算为 {{value}}"
+    },
     "tabs": {
       "items": "工程项目"
     },
@@ -2457,10 +2462,11 @@
       "previousValue": "上期价值",
       "currentValue": "本期价值",
       "baht": "（泰铢）",
-      "addItem": "+ 添加项目…",
+      "quickAdd": "添加：",
+      "addOther": "其他（自行输入名称）",
+      "customNamePlaceholder": "项目名称",
       "itemCount_one": "{{count}} 项",
       "itemCount_other": "{{count}} 项",
-      "groupTotal": "{{name}} 合计",
       "buildingTotal": "整栋合计",
       "otherGroup": "其他",
       "workGroupsFailed": "无法加载工程项目列表——请刷新页面后再添加",

@@ -175,6 +175,8 @@ export const mapConstructionInspectionResponseToForm = (ci: any) => {
       summaryCurrentProgressPct:
         summary?.summaryCurrentProgressPct ?? summary?.summaryPreviousProgressPct ?? 0,
       summaryCurrentValue: summary?.summaryCurrentValue ?? 0,
+      // Read in both modes (unlike the Summary* columns): the flag says whether the stored value was typed.
+      currentValueOverride: ci?.isCurrentValueOverridden ? (ci.summaryCurrentValue ?? null) : null,
       documentId: ci?.documentId ?? null,
       fileName: ci?.fileName ?? null,
       filePath: ci?.filePath ?? null,
@@ -304,9 +306,9 @@ export const mapCondoPropertyResponseToForm = (
     buildingConditionTypeOther: response.buildingConditionTypeOther ?? '',
     hasObligation: response.hasObligation ?? '',
     obligationDetails: response.obligationDetails ?? '',
-    documentValidationResultType: response.documentValidationResultType ?? '',
+    documentValidationResultType: response.documentValidationResultType || '01',
 
-    locationType: response.locationType ?? '',
+    locationType: response.locationType || '1',
     street: response.street ?? '',
     soi: response.soi ?? '',
     distanceFromMainRoad: response.distanceFromMainRoad ?? null,
@@ -711,6 +713,9 @@ const mapConstructionInspectionFormToApi = (data: any) => {
     totalValue,
     // Remark is mode-independent: the backend keeps it on both Summary and Full Detail rows.
     remark: constructionRemark ?? null,
+    // Without a value base there is nothing to override (a condo), whatever the form still holds.
+    currentValueOverride:
+      totalValue > 0 ? (constructionSummary?.currentValueOverride ?? null) : null,
     ...(isFullDetail
       ? {
           workDetails: (constructionSubItems ?? []).map((item: any, idx: number) => ({

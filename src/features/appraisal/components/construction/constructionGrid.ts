@@ -1,4 +1,6 @@
 import { formatNumber } from '@shared/utils/formatUtils';
+import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
+import { roundBaht } from '../../utils/constructionMoney';
 
 /** Shared by the construction inspection grid (detail and summary modes) and the tab's toolbar. */
 
@@ -97,8 +99,14 @@ interface ConstructionFormValues {
     summaryCurrentProgressPct?: number | null;
     summaryPreviousProgressPct?: number | null;
     documentId?: string | null;
+    currentValueOverride?: number | null;
   } | null;
   constructionRemark?: string | null;
+  /**
+   * False without a value base: the override is hidden there (and not sent), so it is nothing the
+   * user can see or lose. Left out, it counts.
+   */
+  hasValueBase?: boolean;
 }
 
 /** Anything recorded for the inspection — what saving as "not under construction" would delete. */
@@ -108,4 +116,18 @@ export const hasConstructionData = (v: ConstructionFormValues) =>
   !!v.constructionSummary?.summaryCurrentProgressPct ||
   !!v.constructionSummary?.summaryPreviousProgressPct ||
   !!v.constructionSummary?.documentId ||
+  (v.hasValueBase !== false && v.constructionSummary?.currentValueOverride != null) ||
   !!String(v.constructionRemark ?? '').trim();
+
+/** `hasConstructionData` over a whole form's values: the value base is read off them, as the tab does. */
+export const formHasConstructionData = (values: ConstructionFormValues & Record<string, unknown>) =>
+  hasConstructionData({
+    ...values,
+    hasValueBase:
+      roundBaht(
+        buildingFinalCostValue({
+          buildingCostValue: values.buildingCostValue,
+          depreciationDetails: values.depreciationDetails ?? [],
+        } as Record<string, unknown>),
+      ) > 0,
+  });

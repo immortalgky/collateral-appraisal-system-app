@@ -11,7 +11,7 @@ import { Input, NumberInput } from '@/shared/components';
 import {
   FormTable,
   FormTableDash,
-  FormTableHeading,
+  FormTableBlock,
   FormTableRowActions,
   type FormTableColumn,
 } from '@/shared/components/form';
@@ -259,23 +259,24 @@ function CondoAreaDetailForm({ name, showTitle = true }: CondoAreaDetailFormProp
   return (
     <div className="col-span-12">
       <span data-field={name} />
-      {showTitle && <FormTableHeading>{t('forms.condo.areaDetail')}</FormTableHeading>}
-      <FormTable
-        columns={columns}
-        rows={items}
-        rowKey={item => fields[item.index]?.id ?? item.index}
-        rowProps={item => ({
-          onKeyDown: e => {
-            if (readOnly || !e.altKey) return;
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-              e.preventDefault();
-              move(item.index, e.key === 'ArrowUp' ? -1 : 1);
-            }
-          },
-        })}
-        add={[{ label: t('forms.condo.addArea'), onClick: addRow }]}
-        empty={{ icon: 'ruler-combined', message: t('forms.condo.areaDetailEmpty') }}
-      />
+      <FormTableBlock title={showTitle ? t('forms.condo.areaDetail') : undefined}>
+        <FormTable
+          columns={columns}
+          rows={items}
+          rowKey={item => fields[item.index]?.id ?? item.index}
+          rowProps={item => ({
+            onKeyDown: e => {
+              if (readOnly || !e.altKey) return;
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                move(item.index, e.key === 'ArrowUp' ? -1 : 1);
+              }
+            },
+          })}
+          add={[{ label: t('forms.condo.addArea'), onClick: addRow }]}
+          empty={{ icon: 'ruler-combined', message: t('forms.condo.areaDetailEmpty') }}
+        />
+      </FormTableBlock>
     </div>
   );
 }

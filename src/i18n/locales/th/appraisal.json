@@ -2416,6 +2416,11 @@
       "currentValue": "มูลค่าตามสภาพปัจจุบัน",
       "appraisedValue": "ราคาประเมิน (ทั้งใบงาน)"
     },
+    "override": {
+      "badge": "แก้ไขเอง",
+      "resetTitle": "คืนค่าที่คำนวณได้",
+      "hint": "คำนวณจาก {{pct}}% ได้ {{value}}"
+    },
     "tabs": {
       "items": "รายการงาน"
     },
@@ -2457,10 +2462,11 @@
       "previousValue": "มูลค่างวดก่อน",
       "currentValue": "มูลค่างวดนี้",
       "baht": "(บาท)",
-      "addItem": "＋ เพิ่มรายการ…",
+      "quickAdd": "เพิ่ม:",
+      "addOther": "อื่น ๆ (พิมพ์ชื่อเอง)",
+      "customNamePlaceholder": "ชื่อรายการ",
       "itemCount_one": "{{count}} รายการ",
       "itemCount_other": "{{count}} รายการ",
-      "groupTotal": "รวม {{name}}",
       "buildingTotal": "รวมทั้งหลัง",
       "otherGroup": "อื่น ๆ",
       "workGroupsFailed": "โหลดรายการงานต้นแบบไม่สำเร็จ — โหลดหน้าใหม่เพื่อเพิ่มรายการ",

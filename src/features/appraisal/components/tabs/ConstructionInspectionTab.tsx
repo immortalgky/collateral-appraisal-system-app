@@ -10,6 +10,7 @@ import {
   useAppraisalAppraisedValue,
 } from '@/features/appraisal/context/AppraisalContext';
 import Icon from '@shared/components/Icon';
+import { useFormLayout } from '@/shared/components/form/formLayoutContext';
 import clsx from 'clsx';
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react';
 import { baht, hasConstructionData, pct, sumWork } from '../construction/constructionGrid';
@@ -23,6 +24,7 @@ import { mapConstructionInspectionResponseToForm } from '../../utils/mappers';
 import { proportionStatus, roundBaht } from '../../utils/constructionMoney';
 import { buildingFinalCostValue } from '@/features/pricingAnalysis/domain/calculation';
 import { ConstructionDetailTable } from '../construction/ConstructionDetailTable';
+import { EditedDot, type CurrentValueOverride } from '../construction/constructionGridCells';
 import { useConstructionScope } from '../construction/constructionScope';
 import { ConstructionSummaryForm } from '../construction/ConstructionSummaryForm';
 import { ConstructionRemarkField } from '../construction/ConstructionRemarkField';
@@ -123,6 +125,7 @@ export function ConstructionInspectionTab({
 
   // React Hook Form integration
   const { control, setValue } = useFormContext();
+  const compact = useFormLayout() === 'compact';
   const { fields, append, remove } = useFieldArray({ control, name: 'constructionSubItems' });
 
   const enterDetail = useWatch({ control, name: 'constructionEnterDetail' }) ?? true;
@@ -219,13 +222,27 @@ export function ConstructionInspectionTab({
     : (summary?.summaryCurrentProgressPct ?? 0);
   // Without a value base the appraised value stands whatever the progress, as the server stores it.
   // A house without its building cost has no figure yet (shown as —).
+  // The appraiser's own figure replaces the rows' (or the percentage's) in both modes; a condo has no base to override.
+  const overrideValue: number | null = hasOwnValueBase
+    ? (summary?.currentValueOverride ?? null)
+    : null;
+  const setOverride = (value: number | null) =>
+    setValue('constructionSummary.currentValueOverride', value, { shouldDirty: true });
+  // Any progress edit makes the typed figure stale, so it goes back to following the rows.
+  // Reads the form's own field, not the masked value: with no value base the stored override must still go.
+  const clearOverride = () => {
+    if (summary?.currentValueOverride != null) setOverride(null);
+  };
+  const currentValueOverride: CurrentValueOverride = {
+    value: overrideValue,
+    max: totalValue,
+    onChange: setOverride,
+  };
   const currentValue: number | null = !hasOwnValueBase
     ? condo && appraisedValue
       ? roundBaht(appraisedValue)
       : null
-    : enterDetail
-      ? workTotals.currentValue
-      : summaryCurrentValue;
+    : (overrideValue ?? (enterDetail ? workTotals.currentValue : summaryCurrentValue));
 
   // Previous-round columns on a progressive round, and wherever previous figures exist at all
   // (older data): hidden, they would still be saved without anyone seeing them.
@@ -242,6 +259,7 @@ export function ConstructionInspectionTab({
   const hasCarriedOver = hasConstructionData({
     constructionSubItems: subItems,
     constructionSummary: summary,
+    hasValueBase: hasOwnValueBase,
   });
   const modeLocked = !!readOnly || (!!ciMode && hasCarriedOver);
   const split = proportionStatus(workTotals.proportion);
@@ -250,10 +268,12 @@ export function ConstructionInspectionTab({
   // Locked outright on a progressive round (above); elsewhere it is allowed after a confirmation.
   const [pendingMethod, setPendingMethod] = useState<boolean | null>(null);
   const currentMethodHasData = enterDetail
-    ? subItems.length > 0
-    : hasConstructionData({ constructionSummary: summary });
-  const applyMethod = (detail: boolean) =>
+    ? subItems.length > 0 || overrideValue != null
+    : hasConstructionData({ constructionSummary: summary, hasValueBase: hasOwnValueBase });
+  const applyMethod = (detail: boolean) => {
+    clearOverride();
     setValue('constructionEnterDetail', detail, { shouldDirty: true });
+  };
   const requestMethod = (detail: boolean) => {
     if (detail === enterDetail) return;
     if (currentMethodHasData) setPendingMethod(detail);
@@ -278,6 +298,7 @@ export function ConstructionInspectionTab({
         constructionSubItems: subItems,
         constructionSummary: summary,
         constructionRemark: remark,
+        hasValueBase: hasOwnValueBase,
       })
     )
       setPendingCopy(source);
@@ -312,6 +333,7 @@ export function ConstructionInspectionTab({
       const copiedSummary = {
         ...mapped.constructionSummary,
         summaryPreviousProgressPct: 0,
+        currentValueOverride: null,
         documentId: null,
         fileName: null,
         filePath: null,
@@ -333,7 +355,7 @@ export function ConstructionInspectionTab({
   // Handlers
   const handleAddSubItem = (
     constructionWorkGroupId: string,
-    constructionWorkItemId: string,
+    constructionWorkItemId: string | null,
     workItemName: string,
   ) => {
     // Calculate displayOrder based on existing items in this group
@@ -353,169 +375,190 @@ export function ConstructionInspectionTab({
   };
 
   const handleUpdateSubItem = (index: number, field: string, value: number) => {
+    clearOverride();
     setValue(`constructionSubItems.${index}.${field}`, value, { shouldDirty: true });
   };
 
   const handleDeleteSubItem = (index: number) => {
+    clearOverride();
     remove(index);
   };
 
   return (
     // A full rule: the property's photo card sits above this one, not the tab bar, so nothing else
     // draws its top edge.
-    <div className="bg-(--palette-surface) border border-(--palette-line) text-(--palette-ink)">
+    // Same radius as the photo card beside it (PhotoAside); overflow-clip so the strips and tables keep inside the corners.
+    <div
+      className={clsx(
+        'overflow-clip bg-(--palette-surface) border border-(--palette-line) text-(--palette-ink)',
+        compact ? 'rounded-[0.5714rem]' : 'rounded-section',
+      )}
+    >
       {/* Toolbar: method, building, round, and the figures that answer "where are we" */}
-      <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[6px] min-h-[46px] px-[10px] py-[6px] border-b border-[color:var(--palette-line)]">
-        <div
-          role="group"
-          aria-label={t('constructionInspection.method.label')}
-          title={
-            ciMode && hasCarriedOver ? t('constructionInspection.method.lockedHint') : undefined
-          }
-          className="inline-flex gap-[2px] p-[2px] rounded-[8px] bg-[color:var(--palette-surface-3)]"
-        >
-          {([true, false] as const).map(detail => {
-            const active = enterDetail === detail;
-            return (
-              <button
-                key={String(detail)}
-                type="button"
-                aria-pressed={active}
-                disabled={modeLocked}
-                onClick={() => requestMethod(detail)}
+      <div className="flex flex-col gap-y-[6px] px-[10px] py-[6px] border-b border-[color:var(--palette-line)]">
+        {/* Row 1: which round, and the figures that answer "where are we" */}
+        <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[6px]">
+          <span className="inline-flex items-center gap-[6px] text-sm font-semibold whitespace-nowrap">
+            {inspectionNumber != null && (
+              <span className="rounded-[5px] bg-[color:var(--palette-accent-wash)] px-[6px] py-px text-[0.8571rem] text-[color:var(--palette-accent-ink)]">
+                {t('constructionInspection.inspectionRound', { n: inspectionNumber })}
+              </span>
+            )}
+            {t('constructionInspection.sectionTitle')}
+          </span>
+
+          <div className="ml-auto flex items-center gap-[16px] tabular-nums">
+            {hasOwnValueBase && (
+              <div className="flex flex-col items-end">
+                <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
+                  {t('constructionInspection.kpi.value100')}
+                </span>
+                <b className="text-sm font-semibold">{baht(totalValue)}</b>
+              </div>
+            )}
+            <div className="flex flex-col items-end">
+              <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
+                {t('constructionInspection.kpi.progress')}
+              </span>
+              <b className="text-sm font-semibold whitespace-nowrap">
+                {showPrevious && (
+                  <small className="text-[0.8571rem] font-normal text-[color:var(--palette-ink-3)]">
+                    {pct(previousProgress)} →{' '}
+                  </small>
+                )}
+                {pct(overallProgress)}%
+              </b>
+            </div>
+            <div className="flex flex-col items-end pr-[6px]">
+              <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
+                {!hasOwnValueBase && condo
+                  ? t('constructionInspection.kpi.appraisedValue')
+                  : t('constructionInspection.kpi.currentValue')}
+              </span>
+              <span
                 className={clsx(
-                  'px-[9px] py-[3px] rounded-[6px] text-sm whitespace-nowrap disabled:cursor-not-allowed',
-                  active
-                    ? 'bg-[color:var(--palette-surface)] text-[color:var(--palette-accent-ink)] font-medium shadow-sm'
-                    : clsx('text-[color:var(--palette-ink-2)]', modeLocked && 'opacity-45'),
+                  'relative text-[1.1538rem] font-semibold whitespace-nowrap',
+                  overrideValue != null
+                    ? 'text-[color:var(--palette-warn)]'
+                    : 'text-[color:var(--palette-accent-ink)]',
                 )}
               >
-                {detail
-                  ? t('constructionInspection.method.detail')
-                  : t('constructionInspection.method.summary')}
-              </button>
-            );
-          })}
+                {/* Marked without taking width: the toolbar is full and wraps on the slightest growth. */}
+                {overrideValue != null && <EditedDot />}
+                {/* Not priced yet: no figure, rather than a valuation of 0 (the server reports none). */}
+                {currentValue == null ? '—' : `${baht(currentValue)} ฿`}
+              </span>
+            </div>
+          </div>
         </div>
-        {ciMode && hasCarriedOver && (
-          // Said on screen, not only in a tooltip: a disabled button gives no other clue why.
-          <span
-            title={t('constructionInspection.method.lockedHint')}
-            className="inline-flex items-center gap-[4px] text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap"
+        {/* Row 2: method, building, copy */}
+        <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[6px]">
+          <div
+            role="group"
+            aria-label={t('constructionInspection.method.label')}
+            title={
+              ciMode && hasCarriedOver ? t('constructionInspection.method.lockedHint') : undefined
+            }
+            className="inline-flex gap-[2px] p-[2px] rounded-[8px] bg-[color:var(--palette-surface-3)]"
           >
-            <Icon name="lock" style="solid" className="size-[10px]" />
-            {t('constructionInspection.method.locked')}
-          </span>
-        )}
-        <span className="w-px h-[20px] bg-[color:var(--palette-line)]" />
+            {([true, false] as const).map(detail => {
+              const active = enterDetail === detail;
+              return (
+                <button
+                  key={String(detail)}
+                  type="button"
+                  aria-pressed={active}
+                  disabled={modeLocked}
+                  onClick={() => requestMethod(detail)}
+                  className={clsx(
+                    'px-[9px] py-[3px] rounded-[6px] text-sm whitespace-nowrap disabled:cursor-not-allowed',
+                    active
+                      ? 'bg-[color:var(--palette-surface)] text-[color:var(--palette-accent-ink)] font-medium shadow-sm'
+                      : clsx('text-[color:var(--palette-ink-2)]', modeLocked && 'opacity-45'),
+                  )}
+                >
+                  {detail
+                    ? t('constructionInspection.method.detail')
+                    : t('constructionInspection.method.summary')}
+                </button>
+              );
+            })}
+          </div>
+          {ciMode && hasCarriedOver && (
+            // Said on screen, not only in a tooltip: a disabled button gives no other clue why.
+            <span
+              title={t('constructionInspection.method.lockedHint')}
+              className="inline-flex items-center gap-[4px] text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap"
+            >
+              <Icon name="lock" style="solid" className="size-[10px]" />
+              {t('constructionInspection.method.locked')}
+            </span>
+          )}
+          <span className="w-px h-[20px] bg-[color:var(--palette-line)]" />
 
-        {/* Property Selector */}
-        <PropertyMenu
-          title={t('constructionInspection.buildingProperties')}
-          items={buildingProperties}
-          currentId={propertyId}
-          disabled={buildingProperties.length === 0}
-          buttonClassName="group inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-sm hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)]"
-          button={
-            <>
-              <span className="text-[color:var(--palette-ink-3)]">
-                {t('constructionInspection.building')}
-              </span>
-              <span className="max-w-[200px] truncate">
-                {currentProperty?.address || t('constructionInspection.selectProperty')}
-              </span>
-              <Icon
-                name="chevron-down"
-                style="solid"
-                className="size-[9px] text-[color:var(--palette-ink-3)] transition-transform duration-200 group-data-[open]:rotate-180"
-              />
-            </>
-          }
-          onPick={handlePropertySelect}
-        />
-
-        {/* Copy From */}
-        {!readOnly && !ciMode && otherBuildingProperties.length > 0 && (
+          {/* Property Selector */}
           <PropertyMenu
-            title={t('constructionInspection.copyFromTitle')}
-            items={otherBuildingProperties}
-            disabled={isCopying}
-            buttonClassName="inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-sm hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)] text-[color:var(--palette-ink-2)] disabled:opacity-50"
+            title={t('constructionInspection.buildingProperties')}
+            items={buildingProperties}
+            currentId={propertyId}
+            disabled={buildingProperties.length === 0}
+            buttonClassName="group inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-sm hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)]"
             button={
               <>
-                {isCopying ? (
-                  <Icon name="spinner" style="solid" className="size-[11px] animate-spin" />
-                ) : (
-                  <Icon name="copy" style="regular" className="size-[11px]" />
-                )}
-                {t('constructionInspection.copyFrom')}
+                <span className="text-[color:var(--palette-ink-3)]">
+                  {t('constructionInspection.building')}
+                </span>
+                <span className="max-w-[200px] truncate">
+                  {currentProperty?.address || t('constructionInspection.selectProperty')}
+                </span>
+                <Icon
+                  name="chevron-down"
+                  style="solid"
+                  className="size-[9px] text-[color:var(--palette-ink-3)] transition-transform duration-200 group-data-[open]:rotate-180"
+                />
               </>
             }
-            onPick={requestCopy}
+            onPick={handlePropertySelect}
           />
-        )}
 
-        <span className="inline-flex items-center gap-[6px] text-sm font-semibold whitespace-nowrap">
-          {inspectionNumber != null && (
-            <span className="rounded-[5px] bg-[color:var(--palette-accent-wash)] px-[6px] py-px text-[0.8571rem] text-[color:var(--palette-accent-ink)]">
-              {t('constructionInspection.inspectionRound', { n: inspectionNumber })}
-            </span>
+          {/* Copy From */}
+          {!readOnly && !ciMode && otherBuildingProperties.length > 0 && (
+            <PropertyMenu
+              title={t('constructionInspection.copyFromTitle')}
+              items={otherBuildingProperties}
+              disabled={isCopying}
+              buttonClassName="inline-flex items-center gap-[6px] h-[28px] px-[9px] rounded-[7px] border border-[color:var(--palette-line)] bg-[color:var(--palette-surface)] text-sm hover:border-[color:var(--palette-line-strong)] hover:bg-[color:var(--palette-surface-2)] text-[color:var(--palette-ink-2)] disabled:opacity-50"
+              button={
+                <>
+                  {isCopying ? (
+                    <Icon name="spinner" style="solid" className="size-[11px] animate-spin" />
+                  ) : (
+                    <Icon name="copy" style="regular" className="size-[11px]" />
+                  )}
+                  {t('constructionInspection.copyFrom')}
+                </>
+              }
+              onPick={requestCopy}
+            />
           )}
-          {t('constructionInspection.sectionTitle')}
-        </span>
-
-        <span className="flex-1 min-w-[8px]" />
-
-        <div className="ml-auto flex items-center gap-[16px] tabular-nums">
-          {hasOwnValueBase && (
-            <div className="flex flex-col items-end leading-[1.15]">
-              <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
-                {t('constructionInspection.kpi.value100')}
-              </span>
-              <b className="text-sm font-semibold">{baht(totalValue)}</b>
-            </div>
-          )}
-          <div className="flex flex-col items-end leading-[1.15]">
-            <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
-              {t('constructionInspection.kpi.progress')}
-            </span>
-            <b className="text-sm font-semibold whitespace-nowrap">
-              {showPrevious && (
-                <small className="text-[0.8571rem] font-normal text-[color:var(--palette-ink-3)]">
-                  {pct(previousProgress)} →{' '}
-                </small>
-              )}
-              {pct(overallProgress)}%
-            </b>
-          </div>
-          <div className="flex flex-col items-end leading-[1.15] pr-[6px]">
-            <span className="text-[0.8571rem] text-[color:var(--palette-ink-3)] whitespace-nowrap">
-              {!hasOwnValueBase && condo
-                ? t('constructionInspection.kpi.appraisedValue')
-                : t('constructionInspection.kpi.currentValue')}
-            </span>
-            <span className="text-[1.1538rem] font-semibold text-[color:var(--palette-accent-ink)] whitespace-nowrap">
-              {/* Not priced yet: no figure, rather than a valuation of 0 (the server reports none). */}
-              {currentValue == null ? '—' : `${baht(currentValue)} ฿`}
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* Table title + tools */}
-      <div className="flex items-center gap-[10px] min-h-[34px] px-[10px] border-b border-[color:var(--palette-line)]">
-        <span className="flex items-center gap-[6px] text-sm font-medium text-[color:var(--palette-accent-ink)] whitespace-nowrap">
-          {enterDetail
-            ? t('constructionInspection.tabs.items')
-            : t('constructionInspection.method.summary')}
-          {enterDetail && (
+      {/* Table title + tools: the item list only; the summary form has no list to head. */}
+      {enterDetail && (
+        <div
+          className={clsx(
+            'flex items-center gap-[10px] px-[10px] border-b border-[color:var(--palette-line)]',
+            compact ? 'min-h-[2.2857rem]' : 'min-h-[2.7143rem]',
+          )}
+        >
+          <span className="flex items-center gap-[6px] text-sm font-medium text-[color:var(--palette-accent-ink)] whitespace-nowrap">
+            {t('constructionInspection.tabs.items')}
             <span className="rounded-full bg-[color:var(--palette-surface-3)] px-[6px] text-[0.8571rem] leading-[1.2308rem] text-[color:var(--palette-ink-2)]">
               {subItems.length}
             </span>
-          )}
-        </span>
+          </span>
 
-        {enterDetail && (
           <div className="ml-auto flex items-center gap-[10px] text-[0.8571rem] text-[color:var(--palette-ink-2)]">
             <label className="inline-flex items-center gap-[5px] cursor-pointer whitespace-nowrap">
               <input
@@ -554,8 +597,8 @@ export function ConstructionInspectionTab({
               </span>
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {!hasOwnValueBase && (
         <div
@@ -591,6 +634,7 @@ export function ConstructionInspectionTab({
           showPrevious={showPrevious}
           showCalculated={showCalculated}
           showMoney={hasOwnValueBase}
+          override={currentValueOverride}
           onAddSubItem={handleAddSubItem}
           onUpdateSubItem={handleUpdateSubItem}
           onDeleteSubItem={handleDeleteSubItem}
@@ -599,11 +643,14 @@ export function ConstructionInspectionTab({
       ) : (
         <ConstructionSummaryForm
           summary={summary}
+          totalValue={totalValue}
           summaryCurrentValue={summaryCurrentValue}
+          override={currentValueOverride}
           summaryPreviousValue={summaryPreviousValue}
-          onUpdateSummary={(field, value) =>
-            setValue(`constructionSummary.${field}`, value, { shouldDirty: true })
-          }
+          onUpdateSummary={(field, value) => {
+            if (field === 'summaryCurrentProgressPct') clearOverride();
+            setValue(`constructionSummary.${field}`, value, { shouldDirty: true });
+          }}
           showPrevious={showPrevious}
           showMoney={hasOwnValueBase}
           readOnly={readOnly}
