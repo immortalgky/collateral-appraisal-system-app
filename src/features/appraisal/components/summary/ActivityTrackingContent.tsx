@@ -792,6 +792,13 @@ const ActivityTrackingContent = ({ appraisalId }: ActivityTrackingContentProps) 
             <DocumentList
               documents={brief.documents}
               released={brief.documentsReleased}
+              appraisalId={brief.id}
+              summaryTypeName={
+                brief.summaryTypeNameTh ||
+                brief.summaryTypeName ||
+                t('activityTracking.brief.documents.summaryDefault')
+              }
+              canGenerate={!isCancelled}
               lockedReason={t(
                 brief.status === 'Cancelled'
                   ? 'activityTracking.brief.documents.lockedCancelled'

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import clsx from 'clsx';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -5,6 +6,8 @@ import Icon from '@/shared/components/Icon';
 import { formatFileSize } from '@/shared/utils/formatUtils';
 import { saveBlob } from '@/shared/utils/saveBlob';
 import { useDownloadDocument, useViewDocument } from '@features/request/api/documents';
+import { SUMMARY_TYPE_CODES } from '@features/appraisalDataCorrection/utils/documentCorrection';
+import { JobPoller, useAsyncReportJob } from '@features/reportGeneration/hooks/useAsyncReportJob';
 import type { BriefDocument } from '../api/appraisalBrief';
 
 /**
@@ -19,7 +22,17 @@ interface DocumentListProps {
   released: boolean;
   /** Shown in the locked state so the reader knows why, not just that. */
   lockedReason: string;
+  appraisalId: string;
+  /** The summary's display name — shown on the placeholder while no file exists. */
+  summaryTypeName: string;
+  /** False for a cancelled appraisal: the folder is readable but nothing more is made for it. */
+  canGenerate: boolean;
 }
+
+/** The report job that renders the summary (D042 or D043) on demand — nothing is attached. */
+const SUMMARY_REPORT = 'appraisal-summary';
+
+const isSummary = (d: BriefDocument) => SUMMARY_TYPE_CODES.includes(d.typeCode);
 
 const sizeLabel = (bytes: number | null) => (bytes == null ? null : formatFileSize(bytes));
 
@@ -48,10 +61,36 @@ const fileKind = (fileName: string | null) => {
   return match ?? { icon: 'file-lines', tint: 'text-(--palette-gray-500)' };
 };
 
-const DocumentList = ({ documents, released, lockedReason }: DocumentListProps) => {
+const DocumentList = ({
+  documents,
+  released,
+  lockedReason,
+  appraisalId,
+  summaryTypeName,
+  canGenerate,
+}: DocumentListProps) => {
   const { t } = useTranslation('appraisal');
   const viewDocument = useViewDocument();
   const download = useDownloadDocument();
+  const { trigger, jobsForEntity } = useAsyncReportJob();
+
+  // The job resolves (and opens the PDF) through the global reconciler or the pollers below,
+  // whichever lands first, so an unresolved job for this appraisal's summary is the whole
+  // "in flight" state.
+  const pending = jobsForEntity(appraisalId).filter(
+    j => j.reportTypeKey === SUMMARY_REPORT && !j.resolved,
+  );
+  // `trigger` only tracks the job once the enqueue POST has answered; this covers the gap, so two
+  // fast clicks send one request.
+  const [enqueuing, setEnqueuing] = useState(false);
+  const busy = enqueuing || pending.length > 0;
+  const startGenerate = () => {
+    if (busy) return;
+    setEnqueuing(true);
+    void trigger(SUMMARY_REPORT, appraisalId, { autoOpen: true }).finally(() =>
+      setEnqueuing(false),
+    );
+  };
 
   /**
    * `mutateAsync`, NOT `mutate(id, { onSuccess })`.
@@ -88,7 +127,10 @@ const DocumentList = ({ documents, released, lockedReason }: DocumentListProps) 
     );
   }
 
-  if (documents.length === 0) {
+  const hasSummary = documents.some(isSummary);
+  const showPlaceholder = canGenerate && !hasSummary;
+
+  if (documents.length === 0 && !showPlaceholder) {
     return (
       <p className="rounded-xl bg-(--palette-surface-2) p-4 text-xs text-(--palette-gray-500) ring-1 ring-(--palette-line)">
         {t('activityTracking.brief.documents.empty')}
@@ -101,11 +143,50 @@ const DocumentList = ({ documents, released, lockedReason }: DocumentListProps) 
 
   return (
     <>
+      {/* Zero-output pollers: resolve the job if the realtime push is lost; resolveJob latches. */}
+      {pending.map(j => (
+        <JobPoller key={j.jobId} jobId={j.jobId} job={j} />
+      ))}
       <ul className="grid gap-3.5 sm:grid-cols-2">
+        {showPlaceholder && (
+          /* Same footprint as a primary tile, dashed so it reads as "not there yet". */
+          <li className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 rounded-[20px] border border-dashed border-(--palette-line) p-5">
+            <span className="grid h-[52px] w-[52px] flex-none place-items-center rounded-[17px] bg-(--palette-surface-2)">
+              <Icon
+                name="file-circle-plus"
+                style="solid"
+                className="h-[22px] w-[22px] text-(--palette-gray-400)"
+              />
+            </span>
+            <div className="min-w-0 flex-1 basis-44">
+              <b className="block truncate text-[15.5px] font-bold tracking-tight">
+                {summaryTypeName}
+              </b>
+              <span className="mt-1 block truncate text-[12.5px] text-(--palette-gray-500)">
+                {busy
+                  ? t('activityTracking.brief.documents.generating')
+                  : t('activityTracking.brief.documents.noFile')}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={startGenerate}
+              disabled={busy}
+              className="ml-auto inline-flex flex-none items-center gap-2 rounded-full bg-teal-800 px-5 py-3 text-[13.5px] font-bold text-teal-200 hover:bg-teal-900 disabled:opacity-60"
+            >
+              <Icon
+                name={busy ? 'spinner' : 'file-circle-plus'}
+                style="solid"
+                className={clsx('h-4 w-4', busy && 'animate-spin')}
+              />
+              {t('activityTracking.brief.documents.generate')}
+            </button>
+          </li>
+        )}
         {primary.map(d => (
           <li
             key={d.documentId}
-            className="flex items-center gap-4 rounded-[20px] bg-(--palette-surface-2) p-5"
+            className="flex min-w-0 flex-wrap items-center gap-x-4 gap-y-3 rounded-[20px] bg-(--palette-surface-2) p-5"
           >
             <span className="grid h-[52px] w-[52px] flex-none place-items-center rounded-[17px] bg-(--palette-surface)">
               <Icon
@@ -114,7 +195,7 @@ const DocumentList = ({ documents, released, lockedReason }: DocumentListProps) 
                 className={clsx('h-[22px] w-[22px]', fileKind(d.fileName).tint)}
               />
             </span>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 basis-44">
               <b className="block truncate text-[15.5px] font-bold tracking-tight">
                 {d.typeNameTh || d.typeName}
               </b>
@@ -122,7 +203,7 @@ const DocumentList = ({ documents, released, lockedReason }: DocumentListProps) 
                 {[d.fileName, sizeLabel(d.fileSizeBytes)].filter(Boolean).join(' · ')}
               </span>
             </div>
-            <div className="flex flex-none gap-2">
+            <div className="ml-auto flex flex-none gap-2">
               <button
                 type="button"
                 onClick={() => viewDocument(d.documentId)}
@@ -131,6 +212,21 @@ const DocumentList = ({ documents, released, lockedReason }: DocumentListProps) 
               >
                 <Icon name="eye" style="solid" className="h-4 w-4" />
               </button>
+              {canGenerate && isSummary(d) && (
+                <button
+                  type="button"
+                  onClick={startGenerate}
+                  disabled={busy}
+                  className="grid h-10 w-10 place-items-center rounded-full bg-(--palette-surface) text-(--palette-gray-600) hover:text-(--palette-accent-ink) disabled:opacity-60"
+                  title={t('activityTracking.brief.documents.regenerate')}
+                >
+                  <Icon
+                    name={busy ? 'spinner' : 'rotate-right'}
+                    style="solid"
+                    className={clsx('h-4 w-4', busy && 'animate-spin')}
+                  />
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => save(d)}

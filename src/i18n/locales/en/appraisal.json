@@ -1915,7 +1915,12 @@
         "othersHint": "{{count}} file(s) · all viewable",
         "view": "View",
         "download": "Download",
-        "downloadFailed": "Could not download the document"
+        "downloadFailed": "Could not download the document",
+        "noFile": "No file attached",
+        "generate": "Generate to view",
+        "generating": "Generating report…",
+        "regenerate": "Generate again to view",
+        "summaryDefault": "Appraisal summary"
       },
       "lockedTitle": "Appraised value not yet released",
       "lockedHint": "The appraised value, forced sale value, insurance value and documents are all released together once the committee approves the price.",

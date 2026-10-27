@@ -1915,7 +1915,12 @@
         "othersHint": "{{count}} 个文件 · 均可查看",
         "view": "查看",
         "download": "下载",
-        "downloadFailed": "无法下载该文件"
+        "downloadFailed": "无法下载该文件",
+        "noFile": "尚未附加文件",
+        "generate": "生成报告以查看",
+        "generating": "正在生成报告…",
+        "regenerate": "重新生成以查看",
+        "summaryDefault": "评估摘要报告"
       },
       "lockedTitle": "评估价值尚未公布",
       "lockedHint": "委员会审批价格后，评估价值、强制变现价值、保险价值及文件将一并开放。",

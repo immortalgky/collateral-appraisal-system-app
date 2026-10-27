@@ -198,7 +198,7 @@ export interface BriefDocument {
   typeCode: string;
   typeName: string | null;
   typeNameTh: string | null;
-  /** D043 Appraisal Summary and D001 Appraisal Report — the two credit actually files. */
+  /** D042/D043 Appraisal Summary and D001 Appraisal Report — the ones credit actually files. */
   isPrimary: boolean;
   fileName: string | null;
   fileSizeBytes: number | null;
@@ -455,6 +455,10 @@ export interface AppraisalBrief {
   /** The machines, in the order the report prints them; each is also an entry in `assets`. */
   machines?: BriefMachine[];
   documents: BriefDocument[];
+  /** Which code this appraisal's summary files under: D042 (progressive inspection) or D043. */
+  summaryTypeCode: string;
+  summaryTypeName: string | null;
+  summaryTypeNameTh: string | null;
 }
 
 export const appraisalBriefKey = (id: string | undefined) => ['appraisal-brief', id] as const;
