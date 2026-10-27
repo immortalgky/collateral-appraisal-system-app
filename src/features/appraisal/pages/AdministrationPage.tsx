@@ -1097,7 +1097,8 @@ const AdministrationPage = () => {
           themselves, and a form would let Enter in a nested text field (the quotation section's)
           submit the page. */}
       <div className="flex min-h-0 flex-1 flex-col">
-        <div className="min-h-0 flex-1 overflow-y-auto pr-4 pb-6">
+        {/* relative: absolutely positioned descendants (sr-only cells) must be clipped here, not extend the document. */}
+        <div className="relative min-h-0 flex-1 overflow-y-auto pr-4 pb-6">
           <div className="grid grid-cols-1 items-start gap-x-5 gap-y-3 @5xl:grid-cols-[minmax(0,1fr)_23rem]">
             <div className="flex min-w-0 flex-col gap-3">
               {/* Assignment lock banner — shown when a non-terminal quotation owns this appraisal */}
