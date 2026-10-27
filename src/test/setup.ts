@@ -96,6 +96,8 @@ afterEach(() => {
 
   // Clear localStorage
   localStorageMock.clear();
+  // The language detector caches the choice in this cookie too; it would carry into the next test.
+  document.cookie = 'cas-lang=; Max-Age=0; Path=/';
 });
 
 afterAll(() => {

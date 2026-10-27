@@ -2,10 +2,19 @@ import { useEffect, useState } from 'react';
 import { isAxiosError } from 'axios';
 import { useTranslation } from 'react-i18next';
 import { queryClient } from '@app/queryClient';
+import { leaveWithoutPrompt } from '@shared/api/forcedNavigation';
 import Button from '@shared/components/Button';
 import { currentUserQueryOptions, fetchCurrentUser } from '../api';
 import { useAuthStore } from '../store';
-import { hopToCanonicalOrigin } from '../utils/auth';
+import {
+  clearSavedReturn,
+  hopToCanonicalOrigin,
+  isLoginPath,
+  isSavedUserOrUnknown,
+  readSavedReturn,
+  redirectToLogin,
+  sessionEndReason,
+} from '../utils/auth';
 import { announceUser, listenForRemoteLogout } from '../utils/logout';
 
 type BootState = 'loading' | 'ready' | 'failed';
@@ -35,6 +44,22 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
       })
       .then(user => {
         announceUser(user.id);
+        // Only once the user is on an app page: on /login the saved state is still what it shows.
+        if (!isLoginPath(window.location.pathname)) {
+          const saved = readSavedReturn();
+          // The timed-out user's page, but somebody else signed in: leave their page. The saved state
+          // is cleared first, so the page it lands on cannot do this again.
+          const strangerOnTheirPage =
+            !!saved &&
+            !isSavedUserOrUnknown(saved.userId, user.id) &&
+            saved.path === window.location.pathname &&
+            window.location.pathname !== '/';
+          clearSavedReturn();
+          if (strangerOnTheirPage) {
+            leaveWithoutPrompt(() => window.location.replace('/'));
+            return; // keep the spinner while the page leaves
+          }
+        }
         setState('ready');
       })
       .catch(error => {
@@ -42,6 +67,15 @@ export function AuthInitializer({ children }: { children: React.ReactNode }) {
         // the session, and sending that user to sign in again would just fail the same way.
         if (isAxiosError(error) && error.response?.status === 401) {
           useAuthStore.setState({ isAuthenticated: false });
+          // The API says why a session ended (it idled out, say): carry that to the sign-in page, which
+          // ProtectedRoute would otherwise reach with only the page asked for. Not from /login itself.
+          const reason = sessionEndReason(error.response.headers['x-session-end']);
+          if (reason && !isLoginPath(window.location.pathname)) {
+            redirectToLogin(undefined, reason);
+            // The page is on its way out: keep the spinner. Rendering the app now would let
+            // ProtectedRoute navigate to /login on its own and cancel this one.
+            return;
+          }
           setState('ready');
         } else {
           setState('failed');

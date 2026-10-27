@@ -3,7 +3,10 @@ import { http, HttpResponse } from 'msw';
 import type { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { server } from '@/test/mocks/server';
 
-vi.mock('@features/auth/utils/auth', () => ({ redirectToLogin: vi.fn() }));
+vi.mock('@features/auth/utils/auth', async importOriginal => ({
+  ...(await importOriginal<typeof import('@features/auth/utils/auth')>()),
+  redirectToLogin: vi.fn(),
+}));
 
 /** Resolves with the headers the request would have gone out with, without touching the network. */
 const echoAdapter = async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => ({
@@ -66,6 +69,28 @@ describe('axiosInstance', () => {
       response: { status: 401 },
     });
     expect(redirectToLogin).toHaveBeenCalledTimes(1);
+    expect(redirectToLogin).toHaveBeenCalledWith(undefined, undefined);
+  });
+
+  describe("the reason a 401 gives, from the API's X-Session-End header", () => {
+    const unauthorized = (headers?: Record<string, string>) =>
+      server.use(http.get('*/api/ping', () => HttpResponse.json({}, { status: 401, headers })));
+
+    it.each([
+      ['idle', 'idle'],
+      ['ended', 'ended'],
+      ['something-new', 'ended'],
+    ])('X-Session-End: %s gives %s', async (header, reason) => {
+      unauthorized({ 'X-Session-End': header });
+      await axiosInstance.get('/ping').catch(() => {});
+      expect(redirectToLogin).toHaveBeenCalledWith(undefined, reason);
+    });
+
+    it('claims nothing without the header (there was no session cookie to end)', async () => {
+      unauthorized();
+      await axiosInstance.get('/ping').catch(() => {});
+      expect(redirectToLogin).toHaveBeenCalledWith(undefined, undefined);
+    });
   });
 
   it('sends the browser to sign in once when several requests fail together', async () => {
@@ -79,6 +104,22 @@ describe('axiosInstance', () => {
     server.use(http.get('*/api/ping', () => HttpResponse.json({}, { status: 401 })));
     await axiosInstance.get('/ping').catch(() => {}); // e.g. a cancelled "Leave site?" prompt
     await axiosInstance.get('/ping').catch(() => {});
+    expect(redirectToLogin).toHaveBeenCalledTimes(1);
+
+    const { REDIRECT_SETTLE_MS } = await import('./forcedNavigation');
+    vi.advanceTimersByTime(REDIRECT_SETTLE_MS);
+    await axiosInstance.get('/ping').catch(() => {});
+    expect(redirectToLogin).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not lock later 401s when the redirect itself throws', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    redirectToLogin.mockImplementationOnce(() => {
+      throw new Error('boom');
+    });
+    server.use(http.get('*/api/ping', () => HttpResponse.json({}, { status: 401 })));
+    // The caller still sees the 401, not the redirect's own failure.
+    await expect(axiosInstance.get('/ping')).rejects.toMatchObject({ response: { status: 401 } });
     expect(redirectToLogin).toHaveBeenCalledTimes(1);
 
     const { REDIRECT_SETTLE_MS } = await import('./forcedNavigation');

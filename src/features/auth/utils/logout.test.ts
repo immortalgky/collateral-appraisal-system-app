@@ -56,6 +56,8 @@ describe('logout', () => {
     location.replace = vi.fn();
   });
   afterEach(() => {
+    sessionStorage.clear();
+    vi.doUnmock('./auth');
     vi.unstubAllGlobals();
     vi.useRealTimers();
   });
@@ -67,9 +69,25 @@ describe('logout', () => {
       ),
     );
     const { logout } = await load();
-    await logout();
+    expect(await logout()).toBe(true);
     expect(FakeChannel.instances[0].postMessage).toHaveBeenCalledWith({ type: 'logout' });
     expect(location.replace).toHaveBeenCalledWith('https://idp.example.com/end');
+  });
+
+  it('leaves a flag for the sign-in page it lands on, set after sessionStorage was cleared', async () => {
+    sessionStorage.setItem('cas-return', '{}');
+    server.use(http.post('*/api/auth/logout', () => HttpResponse.json({ url: '/idp' })));
+    const { logout } = await load();
+    await logout();
+    expect(sessionStorage.getItem('cas-signed-out')).toBe('1');
+    expect(sessionStorage.getItem('cas-return')).toBeNull();
+  });
+
+  it('does not leave the flag when the sign-out fails', async () => {
+    server.use(http.post('*/api/auth/logout', () => HttpResponse.json({}, { status: 500 })));
+    const { logout } = await load();
+    await logout();
+    expect(sessionStorage.getItem('cas-signed-out')).toBeNull();
   });
 
   it.each([401, 403, 500])(
@@ -77,7 +95,7 @@ describe('logout', () => {
     async status => {
       server.use(http.post('*/api/auth/logout', () => HttpResponse.json({}, { status })));
       const { logout } = await load();
-      await logout();
+      expect(await logout()).toBe(false);
       expect(toast.error).toHaveBeenCalledTimes(1);
       expect(location.replace).not.toHaveBeenCalled();
       expect(FakeChannel.instances[0].postMessage).not.toHaveBeenCalled();
@@ -110,6 +128,25 @@ describe('logout', () => {
     expect(location.replace).toHaveBeenCalledWith('/idp'); // e.g. a "Leave site?" prompt was declined
     expect(guard.suspend).not.toHaveBeenCalledWith(false);
 
+    vi.advanceTimersByTime(REDIRECT_SETTLE_MS);
+    expect(guard.suspend).toHaveBeenLastCalledWith(false);
+  });
+
+  it('when a step after the request throws: signs in again, still resolves, gives the guard back', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] });
+    const redirectToLogin = vi.fn();
+    vi.doMock('./auth', async importOriginal => ({
+      ...(await importOriginal<typeof import('./auth')>()),
+      redirectToLogin,
+    }));
+    server.use(http.post('*/api/auth/logout', () => HttpResponse.json({ url: '/idp' })));
+    const { logout } = await load();
+    const { REDIRECT_SETTLE_MS } = await import('@shared/api/forcedNavigation');
+    location.replace = vi.fn(() => {
+      throw new Error('blocked');
+    });
+    expect(await logout()).toBe(true); // signed out on the server: no rejection for the caller
+    expect(redirectToLogin).toHaveBeenCalledWith(null, 'signed-out');
     vi.advanceTimersByTime(REDIRECT_SETTLE_MS);
     expect(guard.suspend).toHaveBeenLastCalledWith(false);
   });
@@ -182,13 +219,44 @@ describe('logout', () => {
     expect(location.replace).toHaveBeenCalledWith('/login');
   });
 
-  it('sends this tab to /login when another tab signs out', async () => {
-    const { listenForRemoteLogout } = await load();
-    const stop = listenForRemoteLogout();
-    FakeChannel.instances[0].listeners.forEach(l => l({ data: { type: 'logout' } }));
-    expect(location.href).toBe('/login');
-    stop();
-    expect(FakeChannel.instances[0].listeners).toHaveLength(0);
+  describe('when another tab signs out', () => {
+    const here = (pathname: string, search = '') => {
+      const tab = { ...location, pathname, search, hash: '', href: START };
+      vi.stubGlobal('location', tab);
+      return tab;
+    };
+    const signOutElsewhere = () =>
+      FakeChannel.instances[0].listeners.forEach(l => l({ data: { type: 'logout' } }));
+
+    it('sends this tab to sign in saying it was signed out, with no page for the next person', async () => {
+      const { listenForRemoteLogout } = await load();
+      const tab = here('/tasks', '?x=1');
+      sessionStorage.setItem('cas-return', JSON.stringify({ path: '/tasks?x=1', label: 'Tasks' }));
+      const stop = listenForRemoteLogout();
+      signOutElsewhere();
+      expect(tab.href).toBe('/login?reason=signed-out');
+      expect(sessionStorage.getItem('cas-return')).toBeNull(); // a bare /login cannot bring the page back
+      stop();
+      expect(FakeChannel.instances[0].listeners).toHaveLength(0);
+    });
+
+    it("goes to the canonical origin's sign-in page when this tab is on another host name", async () => {
+      vi.stubEnv('VITE_APP_URL', 'https://app.example.com');
+      const { listenForRemoteLogout } = await load();
+      const tab = here('/tasks', '?x=1');
+      listenForRemoteLogout();
+      signOutElsewhere();
+      expect(tab.replace).toHaveBeenCalledWith('https://app.example.com/login?reason=signed-out');
+      vi.unstubAllEnvs();
+    });
+
+    it('keeps the sign-in page where it is', async () => {
+      const { listenForRemoteLogout } = await load();
+      const tab = here('/login', '?reason=idle');
+      listenForRemoteLogout();
+      signOutElsewhere();
+      expect(tab.href).toBe(START);
+    });
   });
 
   it('ignores other channel messages', async () => {
@@ -198,10 +266,10 @@ describe('logout', () => {
     expect(location.href).toBe(START);
   });
 
-  it('announces the signed-in user, and reloads when another tab signs in as someone else', async () => {
-    const reload = vi.fn();
+  it('announces the signed-in user, and goes home when another tab signs in as someone else', async () => {
+    const replace = vi.fn();
     const { announceUser, listenForRemoteLogout } = await load();
-    vi.stubGlobal('location', { ...location, reload });
+    vi.stubGlobal('location', { ...location, origin: 'https://app.example.com', replace });
     const { useAuthStore } = await import('../store');
     announceUser('u1');
     expect(FakeChannel.instances[0].postMessage).toHaveBeenCalledWith({ type: 'user', id: 'u1' });
@@ -211,8 +279,9 @@ describe('logout', () => {
     const receive = (id: string) =>
       FakeChannel.instances[0].listeners.forEach(l => l({ data: { type: 'user', id } }));
     receive('u1');
-    expect(reload).not.toHaveBeenCalled();
+    expect(replace).not.toHaveBeenCalled();
     receive('u2');
-    expect(reload).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledTimes(1);
+    expect(replace).toHaveBeenCalledWith('https://app.example.com/');
   });
 });

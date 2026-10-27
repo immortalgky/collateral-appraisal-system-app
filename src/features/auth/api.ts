@@ -2,11 +2,11 @@ import { queryOptions, replaceEqualDeep, useQuery } from '@tanstack/react-query'
 import type { AxiosRequestConfig } from 'axios';
 import { queryClient } from '@app/queryClient';
 import axios from '@shared/api/axiosInstance';
-import { leaveWithoutPrompt } from '@shared/api/forcedNavigation';
 import { allRoles } from '@features/userManagement/roleMeta';
 import type { UserRole } from '@shared/config/navigationTypes';
 import type { User } from './types';
 import { useAuthStore } from './store';
+import { goHomeAsNewUser } from './utils/auth';
 
 // Narrow backend-provided role strings to our canonical UserRole union.
 // Unknown roles are silently dropped so a typo or stale backend value can't
@@ -38,13 +38,13 @@ export const fetchCurrentUser = async (config?: AxiosRequestConfig): Promise<Use
     teams: pluck(data.teams, 'teamId'),
   };
   // The browser has one session cookie: if another tab signed in as someone else, this tab's next
-  // request would run as them. Start over as the user the cookie really belongs to. Never publish
-  // the other user here: the throw below makes this call fail, and if the reload silently did not
-  // happen the store keeps the user this tab was built for, so the next check refuses (and reloads)
-  // again.
+  // request would run as them. Start over at the home page as the user the cookie really belongs
+  // to. Never publish the other user here: the throw below makes this call fail, and if the
+  // navigation silently did not happen the store keeps the user this tab was built for, so the next
+  // check refuses (and navigates) again.
   const { user: current, isAuthenticated, setUser } = useAuthStore.getState();
   if (current && fetched.id !== current.id) {
-    leaveWithoutPrompt(() => window.location.reload());
+    goHomeAsNewUser();
     throw new Error('The session now belongs to a different user');
   }
   // Keep the current object when nothing changed: a keep-alive or access-window check every few

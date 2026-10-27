@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import type { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
+import Badge from '@shared/components/Badge';
 import Button from '@shared/components/Button';
 import Icon from '@shared/components/Icon';
 import Modal from '@shared/components/Modal';
@@ -11,6 +13,9 @@ import ConfirmDialog from '@shared/components/ConfirmDialog';
 import { Skeleton } from '@shared/components/Skeleton';
 import { formatDate, formatLocaleDateTime } from '@shared/utils/dateUtils';
 import { useLocalizedCompanyName } from '@shared/utils/companyName';
+import { useHasPermission } from '@shared/hooks/useHasPermission';
+import { extractApiError } from '@shared/utils/errorUtils';
+import { useAuthStore } from '@features/auth/store';
 import {
   useGetUserById,
   useAdminUpdateUser,
@@ -20,6 +25,8 @@ import {
   useSetUserActivation,
   useUnlockUser,
   useResetPassword,
+  useResetTwoFactor,
+  useRevokePasskeys,
   useLdapLookup,
   useSetAccessWindow,
 } from '../api/users';
@@ -336,6 +343,44 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
     });
   };
 
+  // Two-factor reset. The API's policy is CanManageUsers = USER_MANAGE; the other security
+  // buttons have no client-side gate, but this one signs the user out everywhere, so hide it.
+  const canManageUsers = useHasPermission('USER_MANAGE');
+  // Your own 2FA is managed from Profile, not reset here.
+  const currentUserId = useAuthStore(state => state.user?.id);
+  const resetTwoFactor = useResetTwoFactor();
+  const [showResetTwoFactorConfirm, setShowResetTwoFactorConfirm] = useState(false);
+
+  const handleResetTwoFactor = () => {
+    resetTwoFactor.mutate(userId, {
+      onSuccess: () => {
+        toast.success(t('twoFactor.admin.done'));
+        setShowResetTwoFactorConfirm(false);
+      },
+      onError: err => {
+        const apiError = extractApiError(err as AxiosError);
+        toast.error(apiError.detail || apiError.title || t('twoFactor.admin.failed'));
+      },
+    });
+  };
+
+  // Revoking passkeys ends the user's sessions, like the 2FA reset, so it has the same gates.
+  const revokePasskeys = useRevokePasskeys();
+  const [showRevokePasskeysConfirm, setShowRevokePasskeysConfirm] = useState(false);
+
+  const handleRevokePasskeys = () => {
+    revokePasskeys.mutate(userId, {
+      onSuccess: () => {
+        toast.success(t('passkeys.admin.done'));
+        setShowRevokePasskeysConfirm(false);
+      },
+      onError: err => {
+        const apiError = extractApiError(err as AxiosError);
+        toast.error(apiError.detail || apiError.title || t('passkeys.admin.failed'));
+      },
+    });
+  };
+
   // Temporary access window
   const setAccessWindow = useSetAccessWindow();
   const { data: passwordPolicyConfig } = useGetPasswordPolicyConfig();
@@ -393,6 +438,7 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
   if (!user) return null;
 
   const displayName = `${user.firstName} ${user.lastName}`.trim() || user.username;
+  const passkeys = user.passkeys ?? [];
   const initials =
     (user.firstName?.[0] ?? '') + (user.lastName?.[0] ?? '') || user.username[0].toUpperCase();
 
@@ -683,7 +729,58 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
               </Button>
             </>
           )}
+          {user.twoFactorEnabled && canManageUsers && user.id !== currentUserId && (
+            <Button variant="danger" size="sm" onClick={() => setShowResetTwoFactorConfirm(true)}>
+              <Icon name="mobile-screen-button" style="solid" className="size-3.5! mr-1.5" />
+              {t('twoFactor.admin.button')}
+            </Button>
+          )}
+          {passkeys.length > 0 && canManageUsers && user.id !== currentUserId && (
+            <Button variant="danger" size="sm" onClick={() => setShowRevokePasskeysConfirm(true)}>
+              <Icon name="fingerprint" style="solid" className="size-3.5! mr-1.5" />
+              {t('passkeys.admin.button')}
+            </Button>
+          )}
         </div>
+        {passkeys.length > 0 && (
+          <div className="border-t border-gray-100 px-4 py-3">
+            <div className="mb-2 flex items-center gap-2 text-xs font-semibold text-gray-600">
+              {t('passkeys.admin.title')}
+              <span className="inline-flex size-5 items-center justify-center rounded-full bg-gray-100 text-xs font-semibold text-gray-600">
+                {passkeys.length}
+              </span>
+            </div>
+            <ul className="divide-y divide-gray-100 rounded-lg border border-gray-200 text-sm">
+              {passkeys.map(passkey => (
+                <li
+                  key={passkey.id}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2"
+                >
+                  <span
+                    className="min-w-0 flex-1 truncate font-medium text-gray-800"
+                    title={passkey.name}
+                  >
+                    {passkey.name}
+                  </span>
+                  <Badge
+                    tone={passkey.synced ? 'teal' : 'gray'}
+                    dot={false}
+                    className="whitespace-nowrap"
+                  >
+                    {passkey.synced ? t('passkeys.typeSynced') : t('passkeys.typeDevice')}
+                  </Badge>
+                  <span className="whitespace-nowrap text-xs text-gray-500">
+                    {passkey.lastUsedAt
+                      ? t('passkeys.admin.lastUsed', {
+                          time: formatLocaleDateTime(passkey.lastUsedAt, i18n.language),
+                        })
+                      : t('passkeys.neverUsed')}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
 
       {/* Temporary Access Section — only for ad-hoc accounts, closed by default */}
@@ -1280,6 +1377,30 @@ const UserDetailPanel = ({ userId }: UserDetailPanelProps) => {
           </Button>
         </div>
       </Modal>
+
+      {/* Reset 2FA Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showResetTwoFactorConfirm}
+        onClose={() => setShowResetTwoFactorConfirm(false)}
+        onConfirm={handleResetTwoFactor}
+        title={t('twoFactor.admin.confirmTitle')}
+        message={t('twoFactor.admin.confirmMessage', { name: displayName })}
+        confirmText={t('twoFactor.admin.button')}
+        variant="danger"
+        isLoading={resetTwoFactor.isPending}
+      />
+
+      {/* Revoke passkeys Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={showRevokePasskeysConfirm}
+        onClose={() => setShowRevokePasskeysConfirm(false)}
+        onConfirm={handleRevokePasskeys}
+        title={t('passkeys.admin.confirmTitle')}
+        message={t('passkeys.admin.confirmMessage', { name: displayName })}
+        confirmText={t('passkeys.admin.button')}
+        variant="danger"
+        isLoading={revokePasskeys.isPending}
+      />
 
       {/* Activation Confirm Dialog */}
       <ConfirmDialog
