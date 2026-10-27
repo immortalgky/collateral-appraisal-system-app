@@ -45,11 +45,14 @@ export interface FieldConditions {
   match?: 'all' | 'any';
 }
 
+/**
+ * A function condition. Give it `deps` — the form paths it reads — so the field re-evaluates as
+ * they change; without it the function only runs at validation time, never live on screen.
+ */
+export type ConditionFn = ((values: Record<string, unknown>) => boolean) & { deps?: string[] };
+
 /** Condition input: single, multiple with logic, or function */
-export type ConditionInput =
-  | FieldCondition
-  | FieldConditions
-  | ((values: Record<string, unknown>) => boolean);
+export type ConditionInput = FieldCondition | FieldConditions | ConditionFn;
 
 // =============================================================================
 // Field Help Types

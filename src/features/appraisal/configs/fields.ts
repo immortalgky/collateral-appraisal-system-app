@@ -6,6 +6,7 @@ import {
   RAWANG_TITLE_TYPES,
   SURVEY_TITLE_TYPES,
 } from '@/shared/constants/titleTypes';
+import { requiredUnlessDevelopmentOnly } from '../utils/developmentOnlyBuilding';
 
 /** ฿ left-adornment for currency number-inputs (Land + Condo PMA prices). */
 const bahtPrefix = createElement('span', { className: 'text-sm text-(--palette-gray-400)' }, '฿');
@@ -1050,7 +1051,8 @@ export const buildingTypeField: FormField[] = [
     label: 'Total Floor',
     name: 'numberOfFloors',
     wrapperClassName: 'col-span-12',
-    required: true,
+    // Development-only buildings (every depreciation row non-building) have no floors to count.
+    requiredWhen: requiredUnlessDevelopmentOnly,
     maxIntegerDigits: 3,
     decimalPlaces: 1,
   },

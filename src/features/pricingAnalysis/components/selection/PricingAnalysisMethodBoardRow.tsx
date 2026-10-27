@@ -18,22 +18,20 @@ import { isServerId } from '../../store/saveEditingSelection';
 import { ServerDataCtx, useSelectionState } from '../../store/selectionContext';
 import {
   COST_APPROACH_TYPE,
+  MARKET_APPROACH_TYPE,
   type ManualCostBreakdownContext,
   type Method,
   type MethodRole,
 } from '../../types/selection';
 import { availableRoles, requiredComponents } from '../../utils/costRequiredComponents';
+import { qualifiesForManualBreakdown } from '../../utils/manualBreakdown';
 import { getMethodCode } from '../../utils/methodCode';
 import { ManualCostBreakdown } from './ManualCostBreakdown';
 
+const MARKET_ROLES: MethodRole[] = ['Land', 'LandAndBuilding'];
+
 const MANUAL_VALUE_DEBOUNCE_MS = 1000;
 const MANUAL_NOTE_DEBOUNCE_MS = 1000;
-
-/** Cost-approach methods whose manual mode splits out a land-rate breakdown — mock's `LANDM`
- *  (mock:3143), gated further to the method's own `role === 'Land'` (mock:3212). Machinery/Building
- *  Cost methods must never show this: it would add a land value on top of whatever already holds
- *  their own value. */
-const LAND_COMPARISON_METHOD_TYPES = ['WQS_COST', 'SAG_COST', 'DC_COST'];
 
 /**
  * Role chip colours — the mock styles this control as a coloured pill (`.rsel`, mock:449) with
@@ -70,7 +68,7 @@ interface PricingAnalysisMethodBoardRowProps {
     value: number;
     methodId?: string;
   }) => void;
-  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  /** Present only for the Cost and Market approaches in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
   /** Cost approach only — which part of the group's value this method produces. Undefined
    *  handler means the picker isn't wired yet; the select still renders (read from method.role)
@@ -136,7 +134,16 @@ export const PricingAnalysisMethodBoardRow = ({
   // PricingAnalysisCostFormulaRow uses, so the two can never drift on what a group requires.
   const serverData = useContext(ServerDataCtx);
   const requiredRoleComponents = requiredComponents(serverData?.groupDetail?.properties ?? []);
-  const costRoleOptions = availableRoles(requiredRoleComponents);
+  // Cost: whatever the group's composition can need. Market: the same list narrowed to the two
+  // roles BE accepts there (Land / LandAndBuilding), so a land-only group never offers
+  // "Land + Building" and a building-only/condo/machinery group gets none. Income/Residual have
+  // no role. Empty options = no chip.
+  const roleOptions: MethodRole[] =
+    approachType === COST_APPROACH_TYPE
+      ? availableRoles(requiredRoleComponents)
+      : approachType === MARKET_APPROACH_TYPE
+        ? availableRoles(requiredRoleComponents).filter(r => MARKET_ROLES.includes(r))
+        : [];
 
   const [manualInput, setManualInput] = useState<number | null>(method.appraisalValue ?? null);
   const debouncedManualInput = useDebounce(manualInput, MANUAL_VALUE_DEBOUNCE_MS);
@@ -203,12 +210,8 @@ export const PricingAnalysisMethodBoardRow = ({
   };
 
   const showCostBreakdown =
-    !!rowManualMode &&
     !!manualCostBreakdown &&
-    approachType === COST_APPROACH_TYPE &&
-    method.role === 'Land' &&
-    LAND_COMPARISON_METHOD_TYPES.includes(method.methodType) &&
-    (manualCostBreakdown.landAreaInSqWa ?? 0) > 0;
+    qualifiesForManualBreakdown(approachType, method, manualCostBreakdown.landAreaInSqWa);
 
   const handleDerivedTotal = (total: number) => {
     setManualInput(total);
@@ -428,14 +431,13 @@ export const PricingAnalysisMethodBoardRow = ({
               </button>
             )}
 
-            {/* Which part of the group's value this method produces — Cost approach only, and
-                only when the group's own properties actually require a split (mock's `GT().need`
-                gate at mock:3191/3200; a condo group has none and never shows this). Options are
-                filtered to the roles that composition can need (mock's `GT().roles`) — a condo
-                group gets nothing, a land+building group never offers Machinery, a machinery
-                group never offers Land/Building. */}
-            {approachType === COST_APPROACH_TYPE &&
-              requiredRoleComponents.length > 0 &&
+            {/* Which part of the group's value this method produces. Cost: only when the group's
+                own properties actually require a split (mock's `GT().need` gate at
+                mock:3191/3200; a condo group has none and never shows this), with options
+                filtered to the roles that composition can need (mock's `GT().roles`) — a
+                land+building group never offers Machinery, a machinery group never offers
+                Land/Building. Market: that list narrowed to Land / Land + Building. See `roleOptions`. */}
+            {roleOptions.length > 0 &&
               (isReadOnly ? (
                 <span
                   className="shrink-0 inline-flex h-5 items-center rounded-full px-[7px] text-[11px] font-semibold whitespace-nowrap"
@@ -470,9 +472,9 @@ export const PricingAnalysisMethodBoardRow = ({
                   </option>
                   {/* A saved role the group no longer offers (e.g. Machinery in a land+building
                       group) is still listed, so the select shows it instead of "Not set". */}
-                  {(method.role && !costRoleOptions.includes(method.role)
-                    ? [...costRoleOptions, method.role]
-                    : costRoleOptions
+                  {(method.role && !roleOptions.includes(method.role)
+                    ? [...roleOptions, method.role]
+                    : roleOptions
                   ).map(role => (
                     <option key={role} value={role}>
                       {t(`board.role.${role}` as `board.role.${MethodRole}`)}
