@@ -89,6 +89,7 @@ export function createInitialState(
         landRatePerSqWa: isLandRateUnit(apiMethod?.unitType)
           ? (apiMethod?.valuePerUnit ?? null)
           : null,
+        buildingValue: apiMethod?.buildingValue ?? null,
 
         // Not yet in the generated MethodDto schema (v1.ts) — same cast PricingAnalysisPage
         // uses for the group-wide flag. `.passthrough()` lets the raw value survive the parse.

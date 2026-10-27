@@ -482,6 +482,7 @@ function PricingAnalysisContent({
     pricingAnalysisId,
     groupId,
     returnTo,
+    landAreaInSqWa: pricingSelection?.landAreaInSqWa,
   });
 
   // (5) Calculation flow
@@ -633,15 +634,17 @@ function PricingAnalysisContent({
       methodType,
       rate,
       methodId,
+      buildingValue,
     }: {
       approachType: string;
       methodType: string;
       rate: number | null;
       methodId?: string;
+      buildingValue?: number | null;
     }) => {
       dispatch({
         type: 'SUMMARY_UPDATE_METHOD_LAND_RATE',
-        payload: { approachType, methodType, rate, methodId },
+        payload: { approachType, methodType, rate, methodId, buildingValue },
       });
     },
     [dispatch],
@@ -670,13 +673,25 @@ function PricingAnalysisContent({
     [dispatch],
   );
 
+  const handleManualBreakdownRevert = useCallback(
+    (payload: Parameters<ManualCostBreakdownContext['onBreakdownRevert']>[0]) =>
+      dispatch({ type: 'SUMMARY_REVERT_METHOD_BREAKDOWN', payload }),
+    [dispatch],
+  );
+
   const manualCostBreakdown: ManualCostBreakdownContext = useMemo(
     () => ({
       landAreaInSqWa: pricingSelection?.landAreaInSqWa ?? null,
       buildingValue: pricingSelection?.buildingValue ?? null,
       onLandRateSync: handleManualLandRateSync,
+      onBreakdownRevert: handleManualBreakdownRevert,
     }),
-    [pricingSelection?.landAreaInSqWa, pricingSelection?.buildingValue, handleManualLandRateSync],
+    [
+      pricingSelection?.landAreaInSqWa,
+      pricingSelection?.buildingValue,
+      handleManualLandRateSync,
+      handleManualBreakdownRevert,
+    ],
   );
 
   // (9) Assemble server data for context

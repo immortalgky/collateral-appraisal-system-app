@@ -3,7 +3,13 @@ import { useTranslation } from 'react-i18next';
 import clsx from 'clsx';
 import { Icon } from '@/shared/components';
 import { usePageReadOnly } from '@/shared/contexts/PageReadOnlyContext';
-import type { Approach, ManualCostBreakdownContext, MethodRole } from '../../types/selection';
+import {
+  COST_APPROACH_TYPE,
+  MARKET_APPROACH_TYPE,
+  type Approach,
+  type ManualCostBreakdownContext,
+  type MethodRole,
+} from '../../types/selection';
 import type { PricingAnalysisConfigType, MarketComparableDetailType } from '../../schemas';
 import type { PropertyGroupItemDto } from '@features/appraisal/api';
 import type { MethodKey } from '../../hooks/useSelectionActions';
@@ -35,7 +41,7 @@ interface PricingAnalysisMethodBoardProps {
     value: number;
     methodId?: string;
   }) => void;
-  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  /** Present only for the Cost and Market approaches in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
   onSelectMethodRole?: (arg: {
     approachType: string;
@@ -277,7 +283,10 @@ export const PricingAnalysisMethodBoard = ({
                   onDeleteMethod={onDeleteMethod}
                   onManualValueSync={onManualValueSync}
                   manualCostBreakdown={
-                    approach.approachType === 'COSTAPPR' ? manualCostBreakdown : undefined
+                    approach.approachType === COST_APPROACH_TYPE ||
+                    approach.approachType === MARKET_APPROACH_TYPE
+                      ? manualCostBreakdown
+                      : undefined
                   }
                   onSelectMethodRole={onSelectMethodRole}
                   onManualNoteSync={onManualNoteSync}

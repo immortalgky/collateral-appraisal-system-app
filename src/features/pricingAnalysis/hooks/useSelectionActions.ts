@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import type { SelectionAction, SelectionState } from '../store/selectionReducer';
 import type { Approach, Method, MethodRole } from '../types/selection';
 import { useSaveEditingSelection } from '../store/saveEditingSelection';
+import { manualBreakdownRequest, qualifiesForManualBreakdown } from '../utils/manualBreakdown';
 import { pricingAnalysisKeys } from '../api/queryKeys';
 import {
   useAddPricingAnalysisApproach,
@@ -24,7 +25,6 @@ import {
 } from '../api';
 import { createUploadSession, useUploadDocument } from '@features/request/api/documents';
 import type {
-  SetManualCostBreakdownRequestType,
   UpdateMethodRequestType,
   UpdatePricingAnalysisRequestType,
   UpdateRemarkRequestType,
@@ -43,6 +43,7 @@ export function useSelectionActions({
   pricingAnalysisId,
   groupId,
   returnTo,
+  landAreaInSqWa,
 }: {
   state: SelectionState;
   dispatch: React.Dispatch<SelectionAction>;
@@ -52,6 +53,8 @@ export function useSelectionActions({
    *  Defaults to `${basePath}/property` (PropertyGroup subject).
    *  Pass `${basePath}/block-condo/model/:id` etc. for model subjects. */
   returnTo?: string;
+  /** The group's land area, for Save's re-check of a manual land-rate breakdown. */
+  landAreaInSqWa?: number | null;
 }) {
   const navigate = useNavigate();
   const basePath = useBasePath();
@@ -218,11 +221,12 @@ export function useSelectionActions({
     dispatch({ type: 'SUMMARY_SELECT_APPROACH', payload: { approachType } });
   };
 
-  // Cost approach's role picker (Land/Building/LandAndBuilding/Machinery) — a discrete
+  // Cost + Market role picker (Market offers only Land/LandAndBuilding) — a discrete
   // choice, written immediately (unlike the debounced value/remark below) because multi-select
   // and the Cost formula row both key off Role server-side, same "reflect the real state right
-  // away" reasoning as the calc-mode toggle in PricingAnalysisMethodBoardRow. No local dispatch:
-  // the invalidate below re-INITs from the server, the same round trip that toggle already uses.
+  // away" reasoning as the calc-mode toggle in PricingAnalysisMethodBoardRow. The role is mirrored
+  // locally on success; the invalidate below then re-INITs from the server, the same round trip
+  // that toggle already uses.
   const selectMethodRole = async (arg: MethodKey & { role: MethodRole }) => {
     const appr = state.summarySelected.find((a: Approach) => a.approachType === arg.approachType);
     const method = appr?.methods.find((m: Method) => m.methodType === arg.methodType);
@@ -233,6 +237,12 @@ export function useSelectionActions({
         id: pricingAnalysisId,
         methodId: method.id,
         request: { role: arg.role } as UpdateMethodRequestType,
+      });
+      // Mirrored locally at once: until the refetch lands, Save's breakdown re-check and the
+      // building gate would otherwise still read the old role.
+      dispatch({
+        type: 'SUMMARY_SET_METHOD_ROLE',
+        payload: { approachType: arg.approachType, methodType: arg.methodType, role: arg.role },
       });
       await qc.invalidateQueries({ queryKey: pricingAnalysisKeys.detail(pricingAnalysisId) });
       toast.success(t('toasts.changed'));
@@ -364,6 +374,11 @@ export function useSelectionActions({
         dirtyBreakdownKeys.length > 0 ||
         dirtyRemarkKeys.length > 0
       ) {
+        const approachOf = new Map(
+          state.summarySelected.flatMap(appr =>
+            appr.methods.map(m => [m.id, appr.approachType] as const),
+          ),
+        );
         const dirtyMethods = state.summarySelected
           .flatMap(appr => appr.methods)
           .filter(
@@ -392,14 +407,28 @@ export function useSelectionActions({
           // remark are dirty on the same method, the breakdown call above lands first, then a
           // second call here sends remark alone (no methodValue — already written above) so
           // typing a note while adjusting a land rate isn't silently lost.
-          if (dirtyBreakdownKeys.includes(method.id)) {
+          // Re-checked here, not trusted from the dirty key: a method that has since flipped to
+          // System, changed role or left the land methods would be rejected by the server and
+          // fail the whole Save. Such a breakdown is skipped (SUMMARY_SAVE clears its key); the
+          // method's own price or remark, if dirty, still goes through below.
+          const approachType = approachOf.get(method.id) ?? '';
+          const breakdownDirty =
+            dirtyBreakdownKeys.includes(method.id) &&
+            qualifiesForManualBreakdown(approachType, method, landAreaInSqWa, {
+              clearing: method.landRatePerSqWa == null,
+            });
+          if (
+            !breakdownDirty &&
+            !dirtyValueKeys.includes(method.id) &&
+            !dirtyRemarkKeys.includes(method.id)
+          )
+            continue;
+
+          if (breakdownDirty) {
             await manualCostBreakdownMutation.mutateAsync({
               id: pricingAnalysisId,
               methodId: method.id,
-              request: {
-                landRatePerSqWa: method.landRatePerSqWa ?? null,
-                indicatedValue: method.appraisalValue,
-              } as SetManualCostBreakdownRequestType,
+              request: manualBreakdownRequest(approachType, method),
             });
 
             if (dirtyRemarkKeys.includes(method.id)) {

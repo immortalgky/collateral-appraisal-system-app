@@ -42,6 +42,12 @@ export interface Method {
    */
   landRatePerSqWa?: number | null;
   /**
+   * Building value saved with a manual Cost-approach `LandAndBuilding` method's breakdown
+   * (`MethodDto.buildingValue`, written by SetManualCostBreakdown). Null until one is saved;
+   * the breakdown then falls back to the group's own building cost — see ManualCostBreakdown.
+   */
+  buildingValue?: number | null;
+  /**
    * Cost approach only: which part of the group's value this method produces. Enforced
    * server-side to exactly these four (`PricingAnalysisMethod.SetRole`) — null is a normal
    * state, not missing data: the method isn't in a Cost approach, or was reverted by
@@ -88,6 +94,9 @@ export type MethodRole = 'Land' | 'Building' | 'LandAndBuilding' | 'Machinery';
  *  createInitialState both map it to this value — see pricingAnalysis.config.json
  *  and store/createInitialState.ts). */
 export const COST_APPROACH_TYPE = 'COSTAPPR';
+
+/** Frontend spelling of the Market approach type (BE sends `'Market'`; see COST_APPROACH_TYPE). */
+export const MARKET_APPROACH_TYPE = 'MARAPPR';
 
 export interface Approach {
   id?: string;
@@ -156,5 +165,20 @@ export interface ManualCostBreakdownContext {
     methodType: string;
     rate: number | null;
     methodId?: string;
+    /** Only a `LandAndBuilding` breakdown sends this; undefined leaves the stored value as is. */
+    buildingValue?: number | null;
+  }) => void;
+  /** Escape after an edit already dispatched figures: puts the method back as it was when the edit
+   *  began, and clears the dirty marks the edit added. */
+  onBreakdownRevert: (arg: {
+    approachType: string;
+    methodType: string;
+    methodId?: string;
+    rate: number | null;
+    /** Undefined leaves the building untouched (a Land breakdown has none). */
+    buildingValue?: number | null;
+    price: number;
+    keepBreakdownDirty: boolean;
+    keepValueDirty: boolean;
   }) => void;
 }

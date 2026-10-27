@@ -60,7 +60,7 @@ export function isFieldConditions(obj: unknown): obj is FieldConditions {
 
 /**
  * Extracts dependency field names from a condition input.
- * Returns empty array for function conditions (rare/unsupported for targeted watch).
+ * A function condition contributes only the paths it declares in `deps`.
  */
 export function extractConditionFields(
   input: ConditionInput | undefined,
@@ -68,7 +68,9 @@ export function extractConditionFields(
   index?: number,
 ): string[] {
   if (!input) return [];
-  if (typeof input === 'function') return [];
+  if (typeof input === 'function') {
+    return (input.deps ?? []).map(dep => resolveFieldPath(dep, namePrefix, index));
+  }
   if (isFieldConditions(input)) {
     return input.conditions.map(c => resolveFieldPath(c.field, namePrefix, index));
   }
@@ -146,9 +148,16 @@ export function evaluateConditions(
   namePrefix: string,
   index?: number,
 ): boolean {
-  // Functional condition
+  // Functional condition. One that declares `deps` is handed just those paths, at the names it
+  // declared (relative to namePrefix/index) — the shape superRefine gives it at the form root, so
+  // it reads the same values live on screen as at validation. Without `deps` it gets `values` as is.
   if (typeof input === 'function') {
-    return input(values);
+    if (!input.deps) return input(values);
+    const scoped: Record<string, unknown> = {};
+    for (const dep of input.deps) {
+      setNestedValue(scoped, dep, getNestedValue(values, resolveFieldPath(dep, namePrefix, index)));
+    }
+    return input(scoped);
   }
 
   // Multiple conditions with match logic

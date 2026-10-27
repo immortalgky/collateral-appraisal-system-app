@@ -64,7 +64,7 @@ interface PricingAnalysisApproachMethodSelectorProps {
     value: number;
     methodId?: string;
   }) => void;
-  /** Present only for the Cost approach in manual mode — see ManualCostBreakdown. */
+  /** Present only for the Cost and Market approaches in manual mode — see ManualCostBreakdown. */
   manualCostBreakdown?: ManualCostBreakdownContext;
   onSelectMethodRole?: (arg: {
     approachType: string;

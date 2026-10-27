@@ -1,4 +1,5 @@
-import type { Approach } from '../types/selection';
+import type { Approach, Method, MethodRole } from '../types/selection';
+import { ROLE_COVERS } from '../utils/costRequiredComponents';
 import { COST_APPROACH_TYPE } from '../types/selection';
 import type { PricingAnalysisDocumentDtoType } from '../schemas';
 
@@ -128,7 +129,31 @@ export type SelectionAction =
         methodType: string;
         rate: number | null;
         methodId?: string;
+        /** Set only by a Cost `LandAndBuilding` breakdown; undefined leaves it untouched. */
+        buildingValue?: number | null;
       };
+    }
+  | {
+      /** Escape on a land-rate edit that had already dispatched figures: restores the method's
+       *  rate, building and price to what they were when the edit began, and drops the dirty marks
+       *  the edit added (kept when the method was already dirty before it). */
+      type: 'SUMMARY_REVERT_METHOD_BREAKDOWN';
+      payload: {
+        approachType: string;
+        methodType: string;
+        methodId?: string;
+        rate: number | null;
+        buildingValue?: number | null;
+        price: number;
+        keepBreakdownDirty: boolean;
+        keepValueDirty: boolean;
+      };
+    }
+  | {
+      /** Local mirror of a role the chip has just written, so nothing between the write and the
+       *  refetch (Save's re-check, the breakdown gate) reads the old one. */
+      type: 'SUMMARY_SET_METHOD_ROLE';
+      payload: { approachType: string; methodType: string; role: MethodRole };
     }
   | {
       /** Local-only, same batching as SUMMARY_UPDATE_METHOD_VALUE — the manual-mode note
@@ -150,6 +175,18 @@ const getVisibleApproach = (approaches: Approach[] = []) => {
   return approaches
     .filter(appr => appr.methods.some(method => method.isIncluded))
     .map(appr => ({ ...appr, methods: appr.methods.filter(method => method.isIncluded) }));
+};
+
+/**
+ * An approach's own value from its selected methods. Mirrors BE ComputeSelectedValue: Cost sums every
+ * selected method's value (each carries a distinct Role, so no double-counting); every other
+ * approach type still has exactly one selected method.
+ */
+const selectedValue = (approachType: string, methods: Approach['methods']) => {
+  const selected = methods.filter(method => method.isSelected);
+  return approachType === COST_APPROACH_TYPE
+    ? selected.reduce((sum, method) => sum + (method.appraisalValue ?? 0), 0)
+    : (selected[0]?.appraisalValue ?? 0);
 };
 
 /** convert visible approaches and methods into one string to compare changes */
@@ -202,11 +239,13 @@ export function approachMethodReducer(
       // thinks it has something to send:
       //   • ticks, for approaches with pending selection edits (dirtyMethodApproachTypes), and the
       //     approach tick itself when dirtyApproachSelection;
-      //   • a typed manual value, for methods in dirtyManualValueKeys.
+      //   • a typed manual value, for methods in dirtyManualValueKeys;
+      //   • a typed land rate and building value, for methods in dirtyCostBreakdownKeys.
       // Everything else comes fresh from the server; a touched approach's total is re-derived
       // from the kept state the same way SUMMARY_SELECT_METHOD does (Cost sums, others take one).
       const dirtyTypes = state.dirtyMethodApproachTypes ?? [];
       const dirtyValueIds = state.dirtyManualValueKeys ?? [];
+      const dirtyBreakdownIds = state.dirtyCostBreakdownKeys ?? [];
       const previousMethods = (state.summarySelected ?? []).flatMap(a => a.methods);
       const flippedIds = new Set(
         visibleApproach
@@ -232,12 +271,16 @@ export function approachMethodReducer(
           const modeFlipped = prevMethod.useSystemCalc !== m.useSystemCalc;
           if (modeFlipped) return m;
           const keepValue = !!m.id && dirtyValueIds.includes(m.id);
-          if (!keepTicks && !keepValue) return m;
-          touched = true;
+          const keepBreakdown = !!m.id && dirtyBreakdownIds.includes(m.id);
+          if (!keepTicks && !keepValue && !keepBreakdown) return m;
+          // A kept breakdown changes no total on its own (its price travels as a kept value).
+          if (keepTicks || keepValue) touched = true;
           return {
             ...m,
             isSelected: keepTicks ? prevMethod.isSelected : m.isSelected,
             appraisalValue: keepValue ? prevMethod.appraisalValue : m.appraisalValue,
+            landRatePerSqWa: keepBreakdown ? prevMethod.landRatePerSqWa : m.landRatePerSqWa,
+            buildingValue: keepBreakdown ? prevMethod.buildingValue : m.buildingValue,
           };
         });
         const selectedMethods = methods.filter(m => m.isSelected);
@@ -252,9 +295,7 @@ export function approachMethodReducer(
           methods,
           appraisalValue: !touched
             ? appr.appraisalValue
-            : appr.approachType === COST_APPROACH_TYPE
-              ? selectedMethods.reduce((sum, m) => sum + (m.appraisalValue ?? 0), 0)
-              : (selectedMethods[0]?.appraisalValue ?? 0),
+            : selectedValue(appr.approachType, methods),
         };
       });
 
@@ -275,9 +316,14 @@ export function approachMethodReducer(
         // A method whose System/Manual mode flipped server-side has no pending typed value any more
         // (the flip cleared it); keeping its key would make Save write methodValue 0 over null.
         dirtyManualValueKeys: (state.dirtyManualValueKeys ?? []).filter(id => !flippedIds.has(id)),
-        dirtyCostBreakdownKeys: state.dirtyCostBreakdownKeys ?? [],
+        // Same for a land rate typed on a method that has since flipped (its breakdown is gone).
+        dirtyCostBreakdownKeys: (state.dirtyCostBreakdownKeys ?? []).filter(
+          id => !flippedIds.has(id),
+        ),
         // Same for a note typed on a method that has since flipped to System (its note box is gone).
-        dirtyMethodRemarkKeys: (state.dirtyMethodRemarkKeys ?? []).filter(id => !flippedIds.has(id)),
+        dirtyMethodRemarkKeys: (state.dirtyMethodRemarkKeys ?? []).filter(
+          id => !flippedIds.has(id),
+        ),
         dirtyMethodApproachTypes: state.dirtyMethodApproachTypes ?? [],
         dirtyApproachSelection: state.dirtyApproachSelection ?? false,
       };
@@ -440,11 +486,17 @@ export function approachMethodReducer(
         summarySelected: state.summarySelected.map(appr => {
           if (appr.approachType !== action.payload.approachType) return appr;
 
-          // Mirrors BE PricingAnalysisApproach.SelectMethod: a Cost method with a Role
-          // deselects only siblings sharing that Role, so a Land-role and a Building-role
-          // method can be selected at once. Every other case (non-Cost, or a Cost method
-          // with a null Role — should not normally happen) stays exclusive.
-          const isRoleScoped = appr.approachType === COST_APPROACH_TYPE && !!targetMethod?.role;
+          // Mirrors BE PricingAnalysisApproach.DeselectedBySelecting: a Cost method with a Role
+          // deselects the role-tagged siblings it fully replaces (every component they cover,
+          // it covers too) — so same-role swaps and LandAndBuilding also drops Land/Building,
+          // while Building next to a ticked LandAndBuilding is left for the BE to reject. A
+          // role-less sibling is left alone. Every other case (non-Cost, or a Cost target with
+          // a null Role — should not normally happen) stays exclusive.
+          const targetRole = appr.approachType === COST_APPROACH_TYPE ? targetMethod.role : null;
+          const isReplacedBy = (sibling: Method) =>
+            !targetRole ||
+            (!!sibling.role &&
+              ROLE_COVERS[sibling.role].every(c => ROLE_COVERS[targetRole].includes(c)));
 
           const nextMethods = appr.methods.map(method => {
             if (method.methodType === action.payload.methodType)
@@ -452,22 +504,12 @@ export function approachMethodReducer(
             // Unticking touches only the clicked method — its siblings keep whatever they
             // had, so unticking Building in a Cost approach leaves Land selected.
             if (isDeselecting) return method;
-            if (isRoleScoped)
-              return method.role === targetMethod!.role ? { ...method, isSelected: false } : method;
-            return { ...method, isSelected: false };
+            return isReplacedBy(method) ? { ...method, isSelected: false } : method;
           });
-
-          const selectedMethods = nextMethods.filter(method => method.isSelected);
 
           return {
             ...appr,
-            // Mirrors BE ComputeSelectedValue: Cost sums every selected method's value
-            // (each carries a distinct Role, so no double-counting); every other approach
-            // type still has exactly one selected method, same as before.
-            appraisalValue:
-              appr.approachType === COST_APPROACH_TYPE
-                ? selectedMethods.reduce((sum, method) => sum + (method.appraisalValue ?? 0), 0)
-                : (selectedMethods[0]?.appraisalValue ?? 0),
+            appraisalValue: selectedValue(appr.approachType, nextMethods),
             methods: nextMethods,
           };
         }),
@@ -621,11 +663,13 @@ export function approachMethodReducer(
               };
             return method;
           });
-          const selectedMethod = updatedMethods.find(m => m.isSelected);
           return {
             ...appr,
             methods: updatedMethods,
-            appraisalValue: selectedMethod?.appraisalValue ?? appr.appraisalValue,
+            // Cost sums its selected methods; unchanged while none is.
+            appraisalValue: updatedMethods.some(m => m.isSelected)
+              ? selectedValue(appr.approachType, updatedMethods)
+              : appr.appraisalValue,
           };
         }),
       };
@@ -646,13 +690,13 @@ export function approachMethodReducer(
             return { ...method, appraisalValue: action.payload.value };
           });
 
-          const selectedMethod = updatedMethods.find(m => m.isSelected);
           return {
             ...appr,
             methods: updatedMethods,
-            // Keep the approach's own appraisalValue in sync only when the edited
-            // method is the one currently selected — mirrors CALCULATION_SAVE.
-            appraisalValue: selectedMethod?.appraisalValue ?? appr.appraisalValue,
+            // Kept in sync with the selected methods (Cost sums them); unchanged while none is.
+            appraisalValue: updatedMethods.some(m => m.isSelected)
+              ? selectedValue(appr.approachType, updatedMethods)
+              : appr.appraisalValue,
           };
         }),
         dirtyManualValueKeys:
@@ -676,7 +720,13 @@ export function approachMethodReducer(
             ...appr,
             methods: appr.methods.map(method =>
               method.methodType === action.payload.methodType
-                ? { ...method, landRatePerSqWa: action.payload.rate }
+                ? {
+                    ...method,
+                    landRatePerSqWa: action.payload.rate,
+                    ...(action.payload.buildingValue !== undefined && {
+                      buildingValue: action.payload.buildingValue,
+                    }),
+                  }
                 : method,
             ),
           };
@@ -685,6 +735,60 @@ export function approachMethodReducer(
           action.payload.methodId && !state.dirtyCostBreakdownKeys.includes(action.payload.methodId)
             ? [...state.dirtyCostBreakdownKeys, action.payload.methodId]
             : state.dirtyCostBreakdownKeys,
+      };
+    }
+
+    case 'SUMMARY_REVERT_METHOD_BREAKDOWN': {
+      if (state.summarySelected == null) return state;
+      const { approachType, methodType, methodId, rate, buildingValue, price } = action.payload;
+
+      return {
+        ...state,
+        summarySelected: state.summarySelected.map(appr => {
+          if (appr.approachType !== approachType) return appr;
+          const methods = appr.methods.map(method =>
+            method.methodType === methodType
+              ? {
+                  ...method,
+                  landRatePerSqWa: rate,
+                  appraisalValue: price,
+                  ...(buildingValue !== undefined && { buildingValue }),
+                }
+              : method,
+          );
+          return {
+            ...appr,
+            methods,
+            appraisalValue: methods.some(m => m.isSelected)
+              ? selectedValue(appr.approachType, methods)
+              : appr.appraisalValue,
+          };
+        }),
+        dirtyCostBreakdownKeys: action.payload.keepBreakdownDirty
+          ? state.dirtyCostBreakdownKeys
+          : state.dirtyCostBreakdownKeys.filter(id => id !== methodId),
+        dirtyManualValueKeys: action.payload.keepValueDirty
+          ? state.dirtyManualValueKeys
+          : state.dirtyManualValueKeys.filter(id => id !== methodId),
+      };
+    }
+
+    case 'SUMMARY_SET_METHOD_ROLE': {
+      if (state.summarySelected == null) return state;
+      const { approachType, methodType, role } = action.payload;
+
+      return {
+        ...state,
+        summarySelected: state.summarySelected.map(appr =>
+          appr.approachType !== approachType
+            ? appr
+            : {
+                ...appr,
+                methods: appr.methods.map(method =>
+                  method.methodType === methodType ? { ...method, role } : method,
+                ),
+              },
+        ),
       };
     }
 

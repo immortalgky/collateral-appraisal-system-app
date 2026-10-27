@@ -1277,6 +1277,7 @@ const SetManualCostBreakdownRequest = z
   .object({
     landRatePerSqWa: z.number().nullable().default(null),
     indicatedValue: z.number().nullable().default(null),
+    buildingValue: z.number().nullable().default(null),
   })
   .partial()
   .passthrough();

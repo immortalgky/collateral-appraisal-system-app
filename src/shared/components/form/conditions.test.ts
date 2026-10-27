@@ -4,9 +4,10 @@ import {
   resolveFieldPath,
   evaluateCondition,
   evaluateConditions,
+  extractConditionFields,
   setNestedValue,
 } from './conditions';
-import type { FieldCondition, FieldConditions } from './types';
+import type { ConditionFn, FieldCondition, FieldConditions } from './types';
 
 // =============================================================================
 // getNestedValue
@@ -237,5 +238,33 @@ describe('setNestedValue', () => {
     setNestedValue(obj, 'list.0', 'a');
     expect(Array.isArray(obj.list)).toBe(true);
     expect((obj.list as any)[0]).toBe('a');
+  });
+});
+
+// =============================================================================
+// Function conditions with `deps`
+// =============================================================================
+
+describe('function conditions with deps', () => {
+  const hasRows: ConditionFn = Object.assign(
+    (values: Record<string, unknown>) => ((values.rows as unknown[] | undefined)?.length ?? 0) > 0,
+    { deps: ['rows'] },
+  );
+
+  it('reads the same shape at the root and under a namePrefix', () => {
+    expect(evaluateConditions(hasRows, { rows: [1] }, '')).toBe(true);
+    expect(evaluateConditions(hasRows, { building: { rows: [1] } }, 'building')).toBe(true);
+    expect(evaluateConditions(hasRows, { building: { rows: [] } }, 'building')).toBe(false);
+  });
+
+  it('resolves array rows and watches the scoped path', () => {
+    expect(evaluateConditions(hasRows, { items: [{ rows: [1] }] }, 'items', 0)).toBe(true);
+    expect(extractConditionFields(hasRows, 'building')).toEqual(['building.rows']);
+    expect(extractConditionFields(hasRows, 'items', 0)).toEqual(['items.0.rows']);
+  });
+
+  it('hands a function without deps the values untouched', () => {
+    const fn: ConditionFn = values => values.a === 1;
+    expect(evaluateConditions(fn, { a: 1 }, 'building')).toBe(true);
   });
 });
