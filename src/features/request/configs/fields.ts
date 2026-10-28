@@ -1035,7 +1035,7 @@ export function makeTitleAddressFields(t: TFunction<'request'>): FormField[] {
       wrapperClassName: 'col-span-2',
       requiredWhen: {
         field: 'collateralType',
-        is: [...LAND_CODES, ...LEASE_LAND_CODE],
+        is: [...LAND_CODES, ...LEASE_LAND_CODE, ...MOVABLE_CODES],
         operator: 'notIn',
       },
       maxLength: 50,
@@ -1131,7 +1131,7 @@ export function makeDopaAddressFields(t: TFunction<'request'>): FormField[] {
       maxLength: 50,
       requiredWhen: {
         field: 'collateralType',
-        is: [...LAND_CODES, ...LEASE_LAND_CODE],
+        is: [...LAND_CODES, ...LEASE_LAND_CODE, ...MOVABLE_CODES],
         operator: 'notIn',
       },
     },
@@ -1783,7 +1783,7 @@ export const dopaAddressFields: FormField[] = [
     maxLength: 50,
     requiredWhen: {
       field: 'collateralType',
-      is: [...LAND_CODES, ...LEASE_LAND_CODE],
+      is: [...LAND_CODES, ...LEASE_LAND_CODE, ...MOVABLE_CODES],
       operator: 'notIn',
     },
   },
