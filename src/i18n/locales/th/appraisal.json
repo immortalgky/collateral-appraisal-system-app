@@ -1019,6 +1019,7 @@
       "fields": {
         "propertyName": "ชื่อเครื่องจักร",
         "machineType": "ประเภทเครื่องจักร",
+        "machineTypeOther": "ประเภทเครื่องจักรอื่นๆ",
         "brand": "ยี่ห้อ",
         "model": "รุ่น",
         "series": "แบบ",
@@ -1063,6 +1064,57 @@
         "cannotUse": "ใช้ไม่ได้",
         "canUse": "ใช้ได้"
       }
+    },
+    "vehicleInfo": {
+      "groups": {
+        "identification": "ข้อมูลยานพาหนะ",
+        "registration": "ทะเบียน",
+        "purchase": "การซื้อและที่ตั้ง"
+      },
+      "fields": {
+        "propertyName": "ชื่อยานพาหนะ",
+        "engineNumber": "เลขเครื่องยนต์",
+        "chassisNumber": "เลขตัวถัง",
+        "licensePlateNumber": "ทะเบียนรถ",
+        "registrationNumber": "หมายเลขทะเบียน",
+        "registrationDate": "วันที่จดทะเบียน",
+        "color": "สี",
+        "colorOther": "สีอื่นๆ",
+        "brand": "ยี่ห้อ",
+        "model": "รุ่น",
+        "yearOfManufacture": "ปีที่ผลิต",
+        "vehicleType": "ประเภทยานพาหนะ",
+        "vehicleTypeOther": "ประเภทยานพาหนะอื่นๆ",
+        "purchaseDate": "วันที่ซื้อ",
+        "purchasePrice": "ราคาซื้อ",
+        "energyUse": "พลังงานที่ใช้",
+        "energyUseOther": "พลังงานที่ใช้อื่นๆ",
+        "location": "ตำแหน่งที่ตั้ง"
+      }
+    },
+    "vesselInfo": {
+      "groups": {
+        "identification": "ข้อมูลเรือ",
+        "engineAndTonnage": "เครื่องยนต์และขนาดตัน",
+        "purchase": "การซื้อ ที่ตั้ง และสภาพ"
+      },
+      "fields": {
+        "propertyName": "ชื่อเรือ",
+        "model": "รุ่น",
+        "yearOfManufacture": "ปีที่ผลิต",
+        "vesselType": "ประเภทเรือ",
+        "vesselTypeOther": "ประเภทเรืออื่นๆ",
+        "capacity": "กำลังเครื่องยนต์ (แรงม้า/กิโลวัตต์)",
+        "numberOfEngines": "จำนวนเครื่องยนต์",
+        "hullNumber": "หมายเลขตัวเรือ",
+        "registrationNumber": "หมายเลขทะเบียน",
+        "purchaseDate": "วันที่ซื้อ",
+        "purchasePrice": "ราคาซื้อ",
+        "grossTonnage": "ขนาดตันกรอส",
+        "netTonnage": "ขนาดตันเนต",
+        "location": "ตำแหน่งที่ตั้ง",
+        "conditionUse": "สภาพการใช้งาน"
+      }
     }
   },
   "properties": {
@@ -1101,7 +1153,9 @@
       "noPhotos": "ยังไม่มีรูป",
       "rowHint": "ดับเบิลคลิกเพื่อแก้ไข · คลิกขวาสำหรับคำสั่งอื่น",
       "emptyHint": "ยังไม่มีทรัพย์สิน — เพิ่มได้จากปุ่มในกลุ่มด้านซ้าย",
-      "emptyReadOnly": "ยังไม่มีทรัพย์สิน"
+      "emptyReadOnly": "ยังไม่มีทรัพย์สิน",
+      "grossTonnage": "ตันกรอส",
+      "yearOfManufacture": "ปีที่ผลิต"
     },
     "toolbar": {
       "groups": "กลุ่ม",
@@ -1196,7 +1250,8 @@
       "machineAge": "อายุ {{n}} ปี",
       "leaseRemaining": "เช่าเหลือ {{n}} ปี",
       "leaseEnded": "สัญญาเช่าสิ้นสุดแล้ว",
-      "leaseRent": "ค่าเช่า ฿{{n}}"
+      "leaseRent": "ค่าเช่า ฿{{n}}",
+      "grossTonnage": "{{n}} ตันกรอส"
     },
     "machinerySummary": {
       "title": "สรุปเครื่องจักร",
@@ -1206,7 +1261,7 @@
         "drift": "จำนวนไม่ตรงกับรายการ"
       },
       "hint": {
-        "none": "ใบประเมินนี้มีเครื่องจักร {{n}} เครื่อง — ต้องบันทึกสรุป",
+        "none": "ใบประเมินนี้มีเครื่องจักร ยานพาหนะ หรือเรือ {{n}} รายการ — ต้องบันทึกสรุป",
         "drift": "ที่บันทึกไว้ → ที่นับได้จากรายการเครื่องจักรตอนนี้"
       },
       "actions": {
@@ -2801,6 +2856,10 @@
     "propertyBuildingCreated": "สร้างทรัพย์สินสิ่งปลูกสร้างสำเร็จ",
     "propertyMachineryUpdated": "อัปเดตทรัพย์สินเครื่องจักรสำเร็จ",
     "propertyMachineryCreated": "สร้างทรัพย์สินเครื่องจักรสำเร็จ",
+    "propertyVehicleUpdated": "อัปเดตทรัพย์สินยานพาหนะสำเร็จ",
+    "propertyVehicleCreated": "สร้างทรัพย์สินยานพาหนะสำเร็จ",
+    "propertyVesselUpdated": "อัปเดตทรัพย์สินเรือสำเร็จ",
+    "propertyVesselCreated": "สร้างทรัพย์สินเรือสำเร็จ",
     "leaseAgreementBuildingUpdated": "อัปเดตสัญญาเช่าอาคารสำเร็จ",
     "leaseAgreementBuildingCreated": "สร้างสัญญาเช่าอาคารสำเร็จ",
     "leaseAgreementLandUpdated": "อัปเดตสัญญาเช่าที่ดินสำเร็จ",
@@ -2951,6 +3010,8 @@
     "navBuilding": "อาคาร",
     "navConstructionInspection": "รายละเอียดงานก่อสร้าง",
     "navMachinery": "เครื่องจักร",
+    "navVehicle": "ยานพาหนะ",
+    "navVessel": "เรือ",
     "navPma": "ข้อมูล PMA",
     "saveDraft": "บันทึกร่าง",
     "save": "บันทึก"

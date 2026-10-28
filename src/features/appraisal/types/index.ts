@@ -98,9 +98,18 @@ export interface PropertyItem {
   roomNumber?: string;
   roomLayoutType?: string;
   roomLayoutTypeOther?: string;
-  /** Machinery only. */
+  /** Machinery, vehicle or vessel. */
   yearOfManufacture?: number;
+  /** Machinery only. */
   machineAge?: number;
+  /** Vehicle only: VehicleType parameter code, and the free text entered when it is '99' (other). */
+  vehicleType?: string;
+  vehicleTypeOther?: string;
+  /** Vessel only: VesselType parameter code, and the free text entered when it is '99' (other). */
+  vesselType?: string;
+  vesselTypeOther?: string;
+  /** Vessel only: gross tonnage. */
+  grossTonnage?: number;
   /** Lease types only: remaining term in years as entered, the contract's end date, and its rent. */
   remainingLeaseYears?: number;
   leaseEndDate?: string;

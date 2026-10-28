@@ -11,6 +11,29 @@ import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
 /** Property type codes that mean machinery. Exported so the grouped card asks the same
  * question rather than keeping a second copy that can drift. */
 export const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
+export const VEHICLE_TYPES = new Set(['VEH', 'Vehicle']);
+export const VESSEL_TYPES = new Set(['VES', 'Vessel']);
+export const isVehicleOrVessel = (type: string): boolean =>
+  VEHICLE_TYPES.has(type) || VESSEL_TYPES.has(type);
+
+export const needsMachinerySummary = (type: string): boolean =>
+  MACHINE_TYPES.has(type) || isVehicleOrVessel(type);
+
+const OTHER_ASSET_TYPE = '99';
+
+export const AssetTypeValue = ({ property }: { property: PropertyItem }) => {
+  const isVessel = VESSEL_TYPES.has(property.type);
+  const code = isVessel ? property.vesselType : property.vehicleType;
+  const other = isVessel ? property.vesselTypeOther : property.vehicleTypeOther;
+  if (code === OTHER_ASSET_TYPE && other) return <>{other}</>;
+  if (!code) return <span className="text-(--palette-gray-400)">—</span>;
+  return (
+    <ParameterDisplay group={isVessel ? 'VesselType' : 'VehicleType'} code={code} fallback={code} />
+  );
+};
+
+const hasAssetType = (property: PropertyItem): boolean =>
+  !!(VESSEL_TYPES.has(property.type) ? property.vesselType : property.vehicleType);
 
 /**
  * Property type codes that mean a building standing on someone's land.
@@ -121,6 +144,22 @@ function useTypeFacts(property: PropertyItem): ReactNode[] {
       facts.push(
         <span key="mage" className="tabular-nums">
           {t('properties.facts.machineAge', { n: formatAreaNumber(property.machineAge) })}
+        </span>,
+      );
+  }
+
+  if (isVehicleOrVessel(type)) {
+    if (hasAssetType(property)) facts.push(<AssetTypeValue key="atype" property={property} />);
+    if (property.yearOfManufacture)
+      facts.push(
+        <span key="year" className="tabular-nums">
+          {t('properties.facts.madeIn', { n: property.yearOfManufacture })}
+        </span>,
+      );
+    if (VESSEL_TYPES.has(type) && property.grossTonnage)
+      facts.push(
+        <span key="gt" className="tabular-nums">
+          {t('properties.facts.grossTonnage', { n: formatAreaNumber(property.grossTonnage) })}
         </span>,
       );
   }
@@ -485,6 +524,7 @@ export function PropertyCardContent({
 }: PropertyCardContentProps) {
   const { t } = useTranslation('appraisal');
   const isMachine = MACHINE_TYPES.has(property.type);
+  const isMovable = isVehicleOrVessel(property.type);
   const exceptions = useExceptionChips(property);
   const typeFacts = useTypeFacts(property);
 
@@ -504,14 +544,24 @@ export function PropertyCardContent({
             </span>
           ),
         ]
-      : [
-          <PlaceValue key="place" property={property} />,
-          coords ? (
-            <span key="coords" className="tabular-nums">
-              {coords}
-            </span>
-          ) : null,
-        ];
+      : isMovable
+        ? [
+            brandModel(property) || null,
+            filled(property.registrationNumber) ? (
+              <span key="reg" className="tabular-nums">
+                {property.registrationNumber}
+              </span>
+            ) : null,
+            <PlaceValue key="place" property={property} />,
+          ]
+        : [
+            <PlaceValue key="place" property={property} />,
+            coords ? (
+              <span key="coords" className="tabular-nums">
+                {coords}
+              </span>
+            ) : null,
+          ];
 
     return (
       <div
@@ -562,7 +612,7 @@ export function PropertyCardContent({
 
   // ── One row inside a pile of same-type properties ─────────────────────────────────────────
   if (size === 'stack') {
-    const gridClass = isMachine ? STACK_GRID_MACHINE : STACK_GRID_PROPERTY;
+    const gridClass = isMachine || isMovable ? STACK_GRID_MACHINE : STACK_GRID_PROPERTY;
     const coords = coordinateText(property);
 
     return (
@@ -591,6 +641,37 @@ export function PropertyCardContent({
               {property.registrationStatus
                 ? t('properties.machineryChips.registered')
                 : t('properties.machineryChips.unregistered')}
+            </div>
+            <div
+              className="text-[11px] text-(--palette-gray-500) truncate"
+              title={brandModel(property)}
+            >
+              {brandModel(property) || <span className="text-(--palette-gray-400)">—</span>}
+            </div>
+          </>
+        ) : VESSEL_TYPES.has(property.type) ? (
+          <>
+            <div className="text-[11px] text-(--palette-gray-500) truncate">
+              <AssetTypeValue property={property} />
+            </div>
+            <div className="text-[11px] text-(--palette-gray-500) truncate" title={property.model}>
+              {property.model || <span className="text-(--palette-gray-400)">—</span>}
+            </div>
+            <div className="text-[11px] text-(--palette-gray-500) truncate tabular-nums text-right">
+              {property.grossTonnage ? (
+                formatAreaNumber(property.grossTonnage)
+              ) : (
+                <span className="text-(--palette-gray-400)">—</span>
+              )}
+            </div>
+          </>
+        ) : isMovable ? (
+          <>
+            <div className="text-[11px] text-(--palette-gray-500) truncate tabular-nums">
+              {property.registrationNumber || <span className="text-(--palette-gray-400)">—</span>}
+            </div>
+            <div className="text-[11px] text-(--palette-gray-500) truncate">
+              <AssetTypeValue property={property} />
             </div>
             <div
               className="text-[11px] text-(--palette-gray-500) truncate"
@@ -757,7 +838,7 @@ export function PropertyCardContent({
               />
             </Badge>
 
-            {isMachine ? (
+            {isMachine || isMovable ? (
               <>
                 {(property.brand || property.model) && (
                   <div

@@ -50,16 +50,22 @@ function OptionText({
   options,
   value,
   required,
+  other,
 }: {
   group?: string;
   options?: { value?: string | null; label: string }[];
   value: unknown;
   required: boolean;
+  other?: { is: string; text: unknown };
 }) {
   const fromGroup = useParameterOptions(group ?? '');
   const code = isBlank(value) ? null : String(value);
   // A code the list does not know is shown as is rather than hidden.
-  const text = code && ((options ?? fromGroup).find(o => o.value === code)?.label ?? code);
+  const label = code && ((options ?? fromGroup).find(o => o.value === code)?.label ?? code);
+  const text =
+    label && other && code === other.is && !isBlank(other.text)
+      ? `${label}: ${String(other.text)}`
+      : label;
   return <Shown text={text} required={required} />;
 }
 
@@ -195,6 +201,7 @@ export function FormReadValue({
           options={field.options}
           value={value}
           required={required}
+          other={field.type === 'dropdown' ? other : undefined}
         />
       );
     case 'boolean-toggle':

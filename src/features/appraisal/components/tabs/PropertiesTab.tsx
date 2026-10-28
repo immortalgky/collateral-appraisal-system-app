@@ -15,7 +15,7 @@ import {
 } from '@dnd-kit/core';
 import toast from 'react-hot-toast';
 import Icon from '@shared/components/Icon';
-import { PropertyCardContent } from '../PropertyCardContent';
+import { PropertyCardContent, needsMachinerySummary } from '../PropertyCardContent';
 import { usePropertyClipboardStore } from '../../store';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import {
@@ -86,11 +86,11 @@ export const PropertiesTab = ({ viewMode, onViewModeChange, editorSlot }: Proper
   const { groups, isLoading, error } = useEnrichedPropertyGroups(appraisalId);
 
   // The machinery summary lives here now, as a strip above the groups (or a pinned rail entry in
-  // the split view) — shown, as the old tab was, only when the appraisal holds machinery.
+  // the split view) — shown only when the appraisal holds machinery, vehicles or vessels.
   const machineCount = useMemo(
     () =>
       groups.reduce(
-        (n, group) => n + group.items.filter(item => (item.type as string) === 'MAC').length,
+        (n, group) => n + group.items.filter(item => needsMachinerySummary(item.type)).length,
         0,
       ),
     [groups],

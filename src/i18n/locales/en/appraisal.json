@@ -1019,6 +1019,7 @@
       "fields": {
         "propertyName": "Machinery Name",
         "machineType": "Machine Type",
+        "machineTypeOther": "Machine Type Other",
         "brand": "Brand",
         "model": "Model",
         "series": "Series",
@@ -1063,6 +1064,57 @@
         "cannotUse": "Can not",
         "canUse": "Can"
       }
+    },
+    "vehicleInfo": {
+      "groups": {
+        "identification": "Identification",
+        "registration": "Registration",
+        "purchase": "Purchase & Location"
+      },
+      "fields": {
+        "propertyName": "Vehicle Name",
+        "engineNumber": "Engine No.",
+        "chassisNumber": "Chassis No.",
+        "licensePlateNumber": "License Plate Number",
+        "registrationNumber": "Registration No.",
+        "registrationDate": "Registration Date",
+        "color": "Color",
+        "colorOther": "Color Other",
+        "brand": "Brand",
+        "model": "Model",
+        "yearOfManufacture": "Year",
+        "vehicleType": "Vehicle Type",
+        "vehicleTypeOther": "Vehicle Type Other",
+        "purchaseDate": "Purchase Date",
+        "purchasePrice": "Purchase Price",
+        "energyUse": "Energy Use",
+        "energyUseOther": "Energy Use Other",
+        "location": "Location"
+      }
+    },
+    "vesselInfo": {
+      "groups": {
+        "identification": "Identification",
+        "engineAndTonnage": "Engine & Tonnage",
+        "purchase": "Purchase, Location & Condition"
+      },
+      "fields": {
+        "propertyName": "Vessel Name",
+        "model": "Model",
+        "yearOfManufacture": "Year",
+        "vesselType": "Vessel Type",
+        "vesselTypeOther": "Vessel Type Other",
+        "capacity": "Engine Power (HP/kW)",
+        "numberOfEngines": "Number of Engines",
+        "hullNumber": "Hull Number",
+        "registrationNumber": "Registration No.",
+        "purchaseDate": "Purchase Date",
+        "purchasePrice": "Purchase Price",
+        "grossTonnage": "Gross Tonnage",
+        "netTonnage": "Net Tonnage",
+        "location": "Location",
+        "conditionUse": "Condition Use"
+      }
     }
   },
   "properties": {
@@ -1101,7 +1153,9 @@
       "noPhotos": "No photos yet",
       "rowHint": "Double-click to edit · right-click for more",
       "emptyHint": "No properties yet — add one from a group on the left.",
-      "emptyReadOnly": "No properties yet."
+      "emptyReadOnly": "No properties yet.",
+      "grossTonnage": "Gross tonnage",
+      "yearOfManufacture": "Year of manufacture"
     },
     "toolbar": {
       "groups": "groups",
@@ -1196,7 +1250,8 @@
       "machineAge": "{{n}} yr old",
       "leaseRemaining": "{{n}} yr lease left",
       "leaseEnded": "Lease ended",
-      "leaseRent": "Rent ฿{{n}}"
+      "leaseRent": "Rent ฿{{n}}",
+      "grossTonnage": "{{n}} GT"
     },
     "machinerySummary": {
       "title": "Machinery summary",
@@ -1206,7 +1261,7 @@
         "drift": "Counts out of date"
       },
       "hint": {
-        "none": "This appraisal has {{n}} machines — save a summary",
+        "none": "This appraisal has {{n}} machines, vehicles or vessels — save a summary",
         "drift": "Saved → counted from the machine list now"
       },
       "actions": {
@@ -2801,6 +2856,10 @@
     "propertyBuildingCreated": "Property building created successfully",
     "propertyMachineryUpdated": "Property Machinery updated successfully",
     "propertyMachineryCreated": "Property Machinery created successfully",
+    "propertyVehicleUpdated": "Property vehicle updated successfully",
+    "propertyVehicleCreated": "Property vehicle created successfully",
+    "propertyVesselUpdated": "Property vessel updated successfully",
+    "propertyVesselCreated": "Property vessel created successfully",
     "leaseAgreementBuildingUpdated": "Lease agreement building updated successfully",
     "leaseAgreementBuildingCreated": "Lease agreement building created successfully",
     "leaseAgreementLandUpdated": "Lease agreement land updated successfully",
@@ -2951,6 +3010,8 @@
     "navBuilding": "Building",
     "navConstructionInspection": "Construction Detail",
     "navMachinery": "Machinery",
+    "navVehicle": "Vehicle",
+    "navVessel": "Vessel",
     "navPma": "PMA Information",
     "saveDraft": "Save draft",
     "save": "Save"
