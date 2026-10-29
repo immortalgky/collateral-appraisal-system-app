@@ -2,6 +2,13 @@ import clsx from 'clsx';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { getTypeDotColor } from '../utils/propertyTypeConfig';
 
+/**
+ * Size of the `sm` pill. Taken from the mock: 0.66rem text in 0.02rem/0.42rem padding. It sits beside a
+ * 0.8rem title, so anything larger competes with the property's own name. Exported so the status chips
+ * on the same line (PropertyCardContent) are built from it and cannot drift from it.
+ */
+export const PILL_SM_BOX = 'px-[0.42rem] py-[0.02rem] text-[0.66rem] font-semibold leading-[1.4]';
+
 interface PropertyTypeChipProps {
   /** Property type code (or legacy display name). */
   code: string;
@@ -58,9 +65,7 @@ export const PropertyTypeChip = ({
         'inline-flex items-center whitespace-nowrap rounded-full border',
         size === 'md'
           ? 'px-2.5 text-xs font-medium leading-normal'
-          : // Sizes taken from the mock: 0.66rem text in 0.02rem/0.42rem padding. It sits beside a
-            // 0.8rem title, so anything larger competes with the property's own name.
-            'px-[0.42rem] py-[0.02rem] text-[0.66rem] font-semibold leading-[1.4]',
+          : PILL_SM_BOX,
         tone,
         className,
       )}
