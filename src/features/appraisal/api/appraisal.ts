@@ -1,7 +1,10 @@
 import type { GetAppraisalByIdResponseType } from '@/shared/schemas/v1';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import axios from '@shared/api/axiosInstance';
+import { errorText } from '@/shared/utils/errorUtils';
 
 /**
  * Hook for fetching appraisal data by ID
@@ -15,6 +18,45 @@ export const useGetAppraisalById = (appraisalId: string | undefined) => {
       return data;
     },
     enabled: !!appraisalId,
+  });
+};
+
+/**
+ * Correct the construction-inspection round number of the whole appraisal (one value, shown on
+ * every building's tab and in the header).
+ * PUT /appraisals/{appraisalId}/inspection-number  { inspectionNumber }  ->  204
+ * 400: not a positive number, or not a construction inspection. 409: the appraisal is closed.
+ */
+export const useUpdateInspectionNumber = () => {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation('appraisal');
+
+  return useMutation({
+    mutationFn: async ({
+      appraisalId,
+      inspectionNumber,
+    }: {
+      appraisalId: string;
+      inspectionNumber: number;
+    }): Promise<void> => {
+      await axios.put(`/appraisals/${appraisalId}/inspection-number`, { inspectionNumber });
+    },
+    // The API stores exactly the submitted number, so the cached header (which feeds
+    // AppraisalContext in AppraisalLayout and TaskLayout) is patched, not refetched: a failed
+    // refetch would put the query in error and swap the whole page, unsaved forms included, for
+    // the error screen.
+    onSuccess: async (_, { appraisalId, inspectionNumber }) => {
+      const queryKey = ['appraisal', appraisalId];
+      // A header GET already in flight would land after the patch and put the old number back.
+      await queryClient.cancelQueries({ queryKey, exact: true });
+      queryClient.setQueryData<GetAppraisalByIdResponseType>(
+        queryKey,
+        old => old && { ...old, inspectionNumber },
+      );
+    },
+    onError: error => {
+      toast.error(errorText(error, t('constructionInspection.editRound.saveFailed')));
+    },
   });
 };
 

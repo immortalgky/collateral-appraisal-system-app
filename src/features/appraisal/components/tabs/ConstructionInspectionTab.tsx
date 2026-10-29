@@ -17,6 +17,7 @@ import { baht, hasConstructionData, pct, sumWork } from '../construction/constru
 import axios from '@shared/api/axiosInstance';
 import toast from 'react-hot-toast';
 import ConfirmDialog from '@/shared/components/ConfirmDialog';
+import EditInspectionNumberDialog from '../EditInspectionNumberDialog';
 import { useEnrichedPropertyGroups } from '../../hooks/useEnrichedPropertyGroups';
 import { usePropertyBasePath } from '../../hooks/usePropertyBasePath';
 import { useConstructionWorkGroups } from '../../api/constructionWorkGroups';
@@ -251,6 +252,7 @@ export function ConstructionInspectionTab({
     computedSubItems.some((i: { previousProgressPct: number }) => i.previousProgressPct > 0) ||
     (summary?.summaryPreviousProgressPct ?? 0) > 0;
   const [showCalculated, setShowCalculated] = useState(false);
+  const [editingRound, setEditingRound] = useState(false);
   // Switching method discards the other method's data on save. On a progressive round it is
   // locked while any method-specific data is on the form — carried over, saved or just typed; guessing
   // which of it "came over" missed cases (0% rows, a saved summary) and lost them. Clearing the rows
@@ -400,9 +402,30 @@ export function ConstructionInspectionTab({
         <div className="flex flex-wrap items-center gap-x-[8px] gap-y-[6px]">
           <span className="inline-flex items-center gap-[6px] text-sm font-semibold whitespace-nowrap">
             {inspectionNumber != null && (
-              <span className="rounded-[5px] bg-[color:var(--palette-accent-wash)] px-[6px] py-px text-[0.8571rem] text-[color:var(--palette-accent-ink)]">
-                {t('constructionInspection.inspectionRound', { n: inspectionNumber })}
-              </span>
+              <>
+                <span className="rounded-[5px] bg-[color:var(--palette-accent-wash)] px-[6px] py-px text-[0.8571rem] text-[color:var(--palette-accent-ink)]">
+                  {t('constructionInspection.inspectionRound', { n: inspectionNumber })}
+                </span>
+                {!readOnly && appraisalId && (
+                  <>
+                    <button
+                      type="button"
+                      title={t('constructionInspection.editRound.tooltip')}
+                      aria-label={t('constructionInspection.editRound.tooltip')}
+                      onClick={() => setEditingRound(true)}
+                      className="flex size-6 items-center justify-center rounded-md text-(--palette-gray-400) hover:bg-primary/10 hover:text-primary"
+                    >
+                      <Icon name="pen" style="solid" />
+                    </button>
+                    <EditInspectionNumberDialog
+                      isOpen={editingRound}
+                      onClose={() => setEditingRound(false)}
+                      appraisalId={appraisalId}
+                      current={inspectionNumber}
+                    />
+                  </>
+                )}
+              </>
             )}
             {t('constructionInspection.sectionTitle')}
           </span>

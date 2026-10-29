@@ -2389,6 +2389,13 @@
   "constructionInspection": {
     "sectionTitle": "การตรวจสอบการก่อสร้าง",
     "inspectionRound": "ครั้งที่ {{n}}",
+    "editRound": {
+      "title": "แก้ไขครั้งที่ตรวจ",
+      "label": "ครั้งที่",
+      "note": "ครั้งที่ตรวจของทั้งเล่ม ใช้กับทุกอาคาร",
+      "tooltip": "แก้ไขครั้งที่",
+      "saveFailed": "บันทึกครั้งที่ตรวจไม่สำเร็จ"
+    },
     "summary": "สรุปการก่อสร้าง",
     "columns": {
       "description": "รายละเอียด",
