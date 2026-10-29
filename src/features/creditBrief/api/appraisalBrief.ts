@@ -203,6 +203,14 @@ export interface BriefDocument {
   fileName: string | null;
   fileSizeBytes: number | null;
   uploadedAt: string | null;
+  /** Where the file is attached: the appraisal itself, its request, or one collateral title. */
+  source: 'Appraisal' | 'Request' | 'Title';
+  /** Title rows only. */
+  titleNumber: string | null;
+  /** Thai collateral type name, title rows only. */
+  collateralTypeName: string | null;
+  /** Set on a request/title file carried over from the previous appraisal of the same collateral. */
+  carriedFromAppraisalNumber: string | null;
 }
 
 /**

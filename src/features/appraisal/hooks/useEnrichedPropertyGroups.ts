@@ -53,6 +53,7 @@ export function mapGroupItemToPropertyItem(item: PropertyGroupItem): PropertyIte
     isUnderConstruction: (item.isUnderConstruction as boolean | null | undefined) ?? undefined,
     constructionProgressPct:
       (item.constructionProgressPct as number | null | undefined) ?? undefined,
+    isDevelopmentOnly: (item.isDevelopmentOnly as boolean | null | undefined) ?? undefined,
     buildingArea: (item.buildingArea as number | null | undefined) ?? undefined,
     condoName: (item.condoName as string | null | undefined) ?? undefined,
     floorNumber: (item.floorNumber as string | null | undefined) ?? undefined,

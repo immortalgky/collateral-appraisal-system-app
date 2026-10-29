@@ -35,6 +35,26 @@ const UnderConstructionChip = ({ property }: { property: PropertyItem }) => {
   );
 };
 
+/**
+ * Grey chip for a building whose depreciation rows are all ส่วนพัฒนา. Neutral and lighter than the
+ * amber one: it says where the building prints in the report, not that something needs attention.
+ */
+const DevelopmentOnlyChip = ({ property }: { property: PropertyItem }) => {
+  const { t } = useTranslation('appraisal');
+  if (!property.isDevelopmentOnly) return null;
+  return (
+    <Badge
+      tone="gray"
+      size="xs"
+      dot={false}
+      title={t('properties.developmentOnlyHint')}
+      className="ml-1.5 ring-1 ring-(--palette-line)"
+    >
+      {t('properties.developmentOnly')}
+    </Badge>
+  );
+};
+
 /** Types whose record carries land titles. */
 const TITLED_TYPES = new Set(['L', 'LB', 'LSL', 'LS']);
 /** Land with a building on it: the land area sits in the area column, the building's goes here. */
@@ -148,8 +168,13 @@ function useTypeFacts(property: PropertyItem): ReactNode[] {
       );
   }
 
-  if (LAND_BUILDING_TYPES.has(type) && property.isUnderConstruction)
-    facts.push(<UnderConstructionChip key="uc" property={property} />);
+  if (LAND_BUILDING_TYPES.has(type) && (property.isUnderConstruction || property.isDevelopmentOnly))
+    facts.push(
+      <Fragment key="status">
+        <UnderConstructionChip property={property} />
+        <DevelopmentOnlyChip property={property} />
+      </Fragment>,
+    );
 
   return facts;
 }
@@ -175,10 +200,15 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
     const hasType = !!property.buildingType;
     // Zero is what the form used to save for a blank age, so it reads as "not entered".
     const age = property.buildingAge ? property.buildingAge : null;
-    const underConstruction = <UnderConstructionChip property={property} />;
+    const statusChips = (
+      <>
+        <UnderConstructionChip property={property} />
+        <DevelopmentOnlyChip property={property} />
+      </>
+    );
     if (!hasType && floors == null && age == null)
-      return property.isUnderConstruction ? (
-        underConstruction
+      return property.isUnderConstruction || property.isDevelopmentOnly ? (
+        statusChips
       ) : (
         <span className="text-(--palette-gray-400)">—</span>
       );
@@ -203,7 +233,7 @@ export const PlaceValue = ({ property }: { property: PropertyItem }) => {
         {age != null && (
           <span className="tabular-nums">{t('properties.buildingAge', { n: age })}</span>
         )}
-        {underConstruction}
+        {statusChips}
       </>
     );
   }
