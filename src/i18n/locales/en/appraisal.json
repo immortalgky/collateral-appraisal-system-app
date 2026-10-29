@@ -1559,7 +1559,7 @@
       "progress": "Appraisal Progress",
       "request": "Request Information",
       "collateral": "Collateral in this Request",
-      "documents": "Appraisal Documents",
+      "documents": "Documents",
       "log": "Activity Log",
       "route": "Route",
       "noCollateral": "No collateral items on this request",
@@ -1909,12 +1909,18 @@
         }
       },
       "documents": {
-        "lockedTitle": "Documents not yet available",
-        "lockedCancelled": "This request was cancelled before a price was issued, so there are no documents.",
-        "lockedPending": "All documents are released together once the appraisal team approves the price.",
-        "empty": "The price is approved, but no files are attached to this appraisal folder yet.",
-        "others": "Other documents in the folder",
-        "othersHint": "{{count}} file(s) · all viewable",
+        "lockedTitle": "Appraisal documents not yet available",
+        "lockedCancelled": "This request was cancelled before a price was issued, so there are no appraisal documents.",
+        "lockedPending": "Appraisal documents are released once the appraisal team approves the price.",
+        "empty": "No files are attached to this appraisal folder yet.",
+        "others": "Other documents",
+        "filterAll": "All",
+        "source": {
+          "Request": "Request",
+          "Title": "Collateral",
+          "Appraisal": "Appraisal"
+        },
+        "carriedFrom": "From previous appraisal {{number}}",
         "view": "View",
         "download": "Download",
         "downloadFailed": "Could not download the document",
