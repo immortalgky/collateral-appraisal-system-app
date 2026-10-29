@@ -1187,6 +1187,8 @@
     "buildingAge": "{{n}} yr old",
     "underConstruction": "Under construction",
     "underConstructionPct": "Under construction {{pct}}%",
+    "developmentOnly": "Development",
+    "developmentOnlyHint": "Only development items — printed under ส่วนพัฒนา (Development) in the report",
     "facts": {
       "deed": "Deed {{no}}",
       "buildingArea": "Building {{n}} m²",

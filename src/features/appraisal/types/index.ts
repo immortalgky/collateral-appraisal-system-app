@@ -90,6 +90,8 @@ export interface PropertyItem {
   isUnderConstruction?: boolean;
   /** Building only, while under construction: overall progress 0-100, if an inspection exists. */
   constructionProgressPct?: number;
+  /** Building only: every depreciation row is ส่วนพัฒนา, so it prints under that heading. */
+  isDevelopmentOnly?: boolean;
   /** Land with a building (LB / LS): the building's floor area, m². */
   buildingArea?: number;
   /** Condo only. */

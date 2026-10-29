@@ -1187,6 +1187,8 @@
     "buildingAge": "房龄 {{n}} 年",
     "underConstruction": "在建",
     "underConstructionPct": "在建 {{pct}}%",
+    "developmentOnly": "开发部分",
+    "developmentOnlyHint": "仅含开发部分项目，将在报告的“ส่วนพัฒนา（开发部分）”标题下打印",
     "facts": {
       "deed": "地契 {{no}}",
       "buildingArea": "建筑 {{n}} m²",
