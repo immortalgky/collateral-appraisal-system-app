@@ -1557,7 +1557,7 @@
       "progress": "评估进度",
       "request": "申请信息",
       "collateral": "本次申请的抵押物",
-      "documents": "评估文件",
+      "documents": "文件",
       "log": "活动记录",
       "route": "处理路线",
       "noCollateral": "本次申请没有抵押物",
@@ -1907,12 +1907,18 @@
         }
       },
       "documents": {
-        "lockedTitle": "文件尚未提供",
-        "lockedCancelled": "本次申请在出具价格前已取消，因此没有文件。",
-        "lockedPending": "评估部门审批价格后，所有文件将一并开放。",
-        "empty": "价格已审批，但此评估档案中尚未附上任何文件。",
-        "others": "档案中的其他文件",
-        "othersHint": "{{count}} 个文件 · 均可查看",
+        "lockedTitle": "评估文件尚未提供",
+        "lockedCancelled": "本次申请在出具价格前已取消，因此没有评估文件。",
+        "lockedPending": "评估部门审批价格后，评估文件将开放查看。",
+        "empty": "此评估档案中尚未附上任何文件。",
+        "others": "其他文件",
+        "filterAll": "全部",
+        "source": {
+          "Request": "申请",
+          "Title": "抵押物",
+          "Appraisal": "评估"
+        },
+        "carriedFrom": "来自原评估 {{number}}",
         "view": "查看",
         "download": "下载",
         "downloadFailed": "无法下载该文件",
