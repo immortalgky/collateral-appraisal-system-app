@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import type { PropertyItem } from '../types';
 import Icon from '@shared/components/Icon';
 import Badge from '@shared/components/Badge';
-import { PropertyTypeChip } from './PropertyTypeChip';
+import { PILL_SM_BOX, PropertyTypeChip } from './PropertyTypeChip';
 import ParameterDisplay from '@shared/components/ParameterDisplay';
 import { isWithinThailand } from '@/shared/constants/mapConfig';
 import { formatAreaNumber, toRaiNganWa } from '../utils/areaFormat';
@@ -21,13 +21,16 @@ export const MACHINE_TYPES = new Set(['MAC', 'Machine', 'Machinery']);
  */
 export const BUILDING_TYPES = new Set(['B', 'LSB']);
 
+/** Box of the two status chips: the same metrics as PropertyTypeChip `sm`, so a line of chips reads as one size. */
+const STATUS_CHIP_BOX = `ml-1.5 inline-flex items-center whitespace-nowrap rounded-full border ${PILL_SM_BOX}`;
+
 /** Amber chip for a building that is not finished yet, with its progress when an inspection exists. */
 const UnderConstructionChip = ({ property }: { property: PropertyItem }) => {
   const { t } = useTranslation('appraisal');
   if (!property.isUnderConstruction) return null;
   const pct = property.constructionProgressPct;
   return (
-    <span className="ml-1.5 inline-flex items-center rounded-full bg-(--palette-warn-wash) px-1.5 text-[0.6875rem] font-semibold text-(--palette-warn) ring-1 ring-amber-200 dark:ring-amber-500/30 tabular-nums">
+    <span className={`${STATUS_CHIP_BOX} border-amber-200 bg-(--palette-warn-wash) text-(--palette-warn) tabular-nums dark:border-amber-500/30`}>
       {pct != null
         ? t('properties.underConstructionPct', { pct: Math.round(pct) })
         : t('properties.underConstruction')}
@@ -43,15 +46,12 @@ const DevelopmentOnlyChip = ({ property }: { property: PropertyItem }) => {
   const { t } = useTranslation('appraisal');
   if (!property.isDevelopmentOnly) return null;
   return (
-    <Badge
-      tone="gray"
-      size="xs"
-      dot={false}
+    <span
       title={t('properties.developmentOnlyHint')}
-      className="ml-1.5 ring-1 ring-(--palette-line)"
+      className={`${STATUS_CHIP_BOX} border-(--palette-line) bg-gray-100 text-gray-600 dark:bg-(--palette-surface-3) dark:text-(--palette-ink-2)`}
     >
       {t('properties.developmentOnly')}
-    </Badge>
+    </span>
   );
 };
 
