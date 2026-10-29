@@ -2389,6 +2389,13 @@
   "constructionInspection": {
     "sectionTitle": "施工检验",
     "inspectionRound": "第 {{n}} 次检验",
+    "editRound": {
+      "title": "修改检验期次",
+      "label": "期次",
+      "note": "整份评估的期次编号，适用于所有建筑。",
+      "tooltip": "修改期次",
+      "saveFailed": "无法保存期次编号。"
+    },
     "summary": "施工摘要",
     "columns": {
       "description": "描述",

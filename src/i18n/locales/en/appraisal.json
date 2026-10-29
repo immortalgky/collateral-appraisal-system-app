@@ -2389,6 +2389,13 @@
   "constructionInspection": {
     "sectionTitle": "Construction Inspection",
     "inspectionRound": "Inspection #{{n}}",
+    "editRound": {
+      "title": "Edit inspection round",
+      "label": "Round",
+      "note": "The round number of the whole appraisal; applies to every building.",
+      "tooltip": "Edit round",
+      "saveFailed": "Could not save the round number."
+    },
     "summary": "Construction Summary",
     "columns": {
       "description": "Description",
