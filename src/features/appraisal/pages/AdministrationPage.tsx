@@ -938,9 +938,7 @@ const AdministrationPage = () => {
       description: t('administration.assignmentType.internalDesc'),
       // A quotation lock disables the whole group, not this option.
       disabled: isInternalDisabled,
-      disabledReason: isInternalDisabled
-        ? t('administration.assignmentType.internalDisabledReason')
-        : undefined,
+      disabledReason: t('administration.assignmentType.internalDisabledReason'),
     },
     {
       value: 'external',
@@ -951,9 +949,7 @@ const AdministrationPage = () => {
       // which escalates the case straight back here; leaving it visible tells the admin the path
       // exists and is paused, rather than silently removing an option they expect to see.
       disabled: !canAssignCompanyInSystem,
-      disabledReason: !canAssignCompanyInSystem
-        ? t('administration.assignmentType.externalDisabledReason')
-        : undefined,
+      disabledReason: t('administration.assignmentType.externalDisabledReason'),
     },
     {
       value: 'external-offline',
@@ -1217,14 +1213,22 @@ const AdministrationPage = () => {
                     {t('administration.offlineExternal.keyerMethodLabel')}
                   </FieldLabel>
                   {isReadOnly ? (
-                    // Read-only: the chosen method as text, not a greyed-out toggle.
-                    <p className="mb-2 text-sm text-(--palette-ink)">
-                      {t(
-                        assignmentMethod === 'roundrobin'
-                          ? 'administration.assignmentDetails.roundrobin'
-                          : 'administration.assignmentDetails.manual',
+                    // Read-only: the chosen method as text (with the hint the control would show),
+                    // not a greyed-out toggle.
+                    <div className="mb-2">
+                      <p className="text-sm text-(--palette-ink)">
+                        {t(
+                          assignmentMethod === 'roundrobin'
+                            ? 'administration.assignmentDetails.roundrobin'
+                            : 'administration.assignmentDetails.manual',
+                        )}
+                      </p>
+                      {assignmentMethod === 'roundrobin' && (
+                        <p className="mt-1.5 text-xs text-(--palette-gray-500)">
+                          {t('administration.offlineExternal.keyerRoundrobinDesc')}
+                        </p>
                       )}
-                    </p>
+                    </div>
                   ) : (
                     <Controller
                       name="assignmentMethod"

@@ -131,14 +131,14 @@ describe('SegmentedChoice', () => {
       expect(onChange).not.toHaveBeenCalled();
     });
 
-    it('a selected card that is now disabled keeps its description', () => {
+    it('a selected card that is now disabled still gives its reason', () => {
       const options: SegmentedOption<V>[] = [
         OPTIONS[0],
         { ...OPTIONS[1], disabled: true, disabledReason: 'Paused for now' },
       ];
       render(<Harness initial="external" variant="cards" options={options} />);
       expect(screen.getByRole('radio', { name: 'External' })).toHaveAccessibleDescription(
-        'A company',
+        'Paused for now',
       );
     });
 

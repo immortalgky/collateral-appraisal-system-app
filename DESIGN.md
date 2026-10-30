@@ -261,6 +261,22 @@ per-component focus colours, bare-text disabled fields inside the skins) are rem
 specified in 17.5. The old rule (`md` option exactly the input height 35.5px, `bg-primary` pill with
 `shadow-primary/25`) is removed.
 
+**Assignment choices** (`appraisal/components/administration/SegmentedChoice.tsx`, Administration page only;
+approved on the canvas boards 16 and 18, ticket #534). Outside the form system, so 17.5 does not apply:
+
+- `variant="cards"` for the main decision (assignment type): one radio card per option, a row of equal columns
+  once the card is 40rem wide (stacked below). Card `rounded-section border border-(--palette-line)
+bg-(--palette-surface) px-3 py-2.5`, a 16px radio dot, label `font-semibold`, a one-line description
+  `text-xs text-(--palette-gray-500)`. Selected: `border-primary bg-(--palette-accent-wash)` plus a 1px inset
+  primary ring, label `text-(--palette-accent-ink)`. A disabled option is a `bg-(--palette-surface-2)` card
+  whose description is replaced by a short reason; no opacity fade.
+- `variant="segmented"` (default) for sub-choices (method, follow-up, keyer): track `h-ctl rounded-ctl border
+border-(--palette-line) bg-(--palette-surface-3)`, options `h-8 rounded-ctl-c text-sm font-medium`; the selected
+  option is a white pill (`bg-(--palette-surface)`, small shadow; dark `--palette-line-soft`, no shadow) with
+  `text-(--palette-accent-ink)` semibold. The selected option's explanation is one grey hint line under the
+  track (`mt-1.5 text-xs text-(--palette-gray-500)`), never a callout box.
+- A locked group (read-only, quotation lock) keeps its selection visible in grey, not teal.
+
 **Badge** (`Badge.tsx`): `inline-flex items-center gap-1.5 font-medium rounded-full`, dot on by default, `badgeStyle="soft"`.
 Sizes: `sm` (default) `px-2 py-0.5 text-xs`; `md` `text-sm`; `lg` `text-base`; `xs` `text-[11px]`.
 Colour by `tone` (`teal | green | yellow | gray`) or `type`+`value` (status, priority, channel…).

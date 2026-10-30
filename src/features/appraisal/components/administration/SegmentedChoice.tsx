@@ -1,7 +1,6 @@
 import { useId } from 'react';
 import { Description, Field, Label, Radio, RadioGroup } from '@headlessui/react';
 import clsx from 'clsx';
-import Icon from '@/shared/components/Icon';
 
 export interface SegmentedOption<V extends string = string> {
   value: V;
@@ -12,7 +11,6 @@ export interface SegmentedOption<V extends string = string> {
   disabled?: boolean;
   /** Cards: shown in place of the description while the option is disabled. */
   disabledReason?: string;
-  icon?: string;
 }
 
 interface SegmentedChoiceProps<V extends string> {
@@ -77,14 +75,11 @@ export default function SegmentedChoice<V extends string>({
         {options.map(option => {
           const checked = option.value === value;
           const off = disabled || !!option.disabled;
-          // Teal only where it can still be chosen; a locked selection is grey (17.5).
+          // Teal only where it can still be chosen; a locked selection is grey.
           const on = checked && !off;
           if (cards) {
-            // A saved pick that is now disabled still says what it is.
             const text =
-              option.disabled && !checked && option.disabledReason
-                ? option.disabledReason
-                : option.description;
+              option.disabled && option.disabledReason ? option.disabledReason : option.description;
             // Field: the card is named by its label and described by the line under it (without
             // it, Headless UI v2 hands a Label inside a Radio to the group).
             return (
@@ -93,7 +88,7 @@ export default function SegmentedChoice<V extends string>({
                   value={option.value}
                   disabled={option.disabled}
                   className={clsx(
-                    'flex flex-1 items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors select-none',
+                    'flex flex-1 items-start gap-2.5 rounded-section border px-3 py-2.5 text-left transition-colors select-none',
                     off ? 'cursor-not-allowed' : 'cursor-pointer',
                     // Disabled is a grey fill, not a fade, so the reason stays readable (17.5).
                     on
@@ -153,7 +148,7 @@ export default function SegmentedChoice<V extends string>({
               className={clsx(
                 // flex-auto: grow from the label's own width, so a long Thai label gets more room
                 // than a short one; min-w-0 lets it truncate (a Thai-safe `truncate`, DESIGN s.4).
-                'flex h-8 min-w-0 flex-auto items-center justify-center gap-1.5 rounded-ctl-c px-3 font-medium transition-colors select-none',
+                'flex h-8 min-w-0 flex-auto items-center justify-center rounded-ctl-c px-3 font-medium transition-colors select-none',
                 off ? 'cursor-not-allowed' : 'cursor-pointer',
                 checked
                   ? // Dark: the card colour sits below the track, so the pill takes a lighter line tone.
@@ -166,13 +161,6 @@ export default function SegmentedChoice<V extends string>({
                     : 'text-(--palette-gray-600) hover:text-(--palette-ink)',
               )}
             >
-              {option.icon && (
-                <Icon
-                  name={option.icon}
-                  style={checked ? 'solid' : 'regular'}
-                  className="shrink-0"
-                />
-              )}
               <span className="truncate">{option.label}</span>
             </Radio>
           );
