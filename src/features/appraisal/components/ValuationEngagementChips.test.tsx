@@ -131,8 +131,8 @@ describe('ValuationEngagementChips at key-in', () => {
     await user.click(within(dialog).getByText('set-book-date'));
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    // A placeholder, never a blank name.
-    expect(within(dialog).getByText('…')).toBeInTheDocument();
+    // A loading text, never a blank name.
+    expect(within(dialog).getByText('common:status.loading')).toBeInTheDocument();
   });
 
   it('follows the assignment when its company changes (routed back and re-picked)', async () => {

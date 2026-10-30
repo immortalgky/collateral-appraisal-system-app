@@ -599,13 +599,7 @@ const AdministrationPage = () => {
       // (its record, else the picker's list entry for that id), or on a fresh row the defaults'
       // (the prior inspection's company when preselected, else none).
       selectedCompany: saved
-        ? (assignedCompany ??
-          // The off-system pick comes from the unfiltered list, often outside the segment one.
-          (saved.assignmentType === 'external-offline'
-            ? offlineCompanies
-            : eligibleCompanies
-          )?.find(c => c.id === saved.companyId) ??
-          null)
+        ? (assignedCompany ?? eligibleCompanies?.find(c => c.id === saved.companyId) ?? null)
         : resolvedFormDefaults.selectedCompany,
       selectedFollowupStaff: resolvedFollowupStaff,
       remarks: currentAssignment?.remark ?? '',
@@ -634,7 +628,6 @@ const AdministrationPage = () => {
     reset,
     previousCompany,
     eligibleCompanies,
-    offlineCompanies,
     currentAssignment,
     assignedStaff,
     assignedCompany,

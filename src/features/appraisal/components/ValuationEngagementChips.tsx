@@ -66,7 +66,7 @@ const ValuationEngagementChips = ({
   onCompletenessChange,
   saveHandleRef,
 }: ValuationEngagementChipsProps) => {
-  const { t } = useTranslation('appraisal');
+  const { t } = useTranslation(['appraisal', 'common']);
   const localizeCompanyName = useLocalizedCompanyName();
   const editDialog = useDisclosure();
   const companyModal = useDisclosure();
@@ -179,8 +179,11 @@ const ValuationEngagementChips = ({
   const shownCompany = isCompanyLocked ? (savedCompany ?? null) : selectedCompany;
   const companyName = shownCompany?.companyName ?? null;
   if (!companyName && !canEdit) return null;
-  // For the keyer, a recorded company is never blank: "…" while it loads, its id if the lookup failed.
-  const lockedCompanyText = isCompanyLookupFailed ? assignment?.assigneeCompanyId : '…';
+  // For the keyer, a recorded company is never blank: "loading" until it loads, its id if the
+  // lookup failed.
+  const lockedCompanyText = isCompanyLookupFailed
+    ? assignment?.assigneeCompanyId
+    : t('common:status.loading');
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
   // server-side (RequireOfflineEngagementRecorded), so the chip is styled as a call to action
