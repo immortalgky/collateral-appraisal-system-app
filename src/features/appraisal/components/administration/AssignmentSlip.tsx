@@ -44,6 +44,8 @@ export interface AssignmentSlipProps {
   isPreviousCompany?: boolean;
   followupMethod: SlipChecksInput['followupStaffMethod'];
   followupName?: string | null;
+  /** Off-system external: the company the bank engaged (the recipient row is the keyer). */
+  offlineCompanyName?: string | null;
   /** The finalized quotation's winner, once there is one (quotation method). */
   quotationWinnerName?: string | null;
 
@@ -230,6 +232,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
     assignmentType,
     followupMethod,
     followupName,
+    offlineCompanyName,
     fee,
     feeStatus,
     result,
@@ -295,7 +298,7 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
       <dl className="grid @lg:grid-cols-2">
         <Row
           label={t('administration.slip.segment.type')}
-          className={clsx('@lg:order-1', !showFollowup && '@lg:col-span-2')}
+          className={clsx('@lg:order-1', !showFollowup && !isOffline && '@lg:col-span-2')}
         >
           {typeLabel}
         </Row>
@@ -309,6 +312,15 @@ export default function AssignmentSlip(props: AssignmentSlipProps) {
         >
           {recipient}
         </Row>
+        {isOffline && (
+          <Row label={t('administration.slip.segment.company')} className="@lg:order-2">
+            {offlineCompanyName || (
+              <Muted>
+                {t(readOnly ? 'administration.noData' : 'administration.slip.notSelected')}
+              </Muted>
+            )}
+          </Row>
+        )}
         {showFollowup && (
           <Row label={t('administration.slip.segment.followup')} className="@lg:order-2">
             {followup}

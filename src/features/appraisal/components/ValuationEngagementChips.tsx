@@ -97,6 +97,12 @@ const ValuationEngagementChips = ({
   );
 
   const savedBookDate = assignment?.offlineBookDate ?? null;
+  // The admin names the company on the assignment page (#535); once the assignment holds one it is
+  // locked here and the keyer only enters the book date. A wrong company is fixed by routing back
+  // to appraisal-assignment. Only a case that reached key-in before that still picks it here, and
+  // once that pick is saved the assignment holds it, so it locks too (the server locks it as well).
+  const isCompanyLocked = !!assignment?.assigneeCompanyId;
+  const hasCompany = isCompanyLocked || !!selectedCompany?.id;
 
   useEffect(() => {
     if (hasSeededCompany.current || !savedCompany) return;
@@ -111,8 +117,8 @@ const ValuationEngagementChips = ({
   }, [savedBookDate]);
 
   useEffect(() => {
-    onCompletenessChange?.(!!selectedCompany?.id && !!bookDate);
-  }, [selectedCompany, bookDate, onCompletenessChange]);
+    onCompletenessChange?.(hasCompany && !!bookDate);
+  }, [hasCompany, bookDate, onCompletenessChange]);
 
   const markDirty = () => {
     if (isDirty) return;
@@ -126,7 +132,7 @@ const ValuationEngagementChips = ({
   const persistEngagement = (): Promise<boolean> => {
     if (!canEdit || !isDirty) return Promise.resolve(true);
 
-    if (!selectedCompany?.id) {
+    if (!hasCompany) {
       toast.error(t('offlineEngagement.validation.companyRequired'));
       return Promise.resolve(false);
     }
@@ -139,7 +145,8 @@ const ValuationEngagementChips = ({
       saveEngagement(
         {
           appraisalId,
-          companyId: selectedCompany.id,
+          // Omitted once locked: the server keeps the assignment's company.
+          ...(isCompanyLocked ? {} : { companyId: selectedCompany?.id }),
           // Date-only string. DatePickerInput emits an offset-bearing ISO timestamp, which the
           // backend binds to DateTime and converts to server local time — on a node outside UTC+07
           // that lands on the previous calendar day, printing a book date a day early.
@@ -178,7 +185,9 @@ const ValuationEngagementChips = ({
   //
   // Nothing to show for an internal appraisal, or before a company has ever been recorded on a
   // case the current user cannot edit.
-  const companyName = selectedCompany?.companyName ?? null;
+  // A locked company whose record has not loaded (or could not be looked up) is named by its id.
+  const companyName =
+    selectedCompany?.companyName ?? (isCompanyLocked ? assignment.assigneeCompanyId : null);
   if (!companyName && !canEdit) return null;
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
@@ -186,7 +195,7 @@ const ValuationEngagementChips = ({
   // rather than a quiet grey label — it is the one thing on this page nobody else can supply.
   // Both are required. On this path the save endpoint writes them together, so in practice they
   // go missing together — but the pill names whichever is actually absent rather than assuming.
-  const isOutstanding = canEdit && (!companyName || !bookDate);
+  const isOutstanding = canEdit && (!hasCompany || !bookDate);
 
   return (
     <>
@@ -199,9 +208,9 @@ const ValuationEngagementChips = ({
         >
           <Icon name="triangle-exclamation" style="solid" className="w-3.5 h-3.5 text-amber-500" />
           <span>
-            {!companyName && !bookDate
+            {!hasCompany && !bookDate
               ? t('offlineEngagement.outstandingBoth')
-              : !companyName
+              : !hasCompany
                 ? t('offlineEngagement.outstandingCompany')
                 : t('offlineEngagement.outstandingDate')}
           </span>
@@ -241,21 +250,30 @@ const ValuationEngagementChips = ({
               style="solid"
               className="w-4 h-4 text-amber-500 shrink-0 mt-0.5"
             />
-            <p className="text-xs text-(--palette-warn)">{t('offlineEngagement.hint')}</p>
+            <p className="text-xs text-(--palette-warn)">
+              {t(isCompanyLocked ? 'offlineEngagement.hintLocked' : 'offlineEngagement.hint')}
+            </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-(--palette-ink) mb-2">
-              {t('offlineEngagement.companyLabel')} <span className="text-danger">*</span>
+              {t('offlineEngagement.companyLabel')}
+              {!isCompanyLocked && <span className="text-danger"> *</span>}
             </label>
             {selectedCompany ? (
               <CompanyDisplay
                 company={selectedCompany}
-                onClear={() => {
-                  setSelectedCompany(null);
-                  markDirty();
-                }}
+                onClear={
+                  isCompanyLocked
+                    ? undefined
+                    : () => {
+                        setSelectedCompany(null);
+                        markDirty();
+                      }
+                }
               />
+            ) : isCompanyLocked ? (
+              <p className="text-sm text-(--palette-ink)">{assignment.assigneeCompanyId}</p>
             ) : (
               <button
                 type="button"
@@ -265,6 +283,11 @@ const ValuationEngagementChips = ({
                 <Icon name="magnifying-glass" style="solid" className="size-4 mr-2 inline" />
                 {t('offlineEngagement.selectCompany')}
               </button>
+            )}
+            {isCompanyLocked && (
+              <p className="mt-1 text-xs text-(--palette-gray-500)">
+                {t('offlineEngagement.companyLockedHint')}
+              </p>
             )}
           </div>
 

@@ -1176,7 +1176,7 @@ describe('AdministrationPage: read-only details', () => {
 
   it('shows the stored keyer of an off-system assignment, as the keyer', async () => {
     // A made off-system assignment is stored as External, method 'Offline' (the workflow stamps
-    // it), with the keyer as the assignee and no company.
+    // it), with the keyer as the assignee and no company (made before the admin picked it, #535).
     state.assignments = [
       {
         ...made,
@@ -1190,7 +1190,8 @@ describe('AdministrationPage: read-only details', () => {
     // Form card + the slip in the rail + the slip at the form's end.
     expect(await screen.findAllByText('K-0042')).toHaveLength(3);
     expect(screen.getAllByText('administration.slip.segment.keyer')).toHaveLength(2);
-    expect(screen.queryByText('administration.noData')).not.toBeInTheDocument();
+    // Only the missing company says so (form card + both slips), not the keyer.
+    expect(screen.getAllByText('administration.noData')).toHaveLength(3);
   });
 
   it('shows a made off-system assignment as off-system even once the keyer has recorded its company', async () => {
@@ -2102,5 +2103,95 @@ describe('AdministrationPage: the watched fields drive the form', () => {
 
     expect(await screen.findByText('administration.offlineExternal.title')).toBeInTheDocument();
     expect(typeRadio('externalOffline')).toBeChecked();
+  });
+});
+
+describe('AdministrationPage: the off-system (EXTO) company', () => {
+  const offlineRoundrobin = () =>
+    setDefaults(null, { assignmentType: 'external-offline', assignmentMethod: 'roundrobin' });
+
+  it('asks for the company on the EXTO card and blocks Assign until it is picked', async () => {
+    withBase();
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+
+    const label = await screen.findByText('administration.offlineExternal.companyLabel');
+    expect(label).toBeInTheDocument();
+    expect(within(slipCard()).getByText('administration.slip.reason.companyMissing')).toBeVisible();
+    expect(slipAssign()).toBeDisabled();
+
+    await user.click(
+      within(slipCard()).getByRole('button', { name: 'administration.slip.checks.fixAria' }),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('validation.selectCompany');
+
+    await user.click(screen.getByText('pick-other-company'));
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+  });
+
+  it('sends the picked company with the EXTO assignment', async () => {
+    withBase();
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await waitFor(() => expect(slipAssign()).toBeEnabled());
+    await user.click(slipAssign());
+
+    await waitFor(() => expect(state.posted).toHaveLength(1));
+    expect(state.posted[0]).toMatchObject({
+      decisionTaken: 'EXTO',
+      assignmentType: 'External',
+      assigneeCompanyId: 'c-new',
+      assigneeCompanyName: 'New Co',
+    });
+  });
+
+  it('saves the picked company with the EXTO draft', async () => {
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+    await user.click(await screen.findByText('pick-other-company'));
+    await user.click(within(slipCard()).getByRole('button', { name: 'administration.saveDraft' }));
+
+    await waitFor(() => expect(state.drafted).toHaveLength(1));
+    expect(state.drafted[0]).toMatchObject({
+      assignmentMethod: 'Offline',
+      assigneeCompanyId: 'c-new',
+    });
+  });
+
+  it('restores the company of a reopened EXTO draft', async () => {
+    state.assignments = [
+      {
+        ...draftAssignment,
+        assignmentType: 'External',
+        assignmentMethod: 'Offline',
+        assigneeCompanyId: 'c-old',
+      },
+    ];
+    render(<AdministrationPage />);
+
+    expect(await screen.findByText('Old Co', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getByText('administration.offlineExternal.companyLabel')).toBeInTheDocument();
+  });
+
+  it('shows the EXTO company on the read-only page, with no way to change it', async () => {
+    state.assignments = [
+      {
+        ...draftAssignment,
+        assignmentType: 'External',
+        assignmentMethod: 'Offline',
+        assignmentStatus: 'Assigned',
+        draftSavedAt: null,
+        assigneeUserId: 'K-0042',
+        assigneeCompanyId: 'c-old',
+      },
+    ];
+    render(<AdministrationPage />);
+
+    expect((await screen.findAllByText('Old Co')).length).toBeGreaterThan(0);
+    expect(screen.queryByText('pick-other-company')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'administration.clearSelection' }),
+    ).not.toBeInTheDocument();
   });
 });

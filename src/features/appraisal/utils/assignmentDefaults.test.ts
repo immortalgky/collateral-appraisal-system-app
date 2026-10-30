@@ -170,10 +170,16 @@ describe('correctSavedSelection', () => {
 
   it.each([
     {
-      name: 'external with the kill switch off becomes external-offline + manual',
-      values: saved('external'),
+      name: 'external with the kill switch off becomes external-offline + manual, without its in-system company',
+      values: { ...saved('external'), companyId: 'c1' },
       flags: { canAssignCompanyInSystem: false, isInternalDisabled: false, isReadOnly: false },
-      expected: { assignmentType: 'external-offline', assignmentMethod: 'manual', staffId: 'u1' },
+      expected: {
+        assignmentType: 'external-offline',
+        assignmentMethod: 'manual',
+        staffId: 'u1',
+        companyId: null,
+        selectedCompany: null,
+      },
     },
     {
       name: 'internal over the facility limit is cleared',

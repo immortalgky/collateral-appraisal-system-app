@@ -95,16 +95,41 @@ describe('computeSlipChecks', () => {
   it('internal and off-system need staffId and have no followup row', () => {
     expect(statuses({ assignmentType: 'internal' })).toEqual({ assignee: 'error', fee: 'ok' });
     expect(statuses({ assignmentType: 'external-offline', staffId: 's1' })).toEqual({
+      company: 'ok',
       assignee: 'ok',
       fee: 'ok',
     });
+  });
+
+  it('off-system needs its company whatever the keyer method, and names it first', () => {
+    const r = run({
+      assignmentType: 'external-offline',
+      assignmentMethod: 'roundrobin',
+      companyId: null,
+    });
+    expect(r.checks[0]).toMatchObject({
+      id: 'company',
+      status: 'error',
+      labelKey: 'administration.slip.checks.companyMissing',
+    });
+    expect(r.blockReason).toBe('administration.slip.reason.companyMissing');
+    // Untouched: a to-do, and the reason is muted.
+    expect(
+      run({
+        assignmentType: 'external-offline',
+        assignmentMethod: 'roundrobin',
+        companyId: null,
+        revealed: {},
+      }).blockTone,
+    ).toBe('muted');
   });
 
   it('names the missing recipient per type (company / staff / keyer)', () => {
     const label = (patch: Partial<SlipChecksInput>) => run(patch).checks[0].labelKey;
     expect(label({ companyId: null })).toBe('administration.slip.checks.companyMissing');
     expect(label({ assignmentType: 'internal' })).toBe('administration.slip.checks.staffMissing');
-    expect(label({ assignmentType: 'external-offline' })).toBe(
+    // Off-system: the company check comes first, then the keyer.
+    expect(run({ assignmentType: 'external-offline' }).checks[1].labelKey).toBe(
       'administration.slip.checks.keyerMissing',
     );
     // An empty string counts as missing, like the schema's length check.

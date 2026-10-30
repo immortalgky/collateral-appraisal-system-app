@@ -105,8 +105,15 @@ export const correctSavedSelection = (
   },
 ): AssignmentFormType => {
   if (isReadOnly) return values;
+  // The in-system pick is not the company the bank engaged off-system: the admin picks that one anew.
   if (!canAssignCompanyInSystem && values.assignmentType === 'external')
-    return { ...values, assignmentType: 'external-offline', assignmentMethod: 'manual' };
+    return {
+      ...values,
+      assignmentType: 'external-offline',
+      assignmentMethod: 'manual',
+      companyId: null,
+      selectedCompany: null,
+    };
   if (isInternalDisabled && values.assignmentType === 'internal')
     return {
       ...values,

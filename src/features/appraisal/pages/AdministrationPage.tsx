@@ -112,7 +112,7 @@ const FIX_FOCUS_TARGET =
 /** Track width of the Manual / Round-robin choice (the off-system keyer's and the follow-up staff's). */
 const TWO_WAY_CHOICE_WIDTH = 'max-w-[18.5rem]';
 
-type FixTarget = 'type' | 'assignee' | 'followup' | 'fee' | 'remarks' | 'quotation';
+type FixTarget = 'type' | 'company' | 'assignee' | 'followup' | 'fee' | 'remarks' | 'quotation';
 
 const AdministrationPage = () => {
   const { t } = useTranslation('appraisal');
@@ -259,10 +259,13 @@ const AdministrationPage = () => {
   const needsPreselectCheck = !!previousCompany?.mouActive && canPreselect;
   // Which appraisal the form has been seeded for (see the seed below).
   const [seededAppraisalId, setSeededAppraisalId] = useState<string | undefined>(undefined);
-  // After the seed only an external type needs the list (picker, change-company dialog); what the
-  // banner reads stays in the query cache, so switching type does not lose it.
+  // After the seed only an external type (in-system or off-system) needs the list (picker,
+  // change-company dialog); what the banner reads stays in the query cache, so switching type does
+  // not lose it.
   const isEligibleListWanted =
-    assignmentType === 'external' || (needsPreselectCheck && seededAppraisalId !== appraisalId);
+    assignmentType === 'external' ||
+    assignmentType === 'external-offline' ||
+    (needsPreselectCheck && seededAppraisalId !== appraisalId);
   const { data: eligibleCompanies, isFetching: isFetchingEligibleCompanies } =
     useGetEligibleCompanies(bankingSegment, isEligibleListWanted);
   const previousCompanyListed = previousCompany
@@ -324,11 +327,14 @@ const AdministrationPage = () => {
     ],
   );
   // A saved draft can still carry 'external' from before the switch was thrown. Move it to the
-  // offline equivalent for the same reason — a disabled option must never remain selected.
+  // offline equivalent for the same reason — a disabled option must never remain selected. Its
+  // in-system company goes too (as correctSavedSelection does): the off-system one is picked anew.
   useEffect(() => {
     if (!isReadOnly && !canAssignCompanyInSystem && assignmentType === 'external') {
       setValue('assignmentType', 'external-offline');
       setValue('assignmentMethod', 'manual');
+      setValue('selectedCompany', null);
+      setValue('companyId', null);
     }
   }, [isReadOnly, canAssignCompanyInSystem, assignmentType, setValue]);
 
@@ -449,17 +455,26 @@ const AdministrationPage = () => {
     }
     // Any other company than the previous one is asked about, whatever is selected now (also after
     // a clear, or a switch of type and back); picking the previous company itself is applied.
-    if (previousCompany && isPreviousCompanyEligible && company.id !== previousCompany.companyId) {
+    // Only for an in-system pick: the off-system company is the one the bank already engaged.
+    if (
+      getValues('assignmentType') === 'external' &&
+      previousCompany &&
+      isPreviousCompanyEligible &&
+      company.id !== previousCompany.companyId
+    ) {
       setPendingCompany(company);
       return;
     }
     applyCompany(company);
   };
+  // The off-system company has a check of its own; the in-system one is the assignee.
+  const companyCheckId = (): SlipCheckId =>
+    getValues('assignmentType') === 'external-offline' ? 'company' : 'assignee';
   const clearCompany = () => {
     setValue('selectedCompany', null, { shouldDirty: true });
     setValue('companyId', null, { shouldDirty: true });
     setPreviousPreselected(false);
-    touch('assignee');
+    touch(companyCheckId());
   };
   // "Keep the previous company": drops the pick and selects the previous company (the same two
   // fields a normal select writes). If it is already the selected one nothing is written, so the
@@ -523,7 +538,7 @@ const AdministrationPage = () => {
     }
     setPreviousPreselected(false);
     // The picks were just cleared: their fields start fresh, not red.
-    untouch('assignee', 'followup');
+    untouch('company', 'assignee', 'followup');
   };
 
   // Update form when data is fetched. A fresh row is seeded once per appraisal when every input is
@@ -715,9 +730,9 @@ const AdministrationPage = () => {
     // AssignmentType value object only accepts those two codes. The "quotation" choice
     // lives on assignmentMethod, not on assignmentType.
     //
-    // Off-system external counts as External for the backend value object, but nothing is
-    // selected here: the keyer records the company and the book date at int-offline-book-keyin,
-    // so company / followup-staff fields are all sent null.
+    // Off-system external counts as External for the backend value object. Its company is the
+    // admin's manual pick (the keyer records only the book date at int-offline-book-keyin); it has
+    // no follow-up staff.
     const isOfflineExternal = data.assignmentType === 'external-offline';
     const isExternal = data.assignmentType === 'external' || isOfflineExternal;
     const isQuotationMethod = data.assignmentMethod === 'quotation';
@@ -727,8 +742,9 @@ const AdministrationPage = () => {
 
     // For quotation method on an external assignment, send the finalized winner's company id
     // (not whatever was previously selected manually).
-    const resolvedAssigneeCompanyId =
-      isExternal && !isOfflineExternal
+    const resolvedAssigneeCompanyId = isOfflineExternal
+      ? data.companyId
+      : isExternal
         ? isQuotationMethod && quotationWinner
           ? quotationWinner.companyId
           : isManualMethod
@@ -743,8 +759,9 @@ const AdministrationPage = () => {
       : isExternal
         ? ('EXT' as const)
         : ('INT' as const);
-    const resolvedAssigneeCompanyName =
-      isExternal && !isOfflineExternal
+    const resolvedAssigneeCompanyName = isOfflineExternal
+      ? (data.selectedCompany?.companyName ?? null)
+      : isExternal
         ? isQuotationMethod && quotationWinner
           ? quotationWinner.companyName
           : isManualMethod
@@ -821,9 +838,9 @@ const AdministrationPage = () => {
         // draft came back with the picker empty.
         assigneeUserId:
           isExternal && !isDraftOfflineExternal ? null : isManualMethod ? data.staffId : null,
-        // Off-system external picks no company here — the keyer records it later.
+        // Off-system external always keeps its company (a manual pick, whatever the keyer method).
         assigneeCompanyId:
-          isExternal && !isDraftOfflineExternal && isManualMethod ? data.companyId : null,
+          isDraftOfflineExternal || (isExternal && isManualMethod) ? data.companyId : null,
         assignmentMethod: isDraftOfflineExternal ? OFFLINE_DRAFT_METHOD : data.assignmentMethod,
         internalAppraiserId: isExternal && !isDraftOfflineExternal ? data.followupStaffId : null,
         internalFollowupAssignmentMethod:
@@ -907,6 +924,7 @@ const AdministrationPage = () => {
       ? message
       : undefined;
   const typeError = fieldError('type', t('validation.assignmentTypeRequired'));
+  const offlineCompanyError = fieldError('company', t('validation.selectCompany'));
   const assigneeError = fieldError(
     'assignee',
     isExternalType ? t('validation.selectCompany') : t('validation.selectAssignee'),
@@ -1070,6 +1088,48 @@ const AdministrationPage = () => {
     </>
   );
 
+  // The form's company (in-system manual pick or the off-system company), as a picker.
+  const renderCompanyPicker = (o: { labelId: string; canEdit: boolean; error?: string }) => (
+    <>
+      {selectedCompany ? (
+        <CompanyDisplay
+          company={selectedCompany}
+          badge={
+            previousCompany?.companyId === selectedCompany.id ? previousCompanyBadge : undefined
+          }
+          onChange={o.canEdit ? openCompanyModal : undefined}
+          onClear={o.canEdit ? clearCompany : undefined}
+        />
+      ) : companyId ? (
+        // The saved id whose company record could not be looked up: shown as it is
+        // stored (the assignment carries no company name), never as "not selected".
+        <StoredCode
+          code={companyId}
+          changeLabel={t('administration.changeCompanyButton')}
+          onChange={o.canEdit ? openCompanyModal : undefined}
+          onClear={o.canEdit ? clearCompany : undefined}
+        />
+      ) : o.canEdit ? (
+        <PickerButton
+          placeholder={t('administration.manualCompany.placeholder')}
+          onClick={openCompanyModal}
+          invalid={!!o.error}
+          labelledBy={o.labelId}
+        />
+      ) : (
+        isReadOnly && (
+          <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
+        )
+      )}
+      <FieldError>{o.error}</FieldError>
+    </>
+  );
+
+  // The form's company as the slip names it: the looked-up record, else the stored id.
+  const companyLabel = selectedCompany
+    ? localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal)
+    : companyId;
+
   const slipProps: AssignmentSlipProps = {
     subtitle: reportNo,
     readOnly: isReadOnly,
@@ -1080,11 +1140,10 @@ const AdministrationPage = () => {
     // not resolve to a person is still the record's own value.
     assigneeName: isStaffAssignee
       ? staffPersonLabel(selectedStaff, staffId, storedAssigneeName)
-      : selectedCompany
-        ? localizeCompanyName(selectedCompany.companyName, selectedCompany.companyNameLocal)
-        : companyId,
+      : companyLabel,
     isPreviousCompany:
       isExternalType && !!selectedCompany && selectedCompany.id === previousCompany?.companyId,
+    offlineCompanyName: assignmentType === 'external-offline' ? companyLabel : null,
     followupMethod: followupStaffMethod,
     followupName: staffPersonLabel(selectedFollowupStaff, followupStaffId, storedFollowupName),
     quotationWinnerName: quotationWinner
@@ -1203,16 +1262,28 @@ const AdministrationPage = () => {
                 </div>
               </FormCard>
 
-              {/* Off-system external: nothing to select here. The company and the book's appraisal
-                  date are recorded by the keyer at int-offline-book-keyin, who has the paper book. */}
+              {/* Off-system external: the company the bank engaged (always picked by hand) and who
+                  keys its book in. The keyer records only the book's appraisal date at key-in. */}
               {assignmentType === 'external-offline' && (
                 <FormCard
                   title={t('administration.offlineExternal.title')}
                   subtitle={t('administration.offlineExternal.subtitle')}
                 >
+                  <div ref={sectionRef('company')}>
+                    <FieldLabel id={`${labelsId}-offline-company`} required={!isReadOnly} first>
+                      {t('administration.offlineExternal.companyLabel')}
+                    </FieldLabel>
+                    {/* Like the keyer picker, not held by the quotation lock. */}
+                    {renderCompanyPicker({
+                      labelId: `${labelsId}-offline-company`,
+                      canEdit: !isReadOnly,
+                      error: offlineCompanyError,
+                    })}
+                  </div>
+
                   {/* Who keys the book in. The person is an internal appraiser, but the decision
                       belongs to this engagement and reads as part of it. */}
-                  <FieldLabel id={`${labelsId}-keyer`} required={!isReadOnly} first>
+                  <FieldLabel id={`${labelsId}-keyer`} required={!isReadOnly}>
                     {t('administration.offlineExternal.keyerMethodLabel')}
                   </FieldLabel>
                   <Controller
@@ -1304,41 +1375,11 @@ const AdministrationPage = () => {
                       <FieldLabel id={`${labelsId}-company`} required={!isReadOnly}>
                         {t('administration.manualCompany.label')}
                       </FieldLabel>
-                      {selectedCompany ? (
-                        <CompanyDisplay
-                          company={selectedCompany}
-                          badge={
-                            previousCompany?.companyId === selectedCompany.id
-                              ? previousCompanyBadge
-                              : undefined
-                          }
-                          onChange={canEditAssignment ? openCompanyModal : undefined}
-                          onClear={canEditAssignment ? clearCompany : undefined}
-                        />
-                      ) : companyId ? (
-                        // The saved id whose company record could not be looked up: shown as it is
-                        // stored (the assignment carries no company name), never as "not selected".
-                        <StoredCode
-                          code={companyId}
-                          changeLabel={t('administration.changeCompanyButton')}
-                          onChange={canEditAssignment ? openCompanyModal : undefined}
-                          onClear={canEditAssignment ? clearCompany : undefined}
-                        />
-                      ) : canEditAssignment ? (
-                        <PickerButton
-                          placeholder={t('administration.manualCompany.placeholder')}
-                          onClick={openCompanyModal}
-                          invalid={!!assigneeError}
-                          labelledBy={`${labelsId}-company`}
-                        />
-                      ) : (
-                        isReadOnly && (
-                          <p className="text-sm text-(--palette-gray-500)">
-                            {t('administration.noData')}
-                          </p>
-                        )
-                      )}
-                      <FieldError>{assigneeError}</FieldError>
+                      {renderCompanyPicker({
+                        labelId: `${labelsId}-company`,
+                        canEdit: canEditAssignment,
+                        error: assigneeError,
+                      })}
                     </div>
                   )}
 
@@ -1507,7 +1548,7 @@ const AdministrationPage = () => {
             isOpen={isCompanyModalOpen}
             onClose={() => {
               closeCompanyModal();
-              touch('assignee');
+              touch(companyCheckId());
             }}
             onSelect={handleCompanySelect}
             eligibleCompanies={eligibleCompanies}
