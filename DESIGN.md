@@ -266,13 +266,13 @@ approved on the canvas boards 16 and 18, ticket #534). Outside the form system, 
 
 - `variant="cards"` for the main decision (assignment type): one radio card per option, a row of equal columns
   once the card is 40rem wide (stacked below). Card `rounded-section border border-(--palette-line)
-bg-(--palette-surface) px-3 py-2.5`, a 16px radio dot, label `font-semibold`, a one-line description
+bg-(--palette-surface) px-3 py-2.5`, a `size-4` (14px) radio dot, label `font-semibold`, a one-line description
   `text-xs text-(--palette-gray-500)`. Selected: `border-primary bg-(--palette-accent-wash)` plus a 1px inset
   primary ring, label `text-(--palette-accent-ink)`. A disabled option is a `bg-(--palette-surface-2)` card
   whose description is replaced by a short reason; no opacity fade.
 - `variant="segmented"` (default) for sub-choices (method, follow-up, keyer): track `h-ctl rounded-ctl border
 border-(--palette-line) bg-(--palette-surface-3)`, options `h-8 rounded-ctl-c text-sm font-medium`; the selected
-  option is a white pill (`bg-(--palette-surface)`, small shadow; dark `--palette-line-soft`, no shadow) with
+  option is a white pill (`bg-(--palette-surface) shadow-xs ring-1 ring-black/5`; dark `--palette-line-soft`, no shadow) with
   `text-(--palette-accent-ink)` semibold. The selected option's explanation is one grey hint line under the
   track (`mt-1.5 text-xs text-(--palette-gray-500)`), never a callout box.
 - A locked group (read-only, quotation lock) keeps its selection visible in grey, not teal, shows no hint line

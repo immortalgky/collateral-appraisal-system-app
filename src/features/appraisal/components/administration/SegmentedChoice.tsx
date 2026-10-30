@@ -161,7 +161,7 @@ export default function SegmentedChoice<V extends string>({
                 checked
                   ? // Dark: the card colour sits below the track, so the pill takes a lighter line tone.
                     clsx(
-                      'bg-(--palette-surface) font-semibold shadow-[0_1px_2px_rgb(16_24_40/0.10),0_0_0_1px_rgb(16_24_40/0.05)] dark:bg-(--palette-line-soft) dark:shadow-none',
+                      'bg-(--palette-surface) font-semibold shadow-xs ring-1 ring-black/5 dark:bg-(--palette-line-soft) dark:shadow-none dark:ring-0',
                       on ? 'text-(--palette-accent-ink)' : 'text-(--palette-ink-2)',
                     )
                   : off

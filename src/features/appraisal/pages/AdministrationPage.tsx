@@ -874,7 +874,7 @@ const AdministrationPage = () => {
   const isExternalType = assignmentType === 'external';
   // The pickers: not while read-only, nor while a quotation owns the appraisal (the off-system
   // keyer picker is the one that ignores the quotation lock, as before).
-  const canEditPicker = !isReadOnly && !isLockedByQuotation;
+  const canEditAssignment = !isReadOnly && !isLockedByQuotation;
 
   const slipResult = computeSlipChecks({
     assignmentType: assignmentType ?? '',
@@ -1189,13 +1189,13 @@ const AdministrationPage = () => {
                           touch('type');
                         }}
                         variant="cards"
-                        disabled={isReadOnly || isLockedByQuotation}
+                        disabled={!canEditAssignment}
                       />
                     )}
                   />
                   <FieldError>{typeError}</FieldError>
                   {/* What to pick instead; nothing to pick while the type choice is locked. */}
-                  {!canAssignCompanyInSystem && !isReadOnly && !isLockedByQuotation && (
+                  {!canAssignCompanyInSystem && canEditAssignment && (
                     <p className="mt-2 text-xs text-(--palette-warn)">
                       {t('administration.assignmentType.externalDisabledHint')}
                     </p>
@@ -1224,7 +1224,7 @@ const AdministrationPage = () => {
                         options={keyerOptions}
                         value={field.value === 'quotation' ? '' : field.value}
                         onChange={field.onChange}
-                        disabled={isReadOnly || isLockedByQuotation}
+                        disabled={!canEditAssignment}
                         className={TWO_WAY_CHOICE_WIDTH}
                       />
                     )}
@@ -1273,7 +1273,7 @@ const AdministrationPage = () => {
                         options={methodOptions}
                         value={field.value}
                         onChange={field.onChange}
-                        disabled={isReadOnly || isLockedByQuotation}
+                        disabled={!canEditAssignment}
                       />
                     )}
                   />
@@ -1292,7 +1292,7 @@ const AdministrationPage = () => {
                         labelId: `${labelsId}-staff`,
                         onOpen: openStaffModal,
                         onClear: clearStaff,
-                        canEdit: canEditPicker,
+                        canEdit: canEditAssignment,
                         error: assigneeError,
                       })}
                     </div>
@@ -1312,8 +1312,8 @@ const AdministrationPage = () => {
                               ? previousCompanyBadge
                               : undefined
                           }
-                          onChange={canEditPicker ? openCompanyModal : undefined}
-                          onClear={canEditPicker ? clearCompany : undefined}
+                          onChange={canEditAssignment ? openCompanyModal : undefined}
+                          onClear={canEditAssignment ? clearCompany : undefined}
                         />
                       ) : companyId ? (
                         // The saved id whose company record could not be looked up: shown as it is
@@ -1321,10 +1321,10 @@ const AdministrationPage = () => {
                         <StoredCode
                           code={companyId}
                           changeLabel={t('administration.changeCompanyButton')}
-                          onChange={canEditPicker ? openCompanyModal : undefined}
-                          onClear={canEditPicker ? clearCompany : undefined}
+                          onChange={canEditAssignment ? openCompanyModal : undefined}
+                          onClear={canEditAssignment ? clearCompany : undefined}
                         />
-                      ) : canEditPicker ? (
+                      ) : canEditAssignment ? (
                         <PickerButton
                           placeholder={t('administration.manualCompany.placeholder')}
                           onClick={openCompanyModal}
@@ -1362,7 +1362,7 @@ const AdministrationPage = () => {
                             options={followupOptions}
                             value={field.value}
                             onChange={handleFollowupMethodChange}
-                            disabled={isReadOnly || isLockedByQuotation}
+                            disabled={!canEditAssignment}
                             className={TWO_WAY_CHOICE_WIDTH}
                           />
                         )}
@@ -1379,7 +1379,7 @@ const AdministrationPage = () => {
                             labelId: `${labelsId}-followup`,
                             onOpen: openFollowupStaffModal,
                             onClear: clearFollowupStaff,
-                            canEdit: canEditPicker,
+                            canEdit: canEditAssignment,
                             error: followupError,
                           })}
                         </div>
