@@ -2174,6 +2174,48 @@ describe('AdministrationPage: the off-system (EXTO) company', () => {
     expect(screen.getByText('administration.offlineExternal.companyLabel')).toBeInTheDocument();
   });
 
+  it('holds the company and the keyer under a quotation lock, like every other choice', async () => {
+    state.staff = [
+      {
+        id: 'K-1',
+        employeeId: 'K-1',
+        name: 'Keyer',
+        email: '',
+        department: '',
+        avatar: null,
+        currentWorkload: 0,
+      },
+    ];
+    state.assignments = [
+      {
+        ...draftAssignment,
+        assignmentType: 'External',
+        assignmentMethod: 'Offline',
+        assigneeUserId: 'K-1',
+        assigneeCompanyId: 'c-old',
+      },
+    ];
+    state.none = [
+      {
+        id: 'SENT',
+        quotationNumber: 'QT-SENT',
+        status: 'Sent',
+        requestDate: '2026-10-01',
+        selectedAt: null,
+      },
+    ];
+    render(<AdministrationPage />);
+
+    expect(await screen.findByText('Old Co', { selector: 'span' })).toBeInTheDocument();
+    expect(screen.getAllByText('Keyer', { exact: false }).length).toBeGreaterThan(0);
+    expect(
+      screen.queryByRole('button', { name: 'administration.clearSelection' }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('button', { name: 'administration.changeCompanyButton' }),
+    ).not.toBeInTheDocument();
+  });
+
   it('shows the EXTO company on the read-only page, with no way to change it', async () => {
     state.assignments = [
       {

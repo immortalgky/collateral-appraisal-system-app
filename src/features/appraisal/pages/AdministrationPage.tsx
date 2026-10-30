@@ -889,8 +889,7 @@ const AdministrationPage = () => {
 
   const isStaffAssignee = assignmentType === 'internal' || assignmentType === 'external-offline';
   const isExternalType = assignmentType === 'external';
-  // The pickers: not while read-only, nor while a quotation owns the appraisal (the off-system
-  // keyer picker is the one that ignores the quotation lock, as before).
+  // Every choice and picker: not while read-only, nor while a quotation owns the appraisal.
   const canEditAssignment = !isReadOnly && !isLockedByQuotation;
 
   const slipResult = computeSlipChecks({
@@ -1273,10 +1272,9 @@ const AdministrationPage = () => {
                     <FieldLabel id={`${labelsId}-offline-company`} required={!isReadOnly} first>
                       {t('administration.offlineExternal.companyLabel')}
                     </FieldLabel>
-                    {/* Like the keyer picker, not held by the quotation lock. */}
                     {renderCompanyPicker({
                       labelId: `${labelsId}-offline-company`,
-                      canEdit: !isReadOnly,
+                      canEdit: canEditAssignment,
                       error: offlineCompanyError,
                     })}
                   </div>
@@ -1311,7 +1309,7 @@ const AdministrationPage = () => {
                         labelId: `${labelsId}-keyer`,
                         onOpen: openStaffModal,
                         onClear: clearStaff,
-                        canEdit: !isReadOnly,
+                        canEdit: canEditAssignment,
                         error: assigneeError,
                       })}
                     </div>
