@@ -74,16 +74,6 @@ export function FieldError({ children }: { children?: ReactNode }) {
   );
 }
 
-/** Dashed note under a choice: what the automatic option does. */
-export function InfoNote({ title, children }: { title?: string; children: ReactNode }) {
-  return (
-    <div className="mt-2 rounded-lg border border-dashed border-(--palette-line-strong) bg-(--palette-surface-2) px-3 py-2 text-xs text-(--palette-gray-600)">
-      {title && <p className="font-medium text-(--palette-ink)">{title}</p>}
-      <p>{children}</p>
-    </div>
-  );
-}
-
 const NOTICE_TONES = {
   gray: {
     box: 'border-(--palette-line) bg-(--palette-surface-3) text-(--palette-gray-600)',

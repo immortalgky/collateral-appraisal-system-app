@@ -398,13 +398,14 @@
       "title": "分配类型",
       "subtitle": "选择内部分配或外部公司",
       "internal": "内部评估",
-      "internalDesc": "分配给内部评估人员",
+      "internalDesc": "由银行内部评估人员完成",
       "external": "外部公司",
-      "externalDesc": "分配给外部评估公司",
+      "externalDesc": "评估公司在系统内作业",
       "externalOffline": "外部公司（系统外评估）",
-      "externalOfflineDesc": "在系统外委托公司，由内部人员录入其评估报告",
-      "internalDisabledHint": "授信额度超过 5000 万时不可内部分配",
-      "externalDisabledHint": "目前无法在系统内分配给外部公司——评估公司在系统外受委托。请使用“外部公司（系统外评估）”记录此类委托，或分配给内部人员。"
+      "externalOfflineDesc": "系统外委托，由内部人员录入报告",
+      "externalDisabledHint": "目前无法在系统内分配给外部公司——评估公司在系统外受委托。请使用“外部公司（系统外评估）”记录此类委托，或分配给内部人员。",
+      "internalDisabledReason": "授信额度超过 5000 万",
+      "externalDisabledReason": "暂时停用"
     },
     "offlineExternal": {
       "title": "系统外委托外部公司",
@@ -419,8 +420,7 @@
       "methodLabel": "分配方式",
       "manual": "手动选择",
       "manualDesc": "选择指定的被分配人",
-      "roundrobin": "轮询",
-      "roundrobinDesc": "系统根据工作负载自动分配",
+      "roundrobin": "自动",
       "quotation": "请求报价",
       "quotationDesc": "先向公司请求报价"
     },
@@ -433,16 +433,11 @@
       "placeholder": "点击搜索并选择外部公司..."
     },
     "roundrobinInfo": {
-      "title": "轮询分配",
       "internalDesc": "系统将根据当前工作负载分配情况，自动将此估价分配给下一位可用员工。",
       "externalDesc": "系统将根据轮换计划，自动将此估价分配给下一家外部公司。"
     },
     "followupStaff": {
       "label": "内部跟进人员",
-      "manualLabel": "手动选择",
-      "manualDesc": "选择指定员工",
-      "roundrobinLabel": "轮询",
-      "roundrobinDesc": "系统自动分配",
       "roundrobinInfo": "系统将根据轮询分配自动指定跟进人员。",
       "placeholder": "点击搜索并选择内部跟进人员..."
     },
@@ -538,7 +533,7 @@
       "previousCompany": "（原公司）",
       "notSelected": "尚未选择",
       "awaitingWinner": "等待中标者",
-      "auto": "自动分配",
+      "auto": "自动",
       "fee": {
         "total": "合计",
         "beforeVat": "不含增值税 {{amount}}",

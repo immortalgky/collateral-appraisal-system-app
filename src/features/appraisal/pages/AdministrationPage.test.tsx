@@ -227,6 +227,7 @@ const feePreview = {
 };
 
 beforeEach(() => {
+  state.request = { detail: { loanDetail: { bankingSegment: 'SME', facilityLimit: 1_000_000 } } };
   state.none = [];
   state.quotationDetails = {};
   state.defaults = undefined;
@@ -316,6 +317,36 @@ describe('AdministrationPage: previous inspection company', () => {
     expect(await screen.findByText('administration.previousCompany.title')).toBeInTheDocument();
     expect(screen.queryByText(/previousCompany\.hint/)).not.toBeInTheDocument();
     expect(screen.queryByText('Old Co')).not.toBeInTheDocument();
+  });
+
+  it('shows the internal card disabled with its reason when the facility limit is over 50 million', async () => {
+    setDefaults(null);
+    state.request = {
+      detail: { loanDetail: { bankingSegment: 'SME', facilityLimit: 60_000_000 } },
+    };
+    render(<AdministrationPage />);
+
+    const internal = await screen.findByRole('radio', {
+      name: 'administration.assignmentType.internal',
+    });
+    expect(internal).toHaveAttribute('aria-disabled', 'true');
+    expect(internal).toHaveAccessibleDescription(
+      'administration.assignmentType.internalDisabledReason',
+    );
+  });
+
+  it('shows the in-system external card dimmed with its reason while in-system assignment is off', async () => {
+    setDefaults(previousCompany());
+    state.killSwitch = { key: 'k', value: 'false', valueType: 'bool', isActive: true };
+    render(<AdministrationPage />);
+
+    const external = await screen.findByRole('radio', {
+      name: 'administration.assignmentType.external',
+    });
+    expect(external).toHaveAttribute('aria-disabled', 'true');
+    expect(external).toHaveAccessibleDescription(
+      'administration.assignmentType.externalDisabledReason',
+    );
   });
 
   // The seed waits for the eligible list only when a preselect can happen. Here the list never
@@ -965,6 +996,18 @@ describe('AdministrationPage: the slip actions', () => {
       internalFollowupAssignmentMethod: 'roundrobin',
       remark: 'note',
     });
+  });
+
+  it('explains round-robin with one hint line per choice, not an info box', async () => {
+    externalManual();
+    const { user } = render(<AdministrationPage />);
+    await screen.findByText('administration.assignmentDetails.manualDesc');
+
+    await user.click(screen.getAllByTitle('administration.assignmentDetails.roundrobin')[0]);
+    expect(
+      await screen.findByText('administration.roundrobinInfo.externalDesc'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('administration.assignmentDetails.manualDesc')).toBeNull();
   });
 
   it('does not save a company left in the form after switching to round-robin', async () => {
@@ -1944,7 +1987,8 @@ describe('AdministrationPage: the watched fields drive the form', () => {
     currentWorkload: 0,
   };
   // The groups in page order: type, method, then the follow-up method (external only).
-  const methodGroup = () => screen.getAllByRole('radiogroup')[1];
+  const methodGroup = () =>
+    screen.getByRole('radiogroup', { name: 'administration.assignmentDetails.methodLabel' });
   const methodRadio = (name: 'manual' | 'roundrobin') =>
     within(methodGroup()).getByRole('radio', {
       name: new RegExp(`administration\\.assignmentDetails\\.${name}`),
