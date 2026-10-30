@@ -75,6 +75,10 @@ export default function SegmentedChoice<V extends string>({
       >
         {options.map(option => {
           const checked = option.value === value;
+          // Every Radio gets the group lock too: Headless UI lets an explicit `disabled={false}` on a
+          // Radio override the group's. ponytail: a selected option that is disabled has tabIndex
+          // -1, and so do the rest, so Tab skips the group until the value is cleared (the
+          // Administration page clears it); a focusable-but-aria-disabled radio needs a custom group.
           const off = disabled || !!option.disabled;
           // Teal only where it can still be chosen; a locked selection is grey.
           const on = checked && !off;
@@ -87,7 +91,7 @@ export default function SegmentedChoice<V extends string>({
               <Field key={option.value} className="flex">
                 <Radio
                   value={option.value}
-                  disabled={option.disabled}
+                  disabled={off}
                   className={clsx(
                     'flex flex-1 items-start gap-2.5 rounded-section border px-3 py-2.5 text-left transition-colors select-none',
                     off ? 'cursor-not-allowed' : 'cursor-pointer',
@@ -144,7 +148,7 @@ export default function SegmentedChoice<V extends string>({
             <Radio
               key={option.value}
               value={option.value}
-              disabled={option.disabled}
+              disabled={off}
               title={option.label}
               className={clsx(
                 // flex-auto: grow from the label's own width, so a long Thai label gets more room

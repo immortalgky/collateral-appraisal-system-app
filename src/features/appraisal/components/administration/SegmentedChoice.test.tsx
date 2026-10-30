@@ -69,6 +69,21 @@ describe('SegmentedChoice', () => {
     );
   });
 
+  it('the hint describes the group, not each option', () => {
+    render(<Harness initial="internal" />);
+    expect(screen.getByRole('radio', { name: 'External' })).not.toHaveAccessibleDescription(
+      'Own staff',
+    );
+  });
+
+  it('a locked group marks every option disabled, even one marked enabled', () => {
+    const options = OPTIONS.map(option => ({ ...option, disabled: false }));
+    render(<Harness initial="internal" options={options} disabled />);
+    for (const radio of screen.getAllByRole('radio')) {
+      expect(radio).toHaveAttribute('aria-disabled', 'true');
+    }
+  });
+
   it('a locked group shows no hint', () => {
     render(<Harness initial="internal" disabled />);
     expect(screen.queryByText('Own staff')).not.toBeInTheDocument();
@@ -132,6 +147,7 @@ describe('SegmentedChoice', () => {
       const options: SegmentedOption<V>[] = [
         OPTIONS[0],
         { ...OPTIONS[1], disabled: true, disabledReason: 'Paused for now' },
+        { ...OPTIONS[2], disabled: false },
       ];
       const { user } = render(
         <Harness initial="internal" variant="cards" options={options} onChange={onChange} />,

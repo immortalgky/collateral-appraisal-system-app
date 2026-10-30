@@ -1194,7 +1194,8 @@ const AdministrationPage = () => {
                     )}
                   />
                   <FieldError>{typeError}</FieldError>
-                  {!canAssignCompanyInSystem && (
+                  {/* What to pick instead; nothing to pick while the type choice is locked. */}
+                  {!canAssignCompanyInSystem && !isReadOnly && !isLockedByQuotation && (
                     <p className="mt-2 text-xs text-(--palette-warn)">
                       {t('administration.assignmentType.externalDisabledHint')}
                     </p>
@@ -1262,9 +1263,7 @@ const AdministrationPage = () => {
                   subtitle={t('administration.assignmentDetails.subtitle')}
                 >
                   {/* Assignment Method */}
-                  <FieldLabel id={`${labelsId}-method`} first>
-                    {t('administration.assignmentDetails.methodLabel')}
-                  </FieldLabel>
+                  <FieldLabel first>{t('administration.assignmentDetails.methodLabel')}</FieldLabel>
                   <Controller
                     name="assignmentMethod"
                     control={control}
