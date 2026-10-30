@@ -25,7 +25,7 @@ interface SegmentedChoiceProps<V extends string> {
    * decision (assignment type).
    */
   variant?: 'segmented' | 'cards';
-  /** The whole control: dimmed, not selectable. */
+  /** The whole control: greyed out (the selection stays visible, in grey), not selectable. */
   disabled?: boolean;
   /** The visible label lives outside; give the group its name one way or the other. */
   ariaLabel?: string;
@@ -67,7 +67,7 @@ export default function SegmentedChoice<V extends string>({
         aria-describedby={hint ? descriptionId : undefined}
         className={clsx(
           cards
-            ? 'grid grid-cols-1 gap-2 @[40rem]:grid-cols-3'
+            ? 'grid grid-cols-1 gap-2 @[40rem]:auto-cols-fr @[40rem]:grid-flow-col'
             : // The text-control height (DESIGN 17.3); the h-8 options sit centred in it.
               'flex h-ctl items-center gap-0.5 rounded-ctl border border-(--palette-line) bg-(--palette-surface-3) px-[0.2143rem]',
           'text-sm',
@@ -77,9 +77,14 @@ export default function SegmentedChoice<V extends string>({
         {options.map(option => {
           const checked = option.value === value;
           const off = disabled || !!option.disabled;
+          // Teal only where it can still be chosen; a locked selection is grey (17.5).
+          const on = checked && !off;
           if (cards) {
+            // A saved pick that is now disabled still says what it is.
             const text =
-              option.disabled && option.disabledReason ? option.disabledReason : option.description;
+              option.disabled && !checked && option.disabledReason
+                ? option.disabledReason
+                : option.description;
             // Field: the card is named by its label and described by the line under it (without
             // it, Headless UI v2 hands a Label inside a Radio to the group).
             return (
@@ -91,10 +96,13 @@ export default function SegmentedChoice<V extends string>({
                     'flex flex-1 items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors select-none',
                     off ? 'cursor-not-allowed' : 'cursor-pointer',
                     // Disabled is a grey fill, not a fade, so the reason stays readable (17.5).
-                    checked
+                    on
                       ? 'border-primary bg-(--palette-accent-wash) shadow-[inset_0_0_0_1px_var(--color-primary)]'
                       : off
-                        ? 'border-(--palette-line) bg-(--palette-surface-2)'
+                        ? clsx(
+                            'bg-(--palette-surface-2)',
+                            checked ? 'border-(--palette-line-strong)' : 'border-(--palette-line)',
+                          )
                         : 'border-(--palette-line) bg-(--palette-surface) hover:border-(--palette-input-edge-hover)',
                   )}
                 >
@@ -102,9 +110,11 @@ export default function SegmentedChoice<V extends string>({
                     aria-hidden="true"
                     className={clsx(
                       'mt-0.5 size-4 shrink-0 rounded-full bg-(--form-input-bg)',
-                      checked
+                      on
                         ? 'border-[5px] border-primary'
-                        : 'border-[1.5px] border-(--palette-input-edge-hover)',
+                        : checked
+                          ? 'border-[5px] border-(--palette-ink-3)'
+                          : 'border-[1.5px] border-(--palette-input-edge-hover)',
                     )}
                   />
                   <span className="min-w-0">
@@ -112,9 +122,9 @@ export default function SegmentedChoice<V extends string>({
                       as="span"
                       className={clsx(
                         'block font-semibold',
-                        checked
+                        on
                           ? 'text-(--palette-accent-ink)'
-                          : off
+                          : off && !checked
                             ? 'text-(--palette-ink-2)'
                             : 'text-(--palette-ink)',
                       )}
@@ -146,7 +156,11 @@ export default function SegmentedChoice<V extends string>({
                 'flex h-8 min-w-0 flex-auto items-center justify-center gap-1.5 rounded-ctl-c px-3 font-medium transition-colors select-none',
                 off ? 'cursor-not-allowed' : 'cursor-pointer',
                 checked
-                  ? 'bg-(--palette-surface) font-semibold text-(--palette-accent-ink) shadow-[0_1px_2px_rgb(16_24_40/0.10),0_0_0_1px_rgb(16_24_40/0.05)]'
+                  ? // Dark: the card colour sits below the track, so the pill takes a lighter line tone.
+                    clsx(
+                      'bg-(--palette-surface) font-semibold shadow-[0_1px_2px_rgb(16_24_40/0.10),0_0_0_1px_rgb(16_24_40/0.05)] dark:bg-(--palette-line-soft) dark:shadow-none',
+                      on ? 'text-(--palette-accent-ink)' : 'text-(--palette-ink-2)',
+                    )
                   : off
                     ? 'text-(--palette-ink-3)'
                     : 'text-(--palette-gray-600) hover:text-(--palette-ink)',

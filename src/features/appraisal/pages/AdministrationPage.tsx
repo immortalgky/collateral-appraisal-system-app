@@ -936,7 +936,8 @@ const AdministrationPage = () => {
       value: 'internal',
       label: t('administration.assignmentType.internal'),
       description: t('administration.assignmentType.internalDesc'),
-      disabled: isInternalDisabled || isLockedByQuotation,
+      // A quotation lock disables the whole group, not this option.
+      disabled: isInternalDisabled,
       disabledReason: isInternalDisabled
         ? t('administration.assignmentType.internalDisabledReason')
         : undefined,
@@ -945,8 +946,8 @@ const AdministrationPage = () => {
       value: 'external',
       label: t('administration.assignmentType.external'),
       description: t('administration.assignmentType.externalDesc'),
-      // Shown but disabled while the go-live switch is off, with the hint below explaining why —
-      // mirroring how isInternalDisabled is handled. Submitting it would reach company-selection,
+      // Shown but disabled while the go-live switch is off: the card gives the short reason and the
+      // hint below says what to use instead. Submitting it would reach company-selection,
       // which escalates the case straight back here; leaving it visible tells the admin the path
       // exists and is paused, rather than silently removing an option they expect to see.
       disabled: !canAssignCompanyInSystem,
