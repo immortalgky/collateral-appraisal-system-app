@@ -1050,7 +1050,7 @@
         "machineTechnology": "Machinery Technology",
         "other": "Other",
         "machineParts": "Machinery Parts",
-        "remark": "Remark",
+        "remark": "Property List Remark",
         "appraiserOpinion": "Appraiser Opinion"
       },
       "options": {
@@ -2553,7 +2553,7 @@
         "floors": "Floors",
         "areaCost": "Area & Cost",
         "limitations": "Limitations",
-        "remark": "Remark"
+        "remark": "Property List Remark"
       }
     },
     "condo": {
@@ -2565,7 +2565,7 @@
         "building": "Building",
         "unit": "Unit",
         "referencePrices": "Government Appraisal Price and Insured Value",
-        "remark": "Remarks"
+        "remark": "Property List Remark"
       },
       "areaDetailHint": "Each part of the unit and its area",
       "areaDetailEmpty": "No area details yet",
@@ -2996,7 +2996,8 @@
       "eviction": "Right Restriction",
       "allocation": "Allocation",
       "hasBuilding": "Has Building",
-      "remark": "Remark"
+      "remark": "Remark",
+      "propertyListRemark": "Property List Remark"
     },
     "fields": {
       "other": "Other",
@@ -3673,7 +3674,7 @@
       "evictionType": "Right Restriction",
       "evictionTypeOther": "Other",
       "otherLegalLimitations": "Other",
-      "remark": "Remark"
+      "remark": "Property List Remark"
     },
     "building": {
       "houseNumber": "House No.",
@@ -3740,7 +3741,7 @@
       "isEncroachingOthers": "Is Encroaching",
       "encroachingOthersArea": "Encroaching Area",
       "encroachingOthersRemark": "Encroachment Remark",
-      "remark": "Remark"
+      "remark": "Property List Remark"
     },
     "condo": {
       "propertyName": "Property Name",
@@ -3823,7 +3824,7 @@
       "royalDecree": "Royal Decree",
       "isForestBoundary": "Is In Forest Boundary",
       "forestBoundaryRemark": "Is In Forest Boundary",
-      "remark": "Remark"
+      "remark": "Property List Remark"
     },
     "lease": {
       "lessorName": "Lessor Name",

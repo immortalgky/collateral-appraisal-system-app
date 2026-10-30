@@ -1050,7 +1050,7 @@
         "machineTechnology": "เทคโนโลยีเครื่องจักร",
         "other": "อื่น ๆ",
         "machineParts": "ส่วนประกอบของเครื่องจักร",
-        "remark": "หมายเหตุ",
+        "remark": "หมายเหตุรายการทรัพย์สิน",
         "appraiserOpinion": "ความเห็นผู้ประเมิน"
       },
       "options": {
@@ -2547,7 +2547,7 @@
         "floors": "ชั้นและพื้น",
         "areaCost": "พื้นที่และราคาก่อสร้าง",
         "limitations": "ข้อจำกัด",
-        "remark": "หมายเหตุ"
+        "remark": "หมายเหตุรายการทรัพย์สิน"
       }
     },
     "condo": {
@@ -2559,7 +2559,7 @@
         "building": "อาคาร",
         "unit": "ห้องชุด",
         "referencePrices": "ราคาประเมินราชการและทุนประกันภัย",
-        "remark": "หมายเหตุ"
+        "remark": "หมายเหตุรายการทรัพย์สิน"
       },
       "areaDetailHint": "แต่ละส่วนของห้องชุดและพื้นที่",
       "areaDetailEmpty": "ยังไม่มีรายละเอียดพื้นที่",
@@ -2996,7 +2996,8 @@
       "eviction": "การรอนสิทธิ์",
       "allocation": "การจัดสรร",
       "hasBuilding": "มีอาคาร",
-      "remark": "หมายเหตุ"
+      "remark": "หมายเหตุ",
+      "propertyListRemark": "หมายเหตุรายการทรัพย์สิน"
     },
     "fields": {
       "other": "อื่นๆ",
@@ -3673,7 +3674,7 @@
       "evictionType": "การรอนสิทธิ์",
       "evictionTypeOther": "อื่นๆ",
       "otherLegalLimitations": "ข้อจำกัดอื่นๆ",
-      "remark": "หมายเหตุ"
+      "remark": "หมายเหตุรายการทรัพย์สิน"
     },
     "building": {
       "houseNumber": "บ้านเลขที่",
@@ -3740,7 +3741,7 @@
       "isEncroachingOthers": "รุกล้ำที่ผู้อื่น",
       "encroachingOthersArea": "พื้นที่ที่รุกล้ำผู้อื่น",
       "encroachingOthersRemark": "หมายเหตุการรุกล้ำผู้อื่น",
-      "remark": "หมายเหตุ"
+      "remark": "หมายเหตุรายการทรัพย์สิน"
     },
     "condo": {
       "propertyName": "ชื่อทรัพย์สิน",
@@ -3823,7 +3824,7 @@
       "royalDecree": "พระราชกฤษฎีกา",
       "isForestBoundary": "อยู่ในแนวเขตป่า",
       "forestBoundaryRemark": "หมายเหตุแนวเขตป่า",
-      "remark": "หมายเหตุ"
+      "remark": "หมายเหตุรายการทรัพย์สิน"
     },
     "lease": {
       "lessorName": "ชื่อผู้ให้เช่า",
