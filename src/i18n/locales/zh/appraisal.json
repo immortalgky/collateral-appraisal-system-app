@@ -1050,7 +1050,7 @@
         "machineTechnology": "机器技术",
         "other": "其他",
         "machineParts": "机器部件",
-        "remark": "备注",
+        "remark": "资产清单备注",
         "appraiserOpinion": "评估师意见"
       },
       "options": {
@@ -2547,7 +2547,7 @@
         "floors": "楼层",
         "areaCost": "面积与造价",
         "limitations": "限制",
-        "remark": "备注"
+        "remark": "资产清单备注"
       }
     },
     "condo": {
@@ -2559,7 +2559,7 @@
         "building": "建筑",
         "unit": "单元",
         "referencePrices": "政府评估价格与保险金额",
-        "remark": "备注"
+        "remark": "资产清单备注"
       },
       "areaDetailHint": "单元各部分及其面积",
       "areaDetailEmpty": "暂无面积明细",
@@ -2996,7 +2996,8 @@
       "eviction": "权利限制",
       "allocation": "分配",
       "hasBuilding": "有无建筑",
-      "remark": "备注"
+      "remark": "备注",
+      "propertyListRemark": "资产清单备注"
     },
     "fields": {
       "other": "其他",
@@ -3673,7 +3674,7 @@
       "evictionType": "权利追夺",
       "evictionTypeOther": "其他",
       "otherLegalLimitations": "其他限制",
-      "remark": "备注"
+      "remark": "资产清单备注"
     },
     "building": {
       "houseNumber": "门牌号",
@@ -3740,7 +3741,7 @@
       "isEncroachingOthers": "侵占他人土地",
       "encroachingOthersArea": "侵占他人面积",
       "encroachingOthersRemark": "侵占他人备注",
-      "remark": "备注"
+      "remark": "资产清单备注"
     },
     "condo": {
       "propertyName": "资产名称",
@@ -3823,7 +3824,7 @@
       "royalDecree": "御令",
       "isForestBoundary": "位于林区边界内",
       "forestBoundaryRemark": "林区边界备注",
-      "remark": "备注"
+      "remark": "资产清单备注"
     },
     "lease": {
       "lessorName": "出租人名称",

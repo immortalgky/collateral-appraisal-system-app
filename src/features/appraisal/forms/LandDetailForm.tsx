@@ -182,7 +182,10 @@ const LandDetailForm = ({ propertyType = 'L' }: LandDetailFormProps) => {
             <FormFields fields={limitationFieldsAfterDeductions} />
           </FormSection>
 
-          <FormSection title={t('landCharacteristicsForm.sections.remark')} icon="comment">
+          <FormSection
+            title={t('landCharacteristicsForm.sections.propertyListRemark')}
+            icon="comment"
+          >
             <FormFields fields={remarkLandField} />
           </FormSection>
         </FormSheet>
