@@ -1,4 +1,3 @@
-import { useId } from 'react';
 import { Description, Field, Label, Radio, RadioGroup } from '@headlessui/react';
 import clsx from 'clsx';
 
@@ -25,9 +24,11 @@ interface SegmentedChoiceProps<V extends string> {
   variant?: 'segmented' | 'cards';
   /** The whole control: greyed out (the selection stays visible, in grey), not selectable. */
   disabled?: boolean;
-  /** The visible label lives outside; give the group its name one way or the other. */
-  ariaLabel?: string;
-  ariaLabelledBy?: string;
+  /**
+   * The group's accessible name (the visible label lives outside). Not aria-labelledby: Headless
+   * UI's RadioGroup overwrites that with the ids of its own Label children.
+   */
+  ariaLabel: string;
   /** For the width of the track, e.g. `max-w-[18.5rem]`. It fills its container by default. */
   className?: string;
 }
@@ -44,25 +45,25 @@ export default function SegmentedChoice<V extends string>({
   variant = 'segmented',
   disabled = false,
   ariaLabel,
-  ariaLabelledBy,
   className,
 }: SegmentedChoiceProps<V>) {
-  const descriptionId = useId();
   const cards = variant === 'cards';
-  const hint = cards ? undefined : options.find(option => option.value === value)?.description;
+  // A locked group shows no hint: it reads as what will happen, and on a read-only page it has.
+  const hint =
+    cards || disabled ? undefined : options.find(option => option.value === value)?.description;
 
   return (
-    // Cards lay out in a row once the card is 40rem wide, stacked below that.
-    <div className={clsx(cards && '@container')}>
-      <RadioGroup
-        value={value}
-        onChange={(next: V | '') => {
-          if (next) onChange(next);
-        }}
-        disabled={disabled}
-        aria-label={ariaLabel}
-        aria-labelledby={ariaLabelledBy}
-        aria-describedby={hint ? descriptionId : undefined}
+    <RadioGroup
+      value={value}
+      onChange={(next: V | '') => {
+        if (next) onChange(next);
+      }}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      // Cards lay out in a row once the card is 40rem wide, stacked below that.
+      className={clsx(cards && '@container')}
+    >
+      <div
         className={clsx(
           cards
             ? 'grid grid-cols-1 gap-2 @[40rem]:auto-cols-fr @[40rem]:grid-flow-col'
@@ -86,9 +87,7 @@ export default function SegmentedChoice<V extends string>({
               <Field key={option.value} className="flex">
                 <Radio
                   value={option.value}
-                  // A disabled pick that is still selected stays focusable, or Tab could not reach the
-                  // group at all (Headless UI gives every other option tabIndex -1).
-                  disabled={option.disabled && !checked}
+                  disabled={option.disabled}
                   className={clsx(
                     'flex flex-1 items-start gap-2.5 rounded-section border px-3 py-2.5 text-left transition-colors select-none',
                     off ? 'cursor-not-allowed' : 'cursor-pointer',
@@ -145,7 +144,7 @@ export default function SegmentedChoice<V extends string>({
             <Radio
               key={option.value}
               value={option.value}
-              disabled={option.disabled && !checked}
+              disabled={option.disabled}
               title={option.label}
               className={clsx(
                 // flex-auto: grow from the label's own width, so a long Thai label gets more room
@@ -167,13 +166,14 @@ export default function SegmentedChoice<V extends string>({
             </Radio>
           );
         })}
-      </RadioGroup>
+      </div>
 
+      {/* A Description of the group itself (outside every Radio's Field), so it describes the group. */}
       {hint && (
-        <p id={descriptionId} className="mt-1.5 text-xs text-(--palette-gray-500)">
+        <Description as="p" className="mt-1.5 text-xs text-(--palette-gray-500)">
           {hint}
-        </p>
+        </Description>
       )}
-    </div>
+    </RadioGroup>
   );
 }

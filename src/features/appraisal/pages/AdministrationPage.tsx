@@ -1219,7 +1219,7 @@ const AdministrationPage = () => {
                     control={control}
                     render={({ field }) => (
                       <SegmentedChoice
-                        ariaLabelledBy={`${labelsId}-keyer`}
+                        ariaLabel={t('administration.offlineExternal.keyerMethodLabel')}
                         options={keyerOptions}
                         value={field.value === 'quotation' ? '' : field.value}
                         onChange={field.onChange}
@@ -1270,7 +1270,7 @@ const AdministrationPage = () => {
                     control={control}
                     render={({ field }) => (
                       <SegmentedChoice
-                        ariaLabelledBy={`${labelsId}-method`}
+                        ariaLabel={t('administration.assignmentDetails.methodLabel')}
                         options={methodOptions}
                         value={field.value}
                         onChange={field.onChange}
@@ -1359,7 +1359,7 @@ const AdministrationPage = () => {
                         control={control}
                         render={({ field }) => (
                           <SegmentedChoice
-                            ariaLabelledBy={`${labelsId}-followup`}
+                            ariaLabel={t('administration.followupStaff.label')}
                             options={followupOptions}
                             value={field.value}
                             onChange={handleFollowupMethodChange}

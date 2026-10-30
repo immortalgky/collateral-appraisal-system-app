@@ -62,6 +62,18 @@ describe('SegmentedChoice', () => {
     expect(screen.queryByText('A company')).not.toBeInTheDocument();
   });
 
+  it('the group is named and described by the selected option hint', () => {
+    render(<Harness initial="internal" />);
+    expect(screen.getByRole('radiogroup', { name: 'Assignment type' })).toHaveAccessibleDescription(
+      'Own staff',
+    );
+  });
+
+  it('a locked group shows no hint', () => {
+    render(<Harness initial="internal" disabled />);
+    expect(screen.queryByText('Own staff')).not.toBeInTheDocument();
+  });
+
   it('clicking an option selects it and swaps the description', async () => {
     const onChange = vi.fn();
     const { user } = render(<Harness initial="internal" onChange={onChange} />);

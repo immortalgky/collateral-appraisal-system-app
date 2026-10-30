@@ -1987,7 +1987,8 @@ describe('AdministrationPage: the watched fields drive the form', () => {
     currentWorkload: 0,
   };
   // The groups in page order: type, method, then the follow-up method (external only).
-  const methodGroup = () => screen.getAllByRole('radiogroup')[1];
+  const methodGroup = () =>
+    screen.getByRole('radiogroup', { name: 'administration.assignmentDetails.methodLabel' });
   const methodRadio = (name: 'manual' | 'roundrobin') =>
     within(methodGroup()).getByRole('radio', {
       name: new RegExp(`administration\\.assignmentDetails\\.${name}`),
