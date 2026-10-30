@@ -116,6 +116,20 @@ describe('ValuationEngagementChips at key-in', () => {
     expect(within(dialog).getByText('c-admin')).toBeInTheDocument();
   });
 
+  it('shows nothing, not the id, for a company it cannot look up on a case the user cannot edit', async () => {
+    server.use(http.get('*/companies/:id', () => new HttpResponse(null, { status: 404 })));
+    const { container } = render(
+      <ValuationEngagementChips
+        appraisalId="A1"
+        assignment={assignment({ assigneeCompanyId: 'c-x' })}
+      />,
+    );
+
+    await new Promise(r => setTimeout(r, 50));
+    expect(screen.queryByText('c-x')).not.toBeInTheDocument();
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('still asks for the company when the assignment has none', async () => {
     const { user, saveRef } = renderChips(assignment());
 

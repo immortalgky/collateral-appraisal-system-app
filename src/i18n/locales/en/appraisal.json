@@ -3253,7 +3253,7 @@
     "blockedOnSubmit": "Record the external appraisal company and the appraisal date from its book before submitting.",
     "outstandingBoth": "Record appraisal company & date",
     "outstandingDate": "Record appraisal date",
-    "companyLockedHint": "This company was set on the assignment page. If it is wrong, route the case back to assignment to change it.",
+    "companyLockedHint": "This company is already recorded. If it is wrong, route the case back to assignment to change it.",
     "hintLocked": "Record the appraisal date printed on this company's appraisal book."
   },
   "photoTopics": {

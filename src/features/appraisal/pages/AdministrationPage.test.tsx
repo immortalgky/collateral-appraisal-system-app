@@ -66,8 +66,10 @@ const state = vi.hoisted(() => {
     feesReads: 0,
     // The eligible list never answers: while the page asks for it (enabled) it stays fetching.
     eligiblePending: false,
-    // The `enabled` flag of every useGetEligibleCompanies call, in render order.
+    // The `enabled` flag of every segment-filtered useGetEligibleCompanies call, in render order.
     eligibleEnabled: [] as boolean[],
+    // Every enabled useGetEligibleCompanies call as [segment, requireSegment].
+    eligibleCalls: [] as unknown[][],
   };
 });
 
@@ -113,8 +115,9 @@ vi.mock('../api/administration', async importOriginal => ({
   },
   // What the picker offers for the request's segment; the previous company is preselected only
   // if it is in this list.
-  useGetEligibleCompanies: (_segment: unknown, enabled: boolean) => {
-    state.eligibleEnabled.push(enabled);
+  useGetEligibleCompanies: (segment: unknown, enabled: boolean, requireSegment = true) => {
+    if (requireSegment) state.eligibleEnabled.push(enabled);
+    if (enabled) state.eligibleCalls.push([segment, requireSegment]);
     return {
       // Stable arrays, like react-query's structural sharing: the seed effect depends on the list.
       data: state.eligiblePending
@@ -249,6 +252,7 @@ beforeEach(() => {
   state.feesReads = 0;
   state.eligiblePending = false;
   state.eligibleEnabled = [];
+  state.eligibleCalls = [];
   server.use(
     http.get('*/appraisals/:id/fee-preview', ({ request }) => {
       state.feePreviewQueries.push(new URL(request.url).searchParams);
@@ -2127,6 +2131,17 @@ describe('AdministrationPage: the off-system (EXTO) company', () => {
 
     await user.click(screen.getByText('pick-other-company'));
     await waitFor(() => expect(slipAssign()).toBeEnabled());
+  });
+
+  it('offers every company with an MOU, not only the request segment, and only once the picker opens', async () => {
+    offlineRoundrobin();
+    const { user } = render(<AdministrationPage />);
+    await screen.findByText('administration.offlineExternal.companyLabel');
+    expect(state.eligibleCalls).not.toContainEqual([undefined, false]);
+
+    await user.click(screen.getByText('administration.manualCompany.placeholder'));
+
+    expect(state.eligibleCalls).toContainEqual([undefined, false]);
   });
 
   it('sends the picked company with the EXTO assignment', async () => {

@@ -82,7 +82,9 @@ const ValuationEngagementChips = ({
   const hasSeededCompany = useRef(false);
   const hasSeededBookDate = useRef(false);
 
-  const { data: savedCompany } = useGetCompanyById(assignment?.assigneeCompanyId ?? null);
+  const { data: savedCompany, isError: isCompanyLookupFailed } = useGetCompanyById(
+    assignment?.assigneeCompanyId ?? null,
+  );
   const { mutate: saveEngagement } = useSetOfflineExternalEngagement();
 
   // Deliberately unfiltered by banking segment: that scoping exists for the round-robin pool, where
@@ -185,9 +187,11 @@ const ValuationEngagementChips = ({
   //
   // Nothing to show for an internal appraisal, or before a company has ever been recorded on a
   // case the current user cannot edit.
-  // A locked company whose record has not loaded (or could not be looked up) is named by its id.
+  // For the keyer, a locked company whose record could not be looked up is named by its id rather
+  // than shown blank; everyone else still sees nothing until it loads.
+  const showsStoredCompanyId = canEdit && isCompanyLocked && isCompanyLookupFailed;
   const companyName =
-    selectedCompany?.companyName ?? (isCompanyLocked ? assignment.assigneeCompanyId : null);
+    selectedCompany?.companyName ?? (showsStoredCompanyId ? assignment.assigneeCompanyId : null);
   if (!companyName && !canEdit) return null;
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
@@ -258,7 +262,7 @@ const ValuationEngagementChips = ({
           <div>
             <label className="block text-sm font-medium text-(--palette-ink) mb-2">
               {t('offlineEngagement.companyLabel')}
-              {!isCompanyLocked && <span className="text-danger"> *</span>}
+              {!isCompanyLocked && <span className="ml-0.5 text-(--palette-req)">*</span>}
             </label>
             {selectedCompany ? (
               <CompanyDisplay
@@ -273,7 +277,9 @@ const ValuationEngagementChips = ({
                 }
               />
             ) : isCompanyLocked ? (
-              <p className="text-sm text-(--palette-ink)">{assignment.assigneeCompanyId}</p>
+              showsStoredCompanyId && (
+                <p className="text-sm text-(--palette-ink)">{assignment.assigneeCompanyId}</p>
+              )
             ) : (
               <button
                 type="button"

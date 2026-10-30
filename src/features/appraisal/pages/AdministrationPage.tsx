@@ -259,13 +259,10 @@ const AdministrationPage = () => {
   const needsPreselectCheck = !!previousCompany?.mouActive && canPreselect;
   // Which appraisal the form has been seeded for (see the seed below).
   const [seededAppraisalId, setSeededAppraisalId] = useState<string | undefined>(undefined);
-  // After the seed only an external type (in-system or off-system) needs the list (picker,
-  // change-company dialog); what the banner reads stays in the query cache, so switching type does
-  // not lose it.
+  // After the seed only an external type needs the list (picker, change-company dialog); what the
+  // banner reads stays in the query cache, so switching type does not lose it.
   const isEligibleListWanted =
-    assignmentType === 'external' ||
-    assignmentType === 'external-offline' ||
-    (needsPreselectCheck && seededAppraisalId !== appraisalId);
+    assignmentType === 'external' || (needsPreselectCheck && seededAppraisalId !== appraisalId);
   const { data: eligibleCompanies, isFetching: isFetchingEligibleCompanies } =
     useGetEligibleCompanies(bankingSegment, isEligibleListWanted);
   const previousCompanyListed = previousCompany
@@ -400,6 +397,15 @@ const AdministrationPage = () => {
     onOpen: openCompanyModal,
     onClose: closeCompanyModal,
   } = useDisclosure();
+
+  // The off-system picker offers every company with an MOU, not only the request's segment: the bank
+  // already engaged it outside the system (the key-in picker did the same), and the server checks
+  // only its MOU window. Fetched once the picker opens.
+  const { data: offlineCompanies } = useGetEligibleCompanies(
+    undefined,
+    assignmentType === 'external-offline' && isCompanyModalOpen,
+    false,
+  );
 
   const {
     isOpen: isQuotationEntryModalOpen,
@@ -1549,7 +1555,9 @@ const AdministrationPage = () => {
               touch(companyCheckId());
             }}
             onSelect={handleCompanySelect}
-            eligibleCompanies={eligibleCompanies}
+            eligibleCompanies={
+              assignmentType === 'external-offline' ? offlineCompanies : eligibleCompanies
+            }
             previousCompany={
               previousCompany
                 ? { id: previousCompany.companyId, badge: previousCompanyBadge }

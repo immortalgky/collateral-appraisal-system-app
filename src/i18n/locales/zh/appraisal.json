@@ -3253,7 +3253,7 @@
     "blockedOnSubmit": "提交前请先填写外部评估公司及其报告上的评估日期。",
     "outstandingBoth": "请填写评估公司及日期",
     "outstandingDate": "请填写评估日期",
-    "companyLockedHint": "该公司已在分配页面确定。如有错误，请将案件退回分配步骤进行修改。",
+    "companyLockedHint": "该公司已记录。如有错误，请将案件退回分配步骤进行修改。",
     "hintLocked": "请记录该公司评估报告上所载的评估日期。"
   },
   "photoTopics": {
