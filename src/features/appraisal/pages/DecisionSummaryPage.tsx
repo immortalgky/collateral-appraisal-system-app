@@ -1058,7 +1058,7 @@ const DecisionSummaryPage = () => {
       // A locked company (the assignment holds one) leaves only the book date to record.
       toast.error(
         t(
-          assignments?.[0]?.assigneeCompanyId
+          engagementAssignment?.assigneeCompanyId
             ? 'offlineEngagement.validation.bookDateRequired'
             : 'offlineEngagement.blockedOnSubmit',
         ),

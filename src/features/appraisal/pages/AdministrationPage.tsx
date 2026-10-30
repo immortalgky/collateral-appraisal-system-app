@@ -332,6 +332,7 @@ const AdministrationPage = () => {
       setValue('assignmentMethod', 'manual');
       setValue('selectedCompany', null);
       setValue('companyId', null);
+      setPreviousPreselected(false);
     }
   }, [isReadOnly, canAssignCompanyInSystem, assignmentType, setValue]);
 
@@ -474,13 +475,13 @@ const AdministrationPage = () => {
     applyCompany(company);
   };
   // The off-system company has a check of its own; the in-system one is the assignee.
-  const companyCheckId = (): SlipCheckId =>
-    getValues('assignmentType') === 'external-offline' ? 'company' : 'assignee';
+  const companyCheckId: SlipCheckId =
+    assignmentType === 'external-offline' ? 'company' : 'assignee';
   const clearCompany = () => {
     setValue('selectedCompany', null, { shouldDirty: true });
     setValue('companyId', null, { shouldDirty: true });
     setPreviousPreselected(false);
-    touch(companyCheckId());
+    touch(companyCheckId);
   };
   // "Keep the previous company": drops the pick and selects the previous company (the same two
   // fields a normal select writes). If it is already the selected one nothing is written, so the
@@ -606,21 +607,20 @@ const AdministrationPage = () => {
     // The correction effects below only see later changes; a reset in the same commit would
     // overwrite them, so a saved draft is corrected here too (a fresh row's defaults already are).
     // A read-only page (an assignment that was made, or the history view) shows the values as stored.
-    reset(
-      hasSavedSelection
-        ? correctSavedSelection(values, {
-            canAssignCompanyInSystem,
-            isInternalDisabled,
-            isReadOnly,
-          })
-        : values,
-    );
+    const seeded = hasSavedSelection
+      ? correctSavedSelection(values, {
+          canAssignCompanyInSystem,
+          isInternalDisabled,
+          isReadOnly,
+        })
+      : values;
+    reset(seeded);
     // What the seed did about the previous company: chose it on a fresh row (the banner may say
     // so until anything changes). Saving a draft turns the row into a saved one and seeds again:
     // the state is kept then for as long as the selected company is still that same one.
     setPreviousPreselected(wasPreselected =>
       hasSavedSelection
-        ? wasPreselected && !!values.companyId && values.companyId === previousCompany?.companyId
+        ? wasPreselected && !!seeded.companyId && seeded.companyId === previousCompany?.companyId
         : !!resolvedFormDefaults.selectedCompany &&
           resolvedFormDefaults.selectedCompany.id === previousCompany?.companyId,
     );
@@ -1552,7 +1552,7 @@ const AdministrationPage = () => {
             isOpen={isCompanyModalOpen}
             onClose={() => {
               closeCompanyModal();
-              touch(companyCheckId());
+              touch(companyCheckId);
             }}
             onSelect={handleCompanySelect}
             eligibleCompanies={

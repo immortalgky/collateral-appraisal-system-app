@@ -193,6 +193,8 @@ const ValuationEngagementChips = ({
   const companyName =
     selectedCompany?.companyName ?? (showsStoredCompanyId ? assignment.assigneeCompanyId : null);
   if (!companyName && !canEdit) return null;
+  // The keyer's locked company is still loading: nothing yet, rather than a chip with a blank name.
+  if (!companyName && isCompanyLocked) return null;
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
   // server-side (RequireOfflineEngagementRecorded), so the chip is styled as a call to action
@@ -299,7 +301,8 @@ const ValuationEngagementChips = ({
 
           <div>
             <label className="block text-sm font-medium text-(--palette-ink) mb-2">
-              {t('offlineEngagement.bookDateLabel')} <span className="text-danger">*</span>
+              {t('offlineEngagement.bookDateLabel')}
+              <span className="ml-0.5 text-(--palette-req)">*</span>
             </label>
             {/* The book is already in hand, so a future date is always wrong. The backend validator
                 rejects it too; this stops it being entered in the first place. */}

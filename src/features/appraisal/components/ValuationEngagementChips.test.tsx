@@ -116,6 +116,14 @@ describe('ValuationEngagementChips at key-in', () => {
     expect(within(dialog).getByText('c-admin')).toBeInTheDocument();
   });
 
+  it('shows no chip with a blank name while the locked company is still loading', async () => {
+    server.use(http.get('*/companies/:id', () => new Promise<never>(() => {})));
+    renderChips(assignment({ assigneeCompanyId: 'c-admin', offlineBookDate: '2026-09-30' }));
+
+    await new Promise(r => setTimeout(r, 50));
+    expect(screen.queryByText('offlineEngagement.companyLabel')).not.toBeInTheDocument();
+  });
+
   it('shows nothing, not the id, for a company it cannot look up on a case the user cannot edit', async () => {
     server.use(http.get('*/companies/:id', () => new HttpResponse(null, { status: 404 })));
     const { container } = render(
