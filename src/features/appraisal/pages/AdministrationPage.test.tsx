@@ -227,6 +227,7 @@ const feePreview = {
 };
 
 beforeEach(() => {
+  state.request = { detail: { loanDetail: { bankingSegment: 'SME', facilityLimit: 1_000_000 } } };
   state.none = [];
   state.quotationDetails = {};
   state.defaults = undefined;
@@ -316,6 +317,22 @@ describe('AdministrationPage: previous inspection company', () => {
     expect(await screen.findByText('administration.previousCompany.title')).toBeInTheDocument();
     expect(screen.queryByText(/previousCompany\.hint/)).not.toBeInTheDocument();
     expect(screen.queryByText('Old Co')).not.toBeInTheDocument();
+  });
+
+  it('shows the internal card disabled with its reason when the facility limit is over 50 million', async () => {
+    setDefaults(null);
+    state.request = {
+      detail: { loanDetail: { bankingSegment: 'SME', facilityLimit: 60_000_000 } },
+    };
+    render(<AdministrationPage />);
+
+    const internal = await screen.findByRole('radio', {
+      name: 'administration.assignmentType.internal',
+    });
+    expect(internal).toHaveAttribute('aria-disabled', 'true');
+    expect(internal).toHaveAccessibleDescription(
+      'administration.assignmentType.internalDisabledReason',
+    );
   });
 
   it('shows the in-system external card dimmed with its reason while in-system assignment is off', async () => {

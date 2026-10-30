@@ -13,6 +13,9 @@ export interface SegmentedOption<V extends string = string> {
   disabledReason?: string;
 }
 
+/** The one grey hint line under a choice; also used where a read-only page shows the pick as text. */
+export const CHOICE_HINT_CLASS = 'mt-1.5 text-xs text-(--palette-gray-500)';
+
 interface SegmentedChoiceProps<V extends string> {
   options: SegmentedOption<V>[];
   /** '' = nothing selected. */
@@ -90,7 +93,7 @@ export default function SegmentedChoice<V extends string>({
                   className={clsx(
                     'flex flex-1 items-start gap-2.5 rounded-section border px-3 py-2.5 text-left transition-colors select-none',
                     off ? 'cursor-not-allowed' : 'cursor-pointer',
-                    // Disabled is a grey fill, not a fade, so the reason stays readable (17.5).
+                    // Disabled is a grey fill, not a fade, so the reason stays readable.
                     on
                       ? 'border-primary bg-(--palette-accent-wash) shadow-[inset_0_0_0_1px_var(--color-primary)]'
                       : off
@@ -157,7 +160,7 @@ export default function SegmentedChoice<V extends string>({
                       on ? 'text-(--palette-accent-ink)' : 'text-(--palette-ink-2)',
                     )
                   : off
-                    ? 'text-(--palette-ink-3)'
+                    ? 'text-(--palette-ink-2)'
                     : 'text-(--palette-gray-600) hover:text-(--palette-ink)',
               )}
             >
@@ -168,7 +171,7 @@ export default function SegmentedChoice<V extends string>({
       </RadioGroup>
 
       {hint && (
-        <p id={descriptionId} className="mt-1.5 text-xs text-(--palette-gray-500)">
+        <p id={descriptionId} className={CHOICE_HINT_CLASS}>
           {hint}
         </p>
       )}

@@ -67,6 +67,7 @@ import AssignmentFeeCard from '../components/AssignmentFeeCard';
 import QuotationSection from '../components/QuotationSection';
 import QuotationEntryModal from '../components/QuotationEntryModal';
 import SegmentedChoice, {
+  CHOICE_HINT_CLASS,
   type SegmentedOption,
 } from '../components/administration/SegmentedChoice';
 import AssignmentSlip, {
@@ -1001,6 +1002,8 @@ const AdministrationPage = () => {
       description: roundrobinHint,
     },
   ];
+  const keyerOptions = staffMethodOptions(t('administration.offlineExternal.keyerRoundrobinDesc'));
+  const keyerPick = keyerOptions.find(option => option.value === assignmentMethod);
 
   // The names the saved assignment carries, valid only while the form still holds that same pick.
   const storedAssigneeName =
@@ -1215,18 +1218,13 @@ const AdministrationPage = () => {
                   {isReadOnly ? (
                     // Read-only: the chosen method as text (with the hint the control would show),
                     // not a greyed-out toggle.
+                    // Nothing chosen (or a stale 'quotation') reads as no data, not as manual.
                     <div className="mb-2">
                       <p className="text-sm text-(--palette-ink)">
-                        {t(
-                          assignmentMethod === 'roundrobin'
-                            ? 'administration.assignmentDetails.roundrobin'
-                            : 'administration.assignmentDetails.manual',
-                        )}
+                        {keyerPick?.label ?? t('administration.noData')}
                       </p>
-                      {assignmentMethod === 'roundrobin' && (
-                        <p className="mt-1.5 text-xs text-(--palette-gray-500)">
-                          {t('administration.offlineExternal.keyerRoundrobinDesc')}
-                        </p>
+                      {keyerPick?.description && (
+                        <p className={CHOICE_HINT_CLASS}>{keyerPick.description}</p>
                       )}
                     </div>
                   ) : (
@@ -1236,9 +1234,7 @@ const AdministrationPage = () => {
                       render={({ field }) => (
                         <SegmentedChoice
                           ariaLabelledBy={`${labelsId}-keyer`}
-                          options={staffMethodOptions(
-                            t('administration.offlineExternal.keyerRoundrobinDesc'),
-                          )}
+                          options={keyerOptions}
                           value={field.value === 'quotation' ? '' : field.value}
                           onChange={field.onChange}
                           className={TWO_WAY_CHOICE_WIDTH}
