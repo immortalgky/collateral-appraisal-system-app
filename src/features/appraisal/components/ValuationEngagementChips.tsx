@@ -176,7 +176,11 @@ const ValuationEngagementChips = ({
   //
   // Nothing to show for an internal appraisal, or before a company has ever been recorded on a
   // case the current user cannot edit.
-  const shownCompany = isCompanyLocked ? (savedCompany ?? null) : selectedCompany;
+  // The keyer's own pick stands in once saved, until the lookup of the recorded company lands.
+  const shownCompany = isCompanyLocked
+    ? (savedCompany ??
+      (selectedCompany?.id === assignment?.assigneeCompanyId ? selectedCompany : null))
+    : selectedCompany;
   const companyName = shownCompany?.companyName ?? null;
   if (!companyName && !canEdit) return null;
   // For the keyer, a recorded company is never blank: "loading" until it loads, its id if the

@@ -1084,10 +1084,9 @@ const AdministrationPage = () => {
           labelledBy={o.labelId}
         />
       ) : (
-        // Read-only and nothing stored: say so, rather than leave an empty slot.
-        isReadOnly && (
-          <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
-        )
+        // Nothing stored and nothing to pick (read-only, or held by a quotation lock): say so,
+        // rather than leave an empty slot.
+        <p className="text-sm text-(--palette-gray-500)">{t('administration.noData')}</p>
       )}
       <FieldError>{o.error}</FieldError>
     </>
@@ -1359,7 +1358,7 @@ const AdministrationPage = () => {
                   {/* Manual Selection - Internal Staff */}
                   {assignmentMethod === 'manual' && assignmentType === 'internal' && (
                     <div ref={sectionRef('assignee')}>
-                      <FieldLabel id={`${labelsId}-staff`} required={!isReadOnly}>
+                      <FieldLabel id={`${labelsId}-staff`} required={canEditAssignment}>
                         {t('administration.manualStaff.label')}
                       </FieldLabel>
                       {renderStaffPicker({
@@ -1379,7 +1378,7 @@ const AdministrationPage = () => {
                   {/* Manual Selection - External Company */}
                   {assignmentMethod === 'manual' && assignmentType === 'external' && (
                     <div ref={sectionRef('assignee')}>
-                      <FieldLabel id={`${labelsId}-company`} required={!isReadOnly}>
+                      <FieldLabel id={`${labelsId}-company`} required={canEditAssignment}>
                         {t('administration.manualCompany.label')}
                       </FieldLabel>
                       {renderCompanyPicker({

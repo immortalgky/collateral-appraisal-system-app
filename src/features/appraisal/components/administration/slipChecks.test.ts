@@ -110,7 +110,7 @@ describe('computeSlipChecks', () => {
     expect(r.checks[0]).toMatchObject({
       id: 'company',
       status: 'error',
-      labelKey: 'administration.slip.checks.companyMissing',
+      labelKey: 'administration.slip.reason.companyMissing',
     });
     expect(r.blockReason).toBe('administration.slip.reason.companyMissing');
     // Untouched: a to-do, and the reason is muted.

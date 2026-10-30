@@ -187,8 +187,9 @@ export function computeSlipChecks(input: SlipChecksInput): SlipChecksResult {
       add(
         'company',
         offlineCompanyMissing ? 'error' : 'ok',
+        // "No external company selected": the in-system companyMissing names the recipient.
         offlineCompanyMissing
-          ? 'administration.slip.checks.companyMissing'
+          ? 'administration.slip.reason.companyMissing'
           : 'administration.slip.checks.companyOk',
       );
     }

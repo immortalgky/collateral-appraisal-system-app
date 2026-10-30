@@ -2121,7 +2121,10 @@ describe('AdministrationPage: the off-system (EXTO) company', () => {
 
     const label = await screen.findByText('administration.offlineExternal.companyLabel');
     expect(label).toBeInTheDocument();
-    expect(within(slipCard()).getByText('administration.slip.reason.companyMissing')).toBeVisible();
+    // The check and the reason Assign is off both name the missing company.
+    expect(
+      within(slipCard()).getAllByText('administration.slip.reason.companyMissing'),
+    ).toHaveLength(2);
     expect(slipAssign()).toBeDisabled();
 
     await user.click(

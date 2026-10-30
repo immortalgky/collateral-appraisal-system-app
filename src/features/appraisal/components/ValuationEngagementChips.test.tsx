@@ -169,6 +169,34 @@ describe('ValuationEngagementChips at key-in', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it("keeps the name of the keyer's own pick once the saved assignment holds it", async () => {
+    // The lookup of the newly recorded company never answers: the staged record is enough.
+    server.use(http.get('*/companies/:id', () => new Promise<never>(() => {})));
+    const { user, rerender } = render(
+      <ValuationEngagementChips
+        appraisalId="A1"
+        assignment={assignment({ offlineBookDate: '2026-09-30' })}
+        canEdit
+      />,
+    );
+    await user.click(
+      await screen.findByRole('button', { name: 'offlineEngagement.outstandingCompany' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByText('offlineEngagement.selectCompany'));
+    expect(await within(dialog).findByText('New Co')).toBeInTheDocument();
+
+    rerender(
+      <ValuationEngagementChips
+        appraisalId="A1"
+        assignment={assignment({ assigneeCompanyId: 'c-new', offlineBookDate: '2026-09-30' })}
+        canEdit
+      />,
+    );
+    expect(within(screen.getByRole('dialog')).getByText('New Co')).toBeInTheDocument();
+    expect(screen.queryByText('common:status.loading')).not.toBeInTheDocument();
+  });
+
   it('still asks for the company when the assignment has none', async () => {
     const { user, saveRef } = renderChips(assignment());
 
