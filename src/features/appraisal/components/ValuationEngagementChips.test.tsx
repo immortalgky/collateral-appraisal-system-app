@@ -58,7 +58,11 @@ beforeEach(() => {
   server.use(
     http.get('*/companies/eligible', () => HttpResponse.json({ companies: [] })),
     http.get('*/companies/:id', ({ params }) =>
-      HttpResponse.json({ id: params.id, name: 'Admin Co', nameLocal: null }),
+      HttpResponse.json({
+        id: params.id,
+        name: params.id === 'c-b' ? 'B Co' : 'Admin Co',
+        nameLocal: null,
+      }),
     ),
     http.put('*/appraisals/:id/assignments/offline-external-engagement', async ({ request }) => {
       state.saved.push(await request.json());
@@ -116,21 +120,39 @@ describe('ValuationEngagementChips at key-in', () => {
     expect(within(dialog).getByText('c-admin')).toBeInTheDocument();
   });
 
-  it('shows no chip with a blank name while the locked company is still loading', async () => {
+  it('keeps the keyer on the book date while the locked company is loading: the dialog stays open', async () => {
     server.use(http.get('*/companies/:id', () => new Promise<never>(() => {})));
-    renderChips(assignment({ assigneeCompanyId: 'c-admin', offlineBookDate: '2026-09-30' }));
+    const { user } = renderChips(assignment({ assigneeCompanyId: 'c-admin' }));
 
-    await new Promise(r => setTimeout(r, 50));
-    expect(screen.queryByText('offlineEngagement.companyLabel')).not.toBeInTheDocument();
+    await user.click(
+      await screen.findByRole('button', { name: 'offlineEngagement.outstandingDate' }),
+    );
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByText('set-book-date'));
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    // A placeholder, never a blank name.
+    expect(within(dialog).getByText('…')).toBeInTheDocument();
   });
 
-  it('still offers the book date while the locked company is loading', async () => {
-    server.use(http.get('*/companies/:id', () => new Promise<never>(() => {})));
-    renderChips(assignment({ assigneeCompanyId: 'c-admin' }));
+  it('follows the assignment when its company changes (routed back and re-picked)', async () => {
+    const { rerender } = render(
+      <ValuationEngagementChips
+        appraisalId="A1"
+        assignment={assignment({ assigneeCompanyId: 'c-admin', offlineBookDate: '2026-09-30' })}
+        canEdit
+      />,
+    );
+    expect(await screen.findByText('Admin Co')).toBeInTheDocument();
 
-    expect(
-      await screen.findByRole('button', { name: 'offlineEngagement.outstandingDate' }),
-    ).toBeInTheDocument();
+    rerender(
+      <ValuationEngagementChips
+        appraisalId="A1"
+        assignment={assignment({ assigneeCompanyId: 'c-b', offlineBookDate: '2026-09-30' })}
+        canEdit
+      />,
+    );
+    expect(await screen.findByText('B Co')).toBeInTheDocument();
   });
 
   it('shows nothing, not the id, for a company it cannot look up on a case the user cannot edit', async () => {

@@ -599,7 +599,13 @@ const AdministrationPage = () => {
       // (its record, else the picker's list entry for that id), or on a fresh row the defaults'
       // (the prior inspection's company when preselected, else none).
       selectedCompany: saved
-        ? (assignedCompany ?? eligibleCompanies?.find(c => c.id === saved.companyId) ?? null)
+        ? (assignedCompany ??
+          // The off-system pick comes from the unfiltered list, often outside the segment one.
+          (saved.assignmentType === 'external-offline'
+            ? offlineCompanies
+            : eligibleCompanies
+          )?.find(c => c.id === saved.companyId) ??
+          null)
         : resolvedFormDefaults.selectedCompany,
       selectedFollowupStaff: resolvedFollowupStaff,
       remarks: currentAssignment?.remark ?? '',
@@ -628,6 +634,7 @@ const AdministrationPage = () => {
     reset,
     previousCompany,
     eligibleCompanies,
+    offlineCompanies,
     currentAssignment,
     assignedStaff,
     assignedCompany,
@@ -1290,7 +1297,7 @@ const AdministrationPage = () => {
 
                   {/* Who keys the book in. The person is an internal appraiser, but the decision
                       belongs to this engagement and reads as part of it. */}
-                  <FieldLabel id={`${labelsId}-keyer`} required={!isReadOnly}>
+                  <FieldLabel id={`${labelsId}-keyer`} required={canEditAssignment}>
                     {t('administration.offlineExternal.keyerMethodLabel')}
                   </FieldLabel>
                   <Controller

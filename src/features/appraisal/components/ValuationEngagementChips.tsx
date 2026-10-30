@@ -75,11 +75,8 @@ const ValuationEngagementChips = ({
   const [bookDate, setBookDate] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
 
-  // Seed each field from the server exactly once, and PER FIELD. The company and the date arrive
-  // from two different queries (the date rides the assignments query, the company needs a second
-  // lookup), so one shared latch closed as soon as the faster one landed and the company never
-  // seeded on a hard refresh. A latch is still needed so clearing a field does not re-restore it.
-  const hasSeededCompany = useRef(false);
+  // Seed the book date from the server exactly once, so clearing it does not re-restore it. The
+  // company needs no seed: a recorded one is locked and read straight from its lookup below.
   const hasSeededBookDate = useRef(false);
 
   const { data: savedCompany, isError: isCompanyLookupFailed } = useGetCompanyById(
@@ -105,12 +102,6 @@ const ValuationEngagementChips = ({
   // once that pick is saved the assignment holds it, so it locks too (the server locks it as well).
   const isCompanyLocked = !!assignment?.assigneeCompanyId;
   const hasCompany = isCompanyLocked || !!selectedCompany?.id;
-
-  useEffect(() => {
-    if (hasSeededCompany.current || !savedCompany) return;
-    setSelectedCompany(savedCompany);
-    hasSeededCompany.current = true;
-  }, [savedCompany]);
 
   useEffect(() => {
     if (hasSeededBookDate.current || !savedBookDate) return;
@@ -180,19 +171,16 @@ const ValuationEngagementChips = ({
     };
   });
 
-  // selectedCompany is the single source of truth — deliberately WITHOUT falling back to
-  // savedCompany. The seeding effect above copies the server value into it, so the fallback only
-  // ever covered the brief pre-seed render; what it actually did was make a CLEARED company
-  // indistinguishable from an unloaded one, so clearing in the dialog left the old name on the chip.
+  // The company shown: a recorded one straight from its lookup (so it follows the assignment when a
+  // route-back changes it), else the keyer's staged pick on a case that has none yet.
   //
   // Nothing to show for an internal appraisal, or before a company has ever been recorded on a
   // case the current user cannot edit.
-  // For the keyer, a locked company whose record could not be looked up is named by its id rather
-  // than shown blank; everyone else still sees nothing until it loads.
-  const showsStoredCompanyId = canEdit && isCompanyLocked && isCompanyLookupFailed;
-  const companyName =
-    selectedCompany?.companyName ?? (showsStoredCompanyId ? assignment.assigneeCompanyId : null);
+  const shownCompany = isCompanyLocked ? (savedCompany ?? null) : selectedCompany;
+  const companyName = shownCompany?.companyName ?? null;
   if (!companyName && !canEdit) return null;
+  // For the keyer, a recorded company is never blank: "…" while it loads, its id if the lookup failed.
+  const lockedCompanyText = isCompanyLookupFailed ? assignment?.assigneeCompanyId : '…';
 
   // Outstanding = the keyer can still record it and has not. Completing the task is blocked on it
   // server-side (RequireOfflineEngagementRecorded), so the chip is styled as a call to action
@@ -200,9 +188,6 @@ const ValuationEngagementChips = ({
   // Both are required. On this path the save endpoint writes them together, so in practice they
   // go missing together — but the pill names whichever is actually absent rather than assuming.
   const isOutstanding = canEdit && (!hasCompany || !bookDate);
-  // The keyer's locked company is still loading and the date is in: nothing to ask for yet, and no
-  // chip with a blank name. (A missing date still shows its pill, which needs no company name.)
-  if (!companyName && !isOutstanding) return null;
 
   return (
     <>
@@ -230,7 +215,9 @@ const ValuationEngagementChips = ({
           <span className="text-sm leading-none">🏢</span>
           <span>{t('offlineEngagement.companyLabel')}</span>
           <span className="font-semibold text-(--palette-ink)">
-            {localizeCompanyName(companyName ?? '', selectedCompany?.companyNameLocal)}
+            {companyName
+              ? localizeCompanyName(companyName, shownCompany?.companyNameLocal)
+              : lockedCompanyText}
           </span>
           {canEdit && (
             <button
@@ -267,9 +254,9 @@ const ValuationEngagementChips = ({
               {t('offlineEngagement.companyLabel')}
               {!isCompanyLocked && <span className="ml-0.5 text-(--palette-req)">*</span>}
             </label>
-            {selectedCompany ? (
+            {shownCompany ? (
               <CompanyDisplay
-                company={selectedCompany}
+                company={shownCompany}
                 onClear={
                   isCompanyLocked
                     ? undefined
@@ -280,9 +267,7 @@ const ValuationEngagementChips = ({
                 }
               />
             ) : isCompanyLocked ? (
-              showsStoredCompanyId && (
-                <p className="text-sm text-(--palette-ink)">{assignment.assigneeCompanyId}</p>
-              )
+              <p className="text-sm text-(--palette-ink)">{lockedCompanyText}</p>
             ) : (
               <button
                 type="button"
