@@ -16,11 +16,13 @@ function Harness({
   onChange = vi.fn(),
   options = OPTIONS,
   disabled,
+  variant,
 }: {
   initial?: V | '';
   onChange?: (v: V) => void;
   options?: SegmentedOption<V>[];
   disabled?: boolean;
+  variant?: 'segmented' | 'cards';
 }) {
   const [value, setValue] = useState<V | ''>(initial);
   return (
@@ -28,6 +30,7 @@ function Harness({
       options={options}
       value={value}
       disabled={disabled}
+      variant={variant}
       ariaLabel="Assignment type"
       onChange={v => {
         setValue(v);
@@ -100,5 +103,40 @@ describe('SegmentedChoice', () => {
     const { user } = render(<Harness initial="internal" onChange={onChange} disabled />);
     await user.click(screen.getByRole('radio', { name: 'External' }));
     expect(onChange).not.toHaveBeenCalled();
+  });
+
+  describe('cards', () => {
+    it('shows every option with its own description, named by its label', () => {
+      render(<Harness initial="internal" variant="cards" />);
+      const external = screen.getByRole('radio', { name: 'External' });
+      expect(external).toHaveAccessibleDescription('A company');
+      expect(screen.getByRole('radio', { name: 'Internal' })).toHaveAccessibleDescription(
+        'Own staff',
+      );
+    });
+
+    it('a disabled card shows its reason instead of the description and cannot be picked', async () => {
+      const onChange = vi.fn();
+      const options: SegmentedOption<V>[] = [
+        OPTIONS[0],
+        { ...OPTIONS[1], disabled: true, disabledReason: 'Paused for now' },
+      ];
+      const { user } = render(
+        <Harness initial="internal" variant="cards" options={options} onChange={onChange} />,
+      );
+      const external = screen.getByRole('radio', { name: 'External' });
+      expect(external).toHaveAccessibleDescription('Paused for now');
+      expect(screen.queryByText('A company')).not.toBeInTheDocument();
+      await user.click(external);
+      expect(onChange).not.toHaveBeenCalled();
+    });
+
+    it('arrow keys move the selection between cards', async () => {
+      const onChange = vi.fn();
+      const { user } = render(<Harness initial="internal" variant="cards" onChange={onChange} />);
+      screen.getByRole('radio', { name: 'Internal' }).focus();
+      await user.keyboard('{ArrowRight}');
+      expect(onChange).toHaveBeenLastCalledWith('external');
+    });
   });
 });

@@ -76,7 +76,6 @@ import AssignmentSlipBar from '../components/administration/AssignmentSlipBar';
 import {
   FieldError,
   FieldLabel,
-  InfoNote,
   InlineNotice,
   PickerButton,
 } from '../components/administration/AdministrationFields';
@@ -938,6 +937,9 @@ const AdministrationPage = () => {
       label: t('administration.assignmentType.internal'),
       description: t('administration.assignmentType.internalDesc'),
       disabled: isInternalDisabled || isLockedByQuotation,
+      disabledReason: isInternalDisabled
+        ? t('administration.assignmentType.internalDisabledReason')
+        : undefined,
     },
     {
       value: 'external',
@@ -948,6 +950,9 @@ const AdministrationPage = () => {
       // which escalates the case straight back here; leaving it visible tells the admin the path
       // exists and is paused, rather than silently removing an option they expect to see.
       disabled: !canAssignCompanyInSystem,
+      disabledReason: !canAssignCompanyInSystem
+        ? t('administration.assignmentType.externalDisabledReason')
+        : undefined,
     },
     {
       value: 'external-offline',
@@ -966,8 +971,15 @@ const AdministrationPage = () => {
       label: t('administration.assignmentDetails.manual'),
       description: t('administration.assignmentDetails.manualDesc'),
     },
-    // No description: the info note under the control says what it does.
-    { value: 'roundrobin', label: t('administration.assignmentDetails.roundrobin') },
+    {
+      value: 'roundrobin',
+      label: t('administration.assignmentDetails.roundrobin'),
+      description: t(
+        isExternalType
+          ? 'administration.roundrobinInfo.externalDesc'
+          : 'administration.roundrobinInfo.internalDesc',
+      ),
+    },
     // Quotation is external-only.
     ...(isExternalType
       ? [
@@ -980,10 +992,17 @@ const AdministrationPage = () => {
       : []),
   ];
 
-  // The off-system keyer and the follow-up staff choose between the same two things.
-  const staffMethodOptions: SegmentedOption<'manual' | 'roundrobin'>[] = [
+  // The off-system keyer and the follow-up staff choose between the same two things; only the
+  // round-robin hint differs (manual opens a picker, which needs no hint).
+  const staffMethodOptions = (
+    roundrobinHint: string,
+  ): SegmentedOption<'manual' | 'roundrobin'>[] => [
     { value: 'manual', label: t('administration.assignmentDetails.manual') },
-    { value: 'roundrobin', label: t('administration.assignmentDetails.roundrobin') },
+    {
+      value: 'roundrobin',
+      label: t('administration.assignmentDetails.roundrobin'),
+      description: roundrobinHint,
+    },
   ];
 
   // The names the saved assignment carries, valid only while the form still holds that same pick.
@@ -1170,18 +1189,12 @@ const AdministrationPage = () => {
                           handleAssignmentTypeChange(value, field.onChange);
                           touch('type');
                         }}
-                        tone={assignmentType === 'internal' ? 'teal' : 'purple'}
-                        descriptionVariant="callout"
+                        variant="cards"
                         disabled={isReadOnly || isLockedByQuotation}
                       />
                     )}
                   />
                   <FieldError>{typeError}</FieldError>
-                  {isInternalDisabled && (
-                    <p className="mt-2 text-xs text-(--palette-warn)">
-                      {t('administration.assignmentType.internalDisabledHint')}
-                    </p>
-                  )}
                   {!canAssignCompanyInSystem && (
                     <p className="mt-2 text-xs text-(--palette-warn)">
                       {t('administration.assignmentType.externalDisabledHint')}
@@ -1218,7 +1231,9 @@ const AdministrationPage = () => {
                       render={({ field }) => (
                         <SegmentedChoice
                           ariaLabelledBy={`${labelsId}-keyer`}
-                          options={staffMethodOptions}
+                          options={staffMethodOptions(
+                            t('administration.offlineExternal.keyerRoundrobinDesc'),
+                          )}
                           value={field.value === 'quotation' ? '' : field.value}
                           onChange={field.onChange}
                           className={TWO_WAY_CHOICE_WIDTH}
@@ -1241,12 +1256,6 @@ const AdministrationPage = () => {
                         error: assigneeError,
                       })}
                     </div>
-                  )}
-
-                  {assignmentMethod === 'roundrobin' && (
-                    <InfoNote title={t('administration.roundrobinInfo.title')}>
-                      {t('administration.offlineExternal.keyerRoundrobinDesc')}
-                    </InfoNote>
                   )}
                 </FormCard>
               )}
@@ -1347,15 +1356,6 @@ const AdministrationPage = () => {
                     </div>
                   )}
 
-                  {/* Round-robin Info */}
-                  {assignmentMethod === 'roundrobin' && (
-                    <InfoNote title={t('administration.roundrobinInfo.title')}>
-                      {assignmentType === 'internal'
-                        ? t('administration.roundrobinInfo.internalDesc')
-                        : t('administration.roundrobinInfo.externalDesc')}
-                    </InfoNote>
-                  )}
-
                   {/* Internal Followup Staff - Only for external assignments */}
                   {assignmentType === 'external' && (
                     <div ref={sectionRef('followup')}>
@@ -1373,7 +1373,9 @@ const AdministrationPage = () => {
                         render={({ field }) => (
                           <SegmentedChoice
                             ariaLabelledBy={`${labelsId}-followup`}
-                            options={staffMethodOptions}
+                            options={staffMethodOptions(
+                              t('administration.followupStaff.roundrobinInfo'),
+                            )}
                             value={field.value}
                             onChange={handleFollowupMethodChange}
                             disabled={isReadOnly || isLockedByQuotation}
@@ -1381,13 +1383,6 @@ const AdministrationPage = () => {
                           />
                         )}
                       />
-
-                      {/* Round-robin info box */}
-                      {followupStaffMethod === 'roundrobin' && (
-                        <InfoNote title={t('administration.roundrobinInfo.title')}>
-                          {t('administration.followupStaff.roundrobinInfo')}
-                        </InfoNote>
-                      )}
 
                       {/* Manual staff selection */}
                       {followupStaffMethod === 'manual' && (

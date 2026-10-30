@@ -1,15 +1,17 @@
 import { useId } from 'react';
-import { Radio, RadioGroup } from '@headlessui/react';
+import { Description, Field, Label, Radio, RadioGroup } from '@headlessui/react';
 import clsx from 'clsx';
 import Icon from '@/shared/components/Icon';
 
 export interface SegmentedOption<V extends string = string> {
   value: V;
   label: string;
-  /** Shown under the control while this option is the selected one. */
+  /** Segmented: shown under the control while this option is selected. Cards: on every card. */
   description?: string;
-  /** This option only: dimmed and struck through, not selectable. */
+  /** This option only: dimmed, not selectable. */
   disabled?: boolean;
+  /** Cards: shown in place of the description while the option is disabled. */
+  disabledReason?: string;
   icon?: string;
 }
 
@@ -18,13 +20,12 @@ interface SegmentedChoiceProps<V extends string> {
   /** '' = nothing selected. */
   value: V | '';
   onChange: (value: V) => void;
-  /** Teal for internal and neutral choices, purple for the external ones. */
-  tone?: 'teal' | 'purple';
   /**
-   * hint = grey helper line (assignment method); callout = tinted box with a dot (assignment type).
+   * segmented = soft pill track for a sub-choice; cards = one radio card per option, for the main
+   * decision (assignment type).
    */
-  descriptionVariant?: 'hint' | 'callout';
-  /** The whole control: dimmed, not selectable, nothing struck through. */
+  variant?: 'segmented' | 'cards';
+  /** The whole control: dimmed, not selectable. */
   disabled?: boolean;
   /** The visible label lives outside; give the group its name one way or the other. */
   ariaLabel?: string;
@@ -33,44 +34,28 @@ interface SegmentedChoiceProps<V extends string> {
   className?: string;
 }
 
-// The selected pill uses the Toggle's recipe (bg + tinted shadow), static so Tailwind sees the classes.
-const TONE = {
-  teal: {
-    on: 'bg-primary text-white shadow-md shadow-primary/25',
-    callout:
-      'border-primary-200 dark:border-primary-500/30 bg-(--palette-accent-wash) text-(--palette-accent-ink)',
-    dot: 'bg-primary',
-  },
-  purple: {
-    on: 'bg-purple-600 text-white shadow-md shadow-purple-600/25',
-    callout:
-      'border-purple-200 dark:border-purple-500/30 bg-purple-50 dark:bg-purple-500/10 text-purple-800 dark:text-purple-300',
-    dot: 'bg-purple-600',
-  },
-} as const;
-
 /**
- * Segmented radio group: a pill track with one pill per option, and the selected option's
- * description underneath. Arrow keys move the selection, Space selects (Headless UI RadioGroup).
- * Same height as a text input (track p-1 + option py, like Toggle md).
+ * A radio group drawn either as a soft segmented track (grey track, white selected pill, teal
+ * text, the selected option's description as a hint underneath) or as radio cards. Arrow keys move
+ * the selection, Space selects (Headless UI RadioGroup).
  */
 export default function SegmentedChoice<V extends string>({
   options,
   value,
   onChange,
-  tone = 'teal',
-  descriptionVariant = 'hint',
+  variant = 'segmented',
   disabled = false,
   ariaLabel,
   ariaLabelledBy,
   className,
 }: SegmentedChoiceProps<V>) {
   const descriptionId = useId();
-  const styles = TONE[tone];
-  const description = options.find(option => option.value === value)?.description;
+  const cards = variant === 'cards';
+  const hint = cards ? undefined : options.find(option => option.value === value)?.description;
 
   return (
-    <div>
+    // Cards lay out in a row once the card is 40rem wide, stacked below that.
+    <div className={clsx(cards && '@container')}>
       <RadioGroup
         value={value}
         onChange={(next: V | '') => {
@@ -79,16 +64,76 @@ export default function SegmentedChoice<V extends string>({
         disabled={disabled}
         aria-label={ariaLabel}
         aria-labelledby={ariaLabelledBy}
-        aria-describedby={description ? descriptionId : undefined}
+        aria-describedby={hint ? descriptionId : undefined}
         className={clsx(
-          'flex rounded-full bg-gray-100/80 p-1 text-sm',
-          disabled && 'opacity-65',
+          cards
+            ? 'grid grid-cols-1 gap-2 @[40rem]:grid-cols-3'
+            : // The text-control height (DESIGN 17.3); the h-8 options sit centred in it.
+              'flex h-ctl items-center gap-0.5 rounded-ctl border border-(--palette-line) bg-(--palette-surface-3) px-[0.2143rem]',
+          'text-sm',
           className,
         )}
       >
         {options.map(option => {
           const checked = option.value === value;
           const off = disabled || !!option.disabled;
+          if (cards) {
+            const text =
+              option.disabled && option.disabledReason ? option.disabledReason : option.description;
+            // Field: the card is named by its label and described by the line under it (without
+            // it, Headless UI v2 hands a Label inside a Radio to the group).
+            return (
+              <Field key={option.value} className="flex">
+                <Radio
+                  value={option.value}
+                  disabled={option.disabled}
+                  className={clsx(
+                    'flex flex-1 items-start gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors select-none',
+                    off ? 'cursor-not-allowed' : 'cursor-pointer',
+                    // Disabled is a grey fill, not a fade, so the reason stays readable (17.5).
+                    checked
+                      ? 'border-primary bg-(--palette-accent-wash) shadow-[inset_0_0_0_1px_var(--color-primary)]'
+                      : off
+                        ? 'border-(--palette-line) bg-(--palette-surface-2)'
+                        : 'border-(--palette-line) bg-(--palette-surface) hover:border-(--palette-input-edge-hover)',
+                  )}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={clsx(
+                      'mt-0.5 size-4 shrink-0 rounded-full bg-(--form-input-bg)',
+                      checked
+                        ? 'border-[5px] border-primary'
+                        : 'border-[1.5px] border-(--palette-input-edge-hover)',
+                    )}
+                  />
+                  <span className="min-w-0">
+                    <Label
+                      as="span"
+                      className={clsx(
+                        'block font-semibold',
+                        checked
+                          ? 'text-(--palette-accent-ink)'
+                          : off
+                            ? 'text-(--palette-ink-2)'
+                            : 'text-(--palette-ink)',
+                      )}
+                    >
+                      {option.label}
+                    </Label>
+                    {text && (
+                      <Description
+                        as="span"
+                        className="mt-0.5 block text-xs text-(--palette-gray-500)"
+                      >
+                        {text}
+                      </Description>
+                    )}
+                  </span>
+                </Radio>
+              </Field>
+            );
+          }
           return (
             <Radio
               key={option.value}
@@ -98,12 +143,12 @@ export default function SegmentedChoice<V extends string>({
               className={clsx(
                 // flex-auto: grow from the label's own width, so a long Thai label gets more room
                 // than a short one; min-w-0 lets it truncate (a Thai-safe `truncate`, DESIGN s.4).
-                'flex min-w-0 flex-auto select-none items-center justify-center gap-1.5 rounded-full px-4 py-[calc(0.25rem+1px)] font-medium transition-colors',
+                'flex h-8 min-w-0 flex-auto items-center justify-center gap-1.5 rounded-ctl-c px-3 font-medium transition-colors select-none',
                 off ? 'cursor-not-allowed' : 'cursor-pointer',
                 checked
-                  ? styles.on
-                  : option.disabled
-                    ? 'text-(--palette-gray-300) line-through decoration-gray-200'
+                  ? 'bg-(--palette-surface) font-semibold text-(--palette-accent-ink) shadow-[0_1px_2px_rgb(16_24_40/0.10),0_0_0_1px_rgb(16_24_40/0.05)]'
+                  : off
+                    ? 'text-(--palette-ink-3)'
                     : 'text-(--palette-gray-600) hover:text-(--palette-ink)',
               )}
             >
@@ -120,26 +165,11 @@ export default function SegmentedChoice<V extends string>({
         })}
       </RadioGroup>
 
-      {description &&
-        (descriptionVariant === 'callout' ? (
-          <p
-            id={descriptionId}
-            className={clsx(
-              'mt-2 flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs',
-              styles.callout,
-            )}
-          >
-            <span
-              className={clsx('size-1.5 shrink-0 rounded-full', styles.dot)}
-              aria-hidden="true"
-            />
-            {description}
-          </p>
-        ) : (
-          <p id={descriptionId} className="mt-1.5 text-xs text-(--palette-gray-500)">
-            {description}
-          </p>
-        ))}
+      {hint && (
+        <p id={descriptionId} className="mt-1.5 text-xs text-(--palette-gray-500)">
+          {hint}
+        </p>
+      )}
     </div>
   );
 }

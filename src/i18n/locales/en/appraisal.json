@@ -398,13 +398,14 @@
       "title": "Assignment Type",
       "subtitle": "Select whether to assign internally or to an external company",
       "internal": "Internal Appraisal",
-      "internalDesc": "Assign to internal appraisal staff",
+      "internalDesc": "Done by the bank's own appraisal staff",
       "external": "External Company",
-      "externalDesc": "Assign to external appraisal company",
+      "externalDesc": "An appraisal company works in the system",
       "externalOffline": "External (Appraised Offline)",
-      "externalOfflineDesc": "Company engaged outside the system; internal staff keys in its book",
-      "internalDisabledHint": "Internal assignment is not available for facility limits exceeding 50M",
-      "externalDisabledHint": "Assigning to an external company in the system is currently unavailable — appraisal companies are engaged outside the system. Use \"External (Appraised Offline)\" to record such an engagement, or assign internally."
+      "externalOfflineDesc": "Engaged outside the system; staff key in the report",
+      "externalDisabledHint": "Assigning to an external company in the system is currently unavailable — appraisal companies are engaged outside the system. Use \"External (Appraised Offline)\" to record such an engagement, or assign internally.",
+      "internalDisabledReason": "Facility limit over 50 million",
+      "externalDisabledReason": "Temporarily unavailable"
     },
     "offlineExternal": {
       "title": "Offline External Engagement",
@@ -419,7 +420,7 @@
       "methodLabel": "Assignment Method",
       "manual": "Manual Selection",
       "manualDesc": "Select specific assignee",
-      "roundrobin": "Round-robin",
+      "roundrobin": "Automatic",
       "roundrobinDesc": "System auto-assigns based on workload",
       "quotation": "Request Quotation",
       "quotationDesc": "Request quotation from company first"
@@ -433,7 +434,6 @@
       "placeholder": "Click to search and select external company..."
     },
     "roundrobinInfo": {
-      "title": "Round-robin Assignment",
       "internalDesc": "The system will automatically assign this appraisal to the next available staff member based on current workload distribution.",
       "externalDesc": "The system will automatically assign this appraisal to the next external company based on the rotation schedule."
     },
@@ -538,7 +538,7 @@
       "previousCompany": "(previous company)",
       "notSelected": "Not selected yet",
       "awaitingWinner": "Awaiting winner",
-      "auto": "Auto-assigned",
+      "auto": "Automatic",
       "fee": {
         "total": "Total",
         "beforeVat": "Before VAT {{amount}}",
