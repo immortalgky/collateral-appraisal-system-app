@@ -14,6 +14,19 @@ Read before any UI change (type scale, colours, cards, tables, controls, styling
 - `npx vitest run`, the full suite: the locale parity test only runs there. Check the `Errors` line, not just passed/failed.
 - `npx prettier --write <changed files>` only; never a folder.
 
+## Release branches
+
+Process: `docs/deployment/release-process.md` in the API repo (`collateral-appraisal-system-api`). `main` is the trunk; `release/vX.Y` feeds UAT and PRD; BE and FE use the same release numbers.
+
+1. A fix for UAT/PRD goes to `release/vX.Y` by PR (squash). **In the same task**, cherry-pick it onto a
+   branch off `origin/main` with `git cherry-pick -x <sha>` and open a PR to `main`. If a newer
+   `release/v*` already exists, port it there too. Report every PR link; the task is not done until
+   the ports are open. If the fix does not apply to `main`, say why in the release PR.
+2. Never merge a release branch into `main`, never push to it directly, never create, move or delete
+   `v*` tags or `release/*` branches unless the user asks.
+3. Before saying a release is ready, run `git cherry -v origin/main origin/release/vX.Y`; any `+` line
+   is a fix missing from `main`.
+
 ## Agent skills
 
 ### Issue tracker
