@@ -965,6 +965,7 @@
       "remark": "หมายเหตุ"
     },
     "projectLand": {
+      "remark": "หมายเหตุ",
       "propertyName": "ชื่อทรัพย์สิน",
       "subDistrict": "ตำบล/แขวง",
       "districtName": "อำเภอ/เขต",
